@@ -1,22 +1,16 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from jpoke.core.event import EventManager
 
-from typing import Literal
-
-import jpoke.utils.copy_utils as copyut
-from jpoke.data.move import MoveData
+from jpoke.utils.types import MoveCategory
+from jpoke.utils import fast_copy
+from jpoke.data import MOVES
 
 from .effect import BaseEffect
 
 
 class Move(BaseEffect):
-    def __init__(self, data: MoveData, pp: int | None = None):
-        self.data: MoveData
-        super().__init__(data)
+    def __init__(self, name: str, pp: int | None = None):
+        super().__init__(MOVES[name])
+        self.pp: int = pp if pp else self.data.pp
 
-        self.pp: int = pp if pp else data.pp
         self.bench_reset()
 
     def bench_reset(self):
@@ -26,7 +20,7 @@ class Move(BaseEffect):
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        return copyut.fast_copy(self, new)
+        return fast_copy(self, new)
 
     def dump(self):
         return {"name": self.name, "pp": self.pp}
@@ -39,5 +33,5 @@ class Move(BaseEffect):
         return self._type
 
     @property
-    def category(self) -> Literal["物理", "特殊", "変化"]:
+    def category(self) -> MoveCategory:
         return self.data.category

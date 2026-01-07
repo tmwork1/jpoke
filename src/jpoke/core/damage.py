@@ -1,15 +1,24 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.model.pokemon import Pokemon
-    from jpoke.model.ability import Ability
-    from jpoke.model.move import Move
+    from jpoke.model import Pokemon, Ability, Move
 
 from dataclasses import dataclass
+from decimal import Decimal, ROUND_HALF_DOWN
+
+from jpoke.utils.types import Stat
+from jpoke.utils import fast_copy
 
 from .event import EventManager, Event, EventContext
-from jpoke.utils import copy_utils as copyut, math_utils as mathut
-from jpoke.utils.enums import Stat
+
+
+def rank_modifier(v: float) -> float:
+    return (2+v)/2 if v >= 0 else 2/(2-v)
+
+
+def round_half_down(v: float) -> int:
+    """五捨五超入"""
+    return int(Decimal(str(v)).quantize(Decimal('0'), rounding=ROUND_HALF_DOWN))
 
 
 @dataclass
@@ -18,10 +27,6 @@ class DamageContext:
     self_harm: bool = False
     power_multiplier: float = 1
     is_lethal_calc: bool = False
-
-
-def rank_modifier(v: float) -> float:
-    return (2+v)/2 if v >= 0 else 2/(2-v)
 
 
 class DamageCalculator:
@@ -38,7 +43,7 @@ class DamageCalculator:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        copyut.fast_copy(self, new)
+        fast_copy(self, new)
         return new
 
     def single_hit_damages(self,
@@ -47,12 +52,10 @@ class DamageCalculator:
                            defender: Pokemon,
                            move: Move,
                            dmg_ctx: DamageContext | None = None) -> list[int]:
-
-        # ダメージを与えない技なら中断
         if not move.data.power:
             return [0]
 
-        if dmg_ctx is None:
+        if not dmg_ctx:
             dmg_ctx = DamageContext()
 
         move_category = attacker.effective_move_category(move, events)
@@ -63,30 +66,28 @@ class DamageCalculator:
 
         # その他の補正
         r_pow = events.emit(Event.ON_CALC_POWER_MODIFIER,
-                            value=4096,
-                            ctx=EventContext(attacker, move))
-        final_pow = mathut.round_half_down(final_pow * r_pow/4096)
+                            EventContext(attacker, move), 4096)
+        final_pow = round_half_down(final_pow * r_pow/4096)
         final_pow = max(1, final_pow)
 
         # ---------------- 最終攻撃 ----------------
         # ステータス
         if move == 'イカサマ':
-            final_atk = defender.stats[Stat.A.idx]
-            r_rank = rank_modifier(defender.field_status.rank[Stat.A.idx])
+            final_atk = defender.stats["A"]
+            r_rank = rank_modifier(defender.rank["A"])
         else:
             if move == 'ボディプレス':
-                stat = Stat.B
+                stat = "B"
             elif move_category == "物理":
-                stat = Stat.A
+                stat = "A"
             else:
-                stat = Stat.C
-            final_atk = attacker.stats[stat.idx]
-            r_rank = rank_modifier(attacker.field_status.rank[stat.idx])
+                stat = "C"
+            final_atk = attacker.stats[stat]
+            r_rank = rank_modifier(attacker.rank[stat])
 
         # ランク補正の修正
-        def_ability: Ability = events.emit(Event.ON_CHECK_DEF_ABILITY,
-                                           value=defender.ability,
-                                           ctx=EventContext(defender, move))
+        def_ability: Ability = events.emit(
+            Event.ON_CHECK_DEF_ABILITY, EventContext(defender, move), defender.ability)
 
         if def_ability == 'てんねん' and r_rank != 1:
             r_rank = 1
@@ -104,20 +105,19 @@ class DamageCalculator:
 
         # その他の補正
         r_atk = events.emit(Event.ON_CALC_ATK_MODIFIER,
-                            value=4096,
-                            ctx=EventContext(attacker, move))
-        final_atk = mathut.round_half_down(final_atk * r_atk/4096)
+                            EventContext(attacker, move), 4096)
+        final_atk = round_half_down(final_atk * r_atk/4096)
         final_atk = max(1, final_atk)
 
         # ---------------- 最終防御 ----------------
         # ステータス
         if move_category == "物理" or "physical" in move.data.flags:
-            stat = Stat.B
+            stat = "B"
         else:
-            stat = Stat.D
+            stat = "D"
 
-        final_def = defender.stats[stat.idx]
-        r_rank = rank_modifier(defender.field_status.rank[stat.idx])
+        final_def = defender.stats[stat]
+        r_rank = rank_modifier(defender.rank[stat])
 
         # ランク補正の修正
         if "ignore_rank" in move.data.flags and r_rank != 1:
@@ -140,9 +140,8 @@ class DamageCalculator:
 
         # その他の補正
         r_def = events.emit(Event.ON_CALC_DEF_MODIFIER,
-                            value=4096,
-                            ctx=EventContext(defender, move))
-        final_def = mathut.round_half_down(final_def * r_def/4096)
+                            EventContext(defender, move), 4096)
+        final_def = round_half_down(final_def * r_def/4096)
         final_def = max(1, final_def)
 
         # ---------------- ダメージ計算 ----------------
@@ -151,19 +150,13 @@ class DamageCalculator:
 
         # 急所
         if dmg_ctx.critical:
-            max_dmg = mathut.round_half_down(max_dmg * 1.5)
+            max_dmg = round_half_down(max_dmg * 1.5)
             self.logs.append("急所 x1.5")
 
         # その他の補正
-        r_atk_type = events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER,
-                                 value=4096,
-                                 ctx=EventContext(attacker, move))
-        r_def_type = events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER,
-                                 value=1,
-                                 ctx=EventContext(defender, move))
-        r_dmg = events.emit(Event.ON_CALC_DAMAGE_MODIFIER,
-                            value=1,
-                            ctx=EventContext(attacker, move))
+        r_atk_type = events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, EventContext(attacker, move), 4096)
+        r_def_type = events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, EventContext(defender, move), 1)
+        r_dmg = events.emit(Event.ON_CALC_DAMAGE_MODIFIER, EventContext(attacker, move), 1)
 
         dmgs = [0]*16
         for i in range(16):
@@ -171,9 +164,9 @@ class DamageCalculator:
             dmgs[i] = int(max_dmg * (0.85+0.01*i))
 
             # 補正
-            dmgs[i] = mathut.round_half_down(dmgs[i] * r_atk_type)
+            dmgs[i] = round_half_down(dmgs[i] * r_atk_type)
             dmgs[i] = int(dmgs[i] * r_def_type)
-            dmgs[i] = mathut.round_half_down(dmgs[i] * r_dmg/4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_dmg/4096)
 
             # 最低ダメージ補償
             if dmgs[i] == 0 and r_def_type * r_dmg > 0:

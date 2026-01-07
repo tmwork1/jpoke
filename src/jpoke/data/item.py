@@ -1,7 +1,7 @@
-from jpoke.core.event import Event, Handler
+from jpoke.core.event import Event, Handler, HandlerResult
 from .models import ItemData
 
-from jpoke.handlers.item import on_hit, on_damage, on_turn_end, on_modify_stat, on_trap
+from jpoke.handlers import common, item as hdl
 
 
 ITEMS: dict[str, ItemData] = {
@@ -33,7 +33,7 @@ ITEMS: dict[str, ItemData] = {
     "いのちのたま": ItemData(
         throw_power=30,
         consumable=False,
-        handlers={Event.ON_HIT: Handler(on_hit.いのちのたま)}
+        handlers={Event.ON_HIT: Handler(hdl.いのちのたま)},
     ),
     "エレキシード": {
         "consumable": True,
@@ -94,7 +94,8 @@ ITEMS: dict[str, ItemData] = {
     "きれいなぬけがら": ItemData(
         consumable=False,
         throw_power=10,
-        handlers={Event.ON_CHECK_TRAP: Handler(on_trap.きれいなぬけがら, -100)},
+        handlers={Event.ON_CHECK_TRAPPED: Handler(
+            lambda b, c, v: (False, HandlerResult.STOP_EVENT), -100)}
     ),
     "ぎんのこな": {
         "consumable": False,
@@ -227,12 +228,12 @@ ITEMS: dict[str, ItemData] = {
     "だっしゅつパック": ItemData(
         consumable=True,
         throw_power=50,
-        handlers={Event.ON_MODIFY_STAT: Handler(on_modify_stat.だっしゅつパック)}
+        handlers={Event.ON_MODIFY_STAT: Handler(hdl.だっしゅつパック)}
     ),
     "だっしゅつボタン": ItemData(
         consumable=True,
         throw_power=30,
-        handlers={Event.ON_DAMAGE: Handler(on_damage.だっしゅつボタン)}
+        handlers={Event.ON_DAMAGE: Handler(hdl.だっしゅつボタン, by="foe")}
     ),
     "たつじんのおび": {
         "consumable": False,
@@ -240,7 +241,8 @@ ITEMS: dict[str, ItemData] = {
     },
     "たべのこし": ItemData(
         throw_power=10,
-        handlers={Event.ON_TURN_END_2: Handler(on_turn_end.たべのこし)}
+        handlers={Event.ON_TURN_END_2: Handler(
+            lambda b, c, v: common.modify_hp(b, c, v, "self", r=1/16) and hdl.reveal_item(b, c, v))}
     ),
     "ちからのハチマキ": {
         "consumable": False,

@@ -1,10 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core.event import EventManager
-    from jpoke.player import Player
+    from jpoke.core import EventManager, Player
 
-from jpoke.utils import copy_utils as copyut
+from jpoke.utils import fast_copy
 from jpoke.data.field import FIELDS
 from jpoke.data.models import FieldData
 from .effect import BaseEffect
@@ -18,14 +17,14 @@ class Field(BaseEffect):
     def init(self, name: str, count: int):
         super().__init__(FIELDS[name])
         self.count = count
-        self.observed = True
+        self.revealed = True
         self.data: FieldData
 
     def __deepcopy__(self, memo):
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        return copyut.fast_copy(self, new, keys_to_deepcopy=[])
+        return fast_copy(self, new, keys_to_deepcopy=[])
 
     def update_reference(self, owners: list[Player]):
         self.owners = owners

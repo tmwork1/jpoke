@@ -3,14 +3,14 @@ from typing import TYPE_CHECKING, Self
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
     from jpoke.model.pokemon import Pokemon
-    from jpoke.player import Player
+    from jpoke.core.player import Player
 
 
 class BaseEffect:
     def __init__(self, data) -> None:
         self.data = data
         self.active: bool = True
-        self.observed: bool = False
+        self.revealed: bool = False
 
     @property
     def name(self) -> str:

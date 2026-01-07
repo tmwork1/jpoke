@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from jpoke.utils.enums import Command
-import jpoke.utils.copy_utils as copyut
+from jpoke.utils import fast_copy
 
 
 @dataclass
@@ -43,7 +43,7 @@ class Logger:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        return copyut.fast_copy(self, new)
+        return fast_copy(self, new)
 
     def get_turn_logs(self, turn: int, player_idx: int) -> list[str]:
         return [log.text for log in self.turn_logs if

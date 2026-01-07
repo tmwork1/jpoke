@@ -1,24 +1,23 @@
 {
-    "seed": 1765608262,
+    "seed": 1766277443,
     "players": [
         {
             "name": "Player1",
             "selection_indexes": [
-                0,
-                1
+                0
             ],
             "commands": {
                 "1": [
-                    "TERASTAL_0"
+                    "MOVE_0"
                 ],
                 "2": [
-                    "SWITCH_1"
+                    "TERASTAL_0"
                 ],
                 "3": [
-                    "SWITCH_0"
+                    "TERASTAL_0"
                 ],
                 "4": [
-                    "TERASTAL_0"
+                    "MOVE_0"
                 ]
             },
             "team": [
@@ -27,35 +26,7 @@
                     "gender": "NONE",
                     "level": 50,
                     "nature": "まじめ",
-                    "ability": "",
-                    "item": "",
-                    "moves": [
-                        "たいあたり"
-                    ],
-                    "indiv": [
-                        31,
-                        31,
-                        31,
-                        31,
-                        31,
-                        31
-                    ],
-                    "effort": [
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0
-                    ],
-                    "terastal": ""
-                },
-                {
-                    "name": "ピカチュウ",
-                    "gender": "NONE",
-                    "level": 50,
-                    "nature": "まじめ",
-                    "ability": "",
+                    "ability": "いかく",
                     "item": "",
                     "moves": [
                         "たいあたり"
@@ -87,10 +58,10 @@
             ],
             "commands": {
                 "1": [
-                    "MOVE_0"
+                    "TERASTAL_0"
                 ],
                 "2": [
-                    "MOVE_0"
+                    "TERASTAL_0"
                 ],
                 "3": [
                     "MOVE_0"

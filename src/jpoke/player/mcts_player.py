@@ -1,6 +1,5 @@
 from jpoke.utils.enums import Command
-from jpoke.core.battle import Battle
-from jpoke.player.player import Player
+from jpoke.core import Battle, Player
 
 
 class MCTSPlayer(Player):

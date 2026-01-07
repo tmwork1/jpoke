@@ -1,46 +1,85 @@
 from enum import Enum, auto
 
 
-class BaseEnum(Enum):
-    def __str__(self):
-        if isinstance(self.value, tuple):
-            return self.value[0]
-        else:
-            return str(self.value)
+class HandlerResult(Enum):
+    NONE = None
+    STOP_HANDLER = auto()
+    STOP_EVENT = auto()
 
-    def is_none(self) -> bool:
-        if isinstance(self.value, tuple):
-            return self.value[0] is None
-        else:
-            return self.value is None
+
+class Event(Enum):
+    ON_BEFORE_ACTION = auto()
+    ON_SWITCH_IN = auto()
+    ON_SWITCH_OUT = auto()
+    ON_BEFORE_MOVE = auto()
+    ON_TRY_ACTION = auto()
+    ON_DECLARE_MOVE = auto()
+    ON_CONSUME_PP = auto()
+    ON_TRY_MOVE = auto()
+    ON_TRY_IMMUNE = auto()
+    ON_HIT = auto()
+    ON_PAY_HP = auto()
+    ON_MODIFY_DAMAGE = auto()
+    ON_MOVE_SECONDARY = auto()
+    ON_DAMAGE = auto()
+    ON_AFTER_PIVOT = auto()
+    ON_TURN_END_1 = auto()
+    ON_TURN_END_2 = auto()
+    ON_TURN_END_3 = auto()
+    ON_TURN_END_4 = auto()
+    ON_TURN_END_5 = auto()
+    ON_TURN_END_6 = auto()
+    ON_MODIFY_STAT = auto()
+    ON_END = auto()
+
+    ON_CHECK_PP_CONSUMED = auto()
+    ON_CHECK_DURATION = auto()
+    ON_CHECK_FLOATING = auto()
+    ON_CHECK_TRAPPED = auto()
+    ON_CHECK_NERVOUS = auto()
+    ON_CHECK_MOVE_TYPE = auto()
+    ON_CHECK_MOVE_CATEGORY = auto()
+
+    ON_CALC_SPEED = auto()
+    ON_CALC_ACTION_SPEED = auto()
+    ON_CALC_ACCURACY = auto()
+    ON_CALC_POWER_MODIFIER = auto()
+    ON_CALC_ATK_MODIFIER = auto()
+    ON_CALC_DEF_MODIFIER = auto()
+    ON_CALC_ATK_TYPE_MODIFIER = auto()
+    ON_CALC_DEF_TYPE_MODIFIER = auto()
+    ON_CALC_DAMAGE_MODIFIER = auto()
+    ON_CHECK_DEF_ABILITY = auto()
+
+
+class Interrupt(Enum):
+    NONE = auto()
+    EJECTBUTTON = auto()
+    PIVOT = auto()
+    EMERGENCY = auto()
+    FAINTED = auto()
+    REQUESTED = auto()
+    EJECTPACK_ON_AFTER_SWITCH = auto()
+    EJECTPACK_ON_START = auto()
+    EJECTPACK_ON_SWITCH_0 = auto()
+    EJECTPACK_ON_SWITCH_1 = auto()
+    EJECTPACK_ON_AFTER_MOVE_0 = auto()
+    EJECTPACK_ON_AFTER_MOVE_1 = auto()
+    EJECTPACK_ON_TURN_END = auto()
+
+    def consume_item(self) -> bool:
+        return "EJECT" in self.name
 
     @classmethod
-    def names(cls) -> list[str]:
-        return [x.name for x in cls]
+    def ejectpack_on_switch(cls, idx: int):
+        return cls[f"EJECTPACK_ON_SWITCH_{idx}"]
+
+    @classmethod
+    def ejectpack_on_after_move(cls, idx: int):
+        return cls[f"EJECTPACK_ON_AFTER_MOVE_{idx}"]
 
 
-class Stat(BaseEnum):
-    H = ("H", 0, "HP", "HP")
-    A = ("A", 1, "こうげき", "攻撃")
-    B = ("B", 2, "ぼうぎょ", "防御")
-    C = ("C", 3, "とくこう", "特攻")
-    D = ("D", 4, "とくぼう", "特防")
-    S = ("S", 5, "すばやさ", "素早さ")
-    ACC = ("命中", 6, "めいちゅう", "命中")
-    EVA = ("回避", 7, "かいひ", "回避")
-
-    @property
-    def idx(self) -> int:
-        return self.value[1]
-
-
-class Gender(BaseEnum):
-    NONE = None
-    MALE = "オス"
-    FEMALE = "メス"
-
-
-class Condition(BaseEnum):
+class Condition(Enum):
     AQUA_RING = ("アクアリング", 1, True, False)
     AME_MAMIRE = ("あめまみれ", 3, False, True)
     ENCORE = ("アンコール", 3, False, True)
@@ -79,16 +118,7 @@ class Condition(BaseEnum):
         return self.value[3]
 
 
-class BoostSource(BaseEnum):
-    """能力ブーストの発動要因"""
-    NONE = None
-    ABILITY = auto()
-    ITEM = auto()
-    WEATHER = auto()
-    FIELD = auto()
-
-
-class Time(BaseEnum):
+class Time(Enum):
     """時間 [s]"""
     GAME = 20*60                # 試合
     SELECTION = 90              # 選出
@@ -98,7 +128,7 @@ class Time(BaseEnum):
     TIMEOUT = 60                # 実機対戦でのタイムアウト
 
 
-class Command(BaseEnum):
+class Command(Enum):
     NONE = None
     STRUGGLE = auto()
     FORCED = auto()
@@ -174,8 +204,15 @@ class Command(BaseEnum):
     ZMOVE_8 = auto()
     ZMOVE_9 = auto()
 
+    @classmethod
+    def names(cls) -> list[str]:
+        return [x.name for x in cls]
+
     def __str__(self):
         return self.name
+
+    def is_none(self) -> bool:
+        return self.value is None
 
     @property
     def idx(self) -> int:

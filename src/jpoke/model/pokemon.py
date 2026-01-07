@@ -3,20 +3,17 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
 
-from typing import Literal
-
-from jpoke.utils.enums import Gender, Stat
+from jpoke.utils.types import Stat, MoveCategory, Gender, BoostSource, get_stats
 from jpoke.utils.constants import NATURE_MODIFIER
-import jpoke.utils.copy_utils as copyut
+from jpoke.utils import fast_copy
 
 from jpoke.core.event import Event, EventContext
-from jpoke.data.models import PokemonData
+from jpoke.data import pokedex
 
 from .ability import Ability
 from .item import Item
 from .move import Move
 from .ailment import Ailment
-from .active_status import FieldStatus
 
 
 def calc_hp(level, base, indiv, effort):
@@ -28,32 +25,69 @@ def calc_stat(level, base, indiv, effort, nc):
 
 
 class Pokemon:
-    def __init__(self, data: PokemonData):
-        self.data: PokemonData = data
-        self.observed: bool
+    def __init__(self,
+                 name: str,
+                 ability: str | Ability = "",
+                 item: str | Item = "",
+                 moves: list[str | Move] = ["はねる"]):
+        self.data = pokedex[name]
 
-        self.gender: Gender = Gender.NONE
+        self.observed: bool
+        self.gender: Gender = ""
         self._level: int = 50
         self._nature: str = "まじめ"
-        self.ability: Ability = None  # type: ignore
-        self.item: Item = None  # type: ignore
-        self.moves: list[Move] = []
+        self._ability: Ability = Ability()
+        self._item: Item = Item()
+        self._moves: list[Move] = []
         self._indiv: list[int] = [31]*6
         self._effort: list[int] = [0]*6
         self._stats: list[int] = [100]*6
         self._terastal: str = ""
-        self.is_terastallized: bool = False
+        self.terastallized: bool = False
 
         self.sleep_count: int
         self.ailment: Ailment = Ailment(self)
+        # self.field_status: FieldStatus = FieldStatus()
 
-        self.field_status: FieldStatus = FieldStatus()
+        self.ability = ability
+        self.item = item
+        self.moves = moves
 
         self.update_stats()
         self.hp: int = self.max_hp
 
+        self.bench_reset()
+
+    def bench_reset(self):
+        self.choice_locked: bool = False
+        self.hidden: bool = False
+        self.lockon: bool = False
+        self.active_turn: int = 0
+        self.forced_turn: int = 0
+        self.sub_hp: int = 0
+        self.bind_damage_denom: int = 0
+        self.hits_taken: int = 0
+        self.boosted_stat: Stat | None = None
+        self.boost_source: BoostSource = ""
+        self.rank: dict[Stat, int] = {k: 0 for k in get_stats()}  # type: ignore
         self.added_types: list[str] = []
         self.lost_types: list[str] = []
+        self.executed_move: Move | None = None
+        self.expended_moves: list[Move] = []
+
+    @classmethod
+    def reconstruct_from_log(cls, data: dict) -> Pokemon:
+        mon = cls(data["name"])
+        mon.gender = data["gender"]
+        mon.level = data["level"]
+        mon.nature = data["nature"]
+        # mon.ability = cls.create_ability(data["ability"])
+        # mon.item = cls.create_item(data["item"])
+        # mon.moves = [cls.create_move(s) for s in data["moves"]]
+        mon.indiv = data["indiv"]
+        mon.effort = data["effort"]
+        mon.terastal = data["terastal"]
+        return mon
 
     def __str__(self):
         sep = '\n\t'
@@ -76,18 +110,18 @@ class Pokemon:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        copyut.fast_copy(self, new, keys_to_deepcopy=['ability', 'item', 'moves', 'field_status'])
+        fast_copy(self, new, keys_to_deepcopy=['ability', 'item', 'moves', 'field_status', 'executed_move', 'expended_moves'])
         return new
 
     def dump(self) -> dict:
         return {
             "name": self.data.name,
-            "gender": self.gender.name,
+            "gender": self.gender,
             "level": self._level,
             "nature": self._nature,
-            "ability": self.ability.data.name,
-            "item": self.item.data.name,
-            "moves": [move.data.name for move in self.moves],
+            "ability": self.ability.name,
+            "item": self.item.name,
+            "moves": [move.name for move in self.moves],
             "indiv": self._indiv,
             "effort": self._effort,
             "terastal": self._terastal,
@@ -101,12 +135,42 @@ class Pokemon:
             self.item.register_handlers(events, self)
 
     def switch_out(self, events: EventManager):
+        self.bench_reset()
         self.ability.unregister_handlers(events, self)
         self.item.unregister_handlers(events, self)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.data.name
+
+    @property
+    def ability(self) -> Ability:
+        return self._ability
+
+    @ability.setter
+    def ability(self, obj: str | Ability):
+        if isinstance(obj, str):
+            obj = Ability(obj)
+        self._ability = obj
+
+    @property
+    def item(self) -> Item:
+        return self._item
+
+    @item.setter
+    def item(self, obj: str | Item):
+        if isinstance(obj, str):
+            obj = Item(obj)
+        self._item = obj
+
+    @property
+    def moves(self) -> list[Move]:
+        return self._moves
+
+    @moves.setter
+    def moves(self, objs: list[str | Move]):
+        self._moves = [Move(obj) if isinstance(obj, str) else obj
+                       for obj in objs]
 
     @property
     def types(self) -> list[str]:
@@ -125,11 +189,15 @@ class Pokemon:
 
     @property
     def max_hp(self) -> int:
-        return self.stats[0]
+        return self.stats["H"]
 
     @property
     def hp_ratio(self) -> float:
         return self.hp / self.max_hp
+
+    @hp_ratio.setter
+    def hp_ratio(self, v: float):
+        self.hp = int(self.max_hp * v)
 
     @property
     def level(self) -> int:
@@ -163,25 +231,27 @@ class Pokemon:
 
     @property
     def terastal(self) -> str | None:
-        return self._terastal if self.is_terastallized else None
+        return self._terastal if self.terastallized else None
 
     @terastal.setter
     def terastal(self, type: str):
         self._terastal = type
 
     def can_terastallize(self) -> bool:
-        return not self.is_terastallized and self._terastal is not None
+        return not self.terastallized and self._terastal is not None
 
     def terastallize(self) -> bool:
-        self.is_terastallized = self.can_terastallize()
-        return self.is_terastallized
+        self.terastallized = self.can_terastallize()
+        return self.terastallized
 
     @property
-    def stats(self) -> list[int]:
-        return self._stats
+    def stats(self) -> dict[Stat, int]:
+        labels = get_stats()[:6]
+        return {s: v for s, v in zip(labels, self._stats)}  # type: ignore
 
     @stats.setter
-    def stats(self, stats: list[int]):
+    def stats(self, stats: dict[Stat, int]):
+        stat_values = list(stats.values())
         nc = NATURE_MODIFIER[self._nature]
         efforts_50 = [0] + [4+8*i for i in range(32)]
 
@@ -191,7 +261,7 @@ class Pokemon:
                     v = calc_hp(self._level, self.data.base[i], self._indiv[i], self._effort[i])
                 else:
                     v = calc_stat(self._level, self.data.base[i], self._indiv[i], self._effort[i], nc)
-                if v == stats[i]:
+                if v == stat_values[i]:
                     self._effort[i] = eff
                     self._stats[i] = v
                     break
@@ -222,30 +292,6 @@ class Pokemon:
     def effort(self, effort: list[int]):
         self._effort = effort
         self.update_stats()
-
-    @property
-    def H(self) -> int:
-        return self.stats[0]
-
-    @property
-    def A(self) -> int:
-        return self.stats[1]
-
-    @property
-    def B(self) -> int:
-        return self.stats[2]
-
-    @property
-    def C(self) -> int:
-        return self.stats[3]
-
-    @property
-    def D(self) -> int:
-        return self.stats[4]
-
-    @property
-    def S(self) -> int:
-        return self.stats[5]
 
     def update_stats(self, keep_damage: bool = False):
         if keep_damage:
@@ -284,9 +330,9 @@ class Pokemon:
         return self.hp - old
 
     def modify_stat(self, stat: Stat, v: int) -> int:
-        old = self.field_status.rank[stat.idx]
-        self.field_status.rank[stat.idx] = max(-6, min(6, old + v))
-        return self.field_status.rank[stat.idx] - old
+        old = self.rank[stat]
+        self.rank[stat] = max(-6, min(6, old + v))
+        return self.rank[stat] - old
 
     def find_move(self, move: Move | str) -> Move | None:
         for mv in self.moves:
@@ -297,22 +343,21 @@ class Pokemon:
         return self.find_move(move) is not None
 
     def floating(self, events: EventManager) -> bool:
-        return False
+        floating = "ひこう" in self.types
+        floating &= events.emit(Event.ON_CHECK_FLOATING, EventContext(self), floating)
+        return floating
 
     def trapped(self, events: EventManager) -> bool:
-        self.field_status._trapped = False
-        # self.field_status._trapped |= self.field_status.count[Condition.SWITCH_BLOCK] > 0
-        # self.field_status._trapped |= self.field_status.count[Condition.BIND] > 0
-        events.emit(Event.ON_CHECK_TRAP)
-        self.field_status._trapped &= "ゴースト" not in self.types
-        return self.field_status._trapped
+        trapped = events.emit(Event.ON_CHECK_TRAPPED, EventContext(self), False)
+        trapped &= "ゴースト" not in self.types  # type: ignore
+        return trapped
+
+    def nervous(self, events: EventManager) -> bool:
+        return events.emit(Event.ON_CHECK_NERVOUS, EventContext(self), False)
 
     def effective_move_type(self, move: Move, events: EventManager) -> str:
-        events.emit(Event.ON_CHECK_MOVE_TYPE,
-                    ctx=EventContext(self, move))
+        events.emit(Event.ON_CHECK_MOVE_TYPE, EventContext(self, move))
         return move._type
 
-    def effective_move_category(self, move: Move, events: EventManager) -> Literal["物理", "特殊", "変化"]:
-        events.emit(Event.ON_CHECK_MOVE_CATEGORY,
-                    ctx=EventContext(self, move))
-        return move.category
+    def effective_move_category(self, move: Move, events: EventManager) -> MoveCategory:
+        return events.emit(Event.ON_CHECK_MOVE_CATEGORY, EventContext(self, move), value=move.category)

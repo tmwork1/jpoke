@@ -1,95 +1,31 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core.battle import Battle
-    from jpoke.model.pokemon import Pokemon
-    from jpoke.model.move import Move
+    from jpoke.core import Battle
+    from jpoke.model import Pokemon, Move, Field
 
 from typing import Callable
 from dataclasses import dataclass
-from enum import Enum, auto
 
-from jpoke.utils import copy_utils as copyut
-from jpoke.handlers import HandlerOutput, HandlerResultFlag
-from jpoke.player import Player
-
-
-class Event(Enum):
-    ON_BEFORE_ACTION = auto()
-    ON_SWITCH_IN = auto()
-    ON_SWITCH_OUT = auto()
-    ON_BEFORE_MOVE = auto()
-    ON_TRY_ACTION = auto()
-    ON_TRY_MOVE = auto()
-    ON_TRY_IMMUNE = auto()
-    ON_HIT = auto()
-    ON_PAY_HP = auto()
-    ON_MODIFY_DAMAGE = auto()
-    ON_MOVE_SECONDARY = auto()
-    ON_DAMAGE = auto()
-    ON_AFTER_PIVOT = auto()
-    ON_TURN_END_1 = auto()
-    ON_TURN_END_2 = auto()
-    ON_TURN_END_3 = auto()
-    ON_TURN_END_4 = auto()
-    ON_TURN_END_5 = auto()
-    ON_TURN_END_6 = auto()
-    ON_MODIFY_STAT = auto()
-    ON_END = auto()
-    ON_CHECK_TRAP = auto()
-    ON_CHECK_MOVE_TYPE = auto()
-    ON_CHECK_MOVE_CATEGORY = auto()
-
-    ON_CALC_SPEED = auto()
-    ON_CALC_ACTION_SPEED = auto()
-    ON_CALC_ACCURACY = auto()
-    ON_CALC_POWER_MODIFIER = auto()
-    ON_CALC_ATK_MODIFIER = auto()
-    ON_CALC_DEF_MODIFIER = auto()
-    ON_CALC_ATK_TYPE_MODIFIER = auto()
-    ON_CALC_DEF_TYPE_MODIFIER = auto()
-    ON_CALC_DAMAGE_MODIFIER = auto()
-    ON_CHECK_DEF_ABILITY = auto()
-
-
-class Interrupt(Enum):
-    NONE = auto()
-    EJECTBUTTON = auto()
-    PIVOT = auto()
-    EMERGENCY = auto()
-    FAINTED = auto()
-    REQUESTED = auto()
-    EJECTPACK_ON_AFTER_SWITCH = auto()
-    EJECTPACK_ON_START = auto()
-    EJECTPACK_ON_SWITCH_0 = auto()
-    EJECTPACK_ON_SWITCH_1 = auto()
-    EJECTPACK_ON_AFTER_MOVE_0 = auto()
-    EJECTPACK_ON_AFTER_MOVE_1 = auto()
-    EJECTPACK_ON_TURN_END = auto()
-
-    def consume_item(self) -> bool:
-        return "EJECT" in self.name
-
-    @classmethod
-    def ejectpack_on_switch(cls, idx: int):
-        return cls[f"EJECTPACK_ON_SWITCH_{idx}"]
-
-    @classmethod
-    def ejectpack_on_after_move(cls, idx: int):
-        return cls[f"EJECTPACK_ON_AFTER_MOVE_{idx}"]
+from jpoke.utils.types import Side, GlobalField, SideField, Weather, Terrain
+from jpoke.utils.enums import Event, HandlerResult
+from jpoke.utils import fast_copy
+from .player import Player
 
 
 @dataclass
 class EventContext:
     source: Pokemon
+    by: Side = "self"
     move: Move = None  # type: ignore
-    by_foe: bool = False
+    field: GlobalField | SideField | Weather | Terrain = ""
 
 
 @dataclass(frozen=True)
 class Handler:
     func: Callable
     priority: int = 0
+    by: Side = "self"
     once: bool = False
 
     def __lt__(self, other):
@@ -105,7 +41,7 @@ class EventManager:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        return copyut.fast_copy(self, new)
+        return fast_copy(self, new)
 
     def update_reference(self, new: Battle):
         old = self.battle
@@ -147,48 +83,51 @@ class EventManager:
             if not self.handlers[event][handler]:
                 del self.handlers[event][handler]
 
-    def emit(self,
-             event: Event,
-             value=None,
-             ctx: EventContext | None = None,
-             ):
+    def emit(self, event: Event, ctx: EventContext | None = None, value: Any = None) -> Any:
         """イベントを発火"""
         for handler, sources in sorted(self.handlers.get(event, {}).items()):
-            # 引数のコンテキストを優先し、指定がなければ登録されているsourceを参照する
             if ctx:
-                ctxs = [ctx]
+                # 引数のコンテキストに合致するハンドラがあるか検証する
+                if (not handler.by and ctx.source in sources) or \
+                        (handler.by and any(ctx.source is not mon for mon in sources)):
+                    ctxs = [ctx]
+                else:
+                    continue
             else:
-                # sources: list[Pokemon | Player] の全要素を場のポケモンに置き換える
+                # 引数のコンテキストに指定がなければ、登録されている source からコンテキストを生成する
                 new_sources = []
                 for source in sources:
                     if isinstance(source, Player):
-                        source = self.battle.active(source)
+                        source = source.active
                     if source not in new_sources:
                         new_sources.append(source)
 
                 # 素早さ順に並び変える
                 if len(new_sources) > 1:
-                    order = self.battle.get_speed_order()
+                    order = self.battle.calc_speed_order()
                     new_sources = [p for p in order if p in new_sources]
 
                 ctxs = [EventContext(source) for source in new_sources]
 
             # すべての source に対してハンドラを実行する
             for c in ctxs:
-                out: HandlerOutput | None = handler.func(self.battle, value, c)
+                res = handler.func(self.battle, c, value)
 
-                # 単発ハンドラなら削除
+                # 単発ハンドラの削除
                 if handler.once:
                     self.off(event, handler, c.source)
 
-                if isinstance(out, HandlerOutput):
-                    # value を更新
-                    value = out.value
-                    # フラグにしたがって処理を分岐
-                    match out.flag:
-                        case HandlerResultFlag.STOP_HANDLER:
-                            break
-                        case HandlerResultFlag.STOP_EVENT:
-                            return value
+                if isinstance(res, HandlerResult):
+                    flag = res
+                elif isinstance(res, tuple):
+                    value, flag = res
+                else:
+                    value, flag = res, None
+
+                match flag:
+                    case HandlerResult.STOP_HANDLER:
+                        break
+                    case HandlerResult.STOP_EVENT:
+                        return value
 
         return value

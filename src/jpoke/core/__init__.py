@@ -1,5 +1,3 @@
-from .pokedb import PokeDB
 from .battle import Battle
-from ..model.pokemon import Pokemon
-
-PokeDB.init()
+from .player import Player
+from .event import EventManager, EventContext
