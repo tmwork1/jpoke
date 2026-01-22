@@ -2,7 +2,6 @@ from enum import Enum, auto
 
 
 class HandlerResult(Enum):
-    NONE = None
     STOP_HANDLER = auto()
     STOP_EVENT = auto()
 
@@ -129,7 +128,7 @@ class Time(Enum):
 
 
 class Command(Enum):
-    NONE = None
+    NONE = auto()
     STRUGGLE = auto()
     FORCED = auto()
     SKIP = auto()
