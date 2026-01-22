@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle
-    from jpoke.model import Pokemon, Move, Field
+    from jpoke.model import Pokemon, Move
 
 from typing import Callable
 from dataclasses import dataclass
@@ -16,8 +16,8 @@ from .player import Player
 @dataclass
 class EventContext:
     source: Pokemon
-    by: Side = "self"
-    move: Move = None  # type: ignore
+    target: Pokemon | None = None
+    move: Move | None = None
     field: GlobalField | SideField | Weather | Terrain = ""
 
 
@@ -25,7 +25,7 @@ class EventContext:
 class Handler:
     func: Callable
     priority: int = 0
-    by: Side = "self"
+    triggered_by: Side = "self"
     once: bool = False
 
     def __lt__(self, other):
@@ -88,8 +88,8 @@ class EventManager:
         for handler, sources in sorted(self.handlers.get(event, {}).items()):
             if ctx:
                 # 引数のコンテキストに合致するハンドラがあるか検証する
-                if (not handler.by and ctx.source in sources) or \
-                        (handler.by and any(ctx.source is not mon for mon in sources)):
+                if (handler.triggered_by == "self" and ctx.source in sources) or \
+                        (handler.triggered_by == "foe" and any(ctx.source is not mon for mon in sources)):
                     ctxs = [ctx]
                 else:
                     continue

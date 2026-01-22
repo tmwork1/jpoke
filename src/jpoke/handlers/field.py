@@ -18,7 +18,7 @@ def reduce_global_field_count(battle: Battle, ctx: EventContext, value: Any,
 def reduce_side_field_count(battle: Battle, ctx: EventContext, value: Any,
                             name: SideField):
     player = battle.find_player(ctx.source)
-    side = battle.side(player)
+    side = battle.side[player]
     if side.reduce_count(name):
         field = side.fields[name]
         battle.add_turn_log(None, f"{field.name} 残り{field.count}ターン")

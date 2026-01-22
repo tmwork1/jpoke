@@ -21,6 +21,11 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> bool:
     return not ctx.source.floating(battle.events)
 
 
+def いかく(battle: Battle, ctx: EventContext, value: Any) -> bool:
+    ctx.target = battle.foe(ctx.source)
+    return reveal_ability(battle, ctx, value) and common.modify_stat(battle, ctx, "A", -1)
+
+
 def かげふみ(battle: Battle, ctx: EventContext, value: Any) -> bool:
     return ctx.source.ability != "かげふみ"
 
@@ -30,6 +35,6 @@ def じりょく(battle: Battle, ctx: EventContext, value: Any) -> bool:
 
 
 def かちき(battle: Battle, ctx: EventContext, value: Any):
-    if value < 0 and ctx.by == "self":
+    if value < 0 and ctx.by == "foe":
         battle.modify_stat(ctx.source, "C", +2)
         reveal_ability(battle, ctx, value)

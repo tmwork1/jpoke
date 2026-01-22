@@ -19,11 +19,10 @@ ABILITIES: dict[str, AbilityData] = {
     "あめうけざら": {},
     "あめふらし": {},
     "ありじごく": AbilityData(
-        handlers={Event.ON_CHECK_TRAPPED: Handler(hdl.ありじごく, by="foe")}
+        handlers={Event.ON_CHECK_TRAPPED: Handler(hdl.ありじごく, triggered_by="foe")}
     ),
     "いかく": AbilityData(
-        handlers={Event.ON_SWITCH_IN: Handler(
-            lambda b, c, v: hdl.reveal_ability(b, c, v) and common.modify_stat(b, c, v, "foe", "A", -1), 4)}
+        handlers={Event.ON_SWITCH_IN: Handler(hdl.いかく)},
     ),
     "いかりのこうら": {},
     "いかりのつぼ": {
@@ -67,7 +66,7 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     },
     "かげふみ": AbilityData(
-        handlers={Event.ON_CHECK_TRAPPED: Handler(hdl.かげふみ, by="foe")}
+        handlers={Event.ON_CHECK_TRAPPED: Handler(hdl.かげふみ, triggered_by="foe")}
     ),
     "かぜのり": {},
     "かそく": {},
@@ -110,7 +109,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_SWITCH_IN: Handler(hdl.reveal_ability),
             Event.ON_CHECK_NERVOUS: Handler(
-                lambda b, c, v: hdl.check_ability(b, c, v, "きんちょうかん", "foe"), by="foe"),
+                lambda b, c, v: hdl.check_ability(b, c, "きんちょうかん", "foe"), triggered_by="foe"),
         }
     ),
     "ぎたい": {
@@ -200,7 +199,7 @@ ABILITIES: dict[str, AbilityData] = {
     },
     "じょおうのいげん": {},
     "じりょく": AbilityData(
-        handlers={Event.ON_CHECK_TRAPPED: Handler(hdl.じりょく, by="foe")}
+        handlers={Event.ON_CHECK_TRAPPED: Handler(hdl.じりょく, triggered_by="foe")}
     ),
     "じんばいったい": {
         "flags": [
@@ -238,7 +237,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda b, c, v: hdl.reveal_ability(b, c, v) and common.apply_ailment(b, c, v, "self", "ねむり"))
+                lambda b, c, v: hdl.reveal_ability(b, c, v) and common.apply_ailment(b, c, "self", "ねむり"))
         }
     ),
     "そうしょく": {},
@@ -514,7 +513,7 @@ ABILITIES: dict[str, AbilityData] = {
     "クリアボディ": {},
     "グラスメイカー": AbilityData(
         handlers={Event.ON_SWITCH_IN: Handler(
-            lambda b, c, v: common.apply_terrain(b, c, v, "グラスフィールド") and hdl.reveal_ability(b, c, v))}
+            lambda b, c, v: common.apply_terrain(b, c, "グラスフィールド") and hdl.reveal_ability(b, c, v))}
     ),
     "サイコメイカー": {},
     "サンパワー": {},

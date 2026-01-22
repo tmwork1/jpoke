@@ -22,13 +22,12 @@ def reveal(battle: Battle, ctx: EventContext,
     return True
 
 
-def modify_hp(
-    battle: Battle, ctx: EventContext,
-    target: Side,
-    v: int = 0,
-    r: float = 0,
-    prob: float = 1,
-) -> bool:
+def modify_hp(battle: Battle, ctx: EventContext,
+              target: Side,
+              v: int = 0,
+              r: float = 0,
+              prob: float = 1,
+              ) -> bool:
     """HPが変化したらTrueを返す"""
     if prob < 1 and battle.random.random() >= prob:
         return False
@@ -36,26 +35,16 @@ def modify_hp(
     return battle.modify_hp(mon, v, r)
 
 
-def modify_stat(
-    battle: Battle, ctx: EventContext,
-    target: Side,
-    stat: Stat,
-    v: int,
-    prob: float = 1
-) -> bool:
+def modify_stat(battle: Battle, ctx: EventContext,
+                stat: Stat, v: int, prob: float = 1) -> bool:
     """能力ランクが変化したらTrueを返す"""
     if prob < 1 and battle.random.random() >= prob:
         return False
-    mon = ctx.source if target == "self" else battle.foe(ctx.source)
-    by = "self" if ctx.source == target else "foe"
-    return battle.modify_stat(mon, stat, v, by=by)
+    return battle.modify_stat(ctx.source, ctx.target, stat, v)
 
 
-def apply_ailment(battle: Battle,
-                  ctx: EventContext,
-                  target: Side,
-                  ailment: AilmentName,
-                  prob: float = 1) -> bool:
+def apply_ailment(battle: Battle, ctx: EventContext,
+                  target: Side, ailment: AilmentName, prob: float = 1) -> bool:
     if prob < 1 and battle.random.random() >= prob:
         return False
     mon = ctx.source if target == "self" else battle.foe(ctx.source)
@@ -84,7 +73,7 @@ def apply_side(battle: Battle,
                count: int) -> bool:
     mon = ctx.source if target == "self" else battle.foe(ctx.source)
     player = battle.find_player(mon)
-    side = battle.side(player)
+    side = battle.side[player]
     ctx.field = name
     count = battle.events.emit(Event.ON_CHECK_DURATION, ctx, count)
     return side.activate(name, count)

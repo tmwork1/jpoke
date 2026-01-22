@@ -62,19 +62,25 @@ def test():
     )
 
     # いかく
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", ability="いかく")])
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="いかく")]
+    )
     assert battle.actives[0].ability.revealed
     assert battle.actives[1].rank["A"] == -1
 
     # かちき
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", ability="かちき")])
-    battle.modify_stat(battle.actives[0], "A", -1, by_foe=True)
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="かちき")]
+    )
+    battle.modify_stat(battle.actives[0], "S", -1, by="foe")
     assert battle.actives[0].ability.revealed
     assert battle.actives[0].rank["C"] == 2
 
     # かちき: 相手による能力ダウンでなければ発動しない
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", ability="かちき")])
-    battle.modify_stat(battle.actives[0], "A", -1, by_foe=False)
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="かちき")]
+    )
+    battle.modify_stat(battle.actives[0], "A", -1, by="self")
     assert not battle.actives[0].ability.revealed
     assert battle.actives[0].rank["C"] == 0
 
@@ -86,18 +92,24 @@ def test():
     assert battle.actives[0].ability.revealed
 
     # きんちょうかん
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", ability="きんちょうかん")])
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="きんちょうかん")]
+    )
     assert battle.actives[0].ability.revealed
     assert battle.actives[1].nervous(battle.events)
     assert not battle.actives[0].nervous(battle.events)
 
     # ぜったいねむり
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", ability="ぜったいねむり")])
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぜったいねむり")]
+    )
     assert battle.actives[0].ability.revealed
     assert battle.actives[0].ailment == "ねむり"
 
     # グラスメイカー
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", ability="グラスメイカー")])
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="グラスメイカー")]
+    )
     assert battle.actives[0].ability.revealed
     assert battle.field.fields["terrain"] == "グラスフィールド"
 

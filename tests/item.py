@@ -8,12 +8,18 @@ SHOW_LOG = True
 
 def test():
     # いのちのたま
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["たいあたり"])], turn=1)
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["たいあたり"])],
+        turn=1
+    )
     assert battle.actives[0].item.revealed
     assert battle.actives[0].hp == math.ceil(battle.actives[0].max_hp * 7/8)
 
     # いのちのたま: 変化技では発動しない
-    battle = test_utils.generate_battle(ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["はねる"])], turn=1)
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["はねる"])],
+        turn=1
+    )
     assert not battle.actives[0].item.revealed
 
     # きれいなぬけがら

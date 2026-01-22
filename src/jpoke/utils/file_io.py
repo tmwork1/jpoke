@@ -1,7 +1,7 @@
 import requests
 import jaconv
 from importlib import resources
-import Levenshtein
+from rapidfuzz.distance import Levenshtein
 import json
 import os
 from datetime import datetime

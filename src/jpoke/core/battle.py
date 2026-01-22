@@ -68,8 +68,9 @@ class Battle:
 
         return new
 
-    def side(self, player: Player) -> SideFieldManager:
-        return self.sides[self.players.index(player)]
+    @property
+    def side(self) -> dict[Player, SideFieldManager]:
+        return dict(zip(self.players, self.sides))
 
     @property
     def actives(self) -> list[Pokemon]:
@@ -307,6 +308,7 @@ class Battle:
 
         # 発動した技の確定
         attacker.executed_move = move
+        self.add_turn_log(attacker, move.name)
 
         # TODO 命中判定
         if not self.check_hit(attacker, move):
@@ -353,12 +355,13 @@ class Battle:
                               f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}")
         return bool(v)
 
-    def modify_stat(self, target: Pokemon, stat: Stat, v: int, by: Side = "self") -> bool:
-        if v and (result := target.modify_stat(stat, v)):
-            self.add_turn_log(self.find_player(target),
-                              f"{stat}{'+' if result >= 0 else ''}{result}")
-            self.events.emit(Event.ON_MODIFY_STAT, EventContext(target, by=by), result)
-        return bool(result)
+    def modify_stat(self, source: Pokemon, target: Pokemon, stat: Stat, v: int) -> bool:
+        if v and (v := target.modify_stat(stat, v)):
+            text = f"{stat}{'+' if v >= 0 else ''}{v}"
+            self.add_turn_log(self.find_player(target), text)
+            ctx = EventContext(source, target=target)
+            self.events.emit(Event.ON_MODIFY_STAT, ctx, v)
+        return bool(v)
 
     def calc_damage(self,
                     attacker: Pokemon,
@@ -366,7 +369,7 @@ class Battle:
                     critical: bool = False,
                     self_harm: bool = False,
                     ) -> int:
-        damages = self.calc_damages(attacker, move, critical, self_harm)
+        damages, _ = self.calc_damages(attacker, move, critical, self_harm)
         return self.random.choice(damages)
 
     def calc_damages(self,
