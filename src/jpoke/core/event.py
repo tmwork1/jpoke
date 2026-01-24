@@ -2,40 +2,56 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle
-    from jpoke.model import Pokemon, Move
+    from jpoke.model import Move, Pokemon
 
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.types import Side, GlobalField, SideField, Weather, Terrain
+from jpoke.utils.types import ContextRole, Side, GlobalField, SideField, Weather, Terrain
 from jpoke.utils.enums import Event, HandlerResult
 from jpoke.utils import fast_copy
+
 from .player import Player
 
 
 @dataclass
 class EventContext:
-    source: Pokemon
-    target: Pokemon | None = None
-    move: Move | None = None
+    target: Pokemon | None = None,
+    source: Pokemon | None = None,
+    attacker: Pokemon | None = None,
+    defender: Pokemon | None = None,
+    move: Move | None = None,
     field: GlobalField | SideField | Weather | Terrain = ""
 
 
 @dataclass(frozen=True)
 class Handler:
     func: Callable
+    role: ContextRole = "source"
+    side: Side = "self"
     priority: int = 0
-    triggered_by: Side = "self"
     once: bool = False
 
     def __lt__(self, other):
         return self.priority > other.priority
 
 
+@dataclass(frozen=True)
+class RegisteredHandler:
+    handler: Handler
+    source: Pokemon | Player | None
+
+    def resolve_source(self) -> Pokemon | None:
+        if isinstance(self.source, Player):
+            return self.source.active
+        else:
+            return self.source
+
+
 class EventManager:
     def __init__(self, battle: Battle) -> None:
         self.battle = battle
-        self.handlers: dict[Event, dict[Handler, list[Pokemon | Player]]] = {}
+        self.handlers: dict[Event, list[RegisteredHandler]] = {}
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -67,55 +83,47 @@ class EventManager:
         # Battle への参照を更新する
         self.battle = new
 
-    def on(self, event: Event, handler: Handler, source: Pokemon | Player):
-        """イベントを指定してハンドラを登録"""
-        self.handlers.setdefault(event, {})
-        sources = self.handlers[event].setdefault(handler, [])
-        if source not in sources:
-            sources.append(source)
+    def on(self,
+           event: Event,
+           handler: Handler,
+           source: Pokemon | Player | None = None):
+        """ハンドラを登録"""
+        self.handlers.setdefault(event, []).append(
+            RegisteredHandler(handler, source))
 
-    def off(self, event: Event, handler: Handler, source: Pokemon | Player):
-        if event in self.handlers and handler in self.handlers[event]:
-            # source を削除
-            self.handlers[event][handler] = \
-                [p for p in self.handlers[event][handler] if p != source]
-            # 空のハンドラを解除
-            if not self.handlers[event][handler]:
-                del self.handlers[event][handler]
+    def off(self,
+            event: Event,
+            handler: Handler,
+            source: Pokemon | Player | None = None):
+        """ハンドラを解除"""
+        if event not in self.handlers:
+            return
+        self.handlers[event] = [
+            rh for rh in self.handlers[event]
+            if not (rh.handler == handler and rh.source == source)
+        ]
 
-    def emit(self, event: Event, ctx: EventContext | None = None, value: Any = None) -> Any:
+    def emit(self,
+             event: Event,
+             ctx: EventContext | None = None,
+             value: Any = None) -> Any:
         """イベントを発火"""
-        for handler, sources in sorted(self.handlers.get(event, {}).items()):
+        print(f"Event emitted: {event}, handlers={self.handlers.get(event, [])}")
+        for rh in sorted(self.handlers.get(event, []), key=lambda x: x.handler):
+            handler = rh.handler
+
             if ctx:
-                # 引数のコンテキストに合致するハンドラがあるか検証する
-                if (handler.triggered_by == "self" and ctx.source in sources) or \
-                        (handler.triggered_by == "foe" and any(ctx.source is not mon for mon in sources)):
-                    ctxs = [ctx]
-                else:
+                if not self._match(ctx, rh):
                     continue
+                ctxs = [ctx]
             else:
-                # 引数のコンテキストに指定がなければ、登録されている source からコンテキストを生成する
-                new_sources = []
-                for source in sources:
-                    if isinstance(source, Player):
-                        source = source.active
-                    if source not in new_sources:
-                        new_sources.append(source)
+                ctxs = self._build_contexts(rh)
 
-                # 素早さ順に並び変える
-                if len(new_sources) > 1:
-                    order = self.battle.calc_speed_order()
-                    new_sources = [p for p in order if p in new_sources]
-
-                ctxs = [EventContext(source) for source in new_sources]
-
-            # すべての source に対してハンドラを実行する
             for c in ctxs:
                 res = handler.func(self.battle, c, value)
 
-                # 単発ハンドラの削除
                 if handler.once:
-                    self.off(event, handler, c.source)
+                    self.off(event, handler, rh.source)
 
                 if isinstance(res, HandlerResult):
                     flag = res
@@ -124,6 +132,7 @@ class EventManager:
                 else:
                     value, flag = res, None
 
+                # 制御フラグの処理
                 match flag:
                     case HandlerResult.STOP_HANDLER:
                         break
@@ -131,3 +140,46 @@ class EventManager:
                         return value
 
         return value
+
+    def _match(self, ctx: EventContext, rh: RegisteredHandler) -> bool:
+        match rh.handler.side:
+            case "self":
+                return ctx.target == rh.resolve_source()
+            case "foe":
+                return ctx.target == self.battle.foe(rh.resolve_source())
+            case "all":
+                return False
+
+    def _build_contexts(self, rh: RegisteredHandler) -> list[EventContext]:
+        """
+        RegisteredHandler から EventContext のリストを構築する
+        """
+        sources = self._expand(rh.source)
+        target_sides = self._expand(rh.handler.side)
+
+        if not sources:
+            return []
+
+        # 素早さ順に source を並べる
+        if len(sources) > 1:
+            order = self.battle.calc_speed_order()
+            sources = [p for p in order if p in sources]
+
+        # ターゲットを決定する
+        ctxs = [
+            EventContext(
+                source=s,
+                target=s if ts == "self" else self.battle.foe(s)
+            )
+            for s in sources
+            for ts in target_sides
+        ]
+
+        return ctxs
+
+    def _expand(self, obj) -> list[Pokemon]:
+        if obj is None:
+            return []
+        if isinstance(obj, Player):
+            return [obj.active]
+        return [obj]

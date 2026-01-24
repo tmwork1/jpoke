@@ -17,7 +17,7 @@ def reduce_global_field_count(battle: Battle, ctx: EventContext, value: Any,
 
 def reduce_side_field_count(battle: Battle, ctx: EventContext, value: Any,
                             name: SideField):
-    player = battle.find_player(ctx.source)
+    player = battle.find_player(ctx.target)
     side = battle.side[player]
     if side.reduce_count(name):
         field = side.fields[name]
@@ -26,5 +26,5 @@ def reduce_side_field_count(battle: Battle, ctx: EventContext, value: Any,
 
 def リフレクター(battle: Battle, ctx: EventContext, value: Any):
     if ctx.move.category == "物理":
-        battle.add_turn_log(ctx.source, f"リフレクター x0.5")
+        battle.add_turn_log(ctx.target, f"リフレクター x0.5")
         return value // 2

@@ -6,12 +6,12 @@ if TYPE_CHECKING:
 
 
 def どく(battle: Battle, ctx: EventContext, value: Any):
-    if battle.modify_hp(ctx.source, r=-1/8):
-        battle.add_turn_log(ctx.source, "どくダメージ")
+    if battle.modify_hp(ctx.target, r=-1/8):
+        battle.add_turn_log(ctx.target, "どくダメージ")
 
 
 def もうどく(battle: Battle, ctx: EventContext, value: Any):
-    ctx.source.ailment.count += 1
-    r = max(-1, -ctx.source.ailment.count/16)
-    if battle.modify_hp(ctx.source, r=r):
-        battle.add_turn_log(ctx.source, "もうどくダメージ")
+    ctx.target.ailment.count += 1
+    r = max(-1, -ctx.target.ailment.count/16)
+    if battle.modify_hp(ctx.target, r=r):
+        battle.add_turn_log(ctx.target, "もうどくダメージ")

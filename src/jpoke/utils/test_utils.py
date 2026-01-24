@@ -37,7 +37,7 @@ def generate_battle(ally: list[Pokemon] | None = None,
             return battle
 
 
-def check_switch(battle, idx=1) -> bool:
+def check_switch(battle: Battle, idx: int) -> bool:
     """交代可能ならTrueを返す"""
     commands = battle.get_available_action_commands(battle.players[idx])
     return any(c.is_switch() for c in commands)

@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Self
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
-    from jpoke.model.pokemon import Pokemon
     from jpoke.core.player import Player
+    from jpoke.model.pokemon import Pokemon
 
 
 class BaseEffect:
@@ -16,11 +16,15 @@ class BaseEffect:
     def name(self) -> str:
         return self.data.name if self.active else ""
 
-    def register_handlers(self, events: EventManager, source: Pokemon | Player):
+    def register_handlers(self,
+                          events: EventManager,
+                          source: Pokemon | Player | None = None):
         for event, handler in self.data.handlers.items():
             events.on(event, handler, source)
 
-    def unregister_handlers(self, events: EventManager, source: Pokemon | Player):
+    def unregister_handlers(self,
+                            events: EventManager,
+                            source: Pokemon | Player | None = None):
         for event, handler in self.data.handlers.items():
             events.off(event, handler, source)
 

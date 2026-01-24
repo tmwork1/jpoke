@@ -5,8 +5,9 @@
             "name": "Python デバッガー: 現在のファイル",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/ability.py",
-            //"program": "${workspaceFolder}/tests/item.py",
+            //"program": "${workspaceFolder}/tests/run_tests.py", // 全体テスト
+            "program": "${workspaceFolder}/tests/ability.py", // ability.pyのデバッグ用
+            //"program": "${workspaceFolder}/tests/item.py", // item.pyのデバッグ用
             "console": "integratedTerminal"
         }
     ]

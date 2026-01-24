@@ -95,7 +95,7 @@ FIELDS: dict[str, FieldData] = {
     # Side fields
     "リフレクター": FieldData(
         handlers={
-            Event.ON_CALC_DAMAGE_MODIFIER: Handler(hdl.リフレクター, triggered_by="foe"),
+            Event.ON_CALC_DAMAGE_MODIFIER: Handler(hdl.リフレクター, side="foe"),
             Event.ON_TURN_END_5: Handler(
                 lambda b, c, v: hdl.reduce_side_field_count(b, c, v, "reflector"),
             ),

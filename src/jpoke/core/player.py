@@ -4,8 +4,6 @@ if TYPE_CHECKING:
     from jpoke.core.battle import Battle
     from jpoke.model.pokemon import Pokemon
 
-import random
-
 from jpoke.utils.enums import Command, Interrupt
 from jpoke.utils import fast_copy
 
@@ -44,19 +42,19 @@ class Player:
 
     def choose_selection_commands(self, battle: Battle) -> list[Command]:
         n = min(3, len(self.team))
-        return random.sample(battle.get_available_selection_commands(self), n)
+        return battle.get_available_selection_commands(self)[:n]
 
     def choose_action_command(self, battle: Battle) -> Command:
-        return random.choice(battle.get_available_action_commands(self))
+        return battle.get_available_action_commands(self)[0]
 
     def choose_switch_command(self, battle: Battle) -> Command:
-        return random.choice(battle.get_available_switch_commands(self))
+        return battle.get_available_switch_commands(self)[0]
 
     @property
-    def active(self) -> Pokemon:
+    def active(self) -> Pokemon | None:
         if self.active_idx is not None:
             return self.team[self.active_idx]
-        return None  # type: ignore
+        return None
 
     @property
     def selection(self) -> list[Pokemon]:

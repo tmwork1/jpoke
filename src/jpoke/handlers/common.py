@@ -2,68 +2,72 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
+    from jpoke.model import Pokemon
 
 from jpoke.utils.types import Side, Stat, AilmentName, Weather, Terrain, SideField
 from jpoke.utils.enums import Event
 
 
-def reveal(battle: Battle, ctx: EventContext,
-           what: Literal["ability", "item", "move"], whose: Side) -> bool:
-    mon = ctx.source if whose == "self" else battle.foe(ctx.source)
-    match what:
-        case "ability":
-            target = mon.ability
-        case "item":
-            target = mon.item
-        case "move":
-            target = ctx.move
-    target.revealed = True
-    battle.add_turn_log(ctx.source, target.name)
-    return True
-
-
-def modify_hp(battle: Battle, ctx: EventContext,
-              target: Side,
+def modify_hp(battle: Battle,
               v: int = 0,
               r: float = 0,
-              prob: float = 1,
-              ) -> bool:
-    """HPが変化したらTrueを返す"""
+              ctx: EventContext | None = None,
+              target: Pokemon | None = None,
+              source: Pokemon | None = None,
+              prob: float = 1) -> bool:
     if prob < 1 and battle.random.random() >= prob:
         return False
-    mon = ctx.source if target == "self" else battle.foe(ctx.source)
-    return battle.modify_hp(mon, v, r)
+    if not target:
+        target = ctx.target
+    if not source:
+        source = ctx.source
+    return battle.modify_hp(target, v, r)
 
 
-def modify_stat(battle: Battle, ctx: EventContext,
-                stat: Stat, v: int, prob: float = 1) -> bool:
-    """能力ランクが変化したらTrueを返す"""
+def modify_stat(battle: Battle,
+                stat: Stat,
+                v: int,
+                ctx: EventContext | None = None,
+                target: Pokemon | None = None,
+                source: Pokemon | None = None,
+                prob: float = 1) -> bool:
     if prob < 1 and battle.random.random() >= prob:
         return False
-    return battle.modify_stat(ctx.source, ctx.target, stat, v)
+    if not target:
+        target = ctx.target
+    if not source:
+        source = ctx.source
+    return battle.modify_stat(target, stat, v, source=source)
 
 
-def apply_ailment(battle: Battle, ctx: EventContext,
-                  target: Side, ailment: AilmentName, prob: float = 1) -> bool:
+def apply_ailment(battle: Battle,
+                  target: Pokemon,
+                  ailment: AilmentName,
+                  prob: float = 1) -> bool:
     if prob < 1 and battle.random.random() >= prob:
         return False
-    mon = ctx.source if target == "self" else battle.foe(ctx.source)
     if ailment:
-        return mon.ailment.overwrite(battle, ailment)
+        return target.ailment.overwrite(battle, ailment)
     else:
-        return mon.ailment.cure(battle)
+        return target.ailment.cure(battle)
 
 
-def apply_weather(battle: Battle, ctx: EventContext, name: Weather, count: int = 5):
-    ctx.field = name
+def apply_weather(battle: Battle, ctx: EventContext, weather: Weather, count: int = 5):
+    ctx.field = weather
     count = battle.events.emit(Event.ON_CHECK_DURATION, ctx, count)
-    return battle.field.activate_weather(name, count)
+    if battle.field.activate_weather(weather, count):
+        battle.add_turn_log(None, weather)
+        return True
+    return False
 
 
-def apply_terrain(battle: Battle, ctx: EventContext, name: Terrain, count: int = 5):
-    ctx.field = name
+def apply_terrain(battle: Battle, ctx: EventContext, terrain: Terrain, count: int = 5):
+    ctx.field = terrain
     count = battle.events.emit(Event.ON_CHECK_DURATION, ctx, count)
-    return battle.field.activate_terrain(name, count)
+    if battle.field.activate_terrain(terrain, count):
+        battle.add_turn_log(None, terrain)
+        return True
+    return False
 
 
 def apply_side(battle: Battle,
@@ -71,7 +75,7 @@ def apply_side(battle: Battle,
                target: Side,
                name: SideField,
                count: int) -> bool:
-    mon = ctx.source if target == "self" else battle.foe(ctx.source)
+    mon = ctx.target if target == "self" else battle.foe(ctx.target)
     player = battle.find_player(mon)
     side = battle.side[player]
     ctx.field = name

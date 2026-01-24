@@ -4,62 +4,59 @@ from jpoke.utils import test_utils
 
 def test():
     # ニュートラル
-    assert test_utils.check_switch(
-        test_utils.generate_battle(
-            foe=[Pokemon("ピカチュウ") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
+    assert test_utils.check_switch(battle, 1)
+
     # ありじごく
-    assert not test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="ありじごく")],
-            foe=[Pokemon("ピカチュウ") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="ありじごく")],
+        foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
+    assert not test_utils.check_switch(battle, 1)
+
     # ありじごく: 飛行タイプに無効
-    assert test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="ありじごく")],
-            foe=[Pokemon("リザードン") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="ありじごく")],
+        foe=[Pokemon("リザードン") for _ in range(2)]
     )
+    assert test_utils.check_switch(battle, 1)
+
     # ありじごく: ゴーストタイプには無効
-    assert test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="ありじごく")],
-            foe=[Pokemon("ゲンガー") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="ありじごく")],
+        foe=[Pokemon("ゲンガー") for _ in range(2)]
     )
+    assert test_utils.check_switch(battle, 1)
 
     # かげふみ
-    assert not test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="かげふみ")],
-            foe=[Pokemon("ピカチュウ") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="かげふみ")],
+        foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
+    assert not test_utils.check_switch(battle, 1)
+
     # かげふみ: かげふみ相手には無効
-    assert test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="かげふみ")],
-            foe=[Pokemon("ピカチュウ", ability="かげふみ") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="かげふみ")],
+        foe=[Pokemon("ピカチュウ", ability="かげふみ") for _ in range(2)]
     )
+    assert test_utils.check_switch(battle, 1)
 
     # じりょく
-    assert not test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="じりょく")],
-            foe=[Pokemon("ハッサム") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="じりょく")],
+        foe=[Pokemon("ハッサム") for _ in range(2)]
     )
+    assert not test_utils.check_switch(battle, 1)
+
     # じりょく: はがねタイプ以外には無効
-    assert test_utils.check_switch(
-        test_utils.generate_battle(
-            ally=[Pokemon("ピカチュウ", ability="じりょく")],
-            foe=[Pokemon("ピカチュウ") for _ in range(2)]
-        )
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="じりょく")],
+        foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
+    assert test_utils.check_switch(battle, 1)
 
     # いかく
     battle = test_utils.generate_battle(
@@ -72,17 +69,16 @@ def test():
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かちき")]
     )
-    battle.modify_stat(battle.actives[0], "S", -1, by="foe")
+    battle.modify_stat(battle.actives[0], "S", -1, source=battle.actives[1])
     assert battle.actives[0].ability.revealed
     assert battle.actives[0].rank["C"] == 2
 
-    # かちき: 相手による能力ダウンでなければ発動しない
+    # かちき: 自分による能力ダウンでは発動しない
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かちき")]
     )
-    battle.modify_stat(battle.actives[0], "A", -1, by="self")
+    battle.modify_stat(battle.actives[0], "A", -1, source=battle.actives[0])
     assert not battle.actives[0].ability.revealed
-    assert battle.actives[0].rank["C"] == 0
 
     # かちき: 相手のいかくにより発動
     battle = test_utils.generate_battle(
@@ -112,6 +108,7 @@ def test():
     )
     assert battle.actives[0].ability.revealed
     assert battle.field.fields["terrain"] == "グラスフィールド"
+    assert battle.field.fields["terrain"].count == 5
 
 
 if __name__ == "__main__":

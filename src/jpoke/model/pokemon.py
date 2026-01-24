@@ -129,13 +129,19 @@ class Pokemon:
 
     def switch_in(self, events: EventManager):
         self.observed = True
+        self._register_handlers(events)
+
+    def switch_out(self, events: EventManager):
+        self.bench_reset()
+        self._register_handlers(events)
+
+    def _register_handlers(self, events: EventManager):
         if self.ability.active:
             self.ability.register_handlers(events, self)
         if self.item.active:
             self.item.register_handlers(events, self)
 
-    def switch_out(self, events: EventManager):
-        self.bench_reset()
+    def unregister_handlers(self, events: EventManager):
         self.ability.unregister_handlers(events, self)
         self.item.unregister_handlers(events, self)
 
@@ -344,20 +350,39 @@ class Pokemon:
 
     def floating(self, events: EventManager) -> bool:
         floating = "ひこう" in self.types
-        floating &= events.emit(Event.ON_CHECK_FLOATING, EventContext(self), floating)
+        floating &= events.emit(
+            Event.ON_CHECK_FLOATING,
+            EventContext(source=self),
+            floating
+        )
         return floating
 
     def trapped(self, events: EventManager) -> bool:
-        trapped = events.emit(Event.ON_CHECK_TRAPPED, EventContext(self), False)
-        trapped &= "ゴースト" not in self.types  # type: ignore
+        trapped = events.emit(
+            Event.ON_CHECK_TRAPPED,
+            EventContext(source=self, target=self),
+            False
+        )
+        trapped &= "ゴースト" not in self.types
         return trapped
 
     def nervous(self, events: EventManager) -> bool:
-        return events.emit(Event.ON_CHECK_NERVOUS, EventContext(self), False)
+        return events.emit(
+            Event.ON_CHECK_NERVOUS,
+            EventContext(source=self),
+            False
+        )
 
     def effective_move_type(self, move: Move, events: EventManager) -> str:
-        events.emit(Event.ON_CHECK_MOVE_TYPE, EventContext(self, move))
+        events.emit(
+            Event.ON_CHECK_MOVE_TYPE,
+            EventContext(source=self, move=move)
+        )
         return move._type
 
     def effective_move_category(self, move: Move, events: EventManager) -> MoveCategory:
-        return events.emit(Event.ON_CHECK_MOVE_CATEGORY, EventContext(self, move), value=move.category)
+        return events.emit(
+            Event.ON_CHECK_MOVE_CATEGORY,
+            EventContext(source=self, move=move),
+            value=move.category
+        )

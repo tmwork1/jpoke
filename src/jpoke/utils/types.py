@@ -1,5 +1,7 @@
 from typing import Literal, get_args
 
+ContextRole = Literal["source", "target", "attacker", "defender", "move", "field", "side"]
+
 Side = Literal["self", "foe", "all"]
 
 Stat = Literal["H", "A", "B", "C", "D", "S", "ACC", "EVA"]

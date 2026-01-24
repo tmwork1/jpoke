@@ -30,7 +30,7 @@ class DamageContext:
     is_lethal_calc: bool = False
     _flags: list[DamageFlag] = field(default_factory=list)
 
-    def add_flag(flag: DamageFlag):
+    def add_flag(self, flag: DamageFlag):
         self._flags.append(flag)
 
 
@@ -91,9 +91,9 @@ class DamageCalculator:
             dmg_ctx.add_flag(DamageFlag.CRITICAL)
 
         # その他の補正
-        r_atk_type = events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, EventContext(attacker, move), 4096)
-        r_def_type = events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, EventContext(defender, move), 1)
-        r_dmg = events.emit(Event.ON_CALC_DAMAGE_MODIFIER, EventContext(attacker, move), 1)
+        r_atk_type = events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, EventContext(attacker=attacker, defender=defender, move=move), 4096)
+        r_def_type = events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, EventContext(attacker=attacker, defender=defender, move=move), 1)
+        r_dmg = events.emit(Event.ON_CALC_DAMAGE_MODIFIER, EventContext(attacker=attacker, defender=defender, move=move), 1)
 
         dmgs = [0]*16
         for i in range(16):
@@ -126,8 +126,11 @@ class DamageCalculator:
         final_pow = move.data.power * dmg_ctx.power_multiplier
 
         # その他の補正
-        r_pow = events.emit(Event.ON_CALC_POWER_MODIFIER,
-                            EventContext(attacker, move), 4096)
+        r_pow = events.emit(
+            Event.ON_CALC_POWER_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
         final_pow = round_half_down(final_pow * r_pow/4096)
         final_pow = max(1, final_pow)
 
@@ -160,7 +163,10 @@ class DamageCalculator:
 
         # ランク補正の修正
         def_ability: Ability = events.emit(
-            Event.ON_CHECK_DEF_ABILITY, EventContext(defender, move), defender.ability)
+            Event.ON_CHECK_DEF_ABILITY,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            defender.ability
+        )
 
         if def_ability == 'てんねん' and r_rank != 1:
             r_rank = 1
@@ -174,8 +180,11 @@ class DamageCalculator:
         final_atk = int(final_atk * r_rank)
 
         # その他の補正
-        r_atk = events.emit(Event.ON_CALC_ATK_MODIFIER,
-                            EventContext(attacker, move), 4096)
+        r_atk = events.emit(
+            Event.ON_CALC_ATK_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
         final_atk = round_half_down(final_atk * r_atk/4096)
         final_atk = max(1, final_atk)
 
@@ -218,8 +227,11 @@ class DamageCalculator:
         final_def = int(final_def * r_rank)
 
         # その他の補正
-        r_def = events.emit(Event.ON_CALC_DEF_MODIFIER,
-                            EventContext(defender, move), 4096)
+        r_def = events.emit(
+            Event.ON_CALC_DEF_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
         final_def = round_half_down(final_def * r_def/4096)
         final_def = max(1, final_def)
 
