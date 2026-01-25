@@ -1,6 +1,6 @@
 from jpoke.core.event import Event, Handler
 from .models import AbilityData
-from jpoke.handlers import common, ability as hdl
+from jpoke.handlers import common, ability as h
 
 
 ABILITIES: dict[str, AbilityData] = {
@@ -20,16 +20,15 @@ ABILITIES: dict[str, AbilityData] = {
     "ありじごく": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: Handler(
-                lambda btl, ctx, v: not ctx.source.floating(btl.events),
-                side="foe"
+                lambda btl, ctx, v: not ctx.target.floating(btl.events),
+                side="foe",
             )
         }
     ),
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: hdl.reveal_ability(btl, ctx.source) and common.modify_stat(btl, "A", -1, ctx=ctx),
-                side="foe"
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.target) and common.modify_stat(btl, btl.foe(ctx.target), "A", -1),
             )
         },
     ),
@@ -75,10 +74,12 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     },
     "かげふみ": AbilityData(
-        handlers={Event.ON_CHECK_TRAPPED: Handler(
-            lambda btl, ctx, v: ctx.source.ability != "かげふみ",
-            side="foe"
-        )}
+        handlers={
+            Event.ON_CHECK_TRAPPED: Handler(
+                lambda btl, ctx, v: ctx.target.ability != "かげふみ",
+                side="foe",
+            )
+        }
     ),
     "かぜのり": {},
     "かそく": {},
@@ -86,7 +87,9 @@ ABILITIES: dict[str, AbilityData] = {
     "かたやぶり": {},
     "かちき": AbilityData(
         flags=["undeniable"],
-        handlers={Event.ON_MODIFY_STAT: Handler(hdl.かちき)}
+        handlers={
+            Event.ON_MODIFY_STAT: Handler(h.かちき, role="target")
+        }
     ),
     "かるわざ": {},
     "かわりもの": {
@@ -120,12 +123,9 @@ ABILITIES: dict[str, AbilityData] = {
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: hdl.reveal_ability(btl, ctx.source)
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.target)
             ),
-            Event.ON_CHECK_NERVOUS: Handler(
-                lambda btl, ctx, v: btl.foe(ctx.source).ability == "きんちょうかん",
-                side="foe"
-            ),
+            Event.ON_CHECK_NERVOUS: Handler(lambda btl, ctx, v: True, side="foe"),
         }
     ),
     "ぎたい": {
@@ -216,7 +216,7 @@ ABILITIES: dict[str, AbilityData] = {
     "じょおうのいげん": {},
     "じりょく": AbilityData(
         handlers={Event.ON_CHECK_TRAPPED: Handler(
-            lambda btl, ctx, v: "はがね" in ctx.source.types,
+            lambda btl, ctx, v: "はがね" in ctx.target.types,
             side="foe"
         )}
     ),
@@ -256,7 +256,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: hdl.reveal_ability(btl, ctx.source) and common.apply_ailment(btl, ctx.source, "ねむり")
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.target) and common.apply_ailment(btl, ctx.target, "ねむり")
             )
         }
     ),
@@ -533,7 +533,7 @@ ABILITIES: dict[str, AbilityData] = {
     "クリアボディ": {},
     "グラスメイカー": AbilityData(
         handlers={Event.ON_SWITCH_IN: Handler(
-            lambda btl, ctx, v: common.apply_terrain(btl, ctx, "グラスフィールド") and hdl.reveal_ability(btl, ctx.source))}
+            lambda btl, ctx, v: common.apply_terrain(btl, ctx, "グラスフィールド") and h.reveal_ability(btl, ctx.target))}
     ),
     "サイコメイカー": {},
     "サンパワー": {},

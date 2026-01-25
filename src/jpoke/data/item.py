@@ -33,7 +33,7 @@ ITEMS: dict[str, ItemData] = {
     "いのちのたま": ItemData(
         throw_power=30,
         consumable=False,
-        handlers={Event.ON_HIT: Handler(hdl.いのちのたま)},
+        handlers={Event.ON_HIT: Handler(hdl.いのちのたま, role="attacker")},
     ),
     "エレキシード": {
         "consumable": True,
@@ -95,7 +95,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=False,
         throw_power=10,
         handlers={Event.ON_CHECK_TRAPPED: Handler(
-            lambda b, c, v: (False, HandlerResult.STOP_EVENT), -100)}
+            lambda btl, ctx, v: (False, HandlerResult.STOP_EVENT), priority=-100)}
     ),
     "ぎんのこな": {
         "consumable": False,
@@ -233,7 +233,7 @@ ITEMS: dict[str, ItemData] = {
     "だっしゅつボタン": ItemData(
         consumable=True,
         throw_power=30,
-        handlers={Event.ON_DAMAGE: Handler(hdl.だっしゅつボタン, side="foe")}
+        handlers={Event.ON_DAMAGE: Handler(hdl.だっしゅつボタン, role="defender")}
     ),
     "たつじんのおび": {
         "consumable": False,
@@ -242,7 +242,7 @@ ITEMS: dict[str, ItemData] = {
     "たべのこし": ItemData(
         throw_power=10,
         handlers={Event.ON_TURN_END_2: Handler(
-            lambda b, c, v: common.modify_hp(b, c, "self", r=1/16) and hdl.reveal_item(b, c, v))}
+            lambda btl, ctx, v: common.modify_hp(btl, ctx.target, r=1/16) and hdl.reveal_item(btl, ctx.target))}
     ),
     "ちからのハチマキ": {
         "consumable": False,

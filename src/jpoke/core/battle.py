@@ -209,7 +209,7 @@ class Battle:
         return []
 
     def calc_effective_speed(self, mon: Pokemon) -> int:
-        return self.events.emit(Event.ON_CALC_SPEED, EventContext(source=mon), mon.stats["S"])
+        return self.events.emit(Event.ON_CALC_SPEED, EventContext(target=mon), mon.stats["S"])
 
     def calc_speed_order(self) -> list[Pokemon]:
         speeds = [self.calc_effective_speed(p) for p in self.actives]
@@ -233,9 +233,11 @@ class Battle:
 
             command = player.reserved_commands[-1]
             move = self.command_to_move(self.players[i], command)
-            ctx = EventContext(source=mon, move=move)
-            action_speed = self.events.emit(Event.ON_CALC_ACTION_SPEED, ctx, 0)
-
+            action_speed = self.events.emit(
+                Event.ON_CALC_ACTION_SPEED,
+                EventContext(target=mon, move=move),
+                0
+            )
             total_speed = action_speed + speed*1e-5  # type: ignore
             speeds.append(total_speed)
             actives.append(mon)
@@ -291,10 +293,10 @@ class Battle:
         return 100*self.random.random() < accuracy  # type: ignore
 
     def run_move(self, attacker: Pokemon, move: Move):
+        ctx = EventContext(attacker=attacker, defender=self.foe(attacker), move=move)
+
         # 技のハンドラを登録
         move.register_handlers(self.events, attacker)
-
-        ctx = EventContext(attacker=attacker, move=move)
 
         # 行動成功判定
         self.events.emit(Event.ON_TRY_ACTION, ctx)
@@ -326,21 +328,18 @@ class Battle:
         # ダメージ修正
         damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 
-        defender = self.foe(attacker)
-
+        # ダメージの適用
         if damage:
-            # ダメージ付与
-            self.modify_hp(defender, -damage)
+            self.modify_hp(ctx.defender, -damage)
 
-        self.events.emit(
-            Event.ON_HIT,
-            EventContext(attacker=attacker, move=move)
-        )
+        # 技を当てたときの処理
+        self.events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えたときの処理
         if damage:
             self.events.emit(Event.ON_DAMAGE, ctx)
 
+        # 技のハンドラを解除
         move.unregister_handlers(self.events, attacker)
 
     def command_to_move(self, player: Player, command: Command) -> Move:
@@ -367,9 +366,10 @@ class Battle:
         if v and (v := target.modify_stat(stat, v)):
             self.add_turn_log(self.find_player(target),
                               f"{stat}{'+' if v >= 0 else ''}{v}")
+            print(f"{target.name} {stat} {v} {source.name if source else ''}")
             self.events.emit(
                 Event.ON_MODIFY_STAT,
-                EventContext(source=source, target=target),
+                EventContext(target=target, source=source),
                 v
             )
             return True
@@ -414,7 +414,7 @@ class Battle:
         # 退場
         old = player.active
         if old is not None:
-            self.events.emit(Event.ON_SWITCH_OUT, EventContext(source=old))
+            self.events.emit(Event.ON_SWITCH_OUT, EventContext(target=old))
             old.switch_out(self.events)
             self.add_turn_log(player, f"{old.name} {'交代' if old.hp else '瀕死'}")
 
@@ -425,7 +425,7 @@ class Battle:
 
         # ポケモンが場に出た時の処理
         if emit:
-            self.events.emit(Event.ON_SWITCH_IN, EventContext(source=new))
+            self.events.emit(Event.ON_SWITCH_IN, EventContext(target=new))
 
             # リクエストがなくなるまで再帰的に交代する
             while self.has_interrupt():
@@ -476,7 +476,7 @@ class Battle:
             for mon in self.calc_speed_order():
                 player = self.find_player(mon)
                 if player in switched_players:
-                    self.events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+                    self.events.emit(Event.ON_SWITCH_IN, EventContext(target=mon))
 
     def run_faint_switch(self):
         '''
@@ -637,7 +637,7 @@ class Battle:
                 # 交代技の後の処理
                 self.events.emit(
                     Event.ON_AFTER_PIVOT,
-                    EventContext(source=player.active)
+                    EventContext(target=player.active)
                 )
 
                 # だっしゅつパックによる割り込みフラグを更新

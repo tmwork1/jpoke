@@ -16,18 +16,21 @@ from .player import Player
 
 @dataclass
 class EventContext:
-    target: Pokemon | None = None,
-    source: Pokemon | None = None,
-    attacker: Pokemon | None = None,
-    defender: Pokemon | None = None,
-    move: Move | None = None,
-    field: GlobalField | SideField | Weather | Terrain = ""
+    target: Pokemon | None = None
+    source: Pokemon | None = None
+    attacker: Pokemon | None = None
+    defender: Pokemon | None = None
+    move: Move | None = None
+    global_field: GlobalField | None = None
+    side_field: SideField | None = None
+    weather: Weather = ""
+    terrain: Terrain = ""
 
 
-@dataclass(frozen=True)
+@dataclass
 class Handler:
     func: Callable
-    role: ContextRole = "source"
+    role: ContextRole = "target"
     side: Side = "self"
     priority: int = 0
     once: bool = False
@@ -36,16 +39,13 @@ class Handler:
         return self.priority > other.priority
 
 
-@dataclass(frozen=True)
+@dataclass
 class RegisteredHandler:
     handler: Handler
-    source: Pokemon | Player | None
+    target: Pokemon | Player | None
 
     def resolve_source(self) -> Pokemon | None:
-        if isinstance(self.source, Player):
-            return self.source.active
-        else:
-            return self.source
+        return self.target.active if isinstance(self.target, Player) else self.target
 
 
 class EventManager:
@@ -86,21 +86,21 @@ class EventManager:
     def on(self,
            event: Event,
            handler: Handler,
-           source: Pokemon | Player | None = None):
+           target: Pokemon | Player | None = None):
         """ハンドラを登録"""
         self.handlers.setdefault(event, []).append(
-            RegisteredHandler(handler, source))
+            RegisteredHandler(handler, target))
 
     def off(self,
             event: Event,
             handler: Handler,
-            source: Pokemon | Player | None = None):
+            target: Pokemon | Player | None = None):
         """ハンドラを解除"""
         if event not in self.handlers:
             return
         self.handlers[event] = [
             rh for rh in self.handlers[event]
-            if not (rh.handler == handler and rh.source == source)
+            if not (rh.handler == handler and rh.target == target)
         ]
 
     def emit(self,
@@ -108,78 +108,64 @@ class EventManager:
              ctx: EventContext | None = None,
              value: Any = None) -> Any:
         """イベントを発火"""
-        print(f"Event emitted: {event}, handlers={self.handlers.get(event, [])}")
-        for rh in sorted(self.handlers.get(event, []), key=lambda x: x.handler):
-            handler = rh.handler
+        for rh in self._sort_handlers(self.handlers.get(event, [])):
+            context = ctx if ctx else self._build_context(rh)
 
-            if ctx:
-                if not self._match(ctx, rh):
-                    continue
-                ctxs = [ctx]
+            if not self._match(context, rh):
+                print(f"  Handler skipped: {rh}")
+                continue
+
+            res = rh.handler.func(self.battle, context, value)
+            # ハンドラの戻り値の処理
+            if isinstance(res, HandlerResult):
+                flag = res
+            elif isinstance(res, tuple):
+                value, flag = res
             else:
-                ctxs = self._build_contexts(rh)
+                value, flag = res, None
 
-            for c in ctxs:
-                res = handler.func(self.battle, c, value)
+            # 一度きりのハンドラを解除
+            if rh.handler.once:
+                self.off(event, rh.handler, rh.target)
 
-                if handler.once:
-                    self.off(event, handler, rh.source)
-
-                if isinstance(res, HandlerResult):
-                    flag = res
-                elif isinstance(res, tuple):
-                    value, flag = res
-                else:
-                    value, flag = res, None
-
-                # 制御フラグの処理
-                match flag:
-                    case HandlerResult.STOP_HANDLER:
-                        break
-                    case HandlerResult.STOP_EVENT:
-                        return value
+            # 制御フラグの処理
+            match flag:
+                case HandlerResult.STOP_HANDLER:
+                    break
+                case HandlerResult.STOP_EVENT:
+                    return value
 
         return value
 
+    def _sort_handlers(self, rhs: list[RegisteredHandler]) -> list[RegisteredHandler]:
+        if len(rhs) <= 1:
+            return rhs
+
+        speed_order = self.battle.calc_speed_order()
+        speed_idx = {p: i for i, p in enumerate(speed_order)}
+
+        def key(rh: RegisteredHandler):
+            src = rh.resolve_source()
+            s_idx = speed_idx.get(src, float("inf"))
+            return (rh.handler.priority, s_idx)
+
+        return sorted(rhs, key=key)
+
+    def _build_context(self, rh: RegisteredHandler) -> EventContext:
+        """ハンドラに対応するコンテキストを構築"""
+        mon = rh.resolve_source() if rh.handler.side == "self" else self.battle.foe(rh.resolve_source())
+        return EventContext(**{rh.handler.role: mon})
+
     def _match(self, ctx: EventContext, rh: RegisteredHandler) -> bool:
+        """コンテキストがハンドラにマッチするか判定"""
+        # コンテキストの対象の判定
+        ctx_mon = getattr(ctx, rh.handler.role)
+        if ctx_mon is None:
+            return False
+
+        # ハンドラの対象の判定
         match rh.handler.side:
             case "self":
-                return ctx.target == rh.resolve_source()
+                return ctx_mon == rh.resolve_source()
             case "foe":
-                return ctx.target == self.battle.foe(rh.resolve_source())
-            case "all":
-                return False
-
-    def _build_contexts(self, rh: RegisteredHandler) -> list[EventContext]:
-        """
-        RegisteredHandler から EventContext のリストを構築する
-        """
-        sources = self._expand(rh.source)
-        target_sides = self._expand(rh.handler.side)
-
-        if not sources:
-            return []
-
-        # 素早さ順に source を並べる
-        if len(sources) > 1:
-            order = self.battle.calc_speed_order()
-            sources = [p for p in order if p in sources]
-
-        # ターゲットを決定する
-        ctxs = [
-            EventContext(
-                source=s,
-                target=s if ts == "self" else self.battle.foe(s)
-            )
-            for s in sources
-            for ts in target_sides
-        ]
-
-        return ctxs
-
-    def _expand(self, obj) -> list[Pokemon]:
-        if obj is None:
-            return []
-        if isinstance(obj, Player):
-            return [obj.active]
-        return [obj]
+                return ctx_mon == self.battle.foe(rh.resolve_source())

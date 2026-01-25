@@ -3,69 +3,69 @@ from jpoke.utils import test_utils
 
 
 def test():
-    # ニュートラル
+    print("--- ニュートラル ---")
     battle = test_utils.generate_battle(
         foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
     assert test_utils.check_switch(battle, 1)
 
-    # ありじごく
+    print("--- ありじごく ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="ありじごく")],
         foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
     assert not test_utils.check_switch(battle, 1)
 
-    # ありじごく: 飛行タイプに無効
+    print("--- ありじごく: 飛行タイプに無効 ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="ありじごく")],
         foe=[Pokemon("リザードン") for _ in range(2)]
     )
     assert test_utils.check_switch(battle, 1)
 
-    # ありじごく: ゴーストタイプには無効
+    print("--- ありじごく: ゴーストタイプには無効 ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="ありじごく")],
         foe=[Pokemon("ゲンガー") for _ in range(2)]
     )
     assert test_utils.check_switch(battle, 1)
 
-    # かげふみ
+    print("--- かげふみ ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かげふみ")],
         foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
     assert not test_utils.check_switch(battle, 1)
 
-    # かげふみ: かげふみ相手には無効
+    print("--- かげふみ: かげふみ相手には無効 ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かげふみ")],
         foe=[Pokemon("ピカチュウ", ability="かげふみ") for _ in range(2)]
     )
     assert test_utils.check_switch(battle, 1)
 
-    # じりょく
+    print("--- じりょく ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="じりょく")],
         foe=[Pokemon("ハッサム") for _ in range(2)]
     )
     assert not test_utils.check_switch(battle, 1)
 
-    # じりょく: はがねタイプ以外には無効
+    print("--- じりょく: はがねタイプ以外には無効 ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="じりょく")],
         foe=[Pokemon("ピカチュウ") for _ in range(2)]
     )
     assert test_utils.check_switch(battle, 1)
 
-    # いかく
+    print("--- いかく ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="いかく")]
     )
     assert battle.actives[0].ability.revealed
     assert battle.actives[1].rank["A"] == -1
 
-    # かちき
+    print("--- かちき ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かちき")]
     )
@@ -73,21 +73,21 @@ def test():
     assert battle.actives[0].ability.revealed
     assert battle.actives[0].rank["C"] == 2
 
-    # かちき: 自分による能力ダウンでは発動しない
+    print("--- かちき: 自分による能力ダウンでは発動しない ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かちき")]
     )
     battle.modify_stat(battle.actives[0], "A", -1, source=battle.actives[0])
     assert not battle.actives[0].ability.revealed
 
-    # かちき: 相手のいかくにより発動
+    print("--- かちき: 相手のいかくにより発動 ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="かちき")],
         foe=[Pokemon("ピカチュウ", ability="いかく")]
     )
     assert battle.actives[0].ability.revealed
 
-    # きんちょうかん
+    print("--- きんちょうかん ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="きんちょうかん")]
     )
@@ -95,14 +95,14 @@ def test():
     assert battle.actives[1].nervous(battle.events)
     assert not battle.actives[0].nervous(battle.events)
 
-    # ぜったいねむり
+    print("--- ぜったいねむり ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="ぜったいねむり")]
     )
     assert battle.actives[0].ability.revealed
     assert battle.actives[0].ailment == "ねむり"
 
-    # グラスメイカー
+    print("--- グラスメイカー ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="グラスメイカー")]
     )

@@ -11,7 +11,7 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="あついいわ",
         handlers={
             Event.ON_TURN_END_1: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "weather"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
             ),
         },
     ),
@@ -19,7 +19,7 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="しめったいわ",
         handlers={
             Event.ON_TURN_END_1: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "weather"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
             ),
         },
     ),
@@ -27,10 +27,10 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="さらさらいわ",
         handlers={
             Event.ON_TURN_END_1: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "weather"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
             ),
             Event.ON_TURN_END_2: Handler(
-                lambda b, c, v: common.modify_hp(b, c, "self", r=-1/16),
+                lambda btl, ctx, v: common.modify_hp(btl, ctx.target, r=-1/16),
             )
         },
     ),
@@ -38,7 +38,7 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="つめたいいわ",
         handlers={
             Event.ON_TURN_END_1: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "weather"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
             ),
         },
     ),
@@ -46,7 +46,7 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "terrain"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
@@ -54,10 +54,10 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_3: Handler(
-                lambda b, c, v: common.modify_hp(b, c, "self", r=1/16)
+                lambda btl, ctx, v: common.modify_hp(btl, ctx.target, r=1/16)
             ),
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "terrain"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
@@ -65,7 +65,7 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "terrain"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
@@ -73,21 +73,21 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "terrain"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
     "じゅうりょく": FieldData(
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "gravity"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "gravity"),
             ),
         },
     ),
     "トリックルーム": FieldData(
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_global_field_count(b, c, v, "trickroom"),
+                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "trickroom"),
             ),
         },
     ),
@@ -97,7 +97,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: Handler(hdl.リフレクター, side="foe"),
             Event.ON_TURN_END_5: Handler(
-                lambda b, c, v: hdl.reduce_side_field_count(b, c, v, "reflector"),
+                lambda btl, ctx, v: hdl.reduce_side_field_count(btl, ctx, v, "reflector"),
             ),
         },
     ),
