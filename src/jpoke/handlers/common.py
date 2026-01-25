@@ -43,36 +43,6 @@ def apply_ailment(battle: Battle,
         return target.ailment.cure(battle)
 
 
-def apply_weather(battle: Battle,
-                  target: Pokemon,
-                  weather: Weather,
-                  base_count: int = 5) -> bool:
-    count = battle.events.emit(
-        Event.ON_CHECK_DURATION,
-        EventContext(target=target, weather=weather),
-        base_count
-    )
-    if battle.field.activate_weather(weather, count):
-        battle.add_turn_log(None, weather)
-        return True
-    return False
-
-
-def apply_terrain(battle: Battle,
-                  target: Pokemon,
-                  terrain: Terrain,
-                  base_count: int = 5) -> bool:
-    count = battle.events.emit(
-        Event.ON_CHECK_DURATION,
-        EventContext(target=target, terrain=terrain),
-        base_count
-    )
-    if battle.field.activate_terrain(terrain, count):
-        battle.add_turn_log(None, terrain)
-        return True
-    return False
-
-
 def apply_side_field(battle: Battle,
                      target: Side,
                      field: SideField,

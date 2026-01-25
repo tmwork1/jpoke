@@ -27,7 +27,7 @@ class Player:
 
     def reset_game(self):
         self.selection_idxes: list[int] = []
-        self.active_idx: int = None  # type: ignore
+        self.active_idx: int | None = None
         self.interrupt: Interrupt = Interrupt.NONE
         self.reserved_commands: list[Command] = []
 
@@ -52,9 +52,9 @@ class Player:
 
     @property
     def active(self) -> Pokemon | None:
-        if self.active_idx is not None:
-            return self.team[self.active_idx]
-        return None
+        if self.active_idx is None:
+            return None
+        return self.team[self.active_idx]
 
     @property
     def selection(self) -> list[Pokemon]:

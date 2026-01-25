@@ -168,6 +168,11 @@ ITEMS: dict[str, ItemData] = {
     "さらさらいわ": ItemData(
         consumable=False,
         throw_power=10,
+        handlers={
+            Event.ON_CHECK_DURATION: Handler(
+                lambda btl, ctx, v: v + 3 if ctx.weather == "すなあらし" else v
+            )
+        }
     ),
     "じしゃく": {
         "consumable": False,

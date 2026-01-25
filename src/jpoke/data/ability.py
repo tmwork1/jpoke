@@ -231,7 +231,13 @@ ABILITIES: dict[str, AbilityData] = {
     "すじがねいり": {},
     "すてみ": {},
     "すなおこし": {},
-    "すなかき": {},
+    "すなかき": AbilityData(
+        handlers={
+            Event.ON_CALC_SPEED: Handler(
+                lambda btl, ctx, v: v * 2 if btl.weather == "すなあらし" else v
+            )
+        }
+    ),
     "すながくれ": {},
     "すなのちから": {},
     "すなはき": {

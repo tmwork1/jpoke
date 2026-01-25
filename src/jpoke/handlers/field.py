@@ -7,7 +7,9 @@ from jpoke.utils.types import GlobalField, SideField
 from jpoke.core.event import EventContext, HandlerResult
 
 
-def reduce_global_field_count(battle: Battle, ctx: EventContext, value: Any,
+def reduce_global_field_count(battle: Battle,
+                              ctx: EventContext,
+                              value: Any,
                               name: GlobalField):
     if battle.field.reduce_count(name):
         field = battle.field.fields[name]
@@ -15,7 +17,9 @@ def reduce_global_field_count(battle: Battle, ctx: EventContext, value: Any,
     return HandlerResult.STOP_HANDLER
 
 
-def reduce_side_field_count(battle: Battle, ctx: EventContext, value: Any,
+def reduce_side_field_count(battle: Battle,
+                            ctx: EventContext,
+                            value: Any,
                             name: SideField):
     player = battle.find_player(ctx.target)
     side = battle.side[player]
@@ -24,8 +28,18 @@ def reduce_side_field_count(battle: Battle, ctx: EventContext, value: Any,
         battle.add_turn_log(None, f"{field.name} 残り{field.count}ターン")
 
 
+def すなあらし_ダメージ(battle: Battle, ctx: EventContext, value: Any):
+    # ON_TURN_END ハンドラ
+    if not ctx.target or \
+            any(ctx.target.has_type(t) for t in ["いわ", "じめん", "はがね"]) or \
+            ctx.target.ability.name in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]:
+        return
+    if battle.modify_hp(ctx.target, r=-1/16):
+        battle.add_turn_log(ctx.target, f"すなあらし")
+
+
 def リフレクター(battle: Battle, ctx: EventContext, value: Any):
     # ON_CALC_DAMAGE_MODIFIER ハンドラ
     if ctx.move.category == "物理":
-        battle.add_turn_log(ctx.target, f"リフレクター x0.5")
+        battle.add_turn_log(ctx.attacker, f"リフレクター x0.5")
         return value // 2

@@ -7604,7 +7604,7 @@ MOVES: dict[str, MoveData] = {
         ],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.apply_weather(btl, ctx.attacker, "すなあらし")
+                lambda btl, ctx, v: btl.apply_weather("すなあらし", ctx.attacker)
             )
         }
     ),

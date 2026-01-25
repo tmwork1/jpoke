@@ -10,15 +10,15 @@ from .effect import BaseEffect
 
 
 class Field(BaseEffect):
-    def __init__(self, owners: list[Player], name: str = "", count: int = 0) -> None:
-        self.owners: list[Player] = owners
-        self.init(name, count)
-
-    def init(self, name: str, count: int):
+    def __init__(self,
+                 owners: list[Player],
+                 name: str = "",
+                 count: int = 0) -> None:
         super().__init__(FIELDS[name])
+        self.data: FieldData  # IDE hint
+        self.owners: list[Player] = owners
         self.count = count
         self.revealed = True
-        self.data: FieldData
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -37,31 +37,31 @@ class Field(BaseEffect):
     def turn_extention_item(self) -> str | None:
         return self.data.turn_extension_item
 
-    def activate(self, events: EventManager, count: int):
-        """フィールドを起動する"""
+    @property
+    def is_active(self) -> bool:
+        return self.count > 0
+
+    def can_activate(self) -> bool:
+        return not self.is_active
+
+    def activate(self, events: EventManager, count: int) -> bool:
+        if not self.can_activate():
+            return False
         self.count = count
         for player in self.owners:
             self.register_handlers(events, player)
+        return True
 
-    def deactivate(self, events: EventManager):
-        """フィールドを終了する"""
+    def deactivate(self, events: EventManager) -> bool:
         self.count = 0
         for player in self.owners:
             self.unregister_handlers(events, player)
+        return True
 
-    def reduce_count(self, events: EventManager, by: int = 1):
-        """フィールドのカウントを減らす"""
+    def tick(self, events: EventManager, by: int = 1) -> bool:
+        if not self.is_active:
+            return False
         self.count = max(0, self.count - by)
         if not self.count:
             self.deactivate(events)
-
-    def overwrite(self, events: EventManager, name: str, count: int):
-        """フィールドを強制的に書き変える"""
-        # 現在のハンドラを解除
-        for player in self.owners:
-            self.unregister_handlers(events, player)
-        # 初期化
-        self.init(name, count)
-        # 新しくハンドラを登録
-        for player in self.owners:
-            self.register_handlers(events, player)
+        return True

@@ -29,9 +29,7 @@ FIELDS: dict[str, FieldData] = {
             Event.ON_TURN_END_1: Handler(
                 lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
             ),
-            Event.ON_TURN_END_2: Handler(
-                lambda btl, ctx, v: common.modify_hp(btl, ctx.target, r=-1/16),
-            )
+            Event.ON_TURN_END_2: Handler(hdl.すなあらし_ダメージ)
         },
     ),
     "ゆき": FieldData(
@@ -95,7 +93,10 @@ FIELDS: dict[str, FieldData] = {
     # Side fields
     "リフレクター": FieldData(
         handlers={
-            Event.ON_CALC_DAMAGE_MODIFIER: Handler(hdl.リフレクター, side="foe"),
+            Event.ON_CALC_DAMAGE_MODIFIER: Handler(
+                hdl.リフレクター,
+                role="defender",
+            ),
             Event.ON_TURN_END_5: Handler(
                 lambda btl, ctx, v: hdl.reduce_side_field_count(btl, ctx, v, "reflector"),
             ),

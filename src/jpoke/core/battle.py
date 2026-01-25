@@ -6,7 +6,7 @@ from random import Random
 from copy import deepcopy
 import json
 
-from jpoke.utils.types import Stat, Side
+from jpoke.utils.types import Stat, Side, Weather, Terrain
 from jpoke.utils.enums import Command, Interrupt
 from jpoke.utils import fast_copy
 
@@ -218,7 +218,8 @@ class Battle:
             self.random.shuffle(actives)
         else:
             paired = sorted(zip(speeds, self.actives),
-                            key=lambda pair: pair[0], reverse=True)
+                            key=lambda pair: pair[0],
+                            reverse=True)
             _, actives = zip(*paired)
         return actives
 
@@ -238,14 +239,15 @@ class Battle:
                 EventContext(target=mon, move=move),
                 0
             )
-            total_speed = action_speed + speed*1e-5  # type: ignore
+            total_speed = action_speed + speed*1e-5
             speeds.append(total_speed)
             actives.append(mon)
 
         # Sort by speed
         if len(actives) > 1:
             paired = sorted(zip(speeds, actives),
-                            key=lambda pair: pair[0], reverse=True)
+                            key=lambda pair: pair[0],
+                            reverse=True)
             _, actives = zip(*paired)
 
         return actives
@@ -290,7 +292,7 @@ class Battle:
                 EventContext(attacker=attacker, move=move),
                 move.data.accuracy
             )
-        return 100*self.random.random() < accuracy  # type: ignore
+        return 100*self.random.random() < accuracy
 
     def run_move(self, attacker: Pokemon, move: Move):
         ctx = EventContext(attacker=attacker, defender=self.foe(attacker), move=move)
@@ -362,7 +364,7 @@ class Battle:
                     target: Pokemon,
                     stat: Stat,
                     v: int,
-                    source: Pokemon | None = None) -> bool:
+                    source: Pokemon = None) -> bool:
         if v and (v := target.modify_stat(stat, v)):
             self.add_turn_log(self.find_player(target),
                               f"{stat}{'+' if v >= 0 else ''}{v}")
@@ -379,22 +381,21 @@ class Battle:
                     attacker: Pokemon,
                     move: Move | str,
                     critical: bool = False,
-                    self_harm: bool = False,
-                    ) -> int:
-        damages, _ = self.calc_damages(attacker, move, critical, self_harm)
+                    self_harm: bool = False) -> int:
+        damages = self.calc_damages(attacker, move, critical, self_harm)
         return self.random.choice(damages)
 
     def calc_damages(self,
                      attacker: Pokemon,
                      move: Move | str,
                      critical: bool = False,
-                     self_harm: bool = False,
-                     ) -> list[int]:
+                     self_harm: bool = False) -> list[int]:
         if isinstance(move, str):
             move = Move(move)
         defender = attacker if self_harm else self.foe(attacker)
         ctx = DamageContext(critical, self_harm)
-        return self.damage_calculator.single_hit_damages(self.events, attacker, defender, move, ctx)
+        damages, ctx = self.damage_calculator.single_hit_damages(self.events, attacker, defender, move, ctx)
+        return damages
 
     def has_interrupt(self) -> bool:
         return any(pl.interrupt != Interrupt.NONE for pl in self.players)
@@ -546,6 +547,34 @@ class Battle:
         print(f"Turn {turn}")
         for player in self.players:
             print(f"\t{player.name}\t{turn_logs[player]} {damage_logs[player]}")
+
+    def apply_weather(self,
+                      weather: Weather,
+                      target: Pokemon | None = None,
+                      base_count: int = 5) -> bool:
+        count = self.events.emit(
+            Event.ON_CHECK_DURATION,
+            EventContext(target=target, weather=weather),
+            base_count
+        )
+        if self.field.activate_weather(weather, count):
+            self.add_turn_log(None, weather)
+            return True
+        return False
+
+    def apply_terrain(self,
+                      terrain: Terrain,
+                      target: Pokemon | None = None,
+                      base_count: int = 5) -> bool:
+        count = self.events.emit(
+            Event.ON_CHECK_DURATION,
+            EventContext(target=target, terrain=terrain),
+            base_count
+        )
+        if self.field.activate_terrain(terrain, count):
+            self.add_turn_log(None, terrain)
+            return True
+        return False
 
     def advance_turn(self,
                      commands: dict[Player, Command] | None = None,

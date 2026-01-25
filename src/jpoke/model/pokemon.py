@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
 
-from jpoke.utils.types import Stat, MoveCategory, Gender, BoostSource, get_stats
+from jpoke.utils.types import Type, Stat, MoveCategory, Gender, BoostSource, get_stats
 from jpoke.utils.constants import NATURE_MODIFIER
 from jpoke.utils import fast_copy
 
@@ -69,7 +69,7 @@ class Pokemon:
         self.hits_taken: int = 0
         self.boosted_stat: Stat | None = None
         self.boost_source: BoostSource = ""
-        self.rank: dict[Stat, int] = {k: 0 for k in get_stats()}  # type: ignore
+        self.rank: dict[Stat, int] = {k: 0 for k in get_stats()}
         self.added_types: list[str] = []
         self.lost_types: list[str] = []
         self.executed_move: Move | None = None
@@ -247,7 +247,7 @@ class Pokemon:
     @property
     def stats(self) -> dict[Stat, int]:
         labels = get_stats()[:6]
-        return {s: v for s, v in zip(labels, self._stats)}  # type: ignore
+        return {s: v for s, v in zip(labels, self._stats)}
 
     @stats.setter
     def stats(self, stats: dict[Stat, int]):
@@ -292,6 +292,9 @@ class Pokemon:
     def effort(self, effort: list[int]):
         self._effort = effort
         self.update_stats()
+
+    def has_type(self, type_: Type) -> bool:
+        return type_ in self.types
 
     def update_stats(self, keep_damage: bool = False):
         if keep_damage:

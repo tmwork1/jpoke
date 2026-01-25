@@ -26,7 +26,7 @@ def generate_battle(ally: list[Pokemon] | None = None,
         for mon in mons:
             player.team.append(mon)
 
-    battle = Battle(players)  # type: ignore
+    battle = Battle(players)
 
     if accuracy is not None:
         battle.test_option.accuracy = accuracy

@@ -29,6 +29,13 @@ def test():
     )
     assert test_utils.check_switch(battle, 0)
 
+    print("--- さらさらいわ ---")
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
+    )
+    battle.apply_weather("すなあらし", battle.actives[0])
+    assert battle.weather.count == 8
+
     print("--- だっしゅつパック ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", item="だっしゅつパック"), Pokemon("ライチュウ")],

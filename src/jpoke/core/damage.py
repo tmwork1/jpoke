@@ -54,7 +54,7 @@ class DamageCalculator:
                            attacker: Pokemon,
                            defender: Pokemon,
                            move: Move,
-                           dmg_ctx: DamageContext | None = None) -> tuple[list[int], DamageContext]:
+                           dmg_ctx: DamageContext | None = None) -> tuple[list[int], DamageContext | None]:
         """
         1回の攻撃で与えるダメージを計算する
 
