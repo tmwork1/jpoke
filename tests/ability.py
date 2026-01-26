@@ -95,20 +95,20 @@ def test():
     assert battle.actives[1].nervous(battle.events)
     assert not battle.actives[0].nervous(battle.events)
 
+    print("--- グラスメイカー ---")
+    battle = test_utils.generate_battle(
+        ally=[Pokemon("ピカチュウ", ability="グラスメイカー")]
+    )
+    assert battle.actives[0].ability.revealed
+    assert battle.terrain == "グラスフィールド"
+    assert battle.terrain.count == 5
+
     print("--- ぜったいねむり ---")
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", ability="ぜったいねむり")]
     )
     assert battle.actives[0].ability.revealed
     assert battle.actives[0].ailment == "ねむり"
-
-    print("--- グラスメイカー ---")
-    battle = test_utils.generate_battle(
-        ally=[Pokemon("ピカチュウ", ability="グラスメイカー")]
-    )
-    assert battle.actives[0].ability.revealed
-    assert battle.field.fields["terrain"] == "グラスフィールド"
-    assert battle.field.fields["terrain"].count == 5
 
 
 if __name__ == "__main__":

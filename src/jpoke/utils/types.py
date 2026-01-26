@@ -1,6 +1,6 @@
 from typing import Literal, get_args
 
-ContextRole = Literal["source", "target", "attacker", "defender", "move", "field", "side"]
+ContextRole = Literal["", "source", "target", "attacker", "defender"]
 
 Side = Literal["self", "foe"]
 

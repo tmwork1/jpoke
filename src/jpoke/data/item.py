@@ -94,8 +94,13 @@ ITEMS: dict[str, ItemData] = {
     "きれいなぬけがら": ItemData(
         consumable=False,
         throw_power=10,
-        handlers={Event.ON_CHECK_TRAPPED: Handler(
-            lambda btl, ctx, v: (False, HandlerResult.STOP_EVENT), priority=-100)}
+        handlers={
+            Event.ON_CHECK_TRAPPED: Handler(
+                lambda b, c, v: (False, HandlerResult.STOP_EVENT),
+                priority=-100,
+                role="source"
+            )
+        }
     ),
     "ぎんのこな": {
         "consumable": False,
@@ -170,7 +175,8 @@ ITEMS: dict[str, ItemData] = {
         throw_power=10,
         handlers={
             Event.ON_CHECK_DURATION: Handler(
-                lambda btl, ctx, v: v + 3 if ctx.weather == "すなあらし" else v
+                lambda btl, ctx, v: v + 3 if ctx.weather == "すなあらし" else v,
+                role="source",
             )
         }
     ),
@@ -246,8 +252,12 @@ ITEMS: dict[str, ItemData] = {
     },
     "たべのこし": ItemData(
         throw_power=10,
-        handlers={Event.ON_TURN_END_2: Handler(
-            lambda btl, ctx, v: common.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target))}
+        handlers={
+            Event.ON_TURN_END_2: Handler(
+                lambda btl, ctx, v: common.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target),
+                role="source",
+            )
+        }
     ),
     "ちからのハチマキ": {
         "consumable": False,

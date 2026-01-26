@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.types import ContextRole, Side, GlobalField, SideField, Weather, Terrain
+from jpoke.utils.types import ContextRole, Side
 from jpoke.utils.enums import Event, HandlerResult
 from jpoke.utils import fast_copy
 
@@ -22,6 +22,10 @@ class EventContext:
     defender: Pokemon | None = None
     move: Move | None = None
     field: Field | None = None
+
+    @property
+    def subject(self) -> Pokemon | None:
+        return self.source or self.target or self.attacker or self.defender
 
 
 @dataclass

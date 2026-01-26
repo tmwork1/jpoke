@@ -1,3 +1,4 @@
+from functools import partial
 from jpoke.core.event import Event, Handler
 from .models import AbilityData
 from jpoke.handlers import common, ability as h
@@ -20,7 +21,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ありじごく": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: Handler(
-                lambda btl, ctx, v: not ctx.target.floating(btl.events),
+                lambda btl, ctx, v: not ctx.source.floating(btl.events),
                 role="source", side="foe",
             )
         }
@@ -28,7 +29,7 @@ ABILITIES: dict[str, AbilityData] = {
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source) and common.modify_stat(btl, btl.foe(ctx.target), "A", -1),
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source) and common.modify_stat(btl, btl.foe(ctx.source), "A", -1),
                 role="source",
             )
         },
@@ -77,7 +78,7 @@ ABILITIES: dict[str, AbilityData] = {
     "かげふみ": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: Handler(
-                lambda btl, ctx, v: ctx.target.ability != "かげふみ",
+                lambda btl, ctx, v: ctx.source.ability != "かげふみ",
                 role="source", side="foe",
             )
         }
@@ -221,7 +222,7 @@ ABILITIES: dict[str, AbilityData] = {
     "じょおうのいげん": {},
     "じりょく": AbilityData(
         handlers={Event.ON_CHECK_TRAPPED: Handler(
-            lambda btl, ctx, v: "はがね" in ctx.target.types,
+            lambda btl, ctx, v: "はがね" in ctx.source.types,
             role="source", side="foe"
         )}
     ),
@@ -268,7 +269,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source) and common.apply_ailment(btl, ctx.target, "ねむり"),
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source) and common.apply_ailment(btl, ctx.source, "ねむり"),
                 role="source",
             )
         }
@@ -547,7 +548,11 @@ ABILITIES: dict[str, AbilityData] = {
     "グラスメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: btl.terrain_manager.activate("グラスフィールド", 5, ctx.source) and h.reveal_ability(btl, ctx.source),
+                partial(
+                    common.activate_terrain,
+                    terrain="グラスフィールド",
+                    count=5,
+                ),
                 role="source",
             )
         }

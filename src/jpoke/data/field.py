@@ -19,9 +19,10 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="さらさらいわ",
         handlers={
             Event.ON_TURN_END_1: Handler(
-                lambda btl, ctx, v: btl.weather.tick()
+                lambda btl, ctx, v: btl.weather.tick(),
+                role=""
             ),
-            Event.ON_TURN_END_2: Handler(hdl.apply_sandstorm_damage)
+            Event.ON_TURN_END_2: Handler(hdl.apply_sandstorm_damage, role="source"),
         },
     ),
     "ゆき": FieldData(
@@ -42,33 +43,27 @@ FIELDS: dict[str, FieldData] = {
                 role="source"
             ),
             Event.ON_TURN_END_5: Handler(
+                lambda btl, ctx, v: btl.terrain_manager.tick(),
+                role=""
             )
         },
     ),
     "サイコフィールド": FieldData(
         turn_extension_item="グランドコート",
         handlers={
-            Event.ON_TURN_END_5: Handler(
-            )
         },
     ),
     "ミストフィールド": FieldData(
         turn_extension_item="グランドコート",
         handlers={
-            Event.ON_TURN_END_5: Handler(
-            )
         },
     ),
     "じゅうりょく": FieldData(
         handlers={
-            Event.ON_TURN_END_5: Handler(
-            ),
         },
     ),
     "トリックルーム": FieldData(
         handlers={
-            Event.ON_TURN_END_5: Handler(
-            ),
         },
     ),
 
@@ -78,8 +73,6 @@ FIELDS: dict[str, FieldData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: Handler(
                 hdl.リフレクター,
                 role="defender",
-            ),
-            Event.ON_TURN_END_5: Handler(
             ),
         },
     ),
