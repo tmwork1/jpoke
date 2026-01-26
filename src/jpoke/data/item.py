@@ -233,7 +233,7 @@ ITEMS: dict[str, ItemData] = {
     "だっしゅつパック": ItemData(
         consumable=True,
         throw_power=50,
-        handlers={Event.ON_MODIFY_STAT: Handler(hdl.だっしゅつパック)}
+        handlers={Event.ON_MODIFY_STAT: Handler(hdl.だっしゅつパック, role="target")}
     ),
     "だっしゅつボタン": ItemData(
         consumable=True,
@@ -247,7 +247,7 @@ ITEMS: dict[str, ItemData] = {
     "たべのこし": ItemData(
         throw_power=10,
         handlers={Event.ON_TURN_END_2: Handler(
-            lambda btl, ctx, v: common.modify_hp(btl, ctx.target, r=1/16) and hdl.reveal_item(btl, ctx.target))}
+            lambda btl, ctx, v: common.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target))}
     ),
     "ちからのハチマキ": {
         "consumable": False,

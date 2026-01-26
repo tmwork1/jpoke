@@ -21,14 +21,15 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_CHECK_TRAPPED: Handler(
                 lambda btl, ctx, v: not ctx.target.floating(btl.events),
-                side="foe",
+                role="source", side="foe",
             )
         }
     ),
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: h.reveal_ability(btl, ctx.target) and common.modify_stat(btl, btl.foe(ctx.target), "A", -1),
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source) and common.modify_stat(btl, btl.foe(ctx.target), "A", -1),
+                role="source",
             )
         },
     ),
@@ -77,7 +78,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_CHECK_TRAPPED: Handler(
                 lambda btl, ctx, v: ctx.target.ability != "かげふみ",
-                side="foe",
+                role="source", side="foe",
             )
         }
     ),
@@ -123,9 +124,13 @@ ABILITIES: dict[str, AbilityData] = {
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: h.reveal_ability(btl, ctx.target)
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source),
+                role="source",
             ),
-            Event.ON_CHECK_NERVOUS: Handler(lambda btl, ctx, v: True, side="foe"),
+            Event.ON_CHECK_NERVOUS: Handler(
+                lambda btl, ctx, v: True,
+                role="source", side="foe"
+            ),
         }
     ),
     "ぎたい": {
@@ -217,7 +222,7 @@ ABILITIES: dict[str, AbilityData] = {
     "じりょく": AbilityData(
         handlers={Event.ON_CHECK_TRAPPED: Handler(
             lambda btl, ctx, v: "はがね" in ctx.target.types,
-            side="foe"
+            role="source", side="foe"
         )}
     ),
     "じんばいったい": {
@@ -234,7 +239,8 @@ ABILITIES: dict[str, AbilityData] = {
     "すなかき": AbilityData(
         handlers={
             Event.ON_CALC_SPEED: Handler(
-                lambda btl, ctx, v: v * 2 if btl.weather == "すなあらし" else v
+                lambda btl, ctx, v: v * 2 if btl.weather == "すなあらし" else v,
+                role="source",
             )
         }
     ),
@@ -262,7 +268,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                lambda btl, ctx, v: h.reveal_ability(btl, ctx.target) and common.apply_ailment(btl, ctx.target, "ねむり")
+                lambda btl, ctx, v: h.reveal_ability(btl, ctx.source) and common.apply_ailment(btl, ctx.target, "ねむり"),
+                role="source",
             )
         }
     ),
@@ -538,8 +545,12 @@ ABILITIES: dict[str, AbilityData] = {
     },
     "クリアボディ": {},
     "グラスメイカー": AbilityData(
-        handlers={Event.ON_SWITCH_IN: Handler(
-            lambda btl, ctx, v: common.apply_terrain(btl, ctx, "グラスフィールド") and h.reveal_ability(btl, ctx.target))}
+        handlers={
+            Event.ON_SWITCH_IN: Handler(
+                lambda btl, ctx, v: btl.terrain_manager.activate("グラスフィールド", 5, ctx.source) and h.reveal_ability(btl, ctx.source),
+                role="source",
+            )
+        }
     ),
     "サイコメイカー": {},
     "サンパワー": {},

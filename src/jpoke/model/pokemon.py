@@ -349,7 +349,7 @@ class Pokemon:
         floating = "ひこう" in self.types
         floating &= events.emit(
             Event.ON_CHECK_FLOATING,
-            EventContext(target=self),
+            EventContext(source=self),
             floating
         )
         return floating
@@ -357,7 +357,7 @@ class Pokemon:
     def trapped(self, events: EventManager) -> bool:
         trapped = events.emit(
             Event.ON_CHECK_TRAPPED,
-            EventContext(target=self),
+            EventContext(source=self),
             False
         )
         trapped &= "ゴースト" not in self.types
@@ -366,20 +366,20 @@ class Pokemon:
     def nervous(self, events: EventManager) -> bool:
         return events.emit(
             Event.ON_CHECK_NERVOUS,
-            EventContext(target=self),
+            EventContext(source=self),
             False
         )
 
     def effective_move_type(self, move: Move, events: EventManager) -> str:
         events.emit(
             Event.ON_CHECK_MOVE_TYPE,
-            EventContext(target=self, move=move)
+            EventContext(source=self, move=move)
         )
         return move._type
 
     def effective_move_category(self, move: Move, events: EventManager) -> MoveCategory:
         return events.emit(
             Event.ON_CHECK_MOVE_CATEGORY,
-            EventContext(target=self, move=move),
+            EventContext(source=self, move=move),
             value=move.category
         )

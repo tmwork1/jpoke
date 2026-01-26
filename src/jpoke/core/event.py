@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle
-    from jpoke.model import Move, Pokemon
+    from jpoke.model import Move, Pokemon, Field
 
 from typing import Callable
 from dataclasses import dataclass
@@ -16,21 +16,18 @@ from .player import Player
 
 @dataclass
 class EventContext:
-    target: Pokemon | None = None
     source: Pokemon | None = None
+    target: Pokemon | None = None
     attacker: Pokemon | None = None
     defender: Pokemon | None = None
     move: Move | None = None
-    global_field: GlobalField | None = None
-    side_field: SideField | None = None
-    weather: Weather = ""
-    terrain: Terrain = ""
+    field: Field | None = None
 
 
 @dataclass
 class Handler:
     func: Callable
-    role: ContextRole = "target"
+    role: ContextRole
     side: Side = "self"
     priority: int = 0
     once: bool = False

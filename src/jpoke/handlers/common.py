@@ -31,6 +31,19 @@ def modify_stat(battle: Battle,
     return battle.modify_stat(target, stat, v, source=source)
 
 
+def activate_field(battle: Battle,
+                   ctx: EventContext,
+                   field: SideField,
+                   count: int) -> bool:
+    count = battle.events.emit(
+        Event.ON_CHECK_DURATION,
+        EventContext(target=ctx.target, side_field=field),
+        count
+    )
+    player = battle.find_player(ctx.target)
+    return battle.side[player].activate(field, count)
+
+
 def apply_ailment(battle: Battle,
                   target: Pokemon,
                   ailment: AilmentName,

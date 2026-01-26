@@ -6,7 +6,7 @@ from random import Random
 from copy import deepcopy
 import json
 
-from jpoke.utils.types import Stat, Side, Weather, Terrain
+from jpoke.utils.types import Stat, Weather, Terrain
 from jpoke.utils.enums import Command, Interrupt
 from jpoke.utils import fast_copy
 
@@ -16,7 +16,7 @@ from .event import Event, EventManager, EventContext
 from .player import Player
 from .logger import Logger
 from .damage import DamageCalculator, DamageContext
-from .field import GlobalFieldManager, SideFieldManager
+from .field import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 
 
 @dataclass
@@ -43,6 +43,8 @@ class Battle:
         self.random = Random(self.seed)
         self.damage_calculator: DamageCalculator = DamageCalculator()
 
+        self.weather_manager: WeatherManager = WeatherManager(self.events, self.players)
+        self.terrain_manager: TerrainManager = TerrainManager(self.events, self.players)
         self.field: GlobalFieldManager = GlobalFieldManager(self.events, self.players)
         self.sides: list[SideFieldManager] = [SideFieldManager(self.events, pl) for pl in self.players]
 
@@ -78,11 +80,11 @@ class Battle:
 
     @property
     def weather(self) -> Field:
-        return self.field.fields["weather"]
+        return self.weather_manager.current
 
     @property
     def terrain(self) -> Field:
-        return self.field.fields["terrain"]
+        return self.terrain_manager.current
 
     def export_log(self, file):
         data = {
@@ -415,7 +417,7 @@ class Battle:
         # 退場
         old = player.active
         if old is not None:
-            self.events.emit(Event.ON_SWITCH_OUT, EventContext(target=old))
+            self.events.emit(Event.ON_SWITCH_OUT, EventContext(source=old))
             old.switch_out(self.events)
             self.add_turn_log(player, f"{old.name} {'交代' if old.hp else '瀕死'}")
 
@@ -426,7 +428,7 @@ class Battle:
 
         # ポケモンが場に出た時の処理
         if emit:
-            self.events.emit(Event.ON_SWITCH_IN, EventContext(target=new))
+            self.events.emit(Event.ON_SWITCH_IN, EventContext(source=new))
 
             # リクエストがなくなるまで再帰的に交代する
             while self.has_interrupt():
@@ -477,7 +479,7 @@ class Battle:
             for mon in self.calc_speed_order():
                 player = self.find_player(mon)
                 if player in switched_players:
-                    self.events.emit(Event.ON_SWITCH_IN, EventContext(target=mon))
+                    self.events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
 
     def run_faint_switch(self):
         '''
@@ -547,34 +549,6 @@ class Battle:
         print(f"Turn {turn}")
         for player in self.players:
             print(f"\t{player.name}\t{turn_logs[player]} {damage_logs[player]}")
-
-    def apply_weather(self,
-                      weather: Weather,
-                      target: Pokemon | None = None,
-                      base_count: int = 5) -> bool:
-        count = self.events.emit(
-            Event.ON_CHECK_DURATION,
-            EventContext(target=target, weather=weather),
-            base_count
-        )
-        if self.field.activate_weather(weather, count):
-            self.add_turn_log(None, weather)
-            return True
-        return False
-
-    def apply_terrain(self,
-                      terrain: Terrain,
-                      target: Pokemon | None = None,
-                      base_count: int = 5) -> bool:
-        count = self.events.emit(
-            Event.ON_CHECK_DURATION,
-            EventContext(target=target, terrain=terrain),
-            base_count
-        )
-        if self.field.activate_terrain(terrain, count):
-            self.add_turn_log(None, terrain)
-            return True
-        return False
 
     def advance_turn(self,
                      commands: dict[Player, Command] | None = None,

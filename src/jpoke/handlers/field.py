@@ -28,7 +28,7 @@ def reduce_side_field_count(battle: Battle,
         battle.add_turn_log(None, f"{field.name} 残り{field.count}ターン")
 
 
-def すなあらし_ダメージ(battle: Battle, ctx: EventContext, value: Any):
+def apply_sandstorm_damage(battle: Battle, ctx: EventContext, value: Any):
     # ON_TURN_END ハンドラ
     if not ctx.target or \
             any(ctx.target.has_type(t) for t in ["いわ", "じめん", "はがね"]) or \

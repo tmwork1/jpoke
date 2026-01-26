@@ -5,57 +5,43 @@ from jpoke.handlers import common, field as hdl
 
 FIELDS: dict[str, FieldData] = {
     "": FieldData(),
-
-    # Global fields
     "はれ": FieldData(
         turn_extension_item="あついいわ",
         handlers={
-            Event.ON_TURN_END_1: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
-            ),
         },
     ),
     "あめ": FieldData(
         turn_extension_item="しめったいわ",
         handlers={
-            Event.ON_TURN_END_1: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
-            ),
         },
     ),
     "すなあらし": FieldData(
         turn_extension_item="さらさらいわ",
         handlers={
             Event.ON_TURN_END_1: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
+                lambda btl, ctx, v: btl.weather.tick()
             ),
-            Event.ON_TURN_END_2: Handler(hdl.すなあらし_ダメージ)
+            Event.ON_TURN_END_2: Handler(hdl.apply_sandstorm_damage)
         },
     ),
     "ゆき": FieldData(
         turn_extension_item="つめたいいわ",
         handlers={
-            Event.ON_TURN_END_1: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "weather"),
-            ),
         },
     ),
     "エレキフィールド": FieldData(
         turn_extension_item="グランドコート",
         handlers={
-            Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
-            )
         },
     ),
     "グラスフィールド": FieldData(
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_3: Handler(
-                lambda btl, ctx, v: common.modify_hp(btl, ctx.target, r=1/16)
+                lambda btl, ctx, v: common.modify_hp(btl, ctx.source, r=1/16),
+                role="source"
             ),
             Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
@@ -63,7 +49,6 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
@@ -71,21 +56,18 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "terrain"),
             )
         },
     ),
     "じゅうりょく": FieldData(
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "gravity"),
             ),
         },
     ),
     "トリックルーム": FieldData(
         handlers={
             Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_global_field_count(btl, ctx, v, "trickroom"),
             ),
         },
     ),
@@ -98,7 +80,6 @@ FIELDS: dict[str, FieldData] = {
                 role="defender",
             ),
             Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: hdl.reduce_side_field_count(btl, ctx, v, "reflector"),
             ),
         },
     ),

@@ -11,8 +11,8 @@ from .effect import BaseEffect
 
 class Field(BaseEffect):
     def __init__(self,
+                 name: str,
                  owners: list[Player],
-                 name: str = "",
                  count: int = 0) -> None:
         super().__init__(FIELDS[name])
         self.data: FieldData  # IDE hint
@@ -29,6 +29,16 @@ class Field(BaseEffect):
     def update_reference(self, owners: list[Player]):
         self.owners = owners
 
+    def activate(self, events: EventManager, count: int):
+        self.count = count
+        for player in self.owners:
+            self.register_handlers(events, player)
+
+    def deactivate(self, events: EventManager):
+        self.count = 0
+        for player in self.owners:
+            self.unregister_handlers(events, player)
+
     @property
     def name(self) -> str:
         return self.data.name if self.active and self.count else ""
@@ -40,28 +50,3 @@ class Field(BaseEffect):
     @property
     def is_active(self) -> bool:
         return self.count > 0
-
-    def can_activate(self) -> bool:
-        return not self.is_active
-
-    def activate(self, events: EventManager, count: int) -> bool:
-        if not self.can_activate():
-            return False
-        self.count = count
-        for player in self.owners:
-            self.register_handlers(events, player)
-        return True
-
-    def deactivate(self, events: EventManager) -> bool:
-        self.count = 0
-        for player in self.owners:
-            self.unregister_handlers(events, player)
-        return True
-
-    def tick(self, events: EventManager, by: int = 1) -> bool:
-        if not self.is_active:
-            return False
-        self.count = max(0, self.count - by)
-        if not self.count:
-            self.deactivate(events)
-        return True
