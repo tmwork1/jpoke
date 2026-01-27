@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils.enums import Interrupt
 from jpoke.core.event import Event, EventContext
-from . import common
+from . import base
 
 
 def pivot(battle: Battle, ctx: EventContext, value: Any):

@@ -1,7 +1,7 @@
 from jpoke.core.event import Event, Handler, HandlerResult
 from .models import ItemData
 
-from jpoke.handlers import common, item as hdl
+from jpoke.handlers import base, item as hdl
 
 
 ITEMS: dict[str, ItemData] = {
@@ -254,7 +254,7 @@ ITEMS: dict[str, ItemData] = {
         throw_power=10,
         handlers={
             Event.ON_TURN_END_2: Handler(
-                lambda btl, ctx, v: common.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target),
+                lambda btl, ctx, v: base.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target),
                 role="source",
             )
         }

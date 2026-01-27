@@ -23,9 +23,8 @@ class EventContext:
     move: Move | None = None
     field: Field | None = None
 
-    @property
-    def subject(self) -> Pokemon | None:
-        return self.source or self.target or self.attacker or self.defender
+    def get(self, role: ContextRole) -> Pokemon | None:
+        return getattr(self, role)
 
 
 @dataclass
@@ -160,7 +159,7 @@ class EventManager:
     def _match(self, ctx: EventContext, rh: RegisteredHandler) -> bool:
         """コンテキストがハンドラにマッチするか判定"""
         # コンテキストの対象の判定
-        ctx_mon = getattr(ctx, rh.handler.role)
+        ctx_mon = ctx.get(rh.handler.role)
         if ctx_mon is None:
             return False
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import EventManager
     from jpoke.model.pokemon import Pokemon
 
 from jpoke.utils.types import AilmentName
@@ -16,13 +16,13 @@ class Ailment(BaseEffect):
         self.owner: Pokemon = owner
         self.init(name)
 
-        self.revealed = True
-
-    def init(self, name: str):
+    def init(self, name: str = "") -> None:
         super().__init__(AILMENTS[name])
+        self.revealed = True
         self.bench_reset()
 
     def bench_reset(self):
+        """ベンチに戻ったときのリセット処理"""
         self.count: int = 0
 
     def __deepcopy__(self, memo):
@@ -31,31 +31,21 @@ class Ailment(BaseEffect):
         memo[id(self)] = new
         return fast_copy(self, new)
 
-    def overwrite(self, battle: Battle, name: AilmentName, force: bool = False) -> bool:
-        # force=True でない限り上書き不可
-        if not force and self.name:
-            return False
+    def update_references(self, owner: Pokemon) -> None:
+        self.owner = owner
 
-        # 重ねがけ不可
-        if name == self.name:
-            return False
+    @property
+    def is_active(self) -> bool:
+        return self.name != ""
 
-        battle.add_turn_log(self.owner, name)
-
-        # 現在のハンドラを解除
-        self.unregister_handlers(battle.events, self.owner)
-        # 初期化
+    def activate(self, events: EventManager, name: AilmentName):
+        """状態異常を付与する"""
+        # ハンドラの更新
+        self.unregister_handlers(events, self.owner)
         self.init(name)
-        # 新しいハンドラを登録
-        self.register_handlers(battle.events, self.owner)
+        self.register_handlers(events, self.owner)
 
-        return True
-
-    def cure(self, battle: Battle) -> bool:
+    def deactivate(self, events: EventManager):
         """状態異常を解除する"""
-        if not self.name:
-            return False
-        battle.add_turn_log(self.owner, f"{self.name}解除")
-        self.unregister_handlers(battle.events, self.owner)
-        self.init("")
-        return True
+        self.unregister_handlers(events, self.owner)
+        self.init()

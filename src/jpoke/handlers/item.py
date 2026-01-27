@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from jpoke.utils.types import Side
 from jpoke.utils.enums import Interrupt
 from jpoke.core.event import EventContext, HandlerResult
-from . import common
+from . import base
 
 
 def reveal_item(battle: Battle, target: Pokemon) -> bool:
@@ -18,7 +18,7 @@ def reveal_item(battle: Battle, target: Pokemon) -> bool:
 
 def いのちのたま(battle: Battle, ctx: EventContext, value: Any):
     # ON_HITのハンドラ
-    if ctx.move.category != "変化" and common.modify_hp(battle, ctx.attacker, r=-1/8):
+    if ctx.move.category != "変化" and base.modify_hp(battle, ctx.attacker, r=-1/8):
         reveal_item(battle, ctx.attacker)
 
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
 
-from jpoke.utils.types import Type, Stat, MoveCategory, Gender, BoostSource, get_stats
+from jpoke.utils.types import Type, Stat, MoveCategory, Gender, BoostSource, stats, AilmentName
 from jpoke.utils.constants import NATURE_MODIFIER
 from jpoke.utils import fast_copy
 
@@ -59,6 +59,7 @@ class Pokemon:
         self.bench_reset()
 
     def bench_reset(self):
+        """ベンチに戻ったときのリセット処理"""
         self.choice_locked: bool = False
         self.hidden: bool = False
         self.lockon: bool = False
@@ -69,7 +70,7 @@ class Pokemon:
         self.hits_taken: int = 0
         self.boosted_stat: Stat | None = None
         self.boost_source: BoostSource = ""
-        self.rank: dict[Stat, int] = {k: 0 for k in get_stats()}
+        self.rank: dict[Stat, int] = {k: 0 for k in stats()}
         self.added_types: list[str] = []
         self.lost_types: list[str] = []
         self.executed_move: Move | None = None
@@ -246,7 +247,7 @@ class Pokemon:
 
     @property
     def stats(self) -> dict[Stat, int]:
-        labels = get_stats()[:6]
+        labels = stats()[:6]
         return {s: v for s, v in zip(labels, self._stats)}
 
     @stats.setter
@@ -383,3 +384,20 @@ class Pokemon:
             EventContext(source=self, move=move),
             value=move.category
         )
+
+    def apply_ailment(self, name: AilmentName, force: bool = False) -> bool:
+        # force=True でない限り上書き不可
+        if self.ailment.is_active and not force:
+            return False
+        # 重ねがけ不可
+        if name == self.ailment.name:
+            return False
+        self.ailment.activate(name)
+        return True
+
+    def cure_ailment(self) -> bool:
+        """状態異常を解除する"""
+        if not self.ailment.is_active:
+            return False
+        self.ailment.deactivate()
+        return True

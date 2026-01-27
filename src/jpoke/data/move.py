@@ -1,6 +1,6 @@
 from jpoke.core.event import Event, Handler
 from .models import MoveData
-from jpoke.handlers import common, move as hdl
+from jpoke.handlers import base, move as hdl
 
 
 MOVES: dict[str, MoveData] = {
@@ -70,7 +70,7 @@ MOVES: dict[str, MoveData] = {
         flags=["contact", "punch"],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.modify_stat(btl, ctx.attacker, "S", -1),
+                lambda btl, ctx, v: base.modify_stat(btl, ctx.attacker, "S", -1),
                 role="source",
             )
         }
@@ -3840,7 +3840,7 @@ MOVES: dict[str, MoveData] = {
         flags=["contact", "non_encore"],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.modify_hp(btl, ctx.attacker, r=-1/4),
+                lambda btl, ctx, v: base.modify_hp(btl, ctx.attacker, r=-1/4),
                 role="attacker",
             )
         }
@@ -5194,7 +5194,7 @@ MOVES: dict[str, MoveData] = {
         flags=["bullet"],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.apply_ailment(btl, ctx.defender, "まひ"),
+                lambda btl, ctx, v: base.apply_ailment(btl, ctx.defender, "まひ"),
                 role="attacker",
             ),
         }
@@ -7875,7 +7875,7 @@ MOVES: dict[str, MoveData] = {
         ],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.modify_stat(btl, ctx.attacker, "A", +2),
+                lambda btl, ctx, v: base.modify_stat(btl, ctx.attacker, "A", +2),
                 role="attacker",
             ),
         }
@@ -8049,7 +8049,7 @@ MOVES: dict[str, MoveData] = {
         ],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.apply_ailment(btl, ctx.defender, "もうどく"),
+                lambda btl, ctx, v: base.apply_ailment(btl, ctx.defender, "もうどく"),
                 role="attacker"
             )
         }
@@ -9089,7 +9089,7 @@ MOVES: dict[str, MoveData] = {
         ],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: common.apply_side_field(btl, ctx.attacker, "reflector", base_count=5),
+                lambda btl, ctx, v: base.apply_side_field(btl, ctx.attacker, "reflector", base_count=5),
                 role="attacker"
             )
         }

@@ -1,6 +1,6 @@
 from jpoke.core.event import Event, Handler
 from .models import FieldData
-from jpoke.handlers import common, field as hdl
+from jpoke.handlers import base, field as hdl
 
 
 FIELDS: dict[str, FieldData] = {
@@ -39,7 +39,7 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="グランドコート",
         handlers={
             Event.ON_TURN_END_3: Handler(
-                lambda btl, ctx, v: common.modify_hp(btl, ctx.source, r=1/16),
+                lambda btl, ctx, v: base.modify_hp(btl, ctx.source, r=1/16),
                 role="source"
             ),
             Event.ON_TURN_END_5: Handler(

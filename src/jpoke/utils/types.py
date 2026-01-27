@@ -1,6 +1,10 @@
 from typing import Literal, get_args
 
-ContextRole = Literal["", "source", "target", "attacker", "defender"]
+ContextRole = Literal["source", "target", "attacker", "defender"]
+
+Factor = Literal["ability", "item", "move"]
+
+LogPolicy = Literal["always", "on_success", "on_failure", "never"]
 
 Side = Literal["self", "foe"]
 
@@ -27,5 +31,5 @@ Terrain = Literal["", "エレキフィールド", "グラスフィールド", "�
 BoostSource = Literal["", "ability", "item", "weather", "terrain"]
 
 
-def get_stats() -> list[str]:
+def stats() -> list[str]:
     return list(get_args(Stat))

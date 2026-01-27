@@ -44,7 +44,7 @@ class Battle:
         self.damage_calculator: DamageCalculator = DamageCalculator()
 
         self.weather_manager: WeatherManager = WeatherManager(self.events, self.players)
-        self.terrain_mgr: TerrainManager = TerrainManager(self.events, self.players)
+        self.terrain_manager: TerrainManager = TerrainManager(self.events, self.players)
         self.field: GlobalFieldManager = GlobalFieldManager(self.events, self.players)
         self.sides: list[SideFieldManager] = [SideFieldManager(self.events, pl) for pl in self.players]
 
@@ -84,7 +84,7 @@ class Battle:
 
     @property
     def terrain(self) -> Field:
-        return self.terrain_mgr.current
+        return self.terrain_manager.current
 
     def export_log(self, file):
         data = {
@@ -366,7 +366,7 @@ class Battle:
                     target: Pokemon,
                     stat: Stat,
                     v: int,
-                    source: Pokemon | None = None) -> bool:
+                    source: Pokemon = None) -> bool:
         if v and (v := target.modify_stat(stat, v)):
             self.add_turn_log(self.find_player(target),
                               f"{stat}{'+' if v >= 0 else ''}{v}")
