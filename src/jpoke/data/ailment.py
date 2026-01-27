@@ -6,10 +6,10 @@ from jpoke.handlers import ailment as hdl
 AILMENTS: dict[str, AilmentData] = {
     "": AilmentData(),
     "どく": AilmentData(
-        handlers={Event.ON_TURN_END_4: Handler(hdl.どく, role="source")},
+        handlers={Event.ON_TURN_END_4: Handler(hdl.どく)},
     ),
     "もうどく": AilmentData(
-        handlers={Event.ON_TURN_END_4: Handler(hdl.もうどく, role="source")},
+        handlers={Event.ON_TURN_END_4: Handler(hdl.もうどく)},
     ),
     "まひ": AilmentData(),
     "やけど": AilmentData(),

@@ -52,9 +52,8 @@ class Player:
 
     @property
     def active(self) -> Pokemon | None:
-        if self.active_idx is None:
-            return None
-        return self.team[self.active_idx]
+        if self.active_idx is not None:
+            return self.team[self.active_idx]
 
     @property
     def selection(self) -> list[Pokemon]:

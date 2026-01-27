@@ -366,7 +366,7 @@ class Battle:
                     target: Pokemon,
                     stat: Stat,
                     v: int,
-                    source: Pokemon = None) -> bool:
+                    source: Pokemon | None = None) -> bool:
         if v and (v := target.modify_stat(stat, v)):
             self.add_turn_log(self.find_player(target),
                               f"{stat}{'+' if v >= 0 else ''}{v}")

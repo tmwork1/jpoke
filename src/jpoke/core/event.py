@@ -30,8 +30,8 @@ class EventContext:
 @dataclass
 class Handler:
     func: Callable
-    role: ContextRole
-    side: Side = "self"
+    subject_role: ContextRole = "source"
+    subject_side: Side = "self"
     priority: int = 0
     once: bool = False
 
@@ -42,10 +42,14 @@ class Handler:
 @dataclass
 class RegisteredHandler:
     handler: Handler
-    target: Pokemon | Player | None
+    _subject: Pokemon | Player
 
-    def resolve_source(self) -> Pokemon | None:
-        return self.target.active if isinstance(self.target, Player) else self.target
+    @property
+    def subject(self) -> Pokemon:
+        if isinstance(self._subject, Player):
+            return self._subject.active
+        else:
+            return self._subject
 
 
 class EventManager:
@@ -64,21 +68,18 @@ class EventManager:
 
         # ハンドラの対象に指定されているポケモンまたはプレイヤーへの参照を更新する
         for event, data in self.handlers.items():
-            for handler, sources in data.items():
-                new_sources = []
-                for old_source in sources:
-                    # プレイヤーまたはポケモンのインデックスから複製後のオブジェクトを見つける
-                    if isinstance(old_source, Player):
-                        player_idx = old.players.index(old_source)
-                        new_source = new.players[player_idx]
-                    else:
-                        old_player = old.find_player(old_source)
-                        player_idx = old.players.index(old_player)
-                        team_idx = old_player.team.index(old_source)
-                        new_source = new.players[player_idx].team[team_idx]
-                    new_sources.append(new_source)
+            for i, rh in enumerate(data):
+                # プレイヤーまたはポケモンのインデックスから複製後のオブジェクトを見つける
+                if isinstance(rh._subject, Player):
+                    player_idx = old.players.index(rh._subject)
+                    new_source = new.players[player_idx]
+                elif rh._subject:
+                    old_player = old.find_player(rh._subject)
+                    player_idx = old.players.index(old_player)
+                    team_idx = old_player.team.index(rh._subject)
+                    new_source = new.players[player_idx].team[team_idx]
 
-                self.handlers[event][handler] = new_sources
+                self.handlers[event][i]._subject = new_source
 
         # Battle への参照を更新する
         self.battle = new
@@ -86,21 +87,23 @@ class EventManager:
     def on(self,
            event: Event,
            handler: Handler,
-           target: Pokemon | Player | None = None):
+           subject: Pokemon | Player):
         """ハンドラを登録"""
         self.handlers.setdefault(event, []).append(
-            RegisteredHandler(handler, target))
+            RegisteredHandler(handler, subject)
+        )
+        print(event, subject)
 
     def off(self,
             event: Event,
             handler: Handler,
-            target: Pokemon | Player | None = None):
+            subject: Pokemon | Player):
         """ハンドラを解除"""
         if event not in self.handlers:
             return
         self.handlers[event] = [
             rh for rh in self.handlers[event]
-            if not (rh.handler == handler and rh.target == target)
+            if not (rh.handler == handler and rh._subject == subject)
         ]
 
     def emit(self,
@@ -126,7 +129,7 @@ class EventManager:
 
             # 一度きりのハンドラを解除
             if rh.handler.once:
-                self.off(event, rh.handler, rh.target)
+                self.off(event, rh.handler, rh._subject)
 
             # 制御フラグの処理
             match flag:
@@ -145,27 +148,29 @@ class EventManager:
         speed_idx = {p: i for i, p in enumerate(speed_order)}
 
         def key(rh: RegisteredHandler):
-            src = rh.resolve_source()
-            s_idx = speed_idx.get(src, float("inf"))
+            s_idx = speed_idx.get(rh.subject, float("inf"))
             return (rh.handler.priority, s_idx)
 
         return sorted(rhs, key=key)
 
     def _build_context(self, rh: RegisteredHandler) -> EventContext:
         """ハンドラに対応するコンテキストを構築"""
-        mon = rh.resolve_source() if rh.handler.side == "self" else self.battle.foe(rh.resolve_source())
-        return EventContext(**{rh.handler.role: mon})
+        if rh.handler.subject_side == "self":
+            mon = rh.subject
+        else:
+            mon = self.battle.foe(rh.subject)
+        return EventContext(**{rh.handler.subject_role: mon})
 
     def _match(self, ctx: EventContext, rh: RegisteredHandler) -> bool:
         """コンテキストがハンドラにマッチするか判定"""
         # コンテキストの対象の判定
-        ctx_mon = ctx.get(rh.handler.role)
+        ctx_mon = ctx.get(rh.handler.subject_role)
         if ctx_mon is None:
             return False
 
         # ハンドラの対象の判定
-        match rh.handler.side:
+        match rh.handler.subject_side:
             case "self":
-                return ctx_mon == rh.resolve_source()
+                return ctx_mon == rh.subject
             case "foe":
-                return ctx_mon == self.battle.foe(rh.resolve_source())
+                return ctx_mon == self.battle.foe(rh.subject)

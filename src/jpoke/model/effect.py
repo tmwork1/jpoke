@@ -18,15 +18,15 @@ class BaseEffect:
 
     def register_handlers(self,
                           events: EventManager,
-                          source: Pokemon | Player | None = None):
+                          subject: Pokemon | Player):
         for event, handler in self.data.handlers.items():
-            events.on(event, handler, source)
+            events.on(event, handler, subject)
 
     def unregister_handlers(self,
                             events: EventManager,
-                            source: Pokemon | Player | None = None):
+                            subject: Pokemon | Player):
         for event, handler in self.data.handlers.items():
-            events.off(event, handler, source)
+            events.off(event, handler, subject)
 
     def __eq__(self, value: Self | str) -> bool:
         if isinstance(value, str):

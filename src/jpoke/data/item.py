@@ -33,7 +33,7 @@ ITEMS: dict[str, ItemData] = {
     "いのちのたま": ItemData(
         throw_power=30,
         consumable=False,
-        handlers={Event.ON_HIT: Handler(hdl.いのちのたま, role="attacker")},
+        handlers={Event.ON_HIT: Handler(hdl.いのちのたま, subject_role="attacker")},
     ),
     "エレキシード": {
         "consumable": True,
@@ -98,7 +98,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CHECK_TRAPPED: Handler(
                 lambda b, c, v: (False, HandlerResult.STOP_EVENT),
                 priority=-100,
-                role="source"
+                subject_role="source"
             )
         }
     ),
@@ -176,7 +176,7 @@ ITEMS: dict[str, ItemData] = {
         handlers={
             Event.ON_CHECK_DURATION: Handler(
                 lambda btl, ctx, v: v + 3 if ctx.weather == "すなあらし" else v,
-                role="source",
+                subject_role="source",
             )
         }
     ),
@@ -239,12 +239,12 @@ ITEMS: dict[str, ItemData] = {
     "だっしゅつパック": ItemData(
         consumable=True,
         throw_power=50,
-        handlers={Event.ON_MODIFY_STAT: Handler(hdl.だっしゅつパック, role="target")}
+        handlers={Event.ON_MODIFY_STAT: Handler(hdl.だっしゅつパック, subject_role="target")}
     ),
     "だっしゅつボタン": ItemData(
         consumable=True,
         throw_power=30,
-        handlers={Event.ON_DAMAGE: Handler(hdl.だっしゅつボタン, role="defender")}
+        handlers={Event.ON_DAMAGE: Handler(hdl.だっしゅつボタン, subject_role="defender")}
     ),
     "たつじんのおび": {
         "consumable": False,
@@ -255,7 +255,7 @@ ITEMS: dict[str, ItemData] = {
         handlers={
             Event.ON_TURN_END_2: Handler(
                 lambda btl, ctx, v: base.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target),
-                role="source",
+                subject_role="source",
             )
         }
     ),

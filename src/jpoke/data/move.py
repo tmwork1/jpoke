@@ -71,7 +71,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: base.modify_stat(btl, ctx.attacker, "S", -1),
-                role="source",
+                subject_role="source",
             )
         }
     ),
@@ -2566,7 +2566,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
         flags=["contact"],
-        handlers={Event.ON_HIT: Handler(hdl.pivot, role="attacker")}
+        handlers={Event.ON_HIT: Handler(hdl.pivot, subject_role="attacker")}
     ),
     "なげつける": {
         "type": "あく",
@@ -3841,7 +3841,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: base.modify_hp(btl, ctx.attacker, r=-1/4),
-                role="attacker",
+                subject_role="attacker",
             )
         }
     ),
@@ -5195,7 +5195,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: base.apply_ailment(btl, ctx.defender, "まひ"),
-                role="attacker",
+                subject_role="attacker",
             ),
         }
     ),
@@ -7614,7 +7614,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: btl.weather_manager.activate("すなあらし", ctx.attacker),
-                role="attacker",
+                subject_role="attacker",
             )
         }
     ),
@@ -7876,7 +7876,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: base.modify_stat(btl, ctx.attacker, "A", +2),
-                role="attacker",
+                subject_role="attacker",
             ),
         }
     ),
@@ -8050,7 +8050,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: base.apply_ailment(btl, ctx.defender, "もうどく"),
-                role="attacker"
+                subject_role="attacker"
             )
         }
     ),
@@ -8637,7 +8637,7 @@ MOVES: dict[str, MoveData] = {
             "reflectable",
             "wind",
         ],
-        handlers={Event.ON_HIT: Handler(hdl.blow, role="attacker")}
+        handlers={Event.ON_HIT: Handler(hdl.blow, subject_role="attacker")}
     ),
     "フラフラダンス": {
         "type": "ノーマル",
@@ -9090,7 +9090,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: Handler(
                 lambda btl, ctx, v: base.apply_side_field(btl, ctx.attacker, "reflector", base_count=5),
-                role="attacker"
+                subject_role="attacker"
             )
         }
     ),
@@ -9200,6 +9200,6 @@ for name, obj in MOVES.items():
 
     # 共通ハンドラを追加
     MOVES[name].handlers |= {
-        Event.ON_DECLARE_MOVE: Handler(hdl.reveal_move, role="attacker"),
-        Event.ON_CONSUME_PP: Handler(hdl.consume_pp, role="attacker"),
+        Event.ON_DECLARE_MOVE: Handler(hdl.reveal_move, subject_role="attacker"),
+        Event.ON_CONSUME_PP: Handler(hdl.consume_pp, subject_role="attacker"),
     }

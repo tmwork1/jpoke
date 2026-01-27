@@ -20,9 +20,9 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_TURN_END_1: Handler(
                 lambda btl, ctx, v: btl.weather.tick(),
-                role=""
+                subject_role=""
             ),
-            Event.ON_TURN_END_2: Handler(hdl.apply_sandstorm_damage, role="source"),
+            Event.ON_TURN_END_2: Handler(hdl.apply_sandstorm_damage),
         },
     ),
     "ゆき": FieldData(
@@ -40,11 +40,11 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_TURN_END_3: Handler(
                 lambda btl, ctx, v: base.modify_hp(btl, ctx.source, r=1/16),
-                role="source"
+                subject_role="source"
             ),
             Event.ON_TURN_END_5: Handler(
                 lambda btl, ctx, v: btl.terrain_manager.tick(),
-                role=""
+                subject_role=""
             )
         },
     ),
@@ -72,7 +72,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: Handler(
                 hdl.リフレクター,
-                role="defender",
+                subject_role="defender",
             ),
         },
     ),
