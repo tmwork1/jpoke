@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.types import ContextRole, Side
+from jpoke.utils.types import ContextRole, RoleSpec, Side
 from jpoke.utils.enums import Event, HandlerResult
 from jpoke.utils import fast_copy
 
@@ -29,11 +29,32 @@ class EventContext:
 
 @dataclass
 class Handler:
+    """イベントハンドラの定義。
+
+    Handler は特定のポケモンまたはプレイヤー（subject）に紐づいて登録され、条件に合うイベントが発火したときに実行される。
+
+    - **subject**: ハンドラを所有・発動させるトリガーとなるポケモン（またはプレイヤー）
+    - **subject_spec**: どの役割（role）のどちら側（side）に対して発動するかを "role:side" 形式で指定
+
+    例: 「いかく」特性
+    - subject: いかくを持つポケモン自身
+    - subject_spec="source:self": イベントの source（登場したポケモン）が自分自身の時に発動
+    - target_spec="source:foe": 効果の対象は source から見て相手側のポケモン
+    """
     func: Callable
-    subject_role: ContextRole = "source"
-    subject_side: Side = "self"
+    subject_spec: RoleSpec
     priority: int = 0
     once: bool = False
+
+    @property
+    def role(self) -> ContextRole:
+        """subject_spec から role を抽出"""
+        return self.subject_spec.split(":")[0]  # type: ignore
+
+    @property
+    def side(self) -> Side:
+        """subject_spec から side を抽出"""
+        return self.subject_spec.split(":")[1]  # type: ignore
 
     def __lt__(self, other):
         return self.priority > other.priority
@@ -92,7 +113,6 @@ class EventManager:
         self.handlers.setdefault(event, []).append(
             RegisteredHandler(handler, subject)
         )
-        print(event, subject)
 
     def off(self,
             event: Event,
@@ -112,6 +132,7 @@ class EventManager:
              value: Any = None) -> Any:
         """イベントを発火"""
         for rh in self._sort_handlers(self.handlers.get(event, [])):
+            # print(event, rh)
             context = ctx if ctx else self._build_context(rh)
 
             if not self._match(context, rh):
@@ -155,21 +176,21 @@ class EventManager:
 
     def _build_context(self, rh: RegisteredHandler) -> EventContext:
         """ハンドラに対応するコンテキストを構築"""
-        if rh.handler.subject_side == "self":
+        if rh.handler.side == "self":
             mon = rh.subject
         else:
             mon = self.battle.foe(rh.subject)
-        return EventContext(**{rh.handler.subject_role: mon})
+        return EventContext(**{rh.handler.role: mon})
 
     def _match(self, ctx: EventContext, rh: RegisteredHandler) -> bool:
         """コンテキストがハンドラにマッチするか判定"""
         # コンテキストの対象の判定
-        ctx_mon = ctx.get(rh.handler.subject_role)
+        ctx_mon = ctx.get(rh.handler.role)
         if ctx_mon is None:
             return False
 
         # ハンドラの対象の判定
-        match rh.handler.subject_side:
+        match rh.handler.side:
             case "self":
                 return ctx_mon == rh.subject
             case "foe":

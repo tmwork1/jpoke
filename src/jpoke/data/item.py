@@ -1,7 +1,8 @@
+from functools import partial
+
 from jpoke.core.event import Event, Handler, HandlerResult
 from .models import ItemData
-
-from jpoke.handlers import base, item as hdl
+from jpoke.handlers import base, item as h
 
 
 ITEMS: dict[str, ItemData] = {
@@ -33,7 +34,9 @@ ITEMS: dict[str, ItemData] = {
     "いのちのたま": ItemData(
         throw_power=30,
         consumable=False,
-        handlers={Event.ON_HIT: Handler(hdl.いのちのたま, subject_role="attacker")},
+        handlers={
+            Event.ON_HIT: Handler(h.いのちのたま, subject_spec="attacker:self")
+        }
     ),
     "エレキシード": {
         "consumable": True,
@@ -98,7 +101,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CHECK_TRAPPED: Handler(
                 lambda b, c, v: (False, HandlerResult.STOP_EVENT),
                 priority=-100,
-                subject_role="source"
+                subject_spec="source:self"
             )
         }
     ),
@@ -175,8 +178,8 @@ ITEMS: dict[str, ItemData] = {
         throw_power=10,
         handlers={
             Event.ON_CHECK_DURATION: Handler(
-                lambda btl, ctx, v: v + 3 if ctx.weather == "すなあらし" else v,
-                subject_role="source",
+                partial(base.resolve_field_count, field="すなあらし", additonal_count=3),
+                subject_spec="source:self",
             )
         }
     ),
@@ -239,12 +242,12 @@ ITEMS: dict[str, ItemData] = {
     "だっしゅつパック": ItemData(
         consumable=True,
         throw_power=50,
-        handlers={Event.ON_MODIFY_STAT: Handler(hdl.だっしゅつパック, subject_role="target")}
+        handlers={Event.ON_MODIFY_STAT: Handler(h.だっしゅつパック, subject_spec="target:self")}
     ),
     "だっしゅつボタン": ItemData(
         consumable=True,
         throw_power=30,
-        handlers={Event.ON_DAMAGE: Handler(hdl.だっしゅつボタン, subject_role="defender")}
+        handlers={Event.ON_DAMAGE: Handler(h.だっしゅつボタン, subject_spec="defender:self")}
     ),
     "たつじんのおび": {
         "consumable": False,
@@ -254,8 +257,10 @@ ITEMS: dict[str, ItemData] = {
         throw_power=10,
         handlers={
             Event.ON_TURN_END_2: Handler(
-                lambda btl, ctx, v: base.modify_hp(btl, ctx.source, r=1/16) and hdl.reveal_item(btl, ctx.target),
-                subject_role="source",
+                partial(
+                    h.modify_hp, target_spec="source:self", r=1/16, log="on_success"
+                ),
+                subject_spec="source:self",
             )
         }
     ),

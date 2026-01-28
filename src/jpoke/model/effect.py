@@ -9,12 +9,18 @@ if TYPE_CHECKING:
 class BaseEffect:
     def __init__(self, data) -> None:
         self.data = data
-        self.active: bool = True
+        self.effect_enabled: bool = True
         self.revealed: bool = False
 
     @property
     def name(self) -> str:
-        return self.data.name if self.active else ""
+        """名前。効果が無効化されている場合は空文字を返す"""
+        return self.data.name if self.effect_enabled else ""
+
+    @property
+    def orig_name(self) -> str:
+        """効果の無効化に関わらず、常に元の名前を返す"""
+        return self.data.name
 
     def register_handlers(self,
                           events: EventManager,

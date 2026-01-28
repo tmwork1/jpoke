@@ -20,14 +20,14 @@ ABILITIES: dict[str, AbilityData] = {
     "あめふらし": {},
     "ありじごく": AbilityData(
         handlers={
-            Event.ON_CHECK_TRAPPED: Handler(h.ありじごく, subject_side="foe")
+            Event.ON_CHECK_TRAPPED: Handler(h.ありじごく, subject_spec="source:foe")
         }
     ),
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                partial(h.modify_stat, stat="A", v=-1, source_role="source", log="always"),
-                subject_role="source",
+                partial(h.modify_stat, stat="A", v=-1, target_spec="source:foe", source_spec="source:self", log="always"),
+                subject_spec="source:self",
             )
         },
     ),
@@ -74,7 +74,7 @@ ABILITIES: dict[str, AbilityData] = {
     },
     "かげふみ": AbilityData(
         handlers={
-            Event.ON_CHECK_TRAPPED: Handler(h.かげふみ, subject_side="foe")
+            Event.ON_CHECK_TRAPPED: Handler(h.かげふみ, subject_spec="source:foe")
         }
     ),
     "かぜのり": {},
@@ -84,7 +84,7 @@ ABILITIES: dict[str, AbilityData] = {
     "かちき": AbilityData(
         flags=["undeniable"],
         handlers={
-            Event.ON_MODIFY_STAT: Handler(h.かちき, subject_role="target")
+            Event.ON_MODIFY_STAT: Handler(h.かちき, subject_spec="target:self")
         }
     ),
     "かるわざ": {},
@@ -119,11 +119,11 @@ ABILITIES: dict[str, AbilityData] = {
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                partial(h.reveal_ability, source_role="source"),
-                subject_role="source",
+                partial(h.reveal_ability, source_spec="source:self"),
+                subject_spec="source:self",
             ),
             Event.ON_CHECK_NERVOUS: Handler(
-                lambda *args: True, subject_side="foe"
+                lambda *args: True, subject_spec="source:foe"
             ),
         }
     ),
@@ -215,7 +215,7 @@ ABILITIES: dict[str, AbilityData] = {
     "じょおうのいげん": {},
     "じりょく": AbilityData(
         handlers={
-            Event.ON_CHECK_TRAPPED: Handler(h.じりょく, subject_side="foe")
+            Event.ON_CHECK_TRAPPED: Handler(h.じりょく, subject_spec="source:foe")
         }
     ),
     "じんばいったい": {
@@ -231,7 +231,7 @@ ABILITIES: dict[str, AbilityData] = {
     "すなおこし": {},
     "すなかき": AbilityData(
         handlers={
-            Event.ON_CALC_SPEED: Handler(h.すなかき)
+            Event.ON_CALC_SPEED: Handler(h.すなかき, subject_spec="source:self")
         }
     ),
     "すながくれ": {},
@@ -258,8 +258,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: Handler(
-                partial(h.apply_ailment, ailment="ねむり", log="always"),
-                subject_role="source",
+                partial(h.apply_ailment, ailment="ねむり", target_spec="source:self", source_spec="source:self", log="always"),
+                subject_spec="source:self",
             )
         }
     ),
@@ -538,7 +538,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_SWITCH_IN: Handler(
                 partial(h.activate_terrain, terrain="グラスフィールド", count=5),
-                subject_role="source",
+                subject_spec="source:self",
             )
         }
     ),

@@ -41,7 +41,7 @@ class Field(BaseEffect):
 
     @property
     def name(self) -> str:
-        return self.data.name if self.active and self.count else ""
+        return self.orig_name if self.effect_enabled and self.count else ""
 
     @property
     def turn_extention_item(self) -> str | None:

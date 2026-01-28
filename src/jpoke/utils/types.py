@@ -2,6 +2,14 @@ from typing import Literal, get_args
 
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
+# role:side 形式で、特定の側のロールを指定 (例: "target:foe", "source:self")
+RoleSpec = Literal[
+    "source:self", "source:foe",
+    "target:self", "target:foe",
+    "attacker:self",
+    "defender:self",
+]
+
 Factor = Literal["ability", "item", "move"]
 
 LogPolicy = Literal["always", "on_success", "on_failure", "never"]

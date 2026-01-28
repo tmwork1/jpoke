@@ -46,7 +46,7 @@ class Pokemon:
         self.terastallized: bool = False
 
         self.sleep_count: int
-        self.ailment: Ailment = Ailment(self)
+        self.ailment: Ailment = Ailment()
         # self.field_status: FieldStatus = FieldStatus()
 
         self.ability = ability
@@ -116,7 +116,7 @@ class Pokemon:
 
     def dump(self) -> dict:
         return {
-            "name": self.data.name,
+            "name": self.orig_name,
             "gender": self.gender,
             "level": self._level,
             "nature": self._nature,
@@ -130,15 +130,18 @@ class Pokemon:
 
     def switch_in(self, events: EventManager):
         self.observed = True
-        if self.ability.active:
+        if self.ability.effect_enabled:
             self.ability.register_handlers(events, self)
-        if self.item.active:
+        if self.item.effect_enabled:
             self.item.register_handlers(events, self)
+        if self.ailment.effect_enabled:
+            self.ailment.register_handlers(events, self)
 
     def switch_out(self, events: EventManager):
         self.bench_reset()
         self.ability.unregister_handlers(events, self)
         self.item.unregister_handlers(events, self)
+        self.ailment.unregister_handlers(events, self)
 
     @property
     def name(self) -> str:
@@ -297,6 +300,9 @@ class Pokemon:
     def has_type(self, type_: Type) -> bool:
         return type_ in self.types
 
+    def has_move(self, move: Move | str) -> bool:
+        return self.find_move(move) is not None
+
     def update_stats(self, keep_damage: bool = False):
         if keep_damage:
             damage = self._stats[0] - self.hp
@@ -343,10 +349,7 @@ class Pokemon:
             if move in [mv, mv.name]:
                 return mv
 
-    def knows(self, move: Move | str) -> bool:
-        return self.find_move(move) is not None
-
-    def floating(self, events: EventManager) -> bool:
+    def is_floating(self, events: EventManager) -> bool:
         floating = "ひこう" in self.types
         floating &= events.emit(
             Event.ON_CHECK_FLOATING,
@@ -355,7 +358,7 @@ class Pokemon:
         )
         return floating
 
-    def trapped(self, events: EventManager) -> bool:
+    def is_trapped(self, events: EventManager) -> bool:
         trapped = events.emit(
             Event.ON_CHECK_TRAPPED,
             EventContext(source=self),
@@ -364,7 +367,7 @@ class Pokemon:
         trapped &= "ゴースト" not in self.types
         return trapped
 
-    def nervous(self, events: EventManager) -> bool:
+    def is_nervous(self, events: EventManager) -> bool:
         return events.emit(
             Event.ON_CHECK_NERVOUS,
             EventContext(source=self),
@@ -385,19 +388,27 @@ class Pokemon:
             value=move.category
         )
 
-    def apply_ailment(self, name: AilmentName, force: bool = False) -> bool:
+    def apply_ailment(self, events: EventManager, name: AilmentName, source: Pokemon | None = None, force: bool = False) -> bool:
         # force=True でない限り上書き不可
         if self.ailment.is_active and not force:
             return False
         # 重ねがけ不可
         if name == self.ailment.name:
             return False
-        self.ailment.activate(name)
+        # 既存のハンドラを削除
+        if self.ailment.is_active:
+            self.ailment.unregister_handlers(events, self)
+        # 新しい状態異常を設定してハンドラ登録
+        self.ailment = Ailment(name)
+        self.ailment.register_handlers(events, self)
         return True
 
-    def cure_ailment(self) -> bool:
+    def cure_ailment(self, events: EventManager, source: Pokemon | None = None) -> bool:
         """状態異常を解除する"""
-        if not self.ailment.is_active:
+        if not self.ailment.effect_enabled:
             return False
-        self.ailment.deactivate()
+        # ハンドラ削除
+        self.ailment.unregister_handlers(events, self)
+        # 状態異常をクリア
+        self.ailment = Ailment()
         return True

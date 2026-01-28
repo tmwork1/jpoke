@@ -43,8 +43,8 @@ class Battle:
         self.random = Random(self.seed)
         self.damage_calculator: DamageCalculator = DamageCalculator()
 
-        self.weather_manager: WeatherManager = WeatherManager(self.events, self.players)
-        self.terrain_manager: TerrainManager = TerrainManager(self.events, self.players)
+        self.weather_mgr: WeatherManager = WeatherManager(self.events, self.players)
+        self.terrain_mgr: TerrainManager = TerrainManager(self.events, self.players)
         self.field: GlobalFieldManager = GlobalFieldManager(self.events, self.players)
         self.sides: list[SideFieldManager] = [SideFieldManager(self.events, pl) for pl in self.players]
 
@@ -80,11 +80,11 @@ class Battle:
 
     @property
     def weather(self) -> Field:
-        return self.weather_manager.current
+        return self.weather_mgr.current
 
     @property
     def terrain(self) -> Field:
-        return self.terrain_manager.current
+        return self.terrain_mgr.current
 
     def export_log(self, file):
         data = {
@@ -175,7 +175,7 @@ class Battle:
         return Command.selection_commands()[:len(player.team)]
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
-        if player.active.trapped(self.events):
+        if player.active.is_trapped(self.events):
             return []
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
                 if mon in player.selection and mon is not player.active]

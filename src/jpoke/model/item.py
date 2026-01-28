@@ -15,5 +15,5 @@ class Item(BaseEffect):
         return fast_copy(self, new)
 
     def consume(self):
-        self.active = False
+        self.effect_enabled = False
         self.revealed = True

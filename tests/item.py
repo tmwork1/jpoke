@@ -33,7 +33,7 @@ def test():
     battle = test_utils.generate_battle(
         ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
     )
-    battle.apply_weather("すなあらし", battle.actives[0])
+    battle.weather_mgr.activate("すなあらし", 5, source=battle.actives[0])
     assert battle.weather.count == 8
 
     print("--- だっしゅつパック ---")
@@ -43,7 +43,7 @@ def test():
     )
     assert battle.players[0].active_idx != 0
     assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item.active
+    assert not battle.players[0].team[0].item.effect_enabled
 
     print("--- だっしゅつパック : 能力上昇では発動しない ---")
     battle = test_utils.generate_battle(
@@ -60,7 +60,7 @@ def test():
     )
     assert battle.players[0].active_idx != 0
     assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item.active
+    assert not battle.players[0].team[0].item.effect_enabled
 
     print("--- たべのこし ---")
     mon = Pokemon("ピカチュウ", item="たべのこし")

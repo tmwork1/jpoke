@@ -62,8 +62,8 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             EventContext(source=source, field=field),
             count
         )
-        self.current = field
         field.activate(self.events, count)
+        self.current = field
         return True
 
     def deactivate(self) -> bool:

@@ -12,11 +12,7 @@ from .effect import BaseEffect
 
 
 class Ailment(BaseEffect):
-    def __init__(self, owner: Pokemon, name: AilmentName = "") -> None:
-        self.owner: Pokemon = owner
-        self.init(name)
-
-    def init(self, name: str = "") -> None:
+    def __init__(self, name: AilmentName = "") -> None:
         super().__init__(AILMENTS[name])
         self.revealed = True
         self.bench_reset()
@@ -31,21 +27,7 @@ class Ailment(BaseEffect):
         memo[id(self)] = new
         return fast_copy(self, new)
 
-    def update_references(self, owner: Pokemon) -> None:
-        self.owner = owner
-
     @property
     def is_active(self) -> bool:
+        """状態異常が実在するかどうか（空でない状態異常が存在する）"""
         return self.name != ""
-
-    def activate(self, events: EventManager, name: AilmentName):
-        """状態異常を付与する"""
-        # ハンドラの更新
-        self.unregister_handlers(events, self.owner)
-        self.init(name)
-        self.register_handlers(events, self.owner)
-
-    def deactivate(self, events: EventManager):
-        """状態異常を解除する"""
-        self.unregister_handlers(events, self.owner)
-        self.init()

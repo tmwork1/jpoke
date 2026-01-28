@@ -92,8 +92,8 @@ def test():
         ally=[Pokemon("ピカチュウ", ability="きんちょうかん")]
     )
     assert battle.actives[0].ability.revealed
-    assert battle.actives[1].nervous(battle.events)
-    assert not battle.actives[0].nervous(battle.events)
+    assert battle.actives[1].is_nervous(battle.events)
+    assert not battle.actives[0].is_nervous(battle.events)
 
     print("--- グラスメイカー ---")
     battle = test_utils.generate_battle(
