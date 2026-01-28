@@ -5,14 +5,15 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Move
 
 from jpoke.utils.enums import Interrupt
-from jpoke.core.event import Event, EventContext
-from . import base
+from jpoke.core.event import Event, EventContext, HandlerReturn
+from . import common
 
 
 def pivot(battle: Battle, ctx: EventContext, value: Any):
     player = battle.find_player(ctx.attacker)
     if battle.get_available_switch_commands(player):
         player.interrupt = Interrupt.PIVOT
+    return HandlerReturn(True)
 
 
 def blow(battle: Battle, ctx: EventContext, value: Any):
@@ -21,6 +22,7 @@ def blow(battle: Battle, ctx: EventContext, value: Any):
     if commands:
         command = battle.random.choice(commands)
         battle.run_switch(player, player.team[command.idx])
+    return HandlerReturn(True)
 
 # 共通ハンドラ
 
@@ -28,7 +30,7 @@ def blow(battle: Battle, ctx: EventContext, value: Any):
 def reveal_move(battle: Battle, ctx: EventContext, value: Any):
     ctx.move.revealed = True
     battle.add_turn_log(ctx.attacker, ctx.move.name)
-    return True
+    return HandlerReturn(True)
 
 
 def consume_pp(battle: Battle, ctx: EventContext, value: Any):
@@ -36,4 +38,4 @@ def consume_pp(battle: Battle, ctx: EventContext, value: Any):
     ctx.move.pp = max(0, ctx.move.pp - v)
     battle.add_turn_log(ctx.attacker, f"PP -{v}")
     ctx.attacker.pp_consumed_moves.append(ctx.move)
-    return True
+    return HandlerReturn(True)

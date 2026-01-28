@@ -1,8 +1,9 @@
 from functools import partial
 
-from jpoke.core.event import Event, Handler, HandlerResult
+from jpoke.utils.enums import Event, EventControl
+from jpoke.core.event import HandlerReturn
+from jpoke.handlers import common, item as h
 from .models import ItemData
-from jpoke.handlers import base, item as h
 
 
 ITEMS: dict[str, ItemData] = {
@@ -35,7 +36,10 @@ ITEMS: dict[str, ItemData] = {
         throw_power=30,
         consumable=False,
         handlers={
-            Event.ON_HIT: Handler(h.いのちのたま, subject_spec="attacker:self")
+            Event.ON_HIT: h.ItemHandler(
+                h.いのちのたま,
+                subject_spec="attacker:self",
+            )
         }
     ),
     "エレキシード": {
@@ -98,10 +102,11 @@ ITEMS: dict[str, ItemData] = {
         consumable=False,
         throw_power=10,
         handlers={
-            Event.ON_CHECK_TRAPPED: Handler(
-                lambda b, c, v: (False, HandlerResult.STOP_EVENT),
+            Event.ON_CHECK_TRAPPED: h.ItemHandler(
+                lambda *args: HandlerReturn(True, False, EventControl.STOP_EVENT),
+                subject_spec="source:self",
+                log="never",
                 priority=-100,
-                subject_spec="source:self"
             )
         }
     ),
@@ -177,9 +182,10 @@ ITEMS: dict[str, ItemData] = {
         consumable=False,
         throw_power=10,
         handlers={
-            Event.ON_CHECK_DURATION: Handler(
-                partial(base.resolve_field_count, field="すなあらし", additonal_count=3),
+            Event.ON_CHECK_DURATION: h.ItemHandler(
+                partial(common.resolve_field_count, field="すなあらし", additonal_count=3),
                 subject_spec="source:self",
+                log="never",
             )
         }
     ),
@@ -242,12 +248,22 @@ ITEMS: dict[str, ItemData] = {
     "だっしゅつパック": ItemData(
         consumable=True,
         throw_power=50,
-        handlers={Event.ON_MODIFY_STAT: Handler(h.だっしゅつパック, subject_spec="target:self")}
+        handlers={
+            Event.ON_MODIFY_STAT: h.ItemHandler(
+                h.だっしゅつパック,
+                subject_spec="target:self",
+            )
+        }
     ),
     "だっしゅつボタン": ItemData(
         consumable=True,
         throw_power=30,
-        handlers={Event.ON_DAMAGE: Handler(h.だっしゅつボタン, subject_spec="defender:self")}
+        handlers={
+            Event.ON_DAMAGE: h.ItemHandler(
+                h.だっしゅつボタン,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "たつじんのおび": {
         "consumable": False,
@@ -256,9 +272,9 @@ ITEMS: dict[str, ItemData] = {
     "たべのこし": ItemData(
         throw_power=10,
         handlers={
-            Event.ON_TURN_END_2: Handler(
+            Event.ON_TURN_END_2: h.ItemHandler(
                 partial(
-                    h.modify_hp, target_spec="source:self", r=1/16, log="on_success"
+                    common.modify_hp, target_spec="source:self", r=1/16
                 ),
                 subject_spec="source:self",
             )

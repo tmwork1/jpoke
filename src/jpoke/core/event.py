@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Move, Pokemon, Field
@@ -7,11 +7,23 @@ if TYPE_CHECKING:
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.types import ContextRole, RoleSpec, Side
-from jpoke.utils.enums import Event, HandlerResult
+from jpoke.utils.types import ContextRole, RoleSpec, LogPolicy, EffectSource, Side
+from jpoke.utils.enums import Event, EventControl
 from jpoke.utils import fast_copy
 
 from .player import Player
+
+
+class HandlerReturn(NamedTuple):
+    """ハンドラ関数の戻り値。
+
+    - success: 処理が成功したかどうか
+    - value: 補正値などの連鎖計算に使う値（省略可）
+    - control: イベント制御フラグ（省略可）
+    """
+    success: bool
+    value: Any = None
+    control: EventControl | None = None
 
 
 @dataclass
@@ -25,6 +37,18 @@ class EventContext:
 
     def get(self, role: ContextRole) -> Pokemon | None:
         return getattr(self, role)
+
+    def resolve_role(self,
+                     battle: Battle,
+                     spec: RoleSpec | None) -> Pokemon | None:
+        if spec is None:
+            return None
+
+        role, side = spec.split(":")
+        mon = self.get(role)
+        if mon and side == "foe":
+            mon = battle.foe(mon)
+        return mon
 
 
 @dataclass
@@ -43,8 +67,13 @@ class Handler:
     """
     func: Callable
     subject_spec: RoleSpec
+    source_type: EffectSource
+    log: LogPolicy = "always"
     priority: int = 0
     once: bool = False
+
+    def __lt__(self, other):
+        return self.priority > other.priority
 
     @property
     def role(self) -> ContextRole:
@@ -56,8 +85,36 @@ class Handler:
         """subject_spec から side を抽出"""
         return self.subject_spec.split(":")[1]  # type: ignore
 
-    def __lt__(self, other):
-        return self.priority > other.priority
+    def resolve_subject(self, battle: Battle, ctx: EventContext) -> Pokemon | None:
+        """subject_spec に基づいてハンドラの対象ポケモンを解決"""
+        return ctx.resolve_role(battle, self.subject_spec)
+
+    def should_log(self, success: bool) -> bool:
+        return self.log == "always" or \
+            (self.log == "on_success" and success) or \
+            (self.log == "on_failure" and not success)
+
+    def write_log(self, battle: Battle, ctx: EventContext, success: bool) -> None:
+        if not self.should_log(success):
+            return
+
+        subject = self.resolve_subject(battle, ctx)
+        if not subject:
+            return
+
+        match self.source_type:
+            case "ability":
+                subject.ability.revealed = True
+                text = subject.ability.orig_name
+            case "item":
+                subject.item.revealed = True
+                text = subject.item.orig_name
+            case "move":
+                ctx.move.revealed = True
+                text = ctx.move.orig_name
+        if not success:
+            text += " 失敗"
+        battle.add_turn_log(subject, text)
 
 
 @dataclass
@@ -139,24 +196,23 @@ class EventManager:
                 print(f"  Handler skipped: {rh}")
                 continue
 
-            res = rh.handler.func(self.battle, context, value)
-            # ハンドラの戻り値の処理
-            if isinstance(res, HandlerResult):
-                flag = res
-            elif isinstance(res, tuple):
-                value, flag = res
-            else:
-                value, flag = res, None
+            result: HandlerReturn = rh.handler.func(self.battle, context, value)
+
+            if result.value is not None:
+                value = result.value
+
+            # log_policy に基づいてログを出力
+            rh.handler.write_log(self.battle, context, result.success)
 
             # 一度きりのハンドラを解除
             if rh.handler.once:
                 self.off(event, rh.handler, rh._subject)
 
             # 制御フラグの処理
-            match flag:
-                case HandlerResult.STOP_HANDLER:
+            match result.control:
+                case EventControl.STOP_HANDLER:
                     break
-                case HandlerResult.STOP_EVENT:
+                case EventControl.STOP_EVENT:
                     return value
 
         return value

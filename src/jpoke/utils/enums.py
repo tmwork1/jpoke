@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 
-class HandlerResult(Enum):
+class EventControl(Enum):
     STOP_HANDLER = auto()
     STOP_EVENT = auto()
 

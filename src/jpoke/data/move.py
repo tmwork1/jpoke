@@ -1,6 +1,23 @@
-from jpoke.core.event import Event, Handler
+from functools import partial
+from jpoke.core.event import Event, Handler, HandlerReturn
 from .models import MoveData
-from jpoke.handlers import base, move as h
+from jpoke.handlers import common, move as h
+
+
+def add_common_handlers():
+    """共通ハンドラを追加する。"""
+    for name, obj in MOVES.items():
+        if isinstance(obj, dict):
+            continue
+
+        # 共通ハンドラを追加
+        MOVES[name].handlers |= {
+            Event.ON_CONSUME_PP: Handler(
+                h.consume_pp,
+                subject_spec="attacker:self",
+                source_type="move",
+            ),
+        }
 
 
 MOVES: dict[str, MoveData] = {
@@ -70,8 +87,12 @@ MOVES: dict[str, MoveData] = {
         flags=["contact", "punch"],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: base.modify_stat(btl, ctx.attacker, "S", -1),
-                subject_spec="source:self",
+                partial(
+                    common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"
+                ),
+                subject_spec="attacker:self",
+                source_type="move",
+                log="never"
             )
         }
     ),
@@ -2566,7 +2587,14 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
         flags=["contact"],
-        handlers={Event.ON_HIT: Handler(h.pivot, subject_spec="attacker:self")}
+        handlers={
+            Event.ON_HIT: Handler(
+                h.pivot,
+                subject_spec="attacker:self",
+                source_type="move",
+                log="never",
+            )
+        }
     ),
     "なげつける": {
         "type": "あく",
@@ -3840,8 +3868,10 @@ MOVES: dict[str, MoveData] = {
         flags=["contact", "non_encore"],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: base.modify_hp(btl, ctx.attacker, r=-1/4),
+                partial(common.modify_hp, target_spec="attacker:self", r=-1/4),
                 subject_spec="attacker:self",
+                source_type="move",
+                log="never",
             )
         }
     ),
@@ -5190,12 +5220,13 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=50,
-        priority=0,
         flags=["bullet"],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: base.apply_ailment(btl, ctx.defender, "まひ"),
+                partial(common.apply_ailment, ailment="まひ", target_spec="defener:self"),
                 subject_spec="attacker:self",
+                source_type="move",
+                log="never",
             ),
         }
     ),
@@ -7613,8 +7644,10 @@ MOVES: dict[str, MoveData] = {
         ],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: btl.weather_manager.activate("すなあらし", ctx.attacker),
+                partial(common.activate_weather, weather="すなあらし", source_spec="attacker:self"),
                 subject_spec="attacker:self",
+                source_type="move",
+                log="never",
             )
         }
     ),
@@ -8045,8 +8078,10 @@ MOVES: dict[str, MoveData] = {
         ],
         handlers={
             Event.ON_HIT: Handler(
-                lambda btl, ctx, v: base.apply_ailment(btl, ctx.defender, "もうどく"),
-                subject_spec="attacker:self"
+                partial(common.apply_ailment, ailment="もうどく", target_spec="defender:self", source_spec="attacker:self"),
+                subject_spec="attacker:self",
+                source_type="move",
+                log="never",
             )
         }
     ),
@@ -8633,7 +8668,14 @@ MOVES: dict[str, MoveData] = {
             "reflectable",
             "wind",
         ],
-        handlers={Event.ON_HIT: Handler(h.blow, subject_spec="attacker:self")}
+        handlers={
+            Event.ON_HIT: Handler(
+                h.blow,
+                subject_spec="attacker:self",
+                source_type="move",
+                log="never",
+            )
+        }
     ),
     "フラフラダンス": {
         "type": "ノーマル",
@@ -9084,10 +9126,6 @@ MOVES: dict[str, MoveData] = {
             "ignore_substitute"
         ],
         handlers={
-            Event.ON_HIT: Handler(
-                lambda btl, ctx, v: base.apply_side_field(btl, ctx.attacker, "reflector", base_count=5),
-                subject_spec="attacker:self"
-            )
         }
     ),
     "リフレッシュ": {
@@ -9189,13 +9227,4 @@ MOVES: dict[str, MoveData] = {
 }
 
 
-# 共通ハンドラと役割の設定
-for name, obj in MOVES.items():
-    if isinstance(obj, dict):
-        continue
-
-    # 共通ハンドラを追加
-    MOVES[name].handlers |= {
-        Event.ON_DECLARE_MOVE: Handler(h.reveal_move, subject_spec="attacker:self"),
-        Event.ON_CONSUME_PP: Handler(h.consume_pp, subject_spec="attacker:self"),
-    }
+add_common_handlers()

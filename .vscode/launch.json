@@ -6,8 +6,8 @@
             "type": "debugpy",
             "request": "launch",
             //"program": "${workspaceFolder}/tests/run_tests.py", // 全体テスト
-            //"program": "${workspaceFolder}/tests/ability.py", // 特性のテスト
-            "program": "${workspaceFolder}/tests/item.py", // アイテムのテスト
+            "program": "${workspaceFolder}/tests/ability.py", // 特性のテスト
+            //"program": "${workspaceFolder}/tests/item.py", // アイテムのテスト
             //"program": "${workspaceFolder}/tests/move.py", // 技のテスト
             //"program": "${workspaceFolder}/tests/field.py", // フィールドのテスト
             "console": "integratedTerminal"

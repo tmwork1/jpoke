@@ -4,10 +4,13 @@ if TYPE_CHECKING:
     from jpoke.core.battle import Battle
     from jpoke.core.event import EventContext
 
+from jpoke.core.event import HandlerReturn
+
 
 def どく(battle: Battle, ctx: EventContext, value: Any):
     if battle.modify_hp(ctx.target, r=-1/8):
         battle.add_turn_log(ctx.target, "どくダメージ")
+    return HandlerReturn(True)
 
 
 def もうどく(battle: Battle, ctx: EventContext, value: Any):
@@ -15,3 +18,4 @@ def もうどく(battle: Battle, ctx: EventContext, value: Any):
     r = max(-1, -ctx.target.ailment.count/16)
     if battle.modify_hp(ctx.target, r=r):
         battle.add_turn_log(ctx.target, "もうどくダメージ")
+    return HandlerReturn(True)

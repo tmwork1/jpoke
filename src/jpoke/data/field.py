@@ -1,6 +1,6 @@
-from jpoke.core.event import Event, Handler
+from jpoke.core.event import Event, Handler, HandlerReturn
 from .models import FieldData
-from jpoke.handlers import base, field as hdl
+from jpoke.handlers import common, field as hdl
 
 
 FIELDS: dict[str, FieldData] = {
@@ -18,11 +18,6 @@ FIELDS: dict[str, FieldData] = {
     "すなあらし": FieldData(
         turn_extension_item="さらさらいわ",
         handlers={
-            Event.ON_TURN_END_1: Handler(
-                lambda btl, ctx, v: btl.weather.tick(),
-                subject_spec="source:self"
-            ),
-            Event.ON_TURN_END_2: Handler(hdl.apply_sandstorm_damage, subject_spec="source:self"),
         },
     ),
     "ゆき": FieldData(
@@ -38,14 +33,6 @@ FIELDS: dict[str, FieldData] = {
     "グラスフィールド": FieldData(
         turn_extension_item="グランドコート",
         handlers={
-            Event.ON_TURN_END_3: Handler(
-                lambda btl, ctx, v: base.modify_hp(btl, ctx.source, r=1/16),
-                subject_spec="source:self"
-            ),
-            Event.ON_TURN_END_5: Handler(
-                lambda btl, ctx, v: btl.terrain_manager.tick(),
-                subject_spec="source:self"
-            )
         },
     ),
     "サイコフィールド": FieldData(
@@ -70,10 +57,6 @@ FIELDS: dict[str, FieldData] = {
     # Side fields
     "リフレクター": FieldData(
         handlers={
-            Event.ON_CALC_DAMAGE_MODIFIER: Handler(
-                hdl.リフレクター,
-                subject_spec="defender:self",
-            ),
         },
     ),
     "ひかりのかべ": FieldData(
