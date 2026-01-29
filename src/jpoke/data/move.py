@@ -12,10 +12,10 @@ def add_common_handlers():
 
         # 共通ハンドラを追加
         MOVES[name].handlers |= {
-            Event.ON_CONSUME_PP: Handler(
+            Event.ON_CONSUME_PP: h.MoveHandler(
                 h.consume_pp,
                 subject_spec="attacker:self",
-                source_type="move",
+                log="always"
             ),
         }
 
@@ -86,13 +86,10 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         flags=["contact", "punch"],
         handlers={
-            Event.ON_HIT: Handler(
+            Event.ON_HIT: h.MoveHandler(
                 partial(
                     common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"
                 ),
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never"
             )
         }
     ),
@@ -2588,12 +2585,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         flags=["contact"],
         handlers={
-            Event.ON_HIT: Handler(
-                h.pivot,
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never",
-            )
+            Event.ON_HIT: h.MoveHandler(h.pivot)
         }
     ),
     "なげつける": {
@@ -3867,11 +3859,8 @@ MOVES: dict[str, MoveData] = {
         power=40,
         flags=["contact", "non_encore"],
         handlers={
-            Event.ON_HIT: Handler(
+            Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_hp, target_spec="attacker:self", r=-1/4),
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never",
             )
         }
     ),
@@ -5222,11 +5211,8 @@ MOVES: dict[str, MoveData] = {
         accuracy=50,
         flags=["bullet"],
         handlers={
-            Event.ON_HIT: Handler(
-                partial(common.apply_ailment, ailment="まひ", target_spec="defener:self"),
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never",
+            Event.ON_HIT: h.MoveHandler(
+                partial(common.apply_ailment, ailment="まひ", target_spec="defender:self"),
             ),
         }
     ),
@@ -7643,11 +7629,8 @@ MOVES: dict[str, MoveData] = {
             "wind"
         ],
         handlers={
-            Event.ON_HIT: Handler(
+            Event.ON_HIT: h.MoveHandler(
                 partial(common.activate_weather, weather="すなあらし", source_spec="attacker:self"),
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never",
             )
         }
     ),
@@ -8077,11 +8060,8 @@ MOVES: dict[str, MoveData] = {
             "reflectable"
         ],
         handlers={
-            Event.ON_HIT: Handler(
+            Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_ailment, ailment="もうどく", target_spec="defender:self", source_spec="attacker:self"),
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never",
             )
         }
     ),
@@ -8669,12 +8649,7 @@ MOVES: dict[str, MoveData] = {
             "wind",
         ],
         handlers={
-            Event.ON_HIT: Handler(
-                h.blow,
-                subject_spec="attacker:self",
-                source_type="move",
-                log="never",
-            )
+            Event.ON_HIT: h.MoveHandler(h.blow)
         }
     ),
     "フラフラダンス": {

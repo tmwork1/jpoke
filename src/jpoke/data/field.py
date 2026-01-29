@@ -1,6 +1,6 @@
 from jpoke.core.event import Event, Handler, HandlerReturn
 from .models import FieldData
-from jpoke.handlers import common, field as hdl
+from jpoke.handlers import common, field as h
 
 
 FIELDS: dict[str, FieldData] = {
@@ -18,6 +18,11 @@ FIELDS: dict[str, FieldData] = {
     "すなあらし": FieldData(
         turn_extension_item="さらさらいわ",
         handlers={
+            Event.ON_TURN_END_2: Handler(
+                h.すなあらし_apply_damage,
+                subject_spec="target:self",
+                log_text="すなあらしダメージ",
+            ),
         },
     ),
     "ゆき": FieldData(

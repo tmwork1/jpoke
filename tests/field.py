@@ -1,33 +1,31 @@
 import math
 from jpoke import Pokemon
-from jpoke.utils import test_utils
-
-
-SHOW_LOG = True
+from jpoke.utils import test_utils as t
 
 
 def test():
     print("--- すなあらし ---")
-    battle = test_utils.generate_battle()
-    battle.apply_weather("すなあらし")
-    battle.advance_turn(print_log=SHOW_LOG)
+    battle = t.start_battle(
+        weather="すなあらし",
+        turn=1,
+    )
     assert battle.actives[0].hp == math.ceil(battle.actives[0].max_hp * 15/16)
     assert battle.actives[1].hp == math.ceil(battle.actives[1].max_hp * 15/16)
 
     print("--- すなあらし: いわタイプはダメージを受けない ---")
-    battle = test_utils.generate_battle(
+    battle = t.start_battle(
         ally=[Pokemon("イシツブテ")],
+        weather="すなあらし",
+        turn=1,
     )
-    battle.apply_weather("すなあらし")
-    battle.advance_turn(print_log=SHOW_LOG)
     assert battle.actives[0].hp == battle.actives[0].max_hp
 
     print("--- すなあらし: 特性でダメージを受けない ---")
-    battle = test_utils.generate_battle(
+    battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="すなかき")],
+        weather="すなあらし",
+        turn=1,
     )
-    battle.apply_weather("すなあらし")
-    battle.advance_turn(print_log=SHOW_LOG)
     assert battle.actives[0].hp == battle.actives[0].max_hp
 
 

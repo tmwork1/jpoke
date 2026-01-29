@@ -1,21 +1,24 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core.battle import Battle
-    from jpoke.core.event import EventContext
+    from jpoke.core import Battle, EventContext
 
-from jpoke.core.event import HandlerReturn
+from jpoke.utils.types import EffectSource, LogPolicy
+from jpoke.core.event import Handler, HandlerReturn
 
 
-def どく(battle: Battle, ctx: EventContext, value: Any):
-    if battle.modify_hp(ctx.target, r=-1/8):
-        battle.add_turn_log(ctx.target, "どくダメージ")
-    return HandlerReturn(True)
+class AilmentHandler(Handler):
+    def __init__(self,
+                 func: Callable,
+                 subject_spec: str,
+                 log: LogPolicy = "always",
+                 log_text: str | None = None,
+                 priority: int = 100):
+        super().__init__(func, subject_spec, "ailment", log, log_text, priority)
 
 
 def もうどく(battle: Battle, ctx: EventContext, value: Any):
     ctx.target.ailment.count += 1
     r = max(-1, -ctx.target.ailment.count/16)
-    if battle.modify_hp(ctx.target, r=r):
-        battle.add_turn_log(ctx.target, "もうどくダメージ")
-    return HandlerReturn(True)
+    success = battle.modify_hp(ctx.target, r=r)
+    return HandlerReturn(success)

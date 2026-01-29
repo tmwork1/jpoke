@@ -1,4 +1,5 @@
 from jpoke import Battle, Player, Pokemon
+from jpoke.utils.types import Weather, Terrain
 from jpoke.utils.enums import Command
 
 
@@ -10,13 +11,12 @@ class CustomPlayer(Player):
         return battle.get_available_action_commands(self)[0]
 
 
-PRINT_LOG = True
-
-
-def generate_battle(ally: list[Pokemon] | None = None,
-                    foe: list[Pokemon] | None = None,
-                    turn: int = 0,
-                    accuracy: int | None = 100) -> Battle:
+def start_battle(ally: list[Pokemon] | None = None,
+                 foe: list[Pokemon] | None = None,
+                 weather: Weather | None = None,
+                 terrain: Terrain | None = None,
+                 turn: int = 0,
+                 accuracy: int | None = 100) -> Battle:
     if not ally:
         ally = [Pokemon("ピカチュウ")]
     if not foe:
@@ -27,17 +27,22 @@ def generate_battle(ally: list[Pokemon] | None = None,
             player.team.append(mon)
 
     battle = Battle(players)
+    if weather:
+        battle.weather_mgr.activate(weather, 999)
+    if terrain:
+        battle.terrain_mgr.activate(terrain, 999)
 
     if accuracy is not None:
         battle.test_option.accuracy = accuracy
 
     while True:
-        battle.advance_turn(print_log=PRINT_LOG)
+        battle.advance_turn()
+        battle.print_turn_log()
         if battle.winner() or battle.turn == turn:
             return battle
 
 
-def check_switch(battle: Battle, idx: int) -> bool:
+def can_switch(battle: Battle, idx: int) -> bool:
     """交代可能ならTrueを返す"""
     commands = battle.get_available_action_commands(battle.players[idx])
     return any(c.is_switch() for c in commands)

@@ -21,7 +21,6 @@ class Event(Enum):
     ON_SWITCH_OUT = auto()
     ON_BEFORE_MOVE = auto()
     ON_TRY_ACTION = auto()
-    ON_DECLARE_MOVE = auto()
     ON_CONSUME_PP = auto()
     ON_TRY_MOVE = auto()
     ON_TRY_IMMUNE = auto()

@@ -67,23 +67,25 @@ class Handler:
     """
     func: Callable
     subject_spec: RoleSpec
-    source_type: EffectSource
+    source_type: EffectSource | None = None
     log: LogPolicy = "always"
-    priority: int = 0
+    log_text: str | None = None
+    priority: int = 100
     once: bool = False
 
     def __lt__(self, other):
-        return self.priority > other.priority
+        """priorityが小さいほど先に実行される"""
+        return self.priority < other.priority
 
     @property
     def role(self) -> ContextRole:
         """subject_spec から role を抽出"""
-        return self.subject_spec.split(":")[0]  # type: ignore
+        return self.subject_spec.split(":")[0]
 
     @property
     def side(self) -> Side:
         """subject_spec から side を抽出"""
-        return self.subject_spec.split(":")[1]  # type: ignore
+        return self.subject_spec.split(":")[1]
 
     def resolve_subject(self, battle: Battle, ctx: EventContext) -> Pokemon | None:
         """subject_spec に基づいてハンドラの対象ポケモンを解決"""
@@ -102,18 +104,26 @@ class Handler:
         if not subject:
             return
 
-        match self.source_type:
-            case "ability":
-                subject.ability.revealed = True
-                text = subject.ability.orig_name
-            case "item":
-                subject.item.revealed = True
-                text = subject.item.orig_name
-            case "move":
-                ctx.move.revealed = True
-                text = ctx.move.orig_name
+        text = ""
+        if self.log_text is not None:
+            text = self.log_text
+        else:
+            match self.source_type:
+                case "ability":
+                    subject.ability.revealed = True
+                    text = subject.ability.orig_name
+                case "item":
+                    subject.item.revealed = True
+                    text = subject.item.orig_name
+                case "move":
+                    ctx.move.revealed = True
+                    text = ctx.move.orig_name
+                case "ailment":
+                    text = subject.ailment.name
+
         if not success:
             text += " 失敗"
+
         battle.add_turn_log(subject, text)
 
 
@@ -151,7 +161,7 @@ class EventManager:
                 if isinstance(rh._subject, Player):
                     player_idx = old.players.index(rh._subject)
                     new_source = new.players[player_idx]
-                elif rh._subject:
+                else:
                     old_player = old.find_player(rh._subject)
                     player_idx = old.players.index(old_player)
                     team_idx = old_player.team.index(rh._subject)
@@ -193,7 +203,7 @@ class EventManager:
             context = ctx if ctx else self._build_context(rh)
 
             if not self._match(context, rh):
-                print(f"  Handler skipped: {rh}")
+                # print(f"  Handler skipped: {rh}")
                 continue
 
             result: HandlerReturn = rh.handler.func(self.battle, context, value)
@@ -221,12 +231,9 @@ class EventManager:
         if len(rhs) <= 1:
             return rhs
 
-        speed_order = self.battle.calc_speed_order()
-        speed_idx = {p: i for i, p in enumerate(speed_order)}
-
         def key(rh: RegisteredHandler):
-            s_idx = speed_idx.get(rh.subject, float("inf"))
-            return (rh.handler.priority, s_idx)
+            speed = self.battle.calc_effective_speed(rh.subject)
+            return (rh.handler.priority, -speed)
 
         return sorted(rhs, key=key)
 

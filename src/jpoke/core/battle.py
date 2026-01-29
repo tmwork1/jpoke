@@ -6,7 +6,7 @@ from random import Random
 from copy import deepcopy
 import json
 
-from jpoke.utils.types import Stat, Weather, Terrain
+from jpoke.utils.types import Stat
 from jpoke.utils.enums import Command, Interrupt
 from jpoke.utils import fast_copy
 
@@ -101,7 +101,7 @@ class Battle:
             })
 
         for log in self.logger.command_logs:
-            data["players"][log.player_idx]["commands"].setdefault(
+            data["players"][log.idx]["commands"].setdefault(
                 str(log.turn), []).append(log.command.name)
 
         with open(file, 'w', encoding='utf-8') as f:
@@ -306,7 +306,6 @@ class Battle:
         self.events.emit(Event.ON_TRY_ACTION, ctx)
 
         # 技の宣言、PP消費
-        self.events.emit(Event.ON_DECLARE_MOVE, ctx)
         self.events.emit(Event.ON_CONSUME_PP, ctx)
 
         # 発動成功判定
@@ -370,7 +369,6 @@ class Battle:
         if v and (v := target.modify_stat(stat, v)):
             self.add_turn_log(self.find_player(target),
                               f"{stat}{'+' if v >= 0 else ''}{v}")
-            print(f"{target.name} {stat} {v} {source.name if source else ''}")
             self.events.emit(
                 Event.ON_MODIFY_STAT,
                 EventContext(target=target, source=source),
@@ -465,7 +463,8 @@ class Battle:
 
             # コマンドが予約されていなければ、プレイヤーの方策関数に従う
             if not player.reserved_commands:
-                command = player.reserve_command(player.choose_switch_command(self))
+                command = player.choose_switch_command(self)
+                player.reserve_command(command)
                 self.add_command_log(player, command)
 
             # 交代コマンドを取得
@@ -525,7 +524,7 @@ class Battle:
 
     def add_turn_log(self, source: Player | list[Player] | Pokemon | None, text: str):
         for idx in self.to_player_idxes(source):
-            self.logger.add_turn_log(self.turn, idx, text)
+            self.logger.add_event_log(self.turn, idx, text)
 
     def add_damage_log(self, source: Player | Pokemon | None, text: str):
         idx = self.to_player_idxes(source)[0]
@@ -534,7 +533,7 @@ class Battle:
     def get_turn_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
         if turn is None:
             turn = self.turn
-        return {pl: self.logger.get_turn_logs(turn, i) for i, pl in enumerate(self.players)}
+        return {pl: self.logger.get_event_logs(turn, i) for i, pl in enumerate(self.players)}
 
     def get_damage_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
         if turn is None:
@@ -550,19 +549,13 @@ class Battle:
         for player in self.players:
             print(f"\t{player.name}\t{turn_logs[player]} {damage_logs[player]}")
 
-    def advance_turn(self,
-                     commands: dict[Player, Command] | None = None,
-                     print_log: bool = False):
+    def advance_turn(self, commands: dict[Player, Command] | None = None):
         # 引数のコマンドをスケジュールに追加する
         if commands:
             for player, command in commands.items():
                 player.reserve_command(command)
                 self.add_command_log(player, command)
-
         self._advance_turn()
-
-        if print_log:
-            self.print_turn_log()
 
     def _advance_turn(self):
         if not self.has_interrupt():
@@ -584,7 +577,8 @@ class Battle:
             # 予約されているコマンドがなければ、方策関数に従ってコマンドを予約する
             for player in self.players:
                 if not player.reserved_commands:
-                    command = player.reserve_command(player.choose_action_command(self))
+                    command = player.choose_action_command(self)
+                    player.reserve_command(command)
                     self.add_command_log(player, command)
 
             # 行動前の処理

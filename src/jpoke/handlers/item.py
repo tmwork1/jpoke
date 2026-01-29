@@ -14,7 +14,7 @@ class ItemHandler(Handler):
                  func: Callable,
                  subject_spec: RoleSpec,
                  log: LogPolicy = "on_success",
-                 priority: int = 0,
+                 priority: int = 100,
                  once: bool = False) -> None:
         super().__init__(
             func=func,
