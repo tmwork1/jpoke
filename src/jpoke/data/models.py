@@ -57,3 +57,9 @@ class FieldData:
 class AilmentData:
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
+
+
+@dataclass
+class VolatileData:
+    handlers: dict[Event, Handler] = field(default_factory=dict)
+    name: str = ""

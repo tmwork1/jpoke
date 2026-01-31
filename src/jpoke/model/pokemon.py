@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
 
-from jpoke.utils.type_defs import Nature, Type, Stat, MoveCategory, Gender, BoostSource, AilmentName
+from jpoke.utils.type_defs import Nature, Type, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
 from jpoke.utils import fast_copy
 
@@ -14,6 +14,7 @@ from .ability import Ability
 from .item import Item
 from .move import Move
 from .ailment import Ailment
+from .volatile import Volatile
 from .stats import PokemonStats
 
 
@@ -81,6 +82,7 @@ class Pokemon:
         self.lost_types: list[str] = []
         self.executed_move: Move | None = None
         self.pp_consumed_moves: list[Move] = []
+        self.volatiles: dict[str, Volatile] = {}
 
     @classmethod
     def reconstruct_from_log(cls, data: dict) -> Pokemon:
@@ -113,7 +115,7 @@ class Pokemon:
         new = cls.__new__(cls)
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
-            'ability', 'item', 'moves', 'ailment',
+            'ability', 'item', 'moves', 'ailment', 'volatiles',
             'executed_move', 'pp_consumed_moves',
             '_stats_manager',
         ])
@@ -162,13 +164,15 @@ class Pokemon:
             events: イベントマネージャー
 
         Note:
-            特性、持ち物、状態異常のハンドラを登録し、
+            特性、持ち物、状態異常、揮発性状態のハンドラを登録し、
             observedフラグをTrueにする。
         """
         self.revealed = True
         self.ability.register_handlers(events, self)
         self.item.register_handlers(events, self)
         self.ailment.register_handlers(events, self)
+        for volatile in self.volatiles.values():
+            volatile.register_handlers(events, self)
 
     def switch_out(self, events: EventManager):
         """ポケモンを引っ込める。
@@ -183,6 +187,8 @@ class Pokemon:
         self.ability.unregister_handlers(events, self)
         self.item.unregister_handlers(events, self)
         self.ailment.unregister_handlers(events, self)
+        for volatile in self.volatiles.values():
+            volatile.unregister_handlers(events, self)
 
     @property
     def name(self) -> str:
@@ -192,6 +198,24 @@ class Pokemon:
             ポケモンの種族名
         """
         return self.data.name
+
+    @property
+    def alive(self) -> bool:
+        """ポケモンが生存しているかどうかを取得する。
+
+        Returns:
+            HPが0より大きい場合True
+        """
+        return self.hp > 0
+
+    @property
+    def faited(self) -> bool:
+        """ポケモンが瀕死状態かどうかを取得する。
+
+        Returns:
+            HPが0の場合True
+        """
+        return self.hp == 0
 
     @property
     def ability(self) -> Ability:
@@ -713,7 +737,11 @@ class Pokemon:
             value=move.category
         )
 
-    def apply_ailment(self, events: EventManager, name: AilmentName, source: Pokemon | None = None, force: bool = False) -> bool:
+    def apply_ailment(self,
+                      events: EventManager,
+                      name: AilmentName,
+                      source: Pokemon | None = None,
+                      force: bool = False) -> bool:
         """状態異常を付与する。
 
         Args:
@@ -762,4 +790,64 @@ class Pokemon:
         self.ailment.unregister_handlers(events, self)
         # 状態異常をクリア
         self.ailment = Ailment()
+        return True
+
+    def check_volatile(self, name: VolatileName) -> bool:
+        """指定された揮発性状態を持っているか判定する。
+
+        Args:
+            name: 揮発性状態名
+
+        Returns:
+            指定揮発性状態を持っていればTrue
+        """
+        return name in self.volatiles and self.volatiles[name].is_active
+
+    def apply_volatile(self,
+                       events: EventManager,
+                       name: VolatileName,
+                       count: int = 1,
+                       source: Pokemon | None = None) -> bool:
+        """揮発性状態を付与する。
+
+        Args:
+            events: イベントマネージャー
+            name: 揮発性状態名
+            source: 揮発性状態の原因となったポケモン
+
+        Returns:
+            付与に成功したTrue
+
+        Note:
+            - force=Falseの場合、既に同じ揮発性状態があれば失敗
+        """
+        # 既に同じ揮発性状態がある場合は失敗
+        if self.check_volatile(name):
+            return False
+
+        volatile = Volatile(name, count=count)
+        volatile.register_handlers(events, self)
+        self.volatiles[name] = volatile
+        return True
+
+    def remove_volatile(self,
+                        events: EventManager,
+                        name: VolatileName,
+                        source: Pokemon | None = None) -> bool:
+        """揮発性状態を解除する。
+
+        Args:
+            events: イベントマネージャー
+            name: 揮発性状態名
+            source: 解除の原因となったポケモン
+
+        Returns:
+            解除に成功したTrue
+
+        Note:
+            指定された揮発性状態がない場合は失敗する。
+        """
+        if not self.check_volatile(name):
+            return False
+        self.volatiles.pop(name).unregister_handlers(events, self)
         return True

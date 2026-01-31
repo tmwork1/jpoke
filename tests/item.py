@@ -1,6 +1,6 @@
 import math
 from jpoke import Pokemon
-from jpoke.utils import test_utils as t
+import test_utils as t
 
 
 def test():

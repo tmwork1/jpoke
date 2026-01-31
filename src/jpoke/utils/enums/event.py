@@ -63,3 +63,4 @@ class Event(Enum):
     ON_CALC_DEF_TYPE_MODIFIER = auto()
     ON_CALC_DAMAGE_MODIFIER = auto()
     ON_CHECK_DEF_ABILITY = auto()
+    ON_CALC_DRAIN = auto()

@@ -1,5 +1,5 @@
 from jpoke import Battle, Player, Pokemon
-from jpoke.utils.type_defs import Weather, Terrain
+from jpoke.utils.type_defs import VolatileName, Weather, Terrain
 from jpoke.utils.enums import Command
 
 
@@ -13,9 +13,11 @@ class CustomPlayer(Player):
 
 def start_battle(ally: list[Pokemon] | None = None,
                  foe: list[Pokemon] | None = None,
+                 turn: int = 0,
                  weather: Weather | None = None,
                  terrain: Terrain | None = None,
-                 turn: int = 0,
+                 ally_volatile: dict[VolatileName, int] | None = None,
+                 foe_volatile: dict[VolatileName, int] | None = None,
                  accuracy: int | None = 100) -> Battle:
     if not ally:
         ally = [Pokemon("ピカチュウ")]
@@ -37,6 +39,14 @@ def start_battle(ally: list[Pokemon] | None = None,
 
     while True:
         battle.advance_turn()
+
+        if battle.turn == 1 and (ally_volatile or foe_volatile):
+            volatiles = [ally_volatile, foe_volatile]
+            for idx, mon in enumerate(battle.actives):
+                if volatiles[idx]:
+                    for name, count in volatiles[idx].items():
+                        mon.apply_volatile(battle.events, name, count=count)
+
         battle.print_logs()
         if battle.winner() or battle.turn == turn:
             return battle

@@ -10,7 +10,7 @@ RoleSpec = Literal[
     "defender:self",
 ]
 
-EffectSource = Literal["ability", "item", "move", "ailment"]
+EffectSource = Literal["ability", "item", "move", "ailment", "volatile"]
 
 LogPolicy = Literal["always", "on_success", "on_failure", "never"]
 
@@ -35,6 +35,33 @@ Gender = Literal["", "オス", "メス"]
 MoveCategory = Literal["物理", "特殊", "変化"]
 
 AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"]
+
+VolatileName = Literal[
+    "アクアリング",
+    "あめまみれ",
+    "アンコール",
+    "うちおとす",
+    "かいふくふうじ",
+    "かなしばり",
+    "急所ランク",
+    "こんらん",
+    "しおづけ",
+    "じごくずき",
+    "じゅうでん",
+    "たくわえる",
+    "ちょうはつ",
+    "でんじふゆう",
+    "にげられない",
+    "ねむけ",
+    "ねをはる",
+    "のろい",
+    "バインド",
+    "ほろびのうた",
+    "みがわり",
+    "みちづれ",
+    "メロメロ",
+    "やどりぎのタネ",
+]
 
 GlobalField = Literal["weather", "terrain", "gravity", "trickroom"]
 

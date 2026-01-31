@@ -57,8 +57,8 @@ async def main(pattern: str = "*.py"):
     return 0 if passed == total else 1
 
 if __name__ == "__main__":
-    # 例: python run_tests.py  # tests/*.py を対象
-    #    python run_tests.py tests_*.py  # パターン指定も可能
+    # 例: python run.py  # tests/*.py を対象
+    #    python run.py tests_*.py  # パターン指定も可能
     pattern = sys.argv[1] if len(sys.argv) > 1 else "*.py"
     exit_code = asyncio.run(main(pattern))
     sys.exit(exit_code)

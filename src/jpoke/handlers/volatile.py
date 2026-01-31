@@ -4,21 +4,16 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy
+from jpoke.utils.enums import Event
 from jpoke.core.event import Handler, HandlerReturn
+from . import common
 
 
-class AilmentHandler(Handler):
+class VolatileHandler(Handler):
     def __init__(self,
                  func: Callable,
-                 subject_spec: RoleSpec,
+                 subject_spec: RoleSpec = "source:self",
                  log: LogPolicy = "on_success",
                  log_text: str | None = None,
                  priority: int = 100):
-        super().__init__(func, subject_spec, "ailment", log, log_text, priority)
-
-
-def もうどく(battle: Battle, ctx: EventContext, value: Any):
-    ctx.target.ailment.count += 1
-    r = max(-1, -ctx.target.ailment.count/16)
-    success = battle.modify_hp(ctx.target, r=r)
-    return HandlerReturn(success)
+        super().__init__(func, subject_spec, "volatile", log, log_text, priority)

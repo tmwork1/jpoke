@@ -338,6 +338,24 @@ class Battle:
                                f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}")
         return bool(v)
 
+    def drain_hp(self, from_: Pokemon, to_: Pokemon, v: int = 0, r: float = 0) -> tuple[bool, bool]:
+        """HPを吸収。
+        Args:
+            from_: HPを吸収されるポケモン
+            to_: HPを吸収するポケモン
+            v: 固定値で吸収するHP量
+            r: 最大HP割合で吸収するHP量
+
+        Returns:
+            成功したかどうかのタプル（吸収される側、吸収する側）
+        """
+        if r:
+            v = int(from_.max_hp * r)
+        success = self.modify_hp(from_, -v)
+        if success:
+            return success, self.modify_hp(to_, v)
+        return success, False
+
     def modify_stat(self,
                     target: Pokemon,
                     stat: Stat,

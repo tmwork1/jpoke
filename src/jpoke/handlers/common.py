@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, Weather, Terrain, Side
+from jpoke.utils.enums import Event
 from jpoke.core.event import EventContext, HandlerReturn
 
 
@@ -19,6 +20,27 @@ def modify_hp(battle: Battle,
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     success = battle.modify_hp(target, v, r)
+    return HandlerReturn(success)
+
+
+def drain_hp(battle: Battle,
+             ctx: EventContext,
+             value: Any,
+             from_: RoleSpec,
+             to_: RoleSpec | None = None,
+             v: int = 0,
+             r: float = 0,
+             prob: float = 1) -> HandlerReturn:
+    if prob < 1 and battle.random.random() >= prob:
+        return HandlerReturn(False)
+
+    from_mon = ctx.resolve_role(battle, from_)
+    if to_ is not None:
+        to_mon = ctx.resolve_role(battle, to_)
+    else:
+        to_mon = from_mon
+
+    success, _ = battle.drain_hp(from_mon, to_mon, v, r)
     return HandlerReturn(success)
 
 

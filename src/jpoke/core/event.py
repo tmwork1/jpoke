@@ -120,6 +120,8 @@ class Handler:
                     text = ctx.move.orig_name
                 case "ailment":
                     text = subject.ailment.name
+                case "volatile":
+                    text = subject.volatile.name
 
         if not success:
             text += " 失敗"
