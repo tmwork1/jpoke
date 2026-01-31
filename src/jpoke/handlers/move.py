@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
-from jpoke.utils.types import RoleSpec, LogPolicy
+from jpoke.utils.type_defs import RoleSpec, LogPolicy
 from jpoke.utils.enums import Event, Interrupt
 from jpoke.core.event import Handler, EventContext, HandlerReturn
 
@@ -21,7 +21,7 @@ class MoveHandler(Handler):
 def consume_pp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     v = battle.events.emit(Event.ON_CHECK_PP_CONSUMED, ctx, 1)
     ctx.move.pp = max(0, ctx.move.pp - v)
-    battle.add_turn_log(ctx.attacker, f"PP -{v}")
+    battle.add_event_log(ctx.attacker, f"PP -{v}")
     ctx.attacker.pp_consumed_moves.append(ctx.move)
     return HandlerReturn(True)
 

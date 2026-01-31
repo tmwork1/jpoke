@@ -1,7 +1,8 @@
 from typing import Literal
 from dataclasses import dataclass, field
 
-from jpoke.utils.types import stats
+from jpoke.utils.constants import STATS
+
 from jpoke.core.event import Event, Handler
 
 
@@ -14,7 +15,7 @@ class PokemonData:
         self.weight: float = data["weight"]
         self.types: list[str] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
-        self.base: list[int] = [data[s] for s in stats()[:6]]
+        self.base: list[int] = [data[s] for s in STATS[:6]]
 
 
 @dataclass

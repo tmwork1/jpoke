@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from jpoke import config
-from jpoke.utils import file_io as fileut
+from jpoke.utils import io_utils as iout
 from jpoke.data.models import PokemonData
 
 
@@ -17,11 +17,11 @@ def get_season(start_year=2022, start_month=12) -> int:
 
 
 def init():
-    file = str(fileut.resource_path('data', "zukan.json"))
+    file = iout.resource_path('data', "zukan.json")
 
-    if False and fileut.needs_update(file):
-        fileut.download(config.URL_ZUKAN, file)
-        fileut.save_last_update(file)
+    if False and iout.needs_update(file):
+        iout.download(config.URL_ZUKAN, file)
+        iout.save_update_log(file)
 
     with open(file, encoding='utf-8') as f:
         data = json.load(f)

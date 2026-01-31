@@ -19,7 +19,14 @@ class Player:
         self.n_won: int = 0
         self.rating: float = 1500
 
-        self.reset_game()
+        # ゲーム状態
+        self.selection_idxes: list[int] = []
+        self.active_idx: int | None = None
+        self.interrupt: Interrupt = Interrupt.NONE
+        self.reserved_commands: list[Command] = []
+
+        # ターン状態
+        self.has_switched: bool = False
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -27,20 +34,23 @@ class Player:
         memo[id(self)] = new
         return fast_copy(self, new, keys_to_deepcopy=["team"])
 
-    def reset_game(self):
+    def init_game(self):
         """ゲーム状態をリセットする。
 
         選出、場のポケモン、割り込み状態、予約コマンドをクリアし、
         ターン状態もリセットする。
         """
-        self.selection_idxes: list[int] = []
-        self.active_idx: int | None = None
-        self.interrupt: Interrupt = Interrupt.NONE
-        self.reserved_commands: list[Command] = []
+        self.selection_idxes = []
+        self.active_idx = None
+        self.interrupt = Interrupt.NONE
+        self.reserved_commands = []
 
-        self.reset_turn()
+        self.init_turn()
 
-    def reset_turn(self):
+        for mon in self.team:
+            mon.init_game()
+
+    def init_turn(self):
         """ターン状態をリセットする。
 
         交代フラグをクリアする。

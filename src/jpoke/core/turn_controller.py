@@ -1,0 +1,239 @@
+"""ターン進行を管理するクラス。
+
+Battleクラスの責務を分離し、ターン管理に関連するロジックを担当する。
+"""
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Battle, Player
+    from jpoke.model import Pokemon
+
+from jpoke.utils.enums import Command, Interrupt
+from jpoke.core.event import Event, EventContext
+
+
+class TurnController:
+    """ターン進行を管理するクラス。
+
+    担当する責務:
+    - ターン初期化
+    - ポケモン選出処理
+    - ターン進行のオーケストレーション（コマンド処理、技発動、交代など）
+    - 勝敗判定とスコア計算
+    """
+
+    def __init__(self, battle: "Battle"):
+        """TurnControllerを初期化。
+
+        Args:
+            battle: Battleインスタンスへの参照
+        """
+        self.battle = battle
+
+    def update_reference(self, battle: "Battle"):
+        """Battleインスタンスの参照を更新。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
+
+    def init_turn(self):
+        """ターンを初期化し、各プレイヤーの状態をリセット。"""
+        for player in self.battle.players:
+            player.init_turn()
+        self.battle.turn += 1
+
+    def run_selection(self):
+        """ポケモン選出処理を実行。
+
+        各プレイヤーが選出していない場合、方策関数に従って選出を行う。
+        """
+        for pl in self.battle.players:
+            if not pl.selection_idxes:
+                commands = pl.choose_selection_commands(self.battle)
+                pl.selection_idxes = [c.idx for c in commands]
+
+    def TOD_score(self, player: "Player", alpha: float = 1) -> float:
+        """プレイヤーのTime Over Death（TOD）スコアを計算。
+
+        Args:
+            player: スコアを計算するプレイヤー
+            alpha: HP割合の重み係数
+
+        Returns:
+            TODスコア（生存ポケモン数 + HP割合）
+        """
+        n_alive, total_max_hp, total_hp = 0, 0, 0
+        for mon in player.selection:
+            total_max_hp += mon.max_hp
+            total_hp += mon.hp
+            if mon.hp:
+                n_alive += 1
+        return n_alive + alpha * total_hp / total_max_hp
+
+    def winner(self) -> "Player | None":
+        """勝者を判定して返す。
+
+        Returns:
+            勝者のPlayerインスタンス、勝負がついていない場合はNone
+        """
+        if self.battle.winner_idx is not None:
+            return self.battle.players[self.battle.winner_idx]
+
+        TOD_scores = [self.TOD_score(pl) for pl in self.battle.players]
+        if 0 in TOD_scores:
+            loser_idx = TOD_scores.index(0)
+            self.battle.winner_idx = int(not loser_idx)
+            self.battle.add_event_log(self.battle.players[self.battle.winner_idx], "勝ち")
+            self.battle.add_event_log(self.battle.players[loser_idx], "負け")
+            return self.battle.players[self.battle.winner_idx]
+
+        return None
+
+    def advance_turn(self, commands: dict["Player", Command] | None = None):
+        """ターンを1つ進める。
+
+        Args:
+            commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
+        """
+        # 引数のコマンドをスケジュールに追加する
+        if commands:
+            for player, command in commands.items():
+                player.reserve_command(command)
+                self.battle.add_command_log(player, command)
+        self._advance_turn()
+
+    def _advance_turn(self):
+        """内部的なターン進行処理を実行。
+
+        割り込みの有無に応じて、ターンの各フェーズを順番に処理する。
+        """
+        if not self.battle.has_interrupt():
+            self.init_turn()
+
+        if self.battle.turn == 0:
+            if not self.battle.has_interrupt():
+                # ポケモンを選出
+                self.run_selection()
+                # ポケモンを場に出す
+                self.battle.run_initial_switch()
+
+            # だっしゅつパックによる交代
+            self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
+
+            return
+
+        if not self.battle.has_interrupt():
+            # 予約されているコマンドがなければ、方策関数に従ってコマンドを予約する
+            for player in self.battle.players:
+                if not player.reserved_commands:
+                    command = player.choose_action_command(self.battle)
+                    player.reserve_command(command)
+                    self.battle.add_command_log(player, command)
+
+            # 行動前の処理
+            self.battle.events.emit(Event.ON_BEFORE_ACTION)
+
+        # ターン開始時の交代処理
+        for mon in self.battle.calc_speed_order():
+            # 交代フラグ
+            idx = self.battle.actives.index(mon)
+            interrupt = Interrupt.ejectpack_on_switch(idx)
+            # 交代
+            if not self.battle.has_interrupt():
+                player = self.battle.players[idx]
+                if player.reserved_commands[0].is_switch():
+                    command = player.reserved_commands.pop(0)
+                    player = self.battle.find_player(mon)
+                    new = player.team[command.idx]
+                    self.battle.run_switch(player, new)
+
+                # だっしゅつパックによる割り込みフラグを更新
+                self.battle.override_interrupt(interrupt)
+
+            # だっしゅつパックによる交代
+            self.battle.run_interrupt_switch(interrupt)
+
+        # 行動前の処理
+        self.battle.events.emit(Event.ON_BEFORE_MOVE)
+
+        # 技の処理
+        for mon in self.battle.calc_action_order():
+            player = self.battle.find_player(mon)
+            self.battle.add_event_log(player, player.active.name)
+
+            if not self.battle.has_interrupt():
+                # 技の発動
+                command = player.reserved_commands.pop(0)
+                move = self.battle.command_to_move(player, command)
+                self.battle.run_move(mon, move)
+
+            # だっしゅつボタンによる交代
+            self.battle.run_interrupt_switch(Interrupt.EJECTBUTTON)
+
+            # ききかいひによる交代
+            self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+
+            # 交代技による交代
+            self.battle.run_interrupt_switch(Interrupt.PIVOT)
+
+            interrupt = Interrupt.ejectpack_on_after_move(
+                self.battle.players.index(player))
+
+            if not self.battle.has_interrupt():
+                # 交代技の後の処理
+                self.battle.events.emit(
+                    Event.ON_AFTER_PIVOT,
+                    EventContext(target=player.active)
+                )
+
+                # だっしゅつパックによる割り込みフラグを更新
+                self.battle.override_interrupt(interrupt)
+
+            # だっしゅつパックによる交代
+            self.battle.run_interrupt_switch(interrupt)
+
+        # ターン終了時の処理 (1)
+        if not self.battle.has_interrupt():
+            self.battle.events.emit(Event.ON_TURN_END_1)
+
+        # ターン終了時の処理 (2)
+        if not self.battle.has_interrupt():
+            self.battle.events.emit(Event.ON_TURN_END_2)
+
+        # ききかいひによる交代
+        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+
+        # ターン終了時の処理 (3)
+        if not self.battle.has_interrupt():
+            self.battle.events.emit(Event.ON_TURN_END_3)
+
+        # ききかいひによる交代
+        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+
+        # ターン終了時の処理 (4)
+        if not self.battle.has_interrupt():
+            self.battle.events.emit(Event.ON_TURN_END_4)
+
+        # ききかいひによる交代
+        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+
+        # ターン終了時の処理 (5)
+        if not self.battle.has_interrupt():
+            self.battle.events.emit(Event.ON_TURN_END_5)
+
+            # だっしゅつパックによる割り込みフラグを更新
+            self.battle.override_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
+
+        # だっしゅつパックによる交代
+        self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
+
+        # ターン終了時の処理 (6)
+        if not self.battle.has_interrupt():
+            self.battle.events.emit(Event.ON_TURN_END_6)
+
+        self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
+
+        # 瀕死による交代
+        self.battle.run_faint_switch()

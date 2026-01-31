@@ -40,7 +40,7 @@ def test():
     )
     assert battle.players[0].active_idx != 0
     assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item.effect_enabled
+    assert not battle.players[0].team[0].item._enabled
 
     print("--- だっしゅつパック : 能力上昇では発動しない ---")
     battle = t.start_battle(
@@ -57,7 +57,7 @@ def test():
     )
     assert battle.players[0].active_idx != 0
     assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item.effect_enabled
+    assert not battle.players[0].team[0].item._enabled
 
     print("--- たべのこし ---")
     mon = Pokemon("ピカチュウ", item="たべのこし")

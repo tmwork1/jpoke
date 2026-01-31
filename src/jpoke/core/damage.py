@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 from dataclasses import dataclass, field
 from decimal import Decimal, ROUND_HALF_DOWN
 
-from jpoke.utils.types import Stat
+from jpoke.utils.type_defs import Stat
 from jpoke.utils.enums import DamageFlag
 from jpoke.utils import fast_copy
 

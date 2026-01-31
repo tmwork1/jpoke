@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import json
 
 from jpoke.utils.enums import Command
 from jpoke.utils import fast_copy
@@ -153,3 +154,34 @@ class Logger:
             text: ダメージの詳細情報
         """
         self.damage_logs.append(DamageLog(turn, idx, text))
+
+    def export_log(self, file: str, seed: int, players_data: list[dict]):
+        """バトルログをJSON形式でエクスポート。
+
+        Args:
+            file: 出力先ファイルパス
+            seed: バトルのシード値
+            players_data: プレイヤーごとのデータ（name, selection_indexes, team）
+        """
+        data = {
+            "seed": seed,
+            "players": [],
+        }
+
+        # プレイヤーデータをコピー
+        for player_data in players_data:
+            data["players"].append({
+                "name": player_data["name"],
+                "selection_indexes": player_data["selection_indexes"],
+                "commands": {},
+                "team": player_data["team"],
+            })
+
+        # コマンドログを追加
+        for log in self.command_logs:
+            data["players"][log.idx]["commands"].setdefault(
+                str(log.turn), []).append(log.command.name)
+
+        # ファイルに書き込み
+        with open(file, 'w', encoding='utf-8') as f:
+            f.write(json.dumps(data, ensure_ascii=False, indent=4))

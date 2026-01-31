@@ -1,5 +1,5 @@
 from jpoke import Battle, Player, Pokemon
-from jpoke.utils.types import Weather, Terrain
+from jpoke.utils.type_defs import Weather, Terrain
 from jpoke.utils.enums import Command
 
 
@@ -37,7 +37,7 @@ def start_battle(ally: list[Pokemon] | None = None,
 
     while True:
         battle.advance_turn()
-        battle.print_turn_log()
+        battle.print_logs()
         if battle.winner() or battle.turn == turn:
             return battle
 

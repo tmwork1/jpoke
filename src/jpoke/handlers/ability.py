@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.core.event import HandlerReturn, Handler
-from jpoke.utils.types import LogPolicy, RoleSpec
+from jpoke.utils.type_defs import LogPolicy, RoleSpec
 from . import common
 
 

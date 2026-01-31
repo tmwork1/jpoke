@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.types import ContextRole, RoleSpec, LogPolicy, EffectSource, Side
+from jpoke.utils.type_defs import ContextRole, RoleSpec, LogPolicy, EffectSource, Side
 from jpoke.utils.enums import Event, EventControl
 from jpoke.utils import fast_copy
 
@@ -110,13 +110,13 @@ class Handler:
         else:
             match self.source_type:
                 case "ability":
-                    subject.ability.revealed = True
+                    subject.ability.reveal()
                     text = subject.ability.orig_name
                 case "item":
-                    subject.item.revealed = True
+                    subject.item.reveal()
                     text = subject.item.orig_name
                 case "move":
-                    ctx.move.revealed = True
+                    ctx.move.reveal()
                     text = ctx.move.orig_name
                 case "ailment":
                     text = subject.ailment.name
@@ -124,7 +124,7 @@ class Handler:
         if not success:
             text += " 失敗"
 
-        battle.add_turn_log(subject, text)
+        battle.add_event_log(subject, text)
 
 
 @dataclass

@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon
 
-from jpoke.utils.types import RoleSpec, Stat, AilmentName, Weather, Terrain, Side
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, Weather, Terrain, Side
 from jpoke.core.event import EventContext, HandlerReturn
 
 

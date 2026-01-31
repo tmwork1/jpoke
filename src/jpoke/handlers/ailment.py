@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
-from jpoke.utils.types import EffectSource, LogPolicy
+from jpoke.utils.type_defs import EffectSource, LogPolicy
 from jpoke.core.event import Handler, HandlerReturn
 
 

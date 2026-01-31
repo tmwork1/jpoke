@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils.enums import Interrupt
 from jpoke.core.event import EventContext, EventControl, HandlerReturn, Handler
-from jpoke.utils.types import LogPolicy, RoleSpec
+from jpoke.utils.type_defs import LogPolicy, RoleSpec
 from . import common
 
 

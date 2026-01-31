@@ -2,11 +2,11 @@ from typing import Self
 from dataclasses import dataclass
 
 import time
+import json
 from random import Random
 from copy import deepcopy
-import json
 
-from jpoke.utils.types import Stat
+from jpoke.utils.type_defs import Stat
 from jpoke.utils.enums import Command, Interrupt
 from jpoke.utils import fast_copy
 
@@ -16,11 +16,16 @@ from .event import Event, EventManager, EventContext
 from .player import Player
 from .logger import Logger
 from .damage import DamageCalculator, DamageContext
-from .field import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
+from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
+from .move_executor import MoveExecutor
+from .switch_manager import SwitchManager
+from .turn_controller import TurnController
+from .speed_calculator import SpeedCalculator
 
 
 @dataclass
 class TestOption:
+    """テスト用オプション設定クラス。"""
     accuracy: int | None = None
 
 
@@ -42,6 +47,10 @@ class Battle:
         self.logger = Logger()
         self.random = Random(self.seed)
         self.damage_calculator: DamageCalculator = DamageCalculator()
+        self.move_executor: MoveExecutor = MoveExecutor(self)
+        self.switch_manager: SwitchManager = SwitchManager(self)
+        self.turn_controller: TurnController = TurnController(self)
+        self.speed_calculator: SpeedCalculator = SpeedCalculator(self)
 
         self.weather_mgr: WeatherManager = WeatherManager(self.events, self.players)
         self.terrain_mgr: TerrainManager = TerrainManager(self.events, self.players)
@@ -56,19 +65,51 @@ class Battle:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             "players", "events", "logger", "random", "damage_calculator",
-            "states", "field", "sides"
+            "move_executor", "switch_manager", "turn_controller", "speed_calculator",
+            "field", "sides"
         ])
 
         # 複製したインスタンスが複製後を参照するように再代入する
-        new.events.update_reference(new)
-        new.field.update_reference(new.events, new.players)
-        for i, side in enumerate(new.sides):
-            side.update_reference(new.events, new.players[i])
-
-        # 乱数の隠蔽
-        new.random.seed(int(time.time()))
+        new._update_reference()
 
         return new
+
+    def _update_reference(self):
+        """Battle インスタンスの参照を各マネージャークラスに更新する。"""
+        self.events.update_reference(self)
+        self.move_executor.update_reference(self)
+        self.switch_manager.update_reference(self)
+        self.turn_controller.update_reference(self)
+        self.speed_calculator.update_reference(self)
+        self.field.update_reference(self.events, self.players)
+        for i, side in enumerate(self.sides):
+            side.update_reference(self.events, self.players[i])
+
+    def init_game(self):
+        """ゲーム初期化。
+        """
+        # 管理クラスの初期化
+        self.events = EventManager(self)
+        self.logger = Logger()
+        self.random = Random(self.seed)
+        self.damage_calculator = DamageCalculator()
+        self.move_executor = MoveExecutor(self)
+        self.switch_manager = SwitchManager(self)
+        self.turn_controller = TurnController(self)
+        self.speed_calculator = SpeedCalculator(self)
+
+        self.weather_mgr = WeatherManager(self.events, self.players)
+        self.terrain_mgr = TerrainManager(self.events, self.players)
+        self.field = GlobalFieldManager(self.events, self.players)
+        self.sides = [SideFieldManager(self.events, pl) for pl in self.players]
+
+        # 各プレイヤーとポケモンの初期化
+        for player in self.players:
+            player.init_game()
+
+    def init_turn(self):
+        """ターン初期化（TurnControllerへの委譲）。"""
+        self.turn_controller.init_turn()
 
     @property
     def side(self) -> dict[Player, SideFieldManager]:
@@ -87,25 +128,20 @@ class Battle:
         return self.terrain_mgr.current
 
     def export_log(self, file):
-        data = {
-            "seed": self.seed,
-            "players": [],
-        }
+        """バトルログをJSON形式でエクスポート。
 
+        Args:
+            file: 出力先ファイルパス
+        """
+        players_data = []
         for player in self.players:
-            data["players"].append({
+            players_data.append({
                 "name": player.name,
                 "selection_indexes": player.selection_idxes,
-                "commands": {},
-                "team": [mon.dump() for mon in player.team],
+                "team": [mon.to_dict() for mon in player.team],
             })
 
-        for log in self.logger.command_logs:
-            data["players"][log.idx]["commands"].setdefault(
-                str(log.turn), []).append(log.command.name)
-
-        with open(file, 'w', encoding='utf-8') as f:
-            f.write(json.dumps(data, ensure_ascii=False, indent=4))
+        self.logger.export_log(file, self.seed, players_data)
 
     @classmethod
     def reconstruct_from_log(cls, file) -> Self:
@@ -133,16 +169,21 @@ class Battle:
 
         return new
 
-    def masked(self, perspective: Player) -> tuple[Self, Player]:
-        # TODO mask
-        new = deepcopy(self)
-        new_player = new.players[self.players.index(perspective)]
-        return new, new_player
+    def masked_copy(self, perspective: Player) -> Self:
+        # TODO: implement more detailed masking
+        """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
+        Args:
+            perspective: 情報を完全に保持するプレイヤー
 
-    def init_turn(self):
-        for player in self.players:
-            player.reset_turn()
-        self.turn += 1
+        Returns:
+            Battle インスタンスのコピー
+        """
+        new = deepcopy(self)
+
+        # 乱数の隠蔽
+        new.random.seed(int(time.time()))
+
+        return new
 
     def find_player(self, mon: Pokemon) -> Player:
         for player in self.players:
@@ -150,20 +191,26 @@ class Battle:
                 return player
         raise Exception("Player not found.")
 
-    def find_rival(self, mon: Pokemon) -> Player:
-        player = self.find_player(mon)
-        idx = self.players.index(player)
-        return self.players[not idx]
-
     def find_player_index(self, mon: Pokemon) -> int:
         for i, player in enumerate(self.players):
             if mon in player.team:
                 return i
         raise Exception("Player not found.")
 
-    def team_idx(self, mon: Pokemon) -> int:
-        player = self.find_player(mon)
-        return player.team.index(mon)
+    def get_player_idx(self, source: Player | Pokemon) -> int:
+        """プレイヤーまたはポケモンからプレイヤーインデックスを取得。
+
+        Args:
+            source: Player または Pokemon インスタンス
+
+        Returns:
+            プレイヤーインデックス (0 or 1)
+        """
+        if isinstance(source, Player):
+            return self.players.index(source)
+        elif isinstance(source, Pokemon):
+            return self.find_player_index(source)
+        raise ValueError(f"Invalid source type: {type(source)}")
 
     def foe(self, active: Pokemon) -> Pokemon:
         return self.actives[not self.actives.index(active)]
@@ -199,166 +246,96 @@ class Battle:
 
         return commands
 
-    def to_player_idxes(self, source: Player | list[Player] | Pokemon | None) -> list[int]:
-        if isinstance(source, Player):
-            return [self.players.index(source)]
-        if isinstance(source, list):
-            return [self.players.index(pl) for pl in source]
-        if isinstance(source, Pokemon):
-            return [self.players.index(self.find_player(source))]
-        if source is None:
-            return list(range(len(self.players)))
-        return []
-
     def calc_effective_speed(self, mon: Pokemon) -> int:
-        return self.events.emit(Event.ON_CALC_SPEED, EventContext(target=mon), mon.stats["S"])
+        """実効素早さを計算（SpeedCalculatorへの委譲）。
+
+        Args:
+            mon: 対象のポケモン
+
+        Returns:
+            補正後の実効素早さ
+        """
+        return self.speed_calculator.calc_effective_speed(mon)
 
     def calc_speed_order(self) -> list[Pokemon]:
-        speeds = [self.calc_effective_speed(p) for p in self.actives]
-        if speeds[0] == speeds[1]:
-            actives = self.actives.copy()
-            self.random.shuffle(actives)
-        else:
-            paired = sorted(zip(speeds, self.actives),
-                            key=lambda pair: pair[0],
-                            reverse=True)
-            _, actives = zip(*paired)
-        return actives
+        """素早さ順序を計算（SpeedCalculatorへの委譲）。
+
+        Returns:
+            素早さの速い順にソートされたポケモンのリスト
+        """
+        return self.speed_calculator.calc_speed_order()
 
     def calc_action_order(self) -> list[Pokemon]:
-        actives, speeds = [], []
-        for i, player in enumerate(self.players):
-            if player.has_switched:
-                continue
+        """行動順序を計算（SpeedCalculatorへの委譲）。
 
-            mon = player.active
-            speed = self.calc_effective_speed(mon)
+        Returns:
+            行動順にソートされたポケモンのリスト
+        """
+        return self.speed_calculator.calc_action_order()
 
-            command = player.reserved_commands[-1]
-            move = self.command_to_move(self.players[i], command)
-            action_speed = self.events.emit(
-                Event.ON_CALC_ACTION_SPEED,
-                EventContext(target=mon, move=move),
-                0
-            )
-            total_speed = action_speed + speed*1e-5
-            speeds.append(total_speed)
-            actives.append(mon)
+    def TOD_score(self, player: Player, alpha: float = 1) -> float:
+        """TODスコアを計算（TurnControllerへの委譲）。
 
-        # Sort by speed
-        if len(actives) > 1:
-            paired = sorted(zip(speeds, actives),
-                            key=lambda pair: pair[0],
-                            reverse=True)
-            _, actives = zip(*paired)
+        Args:
+            player: スコアを計算するプレイヤー
+            alpha: HP割合の重み係数
 
-        return actives
-
-    def TOD_score(self, player: Player, alpha: float = 1):
-        n_alive, total_max_hp, total_hp = 0, 0, 0
-        for mon in player.selection:
-            total_max_hp += mon.max_hp
-            total_hp += mon.hp
-            if mon.hp:
-                n_alive += 1
-        return n_alive + alpha * total_hp / total_max_hp
+        Returns:
+            TODスコア
+        """
+        return self.turn_controller.TOD_score(player, alpha)
 
     def winner(self) -> Player | None:
-        if self.winner_idx is not None:
-            return self.players[self.winner_idx]
+        """勝者を判定（TurnControllerへの委譲）。
 
-        TOD_scores = [self.TOD_score(pl) for pl in self.players]
-        if 0 in TOD_scores:
-            loser_idx = TOD_scores.index(0)
-            self.winner_idx = int(not loser_idx)
-            self.add_turn_log(self.players[self.winner_idx], "勝ち")
-            self.add_turn_log(self.players[loser_idx], "負け")
-            return self.players[self.winner_idx]
-
-        return None
+        Returns:
+            勝者のPlayerインスタンス、勝負がついていない場合はNone
+        """
+        return self.turn_controller.winner()
 
     def run_selection(self):
-        for pl in self.players:
-            if not pl.selection_idxes:
-                commands = pl.choose_selection_commands(self)
-                pl.selection_idxes = [c.idx for c in commands]
+        """ポケモン選出処理（TurnControllerへの委譲）。"""
+        self.turn_controller.run_selection()
 
     def check_hit(self, attacker: Pokemon, move: Move) -> bool:
-        if self.test_option.accuracy is not None:
-            accuracy = self.test_option.accuracy
-        else:
-            if not move.data.accuracy:
-                return True
-            accuracy = self.events.emit(
-                Event.ON_CALC_ACCURACY,
-                EventContext(attacker=attacker, move=move),
-                move.data.accuracy
-            )
-        return 100*self.random.random() < accuracy
+        """技の命中判定（MoveExecutorへの委譲）。
+
+        Args:
+            attacker: 攻撃側のポケモン
+            move: 使用する技
+
+        Returns:
+            命中した場合True
+        """
+        return self.move_executor.check_hit(attacker, move)
 
     def run_move(self, attacker: Pokemon, move: Move):
-        ctx = EventContext(attacker=attacker, defender=self.foe(attacker), move=move)
+        """技を実行（MoveExecutorへの委譲）。
 
-        # 技のハンドラを登録
-        move.register_handlers(self.events, attacker)
-
-        # 行動成功判定
-        self.events.emit(Event.ON_TRY_ACTION, ctx)
-
-        # 技の宣言、PP消費
-        self.events.emit(Event.ON_CONSUME_PP, ctx)
-
-        # 発動成功判定
-        self.events.emit(Event.ON_TRY_MOVE, ctx)
-
-        # 発動した技の確定
-        attacker.executed_move = move
-        self.add_turn_log(attacker, move.name)
-
-        # TODO 命中判定
-        if not self.check_hit(attacker, move):
-            return
-
-        # 無効判定
-        self.events.emit(Event.ON_TRY_IMMUNE, ctx)
-
-        # ダメージ計算
-        damage = self.calc_damage(attacker, move)
-
-        # HPコストの支払い
-        self.events.emit(Event.ON_PAY_HP, ctx)
-
-        # ダメージ修正
-        damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
-
-        # ダメージの適用
-        if damage:
-            self.modify_hp(ctx.defender, -damage)
-
-        # 技を当てたときの処理
-        self.events.emit(Event.ON_HIT, ctx)
-
-        # ダメージを与えたときの処理
-        if damage:
-            self.events.emit(Event.ON_DAMAGE, ctx)
-
-        # 技のハンドラを解除
-        move.unregister_handlers(self.events, attacker)
+        Args:
+            attacker: 攻撃側のポケモン
+            move: 使用する技
+        """
+        self.move_executor.run_move(attacker, move)
 
     def command_to_move(self, player: Player, command: Command) -> Move:
-        if command == Command.STRUGGLE:
-            return Move("わるあがき")
-        elif command.is_zmove():
-            return Move("わるあがき")
-        else:
-            return player.active.moves[command.idx]
+        """コマンドから技オブジェクトを取得（MoveExecutorへの委譲）。
+
+        Args:
+            player: プレイヤー
+            command: 実行するコマンド
+
+        Returns:
+            技オブジェクト
+        """
+        return self.move_executor.command_to_move(player, command)
 
     def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0) -> bool:
         if r:
             v = int(target.max_hp * r)
         if v and (v := target.modify_hp(v)):
-            self.add_turn_log(self.find_player(target),
-                              f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}")
+            self.add_event_log(self.find_player(target),
+                               f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}")
         return bool(v)
 
     def modify_stat(self,
@@ -367,8 +344,8 @@ class Battle:
                     v: int,
                     source: Pokemon | None = None) -> bool:
         if v and (v := target.modify_stat(stat, v)):
-            self.add_turn_log(self.find_player(target),
-                              f"{stat}{'+' if v >= 0 else ''}{v}")
+            self.add_event_log(self.find_player(target),
+                               f"{stat}{'+' if v >= 0 else ''}{v}")
             self.events.emit(
                 Event.ON_MODIFY_STAT,
                 EventContext(target=target, source=source),
@@ -398,291 +375,130 @@ class Battle:
         return damages
 
     def has_interrupt(self) -> bool:
-        return any(pl.interrupt != Interrupt.NONE for pl in self.players)
+        """割り込みフラグが設定されているか確認（SwitchManagerへの委譲）。
+
+        Returns:
+            いずれかのプレイヤーに割り込みフラグがある場合True
+        """
+        return self.switch_manager.has_interrupt()
 
     def override_interrupt(self, flag: Interrupt, only_first: bool = True):
-        for mon in self.calc_speed_order():
-            player = self.find_player(mon)
-            if player.interrupt == Interrupt.REQUESTED:
-                player.interrupt = flag
-                if only_first:
-                    return
+        """割り込みフラグを上書き（SwitchManagerへの委譲）。
+
+        Args:
+            flag: 設定する割り込みフラグ
+            only_first: 最初の1体のみに設定する場合True
+        """
+        self.switch_manager.override_interrupt(flag, only_first)
 
     def run_switch(self, player: Player, new: Pokemon, emit: bool = True):
-        # 割り込みフラグを破棄
-        player.interrupt = Interrupt.NONE
+        """ポケモンを交代（SwitchManagerへの委譲）。
 
-        # 退場
-        old = player.active
-        if old is not None:
-            self.events.emit(Event.ON_SWITCH_OUT, EventContext(source=old))
-            old.switch_out(self.events)
-            self.add_turn_log(player, f"{old.name} {'交代' if old.hp else '瀕死'}")
-
-        # 入場
-        player.active_idx = player.team.index(new)
-        new.switch_in(self.events)
-        self.add_turn_log(player, f"{new.name} 着地")
-
-        # ポケモンが場に出た時の処理
-        if emit:
-            self.events.emit(Event.ON_SWITCH_IN, EventContext(source=new))
-
-            # リクエストがなくなるまで再帰的に交代する
-            while self.has_interrupt():
-                flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
-                self.override_interrupt(flag)
-                self.run_interrupt_switch(flag)
-
-        # その他の処理
-        player.has_switched = True
+        Args:
+            player: 交代を行うプレイヤー
+            new: 場に出す新しいポケモン
+            emit: ON_SWITCH_INイベントを発火する場合True
+        """
+        self.switch_manager.run_switch(player, new, emit)
 
     def run_initial_switch(self):
-        # ポケモンを場に出す
-        for pl in self.players:
-            new = pl.selection[0]
-            self.run_switch(pl, new, emit=False)
+        """バトル開始時の初期交代（SwitchManagerへの委譲）。"""
+        self.switch_manager.run_initial_switch()
 
-        # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
-        self.events.emit(Event.ON_SWITCH_IN)
+    def run_interrupt_switch(self, flag: Interrupt, emit_on_each_switch: bool = True):
+        """割り込み交代を実行（SwitchManagerへの委譲）。
 
-        # だっしゅつパックによる割り込みフラグを更新
-        self.override_interrupt(Interrupt.EJECTPACK_ON_START)
-
-    def run_interrupt_switch(self, flag: Interrupt, emit_on_each_switch=True):
-        switched_players = []
-
-        for player in self.players:
-            if player.interrupt != flag:
-                continue
-
-            # 交代を引き起こしたアイテムを消費させる
-            if flag.consume_item():
-                self.add_turn_log(player, f"{player.active.item.name}消費")
-                player.active.item.consume()
-
-            # コマンドが予約されていなければ、プレイヤーの方策関数に従う
-            if not player.reserved_commands:
-                command = player.choose_switch_command(self)
-                player.reserve_command(command)
-                self.add_command_log(player, command)
-
-            # 交代コマンドを取得
-            command = player.reserved_commands.pop(0)
-
-            self.run_switch(player, player.team[command.idx], emit=emit_on_each_switch)
-            switched_players.append(player)
-
-        # 全員の着地処理を同時に実行
-        if not emit_on_each_switch:
-            for mon in self.calc_speed_order():
-                player = self.find_player(mon)
-                if player in switched_players:
-                    self.events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+        Args:
+            flag: 対象とする割り込みフラグ
+            emit_on_each_switch: 各交代ごとにON_SWITCH_INを発火する場合True
+        """
+        self.switch_manager.run_interrupt_switch(flag, emit_on_each_switch)
 
     def run_faint_switch(self):
-        '''
-        while self.winner() is None:
-            target_players = []
-            if not self.has_interrupt():
-                for player in self.players:
-                    if player.active.hp == 0:
-                        player.interrupt = Interrupt.FAINTED
-                        target_players.append(player)
+        """瀕死による交代を実行（SwitchManagerへの委議）。"""
+        self.switch_manager.run_faint_switch()
 
-            # 交代を行うプレイヤーがいなければ終了
-            if not target_players:
-                return
+    def add_command_log(self, source: Player | Pokemon, command: Command):
+        """コマンドログを追加。
 
-            self.run_interrupt_switch(Interrupt.FAINTED, False)
-        '''
-        if self.winner():
-            return
-
-        # 交代フラグを設定
-        if not self.has_interrupt():
-            for player in self.players:
-                if player.active.hp == 0:
-                    player.interrupt = Interrupt.FAINTED
-
-        # 交代を行うプレイヤー
-        switch_players = [pl for pl in self.players if pl.interrupt == Interrupt.FAINTED]
-
-        # 対象プレイヤーがいなければ終了
-        if not switch_players:
-            return
-
-        # 交代
-        self.run_interrupt_switch(Interrupt.FAINTED, False)
-
-        # すべての死に出しが完了するまで再帰的に実行
-        self.run_faint_switch()
-
-    def add_command_log(self, source: Player | Pokemon | None, command: Command):
-        idx = self.to_player_idxes(source)[0]
+        Args:
+            source: Player または Pokemon インスタンス
+            command: 選択されたコマンド
+        """
+        idx = self.get_player_idx(source)
         self.logger.add_command_log(self.turn, idx, command)
 
-    def add_turn_log(self, source: Player | list[Player] | Pokemon | None, text: str):
-        for idx in self.to_player_idxes(source):
-            self.logger.add_event_log(self.turn, idx, text)
+    def add_event_log(self, source: Player | Pokemon, text: str):
+        """イベントログを追加。
 
-    def add_damage_log(self, source: Player | Pokemon | None, text: str):
-        idx = self.to_player_idxes(source)[0]
+        Args:
+            source: Player または Pokemon インスタンス
+            text: イベントの内容
+        """
+        idx = self.get_player_idx(source)
+        self.logger.add_event_log(self.turn, idx, text)
+
+    def add_damage_log(self, source: Player | Pokemon, text: str):
+        """ダメージログを追加。
+
+        Args:
+            source: Player または Pokemon インスタンス
+            text: ダメージの詳細情報
+        """
+        idx = self.get_player_idx(source)
         self.logger.add_damage_log(self.turn, idx, text)
 
-    def get_turn_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
+    def get_event_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
+        """指定したターンの全プレイヤーのイベントログを取得。
+
+        Args:
+            turn: ターン番号（Noneの場合は現在のターン）
+
+        Returns:
+            Playerをキーとしたイベントテキストのリストの辞書
+        """
         if turn is None:
             turn = self.turn
-        return {pl: self.logger.get_event_logs(turn, i) for i, pl in enumerate(self.players)}
+        return {player: self.logger.get_event_logs(turn, i)
+                for i, player in enumerate(self.players)}
 
     def get_damage_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
-        if turn is None:
-            turn = self.turn
-        return {pl: self.logger.get_damage_logs(turn, i) for i, pl in enumerate(self.players)}
+        """指定したターンの全プレイヤーのダメージログを取得。
 
-    def print_turn_log(self, turn: int | None = None):
+        Args:
+            turn: ターン番号（Noneの場合は現在のターン）
+
+        Returns:
+            Playerをキーとしたダメージテキストのリストの辞書
+        """
         if turn is None:
             turn = self.turn
-        turn_logs = self.get_turn_logs(turn)
-        damage_logs = self.get_damage_logs(turn)
+        return {player: self.logger.get_damage_logs(turn, i)
+                for i, player in enumerate(self.players)}
+
+    def print_logs(self, turn: int | None = None):
+        """指定したターンのログを整形して出力。
+
+        Args:
+            turn: ターン番号（Noneの場合は現在のターン）
+        """
+        if turn is None:
+            turn = self.turn
+
         print(f"Turn {turn}")
-        for player in self.players:
-            print(f"\t{player.name}\t{turn_logs[player]} {damage_logs[player]}")
+        for i, player in enumerate(self.players):
+            event_logs = self.logger.get_event_logs(turn, i)
+            damage_logs = self.logger.get_damage_logs(turn, i)
+            print(f"\t{player.name}\t{event_logs} {damage_logs}")
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):
-        # 引数のコマンドをスケジュールに追加する
-        if commands:
-            for player, command in commands.items():
-                player.reserve_command(command)
-                self.add_command_log(player, command)
-        self._advance_turn()
+        """ターンを進める（TurnControllerへの委譲）。
+
+        Args:
+            commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
+        """
+        self.turn_controller.advance_turn(commands)
 
     def _advance_turn(self):
-        if not self.has_interrupt():
-            self.init_turn()
-
-        if self.turn == 0:
-            if not self.has_interrupt():
-                # ポケモンを選出
-                self.run_selection()
-                # ポケモンを場に出す
-                self.run_initial_switch()
-
-            # だっしゅつパックによる交代
-            self.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
-
-            return
-
-        if not self.has_interrupt():
-            # 予約されているコマンドがなければ、方策関数に従ってコマンドを予約する
-            for player in self.players:
-                if not player.reserved_commands:
-                    command = player.choose_action_command(self)
-                    player.reserve_command(command)
-                    self.add_command_log(player, command)
-
-            # 行動前の処理
-            self.events.emit(Event.ON_BEFORE_ACTION)
-
-        # ターン開始時の交代処理
-        for mon in self.calc_speed_order():
-            # 交代フラグ
-            idx = self.actives.index(mon)
-            interrupt = Interrupt.ejectpack_on_switch(idx)
-            # 交代
-            if not self.has_interrupt():
-                player = self.players[idx]
-                if player.reserved_commands[0].is_switch():
-                    command = player.reserved_commands.pop(0)
-                    player = self.find_player(mon)
-                    new = player.team[command.idx]
-                    self.run_switch(player, new)
-
-                # だっしゅつパックによる割り込みフラグを更新
-                self.override_interrupt(interrupt)
-
-            # だっしゅつパックによる交代
-            self.run_interrupt_switch(interrupt)
-
-        # 行動前の処理
-        self.events.emit(Event.ON_BEFORE_MOVE)
-
-        # 技の処理
-        for mon in self.calc_action_order():
-            player = self.find_player(mon)
-            self.add_turn_log(player, player.active.name)
-
-            if not self.has_interrupt():
-                # 技の発動
-                command = player.reserved_commands.pop(0)
-                move = self.command_to_move(player, command)
-                self.run_move(mon, move)
-
-            # だっしゅつボタンによる交代
-            self.run_interrupt_switch(Interrupt.EJECTBUTTON)
-
-            # ききかいひによる交代
-            self.run_interrupt_switch(Interrupt.EMERGENCY)
-
-            # 交代技による交代
-            self.run_interrupt_switch(Interrupt.PIVOT)
-
-            interrupt = Interrupt.ejectpack_on_after_move(
-                self.players.index(player))
-
-            if not self.has_interrupt():
-                # 交代技の後の処理
-                self.events.emit(
-                    Event.ON_AFTER_PIVOT,
-                    EventContext(target=player.active)
-                )
-
-                # だっしゅつパックによる割り込みフラグを更新
-                self.override_interrupt(interrupt)
-
-            # だっしゅつパックによる交代
-            self.run_interrupt_switch(interrupt)
-
-        # ターン終了時の処理 (1)
-        if not self.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_1)
-
-        # ターン終了時の処理 (2)
-        if not self.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_2)
-
-        # ききかいひによる交代
-        self.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (3)
-        if not self.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_3)
-
-        # ききかいひによる交代
-        self.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (4)
-        if not self.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_4)
-
-        # ききかいひによる交代
-        self.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (5)
-        if not self.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_5)
-
-            # だっしゅつパックによる割り込みフラグを更新
-            self.override_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
-
-        # だっしゅつパックによる交代
-        self.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
-
-        # ターン終了時の処理 (5)
-        if not self.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_6)
-
-        self.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
-
-        # 瀕死による交代
-        self.run_faint_switch()
+        """内部的なターン進行処理（TurnControllerへの委譲）。"""
+        self.turn_controller._advance_turn()
