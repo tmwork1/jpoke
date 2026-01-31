@@ -4,7 +4,7 @@ from .models import MoveData
 from jpoke.handlers import common, move as h
 
 
-def add_common_handlers():
+def common_setup():
     """共通ハンドラを追加する。"""
     for name, obj in MOVES.items():
         if isinstance(obj, dict):
@@ -9202,4 +9202,4 @@ MOVES: dict[str, MoveData] = {
 }
 
 
-add_common_handlers()
+common_setup()

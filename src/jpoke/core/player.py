@@ -1,3 +1,8 @@
+"""プレイヤークラスとプレイヤー管理機能。
+
+バトルに参加するプレイヤーの情報と、コマンドの予約・管理を行います。
+選出、交代、行動の選択などプレイヤー固有の処理を提供します。
+"""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -9,9 +14,32 @@ from jpoke.utils import fast_copy
 
 
 class Player:
+    """バトルプレイヤーを表すクラス。
+
+    プレイヤーのポケモンチーム、現在の場のポケモン、
+    予約されたコマンド、割り込み状態などを管理します。
+
+    Attributes:
+        MAX_RESERVED: 予約可能な最大コマンド数
+        name: プレイヤー名
+        team: ポケモンチームのリスト（最大6匹）
+        n_game: 対戦数
+        n_won: 勝利数
+        rating: レーティング値
+        selection_idxes: 選出したポケモンのインデックスリスト
+        active_idx: 現在場に出ているポケモンのインデックス
+        interrupt: 割り込みフラグ（交代が必要な状態）
+        reserved_commands: 予約されたコマンドのリスト
+        has_switched: 今ターンに交代したかどうか
+    """
     MAX_RESERVED = 10
 
     def __init__(self, name: str = ""):
+        """Playerインスタンスを初期化する。
+
+        Args:
+            name: プレイヤー名（デフォルトは空文字列）
+        """
         self.name = name
 
         self.team: list[Pokemon] = []
@@ -29,6 +57,14 @@ class Player:
         self.has_switched: bool = False
 
     def __deepcopy__(self, memo):
+        """Playerインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Player: コピーされたPlayerインスタンス
+        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -45,7 +81,7 @@ class Player:
         self.interrupt = Interrupt.NONE
         self.reserved_commands = []
 
-        self.init_turn()
+        self.has_switched: bool = False
 
         for mon in self.team:
             mon.init_game()
@@ -58,7 +94,14 @@ class Player:
         self.has_switched = False
 
     def reserve_command(self, command: Command):
-        """コマンドを予約する。"""
+        """コマンドを予約する。
+
+        Args:
+            command: 予約するコマンド
+
+        Raises:
+            RuntimeError: 予約上限を超えた場合
+        """
         if len(self.reserved_commands) >= self.MAX_RESERVED:
             raise RuntimeError(f"予約上限({self.MAX_RESERVED})を超えました")
         self.reserved_commands.append(command)

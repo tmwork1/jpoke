@@ -1,7 +1,14 @@
 from functools import partial
-from jpoke.core.event import Event, Handler
-from .models import VolatileData
+
+from jpoke.utils.enums import Event
 from jpoke.handlers import common, volatile as h
+from .models import VolatileData
+
+
+def common_setup():
+    for name, data in VOLATILES.items():
+        for event in data.handlers:
+            data.handlers[event].log_text = name
 
 
 VOLATILES: dict[str, VolatileData] = {
@@ -134,3 +141,6 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
 }
+
+
+common_setup()

@@ -1,3 +1,8 @@
+"""ダメージ計算ロジックを提供するモジュール。
+
+ポケモンの技のダメージ計算を行います。
+ランク補正、特性、持ち物、天候などの諸要素を考慮した詳細なダメージ計算を実装します。
+"""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -14,16 +19,44 @@ from .event import EventManager, Event, EventContext
 
 
 def rank_modifier(v: float) -> float:
+    """ランク補正値を計算する。
+
+    Args:
+        v: ランク値（-6～+6）
+
+    Returns:
+        float: 補正倍率
+    """
     return (2+v)/2 if v >= 0 else 2/(2-v)
 
 
 def round_half_down(v: float) -> int:
-    """五捨五超入"""
+    """五捨五超入で丸める。
+
+    0.5は切り捨て、0.5より大きい値は切り上げます。
+
+    Args:
+        v: 対象の値
+
+    Returns:
+        int: 丸められた整数値
+    """
     return int(Decimal(str(v)).quantize(Decimal('0'), rounding=ROUND_HALF_DOWN))
 
 
 @dataclass
 class DamageContext:
+    """ダメージ計算のコンテキスト情報。
+
+    ダメージ計算中の状態や補正、フラグを保持します。
+
+    Attributes:
+        critical: 急所に当たるかどうか
+        self_harm: 自分自身へのダメージかどうか
+        power_multiplier: 技威力の倍率
+        is_lethal_calc: 致死率計算中かどうか
+        _flags: ダメージ計算に関するフラグのリスト
+    """
     critical: bool = False
     self_harm: bool = False
     power_multiplier: float = 1
@@ -31,11 +64,29 @@ class DamageContext:
     _flags: list[DamageFlag] = field(default_factory=list)
 
     def add_flag(self, flag: DamageFlag):
+        """ダメージ計算フラグを追加する。
+
+        Args:
+            flag: 追加するフラグ
+        """
         self._flags.append(flag)
 
 
 class DamageCalculator:
+    """ダメージ計算を行うクラス。
+
+    技のダメージ計算、威力・攻撃・防御の最終値計算を提供します。
+
+    Attributes:
+        lethal_num: 致死回数
+        lethal_prob: 致死確率
+        hp_dstr: HP分布
+        damage_dstr: ダメージ分布
+        damage_ratio_dstr: ダメージ割合分布
+    """
+
     def __init__(self):
+        """DamageCalculatorを初期化する。"""
         self.lethal_num: int = 0
         self.lethal_prob: float = 0.
         self.hp_dstr: dict = {}
@@ -43,6 +94,14 @@ class DamageCalculator:
         self.damage_ratio_dstr: dict = {}
 
     def __deepcopy__(self, memo):
+        """ディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            DamageCalculator: コピーされたインスタンス
+        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -117,6 +176,18 @@ class DamageCalculator:
                          defender: Pokemon,
                          move: Move,
                          dmg_ctx: DamageContext | None = None) -> int:
+        """最終威力を計算する。
+
+        Args:
+            events: イベントマネージャー
+            attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
+            move: 技
+            dmg_ctx: ダメージコンテキスト
+
+        Returns:
+            int: 補正後の最終威力
+        """
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
@@ -142,6 +213,20 @@ class DamageCalculator:
                           defender: Pokemon,
                           move: Move,
                           dmg_ctx: DamageContext | None = None) -> int:
+        """最終攻撃力を計算する。
+
+        ランク補正、特性、持ち物などの補正を適用します。
+
+        Args:
+            events: イベントマネージャー
+            attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
+            move: 技
+            dmg_ctx: ダメージコンテキスト
+
+        Returns:
+            int: 補正後の最終攻撃力
+        """
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
@@ -196,6 +281,20 @@ class DamageCalculator:
                            defender: Pokemon,
                            move: Move,
                            dmg_ctx: DamageContext | None = None) -> int:
+        """最終防御力を計算する。
+
+        ランク補正、特性、持ち物などの補正を適用します。
+
+        Args:
+            events: イベントマネージャー
+            attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
+            move: 技
+            dmg_ctx: ダメージコンテキスト
+
+        Returns:
+            int: 補正後の最終防御力
+        """
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 

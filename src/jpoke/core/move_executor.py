@@ -108,7 +108,6 @@ class MoveExecutor:
 
         # 発動した技の確定
         attacker.executed_move = move
-        self.battle.add_event_log(attacker, move.name)
 
         # 命中判定
         if not self.check_hit(attacker, move):
@@ -135,7 +134,12 @@ class MoveExecutor:
 
         # ダメージを与えたときの処理
         if damage:
-            self.battle.events.emit(Event.ON_DAMAGE, ctx)
+            self.battle.events.emit(Event.ON_DAMAGE_1, ctx)
+
+        # TODO: 勝敗判定
+
+        if damage:
+            self.battle.events.emit(Event.ON_DAMAGE_2, ctx)
 
         # 技のハンドラを解除
         move.unregister_handlers(self.battle.events, attacker)

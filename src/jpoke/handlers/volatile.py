@@ -14,6 +14,5 @@ class VolatileHandler(Handler):
                  func: Callable,
                  subject_spec: RoleSpec = "source:self",
                  log: LogPolicy = "on_success",
-                 log_text: str | None = None,
                  priority: int = 100):
-        super().__init__(func, subject_spec, "volatile", log, log_text, priority)
+        super().__init__(func, subject_spec, "volatile", log, None, priority)

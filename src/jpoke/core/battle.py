@@ -1,3 +1,8 @@
+"""ポケモンバトルのメインロジックを管理するモジュール。
+
+バトル全体の状態管理、ターン進行、イベント処理、ログ記録などを統括します。
+プレイヤー、ポケモン、技、場の状態などを一元管理し、バトルの進行を制御します。
+"""
 from typing import Self
 from dataclasses import dataclass
 
@@ -25,14 +30,49 @@ from .speed_calculator import SpeedCalculator
 
 @dataclass
 class TestOption:
-    """テスト用オプション設定クラス。"""
+    """テスト用オプション設定クラス。
+
+    Attributes:
+        accuracy: 命中率の固定値（Noneの場合は通常計算）
+    """
     accuracy: int | None = None
 
 
 class Battle:
+    """ポケモンバトルの状態と処理を管理するメインクラス。
+
+    バトル全体の状態、ターン管理、イベントシステム、ログ記録、
+    各種マネージャークラスを統括します。
+
+    Attributes:
+        players: 参加プレイヤーのリスト（通常2人）
+        seed: 乱数シード値
+        turn: 現在のターン数
+        winner_idx: 勝者のインデックス（勝負がついていない場合はNone）
+        events: イベント管理システム
+        logger: バトルログ記録システム
+        random: 乱数生成器
+        damage_calculator: ダメージ計算機
+        move_executor: 技実行管理
+        switch_manager: 交代管理
+        turn_controller: ターン進行制御
+        speed_calculator: 素早さ計算機
+        weather_mgr: 天候管理
+        terrain_mgr: フィールド管理
+        field: グローバル場の状態管理
+        sides: 各プレイヤー側の場の状態管理
+        test_option: テスト用オプション設定
+    """
+
     def __init__(self,
                  players: list[Player],
                  seed: int | None = None) -> None:
+        """Battleインスタンスを初期化する。
+
+        Args:
+            players: 参加プレイヤーのリスト（通常2人）
+            seed: 乱数シード値（Noneの場合は現在時刻を使用）
+        """
 
         if seed is None:
             seed = int(time.time())
@@ -60,6 +100,14 @@ class Battle:
         self.test_option: TestOption = TestOption()
 
     def __deepcopy__(self, memo):
+        """Battleインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Battle: コピーされたBattleインスタンス
+        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -113,18 +161,38 @@ class Battle:
 
     @property
     def side(self) -> dict[Player, SideFieldManager]:
+        """プレイヤーごとの場の状態管理マネージャーの辞書を取得。
+
+        Returns:
+            dict[Player, SideFieldManager]: プレイヤーをキーとした場の状態管理の辞書
+        """
         return dict(zip(self.players, self.sides))
 
     @property
     def actives(self) -> list[Pokemon]:
+        """現在場に出ているポケモンのリストを取得。
+
+        Returns:
+            list[Pokemon]: 各プレイヤーの場のポケモン
+        """
         return [pl.active for pl in self.players]
 
     @property
     def weather(self) -> Field:
+        """現在の天候を取得。
+
+        Returns:
+            Field: 現在の天候フィールド
+        """
         return self.weather_mgr.current
 
     @property
     def terrain(self) -> Field:
+        """現在のフィールド状態を取得。
+
+        Returns:
+            Field: 現在のフィールド
+        """
         return self.terrain_mgr.current
 
     def export_log(self, file):
@@ -145,6 +213,14 @@ class Battle:
 
     @classmethod
     def reconstruct_from_log(cls, file) -> Self:
+        """ログファイルからBattleインスタンスを再構築する。
+
+        Args:
+            file: ログファイルのパス
+
+        Returns:
+            Self: 再構築されたBattleインスタンス
+        """
         with open(file, encoding="utf-8") as f:
             data = json.load(f)
 
@@ -186,12 +262,34 @@ class Battle:
         return new
 
     def find_player(self, mon: Pokemon) -> Player:
+        """ポケモンが所属するプレイヤーを検索する。
+
+        Args:
+            mon: 検索対象のポケモン
+
+        Returns:
+            Player: ポケモンを所有するプレイヤー
+
+        Raises:
+            Exception: ポケモンが見つからない場合
+        """
         for player in self.players:
             if mon in player.team:
                 return player
         raise Exception("Player not found.")
 
     def find_player_index(self, mon: Pokemon) -> int:
+        """ポケモンが所属するプレイヤーのインデックスを検索する。
+
+        Args:
+            mon: 検索対象のポケモン
+
+        Returns:
+            int: プレイヤーのインデックス（0または1）
+
+        Raises:
+            Exception: ポケモンが見つからない場合
+        """
         for i, player in enumerate(self.players):
             if mon in player.team:
                 return i
@@ -213,21 +311,63 @@ class Battle:
         raise ValueError(f"Invalid source type: {type(source)}")
 
     def foe(self, active: Pokemon) -> Pokemon:
+        """指定したポケモンの対戦相手を取得する。
+
+        Args:
+            active: 場に出ているポケモン
+
+        Returns:
+            Pokemon: 対戦相手のポケモン
+        """
         return self.actives[not self.actives.index(active)]
 
     def rival(self, player: Player) -> Player:
+        """指定したプレイヤーの対戦相手を取得する。
+
+        Args:
+            player: プレイヤー
+
+        Returns:
+            Player: 対戦相手のプレイヤー
+        """
         return self.players[not self.players.index(player)]
 
     def get_available_selection_commands(self, player: Player) -> list[Command]:
+        """ポケモン選出時に使用可能なコマンドを取得する。
+
+        Args:
+            player: プレイヤー
+
+        Returns:
+            list[Command]: 選出可能なコマンドのリスト
+        """
         return Command.selection_commands()[:len(player.team)]
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
+        """交代可能なコマンドのリストを取得する。
+
+        Args:
+            player: プレイヤー
+
+        Returns:
+            list[Command]: 交代可能なコマンドのリスト（交代不可の場合は空リスト）
+        """
         if player.active.is_trapped(self.events):
             return []
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
                 if mon in player.selection and mon is not player.active]
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
+        """行動時に使用可能なコマンドを取得する。
+
+        技コマンド、テラスタルコマンド、交代コマンドを含みます。
+
+        Args:
+            player: プレイヤー
+
+        Returns:
+            list[Command]: 使用可能なコマンドのリスト
+        """
         n = len(player.active.moves)
 
         # 通常技
@@ -283,7 +423,7 @@ class Battle:
         Returns:
             TODスコア
         """
-        return self.turn_controller.TOD_score(player, alpha)
+        return self.turn_controller.calc_TOD_score(player, alpha)
 
     def winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
@@ -291,7 +431,7 @@ class Battle:
         Returns:
             勝者のPlayerインスタンス、勝負がついていない場合はNone
         """
-        return self.turn_controller.winner()
+        return self.turn_controller.judge_winner()
 
     def run_selection(self):
         """ポケモン選出処理（TurnControllerへの委譲）。"""
@@ -331,6 +471,16 @@ class Battle:
         return self.move_executor.command_to_move(player, command)
 
     def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0) -> bool:
+        """ポケモンのHPを変更する。
+
+        Args:
+            target: 対象のポケモン
+            v: 変更する固定HP量
+            r: 最大HPに対する割合（0.0～1.0）
+
+        Returns:
+            bool: HP変更が成功した場合True
+        """
         if r:
             v = int(target.max_hp * r)
         if v and (v := target.modify_hp(v)):
@@ -361,6 +511,17 @@ class Battle:
                     stat: Stat,
                     v: int,
                     source: Pokemon | None = None) -> bool:
+        """ポケモンの能力ランクを変更する。
+
+        Args:
+            target: 対象のポケモン
+            stat: 変更する能力値（"A", "B", "C", "D", "S"）
+            v: 変更するランク数
+            source: 変更の原因となったポケモン（Noneの場合もある）
+
+        Returns:
+            bool: ランク変更が成功した場合True
+        """
         if v and (v := target.modify_stat(stat, v)):
             self.add_event_log(self.find_player(target),
                                f"{stat}{'+' if v >= 0 else ''}{v}")
@@ -377,6 +538,17 @@ class Battle:
                     move: Move | str,
                     critical: bool = False,
                     self_harm: bool = False) -> int:
+        """ダメージを計算してランダムに1つ選択する。
+
+        Args:
+            attacker: 攻撃側のポケモン
+            move: 使用する技（MoveオブジェクトまたはID文字列）
+            critical: 急所に当たるかどうか
+            self_harm: 自分自身へのダメージかどうか
+
+        Returns:
+            int: 計算されたダメージ値
+        """
         damages = self.calc_damages(attacker, move, critical, self_harm)
         return self.random.choice(damages)
 
@@ -385,6 +557,19 @@ class Battle:
                      move: Move | str,
                      critical: bool = False,
                      self_harm: bool = False) -> list[int]:
+        """可能なダメージ値のリストを計算する。
+
+        乱数によるダメージ幅を考慮した全ての可能なダメージ値を返します。
+
+        Args:
+            attacker: 攻撃側のポケモン
+            move: 使用する技（MoveオブジェクトまたはID文字列）
+            critical: 急所に当たるかどうか
+            self_harm: 自分自身へのダメージかどうか
+
+        Returns:
+            list[int]: 可能なダメージ値のリスト
+        """
         if isinstance(move, str):
             move = Move(move)
         defender = attacker if self_harm else self.foe(attacker)
@@ -519,4 +704,4 @@ class Battle:
 
     def _advance_turn(self):
         """内部的なターン進行処理（TurnControllerへの委譲）。"""
-        self.turn_controller._advance_turn()
+        self.turn_controller._process_turn_phases()

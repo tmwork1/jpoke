@@ -29,7 +29,8 @@ class Event(Enum):
     ON_PAY_HP = auto()
     ON_MODIFY_DAMAGE = auto()
     ON_MOVE_SECONDARY = auto()
-    ON_DAMAGE = auto()
+    ON_DAMAGE_1 = auto()
+    ON_DAMAGE_2 = auto()
     ON_AFTER_PIVOT = auto()
 
     # ターン終了イベント

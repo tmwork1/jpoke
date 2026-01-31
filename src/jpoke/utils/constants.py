@@ -1,9 +1,18 @@
+"""ポケモンバトルで使用される定数を定義するモジュール。
+
+ランク補正の範囲、性格補正、タイプ相性などの定数を提供します。
+"""
 from typing import get_args
 from .type_defs import Stat
 
 RANK_MIN = -6
+"""能力ランクの最小値"""
+
 RANK_MAX = 6
+"""能力ランクの最大値"""
+
 STATS = list(get_args(Stat))
+"""全ステータスのリスト"""
 
 NATURE_MODIFIER = {
     'まじめ': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],

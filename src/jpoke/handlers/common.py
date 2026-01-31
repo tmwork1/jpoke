@@ -38,7 +38,7 @@ def drain_hp(battle: Battle,
     if to_ is not None:
         to_mon = ctx.resolve_role(battle, to_)
     else:
-        to_mon = from_mon
+        to_mon = battle.foe(from_mon)
 
     success, _ = battle.drain_hp(from_mon, to_mon, v, r)
     return HandlerReturn(success)

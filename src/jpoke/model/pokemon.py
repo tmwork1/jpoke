@@ -1,3 +1,8 @@
+"""ポケモンモデルを定義するモジュール。
+
+ポケモンの基本情報、ステータス、特性、持ち物、技、状態異常、
+ランク変化など、バトル中のポケモンの全状態を管理します。
+"""
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -19,6 +24,26 @@ from .stats import PokemonStats
 
 
 class Pokemon:
+    """ポケモンクラス。
+
+    ポケモンの全状態と機能を管理するメインクラスです。
+    種族値、個体値、努力値、性格からステータスを計算し、
+    特性、持ち物、技、状態異常、ランク変化などを管理します。
+
+    Attributes:
+        data: ポケモン図鑑データ
+        gender: 性別
+        hp: 現在HP
+        max_hp: 最大HP
+        ailment: 状態異常
+        ability: 特性
+        item: 持ち物
+        moves: 覚えている技のリスト
+        rank: 能力ランクの辞書
+        volatiles: 揮発状態の辞書
+        is_terastallized: テラスタル済みかどうか
+    """
+
     def __init__(self,
                  name: str,
                  gender: Gender = "",
@@ -28,6 +53,18 @@ class Pokemon:
                  item: str | Item = "",
                  moves: list[str | Move] = ["はねる"],
                  terastal: Type = "ステラ") -> None:
+        """ポケモンを初期化する。
+
+        Args:
+            name: ポケモン名
+            gender: 性別（"オス"/"メス"/""）
+            nature: 性格
+            level: レベル（デフォルト50）
+            ability: 特性（文字列またはAbilityインスタンス）
+            item: 持ち物（文字列またはItemインスタンス）
+            moves: 技のリスト（文字列またはMoveインスタンスのリスト）
+            terastal: テラスタルタイプ
+        """
         self.data = pokedex[name]
         self.gender: Gender = gender
         self._nature: Nature = nature
@@ -111,6 +148,14 @@ class Pokemon:
         return mon
 
     def __deepcopy__(self, memo):
+        """ディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Pokemon: コピーされたインスタンス
+        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -122,6 +167,11 @@ class Pokemon:
         return new
 
     def __str__(self):
+        """ポケモンの情報を文字列化する。
+
+        Returns:
+            str: ポケモンの詳細情報
+        """
         sep = '\n\t'
         s = f"{self.name}{sep}"
         s += f"HP {self.hp}/{self.max_hp} ({self.hp_ratio*100:.0f}%){sep}"

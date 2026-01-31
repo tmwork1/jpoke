@@ -54,7 +54,7 @@ class TurnController:
                 commands = pl.choose_selection_commands(self.battle)
                 pl.selection_idxes = [c.idx for c in commands]
 
-    def TOD_score(self, player: "Player", alpha: float = 1) -> float:
+    def calc_TOD_score(self, player: "Player", alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
 
         Args:
@@ -72,7 +72,7 @@ class TurnController:
                 n_alive += 1
         return n_alive + alpha * total_hp / total_max_hp
 
-    def winner(self) -> "Player | None":
+    def judge_winner(self) -> "Player | None":
         """勝者を判定して返す。
 
         Returns:
@@ -81,7 +81,7 @@ class TurnController:
         if self.battle.winner_idx is not None:
             return self.battle.players[self.battle.winner_idx]
 
-        TOD_scores = [self.TOD_score(pl) for pl in self.battle.players]
+        TOD_scores = [self.calc_TOD_score(pl) for pl in self.battle.players]
         if 0 in TOD_scores:
             loser_idx = TOD_scores.index(0)
             self.battle.winner_idx = int(not loser_idx)
@@ -102,16 +102,22 @@ class TurnController:
             for player, command in commands.items():
                 player.reserve_command(command)
                 self.battle.add_command_log(player, command)
-        self._advance_turn()
+        self._process_turn_phases()
 
-    def _advance_turn(self):
+    def update_turn_count(self):
+        """ターンカウントを進行させる。"""
+        self.battle.turn += 1
+
+    def _process_turn_phases(self):
         """内部的なターン進行処理を実行。
 
         割り込みの有無に応じて、ターンの各フェーズを順番に処理する。
         """
+        # ターンの更新
         if not self.battle.has_interrupt():
-            self.init_turn()
+            self.update_turn_count()
 
+        # 0ターン目の処理
         if self.battle.turn == 0:
             if not self.battle.has_interrupt():
                 # ポケモンを選出
@@ -125,6 +131,9 @@ class TurnController:
             return
 
         if not self.battle.has_interrupt():
+            # ターン初期化
+            self.init_turn()
+
             # 予約されているコマンドがなければ、方策関数に従ってコマンドを予約する
             for player in self.battle.players:
                 if not player.reserved_commands:
@@ -178,18 +187,10 @@ class TurnController:
             # 交代技による交代
             self.battle.run_interrupt_switch(Interrupt.PIVOT)
 
+            # だっしゅつパックによる割り込みフラグを更新
             interrupt = Interrupt.ejectpack_on_after_move(
                 self.battle.players.index(player))
-
-            if not self.battle.has_interrupt():
-                # 交代技の後の処理
-                self.battle.events.emit(
-                    Event.ON_AFTER_PIVOT,
-                    EventContext(target=player.active)
-                )
-
-                # だっしゅつパックによる割り込みフラグを更新
-                self.battle.override_interrupt(interrupt)
+            self.battle.override_interrupt(interrupt)
 
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
@@ -198,25 +199,28 @@ class TurnController:
         if not self.battle.has_interrupt():
             self.battle.events.emit(Event.ON_TURN_END_1)
 
+        # ききかいひによる交代 (1)
+        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+
         # ターン終了時の処理 (2)
         if not self.battle.has_interrupt():
             self.battle.events.emit(Event.ON_TURN_END_2)
 
-        # ききかいひによる交代
+        # ききかいひによる交代 (2)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (3)
         if not self.battle.has_interrupt():
             self.battle.events.emit(Event.ON_TURN_END_3)
 
-        # ききかいひによる交代
+        # ききかいひによる交代 (3)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (4)
         if not self.battle.has_interrupt():
             self.battle.events.emit(Event.ON_TURN_END_4)
 
-        # ききかいひによる交代
+        # ききかいひによる交代 (4)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (5)
@@ -229,11 +233,9 @@ class TurnController:
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
 
+        # 瀕死による交代
+        self.battle.run_faint_switch()
+
         # ターン終了時の処理 (6)
         if not self.battle.has_interrupt():
             self.battle.events.emit(Event.ON_TURN_END_6)
-
-        self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
-
-        # 瀕死による交代
-        self.battle.run_faint_switch()

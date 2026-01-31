@@ -1,0 +1,54 @@
+Phase,Step,Type,Name,Description,CodeMethod,Implemented,Notes
+COMMON,0.0,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,割り込みがある場合はターンカウント増加スキップ
+COMMON,0.1,Process,ターンカウント増加,ターン番号を1増やす,increment_turn_count(),✓,ターン0→1、1→2、...
+INIT,0.2,Start,ターン0開始,初期ターン処理開始,_process_turn_phases(),✓,turn == 0の場合の処理
+INIT,0.3,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,割り込みがある場合は以降スキップ
+INIT,0.4,Process,選出,ポケモン選出処理,run_selection(),✓,selection_idxesが未設定の場合のみ
+INIT,0.5,Process,初期繰り出し,選出したポケモンを場に出す,run_initial_switch(),✓,
+INIT,0.6,Interrupt,EJECTPACK_ON_START,だっしゅつパックによる交代,run_interrupt_switch(EJECTPACK_ON_START),✓,繰り出し時のだっしゅつパック
+INIT,0.7,End,ターン0終了,この時点でreturn,,,ターン1以降の処理は行わない
+TURN,1.0,Start,ターン開始,ターン1以降の処理開始,,,turn >= 1の場合
+TURN,1.1,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,割り込みがある場合は初期化スキップ
+TURN,1.2,Process,ターン初期化,プレイヤー状態のリセット,init_turn(),✓,各プレイヤーのターン状態を初期化（ターンカウントは含まない）
+TURN,1.3,Process,コマンド予約,行動コマンドの決定,choose_action_command(),✓,reserved_commandsが空の場合のみ
+TURN,1.4,Event,ON_BEFORE_ACTION,行動前イベント発火,events.emit(ON_BEFORE_ACTION),✓,クイックドロウ・せんせいのツメ等
+SWITCH_PHASE,2.0,Start,交代フェーズ開始,ターン開始時の交代処理,,,
+SWITCH_PHASE,2.1,Loop,速度順ループ開始,速度順でポケモンを処理,calc_speed_order(),✓,各ポケモンに対して以降の処理を実行
+SWITCH_PHASE,2.2,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,割り込みがある場合は交代スキップ
+SWITCH_PHASE,2.3,Check,交代コマンド判定,交代コマンドか確認,reserved_commands[0].is_switch(),✓,
+SWITCH_PHASE,2.4,Process,交代実行,ポケモンを交代する,run_switch(player, new),✓,交代コマンドの場合のみ
+SWITCH_PHASE,2.5,Process,割り込みフラグ更新,だっしゅつパック用フラグ設定,override_interrupt(EJECTPACK),✓,交代したポケモンのインデックス用
+SWITCH_PHASE,2.6,Interrupt,EJECTPACK_ON_SWITCH,だっしゅつパックによる交代,run_interrupt_switch(),✓,交代後のだっしゅつパック
+SWITCH_PHASE,2.7,End,速度順ループ終了,全ポケモンの処理完了,,,
+MOVE_BEFORE,3.0,Event,ON_BEFORE_MOVE,技使用前イベント発火,events.emit(ON_BEFORE_MOVE),✓,メガシンカ・ダイマックス・テラスタル等
+MOVE_PHASE,3.1,Start,技フェーズ開始,技の実行処理,,,
+MOVE_PHASE,3.2,Loop,行動順ループ開始,行動順でポケモンを処理,calc_action_order(),✓,各ポケモンに対して以降の処理を実行
+MOVE_PHASE,3.3,Log,行動ログ,ポケモン名をログ出力,add_event_log(),✓,
+MOVE_PHASE,3.4,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,割り込みがある場合は技発動スキップ
+MOVE_PHASE,3.5,Process,技発動,技を実行する,run_move(mon, move),✓,コマンドから技を取得して実行
+MOVE_PHASE,3.6,Interrupt,EJECTBUTTON,だっしゅつボタンによる交代,run_interrupt_switch(EJECTBUTTON),✓,被弾時のだっしゅつボタン
+MOVE_PHASE,3.7,Interrupt,EMERGENCY,ききかいひによる交代,run_interrupt_switch(EMERGENCY),✓,HP減少時のききかいひ・にげごし
+MOVE_PHASE,3.8,Interrupt,PIVOT,交代技による交代,run_interrupt_switch(PIVOT),✓,とんぼがえり・ボルトチェンジ等
+MOVE_PHASE,3.9,Process,割り込みフラグ更新,だっしゅつパック用フラグ設定,override_interrupt(EJECTPACK_AFTER_MOVE),✓,技使用後のだっしゅつパック用
+MOVE_PHASE,3.10,Interrupt,EJECTPACK_AFTER_MOVE,だっしゅつパックによる交代,run_interrupt_switch(EJECTPACK_AFTER_MOVE),✓,技使用後のだっしゅつパック
+MOVE_PHASE,3.11,End,行動順ループ終了,全ポケモンの処理完了,,,
+END_1,4.1,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,
+END_1,4.2,Event,ON_TURN_END_1,ターン終了処理1,events.emit(ON_TURN_END_1),✓,天気終了判定・天気ダメージ・特性回復等
+END_1,4.3,Interrupt,EMERGENCY,ききかいひによる交代,run_interrupt_switch(EMERGENCY),✓,
+END_2,4.4,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,
+END_2,4.5,Event,ON_TURN_END_2,ターン終了処理2,events.emit(ON_TURN_END_2),✓,みらいよち・ねがいごと・設置技ダメージ等
+END_2,4.6,Interrupt,EMERGENCY,ききかいひによる交代,run_interrupt_switch(EMERGENCY),✓,
+END_3,4.7,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,
+END_3,4.8,Event,ON_TURN_END_3,ターン終了処理3,events.emit(ON_TURN_END_3),✓,やどりぎ・バインド・状態異常ダメージ・状態変化終了等
+END_3,4.9,Interrupt,EMERGENCY,ききかいひによる交代,run_interrupt_switch(EMERGENCY),✓,
+END_4,4.10,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,
+END_4,4.11,Event,ON_TURN_END_4,ターン終了処理4,events.emit(ON_TURN_END_4),✓,場の状態継続・終了判定・さわぐ・特性効果等
+END_4,4.12,Interrupt,EMERGENCY,ききかいひによる交代,run_interrupt_switch(EMERGENCY),✓,
+END_5,4.13,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,
+END_5,4.14,Event,ON_TURN_END_5,ターン終了処理5,events.emit(ON_TURN_END_5),✓,フォルムチェンジ（ダルマモード等）
+END_5,4.15,Process,割り込みフラグ更新,だっしゅつパック用フラグ設定,override_interrupt(EJECTPACK_ON_TURN_END),✓,
+END_5,4.16,Interrupt,EJECTPACK_ON_TURN_END,だっしゅつパックによる交代,run_interrupt_switch(EJECTPACK_ON_TURN_END),✓,ターン終了時のだっしゅつパック
+FAINT,5.0,Interrupt,FAINT_SWITCH,瀕死による交代,run_faint_switch(),✓,瀕死ポケモンの交代処理
+END_6,5.1,Check,割り込みチェック,割り込みがないか確認,has_interrupt(),✓,
+END_6,5.2,Event,ON_TURN_END_6,ターン終了処理6,events.emit(ON_TURN_END_6),✓,ダイマックス終了判定
+COMPLETE,9.0,End,ターン完了,ターン処理終了,,,次のadvance_turn()呼び出しまで待機
