@@ -497,6 +497,7 @@ Weather = Literal["sunny", "rainy", "sandstorm", "hail"]
 - **RoleSpec を正確に** - `"role:side"` 形式を守る
 - **派生クラスを活用** - AbilityHandler, ItemHandler など
 - **ステータス計算は PokemonStats に委譲** - Pokemon.update_stats() で対応
+- **GameEffect を継承した処理は Event と Handler で実装** - 対戦に影響を与える処理（特性、アイテム、状態異常、揮発性状態など）は、可能な限り Event と Handler の組み合わせとして実装する
 
 ### ❌ 避けるべき
 

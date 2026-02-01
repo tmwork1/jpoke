@@ -6,18 +6,18 @@ from jpoke.handlers import common, ability as h
 
 ABILITIES: dict[str, AbilityData] = {
     "": AbilityData(name=""),
-    "ARシステム": {
-        "flags": [
+    "ARシステム": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "あくしゅう": {},
-    "あついしぼう": {},
-    "あとだし": {},
-    "あまのじゃく": {},
-    "あめうけざら": {},
-    "あめふらし": {},
+    ),
+    "あくしゅう": AbilityData(),
+    "あついしぼう": AbilityData(),
+    "あとだし": AbilityData(),
+    "あまのじゃく": AbilityData(),
+    "あめうけざら": AbilityData(),
+    "あめふらし": AbilityData(),
     "ありじごく": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
@@ -36,47 +36,47 @@ ABILITIES: dict[str, AbilityData] = {
             )
         },
     ),
-    "いかりのこうら": {},
-    "いかりのつぼ": {
-        "flags": [
+    "いかりのこうら": AbilityData(),
+    "いかりのつぼ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "いしあたま": {},
-    "いたずらごころ": {},
-    "いやしのこころ": {},
-    "いろめがね": {},
-    "いわはこび": {},
-    "うのミサイル": {
-        "flags": [
+    ),
+    "いしあたま": AbilityData(),
+    "いたずらごころ": AbilityData(),
+    "いやしのこころ": AbilityData(),
+    "いろめがね": AbilityData(),
+    "いわはこび": AbilityData(),
+    "うのミサイル": AbilityData(
+        flags=[
             "unreproducible",
             "protected",
             "undeniable"
         ]
-    },
-    "うるおいボイス": {},
-    "うるおいボディ": {},
-    "えんかく": {},
-    "おうごんのからだ": {},
-    "おどりこ": {
-        "flags": [
+    ),
+    "うるおいボイス": AbilityData(),
+    "うるおいボディ": AbilityData(),
+    "えんかく": AbilityData(),
+    "おうごんのからだ": AbilityData(),
+    "おどりこ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "おみとおし": {},
-    "おもてなし": {},
-    "おやこあい": {},
-    "おわりのだいち": {
-        "flags": [
+    ),
+    "おみとおし": AbilityData(),
+    "おもてなし": AbilityData(),
+    "おやこあい": AbilityData(),
+    "おわりのだいち": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "かいりきバサミ": {},
-    "かがくへんかガス": {
-        "flags": [
+    ),
+    "かいりきバサミ": AbilityData(),
+    "かがくへんかガス": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
+    ),
     "かげふみ": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
@@ -86,10 +86,10 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "かぜのり": {},
-    "かそく": {},
-    "かたいツメ": {},
-    "かたやぶり": {},
+    "かぜのり": AbilityData(),
+    "かそく": AbilityData(),
+    "かたいツメ": AbilityData(),
+    "かたやぶり": AbilityData(),
     "かちき": AbilityData(
         flags=["undeniable"],
         handlers={
@@ -99,35 +99,35 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "かるわざ": {},
-    "かわりもの": {
-        "flags": [
+    "かるわざ": AbilityData(),
+    "かわりもの": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "かんそうはだ": {},
-    "かんろなミツ": {
-        "flags": [
+    ),
+    "かんそうはだ": AbilityData(),
+    "かんろなミツ": AbilityData(
+        flags=[
             "one_time"
         ]
-    },
-    "がんじょう": {},
-    "がんじょうあご": {},
-    "ききかいひ": {
-        "flags": [
+    ),
+    "がんじょう": AbilityData(),
+    "がんじょうあご": AbilityData(),
+    "ききかいひ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "きけんよち": {},
-    "きみょうなくすり": {},
-    "きもったま": {},
-    "きゅうばん": {},
-    "きょううん": {},
-    "きょうえん": {},
-    "きょうせい": {},
-    "きよめのしお": {},
-    "きれあじ": {},
-    "きんしのちから": {},
+    ),
+    "きけんよち": AbilityData(),
+    "きみょうなくすり": AbilityData(),
+    "きもったま": AbilityData(),
+    "きゅうばん": AbilityData(),
+    "きょううん": AbilityData(),
+    "きょうえん": AbilityData(),
+    "きょうせい": AbilityData(),
+    "きよめのしお": AbilityData(),
+    "きれあじ": AbilityData(),
+    "きんしのちから": AbilityData(),
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -142,92 +142,92 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
-    "ぎたい": {
-        "flags": [
+    "ぎたい": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ぎゃくじょう": {
-        "flags": [
+    ),
+    "ぎゃくじょう": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ぎょぐん": {
-        "flags": [
+    ),
+    "ぎょぐん": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "くいしんぼう": {},
-    "くさのけがわ": {},
-    "くだけるよろい": {
-        "flags": [
+    ),
+    "くいしんぼう": AbilityData(),
+    "くさのけがわ": AbilityData(),
+    "くだけるよろい": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "くろのいななき": {},
-    "げきりゅう": {},
-    "こおりのりんぷん": {},
-    "こだいかっせい": {
-        "flags": [
+    ),
+    "くろのいななき": AbilityData(),
+    "げきりゅう": AbilityData(),
+    "こおりのりんぷん": AbilityData(),
+    "こだいかっせい": AbilityData(
+        flags=[
             "unreproducible",
             "undeniable"
         ]
-    },
-    "こぼれダネ": {
-        "flags": [
+    ),
+    "こぼれダネ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "こんがりボディ": {},
-    "こんじょう": {},
-    "ごりむちゅう": {},
-    "さいせいりょく": {},
-    "さまようたましい": {
-        "flags": [
+    ),
+    "こんがりボディ": AbilityData(),
+    "こんじょう": AbilityData(),
+    "ごりむちゅう": AbilityData(),
+    "さいせいりょく": AbilityData(),
+    "さまようたましい": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "さめはだ": {
-        "flags": [
+    ),
+    "さめはだ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "しぜんかいふく": {},
-    "しめりけ": {},
-    "しゅうかく": {},
-    "しょうりのほし": {
-        "flags": [
+    ),
+    "しぜんかいふく": AbilityData(),
+    "しめりけ": AbilityData(),
+    "しゅうかく": AbilityData(),
+    "しょうりのほし": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "しれいとう": {
-        "flags": [
+    ),
+    "しれいとう": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "しろいけむり": {},
-    "しろのいななき": {},
-    "しんがん": {},
-    "しんりょく": {},
-    "じきゅうりょく": {
-        "flags": [
+    ),
+    "しろいけむり": AbilityData(),
+    "しろのいななき": AbilityData(),
+    "しんがん": AbilityData(),
+    "しんりょく": AbilityData(),
+    "じきゅうりょく": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "じしんかじょう": {},
-    "じゅうなん": {},
-    "じゅくせい": {
-        "flags": [
+    ),
+    "じしんかじょう": AbilityData(),
+    "じゅうなん": AbilityData(),
+    "じゅくせい": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "じょうききかん": {
-        "flags": [
+    ),
+    "じょうききかん": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "じょおうのいげん": {},
+    ),
+    "じょおうのいげん": AbilityData(),
     "じりょく": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
@@ -237,17 +237,17 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "じんばいったい": {
-        "flags": [
+    "じんばいったい": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "すいすい": {},
-    "すいほう": {},
-    "すじがねいり": {},
-    "すてみ": {},
-    "すなおこし": {},
+    ),
+    "すいすい": AbilityData(),
+    "すいほう": AbilityData(),
+    "すじがねいり": AbilityData(),
+    "すてみ": AbilityData(),
+    "すなおこし": AbilityData(),
     "すなかき": AbilityData(
         handlers={
             Event.ON_CALC_SPEED: h.AbilityHandler(
@@ -257,22 +257,22 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "すながくれ": {},
-    "すなのちから": {},
-    "すなはき": {
-        "flags": [
+    "すながくれ": AbilityData(),
+    "すなのちから": AbilityData(),
+    "すなはき": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "すりぬけ": {},
-    "するどいめ": {},
-    "せいぎのこころ": {
-        "flags": [
+    ),
+    "すりぬけ": AbilityData(),
+    "するどいめ": AbilityData(),
+    "せいぎのこころ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "せいしんりょく": {},
-    "せいでんき": {},
+    ),
+    "せいしんりょく": AbilityData(),
+    "せいでんき": AbilityData(),
     "ぜったいねむり": AbilityData(
         flags=[
             "unreproducible",
@@ -287,277 +287,277 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "そうしょく": {},
-    "そうだいしょう": {},
-    "たいねつ": {},
-    "たまひろい": {},
-    "たんじゅん": {},
-    "だっぴ": {},
-    "ちからずく": {},
-    "ちからもち": {},
-    "ちくでん": {},
-    "ちどりあし": {},
-    "ちょすい": {},
-    "てきおうりょく": {},
-    "てつのこぶし": {},
-    "てつのトゲ": {
-        "flags": [
+    "そうしょく": AbilityData(),
+    "そうだいしょう": AbilityData(),
+    "たいねつ": AbilityData(),
+    "たまひろい": AbilityData(),
+    "たんじゅん": AbilityData(),
+    "だっぴ": AbilityData(),
+    "ちからずく": AbilityData(),
+    "ちからもち": AbilityData(),
+    "ちくでん": AbilityData(),
+    "ちどりあし": AbilityData(),
+    "ちょすい": AbilityData(),
+    "てきおうりょく": AbilityData(),
+    "てつのこぶし": AbilityData(),
+    "てつのトゲ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "てんきや": {
-        "flags": [
+    ),
+    "てんきや": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "てんねん": {},
-    "てんのめぐみ": {},
-    "でんきにかえる": {
-        "flags": [
+    ),
+    "てんねん": AbilityData(),
+    "てんのめぐみ": AbilityData(),
+    "でんきにかえる": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "でんきエンジン": {},
-    "とうそうしん": {},
-    "とびだすなかみ": {
-        "flags": [
+    ),
+    "でんきエンジン": AbilityData(),
+    "とうそうしん": AbilityData(),
+    "とびだすなかみ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "とれないにおい": {
-        "flags": [
+    ),
+    "とれないにおい": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "どくくぐつ": {
-        "flags": [
+    ),
+    "どくくぐつ": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "どくげしょう": {
-        "flags": [
+    ),
+    "どくげしょう": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "どくしゅ": {},
-    "どくのくさり": {},
-    "どくのトゲ": {
-        "flags": [
+    ),
+    "どくしゅ": AbilityData(),
+    "どくのくさり": AbilityData(),
+    "どくのトゲ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "どくぼうそう": {},
-    "どしょく": {},
-    "どんかん": {},
-    "なまけ": {},
+    ),
+    "どくぼうそう": AbilityData(),
+    "どしょく": AbilityData(),
+    "どんかん": AbilityData(),
+    "なまけ": AbilityData(),
     "にげあし": AbilityData(),
-    "にげごし": {
-        "flags": [
+    "にげごし": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ぬめぬめ": {
-        "flags": [
+    ),
+    "ぬめぬめ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ねつこうかん": {},
-    "ねつぼうそう": {},
-    "ねんちゃく": {},
-    "のろわれボディ": {
-        "flags": [
+    ),
+    "ねつこうかん": AbilityData(),
+    "ねつぼうそう": AbilityData(),
+    "ねんちゃく": AbilityData(),
+    "のろわれボディ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "はがねつかい": {},
-    "はがねのせいしん": {},
-    "はじまりのうみ": {
-        "flags": [
+    ),
+    "はがねつかい": AbilityData(),
+    "はがねのせいしん": AbilityData(),
+    "はじまりのうみ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "はっこう": {},
-    "はとむね": {},
-    "はやあし": {},
-    "はやおき": {},
-    "はやてのつばさ": {},
-    "はらぺこスイッチ": {
-        "flags": [
+    ),
+    "はっこう": AbilityData(),
+    "はとむね": AbilityData(),
+    "はやあし": AbilityData(),
+    "はやおき": AbilityData(),
+    "はやてのつばさ": AbilityData(),
+    "はらぺこスイッチ": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "はりきり": {},
-    "はりこみ": {},
-    "はんすう": {
-        "flags": [
+    ),
+    "はりきり": AbilityData(),
+    "はりこみ": AbilityData(),
+    "はんすう": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ばけのかわ": {
-        "flags": [
+    ),
+    "ばけのかわ": AbilityData(
+        flags=[
             "unreproducible",
             "protected",
             "one_time"
         ]
-    },
-    "ばんけん": {},
-    "ひでり": {},
-    "ひとでなし": {},
-    "ひひいろのこどう": {},
-    "ひらいしん": {},
-    "びびり": {
-        "flags": [
+    ),
+    "ばんけん": AbilityData(),
+    "ひでり": AbilityData(),
+    "ひとでなし": AbilityData(),
+    "ひひいろのこどう": AbilityData(),
+    "ひらいしん": AbilityData(),
+    "びびり": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "びんじょう": {
-        "flags": [
+    ),
+    "びんじょう": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ふうりょくでんき": {
-        "flags": [
+    ),
+    "ふうりょくでんき": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ふかしのこぶし": {},
-    "ふくがん": {},
-    "ふくつのこころ": {},
-    "ふくつのたて": {
-        "flags": [
+    ),
+    "ふかしのこぶし": AbilityData(),
+    "ふくがん": AbilityData(),
+    "ふくつのこころ": AbilityData(),
+    "ふくつのたて": AbilityData(
+        flags=[
             "one_time"
         ]
-    },
-    "ふしぎなうろこ": {},
-    "ふしぎなまもり": {},
-    "ふしょく": {},
-    "ふとうのけん": {
-        "flags": [
+    ),
+    "ふしぎなうろこ": AbilityData(),
+    "ふしぎなまもり": AbilityData(),
+    "ふしょく": AbilityData(),
+    "ふとうのけん": AbilityData(
+        flags=[
             "one_time"
         ]
-    },
-    "ふみん": {},
-    "ふゆう": {},
-    "ぶきよう": {},
-    "へんげんじざい": {},
-    "へんしょく": {
-        "flags": [
+    ),
+    "ふみん": AbilityData(),
+    "ふゆう": AbilityData(),
+    "ぶきよう": AbilityData(),
+    "へんげんじざい": AbilityData(),
+    "へんしょく": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ほうし": {
-        "flags": [
+    ),
+    "ほうし": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ほおぶくろ": {},
-    "ほのおのからだ": {
-        "flags": [
+    ),
+    "ほおぶくろ": AbilityData(),
+    "ほのおのからだ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ほろびのボディ": {
-        "flags": [
+    ),
+    "ほろびのボディ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ぼうおん": {},
-    "ぼうじん": {},
-    "ぼうだん": {},
-    "まけんき": {
-        "flags": [
+    ),
+    "ぼうおん": AbilityData(),
+    "ぼうじん": AbilityData(),
+    "ぼうだん": AbilityData(),
+    "まけんき": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "みずがため": {
-        "flags": [
+    ),
+    "みずがため": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "みずのベール": {},
-    "みつあつめ": {},
-    "むしのしらせ": {},
-    "めんえき": {},
-    "もうか": {},
-    "ものひろい": {},
-    "もふもふ": {},
-    "もらいび": {},
-    "やるき": {},
-    "ゆうばく": {
-        "flags": [
+    ),
+    "みずのベール": AbilityData(),
+    "みつあつめ": AbilityData(),
+    "むしのしらせ": AbilityData(),
+    "めんえき": AbilityData(),
+    "もうか": AbilityData(),
+    "ものひろい": AbilityData(),
+    "もふもふ": AbilityData(),
+    "もらいび": AbilityData(),
+    "やるき": AbilityData(),
+    "ゆうばく": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ゆきかき": {},
-    "ゆきがくれ": {},
-    "ゆきふらし": {},
-    "ようりょくそ": {},
-    "よちむ": {},
-    "よびみず": {},
-    "よわき": {},
-    "りゅうのあぎと": {},
-    "りんぷん": {},
-    "わざわいのうつわ": {
-        "flags": [
+    ),
+    "ゆきかき": AbilityData(),
+    "ゆきがくれ": AbilityData(),
+    "ゆきふらし": AbilityData(),
+    "ようりょくそ": AbilityData(),
+    "よちむ": AbilityData(),
+    "よびみず": AbilityData(),
+    "よわき": AbilityData(),
+    "りゅうのあぎと": AbilityData(),
+    "りんぷん": AbilityData(),
+    "わざわいのうつわ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "わざわいのおふだ": {
-        "flags": [
+    ),
+    "わざわいのおふだ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "わざわいのたま": {
-        "flags": [
+    ),
+    "わざわいのたま": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "わざわいのつるぎ": {},
-    "わたげ": {
-        "flags": [
+    ),
+    "わざわいのつるぎ": AbilityData(),
+    "わたげ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "わるいてぐせ": {
-        "flags": [
+    ),
+    "わるいてぐせ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "アイスフェイス": {
-        "flags": [
+    ),
+    "アイスフェイス": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "アイスボディ": {},
-    "アナライズ": {},
-    "アロマベール": {},
-    "イリュージョン": {
-        "flags": [
+    ),
+    "アイスボディ": AbilityData(),
+    "アナライズ": AbilityData(),
+    "アロマベール": AbilityData(),
+    "イリュージョン": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "エアロック": {
-        "flags": [
+    ),
+    "エアロック": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "エレキメイカー": {},
-    "オーラブレイク": {},
-    "カブトアーマー": {},
-    "カーリーヘアー": {
-        "flags": [
+    ),
+    "エレキメイカー": AbilityData(),
+    "オーラブレイク": AbilityData(),
+    "カブトアーマー": AbilityData(),
+    "カーリーヘアー": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "クイックドロウ": {},
-    "クォークチャージ": {
-        "flags": [
+    ),
+    "クイックドロウ": AbilityData(),
+    "クォークチャージ": AbilityData(
+        flags=[
             "unreproducible",
             "undeniable"
         ]
-    },
-    "クリアボディ": {},
+    ),
+    "クリアボディ": AbilityData(),
     "グラスメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -566,212 +566,212 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "サイコメイカー": {},
-    "サンパワー": {},
-    "サーフテール": {},
-    "シェルアーマー": {},
-    "シンクロ": {
-        "flags": [
+    "サイコメイカー": AbilityData(),
+    "サンパワー": AbilityData(),
+    "サーフテール": AbilityData(),
+    "シェルアーマー": AbilityData(),
+    "シンクロ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "スイートベール": {},
-    "スカイスキン": {},
-    "スキルリンク": {},
-    "スクリューおびれ": {},
-    "スナイパー": {},
-    "スロースタート": {},
-    "スワームチェンジ": {
-        "flags": [
+    ),
+    "スイートベール": AbilityData(),
+    "スカイスキン": AbilityData(),
+    "スキルリンク": AbilityData(),
+    "スクリューおびれ": AbilityData(),
+    "スナイパー": AbilityData(),
+    "スロースタート": AbilityData(),
+    "スワームチェンジ": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "ゼロフォーミング": {
-        "flags": [
+    ),
+    "ゼロフォーミング": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "ソウルハート": {},
-    "ターボブレイズ": {},
-    "ダウンロード": {},
-    "ダルマモード": {
-        "flags": [
+    ),
+    "ソウルハート": AbilityData(),
+    "ターボブレイズ": AbilityData(),
+    "ダウンロード": AbilityData(),
+    "ダルマモード": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "ダークオーラ": {
-        "flags": [
+    ),
+    "ダークオーラ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "テイルアーマー": {},
-    "テクニシャン": {},
-    "テラスシェル": {
-        "flags": [
+    ),
+    "テイルアーマー": AbilityData(),
+    "テクニシャン": AbilityData(),
+    "テラスシェル": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "テラスチェンジ": {
-        "flags": [
+    ),
+    "テラスチェンジ": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "テラボルテージ": {},
-    "テレパシー": {},
-    "デルタストリーム": {
-        "flags": [
+    ),
+    "テラボルテージ": AbilityData(),
+    "テレパシー": AbilityData(),
+    "デルタストリーム": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "トランジスタ": {},
-    "トレース": {
-        "flags": [
+    ),
+    "トランジスタ": AbilityData(),
+    "トレース": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "ナイトメア": {},
-    "ノーてんき": {
-        "flags": [
+    ),
+    "ナイトメア": AbilityData(),
+    "ノーてんき": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ノーガード": {
-        "flags": [
+    ),
+    "ノーガード": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ノーマルスキン": {},
-    "ハドロンエンジン": {},
-    "ハードロック": {},
-    "バッテリー": {
-        "flags": [
+    ),
+    "ノーマルスキン": AbilityData(),
+    "ハドロンエンジン": AbilityData(),
+    "ハードロック": AbilityData(),
+    "バッテリー": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "バトルスイッチ": {
-        "flags": [
+    ),
+    "バトルスイッチ": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "バリアフリー": {},
-    "パステルベール": {},
-    "パワースポット": {
-        "flags": [
+    ),
+    "バリアフリー": AbilityData(),
+    "パステルベール": AbilityData(),
+    "パワースポット": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "パンクロック": {},
-    "ヒーリングシフト": {},
-    "ビビッドボディ": {},
-    "ビーストブースト": {},
-    "ファントムガード": {
-        "flags": [
+    ),
+    "パンクロック": AbilityData(),
+    "ヒーリングシフト": AbilityData(),
+    "ビビッドボディ": AbilityData(),
+    "ビーストブースト": AbilityData(),
+    "ファントムガード": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ファーコート": {},
-    "フィルター": {},
-    "フェアリーオーラ": {
-        "flags": [
+    ),
+    "ファーコート": AbilityData(),
+    "フィルター": AbilityData(),
+    "フェアリーオーラ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "フェアリースキン": {},
-    "フラワーギフト": {
-        "flags": [
+    ),
+    "フェアリースキン": AbilityData(),
+    "フラワーギフト": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "フラワーベール": {},
-    "フリーズスキン": {},
-    "フレンドガード": {},
-    "ブレインフォース": {},
-    "プラス": {},
-    "プリズムアーマー": {
-        "flags": [
+    ),
+    "フラワーベール": AbilityData(),
+    "フリーズスキン": AbilityData(),
+    "フレンドガード": AbilityData(),
+    "ブレインフォース": AbilityData(),
+    "プラス": AbilityData(),
+    "プリズムアーマー": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "プレッシャー": {
-        "flags": [
+    ),
+    "プレッシャー": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ヘドロえき": {
-        "flags": [
+    ),
+    "ヘドロえき": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ヘヴィメタル": {},
-    "ポイズンヒール": {},
-    "マイティチェンジ": {
-        "flags": [
+    ),
+    "ヘヴィメタル": AbilityData(),
+    "ポイズンヒール": AbilityData(),
+    "マイティチェンジ": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "マイナス": {},
-    "マイペース": {},
-    "マグマのよろい": {},
-    "マジシャン": {},
-    "マジックガード": {
-        "flags": [
+    ),
+    "マイナス": AbilityData(),
+    "マイペース": AbilityData(),
+    "マグマのよろい": AbilityData(),
+    "マジシャン": AbilityData(),
+    "マジックガード": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "マジックミラー": {},
-    "マルチスケイル": {},
-    "マルチタイプ": {
-        "flags": [
+    ),
+    "マジックミラー": AbilityData(),
+    "マルチスケイル": AbilityData(),
+    "マルチタイプ": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    },
-    "ミイラ": {
-        "flags": [
+    ),
+    "ミイラ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ミストメイカー": {},
-    "ミラクルスキン": {},
-    "ミラーアーマー": {},
-    "ムラっけ": {},
-    "メガランチャー": {},
-    "メタルプロテクト": {
-        "flags": [
+    ),
+    "ミストメイカー": AbilityData(),
+    "ミラクルスキン": AbilityData(),
+    "ミラーアーマー": AbilityData(),
+    "ムラっけ": AbilityData(),
+    "メガランチャー": AbilityData(),
+    "メタルプロテクト": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "メロメロボディ": {
-        "flags": [
+    ),
+    "メロメロボディ": AbilityData(
+        flags=[
             "undeniable"
         ]
-    },
-    "ヨガパワー": {},
-    "ライトメタル": {},
-    "リベロ": {},
-    "リミットシールド": {
-        "flags": [
+    ),
+    "ヨガパワー": AbilityData(),
+    "ライトメタル": AbilityData(),
+    "リベロ": AbilityData(),
+    "リミットシールド": AbilityData(
+        flags=[
             "unreproducible",
             "protected",
             "undeniable"
         ]
-    },
-    "リーフガード": {},
-    "レシーバー": {
-        "flags": [
+    ),
+    "リーフガード": AbilityData(),
+    "レシーバー": AbilityData(
+        flags=[
             "unreproducible"
         ]
-    },
-    "ＡＲシステム": {},
-    "おもかげやどし": {
-        "flags": [
+    ),
+    "ＡＲシステム": AbilityData(),
+    "おもかげやどし": AbilityData(
+        flags=[
             "unreproducible",
             "protected"
         ]
-    }
+    )
 }

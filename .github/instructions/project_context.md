@@ -132,6 +132,8 @@ def 新特性(battle: Battle, ctx: EventContext, value: Any):
 
 #### ステップ3: テストを作成
 
+**テストは `/tests/` ディレクトリに作成し、再現性を担保する**
+
 ```python
 # tests/ability.py
 def test_新特性():
