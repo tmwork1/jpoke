@@ -39,6 +39,7 @@ class Field(GameEffect):
         self.data: FieldData  # IDE hint
         self.owners: list[Player] = owners
         self.count = count
+        self.layers = 0  # まきびし、どくびしなどの層数管理
         self.reveal()
 
     def __deepcopy__(self, memo):

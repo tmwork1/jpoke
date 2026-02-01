@@ -63,10 +63,10 @@ VolatileName = Literal[
     "やどりぎのタネ",
 ]
 
-GlobalField = Literal["weather", "terrain", "gravity", "trickroom"]
+GlobalField = Literal["じゅうりょく", "トリックルーム"]
 
-SideField = Literal["reflector", "lightwall", "shinpi", "whitemist", "oikaze", "wish",
-                    "makibishi", "dokubishi", "stealthrock", "nebanet"]
+SideField = Literal["リフレクター", "ひかりのかべ", "しんぴのまもり", "しろいきり", "おいかぜ", "ねがいごと",
+                    "まきびし", "どくびし", "ステルスロック", "ねばねばネット"]
 
 Weather = Literal["", "はれ", "あめ", "ゆき", "すなあらし"]
 

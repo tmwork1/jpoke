@@ -153,12 +153,49 @@ def 新特性(battle: Battle, ctx: EventContext, value: Any):
 
 **テストは [`/tests/`](../../tests/) ディレクトリに作成し、再現性を担保する**
 
+**重要: 繰り返しコードは test_utils に共通化してテストを簡潔に保つ**
+
 ```python
 # tests/ability.py
+from test_utils import start_battle, tick_fields
+
 def test_新特性():
-    battle = start_battle(...)
+    battle = start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        foe=[Pokemon("ライチュウ")],
+        weather="はれ",  # 天候指定
+        terrain="グラスフィールド",  # 地形指定
+        ally_side_field={"まきびし": 3},  # サイドフィールド（日本語名、まきびし3層）
+        global_field={"トリックルーム": 5},  # グローバルフィールド（日本語名）
+        ally_volatile={"いかり": 2},  # 揮発性状態
+    )
+    
+    # フィールドカウントを進める
+    tick_fields(battle, ticks=3)  # 3ターン分カウント減少
+    
     # テストコード
 ```
+
+**test_utils.start_battle() の主なパラメータ:**
+- `ally`, `foe`: ポケモンのリスト
+- `turn`: 開始ターン数
+- `weather`: 天候（"はれ", "あめ", "すなあらし", "ゆき"）
+- `terrain`: 地形（"グラスフィールド", "エレキフィールド", 等）
+- `ally_side_field`, `foe_side_field`: サイドフィールド（辞書形式: `{フィールド名: 層数}`）
+  - **⚠️ フィールド名は日本語（ひらがな/カタカナ）を使用**: `"まきびし"`, `"どくびし"`, `"ステルスロック"`, `"ねばねばネット"`, `"リフレクター"`, `"ひかりのかべ"`, `"しんぴのまもり"`, `"しろいきり"`, `"おいかぜ"`, `"ねがいごと"`
+- `global_field`: グローバルフィールド（辞書形式: `{フィールド名: カウント}`）
+  - **⚠️ フィールド名は日本語（ひらがな/カタカナ）を使用**: `"じゅうりょく"`, `"トリックルーム"`
+- `ally_volatile`, `foe_volatile`: 揮発性状態（辞書形式: `{状態名: カウント}`）
+- `accuracy`: 命中率（テスト用）
+
+**test_utils.tick_fields() - フィールド効果のカウントダウン:**
+```python
+tick_fields(battle, ticks=5)  # 天候・地形・フィールド効果のカウントを5減らす
+```
+- 天候、地形、グローバルフィールド、サイドフィールドのカウントを一括で減少
+- カウントが0になったフィールドは自動的に解除される
+
+**💡 新しいパターンが3回以上出現したら、test_utilsに追加することを検討してください**
 
 ---
 

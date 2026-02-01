@@ -373,7 +373,14 @@ class EventManager:
             return rhs
 
         def key(rh: RegisteredHandler):
-            speed = self.battle.calc_effective_speed(rh.subject)
+            from jpoke.core import Player
+            subject = rh.subject
+            # Playerの場合はactiveポケモンに変換
+            if isinstance(subject, Player):
+                subject = subject.active
+                if subject is None:
+                    return (rh.handler.priority, 0)
+            speed = self.battle.calc_effective_speed(subject)
             return (rh.handler.priority, -speed)
 
         return sorted(rhs, key=key)
@@ -388,14 +395,23 @@ class EventManager:
 
     def _match(self, ctx: EventContext, rh: RegisteredHandler) -> bool:
         """コンテキストがハンドラにマッチするか判定"""
+        from jpoke.core import Player
+
         # コンテキストの対象の判定
         ctx_mon = ctx.get(rh.handler.role)
         if ctx_mon is None:
             return False
 
+        # ハンドラの対象を解決（Playerの場合はactiveポケモンに変換）
+        subject = rh.subject
+        if isinstance(subject, Player):
+            subject = subject.active
+            if subject is None:
+                return False
+
         # ハンドラの対象の判定
         match rh.handler.side:
             case "self":
-                return ctx_mon == rh.subject
+                return ctx_mon == subject
             case "foe":
-                return ctx_mon == self.battle.foe(rh.subject)
+                return ctx_mon == self.battle.foe(subject)

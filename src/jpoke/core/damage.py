@@ -147,19 +147,39 @@ class DamageCalculator:
             max_dmg = round_half_down(max_dmg * 1.5)
             dmg_ctx.add_flag(DamageFlag.CRITICAL)
 
-        # その他の補正（すべて4096基準）
+        # -- ここで乱数が適用される(計算はループ内で実行) --
+
+        # 攻撃タイプ補正
         r_atk_type = events.emit(
             Event.ON_CALC_ATK_TYPE_MODIFIER,
             EventContext(attacker=attacker, defender=defender, move=move),
             4096
         )
+
+        # 防御タイプ補正
         r_def_type = events.emit(
             Event.ON_CALC_DEF_TYPE_MODIFIER,
             EventContext(attacker=attacker, defender=defender, move=move),
             4096
         )
+
+        # やけど補正（タイプ相性の後、ダメージ補正の前）
+        r_burn = events.emit(
+            Event.ON_CALC_BURN_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
+
+        # ダメージ補正
         r_dmg = events.emit(
             Event.ON_CALC_DAMAGE_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
+
+        # まもる貫通系補正（Z技、ダイマックス技等）
+        r_protect = events.emit(
+            Event.ON_CALC_PROTECT_MODIFIER,
             EventContext(attacker=attacker, defender=defender, move=move),
             4096
         )
@@ -169,10 +189,18 @@ class DamageCalculator:
             # 乱数 85~100%
             dmgs[i] = int(max_dmg * (0.85+0.01*i))
 
-            # 補正（すべて4096基準で適用）
+            # タイプ補正
             dmgs[i] = round_half_down(dmgs[i] * r_atk_type / 4096)
             dmgs[i] = round_half_down(dmgs[i] * r_def_type / 4096)
+
+            # やけど補正
+            dmgs[i] = round_half_down(dmgs[i] * r_burn / 4096)
+
+            # ダメージ補正
             dmgs[i] = round_half_down(dmgs[i] * r_dmg / 4096)
+
+            # まもる貫通系補正
+            dmgs[i] = round_half_down(dmgs[i] * r_protect / 4096)
 
             # 最低ダメージ補償
             if dmgs[i] == 0 and r_def_type * r_dmg > 0:

@@ -64,7 +64,7 @@ def test():
     battle = t.start_battle(ally=[mon], turn=1)
     assert not battle.actives[0].item.revealed
     mon.hp = 1
-    battle.advance_turn(print_log=t.PRINT_LOG)
+    battle.advance_turn()
     assert battle.actives[0].item.revealed
     assert battle.actives[0].hp == 1 + mon.max_hp // 16
 

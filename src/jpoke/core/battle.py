@@ -34,8 +34,11 @@ class TestOption:
 
     Attributes:
         accuracy: 命中率の固定値（Noneの場合は通常計算）
+        ailment_trigger_rate: 状態異常の確率的発動の固定値（Noneの場合は通常の乱数判定）
+            例: 1.0 = 必ず発動, 0.0 = 必ず発動しない
     """
     accuracy: int | None = None
+    ailment_trigger_rate: float | None = None
 
 
 class Battle:
@@ -59,8 +62,8 @@ class Battle:
         speed_calculator: 素早さ計算機
         weather_mgr: 天候管理
         terrain_mgr: フィールド管理
-        field: グローバル場の状態管理
-        sides: 各プレイヤー側の場の状態管理
+        field_mgr: グローバル場の状態管理
+        side_mgrs: 各プレイヤー側の場の状態管理
         test_option: テスト用オプション設定
     """
 
@@ -94,8 +97,8 @@ class Battle:
 
         self.weather_mgr: WeatherManager = WeatherManager(self.events, self.players)
         self.terrain_mgr: TerrainManager = TerrainManager(self.events, self.players)
-        self.field: GlobalFieldManager = GlobalFieldManager(self.events, self.players)
-        self.sides: list[SideFieldManager] = [SideFieldManager(self.events, pl) for pl in self.players]
+        self.field_mgr: GlobalFieldManager = GlobalFieldManager(self.events, self.players)
+        self.side_mgrs: list[SideFieldManager] = [SideFieldManager(self.events, pl) for pl in self.players]
 
         self.test_option: TestOption = TestOption()
 
@@ -114,7 +117,7 @@ class Battle:
         fast_copy(self, new, keys_to_deepcopy=[
             "players", "events", "logger", "random", "damage_calculator",
             "move_executor", "switch_manager", "turn_controller", "speed_calculator",
-            "field", "sides"
+            "field_mgr", "side_mgrs"
         ])
 
         # 複製したインスタンスが複製後を参照するように再代入する
@@ -129,8 +132,8 @@ class Battle:
         self.switch_manager.update_reference(self)
         self.turn_controller.update_reference(self)
         self.speed_calculator.update_reference(self)
-        self.field.update_reference(self.events, self.players)
-        for i, side in enumerate(self.sides):
+        self.field_mgr.update_reference(self.events, self.players)
+        for i, side in enumerate(self.side_mgrs):
             side.update_reference(self.events, self.players[i])
 
     def init_game(self):
@@ -148,8 +151,8 @@ class Battle:
 
         self.weather_mgr = WeatherManager(self.events, self.players)
         self.terrain_mgr = TerrainManager(self.events, self.players)
-        self.field = GlobalFieldManager(self.events, self.players)
-        self.sides = [SideFieldManager(self.events, pl) for pl in self.players]
+        self.field_mgr = GlobalFieldManager(self.events, self.players)
+        self.side_mgrs = [SideFieldManager(self.events, pl) for pl in self.players]
 
         # 各プレイヤーとポケモンの初期化
         for player in self.players:
@@ -159,14 +162,16 @@ class Battle:
         """ターン初期化（TurnControllerへの委譲）。"""
         self.turn_controller.init_turn()
 
-    @property
-    def side(self) -> dict[Player, SideFieldManager]:
-        """プレイヤーごとの場の状態管理マネージャーの辞書を取得。
+    def get_side(self, source: Player | Pokemon) -> SideFieldManager:
+        """プレイヤーまたはポケモンからサイドフィールドマネージャーを取得。
+
+        Args:
+            source: Player または Pokemon インスタンス
 
         Returns:
-            dict[Player, SideFieldManager]: プレイヤーをキーとした場の状態管理の辞書
+            SideFieldManager: 対応するサイドフィールドマネージャー
         """
-        return dict(zip(self.players, self.sides))
+        return self.side_mgrs[self.get_player_index(source)]
 
     @property
     def actives(self) -> list[Pokemon]:
@@ -295,7 +300,7 @@ class Battle:
                 return i
         raise Exception("Player not found.")
 
-    def get_player_idx(self, source: Player | Pokemon) -> int:
+    def get_player_index(self, source: Player | Pokemon) -> int:
         """プレイヤーまたはポケモンからプレイヤーインデックスを取得。
 
         Args:
@@ -413,7 +418,7 @@ class Battle:
         """
         return self.speed_calculator.calc_action_order()
 
-    def TOD_score(self, player: Player, alpha: float = 1) -> float:
+    def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
 
         Args:
@@ -423,7 +428,7 @@ class Battle:
         Returns:
             TODスコア
         """
-        return self.turn_controller.calc_TOD_score(player, alpha)
+        return self.turn_controller.calc_tod_score(player, alpha)
 
     def winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
@@ -628,7 +633,7 @@ class Battle:
             source: Player または Pokemon インスタンス
             command: 選択されたコマンド
         """
-        idx = self.get_player_idx(source)
+        idx = self.get_player_index(source)
         self.logger.add_command_log(self.turn, idx, command)
 
     def add_event_log(self, source: Player | Pokemon, text: str):
@@ -638,7 +643,7 @@ class Battle:
             source: Player または Pokemon インスタンス
             text: イベントの内容
         """
-        idx = self.get_player_idx(source)
+        idx = self.get_player_index(source)
         self.logger.add_event_log(self.turn, idx, text)
 
     def add_damage_log(self, source: Player | Pokemon, text: str):
@@ -648,7 +653,7 @@ class Battle:
             source: Player または Pokemon インスタンス
             text: ダメージの詳細情報
         """
-        idx = self.get_player_idx(source)
+        idx = self.get_player_index(source)
         self.logger.add_damage_log(self.turn, idx, text)
 
     def get_event_logs(self, turn: int | None = None) -> dict[Player, list[str]]:

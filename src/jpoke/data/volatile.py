@@ -5,7 +5,16 @@ from jpoke.handlers import common, volatile as h
 from .models import VolatileData
 
 
-def common_setup():
+def common_setup() -> None:
+    """
+    各VOLATILEのハンドラにログ用のテキスト（名前）を設定する。
+
+    この関数は、VOLATILESディクショナリ内の全てのVolatileDataに対して、
+    各イベントハンドラにlog_text属性として状態名を設定します。
+    これにより、ハンドラ実行時のログ出力で状態名を表示できます。
+
+    呼び出しタイミング: モジュール初期化時（ファイル末尾）
+    """
     for name, data in VOLATILES.items():
         for event in data.handlers:
             data.handlers[event].log_text = name
@@ -47,7 +56,16 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "かなしばり": VolatileData(
         handlers={
-            # TODO: かなしばりのハンドラを実装
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.かなしばり_before_move,
+                subject_spec="target:self",
+                priority=200
+            ),
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.かなしばり_turn_end,
+                subject_spec="source:self",
+                log="never"
+            ),
         }
     ),
     "急所ランク": VolatileData(
@@ -57,7 +75,11 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "こんらん": VolatileData(
         handlers={
-            # TODO: こんらんのハンドラを実装
+            Event.ON_BEFORE_ACTION: h.VolatileHandler(
+                h.こんらん_action,
+                subject_spec="target:self",
+                priority=200
+            ),
         }
     ),
     "しおづけ": VolatileData(
@@ -82,8 +104,16 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ちょうはつ": VolatileData(
         handlers={
-            # TODO: ちょうはつのハンドラを実装
-            # 変化技の使用を防ぐ処理
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.ちょうはつ_before_move,
+                subject_spec="target:self",
+                priority=200
+            ),
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.ちょうはつ_turn_end,
+                subject_spec="source:self",
+                log="never"
+            ),
         }
     ),
     "でんじふゆう": VolatileData(
@@ -113,8 +143,16 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "バインド": VolatileData(
         handlers={
-            # TODO: バインド系技のハンドラを実装
-            # ターン終了時のダメージ、交代制限など
+            Event.ON_TURN_END_4: h.VolatileHandler(
+                h.バインド_turn_end,
+                subject_spec="source:self"
+            ),
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.バインド_before_switch,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
         }
     ),
     "ほろびのうた": VolatileData(
@@ -129,7 +167,11 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "メロメロ": VolatileData(
         handlers={
-            # TODO: メロメロのハンドラを実装
+            Event.ON_BEFORE_ACTION: h.VolatileHandler(
+                h.メロメロ_action,
+                subject_spec="target:self",
+                priority=200
+            ),
         }
     ),
     "やどりぎのタネ": VolatileData(

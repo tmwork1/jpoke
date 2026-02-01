@@ -67,6 +67,9 @@ class Event(Enum):
     ON_CALC_DEF_MODIFIER = auto()
     ON_CALC_ATK_TYPE_MODIFIER = auto()
     ON_CALC_DEF_TYPE_MODIFIER = auto()
+    ON_CALC_BURN_MODIFIER = auto()  # やけど補正（タイプ相性の後、ダメージ補正の前）
     ON_CALC_DAMAGE_MODIFIER = auto()
+    ON_CALC_PROTECT_MODIFIER = auto()  # まもる貫通系補正（Z技、ダイマックス技等）
+    ON_CALC_FINAL_DAMAGE_MODIFIER = auto()  # 最終ダメージへの順次補正（STAB、タイプ相性、やけど等）
     ON_CHECK_DEF_ABILITY = auto()
     ON_CALC_DRAIN = auto()

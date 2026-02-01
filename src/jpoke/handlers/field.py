@@ -12,9 +12,9 @@ def はれ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> Hand
     """晴れ状態での技威力補正"""
     move_type = ctx.move.type
     if move_type == "ほのお":
-        return HandlerReturn(True, value * 1.5)
+        return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     elif move_type == "みず":
-        return HandlerReturn(True, value * 0.5)
+        return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
     return HandlerReturn(False, value)
 
 
@@ -30,9 +30,9 @@ def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> Hand
     """雨状態での技威力補正"""
     move_type = ctx.move.type
     if move_type == "みず":
-        return HandlerReturn(True, value * 1.5)
+        return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     elif move_type == "ほのお":
-        return HandlerReturn(True, value * 0.5)
+        return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
     return HandlerReturn(False, value)
 
 
@@ -44,7 +44,7 @@ def あめ_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(False, value)
 
 
-def すなあらし_apply_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def すなあらし_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     # ON_TURN_END ハンドラ
     success = ctx.target and \
         not any(ctx.target.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
@@ -56,14 +56,14 @@ def すなあらし_apply_damage(battle: Battle, ctx: EventContext, value: Any) 
 def すなあらし_spdef_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
     if ctx.target.has_type("いわ"):
-        return HandlerReturn(True, value * 1.5)
+        return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     return HandlerReturn(False, value)
 
 
 def ゆき_def_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
     if ctx.target.has_type("こおり"):
-        return HandlerReturn(True, value * 1.5)
+        return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     return HandlerReturn(False, value)
 
 
@@ -79,7 +79,7 @@ def ゆき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 def エレキフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """エレキフィールドでの電気技威力1.3倍"""
     if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle.events):
-        return HandlerReturn(True, value * 1.3)
+        return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
     return HandlerReturn(False, value)
 
 
@@ -102,7 +102,7 @@ def エレキフィールド_cure_sleep(battle: Battle, ctx: EventContext, value
 def グラスフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """グラスフィールドでの草技威力1.3倍"""
     if ctx.move.type == "くさ" and not ctx.attacker.is_floating(battle.events):
-        return HandlerReturn(True, value * 1.3)
+        return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
     return HandlerReturn(False, value)
 
 
@@ -117,7 +117,7 @@ def グラスフィールド_heal(battle: Battle, ctx: EventContext, value: Any)
 def サイコフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """サイコフィールドでのエスパー技威力1.3倍"""
     if ctx.move.type == "エスパー" and not ctx.attacker.is_floating(battle.events):
-        return HandlerReturn(True, value * 1.3)
+        return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
     return HandlerReturn(False, value)
 
 
@@ -131,7 +131,7 @@ def サイコフィールド_block_priority(battle: Battle, ctx: EventContext, v
 def ミストフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ミストフィールドでのドラゴン技威力0.5倍"""
     if ctx.move.type == "ドラゴン" and not ctx.defender.is_floating(battle.events):
-        return HandlerReturn(True, value * 0.5)
+        return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
     return HandlerReturn(False, value)
 
 
@@ -164,16 +164,16 @@ def トリックルーム_reverse_speed(battle: Battle, ctx: EventContext, value
 def リフレクター_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """リフレクターで物理技ダメージ軽減"""
     if ctx.move.category == "物理":
-        # 0.5倍にするため、4096基準で 4096 * 0.5 = 2048
-        return HandlerReturn(True, value // 2)
+        # 0.5倍にするため、4096基準で 2048/4096
+        return HandlerReturn(True, value * 2048 // 4096)
     return HandlerReturn(False, value)
 
 
 def ひかりのかべ_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """光の壁で特殊技ダメージ軽減"""
     if ctx.move.category == "特殊":
-        # 0.5倍にするため、4096基準で 4096 * 0.5 = 2048
-        return HandlerReturn(True, value // 2)
+        # 0.5倍にするため、4096基準で 2048/4096
+        return HandlerReturn(True, value * 2048 // 4096)
     return HandlerReturn(False, value)
 
 
@@ -189,32 +189,46 @@ def おいかぜ_speed_boost(battle: Battle, ctx: EventContext, value: Any) -> H
 
 def まきびし_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """まきびしのダメージ"""
-    if not ctx.target or ctx.target.is_floating(battle.events):
+    if not ctx.source or ctx.source.is_floating(battle.events):
         return HandlerReturn(False)
 
-    # フィールドのカウントでダメージ量を決定
-    # TODO: フィールドのカウント管理機能の実装が必要
-    # 仮で1層として実装
-    success = battle.modify_hp(ctx.target, r=-1/8)
+    # 対象のサイドのまきびしフィールドを取得
+    makibishi_field = battle.get_side(ctx.source).fields.get("まきびし")
+    if not makibishi_field or makibishi_field.layers == 0:
+        return HandlerReturn(False)
+
+    # 層数に応じたダメージ量を決定
+    damage_ratio = {
+        1: -1/8,
+        2: -1/6,
+    }.get(makibishi_field.layers, -1/4)  # 3層以上は1/4
+
+    success = battle.modify_hp(ctx.source, r=damage_ratio)
     return HandlerReturn(success)
 
 
 def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """どくびしの毒付与"""
-    if not ctx.target:
+    if not ctx.source:
+        return HandlerReturn(False)
+
+    # 対象のサイドのどくびしフィールドを取得
+    dokubishi_field = battle.get_side(ctx.source).fields.get("どくびし")
+    if not dokubishi_field or dokubishi_field.layers == 0:
         return HandlerReturn(False)
 
     # どくタイプは吸収して消滅
-    if ctx.target.has_type("どく"):
-        # TODO: フィールドのカウントを0にする処理
+    if ctx.source.has_type("どく"):
+        dokubishi_field.layers = 0
+        dokubishi_field.deactivate(battle.events)
         return HandlerReturn(True)
 
-    if ctx.target.is_floating(battle.events):
+    if ctx.source.is_floating(battle.events):
         return HandlerReturn(False)
 
-    # TODO: カウント管理、1層でどく、2層でもうどく
-    # 仮で「どく」として実装
-    success = ctx.target.apply_ailment(battle.events, "どく", source=ctx.target)
+    # 層数に応じて「どく」または「もうどく」を付与
+    ailment = "もうどく" if dokubishi_field.layers >= 2 else "どく"
+    success = ctx.source.apply_ailment(battle.events, ailment, source=ctx.source)
     return HandlerReturn(success)
 
 
@@ -222,13 +236,13 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
     """ステルスロックのダメージ（岩タイプ相性依存）"""
     from jpoke.utils.constants import TYPE_MATCH_UP
 
-    if not ctx.target:
+    if not ctx.source:
         return HandlerReturn(False)
 
     effectiveness = 1.0
 
     # 岩タイプとの相性計算
-    for poke_type in ctx.target.types:
+    for poke_type in ctx.source.types:
         effectiveness *= TYPE_MATCH_UP["いわ"][poke_type]
 
     # ダメージ倍率を決定
@@ -240,15 +254,20 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
         0.25: -1/32,
     }.get(effectiveness, -1/8)
 
-    success = battle.modify_hp(ctx.target, r=damage_ratio)
+    success = battle.modify_hp(ctx.source, r=damage_ratio)
     return HandlerReturn(success)
 
 
 def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねばねばネットの素早さダウン"""
-    if not ctx.target or ctx.target.is_floating(battle.events):
+    if not ctx.source or ctx.source.is_floating(battle.events):
+        return HandlerReturn(False)
+
+    # 対象のサイドのねばねばネットフィールドを取得
+    nebanet_field = battle.get_side(ctx.source).fields.get("ねばねばネット")
+    if not nebanet_field or nebanet_field.layers == 0:
         return HandlerReturn(False)
 
     # 素早さランクを1段階下げる
-    from jpoke.handlers.common import modify_stat
-    return modify_stat(battle, ctx, value, "S", -1, target_spec="target:self", source_spec="source:self")
+    success = battle.modify_stat(ctx.source, "S", -1, source=ctx.source)
+    return HandlerReturn(success)

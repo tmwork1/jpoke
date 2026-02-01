@@ -428,6 +428,9 @@ class Logger:
 # EventManager._sort_handlers() で以下の順序でソート
 1. priority が小さい順
 2. 同じなら素早さが大きい順
+
+# 注意: subject が Player の場合は active ポケモンに変換してから素早さを計算
+# サイドフィールド効果のハンドラーは Player に登録されるため、この変換が必要
 ```
 
 ### RoleSpec による対象指定

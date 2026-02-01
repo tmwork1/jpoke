@@ -40,11 +40,11 @@ FIELDS: dict[str, FieldData] = {
         turn_extension_item="さらさらいわ",
         handlers={
             Event.ON_TURN_END_2: Handler(
-                h.すなあらし_apply_damage,
+                h.すなあらし_damage,
                 subject_spec="target:self",
                 log_text="すなあらしダメージ",
             ),
-            Event.ON_CALC_DEF_TYPE_MODIFIER: Handler(
+            Event.ON_CALC_DEF_MODIFIER: Handler(
                 h.すなあらし_spdef_boost,
                 subject_spec="defender:self",
                 log="never",
@@ -54,7 +54,7 @@ FIELDS: dict[str, FieldData] = {
     "ゆき": FieldData(
         turn_extension_item="つめたいいわ",
         handlers={
-            Event.ON_CALC_DEF_TYPE_MODIFIER: Handler(
+            Event.ON_CALC_DEF_MODIFIER: Handler(
                 h.ゆき_def_boost,
                 subject_spec="defender:self",
                 log="never",
@@ -187,6 +187,9 @@ FIELDS: dict[str, FieldData] = {
             ),
         },
     ),
+    "しろいきり": FieldData(
+        handlers={},
+    ),
     "おいかぜ": FieldData(
         handlers={
             Event.ON_CALC_SPEED: Handler(
@@ -196,11 +199,14 @@ FIELDS: dict[str, FieldData] = {
             ),
         },
     ),
+    "ねがいごと": FieldData(
+        handlers={},
+    ),
     "まきびし": FieldData(
         handlers={
             Event.ON_SWITCH_IN: Handler(
                 h.まきびし_damage,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log_text="まきびしダメージ",
             ),
         },
@@ -209,7 +215,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_SWITCH_IN: Handler(
                 h.どくびし_poison,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log_text="どくびし",
             ),
         },
@@ -218,7 +224,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_SWITCH_IN: Handler(
                 h.ステルスロック_damage,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log_text="ステルスロック",
             ),
         },
@@ -227,7 +233,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_SWITCH_IN: Handler(
                 h.ねばねばネット_speed_drop,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log_text="ねばねばネット",
             ),
         },

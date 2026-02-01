@@ -21,6 +21,9 @@ class Volatile(GameEffect):
     Attributes:
         count: 揮発性状態の継続ターン数などを記録するカウンター
         value: 揮発性状態に紐づく数値（みがわりのHP等）
+        disabled_move_name: かなしばりで使用禁止になっている技名
+        locked_move_name: アンコールで固定されている技名
+        source_pokemon: バインド等で使用者を記録（使用者が交代すると解除される）
 
     Notes:
         Pokemonクラスのbench_reset()で新しくインスタンスが作られるため、
@@ -35,6 +38,9 @@ class Volatile(GameEffect):
         """
         super().__init__(VOLATILES[name])
         self.count: int = count
+        self.disabled_move_name: str = ""  # かなしばり用
+        self.locked_move_name: str = ""  # アンコール用
+        self.source_pokemon: Pokemon | None = None  # バインド等の使用者
 
     def __deepcopy__(self, memo):
         cls = self.__class__

@@ -66,6 +66,10 @@ class BaseFieldManager(Generic[T]):
         self.owners = owners
         for field in self.fields.values():
             field.update_reference(owners)
+            # アクティブなフィールドのハンドラーを再登録
+            if field.is_active:
+                for owner in owners:
+                    field.register_handlers(events, owner)
 
     def tick(self, name: T) -> bool:
         """フィールド効果のカウントを1減らす。
@@ -247,8 +251,8 @@ class GlobalFieldManager(StackableFieldManager[GlobalField]):
             events,
             players,
             {
-                "gravity": Field("じゅうりょく", players),
-                "trickroom": Field("トリックルーム", players),
+                "じゅうりょく": Field("じゅうりょく", players),
+                "トリックルーム": Field("トリックルーム", players),
             }
         )
 
@@ -271,14 +275,16 @@ class SideFieldManager(StackableFieldManager[SideField]):
             events,
             [player],
             {
-                "reflector": Field("リフレクター", [player]),
-                "lightwall": Field("ひかりのかべ", [player]),
-                "shinpi": Field("しんぴのまもり", [player]),
-                "oikaze": Field("おいかぜ", [player]),
-                "makibishi": Field("まきびし", [player]),
-                "dokubishi": Field("どくびし", [player]),
-                "stealthrock": Field("ステルスロック", [player]),
-                "nebanet": Field("ねばねばネット", [player]),
+                "リフレクター": Field("リフレクター", [player]),
+                "ひかりのかべ": Field("ひかりのかべ", [player]),
+                "しんぴのまもり": Field("しんぴのまもり", [player]),
+                "しろいきり": Field("しろいきり", [player]),
+                "おいかぜ": Field("おいかぜ", [player]),
+                "ねがいごと": Field("ねがいごと", [player]),
+                "まきびし": Field("まきびし", [player]),
+                "どくびし": Field("どくびし", [player]),
+                "ステルスロック": Field("ステルスロック", [player]),
+                "ねばねばネット": Field("ねばねばネット", [player]),
             }
         )
 

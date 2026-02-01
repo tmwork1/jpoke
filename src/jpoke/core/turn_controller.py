@@ -54,7 +54,7 @@ class TurnController:
                 commands = pl.choose_selection_commands(self.battle)
                 pl.selection_idxes = [c.idx for c in commands]
 
-    def calc_TOD_score(self, player: "Player", alpha: float = 1) -> float:
+    def calc_tod_score(self, player: "Player", alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
 
         Args:
@@ -81,7 +81,7 @@ class TurnController:
         if self.battle.winner_idx is not None:
             return self.battle.players[self.battle.winner_idx]
 
-        TOD_scores = [self.calc_TOD_score(pl) for pl in self.battle.players]
+        TOD_scores = [self.calc_tod_score(pl) for pl in self.battle.players]
         if 0 in TOD_scores:
             loser_idx = TOD_scores.index(0)
             self.battle.winner_idx = int(not loser_idx)

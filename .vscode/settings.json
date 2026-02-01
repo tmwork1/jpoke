@@ -13,4 +13,14 @@
     "autopep8.args": [
         "--max-line-length=150"
     ],
+    "chat.tools.terminal.autoApprove": {
+        "/^C:/Users/tmtmp/AppData/Local/Programs/Python/Python313/python\\.exe tests/ailment\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python tests/run\\.py field\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    },
 }

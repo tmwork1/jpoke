@@ -4,8 +4,21 @@ from .models import MoveData
 from jpoke.handlers import common, move as h
 
 
-def common_setup():
-    """共通ハンドラを追加する。"""
+def common_setup() -> None:
+    """
+    全ての技に共通ハンドラを追加する。
+
+    この関数は、MOVESディクショナリ内の全てのMoveDataに対して、
+    PP消費のためのON_CONSUME_PPイベントハンドラを追加します。
+
+    追加されるハンドラ:
+        - ON_CONSUME_PP: 技使用時のPP消費処理
+
+    呼び出しタイミング: モジュール初期化時（ファイル末尾）
+
+    Note:
+        dictインスタンスはスキップされます（MoveDataオブジェクトのみ処理）
+    """
     for name, obj in MOVES.items():
         if isinstance(obj, dict):
             continue
