@@ -134,8 +134,6 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        move_category = attacker.effective_move_category(move, events)
-
         # 最終威力・攻撃・防御
         final_pow = self.calc_final_power(events, attacker, defender, move, dmg_ctx)
         final_atk = self.calc_final_attack(events, attacker, defender, move, dmg_ctx)
@@ -149,20 +147,32 @@ class DamageCalculator:
             max_dmg = round_half_down(max_dmg * 1.5)
             dmg_ctx.add_flag(DamageFlag.CRITICAL)
 
-        # その他の補正
-        r_atk_type = events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, EventContext(attacker=attacker, defender=defender, move=move), 4096)
-        r_def_type = events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, EventContext(attacker=attacker, defender=defender, move=move), 1)
-        r_dmg = events.emit(Event.ON_CALC_DAMAGE_MODIFIER, EventContext(attacker=attacker, defender=defender, move=move), 1)
+        # その他の補正（すべて4096基準）
+        r_atk_type = events.emit(
+            Event.ON_CALC_ATK_TYPE_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
+        r_def_type = events.emit(
+            Event.ON_CALC_DEF_TYPE_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
+        r_dmg = events.emit(
+            Event.ON_CALC_DAMAGE_MODIFIER,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            4096
+        )
 
         dmgs = [0]*16
         for i in range(16):
             # 乱数 85~100%
             dmgs[i] = int(max_dmg * (0.85+0.01*i))
 
-            # 補正
-            dmgs[i] = round_half_down(dmgs[i] * r_atk_type)
-            dmgs[i] = int(dmgs[i] * r_def_type)
-            dmgs[i] = round_half_down(dmgs[i] * r_dmg/4096)
+            # 補正（すべて4096基準で適用）
+            dmgs[i] = round_half_down(dmgs[i] * r_atk_type / 4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_def_type / 4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_dmg / 4096)
 
             # 最低ダメージ補償
             if dmgs[i] == 0 and r_def_type * r_dmg > 0:

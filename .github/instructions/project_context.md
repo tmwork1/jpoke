@@ -4,6 +4,11 @@
 
 **jpoke** はポケモンシングルバトル対戦シミュレータである。
 
+### 基本方針
+
+- **ポケモンの仕様は第9世代（スカーレット・バイオレット）を参照する**
+- **第9世代で実装されていない技・アイテム・特性・ポケモンなどは、実装を見送る**
+
 ### 目的
 - 戦闘ロジックの開発・検証
 - Pokemon AI ボット開発の基盤（準備中）
@@ -35,8 +40,7 @@ src/jpoke/
 │   ├── ability.py     # 特性データ
 │   ├── move.py        # 技データ
 │   ├── item.py        # アイテムデータ
-│   ├── pokedex.py     # ポケモン図鑑
-│   └── ...
+│   └── pokedex.py     # ポケモン図鑑
 ├── handlers/          # イベントハンドラ実装
 │   ├── ability.py     # 特性ハンドラ
 │   ├── move.py        # 技ハンドラ
@@ -50,11 +54,11 @@ src/jpoke/
 
 ---
 
-## 大切なアーキテクチャコンセプト
+## 核心アーキテクチャ
 
 ### 1. イベント駆動パターン
 
-このシステムの中核は **`EventManager`** （`core/event.py`）です。
+このシステムの中核は **`EventManager`** （[`core/event.py`](../../src/jpoke/core/event.py)）です。
 
 ```
 バトルの各フェーズ
@@ -86,7 +90,14 @@ Event.ON_SWITCH_IN: Handler(
 )
 ```
 
-### 3. イベントコンテキスト（EventContext）
+**Handler の構造**:
+- `func`: 実行する関数
+- `subject_spec`: 対象指定（`"role:side"` 形式）
+- `source_type`: 効果の出典（`"ability"` | `"item"` | `"move"` | `"ailment"` | `"volatile"`）
+- `log`: ログ出力方法（`"always"` | `"on_success"` | `"on_failure"` | `"never"`）
+- `priority`: 優先度（小さいほど先に実行）
+
+### 3. EventContext
 
 ハンドラ内で利用可能な情報：
 
@@ -94,10 +105,18 @@ Event.ON_SWITCH_IN: Handler(
 # EventContext の主要属性
 ctx.source      # 効果の発動源（Pokemon）
 ctx.target      # 効果の対象（Pokemon）
-ctx.attacker    # 攻撃側のPokeｍon
-ctx.defender    # 防御側のPokeｍon
-ctx.event       # 発生したイベント
+ctx.attacker    # 攻撃側のPokemon（source のエイリアス）
+ctx.defender    # 防御側のPokemon（target のエイリアス）
+ctx.move        # 使用された技
+ctx.field       # 場の状態
 ```
+
+**重要**: `attacker`/`defender` は `source`/`target` のエイリアスですが、**イベントの種類によって使い分ける必要があります**：
+
+- **ダメージ計算系イベント**: `attacker`/`defender` を使用し、`subject_spec` も `"attacker:self"` などと指定
+- **その他のイベント**: `source`/`target` を使用し、`subject_spec` も `"source:self"` などと指定
+
+詳細は [`architecture.md`](architecture.md) の「EventContext - イベントコンテキスト」セクションを参照してください。
 
 ---
 
@@ -105,7 +124,7 @@ ctx.event       # 発生したイベント
 
 ### 新しい特性を追加する場合
 
-#### ステップ1: `data/ability.py` でデータ定義
+#### ステップ1: [`data/ability.py`](../../src/jpoke/data/ability.py) でデータ定義
 
 ```python
 ABILITIES = {
@@ -121,7 +140,7 @@ ABILITIES = {
 }
 ```
 
-#### ステップ2: `handlers/ability.py` でハンドラ実装
+#### ステップ2: [`handlers/ability.py`](../../src/jpoke/handlers/ability.py) でハンドラ実装
 
 ```python
 def 新特性(battle: Battle, ctx: EventContext, value: Any):
@@ -132,7 +151,7 @@ def 新特性(battle: Battle, ctx: EventContext, value: Any):
 
 #### ステップ3: テストを作成
 
-**テストは `/tests/` ディレクトリに作成し、再現性を担保する**
+**テストは [`/tests/`](../../tests/) ディレクトリに作成し、再現性を担保する**
 
 ```python
 # tests/ability.py
@@ -157,6 +176,8 @@ side: "self"（自分側）, "foe"（相手側）
 
 例:
 - "source:self"  → 効果の発動源本人
+- "source:foe"   → 効果の発動源の相手
+- "target:self"  → 効果の対象（自分側）
 - "target:foe"   → 効果の対象（相手側）
 ```
 
@@ -195,7 +216,7 @@ Handler(..., priority=100)
 どの順序で発動するか？
 （priority で制御）
     ↓
-各効果が完成
+各効果が適用
 ```
 
 ### ターン処理フロー
@@ -214,9 +235,9 @@ Handler(..., priority=100)
 
 ## 推奨される学習順序
 
-1. **このファイル** (`project_context.md`) を読む ← 今ここ
-2. **`architecture.md`** で詳細を学ぶ
-3. **`.github/instructions/agents/workflow.md`** でエージェント運用を理解
+1. **このファイル** ([`project_context.md`](project_context.md)) を読む ← 今ここ
+2. **[`architecture.md`](architecture.md)** で詳細を学ぶ
+3. **[`agents/workflow.md`](agents/workflow.md)** でエージェント運用を理解
 4. 実装フロー例に沿ってエージェントを使う
 
 ---
@@ -225,15 +246,15 @@ Handler(..., priority=100)
 
 ### 必ず理解すべき
 
-- **`src/jpoke/core/event.py`** - イベント駆動の中核
-- **`src/jpoke/core/battle.py`** - バトルシステムのファサード
-- **`src/jpoke/model/pokemon.py`** - ポケモンの状態管理
-- **`src/jpoke/data/ability.py`** - 特性定義の例
+- **[`src/jpoke/core/event.py`](../../src/jpoke/core/event.py)** - イベント駆動の中核
+- **[`src/jpoke/core/battle.py`](../../src/jpoke/core/battle.py)** - バトルシステムのファサード
+- **[`src/jpoke/model/pokemon.py`](../../src/jpoke/model/pokemon.py)** - ポケモンの状態管理
+- **[`src/jpoke/data/ability.py`](../../src/jpoke/data/ability.py)** - 特性定義の例
 
 ### 参考になる既存実装
 
-- **`src/jpoke/handlers/ability.py`** - 特性ハンドラの実装例
-- **`tests/ability.py`** - テストの例
+- **[`src/jpoke/handlers/ability.py`](../../src/jpoke/handlers/ability.py)** - 特性ハンドラの実装例
+- **[`tests/ability.py`](../../tests/ability.py)** - テストの例
 
 ---
 
@@ -259,6 +280,6 @@ Event.ON_SWITCH_IN: Handler(新特性, ...)
 
 ## 次のステップ
 
-- 詳細な設計については **`architecture.md`** を参照
-- 新機能の実装フローは **`.github/instructions/agents/workflow.md`** を参照
-- 複数特性を実装する場合は **`.github/instructions/agents/05_research.md`** で調査
+- 詳細な設計については **[`architecture.md`](architecture.md)** を参照
+- 新機能の実装フローは **[`agents/workflow.md`](agents/workflow.md)** を参照
+- 複数特性を実装する場合は **[`agents/05_research.md`](agents/05_research.md)** で調査

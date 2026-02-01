@@ -1,8 +1,10 @@
 # アーキテクチャ詳細
 
-> **前提条件**: `project_context.md` を読了していること。
+> **前提条件**: [`project_context.md`](project_context.md) を読了していること。
 
 本ドキュメントは、プロジェクトの詳細なアーキテクチャ設計を説明する。
+
+> **重要**: 作用の実装場所については [`effect_hierarchy.md`](effect_hierarchy.md) を参照してください。
 
 ---
 
@@ -10,29 +12,12 @@
 
 ### 中核: EventManager
 
-**`core/event.py`** の `EventManager` がシステムの中心です。
+[`core/event.py`](../../src/jpoke/core/event.py) が全イベント処理を管理します。
 
-```python
-class EventManager:
-    def fire(self, event: Event, ctx: EventContext) -> EventResult:
-        """
-        1. 登録されたハンドラを優先度でソート
-        2. 各ハンドラを実行
-        3. 結果を集約して返す
-        """
-```
-
-### Handler の構造
-
-```python
-@dataclass
-class Handler:
-    func: Callable              # 実行する関数
-    subject_spec: RoleSpec      # "role:side" 形式
-    source_type: EffectSource   # "ability" | "item" | "move" | "ailment"
-    log: LogPolicy              # ログ出力方法
-    priority: int = 100         # 優先度
-```
+**主要メソッド**:
+- `fire_event()`: イベント発火
+- `register_handler()`: ハンドラ登録
+- `unregister_handler()`: ハンドラ解除
 
 ### HandlerReturn
 
@@ -44,29 +29,17 @@ class HandlerReturn:
     success: bool               # 処理が成功したか
     value: Any = None           # ダメージ補正などの値
     control: HandlerResult = None  # イベント制御フラグ
-```
 
-### EventContext
-
-ハンドラ内で利用可能な情報：
-
-```python
-@dataclass
-class EventContext:
-    battle: Battle
-    event: Event
-    source: Pokemon             # 効果の発動源
-    target: Pokemon             # 効果の対象
-    attacker: Pokemon           # 攻撃側
-    defender: Pokemon           # 防御側
-    value: Any                  # イベント固有データ
+# control の種類
+HandlerResult.BLOCK      # 以降のハンドラをブロック
+HandlerResult.INTERRUPT  # イベント全体を中断
 ```
 
 ---
 
 ## Handler 派生クラス
 
-`handlers/` 配下には、用途別の Handler 派生クラスがあります：
+[`handlers/`](../../src/jpoke/handlers/) 配下には、用途別の Handler 派生クラスがあります：
 
 ### AbilityHandler
 
@@ -122,27 +95,14 @@ VolatileHandler(
 
 ### 責務分離（ファサードパターン）
 
-```
-Battle（ファサード）
-  ├── move_executor: MoveExecutor   # 技実行
-  ├── switch_manager: SwitchManager # 交代処理
-  ├── turn_controller: TurnController # ターン進行
-  ├── field_manager: FieldManager   # フィールド管理
-  └── logger: Logger                # ログ管理
-```
+[`Battle`](../../src/jpoke/core/battle.py) クラスは以下のマネージャーを統括：
 
-Battle クラス自体は各マネージャーへの**ファサードメソッド**を提供：
-
-```python
-# Battle 経由の呼び出し（推奨）
-battle.run_move(move, user, target)
-battle.run_switch(pokemon)
-battle.advance_turn()
-
-# 内部では委譲
-def run_move(self, move, user, target):
-    return self.move_executor.run_move(move, user, target)
-```
+- **MoveExecutor**: 技実行処理
+- **SwitchManager**: 交代処理
+- **TurnController**: ターン進行
+- **EventManager**: イベント管理
+- **FieldManager**: フィールド状態管理
+- **Logger**: ログ出力
 
 ### MoveExecutor - 技実行
 
@@ -189,34 +149,78 @@ class TurnController:
         """
 ```
 
+### EventContext - イベントコンテキスト
+
+EventContext は内部的には `source`/`target` のみを保持しますが、`attacker`/`defender` での指定・アクセスも可能です：
+
+```python
+class EventContext:
+    source: Pokemon | None     # イベントの発生源
+    target: Pokemon | None     # イベントの対象
+    
+    # source/target のエイリアス（プロパティ）
+    @property
+    def attacker(self) -> Pokemon | None:
+        return self.source
+    
+    @property
+    def defender(self) -> Pokemon | None:
+        return self.target
+```
+
+**重要な使い分けルール**:
+
+| コンテキスト | 使用する属性 | 理由 |
+|------------|------------|------|
+| **ダメージ計算系イベント** | `attacker`, `defender` | 攻撃/防御の役割が明確 |
+| **その他のイベント** | `source`, `target` | 一般的な発生源/対象の関係 |
+
+**ダメージ計算系イベント**:
+- `ON_CALC_POWER_MODIFIER` - 技威力補正
+- `ON_CALC_ATK_MODIFIER` - 攻撃力補正
+- `ON_CALC_DEF_MODIFIER` - 防御力補正
+- `ON_CALC_ATK_TYPE_MODIFIER` - 攻撃タイプ補正
+- `ON_CALC_DEF_TYPE_MODIFIER` - 防御タイプ補正
+- `ON_CALC_DAMAGE_MODIFIER` - ダメージ補正
+
+**Handler の subject_spec は使用する属性名と一致させる**:
+
+```python
+# ✅ 正しい例（ダメージ計算）
+Event.ON_CALC_POWER_MODIFIER: Handler(
+    はれ_power_modifier,
+    subject_spec="attacker:self",  # attacker を使用
+    log="never",
+)
+
+# ✅ 正しい例（その他）
+Event.ON_SWITCH_IN: Handler(
+    いかく,
+    subject_spec="source:self",  # source を使用
+    log="on_success",
+)
+
+# ❌ 間違った例
+Event.ON_CALC_POWER_MODIFIER: Handler(
+    はれ_power_modifier,
+    subject_spec="source:self",  # ダメージ計算では attacker を使うべき
+    log="never",
+)
+```
+
 ---
 
 ## Pokemon の状態管理
 
 ### 基本構造
 
-```python
-class Pokemon:
-    # 基本データ
-    name: str
-    level: int
-    ability: Ability
-    item: Item
-    moves: list[Move]
-    nature: Nature
-    
-    # バトル状態
-    hp: int
-    ailment: Ailment              # 状態異常（1つのみ）
-    volatiles: dict[str, Volatile] # 揮発性状態（複数可能）
-    rank: dict[Stat, int]         # ランク変化（+-7段階）
-    
-    # 場限定の状態
-    is_terastallized: bool
-    
-    # ステータス計算
-    _stats_manager: PokemonStats
-```
+[`Pokemon`](../../src/jpoke/model/pokemon.py) クラスは以下を管理：
+
+- **基本ステータス**: HP、攻撃、防御、特攻、特防、素早さ
+- **ランク補正**: -6 〜 +6
+- **状態異常**: 毒、まひ、やけど、ねむり、こおり
+- **揮発性状態**: みがわり、アンコール、こんらんなど
+- **特性・アイテム**: 現在保持している特性とアイテム
 
 ### ライフサイクル
 
@@ -260,17 +264,18 @@ def switch_out(self):
 
 ### PokemonStats - ステータス計算
 
+ステータスの計算は [`PokemonStats`](../../src/jpoke/model/stats.py) に委譲されます：
+
 ```python
 class PokemonStats:
-    _stats: list[int]      # [HP, 攻撃, 防御, 特攻, 特防, 素早さ]
-    _indiv: list[int]      # 個体値
-    _effort: list[int]     # 努力値
+    def get_attack(self) -> int:
+        """攻撃力を計算（ランク補正含む）"""
     
-    def update_stats(self, level, base, nature):
-        """
-        種族値、個体値、努力値、性格補正から
-        ステータス実数値を再計算
-        """
+    def get_defense(self) -> int:
+        """防御力を計算（ランク補正含む）"""
+    
+    def apply_rank_change(self, stat: Stat, change: int):
+        """ランクを変更（-6 〜 +6 に制限）"""
 ```
 
 ---
@@ -304,6 +309,38 @@ class Volatile(GameEffect):
 
 **例**: みがわり、アンコール、ちょうはつ、やどりぎのタネ、こんらん
 
+### 揮発性状態の実装例
+
+```python
+# data/volatile.py
+"みがわり": VolatileData(
+    handlers={
+        Event.ON_BEFORE_DAMAGE: VolatileHandler(
+            func=みがわり,
+            subject_spec="source:self",
+            priority=50,
+            log="on_success"
+        )
+    }
+),
+
+# handlers/volatile.py
+def みがわり(battle: Battle, ctx: EventContext, value: Any):
+    """みがわりがダメージを肩代わりする"""
+    substitute = ctx.defender.volatiles.get("みがわり")
+    if not substitute or not substitute.is_active():
+        return HandlerReturn(False)
+    
+    # みがわりのHPを減らす
+    substitute.value -= value
+    if substitute.value <= 0:
+        ctx.defender.remove_volatile("みがわり")
+        battle.logger.log(f"{ctx.defender.name}のみがわりが壊れた！")
+        return HandlerReturn(True, 0, HandlerResult.BLOCK)
+    
+    return HandlerReturn(True, 0, HandlerResult.BLOCK)
+```
+
 ---
 
 ## ダメージ計算（damage.py）
@@ -331,32 +368,18 @@ def calculate_damage(
 
 ## ログシステム（logger.py）
 
-### 3種類のログ
+[`Logger`](../../src/jpoke/core/logger.py) はバトルログを管理します：
 
 ```python
-@dataclass
-class EventLog:
-    text: str  # イベント説明
-
-@dataclass
-class CommandLog:
-    command: Command  # プレイヤーコマンド
-
-@dataclass
-class DamageLog:
-    damage: int  # ダメージ量
-```
-
-### ログアクセスの推奨方法
-
-```python
-# Battle 経由（推奨）
-battle.add_event_log(source_pokemon, "メッセージ")
-logs = battle.get_event_logs(turn)  # dict[Player, list[str]]
-
-# Logger 直接（低レベルAPI）
-battle.logger.add_event_log(turn, idx, "メッセージ")
-logs = battle.logger.get_event_logs(turn, idx)  # list[str]
+class Logger:
+    def log(self, message: str):
+        """通常ログ"""
+    
+    def log_critical(self, message: str):
+        """重要ログ（赤色）"""
+    
+    def log_debug(self, message: str):
+        """デバッグログ（グレー）"""
 ```
 
 ---
@@ -389,7 +412,8 @@ logs = battle.logger.get_event_logs(turn, idx)  # list[str]
 # 場の状態
 "reflect"         # リフレクター
 "light_screen"    # ライトスクリーン
-"spikes"          # ステルスロック
+"spikes"          # まきびし
+"stealth_rock"    # ステルスロック
 ```
 
 ---
@@ -410,7 +434,7 @@ logs = battle.logger.get_event_logs(turn, idx)  # list[str]
 
 ```python
 "source:self"   # 自分（効果の発動源）
-"source:foe"    # 相手（効果の発動源）
+"source:foe"    # 相手（効果の発動源の相手）
 "target:self"   # 自分（効果の対象）
 "target:foe"    # 相手（効果の対象）
 "attacker:*"    # 攻撃側（どちらか）
@@ -453,7 +477,7 @@ battle_copy.update_reference()
 RoleSpec = Literal["source:self", "source:foe", "target:self", ...]
 
 # 効果の出典
-EffectSource = Literal["ability", "item", "move", "ailment"]
+EffectSource = Literal["ability", "item", "move", "ailment", "volatile"]
 
 # ログポリシー
 LogPolicy = Literal["always", "on_success", "on_failure", "never"]
@@ -470,21 +494,21 @@ Weather = Literal["sunny", "rainy", "sandstorm", "hail"]
 
 実装を始める前に、以下の順序でファイルを理解してください：
 
-1. **`utils/type_defs.py`** - 型定義
-2. **`utils/enums/`** - Event, Command などの enum
-3. **`utils/constants.py`** - ゲーム定数
-4. **`model/stats.py`** - ステータス計算
-5. **`model/effect.py`** - GameEffect 基底クラス
-6. **`model/ailment.py`** - 状態異常管理
-7. **`model/volatile.py`** - 揮発性状態管理
-8. **`model/pokemon.py`** - Pokemon クラス
-9. **`core/event.py`** - イベントシステム
-10. **`core/move_executor.py`** - 技実行
-11. **`core/switch_manager.py`** - 交代処理
-12. **`core/turn_controller.py`** - ターン進行
-13. **`core/battle.py`** - Battle ファサード
-14. **`data/models.py`** - データ構造定義
-15. **`handlers/*.py`** - ハンドラ実装
+1. **[`utils/type_defs.py`](../../src/jpoke/utils/type_defs.py)** - 型定義
+2. **[`utils/enums/`](../../src/jpoke/utils/enums/)** - Event, Command などの enum
+3. **[`utils/constants.py`](../../src/jpoke/utils/constants.py)** - ゲーム定数
+4. **[`model/stats.py`](../../src/jpoke/model/stats.py)** - ステータス計算
+5. **[`model/effect.py`](../../src/jpoke/model/effect.py)** - GameEffect 基底クラス
+6. **[`model/ailment.py`](../../src/jpoke/model/ailment.py)** - 状態異常管理
+7. **[`model/volatile.py`](../../src/jpoke/model/volatile.py)** - 揮発性状態管理
+8. **[`model/pokemon.py`](../../src/jpoke/model/pokemon.py)** - Pokemon クラス
+9. **[`core/event.py`](../../src/jpoke/core/event.py)** - イベントシステム
+10. **[`core/move_executor.py`](../../src/jpoke/core/move_executor.py)** - 技実行
+11. **[`core/switch_manager.py`](../../src/jpoke/core/switch_manager.py)** - 交代処理
+12. **[`core/turn_controller.py`](../../src/jpoke/core/turn_controller.py)** - ターン進行
+13. **[`core/battle.py`](../../src/jpoke/core/battle.py)** - Battle ファサード
+14. **[`data/models.py`](../../src/jpoke/data/models.py)** - データ構造定義
+15. **[`handlers/*.py`](../../src/jpoke/handlers/)** - ハンドラ実装
 
 ---
 
@@ -496,7 +520,7 @@ Weather = Literal["sunny", "rainy", "sandstorm", "hail"]
 - **名前付き関数** - Lambda ではなく名前付き関数で実装（デバッグが容易）
 - **RoleSpec を正確に** - `"role:side"` 形式を守る
 - **派生クラスを活用** - AbilityHandler, ItemHandler など
-- **ステータス計算は PokemonStats に委譲** - Pokemon.update_stats() で対応
+- **ステータス計算は PokemonStats に委譲** - [`Pokemon.update_stats()`](../../src/jpoke/model/pokemon.py) で対応
 - **GameEffect を継承した処理は Event と Handler で実装** - 対戦に影響を与える処理（特性、アイテム、状態異常、揮発性状態など）は、可能な限り Event と Handler の組み合わせとして実装する
 
 ### ❌ 避けるべき
@@ -505,6 +529,47 @@ Weather = Literal["sunny", "rainy", "sandstorm", "hail"]
 - **グローバル変数** - 参照追跡が困難
 - **直接的なミュータブル修正** - イベントハンドラ経由で統一
 - **複雑な Lambda** - `<lambda>` としかスタックトレースに表示されない
+
+---
+
+## エラーハンドリング
+
+### 例外処理の基本方針
+
+```python
+# ❌ 避けるべき: 例外を握りつぶす
+try:
+    handler_func(battle, ctx, value)
+except Exception:
+    pass
+
+# ✅ 推奨: ログに記録して適切に処理
+try:
+    handler_func(battle, ctx, value)
+except ValueError as e:
+    battle.logger.log_critical(f"Invalid value: {e}")
+    return HandlerReturn(False)
+except Exception as e:
+    battle.logger.log_critical(f"Unexpected error in handler: {e}")
+    raise
+```
+
+### バリデーション
+
+```python
+# ハンドラ関数内でのバリデーション例
+def 特性ハンドラ(battle: Battle, ctx: EventContext, value: Any):
+    if ctx.source is None:
+        battle.logger.log_debug("source is None, skipping")
+        return HandlerReturn(False)
+    
+    if not isinstance(value, int):
+        battle.logger.log_critical(f"Expected int, got {type(value)}")
+        return HandlerReturn(False)
+    
+    # 正常処理
+    return HandlerReturn(True)
+```
 
 ---
 
@@ -538,5 +603,6 @@ lambda battle, ctx, value: ...
 
 ## 次のステップ
 
-- 実装フローは `.github/instructions/agents/workflow.md` を参照
-- 複数機能の並列実装は `.github/instructions/agents/05_research.md` を参照
+- **作用のヒエラルキー**: [`effect_hierarchy.md`](effect_hierarchy.md) を参照
+- **実装フロー**: [`agents/workflow.md`](agents/workflow.md) を参照
+- **複数機能の並列実装**: [`agents/05_research.md`](agents/05_research.md) を参照

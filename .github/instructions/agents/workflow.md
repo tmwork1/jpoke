@@ -2,353 +2,248 @@
 
 本ドキュメントは、複数のエージェント(Copilot Chat の異なる役割)を活用して、ポケモン対戦システムを効率的に開発するためのガイドである。
 
+## 基本方針
+
+- **ポケモンの仕様は第9世代（スカーレット・バイオレット）を参照する**
+- **第9世代で実装されていない技・アイテム・特性・ポケモンなどは、実装を見送る**
+
+---
+
+## 重要な実装ルール
+
+### EventContext の属性の使い分け
+
+イベントの種類によって、使用すべき EventContext の属性が異なる：
+
+| イベント種類 | 使用する属性 | 例 |
+|------------|------------|---|
+| **ダメージ計算関連** | `attacker`, `defender` | ON_CALC_POWER_MODIFIER, ON_CALC_DAMAGE_MODIFIER, ON_CALC_ATK_MODIFIER, ON_CALC_DEF_MODIFIER |
+| **その他のイベント** | `source`, `target` | ON_SWITCH_IN, ON_TURN_END, ON_BEFORE_APPLY_AILMENT |
+
+**重要**: Handler の `subject_spec` は、EventContext で使用される属性名と一致させる必要がある。
+
+```python
+# ✅ 正しい例（ダメージ計算）
+Handler(
+    はれ_power_modifier,
+    subject_spec="attacker:self",  # EventContext(attacker=...) を使うため
+    log="never",
+)
+
+# ❌ 間違った例
+Handler(
+    はれ_power_modifier,
+    subject_spec="source:self",  # ダメージ計算では attacker を使うべき
+    log="never",
+)
+```
+
+### ダメージ補正値の基準
+
+**すべてのダメージ関連補正は 4096 基準** で扱う：
+
+| イベント | 初期値 | 補正の意味 |
+|---------|-------|----------|
+| ON_CALC_POWER_MODIFIER | 4096 | 技威力補正（例: 1.5倍 = 6144） |
+| ON_CALC_ATK_MODIFIER | 4096 | 攻撃力補正 |
+| ON_CALC_DEF_MODIFIER | 4096 | 防御力補正 |
+| ON_CALC_ATK_TYPE_MODIFIER | 4096 | 攻撃タイプ補正 |
+| ON_CALC_DEF_TYPE_MODIFIER | 4096 | 防御タイプ補正 |
+| ON_CALC_DAMAGE_MODIFIER | 4096 | 最終ダメージ補正 |
+
+**Handler での補正値の計算例**:
+
+```python
+# 0.5倍にする場合
+return HandlerReturn(True, value // 2)  # 4096 → 2048
+
+# 1.5倍にする場合
+return HandlerReturn(True, value * 3 // 2)  # 4096 → 6144
+
+# 1.3倍にする場合
+return HandlerReturn(True, value * 5325 // 4096)  # 4096 → 5325
+```
+
+参考: [ポケモンWiki - ダメージ計算式](https://latest.pokewiki.net/%E3%83%80%E3%83%A1%E3%83%BC%E3%82%B8%E8%A8%88%E7%AE%97%E5%BC%8F#damageformula_detail)
+
 ---
 
 ## 全体フロー
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│  ユーザー: 新機能のリクエスト                                            │
-│  「XXX機能を追加したい」                                               │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Research Agent: 仕様調査                                              │
-│  「Webから仕様をリサーチしました」                                     │
-│                          ↓                                             │
-│  ユーザー: リサーチ結果を確認                                           │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Orchestrator: 全体計画を作成                                          │
-│  「以下のフローで進めます」                                            │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Planner: タスク分解                                                   │
-│  「タスクをXXXに分割しました」                                        │
-│                          ↓                                             │
-│  ユーザー: コピペして確認                                              │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Architect: 設計案作成                                                 │
-│  「技術設計は以下の通り」                                              │
-│                          ↓                                             │
-│  ユーザー: コピペして確認                                              │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Coder: コード実装                                                     │
-│  「実装コードはこちら」                                                │
-│                          ↓                                             │
-│  ユーザー: コピペしてエディタに貼り付け、動作確認                       │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Tester: テスト実装                                                    │
-│  「テストコードはこちら」                                              │
-│                          ↓                                             │
-│  ユーザー: テスト実行、全テスト成功か確認                              │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Reviewer: コードレビュー                                              │
-│  「コード品質をチェックしました」                                      │
-│  - 修正が必要な場合: Coderに修正依頼                                   │
-│  - 問題ない場合: 次へ                                                  │
-│                          ↓                                             │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  Domain Expert: ポケモン仕様確認                                       │
-│  「仕様に適合しています」                                              │
-│                          ↓                                             │
-│  実装完了                                                              │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────┘
+ユーザー: 新機能のリクエスト
+    ↓
+Research Agent: 仕様調査
+    ↓
+Orchestrator: 全体計画
+    ↓
+Planner: タスク分解
+    ↓
+Architect: 設計
+    ↓
+Coder: コード実装
+    ↓
+Tester: テスト実装
+    ↓
+Reviewer: コードレビュー
+    ↓
+Domain Expert: 仕様確認
+    ↓
+実装完了
 ```
 
 ---
 
 ## 具体的な使い方
 
-### Step 0: Research Agent で仕様調査(重要)
+### Step 0: Research Agent で仕様調査
 
-特性を大量に実装する場合は、この段階が最重要である。
+**複数の特性を実装する場合は必須**
 
-1. VS Code の Copilot Chat を開く
-   - Ctrl + Shift + I
+1. VS Code の Copilot Chat を開く（Ctrl + Shift + I）
+2. `05_research` を選択
+3. リサーチ対象を入力
 
-2. 左パネルから `05_research` を選択
-   - `.github/instructions/agents/` フォルダ内の `05_research.md`
+```
+【リサーチ対象リスト】
+以下の特性について詳しく調べてください。
 
-3. **リサーチ対象を入力**
-   ```
-   【リサーチ対象リスト】
-   以下の5つの特性について詳しく調べてください。
-   
-   1. テレパシー
-   2. ダウンロード
-   3. トレーシング
-   4. シルヴディ
-   5. フリーズドライ
-   
-   各特性について:
-   - 基本効果と発動条件
-   - 複数効果との相互作用
-   - エッジケース・バグ情報
-   - ゲーム内テスト方法
-   
-   を調べてください。
-   ```
+1. テレパシー
+2. ダウンロード
+3. トレーシング
 
-4. **Research Agent の出力を確認**
-   - リサーチ結果が詳細に記載されている
-   - 複数の出典が記載されている
-   - 信頼度評価がある
+各特性について:
+- 基本効果と発動条件
+- 複数効果との相互作用
+- エッジケース・バグ情報
+```
 
-5. **次のステップへ**
-   - Orchestrator に「以下のリサーチ結果に基づいて実装を計画してください」と渡す
+4. Research Agent の出力を確認
+5. 次のステップへ
 
 ---
 
 ### Step 1: Orchestrator に相談する
 
-1. VS Code の Copilot Chat を開く
-   - Ctrl + Shift + I (または Chat アイコン)
+1. `00_orchestrator` を選択
+2. 要件を入力
 
-2. 左パネルから `00_orchestrator` を選択
-   - `.github/instructions/agents/` フォルダ内の `00_orchestrator.md` をプロンプトコンテキストに追加
+```
+新しい特性「スキルスワップ」を追加したい。
+効果: ターン開始時に相手の特性を一時的に奪う
+```
 
-3. **要件を入力**
-   ```
-   新しい特性「スキルスワップ」を追加したい。
-   効果: ターン開始時に相手の特性を一時的に奪う
-   ```
-
-4. **Orchestrator の出力を確認**
-   ```
-   元の要件:
-   - 新特性「スキルスワップ」を実装
-   - ターン開始時に発動
-   - 相手の特性を奪う
-   
-   推奨フロー:
-   1. データモデル設計（ability.py）
-   2. ハンドラー実装（handlers/ability.py）
-   3. テスト実装
-   ...
-   ```
+3. Orchestrator の出力を確認
 
 ---
 
-### Step 2: Planner に タスク分解を依頼
+### Step 2: Planner にタスク分解を依頼
 
-1. **Orchestrator の出力をコピー**
+1. Orchestrator の出力をコピー
+2. `10_planner` を選択
+3. 以下を入力
 
-2. **Copilot Chat で `10_planner` を選択**
+```
+[Orchestrator の出力]
 
-3. **Orchestrator の出力をペースト + 以下を追加**
-   ```
-   [Orchestrator の出力]
-   
-   このタスクを具体的なサブタスクに分解してください。
-   ```
+このタスクを具体的なサブタスクに分解してください。
+```
 
-4. **Planner の出力例**
-   ```
-   ## タスク分解結果
-   
-   ### 実装の全体像
-   
-   | # | タスク | 対象ファイル | 難度 |
-   |----|--------|------------|------|
-   | 1 | Ability モデルに新フィールド追加 | src/jpoke/data/ability.py | 低 |
-   | 2 | ハンドラー関数を実装 | src/jpoke/handlers/ability.py | 中 |
-   | 3 | ターン開始時の発動タイミング組み込み | src/jpoke/core/turn_controller.py | 中 |
-   | 4 | テスト実装 | tests/ability.py | 低 |
-   ```
+4. Planner の出力を確認
 
 ---
 
 ### Step 3: Architect に設計を依頼
 
-1. **Planner の出力をコピー**
+1. Planner の出力をコピー
+2. `20_architect` を選択
+3. 以下を入力
 
-2. **Copilot Chat で `20_architect` を選択**
+```
+[Planner の出力]
 
-3. **Planner の出力をペースト + 以下を追加**
-   ```
-   [Planner の出力]
-   
-   このタスク計画に基づいて技術設計を作成してください。
-   ```
+このタスク計画に基づいて技術設計を作成してください。
+```
 
-4. **Architect の出力例**
-   ```
-   ## 実装設計
-   
-   ### タスク計画の概要
-   [要点の整理]
-   
-   ### 詳細設計
-   
-   #### 1. データモデル設計
-   
-   ```python
-   class Ability(BaseModel):
-       # 既存フィールド
-       id: str
-       name: str
-       
-       # 新規フィールド
-       swap_target_ability: Optional[str] = None  # 奪う特性
-       duration_turns: int = 1  # 効果の持続ターン数
-   ```
-   
-   #### 2. 既存コード連携
-   
-   | 対象ファイル | 変更内容 | 理由 |
-   |...
-   ```
+4. Architect の出力を確認
 
 ---
 
 ### Step 4: Coder にコーディングを依頼
 
-1. **Architect の出力をコピー**
+1. Architect の出力をコピー
+2. `30_coder` を選択
+3. 以下を入力
 
-2. **Copilot Chat で `30_coder` を選択**
+```
+[Architect の出力]
 
-3. **Architect の出力をペースト + 以下を追加**
-   ```
-   [Architect の出力]
-   
-   上記の設計に基づいてコードを実装してください。
-   ```
+上記の設計に基づいてコードを実装してください。
+```
 
-4. **Coder の出力例**
-   ```python
-   ## 実装コード
-   
-   ### 実装内容
-   
-   #### 1. 新規モデル
-   
-   ```python
-   # ファイル: src/jpoke/data/ability.py
-   
-   class Ability(BaseModel):
-       ...
-   ```
-   
-   #### 2. ハンドラー関数
-   
-   ```python
-   # ファイル: src/jpoke/handlers/ability.py
-   
-   def swap_ability(...):
-       ...
-   ```
-   ```
-
-5. **生成されたコードをエディタに貼り付け**
-   - 対象ファイルを VS Code で開く
-   - コードをコピーして適切な箇所に貼り付け
-   - 動作確認（インポート エラーなし、型ヒント OK など）
+4. 生成されたコードをエディタに貼り付け
+5. 動作確認（インポートエラーなし、型ヒント OK など）
 
 ---
 
 ### Step 5: Tester にテスト実装を依頼
 
-1. **Coder の出力をコピー**
+1. Coder の出力をコピー
+2. `40_tester` を選択
+3. 以下を入力
 
-2. **Copilot Chat で `40_tester` を選択**
+```
+[Coder の出力]
 
-3. **Coder の出力をペースト + 以下を追加**
-   ```
-   [Coder の出力]
-   
-   上記の実装に対して、包括的なテストコードを作成してください。
-   ```
+上記の実装に対して、包括的なテストコードを作成してください。
+```
 
-4. **Tester の出力例**
-   ```python
-   ## テスト実装
-   
-   ```python
-   # ファイル: tests/ability.py
-   
-   class TestSkillSwap:
-       def test_basic_swap(self):
-           ...
-       
-       def test_duration(self):
-           ...
-   ```
-   ```
+4. テストコードをエディタに貼り付け
+5. テスト実行
 
-5. **テストコードをエディタに貼り付け**
-   ```bash
-   pytest tests/ability.py -v
-   ```
+```bash
+pytest tests/ability.py -v
+```
 
 ---
 
 ### Step 6: Reviewer にコードレビューを依頼
 
-1. **Reviewer の出力をコピー（実装 + テストコード）**
+1. 実装 + テストコードをコピー
+2. `50_reviewer` を選択
+3. 以下を入力
 
-2. **Copilot Chat で `50_reviewer` を選択**
+```
+[実装コード + テストコード]
 
-3. **以下を入力**
-   ```
-   [実装コード + テストコード]
-   
-   上記の実装とテストに対してコードレビューしてください。
-   品質、型安全性、セキュリティをチェックしてください。
-   ```
+上記の実装とテストに対してコードレビューしてください。
+```
 
-4. **Reviewer の出力を確認**
-   - ❌ **CRITICAL** 指摘がある場合
-     - 指摘内容を Coder に渡して修正依頼
-     - 修正後、再度 Reviewer にレビュー依頼
-   
-   - ✅ 問題ない場合
-     - 次へ進む
+4. Reviewer の出力を確認
+   - **CRITICAL** 指摘がある場合 → Coder に修正依頼
+   - 問題ない場合 → 次へ
 
 ---
 
 ### Step 7: Domain Expert に仕様確認を依頼
 
-1. **Reviewer で OK が出たコードを準備**
+1. `60_domain_expert` を選択
+2. 以下を入力
 
-2. **Copilot Chat で `60_domain_expert` を選択**
+```
+[実装コード + テストコード]
 
-3. **以下を入力**
-   ```
-   [実装コード + テストコード]
-   
-   ポケモン対戦の仕様観点から、この実装をレビューしてください。
-   ターン順序、複数効果の相互作用、ゲームバランスを確認してください。
-   ```
+ポケモン対戦の仕様観点から、この実装をレビューしてください。
+```
 
-4. **Domain Expert の出力を確認**
-   - ✅ 問題ない
-     - **実装完了、マージ可能**
-   
-   - ⚠️ 要修正
-     - 指摘内容を Coder/Architect に渡して対応
-   
-   - ❌ 不適切
-     - 設計段階へ巻き戻し
+3. Domain Expert の出力を確認
+   - ✅ 問題ない → **実装完了**
+   - ⚠️ 要修正 → Coder/Architect に対応依頼
+   - ❌ 不適切 → 設計段階へ巻き戻し
 
 ---
 
 ## 修正フロー
-
-修正が必要な場合のフロー:
 
 ```
 修正指摘あり
@@ -373,31 +268,28 @@ OK なら Domain Expert へ
 ```
 ❌ やってはいけない:
 「Coderエージェントでコード書いて」
-（前の情報が失われる）
 
 ✅ 推奨:
 [Architectの出力全体をコピペ]
 「上記の設計に基づいて実装してください」
-（コンテキストが繋がる）
 ```
 
 ### 2. 確認ポイント
 
-各ステップで以下を確認:
-
 | ステップ | 確認項目 |
 |---------|---------|
-| Planner | タスクの粒度は適切か、漏れはないか |
-| Architect | 既存コード との矛盾はないか |
-| Coder | エラーなく動作するか |
-| Tester | テスト成功しているか |
-| Reviewer | CRITICAL 指摘がないか |
-| Domain Expert | ゲームバランスは OK か |
+| Research | 複数出典、信頼度評価あり |
+| Planner | タスクの粒度適切、漏れなし |
+| Architect | 既存コードとの矛盾なし |
+| Coder | エラーなく動作 |
+| Tester | テスト成功 |
+| Reviewer | CRITICAL 指摘なし |
+| Domain Expert | ゲームバランス OK |
 
 ### 3. 手戻りを避けるコツ
 
-- Planner の段階でしっかり確認（タスク漏れは後で大変）
-- Architect で既存コード を必ず参考にする
+- Planner の段階でしっかり確認
+- Architect で既存コードを必ず参考にする
 - Coder の出力は動作確認してから Tester へ
 - Reviewer で修正が出たら、修正内容を正確に Coder に伝える
 
@@ -405,15 +297,13 @@ OK なら Domain Expert へ
 
 ## クイックスタート（小規模な機能の場合）
 
-「Coder」と「Reviewer」だけで済ます場合:
-
 ```
 1. Planner で簡単にタスク分解
-   ↓
+    ↓
 2. Coder に「以下のタスクを実装してください」
-   ↓
+    ↓
 3. Tester で簡単なテスト
-   ↓
+    ↓
 4. Reviewer で最終チェック
 ```
 
@@ -421,11 +311,11 @@ OK なら Domain Expert へ
 
 ## 参考資料
 
-- Research Agent (リサーチ担当): `.github/instructions/agents/05_research.md`
-- Orchestrator (全体司令塔): `.github/instructions/agents/00_orchestrator.md`
-- Planner (計画担当): `.github/instructions/agents/10_planner.md`
-- Architect (設計担当): `.github/instructions/agents/20_architect.md`
-- Coder (実装担当): `.github/instructions/agents/30_coder.md`
-- Tester (テスト担当): `.github/instructions/agents/40_tester.md`
-- Reviewer (レビュー担当): `.github/instructions/agents/50_reviewer.md`
-- Domain Expert (ポケモン仕様): `.github/instructions/agents/60_domain_expert.md`
+- Research Agent: [`05_research.md`](05_research.md)
+- Orchestrator: [`00_orchestrator.md`](00_orchestrator.md)
+- Planner: [`10_planner.md`](10_planner.md)
+- Architect: [`20_architect.md`](20_architect.md)
+- Coder: [`30_coder.md`](30_coder.md)
+- Tester: [`40_tester.md`](40_tester.md)
+- Reviewer: [`50_reviewer.md`](50_reviewer.md)
+- Domain Expert: [`60_domain_expert.md`](60_domain_expert.md)

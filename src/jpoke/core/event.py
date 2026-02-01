@@ -31,27 +31,58 @@ class HandlerReturn(NamedTuple):
     control: EventControl | None = None
 
 
-@dataclass
 class EventContext:
     """イベント発火時のコンテキスト情報。
 
     イベントに関連するポケモン、技、場の状態などを保持します。
     ハンドラ実行時に必要な情報を提供します。
 
+    内部的には source/target のみを保持しますが、
+    attacker/defender での指定・アクセスも可能です（source/target のエイリアス）。
+
     Attributes:
-        source: イベントの発生源となるポケモン
-        target: イベントの対象となるポケモン
-        attacker: 攻撃側のポケモン
-        defender: 防御側のポケモン
+        source: イベントの発生源となるポケモン（attacker のエイリアス）
+        target: イベントの対象となるポケモン（defender のエイリアス）
         move: 使用された技
         field: 場の状態
     """
-    source: Pokemon | None = None
-    target: Pokemon | None = None
-    attacker: Pokemon | None = None
-    defender: Pokemon | None = None
-    move: Move | None = None
-    field: Field | None = None
+
+    def __init__(self,
+                 source: Pokemon | None = None,
+                 target: Pokemon | None = None,
+                 attacker: Pokemon | None = None,
+                 defender: Pokemon | None = None,
+                 move: Move | None = None,
+                 field: Field | None = None):
+        """EventContext を初期化する。
+
+        Args:
+            source: イベントの発生源となるポケモン
+            target: イベントの対象となるポケモン
+            attacker: 攻撃側のポケモン（source のエイリアス）
+            defender: 防御側のポケモン（target のエイリアス）
+            move: 使用された技
+            field: 場の状態
+
+        Note:
+            attacker が指定された場合は source に、
+            defender が指定された場合は target にマッピングされます。
+        """
+        # attacker/defender が指定された場合は source/target にマッピング
+        self.source = attacker if attacker is not None else source
+        self.target = defender if defender is not None else target
+        self.move = move
+        self.field = field
+
+    @property
+    def attacker(self) -> Pokemon | None:
+        """攻撃側のポケモン（source のエイリアス）。"""
+        return self.source
+
+    @property
+    def defender(self) -> Pokemon | None:
+        """防御側のポケモン（target のエイリアス）。"""
+        return self.target
 
     def get(self, role: ContextRole) -> Pokemon | None:
         """指定されたロールのポケモンを取得する。
@@ -62,7 +93,12 @@ class EventContext:
         Returns:
             Pokemon | None: 該当するポケモン。存在しない場合はNone
         """
-        return getattr(self, role)
+        # attacker/defender を source/target にマッピング
+        if role == "attacker":
+            return self.source
+        elif role == "defender":
+            return self.target
+        return getattr(self, role, None)
 
     def resolve_role(self,
                      battle: Battle,

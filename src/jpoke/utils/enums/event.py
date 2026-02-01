@@ -44,6 +44,10 @@ class Event(Enum):
     ON_MODIFY_STAT = auto()
     ON_END = auto()
 
+    # 状態異常・能力変化前イベント
+    ON_BEFORE_APPLY_AILMENT = auto()
+    ON_BEFORE_MODIFY_STAT = auto()
+
     # チェック系イベント
     ON_CHECK_PP_CONSUMED = auto()
     ON_CHECK_DURATION = auto()
@@ -52,6 +56,7 @@ class Event(Enum):
     ON_CHECK_NERVOUS = auto()
     ON_CHECK_MOVE_TYPE = auto()
     ON_CHECK_MOVE_CATEGORY = auto()
+    ON_CHECK_PRIORITY_VALID = auto()
 
     # 計算系イベント
     ON_CALC_SPEED = auto()

@@ -5,12 +5,12 @@
             "name": "Python デバッガー: 現在のファイル",
             "type": "debugpy",
             "request": "launch",
-            //"program": "${workspaceFolder}/tests/run_tests.py", // 全体テスト
+            "program": "${workspaceFolder}/tests/run.py", // 全体テスト
             //"program": "${workspaceFolder}/tests/ability.py", // 特性のテスト
             //"program": "${workspaceFolder}/tests/item.py", // アイテムのテスト
             //"program": "${workspaceFolder}/tests/move.py", // 技のテスト
             //"program": "${workspaceFolder}/tests/field.py", // フィールドのテスト
-            "program": "${workspaceFolder}/tests/volatile.py", // 揮発性状態のテスト
+            //"program": "${workspaceFolder}/tests/volatile.py", // 揮発性状態のテスト
             "console": "integratedTerminal"
         }
     ]
