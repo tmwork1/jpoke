@@ -191,6 +191,8 @@ class Handler:
                     text = ctx.move.orig_name
                 case "ailment":
                     text = subject.ailment.name
+                case "volatile":
+                    text = self.log_text if self.log_text else ""
 
         if not success:
             text += " 失敗"

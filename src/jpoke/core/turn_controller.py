@@ -164,9 +164,6 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-        # 行動前の処理
-        self.battle.events.emit(Event.ON_BEFORE_MOVE)
-
         # 技の処理
         for mon in self.battle.calc_action_order():
             player = self.battle.find_player(mon)
@@ -176,7 +173,14 @@ class TurnController:
                 # 技の発動
                 command = player.reserved_commands.pop(0)
                 move = self.battle.command_to_move(player, command)
-                self.battle.run_move(mon, move)
+
+                # 行動前の処理（各ポケモンごとに技を渡して発火）
+                ctx = EventContext(source=mon, target=mon)
+                result_move = self.battle.events.emit(Event.ON_BEFORE_MOVE, ctx=ctx, value=move)
+
+                # ハンドラーが技をNoneにした場合（ブロック）はスキップ
+                if result_move is not None:
+                    self.battle.run_move(mon, result_move)
 
             # だっしゅつボタンによる交代
             self.battle.run_interrupt_switch(Interrupt.EJECTBUTTON)

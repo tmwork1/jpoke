@@ -213,3 +213,63 @@ def get_field_count(battle: Battle, field_type: str, field_name: str) -> int:
         return battle.side_mgrs[idx].fields[field_name].count
     else:
         raise ValueError(f"Unknown field type: {field_type}")
+
+
+def assert_log_contains(battle: Battle, text: str, player_idx: int | None = None, turn: int | None = None):
+    """指定したテキストがログに含まれていることを検証する。
+
+    Args:
+        battle: Battleインスタンス
+        text: ログに含まれるべきテキスト
+        player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
+        turn: ターン番号（Noneの場合は現在のターン）
+
+    Raises:
+        AssertionError: ログにテキストが含まれていない場合
+    """
+    if turn is None:
+        turn = battle.turn
+
+    event_logs = battle.get_event_logs(turn)
+
+    if player_idx is not None:
+        # 特定プレイヤーのログをチェック
+        player = battle.players[player_idx]
+        logs = event_logs.get(player, [])
+        assert any(text in log for log in logs), f"Log does not contain '{text}'. Logs: {logs}"
+    else:
+        # 全プレイヤーのログをチェック
+        all_logs = []
+        for logs in event_logs.values():
+            all_logs.extend(logs)
+        assert any(text in log for log in all_logs), f"Log does not contain '{text}'. Logs: {all_logs}"
+
+
+def assert_log_not_contains(battle: Battle, text: str, player_idx: int | None = None, turn: int | None = None):
+    """指定したテキストがログに含まれていないことを検証する。
+
+    Args:
+        battle: Battleインスタンス
+        text: ログに含まれるべきでないテキスト
+        player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
+        turn: ターン番号（Noneの場合は現在のターン）
+
+    Raises:
+        AssertionError: ログにテキストが含まれている場合
+    """
+    if turn is None:
+        turn = battle.turn
+
+    event_logs = battle.get_event_logs(turn)
+
+    if player_idx is not None:
+        # 特定プレイヤーのログをチェック
+        player = battle.players[player_idx]
+        logs = event_logs.get(player, [])
+        assert not any(text in log for log in logs), f"Log should not contain '{text}'. Logs: {logs}"
+    else:
+        # 全プレイヤーのログをチェック
+        all_logs = []
+        for logs in event_logs.values():
+            all_logs.extend(logs)
+        assert not any(text in log for log in all_logs), f"Log should not contain '{text}'. Logs: {all_logs}"

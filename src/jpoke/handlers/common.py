@@ -44,6 +44,43 @@ def drain_hp(battle: Battle,
     return HandlerReturn(success)
 
 
+def heal_hp(battle: Battle,
+            ctx: EventContext,
+            value: Any,
+            from_: RoleSpec,
+            v: int = 0,
+            r: float = 0,
+            prob: float = 1) -> HandlerReturn:
+    """指定したポケモンのHPを回復する
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント値（未使用）
+        from_: 回復対象のRoleSpec
+        v: 回復する固定HP量
+        r: 最大HPに対する回復割合
+        prob: 発動確率（デフォルト: 1）
+
+    Returns:
+        HandlerReturn: 成功時True
+    """
+    if prob < 1 and battle.random.random() >= prob:
+        return HandlerReturn(False)
+
+    from_mon = ctx.resolve_role(battle, from_)
+
+    # 回復量を計算
+    if v:
+        heal_amount = v
+    else:
+        heal_amount = max(1, int(from_mon.max_hp * r))
+
+    # HP回復を実行
+    actual_heal = battle.modify_hp(from_mon, v=heal_amount)
+    return HandlerReturn(actual_heal > 0)
+
+
 def modify_stat(battle: Battle,
                 ctx: EventContext,
                 value: Any,

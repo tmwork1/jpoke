@@ -26,32 +26,45 @@ VOLATILES: dict[str, VolatileData] = {
         handlers={
             # TODO: みがわりのハンドラを実装
             # みがわりが攻撃を受ける、技を防ぐなどの処理
+            # 複雑な実装が必要なため後回し
         }
     ),
     "アクアリング": VolatileData(
         handlers={
-            # TODO: アクアリングのハンドラを実装
+            Event.ON_TURN_END_4: h.VolatileHandler(
+                partial(common.heal_hp, from_="source:self", r=1/16),
+                subject_spec="source:self",
+            ),
         }
     ),
     "あめまみれ": VolatileData(
         handlers={
-            # TODO: あめまみれのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.あめまみれ_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "アンコール": VolatileData(
         handlers={
             # TODO: アンコールのハンドラを実装
-            # 技選択時に同じ技を強制する処理
+            # 技選択時に同じ技を強制する処理（複雑なため後回し）
         }
     ),
     "うちおとす": VolatileData(
         handlers={
-            # TODO: うちおとすのハンドラを実装
+            # 飛行タイプとふゆう特性を無効化（常駐効果）
+            # 技の効果で適用されるため、ハンドラは不要
         }
     ),
     "かいふくふうじ": VolatileData(
         handlers={
-            # TODO: かいふくふうじのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.かいふくふうじ_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "かなしばり": VolatileData(
@@ -59,18 +72,20 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_BEFORE_MOVE: h.VolatileHandler(
                 h.かなしばり_before_move,
                 subject_spec="target:self",
+                log="on_success",
                 priority=200
             ),
             Event.ON_TURN_END_5: h.VolatileHandler(
                 h.かなしばり_turn_end,
                 subject_spec="source:self",
-                log="never"
+                log="on_success"
             ),
         }
     ),
     "急所ランク": VolatileData(
         handlers={
             # TODO: 急所ランクのハンドラを実装
+            # 急所率計算に影響（ダメージ計算システムと連携するため後回し）
         }
     ),
     "こんらん": VolatileData(
@@ -78,28 +93,41 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_BEFORE_ACTION: h.VolatileHandler(
                 h.こんらん_action,
                 subject_spec="target:self",
+                log="on_success",
                 priority=200
             ),
         }
     ),
     "しおづけ": VolatileData(
         handlers={
-            # TODO: しおづけのハンドラを実装
+            Event.ON_TURN_END_4: h.VolatileHandler(
+                partial(common.drain_hp, from_="source:self", r=1/8),
+                subject_spec="source:self",
+            ),
         }
     ),
     "じごくずき": VolatileData(
         handlers={
-            # TODO: じごくずきのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.じごくずき_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "じゅうでん": VolatileData(
         handlers={
-            # TODO: じゅうでんのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.じゅうでん_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "たくわえる": VolatileData(
         handlers={
             # TODO: たくわえるのハンドラを実装
+            # 防御ランク上昇の管理が必要（複雑なため後回し）
         }
     ),
     "ちょうはつ": VolatileData(
@@ -107,62 +135,90 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_BEFORE_MOVE: h.VolatileHandler(
                 h.ちょうはつ_before_move,
                 subject_spec="target:self",
+                log="on_success",
                 priority=200
             ),
             Event.ON_TURN_END_5: h.VolatileHandler(
                 h.ちょうはつ_turn_end,
                 subject_spec="source:self",
-                log="never"
+                log="on_success"
             ),
         }
     ),
     "でんじふゆう": VolatileData(
         handlers={
-            # TODO: でんじふゆうのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.でんじふゆう_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "にげられない": VolatileData(
         handlers={
-            # TODO: にげられないのハンドラを実装
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.にげられない_check_trapped,
+                subject_spec="source:self",
+                log="on_success",
+                priority=200
+            ),
         }
     ),
     "ねむけ": VolatileData(
         handlers={
-            # TODO: ねむけのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.ねむけ_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "ねをはる": VolatileData(
         handlers={
-            # TODO: ねをはるのハンドラを実装
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.ねをはる_check_trapped,
+                subject_spec="source:self",
+                log="on_success",
+                priority=200
+            ),
         }
     ),
     "のろい": VolatileData(
         handlers={
-            # TODO: のろいのハンドラを実装
+            Event.ON_TURN_END_4: h.VolatileHandler(
+                partial(common.drain_hp, from_="source:self", r=1/4),
+                subject_spec="source:self",
+            ),
         }
     ),
     "バインド": VolatileData(
         handlers={
             Event.ON_TURN_END_4: h.VolatileHandler(
                 h.バインド_turn_end,
-                subject_spec="source:self"
+                subject_spec="source:self",
+                log="on_success"
             ),
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
                 h.バインド_before_switch,
                 subject_spec="source:self",
-                log="never",
+                log="on_success",
                 priority=200
             ),
         }
     ),
     "ほろびのうた": VolatileData(
         handlers={
-            # TODO: ほろびのうたのハンドラを実装
+            Event.ON_TURN_END_5: h.VolatileHandler(
+                h.ほろびのうた_turn_end,
+                subject_spec="source:self",
+                log="on_success"
+            ),
         }
     ),
     "みちづれ": VolatileData(
         handlers={
             # TODO: みちづれのハンドラを実装
+            # ひんしイベントで相手をひんしにする（複雑なため後回し）
         }
     ),
     "メロメロ": VolatileData(
@@ -170,6 +226,7 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_BEFORE_ACTION: h.VolatileHandler(
                 h.メロメロ_action,
                 subject_spec="target:self",
+                log="on_success",
                 priority=200
             ),
         }
