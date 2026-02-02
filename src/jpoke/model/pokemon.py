@@ -813,6 +813,14 @@ class Pokemon:
         # 重ねがけ不可
         if name == self.ailment.name:
             return False
+
+        # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
+        ctx = EventContext(target=self, source=source)
+        result = events.emit(Event.ON_BEFORE_APPLY_AILMENT, ctx, name)
+        # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
+        if not result:
+            return False
+
         # 既存のハンドラを削除
         if self.ailment.is_active:
             self.ailment.unregister_handlers(events, self)
@@ -822,24 +830,19 @@ class Pokemon:
         return True
 
     def cure_ailment(self, events: EventManager, source: Pokemon | None = None) -> bool:
-        """状態異常を解除する。
+        """状態異常を治療する。
 
         Args:
             events: イベントマネージャー
-            source: 解除の原因となったポケモン
+            source: 治療の原因となったポケモン
 
         Returns:
-            解除に成功したTrue
-
-        Note:
-            状態異常がない場合は失敗する。
+            治療に成功したらTrue
         """
         if not self.ailment.is_active:
             return False
-        # ハンドラ削除
         self.ailment.unregister_handlers(events, self)
-        # 状態異常をクリア
-        self.ailment = Ailment()
+        self.ailment = Ailment("")
         return True
 
     def check_volatile(self, name: VolatileName) -> bool:

@@ -28,8 +28,8 @@
 │   ├── architecture.md              ← 詳細なアーキテクチャ
 │   └── agents/                      ← エージェント実行プロンプト
 │       ├── workflow.md              ← ワークフロー全体
+│       ├── 00_manager.md            ← マネージャー（プロジェクト管理）
 │       ├── 05_research.md           ← リサーチ（仕様調査）
-│       ├── 00_orchestrator.md       ← 司令塔（全体計画）
 │       ├── 10_planner.md            ← 計画（タスク分解）
 │       ├── 20_architect.md          ← 設計（技術設計）
 │       ├── 30_coder.md              ← 実装（コーディング）

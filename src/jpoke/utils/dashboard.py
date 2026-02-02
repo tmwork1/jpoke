@@ -13,19 +13,31 @@ from jpoke.data.item import ITEMS
 from jpoke.data.field import FIELDS
 from jpoke.data.volatile import VOLATILES
 from jpoke.data.ailment import AILMENTS
+from jpoke.data.move import MOVES
 
 
-def has_handlers(data: Any) -> bool:
+def has_handlers(data: Any, exclude_common: bool = False) -> bool:
     """ハンドラが実装されているかを判定する。
 
     Args:
         data: データオブジェクト（AbilityData, ItemData など）
+        exclude_common: 共通ハンドラ（ON_CONSUME_PP）を除外するか
 
     Returns:
         ハンドラが実装されている場合 True
     """
-    if not hasattr(data, 'handlers') or not data.handlers:
+    if not hasattr(data, 'handlers'):
         return False
+
+    # handlersが空でないことを確認（Noneまたは空のdictはFalse）
+    if not data.handlers:
+        return False
+
+    # 技の場合、共通ハンドラ（ON_CONSUME_PP）を除外
+    if exclude_common:
+        from jpoke.core.event import Event
+        handlers = {k: v for k, v in data.handlers.items() if k != Event.ON_CONSUME_PP}
+        return len(handlers) > 0
 
     # ハンドラが空の辞書でないことを確認
     return len(data.handlers) > 0
@@ -69,12 +81,15 @@ def analyze_category(
     implemented = []
     not_implemented = []
 
+    # 技の場合は共通ハンドラを除外
+    exclude_common = (category_name == "move")
+
     for name, data in data_dict.items():
         if not name:  # 空文字列はスキップ
             continue
 
         # ハンドラの有無をチェック
-        has_impl = has_handlers(data)
+        has_impl = has_handlers(data, exclude_common=exclude_common)
 
         # TODOコメントの有無をチェック
         has_todo = check_todo_in_file(data_file, name)
@@ -96,9 +111,10 @@ def generate_dashboard() -> Dict[str, Any]:
     categories = {
         "ability": (ABILITIES, "src/jpoke/data/ability.py"),
         "item": (ITEMS, "src/jpoke/data/item.py"),
-        "field": (FIELDS, "src/jpoke/data/field.py"),
-        "volatile": (VOLATILES, "src/jpoke/data/volatile.py"),
+        "move": (MOVES, "src/jpoke/data/move.py"),
         "ailment": (AILMENTS, "src/jpoke/data/ailment.py"),
+        "volatile": (VOLATILES, "src/jpoke/data/volatile.py"),
+        "field": (FIELDS, "src/jpoke/data/field.py"),
     }
 
     summary = {}
@@ -143,6 +159,86 @@ def main():
     for category, stats in dashboard["summary"].items():
         print(f"{category:12s}: {stats['implemented']:4d}/{stats['total']:4d} "
               f"({stats['percentage']:5.1f}%)")
+
+    # README.mdを更新
+    update_readme(dashboard)
+
+
+def update_readme(dashboard: Dict[str, Any]):
+    """README.mdの実装状況セクションを更新する。"""
+    from datetime import datetime
+
+    readme_path = "README.md"
+
+    try:
+        with open(readme_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except FileNotFoundError:
+        print(f"Warning: {readme_path} not found")
+        return
+
+    # 日付を更新
+    now = datetime.now()
+    today = f"{now.year}年{now.month}月{now.day}日"
+
+    # サマリーテーブルを生成
+    summary = dashboard["summary"]
+
+    # カテゴリ名の日本語マッピング
+    category_names = {
+        "ability": "特性",
+        "item": "アイテム",
+        "move": "技",
+        "ailment": "状態異常",
+        "volatile": "揮発性状態",
+        "field": "フィールド効果",
+    }
+
+    # カテゴリの順序（進捗率の高い順）
+    sorted_categories = sorted(
+        summary.keys(),
+        key=lambda x: summary[x]['percentage'],
+        reverse=True
+    )
+
+    table_lines = ["| カテゴリ | 実装済み | 総数 | 進捗率 |", "|---------|---------|------|--------|"]
+
+    for category in sorted_categories:
+        stats = summary[category]
+        jp_name = category_names.get(category, category)
+        percentage = stats['percentage']
+
+        # 100%の場合は✅を追加
+        display_name = f"**{jp_name}**"
+        if percentage == 100.0:
+            progress = f"**{percentage:.1f}%** ✅"
+        else:
+            progress = f"{percentage:.1f}%"
+
+        table_lines.append(
+            f"| {display_name} | {stats['implemented']} | {stats['total']} | {progress} |"
+        )
+
+    table_content = "\n".join(table_lines)
+
+    # README内の実装状況セクションを置換
+    import re
+
+    # 見出しと日付を更新
+    pattern = r'## 実装状況（\d+年\d+月\d+日時点）'
+    replacement = f'## 実装状況（{today}時点）'
+    content = re.sub(pattern, replacement, content)
+
+    # テーブルを更新
+    pattern = r'\| カテゴリ \| 実装済み \| 総数 \| 進捗率 \|.*?\n(?=\n###|\n##|$)'
+    replacement = table_content + "\n"
+    content = re.sub(pattern, replacement, content, flags=re.DOTALL)
+
+    # ファイルに書き込み
+    with open(readme_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    print(f"\n✓ README.md updated with latest implementation status")
 
 
 if __name__ == "__main__":

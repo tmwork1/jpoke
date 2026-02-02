@@ -518,6 +518,8 @@ class Battle:
                     source: Pokemon | None = None) -> bool:
         """ポケモンの能力ランクを変更する。
 
+        内部的にはmodify_stats()を呼び出して処理します。
+
         Args:
             target: 対象のポケモン
             stat: 変更する能力値（"A", "B", "C", "D", "S"）
@@ -527,16 +529,45 @@ class Battle:
         Returns:
             bool: ランク変更が成功した場合True
         """
-        if v and (v := target.modify_stat(stat, v)):
-            self.add_event_log(self.find_player(target),
-                               f"{stat}{'+' if v >= 0 else ''}{v}")
+        return self.modify_stats(target, {stat: v}, source)
+
+    def modify_stats(self,
+                     target: Pokemon,
+                     stats: dict[Stat, int],
+                     source: Pokemon | None = None) -> bool:
+        """ポケモンの複数の能力ランクを同時に変更する。
+
+        しろいハーブなどのアイテムが正しく動作するよう、
+        複数の能力変化を一度に処理し、最後にイベントを発火します。
+
+        Args:
+            target: 対象のポケモン
+            stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
+            source: 変更の原因となったポケモン（Noneの場合もある）
+
+        Returns:
+            bool: いずれかのランク変更が成功した場合True
+        """
+        any_success = False
+        actual_changes = {}
+
+        # すべての能力変化を適用してログを記録
+        for stat, v in stats.items():
+            if v and (actual_v := target.modify_stat(stat, v)):
+                self.add_event_log(self.find_player(target),
+                                   f"{stat}{'+' if actual_v >= 0 else ''}{actual_v}")
+                actual_changes[stat] = actual_v
+                any_success = True
+
+        # すべての変化が完了した後にイベントを1回だけ発火
+        if any_success:
             self.events.emit(
                 Event.ON_MODIFY_STAT,
                 EventContext(target=target, source=source),
-                v
+                actual_changes
             )
-            return True
-        return False
+
+        return any_success
 
     def calc_damage(self,
                     attacker: Pokemon,

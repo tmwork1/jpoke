@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
-from jpoke.core.event import EventContext, EventControl, HandlerReturn
+from jpoke.core.event import EventContext, HandlerReturn
 
 
 # ===== 天候ハンドラ =====

@@ -216,7 +216,15 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "じしんかじょう": AbilityData(),
-    "じゅうなん": AbilityData(),
+    "じゅうなん": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.じゅうなん,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "じゅくせい": AbilityData(
         flags=[
             "undeniable"
@@ -348,7 +356,15 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "どくぼうそう": AbilityData(),
     "どしょく": AbilityData(),
-    "どんかん": AbilityData(),
+    "どんかん": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.どんかん,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "なまけ": AbilityData(),
     "にげあし": AbilityData(),
     "にげごし": AbilityData(
@@ -436,7 +452,15 @@ ABILITIES: dict[str, AbilityData] = {
             "one_time"
         ]
     ),
-    "ふみん": AbilityData(),
+    "ふみん": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.ふみん,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "ふゆう": AbilityData(),
     "ぶきよう": AbilityData(),
     "へんげんじざい": AbilityData(),
@@ -474,15 +498,39 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "みずのベール": AbilityData(),
+    "みずのベール": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.みずのベール,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "みつあつめ": AbilityData(),
     "むしのしらせ": AbilityData(),
-    "めんえき": AbilityData(),
+    "めんえき": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.めんえき,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "もうか": AbilityData(),
     "ものひろい": AbilityData(),
     "もふもふ": AbilityData(),
     "もらいび": AbilityData(),
-    "やるき": AbilityData(),
+    "やるき": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.やるき,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "ゆうばく": AbilityData(
         flags=[
             "undeniable"
@@ -715,8 +763,24 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "マイナス": AbilityData(),
-    "マイペース": AbilityData(),
-    "マグマのよろい": AbilityData(),
+    "マイペース": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.マイペース,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
+    "マグマのよろい": AbilityData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.マグマのよろい,
+                subject_spec="target:self",
+                log="on_fail",
+            )
+        }
+    ),
     "マジシャン": AbilityData(),
     "マジックガード": AbilityData(
         flags=[

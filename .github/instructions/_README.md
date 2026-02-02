@@ -28,6 +28,7 @@
 - **ポケモンの仕様は第9世代（スカーレット・バイオレット）を参照する**
 - **第9世代で実装されていない技・アイテム・特性・ポケモンなどは、実装を見送る**
 - **すべてのプロジェクトは Manager から開始する**
+- **作業開始前に既存リソースを必ず確認する**（既存コード、テスト、README、docs/research、.github/instructions）
 
 ---
 
@@ -37,6 +38,7 @@
 1. [`project_context.md`](project_context.md) - プロジェクト背景とアーキテクチャ概要（15分）
 2. [`architecture.md`](architecture.md) - 詳細なシステム設計（30分）
 3. [`effect_hierarchy.md`](effect_hierarchy.md) - 作用のヒエラルキーと実装原則（15分）
+4. **既存実装・テスト・ドキュメントの確認**（該当領域のコード、tests、README、docs/research）
 
 ### 新機能実装時
 1. [`agents/workflow.md`](agents/workflow.md) - エージェントワークフロー全体（**新しいチーム構成を理解**）

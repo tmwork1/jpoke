@@ -125,7 +125,12 @@ class GameEffect:
         if not self._enabled:
             return
         for event, handler in self.data.handlers.items():
-            events.on(event, handler, subject)
+            # handlerがリストの場合は各要素を登録
+            if isinstance(handler, list):
+                for h in handler:
+                    events.on(event, h, subject)
+            else:
+                events.on(event, handler, subject)
 
     def unregister_handlers(self,
                             events: EventManager,
@@ -137,7 +142,12 @@ class GameEffect:
             subject: ハンドラの対象となるポケモンまたはプレイヤー
         """
         for event, handler in self.data.handlers.items():
-            events.off(event, handler, subject)
+            # handlerがリストの場合は各要素を解除
+            if isinstance(handler, list):
+                for h in handler:
+                    events.off(event, h, subject)
+            else:
+                events.off(event, handler, subject)
 
     def __eq__(self, value: Self | str) -> bool:
         """等価性の比較を行う。

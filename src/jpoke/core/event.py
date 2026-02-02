@@ -13,22 +13,10 @@ from typing import Callable
 from dataclasses import dataclass
 
 from jpoke.utils.type_defs import ContextRole, RoleSpec, LogPolicy, EffectSource, Side
-from jpoke.utils.enums import Event, EventControl
+from jpoke.utils.enums import Event
 from jpoke.utils import fast_copy
 
 from .player import Player
-
-
-class HandlerReturn(NamedTuple):
-    """ハンドラ関数の戻り値。
-
-    - success: 処理が成功したかどうか
-    - value: 補正値などの連鎖計算に使う値（省略可）
-    - control: イベント制御フラグ（省略可）
-    """
-    success: bool
-    value: Any = None
-    control: EventControl | None = None
 
 
 class EventContext:
@@ -201,6 +189,18 @@ class Handler:
             battle.add_event_log(subject, text)
 
 
+class HandlerReturn(NamedTuple):
+    """ハンドラ関数の戻り値。
+
+    - success: 処理が成功したかどうか
+    - value: 補正値などの連鎖計算に使う値（省略可）
+    - stop_event: イベント処理を停止するかどうか（省略可）
+    """
+    success: bool
+    value: Any = None
+    stop_event: bool = False
+
+
 @dataclass
 class RegisteredHandler:
     """登録済みのイベントハンドラ情報。
@@ -361,12 +361,9 @@ class EventManager:
             if rh.handler.once:
                 self.off(event, rh.handler, rh._subject)
 
-            # 制御フラグの処理
-            match result.control:
-                case EventControl.STOP_HANDLER:
-                    break
-                case EventControl.STOP_EVENT:
-                    return value
+            # イベント停止フラグの処理
+            if result.stop_event:
+                return value
 
         return value
 

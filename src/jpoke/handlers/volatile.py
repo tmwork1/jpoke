@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy
-from jpoke.utils.enums import Event, EventControl
+from jpoke.utils.enums import Event
 from jpoke.core.event import Handler, HandlerReturn
 from . import common
 
@@ -63,7 +63,7 @@ def こんらん_action(battle: Battle, ctx: EventContext, value: Any) -> Handle
         if actual_damage:
             battle.add_event_log(ctx.target, "は混乱している！")
             battle.add_event_log(ctx.target, "は自分を攻撃した！")
-        return HandlerReturn(False, control=EventControl.STOP_EVENT)
+        return HandlerReturn(False, stop_event=True)
 
     battle.add_event_log(ctx.target, "は混乱している！")
     return HandlerReturn(True)
@@ -90,7 +90,7 @@ def ちょうはつ_before_move(battle: Battle, ctx: EventContext, value: Any) -
     # 変化技の場合は使用失敗
     if move.data.category == "変化":
         battle.add_event_log(ctx.target, f"はちょうはつで{move.name}が使えない！")
-        return HandlerReturn(False, value=None, control=EventControl.STOP_EVENT)
+        return HandlerReturn(False, value=None, stop_event=True)
 
     return HandlerReturn(True)
 
@@ -182,7 +182,7 @@ def メロメロ_action(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
     if infatuated:
         battle.add_event_log(ctx.target, "はメロメロで動けない！")
-        return HandlerReturn(False, control=EventControl.STOP_EVENT)
+        return HandlerReturn(False, stop_event=True)
 
     return HandlerReturn(True)
 
@@ -210,7 +210,7 @@ def かなしばり_before_move(battle: Battle, ctx: EventContext, value: Any) -
     if volatile and hasattr(volatile, 'disabled_move_name'):
         if move.name == volatile.disabled_move_name:
             battle.add_event_log(ctx.target, f"は{move.name}を使えない！")
-            return HandlerReturn(False, value=None, control=EventControl.STOP_EVENT)
+            return HandlerReturn(False, value=None, stop_event=True)
 
     return HandlerReturn(True)
 

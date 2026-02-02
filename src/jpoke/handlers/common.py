@@ -97,6 +97,42 @@ def modify_stat(battle: Battle,
     return HandlerReturn(success)
 
 
+def modify_stats(battle: Battle,
+                 ctx: EventContext,
+                 value: Any,
+                 stats: dict[Stat, int],
+                 target_spec: RoleSpec,
+                 source_spec: RoleSpec | None = None,
+                 prob: float = 1) -> HandlerReturn:
+    """複数の能力ランクを同時に変化させる
+
+    しろいハーブなどのアイテムが正しく動作するよう、
+    複数の能力変化を一度に処理します。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント値（未使用）
+        stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
+        target_spec: 対象のRoleSpec
+        source_spec: 変化の原因となるポケモンのRoleSpec
+        prob: 発動確率（デフォルト: 1）
+
+    Returns:
+        HandlerReturn: いずれかの能力が変化した場合True
+    """
+    if prob < 1 and battle.random.random() >= prob:
+        return HandlerReturn(False)
+
+    target = ctx.resolve_role(battle, target_spec)
+    source = ctx.resolve_role(battle, source_spec)
+
+    # battle.modify_stats()を使って一度に処理
+    success = battle.modify_stats(target, stats, source=source)
+
+    return HandlerReturn(success)
+
+
 def apply_ailment(battle: Battle,
                   ctx: EventContext,
                   value: Any,

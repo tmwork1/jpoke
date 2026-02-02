@@ -1,6 +1,6 @@
 from functools import partial
 
-from jpoke.utils.enums import Event, EventControl
+from jpoke.utils.enums import Event
 from jpoke.core.event import HandlerReturn
 from jpoke.handlers import common, item as h
 from .models import ItemData
@@ -96,14 +96,21 @@ ITEMS: dict[str, ItemData] = {
     ),
     "きゅうこん": ItemData(
         consumable=True,
-        throw_power=30
+        throw_power=30,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.きゅうこん,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "きれいなぬけがら": ItemData(
         consumable=False,
         throw_power=10,
         handlers={
             Event.ON_CHECK_TRAPPED: h.ItemHandler(
-                lambda *args: HandlerReturn(True, False, EventControl.STOP_EVENT),
+                lambda *args: HandlerReturn(True, False, stop_event=True),
                 subject_spec="source:self",
                 log="never",
                 priority=-100,
@@ -211,7 +218,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "シルクのスカーフ": ItemData(
         consumable=False,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.シルクのスカーフ,
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "しろいハーブ": ItemData(
         consumable=True,
@@ -282,11 +296,25 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ちからのハチマキ": ItemData(
         consumable=False,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.ちからのハチマキ,
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "つめたいいわ": ItemData(
         consumable=False,
-        throw_power=40
+        throw_power=40,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.つめたいいわ,
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "でかいきんのたま": ItemData(
         consumable=False,
@@ -350,7 +378,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ひかりごけ": ItemData(
         consumable=True,
-        throw_power=30
+        throw_power=30,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.ひかりごけ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "ひかりのこな": ItemData(
         consumable=False,
@@ -410,11 +445,25 @@ ITEMS: dict[str, ItemData] = {
     ),
     "もくたん": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.もくたん,
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "ものしりメガネ": ItemData(
         consumable=False,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.ものしりメガネ,
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "ものまねハーブ": ItemData(
         consumable=True,
@@ -478,7 +527,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "オボンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.オボンのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "ラムのみ": ItemData(
         consumable=True,
@@ -486,35 +542,91 @@ ITEMS: dict[str, ItemData] = {
     ),
     "クラボのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.クラボのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "カゴのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.カゴのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "モモンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.モモンのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "チーゴのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.チーゴのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "ナナシのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.ナナシのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "キーのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.キーのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "ヒメリのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.ヒメリのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "オレンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.オレンのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "フィラのみ": ItemData(
         consumable=True,

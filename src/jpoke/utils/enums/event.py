@@ -2,12 +2,6 @@
 from enum import Enum, auto
 
 
-class EventControl(Enum):
-    """イベントハンドラの制御フラグ"""
-    STOP_HANDLER = auto()
-    STOP_EVENT = auto()
-
-
 class Event(Enum):
     """バトルイベントの種類
 

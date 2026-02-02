@@ -27,6 +27,7 @@
 2. **成果物のレビュー**: マネージャーが各専門家の成果物を仕様・目的と照合してレビュー
 3. **フィードバックループ**: 問題があれば該当専門家に差し戻して修正
 4. **コンテキストの継続性**: プロジェクト全体の一貫性を保ちつつ進行
+5. **既存リソースの参照**: 作業開始前に必ず既存コード・テスト・README・docs/research・.github/instructions を確認
 
 ## 全体フロー
 
@@ -34,6 +35,8 @@
 ユーザー: 新機能のリクエスト
     ↓
 Manager: 要件理解・プロジェクト計画
+    ↓
+Manager: 既存リソース確認（コード・テスト・README・docs/research・.github/instructions）
     ↓
 [必要に応じて]
 Research Specialist: 仕様調査
@@ -534,6 +537,14 @@ python -m jpoke.utils.dashboard
 
 ✅ 推奨:
 Manager に相談し、Manager が適切な専門家を選定
+```
+
+```
+❌ やってはいけない:
+既存コードやドキュメントを確認せずに実装を開始する
+
+✅ 推奨:
+作業開始前に既存コード・テスト・README・docs/research・.github/instructions を確認
 ```
 
 ### 2. Manager が確認すること
