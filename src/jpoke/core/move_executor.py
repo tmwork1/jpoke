@@ -106,6 +106,15 @@ class MoveExecutor:
         # 発動成功判定
         self.battle.events.emit(Event.ON_TRY_MOVE, ctx)
 
+        # 先制技の有効判定（例: サイコフィールド）
+        priority_valid = self.battle.events.emit(
+            Event.ON_CHECK_PRIORITY_VALID,
+            ctx,
+            True
+        )
+        if not priority_valid:
+            return
+
         # 発動した技の確定
         attacker.executed_move = move
 

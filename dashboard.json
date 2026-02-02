@@ -7,10 +7,10 @@
       "percentage": 5.59
     },
     "item": {
-      "total": 155,
-      "implemented": 23,
+      "total": 154,
+      "implemented": 22,
       "not_implemented": 132,
-      "percentage": 14.84
+      "percentage": 14.29
     },
     "move": {
       "total": 688,
@@ -353,7 +353,6 @@
         "いのちのたま",
         "きゅうこん",
         "きれいなぬけがら",
-        "こくばバット",
         "さらさらいわ",
         "たべのこし",
         "だっしゅつパック",

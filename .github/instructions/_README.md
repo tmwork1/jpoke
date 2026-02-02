@@ -12,13 +12,13 @@
 
 ```
 ユーザー → Project Manager (00_manager.md)
-              ├─→ Research Specialist (仕様調査)
-              ├─→ Planning Specialist (タスク分解)
-              ├─→ Architecture Specialist (設計)
-              ├─→ Coding Specialist (実装)
-              ├─→ Testing Specialist (テスト)
-              ├─→ Code Review Specialist (レビュー)
-              └─→ Domain Expert (仕様確認)
+              ├─→ Research Specialist (10_research.md)
+              ├─→ Planning Specialist (20_planner.md)
+              ├─→ Architecture Specialist (30_architect.md)
+              ├─→ Coding Specialist (40_coder.md)
+              ├─→ Testing Specialist (50_tester.md)
+              ├─→ Code Review Specialist (60_reviewer.md)
+              └─→ Domain Expert (70_domain_expert.md)
 ```
 
 **重要**: すべてのプロジェクトは **Manager (00_manager.md)** から開始してください。Manager が適切な専門家を選定し、業務を割り振ります。

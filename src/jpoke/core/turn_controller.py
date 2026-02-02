@@ -42,7 +42,6 @@ class TurnController:
         """ターンを初期化し、各プレイヤーの状態をリセット。"""
         for player in self.battle.players:
             player.init_turn()
-        self.battle.turn += 1
 
     def run_selection(self):
         """ポケモン選出処理を実行。
