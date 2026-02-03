@@ -78,39 +78,6 @@ assert foe.ailment == "まひ"
 5. **テスト実行** - `python tests/run.py` で全テスト実行
 6. **結果報告** - Manager に失敗・カバレッジ・知見を報告
 
-## テストパターン（jpoke特有）
-
-### A. 特性テスト（単体 + 統合）
-```python
-# 単体: ハンドラ関数テスト
-assert apply_static_electricity(defender) == "まひ"
-
-# 統合: バトルでの発動確認
-battle = start_battle(ally=[Pokemon("ピカチュウ", ability="せいでんき")], foe=[...])
-execute_move(battle, "つるのムチ")
-assert foe.ailment == "まひ"
-```
-
-### B. 技効果テスト
-```python
-battle = start_battle(accuracy=100)  # 命中率100%固定
-execute_move(battle, "ピカチュウ", "でんき")
-assert damage == expected_value
-```
-
-### C. フィールド効果テスト
-```python
-battle = start_battle(weather=("はれ", 10), global_field={"トリックルーム": 5})
-tick_fields(battle, ticks=3)
-assert get_field_count(battle, "トリックルーム") == 2
-```
-
-### D. ターン制御テスト
-```python
-battle = start_battle(ally_volatile={"いかり": 2}, foe_volatile={"やどりぎのタネ": 1})
-# イベント発火順序が仕様通りか検証
-```
-
 ## ベストプラクティス
 
 **✅ 推奨**
