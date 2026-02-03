@@ -47,29 +47,28 @@ def test_paralysis_speed_reduction():
 
 
 def test_paralysis_action_disabled_high_rate():
-    """まひ: 行動不能（確率テスト - trigger_rate=1.0）"""
+    """まひ: 行動不能"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
     mon.apply_ailment(battle.events, "まひ")
-
     # 必ず行動不能になる設定
     battle.test_option.ailment_trigger_rate = 1.0
-    result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     # HandlerReturnがFalseを返すことを確認（行動不能）
-    assert result is None or not result, "まひ: 行動不能（trigger_rate=1.0）"
+    assert not result, "まひ: 行動不能（trigger_rate=1.0）"
 
 
 def test_paralysis_action_enabled_low_rate():
-    """まひ: 行動可能（確率テスト - trigger_rate=0.0）"""
+    """まひ: 行動可能"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
     mon.apply_ailment(battle.events, "まひ")
 
     # 必ず行動できる設定
     battle.test_option.ailment_trigger_rate = 0.0
-    result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     # 行動可能であることを確認
-
+    assert result, "まひ: 行動可能"
 
 def test_burn_physical_move_damage_reduction():
     """やけど: 物理技ダメージ半減"""
@@ -157,12 +156,12 @@ def test_sleep_turn_progression_recovery():
     mon.ailment.count = 2  # 2ターンで回復
 
     # 1ターン目: count 2 → 1
-    result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     assert mon.ailment.name == "ねむり", "ねむり: 1ターン目でもまだねむり状態のはず"
     assert mon.ailment.count == 1, f"ねむり: 1ターン目カウント1のはず: {mon.ailment.count}"
 
     # 2ターン目: count 1 → 0 で回復
-    result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     assert mon.ailment.name == "", "ねむり: 2ターン目で回復するはず"
 
 
@@ -177,7 +176,7 @@ def test_burn_turn_end_damage():
     mon.apply_ailment(battle.events, "やけど")
 
     # ターン終了時イベントを発火
-    battle.events.emit(Event.ON_TURN_END_4, EventContext(target=mon), None)
+    battle.events.emit(Event.ON_TURN_END_3, EventContext(target=mon), None)
 
     # 最大HPの1/16のダメージを受けているはず
     expected_damage = mon.max_hp // 16
@@ -209,7 +208,7 @@ def test_freeze_thaw_high_rate():
 
     # 必ず解凍される設定でテスト
     battle.test_option.ailment_trigger_rate = 1.0
-    result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     assert mon.ailment.name == "", "こおり: 解凍失敗（trigger_rate=1.0）"
 
 
@@ -219,13 +218,13 @@ def test_freeze_persist_low_rate():
         ally=[Pokemon("ピカチュウ")],
     )
 
-    # こおり状態を付与
+    # こおり状況を付与
     mon = battle.actives[0]
     mon.apply_ailment(battle.events, "こおり")
 
     # 解凍されない設定でテスト
     battle.test_option.ailment_trigger_rate = 0.0
-    result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     assert mon.ailment.name == "こおり", "こおり: 状態維持失敗（trigger_rate=0.0）"
 
 

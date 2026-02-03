@@ -21,8 +21,7 @@ jpoke プロジェクトで実施した各種リサーチの結果を文書化�
 | フィールド | [field_gen9.md](field_gen9.md) | 2026-02-01 | ✅ ほぼ完了 | 天候・地形・サイド・グローバル |
 | 揮発性状態 | [volatile_gen9.md](volatile_gen9.md) | - | 🚧 作業中 | メロメロ、アンコール、こんらんなど |
 | ダメージ計算 | [damage_calculation.md](damage_calculation.md) | - | ✅ 完了 | ダメージ計算式詳細 |
-| ターン進行 | [turn_gen9.md](turn_gen9.md) | 2026-02-01 | ✅ 完了 | ターン0〜完了までの全フェーズ |
-| イベント優先度 | [イベント_priority_gen9.md](イベント_priority_gen9.md) | 2026-02-01 | 🚧 作業中 | 約500件の処理フロー（進捗管理兼用） |
+| イベント進行 | [event_gen9.md](event_gen9.md) | 2026-02-01 | 🚧 作業中 | 約500件の処理フロー（進捗管理兼用） |
 
 ### 主要な参照元
 - [ポケモンWiki - ターン](https://wiki.xn--rckteqa2e.com/wiki/%E3%82%BF%E3%83%BC%E3%83%B3)

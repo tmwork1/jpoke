@@ -1,0 +1,232 @@
+{
+  "mismatches": [
+    {
+      "name": "どく",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 30,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "ailment.py",
+      "line": 14
+    },
+    {
+      "name": "もうどく",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 30,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "ailment.py",
+      "line": 23
+    },
+    {
+      "name": "まひ",
+      "event_gen9_event": "ON_TRY_ACTION",
+      "event_gen9_priority": 120,
+      "actual_event": "ON_BEFORE_ACTION",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "ailment.py",
+      "line": 37
+    },
+    {
+      "name": "やけど",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 40,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "ailment.py",
+      "line": 46
+    },
+    {
+      "name": "ねむり",
+      "event_gen9_event": "ON_TRY_ACTION",
+      "event_gen9_priority": 10,
+      "actual_event": "ON_BEFORE_ACTION",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "ailment.py",
+      "line": 54
+    },
+    {
+      "name": "こおり",
+      "event_gen9_event": "ON_TRY_ACTION",
+      "event_gen9_priority": 10,
+      "actual_event": "ON_BEFORE_ACTION",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "ailment.py",
+      "line": 62
+    },
+    {
+      "name": "アクアリング",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 10,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "volatile.py",
+      "line": 29
+    },
+    {
+      "name": "こんらん",
+      "event_gen9_event": "ON_TRY_ACTION",
+      "event_gen9_priority": 110,
+      "actual_event": "ON_BEFORE_ACTION",
+      "actual_priority": 200,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "volatile.py",
+      "line": 39
+    },
+    {
+      "name": "しおづけ",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 90,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 55
+    },
+    {
+      "name": "ちょうはつ",
+      "event_gen9_event": "ON_TRY_MOVE + ON_TURN_END_3",
+      "event_gen9_priority": "- / 100",
+      "actual_event": "ON_BEFORE_MOVE / ON_TURN_END_5",
+      "actual_priority": "200 / 100",
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 66
+    },
+    {
+      "name": "バインド",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 70,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "volatile.py",
+      "line": 80
+    },
+    {
+      "name": "でんじふゆう",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": null,
+      "actual_event": "ON_TURN_END_5",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 106
+    },
+    {
+      "name": "ねむけ",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 100,
+      "actual_event": "ON_TURN_END_5",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 112
+    },
+    {
+      "name": "メロメロ",
+      "event_gen9_event": "ON_TRY_ACTION",
+      "event_gen9_priority": 130,
+      "actual_event": "ON_BEFORE_ACTION",
+      "actual_priority": 200,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "volatile.py",
+      "line": 124
+    },
+    {
+      "name": "やどりぎのタネ",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 20,
+      "actual_event": "ON_TURN_END_4",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "volatile.py",
+      "line": 139
+    },
+    {
+      "name": "かなしばり",
+      "event_gen9_event": "ON_TRY_MOVE + ON_TURN_END_3",
+      "event_gen9_priority": "- / 100",
+      "actual_event": "ON_BEFORE_MOVE / ON_TURN_END_5",
+      "actual_priority": "200 / 100",
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 47
+    },
+    {
+      "name": "じごくずき",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": null,
+      "actual_event": "ON_TURN_END_5",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 99
+    },
+    {
+      "name": "じゅうでん",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": null,
+      "actual_event": "ON_TURN_END_5",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 105
+    },
+    {
+      "name": "あめまみれ",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": null,
+      "actual_event": "ON_TURN_END_5",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 34
+    },
+    {
+      "name": "かいふくふうじ",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": null,
+      "actual_event": "ON_TURN_END_5",
+      "actual_priority": 100,
+      "status": "イベント種類が異なる",
+      "file": "volatile.py",
+      "line": 42
+    },
+    {
+      "name": "ねをはる",
+      "event_gen9_event": "ON_TURN_END_3",
+      "event_gen9_priority": 10,
+      "actual_event": "ON_CHECK_TRAPPED",
+      "actual_priority": 200,
+      "status": "イベント種類が異なる、Priorityが異なる",
+      "file": "volatile.py",
+      "line": 118
+    }
+  ],
+  "summary": {
+    "total_mismatches": 20,
+    "event_type_mismatches": 20,
+    "priority_mismatches": 14,
+    "event_mapping_issues": {
+      "ON_TURN_END_3_to_ON_TURN_END_4": 8,
+      "ON_TURN_END_3_to_ON_TURN_END_5": 6,
+      "ON_TRY_ACTION_to_ON_BEFORE_ACTION": 4,
+      "ON_TRY_MOVE_to_ON_BEFORE_MOVE": 2,
+      "ON_TURN_END_3_to_ON_CHECK_TRAPPED": 1
+    },
+    "notes": [
+      "event_gen9.mdの『ON_TURN_END_3』は実装では『ON_TURN_END_4』と『ON_TURN_END_5』に分かれている",
+      "event_gen9.mdの『ON_TRY_ACTION』（Priority: 10-130）は実装では『ON_BEFORE_ACTION』（Priority: 100, 200）に登録されている",
+      "Priorityの大幅なズレ：ドキュメント側は詳細な優先度を指定しているが、実装ではほぼ100または200で統一されている",
+      "実装システムの設計では『ON_TURN_END_4』と『ON_TURN_END_5』を分けて使用されており、ドキュメントの『ON_TURN_END_3』とは異なる階層構造になっている"
+    ]
+  }
+}

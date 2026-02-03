@@ -1,112 +1,151 @@
-﻿# Testing Specialist
+﻿# Tester
 
-Manager から依頼されるテスト専門家。
-
-## 役割
-
-Coder の実装に対して包括的テストを作成実行し、結果を報告。
+Coder実装 → テスト実施・結果報告 → Manager確認
 
 ## 責務
 
-- テスト項目一覧を`docs/test/`に作成
-- `/tests/` にテストコード作成
-- test_utils.py を積極的に拡充
-- Manager に結果報告
-- 本ファイル(50_tester.md)に知見記録
+1. `/tests/`にテストコード作成・実行
+2. `test_utils.py`を拡充・最大活用
+3. テスト実行結果をManager報告
+4. 知見・パターンを本ファイルに記録
 
-## テスト実装の基本方針
+## テストレベル分類
 
-### test_utils の活用と拡充
-
-優先順位:
-1. 既存 test_utils を最大限活用
-2. 繰り返しコード(3回以上)は test_utils に共通化
-3. パラメータで制御可能な部分を増やす
-
-### start_battle の活用
-
+### レベル1: ハンドラ単体テスト
+**対象**: `handlers/*.py` の個別関数（条件判定・副作用）
 ```python
-battle = start_battle(
-    ally=[Pokemon("ピカチュウ")],
-    foe=[Pokemon("ライチュウ")],
-    turn=0,
-    weather="はれ",                          # 天候
-    terrain="グラスフィールド",              # 地形
-    ally_side_field={"まきびし": 3},       # 味方サイドフィールド
-    foe_side_field={"ステルスロック": 1},  # 相手サイドフィールド
-    global_field={"トリックルーム": 5},    # グローバルフィールド
-    ally_volatile={"いかり": 2},            # 味方揮発性状態
-    foe_volatile={"やどりぎのタネ": 1},    # 相手揮発性状態
-    accuracy=100,                            # 命中率固定
-)
-tick_fields(battle, ticks=5)  # カウント進行
+from jpoke.handlers.ability import apply_static_electricity
+# ハンドラ関数を直接呼び出し → 条件・結果を検証
+assert defender.ailment == "まひ"
 ```
 
-## テストヘルパー関数
+### レベル2: 統合テスト
+**対象**: バトル全体でのハンドラ連携（イベント発火・優先度・相互作用）
+```python
+battle = start_battle(
+    ally=[Pokemon("ピカチュウ", ability="せいでんき")],
+    foe=[Pokemon("フシギダネ")],
+)
+# 実際のバトルで技実行 → イベント発火 → ハンドラ呼び出し
+execute_move(battle, "つるのムチ")
+assert foe.ailment == "まひ"
+```
 
-- `start_battle()`: バトル初期化
-- `tick_fields()`: フィールドカウント進行
-- `assert_field_active()`: フィールド有効性検証
-- `get_field_count()`: 残りカウント取得
+## 実装ガイド
 
-## フィールドパラメータ
+**test_utils活用**: `start_battle(weather=(...), terrain=(...), ally_volatile={...}, ...)` で初期化  
+**ターン進行**: `tick_fields(battle, ticks=N)`  
+**共通化**: 繰り返しパターン（3回以上）は `test_utils.py` に関数追加
 
-- `weather`: タプル `(名前, カウント)`
-- `terrain`: タプル `(名前, カウント)`
-- `ally_side_field`: 辞書 `{名前: レイヤー数}`
-- `foe_side_field`: 辞書 `{名前: レイヤー数}`
-- `global_field`: 辞書 `{名前: カウント}`
+## テスト対象別の優先順位
 
-## テストで使うポケモン
+| 優先度 | 対象 | テストケース例 |
+|--------|------|----------------|
+| 高 | 新機能（特性・技・アイテム） | 発動条件・効果・相互作用 |
+| 高 | ダメージ計算 | 基本・補正・エッジケース |
+| 中 | ターン制御・イベント | 順序・優先度・複数効果 |
+| 中 | フィールド効果 | 付与・カウント・消滅 |
+| 低 | UI・ロギング | 表示順序・ログ整合性 |
 
-第1世代の有名種を優先: ピカチュウ、フシギダネ、ヒトカゲ、ゼニガメ等
+## 成果物リスト
 
-目的: 誰でも分かりやすく、テスト意図が明確
+### テストコード
+- **格納先**: `tests/test_<対象>.py`
+- **例**: `tests/test_ability_immunity.py`, `tests/test_damage.py`
+
+### 実行結果報告
+```markdown
+## テスト実行結果
+
+### サマリ
+- 実行数: 25 件
+- 成功: 24 件 ✅
+- 失敗: 1 件 ❌
+- カバレッジ: 95%
+
+### 失敗ケース
+1. test_move_priority_interaction
+   - 原因: 複数効果の順序制御
+   - 詳細: [説明]
+```
 
 ## テスト手順
 
-1. Manager から業務実装コード受領
-2. テスト項目一覧作成・追記、または一覧から読み込み
-3. テストケース設計
-4. test_utils 確認必要なら拡充
-5. テストコード作成 (`tests/` 内)
-6. テスト実行
-7. Manager に結果報告
+1. **Manager実装コード受領** - Coderの実装を確認
+2. **テストケース設計** - エッジケース・相互作用を抽出
+3. **test_utils確認** - 再利用可能なヘルパーを活用
+4. **テストコード作成** - `tests/`にコード実装
+5. **テスト実行** - `python tests/run.py` で全テスト実行
+6. **結果報告** - Manager に失敗・カバレッジ・知見を報告
 
-## 成果物
+## テストパターン（jpoke特有）
 
-- テスト項目一覧 (`docs/test/*test_.md`)
-- テストコード (`tests/test_*.py`)
-- 実行結果（全テスト名成否カバレッジ）
-- 問題発見時は詳細報告
+### A. 特性テスト（単体 + 統合）
+```python
+# 単体: ハンドラ関数テスト
+assert apply_static_electricity(defender) == "まひ"
 
-## 知見記録
+# 統合: バトルでの発動確認
+battle = start_battle(ally=[Pokemon("ピカチュウ", ability="せいでんき")], foe=[...])
+execute_move(battle, "つるのムチ")
+assert foe.ailment == "まひ"
+```
 
-実装後、本ファイルに以下を追記:
-- 新しいテストパターン
-- test_utils の拡張内容
-- トラブルシューティング
+### B. 技効果テスト
+```python
+battle = start_battle(accuracy=100)  # 命中率100%固定
+execute_move(battle, "ピカチュウ", "でんき")
+assert damage == expected_value
+```
 
-### 2026-02-03: イベント駆動システム検証
+### C. フィールド効果テスト
+```python
+battle = start_battle(weather=("はれ", 10), global_field={"トリックルーム": 5})
+tick_fields(battle, ticks=3)
+assert get_field_count(battle, "トリックルーム") == 2
+```
 
-**タスク**: ターン処理とイベントシステムの検証  
-**結果**: ✅ 全テスト22個合格（+13→22）
+### D. ターン制御テスト
+```python
+battle = start_battle(ally_volatile={"いかり": 2}, foe_volatile={"やどりぎのタネ": 1})
+# イベント発火順序が仕様通りか検証
+```
 
-**実施内容**:
-1. イベント enum 全41要素の利用箇所を整理・コメント記載
-2. ターンカウント重複バグ発見・修正（init_turn内の `turn += 1` 削除）
-3. 先制技判定機能（ON_CHECK_PRIORITY_VALID）の追加実装
-4. test_イベント_system.py に9個の新規テスト追加
+## ベストプラクティス
 
-**テスト例** (イベントContextResolution):
-- RoleSpec "role:side" 形式の解決テスト
-- attacker/defender が source/target エイリアスとして機能
-- 優先度ソート動作検証
+**✅ 推奨**
+- `test_utils` テンプレート活用
+- 1テスト = 1仕様確認
+- ハンドラ単体 + 統合の両レベル実施
+- 失敗時は詳細レポート（原因・期待値・実際値）
 
-**知見**:
-- イベント コメント記載で emit/handler 参照箇所の追跡が容易化
-- RoleSpec "role:side" 形式が統一的に機能
-- HandlerReturn の value 連鎖計算（4096基準補正）と stop_イベント フラグが明確に使い分け
+**❌ 避ける**
+- 直接オブジェクト生成（test_utils関数を使用）
+- テストケース間の依存関係
+- ハードコーディング数値（定数化）
 
-**推奨事項**:
-- 新イベント追加時は emit 元と handler 実装箇所をコメントに必須記載
+## テスト実行コマンド
+
+```bash
+# 全テスト実行
+python tests/run.py
+
+# パターン指定
+python tests/run.py test_*.py
+
+# 特定ファイル
+python tests/run.py test_move.py
+
+# pytest直接実行（詳細表示）
+pytest tests/ -v -s --tb=short
+```
+
+## デフォルトテスト対象ポケモン
+
+- **攻撃側**: ピカチュウ（汎用、電気技が豊富）
+- **防御側**: フシギダネ（汎用、草タイプ）
+- **理由**: 第1世代で誰でも知っている（テスト意図が明確）
+
+カスタムテストではドメイン知識を活かしたポケモン選択：
+- 特性テスト: 対象特性を持つポケモン
+- タイプ相性テスト: 相互作用するタイプペア

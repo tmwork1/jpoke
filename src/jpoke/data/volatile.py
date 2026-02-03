@@ -31,18 +31,20 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "アクアリング": VolatileData(
         handlers={
-            Event.ON_TURN_END_4: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(common.heal_hp, from_="source:self", r=1/16),
                 subject_spec="source:self",
+                priority=10,
             ),
         }
     ),
     "あめまみれ": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.あめまみれ_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
@@ -60,10 +62,11 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "かいふくふうじ": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.かいふくふうじ_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
@@ -75,10 +78,11 @@ VOLATILES: dict[str, VolatileData] = {
                 log="on_success",
                 priority=200
             ),
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.かなしばり_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
@@ -90,37 +94,40 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "こんらん": VolatileData(
         handlers={
-            Event.ON_BEFORE_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.こんらん_action,
                 subject_spec="target:self",
                 log="on_success",
-                priority=200
+                priority=110
             ),
         }
     ),
     "しおづけ": VolatileData(
         handlers={
-            Event.ON_TURN_END_4: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(common.drain_hp, from_="source:self", r=1/8),
                 subject_spec="source:self",
+                priority=90,
             ),
         }
     ),
     "じごくずき": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.じごくずき_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
     "じゅうでん": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.じゅうでん_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
@@ -138,19 +145,21 @@ VOLATILES: dict[str, VolatileData] = {
                 log="on_success",
                 priority=200
             ),
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.ちょうはつ_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
     "でんじふゆう": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.でんじふゆう_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
@@ -166,10 +175,11 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ねむけ": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.ねむけ_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=100
             ),
         }
     ),
@@ -185,18 +195,20 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "のろい": VolatileData(
         handlers={
-            Event.ON_TURN_END_4: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(common.drain_hp, from_="source:self", r=1/4),
                 subject_spec="source:self",
+                priority=70,
             ),
         }
     ),
     "バインド": VolatileData(
         handlers={
-            Event.ON_TURN_END_4: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.バインド_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=70
             ),
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
                 h.バインド_before_switch,
@@ -208,10 +220,11 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ほろびのうた": VolatileData(
         handlers={
-            Event.ON_TURN_END_5: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 h.ほろびのうた_turn_end,
                 subject_spec="source:self",
-                log="on_success"
+                log="on_success",
+                priority=110
             ),
         }
     ),
@@ -223,19 +236,20 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "メロメロ": VolatileData(
         handlers={
-            Event.ON_BEFORE_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.メロメロ_action,
                 subject_spec="target:self",
                 log="on_success",
-                priority=200
+                priority=130
             ),
         }
     ),
     "やどりぎのタネ": VolatileData(
         handlers={
-            Event.ON_TURN_END_4: h.VolatileHandler(
+            Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(common.drain_hp, from_="source:self", r=1/8),
                 subject_spec="source:self",
+                priority=20,
             ),
         }
     ),
