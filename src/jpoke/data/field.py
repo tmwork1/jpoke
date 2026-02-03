@@ -3,6 +3,12 @@ from .models import FieldData
 from jpoke.handlers import common, field as h
 
 
+def common_setup():
+    """共通のセットアップ処理"""
+    for name in FIELDS:
+        FIELDS[name].name = name
+
+
 FIELDS: dict[str, FieldData] = {
     "": FieldData(),
     # ===== 天候 (Weather) =====
@@ -239,3 +245,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
 }
+
+
+common_setup()

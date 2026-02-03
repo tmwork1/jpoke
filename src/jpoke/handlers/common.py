@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, Weather, Terrain, Side
+from jpoke.utils.type_defs import RoleSpec, Type, Stat, AilmentName, Weather, Terrain, Side
 from jpoke.utils.enums import Event
 from jpoke.core.event import EventContext, HandlerReturn
 
@@ -193,3 +193,14 @@ def resolve_field_count(battle: Battle,
         return HandlerReturn(True, value + additonal_count)
     else:
         return HandlerReturn(False, value)
+
+
+def modify_by_move_type(battle: Battle,
+                        ctx: EventContext,
+                        value: Any,
+                        type_: Type,
+                        modifier: float) -> HandlerReturn:
+    # ON_CALC_POWER_MODIFIER: 炎技1.2倍
+    if ctx.move.type == type_:
+        return HandlerReturn(True, value * modifier)
+    return HandlerReturn(False, value)

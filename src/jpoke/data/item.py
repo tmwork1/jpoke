@@ -6,6 +6,37 @@ from jpoke.handlers import common, item as h
 from .models import ItemData
 
 
+def common_setup():
+    """共通のセットアップ処理"""
+    for name, data in ITEMS.items():
+        ITEMS[name].name = name
+
+        # タイプ補正ハンドラの登録
+        if data.power_modifier_by_type:
+            ITEMS[name].handlers[Event.ON_CALC_POWER_MODIFIER] = \
+                h.ItemHandler(
+                    partial(
+                        common.modify_by_move_type,
+                        type_=list(data.power_modifier_by_type.keys())[0],
+                        modifier=list(data.power_modifier_by_type.values())[0]
+                    ),
+                    subject_spec="attacker:self",
+                    log="never",
+            )
+
+        if data.damage_modifier_by_type:
+            ITEMS[name].handlers[Event.ON_CALC_DAMAGE_MODIFIER] = \
+                h.ItemHandler(
+                    partial(
+                        common.modify_by_move_type,
+                        type_=list(data.damage_modifier_by_type.keys())[0],
+                        modifier=list(data.damage_modifier_by_type.values())[0]
+                    ),
+                    subject_spec="attacker:self",
+                    log="on_success",
+            )
+
+
 ITEMS: dict[str, ItemData] = {
     "": ItemData(name=""),
     "あかいいと": ItemData(
@@ -68,7 +99,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "かたいいし": ItemData(
         consumable=False,
-        throw_power=100
+        throw_power=100,
+        power_modifier_by_type={"いわ": 4915/4096}
     ),
     "かまどのめん": ItemData(
         consumable=False,
@@ -92,7 +124,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "きせきのたね": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"くさ": 4915/4096}
     ),
     "きゅうこん": ItemData(
         consumable=True,
@@ -119,7 +152,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ぎんのこな": ItemData(
         consumable=False,
-        throw_power=10
+        throw_power=10,
+        power_modifier_by_type={"むし": 4915/4096}
     ),
     "くっつきバリ": ItemData(
         consumable=False,
@@ -151,7 +185,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "くろおび": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"あく": 4915/4096}
     ),
     "こうかくレンズ": ItemData(
         consumable=False,
@@ -198,7 +233,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "じしゃく": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"でんき": 4915/4096}
     ),
     "しめつけバンド": ItemData(
         consumable=False,
@@ -219,13 +255,7 @@ ITEMS: dict[str, ItemData] = {
     "シルクのスカーフ": ItemData(
         consumable=False,
         throw_power=10,
-        handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
-                h.シルクのスカーフ,
-                subject_spec="attacker:self",
-                log="never",
-            )
-        }
+        power_modifier_by_type={"ノーマル": 4915/4096},
     ),
     "しろいハーブ": ItemData(
         consumable=True,
@@ -237,7 +267,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "しんぴのしずく": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"みず": 4915/4096},
     ),
     "するどいキバ": ItemData(
         consumable=False,
@@ -245,7 +276,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "するどいくちばし": ItemData(
         consumable=False,
-        throw_power=50
+        throw_power=50,
+        power_modifier_by_type={"ひこう": 4915/4096}
     ),
     "するどいツメ": ItemData(
         consumable=False,
@@ -253,7 +285,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "せいれいプレート": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"フェアリー": 4915/4096}
     ),
     "せんせいのツメ": ItemData(
         consumable=False,
@@ -308,13 +341,6 @@ ITEMS: dict[str, ItemData] = {
     "つめたいいわ": ItemData(
         consumable=False,
         throw_power=40,
-        handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
-                h.つめたいいわ,
-                subject_spec="attacker:self",
-                log="never",
-            )
-        }
     ),
     "でかいきんのたま": ItemData(
         consumable=False,
@@ -334,11 +360,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "どくバリ": ItemData(
         consumable=False,
-        throw_power=70
+        throw_power=70,
+        power_modifier_by_type={"どく": 4915/4096}
     ),
     "とけないこおり": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"こおり": 4915/4096}
     ),
     "とつげきチョッキ": ItemData(
         consumable=False,
@@ -354,7 +382,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ノーマルジュエル": ItemData(
         consumable=True,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"ノーマル": 6144/4096}
     ),
     "のどスプレー": ItemData(
         consumable=True,
@@ -362,7 +391,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "のろいのおふだ": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"ゴースト": 4915/4096}
     ),
     "パワフルハーブ": ItemData(
         consumable=True,
@@ -425,7 +455,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "まがったスプーン": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"エスパー": 4915/4096}
     ),
     "ミストシード": ItemData(
         consumable=True,
@@ -433,7 +464,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "メタルコート": ItemData(
         consumable=False,
-        throw_power=30
+        throw_power=30,
+        power_modifier_by_type={"はがね": 4915/4096}
     ),
     "メトロノーム": ItemData(
         consumable=False,
@@ -446,13 +478,7 @@ ITEMS: dict[str, ItemData] = {
     "もくたん": ItemData(
         consumable=False,
         throw_power=30,
-        handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
-                h.もくたん,
-                subject_spec="attacker:self",
-                log="never",
-            )
-        }
+        power_modifier_by_type={"ほのお": 4915/4096},
     ),
     "ものしりメガネ": ItemData(
         consumable=False,
@@ -471,7 +497,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "やわらかいすな": ItemData(
         consumable=False,
-        throw_power=10
+        throw_power=10,
+        power_modifier_by_type={"じめん": 4915/4096}
     ),
     "ゆきだま": ItemData(
         consumable=True,
@@ -479,11 +506,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ようせいのハネ": ItemData(
         consumable=False,
-        throw_power=20
+        throw_power=20,
+        power_modifier_by_type={"フェアリー": 4915/4096}
     ),
     "りゅうのキバ": ItemData(
         consumable=False,
-        throw_power=70
+        throw_power=70,
+        power_modifier_by_type={"ドラゴン": 4915/4096}
     ),
     "ルームサービス": ItemData(
         consumable=True,
@@ -678,75 +707,93 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ホズのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"ノーマル": 2048/4096}
     ),
     "リンドのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"くさ": 2048/4096}
     ),
     "オッカのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"ほのお": 2048/4096}
     ),
     "イトケのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"みず": 2048/4096}
     ),
     "ソクノのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"でんき": 2048/4096}
     ),
     "カシブのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"ゴースト": 2048/4096}
     ),
     "ヨロギのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"いわ": 2048/4096}
     ),
     "タンガのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"むし": 2048/4096}
     ),
     "ウタンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"エスパー": 2048/4096}
     ),
     "バコウのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"ひこう": 2048/4096}
     ),
     "シュカのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"じめん": 2048/4096}
     ),
     "ビアーのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"どく": 2048/4096}
     ),
     "ヨプのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"かくとう": 2048/4096}
     ),
     "ヤチェのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"こおり": 2048/4096}
     ),
     "リリバのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"はがね": 2048/4096}
     ),
     "ナモのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"あく": 2048/4096}
     ),
     "ハバンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"ドラゴン": 2048/4096}
     ),
     "ロゼルのみ": ItemData(
         consumable=True,
-        throw_power=10
+        throw_power=10,
+        damage_modifier_by_type={"フェアリー": 2048/4096}
     ),
     "アッキのみ": ItemData(
         consumable=True,
@@ -776,4 +823,8 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         throw_power=10
     )
+
+
 }
+
+common_setup()

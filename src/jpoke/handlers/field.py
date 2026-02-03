@@ -234,7 +234,7 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ステルスロックのダメージ（岩タイプ相性依存）"""
-    from jpoke.utils.constants import TYPE_MATCH_UP
+    from jpoke.utils.constants import TYPE_MODIFIER
 
     if not ctx.source:
         return HandlerReturn(False)
@@ -243,7 +243,7 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
 
     # 岩タイプとの相性計算
     for poke_type in ctx.source.types:
-        effectiveness *= TYPE_MATCH_UP["いわ"][poke_type]
+        effectiveness *= TYPE_MODIFIER["いわ"][poke_type]
 
     # ダメージ倍率を決定
     damage_ratio = {

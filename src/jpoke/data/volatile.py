@@ -16,6 +16,7 @@ def common_setup() -> None:
     呼び出しタイミング: モジュール初期化時（ファイル末尾）
     """
     for name, data in VOLATILES.items():
+        VOLATILES[name].name = name
         for event in data.handlers:
             data.handlers[event].log_text = name
 

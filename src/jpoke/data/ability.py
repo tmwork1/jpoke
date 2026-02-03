@@ -4,6 +4,12 @@ from .models import AbilityData
 from jpoke.handlers import common, ability as h
 
 
+def common_setup():
+    """共通のセットアップ処理"""
+    for name in ABILITIES:
+        ABILITIES[name].name = name
+
+
 ABILITIES: dict[str, AbilityData] = {
     "": AbilityData(name=""),
     "ARシステム": AbilityData(
@@ -839,3 +845,6 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     )
 }
+
+
+common_setup()

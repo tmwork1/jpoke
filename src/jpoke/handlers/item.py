@@ -135,24 +135,6 @@ def ものしりメガネ(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(False, value)
 
 
-def シルクのスカーフ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    # ON_CALC_POWER_MODIFIER: ノーマル技1.2倍
-    if ctx.move.type == "ノーマル":
-        return HandlerReturn(True, value * 6 // 5)
-    return HandlerReturn(False, value)
-
-
-def つめたいいわ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return HandlerReturn(False)
-
-
-def もくたん(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    # ON_CALC_POWER_MODIFIER: 炎技1.2倍
-    if ctx.move.type == "ほのお":
-        return HandlerReturn(True, value * 6 // 5)
-    return HandlerReturn(False, value)
-
-
 def ラムのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: すべての状態異常を回復する（消費型）
     target = ctx.resolve_role(battle, "source:self")
@@ -162,8 +144,4 @@ def ラムのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn
         return common.cure_ailment(battle, ctx, value, "source:self")
 
     # volatiles（こんらん等）はここでは処理しない（状態異常のみ対応）
-    return HandlerReturn(False)
-
-
-def ぎんのこな(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return HandlerReturn(False)

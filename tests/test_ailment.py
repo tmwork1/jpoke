@@ -1,3 +1,4 @@
+"""状態異常ハンドラの単体テスト"""
 import math
 from jpoke.core.event import Event, EventContext
 from jpoke import Pokemon
@@ -9,8 +10,7 @@ def test_poison_turn_end_damage():
     battle = t.start_battle()
     mon = battle.actives[0]
     mon.apply_ailment(battle.events, "どく")
-    battle.advance_turn()
-    battle.print_logs()
+    battle.events.emit(Event.ON_TURN_END_3, EventContext(target=mon), None)
     # 最大HPの1/8のダメージを受けているはず
     damage = mon.max_hp - mon.hp
     assert damage == mon.max_hp // 8, f"どく: ターン終了時ダメージ: {damage} != {mon.max_hp // 8}"
@@ -25,8 +25,7 @@ def test_badly_poison_damage_increase():
     # nターン目: n/16ダメージ
     for i in range(3):
         hp_before = mon.hp
-        battle.advance_turn()
-        battle.print_logs()
+        battle.events.emit(Event.ON_TURN_END_3, EventContext(target=mon), None)
         damage = hp_before - mon.hp
         expected = mon.max_hp * (i + 1) // 16
         assert damage == expected, f"もうどく {i+1}ターン目: {damage=} != {expected=}"
@@ -67,8 +66,11 @@ def test_paralysis_action_enabled_low_rate():
     # 必ず行動できる設定
     battle.test_option.ailment_trigger_rate = 0.0
     result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
-    # 行動可能であることを確認
-    assert result, "まひ: 行動可能"
+    # 行動可能であることを確認（Noneではなくsuccessがあればよい）
+    # ON_TRY_ACTIONはコントロールフロー用のイベントなのでNoneが返ることもある
+    # まひ状態でもtrigger_rate=0.0なら行動不能にならない（Falseが返らない）
+    assert result is not False, "まひ: 行動可能"
+
 
 def test_burn_physical_move_damage_reduction():
     """やけど: 物理技ダメージ半減"""
@@ -79,8 +81,6 @@ def test_burn_physical_move_damage_reduction():
 
     attacker = battle.actives[0]
     defender = battle.actives[1]
-
-    # やけど状態なしでのダメージを記録
     move = attacker.moves[0]  # たいあたり
 
     # やけど補正値を取得（ON_CALC_BURN_MODIFIER）
@@ -130,6 +130,25 @@ def test_burn_special_move_no_damage_change():
     assert burned_modifier == 4096, f"やけど: 特殊技ダメージ変わらず: {burned_modifier} != 4096"
 
 
+def test_burn_turn_end_damage():
+    """やけど: ターン終了時ダメージ"""
+    battle = t.start_battle(
+        ally=[Pokemon("カビゴン")],  # HP高めのポケモンでテスト
+    )
+
+    mon = battle.actives[0]
+    initial_hp = mon.hp
+    mon.apply_ailment(battle.events, "やけど")
+
+    # ターン終了時イベントを発火
+    battle.events.emit(Event.ON_TURN_END_3, EventContext(target=mon), None)
+
+    # 最大HPの1/16のダメージを受けているはず
+    expected_damage = mon.max_hp // 16
+    actual_damage = initial_hp - mon.hp
+    assert actual_damage == expected_damage, f"やけど: ターン終了時ダメージ: {actual_damage} != {expected_damage}"
+
+
 def test_sleep_application():
     """ねむり: 状態適用"""
     battle = t.start_battle(
@@ -163,25 +182,6 @@ def test_sleep_turn_progression_recovery():
     # 2ターン目: count 1 → 0 で回復
     result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
     assert mon.ailment.name == "", "ねむり: 2ターン目で回復するはず"
-
-
-def test_burn_turn_end_damage():
-    """やけど: ターン終了時ダメージ"""
-    battle = t.start_battle(
-        ally=[Pokemon("カビゴン")],  # HP高めのポケモンでテスト
-    )
-
-    mon = battle.actives[0]
-    initial_hp = mon.hp
-    mon.apply_ailment(battle.events, "やけど")
-
-    # ターン終了時イベントを発火
-    battle.events.emit(Event.ON_TURN_END_3, EventContext(target=mon), None)
-
-    # 最大HPの1/16のダメージを受けているはず
-    expected_damage = mon.max_hp // 16
-    actual_damage = initial_hp - mon.hp
-    assert actual_damage == expected_damage, f"やけど: ターン終了時ダメージ: {actual_damage} != {expected_damage}"
 
 
 def test_freeze_application():

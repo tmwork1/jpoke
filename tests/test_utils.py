@@ -78,8 +78,8 @@ def start_battle(
     if accuracy is not None:
         battle.test_option.accuracy = accuracy
 
-    # バトル開始
-    battle.advance_turn()
+    # バトル開始（advance_turnは使わず内部フェーズを実行）
+    run_turn(battle)
     battle.print_logs()
 
     # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
@@ -107,7 +107,7 @@ def start_battle(
 
     # ターン進行
     for _ in range(turn):
-        battle.advance_turn()
+        run_turn(battle)
         battle.print_logs()
         if battle.winner():
             break
@@ -141,6 +141,23 @@ def tick_fields(battle: Battle, ticks: int = 1):
             for field in side.fields.values():
                 if field.is_active:
                     side.tick(field.data.name)
+
+
+def run_turn(battle: Battle, commands: dict[Player, Command] | None = None):
+    """テスト用にターンを1つ進める。
+
+    advance_turn() には依存せず、内部のフェーズ処理を直接呼び出す。
+
+    Args:
+        battle: Battleインスタンス
+        commands: 予約するコマンド辞書（任意）
+    """
+    if commands:
+        for player, command in commands.items():
+            player.reserve_command(command)
+            battle.add_command_log(player, command)
+
+    battle.turn_controller._process_turn_phases()
 
 
 def can_switch(battle: Battle, idx: int) -> bool:

@@ -8,15 +8,36 @@
 
 | 名前 | 効果 | イベント | ハンドラ名 | 処理 | テスト | ユーザー確認 | 備考 |
 |------|------|---------|-----------|----------|----------|--------------|------|
-| いのちのたま | 攻撃技で1/8反動ダメージ | ON_HIT | いのちのたま | ✅ | ❌ | ❌ |  |
-| だっしゅつボタン | ダメージ時に強制交代 | ON_DAMAGE | だっしゅつボタン | ✅ | ❌ | ❌ |  |
-| だっしゅつパック | 能力ダウン時に自動交代 | ON_MODIFY_STAT | だっしゅつパック | ✅ | ❌ | ❌ |  |
+| いのちのたま | 攻撃技で1/8反動ダメージ | ON_HIT | いのちのたま | ✅ | ✅ | ❌ | test_item.py |
+| だっしゅつボタン | ダメージ時に強制交代 | ON_DAMAGE | だっしゅつボタン | ✅ | ✅ | ❌ | test_item.py |
+| だっしゅつパック | 能力ダウン時に自動交代 | ON_MODIFY_STAT | だっしゅつパック | ✅ | ✅ | ❌ | test_item.py |
 | ちからのハチマキ | 物理技1.1倍 | ON_CALC_POWER_MODIFIER | ちからのハチマキ | ✅ | ❌ | ❌ |  |
 | ものしりメガネ | 特殊技1.1倍 | ON_CALC_POWER_MODIFIER | ものしりメガネ | ✅ | ❌ | ❌ |  |
-| シルクのスカーフ | ノーマル技1.2倍 | ON_CALC_POWER_MODIFIER | シルクのスカーフ | ✅ | ❌ | ❌ |  |
+| シルクのスカーフ | ノーマル技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
 | つめたいいわ | 未実装 | ON_CALC_POWER_MODIFIER | つめたいいわ | ❌ | ❌ | ❌ | return False のみ |
-| もくたん | 炎技1.2倍 | ON_CALC_POWER_MODIFIER | もくたん | ✅ | ❌ | ❌ |  |
-| ぎんのこな | 未実装 | ON_CALC_POWER_MODIFIER | ぎんのこな | ❌ | ❌ | ❌ | return False のみ |
+| もくたん | 炎技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ぎんのこな | むし技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+
+## タイプ強化アイテム
+
+| 名前 | 効果 | イベント | ハンドラ名 | 処理 | テスト | ユーザー確認 | 備考 |
+|------|------|---------|-----------|----------|----------|--------------|------|
+| かたいいし | いわ技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| きせきのたね | くさ技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| くろおび | あく技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| じしゃく | でんき技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| しんぴのしずく | みず技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| するどいくちばし | ひこう技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| せいれいプレート | フェアリー技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| どくバリ | どく技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| とけないこおり | こおり技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ノーマルジュエル | ノーマル技1.5倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| のろいのおふだ | ゴースト技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| まがったスプーン | エスパー技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| メタルコート | はがね技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| やわらかいすな | じめん技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ようせいのハネ | フェアリー技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| りゅうのキバ | ドラゴン技1.2倍 | ON_CALC_POWER_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
 
 ## 木の実
 
@@ -34,3 +55,26 @@
 | ひかりごけ | 未実装 | ON_BEFORE_ACTION | ひかりごけ | ❌ | ❌ | ❌ | return False のみ |
 | きゅうこん | 未実装 | ON_BEFORE_ACTION | きゅうこん | ❌ | ❌ | ❌ | return False のみ |
 | ラムのみ | 全状態異常回復 | ON_BEFORE_ACTION | common.cure_ailment | ✅ | ❌ | ❌ |  |
+
+## タイプ半減実
+
+| 名前 | 効果 | イベント | ハンドラ名 | 処理 | テスト | ユーザー確認 | 備考 |
+|------|------|---------|-----------|----------|----------|--------------|------|
+| ホズのみ | ノーマル技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| リンドのみ | くさ技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| オッカのみ | ほのお技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| イトケのみ | みず技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ソクノのみ | でんき技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| カシブのみ | ゴースト技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ヨロギのみ | いわ技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| タンガのみ | むし技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ウタンのみ | エスパー技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| バコウのみ | ひこう技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| シュカのみ | じめん技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ビアーのみ | どく技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ヨプのみ | かくとう技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ヤチェのみ | こおり技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| リリバのみ | はがね技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ナモのみ | あく技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ハバンのみ | ドラゴン技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |
+| ロゼルのみ | フェアリー技ダメージ0.5倍 | ON_CALC_DAMAGE_MODIFIER | common.modify_by_move_type | ✅ | ✅ | ❌ | test_item.py |

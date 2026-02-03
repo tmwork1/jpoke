@@ -116,3 +116,8 @@ pytest tests/ -v -s --tb=short
 カスタムテストではドメイン知識を活かしたポケモン選択：
 - 特性テスト: 対象特性を持つポケモン
 - タイプ相性テスト: 相互作用するタイプペア
+
+## 追加知見
+
+- `advance_turn()`に依存しないテストは、`test_utils.run_turn`やイベント直発火（例: `Event.ON_TRY_ACTION`, `Event.ON_TURN_END_3`）で置き換える。
+- 交代時フィールド効果は `battle.run_switch(...)` で直接検証できる。

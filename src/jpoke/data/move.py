@@ -20,8 +20,7 @@ def common_setup() -> None:
         dictインスタンスはスキップされます（MoveDataオブジェクトのみ処理）
     """
     for name, obj in MOVES.items():
-        if isinstance(obj, dict):
-            continue
+        MOVES[name].name = name
 
         # 共通ハンドラを追加
         MOVES[name].handlers |= {

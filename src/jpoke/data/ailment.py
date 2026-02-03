@@ -4,6 +4,12 @@ from .models import AilmentData
 from jpoke.handlers import common, ailment as h
 
 
+def common_setup():
+    """共通のセットアップ処理"""
+    for name in AILMENTS:
+        AILMENTS[name].name = name
+
+
 AILMENTS: dict[str, AilmentData] = {
     "": AilmentData(),
     "どく": AilmentData(
@@ -76,3 +82,6 @@ AILMENTS: dict[str, AilmentData] = {
         }
     ),
 }
+
+
+common_setup()
