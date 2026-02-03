@@ -1,64 +1,49 @@
-import asyncio
-import importlib.util
-import inspect
 import sys
+import pytest
 from pathlib import Path
-from types import ModuleType
 
-TEST_DIR = Path("tests")
-
-
-def import_module_from_path(pyfile: Path) -> ModuleType:
-    spec = importlib.util.spec_from_file_location(pyfile.stem, pyfile)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load module from {pyfile}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[pyfile.stem] = module
-    spec.loader.exec_module(module)
-    return module
+# カレントディレクトリがどこであってもテストが実行できるようにする
+TEST_DIR = Path(__file__).parent
 
 
-async def run_test_callable(fn, module_name: str, file: Path):
-    name = f"{module_name}.test"
-    try:
-        if inspect.iscoroutinefunction(fn):
-            await fn()
-        else:
-            result = fn()
-            # result が coroutine の場合も await
-            if inspect.iscoroutine(result):
-                await result
-        print(f"[PASS] {name} ({file})")
-        return True
-    except Exception as e:
-        print(f"[FAIL] {name} ({file}) -> {type(e).__name__}: {e}")
-        return False
+def main(pattern: str = "*.py"):
+    """Run pytest on test files matching the pattern.
 
+    Args:
+        pattern: Glob pattern for test files (default: "*.py")
 
-async def main(pattern: str = "*.py"):
-    files = sorted(TEST_DIR.glob(pattern))
-    if not files:
+    Returns:
+        pytest exit code
+    """
+    # デフォルトでは全テストファイル（test_*.py と *_test.py）を実行
+    test_files = []
+    for py_file in TEST_DIR.glob(pattern):
+        if py_file.stem not in ["run", "test_utils", "__pycache__"]:
+            test_files.append(py_file)
+
+    # パターンが指定されていない場合は全テストファイルを対象
+    if not test_files or pattern == "*.py":
+        test_files = []
+        for py_file in TEST_DIR.glob("*.py"):
+            if py_file.stem not in ["run", "test_utils"]:
+                test_files.append(py_file)
+
+    if not test_files:
         print(f"No test files matched: {TEST_DIR}/{pattern}")
         return 1
 
-    total = 0
-    passed = 0
-    for file in files:
-        module = import_module_from_path(file)
-        fn = getattr(module, "test", None)
-        if fn is None:
-            print(f"[SKIP] {file} (no test() found)")
-            continue
-        total += 1
-        ok = await run_test_callable(fn, module_name=file.stem, file=file)
-        passed += int(ok)
+    # pytest で実行
+    # -v: 詳細出力
+    # -x: 最初のエラーで停止
+    # -s: print文の出力を表示
+    args = ["-v", "-s"] + [str(f) for f in sorted(test_files)]
+    exit_code = pytest.main(args)
+    return exit_code
 
-    print(f"\nSummary: {passed}/{total} passed")
-    return 0 if passed == total else 1
 
 if __name__ == "__main__":
-    # 例: python run.py  # tests/*.py を対象
-    #    python run.py tests_*.py  # パターン指定も可能
+    # 例: python run.py  # 全テスト実行
+    #    python run.py test_*.py  # パターン指定
     pattern = sys.argv[1] if len(sys.argv) > 1 else "*.py"
-    exit_code = asyncio.run(main(pattern))
+    exit_code = main(pattern)
     sys.exit(exit_code)

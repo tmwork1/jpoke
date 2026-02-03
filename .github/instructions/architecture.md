@@ -4,10 +4,10 @@
 
 ## イベント駆動システム
 
-### EventManager
-`core/event.py` が全イベント処理を管理。
+### イベントManager
+`core/イベント.py` が全イベント処理を管理。
 
-**主要メソッド**: `fire_event()`, `register_handler()`, `unregister_handler()`
+**主要メソッド**: `fire_イベント()`, `register_handler()`, `unregister_handler()`
 
 ### HandlerReturn
 ```python
@@ -36,7 +36,7 @@ class HandlerReturn:
 - **TurnController**: ターン進行
 - **SwitchManager**: 交代処理
 - **FieldManager**: 天候/地形/場の状態
-- **EventManager**: イベント駆動
+- **イベントManager**: イベント駆動
 - **Logger**: ログ管理
 
 ## RoleSpec の使い分け
@@ -46,7 +46,7 @@ class HandlerReturn:
 | ダメージ計算 | `attacker`, `defender` | ON_CALC_*_MODIFIER |
 | その他 | `source`, `target` | ON_SWITCH_IN, ON_TURN_END |
 
-**重要**: `subject_spec` は EventContext 属性名と一致させる。
+**重要**: `subject_spec` は イベントContext 属性名と一致させる。
 
 ```python
 # ダメージ計算
@@ -87,7 +87,7 @@ switch_out()     # 引っ込む: ハンドラ解除
 
 ```python
 # 揮発性状態実装例
-def みがわり(battle: Battle, ctx: EventContext, value: Any):
+def みがわり(battle: Battle, ctx: イベントContext, value: Any):
     substitute = ctx.defender.volatiles.get("みがわり")
     if not substitute or not substitute.is_active():
         return HandlerReturn(False)
@@ -150,13 +150,13 @@ Stat = Literal["hp", "attack", "defense", "sp_atk", "sp_def", "speed"]
 ## ファイル読解順序
 
 1. `utils/type_defs.py` - 型定義
-2. `utils/enums/` - Event, Command
+2. `utils/enums/` - イベント, Command
 3. `utils/constants.py` - 定数
 4. `model/stats.py` - ステータス
 5. `model/effect.py` - 基底クラス
 6. `model/ailment.py`, `volatile.py` - 状態管理
 7. `model/pokemon.py` - Pokemon
-8. `core/event.py` - イベント
+8. `core/イベント.py` - イベント
 9. `core/move_executor.py`, `switch_manager.py`, `turn_controller.py`
 10. `core/battle.py` - ファサード
 11. `data/models.py` - データ構造
@@ -169,7 +169,7 @@ Stat = Literal["hp", "attack", "defense", "sp_atk", "sp_def", "speed"]
 - 名前付き関数（デバッグ容易）
 - RoleSpec を正確に
 - 派生クラス活用
-- GameEffect 処理は Event/Handler で実装
+- GameEffect 処理は イベント/Handler で実装
 
 ### 回避
 - Any 型の多用

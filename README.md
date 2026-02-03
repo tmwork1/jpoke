@@ -15,7 +15,7 @@
 - **MoveExecutor** ([core/move_executor.py](src/jpoke/core/move_executor.py)) - 技の実行処理
 - **DamageCalculator** ([core/damage.py](src/jpoke/core/damage.py)) - ダメージ計算
 - **SpeedCalculator** ([core/speed_calculator.py](src/jpoke/core/speed_calculator.py)) - 行動順計算
-- **EventSystem** ([core/event.py](src/jpoke/core/event.py)) - イベント駆動システム
+- **イベントSystem** ([core/イベント.py](src/jpoke/core/イベント.py)) - イベント駆動システム
 - **FieldManager** ([core/field_manager.py](src/jpoke/core/field_manager.py)) - フィールド効果管理
 - **SwitchManager** ([core/switch_manager.py](src/jpoke/core/switch_manager.py)) - 交代処理
 
@@ -89,11 +89,11 @@
 
 ```python
 # 例: 特性「いかく」の実装
-def intimidate_on_switch_in(events, player, mon):
+def intimidate_on_switch_in(イベントs, player, mon):
     """場に出たときに相手の攻撃を1段階下げる"""
     opponent = player.opponent
     if opponent.active:
-        events.emit(EventType.CHANGE_STAT_STAGE, 
+        イベントs.emit(イベントType.CHANGE_STAT_STAGE, 
                    mon=opponent.active, 
                    stat=Stat.ATTACK, 
                    delta=-1)
@@ -123,14 +123,22 @@ python -m jpoke.utils.dashboard
 
 ### テスト
 
-```bash
-# 全テスト実行
-python tests/run.py
+pytest でテストを実行します。テストコードは **失敗時のみ出力** が表示されます。成功したテストは結果を表示せずに進行します。
 
-# 個別テスト
-python tests/ability.py
-python tests/item.py
-python tests/field.py
+```bash
+# 全テスト実行（tests フォルダから）
+cd tests
+python run.py
+
+# または pytest を直接使用
+pytest ailment.py ability.py move.py volatile.py -v
+
+# 個別テスト実行
+python ailment.py
+python move.py
+python ability.py
+python volatile.py
+```
 python tests/volatile.py
 ```
 

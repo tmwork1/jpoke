@@ -1,41 +1,78 @@
+import math
+from jpoke.core.event import Event, EventContext
 from jpoke import Pokemon
 import test_utils as t
 
 
-def test():
-    print("--- まひ: 素早さ半減 ---")
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ")]
-    )
-    # まひ前の素早さを記録
-    normal_speed = battle.calc_effective_speed(battle.actives[0])
-
-    # まひ状態にする（apply_ailmentを使用）
+def test_poison_turn_end_damage():
+    """どく: ターン終了時ダメージ"""
+    battle = t.start_battle()
     mon = battle.actives[0]
+    mon.apply_ailment(battle.events, "どく")
+    battle.advance_turn()
+    battle.print_logs()
+    # 最大HPの1/8のダメージを受けているはず
+    damage = mon.max_hp - mon.hp
+    assert damage == mon.max_hp // 8, f"どく: ターン終了時ダメージ: {damage} != {mon.max_hp // 8}"
+
+
+def test_badly_poison_damage_increase():
+    """もうどく: ターン経過でダメージ増加"""
+    battle = t.start_battle()
+    mon = battle.actives[0]
+    mon.apply_ailment(battle.events, "もうどく")
+
+    # nターン目: n/16ダメージ
+    for i in range(3):
+        hp_before = mon.hp
+        battle.advance_turn()
+        battle.print_logs()
+        damage = hp_before - mon.hp
+        expected = mon.max_hp * (i + 1) // 16
+        assert damage == expected, f"もうどく {i+1}ターン目: {damage=} != {expected=}"
+        assert mon.ailment.count == i + 1, f"もうどくカウント: {mon.ailment.count=} != {i+1}"
+
+
+def test_paralysis_speed_reduction():
+    """まひ: 素早さ半減"""
+    battle = t.start_battle(ally=[Pokemon("リザードン")])
+    mon = battle.actives[0]
+    # まひ前の素早さを記録
+    normal_speed = battle.calc_effective_speed(mon)
+    # まひ状態にする
     mon.apply_ailment(battle.events, "まひ")
     paralyzed_speed = battle.calc_effective_speed(mon)
-
     # 素早さが半減していることを確認
-    assert paralyzed_speed == normal_speed // 2, f"Expected {normal_speed // 2}, got {paralyzed_speed}"
-    print("✓ まひで素早さが半減")
+    assert paralyzed_speed == normal_speed // 2, f"まひ: 素早さ半減: Expected {normal_speed // 2}, got {paralyzed_speed}"
 
-    print("--- まひ: 行動不能（確率テスト）---")
+
+def test_paralysis_action_disabled_high_rate():
+    """まひ: 行動不能（確率テスト - trigger_rate=1.0）"""
+    battle = t.start_battle(ally=[Pokemon("リザードン")])
+    mon = battle.actives[0]
+    mon.apply_ailment(battle.events, "まひ")
+
     # 必ず行動不能になる設定
     battle.test_option.ailment_trigger_rate = 1.0
-    from jpoke.core.event import Event, EventContext
     result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
     # HandlerReturnがFalseを返すことを確認（行動不能）
-    assert result is None or not result, "まひで行動不能になるはず"
-    print("✓ まひで行動不能（trigger_rate=1.0）")
+    assert result is None or not result, "まひ: 行動不能（trigger_rate=1.0）"
+
+
+def test_paralysis_action_enabled_low_rate():
+    """まひ: 行動可能（確率テスト - trigger_rate=0.0）"""
+    battle = t.start_battle(ally=[Pokemon("リザードン")])
+    mon = battle.actives[0]
+    mon.apply_ailment(battle.events, "まひ")
 
     # 必ず行動できる設定
     battle.test_option.ailment_trigger_rate = 0.0
     result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
     # 行動可能であることを確認
-    print("✓ まひでも行動可能（trigger_rate=0.0）")
 
-    print("--- やけど: 物理技ダメージ半減 ---")
+
+def test_burn_physical_move_damage_reduction():
+    """やけど: 物理技ダメージ半減"""
     battle = t.start_battle(
         ally=[Pokemon("カビゴン", moves=["たいあたり"])],
         foe=[Pokemon("ピカチュウ")]
@@ -45,7 +82,6 @@ def test():
     defender = battle.actives[1]
 
     # やけど状態なしでのダメージを記録
-    from jpoke.core.event import Event, EventContext
     move = attacker.moves[0]  # たいあたり
 
     # やけど補正値を取得（ON_CALC_BURN_MODIFIER）
@@ -67,34 +103,36 @@ def test():
 
     # 物理技なので補正が半減（2048/4096 = 0.5倍）しているはず
     expected_modifier = 4096 * 2048 // 4096  # 2048
-    assert burned_modifier == expected_modifier, f"やけど時の補正: {burned_modifier} != {expected_modifier}"
-    print(f"✓ やけどで物理技ダメージが半減 (補正: {burned_modifier}/4096)")
+    assert burned_modifier == expected_modifier, f"やけど: 物理技ダメージ半減: {burned_modifier} != {expected_modifier}"
 
-    # 特殊技ではダメージが半減しないことを確認
-    battle2 = t.start_battle(
+
+def test_burn_special_move_no_damage_change():
+    """やけど: 特殊技ダメージは変わらず"""
+    battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
         foe=[Pokemon("ピカチュウ")]
     )
 
-    attacker2 = battle2.actives[0]
-    defender2 = battle2.actives[1]
-    move2 = attacker2.moves[0]  # 10まんボルト（特殊技）
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]  # 10まんボルト（特殊技）
 
     # やけど状態にする
-    attacker2.apply_ailment(battle2.events, "やけど")
+    attacker.apply_ailment(battle.events, "やけど")
 
     # 特殊技のやけど補正値（やけどあり）
-    burned_modifier2 = battle2.events.emit(
+    burned_modifier = battle.events.emit(
         Event.ON_CALC_BURN_MODIFIER,
-        EventContext(attacker=attacker2, defender=defender2, move=move2),
+        EventContext(attacker=attacker, defender=defender, move=move),
         4096
     )
 
     # 特殊技なので補正は変わらない（4096のまま）
-    assert burned_modifier2 == 4096, f"特殊技のやけど補正が変化: {burned_modifier2} != 4096"
-    print(f"✓ やけどでも特殊技ダメージは変わらず (補正: {burned_modifier2}/4096)")
+    assert burned_modifier == 4096, f"やけど: 特殊技ダメージ変わらず: {burned_modifier} != 4096"
 
-    print("--- ねむり: 行動不能 ---")
+
+def test_sleep_application():
+    """ねむり: 状態適用"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
     )
@@ -104,11 +142,12 @@ def test():
     mon.apply_ailment(battle.events, "ねむり")
     mon.ailment.count = 3
 
-    assert mon.ailment.name == "ねむり"
-    assert mon.ailment.count == 3
-    print("✓ ねむり状態を適用（カウント3）")
+    assert mon.ailment.name == "ねむり", "ねむり: 状態適用失敗"
+    assert mon.ailment.count == 3, "ねむり: カウント設定失敗"
 
-    print("--- ねむり: ターン経過で回復 ---")
+
+def test_sleep_turn_progression_recovery():
+    """ねむり: ターン経過で回復"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
     )
@@ -119,16 +158,16 @@ def test():
 
     # 1ターン目: count 2 → 1
     result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
-    assert mon.ailment.name == "ねむり", "まだねむり状態のはず"
-    assert mon.ailment.count == 1, f"カウント1のはず: {mon.ailment.count}"
-    print("✓ ねむりカウント: 2 → 1")
+    assert mon.ailment.name == "ねむり", "ねむり: 1ターン目でもまだねむり状態のはず"
+    assert mon.ailment.count == 1, f"ねむり: 1ターン目カウント1のはず: {mon.ailment.count}"
 
     # 2ターン目: count 1 → 0 で回復
     result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
-    assert mon.ailment.name == "", "ねむりから回復するはず"
-    print("✓ ねむりカウント: 1 → 0（回復）")
+    assert mon.ailment.name == "", "ねむり: 2ターン目で回復するはず"
 
-    print("--- やけど: ターン終了時ダメージ ---")
+
+def test_burn_turn_end_damage():
+    """やけど: ターン終了時ダメージ"""
     battle = t.start_battle(
         ally=[Pokemon("カビゴン")],  # HP高めのポケモンでテスト
     )
@@ -143,63 +182,11 @@ def test():
     # 最大HPの1/16のダメージを受けているはず
     expected_damage = mon.max_hp // 16
     actual_damage = initial_hp - mon.hp
-    assert actual_damage == expected_damage, f"やけどダメージ: {actual_damage} != {expected_damage}"
-    print(f"✓ やけどで1/16ダメージ ({actual_damage} HP)")
+    assert actual_damage == expected_damage, f"やけど: ターン終了時ダメージ: {actual_damage} != {expected_damage}"
 
-    print("--- どく: ターン終了時ダメージ ---")
-    battle = t.start_battle(
-        ally=[Pokemon("カビゴン")],
-    )
 
-    mon = battle.actives[0]
-    initial_hp = mon.hp
-    mon.apply_ailment(battle.events, "どく")
-
-    # ターン終了時イベントを発火
-    battle.events.emit(Event.ON_TURN_END_4, EventContext(target=mon), None)
-
-    # 最大HPの1/8のダメージを受けているはず
-    expected_damage = mon.max_hp // 8
-    actual_damage = initial_hp - mon.hp
-    assert actual_damage == expected_damage, f"どくダメージ: {actual_damage} != {expected_damage}"
-    print(f"✓ どくで1/8ダメージ ({actual_damage} HP)")
-
-    print("--- もうどく: ターン経過でダメージ増加 ---")
-    battle = t.start_battle(
-        ally=[Pokemon("カビゴン")],
-    )
-
-    mon = battle.actives[0]
-    mon.apply_ailment(battle.events, "もうどく")
-
-    # 1ターン目: 1/16ダメージ
-    hp_before = mon.hp
-    battle.events.emit(Event.ON_TURN_END_4, EventContext(target=mon), None)
-    damage_1 = hp_before - mon.hp
-    expected_1 = mon.max_hp // 16
-    assert damage_1 == expected_1, f"1ターン目: {damage_1} != {expected_1}"
-    assert mon.ailment.count == 1, f"カウント1のはず: {mon.ailment.count}"
-    print(f"✓ もうどく1ターン目: 1/16ダメージ ({damage_1} HP)")
-
-    # 2ターン目: 2/16ダメージ
-    hp_before = mon.hp
-    battle.events.emit(Event.ON_TURN_END_4, EventContext(target=mon), None)
-    damage_2 = hp_before - mon.hp
-    expected_2 = (mon.max_hp * 2) // 16
-    assert damage_2 == expected_2, f"2ターン目: {damage_2} != {expected_2}"
-    assert mon.ailment.count == 2, f"カウント2のはず: {mon.ailment.count}"
-    print(f"✓ もうどく2ターン目: 2/16ダメージ ({damage_2} HP)")
-
-    # 3ターン目: 3/16ダメージ
-    hp_before = mon.hp
-    battle.events.emit(Event.ON_TURN_END_4, EventContext(target=mon), None)
-    damage_3 = hp_before - mon.hp
-    expected_3 = (mon.max_hp * 3) // 16
-    assert damage_3 == expected_3, f"3ターン目: {damage_3} != {expected_3}"
-    assert mon.ailment.count == 3, f"カウント3のはず: {mon.ailment.count}"
-    print(f"✓ もうどく3ターン目: 3/16ダメージ ({damage_3} HP)")
-
-    print("--- こおり: 行動不能と解凍テスト ---")
+def test_freeze_application():
+    """こおり: 状態適用"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
     )
@@ -207,24 +194,41 @@ def test():
     # こおり状態にする（apply_ailmentを使用）
     mon = battle.actives[0]
     mon.apply_ailment(battle.events, "こおり")
-    assert mon.ailment.name == "こおり"
-    print("✓ こおり状態を適用")
+    assert mon.ailment.name == "こおり", "こおり: 状態適用失敗"
+
+
+def test_freeze_thaw_high_rate():
+    """こおり: 解凍（確率テスト - trigger_rate=1.0）"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+    )
+
+    # こおり状態にする
+    mon = battle.actives[0]
+    mon.apply_ailment(battle.events, "こおり")
 
     # 必ず解凍される設定でテスト
     battle.test_option.ailment_trigger_rate = 1.0
     result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
-    assert mon.ailment.name == "", "こおりが解凍されるはず"
-    print("✓ こおりが解凍された（trigger_rate=1.0）")
+    assert mon.ailment.name == "", "こおり: 解凍失敗（trigger_rate=1.0）"
 
-    # こおり状態を再度付与して、解凍されない設定でテスト
+
+def test_freeze_persist_low_rate():
+    """こおり: 状態維持（確率テスト - trigger_rate=0.0）"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+    )
+
+    # こおり状態を付与
+    mon = battle.actives[0]
     mon.apply_ailment(battle.events, "こおり")
+
+    # 解凍されない設定でテスト
     battle.test_option.ailment_trigger_rate = 0.0
     result = battle.events.emit(Event.ON_BEFORE_ACTION, EventContext(target=mon), None)
-    assert mon.ailment.name == "こおり", "こおり状態が維持されるはず"
-    print("✓ こおり状態維持（trigger_rate=0.0）")
-
-    print("\n=== All tests passed! ===")
+    assert mon.ailment.name == "こおり", "こおり: 状態維持失敗（trigger_rate=0.0）"
 
 
 if __name__ == "__main__":
-    test()
+    import pytest
+    pytest.main([__file__, "-v"])

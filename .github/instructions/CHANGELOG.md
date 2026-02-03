@@ -7,7 +7,7 @@
 - type_defs.py: GlobalField/SideField を日本語化
 - field_manager.py: 辞書キーを日本語に変更
 - tick_fields 関数追加（tests/test_utils.py）
-- サイドフィールド効果を修正（EventManager、ねばねばネット）
+- サイドフィールド効果を修正（イベントManager、ねばねばネット）
 - test_utils.start_battle に ally_side_field, foe_side_field, global_field パラメータ追加
 - テストコード大幅簡略化（3-5行短縮/テスト）
 

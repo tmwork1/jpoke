@@ -11,7 +11,7 @@ MGR=Manager, RSC=Research, PLN=Planner, ARC=Architect, COD=Coder, TST=Tester, RV
 発言時は先頭に識別子を付ける（例: `MGR: タスクを開始します`）
 
 ## 核心概念
-- イベント駆動: `EventManager` (`src/jpoke/core/event.py`)
+- イベント駆動: `イベントManager` (`src/jpoke/core/イベント.py`)
 - Handler: 全効果をハンドラで実装 (`src/jpoke/handlers/`)
 - RoleSpec: `"role:side"` 形式（`"source:self"`, `"target:foe"` 等）
   - ダメージ計算: `"attacker:self"`, `"defender:self"`
@@ -22,7 +22,7 @@ MGR=Manager, RSC=Research, PLN=Planner, ARC=Architect, COD=Coder, TST=Tester, RV
 ## ファイル構成
 ```
 src/jpoke/
- core/       # event.py, battle.py, damage.py
+ core/       # イベント.py, battle.py, damage.py
  model/      # pokemon.py, stats.py
  data/       # ability.py, move.py, item.py
  handlers/   # 効果実装

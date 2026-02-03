@@ -343,7 +343,7 @@
 "ニトロチャージ": MoveData(
     type="ほのお", category="物理", pp=20, power=50, accuracy=100,
     handlers={
-        Event.ON_HIT: h.MoveHandler(
+        イベント.ON_HIT: h.MoveHandler(
             partial(common.modify_stat, stat="S", v=1, 
                     target_spec="attacker:self", source_spec="attacker:self"),
         )

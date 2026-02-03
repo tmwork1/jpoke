@@ -93,22 +93,20 @@ tick_fields(battle, ticks=5)  # カウント進行
 **結果**: ✅ 全テスト22個合格（+13→22）
 
 **実施内容**:
-1. Event enum 全41要素の利用箇所を整理・コメント記載
+1. イベント enum 全41要素の利用箇所を整理・コメント記載
 2. ターンカウント重複バグ発見・修正（init_turn内の `turn += 1` 削除）
 3. 先制技判定機能（ON_CHECK_PRIORITY_VALID）の追加実装
-4. test_event_system.py に9個の新規テスト追加
+4. test_イベント_system.py に9個の新規テスト追加
 
-**テスト例** (EventContextResolution):
+**テスト例** (イベントContextResolution):
 - RoleSpec "role:side" 形式の解決テスト
 - attacker/defender が source/target エイリアスとして機能
 - 優先度ソート動作検証
 
 **知見**:
-- Event コメント記載で emit/handler 参照箇所の追跡が容易化
+- イベント コメント記載で emit/handler 参照箇所の追跡が容易化
 - RoleSpec "role:side" 形式が統一的に機能
-- HandlerReturn の value 連鎖計算（4096基準補正）と stop_event フラグが明確に使い分け
-- 未使用イベント（ON_MOVE_SECONDARY等）は将来用途で継続管理
+- HandlerReturn の value 連鎖計算（4096基準補正）と stop_イベント フラグが明確に使い分け
 
 **推奨事項**:
 - 新イベント追加時は emit 元と handler 実装箇所をコメントに必須記載
-- ON_AFTER_PIVOT, ON_MOVE_SECONDARY 等は次フェーズで実装予定

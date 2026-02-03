@@ -43,7 +43,7 @@
 | 1.1 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
 | 1.2 | Process | ターン初期化 | プレイヤー状態のリセット | `init_turn()` | ✓ |
 | 1.3 | Process | コマンド予約 | 行動コマンドの決定 | `choose_action_command()` | ✓ |
-| 1.4 | Event | ON_BEFORE_ACTION | 行動前イベント発火 | `events.emit(ON_BEFORE_ACTION)` | ✓ |
+| 1.4 | イベント | ON_BEFORE_ACTION | 行動前イベント発火 | `イベントs.emit(ON_BEFORE_ACTION)` | ✓ |
 
 ### SWITCH_PHASE: 交代フェーズ
 
@@ -62,7 +62,7 @@
 
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
-| 3.0 | Event | ON_BEFORE_MOVE | 技使用前イベント発火 | `events.emit(ON_BEFORE_MOVE)` | ✓ |
+| 3.0 | イベント | ON_BEFORE_MOVE | 技使用前イベント発火 | `イベントs.emit(ON_BEFORE_MOVE)` | ✓ |
 
 ### MOVE_PHASE: 技実行フェーズ
 
@@ -70,7 +70,7 @@
 |------|------|------|-------------|------------|-------------|
 | 3.1 | Start | 技フェーズ開始 | 技の実行処理 | - | - |
 | 3.2 | Loop | 行動順ループ開始 | 行動順でポケモンを処理 | `calc_action_order()` | ✓ |
-| 3.3 | Log | 行動ログ | ポケモン名をログ出力 | `add_event_log()` | ✓ |
+| 3.3 | Log | 行動ログ | ポケモン名をログ出力 | `add_イベント_log()` | ✓ |
 | 3.4 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
 | 3.5 | Process | 技発動 | 技を実行する | `run_move(mon, move)` | ✓ |
 | 3.6 | Interrupt | EJECTBUTTON | だっしゅつボタンによる交代 | `run_interrupt_switch()` | ✓ |
@@ -85,7 +85,7 @@
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
 | 4.1 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
-| 4.2 | Event | ON_TURN_END_1 | ターン終了処理1 | `events.emit(ON_TURN_END_1)` | ✓ |
+| 4.2 | イベント | ON_TURN_END_1 | ターン終了処理1 | `イベントs.emit(ON_TURN_END_1)` | ✓ |
 | 4.3 | Interrupt | EMERGENCY | ききかいひによる交代 | `run_interrupt_switch()` | ✓ |
 
 **処理内容**: 天気終了判定・天気ダメージ・特性回復等
@@ -95,7 +95,7 @@
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
 | 4.4 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
-| 4.5 | Event | ON_TURN_END_2 | ターン終了処理2 | `events.emit(ON_TURN_END_2)` | ✓ |
+| 4.5 | イベント | ON_TURN_END_2 | ターン終了処理2 | `イベントs.emit(ON_TURN_END_2)` | ✓ |
 | 4.6 | Interrupt | EMERGENCY | ききかいひによる交代 | `run_interrupt_switch()` | ✓ |
 
 **処理内容**: みらいよち・ねがいごと・設置技ダメージ等
@@ -105,7 +105,7 @@
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
 | 4.7 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
-| 4.8 | Event | ON_TURN_END_3 | ターン終了処理3 | `events.emit(ON_TURN_END_3)` | ✓ |
+| 4.8 | イベント | ON_TURN_END_3 | ターン終了処理3 | `イベントs.emit(ON_TURN_END_3)` | ✓ |
 | 4.9 | Interrupt | EMERGENCY | ききかいひによる交代 | `run_interrupt_switch()` | ✓ |
 
 **処理内容**: やどりぎ・バインド・状態異常ダメージ・状態変化終了等
@@ -115,7 +115,7 @@
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
 | 4.10 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
-| 4.11 | Event | ON_TURN_END_4 | ターン終了処理4 | `events.emit(ON_TURN_END_4)` | ✓ |
+| 4.11 | イベント | ON_TURN_END_4 | ターン終了処理4 | `イベントs.emit(ON_TURN_END_4)` | ✓ |
 | 4.12 | Interrupt | EMERGENCY | ききかいひによる交代 | `run_interrupt_switch()` | ✓ |
 
 **処理内容**: 場の状態継続・終了判定・さわぐ・特性効果等
@@ -125,7 +125,7 @@
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
 | 4.13 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
-| 4.14 | Event | ON_TURN_END_5 | ターン終了処理5 | `events.emit(ON_TURN_END_5)` | ✓ |
+| 4.14 | イベント | ON_TURN_END_5 | ターン終了処理5 | `イベントs.emit(ON_TURN_END_5)` | ✓ |
 | 4.15 | Process | 割り込みフラグ更新 | だっしゅつパック用フラグ設定 | `override_interrupt()` | ✓ |
 | 4.16 | Interrupt | EJECTPACK_ON_TURN_END | だっしゅつパックによる交代 | `run_interrupt_switch()` | ✓ |
 
@@ -142,7 +142,7 @@
 | Step | Type | Name | Description | CodeMethod | Implemented |
 |------|------|------|-------------|------------|-------------|
 | 5.1 | Check | 割り込みチェック | 割り込みがないか確認 | `has_interrupt()` | ✓ |
-| 5.2 | Event | ON_TURN_END_6 | ターン終了処理6 | `events.emit(ON_TURN_END_6)` | ✓ |
+| 5.2 | イベント | ON_TURN_END_6 | ターン終了処理6 | `イベントs.emit(ON_TURN_END_6)` | ✓ |
 
 **処理内容**: ダイマックス終了判定
 
@@ -159,7 +159,7 @@
 ## 関連ファイル
 
 - 実装: [src/jpoke/core/turn_controller.py](../../src/jpoke/core/turn_controller.py)
-- イベント詳細: [event_priority_gen9.md](event_priority_gen9.md)
+- イベント詳細: [イベント_priority_gen9.md](イベント_priority_gen9.md)
 
 ---
 

@@ -17,7 +17,7 @@
 
 ```
 src/jpoke/
- core/       # event.py, battle.py, damage.py
+ core/       # イベント.py, battle.py, damage.py
  model/      # pokemon.py, stats.py, ailment.py
  data/       # ability.py, move.py, item.py
  handlers/   # 効果実装
@@ -28,7 +28,7 @@ src/jpoke/
 
 ### 1. イベント駆動
 
-`EventManager` (`core/event.py`) が中核。
+`イベントManager` (`core/イベント.py`) が中核。
 
 ```
 バトルフェーズ  イベント発火  登録ハンドラ実行  効果適用
@@ -39,11 +39,11 @@ src/jpoke/
 特性技アイテムの効果は Handler で実装。
 
 ```python
-def いかく(battle: Battle, ctx: EventContext, value: Any):
+def いかく(battle: Battle, ctx: イベントContext, value: Any):
     # 相手の攻撃を1段階下げる
     return HandlerReturn(True, ...)
 
-Event.ON_SWITCH_IN: Handler(
+イベント.ON_SWITCH_IN: Handler(
     func=いかく,
     subject_spec="source:foe",
     log="on_success"
@@ -57,10 +57,10 @@ Event.ON_SWITCH_IN: Handler(
 - `log`: ログポリシー
 - `priority`: 優先度
 
-### 3. EventContext
+### 3. イベントContext
 
 ```python
-class EventContext:
+class イベントContext:
     source: Pokemon | None
     target: Pokemon | None
     
@@ -81,7 +81,7 @@ class EventContext:
 1. `utils/type_defs.py`, `utils/enums/`, `utils/constants.py`
 2. `model/stats.py`, `model/effect.py`, `model/ailment.py`, `model/volatile.py`
 3. `model/pokemon.py`
-4. `core/event.py`, `core/move_executor.py`, `core/turn_controller.py`
+4. `core/イベント.py`, `core/move_executor.py`, `core/turn_controller.py`
 5. `core/battle.py`
 6. `data/models.py`
 7. `handlers/*.py`

@@ -8,9 +8,9 @@
 
 ## 検証内容
 
-### 1. Event Enum の利用箇所整理
+### 1. イベント Enum の利用箇所整理
 
-`src/jpoke/utils/enums/event.py` に各イベント要素の emit/handler 参照先をコメントで明記しました。
+`src/jpoke/utils/enums/イベント.py` に各イベント要素の emit/handler 参照先をコメントで明記しました。
 
 **整理されたイベント:**
 - ON_BEFORE_ACTION: ターン開始時処理、状態異常・揮発性状態による制御
@@ -41,20 +41,14 @@
 #### 未使用イベント
 
 以下のイベントは定義されているが、コード内で emit/handler が見つかりませんでした：
-- ON_MOVE_SECONDARY: 技の二次効果用（未実装）
-- ON_AFTER_PIVOT: 交代技後処理用（未実装）
-- ON_END: バトル終了用（未実装）
 - ON_BEFORE_MODIFY_STAT: 能力変化前判定用（未実装）
-- ON_CALC_FINAL_DAMAGE_MODIFIER: 最終ダメージ補正用（未実装）
 - ON_CALC_DRAIN: ドレイン技用（未実装）
-- ON_CHECK_MOVE_TYPE: 技タイプ変更用（未実装）
-- ON_CHECK_MOVE_CATEGORY: 技分類変更用（未実装）
 
 **結論**: これらは将来の機能拡張用に予約済み
 
 ### 3. HandlerReturn の使用状況
 
-`stop_event=True` は以下で利用されます：
+`stop_イベント=True` は以下で利用されます：
 - ちょうはつによる変化技ブロック（value=None で技を無効化）
 - こんらん自傷時の行動中断
 - アイテム・能力による状態異常防止
@@ -69,7 +63,7 @@
 - **role**: "source", "target", "attacker", "defender"
 - **side**: "self", "foe"
 
-EventContext.resolve_role() で正しく解決されていることをテストで検証
+イベントContext.resolve_role() で正しく解決されていることをテストで検証
 
 ---
 
@@ -81,7 +75,7 @@ EventContext.resolve_role() で正しく解決されていることをテスト�
 ===== 22 passed in 0.15s =====
 ```
 
-### 追加テストスイート: test_event_system.py
+### 追加テストスイート: test_イベント_system.py
 
 以下9つのテストを新規作成・合格：
 
@@ -132,11 +126,11 @@ EventContext.resolve_role() で正しく解決されていることをテスト�
 
 ```diff
   # 発動成功判定
-  self.battle.events.emit(Event.ON_TRY_MOVE, ctx)
+  self.battle.イベントs.emit(イベント.ON_TRY_MOVE, ctx)
 +
 + # 先制技の有効判定（例: サイコフィールド）
-+ priority_valid = self.battle.events.emit(
-+     Event.ON_CHECK_PRIORITY_VALID,
++ priority_valid = self.battle.イベントs.emit(
++     イベント.ON_CHECK_PRIORITY_VALID,
 +     ctx,
 +     True
 + )
@@ -146,7 +140,7 @@ EventContext.resolve_role() で正しく解決されていることをテスト�
 
 **理由**: サイコフィールドなどの先制技ブロック機能を実装
 
-### ファイル: src/jpoke/utils/enums/event.py
+### ファイル: src/jpoke/utils/enums/イベント.py
 
 各イベント要素に emit 元と handler 実装箇所をコメント追記（例）：
 
@@ -164,10 +158,10 @@ ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py
 
 ✅ **一致確認**
 - ターン0（初期化）→ ターン1～の流れが正しく実装
-- 各フェーズの Event emit が表に記載の順序と一致
+- 各フェーズの イベント emit が表に記載の順序と一致
 - interrupt フラグの管理が仕様と一致
 
-### docs/research/event_priority_gen9.md
+### docs/research/イベント_priority_gen9.md
 
 ✅ **優先度管理が正しく実装**
 - Handler.priority で優先度制御（小さい値が先）
@@ -178,7 +172,7 @@ ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py
 
 ## 知見・ベストプラクティス
 
-### Event定義のレビューポイント
+### イベント定義のレビューポイント
 
 1. **新イベント追加時**
    - RoleSpec の role/side 指定を統一
@@ -188,9 +182,9 @@ ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py
 2. **HandlerReturn の使い方**
    - `success` のみ返す → 状態変化（デフォルト）
    - `value` で値を連鎖 → 補正計算系（4096基準）
-   - `stop_event=True` で処理中断 → ブロック機能
+   - `stop_イベント=True` で処理中断 → ブロック機能
 
-3. **EventContext の使用**
+3. **イベントContext の使用**
    - source/target, attacker/defender は相互互換
    - resolve_role() で role:side 形式を統一的に処理
 
@@ -217,9 +211,6 @@ ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py
 1. **ON_MOVE_SECONDARY の実装**
    - 技の二次効果（麻痺30%など）を統一的に処理
 
-2. **ON_AFTER_PIVOT の利用開始**
-   - 交代技の後処理（ダメージカウンターなど）
-
 3. **未使用イベントの整理**
    - 不要イベントの削除、または用途決定
 
@@ -238,7 +229,7 @@ ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py
 
 ## まとめ
 
-✅ **Event システムの検証完了**
+✅ **イベント システムの検証完了**
 - ターン進行とイベント発火が research 文書と一致
 - 優先度制御が正しく実装
 - RoleSpec 使用が統一的
@@ -251,4 +242,4 @@ ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py
 - 22個の統合テストがすべて合格
 - イベントシステム専用テストスイート追加
 
-**結論**: Event 駆動アーキテクチャが仕様通りに動作していることを確認。本実装は本番運用可能。
+**結論**: イベント 駆動アーキテクチャが仕様通りに動作していることを確認。本実装は本番運用可能。

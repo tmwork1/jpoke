@@ -24,7 +24,7 @@
 
 ---
 
-## Event.ON_SWITCH_IN
+## イベント.ON_SWITCH_IN
 
 ポケモンが場に出たときに発火されるイベント
 
@@ -129,7 +129,7 @@
 
 ---
 
-## Event.ON_BEFORE_ACTION
+## イベント.ON_BEFORE_ACTION
 
 行動前の処理
 
@@ -143,7 +143,7 @@
 
 ---
 
-## Event.ON_BEFORE_MOVE
+## イベント.ON_BEFORE_MOVE
 
 技使用前の処理
 
@@ -161,7 +161,7 @@
 
 ---
 
-## Event.ON_TRY_ACTION
+## イベント.ON_TRY_ACTION
 
 行動可能かどうかの判定
 
@@ -195,7 +195,7 @@
 
 ---
 
-## Event.ON_CONSUME_PP
+## イベント.ON_CONSUME_PP
 
 PP消費時の処理
 
@@ -205,7 +205,7 @@ PP消費時の処理
 
 ---
 
-## Event.ON_TRY_MOVE
+## イベント.ON_TRY_MOVE
 
 技使用可能かどうかの判定（膨大な判定処理）
 
@@ -371,7 +371,7 @@ PP消費時の処理
 
 ---
 
-## Event.ON_TRY_IMMUNE
+## イベント.ON_TRY_IMMUNE
 
 技が無効化されないかの最終判定
 
@@ -454,7 +454,7 @@ PP消費時の処理
 
 ---
 
-## Event.ON_PAY_HP
+## イベント.ON_PAY_HP
 
 HP支払い時の処理
 
@@ -465,7 +465,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_MODIFY_DAMAGE
+## イベント.ON_MODIFY_DAMAGE
 
 ダメージ補正時の処理
 
@@ -483,7 +483,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_HIT
+## イベント.ON_HIT
 
 ダメージ発生後の処理（みがわりに被弾しても発動）
 
@@ -501,7 +501,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_DAMAGE_1
+## イベント.ON_DAMAGE_1
 
 ダメージ付与後の最初の処理
 
@@ -535,7 +535,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_DAMAGE_2
+## イベント.ON_DAMAGE_2
 
 ダメージ付与後の2番目の処理
 
@@ -593,7 +593,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_TURN_END_1
+## イベント.ON_TURN_END_1
 
 ターン終了時の処理 (1)
 
@@ -610,7 +610,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_TURN_END_2
+## イベント.ON_TURN_END_2
 
 ターン終了時の処理 (2)
 
@@ -630,7 +630,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_TURN_END_3
+## イベント.ON_TURN_END_3
 
 ターン終了時の処理 (3)
 
@@ -663,7 +663,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_TURN_END_4
+## イベント.ON_TURN_END_4
 
 ターン終了時の処理 (4)
 
@@ -708,7 +708,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_TURN_END_5
+## イベント.ON_TURN_END_5
 
 ターン終了時の処理 (5)
 
@@ -725,7 +725,7 @@ HP支払い時の処理
 
 ---
 
-## Event.ON_TURN_END_6
+## イベント.ON_TURN_END_6
 
 ターン終了時の処理 (6)
 

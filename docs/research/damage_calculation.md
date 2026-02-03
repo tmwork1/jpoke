@@ -590,7 +590,7 @@ def calculate_damage(level, power, attack, defense, modifiers):
 
 ### イベントの種類
 
-コードでは以下のイベントを使用して補正を管理しています（[event.py](../src/jpoke/utils/enums/event.py) 参照）：
+コードでは以下のイベントを使用して補正を管理しています（[イベント.py](../src/jpoke/utils/enums/イベント.py) 参照）：
 
 | イベント名 | 用途 | 適用タイミング | 基準値 |
 |-----------|------|--------------|-------|
@@ -610,9 +610,9 @@ def calculate_damage(level, power, attack, defense, modifiers):
 
 **例1**: エレキフィールドによる威力補正（[field.py](../src/jpoke/handlers/field.py)）
 ```python
-def エレキフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def エレキフィールド_power_modifier(battle: Battle, ctx: イベントContext, value: Any) -> HandlerReturn:
     """エレキフィールドでの電気技威力1.3倍"""
-    if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle.events):
+    if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle.イベントs):
         return HandlerReturn(True, value * 1.3)
     return HandlerReturn(False, value)
 ```
@@ -620,7 +620,7 @@ def エレキフィールド_power_modifier(battle: Battle, ctx: EventContext, v
 **例2**: やけど補正（`ON_CALC_BURN_MODIFIER`）
 
 ```python
-def calc_burn_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def calc_burn_modifier(battle: Battle, ctx: イベントContext, value: int) -> HandlerReturn:
     """やけど状態での物理技ダメージ0.5倍"""
     # 攻撃側がやけど状態で物理技を使用している場合
     if ctx.attacker.ailment.name == "やけど" and ctx.move.category == "物理":
@@ -634,7 +634,7 @@ def calc_burn_modifier(battle: Battle, ctx: EventContext, value: int) -> Handler
 **例3**: まもる貫通系補正（`ON_CALC_PROTECT_MODIFIER`）
 
 ```python
-def calc_protect_modifier_z_move(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def calc_protect_modifier_z_move(battle: Battle, ctx: イベントContext, value: int) -> HandlerReturn:
     """Z技使用時、まもる状態の相手へのダメージ0.25倍"""
     # 防御側がまもる状態かつ、攻撃側がZ技を使用している場合
     if ctx.defender.is_protecting and ctx.move.is_z_move:
@@ -642,7 +642,7 @@ def calc_protect_modifier_z_move(battle: Battle, ctx: EventContext, value: int) 
         return HandlerReturn(True, value * 1024 // 4096)
     return HandlerReturn(False, value)
 
-def calc_protect_modifier_dynamax(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def calc_protect_modifier_dynamax(battle: Battle, ctx: イベントContext, value: int) -> HandlerReturn:
     """ダイマックス技使用時、まもる状態の相手へのダメージ0.25倍"""
     # 防御側がまもる状態かつ、攻撃側がダイマックス技を使用している場合
     if ctx.defender.is_protecting and ctx.move.is_dynamax_move:
@@ -658,7 +658,7 @@ def calc_protect_modifier_dynamax(battle: Battle, ctx: EventContext, value: int)
 
 ```python
 # タイプ一致補正（STAB）: priority=10
-def calc_stab(battle: Battle, ctx: EventContext, damage: int) -> HandlerReturn:
+def calc_stab(battle: Battle, ctx: イベントContext, damage: int) -> HandlerReturn:
     """タイプ一致補正"""
     if ctx.attacker.has_type(ctx.move.type):
         # てきおうりょくの場合は2倍、通常は1.5倍
@@ -669,7 +669,7 @@ def calc_stab(battle: Battle, ctx: EventContext, damage: int) -> HandlerReturn:
     return HandlerReturn(True, damage)
 
 # タイプ相性補正: priority=20
-def calc_type_effectiveness(battle: Battle, ctx: EventContext, damage: int) -> HandlerReturn:
+def calc_type_effectiveness(battle: Battle, ctx: イベントContext, damage: int) -> HandlerReturn:
     """タイプ相性補正"""
     effectiveness = battle.get_type_effectiveness(ctx.move.type, ctx.defender.types)
     if effectiveness == 0:
@@ -685,7 +685,7 @@ def calc_type_effectiveness(battle: Battle, ctx: EventContext, damage: int) -> H
     return HandlerReturn(True, damage)
 
 # やけど補正: priority=30
-def calc_burn_modifier(battle: Battle, ctx: EventContext, damage: int) -> HandlerReturn:
+def calc_burn_modifier(battle: Battle, ctx: イベントContext, damage: int) -> HandlerReturn:
     """やけど状態での物理技ダメージ0.5倍"""
     if ctx.attacker.ailment.name == "やけど" and ctx.move.category == "物理":
         # こんじょう等の特性で無効化されることもある
@@ -694,7 +694,7 @@ def calc_burn_modifier(battle: Battle, ctx: EventContext, damage: int) -> Handle
     return HandlerReturn(True, damage)
 
 # 壁補正: priority=40
-def calc_wall_modifier(battle: Battle, ctx: EventContext, damage: int) -> HandlerReturn:
+def calc_wall_modifier(battle: Battle, ctx: イベントContext, damage: int) -> HandlerReturn:
     """リフレクター/ひかりのかべによる軽減"""
     side = battle.get_side(ctx.defender)
     if ctx.move.category == "物理" and side.fields.get("リフレクター"):
@@ -747,9 +747,9 @@ def calc_wall_modifier(battle: Battle, ctx: EventContext, damage: int) -> Handle
 final_pow = move.data.power * dmg_ctx.power_multiplier
 
 # イベントから補正値を取得（4096基準）
-r_pow = events.emit(
-    Event.ON_CALC_POWER_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_pow = イベントs.emit(
+    イベント.ON_CALC_POWER_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096  # 初期値（等倍）
 )
 
@@ -766,9 +766,9 @@ r_rank = rank_modifier(attacker.rank[stat])
 final_atk = int(final_atk * r_rank)
 
 # イベントから補正値を取得（4096基準）
-r_atk = events.emit(
-    Event.ON_CALC_ATK_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_atk = イベントs.emit(
+    イベント.ON_CALC_ATK_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096  # 初期値（等倍）
 )
 
@@ -780,7 +780,7 @@ final_atk = max(1, final_atk)
 **複数補正の連鎖例**
 ```python
 # 特性「ちからもち」の実装例
-def ちからもち_atk_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちからもち_atk_modifier(battle: Battle, ctx: イベントContext, value: Any) -> HandlerReturn:
     """物理攻撃2倍"""
     if ctx.move.category == "物理":
         # 4096基準で2倍 = 8192
@@ -789,7 +789,7 @@ def ちからもち_atk_modifier(battle: Battle, ctx: EventContext, value: Any) 
     return HandlerReturn(False, value)
 
 # アイテム「こだわりハチマキ」の実装例
-def こだわりハチマキ_atk_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def こだわりハチマキ_atk_modifier(battle: Battle, ctx: イベントContext, value: Any) -> HandlerReturn:
     """物理攻撃1.5倍"""
     if ctx.move.category == "物理":
         # 4096基準で1.5倍 = 6144
@@ -907,37 +907,37 @@ for i in range(16):  # 乱数16通り
 
 ```python
 # タイプ相性補正（攻撃側）
-r_atk_type = events.emit(
-    Event.ON_CALC_ATK_TYPE_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_atk_type = イベントs.emit(
+    イベント.ON_CALC_ATK_TYPE_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096  # 初期値（等倍）
 )
 
 # タイプ相性補正（防御側）
-r_def_type = events.emit(
-    Event.ON_CALC_DEF_TYPE_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_def_type = イベントs.emit(
+    イベント.ON_CALC_DEF_TYPE_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 
 # やけど補正
-r_burn = events.emit(
-    Event.ON_CALC_BURN_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_burn = イベントs.emit(
+    イベント.ON_CALC_BURN_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 
 # ダメージ補正
-r_dmg = events.emit(
-    Event.ON_CALC_DAMAGE_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_dmg = イベントs.emit(
+    イベント.ON_CALC_DAMAGE_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 
 # まもる貫通系補正
-r_protect = events.emit(
-    Event.ON_CALC_PROTECT_MODIFIER,
-    EventContext(attacker=attacker, defender=defender, move=move),
+r_protect = イベントs.emit(
+    イベント.ON_CALC_PROTECT_MODIFIER,
+    イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 ```
@@ -946,5 +946,5 @@ r_protect = events.emit(
 
 - [ポケモンwiki - ダメージ計算式](https://latest.pokewiki.net/%E3%83%80%E3%83%A1%E3%83%BC%E3%82%B8%E8%A8%88%E7%AE%97%E5%BC%8F)
 - 実装コード: [damage.py](../src/jpoke/core/damage.py)
-- イベント定義: [event.py](../src/jpoke/utils/enums/event.py)
+- イベント定義: [イベント.py](../src/jpoke/utils/enums/イベント.py)
 - 最終更新: 2026年2月1日
