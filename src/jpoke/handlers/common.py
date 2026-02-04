@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.core import Battle
-    from jpoke.model import Pokemon
+    from jpoke.model import Pokemon, Move
 
 from jpoke.utils.type_defs import RoleSpec, Type, Stat, AilmentName, Weather, Terrain, Side
 from jpoke.utils.enums import Event
@@ -195,12 +195,14 @@ def resolve_field_count(battle: Battle,
         return HandlerReturn(False, value)
 
 
-def modify_by_move_type(battle: Battle,
-                        ctx: EventContext,
-                        value: Any,
-                        type_: Type,
-                        modifier: float) -> HandlerReturn:
-    # ON_CALC_POWER_MODIFIER: 炎技1.2倍
-    if ctx.move.type == type_:
-        return HandlerReturn(True, value * modifier)
-    return HandlerReturn(False, value)
+def calc_effectiveness(battle: Battle,
+                       attacker: Pokemon,
+                       defender: Pokemon,
+                       move: Move) -> float:
+    """技のタイプ相性を計算する"""
+    value = battle.events.emit(
+        Event.ON_CALC_DEF_TYPE_MODIFIER,
+        EventContext(attacker=attacker, defender=defender, move=move),
+        4096
+    ).value > 4096
+    return value / 4096

@@ -11,60 +11,35 @@ def common_setup():
     for name, data in ITEMS.items():
         ITEMS[name].name = name
 
-        # タイプ補正ハンドラの登録
-        if data.power_modifier_by_type:
-            ITEMS[name].handlers[Event.ON_CALC_POWER_MODIFIER] = \
-                h.ItemHandler(
-                    partial(
-                        common.modify_by_move_type,
-                        type_=list(data.power_modifier_by_type.keys())[0],
-                        modifier=list(data.power_modifier_by_type.values())[0]
-                    ),
-                    subject_spec="attacker:self",
-                    log="never",
-            )
-
-        if data.damage_modifier_by_type:
-            ITEMS[name].handlers[Event.ON_CALC_DAMAGE_MODIFIER] = \
-                h.ItemHandler(
-                    partial(
-                        common.modify_by_move_type,
-                        type_=list(data.damage_modifier_by_type.keys())[0],
-                        modifier=list(data.damage_modifier_by_type.values())[0]
-                    ),
-                    subject_spec="attacker:self",
-                    log="on_success",
-            )
-
 
 ITEMS: dict[str, ItemData] = {
     "": ItemData(name=""),
     "あかいいと": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "あついいわ": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "あつぞこブーツ": ItemData(
         consumable=False,
-        throw_power=80
+        fling_power=80
     ),
     "いかさまダイス": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "いしずえのめん": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "いどのめん": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "いのちのたま": ItemData(
-        throw_power=30,
+        fling_power=30,
         consumable=False,
         handlers={
             Event.ON_HIT: h.ItemHandler(
@@ -75,61 +50,73 @@ ITEMS: dict[str, ItemData] = {
     ),
     "エレキシード": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "おうじゃのしるし": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "おおきなねっこ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "おんみつマント": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "かいがらのすず": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "かえんだま": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "かたいいし": ItemData(
         consumable=False,
-        throw_power=100,
-        power_modifier_by_type={"いわ": 4915/4096}
+        fling_power=100,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="いわ", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "かまどのめん": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "からぶりほけん": ItemData(
         consumable=True,
-        throw_power=80
+        fling_power=80
     ),
     "かるいし": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "きあいのタスキ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "きあいのハチマキ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "きせきのたね": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"くさ": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="くさ", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "きゅうこん": ItemData(
         consumable=True,
-        throw_power=30,
+        fling_power=30,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.きゅうこん,
@@ -140,7 +127,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "きれいなぬけがら": ItemData(
         consumable=False,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_CHECK_TRAPPED: h.ItemHandler(
                 lambda *args: HandlerReturn(True, False, stop_event=True),
@@ -152,77 +139,89 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ぎんのこな": ItemData(
         consumable=False,
-        throw_power=10,
-        power_modifier_by_type={"むし": 4915/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="むし", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "くっつきバリ": ItemData(
         consumable=False,
-        throw_power=80
+        fling_power=80
     ),
     "グラスシード": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "グランドコート": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "クリアチャーム": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "くろいてっきゅう": ItemData(
         consumable=False,
-        throw_power=130
+        fling_power=130
     ),
     "くろいヘドロ": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "くろいメガネ": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "くろおび": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"あく": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="あく", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "こうかくレンズ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "こうこうのしっぽ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "こころのしずく": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "こだわりスカーフ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "こだわりハチマキ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "こだわりメガネ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "ゴツゴツメット": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "サイコシード": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "さらさらいわ": ItemData(
         consumable=False,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_CHECK_DURATION: h.ItemHandler(
                 partial(common.resolve_field_count, field="すなあらし", additonal_count=3),
@@ -233,68 +232,98 @@ ITEMS: dict[str, ItemData] = {
     ),
     "じしゃく": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"でんき": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="でんき", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "しめつけバンド": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "しめったいわ": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "じゃくてんほけん": ItemData(
         consumable=True,
-        throw_power=80
+        fling_power=80
     ),
     "じゅうでんち": ItemData(
         consumable=True,
-        throw_power=30
+        fling_power=30
     ),
     "シルクのスカーフ": ItemData(
         consumable=False,
-        throw_power=10,
-        power_modifier_by_type={"ノーマル": 4915/4096},
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="ノーマル", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        },
     ),
     "しろいハーブ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "しんかのきせき": ItemData(
         consumable=False,
-        throw_power=40
+        fling_power=40
     ),
     "しんぴのしずく": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"みず": 4915/4096},
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="みず", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        },
     ),
     "するどいキバ": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "するどいくちばし": ItemData(
         consumable=False,
-        throw_power=50,
-        power_modifier_by_type={"ひこう": 4915/4096}
+        fling_power=50,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="ひこう", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "するどいツメ": ItemData(
         consumable=False,
-        throw_power=80
+        fling_power=80
     ),
     "せいれいプレート": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"フェアリー": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="フェアリー", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "せんせいのツメ": ItemData(
         consumable=False,
-        throw_power=80
+        fling_power=80
     ),
     "だっしゅつパック": ItemData(
         consumable=True,
-        throw_power=50,
+        fling_power=50,
         handlers={
             Event.ON_MODIFY_STAT: h.ItemHandler(
                 h.だっしゅつパック,
@@ -304,7 +333,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "だっしゅつボタン": ItemData(
         consumable=True,
-        throw_power=30,
+        fling_power=30,
         handlers={
             Event.ON_DAMAGE_1: h.ItemHandler(
                 h.だっしゅつボタン,
@@ -314,22 +343,20 @@ ITEMS: dict[str, ItemData] = {
     ),
     "たつじんのおび": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "たべのこし": ItemData(
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_TURN_END_2: h.ItemHandler(
-                partial(
-                    common.modify_hp, target_spec="source:self", r=1/16
-                ),
+                partial(common.modify_hp, target_spec="source:self", r=1/16),
                 subject_spec="source:self",
             )
         }
     ),
     "ちからのハチマキ": ItemData(
         consumable=False,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ちからのハチマキ,
@@ -340,75 +367,99 @@ ITEMS: dict[str, ItemData] = {
     ),
     "つめたいいわ": ItemData(
         consumable=False,
-        throw_power=40,
+        fling_power=40,
     ),
     "でかいきんのたま": ItemData(
         consumable=False,
-        throw_power=130
+        fling_power=130
     ),
     "でんきだま": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "とくせいガード": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "どくどくだま": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "どくバリ": ItemData(
         consumable=False,
-        throw_power=70,
-        power_modifier_by_type={"どく": 4915/4096}
+        fling_power=70,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="どく", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "とけないこおり": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"こおり": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="こおり", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "とつげきチョッキ": ItemData(
         consumable=False,
-        throw_power=80
+        fling_power=80
     ),
     "ねばりのかぎづめ": ItemData(
         consumable=False,
-        throw_power=90
+        fling_power=90
     ),
     "ねらいのまと": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "ノーマルジュエル": ItemData(
         consumable=True,
-        throw_power=30,
-        power_modifier_by_type={"ノーマル": 6144/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="ノーマル", modifier=6144/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "のどスプレー": ItemData(
         consumable=True,
-        throw_power=30
+        fling_power=30
     ),
     "のろいのおふだ": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"ゴースト": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="ゴースト", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "パワフルハーブ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "パンチグローブ": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "ばんのうがさ": ItemData(
         consumable=False,
-        throw_power=60
+        fling_power=60
     ),
     "ひかりごけ": ItemData(
         consumable=True,
-        throw_power=30,
+        fling_power=30,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.ひかりごけ,
@@ -419,70 +470,88 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ひかりのこな": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "ひかりのねんど": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "ビビリだま": ItemData(
         consumable=True,
-        throw_power=30
+        fling_power=30
     ),
     "ピントレンズ": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "ブーストエナジー": ItemData(
         consumable=True,
-        throw_power=30
+        fling_power=30
     ),
     "ふうせん": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "フォーカスレンズ": ItemData(
         consumable=False,
-        throw_power=10
+        fling_power=10
     ),
     "ぼうごパット": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "ぼうじんゴーグル": ItemData(
         consumable=False,
-        throw_power=80
+        fling_power=80
     ),
     "まがったスプーン": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"エスパー": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="エスパー", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "ミストシード": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "メタルコート": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"はがね": 4915/4096}
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="はがね", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "メトロノーム": ItemData(
         consumable=False,
-        throw_power=30
+        fling_power=30
     ),
     "メンタルハーブ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "もくたん": ItemData(
         consumable=False,
-        throw_power=30,
-        power_modifier_by_type={"ほのお": 4915/4096},
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="ほのお", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        },
     ),
     "ものしりメガネ": ItemData(
         consumable=False,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ものしりメガネ,
@@ -493,70 +562,88 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ものまねハーブ": ItemData(
         consumable=True,
-        throw_power=30
+        fling_power=30
     ),
     "やわらかいすな": ItemData(
         consumable=False,
-        throw_power=10,
-        power_modifier_by_type={"じめん": 4915/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="じめん", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "ゆきだま": ItemData(
         consumable=True,
-        throw_power=30
+        fling_power=30
     ),
     "ようせいのハネ": ItemData(
         consumable=False,
-        throw_power=20,
-        power_modifier_by_type={"フェアリー": 4915/4096}
+        fling_power=20,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="フェアリー", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "りゅうのキバ": ItemData(
         consumable=False,
-        throw_power=70,
-        power_modifier_by_type={"ドラゴン": 4915/4096}
+        fling_power=70,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                partial(h.modify_power_by_type, type_="ドラゴン", modifier=4915/4096),
+                subject_spec="attacker:self",
+                log="never",
+            )
+        }
     ),
     "ルームサービス": ItemData(
         consumable=True,
-        throw_power=100
+        fling_power=100
     ),
     "レッドカード": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "くちたけん": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "くちたたて": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "こんごうだま": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "しらたま": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "だいこんごうだま": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "だいしらたま": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "だいはっきんだま": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "はっきんだま": ItemData(
         consumable=False,
-        throw_power=0
+        fling_power=0
     ),
     "オボンのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.オボンのみ,
@@ -567,11 +654,11 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ラムのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "クラボのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.クラボのみ,
@@ -582,7 +669,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "カゴのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.カゴのみ,
@@ -593,7 +680,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "モモンのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.モモンのみ,
@@ -604,7 +691,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "チーゴのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.チーゴのみ,
@@ -615,7 +702,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ナナシのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.ナナシのみ,
@@ -626,7 +713,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "キーのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.キーのみ,
@@ -637,7 +724,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ヒメリのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.ヒメリのみ,
@@ -648,7 +735,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "オレンのみ": ItemData(
         consumable=True,
-        throw_power=10,
+        fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
                 h.オレンのみ,
@@ -659,169 +746,278 @@ ITEMS: dict[str, ItemData] = {
     ),
     "フィラのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ウイのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "マゴのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "バンジのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "イアのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "チイラのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "リュガのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ヤタピのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ズアのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "カムラのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "スターのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "サンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ホズのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"ノーマル": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="ノーマル", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "リンドのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"くさ": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="くさ", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
+        # handlers=_type_damage_handler("くさ", 2048/4096)
     ),
     "オッカのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"ほのお": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="ほのお", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "イトケのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"みず": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="みず", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ソクノのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"でんき": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="でんき", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "カシブのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"ゴースト": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="ゴースト", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ヨロギのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"いわ": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="いわ", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "タンガのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"むし": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="むし", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ウタンのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"エスパー": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="エスパー", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "バコウのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"ひこう": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="ひこう", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "シュカのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"じめん": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="じめん", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ビアーのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"どく": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="どく", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ヨプのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"かくとう": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="かくとう", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ヤチェのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"こおり": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="こおり", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "リリバのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"はがね": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="はがね", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ナモのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"あく": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="あく", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ハバンのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"ドラゴン": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="ドラゴン", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "ロゼルのみ": ItemData(
         consumable=True,
-        throw_power=10,
-        damage_modifier_by_type={"フェアリー": 2048/4096}
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                partial(h.modify_super_effective_damage, type_="フェアリー", modifier=2048/4096),
+                subject_spec="defender:self",
+                log="never",
+            )
+        }
     ),
     "アッキのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "タラプのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "イバンのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ジャポのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "レンブのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ナゾのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     ),
     "ミクルのみ": ItemData(
         consumable=True,
-        throw_power=10
+        fling_power=10
     )
 
 

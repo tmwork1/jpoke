@@ -1,14 +1,15 @@
 ﻿# Research
 
-Manager依頼 → 調査実施 → docs/research/に保存 → 報告
+Manager依頼 → 調査実施 → Manager報告
 
 ## 責務
 
 1. 複数の信頼できる情報源で確認（Bulbapedia, ポケモンWiki, 公式）
 2. 発動条件・効果・相互作用・第9世代での変更点を記録
 3. 実装容易な形式で整理
-4. docs/research/に保存してManager報告
-5. docs/research/は調査内容に限定し、実装・テスト・進捗管理を含めない
+4. docs/research/に文書化
+
+docs/research/は調査内容に限定し、実装・テスト・進捗管理を含めない
 
 ## 調査チェックリスト
 

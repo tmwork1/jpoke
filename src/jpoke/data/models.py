@@ -27,7 +27,7 @@ class AbilityData:
 
 @dataclass
 class ItemData:
-    throw_power: int = 0
+    fling_power: int = 0
     consumable: bool = False
     power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
