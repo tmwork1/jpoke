@@ -95,13 +95,21 @@ class SpeedCalculator:
 
             command = player.reserved_commands[-1]
             move = self.battle.command_to_move(self.battle.players[i], command)
-            action_speed = self.battle.events.emit(
+
+            # 技の優先度を取得（基本値）
+            base_priority = move.priority if move else 0
+
+            # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
+            priority = self.battle.events.emit(
                 Event.ON_CALC_ACTION_SPEED,
                 EventContext(target=mon, move=move),
-                0
+                base_priority
             )
-            total_speed = action_speed + speed * 1e-5
-            speeds.append(total_speed)
+
+            # 優先度を行動速度に変換（優先度が高いほど値が大きくなるように）
+            # 優先度 +5で約5000、-7で約-7000のような値を設定
+            action_speed = priority * 1000 + speed * 1e-5
+            speeds.append(action_speed)
             actives.append(mon)
 
         # Sort by speed

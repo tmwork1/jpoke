@@ -98,3 +98,95 @@ def blow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
         command = battle.random.choice(commands)
         battle.run_switch(player, player.team[command.idx])
     return HandlerReturn(success)
+
+
+# ===== 命中率補正ハンドラ =====
+
+def acc_rank_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """命中率ランクによる命中率補正。
+
+    攻撃側の命中率ランクが命中判定に影響します。
+    ランク修正値テーブル: -6: ×1/3, -5: ×3/8, ..., 0: ×1.0, +1: ×4/3, ..., +6: ×3
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト（attacker.rank['cmbなど]）
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: ランクがあれば補正値を返す、なければFalse
+    """
+    if not ctx.attacker:
+        return HandlerReturn(False, value)
+
+    acc_rank = ctx.attacker.rank.get("acc", 0)
+    if acc_rank == 0:
+        return HandlerReturn(False, value)
+
+    # ランク補正テーブル（4096基準）
+    rank_modifiers = {
+        -6: 1365,    # 1/3
+        -5: 1638,    # 3/8
+        -4: 2048,    # 1/2
+        -3: 2730,    # 2/3
+        -2: 3413,    # 5/6
+        -1: 3686,    # 9/10
+        0:  4096,    # 1.0
+        1:  5461,    # 4/3
+        2:  6144,    # 1.5
+        3:  5461,    # 4/3（等倍基準）
+        4:  5461,    # 4/3
+        5:  9830,    # 2.4（×1/5基準）
+        6:  12288,   # 3.0
+    }
+
+    modified_acc_rank = max(-6, min(6, acc_rank))
+    modifier = rank_modifiers.get(modified_acc_rank, 4096)
+    modified_value = value * modifier // 4096
+
+    return HandlerReturn(True, modified_value)
+
+
+def eva_rank_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """回避率ランクによる命中率補正。
+
+    防御側の回避率ランクが命中判定に影響します。
+    ランク修正値テーブル: +6: ×1/3, +5: ×3/8, ..., 0: ×1.0, -1: ×4/3, ..., -6: ×3
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト（defender.rank['eva']）
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: ランクがあれば補正値を返す、なければFalse
+    """
+    if not ctx.defender:
+        return HandlerReturn(False, value)
+
+    eva_rank = ctx.defender.rank.get("eva", 0)
+    if eva_rank == 0:
+        return HandlerReturn(False, value)
+
+    # ランク補正テーブル（回避は逆向き）
+    rank_modifiers = {
+        -6: 12288,   # 3.0（命中率3倍＝回避1/3のため）
+        -5: 9830,    # 2.4
+        -4: 5461,    # 4/3
+        -3: 5461,    # 4/3
+        -2: 6144,    # 1.5
+        -1: 5461,    # 4/3
+        0:  4096,    # 1.0
+        1:  3686,    # 9/10
+        2:  3413,    # 5/6
+        3:  2730,    # 2/3
+        4:  2048,    # 1/2
+        5:  1638,    # 3/8
+        6:  1365,    # 1/3
+    }
+
+    modified_eva_rank = max(-6, min(6, eva_rank))
+    modifier = rank_modifiers.get(modified_eva_rank, 4096)
+    modified_value = value * modifier // 4096
+
+    return HandlerReturn(True, modified_value)

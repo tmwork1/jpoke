@@ -762,7 +762,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=40,
         accuracy=100,
-        priority=1
+        priority=2
     ),
     "ゴッドバード": MoveData(
         type="ひこう",
@@ -1013,7 +1013,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=80,
         accuracy=100,
-        priority=2,
+        priority=3,
         flags=["contact"],
     ),
     "スイープビンタ": MoveData(
@@ -6034,6 +6034,42 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         flags=["unprotectable", "ignore_substitute"]
+    ),
+    "あてみなげ": MoveData(
+        type="ノーマル",
+        category="物理",
+        pp=20,
+        power=50,
+        accuracy=100,
+        priority=-1,
+        flags=["contact"],
+    ),
+    "キングシールド": MoveData(
+        type="はがね",
+        category="変化",
+        pp=10,
+        power=0,
+        accuracy=0,
+        priority=4,
+        flags=["protect", "reflectable"],
+    ),
+    "オートガード": MoveData(
+        type="ノーマル",
+        category="変化",
+        pp=15,
+        power=0,
+        accuracy=0,
+        priority=4,
+        flags=["protect", "reflectable"],
+    ),
+    "トラップシェル": MoveData(
+        type="はがね",
+        category="特殊",
+        pp=5,
+        power=150,
+        accuracy=100,
+        priority=-5,
+        flags=["unprotectable"],
     ),
 }
 

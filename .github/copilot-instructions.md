@@ -7,7 +7,7 @@
 - ファイル作成編集削除は承認不要で直接実行
 
 ## エージェント識別子
-MGR=Manager, RSC=Research, PLN=Planner, ARC=Architect, COD=Coder, TST=Tester, RVW=Reviewer, DOM=Domain Expert
+MGR=Manager, RSC=Research, PLN=Planner, ARC=Architect, COD=Coder, TST=Tester, RVW=Reviewer
 発言時は先頭に識別子を付ける（例: `MGR: タスクを開始します`）
 
 ## 核心概念

@@ -115,6 +115,7 @@ class Pokemon:
         self.boosted_stat: Stat | None = None
         self.boost_source: BoostSource = ""
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
+        self.critical_rank: int = 0
         self.added_types: list[str] = []
         self.lost_types: list[str] = []
         self.executed_move: Move | None = None

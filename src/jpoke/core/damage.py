@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 from decimal import Decimal, ROUND_HALF_DOWN
+import random
 
 from jpoke.utils.type_defs import Stat
 from jpoke.utils.enums import DamageFlag
@@ -108,6 +109,27 @@ class DamageCalculator:
         fast_copy(self, new)
         return new
 
+    def _calc_critical(self, critical_rank: int) -> bool:
+        """急所判定を行う。
+
+        急所ランクに基づいて急所確率を計算します：
+        - ランク0: 1/24（約4.17%）
+        - ランク1: 1/8（12.5%）
+        - ランク2: 1/4（25%）
+        - ランク3以上: 1/2（50%、上限）
+
+        Args:
+            critical_rank: 急所ランク（0～3以上）
+
+        Returns:
+            bool: 急所に当たるかどうか
+        """
+        # 急所ランクを0～3の範囲に正規化
+        rank = max(0, min(3, critical_rank))
+        critical_rates = [1/24, 1/8, 1/4, 1/2]
+        critical_rate = critical_rates[rank]
+        return random.random() < critical_rate
+
     def single_hit_damages(self,
                            events: EventManager,
                            attacker: Pokemon,
@@ -133,6 +155,15 @@ class DamageCalculator:
 
         if not dmg_ctx:
             dmg_ctx = DamageContext()
+
+        # 急所判定（急所ランク計算）
+        critical_rank = attacker.critical_rank + (1 if "high_critical" in move.data.flags else 0)
+        critical_rank = events.emit(
+            Event.ON_CALC_CRITICAL,
+            EventContext(attacker=attacker, defender=defender, move=move),
+            critical_rank
+        )
+        dmg_ctx.critical = self._calc_critical(critical_rank)
 
         # 最終威力・攻撃・防御
         final_pow = self.calc_final_power(events, attacker, defender, move, dmg_ctx)
