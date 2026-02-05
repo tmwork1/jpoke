@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core.event import EventManager
 
-from jpoke.utils.type_defs import Nature, Type, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
+from jpoke.utils.type_defs import Nature, PokeType, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
 from jpoke.utils import fast_copy
 
@@ -52,7 +52,7 @@ class Pokemon:
                  ability: str | Ability = "",
                  item: str | Item = "",
                  moves: list[str | Move] = ["はねる"],
-                 terastal: Type = "ステラ") -> None:
+                 terastal: PokeType = "ステラ") -> None:
         """ポケモンを初期化する。
 
         Args:
@@ -69,7 +69,7 @@ class Pokemon:
         self.gender: Gender = gender
         self._nature: Nature = nature
         self._level: int = level
-        self._terastal: Type = terastal
+        self._terastal: PokeType = terastal
 
         # 内部変数の初期化
         self._ability: Ability = Ability()
@@ -566,7 +566,7 @@ class Pokemon:
         self._stats_manager.effort = effort
         self.update_stats()
 
-    def has_type(self, type_: Type) -> bool:
+    def has_type(self, type_: PokeType) -> bool:
         """指定されたタイプを持っているか判定する。
 
         Args:

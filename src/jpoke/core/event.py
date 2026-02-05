@@ -361,6 +361,10 @@ class EventManager:
             if rh.handler.once:
                 self.off(event, rh.handler, rh._subject)
 
+            # 行動可否イベントは失敗時に即時停止
+            if event == Event.ON_TRY_ACTION and not result.success:
+                return False
+
             # イベント停止フラグの処理
             if result.stop_event:
                 return value

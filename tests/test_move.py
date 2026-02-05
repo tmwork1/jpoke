@@ -32,6 +32,45 @@ def test_thunderbolt_paralysis():
     assert battle.actives[1].ailment == "まひ", "でんじほう: まひ適用失敗"
 
 
+def test_flinch_prevents_action():
+    """いわなだれ: ひるみで後攻が行動不能"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["いわなだれ"])],
+        foe=[Pokemon("フシギダネ", moves=["たいあたり"])],
+        turn=0
+    )
+    battle.test_option.ailment_trigger_rate = 1.0
+    t.run_turn(battle)
+
+    assert battle.actives[0].hp == battle.actives[0].max_hp, "いわなだれ: ひるみで被弾してしまった"
+
+
+def test_flinch_no_effect_when_target_moved_first():
+    """先攻側が先に行動した場合はひるみしない"""
+    battle = t.start_battle(
+        ally=[Pokemon("フシギダネ", moves=["いわなだれ"])],
+        foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        turn=0
+    )
+    battle.test_option.ailment_trigger_rate = 1.0
+    t.run_turn(battle)
+
+    assert battle.actives[0].hp < battle.actives[0].max_hp, "先行後ひるみ: 行動が止まってしまった"
+
+
+def test_flinch_blocked_by_inner_focus():
+    """せいしんりょく: ひるみ無効"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["いわなだれ"])],
+        foe=[Pokemon("フシギダネ", ability="せいしんりょく", moves=["たいあたり"])],
+        turn=0
+    )
+    battle.test_option.ailment_trigger_rate = 1.0
+    t.run_turn(battle)
+
+    assert battle.actives[0].hp < battle.actives[0].max_hp, "せいしんりょく: ひるみ無効化に失敗"
+
+
 def test_volt_switch_switch():
     """とんぼがえり: 交代"""
     battle = t.start_battle(

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils.enums import Interrupt, Event
 from jpoke.core.event import EventContext, HandlerReturn, Handler
-from jpoke.utils.type_defs import LogPolicy, RoleSpec, Type
+from jpoke.utils.type_defs import LogPolicy, RoleSpec, PokeType
 from . import common
 
 
@@ -30,7 +30,7 @@ class ItemHandler(Handler):
 def modify_power_by_type(battle: Battle,
                          ctx: EventContext,
                          value: Any,
-                         type_: Type,
+                         type_: PokeType,
                          modifier: float) -> HandlerReturn:
     # ON_CALC_POWER_MODIFIER
     if ctx.move and ctx.move.type == type_:
@@ -41,7 +41,7 @@ def modify_power_by_type(battle: Battle,
 def modify_super_effective_damage(battle: Battle,
                                   ctx: EventContext,
                                   value: Any,
-                                  type_: Type,
+                                  type_: PokeType,
                                   modifier: float) -> HandlerReturn:
     # ON_CALC_DAMAGE_MODIFIER
     if ctx.move and ctx.move.type == type_ and \

@@ -2,7 +2,7 @@ from typing import Literal
 from dataclasses import dataclass, field
 
 from jpoke.utils.constants import STATS
-from jpoke.utils.type_defs import MoveCategory, Type
+from jpoke.utils.type_defs import MoveCategory, PokeType
 from jpoke.core.event import Event, Handler
 
 
@@ -13,7 +13,7 @@ class PokemonData:
         self.form_id: int = data["form-id"]
         self.label: str = data["alias"]
         self.weight: float = data["weight"]
-        self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
+        self.types: list[PokeType] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
         self.base: list[int] = [data[s] for s in STATS[:6]]
 
@@ -29,15 +29,15 @@ class AbilityData:
 class ItemData:
     fling_power: int = 0
     consumable: bool = False
-    power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
-    damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
+    power_modifier_by_type: dict[PokeType, float] = field(default_factory=dict)
+    damage_modifier_by_type: dict[PokeType, float] = field(default_factory=dict)
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
 
 
 @dataclass
 class MoveData:
-    type: Type
+    type: PokeType
     category: MoveCategory
     pp: int
     power: int | None = None

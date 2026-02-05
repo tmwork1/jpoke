@@ -26,3 +26,4 @@
 | ねむけ | ターン経過でカウント減少、ねむり移行 | ON_TURN_END | ねむけ_turn_end | ✅ | ✅ | ❌ | test_volatile.py |
 | ねをはる | 交代制限 | ON_CHECK_TRAPPED | ねをはる_check_trapped | ✅ | ✅ | ❌ | test_volatile.py |
 | ほろびのうた | ターン経過で気絶 | ON_TURN_END | ほろびのうた_turn_end | ✅ | ✅ | ❌ | test_volatile.py |
+| ひるみ | 行動不能、ターン終了で解除 | ON_TRY_ACTION/ON_TURN_END | ひるみ_action/ひるみ_turn_end | ✅ | ✅ | ❌ | test_move.py |

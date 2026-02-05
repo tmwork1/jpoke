@@ -103,6 +103,22 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ひるみ": VolatileData(
+        handlers={
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.ひるみ_action,
+                subject_spec="target:self",
+                log="never",
+                priority=40
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.ひるみ_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=10
+            ),
+        }
+    ),
     "しおづけ": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(

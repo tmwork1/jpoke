@@ -157,7 +157,7 @@ class DamageCalculator:
             dmg_ctx = DamageContext()
 
         # 急所判定（急所ランク計算）
-        critical_rank = attacker.critical_rank + (1 if "high_critical" in move.data.flags else 0)
+        critical_rank = attacker.critical_rank + move.critical_rank_bonus()
         critical_rank = events.emit(
             Event.ON_CALC_CRITICAL,
             EventContext(attacker=attacker, defender=defender, move=move),

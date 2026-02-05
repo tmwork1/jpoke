@@ -18,6 +18,41 @@ class VolatileHandler(Handler):
         super().__init__(func, subject_spec, "volatile", log, None, priority)
 
 
+def ひるみ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ひるみ状態による行動不能判定
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: 行動不能の場合はFalse
+    """
+    if not ctx.target or not ctx.target.check_volatile("ひるみ"):
+        return HandlerReturn(True)
+
+    ctx.target.remove_volatile(battle.events, "ひるみ")
+    battle.add_event_log(ctx.target, "はひるんで動けない！")
+    return HandlerReturn(False, stop_event=True)
+
+
+def ひるみ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ひるみのターン終了時解除
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: 常にTrue
+    """
+    if ctx.source and ctx.source.check_volatile("ひるみ"):
+        ctx.source.remove_volatile(battle.events, "ひるみ")
+    return HandlerReturn(True)
+
+
 def こんらん_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 

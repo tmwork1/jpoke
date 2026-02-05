@@ -100,6 +100,37 @@ def blow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return HandlerReturn(success)
 
 
+def apply_flinch(battle: Battle, ctx: EventContext, value: Any, prob: float = 0.3) -> HandlerReturn:
+    """ひるみを付与する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント値（未使用）
+        prob: ひるみ発動確率
+
+    Returns:
+        HandlerReturn: ひるみ付与に成功したらTrue
+    """
+    if prob < 1:
+        if battle.test_option.ailment_trigger_rate is not None:
+            triggered = battle.test_option.ailment_trigger_rate >= prob
+        else:
+            triggered = battle.random.random() < prob
+        if not triggered:
+            return HandlerReturn(False)
+
+    target = ctx.defender
+    if not target or target.hp <= 0:
+        return HandlerReturn(False)
+
+    if target.ability.orig_name == "せいしんりょく":
+        return HandlerReturn(False)
+
+    success = target.apply_volatile(battle.events, "ひるみ", source=ctx.attacker)
+    return HandlerReturn(success)
+
+
 # ===== 命中率補正ハンドラ =====
 
 def acc_rank_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -190,3 +221,68 @@ def eva_rank_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerR
     modified_value = value * modifier // 4096
 
     return HandlerReturn(True, modified_value)
+
+
+# ===== 技個別の命中率補正ハンドラ =====
+
+def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かみなりの天候による命中率補正。
+
+    雨: 必中
+    晴れ: 50%
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: 補正があればTrue、なければFalse
+    """
+    weather = battle.weather_mgr.current.name
+    if weather == "あめ":
+        return HandlerReturn(True, None)  # 必中
+    elif weather == "はれ":
+        return HandlerReturn(True, 50)
+    return HandlerReturn(False, value)
+
+
+def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぼうふうの天候による命中率補正。
+
+    雨: 必中
+    晴れ: 50%
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: 補正があればTrue、なければFalse
+    """
+    weather = battle.weather_mgr.current.name
+    if weather == "あめ":
+        return HandlerReturn(True, None)  # 必中
+    elif weather == "はれ":
+        return HandlerReturn(True, 50)
+    return HandlerReturn(False, value)
+
+
+def ふぶき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふぶきの天候による命中率補正。
+
+    雪: 必中
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: 補正があればTrue、なければFalse
+    """
+    weather = battle.weather_mgr.current.name
+    if weather == "ゆき":
+        return HandlerReturn(True, None)  # 必中
+    return HandlerReturn(False, value)

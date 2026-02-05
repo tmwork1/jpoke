@@ -1,8 +1,8 @@
 
-from jpoke.utils.type_defs import MoveCategory
+from jpoke.utils.type_defs import PokeType, MoveCategory
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
-
+from jpoke.data.models import MoveData
 from .effect import GameEffect
 
 
@@ -27,7 +27,8 @@ class Move(GameEffect):
         super().__init__(MOVES[name])
         self._initial_pp: int = pp if pp else self.data.pp
         self.pp: int = self._initial_pp
-        self._type: str = self.data.type
+        self._type: PokeType = self.data.type
+        self.data: MoveData  # type hint
 
     def init_game(self):
         """ゲーム初期化処理。
@@ -87,3 +88,31 @@ class Move(GameEffect):
             技の分類（物理、特殊、変化）
         """
         return self.data.category
+
+    @property
+    def priority(self) -> int:
+        """技の優先度を取得する。
+
+        Returns:
+            技の優先度
+        """
+        return self.data.priority
+
+    @property
+    def accuracy(self) -> int | None:
+        """技の命中率を取得する。
+
+        Returns:
+            技の命中率（Noneの場合は必中）
+        """
+        return self.data.accuracy
+
+    def critical_rank_bonus(self) -> int:
+        """急所ランク補正値を取得する。
+
+        この技が高い急所率を持つ場合、急所ランクに+1補正を適用する。
+
+        Returns:
+            int: 急所ランク補正値（0 または 1）
+        """
+        return 1 if "high_critical" in self.data.flags else 0

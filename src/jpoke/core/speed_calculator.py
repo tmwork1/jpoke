@@ -81,6 +81,7 @@ class SpeedCalculator:
 
         優先度と実効素早さを考慮して行動順を決定。
         既に交代したポケモンは除外される。
+        同優先度・同速度の場合はランダムに決定。
 
         Returns:
             行動順にソートされたポケモンのリスト
@@ -92,6 +93,10 @@ class SpeedCalculator:
 
             mon = player.active
             speed = self.calc_effective_speed(mon)
+
+            # reserved_commandsが空の場合はスキップ（通常は発生しないが防御的に）
+            if not player.reserved_commands:
+                continue
 
             command = player.reserved_commands[-1]
             move = self.battle.command_to_move(self.battle.players[i], command)
@@ -106,19 +111,45 @@ class SpeedCalculator:
                 base_priority
             )
 
-            # 優先度を行動速度に変換（優先度が高いほど値が大きくなるように）
-            # 優先度 +5で約5000、-7で約-7000のような値を設定
-            action_speed = priority * 1000 + speed * 1e-5
-            speeds.append(action_speed)
+            # 優先度と素早さをペアで保持（同値時のランダルを可能にするため）
+            # タプル (優先度, 素早さ) の形式で保持し、Python のタプル比較を利用
+            action_key = (priority, speed)
+            speeds.append(action_key)
             actives.append(mon)
 
-        # Sort by speed
+        # Sort by action_key（優先度優先、同一優先度時は素早さで判断）
         if len(actives) > 1:
             paired = sorted(
                 zip(speeds, actives),
                 key=lambda pair: pair[0],
                 reverse=True
             )
-            _, actives = zip(*paired)
+
+            # 同優先度・同速度のグループごとにシャッフルする
+            result_actives = []
+            i = 0
+            while i < len(paired):
+                current_key = paired[i][0]
+                group = [paired[i][1]]
+
+                # 同じキーのモンを集める
+                j = i + 1
+                while j < len(paired) and paired[j][0] == current_key:
+                    group.append(paired[j][1])
+                    j += 1
+
+                # グループ内をシャッフル
+                self.battle.random.shuffle(group)
+                result_actives.extend(group)
+
+                i = j
+
+            actives = result_actives
+        elif len(actives) == 1:
+            # 1匹の場合はそのままソート処理をスキップ
+            pass
+        else:
+            # 0匹の場合は空リストを返す
+            pass
 
         return actives

@@ -143,6 +143,18 @@ def tick_fields(battle: Battle, ticks: int = 1):
                     side.tick(field.data.name)
 
 
+def prepare_action_order(battle: Battle):
+    """行動順計算のため、各プレイヤーのコマンドを予約する。
+
+    Args:
+        battle: Battleインスタンス
+    """
+    for player in battle.players:
+        if not player.reserved_commands:
+            command = player.choose_action_command(battle)
+            player.reserve_command(command)
+
+
 def run_turn(battle: Battle, commands: dict[Player, Command] | None = None):
     """テスト用にターンを1つ進める。
 

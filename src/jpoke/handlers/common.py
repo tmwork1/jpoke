@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon, Move
 
-from jpoke.utils.type_defs import RoleSpec, Type, Stat, AilmentName, Weather, Terrain, Side
+from jpoke.utils.type_defs import RoleSpec, PokeType, Stat, AilmentName, Weather, Terrain, Side
 from jpoke.utils.enums import Event
 from jpoke.core.event import EventContext, HandlerReturn
 

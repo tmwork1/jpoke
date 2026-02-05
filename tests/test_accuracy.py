@@ -102,6 +102,9 @@ def test_thunder_in_sunny_day():
     ally = battle.actives[0]
     move = ally.moves[0]
 
+    # 技のハンドラを登録（実際のバトルフローでは run_move 内で登録される）
+    move.register_handlers(battle.events, ally)
+
     # 複数回試行で確率を検証
     hit_count = 0
     for _ in range(100):
@@ -109,6 +112,9 @@ def test_thunder_in_sunny_day():
         hit = battle.move_executor.check_hit(ally, move)
         if hit:
             hit_count += 1
+
+    # ハンドラを解除
+    move.unregister_handlers(battle.events, ally)
 
     # 50%付近の確率
     assert 35 <= hit_count <= 65, f"50%命中率なので35～65回が期待値。実績: {hit_count}回"
@@ -125,7 +131,15 @@ def test_thunder_in_rain():
 
     ally = battle.actives[0]
     move = ally.moves[0]
+
+    # 技のハンドラを登録
+    move.register_handlers(battle.events, ally)
+
     hit = battle.move_executor.check_hit(ally, move)
+
+    # ハンドラを解除
+    move.unregister_handlers(battle.events, ally)
+
     assert hit is True, "雨時のかみなりは必中"
 
 
@@ -140,7 +154,15 @@ def test_blizzard_in_snow():
 
     ally = battle.actives[0]
     move = ally.moves[0]
+
+    # 技のハンドラを登録
+    move.register_handlers(battle.events, ally)
+
     hit = battle.move_executor.check_hit(ally, move)
+
+    # ハンドラを解除
+    move.unregister_handlers(battle.events, ally)
+
     assert hit is True, "雪時のふぶきは必中"
 
 

@@ -69,13 +69,16 @@ class MoveExecutor:
         if self.battle.test_option.accuracy is not None:
             accuracy = self.battle.test_option.accuracy
         else:
-            if not move.data.accuracy:
+            if move.accuracy is None:
                 return True
             accuracy = self.battle.events.emit(
                 Event.ON_CALC_ACCURACY,
-                EventContext(attacker=attacker, move=move),
-                move.data.accuracy
+                EventContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
+                move.accuracy
             )
+            # 必中処理：イベントハンドラがNoneを返した場合は必中
+            if accuracy is None:
+                return True
         return 100 * self.battle.random.random() < accuracy
 
     def run_move(self, attacker: Pokemon, move: Move):
@@ -97,8 +100,11 @@ class MoveExecutor:
         # 技のハンドラを登録
         move.register_handlers(self.battle.events, attacker)
 
-        # 行動成功判定
-        self.battle.events.emit(Event.ON_TRY_ACTION, ctx)
+        # 行動成功判定（行動者自身を対象にする）
+        ctx_action = EventContext(source=attacker, target=attacker, move=move)
+        can_act = self.battle.events.emit(Event.ON_TRY_ACTION, ctx_action, True)
+        if not can_act:
+            return
 
         # 技の宣言、PP消費
         self.battle.events.emit(Event.ON_CONSUME_PP, ctx)

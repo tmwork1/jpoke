@@ -20,11 +20,6 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="attacker:self",
                 log="never",
             ),
-            Event.ON_CALC_ACCURACY: Handler(
-                h.はれ_accuracy,
-                subject_spec="attacker:self",
-                log="never",
-            ),
         },
     ),
     "あめ": FieldData(
@@ -32,11 +27,6 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_CALC_POWER_MODIFIER: Handler(
                 h.あめ_power_modifier,
-                subject_spec="attacker:self",
-                log="never",
-            ),
-            Event.ON_CALC_ACCURACY: Handler(
-                h.あめ_accuracy,
                 subject_spec="attacker:self",
                 log="never",
             ),
@@ -63,11 +53,6 @@ FIELDS: dict[str, FieldData] = {
             Event.ON_CALC_DEF_MODIFIER: Handler(
                 h.ゆき_def_boost,
                 subject_spec="defender:self",
-                log="never",
-            ),
-            Event.ON_CALC_ACCURACY: Handler(
-                h.ゆき_accuracy,
-                subject_spec="attacker:self",
                 log="never",
             ),
         },

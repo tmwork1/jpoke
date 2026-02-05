@@ -94,3 +94,8 @@ logger.debug(f"結果: {result}")
 - Move: src/jpoke/data/move.py
 - Handler: src/jpoke/handlers/move.py
 - ダメージ計算: src/jpoke/core/damage.py
+
+## 知見
+
+- `ON_TRY_ACTION` は行動可否のゲートなので、失敗時は即座に行動を中断する設計が必要。
+- `MoveData.handlers` は単一ハンドラだけでなくリストも登録可能（複数効果の併用に有効）。
