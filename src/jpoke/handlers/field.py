@@ -18,14 +18,6 @@ def はれ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(False, value)
 
 
-def はれ_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """晴れ状態での命中率補正（かみなり・ぼうふうが50%に）"""
-    move_name = ctx.move.name
-    if move_name in ["かみなり", "ぼうふう"]:
-        return HandlerReturn(True, 50)
-    return HandlerReturn(False, value)
-
-
 def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """雨状態での技威力補正"""
     move_type = ctx.move.type
@@ -33,14 +25,6 @@ def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> Hand
         return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     elif move_type == "ほのお":
         return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
-    return HandlerReturn(False, value)
-
-
-def あめ_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """雨状態での命中率補正（かみなり・ぼうふうが必中）"""
-    move_name = ctx.move.name
-    if move_name in ["かみなり", "ぼうふう"]:
-        return HandlerReturn(True, 100)
     return HandlerReturn(False, value)
 
 
@@ -64,13 +48,6 @@ def ゆき_def_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
     """雪時のこおりタイプ防御1.5倍"""
     if ctx.target.has_type("こおり"):
         return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
-    return HandlerReturn(False, value)
-
-
-def ゆき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """雪時のふぶき必中"""
-    if ctx.move.name == "ふぶき":
-        return HandlerReturn(True, 100)
     return HandlerReturn(False, value)
 
 
