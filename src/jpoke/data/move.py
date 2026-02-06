@@ -541,7 +541,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=60,
         accuracy=95,
-
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -786,7 +785,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=90,
-
         flags=["contact", "punch"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -850,7 +848,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=95,
-
         flags=["contact", "slash"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -926,7 +923,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
-
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -1114,7 +1110,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=75,
         accuracy=100,
-
         flags=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -1478,7 +1473,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-
         flags=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
