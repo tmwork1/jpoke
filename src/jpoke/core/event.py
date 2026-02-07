@@ -33,6 +33,7 @@ class EventContext:
         target: イベントの対象となるポケモン（defender のエイリアス）
         move: 使用された技
         field: 場の状態
+        damage: 与えたダメージ値（ON_HIT 等で使用）
     """
 
     def __init__(self,
@@ -41,7 +42,8 @@ class EventContext:
                  attacker: Pokemon | None = None,
                  defender: Pokemon | None = None,
                  move: Move | None = None,
-                 field: Field | None = None):
+                 field: Field | None = None,
+                 damage: int = 0):
         """EventContext を初期化する。
 
         Args:
@@ -51,6 +53,7 @@ class EventContext:
             defender: 防御側のポケモン（target のエイリアス）
             move: 使用された技
             field: 場の状態
+            damage: 与えたダメージ値（デフォルト0）
 
         Note:
             attacker が指定された場合は source に、
@@ -61,6 +64,7 @@ class EventContext:
         self.target = defender if defender is not None else target
         self.move = move
         self.field = field
+        self.damage = damage
 
     @property
     def attacker(self) -> Pokemon | None:

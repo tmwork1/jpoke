@@ -1,4 +1,8 @@
-"""イベント関連のEnum定義"""
+"""
+イベントのEnum定義
+イベントの処理順の詳細は docs/spec/turn_flow.md を参照
+"""
+
 from enum import Enum, auto
 
 
@@ -15,13 +19,19 @@ class Event(Enum):
     ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py,data/field.py
     ON_SWITCH_OUT = auto()  # emit: core/switch_manager.py
     ON_BEFORE_MOVE = auto()  # emit: core/turn_controller.py; handlers: data/volatile.py
-    ON_TRY_ACTION = auto()  # emit: core/move_executor.py
-    ON_CONSUME_PP = auto()  # emit: core/move_executor.py; handlers: data/move.py
-    ON_TRY_MOVE = auto()  # emit: core/move_executor.py
-    ON_TRY_IMMUNE = auto()  # emit: core/move_executor.py
-    ON_HIT = auto()  # emit: core/move_executor.py; handlers: data/move.py,data/item.py
-    ON_PAY_HP = auto()  # emit: core/move_executor.py
-    ON_MODIFY_DAMAGE = auto()  # emit: core/move_executor.py
+    ON_TRY_ACTION = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_ACTION
+    ON_CONSUME_PP = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_CONSUME_PP
+    ON_TRY_MOVE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_MOVE
+    ON_TRY_IMMUNE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_IMMUNE
+    ON_CHECK_SUBSTITUTE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_IMMUNE Priority 30
+    ON_CHECK_PROTECT = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_MOVE Priority 100
+    ON_CHECK_INVULNERABLE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_MOVE Priority 100
+    ON_CHECK_REFLECT = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_MOVE Priority 100
+    ON_HIT = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_HIT
+    ON_PAY_HP = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_PAY_HP
+    ON_MODIFY_DAMAGE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_MODIFY_DAMAGE
+    ON_BEFORE_DAMAGE_APPLY = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_BEFORE_DAMAGE_APPLY
+    ON_FAINT = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_FAINT
     ON_MOVE_SECONDARY = auto()  # 未使用
     ON_DAMAGE_1 = auto()  # emit: core/move_executor.py; handlers: data/item.py
     ON_DAMAGE_2 = auto()  # emit: core/move_executor.py
@@ -40,6 +50,7 @@ class Event(Enum):
 
     # 状態異常・能力変化前イベント
     ON_BEFORE_APPLY_AILMENT = auto()  # emit: model/pokemon.py apply_ailment; handlers: data/ability.py,data/field.py
+    ON_BEFORE_APPLY_VOLATILE = auto()  # emit: model/pokemon.py apply_volatile; handlers: data/field.py
     ON_BEFORE_MODIFY_STAT = auto()  # 未使用
 
     # チェック系イベント

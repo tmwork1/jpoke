@@ -285,6 +285,7 @@ class SideFieldManager(StackableFieldManager[SideField]):
                 "どくびし": Field("どくびし", [player]),
                 "ステルスロック": Field("ステルスロック", [player]),
                 "ねばねばネット": Field("ねばねばネット", [player]),
+                "オーロラベール": Field("オーロラベール", [player]),
             }
         )
 

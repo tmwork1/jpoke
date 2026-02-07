@@ -170,6 +170,10 @@ class TurnController:
 
             if not self.battle.has_interrupt():
                 # 技の発動
+                if not player.reserved_commands:
+                    command = player.choose_action_command(self.battle)
+                    player.reserve_command(command)
+                    self.battle.add_command_log(player, command)
                 command = player.reserved_commands.pop(0)
                 move = self.battle.command_to_move(player, command)
 

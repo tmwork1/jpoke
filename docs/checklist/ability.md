@@ -16,8 +16,8 @@
 | めんえき | どく・もうどく状態を防ぐ | ON_BEFORE_APPLY_AILMENT | めんえき | ✅ | ✅ | ❌ | test_ability.py |
 | ふみん | ねむり状態を防ぐ | ON_BEFORE_APPLY_AILMENT | ふみん | ✅ | ✅ | ❌ | test_ability.py |
 | やるき | ねむり状態を防ぐ | ON_BEFORE_APPLY_AILMENT | やるき | ✅ | ✅ | ❌ | test_ability.py |
-| マイペース | こんらん状態を防ぐ（揮発状態） | ON_BEFORE_APPLY_AILMENT | マイペース | ⚠️ | ❌ | ❌ |  |
+| マイペース | こんらん状態を防ぐ（揮発状態） | ON_BEFORE_APPLY_AILMENT | マイペース | ❌ | ❌ | ❌ | 揮発無効は未実装 |
 | じゅうなん | まひ状態を防ぐ | ON_BEFORE_APPLY_AILMENT | じゅうなん | ✅ | ✅ | ❌ | test_ability.py |
 | みずのベール | やけど状態を防ぐ | ON_BEFORE_APPLY_AILMENT | みずのベール | ✅ | ✅ | ❌ | test_ability.py |
 | マグマのよろい | こおり状態を防ぐ | ON_BEFORE_APPLY_AILMENT | マグマのよろい | ✅ | ✅ | ❌ | test_ability.py |
-| どんかん | メロメロ・ちょうはつを防ぐ（揮発状態） | ON_BEFORE_APPLY_AILMENT | どんかん | ⚠️ | ❌ | ❌ |  |
+| どんかん | メロメロ・ちょうはつを防ぐ | ON_BEFORE_APPLY_AILMENT | どんかん | ❌ | ❌ | ❌ | 揮発無効は未実装 |

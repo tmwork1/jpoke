@@ -131,6 +131,24 @@ def test_グラスフィールド_くさ技強化():
     assert_power_modifier(battle, TERRAIN_BOOST, "グラスフィールドでくさ技が強化されない")
 
 
+def test_グラスフィールド_じしん弱化():
+    """グラスフィールド: じしん威力0.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("サンドパン", moves=["じしん"])],
+        terrain=("グラスフィールド", DEFAULT_DURATION),
+    )
+    assert_power_modifier(battle, POWER_NERF, "グラスフィールドでじしんが弱化されない")
+
+
+def test_グラスフィールド_じならし弱化():
+    """グラスフィールド: じならし威力0.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("サンドパン", moves=["じならし"])],
+        terrain=("グラスフィールド", DEFAULT_DURATION),
+    )
+    assert_power_modifier(battle, POWER_NERF, "グラスフィールドでじならしが弱化されない")
+
+
 def test_エレキフィールド_でんき技強化():
     """エレキフィールド: でんき技威力1.3倍"""
     battle = t.start_battle(
@@ -156,6 +174,28 @@ def test_ミストフィールド_ドラゴン技弱化():
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
     assert_power_modifier(battle, POWER_NERF, "ミストフィールドでドラゴン技が弱化されない")
+
+
+def test_ミストフィールド_混乱防止():
+    """ミストフィールド: 混乱無効化"""
+    # まずフィールドなしで混乱付与が成功することを確認
+    battle_no_field = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+    )
+    target = battle_no_field.actives[0]
+    result = target.apply_volatile(battle_no_field.events, "こんらん", count=3)
+    assert result, "フィールドなしでも混乱が付与されない"
+    assert "こんらん" in target.volatiles, "混乱状態が追加されていない"
+
+    # ミストフィールド下では混乱付与が失敗する
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        terrain=("ミストフィールド", DEFAULT_DURATION),
+    )
+    target2 = battle.actives[0]
+    result = target2.apply_volatile(battle.events, "こんらん", count=3)
+    assert not result, "ミストフィールド下で混乱が付与された"
+    assert "こんらん" not in target2.volatiles, "混乱状態が追加されている"
 
 
 def test_リフレクター_ダメージ軽減():
@@ -289,6 +329,61 @@ def test_おいかぜ():
         ally_side_field={"おいかぜ": 1},
     )
     assert battle.side_mgrs[0].fields["おいかぜ"].is_active, "おいかぜが有効化されていない"
+
+
+def test_しろいきり_能力低下防止():
+    """しろいきり: 能力ランク低下を防ぐ"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        foe=[Pokemon("ライチュウ")],
+        ally_side_field={"しろいきり": 1},
+    )
+    target = battle.actives[0]
+    before_rank = target.rank["A"]
+    success = battle.modify_stat(target, "A", -1, source=battle.actives[1])
+    after_rank = target.rank["A"]
+
+    assert not success, "しろいきり有効時に能力低下が成功した"
+    assert before_rank == after_rank, "しろいきりで能力低下が防げていない"
+
+
+def test_ねがいごと_回復と解除():
+    """ねがいごと: ターン終了時回復と解除"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        ally_side_field={"ねがいごと": 1},
+    )
+    target = battle.actives[0]
+    max_hp = target.max_hp
+
+    # HPを減らして回復確認
+    battle.modify_hp(target, v=-20)
+    before_hp = target.hp
+
+    # ターンを進行して回復を発動
+    t.run_turn(battle)
+
+    expected_heal = max_hp // 2
+    expected_hp = min(max_hp, before_hp + expected_heal)
+    assert target.hp == expected_hp, "ねがいごとの回復量が不正"
+    assert not battle.side_mgrs[0].fields["ねがいごと"].is_active, "ねがいごとが解除されていない"
+
+
+def test_オーロラベール_ダメージ軽減():
+    """オーロラベール: ダメージ0.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        ally_side_field={"オーロラベール": 1},
+    )
+    ctx = EventContext(
+        attacker=battle.actives[1],
+        defender=battle.actives[0],
+        move=battle.actives[1].moves[0]
+    )
+    modifier = battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, BASE_MODIFIER)
+    expected = int(BASE_MODIFIER * DAMAGE_WALL_MODIFIER)
+    assert abs(modifier - expected) < 0.01, f"オーロラベールの補正値が不正: expected {expected}, got {modifier}"
 
 
 def test_トリックルーム():

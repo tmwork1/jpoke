@@ -185,7 +185,7 @@
 
 ### イベントの種類
 
-コードでは以下のイベントを使用して補正を管理しています（[イベント.py](../src/jpoke/utils/enums/イベント.py) 参照）：
+コードでは以下のイベントを使用して補正を管理しています（[event.py](../src/jpoke/utils/enums/event.py) 参照）：
 
 | イベント名 | 用途 | 適用タイミング | 基準値 |
 |-----------|------|--------------|-------|
@@ -207,7 +207,7 @@
 ```python
 def エレキフィールド_power_modifier(battle: Battle, ctx: イベントContext, value: Any) -> HandlerReturn:
     """エレキフィールドでの電気技威力1.3倍"""
-    if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle.イベントs):
+    if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle.events):
         return HandlerReturn(True, value * 1.3)
     return HandlerReturn(False, value)
 ```
@@ -342,8 +342,8 @@ def calc_wall_modifier(battle: Battle, ctx: イベントContext, damage: int) ->
 final_pow = move.data.power * dmg_ctx.power_multiplier
 
 # イベントから補正値を取得（4096基準）
-r_pow = イベントs.emit(
-    イベント.ON_CALC_POWER_MODIFIER,
+r_pow = events.emit(
+    Event.ON_CALC_POWER_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096  # 初期値（等倍）
 )
@@ -361,8 +361,8 @@ r_rank = rank_modifier(attacker.rank[stat])
 final_atk = int(final_atk * r_rank)
 
 # イベントから補正値を取得（4096基準）
-r_atk = イベントs.emit(
-    イベント.ON_CALC_ATK_MODIFIER,
+r_atk = events.emit(
+    Event.ON_CALC_ATK_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096  # 初期値（等倍）
 )
@@ -502,36 +502,36 @@ for i in range(16):  # 乱数16通り
 
 ```python
 # タイプ相性補正（攻撃側）
-r_atk_type = イベントs.emit(
-    イベント.ON_CALC_ATK_TYPE_MODIFIER,
+r_atk_type = events.emit(
+    Event.ON_CALC_ATK_TYPE_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096  # 初期値（等倍）
 )
 
 # タイプ相性補正（防御側）
-r_def_type = イベントs.emit(
-    イベント.ON_CALC_DEF_TYPE_MODIFIER,
+r_def_type = events.emit(
+    Event.ON_CALC_DEF_TYPE_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 
 # やけど補正
-r_burn = イベントs.emit(
-    イベント.ON_CALC_BURN_MODIFIER,
+r_burn = events.emit(
+    Event.ON_CALC_BURN_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 
 # ダメージ補正
-r_dmg = イベントs.emit(
-    イベント.ON_CALC_DAMAGE_MODIFIER,
+r_dmg = events.emit(
+    Event.ON_CALC_DAMAGE_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
 
 # まもる貫通系補正
-r_protect = イベントs.emit(
-    イベント.ON_CALC_PROTECT_MODIFIER,
+r_protect = events.emit(
+    Event.ON_CALC_PROTECT_MODIFIER,
     イベントContext(attacker=attacker, defender=defender, move=move),
     4096
 )
@@ -541,5 +541,5 @@ r_protect = イベントs.emit(
 
 - [ポケモンwiki - ダメージ計算式](https://latest.pokewiki.net/%E3%83%80%E3%83%A1%E3%83%BC%E3%82%B8%E8%A8%88%E7%AE%97%E5%BC%8F)
 - 実装コード: [damage.py](../src/jpoke/core/damage.py)
-- イベント定義: [イベント.py](../src/jpoke/utils/enums/イベント.py)
+- イベント定義: [event.py](../src/jpoke/utils/enums/event.py)
 - 最終更新: 2026年2月1日

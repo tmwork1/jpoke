@@ -40,6 +40,7 @@ class Volatile(GameEffect):
         self.count: int = count
         self.disabled_move_name: str = ""  # かなしばり用
         self.locked_move_name: str = ""  # アンコール用
+        self.last_move_name: str = ""  # いちゃもん用
         self.source_pokemon: Pokemon | None = None  # バインド等の使用者
 
     def __deepcopy__(self, memo):

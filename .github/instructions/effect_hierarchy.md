@@ -25,14 +25,14 @@
 # data/field.py - 天候「はれ」
 "はれ": FieldData(
     handlers={
-        イベント.ON_CALC_POWER_MODIFIER: Handler(はれ_power_modifier, ...)
+        Event.ON_CALC_POWER_MODIFIER: Handler(はれ_power_modifier, ...)
     }
 )
 
 # data/ability.py - 特性「ひでり」
 "ひでり": AbilityData(
     handlers={
-        イベント.ON_SWITCH_IN: AbilityHandler(
+        Event.ON_SWITCH_IN: AbilityHandler(
             partial(common.activate_weather, weather="はれ", ...),
             ...
         )
@@ -64,7 +64,7 @@
 # 技「にほんばれ」
 "にほんばれ": MoveData(
     handlers={
-        イベント.ON_HIT: MoveHandler(
+        Event.ON_HIT: MoveHandler(
             partial(common.activate_weather, weather="はれ", source_spec="attacker:self"),
             subject_spec="attacker:self",
         )
@@ -88,7 +88,7 @@
 # data/field.py - 天候「はれ」
 "はれ": FieldData(
     handlers={
-        イベント.ON_CALC_POWER_MODIFIER: Handler(
+        Event.ON_CALC_POWER_MODIFIER: Handler(
             はれ_power_modifier,  # ほのお技1.5倍、みず技0.5倍
             subject_spec="attacker:self",
             log="never",
@@ -113,7 +113,7 @@
 # data/ability.py - 特性「てきおうりょく」
 "てきおうりょく": AbilityData(
     handlers={
-        イベント.ON_CALC_POWER_MODIFIER: AbilityHandler(
+        Event.ON_CALC_POWER_MODIFIER: AbilityHandler(
             てきおうりょく_power,
             subject_spec="attacker:self",
             log="never",

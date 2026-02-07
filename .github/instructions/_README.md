@@ -28,7 +28,7 @@
 - **ポケモンの仕様は第9世代（スカーレット・バイオレット）を参照する**
 - **第9世代で実装されていない技・アイテム・特性・ポケモンなどは、実装を見送る**
 - **すべてのプロジェクトは Manager から開始する**
-- **作業開始前に既存リソースを必ず確認する**（既存コード、テスト、README、docs/research、.github/instructions）
+- **作業開始前に既存リソースを必ず確認する**（既存コード、テスト、README、docs/spec、.github/instructions）
 
 ---
 
@@ -38,7 +38,7 @@
 1. [`project_context.md`](project_context.md) - プロジェクト背景とアーキテクチャ概要（15分）
 2. [`architecture.md`](architecture.md) - 詳細なシステム設計（30分）
 3. [`effect_hierarchy.md`](effect_hierarchy.md) - 作用のヒエラルキーと実装原則（15分）
-4. **既存実装・テスト・ドキュメントの確認**（該当領域のコード、tests、README、docs/research）
+4. **既存実装・テスト・ドキュメントの確認**（該当領域のコード、tests、README、docs/spec）
 
 ### 新機能実装時
 1. [`agents/workflow.md`](agents/workflow.md) - エージェントワークフロー全体（**新しいチーム構成を理解**）
@@ -57,7 +57,7 @@
 ├── effect_hierarchy.md     # 作用のヒエラルキーと実装原則
 ├── CHANGELOG.md            # 変更履歴（重要な修正の記録）
 ├── references/             # 参考資料（アーカイブ）
-│   ├── README.md           # → docs/research/ に移行済み
+│   ├── README.md           # → docs/spec/ に移行済み
 │   └── *.csv               # 元データ（保持）
 └── agents/                 # エージェント実行プロンプト
     ├── workflow.md         # ワークフロー全体ガイド（新構成対応）
@@ -71,7 +71,7 @@
     └── 60_domain_expert.md # Domain Expert（Pokemon仕様確認）
 ```
 
-**注意**: リサーチ結果は `docs/research/` に保存されます（詳細は [agents/05_research.md](agents/05_research.md) 参照）。
+**注意**: リサーチ結果は `docs/spec/` に保存されます（詳細は [agents/05_research.md](agents/05_research.md) 参照）。
 
 ---
 

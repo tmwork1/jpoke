@@ -879,7 +879,15 @@ class Pokemon:
         if self.check_volatile(name):
             return False
 
+        # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
+        ctx = EventContext(target=self, move=None, attacker=source, defender=None)
+        result = events.emit(Event.ON_BEFORE_APPLY_VOLATILE, ctx, name)
+        # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
+        if not result:
+            return False
+
         volatile = Volatile(name, count=count)
+        volatile.source_pokemon = source
         volatile.register_handlers(events, self)
         self.volatiles[name] = volatile
         return True

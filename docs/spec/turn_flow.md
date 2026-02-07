@@ -1,12 +1,26 @@
-# イベント優先度別処理フロー (第九世代)
+# ターン処理フロー (第九世代)
 
 本ドキュメントは、各イベント時に実行される処理を優先度順に1処理1行で整理したものである。
+
+## 処理順序の規則
+
+- **各イベント内では、Priority値が小さい行から大きい行へ順番に実行される**（表内で上から下へ）
+- **同一Priority値の複数の処理は、実行順序が不定である**（ハンドラーの登録順、素早さなど実装依存）
+- **イベント全体の発火順序は、ターン処理フロー内で定義された順（Interrupt含む）に従う**
+
+例）ON_TRY_MOVE イベント内：
+```
+Priority 10: こだわり系判定
+Priority 20: ミクルのみ消費
+Priority 30: 技個別の失敗条件（複数）← Priority 30が複数あるため実行順不定
+Priority 40-100: その他判定
+```
 
 ## 出典
 
 - [ポケモンwiki - ターン](https://wiki.xn--rckteqa2e.com/wiki/%E3%82%BF%E3%83%BC%E3%83%B3)
 
-## イベント.ON_SWITCH_IN
+## Event.ON_SWITCH_IN
 
 ポケモンが場に出たときに発火されるイベント
 
@@ -111,7 +125,7 @@
 
 ---
 
-## イベント.ON_BEFORE_ACTION
+## Event.ON_BEFORE_ACTION
 
 行動前の処理
 
@@ -125,7 +139,7 @@
 
 ---
 
-## イベント.ON_BEFORE_MOVE
+## Event.ON_BEFORE_MOVE
 
 技使用前の処理
 
@@ -143,7 +157,7 @@
 
 ---
 
-## イベント.ON_TRY_ACTION
+## Event.ON_TRY_ACTION
 
 行動可能かどうかの判定
 
@@ -177,7 +191,7 @@
 
 ---
 
-## イベント.ON_CONSUME_PP
+## Event.ON_CONSUME_PP
 
 PP消費時の処理
 
@@ -187,7 +201,7 @@ PP消費時の処理
 
 ---
 
-## イベント.ON_TRY_MOVE
+## Event.ON_TRY_MOVE
 
 技使用可能かどうかの判定（膨大な判定処理）
 
@@ -353,7 +367,7 @@ PP消費時の処理
 
 ---
 
-## イベント.ON_TRY_IMMUNE
+## Event.ON_TRY_IMMUNE
 
 技が無効化されないかの最終判定
 
@@ -436,7 +450,7 @@ PP消費時の処理
 
 ---
 
-## イベント.ON_PAY_HP
+## Event.ON_PAY_HP
 
 HP支払い時の処理
 
@@ -447,7 +461,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_MODIFY_DAMAGE
+## Event.ON_MODIFY_DAMAGE
 
 ダメージ補正時の処理
 
@@ -465,7 +479,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_HIT
+## Event.ON_HIT
 
 ダメージ発生後の処理（みがわりに被弾しても発動）
 
@@ -483,7 +497,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_DAMAGE_1
+## Event.ON_DAMAGE_1
 
 ダメージ付与後の最初の処理
 
@@ -517,7 +531,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_DAMAGE_2
+## Event.ON_DAMAGE_2
 
 ダメージ付与後の2番目の処理
 
@@ -575,7 +589,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_TURN_END_1
+## Event.ON_TURN_END_1
 
 ターン終了時の処理 (1)
 
@@ -592,7 +606,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_TURN_END_2
+## Event.ON_TURN_END_2
 
 ターン終了時の処理 (2)
 
@@ -612,7 +626,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_TURN_END_3
+## Event.ON_TURN_END_3
 
 ターン終了時の処理 (3)
 
@@ -645,7 +659,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_TURN_END_4
+## Event.ON_TURN_END_4
 
 ターン終了時の処理 (4)
 
@@ -690,7 +704,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_TURN_END_5
+## Event.ON_TURN_END_5
 
 ターン終了時の処理 (5)
 
@@ -707,7 +721,7 @@ HP支払い時の処理
 
 ---
 
-## イベント.ON_TURN_END_6
+## Event.ON_TURN_END_6
 
 ターン終了時の処理 (6)
 

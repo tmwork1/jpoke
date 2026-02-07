@@ -23,13 +23,6 @@ def common_setup() -> None:
 
 VOLATILES: dict[str, VolatileData] = {
     "": VolatileData(),
-    "みがわり": VolatileData(
-        handlers={
-            # TODO: みがわりのハンドラを実装
-            # みがわりが攻撃を受ける、技を防ぐなどの処理
-            # 複雑な実装が必要なため後回し
-        }
-    ),
     "アクアリング": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
@@ -51,14 +44,28 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "アンコール": VolatileData(
         handlers={
-            # TODO: アンコールのハンドラを実装
-            # 技選択時に同じ技を強制する処理（複雑なため後回し）
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.アンコール_before_move,
+                subject_spec="target:self",
+                log="on_success",
+                priority=200
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.アンコール_turn_end,
+                subject_spec="source:self",
+                log="on_success",
+                priority=100
+            ),
         }
     ),
     "うちおとす": VolatileData(
         handlers={
-            # 飛行タイプとふゆう特性を無効化（常駐効果）
-            # 技の効果で適用されるため、ハンドラは不要
+            Event.ON_CHECK_FLOATING: h.VolatileHandler(
+                h.うちおとす_check_floating,
+                subject_spec="source:self",
+                log="never",
+                priority=50,
+            ),
         }
     ),
     "かいふくふうじ": VolatileData(
@@ -89,8 +96,12 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "急所ランク": VolatileData(
         handlers={
-            # TODO: 急所ランクのハンドラを実装
-            # 急所率計算に影響（ダメージ計算システムと連携するため後回し）
+            Event.ON_CALC_CRITICAL: h.VolatileHandler(
+                h.急所ランク_calc_critical,
+                subject_spec="attacker:self",
+                log="never",
+                priority=50,
+            ),
         }
     ),
     "こんらん": VolatileData(
@@ -151,7 +162,8 @@ VOLATILES: dict[str, VolatileData] = {
     "たくわえる": VolatileData(
         handlers={
             # TODO: たくわえるのハンドラを実装
-            # 防御ランク上昇の管理が必要（複雑なため後回し）
+            # 蓄積数（最大3）を管理し、はきだす・のみこむで使用
+            # 使用時に防御・特防ランク+1、はきだす・のみこむで蓄積数リセット＆ランク解除
         }
     ),
     "ちょうはつ": VolatileData(
@@ -245,10 +257,30 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "みがわり": VolatileData(
+        handlers={
+            Event.ON_TRY_IMMUNE: h.VolatileHandler(
+                h.みがわり_check_substitute,
+                subject_spec="defender:self",
+                log="never",
+                priority=30,  # ON_TRY_IMMUNE Priority 30: みがわりによる無効化
+            ),
+            Event.ON_BEFORE_DAMAGE_APPLY: h.VolatileHandler(
+                h.みがわり_before_damage_apply,
+                subject_spec="defender:self",
+                log="never",
+                priority=50,
+            ),
+        }
+    ),
     "みちづれ": VolatileData(
         handlers={
-            # TODO: みちづれのハンドラを実装
-            # ひんしイベントで相手をひんしにする（複雑なため後回し）
+            Event.ON_FAINT: h.VolatileHandler(
+                h.みちづれ_on_faint,
+                subject_spec="defender:self",
+                log="on_success",
+                priority=100
+            ),
         }
     ),
     "メロメロ": VolatileData(
@@ -267,6 +299,357 @@ VOLATILES: dict[str, VolatileData] = {
                 partial(common.drain_hp, from_="source:self", r=1/8),
                 subject_spec="source:self",
                 priority=20,
+            ),
+        }
+    ),
+    "あくむ": VolatileData(
+        handlers={
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.あくむ_turn_end,
+                subject_spec="source:self",
+                priority=75,
+            ),
+        }
+    ),
+    "さしおさえ": VolatileData(
+        handlers={
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.さしおさえ_turn_end,
+                subject_spec="source:self",
+                log="on_success",
+                priority=100
+            ),
+        }
+    ),
+    "たこがため": VolatileData(
+        handlers={
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.たこがため_turn_end,
+                subject_spec="source:self",
+                priority=80,
+            ),
+        }
+    ),
+    "タールショット": VolatileData(
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.VolatileHandler(
+                h.タールショット_damage_modifier,
+                subject_spec="defender:self",
+                log="never",
+                priority=80,
+            ),
+        }
+    ),
+    "テレキネシス": VolatileData(
+        handlers={
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.テレキネシス_turn_end,
+                subject_spec="source:self",
+                log="on_success",
+                priority=100
+            ),
+        }
+    ),
+    "そうでん": VolatileData(
+        handlers={
+            Event.ON_CHECK_MOVE_TYPE: h.VolatileHandler(
+                h.そうでん_move_type,
+                subject_spec="source:self",
+                log="never",
+                priority=50,
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.そうでん_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "まるくなる": VolatileData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.まるくなる_power_modifier,
+                subject_spec="attacker:self",
+                log="never",
+                priority=80,
+            ),
+        }
+    ),
+    "ちいさくなる": VolatileData(
+        handlers={
+            Event.ON_CALC_ACCURACY: h.VolatileHandler(
+                h.ちいさくなる_accuracy_modifier,
+                subject_spec="defender:self",
+                log="never",
+                priority=50,
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.ちいさくなる_power_modifier,
+                subject_spec="defender:self",
+                log="never",
+                priority=80,
+            ),
+        }
+    ),
+    "ロックオン": VolatileData(
+        handlers={
+            Event.ON_CALC_ACCURACY: h.VolatileHandler(
+                h.ロックオン_accuracy,
+                subject_spec="defender:self",
+                log="never",
+                priority=50,
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.ロックオン_on_hit,
+                subject_spec="defender:self",
+                log="never",
+                priority=50,
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.ロックオン_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=100,
+            ),
+        }
+    ),
+    "特性なし": VolatileData(
+        handlers={
+            # 特性無効化は別途特性判定時に参照
+        }
+    ),
+    "いちゃもん": VolatileData(
+        handlers={
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.いちゃもん_before_move,
+                subject_spec="target:self",
+                log="on_success",
+                priority=200
+            ),
+            Event.ON_TRY_MOVE: h.VolatileHandler(
+                h.いちゃもん_record_move,
+                subject_spec="attacker:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "あばれる": VolatileData(
+        handlers={
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.あばれる_before_move,
+                subject_spec="target:self",
+                log="never",
+                priority=200
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.あばれる_turn_end,
+                subject_spec="source:self",
+                log="on_success",
+                priority=100
+            ),
+        }
+    ),
+    "さわぐ": VolatileData(
+        handlers={
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.さわぐ_before_move,
+                subject_spec="target:self",
+                log="never",
+                priority=200
+            ),
+            Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
+                h.さわぐ_prevent_sleep,
+                subject_spec="target:self",
+                log="never",
+                priority=50
+            ),
+            Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
+                h.さわぐ_prevent_sleep,
+                subject_spec="target:foe",
+                log="never",
+                priority=50
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.さわぐ_turn_end,
+                subject_spec="source:self",
+                log="on_success",
+                priority=100
+            ),
+        }
+    ),
+    "おんねん": VolatileData(
+        handlers={
+            Event.ON_FAINT: h.VolatileHandler(
+                h.おんねん_on_faint,
+                subject_spec="defender:self",
+                log="on_success",
+                priority=100
+            ),
+        }
+    ),
+    "ふういん": VolatileData(
+        handlers={
+            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+                h.ふういん_before_move,
+                subject_spec="source:foe",
+                log="on_success",
+                priority=200
+            ),
+        }
+    ),
+    "マジックコート": VolatileData(
+        handlers={
+            Event.ON_CHECK_REFLECT: h.VolatileHandler(
+                h.マジックコート_before_damage,
+                subject_spec="defender:self",
+                log="on_success",
+                priority=200
+            ),
+        }
+    ),
+    "まもる": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                h.まもる_check_protect,
+                subject_spec="defender:self",
+                log="never",
+                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.まもる_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "キングシールド": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                h.キングシールド_check_protect,
+                subject_spec="defender:self",
+                log="never",
+                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.キングシールド_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "トーチカ": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                h.トーチカ_check_protect,
+                subject_spec="defender:self",
+                log="never",
+                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.トーチカ_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "かえんのまもり": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                h.かえんのまもり_check_protect,
+                subject_spec="defender:self",
+                log="never",
+                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.かえんのまもり_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "スレッドトラップ": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                h.スレッドトラップ_check_protect,
+                subject_spec="defender:self",
+                log="never",
+                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                h.スレッドトラップ_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=200
+            ),
+        }
+    ),
+    "あなをほる": VolatileData(
+        handlers={
+            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
+                partial(h.姿消し_check_invulnerable, allowed_moves=["じしん", "マグニチュード"]),
+                subject_spec="defender:self",
+                log="never",
+                priority=50
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.姿消し_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=100
+            ),
+        }
+    ),
+    "そらをとぶ": VolatileData(
+        handlers={
+            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
+                partial(h.姿消し_check_invulnerable, allowed_moves=["かぜおこし", "たつまき", "かみなり"]),
+                subject_spec="defender:self",
+                log="never",
+                priority=50
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.姿消し_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=100
+            ),
+        }
+    ),
+    "ダイビング": VolatileData(
+        handlers={
+            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
+                partial(h.姿消し_check_invulnerable, allowed_moves=["なみのり", "うずしお"]),
+                subject_spec="defender:self",
+                log="never",
+                priority=50
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.姿消し_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=100
+            ),
+        }
+    ),
+    "シャドーダイブ": VolatileData(
+        handlers={
+            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
+                partial(h.姿消し_check_invulnerable, allowed_moves=[]),
+                subject_spec="defender:self",
+                log="never",
+                priority=50
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                h.姿消し_turn_end,
+                subject_spec="source:self",
+                log="never",
+                priority=100
             ),
         }
     ),

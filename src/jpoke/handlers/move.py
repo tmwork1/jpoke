@@ -131,6 +131,66 @@ def apply_flinch(battle: Battle, ctx: EventContext, value: Any, prob: float = 0.
     return HandlerReturn(success)
 
 
+def apply_hp_drain(battle: Battle, ctx: EventContext, value: Any, rate: float = 0.5) -> HandlerReturn:
+    """HP吸収効果を適用する（ON_HIT イベントで呼ばれる）。
+
+    技のダメージの指定割合分だけ、攻撃側のHPを回復する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト（damage フィールドを使用）
+        value: イベント値（未使用）
+        rate: 吸収率（デフォルト50% = 0.5）
+
+    Returns:
+        HandlerReturn: 吸収成功時はTrue、失敗時はFalse
+    """
+    attacker = ctx.attacker
+    damage = ctx.damage
+
+    if not attacker or not damage:
+        return HandlerReturn(False)
+
+    # 吸収量を計算
+    absorption = max(1, int(damage * rate))
+
+    # HP回復
+    attacker.hp = min(attacker.hp + absorption, attacker.max_hp)
+    battle.add_event_log(attacker, f"HPを{absorption}回復した！")
+
+    return HandlerReturn(True)
+
+
+def apply_recoil(battle: Battle, ctx: EventContext, value: Any, rate: float = 1/3) -> HandlerReturn:
+    """反動ダメージを適用する（ON_HIT イベントで呼ばれる）。
+
+    技のダメージの指定割合分だけ、攻撃側のHPをダメージする。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト（damage フィールドを使用）
+        value: イベント値（未使用）
+        rate: 反動率（デフォルト33% = 1/3）
+
+    Returns:
+        HandlerReturn: 反動適用時はTrue
+    """
+    attacker = ctx.attacker
+    damage = ctx.damage
+
+    if not attacker or not damage:
+        return HandlerReturn(True)
+
+    # 反動ダメージを計算（最低1）
+    recoil_damage = max(1, int(damage * rate))
+
+    # リコイルダメージを適用
+    attacker.hp = max(0, attacker.hp - recoil_damage)
+    battle.add_event_log(attacker, f"反動ダメージで{recoil_damage}のダメージ！")
+
+    return HandlerReturn(True)
+
+
 # ===== 命中率補正ハンドラ =====
 
 def acc_rank_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

@@ -126,7 +126,7 @@ class DamageCalculator:
         """
         # 急所ランクを0～3の範囲に正規化
         rank = max(0, min(3, critical_rank))
-        critical_rates = [1/24, 1/8, 1/4, 1/2]
+        critical_rates = [1/24, 1/8, 1/2, 1.0]
         critical_rate = critical_rates[rank]
         return random.random() < critical_rate
 

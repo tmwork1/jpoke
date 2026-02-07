@@ -112,6 +112,18 @@ class MoveExecutor:
         # 発動成功判定
         self.battle.events.emit(Event.ON_TRY_MOVE, ctx)
 
+        # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
+        if self.battle.events.emit(Event.ON_CHECK_PROTECT, ctx, False):
+            return
+
+        # 姿消し・無敵判定（ON_TRY_MOVE Priority 100: 無効化判定）
+        if self.battle.events.emit(Event.ON_CHECK_INVULNERABLE, ctx, False):
+            return
+
+        # 反射判定（ON_TRY_MOVE Priority 100: マジックコート等による反射）
+        if self.battle.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
+            return
+
         # 先制技の有効判定（例: サイコフィールド）
         priority_valid = self.battle.events.emit(
             Event.ON_CHECK_PRIORITY_VALID,
@@ -124,12 +136,15 @@ class MoveExecutor:
         # 発動した技の確定
         attacker.executed_move = move
 
-        # 命中判定
+        # 命中判定（仕様書: ON_TRY_MOVE終了後のInterrupt）
         if not self.check_hit(attacker, move):
             return
 
-        # 無効判定
-        self.battle.events.emit(Event.ON_TRY_IMMUNE, ctx)
+        # 無効判定（ON_TRY_IMMUNE: Priority 10-100）
+        # Priority 30: みがわり、Priority 100: その他の判定
+        is_immune = self.battle.events.emit(Event.ON_TRY_IMMUNE, ctx, False)
+        if is_immune:
+            return
 
         # ダメージ計算
         damage = self.battle.calc_damage(attacker, move)
@@ -140,11 +155,19 @@ class MoveExecutor:
         # ダメージ修正
         damage = self.battle.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 
+        # ダメージ適用前処理
+        damage = self.battle.events.emit(Event.ON_BEFORE_DAMAGE_APPLY, ctx, damage)
+
         # ダメージの適用
         if damage:
             self.battle.modify_hp(ctx.defender, -damage)
 
-        # 技を当てたときの処理
+        # ひんし時の処理
+        if damage and ctx.defender and ctx.defender.hp == 0:
+            self.battle.events.emit(Event.ON_FAINT, ctx)
+
+        # 技を当てたときの処理（ダメージ情報を含める）
+        ctx.damage = damage
         self.battle.events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えたときの処理

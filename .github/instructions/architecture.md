@@ -5,7 +5,7 @@
 ## イベント駆動システム
 
 ### イベントManager
-`core/イベント.py` が全イベント処理を管理。
+`core/event.py` が全イベント処理を管理。
 
 **主要メソッド**: `fire_イベント()`, `register_handler()`, `unregister_handler()`
 
@@ -156,7 +156,7 @@ Stat = Literal["hp", "attack", "defense", "sp_atk", "sp_def", "speed"]
 5. `model/effect.py` - 基底クラス
 6. `model/ailment.py`, `volatile.py` - 状態管理
 7. `model/pokemon.py` - Pokemon
-8. `core/イベント.py` - イベント
+8. `core/event.py` - イベント
 9. `core/move_executor.py`, `switch_manager.py`, `turn_controller.py`
 10. `core/battle.py` - ファサード
 11. `data/models.py` - データ構造

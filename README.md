@@ -8,7 +8,7 @@
 
 ## ドキュメント方針
 
-- `docs/research/` は調査内容のみを記載し、実装・テスト・進捗管理は含めない
+- `docs/spec/` は調査内容のみを記載し、実装・テスト・進捗管理は含めない
 
 ## プロジェクト構成
 
@@ -19,7 +19,7 @@
 - **MoveExecutor** ([core/move_executor.py](src/jpoke/core/move_executor.py)) - 技の実行処理
 - **DamageCalculator** ([core/damage.py](src/jpoke/core/damage.py)) - ダメージ計算
 - **SpeedCalculator** ([core/speed_calculator.py](src/jpoke/core/speed_calculator.py)) - 行動順計算
-- **イベントSystem** ([core/イベント.py](src/jpoke/core/イベント.py)) - イベント駆動システム
+- **EventManager** ([core/event.py](src/jpoke/core/event.py)) - イベント駆動システム
 - **FieldManager** ([core/field_manager.py](src/jpoke/core/field_manager.py)) - フィールド効果管理
 - **SwitchManager** ([core/switch_manager.py](src/jpoke/core/switch_manager.py)) - 交代処理
 
@@ -106,11 +106,11 @@
 
 ```python
 # 例: 特性「いかく」の実装
-def intimidate_on_switch_in(イベントs, player, mon):
+def intimidate_on_switch_in(events, player, mon):
     """場に出たときに相手の攻撃を1段階下げる"""
     opponent = player.opponent
     if opponent.active:
-        イベントs.emit(イベントType.CHANGE_STAT_STAGE, 
+        events.emit(イベントType.CHANGE_STAT_STAGE, 
                    mon=opponent.active, 
                    stat=Stat.ATTACK, 
                    delta=-1)

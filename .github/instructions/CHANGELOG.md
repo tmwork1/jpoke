@@ -8,7 +8,7 @@
 
 **削除対象:**
 - src/jpoke/data/move.py の "オートガード" MoveData 定義
-- docs/research/action_order.md の +4優先度リストからオートガード削除
+- docs/spec/action_order.md の +4優先度リストからオートガード削除
 
 **教訓:** ゲーム仕様の外部検証が必要。技・アイテム・特性などの追加時は公式ポケモン図鑑/仕様書との突合確認を実施すべき
 

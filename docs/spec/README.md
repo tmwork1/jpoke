@@ -16,13 +16,24 @@ jpoke プロジェクトで実施した各種リサーチ結果を文書化し�
 
 | カテゴリ | ファイル | 調査日 | 備考 |
 |---------|---------|--------|------|
-| 状態異常 | [ailment_gen9.md](ailment_gen9.md) | 2026-02-01 | まひ、やけど、ねむり、こおり |
-| フィールド | [field_gen9.md](field_gen9.md) | 2026-02-01 | 天候・地形・サイド・グローバル |
-| 揮発性状態 | [volatile_gen9.md](volatile_gen9.md) | 2026-02-01 | メロメロ、アンコール、こんらんなど |
-| ダメージ計算 | [damage_calculation.md](damage_calculation.md) | - | ダメージ計算式詳細 |
-| イベント進行 | [event_gen9.md](event_gen9.md) | 2026-02-01 | 処理フロー整理 |
-| アイテム | [item_gen9.md](item_gen9.md) | - |  |
-| 技分類 | [move_gen9.md](move_gen9.md) | 2026-02-02 | 追加効果別の分類メモ |
+| 状態異常 | [ailment.md](ailment.md) | - | まひ、やけど、ねむり、こおり |
+| 命中・回避 | [accuracy.md](accuracy.md) | - | 命中率、回避率の整理 |
+| 行動順 | [action_order.md](action_order.md) | - | 優先度、順序判定 |
+| 急所 | [critical.md](critical.md) | - | 急所ランク、計算 |
+| ダメージ計算 | [damage_calc.md](damage_calc.md) | - | ダメージ計算式詳細 |
+| イベント進行 | [event.md](event.md) | - | 処理フロー整理 |
+| フィールド | [field.md](field.md) | - | 天候・地形の概要 |
+| グローバル場 | [global_field/](global_field/) | - | 天候・地形の個別メモ |
+| サイド場 | [side_field/](side_field/) | - | サイド効果の個別メモ |
+| 揮発性状態 | [volatile/](volatile/) | - | 個別メモ |
+| アイテム | [item/](item/) | - | 個別メモ |
+| テラスタル | [terastal.md](terastal.md) | - | テラスタル関連 |
+| PP | [pp.md](pp.md) | - | PP周りの仕様 |
+| 技カテゴリ | [move/カテゴリ.md](move/カテゴリ.md) | - | 追加効果別の分類 |
+| 技一覧(物理) | [move/physical_move_list.md](move/physical_move_list.md) | - | 物理技一覧 |
+| 技一覧(特殊) | [move/special_move_list.md](move/special_move_list.md) | - | 特殊技一覧 |
+| 技一覧(変化) | [move/status_move_list.md](move/status_move_list.md) | - | 変化技一覧 |
+| 技メモ(個別) | [move/](move/) | - | 個別技の調査メモ |
 
 ### 主要な参照元
 - [ポケモンWiki - ターン](https://wiki.xn--rckteqa2e.com/wiki/%E3%82%BF%E3%83%BC%E3%83%B3)
@@ -66,6 +77,7 @@ jpoke プロジェクトで実施した各種リサーチ結果を文書化し�
 
 | 日付 | 変更内容 |
 |------|---------|
+| 2026-02-07 | 文書一覧を最新の構成に更新 |
 | 2026-02-03 | リサーチ領域に限定するガイドラインを明記 |
 | 2026-02-02 | README最適化（テーブル化、エージェント規則追加） |
 | 2026-02-01 | README作成、ailment_gen9.md追加 |

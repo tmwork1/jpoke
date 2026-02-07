@@ -26,7 +26,7 @@ def test_tick_weather():
     # 残りカウント経過させて0にする
     tick_fields(battle, ticks=DEFAULT_DURATION - 5)
     assert_field_active(battle, 'weather', 'はれ', active=False)
-    print("✓ 天候のカウントダウンテスト成功")
+    print("OK: 天候のカウントダウンテスト成功")
 
 
 def test_tick_terrain():
@@ -45,7 +45,7 @@ def test_tick_terrain():
     # 残りカウント経過させて0にする
     tick_fields(battle, ticks=DEFAULT_DURATION - 10)
     assert_field_active(battle, 'terrain', 'エレキフィールド', active=False)
-    print("✓ 地形のカウントダウンテスト成功")
+    print("OK: 地形のカウントダウンテスト成功")
 
 
 def test_tick_side_field():
@@ -67,7 +67,7 @@ def test_tick_side_field():
     # 残りカウント経過させて0にする
     tick_fields(battle, ticks=DEFAULT_DURATION - 100)
     assert_field_active(battle, 'ally_side', 'まきびし', active=False)
-    print("✓ サイドフィールドのカウントダウンテスト成功")
+    print("OK: サイドフィールドのカウントダウンテスト成功")
 
 
 def test_tick_global_field():
@@ -87,7 +87,7 @@ def test_tick_global_field():
     # 残りカウント経過させて0にする
     tick_fields(battle, ticks=initial_count - 30)
     assert_field_active(battle, 'global', 'トリックルーム', active=False)
-    print("✓ グローバルフィールドのカウントダウンテスト成功")
+    print("OK: グローバルフィールドのカウントダウンテスト成功")
 
 
 def test_tick_multiple_fields():
@@ -128,7 +128,7 @@ def test_tick_multiple_fields():
     assert_field_active(battle, 'foe_side', 'どくびし', active=True)
     assert_field_active(battle, 'global', 'トリックルーム', active=False)
 
-    print("✓ 複数フィールド同時カウントダウンテスト成功")
+    print("OK: 複数フィールド同時カウントダウンテスト成功")
 
 
 if __name__ == "__main__":

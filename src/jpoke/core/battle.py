@@ -548,6 +548,12 @@ class Battle:
         Returns:
             bool: いずれかのランク変更が成功した場合True
         """
+        stats = self.events.emit(
+            Event.ON_BEFORE_MODIFY_STAT,
+            EventContext(target=target, source=source),
+            stats
+        )
+
         any_success = False
         actual_changes = {}
 

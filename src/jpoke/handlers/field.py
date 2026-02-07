@@ -77,9 +77,13 @@ def エレキフィールド_cure_sleep(battle: Battle, ctx: EventContext, value
 
 
 def グラスフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """グラスフィールドでの草技威力1.3倍"""
+    """グラスフィールドでの草技威力1.3倍・地面技威力0.5倍"""
+    # 草技威力1.3倍（攻撃側が接地している場合）
     if ctx.move.type == "くさ" and not ctx.attacker.is_floating(battle.events):
         return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
+    # 地面範囲技威力0.5倍（じしん、じならし、マグニチュード）
+    if ctx.move.name in ["じしん", "じならし", "マグニチュード"]:
+        return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
     return HandlerReturn(False, value)
 
 
@@ -117,6 +121,14 @@ def ミストフィールド_prevent_ailment(battle: Battle, ctx: EventContext, 
     if not ctx.target.is_floating(battle.events):
         return HandlerReturn(True)
     return HandlerReturn(False)
+
+
+def ミストフィールド_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ミストフィールドで混乱無効"""
+    # valueは揮発状態名（VolatileName）
+    if value == "こんらん" and not ctx.target.is_floating(battle.events):
+        return HandlerReturn(True, "", stop_event=True)  # 防いでイベント停止
+    return HandlerReturn(False, value)  # 防がない
 
 
 # ===== グローバルフィールドハンドラ =====
@@ -157,6 +169,18 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: EventContext, value: A
 def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """神秘の守りで状態異常無効"""
     return HandlerReturn(True)
+
+
+def しろいきり_prevent_stat_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """しろいきりで能力低下を防ぐ"""
+    if not value:
+        return HandlerReturn(False, value)
+
+    filtered = {stat: v for stat, v in value.items() if v >= 0}
+    if filtered == value:
+        return HandlerReturn(False, value)
+
+    return HandlerReturn(True, filtered)
 
 
 def おいかぜ_speed_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -248,3 +272,39 @@ def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: A
     # 素早さランクを1段階下げる
     success = battle.modify_stat(ctx.source, "S", -1, source=ctx.source)
     return HandlerReturn(success)
+
+
+def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ねがいごとのターン終了時HP回復"""
+    if not ctx.target:
+        return HandlerReturn(False)
+
+    # 対象のサイドのねがいごとフィールドを取得
+    negai_field = battle.get_side(ctx.target).fields.get("ねがいごと")
+    if not negai_field or not negai_field.is_active:
+        return HandlerReturn(False)
+
+    # HP を1/2回復
+    success = battle.modify_hp(ctx.target, r=1/2)
+
+    # 回復結果に関わらず解除（1回限りの効果）
+    negai_field.deactivate(battle.events)
+
+    return HandlerReturn(success)
+
+
+def オーロラベール_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """オーロラベールで物理・特殊技ダメージ軽減"""
+    # オーロラベール フィールドがアクティブかチェック
+    if not ctx.defender:
+        return HandlerReturn(False, value)
+
+    aurora_field = battle.get_side(ctx.defender).fields.get("オーロラベール")
+    if not aurora_field or not aurora_field.is_active:
+        return HandlerReturn(False, value)
+
+    # ダメージを0.5倍に軽減（物理・特殊両対応）
+    if ctx.move.category in ["物理", "特殊"]:
+        return HandlerReturn(True, value * 2048 // 4096)
+
+    return HandlerReturn(False, value)

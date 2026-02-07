@@ -148,6 +148,22 @@ def apply_ailment(battle: Battle,
     return HandlerReturn(success)
 
 
+def apply_volatile(battle: Battle,
+                   ctx: EventContext,
+                   value: Any,
+                   volatile: str,
+                   target_spec: RoleSpec,
+                   source_spec: RoleSpec | None = None,
+                   count: int = 1,
+                   prob: float = 1) -> HandlerReturn:
+    if prob < 1 and battle.random.random() >= prob:
+        return HandlerReturn(False)
+    target = ctx.resolve_role(battle, target_spec)
+    source = ctx.resolve_role(battle, source_spec)
+    success = target.apply_volatile(battle.events, volatile, count=count, source=source)
+    return HandlerReturn(success)
+
+
 def cure_ailment(battle: Battle,
                  ctx: EventContext,
                  value: Any,

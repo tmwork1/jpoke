@@ -3,15 +3,13 @@
 
 ## 基本方針
 - 第9世代（SV）仕様準拠、シングル対戦のみ実装
-- 不明点は推測して継続、全テストパス優先
-- ファイル作成編集削除は承認不要で直接実行
-
-## エージェント識別子
-MGR=Manager, RSC=Research, PLN=Planner, ARC=Architect, COD=Coder, TST=Tester, RVW=Reviewer
-発言時は先頭に識別子を付ける（例: `MGR: タスクを開始します`）
+- イベント駆動アーキテクチャを遵守し、効果処理は帰属するオブジェクトのハンドラで実装
+- コードの追加や修正があれば、ワークフローに従ってテストとレビューまで完遂
+- ユーザへの確認はせず、不明点は推測して継続
+- 既存コード・テストを最大限活用し、一貫性・可読性を重視
 
 ## 核心概念
-- イベント駆動: `イベントManager` (`src/jpoke/core/イベント.py`)
+- イベント駆動: `EventManager` (`src/jpoke/core/event.py`)
 - Handler: 全効果をハンドラで実装 (`src/jpoke/handlers/`)
 - RoleSpec: `"role:side"` 形式（`"source:self"`, `"target:foe"` 等）
   - ダメージ計算: `"attacker:self"`, `"defender:self"`
@@ -22,7 +20,7 @@ MGR=Manager, RSC=Research, PLN=Planner, ARC=Architect, COD=Coder, TST=Tester, RV
 ## ファイル構成
 ```
 src/jpoke/
- core/       # イベント.py, battle.py, damage.py
+ core/       # event.py, battle.py, damage.py
  model/      # pokemon.py, stats.py
  data/       # ability.py, move.py, item.py
  handlers/   # 効果実装
@@ -38,7 +36,7 @@ tests/          # test_utils.py, field.py
 
 ## ファイル管理
 - ルート直下: README.md, pyproject.toml, setup.cfg, LICENSE のみ
-- 中間スクリプト: `docs/research/` または作業後削除
+- 中間スクリプト: `docs/spec/` または作業後削除
 - テスト: `tests/` 内に配置
 
 ## タスク完了時

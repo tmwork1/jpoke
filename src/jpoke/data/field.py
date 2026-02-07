@@ -120,6 +120,11 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
                 log="on_success",
             ),
+            Event.ON_BEFORE_APPLY_VOLATILE: Handler(
+                h.ミストフィールド_prevent_volatile,
+                subject_spec="target:self",
+                log="on_success",
+            ),
         },
     ),
     # ===== グローバルフィールド (GlobalField) =====
@@ -179,7 +184,13 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "しろいきり": FieldData(
-        handlers={},
+        handlers={
+            Event.ON_BEFORE_MODIFY_STAT: Handler(
+                h.しろいきり_prevent_stat_drop,
+                subject_spec="target:self",
+                log="on_success",
+            ),
+        },
     ),
     "おいかぜ": FieldData(
         handlers={
@@ -191,7 +202,13 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "ねがいごと": FieldData(
-        handlers={},
+        handlers={
+            Event.ON_TURN_END_3: Handler(
+                h.ねがいごと_heal,
+                subject_spec="target:self",
+                log_text="ねがいごと",
+            ),
+        },
     ),
     "まきびし": FieldData(
         handlers={
@@ -226,6 +243,16 @@ FIELDS: dict[str, FieldData] = {
                 h.ねばねばネット_speed_drop,
                 subject_spec="source:self",
                 log_text="ねばねばネット",
+            ),
+        },
+    ),
+    "オーロラベール": FieldData(
+        turn_extension_item="ひかりのねんど",
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: Handler(
+                h.オーロラベール_reduce_damage,
+                subject_spec="defender:self",
+                log="never",
             ),
         },
     ),
