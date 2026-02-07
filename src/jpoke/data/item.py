@@ -1,3 +1,8 @@
+"""持ち物データ定義モジュール。
+
+Note:
+    このモジュール内の持ち物定義はITEMS辞書内で五十音順に配置されています。
+"""
 from functools import partial
 
 from jpoke.utils.enums import Event

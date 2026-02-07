@@ -1,3 +1,8 @@
+"""特性データ定義モジュール。
+
+Note:
+    このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
+"""
 from functools import partial
 from jpoke.core.event import Event, HandlerReturn
 from .models import AbilityData

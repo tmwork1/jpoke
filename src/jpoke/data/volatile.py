@@ -1,3 +1,8 @@
+"""揮発状態データ定義モジュール。
+
+Note:
+    このモジュール内の揮発状態定義はVOLATILES辞書内で五十音順に配置されています。
+"""
 from functools import partial
 
 from jpoke.utils.enums import Event

@@ -1,3 +1,8 @@
+"""特性ハンドラーモジュール。
+
+Note:
+    このモジュール内の関数定義は五十音順に配置されています。
+"""
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:

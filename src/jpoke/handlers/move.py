@@ -2,6 +2,9 @@
 
 技の実行に関連するハンドラ関数を提供します。
 PP消費、交代技、吹き飛ばし技などの処理を行います。
+
+Note:
+    このモジュール内の関数定義は五十音順に配置されています。
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable

@@ -1,3 +1,8 @@
+"""技データ定義モジュール。
+
+Note:
+    このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
+"""
 from functools import partial
 from jpoke.core.event import Event, Handler, HandlerReturn
 from .models import MoveData
