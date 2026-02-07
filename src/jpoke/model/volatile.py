@@ -38,6 +38,7 @@ class Volatile(GameEffect):
         """
         super().__init__(VOLATILES[name])
         self.count: int = count
+        self.sub_hp: int = 0  # みがわりのHP管理用
         self.disabled_move_name: str = ""  # かなしばり用
         self.locked_move_name: str = ""  # アンコール用
         self.last_move_name: str = ""  # いちゃもん用

@@ -94,7 +94,6 @@ class Pokemon:
         ポケモンのバトル状態を初期化する。
         """
         self.revealed = False
-        self.sleep_count: int = 0
         self.is_terastallized: bool = False
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
@@ -104,23 +103,11 @@ class Pokemon:
 
     def bench_reset(self):
         """ベンチに戻ったときのリセット処理"""
-        self.choice_locked: bool = False
-        self.hidden: bool = False
-        self.lockon: bool = False
-        self.active_turn: int = 0
-        self.forced_turn: int = 0
-        self.sub_hp: int = 0
-        self.bind_damage_denom: int = 0
-        self.hits_taken: int = 0
-        self.boosted_stat: Stat | None = None
-        self.boost_source: BoostSource = ""
-        self.rank: dict[Stat, int] = {k: 0 for k in STATS}
-        self.critical_rank: int = 0
-        self.added_types: list[str] = []
-        self.lost_types: list[str] = []
-        self.executed_move: Move | None = None
-        self.pp_consumed_moves: list[Move] = []
         self.volatiles: dict[str, Volatile] = {}
+        self.active_turn: int = 0
+        self.hits_taken: int = 0
+        self.rank: dict[Stat, int] = {k: 0 for k in STATS}
+        self.executed_move: Move | None = None
 
     @classmethod
     def reconstruct_from_log(cls, data: dict) -> Pokemon:
@@ -133,16 +120,19 @@ class Pokemon:
             復元されたPokemonインスタンス
 
         Note:
-            特性、持ち物、技の復元は未実装（TODO）
+            特性、持ち物、技の復元は未実装
+            これらのデータはログに含まれていない、または
+            復元ロジックが複雑なため保留中
         """
-        # TODO: ability, item, movesの復元
+        # TODO (保留): ability, item, movesの復元
+        # データ形式の設計とcreate_*メソッドの実装が必要
+        # - mon.ability = cls.create_ability(data["ability"])
+        # - mon.item = cls.create_item(data["item"])
+        # - mon.moves = [cls.create_move(s) for s in data["moves"]]
         mon = cls(data["name"])
         mon.gender = data["gender"]
         mon.level = data["level"]
         mon.nature = data["nature"]
-        # mon.ability = cls.create_ability(data["ability"])
-        # mon.item = cls.create_item(data["item"])
-        # mon.moves = [cls.create_move(s) for s in data["moves"]]
         mon.indiv = data["indiv"]
         mon.effort = data["effort"]
         mon.terastal = data["terastal"]
@@ -348,8 +338,7 @@ class Pokemon:
                 # TODO アルセウスのタイプ変化
                 return ["ノーマル"]
             else:
-                return [t for t in self.data.types if t not in
-                        self.lost_types + self.added_types] + self.added_types
+                return self.data.types
 
     @property
     def max_hp(self) -> int:
@@ -681,6 +670,76 @@ class Pokemon:
         old = self.rank[stat]
         self.rank[stat] = max(RANK_MIN, min(RANK_MAX, old + v))
         return self.rank[stat] - old
+
+    @property
+    def critical_rank(self) -> int:
+        """急所ランクを取得する。
+
+        Returns:
+            急所ランク（volatileの急所ランク状態から取得）
+
+        Note:
+            volatile["急所ランク"]が存在しない場合は0を返す。
+        """
+        if self.check_volatile("急所ランク"):
+            return self.volatiles["急所ランク"].count
+        return 0
+
+    @critical_rank.setter
+    def critical_rank(self, value: int):
+        """急所ランクを設定する。
+
+        Args:
+            value: 設定する急所ランク値
+
+        Note:
+            内部的にvolatile["急所ランク"]を管理するため、
+            テストやデバッグ用に使用される。
+        """
+        if value <= 0:
+            # 急所ランクが0以下の場合は状態を削除
+            if self.check_volatile("急所ランク"):
+                del self.volatiles["急所ランク"]
+        else:
+            # 急所ランク状態を作成または更新
+            if not self.check_volatile("急所ランク"):
+                self.volatiles["急所ランク"] = Volatile("急所ランク", count=0)
+            self.volatiles["急所ランク"].count = value
+
+    @property
+    def sub_hp(self) -> int:
+        """みがわりの残りHPを取得する。
+
+        Returns:
+            みがわりの残りHP（volatileのみがわりから取得）
+
+        Note:
+            volatile["みがわり"]が存在しない場合は0を返す。
+        """
+        if self.check_volatile("みがわり"):
+            return self.volatiles["みがわり"].sub_hp
+        return 0
+
+    @sub_hp.setter
+    def sub_hp(self, value: int):
+        """みがわりの残りHPを設定する。
+
+        Args:
+            value: 設定するHP値
+
+        Note:
+            内部的にvolatile["みがわり"]を管理するため、
+            テストやデバッグ用に使用される。
+        """
+        if value <= 0:
+            # sub_hpが0以下の場合は状態を削除
+            if self.check_volatile("みがわり"):
+                del self.volatiles["みがわり"]
+        else:
+            # みがわり状態を作成または更新
+            if not self.check_volatile("みがわり"):
+                self.volatiles["みがわり"] = Volatile("みがわり", count=0)
+            self.volatiles["みがわり"].sub_hp = value
 
     def find_move(self, move: Move | str) -> Move | None:
         """技を検索する。

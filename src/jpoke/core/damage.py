@@ -113,10 +113,10 @@ class DamageCalculator:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
-        - ランク0: 1/24（約4.17%）
+        - ランク0: 1/24（約4.2%）
         - ランク1: 1/8（12.5%）
-        - ランク2: 1/4（25%）
-        - ランク3以上: 1/2（50%、上限）
+        - ランク2: 1/2（50%）
+        - ランク3以上: 1/1（100%、上限）
 
         Args:
             critical_rank: 急所ランク（0～3以上）
@@ -157,7 +157,12 @@ class DamageCalculator:
             dmg_ctx = DamageContext()
 
         # 急所判定（急所ランク計算）
-        critical_rank = attacker.critical_rank + move.critical_rank_bonus()
+        critical_rank = move.critical_rank_bonus()
+
+        # volatile「急所ランク」があれば加算
+        if attacker.check_volatile("急所ランク"):
+            critical_rank += attacker.volatiles["急所ランク"].count
+
         critical_rank = events.emit(
             Event.ON_CALC_CRITICAL,
             EventContext(attacker=attacker, defender=defender, move=move),
