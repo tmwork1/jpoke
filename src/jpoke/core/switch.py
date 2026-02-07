@@ -141,15 +141,11 @@ class SwitchManager:
                 self.battle.add_event_log(player, f"{player.active.item.name}消費")
                 player.active.item.consume()
 
-            # コマンドが予約されていなければ、プレイヤーの方策関数に従う
-            if not player.reserved_commands:
-                command = player.choose_switch_command(self.battle)
-                player.reserve_command(command)
-                self.battle.add_command_log(player, command)
+            # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
+            player.clear_reserved_commands()
+            command = player.choose_switch_command(self.battle)
 
-            # 交代コマンドを取得
-            command = player.reserved_commands.pop(0)
-
+            self.battle.add_command_log(player, command)
             self.run_switch(player, player.team[command.idx], emit=emit_on_each_switch)
             switched_players.append(player)
 

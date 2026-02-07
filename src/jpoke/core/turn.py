@@ -129,12 +129,13 @@ class TurnController:
 
             return
 
+        # 通常ターンの処理
         if not self.battle.has_interrupt():
             # ターン初期化
             self.init_turn()
 
-            # 予約されているコマンドがなければ、方策関数に従ってコマンドを予約する
             for player in self.battle.players:
+                # コマンドが予約されていなければ、方策関数に従ってコマンドを予約する
                 if not player.reserved_commands:
                     command = player.choose_action_command(self.battle)
                     player.reserve_command(command)
@@ -143,17 +144,19 @@ class TurnController:
             # 行動前の処理
             self.battle.events.emit(Event.ON_BEFORE_ACTION)
 
-        # ターン開始時の交代処理
+        # 交代処理
         for mon in self.battle.calc_speed_order():
             # 交代フラグ
             idx = self.battle.actives.index(mon)
             interrupt = Interrupt.ejectpack_on_switch(idx)
+
             # 交代
             if not self.battle.has_interrupt():
                 player = self.battle.players[idx]
                 if player.reserved_commands[0].is_switch():
+                    # 予約されている交代コマンドを取得
                     command = player.reserved_commands.pop(0)
-                    player = self.battle.find_player(mon)
+                    # 交代を実行
                     new = player.team[command.idx]
                     self.battle.run_switch(player, new)
 
@@ -166,14 +169,15 @@ class TurnController:
         # 技の処理
         for mon in self.battle.calc_action_order():
             player = self.battle.find_player(mon)
-            self.battle.add_event_log(player, player.active.name)
+
+            # 行動前に交代していたらスキップ
+            if player.has_switched:
+                continue
 
             if not self.battle.has_interrupt():
+                self.battle.add_event_log(player, f"{player.active.name}の行動")
+
                 # 技の発動
-                if not player.reserved_commands:
-                    command = player.choose_action_command(self.battle)
-                    player.reserve_command(command)
-                    self.battle.add_command_log(player, command)
                 command = player.reserved_commands.pop(0)
                 move = self.battle.command_to_move(player, command)
 
@@ -196,7 +200,8 @@ class TurnController:
 
             # だっしゅつパックによる割り込みフラグを更新
             interrupt = Interrupt.ejectpack_on_after_move(
-                self.battle.players.index(player))
+                self.battle.players.index(player)
+            )
             self.battle.override_interrupt(interrupt)
 
             # だっしゅつパックによる交代

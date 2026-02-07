@@ -1,0 +1,40 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\tmtmp\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\tmtmp\Documents\pokemon\jpoke
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_item.py::test_だっしゅつボタン Turn 0
+		['ピカチュウ 着地'] []
+		['ピカチュウ 着地'] []
+
+DEBUG get_available_switch_commands:
+  active=ピカチュウ, active_idx=0
+  selection_idxes=[0, 1]
+  team=[0:ピカチュウ, 1:ライチュウ]
+  available commands: [<Command.SWITCH_1: 16>]
+
+DEBUG get_available_switch_commands:
+  active=ピカチュウ, active_idx=0
+  selection_idxes=[0]
+  team=[0:ピカチュウ]
+  available commands: []
+
+DEBUG run_interrupt_switch (flag=Interrupt.EJECTBUTTON):
+  reserved_commands before: []
+
+DEBUG get_available_switch_commands:
+  active=ピカチュウ, active_idx=0
+  selection_idxes=[0, 1]
+  team=[0:ピカチュウ, 1:ライチュウ]
+  available commands: [<Command.SWITCH_1: 16>]
+  reserved_commands after: [<Command.SWITCH_1: 16>]
+  selected command: SWITCH_1, idx=1
+  switching to: ライチュウ
+Turn 1
+		['ピカチュウ', 'PP -1', 'はねる', 'HP -22 >> 88', 'だっしゅつボタン', 'だっしゅつボタン消費', 'ピカチュウ 交代', 'ライチュウ 着地'] []
+		['ピカチュウ', 'PP -1', 'たいあたり'] []
+PASSED
+
+============================== 1 passed in 0.22s ==============================

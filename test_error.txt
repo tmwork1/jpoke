@@ -1,0 +1,35 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.11, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\tmtmp\AppData\Local\Programs\Python\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\tmtmp\Documents\pokemon\jpoke
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_item.py::test_だっしゅつボタン Turn 0
+		['ピカチュウ 着地'] []
+		['ピカチュウ 着地'] []
+FAILED
+
+================================== FAILURES ===================================
+________________________________ test_だっしゅつボタン ________________________________
+tests\test_item.py:70: in test_だっしゅつボタン
+    battle = t.start_battle(
+tests\test_utils.py:110: in start_battle
+    run_turn(battle)
+tests\test_utils.py:172: in run_turn
+    battle.turn_controller._process_turn_phases()
+src\jpoke\core\turn_controller.py:186: in _process_turn_phases
+    self.battle.run_move(mon, result_move)
+src\jpoke\core\battle.py:464: in run_move
+    self.move_executor.run_move(attacker, move)
+src\jpoke\core\move_executor.py:96: in run_move
+    defender=self.battle.foe(attacker),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+src\jpoke\core\battle.py:327: in foe
+    return self.actives[not self.actives.index(active)]
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   ValueError: <jpoke.model.pokemon.Pokemon object at 0x00000272E95F78C0> is not in list
+=========================== short test summary info ===========================
+FAILED tests/test_item.py::test_だっしゅつボタン - ValueError: <jpoke.model.p...
+============================== 1 failed in 0.41s ==============================
+

@@ -32,7 +32,6 @@ class Player:
         reserved_commands: 予約されたコマンドのリスト
         has_switched: 今ターンに交代したかどうか
     """
-    MAX_RESERVED = 10
 
     def __init__(self, name: str = ""):
         """Playerインスタンスを初期化する。
@@ -98,13 +97,12 @@ class Player:
 
         Args:
             command: 予約するコマンド
-
-        Raises:
-            RuntimeError: 予約上限を超えた場合
         """
-        if len(self.reserved_commands) >= self.MAX_RESERVED:
-            raise RuntimeError(f"予約上限({self.MAX_RESERVED})を超えました")
         self.reserved_commands.append(command)
+
+    def clear_reserved_commands(self):
+        """予約されたコマンドをすべてクリアする。"""
+        self.reserved_commands = []
 
     def choose_selection_commands(self, battle: Battle) -> list[Command]:
         """選出コマンドを選択する。

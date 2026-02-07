@@ -23,9 +23,9 @@ from .logger import Logger
 from .damage import DamageCalculator, DamageContext
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
-from .switch_manager import SwitchManager
-from .turn_controller import TurnController
-from .speed_calculator import SpeedCalculator
+from .switch import SwitchManager
+from .turn import TurnController
+from .speed import SpeedCalculator
 
 
 @dataclass
@@ -747,10 +747,6 @@ class Battle:
         """ターンを進める（TurnControllerへの委譲）。
 
         Args:
-            commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
+            commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従い、そうでなければ引数のコマンドを使用。
         """
         self.turn_controller.advance_turn(commands)
-
-    def _advance_turn(self):
-        """内部的なターン進行処理（TurnControllerへの委譲）。"""
-        self.turn_controller._process_turn_phases()

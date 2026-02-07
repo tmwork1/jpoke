@@ -94,10 +94,6 @@ class SpeedCalculator:
             mon = player.active
             speed = self.calc_effective_speed(mon)
 
-            # reserved_commandsが空の場合はスキップ（通常は発生しないが防御的に）
-            if not player.reserved_commands:
-                continue
-
             command = player.reserved_commands[-1]
             move = self.battle.command_to_move(self.battle.players[i], command)
 
