@@ -1,6 +1,6 @@
-﻿# 作用のヒエラルキーと実装原則
+﻿# 実装原則
 
-複数の作用が相互に影響する場合、どの作用をどこに実装すべきかを明確化。
+効果の実装場所を決定するための原則とガイドライン。複数の作用が相互に影響する場合、どの作用をどこに実装すべきかを明確化。
 
 ## 基本原則
 
@@ -178,5 +178,6 @@ Handler(
 
 ## 次のステップ
 
-- アーキテクチャ詳細: `architecture.md`
-- ワークフロー: `agents/workflow.md`
+- アーキテクチャ詳細: [`architecture.md`](architecture.md)
+- 開発ワークフロー: [`workflow.md`](workflow.md)
+- 実装パターン: [`knowledge/patterns.md`](knowledge/patterns.md)

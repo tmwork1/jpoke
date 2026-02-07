@@ -1,6 +1,7 @@
 ﻿# アーキテクチャ詳細
 
-前提: `project_context.md` を読了済み。作用実装は `effect_hierarchy.md` 参照。
+前提: [`project_context.md`](project_context.md) を読了済み。
+**実装場所の判断は [`implementation_principles.md`](implementation_principles.md) 参照。**
 
 ## イベント駆動システム
 
@@ -202,5 +203,6 @@ log="never"        # なし
 
 ## 次のステップ
 
-- 作用実装: `effect_hierarchy.md`
-- ワークフロー: `agents/workflow.md`
+- 実装原則: [`implementation_principles.md`](implementation_principles.md)
+- 開発ワークフロー: [`workflow.md`](workflow.md)
+- 実装パターン: [`knowledge/patterns.md`](knowledge/patterns.md)
