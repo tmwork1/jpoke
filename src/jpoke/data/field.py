@@ -146,7 +146,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_CALC_ACTION_SPEED: Handler(
                 h.トリックルーム_reverse_speed,
-                subject_spec="source:self",
+                subject_spec="target:self",
                 log="never",
             ),
         },

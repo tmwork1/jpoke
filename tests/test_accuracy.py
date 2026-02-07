@@ -143,6 +143,53 @@ def test_thunder_in_rain():
     assert hit is True, "雨時のかみなりは必中"
 
 
+def test_hurricane_in_sunny_day():
+    """晴天時のぼうふうは50%に低下"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["ぼうふう"])],
+        foe=[Pokemon("フシギダネ")],
+        weather=("はれ", 999),
+        accuracy=None
+    )
+
+    ally = battle.actives[0]
+    move = ally.moves[0]
+
+    move.register_handlers(battle.events, ally)
+
+    hit_count = 0
+    for _ in range(100):
+        battle.random.seed(None)
+        hit = battle.move_executor.check_hit(ally, move)
+        if hit:
+            hit_count += 1
+
+    move.unregister_handlers(battle.events, ally)
+
+    assert 35 <= hit_count <= 65, f"50%命中率なので35～65回が期待値。実績: {hit_count}回"
+
+
+def test_hurricane_in_rain():
+    """雨時のぼうふうは100%（必中）"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["ぼうふう"])],
+        foe=[Pokemon("フシギダネ")],
+        weather=("あめ", 999),
+        accuracy=100
+    )
+
+    ally = battle.actives[0]
+    move = ally.moves[0]
+
+    move.register_handlers(battle.events, ally)
+
+    hit = battle.move_executor.check_hit(ally, move)
+
+    move.unregister_handlers(battle.events, ally)
+
+    assert hit is True, "雨時のぼうふうは必中"
+
+
 def test_blizzard_in_snow():
     """雪時のふぶきは100%（必中）"""
     battle = t.start_battle(

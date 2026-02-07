@@ -63,8 +63,8 @@ def エレキフィールド_power_modifier(battle: Battle, ctx: EventContext, v
 def エレキフィールド_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """エレキフィールドでねむり無効"""
     if value == "ねむり" and not ctx.target.is_floating(battle.events):
-        return HandlerReturn(True)
-    return HandlerReturn(False)
+        return HandlerReturn(True, "", stop_event=True)
+    return HandlerReturn(False, value)
 
 
 def エレキフィールド_cure_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -119,8 +119,8 @@ def ミストフィールド_power_modifier(battle: Battle, ctx: EventContext, v
 def ミストフィールド_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ミストフィールドで状態異常無効"""
     if not ctx.target.is_floating(battle.events):
-        return HandlerReturn(True)
-    return HandlerReturn(False)
+        return HandlerReturn(True, "", stop_event=True)
+    return HandlerReturn(False, value)
 
 
 def ミストフィールド_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
