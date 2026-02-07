@@ -6,11 +6,11 @@
 
 各ファイルは特定のハンドラカテゴリーの実装状況を表示します：
 
-- [ability.md](ability.md) - 特性（Ability）ハンドラ（13件）
+- [ability.md](ability.md) - 特性（Ability）ハンドラ（14件）
 - [item.md](item.md) - 道具（Item）ハンドラ（22件）
 - [move.md](move.md) - 技（Move）ハンドラ（8件）
 - [ailment.md](ailment.md) - 状態異常（Ailment）ハンドラ（7件）
-- [volatile.md](volatile.md) - 揮発状態（Volatile）ハンドラ（18件）
+- [volatile.md](volatile.md) - 揮発状態（Volatile）ハンドラ（69件）
 - [field.md](field.md) - 場の状態（Field）ハンドラ（32件）
   - 天候（Weather）ハンドラ
   - 地形（Terrain）ハンドラ
@@ -29,12 +29,25 @@
 - ⚠️ 部分的に実装（TODO記載あり）
 - ❌ 未実装
 
-## 実装統計
+## 実装統計（2026年2月7日時点）
 
-- **合計ハンドラ**: 100件以上
-- **実装済み**: 大多数が実装済み
-- **テスト実装**: ごく一部のみ実装
-- **全体進捗**: ハンドラロジックの実装は約80%完了
+- **合計ハンドラ**: 150件以上
+- **実装済み**: 約120件（80%以上）
+- **テスト実装**: 大多数は成功
+- **全体進捗**: ハンドラロジックの実装は約85%完了
+
+### 最近の改善（2026年2月7日）
+
+#### コード品質改善
+- ✅ handler/ability.py に包括的な docstring を追加（14関数）
+- ✅ type hint を改善（Any → 具体型）
+- ✅ volatile.py を五十音順に再編成（69関数）
+- ✅ data/handlers モジュールに五十音順の説明をdocstringに追記
+
+#### アーキテクチャ改善
+- ✅ sub_hp と critical_rank を Volatile クラスへ移行
+- ✅ Pokemon クラスから古い属性を削除
+- ✅ テスト互換性を確保（property accessors）
 
 ## 更新方法
 
