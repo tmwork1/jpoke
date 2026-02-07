@@ -430,7 +430,7 @@ class Battle:
         """
         return self.turn_controller.calc_tod_score(player, alpha)
 
-    def winner(self) -> Player | None:
+    def judge_winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
 
         Returns:
@@ -488,9 +488,16 @@ class Battle:
         """
         if r:
             v = int(target.max_hp * r)
+
         if v and (v := target.modify_hp(v)):
-            self.add_event_log(self.find_player(target),
-                               f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}")
+            self.add_event_log(
+                self.find_player(target),
+                f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}"
+            )
+            # HPがゼロになった場合、勝敗判定を実行
+            if target.hp == 0:
+                self.judge_winner()
+
         return bool(v)
 
     def drain_hp(self, from_: Pokemon, to_: Pokemon, v: int = 0, r: float = 0) -> tuple[bool, bool]:

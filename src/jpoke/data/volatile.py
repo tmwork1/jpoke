@@ -165,11 +165,8 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "たくわえる": VolatileData(
-        handlers={
-            # TODO: たくわえるのハンドラを実装
-            # 蓄積数（最大3）を管理し、はきだす・のみこむで使用
-            # 使用時に防御・特防ランク+1、はきだす・のみこむで蓄積数リセット＆ランク解除
-        }
+        # Volatileではカウントの管理のみ行い、実際の効果は技のハンドラ側で処理
+        handlers={}
     ),
     "ちょうはつ": VolatileData(
         handlers={

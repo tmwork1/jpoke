@@ -28,7 +28,7 @@ class TestPriorityBasics:
         })
 
         # ターン完了後もバトルが継続している（攻撃が発動した）
-        assert battle.winner() is None
+        assert battle.judge_winner() is None
 
     def test_priority_negative_move_comes_last(self):
         """優先度-6の技は優先度0の技より後に行動する。"""

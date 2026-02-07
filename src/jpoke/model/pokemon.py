@@ -95,7 +95,7 @@ class Pokemon:
         """
         self.revealed = False
         self.is_terastallized: bool = False
-        self.hp: int = self.max_hp
+        self._hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
 
         # 場に出ているときの状態をリセット
@@ -259,6 +259,30 @@ class Pokemon:
         return self.hp == 0
 
     @property
+    def hp(self) -> int:
+        """ポケモンの現在HPを取得する。
+
+        Returns:
+            現在のHP
+        """
+        return self._hp
+
+    @hp.setter
+    def hp(self, value: int):
+        """HPの直接代入を防止する。
+
+        HPを変更する場合は、battle.modify_hp()を使用してください。
+        これにより、HP=0時の勝敗判定が漏れなくなります。
+
+        Raises:
+            AttributeError: 直接代入しようとした場合
+        """
+        raise AttributeError(
+            "HPを直接代入することはできません。"
+            "battle.modify_hp(pokemon, v)を使用してください。"
+        )
+
+    @property
     def ability(self) -> Ability:
         """特性を取得する。
 
@@ -365,7 +389,7 @@ class Pokemon:
         Args:
             v: HP割合（0.0～1.0）
         """
-        self.hp = int(self.max_hp * v)
+        self._hp = int(self.max_hp * v)
 
     @property
     def level(self) -> int:
@@ -606,7 +630,7 @@ class Pokemon:
 
         # 被ダメージ量を復元
         if keep_damage:
-            self.hp = self.max_hp - damage
+            self._hp = self.max_hp - damage
 
     def set_stats(self, idx: int, value: int) -> bool:
         """指定した実数値になるよう努力値を設定する。
@@ -649,10 +673,11 @@ class Pokemon:
 
         Note:
             HPは0から最大HPの範囲に制限される。
+            このメソッドは内部用です。外部からはbattle.modify_hp()を使用してください。
         """
-        old = self.hp
-        self.hp = max(0, min(self.max_hp, old + v))
-        return self.hp - old
+        old = self._hp
+        self._hp = max(0, min(self.max_hp, old + v))
+        return self._hp - old
 
     def modify_stat(self, stat: Stat, v: int) -> int:
         """ランク補正を変更する。

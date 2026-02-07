@@ -69,7 +69,6 @@ AILMENTS: dict[str, AilmentData] = {
                 log="never",
                 priority=10,
             ),
-            # TODO カウント進行処理を追加
         }
     ),
     "こおり": AilmentData(

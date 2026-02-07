@@ -82,7 +82,7 @@ def test_たべのこし():
     mon = Pokemon("ピカチュウ", item="たべのこし")
     battle = t.start_battle(ally=[mon], turn=1)
     assert not battle.actives[0].item.revealed
-    mon.hp = 1
+    mon._hp = 1  # テスト用に内部変数を直接変更
     battle.events.emit(Event.ON_TURN_END_2, EventContext(source=battle.actives[0]), None)
     assert battle.actives[0].item.revealed
     assert battle.actives[0].hp == 1 + mon.max_hp // 16

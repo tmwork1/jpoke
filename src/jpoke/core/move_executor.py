@@ -174,8 +174,6 @@ class MoveExecutor:
         if damage:
             self.battle.events.emit(Event.ON_DAMAGE_1, ctx)
 
-        # TODO: 勝敗判定
-
         if damage:
             self.battle.events.emit(Event.ON_DAMAGE_2, ctx)
 

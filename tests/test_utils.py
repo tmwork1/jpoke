@@ -109,7 +109,7 @@ def start_battle(
     for _ in range(turn):
         run_turn(battle)
         battle.print_logs()
-        if battle.winner():
+        if battle.judge_winner():
             break
 
     return battle

@@ -166,7 +166,7 @@ class SwitchManager:
         HPが0になったポケモンを交代させる。
         再帰的に実行し、すべての死に出しが完了するまで処理する。
         """
-        if self.battle.winner():
+        if self.battle.judge_winner():
             return
 
         # 交代フラグを設定
