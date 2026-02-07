@@ -48,10 +48,10 @@ src/jpoke/model/stats.py
 src/jpoke/model/volatile.py
 src/jpoke/player/__init__.py
 src/jpoke/player/mcts_player.py
+src/jpoke/script/dashboard.py
 src/jpoke/utils/__init__.py
 src/jpoke/utils/constants.py
 src/jpoke/utils/copy_utils.py
-src/jpoke/utils/dashboard.py
 src/jpoke/utils/io_utils.py
 src/jpoke/utils/string_utils.py
 src/jpoke/utils/type_defs.py

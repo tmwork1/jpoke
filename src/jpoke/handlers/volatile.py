@@ -210,30 +210,6 @@ def うちおとす_check_floating(battle: Battle, ctx: EventContext, value: Any
 def おんねん_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おんねん状態のひんし時処理（相手の技PPを0にする）
 
-    Note:
-        付与側の最後の攻撃技の記録がBattleに必要
-        現在の実装ではMove.ppの操作メソッドが必要
-
-    Args:
-        battle: バトルインスタンス
-        ctx: イベントコンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    # TODO (実装予定): ひんしになったポケモンが最後に受けた攻撃の技のPPを0にする処理
-    # 実装イメージ:
-    # if hasattr(battle, 'last_move_used_against'):
-    #     last_move = battle.last_move_used_against.get(ctx.source)
-    #     if last_move:
-    #         last_move.pp = 0
-    return HandlerReturn(True)
-
-
-def おんねん_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """おんねん状態のひんし時処理（相手の技PPを0にする）
-
     Args:
         battle: バトルインスタンス
         ctx: イベントコンテキスト
@@ -843,31 +819,6 @@ def まるくなる_power_modifier(battle: Battle, ctx: EventContext, value: Any
     if ctx.move and ctx.move.name in ["ころがる", "アイスボール"]:
         return HandlerReturn(True, value * 8192 // 4096)
     return HandlerReturn(False, value)
-
-
-def みちづれ_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """みちづれ状態のひんし時処理（相手もひんしにする）
-
-    Note:
-        攻撃側の記録がBattleに必要
-        現在の実装では攻撃者追跡機能の追加が必要
-
-    Args:
-        battle: バトルインスタンス
-        ctx: イベントコンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    # TODO (実装予定): みちづれ状態でひんしになった場合、最後に攻撃してきた相手をひんしにする処理
-    # 実装イメージ:
-    # if hasattr(battle, 'last_attacker'):
-    #     attacker = battle.last_attacker.get(ctx.source)
-    #     if attacker and not attacker.is_fainted:
-    #         battle.modify_hp(attacker, v=-attacker.hp)
-    #         battle.add_event_log(ctx.source, "のみちづれ！")
-    return HandlerReturn(True)
 
 
 def みちづれ_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
