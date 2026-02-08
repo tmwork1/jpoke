@@ -5,9 +5,9 @@
             "name": "Python デバッガー: 現在のファイル",
             "type": "debugpy",
             "request": "launch",
-            //"program": "${workspaceFolder}/tests/run.py", // 全体テスト
+            "program": "${workspaceFolder}/tests/run.py", // 全体テスト
             //"program": "${workspaceFolder}/tests/test_ability.py", // 特性のテスト
-            "program": "${workspaceFolder}/tests/test_item.py", // アイテムのテスト
+            //"program": "${workspaceFolder}/tests/test_item.py", // アイテムのテスト
             //"program": "${workspaceFolder}/tests/test_move.py", // 技のテスト
             //"program": "${workspaceFolder}/tests/test_field.py", // フィールドのテスト
             //"program": "${workspaceFolder}/tests/test_volatile.py", // 揮発性状態のテスト

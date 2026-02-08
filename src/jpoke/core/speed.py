@@ -92,7 +92,17 @@ class SpeedCalculator:
                 continue
 
             mon = player.active
+
+            # 実効素早さを計算
             speed = self.calc_effective_speed(mon)
+
+            # TODO: トリックルームによる素早さ反転処理の追加
+            # 例:
+            # speed = self.battle.events.emit(
+            #     Event.ON_CHECK_TRICK_ROOM_SPEED,
+            #     EventContext(target=mon),
+            #     speed
+            # )
 
             command = player.reserved_commands[-1]
             move = self.battle.command_to_move(self.battle.players[i], command)

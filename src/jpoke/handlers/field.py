@@ -67,14 +67,7 @@ def エレキフィールド_prevent_sleep(battle: Battle, ctx: EventContext, va
     return HandlerReturn(False, value)
 
 
-def エレキフィールド_cure_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """エレキフィールド上に出た時のねむり回復"""
-    mon = ctx.source
-    if mon.ailment.name == "ねむり" and not mon.is_floating(battle.events):
-        success = mon.cure_ailment(battle.events)
-        return HandlerReturn(success)
-    return HandlerReturn(False)
-
+# TODO: エレキフィールドでのねむけ(揮発状態)防止のハンドラ実装
 
 def グラスフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """グラスフィールドでの草技威力1.3倍・地面技威力0.5倍"""
@@ -172,6 +165,7 @@ def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, val
 
 
 def しろいきり_prevent_stat_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO: 自分以外のポケモンによる能力低下だけ防ぐように修正
     """しろいきりで能力低下を防ぐ"""
     if not value:
         return HandlerReturn(False, value)
@@ -214,14 +208,15 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
         return HandlerReturn(False)
 
     # 対象のサイドのどくびしフィールドを取得
-    dokubishi_field = battle.get_side(ctx.source).fields.get("どくびし")
+    side = battle.get_side(ctx.source)
+    dokubishi_field = side.fields.get("どくびし")
     if not dokubishi_field or dokubishi_field.layers == 0:
         return HandlerReturn(False)
 
     # どくタイプは吸収して消滅
     if ctx.source.has_type("どく"):
         dokubishi_field.layers = 0
-        dokubishi_field.deactivate(battle.events)
+        side.deactivate("どくびし")
         return HandlerReturn(True)
 
     if ctx.source.is_floating(battle.events):
@@ -234,6 +229,7 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO: common.calc_effectivenessを使うように修正
     """ステルスロックのダメージ（岩タイプ相性依存）"""
     from jpoke.utils.constants import TYPE_MODIFIER
 
@@ -275,12 +271,16 @@ def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: A
 
 
 def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO: ターン管理を追加
+    # 現状では発動したターンの終了時に回復してしまう
+    # カウントが0になったら回復させるとよい
     """ねがいごとのターン終了時HP回復"""
     if not ctx.target:
         return HandlerReturn(False)
 
     # 対象のサイドのねがいごとフィールドを取得
-    negai_field = battle.get_side(ctx.target).fields.get("ねがいごと")
+    side = battle.get_side(ctx.target)
+    negai_field = side.fields.get("ねがいごと")
     if not negai_field or not negai_field.is_active:
         return HandlerReturn(False)
 
@@ -288,7 +288,7 @@ def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Any) -> Handl
     success = battle.modify_hp(ctx.target, r=1/2)
 
     # 回復結果に関わらず解除（1回限りの効果）
-    negai_field.deactivate(battle.events)
+    side.deactivate("ねがいごと")
 
     return HandlerReturn(success)
 

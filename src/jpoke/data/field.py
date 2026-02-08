@@ -20,6 +20,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="attacker:self",
                 log="never",
             ),
+            # TODO: こおり状態の防止
         },
     ),
     "あめ": FieldData(
@@ -70,10 +71,6 @@ FIELDS: dict[str, FieldData] = {
                 h.エレキフィールド_prevent_sleep,
                 subject_spec="target:self",
                 log="on_success",
-            ),
-            Event.ON_SWITCH_IN: Handler(
-                h.エレキフィールド_cure_sleep,
-                subject_spec="source:self",
             ),
         },
     ),
@@ -143,6 +140,7 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "トリックルーム": FieldData(
+        # TODO: トリックルームで反転するのは素早さ順のみで、技の優先度は反転しないことを考慮する。
         handlers={
             Event.ON_CALC_ACTION_SPEED: Handler(
                 h.トリックルーム_reverse_speed,
@@ -173,7 +171,18 @@ FIELDS: dict[str, FieldData] = {
             ),
         },
     ),
+    "オーロラベール": FieldData(
+        turn_extension_item="ひかりのねんど",
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: Handler(
+                h.オーロラベール_reduce_damage,
+                subject_spec="defender:self",
+                log="never",
+            ),
+        },
+    ),
     "しんぴのまもり": FieldData(
+        # TODO: こんらん・ねむけ防止処理を追加
         turn_extension_item="ひかりのねんど",
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: Handler(
@@ -243,16 +252,6 @@ FIELDS: dict[str, FieldData] = {
                 h.ねばねばネット_speed_drop,
                 subject_spec="source:self",
                 log_text="ねばねばネット",
-            ),
-        },
-    ),
-    "オーロラベール": FieldData(
-        turn_extension_item="ひかりのねんど",
-        handlers={
-            Event.ON_CALC_DAMAGE_MODIFIER: Handler(
-                h.オーロラベール_reduce_damage,
-                subject_spec="defender:self",
-                log="never",
             ),
         },
     ),
