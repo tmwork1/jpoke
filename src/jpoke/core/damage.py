@@ -327,6 +327,7 @@ class DamageCalculator:
             defender.ability
         )
 
+        # TODO: 特性てんねんのハンドラとして実装する
         if def_ability == 'てんねん' and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_ATK_RANK_BY_TENNEN)
@@ -375,7 +376,7 @@ class DamageCalculator:
         move_category = attacker.effective_move_category(move, events)
 
         # ステータス
-        if move_category == "物理" or "physical" in move.data.flags:
+        if move_category == "物理" or "physical" in move.data.labels:
             stat = "B"
         else:
             stat = "D"
@@ -384,10 +385,11 @@ class DamageCalculator:
         r_rank = rank_modifier(defender.rank[stat])
 
         # ランク補正の修正
-        if "ignore_rank" in move.data.flags and r_rank != 1:
+        if "ignore_rank" in move.data.labels and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_MOVE)
 
+        # TODO: 特性てんねんのハンドラとして実装する
         if attacker.ability == 'てんねん' and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_TENNEN)

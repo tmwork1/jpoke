@@ -36,6 +36,7 @@ MoveCategory = Literal["物理", "特殊", "変化"]
 
 AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"]
 
+# TODO: volatileの実装と完全に一致させる
 VolatileName = Literal[
     "アクアリング",
     "あめまみれ",
@@ -74,3 +75,18 @@ Weather = Literal["", "はれ", "あめ", "ゆき", "すなあらし"]
 Terrain = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 
 BoostSource = Literal["", "ability", "item", "weather", "terrain"]
+
+MoveLabel = Literal[
+    "bite",
+    "bullet",
+    "contact",
+    "dance",
+    "heal",
+    "non_encore",
+    "powder",
+    "pulse",
+    "punch",
+    "slash",
+    "sound",
+    "wind",
+]

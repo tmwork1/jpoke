@@ -2,7 +2,7 @@ from typing import Literal
 from dataclasses import dataclass, field
 
 from jpoke.utils.constants import STATS
-from jpoke.utils.type_defs import MoveCategory, PokeType
+from jpoke.utils.type_defs import MoveCategory, PokeType, MoveLabel
 from jpoke.core.event import Event, Handler
 
 
@@ -43,7 +43,8 @@ class MoveData:
     power: int | None = None
     accuracy: int | None = None
     priority: int = 0
-    flags: list[str] = field(default_factory=list)
+    critical_rank: int = 0
+    labels: list[Move] = field(default_factory=list)
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
 

@@ -30,9 +30,9 @@ jpoke プロジェクトで実施した各種リサーチ結果を文書化し�
 | テラスタル | [terastal.md](terastal.md) | - | テラスタル関連 |
 | PP | [pp.md](pp.md) | - | PP周りの仕様 |
 | 技カテゴリ | [move/カテゴリ.md](move/カテゴリ.md) | - | 追加効果別の分類 |
-| 技一覧(物理) | [move/physical_move_list.md](move/physical_move_list.md) | - | 物理技一覧 |
-| 技一覧(特殊) | [move/special_move_list.md](move/special_move_list.md) | - | 特殊技一覧 |
-| 技一覧(変化) | [move/status_move_list.md](move/status_move_list.md) | - | 変化技一覧 |
+| 技一覧(物理) | [move/physical_moves.md](move/physical_moves.md) | - | 物理技一覧 |
+| 技一覧(特殊) | [move/special_moves.md](move/special_moves.md) | - | 特殊技一覧 |
+| 技一覧(変化) | [move/status_moves.md](move/status_moves.md) | - | 変化技一覧 |
 | 技メモ(個別) | [move/](move/) | - | 個別技の調査メモ |
 
 ### 主要な参照元

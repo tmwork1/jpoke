@@ -26,7 +26,7 @@ class VolatileHandler(Handler):
 def _protect_block(battle: Battle, ctx: EventContext, value: Any) -> bool:
     if not ctx.move:
         return False
-    if "unprotectable" in ctx.move.data.flags or "anti_protect" in ctx.move.data.flags:
+    if "unprotectable" in ctx.move.data.labels or "anti_protect" in ctx.move.data.labels:
         return False
     return True
 
@@ -263,7 +263,7 @@ def かえんのまもり_check_protect(battle: Battle, ctx: EventContext, value
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.flags and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
         common.apply_ailment(battle, ctx, value, "やけど", target_spec="attacker:self", source_spec="defender:self")
     return HandlerReturn(True, True)
 
@@ -889,7 +889,7 @@ def みがわり_before_damage_apply(battle: Battle, ctx: EventContext, value: A
     if sub_hp <= 0:
         return HandlerReturn(False, value)
 
-    if "ignore_substitute" in ctx.move.data.flags:
+    if "ignore_substitute" in ctx.move.data.labels:
         return HandlerReturn(False, value)
 
     ctx.defender.volatiles["みがわり"].sub_hp -= value
@@ -925,7 +925,7 @@ def みがわり_check_substitute(battle: Battle, ctx: EventContext, value: Any)
     if sub_hp <= 0:
         return HandlerReturn(False, value)
 
-    if "ignore_substitute" in ctx.move.data.flags:
+    if "ignore_substitute" in ctx.move.data.labels:
         return HandlerReturn(False, value)
 
     if ctx.move.data.power == 0 or ctx.move.category == "変化":
@@ -1059,7 +1059,7 @@ def キングシールド_check_protect(battle: Battle, ctx: EventContext, value
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.flags and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
         battle.modify_stat(ctx.attacker, "A", -2, source=ctx.defender)
     return HandlerReturn(True, True)
 
@@ -1095,7 +1095,7 @@ def スレッドトラップ_check_protect(battle: Battle, ctx: EventContext, va
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.flags and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
         battle.modify_stat(ctx.attacker, "S", -1, source=ctx.defender)
     return HandlerReturn(True, True)
 
@@ -1166,7 +1166,7 @@ def トーチカ_check_protect(battle: Battle, ctx: EventContext, value: Any) ->
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.flags and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
         common.apply_ailment(battle, ctx, value, "どく", target_spec="attacker:self", source_spec="defender:self")
     return HandlerReturn(True, True)
 
@@ -1202,7 +1202,7 @@ def マジックコート_before_damage(battle: Battle, ctx: EventContext, value
     if not ctx.move or ctx.move.category != "変化":
         return HandlerReturn(False)
 
-    if "reflectable" not in ctx.move.data.flags:
+    if "reflectable" not in ctx.move.data.labels:
         return HandlerReturn(False)
 
     # 簡易反射: 元の効果を無効化

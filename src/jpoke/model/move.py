@@ -115,4 +115,4 @@ class Move(GameEffect):
         Returns:
             int: 急所ランク補正値（0 または 1）
         """
-        return 1 if "high_critical" in self.data.flags else 0
+        return 1 if "high_critical" in self.data.labels else 0

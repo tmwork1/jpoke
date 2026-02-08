@@ -5,7 +5,7 @@ from jpoke.handlers import common, ailment as h
 
 
 def common_setup():
-    """共通のセットアップ処理"""
+    # TODO: docstring 追加
     for name in AILMENTS:
         AILMENTS[name].name = name
 
@@ -15,9 +15,7 @@ AILMENTS: dict[str, AilmentData] = {
     "どく": AilmentData(
         handlers={
             Event.ON_TURN_END_3: h.AilmentHandler(
-                partial(
-                    common.modify_hp, target_spec="target:self", r=-1/8
-                ),
+                partial(common.modify_hp, target_spec="target:self", r=-1/8),
                 subject_spec="target:self",
                 priority=30,
             )

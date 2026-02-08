@@ -68,5 +68,5 @@
 
 **仕様書**:
 - [docs/spec/accuracy.md](../research/accuracy.md) - 命中判定仕様
-- [docs/spec/abiity/ability_list.md](../research/abiity/ability_list.md) - 特性リスト
+- [docs/spec/abiity/abilities.md](../research/abiity/abilities.md) - 特性リスト
 - [docs/spec/event.md](../research/event.md) - イベント処理フロー

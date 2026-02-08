@@ -44,7 +44,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=95,
         accuracy=95,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "３ぼんのや": MoveData(
         type="かくとう",
@@ -52,8 +52,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "ＤＤラリアット": MoveData(
         type="あく",
@@ -61,7 +60,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "Ｇのちから": MoveData(
         type="くさ",
@@ -77,7 +76,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=90,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(
@@ -93,7 +92,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=75,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.3)
@@ -107,7 +106,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アイアンローラー": MoveData(
         type="はがね",
@@ -115,7 +114,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=130,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アイススピナー": MoveData(
         type="こおり",
@@ -123,7 +122,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アイスハンマー": MoveData(
         type="こおり",
@@ -132,7 +131,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=90,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self")
@@ -145,7 +144,8 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags=["slash", "high_critical"],
+        critical_rank=1,
+        labels=["slash"],
     ),
     "アクアジェット": MoveData(
         type="みず",
@@ -154,7 +154,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アクアステップ": MoveData(
         type="みず",
@@ -162,8 +162,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
-        flags=["contact"],
+        labels=["contact", "dance"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=1, target_spec="attacker:self", source_spec="attacker:self")
@@ -176,7 +175,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=90,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アクアブレイク": MoveData(
         type="みず",
@@ -185,7 +184,7 @@ MOVES: dict[str, MoveData] = {
         power=85,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.2)
@@ -198,7 +197,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アクセルロック": MoveData(
         type="いわ",
@@ -207,7 +206,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "アクロバット": MoveData(
         type="ひこう",
@@ -215,7 +214,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=55,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "あなをほる": MoveData(
         type="じめん",
@@ -223,7 +222,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["contact", "hide"],
+        labels=["contact"],
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="あなをほる", target_spec="attacker:self", source_spec="attacker:self", count=1),
@@ -236,7 +235,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        flags=["contact", "rage"],
+        labels=["contact"],
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 v.あばれる_apply,
@@ -249,7 +248,8 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=75,
         accuracy=100,
-        flags=["contact", "critical", "punch"],
+        critical_rank=3,
+        labels=["contact", "punch"],
     ),
     "イカサマ": MoveData(
         type="あく",
@@ -257,7 +257,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=95,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "いかりのまえば": MoveData(
         type="ノーマル",
@@ -265,7 +265,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=90,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "いじげんラッシュ": MoveData(
         type="あく",
@@ -273,8 +273,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-
-        flags=["anti_protect"],
     ),
     "いっちょうあがり": MoveData(
         type="ドラゴン",
@@ -297,7 +295,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
@@ -319,7 +317,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
@@ -333,7 +331,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "うちおとす": MoveData(
         type="いわ",
@@ -349,7 +347,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ウッドホーン": MoveData(
         type="くさ",
@@ -358,7 +356,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "うっぷんばらし": MoveData(
         type="あく",
@@ -366,7 +364,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=75,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "えだづき": MoveData(
         type="くさ",
@@ -374,7 +372,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=40,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "オーラぐるま": MoveData(
         type="でんき",
@@ -391,7 +389,7 @@ MOVES: dict[str, MoveData] = {
         power=30,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "おはかまいり": MoveData(
         type="ゴースト",
@@ -406,7 +404,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "カウンター": MoveData(
         type="かくとう",
@@ -415,7 +413,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         priority=-5,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "かえんぐるま": MoveData(
         type="ほのお",
@@ -424,7 +422,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
 
-        flags=["contact", "unfreeze"],
+        labels=["contact"],
     ),
     "かえんボール": MoveData(
         type="ほのお",
@@ -433,7 +431,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=90,
 
-        flags=["bullet", "unfreeze"],
+        labels=["bullet"],
     ),
     "かかとおとし": MoveData(
         type="かくとう",
@@ -442,7 +440,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "かげうち": MoveData(
         type="ゴースト",
@@ -451,7 +449,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "かげぬい": MoveData(
         type="ゴースト",
@@ -466,7 +464,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=70,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "かみくだく": MoveData(
         type="あく",
@@ -475,7 +473,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["bite", "contact"],
+        labels=["bite", "contact"],
     ),
     "かみつく": MoveData(
         type="あく",
@@ -484,7 +482,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
 
-        flags=["bite", "contact"],
+        labels=["bite", "contact"],
     ),
     "かみなりのキバ": MoveData(
         type="でんき",
@@ -493,7 +491,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=95,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "かみなりパンチ": MoveData(
         type="でんき",
@@ -502,7 +500,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "がむしゃら": MoveData(
         type="ノーマル",
@@ -510,7 +508,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "からげんき": MoveData(
         type="ノーマル",
@@ -518,7 +516,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ガリョウテンセイ": MoveData(
         type="ひこう",
@@ -527,7 +525,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
@@ -540,7 +538,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=75,
         accuracy=100,
-        flags=["contact", "break_wall"],
+        labels=["contact"],
     ),
     "がんせきアックス": MoveData(
         type="いわ",
@@ -548,7 +546,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=65,
         accuracy=90,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "がんせきふうじ": MoveData(
         type="いわ",
@@ -568,7 +566,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["bullet", "immovable"],
+        labels=["bullet"],
     ),
     "きあいパンチ": MoveData(
         type="かくとう",
@@ -577,7 +575,7 @@ MOVES: dict[str, MoveData] = {
         power=150,
         accuracy=100,
         priority=-3,
-        flags=["contact", "non_negoto", "punch", "quick_charge"],
+        labels=["contact", "non_negoto", "punch"],
     ),
     "ギガインパクト": MoveData(
         type="ノーマル",
@@ -585,7 +583,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["contact", "immovable"],
+        labels=["contact"],
     ),
     "きしかいせい": MoveData(
         type="かくとう",
@@ -593,7 +591,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "きゅうけつ": MoveData(
         type="むし",
@@ -602,7 +600,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(h.apply_hp_drain, rate=0.5),
@@ -615,7 +613,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "きょじゅうざん": MoveData(
         type="はがね",
@@ -623,7 +621,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "きょじゅうだん": MoveData(
         type="はがね",
@@ -631,7 +629,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "キラースピン": MoveData(
         type="どく",
@@ -640,7 +638,7 @@ MOVES: dict[str, MoveData] = {
         power=30,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "きりさく": MoveData(
         type="ノーマル",
@@ -648,7 +646,8 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags=["contact", "slash", "high_critical"],
+        critical_rank=1,
+        labels=["contact", "slash"],
     ),
     "クイックターン": MoveData(
         type="みず",
@@ -656,7 +655,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
-        flags=["contact", "switch"],
+        labels=["contact"],
     ),
     "くさわけ": MoveData(
         type="くさ",
@@ -665,7 +664,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "くちばしキャノン": MoveData(
         type="ひこう",
@@ -674,7 +673,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=100,
         priority=-3,
-        flags=["bullet", "non_negoto", "quick_charge"],
+        labels=["bullet", "non_negoto"],
     ),
     "くらいつく": MoveData(
         type="あく",
@@ -682,7 +681,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["bite", "contact"],
+        labels=["bite", "contact"],
     ),
     "グラススライダー": MoveData(
         type="くさ",
@@ -691,7 +690,7 @@ MOVES: dict[str, MoveData] = {
         power=55,
         accuracy=100,
         priority=1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "クラブハンマー": MoveData(
         type="みず",
@@ -699,7 +698,8 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=90,
-        flags=["contact", "high_critical"],
+        critical_rank=1,
+        labels=["contact"],
     ),
     "クロスサンダー": MoveData(
         type="でんき",
@@ -714,7 +714,8 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=80,
-        flags=["contact", "high_critical"],
+        critical_rank=1,
+        labels=["contact"],
     ),
     "クロスポイズン": MoveData(
         type="どく",
@@ -722,8 +723,8 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-
-        flags=["contact", "slash", "high_critical"],
+        critical_rank=1,
+        labels=["contact", "slash"],
     ),
     "げきりん": MoveData(
         type="ドラゴン",
@@ -731,7 +732,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        flags=["contact", "rage"],
+        labels=["contact"],
     ),
     "けたぐり": MoveData(
         type="かくとう",
@@ -739,7 +740,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "こうげきしれい": MoveData(
         type="むし",
@@ -747,7 +748,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "こうそくスピン": MoveData(
         type="ノーマル",
@@ -756,7 +757,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ゴーストダイブ": MoveData(
         type="ゴースト",
@@ -764,7 +765,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags=["contact", "hide", "anti_protect"],
+        labels=["contact"],
     ),
     "こおりのキバ": MoveData(
         type="こおり",
@@ -773,7 +774,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=95,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "こおりのつぶて": MoveData(
         type="こおり",
@@ -789,8 +790,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=90,
-
-        flags=["charge", "high_critical"],
+        critical_rank=1,
     ),
     "このは": MoveData(
         type="くさ",
@@ -805,7 +805,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=90,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", prob=0.2)
@@ -818,7 +818,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=30,
         accuracy=90,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "サイコカッター": MoveData(
         type="エスパー",
@@ -826,7 +826,8 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags=["slash", "high_critical"],
+        critical_rank=1,
+        labels=["slash"],
     ),
     "サイコファング": MoveData(
         type="エスパー",
@@ -834,7 +835,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=100,
-        flags=["bite", "contact", "break_wall"],
+        labels=["bite", "contact"],
     ),
     "サイコブレイド": MoveData(
         type="エスパー",
@@ -842,7 +843,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "サンダーダイブ": MoveData(
         type="でんき",
@@ -851,7 +852,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=95,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ジェットパンチ": MoveData(
         type="みず",
@@ -860,7 +861,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         priority=1,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "シェルブレード": MoveData(
         type="みず",
@@ -868,7 +869,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=95,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
@@ -895,7 +896,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "じしん": MoveData(
         type="じめん",
@@ -911,7 +912,7 @@ MOVES: dict[str, MoveData] = {
         power=30,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "じたばた": MoveData(
         type="ノーマル",
@@ -919,7 +920,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "じだんだ": MoveData(
         type="じめん",
@@ -927,7 +928,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "しっぺがえし": MoveData(
         type="あく",
@@ -935,7 +936,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "じならし": MoveData(
         type="じめん",
@@ -956,7 +957,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "じばく": MoveData(
         type="ノーマル",
@@ -972,7 +973,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=15,
         accuracy=85,
-        flags=["bind", "contact"],
+        labels=["bind", "contact"],
     ),
     "ジャイロボール": MoveData(
         type="はがね",
@@ -980,7 +981,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=1,
         accuracy=100,
-        flags=["bullet", "contact", "variable_power"],
+        labels=["bullet", "contact"],
     ),
     "シャドークロー": MoveData(
         type="ゴースト",
@@ -988,7 +989,8 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=70,
         accuracy=100,
-        flags=["contact", "high_critical"],
+        critical_rank=1,
+        labels=["contact"],
     ),
     "シャドーダイブ": MoveData(
         type="ゴースト",
@@ -996,7 +998,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        flags=["contact", "hide", "anti_protect"],
+        labels=["contact"],
     ),
     "シャドーパンチ": MoveData(
         type="ゴースト",
@@ -1004,7 +1006,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=0,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "じゃれつく": MoveData(
         type="フェアリー",
@@ -1013,15 +1015,13 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "じわれ": MoveData(
         type="じめん",
         category="物理",
         pp=5,
-        power=0,
         accuracy=30,
-        flags=["one_ko"],
     ),
     "しんそく": MoveData(
         type="ノーマル",
@@ -1030,7 +1030,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
         priority=2,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "スイープビンタ": MoveData(
         type="ノーマル",
@@ -1038,7 +1038,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=25,
         accuracy=85,
-        flags=["contact", "combo_2_5"],
+        labels=["contact"],
     ),
     "すいりゅうれんだ": MoveData(
         type="みず",
@@ -1046,7 +1046,8 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=25,
         accuracy=100,
-        flags=["contact", "critical", "punch", "combo_3_3"],
+        critical_rank=3,
+        labels=["contact", "punch"],
     ),
     "スケイルショット": MoveData(
         type="ドラゴン",
@@ -1054,7 +1055,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=25,
         accuracy=90,
-        flags=["combo_2_5"],
+
     ),
     "ずつき": MoveData(
         type="ノーマル",
@@ -1063,7 +1064,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "すてみタックル": MoveData(
         type="ノーマル",
@@ -1072,7 +1073,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(h.apply_recoil, rate=1/3),
@@ -1085,7 +1086,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=80,
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "すなじごく": MoveData(
         type="じめん",
@@ -1093,7 +1094,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-        flags=["bind"],
+        labels=["bind"],
     ),
     "スパーク": MoveData(
         type="でんき",
@@ -1102,7 +1103,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "スマートホーン": MoveData(
         type="はがね",
@@ -1110,7 +1111,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=70,
         accuracy=0,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "せいなるつるぎ": MoveData(
         type="かくとう",
@@ -1118,7 +1119,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags=["contact", "slash", "ignore_rank"],
+        labels=["contact", "slash"],
     ),
     "せいなるほのお": MoveData(
         type="ほのお",
@@ -1127,7 +1128,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=95,
 
-        flags=["unfreeze"],
+
     ),
     "ソウルクラッシュ": MoveData(
         type="フェアリー",
@@ -1135,7 +1136,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=75,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -1148,7 +1149,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=125,
         accuracy=100,
-        flags=["charge", "contact", "slash", "solar"],
+        labels=["contact", "slash"],
     ),
     "そらをとぶ": MoveData(
         type="ひこう",
@@ -1156,7 +1157,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=95,
-        flags=["contact", "hide"],
+        labels=["contact"],
     ),
     "たいあたり": MoveData(
         type="ノーマル",
@@ -1165,7 +1166,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "だいばくはつ": MoveData(
         type="ノーマル",
@@ -1181,7 +1182,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["contact", "hide"],
+        labels=["contact"],
     ),
     "だいふんげき": MoveData(
         type="ほのお",
@@ -1189,7 +1190,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        flags=["rage"],
     ),
     "ダイヤストーム": MoveData(
         type="いわ",
@@ -1206,7 +1206,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ダストシュート": MoveData(
         type="どく",
@@ -1222,7 +1222,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=80,
         accuracy=75,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "タネばくだん": MoveData(
         type="くさ",
@@ -1230,7 +1230,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["bullet"],
+        labels=["bullet"],
     ),
     "タネマシンガン": MoveData(
         type="くさ",
@@ -1238,7 +1238,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=25,
         accuracy=100,
-        flags=["bullet", "combo_2_5"],
+        labels=["bullet"],
     ),
     "ダブルアタック": MoveData(
         type="ノーマル",
@@ -1246,7 +1246,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=35,
         accuracy=90,
-        flags=["contact", "combo_2_2"],
+        labels=["contact"],
     ),
     "ダブルウイング": MoveData(
         type="ひこう",
@@ -1254,7 +1254,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=40,
         accuracy=90,
-        flags=["contact", "combo_2_2"],
+        labels=["contact"],
     ),
     "ダメおし": MoveData(
         type="あく",
@@ -1262,7 +1262,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "だんがいのつるぎ": MoveData(
         type="じめん",
@@ -1277,7 +1277,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ついばむ": MoveData(
         type="ひこう",
@@ -1285,7 +1285,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "つけあがる": MoveData(
         type="あく",
@@ -1293,7 +1293,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=20,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "つじぎり": MoveData(
         type="あく",
@@ -1301,7 +1301,8 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=70,
         accuracy=100,
-        flags=["contact", "slash", "high_critical"],
+        critical_rank=1,
+        labels=["contact", "slash"],
     ),
     "ツタこんぼう": MoveData(
         type="くさ",
@@ -1309,7 +1310,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "つつく": MoveData(
         type="ひこう",
@@ -1317,7 +1318,7 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=35,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "つっぱり": MoveData(
         type="かくとう",
@@ -1325,7 +1326,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=15,
         accuracy=100,
-        flags=["contact", "combo_2_5"],
+        labels=["contact"],
     ),
     "つのでつく": MoveData(
         type="ノーマル",
@@ -1333,7 +1334,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=65,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "つのドリル": MoveData(
         type="ノーマル",
@@ -1341,7 +1342,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=30,
-        flags=["contact", "one_ko"],
+        labels=["contact"],
     ),
     "つばさでうつ": MoveData(
         type="ひこう",
@@ -1349,7 +1350,7 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "つばめがえし": MoveData(
         type="ひこう",
@@ -1357,7 +1358,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=0,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "つららおとし": MoveData(
         type="こおり",
@@ -1373,7 +1374,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=25,
         accuracy=100,
-        flags=["combo_2_5"],
+
     ),
     "つるのムチ": MoveData(
         type="くさ",
@@ -1381,7 +1382,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=45,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "であいがしら": MoveData(
         type="むし",
@@ -1390,7 +1391,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
         priority=2,
-        flags=["contact", "first_turn"],
+        labels=["contact"],
     ),
     "デカハンマー": MoveData(
         type="はがね",
@@ -1398,7 +1399,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=160,
         accuracy=100,
-        flags=["unrepeatable"],
     ),
     "でんこうせっか": MoveData(
         type="ノーマル",
@@ -1407,7 +1407,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "でんこうそうげき": MoveData(
         type="でんき",
@@ -1415,7 +1415,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "どくづき": MoveData(
         type="どく",
@@ -1424,7 +1424,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "どくどくのキバ": MoveData(
         type="どく",
@@ -1433,7 +1433,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "どくばり": MoveData(
         type="どく",
@@ -1457,7 +1457,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=0,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドゲザン": MoveData(
         type="あく",
@@ -1465,7 +1465,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=0,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "とっしん": MoveData(
         type="ノーマル",
@@ -1474,7 +1474,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=85,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "とっておき": MoveData(
         type="ノーマル",
@@ -1482,7 +1482,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "とどめばり": MoveData(
         type="むし",
@@ -1490,7 +1490,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=50,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "とびかかる": MoveData(
         type="むし",
@@ -1498,7 +1498,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -1512,7 +1512,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -1526,7 +1526,7 @@ MOVES: dict[str, MoveData] = {
         power=85,
         accuracy=85,
 
-        flags=["contact", "hide"],
+        labels=["contact"],
     ),
     "とびひざげり": MoveData(
         type="かくとう",
@@ -1535,7 +1535,7 @@ MOVES: dict[str, MoveData] = {
         power=130,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ともえなげ": MoveData(
         type="かくとう",
@@ -1544,7 +1544,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=90,
         priority=-6,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドラゴンアロー": MoveData(
         type="ドラゴン",
@@ -1552,7 +1552,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags=["combo_2_2"],
+
     ),
     "ドラゴンクロー": MoveData(
         type="ドラゴン",
@@ -1560,7 +1560,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドラゴンダイブ": MoveData(
         type="ドラゴン",
@@ -1569,7 +1569,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=75,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドラゴンテール": MoveData(
         type="ドラゴン",
@@ -1578,7 +1578,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=90,
         priority=-6,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドラゴンハンマー": MoveData(
         type="ドラゴン",
@@ -1586,7 +1586,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドラムアタック": MoveData(
         type="くさ",
@@ -1607,7 +1607,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=70,
         accuracy=0,
-        flags=["critical"],
+        critical_rank=3,
     ),
     "トリプルアクセル": MoveData(
         type="こおり",
@@ -1615,7 +1615,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=20,
         accuracy=90,
-        flags=["contact", "combo_3_3"],
+        labels=["contact"],
     ),
     "トリプルキック": MoveData(
         type="かくとう",
@@ -1623,7 +1623,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=10,
         accuracy=90,
-        flags=["contact", "combo_3_3"],
+        labels=["contact"],
     ),
     "トリプルダイブ": MoveData(
         type="みず",
@@ -1631,7 +1631,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=30,
         accuracy=95,
-        flags=["contact", "combo_3_3"],
+        labels=["contact"],
     ),
     "ドリルくちばし": MoveData(
         type="ひこう",
@@ -1639,7 +1639,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ドリルライナー": MoveData(
         type="じめん",
@@ -1647,7 +1647,8 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=95,
-        flags=["contact", "high_critical"],
+        critical_rank=1,
+        labels=["contact"],
     ),
     "ドレインパンチ": MoveData(
         type="かくとう",
@@ -1656,7 +1657,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "トロピカルキック": MoveData(
         type="くさ",
@@ -1665,7 +1666,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -1678,7 +1679,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "とんぼがえり": MoveData(
         type="むし",
@@ -1686,7 +1687,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(h.pivot)
         }
@@ -1697,7 +1698,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        flags=["variable_power"],
+
     ),
     "にぎりつぶす": MoveData(
         type="ノーマル",
@@ -1705,7 +1706,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "にどげり": MoveData(
         type="かくとう",
@@ -1713,7 +1714,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=30,
         accuracy=100,
-        flags=["contact", "combo_2_2"],
+        labels=["contact"],
     ),
     "ニトロチャージ": MoveData(
         type="ほのお",
@@ -1722,7 +1723,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=1, target_spec="attacker:self", source_spec="attacker:self")
@@ -1736,7 +1737,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=3,
-        flags=["contact", "first_turn"],
+        labels=["contact"],
     ),
     "ネコにこばん": MoveData(
         type="ノーマル",
@@ -1751,7 +1752,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=20,
         accuracy=90,
-        flags=["contact", "slash", "combo_10_10"],
+        labels=["contact", "slash"],
     ),
     "のしかかり": MoveData(
         type="ノーマル",
@@ -1760,7 +1761,7 @@ MOVES: dict[str, MoveData] = {
         power=85,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ハードプレス": MoveData(
         type="はがね",
@@ -1768,7 +1769,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "ハイパードリル": MoveData(
         type="ノーマル",
@@ -1776,7 +1777,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["contact", "anti_protect"],
+        labels=["contact"],
     ),
     "はいよるいちげき": MoveData(
         type="むし",
@@ -1785,7 +1786,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -1799,7 +1800,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stats, stats={"A": -1, "B": -1}, target_spec="attacker:self", source_spec="attacker:self")
@@ -1813,7 +1814,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ばくれつパンチ": MoveData(
         type="かくとう",
@@ -1822,7 +1823,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=50,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "ハサミギロチン": MoveData(
         type="ノーマル",
@@ -1830,7 +1831,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=30,
-        flags=["contact", "contact", "one_ko"],
+        labels=["contact"],
     ),
     "はさむ": MoveData(
         type="ノーマル",
@@ -1838,7 +1839,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=55,
         accuracy=100,
-        flags=["contact", "contact"],
+        labels=["contact"],
     ),
     "はたきおとす": MoveData(
         type="あく",
@@ -1846,7 +1847,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-        flags=["contact", "contact"],
+        labels=["contact"],
     ),
     "はたく": MoveData(
         type="ノーマル",
@@ -1854,7 +1855,7 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=40,
         accuracy=100,
-        flags=["contact", "contact"],
+        labels=["contact"],
     ),
     "はっけい": MoveData(
         type="かくとう",
@@ -1863,7 +1864,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "はっぱカッター": MoveData(
         type="くさ",
@@ -1871,7 +1872,8 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=55,
         accuracy=95,
-        flags=["slash", "high_critical"],
+        critical_rank=1,
+        labels=["slash"],
     ),
     "はなふぶき": MoveData(
         type="くさ",
@@ -1879,7 +1881,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags=["wind"],
+        labels=["wind"],
     ),
     "はやてがえし": MoveData(
         type="かくとう",
@@ -1888,7 +1890,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=100,
         priority=3,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "バリアーラッシュ": MoveData(
         type="エスパー",
@@ -1897,7 +1899,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=90,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "バレットパンチ": MoveData(
         type="はがね",
@@ -1906,7 +1908,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=1,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "パワーウィップ": MoveData(
         type="くさ",
@@ -1914,7 +1916,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=85,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "パワフルエッジ": MoveData(
         type="いわ",
@@ -1922,7 +1924,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=95,
         accuracy=100,
-        flags=["contact", "anti_protect"],
+        labels=["contact"],
     ),
     "ヒートスタンプ": MoveData(
         type="ほのお",
@@ -1930,7 +1932,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "ひけん・ちえなみ": MoveData(
         type="あく",
@@ -1938,7 +1940,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=65,
         accuracy=90,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ひっかく": MoveData(
         type="ノーマル",
@@ -1946,7 +1948,7 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=40,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ひょうざんおろし": MoveData(
         type="こおり",
@@ -1963,7 +1965,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ふいうち": MoveData(
         type="あく",
@@ -1972,7 +1974,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
         priority=1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "フェイタルクロー": MoveData(
         type="どく",
@@ -1981,7 +1983,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "フェイント": MoveData(
         type="ノーマル",
@@ -1990,7 +1992,7 @@ MOVES: dict[str, MoveData] = {
         power=30,
         accuracy=100,
         priority=2,
-        flags=["anti_protect"],
+
     ),
     "ふくろだたき": MoveData(
         type="あく",
@@ -2006,7 +2008,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "ふみつけ": MoveData(
         type="ノーマル",
@@ -2015,7 +2017,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "フライングプレス": MoveData(
         type="かくとう",
@@ -2023,7 +2025,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=95,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "フリーズボルト": MoveData(
         type="こおり",
@@ -2032,7 +2034,7 @@ MOVES: dict[str, MoveData] = {
         power=140,
         accuracy=90,
 
-        flags=["charge"],
+
     ),
     "ブリザードランス": MoveData(
         type="こおり",
@@ -2048,7 +2050,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact", "unfreeze"],
+        labels=["contact"],
     ),
     "ブレイククロー": MoveData(
         type="ノーマル",
@@ -2057,7 +2059,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=95,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
@@ -2070,8 +2072,8 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=90,
-
-        flags=["contact", "high_critical"],
+        critical_rank=1,
+        labels=["contact"],
     ),
     "ブレイブバード": MoveData(
         type="ひこう",
@@ -2080,7 +2082,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "プレゼント": MoveData(
         type="ノーマル",
@@ -2095,7 +2097,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "ぶんまわす": MoveData(
         type="あく",
@@ -2103,7 +2105,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ヘビーボンバー": MoveData(
         type="はがね",
@@ -2111,7 +2113,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "ホイールスピン": MoveData(
         type="はがね",
@@ -2120,7 +2122,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ポイズンテール": MoveData(
         type="どく",
@@ -2128,8 +2130,8 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=50,
         accuracy=100,
-
-        flags=["contact", "high_critical"],
+        critical_rank=1,
+        labels=["contact"],
     ),
     "ほうふく": MoveData(
         type="あく",
@@ -2137,7 +2139,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ボーンラッシュ": MoveData(
         type="じめん",
@@ -2145,7 +2147,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=25,
         accuracy=90,
-        flags=["combo_2_5"],
+
     ),
     "ほしがる": MoveData(
         type="ノーマル",
@@ -2153,7 +2155,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ほっぺすりすり": MoveData(
         type="でんき",
@@ -2162,7 +2164,7 @@ MOVES: dict[str, MoveData] = {
         power=20,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ボディプレス": MoveData(
         type="かくとう",
@@ -2170,7 +2172,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ほのおのキバ": MoveData(
         type="ほのお",
@@ -2179,7 +2181,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=95,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ほのおのパンチ": MoveData(
         type="ほのお",
@@ -2188,7 +2190,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "ほのおのムチ": MoveData(
         type="ほのお",
@@ -2197,7 +2199,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ポルターガイスト": MoveData(
         type="ゴースト",
@@ -2213,7 +2215,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "まきつく": MoveData(
         type="ノーマル",
@@ -2221,7 +2223,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=15,
         accuracy=90,
-        flags=["bind", "contact"],
+        labels=["bind", "contact"],
     ),
     "マッハパンチ": MoveData(
         type="かくとう",
@@ -2230,7 +2232,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         priority=1,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "ミサイルばり": MoveData(
         type="むし",
@@ -2238,7 +2240,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=25,
         accuracy=95,
-        flags=["combo_2_5"],
+
     ),
     "みだれづき": MoveData(
         type="ノーマル",
@@ -2246,7 +2248,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=15,
         accuracy=85,
-        flags=["contact", "combo_2_5"],
+        labels=["contact"],
     ),
     "みだれひっかき": MoveData(
         type="ノーマル",
@@ -2254,7 +2256,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=18,
         accuracy=80,
-        flags=["contact", "combo_2_5"],
+        labels=["contact"],
     ),
     "みねうち": MoveData(
         type="ノーマル",
@@ -2262,7 +2264,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=40,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "むしくい": MoveData(
         type="むし",
@@ -2270,7 +2272,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "むねんのつるぎ": MoveData(
         type="ほのお",
@@ -2279,7 +2281,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "メガトンキック": MoveData(
         type="ノーマル",
@@ -2287,7 +2289,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=75,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "メガトンパンチ": MoveData(
         type="ノーマル",
@@ -2295,7 +2297,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=80,
         accuracy=85,
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "メガホーン": MoveData(
         type="むし",
@@ -2303,7 +2305,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=85,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "メタルクロー": MoveData(
         type="はがね",
@@ -2312,7 +2314,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=95,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", prob=0.1)
@@ -2332,7 +2334,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["ignore_ability"],
+
     ),
     "もろはのずつき": MoveData(
         type="いわ",
@@ -2341,7 +2343,7 @@ MOVES: dict[str, MoveData] = {
         power=150,
         accuracy=80,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "やけっぱち": MoveData(
         type="ほのお",
@@ -2349,7 +2351,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "ゆきなだれ": MoveData(
         type="こおり",
@@ -2358,7 +2360,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         priority=-4,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "らいげき": MoveData(
         type="でんき",
@@ -2367,7 +2369,7 @@ MOVES: dict[str, MoveData] = {
         power=130,
         accuracy=85,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "らいめいげり": MoveData(
         type="かくとう",
@@ -2376,7 +2378,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -2389,7 +2391,8 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags=["contact", "slash", "high_critical"],
+        critical_rank=1,
+        labels=["contact", "slash"],
     ),
     "レイジングブル": MoveData(
         type="ノーマル",
@@ -2397,7 +2400,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags=["contact", "break_wall"],
+        labels=["contact"],
     ),
     "れいとうパンチ": MoveData(
         type="こおり",
@@ -2406,7 +2409,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        flags=["contact", "punch"],
+        labels=["contact", "punch"],
     ),
     "れんぞくぎり": MoveData(
         type="むし",
@@ -2414,7 +2417,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=40,
         accuracy=95,
-        flags=["contact", "slash"],
+        labels=["contact", "slash"],
     ),
     "ローキック": MoveData(
         type="かくとう",
@@ -2423,7 +2426,7 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -2436,7 +2439,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=25,
         accuracy=90,
-        flags=["bullet", "combo_2_5"],
+        labels=["bullet"],
     ),
     "ワイドブレイカー": MoveData(
         type="ドラゴン",
@@ -2445,7 +2448,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -2459,14 +2462,14 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "わるあがき": MoveData(
         type="ステラ",
         category="物理",
         pp=999,
         power=40,
-        flags=["contact", "non_encore"],
+        labels=["contact", "non_encore"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_hp, target_spec="attacker:self", r=-1/4),
@@ -2506,7 +2509,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=95,
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "あくのはどう": MoveData(
         type="あく",
@@ -2515,7 +2518,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["wave"],
+        labels=["pulse"],
     ),
     "アシストパワー": MoveData(
         type="エスパー",
@@ -2531,7 +2534,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
 
-        flags=["bullet"],
+        labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self")
@@ -2551,7 +2554,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=80,
         accuracy=100,
-        flags=["anti_protect"],
+
     ),
     "いてつくしせん": MoveData(
         type="エスパー",
@@ -2572,7 +2575,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "いにしえのうた": MoveData(
         type="ノーマル",
@@ -2581,7 +2584,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        flags=["sound"],
+        labels=["sound"],
     ),
     "いのちがけ": MoveData(
         type="かくとう",
@@ -2597,7 +2600,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["sound", "sleep"],
+        labels=["sound"],
     ),
     "ウェザーボール": MoveData(
         type="ノーマル",
@@ -2605,7 +2608,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags=["bullet"],
+        labels=["bullet"],
     ),
     "うずしお": MoveData(
         type="みず",
@@ -2613,7 +2616,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-        flags=["bind"],
+        labels=["bind"],
     ),
     "うたかたのアリア": MoveData(
         type="みず",
@@ -2621,7 +2624,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "うらみつらみ": MoveData(
         type="ゴースト",
@@ -2637,7 +2640,8 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=60,
         accuracy=95,
-        flags=["slash", "high_critical", "wind"],
+        critical_rank=1,
+        labels=["slash", "wind"],
     ),
     "エアスラッシュ": MoveData(
         type="ひこう",
@@ -2646,7 +2650,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=95,
 
-        flags=["slash"],
+        labels=["slash"],
     ),
     "エアロブラスト": MoveData(
         type="ひこう",
@@ -2654,7 +2658,8 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=95,
-        flags=["high_critical", "wind"],
+        critical_rank=1,
+        labels=["wind"],
     ),
     "エコーボイス": MoveData(
         type="ノーマル",
@@ -2662,7 +2667,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=40,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "エナジーボール": MoveData(
         type="くさ",
@@ -2671,7 +2676,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["bullet"],
+        labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
@@ -2697,7 +2702,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        flags=["bullet", "variable_power"],
+        labels=["bullet"],
     ),
     "エレクトロビーム": MoveData(
         type="でんき",
@@ -2705,7 +2710,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=130,
         accuracy=100,
-        flags=["charge"],
+
     ),
     "オーバードライブ": MoveData(
         type="でんき",
@@ -2713,7 +2718,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "オーバーヒート": MoveData(
         type="ほのお",
@@ -2734,8 +2739,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "オーロラビーム": MoveData(
         type="こおり",
@@ -2759,7 +2763,7 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=40,
         accuracy=100,
-        flags=["wind"],
+        labels=["wind"],
     ),
     "カタストロフィ": MoveData(
         type="あく",
@@ -2774,7 +2778,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags=["bullet"],
+        labels=["bullet"],
     ),
     "かみなり": MoveData(
         type="でんき",
@@ -2782,7 +2786,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=110,
         accuracy=70,
-        flags=["rainy_accuracy"],
+
         handlers={
             Event.ON_CALC_ACCURACY: h.MoveHandler(
                 h.かみなり_accuracy,
@@ -2798,7 +2802,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=80,
 
-        flags=["rainy_accuracy", "wind"],
+        labels=["wind"],
     ),
     "きあいだま": MoveData(
         type="かくとう",
@@ -2807,7 +2811,7 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=70,
 
-        flags=["bullet"],
+        labels=["bullet"],
     ),
     "ギガドレイン": MoveData(
         type="くさ",
@@ -2837,7 +2841,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=1,
         accuracy=100,
-        flags=["contact", "variable_power"],
+        labels=["contact"],
     ),
     "クリアスモッグ": MoveData(
         type="どく",
@@ -2852,7 +2856,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["unfreeze"],
+
     ),
     "クロロブラスト": MoveData(
         type="くさ",
@@ -2868,7 +2872,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=90,
-        flags=["non_negoto"],
+        labels=["non_negoto"],
     ),
     "げんしのちから": MoveData(
         type="いわ",
@@ -2884,7 +2888,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=60,
         accuracy=90,
-        flags=["critical"],
+        critical_rank=3,
     ),
     "コールドフレア": MoveData(
         type="こおり",
@@ -2893,7 +2897,7 @@ MOVES: dict[str, MoveData] = {
         power=140,
         accuracy=90,
 
-        flags=["charge"],
+
     ),
     "ゴールドラッシュ": MoveData(
         type="はがね",
@@ -2910,7 +2914,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=80,
 
-        flags=["rainy_accuracy", "wind"],
+        labels=["wind"],
     ),
     "こごえるかぜ": MoveData(
         type="こおり",
@@ -2919,7 +2923,7 @@ MOVES: dict[str, MoveData] = {
         power=55,
         accuracy=95,
 
-        flags=["wind"],
+        labels=["wind"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -2953,7 +2957,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=110,
         accuracy=85,
-        flags=["wave"],
+        labels=["pulse"],
     ),
     "サイケこうせん": MoveData(
         type="エスパー",
@@ -2982,7 +2986,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["physical"],
+
     ),
     "サイコノイズ": MoveData(
         type="エスパー",
@@ -2990,7 +2994,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "サイコブースト": MoveData(
         type="エスパー",
@@ -3011,7 +3015,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
-        flags=["physical"],
+
     ),
     "さばきのつぶて": MoveData(
         type="ノーマル",
@@ -3026,7 +3030,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags=["non_negoto", "sound"],
+        labels=["non_negoto", "sound"],
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 v.さわぐ_apply,
@@ -3039,7 +3043,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=90,
-        flags=["bind"],
+        labels=["bind"],
     ),
     "シードフレア": MoveData(
         type="くさ",
@@ -3056,7 +3060,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "しおふき": MoveData(
         type="みず",
@@ -3086,7 +3090,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=90,
 
-        flags=["unfreeze"],
+
     ),
     "シャドーボール": MoveData(
         type="ゴースト",
@@ -3095,7 +3099,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["bullet"],
+        labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.2)
@@ -3108,7 +3112,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["ignore_ability"],
+
     ),
     "しんくうは": MoveData(
         type="かくとう",
@@ -3140,7 +3144,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=100,
-        flags=["slash", "physical"],
+        labels=["slash"],
     ),
     "じんらい": MoveData(
         type="でんき",
@@ -3165,7 +3169,7 @@ MOVES: dict[str, MoveData] = {
         power=110,
         accuracy=100,
 
-        flags=["sound"],
+        labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="attacker:self", source_spec="attacker:self")
@@ -3179,7 +3183,7 @@ MOVES: dict[str, MoveData] = {
         power=110,
         accuracy=95,
 
-        flags=["unfreeze"],
+
     ),
     "スピードスター": MoveData(
         type="ノーマル",
@@ -3202,7 +3206,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=30,
-        flags=["one_ko"],
+
     ),
     "ソーラービーム": MoveData(
         type="くさ",
@@ -3210,7 +3214,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        flags=["charge", "solar"],
+
     ),
     "だいちのちから": MoveData(
         type="じめん",
@@ -3226,7 +3230,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags=["wave"],
+        labels=["pulse"],
     ),
     "ダイマックスほう": MoveData(
         type="ドラゴン",
@@ -3234,7 +3238,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["non_encore", "non_negoto"],
+        labels=["non_encore", "non_negoto"],
     ),
     "だいもんじ": MoveData(
         type="ほのお",
@@ -3250,7 +3254,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags=["combo_2_2"],
+
     ),
     "だくりゅう": MoveData(
         type="みず",
@@ -3274,7 +3278,7 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
 
-        flags=["wind"],
+        labels=["wind"],
     ),
     "チャージビーム": MoveData(
         type="でんき",
@@ -3295,7 +3299,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=40,
         accuracy=0,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "ツインビーム": MoveData(
         type="エスパー",
@@ -3303,7 +3307,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=40,
         accuracy=100,
-        flags=["combo_2_2"],
+
     ),
     "てっていこうせん": MoveData(
         type="はがね",
@@ -3319,7 +3323,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        flags=["terastal"],
+
     ),
     "テラバースト": MoveData(
         type="ノーマル",
@@ -3327,7 +3331,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["terastal"],
+
     ),
     "でんきショック": MoveData(
         type="でんき",
@@ -3350,7 +3354,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=50,
-        flags=["bullet"],
+        labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_ailment, ailment="まひ", target_spec="defender:self"),
@@ -3363,7 +3367,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["immovable"],
+
     ),
     "トライアタック": MoveData(
         type="ノーマル",
@@ -3387,7 +3391,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
 
-        flags=["contact"],
+        labels=["contact"],
     ),
     "どろかけ": MoveData(
         type="じめん",
@@ -3426,7 +3430,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=80,
 
-        flags=["rainy_accuracy", "wind"],
+        labels=["wind"],
     ),
     "ねっさのだいち": MoveData(
         type="じめん",
@@ -3435,7 +3439,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
 
-        flags=["unfreeze"],
+
     ),
     "ねっとう": MoveData(
         type="みず",
@@ -3444,7 +3448,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["unfreeze"],
+
     ),
     "ねっぷう": MoveData(
         type="ほのお",
@@ -3452,8 +3456,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=95,
         accuracy=90,
-
-        flags=["wind"],
+        labels=["wind"],
     ),
     "ねらいうち": MoveData(
         type="みず",
@@ -3461,7 +3464,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["high_critical"],
+        critical_rank=1,
     ),
     "ねんりき": MoveData(
         type="エスパー",
@@ -3469,7 +3472,6 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=50,
         accuracy=100,
-
     ),
     "バークアウト": MoveData(
         type="あく",
@@ -3478,7 +3480,7 @@ MOVES: dict[str, MoveData] = {
         power=55,
         accuracy=95,
 
-        flags=["sound"],
+        labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self")
@@ -3491,7 +3493,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["immovable"],
+
     ),
     "ハイドロカノン": MoveData(
         type="みず",
@@ -3499,7 +3501,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["immovable"],
+
     ),
     "ハイドロスチーム": MoveData(
         type="みず",
@@ -3507,7 +3509,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags=["unfreeze"],
+
     ),
     "ハイドロポンプ": MoveData(
         type="みず",
@@ -3522,7 +3524,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "はかいこうせん": MoveData(
         type="ノーマル",
@@ -3530,7 +3532,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["immovable"],
+
     ),
     "はきだす": MoveData(
         type="ノーマル",
@@ -3545,7 +3547,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=140,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "はどうだん": MoveData(
         type="かくとう",
@@ -3553,7 +3555,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=80,
         accuracy=0,
-        flags=["bullet", "wave"],
+        labels=["bullet", "pulse"],
     ),
     "はなびらのまい": MoveData(
         type="くさ",
@@ -3561,7 +3563,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        flags=["contact", "rage"],
+        labels=["contact", "dance"],
     ),
     "バブルこうせん": MoveData(
         type="みず",
@@ -3593,7 +3595,7 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=80,
 
-        flags=["wind"],
+        labels=["wind"],
     ),
     "パワージェム": MoveData(
         type="いわ",
@@ -3637,7 +3639,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags=["ignore_ability"],
+
     ),
     "ぶきみなじゅもん": MoveData(
         type="エスパー",
@@ -3645,7 +3647,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=80,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "ふぶき": MoveData(
         type="こおり",
@@ -3653,7 +3655,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=110,
         accuracy=70,
-        flags=["wind"],
+        labels=["wind"],
         handlers={
             Event.ON_CALC_ACCURACY: h.MoveHandler(
                 h.ふぶき_accuracy,
@@ -3668,7 +3670,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        flags=["immovable"],
+
     ),
     "ブラッドムーン": MoveData(
         type="ノーマル",
@@ -3676,7 +3678,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=100,
-        flags=["unrepeatable"],
+
     ),
     "フリーズドライ": MoveData(
         type="こおり",
@@ -3692,7 +3694,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=160,
         accuracy=100,
-        flags=["immovable"],
+
     ),
     "フルールカノン": MoveData(
         type="フェアリー",
@@ -3714,7 +3716,7 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
 
-        flags=["sound"],
+        labels=["sound"],
     ),
     "ふんえん": MoveData(
         type="ほのお",
@@ -3754,7 +3756,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["bullet"],
+        labels=["bullet"],
     ),
     "ベノムショック": MoveData(
         type="どく",
@@ -3777,7 +3779,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=110,
         accuracy=70,
-        flags=["rainy_accuracy", "wind"],
+        labels=["wind"],
         handlers={
             Event.ON_CALC_ACCURACY: h.MoveHandler(
                 h.ぼうふう_accuracy,
@@ -3792,7 +3794,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-        flags=["bind"],
+        labels=["bind"],
     ),
     "ほのおのちかい": MoveData(
         type="ほのお",
@@ -3807,7 +3809,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
+        labels=["dance"],
     ),
     "ボルトチェンジ": MoveData(
         type="でんき",
@@ -3815,7 +3817,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags=["switch"],
+
     ),
     "マグマストーム": MoveData(
         type="ほのお",
@@ -3823,7 +3825,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=75,
-        flags=["bind"],
+        labels=["bind"],
     ),
     "マジカルシャイン": MoveData(
         type="フェアリー",
@@ -3871,7 +3873,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=20,
         accuracy=100,
-        flags=["bind", "contact"],
+        labels=["bind", "contact"],
     ),
     "みずあめボム": MoveData(
         type="くさ",
@@ -3887,7 +3889,7 @@ MOVES: dict[str, MoveData] = {
         power=15,
         accuracy=100,
         priority=1,
-        flags=["combo_2_5"],
+
     ),
     "みずでっぽう": MoveData(
         type="みず",
@@ -3911,7 +3913,7 @@ MOVES: dict[str, MoveData] = {
         power=95,
         accuracy=100,
 
-        flags=["bullet"],
+        labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
@@ -3932,7 +3934,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
 
-        flags=["wave"],
+        labels=["pulse"],
     ),
     "ミラーコート": MoveData(
         type="エスパー",
@@ -3955,7 +3957,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "ムーンフォース": MoveData(
         type="フェアリー",
@@ -3972,7 +3974,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        flags=["sound"],
+        labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
@@ -4006,6 +4008,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100
+        labels=["dance"],
     ),
     "メテオビーム": MoveData(
         type="いわ",
@@ -4013,7 +4016,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=90,
-        flags=["charge"],
+
     ),
     "もえあがるいかり": MoveData(
         type="あく",
@@ -4052,7 +4055,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=40,
         accuracy=100,
-        flags=["wind"],
+        labels=["wind"],
     ),
     "ライジングボルト": MoveData(
         type="でんき",
@@ -4127,7 +4130,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=100,
-        flags=["wave"],
+        labels=["pulse"],
     ),
     "りんごさん": MoveData(
         type="くさ",
@@ -4143,7 +4146,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=60,
         accuracy=100,
-        flags=["sound"],
+        labels=["sound"],
     ),
     "ルミナコリジョン": MoveData(
         type="エスパー",
@@ -4195,7 +4198,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "あくび": MoveData(
         type="ノーマル",
@@ -4203,7 +4206,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "あくまのキッス": MoveData(
         type="ノーマル",
@@ -4211,7 +4214,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=75,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "あさのひざし": MoveData(
         type="ノーマル",
@@ -4219,7 +4222,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "あまいかおり": MoveData(
         type="ノーマル",
@@ -4227,7 +4230,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="EVA", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -4240,7 +4243,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -4253,7 +4256,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "あやしいひかり": MoveData(
         type="ゴースト",
@@ -4261,7 +4264,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "アロマセラピー": MoveData(
         type="くさ",
@@ -4269,7 +4272,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "アロマミスト": MoveData(
         type="フェアリー",
@@ -4277,7 +4280,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "アンコール": MoveData(
         type="ノーマル",
@@ -4285,7 +4288,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "non_encore"],
+        labels=["non_encore"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="アンコール", target_spec="defender:self", source_spec="attacker:self", count=3),
@@ -4298,7 +4301,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "いかりのこな": MoveData(
         type="むし",
@@ -4307,7 +4310,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=2,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "いたみわけ": MoveData(
         type="ノーマル",
@@ -4315,7 +4318,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "いちゃもん": MoveData(
         type="あく",
@@ -4323,7 +4326,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="いちゃもん", target_spec="defender:self", source_spec="attacker:self"),
@@ -4336,7 +4339,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=95,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "いのちのしずく": MoveData(
         type="みず",
@@ -4344,7 +4347,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "いばる": MoveData(
         type="ノーマル",
@@ -4352,7 +4355,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=85,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "いやしのすず": MoveData(
         type="ノーマル",
@@ -4360,7 +4363,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "sound"],
+        labels=["sound"],
     ),
     "いやしのねがい": MoveData(
         type="エスパー",
@@ -4368,7 +4371,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "いやしのはどう": MoveData(
         type="エスパー",
@@ -4376,7 +4379,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["blocked_by_gold", "reflectable", "heal"],
+        labels=["heal"],
     ),
     "いやなおと": MoveData(
         type="ノーマル",
@@ -4384,7 +4387,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=85,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -4397,7 +4400,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -4410,7 +4413,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=55,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
     ),
     "うつしえ": MoveData(
         type="ノーマル",
@@ -4418,7 +4421,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "blocked_by_gold"],
+
     ),
     "うらみ": MoveData(
         type="ゴースト",
@@ -4426,7 +4429,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "blocked_by_gold", "reflectable"],
+
     ),
     "エレキフィールド": MoveData(
         type="でんき",
@@ -4434,7 +4437,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "えんまく": MoveData(
         type="ノーマル",
@@ -4442,7 +4445,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="ACC", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -4455,7 +4458,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "wind"],
+        labels=["wind"],
     ),
     "おいわい": MoveData(
         type="ノーマル",
@@ -4463,7 +4466,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "non_negoto"],
+        labels=["non_negoto"],
     ),
     "オーロラベール": MoveData(
         type="こおり",
@@ -4471,7 +4474,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "おかたづけ": MoveData(
         type="ノーマル",
@@ -4479,7 +4482,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "おきみやげ": MoveData(
         type="あく",
@@ -4487,7 +4490,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+
     ),
     "おさきにどうぞ": MoveData(
         type="ノーマル",
@@ -4495,7 +4498,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "おたけび": MoveData(
         type="ノーマル",
@@ -4503,7 +4506,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
     ),
     "おだてる": MoveData(
         type="あく",
@@ -4511,7 +4514,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "blocked_by_gold", "reflectable"],
+
     ),
     "おちゃかい": MoveData(
         type="ノーマル",
@@ -4519,7 +4522,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "おにび": MoveData(
         type="ほのお",
@@ -4527,7 +4530,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=85,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "ガードシェア": MoveData(
         type="エスパー",
@@ -4535,7 +4538,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "ガードスワップ": MoveData(
         type="エスパー",
@@ -4543,7 +4546,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+
     ),
     "かいでんぱ": MoveData(
         type="でんき",
@@ -4551,7 +4554,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "かいふくふうじ": MoveData(
         type="エスパー",
@@ -4559,7 +4562,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "かえんのまもり": MoveData(
         type="ほのお",
@@ -4568,7 +4571,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="かえんのまもり", target_spec="attacker:self", source_spec="attacker:self"),
@@ -4581,7 +4584,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "かたくなる": MoveData(
         type="ノーマル",
@@ -4589,7 +4592,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
@@ -4602,7 +4605,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable"],
+
     ),
     "からにこもる": MoveData(
         type="みず",
@@ -4610,7 +4613,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
@@ -4623,7 +4626,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "きあいだめ": MoveData(
         type="ノーマル",
@@ -4631,7 +4634,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ギアチェンジ": MoveData(
         type="はがね",
@@ -4639,7 +4642,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "キノコのほうし": MoveData(
         type="くさ",
@@ -4647,7 +4650,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable", "powder"],
+        labels=["powder"],
     ),
     "きりばらい": MoveData(
         type="ひこう",
@@ -4655,7 +4658,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="EVA", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -4668,7 +4671,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=85,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -4681,7 +4684,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "グラスフィールド": MoveData(
         type="くさ",
@@ -4689,7 +4692,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "くろいきり": MoveData(
         type="こおり",
@@ -4697,7 +4700,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "くろいまなざし": MoveData(
         type="ノーマル",
@@ -4705,7 +4708,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "blocked_by_gold", "reflectable"],
+
     ),
     "こうごうせい": MoveData(
         type="くさ",
@@ -4713,7 +4716,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "こうそくいどう": MoveData(
         type="エスパー",
@@ -4721,7 +4724,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
@@ -4734,7 +4737,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "コートチェンジ": MoveData(
         type="ノーマル",
@@ -4742,7 +4745,7 @@ MOVES: dict[str, MoveData] = {
         pp=100,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "コスモパワー": MoveData(
         type="エスパー",
@@ -4750,7 +4753,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "コットンガード": MoveData(
         type="くさ",
@@ -4758,7 +4761,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=3, target_spec="attacker:self", source_spec="attacker:self"),
@@ -4772,7 +4775,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=2,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "こらえる": MoveData(
         type="ノーマル",
@@ -4781,7 +4784,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
     ),
     "こわいかお": MoveData(
         type="ノーマル",
@@ -4789,7 +4792,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -4802,7 +4805,7 @@ MOVES: dict[str, MoveData] = {
         pp=0,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "サイコフィールド": MoveData(
         type="エスパー",
@@ -4810,7 +4813,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "サイドチェンジ": MoveData(
         type="エスパー",
@@ -4819,7 +4822,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=2,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "さいはい": MoveData(
         type="エスパー",
@@ -4827,7 +4830,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "さいみんじゅつ": MoveData(
         type="エスパー",
@@ -4835,7 +4838,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=60,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "さきおくり": MoveData(
         type="あく",
@@ -4843,7 +4846,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "さむいギャグ": MoveData(
         type="こおり",
@@ -4851,7 +4854,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "switch"],
+
     ),
     "じこあんじ": MoveData(
         type="ノーマル",
@@ -4859,7 +4862,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "じこさいせい": MoveData(
         type="ノーマル",
@@ -4867,7 +4870,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "しっぽきり": MoveData(
         type="ノーマル",
@@ -4875,7 +4878,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "switch"],
+
     ),
     "しっぽをふる": MoveData(
         type="ノーマル",
@@ -4883,7 +4886,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -4896,7 +4899,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable"],
+
     ),
     "しびれごな": MoveData(
         type="くさ",
@@ -4904,7 +4907,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=75,
-        flags=["blocked_by_gold", "reflectable", "powder"],
+        labels=["powder"],
     ),
     "ジャングルヒール": MoveData(
         type="くさ",
@@ -4912,7 +4915,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "じゅうでん": MoveData(
         type="でんき",
@@ -4920,7 +4923,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "じゅうりょく": MoveData(
         type="エスパー",
@@ -4928,7 +4931,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "しょうりのまい": MoveData(
         type="かくとう",
@@ -4936,7 +4939,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+        labels=["dance"],
     ),
     "しろいきり": MoveData(
         type="こおり",
@@ -4944,7 +4947,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "しんぴのまもり": MoveData(
         type="ノーマル",
@@ -4952,7 +4955,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "シンプルビーム": MoveData(
         type="ノーマル",
@@ -4960,7 +4963,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "スキルスワップ": MoveData(
         type="エスパー",
@@ -4968,7 +4971,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "スケッチ": MoveData(
         type="ノーマル",
@@ -4976,7 +4979,7 @@ MOVES: dict[str, MoveData] = {
         pp=0,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "ignore_substitute", "non_encore", "non_negoto"],
+        labels=["non_encore", "non_negoto"],
     ),
     "すてゼリフ": MoveData(
         type="あく",
@@ -4984,7 +4987,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound", "switch"],
+        labels=["sound"],
     ),
     "ステルスロック": MoveData(
         type="いわ",
@@ -4992,7 +4995,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "reflectable"],
+
     ),
     "すなあつめ": MoveData(
         type="じめん",
@@ -5000,13 +5003,13 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "すなあらし": MoveData(
         type="いわ",
         category="変化",
         pp=10,
-        flags=["unprotectable", "ignore_substitute", "wind"],
+        labels=["wind"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.activate_weather, weather="すなあらし", source_spec="attacker:self"),
@@ -5019,7 +5022,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="ACC", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -5032,7 +5035,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+
     ),
     "すりかえ": MoveData(
         type="あく",
@@ -5040,7 +5043,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+
     ),
     "スレッドトラップ": MoveData(
         type="むし",
@@ -5049,7 +5052,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="スレッドトラップ", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5062,7 +5065,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ソウルビート": MoveData(
         type="ドラゴン",
@@ -5070,7 +5073,7 @@ MOVES: dict[str, MoveData] = {
         pp=100,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "sound"],
+        labels=["dance", "sound"],
     ),
     "ダークホール": MoveData(
         type="あく",
@@ -5078,7 +5081,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=50,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "タールショット": MoveData(
         type="いわ",
@@ -5086,7 +5089,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="タールショット", target_spec="defender:self", source_spec="attacker:self"),
@@ -5102,7 +5105,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 v.たくわえる_apply,
@@ -5115,7 +5118,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "タマゴうみ": MoveData(
         type="ノーマル",
@@ -5123,7 +5126,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "ちいさくなる": MoveData(
         type="ノーマル",
@@ -5131,7 +5134,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ちいさくなる", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5147,7 +5150,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable", "heal"],
+        labels=["heal"],
     ),
     "ちょうおんぱ": MoveData(
         type="ノーマル",
@@ -5155,7 +5158,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=55,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
     ),
     "ちょうのまい": MoveData(
         type="むし",
@@ -5163,7 +5166,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+        labels=["dance"],
     ),
     "ちょうはつ": MoveData(
         type="あく",
@@ -5171,7 +5174,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable"],
+
     ),
     "つきのひかり": MoveData(
         type="フェアリー",
@@ -5179,7 +5182,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "つぶらなひとみ": MoveData(
         type="フェアリー",
@@ -5188,7 +5191,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         priority=1,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "つぼをつく": MoveData(
         type="ノーマル",
@@ -5196,7 +5199,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "つめとぎ": MoveData(
         type="あく",
@@ -5204,13 +5207,13 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "つるぎのまい": MoveData(
         type="ノーマル",
         category="変化",
         pp=20,
-        flags=["unprotectable", "ignore_substitute"],
+        labels=["dance"],
         handlers={
         }
     ),
@@ -5220,7 +5223,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "テクスチャー２": MoveData(
         type="ノーマル",
@@ -5228,7 +5231,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable"],
+
     ),
     "デコレーション": MoveData(
         type="フェアリー",
@@ -5236,7 +5239,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "てだすけ": MoveData(
         type="ノーマル",
@@ -5245,7 +5248,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         priority=5,
-        flags=["unprotectable"],
+
     ),
     "てっぺき": MoveData(
         type="はがね",
@@ -5253,7 +5256,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=2, target_spec="attacker:self", source_spec="attacker:self"),
@@ -5267,7 +5270,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=-6,
-        flags=["unprotectable", "ignore_substitute", "switch"],
+
     ),
     "てんしのキッス": MoveData(
         type="フェアリー",
@@ -5275,7 +5278,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=75,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "でんじは": MoveData(
         type="でんき",
@@ -5283,7 +5286,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=90,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "でんじふゆう": MoveData(
         type="でんき",
@@ -5291,7 +5294,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "とおせんぼう": MoveData(
         type="ノーマル",
@@ -5299,7 +5302,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "blocked_by_gold", "reflectable"],
+
     ),
     "トーチカ": MoveData(
         type="どく",
@@ -5308,7 +5311,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="トーチカ", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5321,7 +5324,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "sound"],
+        labels=["sound"],
     ),
     "どくガス": MoveData(
         type="どく",
@@ -5329,14 +5332,14 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=90,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "どくどく": MoveData(
         type="どく",
         category="変化",
         pp=10,
         accuracy=90,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_ailment, ailment="もうどく", target_spec="defender:self", source_spec="attacker:self"),
@@ -5349,7 +5352,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "どくのこな": MoveData(
         type="どく",
@@ -5357,7 +5360,7 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=0,
         accuracy=75,
-        flags=["blocked_by_gold", "reflectable", "powder"],
+        labels=["powder"],
     ),
     "どくびし": MoveData(
         type="どく",
@@ -5365,7 +5368,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "reflectable"],
+
     ),
     "とぐろをまく": MoveData(
         type="どく",
@@ -5373,7 +5376,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "とける": MoveData(
         type="どく",
@@ -5381,7 +5384,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ドラゴンエール": MoveData(
         type="ドラゴン",
@@ -5389,7 +5392,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "トリック": MoveData(
         type="エスパー",
@@ -5397,7 +5400,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+
     ),
     "トリックルーム": MoveData(
         type="エスパー",
@@ -5406,7 +5409,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=-7,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ドわすれ": MoveData(
         type="エスパー",
@@ -5414,7 +5417,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=2, target_spec="attacker:self", source_spec="attacker:self"),
@@ -5427,7 +5430,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
     ),
     "なかまづくり": MoveData(
         type="ノーマル",
@@ -5435,7 +5438,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "なかよくする": MoveData(
         type="ノーマル",
@@ -5443,7 +5446,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "blocked_by_gold", "reflectable"],
+
     ),
     "なきごえ": MoveData(
         type="ノーマル",
@@ -5451,7 +5454,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable", "sound"],
+        labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -5464,7 +5467,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "なみだめ": MoveData(
         type="ノーマル",
@@ -5472,7 +5475,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -5485,7 +5488,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "なりきり": MoveData(
         type="エスパー",
@@ -5493,7 +5496,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "blocked_by_gold"],
+
     ),
     "ニードルガード": MoveData(
         type="くさ",
@@ -5502,7 +5505,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
     ),
     "にほんばれ": MoveData(
         type="ほのお",
@@ -5510,7 +5513,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "にらみつける": MoveData(
         type="ノーマル",
@@ -5518,7 +5521,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self"),
@@ -5531,7 +5534,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "ねごと": MoveData(
         type="ノーマル",
@@ -5539,7 +5542,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "non_encore", "non_negoto", "call_move", "sleep"],
+        labels=["non_encore", "non_negoto"],
     ),
     "ねばねばネット": MoveData(
         type="むし",
@@ -5547,7 +5550,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ねむりごな": MoveData(
         type="くさ",
@@ -5555,7 +5558,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=75,
-        flags=["blocked_by_gold", "reflectable", "powder"],
+        labels=["powder"],
     ),
     "ねむる": MoveData(
         type="エスパー",
@@ -5563,7 +5566,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "ねをはる": MoveData(
         type="くさ",
@@ -5571,7 +5574,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "のみこむ": MoveData(
         type="ノーマル",
@@ -5579,7 +5582,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "のろい": MoveData(
         type="ゴースト",
@@ -5587,7 +5590,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "blocked_by_gold"],
+
     ),
     "ハートスワップ": MoveData(
         type="エスパー",
@@ -5595,7 +5598,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "はいすいのじん": MoveData(
         type="かくとう",
@@ -5603,7 +5606,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ハッピータイム": MoveData(
         type="ノーマル",
@@ -5611,7 +5614,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "バトンタッチ": MoveData(
         type="ノーマル",
@@ -5619,7 +5622,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "switch"],
+
     ),
     "はねやすめ": MoveData(
         type="ひこう",
@@ -5627,13 +5630,13 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "はねる": MoveData(
         type="ノーマル",
         category="変化",
         pp=40,
-        flags=["unprotectable", "ignore_substitute"]
+        labels=[]
     ),
     "ハバネロエキス": MoveData(
         type="くさ",
@@ -5641,7 +5644,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "はらだいこ": MoveData(
         type="ノーマル",
@@ -5649,7 +5652,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "パワーシェア": MoveData(
         type="エスパー",
@@ -5657,7 +5660,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "パワースワップ": MoveData(
         type="エスパー",
@@ -5665,7 +5668,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+
     ),
     "パワートリック": MoveData(
         type="エスパー",
@@ -5673,7 +5676,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "ひかりのかべ": MoveData(
         type="エスパー",
@@ -5681,7 +5684,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ひっくりかえす": MoveData(
         type="あく",
@@ -5689,7 +5692,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "ビルドアップ": MoveData(
         type="かくとう",
@@ -5697,7 +5700,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ファストガード": MoveData(
         type="かくとう",
@@ -5706,7 +5709,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=3,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
     ),
     "ふういん": MoveData(
         type="エスパー",
@@ -5714,7 +5717,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ふういん", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5727,7 +5730,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "フェザーダンス": MoveData(
         type="ひこう",
@@ -5735,7 +5738,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+        labels=["dance"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-2, target_spec="defender:self", source_spec="attacker:self"),
@@ -5747,7 +5750,7 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=20,
         priority=-6,
-        flags=["unprotectable", "ignore_substitute", "blocked_by_gold", "reflectable", "wind"],
+        labels=["wind"],
         handlers={
             Event.ON_HIT: h.MoveHandler(h.blow)
         }
@@ -5758,7 +5761,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold"],
+        labels=["dance"],
     ),
     "フラワーヒール": MoveData(
         type="フェアリー",
@@ -5766,7 +5769,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "blocked_by_gold", "reflectable", "heal"],
+        labels=["heal"],
     ),
     "ふるいたてる": MoveData(
         type="ノーマル",
@@ -5774,7 +5777,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ブレイブチャージ": MoveData(
         type="エスパー",
@@ -5782,7 +5785,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "へびにらみ": MoveData(
         type="ノーマル",
@@ -5790,7 +5793,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "へんしん": MoveData(
         type="ノーマル",
@@ -5798,7 +5801,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-        flags=["unprotectable", "ignore_substitute", "blocked_by_gold", "non_encore"],
+        labels=["non_encore"],
     ),
     "ぼうぎょしれい": MoveData(
         type="むし",
@@ -5806,7 +5809,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ほえる": MoveData(
         type="ノーマル",
@@ -5815,7 +5818,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=-6,
-        flags=["unprotectable", "ignore_substitute", "reflectable", "sound"],
+        labels=["sound"],
     ),
     "ほおばる": MoveData(
         type="ノーマル",
@@ -5823,7 +5826,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ほたるび": MoveData(
         type="むし",
@@ -5831,7 +5834,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=3, target_spec="attacker:self", source_spec="attacker:self"),
@@ -5844,7 +5847,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "blocked_by_gold", "sound"],
+        labels=["sound"],
     ),
     "まきびし": MoveData(
         type="じめん",
@@ -5852,7 +5855,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "reflectable"],
+
     ),
     "マジックルーム": MoveData(
         type="エスパー",
@@ -5860,7 +5863,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "まねっこ": MoveData(
         type="ノーマル",
@@ -5868,7 +5871,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "non_negoto", "call_move"],
+        labels=["non_negoto"],
     ),
     "まほうのこな": MoveData(
         type="エスパー",
@@ -5876,7 +5879,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "まもる": MoveData(
         type="ノーマル",
@@ -5885,7 +5888,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5898,7 +5901,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まるくなる", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5914,7 +5917,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "みかづきのまい": MoveData(
         type="エスパー",
@@ -5922,7 +5925,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["dance", "heal"],
     ),
     "みがわり": MoveData(
         type="ノーマル",
@@ -5930,7 +5933,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 v.みがわり_apply,
@@ -5944,7 +5947,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["unprotectable", "ignore_substitute", "protect"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5957,7 +5960,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "みずびたし": MoveData(
         type="みず",
@@ -5965,7 +5968,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "みちづれ": MoveData(
         type="ゴースト",
@@ -5973,7 +5976,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="みちづれ", target_spec="attacker:self", source_spec="attacker:self"),
@@ -5986,7 +5989,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=0,
-        flags=["ignore_substitute", "blocked_by_gold"],
+
     ),
     "ミルクのみ": MoveData(
         type="ノーマル",
@@ -5994,7 +5997,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "heal"],
+        labels=["heal"],
     ),
     "みをけずる": MoveData(
         type="ノーマル",
@@ -6002,7 +6005,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "めいそう": MoveData(
         type="エスパー",
@@ -6010,7 +6013,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "メロメロ": MoveData(
         type="ノーマル",
@@ -6018,7 +6021,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
-        flags=["ignore_substitute", "blocked_by_gold", "reflectable"],
+
     ),
     "ものまね": MoveData(
         type="ノーマル",
@@ -6026,7 +6029,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "non_encore", "non_negoto", "call_move"],
+        labels=["non_encore", "non_negoto"],
     ),
     "もりののろい": MoveData(
         type="くさ",
@@ -6034,7 +6037,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "やどりぎのタネ": MoveData(
         type="くさ",
@@ -6042,7 +6045,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=90,
-        flags=["blocked_by_gold", "reflectable"],
+
     ),
     "ゆきげしき": MoveData(
         type="こおり",
@@ -6050,7 +6053,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "ゆびをふる": MoveData(
         type="ノーマル",
@@ -6058,7 +6061,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute", "non_negoto", "call_move"],
+        labels=["non_negoto"],
     ),
     "リサイクル": MoveData(
         type="ノーマル",
@@ -6066,13 +6069,13 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "リフレクター": MoveData(
         type="エスパー",
         category="変化",
         pp=20,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
         }
     ),
@@ -6082,7 +6085,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "りゅうのまい": MoveData(
         type="ドラゴン",
@@ -6090,7 +6093,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+        labels=["dance"],
     ),
     "ロックオン": MoveData(
         type="ノーマル",
@@ -6098,7 +6101,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=0,
-        flags=["ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ロックオン", target_spec="defender:self", source_spec="attacker:self", count=2),
@@ -6111,7 +6114,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
@@ -6125,7 +6128,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=3,
-        flags=["unprotectable", "ignore_substitute"],
+
     ),
     "わたほうし": MoveData(
         type="くさ",
@@ -6133,7 +6136,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         power=0,
         accuracy=100,
-        flags=["blocked_by_gold", "reflectable", "powder"],
+        labels=["powder"],
     ),
     "わるだくみ": MoveData(
         type="あく",
@@ -6141,7 +6144,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"],
+
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=2, target_spec="attacker:self", source_spec="attacker:self"),
@@ -6154,7 +6157,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        flags=["unprotectable", "ignore_substitute"]
+        labels=[]
     ),
     "あてみなげ": MoveData(
         type="ノーマル",
@@ -6163,7 +6166,7 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
         priority=-1,
-        flags=["contact"],
+        labels=["contact"],
     ),
     "キングシールド": MoveData(
         type="はがね",
@@ -6172,7 +6175,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
-        flags=["protect", "reflectable"],
+
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="キングシールド", target_spec="attacker:self", source_spec="attacker:self"),
@@ -6186,7 +6189,7 @@ MOVES: dict[str, MoveData] = {
         power=150,
         accuracy=100,
         priority=-5,
-        flags=["unprotectable"],
+
     ),
 }
 
