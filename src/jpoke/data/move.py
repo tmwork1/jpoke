@@ -3,10 +3,44 @@
 Note:
     このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
 """
+from dataclasses import dataclass
 from functools import partial
-from jpoke.core.event import Event, Handler, HandlerReturn
-from .models import MoveData
+
+from jpoke.utils.enums import Event
+from jpoke.utils.type_defs import RoleSpec, AilmentName
+from jpoke.core.event import Handler, HandlerReturn
 from jpoke.handlers import common, move as h, volatile as v
+from .models import MoveData
+
+
+@dataclass
+class MoveSecondary:
+    """
+    技の追加効果データを表すデータクラス。
+    docs/spec/move_secondary.mdと対応
+    """
+    target_spec: RoleSpec
+    chance: float = 1.0
+    A: int = 0
+    B: int = 0
+    C: int = 0
+    D: int = 0
+    S: int = 0
+    ACC: int = 0
+    EVA: int = 0
+    ailment: AilmentName | None = None
+    confusion: bool = False
+    flinch: bool = False
+    drain: float = 0
+    recoil: float = 0
+    mis_recoil: float = 0
+    cost: float = 0
+
+    def generate_handler(self) -> h.MoveHandler:
+        # TODO: プロパティの全追加効果に対応するように実装
+        return h.MoveHandler(
+            partial(common.modify_stat, stat="B", v=-1, target_spec=self.target_spec, source_spec="attacker:self", prob=0.3)
+        )
 
 
 def common_setup() -> None:
@@ -6199,6 +6233,7 @@ MOVES: dict[str, MoveData] = {
 }
 
 
+# TODO MOVE_DATA.secondaryで指定するように実装する
 FLINCH_MOVES: dict[str, float] = {
     "３ぼんのや": 0.3,
     "アイアンヘッド": 0.3,
@@ -6236,6 +6271,7 @@ FLINCH_MOVES: dict[str, float] = {
 }
 
 
+# TODO: MoveSecondary.generate_handler()で実装
 def flinch_setup() -> None:
     """ひるみ付与技の共通ハンドラを追加する。"""
     for name, prob in FLINCH_MOVES.items():

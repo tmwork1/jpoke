@@ -16,7 +16,7 @@ jpoke プロジェクトで実施した各種リサーチ結果を文書化し�
 
 | カテゴリ | ファイル | 調査日 | 備考 |
 |---------|---------|--------|------|
-| 状態異常 | [ailment.md](ailment.md) | - | まひ、やけど、ねむり、こおり |
+| 状態異常 | [ailment.md](ailment.md) | - | どく、まひ、やけど、ねむり、こおり |
 | 命中・回避 | [accuracy.md](accuracy.md) | - | 命中率、回避率の整理 |
 | 行動順 | [action_order.md](action_order.md) | - | 優先度、順序判定 |
 | 急所 | [critical.md](critical.md) | - | 急所ランク、計算 |
@@ -29,10 +29,11 @@ jpoke プロジェクトで実施した各種リサーチ結果を文書化し�
 | アイテム | [item/](item/) | - | 個別メモ |
 | テラスタル | [terastal.md](terastal.md) | - | テラスタル関連 |
 | PP | [pp.md](pp.md) | - | PP周りの仕様 |
-| 技カテゴリ | [move/カテゴリ.md](move/カテゴリ.md) | - | 追加効果別の分類 |
-| 技一覧(物理) | [move/physical_moves.md](move/physical_moves.md) | - | 物理技一覧 |
-| 技一覧(特殊) | [move/special_moves.md](move/special_moves.md) | - | 特殊技一覧 |
-| 技一覧(変化) | [move/status_moves.md](move/status_moves.md) | - | 変化技一覧 |
+| 技一覧(物理) | [move/physical_move.md](move/physical_move.md) | - | 物理技の一覧 |
+| 技一覧(特殊) | [move/special_move.md](move/special_move.md) | - | 特殊技の一覧 |
+| 技一覧(変化) | [move/status_move.md](move/status_move.md) | - | 変化技の一覧 |
+| 追加効果 | [move/move_secondary.md](move/status_move.md) | - | 攻撃技の追加効果の一覧 |
+| 技ラベル | [move/move_label.md](move/カテゴリ.md) | - | 技以外のハンドラから参照される識別子 |
 | 技メモ(個別) | [move/](move/) | - | 個別技の調査メモ |
 
 ### 主要な参照元
