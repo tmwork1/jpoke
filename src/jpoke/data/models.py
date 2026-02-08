@@ -44,7 +44,7 @@ class MoveData:
     accuracy: int | None = None
     priority: int = 0
     critical_rank: int = 0
-    labels: list[Move] = field(default_factory=list)
+    labels: list[MoveLabel] = field(default_factory=list)
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
 

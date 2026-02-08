@@ -38,6 +38,9 @@ def common_setup() -> None:
 
 
 MOVES: dict[str, MoveData] = {
+    # -------------------------
+    # 攻撃技
+    # -------------------------
     "１０まんばりき": MoveData(
         type="じめん",
         category="物理",
@@ -4007,7 +4010,7 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=15,
         power=90,
-        accuracy=100
+        accuracy=100,
         labels=["dance"],
     ),
     "メテオビーム": MoveData(
@@ -4190,8 +4193,10 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=95,
-
     ),
+    # -------------------------
+    # 変化技
+    # -------------------------
     "アクアリング": MoveData(
         type="みず",
         category="変化",
