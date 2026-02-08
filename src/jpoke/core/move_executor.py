@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from jpoke.model import Pokemon, Move
 from jpoke.utils.enums import Command
+from jpoke.utils.constants import HIT_RANK_MODIFIERS
 from .event import Event, EventContext
 
 if TYPE_CHECKING:
@@ -66,19 +67,32 @@ class MoveExecutor:
         Returns:
             命中した場合True
         """
+        # テストオプションによる命中率の上書き
         if self.battle.test_option.accuracy is not None:
             accuracy = self.battle.test_option.accuracy
-        else:
-            if move.accuracy is None:
-                return True
-            accuracy = self.battle.events.emit(
-                Event.ON_CALC_ACCURACY,
-                EventContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
-                move.accuracy
-            )
-            # 必中処理：イベントハンドラがNoneを返した場合は必中
-            if accuracy is None:
-                return True
+            return 100 * self.battle.random.random() < accuracy
+
+        # 命中率がNoneなら必中
+        if move.accuracy is None:
+            return True
+
+        # 技の命中変更 + 命中補正
+        accuracy = self.battle.events.emit(
+            Event.ON_MODIFY_ACCURACY,
+            EventContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
+            move.accuracy
+        )
+
+        # 必中処理：イベントハンドラがNoneを返した場合は必中
+        if accuracy is None:
+            return True
+
+        # ランク補正
+        defender = self.battle.foe(attacker)
+        rank_diff = attacker.rank["acc"] - defender.rank["eva"]
+        rank_diff = max(-6, min(6, rank_diff))
+        accuracy = int(accuracy * HIT_RANK_MODIFIERS[rank_diff])
+
         return 100 * self.battle.random.random() < accuracy
 
     def run_move(self, attacker: Pokemon, move: Move):
@@ -101,16 +115,15 @@ class MoveExecutor:
         move.register_handlers(self.battle.events, attacker)
 
         # 行動成功判定（行動者自身を対象にする）
-        ctx_action = EventContext(source=attacker, target=attacker, move=move)
-        can_act = self.battle.events.emit(Event.ON_TRY_ACTION, ctx_action, True)
-        if not can_act:
+        result = self.battle.events.emit(Event.ON_TRY_ACTION, ctx, True)
+        if not result.value:
             return
 
         # 技の宣言、PP消費
         self.battle.events.emit(Event.ON_CONSUME_PP, ctx)
 
         # 発動成功判定
-        self.battle.events.emit(Event.ON_TRY_MOVE, ctx)
+        self.battle.events.emit(Event.ON_TRY_MOVE, ctx, True)
 
         # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
         if self.battle.events.emit(Event.ON_CHECK_PROTECT, ctx, False):

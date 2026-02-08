@@ -335,7 +335,7 @@ def test_じゅうりょく_命中補正():
         defender=battle.actives[1],
         move=battle.actives[0].moves[0]
     )
-    result = battle.events.emit(Event.ON_CALC_ACCURACY, ctx, 30)
+    result = battle.events.emit(Event.ON_MODIFY_ACCURACY, ctx, 30)
     assert result == 50, "じゅうりょくで命中率補正が正しく適用されない"
 
 

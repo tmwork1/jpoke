@@ -109,7 +109,7 @@ class DamageCalculator:
         fast_copy(self, new)
         return new
 
-    def _calc_critical(self, critical_rank: int) -> bool:
+    def _check_critical(self, critical_rank: int) -> bool:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
@@ -156,19 +156,15 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        # 急所判定（急所ランク計算）
-        critical_rank = move.critical_rank_bonus()
-
-        # volatile「急所ランク」があれば加算
-        if attacker.check_volatile("急所ランク"):
-            critical_rank += attacker.volatiles["急所ランク"].count
-
+        # 急所判定
         critical_rank = events.emit(
-            Event.ON_CALC_CRITICAL,
+            Event.ON_MODIFY_CRITICAL,
             EventContext(attacker=attacker, defender=defender, move=move),
-            critical_rank
+            move.critical_rank
         )
-        dmg_ctx.critical = self._calc_critical(critical_rank)
+
+        if critical_rank is not None:
+            dmg_ctx.critical = self._check_critical(critical_rank)
 
         # 最終威力・攻撃・防御
         final_pow = self.calc_final_power(events, attacker, defender, move, dmg_ctx)

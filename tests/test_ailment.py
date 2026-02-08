@@ -52,7 +52,7 @@ def test_paralysis_action_disabled_high_rate():
     mon.apply_ailment(battle.events, "まひ")
     # 必ず行動不能になる設定
     battle.test_option.ailment_trigger_rate = 1.0
-    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(attacker=mon), None)
     # HandlerReturnがFalseを返すことを確認（行動不能）
     assert not result, "まひ: 行動不能（trigger_rate=1.0）"
 
@@ -65,7 +65,7 @@ def test_paralysis_action_enabled_low_rate():
 
     # 必ず行動できる設定
     battle.test_option.ailment_trigger_rate = 0.0
-    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(attacker=mon), None)
     # 行動可能であることを確認（Noneではなくsuccessがあればよい）
     # ON_TRY_ACTIONはコントロールフロー用のイベントなのでNoneが返ることもある
     # まひ状態でもtrigger_rate=0.0なら行動不能にならない（Falseが返らない）
@@ -141,7 +141,7 @@ def test_burn_turn_end_damage():
     mon.apply_ailment(battle.events, "やけど")
 
     # ターン終了時イベントを発火
-    battle.events.emit(Event.ON_TURN_END_3, EventContext(target=mon), None)
+    battle.events.emit(Event.ON_TURN_END_3, EventContext(source=mon), None)
 
     # 最大HPの1/16のダメージを受けているはず
     expected_damage = mon.max_hp // 16
@@ -175,12 +175,12 @@ def test_sleep_turn_progression_recovery():
     mon.ailment.count = 2  # 2ターンで回復
 
     # 1ターン目: count 2 → 1
-    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(attacker=mon), None)
     assert mon.ailment.name == "ねむり", "ねむり: 1ターン目でもまだねむり状態のはず"
     assert mon.ailment.count == 1, f"ねむり: 1ターン目カウント1のはず: {mon.ailment.count}"
 
     # 2ターン目: count 1 → 0 で回復
-    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(attacker=mon), None)
     assert mon.ailment.name == "", "ねむり: 2ターン目で回復するはず"
 
 
@@ -208,7 +208,7 @@ def test_freeze_thaw_high_rate():
 
     # 必ず解凍される設定でテスト
     battle.test_option.ailment_trigger_rate = 1.0
-    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(attacker=mon), None)
     assert mon.ailment.name == "", "こおり: 解凍失敗（trigger_rate=1.0）"
 
 
@@ -224,7 +224,7 @@ def test_freeze_persist_low_rate():
 
     # 解凍されない設定でテスト
     battle.test_option.ailment_trigger_rate = 0.0
-    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(target=mon), None)
+    result = battle.events.emit(Event.ON_TRY_ACTION, EventContext(attacker=mon), None)
     assert mon.ailment.name == "こおり", "こおり: 状態維持失敗（trigger_rate=0.0）"
 
 

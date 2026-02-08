@@ -15,8 +15,8 @@ AILMENTS: dict[str, AilmentData] = {
     "どく": AilmentData(
         handlers={
             Event.ON_TURN_END_3: h.AilmentHandler(
-                partial(common.modify_hp, target_spec="target:self", r=-1/8),
-                subject_spec="target:self",
+                partial(common.modify_hp, target_spec="source:self", r=-1/8),
+                subject_spec="source:self",
                 priority=30,
             )
         }
@@ -25,7 +25,7 @@ AILMENTS: dict[str, AilmentData] = {
         handlers={
             Event.ON_TURN_END_3: h.AilmentHandler(
                 h.もうどく,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 priority=30,
             )
         }
@@ -34,14 +34,14 @@ AILMENTS: dict[str, AilmentData] = {
         handlers={
             Event.ON_CALC_SPEED: h.AilmentHandler(
                 h.まひ_speed,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log="never",
             ),
             Event.ON_TRY_ACTION: h.AilmentHandler(
                 h.まひ_action,
-                subject_spec="target:self",
-                log="never",
+                subject_spec="attacker:self",
                 priority=120,
+                log="never",
             )
         }
     ),
@@ -50,12 +50,12 @@ AILMENTS: dict[str, AilmentData] = {
             Event.ON_CALC_BURN_MODIFIER: h.AilmentHandler(
                 h.やけど_burn,
                 subject_spec="attacker:self",
-                log="never",
             ),
             Event.ON_TURN_END_3: h.AilmentHandler(
                 h.やけど_damage,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 priority=40,
+                log="never",
             )
         }
     ),
@@ -63,8 +63,7 @@ AILMENTS: dict[str, AilmentData] = {
         handlers={
             Event.ON_TRY_ACTION: h.AilmentHandler(
                 h.ねむり_action,
-                subject_spec="target:self",
-                log="never",
+                subject_spec="attacker:self",
                 priority=10,
             ),
         }
@@ -73,8 +72,7 @@ AILMENTS: dict[str, AilmentData] = {
         handlers={
             Event.ON_TRY_ACTION: h.AilmentHandler(
                 h.こおり_action,
-                subject_spec="target:self",
-                log="never",
+                subject_spec="attacker:self",
                 priority=10,
             )
         }

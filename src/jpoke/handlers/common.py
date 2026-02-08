@@ -15,8 +15,8 @@ def modify_hp(battle: Battle,
               target_spec: RoleSpec,
               v: int = 0,
               r: float = 0,
-              prob: float = 1) -> HandlerReturn:
-    if prob < 1 and battle.random.random() >= prob:
+              chance: float = 1) -> HandlerReturn:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     success = battle.modify_hp(target, v, r)
@@ -30,8 +30,8 @@ def drain_hp(battle: Battle,
              to_: RoleSpec | None = None,
              v: int = 0,
              r: float = 0,
-             prob: float = 1) -> HandlerReturn:
-    if prob < 1 and battle.random.random() >= prob:
+             chance: float = 1) -> HandlerReturn:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
 
     from_mon = ctx.resolve_role(battle, from_)
@@ -50,7 +50,7 @@ def heal_hp(battle: Battle,
             from_: RoleSpec,
             v: int = 0,
             r: float = 0,
-            prob: float = 1) -> HandlerReturn:
+            chance: float = 1) -> HandlerReturn:
     """指定したポケモンのHPを回復する
 
     Args:
@@ -60,12 +60,12 @@ def heal_hp(battle: Battle,
         from_: 回復対象のRoleSpec
         v: 回復する固定HP量
         r: 最大HPに対する回復割合
-        prob: 発動確率（デフォルト: 1）
+        chance: 発動確率（デフォルト: 1）
 
     Returns:
         HandlerReturn: 成功時True
     """
-    if prob < 1 and battle.random.random() >= prob:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
 
     from_mon = ctx.resolve_role(battle, from_)
@@ -88,8 +88,8 @@ def modify_stat(battle: Battle,
                 v: int,
                 target_spec: RoleSpec,
                 source_spec: RoleSpec | None = None,
-                prob: float = 1) -> HandlerReturn:
-    if prob < 1 and battle.random.random() >= prob:
+                chance: float = 1) -> HandlerReturn:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -103,7 +103,7 @@ def modify_stats(battle: Battle,
                  stats: dict[Stat, int],
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
-                 prob: float = 1) -> HandlerReturn:
+                 chance: float = 1) -> HandlerReturn:
     """複数の能力ランクを同時に変化させる
 
     しろいハーブなどのアイテムが正しく動作するよう、
@@ -116,12 +116,12 @@ def modify_stats(battle: Battle,
         stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
         target_spec: 対象のRoleSpec
         source_spec: 変化の原因となるポケモンのRoleSpec
-        prob: 発動確率（デフォルト: 1）
+        chance: 発動確率（デフォルト: 1）
 
     Returns:
         HandlerReturn: いずれかの能力が変化した場合True
     """
-    if prob < 1 and battle.random.random() >= prob:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
 
     target = ctx.resolve_role(battle, target_spec)
@@ -139,8 +139,8 @@ def apply_ailment(battle: Battle,
                   ailment: AilmentName,
                   target_spec: RoleSpec,
                   source_spec: RoleSpec | None = None,
-                  prob: float = 1) -> HandlerReturn:
-    if prob < 1 and battle.random.random() >= prob:
+                  chance: float = 1) -> HandlerReturn:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -155,8 +155,8 @@ def apply_volatile(battle: Battle,
                    target_spec: RoleSpec,
                    source_spec: RoleSpec | None = None,
                    count: int = 1,
-                   prob: float = 1) -> HandlerReturn:
-    if prob < 1 and battle.random.random() >= prob:
+                   chance: float = 1) -> HandlerReturn:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -169,8 +169,8 @@ def cure_ailment(battle: Battle,
                  value: Any,
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
-                 prob: float = 1) -> HandlerReturn:
-    if prob < 1 and battle.random.random() >= prob:
+                 chance: float = 1) -> HandlerReturn:
+    if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)

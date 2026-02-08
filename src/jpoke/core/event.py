@@ -196,11 +196,11 @@ class Handler:
 class HandlerReturn(NamedTuple):
     """ハンドラ関数の戻り値。
 
-    - success: 処理が成功したかどうか
+    - success: 処理が成功したか（または行われたか）どうか
     - value: 補正値などの連鎖計算に使う値（省略可）
     - stop_event: イベント処理を停止するかどうか（省略可）
     """
-    success: bool
+    success: bool = False
     value: Any = None
     stop_event: bool = False
 
@@ -364,10 +364,6 @@ class EventManager:
             # 一度きりのハンドラを解除
             if rh.handler.once:
                 self.off(event, rh.handler, rh._subject)
-
-            # 行動可否イベントは失敗時に即時停止
-            if event == Event.ON_TRY_ACTION and not result.success:
-                return False
 
             # イベント停止フラグの処理
             if result.stop_event:

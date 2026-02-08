@@ -13,36 +13,6 @@ from jpoke.handlers import common, move as h, volatile as v
 from .models import MoveData
 
 
-@dataclass
-class MoveSecondary:
-    """
-    技の追加効果データを表すデータクラス。
-    docs/spec/move_secondary.mdと対応
-    """
-    target_spec: RoleSpec
-    chance: float = 1.0
-    A: int = 0
-    B: int = 0
-    C: int = 0
-    D: int = 0
-    S: int = 0
-    ACC: int = 0
-    EVA: int = 0
-    ailment: AilmentName | None = None
-    confusion: bool = False
-    flinch: bool = False
-    drain: float = 0
-    recoil: float = 0
-    mis_recoil: float = 0
-    cost: float = 0
-
-    def generate_handler(self) -> h.MoveHandler:
-        # TODO: プロパティの全追加効果に対応するように実装
-        return h.MoveHandler(
-            partial(common.modify_stat, stat="B", v=-1, target_spec=self.target_spec, source_spec="attacker:self", prob=0.3)
-        )
-
-
 def common_setup() -> None:
     """
     全ての技に共通ハンドラを追加する。
@@ -62,15 +32,21 @@ def common_setup() -> None:
         MOVES[name].name = name
 
         # 共通ハンドラを追加
-        MOVES[name].handlers |= {
-            Event.ON_CONSUME_PP: h.MoveHandler(
-                h.consume_pp,
-                subject_spec="attacker:self",
-                log="always"
-            ),
-        }
+        MOVES[name].handlers[Event.ON_CONSUME_PP] = h.MoveHandler(
+            h.consume_pp,
+            subject_spec="attacker:self",
+            log="always"
+        )
 
 
+# TODO: 追加効果が登録されているイベントを修正
+# ON_PAY_HP : HPコスト消費
+# ON_HIT : attackerのランク変動、hp吸収による回復など
+# ON_DAMAGE_1 : defenderのランク変動など
+# ON_DAMAGE_2 : 反動ダメージなど
+# 詳細は docs/spec/turn_flow.md を参照
+
+# TODO: 定義内の空行を削除
 MOVES: dict[str, MoveData] = {
     # -------------------------
     # 攻撃技
@@ -115,11 +91,10 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         labels=["contact", "punch"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
-                partial(
-                    common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"
-                ),
-            )
+             Event.ON_HIT: h.MoveHandler(
+                 partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"
+                         ),
+             )
         }
     ),
     "アイアンテール": MoveData(
@@ -128,11 +103,11 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=100,
         accuracy=75,
-
         labels=["contact"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.3)
+            Event.ON_DAMAGE_1: h.MoveHandler(
+                partial(common.modify_stat, stat="B", v=-1, chance=0.3,
+                        target_spec="defender:self", source_spec="attacker:self")
             )
         }
     ),
@@ -224,7 +199,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.2)
+                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.2)
             )
         }
     ),
@@ -295,9 +270,6 @@ MOVES: dict[str, MoveData] = {
         power=95,
         accuracy=100,
         labels=["contact"],
-    ),
-    "いかりのまえば": MoveData(
-        type="ノーマル",
         category="物理",
         pp=10,
         power=0,
@@ -335,7 +307,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
+                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
             )
         }
     ),
@@ -636,13 +608,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
         labels=["contact"],
-        handlers={
-            Event.ON_HIT: h.MoveHandler(
-                partial(h.apply_hp_drain, rate=0.5),
-            )
-        }
     ),
     "きょけんとつげき": MoveData(
         type="ドラゴン",
@@ -845,7 +811,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", prob=0.2)
+                partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.2)
             )
         }
     ),
@@ -909,7 +875,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
+                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
             )
         }
     ),
@@ -1109,13 +1075,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-
         labels=["contact"],
-        handlers={
-            Event.ON_HIT: h.MoveHandler(
-                partial(h.apply_recoil, rate=1/3),
-            )
-        }
     ),
     "ストーンエッジ": MoveData(
         type="いわ",
@@ -2099,7 +2059,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
+                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
             )
         }
     ),
@@ -2354,7 +2314,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", prob=0.1)
+                partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.1)
             )
         }
     ),
@@ -2602,7 +2562,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
+                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
             )
         }
     ),
@@ -2716,7 +2676,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
+                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
             )
         }
     ),
@@ -2825,7 +2785,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=70,
 
         handlers={
-            Event.ON_CALC_ACCURACY: h.MoveHandler(
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 h.かみなり_accuracy,
                 subject_spec="attacker:self",
                 log="never",
@@ -3013,7 +2973,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
+                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
             )
         }
     ),
@@ -3139,7 +3099,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.2)
+                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.2)
             )
         }
     ),
@@ -3326,7 +3286,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=1, target_spec="attacker:self", source_spec="attacker:self", prob=0.7)
+                partial(common.modify_stat, stat="C", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.7)
             )
         }
     ),
@@ -3694,7 +3654,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=70,
         labels=["wind"],
         handlers={
-            Event.ON_CALC_ACCURACY: h.MoveHandler(
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 h.ふぶき_accuracy,
                 subject_spec="attacker:self",
                 log="never",
@@ -3818,7 +3778,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=70,
         labels=["wind"],
         handlers={
-            Event.ON_CALC_ACCURACY: h.MoveHandler(
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 h.ぼうふう_accuracy,
                 subject_spec="attacker:self",
                 log="never",
@@ -3953,7 +3913,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
+                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
             )
         }
     ),
@@ -4014,7 +3974,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
+                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
             )
         }
     ),
@@ -4110,7 +4070,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.1)
+                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
             )
         }
     ),
@@ -4123,7 +4083,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", prob=0.5)
+                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
             )
         }
     ),
@@ -6233,66 +6193,4 @@ MOVES: dict[str, MoveData] = {
 }
 
 
-# TODO MOVE_DATA.secondaryで指定するように実装する
-FLINCH_MOVES: dict[str, float] = {
-    "３ぼんのや": 0.3,
-    "アイアンヘッド": 0.3,
-    "あくのはどう": 0.2,
-    "いびき": 0.3,
-    "いわなだれ": 0.3,
-    "エアスラッシュ": 0.3,
-    "おどろかす": 0.3,
-    "かみつく": 0.3,
-    "かみなりのキバ": 0.1,
-    "こおりのキバ": 0.1,
-    "ゴッドバード": 0.3,
-    "しねんのずつき": 0.2,
-    "じんつうりき": 0.1,
-    "ずつき": 0.3,
-    "たきのぼり": 0.2,
-    "たつまき": 0.2,
-    "ダブルパンツァー": 0.3,
-    "つららおとし": 0.3,
-    "ドラゴンダイブ": 0.2,
-    "ニードルアーム": 0.3,
-    "ねこだまし": 1.0,
-    "ハートスタンプ": 0.3,
-    "ハードローラー": 0.3,
-    "はやてがえし": 1.0,
-    "ひっさつまえば": 0.1,
-    "ひょうざんおろし": 0.3,
-    "びりびりちくちく": 0.3,
-    "ふみつけ": 0.3,
-    "ふわふわフォール": 0.3,
-    "ホネこんぼう": 0.1,
-    "ほのおのキバ": 0.1,
-    "まわしげり": 0.3,
-    "もえあがるいかり": 0.2,
-}
-
-
-# TODO: MoveSecondary.generate_handler()で実装
-def flinch_setup() -> None:
-    """ひるみ付与技の共通ハンドラを追加する。"""
-    for name, prob in FLINCH_MOVES.items():
-        move = MOVES.get(name)
-        if not move:
-            continue
-
-        flinch_handler = h.MoveHandler(
-            partial(h.apply_flinch, prob=prob),
-            subject_spec="attacker:self",
-            log="never",
-        )
-
-        existing = move.handlers.get(Event.ON_HIT)
-        if existing is None:
-            move.handlers[Event.ON_HIT] = flinch_handler
-        elif isinstance(existing, list):
-            move.handlers[Event.ON_HIT] = [*existing, flinch_handler]
-        else:
-            move.handlers[Event.ON_HIT] = [existing, flinch_handler]
-
-
 common_setup()
-flinch_setup()

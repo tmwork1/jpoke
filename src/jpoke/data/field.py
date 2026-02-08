@@ -127,7 +127,7 @@ FIELDS: dict[str, FieldData] = {
     # ===== グローバルフィールド (GlobalField) =====
     "じゅうりょく": FieldData(
         handlers={
-            Event.ON_CALC_ACCURACY: Handler(
+            Event.ON_MODIFY_ACCURACY: Handler(
                 h.じゅうりょく_accuracy,
                 subject_spec="source:self",
                 log="never",

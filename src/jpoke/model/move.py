@@ -107,12 +107,11 @@ class Move(GameEffect):
         """
         return self.data.accuracy
 
-    def critical_rank_bonus(self) -> int:
+    @property
+    def critical_rank(self) -> int:
         """急所ランク補正値を取得する。
 
-        この技が高い急所率を持つ場合、急所ランクに+1補正を適用する。
-
         Returns:
-            int: 急所ランク補正値（0 または 1）
+            技の急所ランク
         """
-        return 1 if "high_critical" in self.data.labels else 0
+        return self.data.critical_rank

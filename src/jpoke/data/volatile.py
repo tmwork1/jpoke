@@ -101,7 +101,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "急所ランク": VolatileData(
         handlers={
-            Event.ON_CALC_CRITICAL: h.VolatileHandler(
+            Event.ON_MODIFY_CRITICAL: h.VolatileHandler(
                 h.急所ランク_calc_critical,
                 subject_spec="attacker:self",
                 log="never",
@@ -109,6 +109,9 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+
+    # TODO: こだわりロック(技をこだわっている状態)を追加
+
     "こんらん": VolatileData(
         handlers={
             Event.ON_TRY_ACTION: h.VolatileHandler(
@@ -380,7 +383,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ちいさくなる": VolatileData(
         handlers={
-            Event.ON_CALC_ACCURACY: h.VolatileHandler(
+            Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
                 h.ちいさくなる_accuracy_modifier,
                 subject_spec="defender:self",
                 log="never",
@@ -396,7 +399,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ロックオン": VolatileData(
         handlers={
-            Event.ON_CALC_ACCURACY: h.VolatileHandler(
+            Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
                 h.ロックオン_accuracy,
                 subject_spec="defender:self",
                 log="never",

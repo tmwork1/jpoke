@@ -51,7 +51,7 @@ class SpeedCalculator:
         """
         return self.battle.events.emit(
             Event.ON_CALC_SPEED,
-            EventContext(target=mon),
+            EventContext(source=mon),
             mon.stats["S"]
         )
 
