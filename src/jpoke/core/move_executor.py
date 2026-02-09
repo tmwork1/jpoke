@@ -115,15 +115,15 @@ class MoveExecutor:
         move.register_handlers(self.battle.events, attacker)
 
         # 行動成功判定（行動者自身を対象にする）
-        result = self.battle.events.emit(Event.ON_TRY_ACTION, ctx, True)
-        if not result.value:
+        if not self.battle.events.emit(Event.ON_TRY_ACTION, ctx, True):
             return
 
         # 技の宣言、PP消費
         self.battle.events.emit(Event.ON_CONSUME_PP, ctx)
 
         # 発動成功判定
-        self.battle.events.emit(Event.ON_TRY_MOVE, ctx, True)
+        if not self.battle.events.emit(Event.ON_TRY_MOVE, ctx, True):
+            pass
 
         # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
         if self.battle.events.emit(Event.ON_CHECK_PROTECT, ctx, False):

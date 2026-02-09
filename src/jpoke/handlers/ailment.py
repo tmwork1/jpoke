@@ -49,7 +49,7 @@ def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
     return HandlerReturn(success)
 
 
-def やけど_burn(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def やけど_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
     if ctx.move and ctx.move.category == "物理":
         return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
@@ -58,16 +58,15 @@ def やけど_burn(battle: Battle, ctx: EventContext, value: int) -> HandlerRetu
 
 def ねむり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねむり状態による行動不能チェック"""
-    if ctx.source.ailment.count > 0:
-        ctx.source.ailment.count -= 1
-        if ctx.source.ailment.count == 0:
-            # 回復時はハンドラを解除して空の状態に
-            ctx.source.cure_ailment(battle.events)
-            return HandlerReturn()
-        # まだ眠っている
-        battle.add_event_log(ctx.attacker, "眠っている")
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    mon = ctx.attacker
+    mon.ailment.tick_down()
+    if mon.ailment.count == 0:
+        # 眠りから覚めた：ハンドラを解除して空の状態に
+        mon.cure_ailment(battle.events)
+        return HandlerReturn(value=True)
+    # まだ眠っている
+    battle.add_event_log(mon, "眠っている")
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def こおり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -78,10 +77,11 @@ def こおり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
     else:
         thaw = battle.random.random() < 0.2
 
+    mon = ctx.attacker
     if thaw:
         # 解凍した：ハンドラを解除して空の状態に
-        ctx.source.cure_ailment(battle.events)
-        return HandlerReturn()
+        mon.cure_ailment(battle.events)
+        return HandlerReturn(value=True)
     # まだ凍っている
-    battle.add_event_log(ctx.attacker, "凍っている")
+    battle.add_event_log(mon, "凍っている")
     return HandlerReturn(value=False, stop_event=True)

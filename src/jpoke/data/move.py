@@ -270,9 +270,11 @@ MOVES: dict[str, MoveData] = {
         power=95,
         accuracy=100,
         labels=["contact"],
+    ),
+    "いかりのまえば": MoveData(
+        type="ノーマル",
         category="物理",
         pp=10,
-        power=0,
         accuracy=90,
         labels=["contact"],
     ),

@@ -96,7 +96,6 @@ class EventContext:
                      battle: Battle,
                      spec: RoleSpec | None) -> Pokemon | None:
         """ロール指定からポケモンを解決する。
-
         Args:
             battle: バトルインスタンス
             spec: "role:side"形式のロール指定（例: "source:foe"）
@@ -353,7 +352,10 @@ class EventManager:
                 # print(f"  Handler skipped: {rh}")
                 continue
 
-            result: HandlerReturn = rh.handler.func(self.battle, context, value)
+            result = rh.handler.func(self.battle, context, value)
+
+            if not isinstance(result, HandlerReturn):
+                raise ValueError("Handler function must return HandlerReturn")
 
             if result.value is not None:
                 value = result.value

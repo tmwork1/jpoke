@@ -65,7 +65,8 @@ class Event(Enum):
 
     # 計算系イベント
     ON_CALC_SPEED = auto()  # emit: core/speed_calculator.py; handlers: data/ability.py,data/ailment.py,data/field.py
-    ON_CALC_ACTION_SPEED = auto()  # emit: core/speed_calculator.py; handlers: data/field.py
+    ON_CHECK_SPEED_REVERSE = auto()  # emit: core/speed_calculator.py
+    ON_MODIFY_MOVE_PRIORITY = auto()  # emit: core/speed_calculator.py; handlers: data/field.py
     ON_MODIFY_ACCURACY = auto()  # emit: core/move_executor.py; handlers: data/field.py
     ON_MODIFY_CRITICAL = auto()  # emit: core/damage.py; handlers: data/ability.py,data/item.py
     ON_CALC_POWER_MODIFIER = auto()  # emit: core/damage.py; handlers: data/field.py

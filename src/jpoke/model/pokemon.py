@@ -900,10 +900,12 @@ class Pokemon:
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
-        ctx = EventContext(target=self, source=source)
-        result = events.emit(Event.ON_BEFORE_APPLY_AILMENT, ctx, name)
         # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
-        if not result:
+        if not events.emit(
+            Event.ON_BEFORE_APPLY_AILMENT,
+            EventContext(target=self, source=source),
+            name
+        ):
             return False
 
         # 既存のハンドラを削除
@@ -964,10 +966,12 @@ class Pokemon:
             return False
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
-        ctx = EventContext(target=self, move=None, attacker=source, defender=None)
-        result = events.emit(Event.ON_BEFORE_APPLY_VOLATILE, ctx, name)
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
-        if not result:
+        if not events.emit(
+            Event.ON_BEFORE_APPLY_VOLATILE,
+            EventContext(target=self, move=None, attacker=source, defender=None),
+            name
+        ):
             return False
 
         volatile = Volatile(name, count=count)

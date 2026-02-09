@@ -3,13 +3,14 @@
 実効素早さ、素早さ順序、行動順序の計算を担当。
 """
 
+from __future__ import annotations
 from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .battle import Battle
+    from jpoke.model import Move
 
 from jpoke.model import Pokemon
 from .event import Event, EventContext
-
-if TYPE_CHECKING:
-    from .battle import Battle
 
 
 class SpeedCalculator:
@@ -41,7 +42,13 @@ class SpeedCalculator:
     def calc_effective_speed(self, mon: Pokemon) -> int:
         """ポケモンの実効素早さを計算。
 
-        イベントシステムを通じて特性・持ち物による補正を適用。
+        含まれる要素
+        - 特性による補正
+        - 持ち物による補正
+
+        含まれない要素
+        - トリックルームなどの行動順序補正
+        - 技の優先度
 
         Args:
             mon: 対象のポケモン
@@ -55,6 +62,53 @@ class SpeedCalculator:
             mon.stats["S"]
         )
 
+    def calc_speed_order_key(self, mon: Pokemon) -> int:
+        """ポケモンの行動速度を計算する。
+
+        含まれる要素
+        - 特性による補正
+        - 持ち物による補正
+        - トリックルームなどの行動順序補正
+
+        含まれない要素
+        - 技の優先度
+
+        Args:
+            mon: 対象のポケモン
+
+        Returns:
+            補正後の行動素早さ
+        """
+        # 基本の実効素早さを取得
+        base_speed = self.calc_effective_speed(mon)
+
+        # 素早さ反転の適用
+        return self.battle.events.emit(
+            Event.ON_CHECK_SPEED_REVERSE,
+            EventContext(source=mon),
+            base_speed
+        )
+
+    def calc_move_priority(self, attacker: Pokemon, move: Move) -> int:
+        """ポケモンの行動順序キーを計算する。
+
+        Args:
+            mon: 対象のポケモン
+            move_priority: 使用する技の優先度
+
+        Returns:
+            (優先度, 行動素早さ) のタプル
+        """
+        # 技の優先度を取得（基本値）
+        base_priority = move.priority if move else 0
+
+        # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
+        return self.battle.events.emit(
+            Event.ON_MODIFY_MOVE_PRIORITY,
+            EventContext(attacker=attacker, move=move),
+            base_priority
+        )
+
     def calc_speed_order(self) -> list[Pokemon]:
         """現在場に出ているポケモンの素早さ順序を計算。
 
@@ -63,11 +117,13 @@ class SpeedCalculator:
         Returns:
             素早さの速い順にソートされたポケモンのリスト
         """
-        speeds = [self.calc_effective_speed(p) for p in self.battle.actives]
+        speeds = [self.calc_speed_order_key(p) for p in self.battle.actives]
         if speeds[0] == speeds[1]:
+            # 同速の場合はランダムに順序を決定
             actives = self.battle.actives.copy()
             self.battle.random.shuffle(actives)
         else:
+            # 素早さ順にソート
             paired = sorted(
                 zip(speeds, self.battle.actives),
                 key=lambda pair: pair[0],
@@ -93,33 +149,17 @@ class SpeedCalculator:
 
             mon = player.active
 
-            # 実効素早さを計算
-            speed = self.calc_effective_speed(mon)
+            # 行動速度を計算
+            speed_key = self.calc_speed_order_key(mon)
 
-            # TODO: トリックルームによる素早さ反転処理の追加
-            # 例:
-            # speed = self.battle.events.emit(
-            #     Event.ON_CHECK_TRICK_ROOM_SPEED,
-            #     EventContext(target=mon),
-            #     speed
-            # )
-
+            # 技の優先度を取得
             command = player.reserved_commands[-1]
             move = self.battle.command_to_move(self.battle.players[i], command)
-
-            # 技の優先度を取得（基本値）
-            base_priority = move.priority if move else 0
-
-            # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
-            priority = self.battle.events.emit(
-                Event.ON_CALC_ACTION_SPEED,
-                EventContext(target=mon, move=move),
-                base_priority
-            )
+            move_priority = self.calc_move_priority(mon, move)
 
             # 優先度と素早さをペアで保持（同値時のランダルを可能にするため）
             # タプル (優先度, 素早さ) の形式で保持し、Python のタプル比較を利用
-            action_key = (priority, speed)
+            action_key = (move_priority, speed_key)
             speeds.append(action_key)
             actives.append(mon)
 

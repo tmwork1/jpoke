@@ -29,24 +29,24 @@ def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> Hand
 
 
 def すなあらし_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    # ON_TURN_END ハンドラ
-    success = ctx.target and \
-        not any(ctx.target.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
-        ctx.target.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"] and \
-        battle.modify_hp(ctx.target, r=-1/16)
+    """砂嵐のダメージ"""
+    success = ctx.source and \
+        not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
+        ctx.source.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"] and \
+        battle.modify_hp(ctx.source, r=-1/16)
     return HandlerReturn(success)
 
 
 def すなあらし_spdef_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
-    if ctx.target.has_type("いわ"):
+    if ctx.defender.has_type("いわ"):
         return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     return HandlerReturn(False, value)
 
 
 def ゆき_def_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
-    if ctx.target.has_type("こおり"):
+    if ctx.defender.has_type("こおり"):
         return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
     return HandlerReturn(False, value)
 
@@ -82,9 +82,9 @@ def グラスフィールド_power_modifier(battle: Battle, ctx: EventContext, v
 
 def グラスフィールド_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """グラスフィールドのターン終了時回復"""
-    success = ctx.target and \
-        not ctx.target.is_floating(battle.events) and \
-        battle.modify_hp(ctx.target, r=1/16)
+    success = ctx.source and \
+        not ctx.source.is_floating(battle.events) and \
+        battle.modify_hp(ctx.source, r=1/16)
     return HandlerReturn(success)
 
 
@@ -138,7 +138,7 @@ def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -
 
 def トリックルーム_reverse_speed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """トリックルームで素早さ反転"""
-    return HandlerReturn(True, -value)
+    return HandlerReturn(value=-value)
 
 
 # ===== サイドフィールドハンドラ =====

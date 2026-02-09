@@ -38,7 +38,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_TURN_END_2: Handler(
                 h.すなあらし_damage,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log_text="すなあらしダメージ",
             ),
             Event.ON_CALC_DEF_MODIFIER: Handler(
@@ -84,7 +84,7 @@ FIELDS: dict[str, FieldData] = {
             ),
             Event.ON_TURN_END_2: Handler(
                 h.グラスフィールド_heal,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log_text="グラスフィールド回復",
             ),
         },
@@ -99,7 +99,7 @@ FIELDS: dict[str, FieldData] = {
             ),
             Event.ON_CHECK_PRIORITY_VALID: Handler(
                 h.サイコフィールド_block_priority,
-                subject_spec="target:self",
+                subject_spec="defender:self",
                 log="never",
             ),
         },
@@ -140,11 +140,10 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "トリックルーム": FieldData(
-        # TODO: トリックルームで反転するのは素早さ順のみで、技の優先度は反転しないことを考慮する。
         handlers={
-            Event.ON_CALC_ACTION_SPEED: Handler(
+            Event.ON_CHECK_SPEED_REVERSE: Handler(
                 h.トリックルーム_reverse_speed,
-                subject_spec="target:self",
+                subject_spec="source:self",
                 log="never",
             ),
         },

@@ -48,7 +48,7 @@ AILMENTS: dict[str, AilmentData] = {
     "やけど": AilmentData(
         handlers={
             Event.ON_CALC_BURN_MODIFIER: h.AilmentHandler(
-                h.やけど_burn,
+                h.やけど_modifier,
                 subject_spec="attacker:self",
             ),
             Event.ON_TURN_END_3: h.AilmentHandler(

@@ -25,14 +25,14 @@ class Ailment(GameEffect):
         状態異常は相手に常に公開されるため、初期化時に reveal() を呼ぶ。
     """
 
-    def __init__(self, name: AilmentName = "") -> None:
+    def __init__(self, name: AilmentName = "", count: int = 0) -> None:
         """状態異常を初期化する。
 
         Args:
             name: 状態異常名。空文字列の場合は状態異常なしとして扱う
         """
         super().__init__(AILMENTS[name])
-        self.count: int = 0
+        self.count: int = count
         self.reveal()
 
     def bench_reset(self):
@@ -54,5 +54,12 @@ class Ailment(GameEffect):
         """状態異常のカウンターを1増加させる"""
         if self.count < self.max_count:
             self.count += 1
+            return True
+        return False
+
+    def tick_down(self, ) -> bool:
+        """状態異常のカウンターを1減少させる"""
+        if self.count > 0:
+            self.count -= 1
             return True
         return False

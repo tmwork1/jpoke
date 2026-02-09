@@ -1,9 +1,13 @@
+# TODO: assert 分は英語に統一する
+
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import math
 from jpoke import Battle, Pokemon
+from jpoke.utils.enums import Command
 from jpoke.core.event import Event, EventContext
 from jpoke.model.move import Move
 import test_utils as t
+
 
 # 定数定義
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
@@ -16,10 +20,11 @@ TERRAIN_BOOST = 1.3  # 地形による威力強化
 TERRAIN_NERF = 0.5   # 地形による威力弱化
 
 # ダメージ計算
-SANDSTORM_DAMAGE_RATIO = 15 / 16  # すなあらしダメージ後のHP割合
+SANDSTORM_DAMAGE_RATIO = 1 / 16  # すなあらしダメージ後のHP割合
 
 
 def create_power_modifier_context(battle: Battle, attacker_idx: int = 0) -> EventContext:
+    # TODO: test_utilsに移動
     """技威力補正のイベントコンテキストを作成するヘルパー関数。
 
     Args:
@@ -38,6 +43,7 @@ def create_power_modifier_context(battle: Battle, attacker_idx: int = 0) -> Even
 
 
 def assert_power_modifier(battle: Battle, expected: float, message: str = ""):
+    # TODO: test_utilsに移動
     """技威力補正値を検証するヘルパー関数。
 
     Args:
@@ -53,6 +59,7 @@ def assert_power_modifier(battle: Battle, expected: float, message: str = ""):
 
 
 def create_def_modifier_context(battle: Battle, defender_idx: int = 0) -> EventContext:
+    # TODO: test_utilsに移動
     """防御補正のイベントコンテキストを作成するヘルパー関数。"""
     attacker_idx = 1 - defender_idx
     return EventContext(
@@ -63,6 +70,7 @@ def create_def_modifier_context(battle: Battle, defender_idx: int = 0) -> EventC
 
 
 def assert_def_modifier(battle: Battle, expected: float, message: str = ""):
+    # TODO: test_utilsに移動
     """防御補正値を検証するヘルパー関数。"""
     ctx = create_def_modifier_context(battle)
     modifier = battle.events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, BASE_MODIFIER)
@@ -108,8 +116,9 @@ def test_あめ_ほのお技弱化():
 
 def test_すなあらし_ダメージ():
     """すなあらし: ターン終了時ダメージ"""
-    battle = t.start_battle(weather=("すなあらし", DEFAULT_DURATION), turn=1)
-    expected_hps = [math.ceil(mon.max_hp * SANDSTORM_DAMAGE_RATIO) for mon in battle.actives]
+    battle = t.start_battle(weather=("すなあらし", DEFAULT_DURATION))
+    battle.events.emit(Event.ON_TURN_END_2)
+    expected_hps = [math.ceil(mon.max_hp * (1-SANDSTORM_DAMAGE_RATIO)) for mon in battle.actives]
     assert battle.actives[0].hp == expected_hps[0], "味方がすなあらしダメージを受けていない"
     assert battle.actives[1].hp == expected_hps[1], "相手がすなあらしダメージを受けていない"
 
@@ -119,9 +128,10 @@ def test_すなあらし_いわタイプ無効():
     battle = t.start_battle(
         ally=[Pokemon("イシツブテ")],
         weather=("すなあらし", DEFAULT_DURATION),
-        turn=1,
     )
+    battle.events.emit(Event.ON_TURN_END_2)
     assert battle.actives[0].hp == battle.actives[0].max_hp, "いわタイプがすなあらしダメージを受けた"
+    assert battle.actives[1].hp == math.ceil(battle.actives[1].max_hp * (1-SANDSTORM_DAMAGE_RATIO)), "相手がすなあらしダメージを受けていない"
 
 
 def test_すなあらし_いわタイプ特防上昇():
@@ -325,11 +335,7 @@ def test_ミストフィールド_状態異常防止():
 
 def test_じゅうりょく_命中補正():
     """じゅうりょく: 命中率5/3倍"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        foe=[Pokemon("フシギダネ")],
-        global_field={"じゅうりょく": 5},
-    )
+    battle = t.start_battle(global_field={"じゅうりょく": DEFAULT_DURATION})
     ctx = EventContext(
         attacker=battle.actives[0],
         defender=battle.actives[1],
@@ -343,38 +349,35 @@ def test_じゅうりょく_浮遊無効():
     """じゅうりょく: 浮遊状態を無効化"""
     battle = t.start_battle(
         ally=[Pokemon("ピジョン")],
-        global_field={"じゅうりょく": 5},
+        global_field={"じゅうりょく": DEFAULT_DURATION},
     )
     target = battle.actives[0]
     assert not target.is_floating(battle.events), "じゅうりょくで浮遊が無効化されない"
 
 
-def test_トリックルーム():
-    """トリックルーム: フィールド有効化"""
+def test_トリックルーム_行動順反転():
+    """トリックルーム: 行動順が素早さの逆順になる"""
     battle = t.start_battle(
         ally=[Pokemon("ヤドン")],
         foe=[Pokemon("ピカチュウ")],
         global_field={"トリックルーム": 5},
     )
-    assert battle.field_mgr.fields["トリックルーム"].is_active, "トリックルームが有効化されていない"
-    assert battle.field_mgr.fields["トリックルーム"].count == 5, "トリックルームのカウントが不正"
+    calc_key = battle.speed_calculator.calc_speed_order_key
+    assert calc_key(battle.actives[0]) > calc_key(battle.actives[1]), "トリックルームで行動順が反転しない"
 
 
-# TODO: トリックルーム 行動順が素早さの逆順になっていることをテスト
-
-def test_トリックルーム_優先度反転():
-    # TODO: トリックルーム下でも技の優先度に従って行動順が決まることを確認
-    """トリックルーム: 優先度値を反転"""
+def test_トリックルーム_技優先度():
+    """トリックルーム: 技の優先度が優先される"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        ally=[Pokemon("ヤドン")],
+        foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
         global_field={"トリックルーム": 5},
     )
-    ctx = EventContext(
-        target=battle.actives[0],
-        move=battle.actives[0].moves[0]
-    )
-    result = battle.events.emit(Event.ON_CALC_ACTION_SPEED, ctx, 1)
-    assert result == -1, "トリックルームで優先度が反転しない"
+    for player in battle.players:
+        player.init_turn()
+        player.reserve_command(Command.MOVE_0)
+    action_order = battle.calc_action_order()
+    assert action_order[0] == battle.actives[1], "トリックルームで優先度が考慮されない"
 
 
 if __name__ == "__main__":
