@@ -6,11 +6,11 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy
-from jpoke.utils.enums import Event
-from jpoke.core.event import Handler, HandlerReturn
+from jpoke.enums import Event
+from jpoke.core import Handler, HandlerReturn
 from . import common
 
 
@@ -23,7 +23,7 @@ class VolatileHandler(Handler):
         super().__init__(func, subject_spec, "volatile", log, None, priority)
 
 
-def _protect_block(battle: Battle, ctx: EventContext, value: Any) -> bool:
+def _protect_block(battle: Battle, ctx: BattleContext, value: Any) -> bool:
     if not ctx.move:
         return False
     if "unprotectable" in ctx.move.data.labels or "anti_protect" in ctx.move.data.labels:
@@ -31,12 +31,12 @@ def _protect_block(battle: Battle, ctx: EventContext, value: Any) -> bool:
     return True
 
 
-def あくむ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あくむ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あくむのターン終了時ダメージ
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -44,8 +44,7 @@ def あくむ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     """
     # ねむり状態でない場合は解除
     if ctx.source.ailment.name != "ねむり":
-        ctx.source.volatiles["あくむ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["あくむ"]
+        ctx.source.remove_volatile("あくむ")
         return HandlerReturn(True)
 
     # ダメージ適用（最大HPの1/4）
@@ -56,12 +55,12 @@ def あくむ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あめまみれ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あめまみれのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -69,18 +68,17 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     """
     ctx.source.volatiles["あめまみれ"].tick_down()
     if ctx.source.volatiles["あめまみれ"].count <= 0:
-        ctx.source.volatiles["あめまみれ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["あめまみれ"]
+        ctx.source.remove_volatile("あめまみれ")
         battle.add_event_log(ctx.source, "のあめまみれが解けた！")
     return HandlerReturn(True)
 
 
-def あばれる_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あばれる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あばれる状態を付与する
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -91,18 +89,18 @@ def あばれる_apply(battle: Battle, ctx: EventContext, value: Any) -> Handler
         return HandlerReturn(False)
 
     count = battle.random.randint(2, 3)
-    if not user.apply_volatile(battle.events, "あばれる", count=count, source=user):
+    if not user.apply_volatile(battle, "あばれる", count=count, source=user):
         return HandlerReturn(False)
     user.volatiles["あばれる"].locked_move_name = ctx.move.name if ctx.move else ""
     return HandlerReturn(True)
 
 
-def あばれる_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あばれる_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あばれる中の強制技固定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技
 
     Returns:
@@ -121,12 +119,12 @@ def あばれる_before_move(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def あばれる_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あばれる_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -135,20 +133,19 @@ def あばれる_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Hand
     ctx.source.volatiles["あばれる"].tick_down()
     if ctx.source.volatiles["あばれる"].count <= 0:
         # あばれる終了後にこんらん状態へ
-        ctx.source.volatiles["あばれる"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["あばれる"]
+        ctx.source.remove_volatile("あばれる")
         battle.add_event_log(ctx.source, "はあばれた後こんらんした！")
         # こんらん状態を付与 (1~4ターン)
-        ctx.source.apply_volatile(battle.events, "こんらん", source=ctx.source)
+        ctx.source.apply_volatile(battle, "こんらん", source=ctx.source)
     return HandlerReturn(True)
 
 
-def いちゃもん_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def いちゃもん_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いちゃもんによる同じ技の連続使用禁止
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技（Move）
 
     Returns:
@@ -161,7 +158,7 @@ def いちゃもん_before_move(battle: Battle, ctx: EventContext, value: Any) -
     if move is None:
         return HandlerReturn(True)
 
-    volatile = ctx.target.volatiles.get("いちゃもん")
+    volatile = ctx.target.volatiles.get("いちゃもん") if ctx.target else None
 
     if volatile and hasattr(volatile, 'last_move_name'):
         if move.name == volatile.last_move_name:
@@ -171,12 +168,12 @@ def いちゃもん_before_move(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def いちゃもん_record_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def いちゃもん_record_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いちゃもん用に直前技を記録する
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -193,12 +190,12 @@ def いちゃもん_record_move(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(False)
 
 
-def うちおとす_check_floating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def うちおとす_check_floating(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """うちおとす状態による接地判定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在の浮遊判定
 
     Returns:
@@ -207,12 +204,12 @@ def うちおとす_check_floating(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(True, False)
 
 
-def おんねん_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def おんねん_on_faint(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """おんねん状態のひんし時処理（相手の技PPを0にする）
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -230,12 +227,12 @@ def おんねん_on_faint(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def かいふくふうじ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かいふくふうじ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かいふくふうじのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -249,12 +246,12 @@ def かいふくふうじ_turn_end(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(True)
 
 
-def かえんのまもり_check_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かえんのまもり_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かえんのまもりの保護判定とやけど付与
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 判定値
 
     Returns:
@@ -268,12 +265,12 @@ def かえんのまもり_check_protect(battle: Battle, ctx: EventContext, value
     return HandlerReturn(True, True)
 
 
-def かえんのまもり_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かえんのまもり_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かえんのまもり状態のターン終了時解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -285,12 +282,12 @@ def かえんのまもり_turn_end(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(True)
 
 
-def かなしばり_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かなしばり_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かなしばりによる技の使用禁止
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技（Move）
 
     Returns:
@@ -313,12 +310,12 @@ def かなしばり_before_move(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def かなしばり_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かなしばり_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かなしばりのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -332,12 +329,12 @@ def かなしばり_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def こんらん_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -383,12 +380,12 @@ def こんらん_action(battle: Battle, ctx: EventContext, value: Any) -> Handle
     return HandlerReturn(True)
 
 
-def さしおさえ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def さしおさえ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さしおさえのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -402,12 +399,12 @@ def さしおさえ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def さわぐ_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def さわぐ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ状態を付与する
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -423,12 +420,12 @@ def さわぐ_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(True)
 
 
-def さわぐ_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def さわぐ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ中の強制技固定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技
 
     Returns:
@@ -447,12 +444,12 @@ def さわぐ_before_move(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def さわぐ_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ状態でねむりを防ぐ
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 状態異常名
 
     Returns:
@@ -463,12 +460,12 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(False, value)
 
 
-def さわぐ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def さわぐ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ状態のターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -482,12 +479,12 @@ def さわぐ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def そうでん_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def そうでん_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """そうでん状態による技タイプ変換
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -498,12 +495,12 @@ def そうでん_move_type(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(True)
 
 
-def そうでん_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def そうでん_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """そうでんのターン経過処理（ターン終了時に解除）
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -515,12 +512,12 @@ def そうでん_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def たくわえる_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def たくわえる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """たくわえるの蓄積処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -544,12 +541,12 @@ def たくわえる_apply(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def たこがため_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def たこがため_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """たこがためのターン終了時防御・特防ダウン
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -566,12 +563,12 @@ def たこがため_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def ちいさくなる_accuracy_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちいさくなる_accuracy_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちいさくなる状態への必中補正
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 命中率
 
     Returns:
@@ -582,12 +579,12 @@ def ちいさくなる_accuracy_modifier(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(False, value)
 
 
-def ちいさくなる_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちいさくなる状態への威力補正
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 威力補正値（4096基準）
 
     Returns:
@@ -598,12 +595,12 @@ def ちいさくなる_power_modifier(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(False, value)
 
 
-def ちょうはつ_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちょうはつ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちょうはつによる変化技の使用禁止
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技（Move）
 
     Returns:
@@ -624,12 +621,12 @@ def ちょうはつ_before_move(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def ちょうはつ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちょうはつ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちょうはつのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -643,12 +640,12 @@ def ちょうはつ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def にげられない_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def にげられない_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """にげられない状態による交代制限
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在のtrapped値（OR演算で更新）
 
     Returns:
@@ -657,12 +654,12 @@ def にげられない_check_trapped(battle: Battle, ctx: EventContext, value: A
     return HandlerReturn(True, value | True)
 
 
-def ねむけ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ねむけ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねむけのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -679,12 +676,12 @@ def ねむけ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def ねをはる_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ねをはる_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねをはる状態による交代制限
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在のtrapped値（OR演算で更新）
 
     Returns:
@@ -693,12 +690,12 @@ def ねをはる_check_trapped(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(True, value | True)
 
 
-def ひるみ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ひるみ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ひるみ状態による行動不能判定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -712,12 +709,12 @@ def ひるみ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
     return HandlerReturn(False, stop_event=True)
 
 
-def ひるみ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ひるみ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ひるみのターン終了時解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -728,12 +725,12 @@ def ひるみ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def ふういん_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ふういん_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふういんによる技の使用禁止
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技（Move）
 
     Returns:
@@ -751,12 +748,12 @@ def ふういん_before_move(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def ほろびのうた_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ほろびのうた_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ほろびのうたのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -772,12 +769,12 @@ def ほろびのうた_turn_end(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def まもる_check_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def まもる_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まもるの保護判定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 判定値
 
     Returns:
@@ -788,12 +785,12 @@ def まもる_check_protect(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(False, value)
 
 
-def まもる_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def まもる_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まもる状態のターン終了時解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -805,12 +802,12 @@ def まもる_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def まるくなる_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まるくなる状態で特定技の威力補正
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 威力補正値（4096基準）
 
     Returns:
@@ -821,12 +818,12 @@ def まるくなる_power_modifier(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(False, value)
 
 
-def みちづれ_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def みちづれ_on_faint(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みちづれ状態のひんし時処理（相手もひんしにする）
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -839,12 +836,12 @@ def みちづれ_on_faint(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def みがわり_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりを生成する
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -868,12 +865,12 @@ def みがわり_apply(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def みがわり_before_damage_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def みがわり_before_damage_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりがダメージを肩代わりする
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: ダメージ量
 
     Returns:
@@ -901,7 +898,7 @@ def みがわり_before_damage_apply(battle: Battle, ctx: EventContext, value: A
     return HandlerReturn(True, 0)
 
 
-def みがわり_check_substitute(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def みがわり_check_substitute(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりが変化技と特定の技を防ぐ
 
     ON_TRY_IMMUNE Priority 30 として実行され、みがわり状態のポケモンを保護します。
@@ -909,7 +906,7 @@ def みがわり_check_substitute(battle: Battle, ctx: EventContext, value: Any)
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト（defender: みがわり状態のポケモン）
+        ctx: コンテキスト（defender: みがわり状態のポケモン）
         value: 現在の判定値（他のハンドラからの継続値）
 
     Returns:
@@ -934,12 +931,12 @@ def みがわり_check_substitute(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(False, value)
 
 
-def じごくずき_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def じごくずき_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じごくずきのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -953,12 +950,12 @@ def じごくずき_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def じゅうでん_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def じゅうでん_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じゅうでんのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -972,12 +969,12 @@ def じゅうでん_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def でんじふゆう_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def でんじふゆう_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """でんじふゆうのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -991,12 +988,12 @@ def でんじふゆう_turn_end(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def アンコール_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def アンコール_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """アンコールによる技の固定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 使用しようとしている技（Move）
 
     Returns:
@@ -1026,12 +1023,12 @@ def アンコール_before_move(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def アンコール_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def アンコール_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """アンコールのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1045,12 +1042,12 @@ def アンコール_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def キングシールド_check_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def キングシールド_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """キングシールドの保護判定と攻撃低下
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 判定値
 
     Returns:
@@ -1064,12 +1061,12 @@ def キングシールド_check_protect(battle: Battle, ctx: EventContext, value
     return HandlerReturn(True, True)
 
 
-def キングシールド_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def キングシールド_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """キングシールド状態のターン終了時解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1081,12 +1078,12 @@ def キングシールド_turn_end(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(True)
 
 
-def スレッドトラップ_check_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def スレッドトラップ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """スレッドトラップの保護判定と素早さ低下
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 判定値
 
     Returns:
@@ -1100,12 +1097,12 @@ def スレッドトラップ_check_protect(battle: Battle, ctx: EventContext, va
     return HandlerReturn(True, True)
 
 
-def スレッドトラップ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def スレッドトラップ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """スレッドトラップ状態のターン終了時解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1117,12 +1114,12 @@ def スレッドトラップ_turn_end(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(True)
 
 
-def タールショット_damage_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def タールショット_damage_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """タールショット状態でほのお技のダメージ補正
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: ダメージ補正値（4096基準）
 
     Returns:
@@ -1133,12 +1130,12 @@ def タールショット_damage_modifier(battle: Battle, ctx: EventContext, val
     return HandlerReturn(False, value)
 
 
-def テレキネシス_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def テレキネシス_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """テレキネシスのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1152,12 +1149,12 @@ def テレキネシス_turn_end(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(True)
 
 
-def トーチカ_check_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def トーチカ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """トーチカの保護判定とどく付与
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 判定値
 
     Returns:
@@ -1171,12 +1168,12 @@ def トーチカ_check_protect(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(True, True)
 
 
-def トーチカ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def トーチカ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """トーチカ状態のターン終了時解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1188,12 +1185,12 @@ def トーチカ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def マジックコート_before_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def マジックコート_before_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値
 
     Returns:
@@ -1209,12 +1206,12 @@ def マジックコート_before_damage(battle: Battle, ctx: EventContext, value
     return HandlerReturn(True, None, stop_event=True)
 
 
-def メロメロ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """メロメロ状態による行動不能判定（50%確率）
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1233,12 +1230,12 @@ def メロメロ_action(battle: Battle, ctx: EventContext, value: Any) -> Handle
     return HandlerReturn(True)
 
 
-def ロックオン_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ロックオン_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ロックオン状態による必中化
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 命中率
 
     Returns:
@@ -1250,12 +1247,12 @@ def ロックオン_accuracy(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(False, value)
 
 
-def ロックオン_on_hit(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ロックオン_on_hit(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ロックオン状態の消費
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1272,12 +1269,12 @@ def ロックオン_on_hit(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(False)
 
 
-def ロックオン_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ロックオン_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ロックオンのターン経過処理
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1290,12 +1287,12 @@ def ロックオン_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(True)
 
 
-def バインド_before_switch(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def バインド_before_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """バインド状態による交代制限
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在のtrapped値（OR演算で更新）
 
     Returns:
@@ -1309,12 +1306,12 @@ def バインド_before_switch(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(True, value | True)
 
 
-def バインド_source_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def バインド_source_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """バインド使用者の交代時に対象のバインドを解除
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1334,12 +1331,12 @@ def バインド_source_switch_out(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(True)
 
 
-def バインド_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def バインド_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """バインド状態のターン終了時ダメージ
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1364,12 +1361,12 @@ def バインド_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(True)
 
 
-def 姿消し_check_invulnerable(battle: Battle, ctx: EventContext, value: Any, allowed_moves: list[str]) -> HandlerReturn:
+def 姿消し_check_invulnerable(battle: Battle, ctx: BattleContext, value: Any, allowed_moves: list[str]) -> HandlerReturn:
     """姿消し状態の回避判定
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 判定値
         allowed_moves: 命中可能な技名
 
@@ -1383,12 +1380,12 @@ def 姿消し_check_invulnerable(battle: Battle, ctx: EventContext, value: Any, 
     return HandlerReturn(True, True)
 
 
-def 姿消し_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 姿消し_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """姿消し状態のターン終了時処理（2ターン目で攻撃実行）
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -1403,12 +1400,12 @@ def 姿消し_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(True)
 
 
-def 急所ランク_calc_critical(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 急所ランク_calc_critical(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """急所ランク状態による急所補正
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 急所ランク
 
     Returns:

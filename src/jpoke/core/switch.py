@@ -3,15 +3,17 @@
 ポケモンの交代、割り込み処理、瀕死交代などを担当。
 """
 
+from __future__ import annotations
 from typing import TYPE_CHECKING
-
-from jpoke.model import Pokemon
-from jpoke.utils.enums import Interrupt
-from .event import Event, EventContext
-
 if TYPE_CHECKING:
     from .battle import Battle
     from .player import Player
+
+from jpoke.model import Pokemon
+from jpoke.enums import Interrupt
+
+from .event import Event
+from .context import BattleContext
 
 
 class SwitchManager:
@@ -58,7 +60,7 @@ class SwitchManager:
             flag: 設定する割り込みフラグ
             only_first: 最初の1体のみに設定する場合True
         """
-        for mon in self.battle.calc_speed_order():
+        for mon in self.battle.determine_speed_order():
             player = self.battle.find_player(mon)
             if player.interrupt == Interrupt.REQUESTED:
                 player.interrupt = flag
@@ -81,18 +83,18 @@ class SwitchManager:
         # 退場
         old = player.active
         if old is not None:
-            self.battle.events.emit(Event.ON_SWITCH_OUT, EventContext(source=old))
-            old.switch_out(self.battle.events)
+            self.battle.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
+            old.switch_out(self.battle)
             self.battle.add_event_log(player, f"{old.name} {'交代' if old.hp else '瀕死'}")
 
         # 入場
         player.active_idx = player.team.index(new)
-        new.switch_in(self.battle.events)
+        new.switch_in(self.battle)
         self.battle.add_event_log(player, f"{new.name} 着地")
 
         # ポケモンが場に出た時の処理
         if emit:
-            self.battle.events.emit(Event.ON_SWITCH_IN, EventContext(source=new))
+            self.battle.events.emit(Event.ON_SWITCH_IN, BattleContext(source=new))
 
             # リクエストがなくなるまで再帰的に交代する
             while self.has_interrupt():
@@ -151,10 +153,10 @@ class SwitchManager:
 
         # 全員の着地処理を同時に実行
         if not emit_on_each_switch:
-            for mon in self.battle.calc_speed_order():
+            for mon in self.battle.determine_speed_order():
                 player = self.battle.find_player(mon)
                 if player in switched_players:
-                    self.battle.events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+                    self.battle.events.emit(Event.ON_SWITCH_IN, BattleContext(source=mon))
 
     def run_faint_switch(self):
         """瀕死による交代を実行。

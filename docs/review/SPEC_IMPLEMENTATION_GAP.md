@@ -32,7 +32,7 @@
 ```python
 # handlers/ability.py に追加
 
-def マルチスケイル(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def マルチスケイル(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """マルチスケイル: HPが満タンの場合、ダメージを50%軽減する。
     
     イベント: ON_CALC_DAMAGE_MODIFIER
@@ -211,7 +211,7 @@ def check_hit(self, attacker: Pokemon, move: Move) -> bool:
             return True
         accuracy = self.battle.events.emit(
             Event.ON_CALC_ACCURACY,
-            EventContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
+            BattleContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
             move.accuracy
         )
 ```
@@ -315,7 +315,7 @@ def check_hit(self, attacker: Pokemon, move: Move) -> bool:
 **実装**: `handlers/move.py` Lines 49-56
 
 ```python
-def consume_pp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     v = battle.events.emit(Event.ON_CHECK_PP_CONSUMED, ctx, 1)
     ctx.move.pp = max(0, ctx.move.pp - v)
 ```

@@ -6,17 +6,17 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from jpoke.core import Battle, EventManager
     from jpoke.model import Pokemon, Ability, Move
 
 from dataclasses import dataclass, field
 from decimal import Decimal, ROUND_HALF_DOWN
-import random
 
 from jpoke.utils.type_defs import Stat
-from jpoke.utils.enums import DamageFlag
+from jpoke.enums import Event, DamageFlag
 from jpoke.utils import fast_copy
 
-from .event import EventManager, Event, EventContext
+from .context import BattleContext
 
 
 def rank_modifier(v: float) -> float:
@@ -86,8 +86,9 @@ class DamageCalculator:
         damage_ratio_dstr: ダメージ割合分布
     """
 
-    def __init__(self):
-        """DamageCalculatorを初期化する。"""
+    def __init__(self, battle: Battle):
+        self.battle: Battle = battle
+
         self.lethal_num: int = 0
         self.lethal_prob: float = 0.
         self.hp_dstr: dict = {}
@@ -109,38 +110,28 @@ class DamageCalculator:
         fast_copy(self, new)
         return new
 
-    def _check_critical(self, critical_rank: int) -> bool:
-        """急所判定を行う。
-
-        急所ランクに基づいて急所確率を計算します：
-        - ランク0: 1/24（約4.2%）
-        - ランク1: 1/8（12.5%）
-        - ランク2: 1/2（50%）
-        - ランク3以上: 1/1（100%、上限）
+    def update_reference(self, new_battle: Battle):
+        """ディープコピー後の参照を更新する。
 
         Args:
-            critical_rank: 急所ランク（0～3以上）
-
-        Returns:
-            bool: 急所に当たるかどうか
+            battle: 新しいBattleインスタンス
         """
-        # 急所ランクを0～3の範囲に正規化
-        rank = max(0, min(3, critical_rank))
-        critical_rates = [1/24, 1/8, 1/2, 1.0]
-        critical_rate = critical_rates[rank]
-        return random.random() < critical_rate
+        self.battle = new_battle
 
-    def single_hit_damages(self,
-                           events: EventManager,
-                           attacker: Pokemon,
-                           defender: Pokemon,
-                           move: Move,
-                           dmg_ctx: DamageContext | None = None) -> tuple[list[int], DamageContext | None]:
+    @property
+    def events(self) -> EventManager:
+        """イベント管理システムへのショートカットプロパティ。"""
+        return self.battle.events
+
+    def calc_damage_range(self,
+                          attacker: Pokemon,
+                          defender: Pokemon,
+                          move: Move,
+                          dmg_ctx: DamageContext) -> tuple[list[int], DamageContext | None]:
         """
         1回の攻撃で与えるダメージを計算する
 
         Args:
-            events: イベントマネージャー
             attacker: 攻撃側
             defender: 防御側
             move: 技
@@ -153,23 +144,10 @@ class DamageCalculator:
         if not move.data.power:
             return [0], dmg_ctx
 
-        if not dmg_ctx:
-            dmg_ctx = DamageContext()
-
-        # 急所判定
-        critical_rank = events.emit(
-            Event.ON_MODIFY_CRITICAL,
-            EventContext(attacker=attacker, defender=defender, move=move),
-            move.critical_rank
-        )
-
-        if critical_rank is not None:
-            dmg_ctx.critical = self._check_critical(critical_rank)
-
         # 最終威力・攻撃・防御
-        final_pow = self.calc_final_power(events, attacker, defender, move, dmg_ctx)
-        final_atk = self.calc_final_attack(events, attacker, defender, move, dmg_ctx)
-        final_def = self.calc_final_defense(events, attacker, defender, move, dmg_ctx)
+        final_pow = self.calc_final_power(attacker, defender, move, dmg_ctx)
+        final_atk = self.calc_final_attack(attacker, defender, move, dmg_ctx)
+        final_def = self.calc_final_defense(attacker, defender, move, dmg_ctx)
 
         # 最大乱数ダメージ
         max_dmg = int(int(int(attacker.level*0.4+2)*final_pow*final_atk/final_def)/50+2)
@@ -182,37 +160,37 @@ class DamageCalculator:
         # -- ここで乱数が適用される(計算はループ内で実行) --
 
         # 攻撃タイプ補正
-        r_atk_type = events.emit(
+        r_atk_type = self.events.emit(
             Event.ON_CALC_ATK_TYPE_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
 
         # 防御タイプ補正
-        r_def_type = events.emit(
+        r_def_type = self.events.emit(
             Event.ON_CALC_DEF_TYPE_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
 
         # やけど補正（タイプ相性の後、ダメージ補正の前）
-        r_burn = events.emit(
+        r_burn = self.events.emit(
             Event.ON_CALC_BURN_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
 
         # ダメージ補正
-        r_dmg = events.emit(
+        r_dmg = self.events.emit(
             Event.ON_CALC_DAMAGE_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
 
         # まもる貫通系補正（Z技、ダイマックス技等）
-        r_protect = events.emit(
+        r_protect = self.events.emit(
             Event.ON_CALC_PROTECT_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
 
@@ -241,7 +219,6 @@ class DamageCalculator:
         return dmgs, dmg_ctx
 
     def calc_final_power(self,
-                         events: EventManager,
                          attacker: Pokemon,
                          defender: Pokemon,
                          move: Move,
@@ -249,7 +226,6 @@ class DamageCalculator:
         """最終威力を計算する。
 
         Args:
-            events: イベントマネージャー
             attacker: 攻撃側のポケモン
             defender: 防御側のポケモン
             move: 技
@@ -261,15 +237,13 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        move_category = attacker.effective_move_category(move, events)
-
         # 技威力
         final_pow = move.data.power * dmg_ctx.power_multiplier
 
         # その他の補正
-        r_pow = events.emit(
+        r_pow = self.events.emit(
             Event.ON_CALC_POWER_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
         final_pow = round_half_down(final_pow * r_pow/4096)
@@ -278,7 +252,6 @@ class DamageCalculator:
         return final_pow
 
     def calc_final_attack(self,
-                          events: EventManager,
                           attacker: Pokemon,
                           defender: Pokemon,
                           move: Move,
@@ -288,7 +261,6 @@ class DamageCalculator:
         ランク補正、特性、持ち物などの補正を適用します。
 
         Args:
-            events: イベントマネージャー
             attacker: 攻撃側のポケモン
             defender: 防御側のポケモン
             move: 技
@@ -300,7 +272,7 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        move_category = attacker.effective_move_category(move, events)
+        move_category = attacker.effective_move_category(move, self.battle)
 
         # ステータス
         if move == 'イカサマ':
@@ -317,9 +289,9 @@ class DamageCalculator:
             r_rank = rank_modifier(attacker.rank[stat])
 
         # ランク補正の修正
-        def_ability: Ability = events.emit(
+        def_ability: Ability = self.events.emit(
             Event.ON_CHECK_DEF_ABILITY,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             defender.ability
         )
 
@@ -336,9 +308,9 @@ class DamageCalculator:
         final_atk = int(final_atk * r_rank)
 
         # その他の補正
-        r_atk = events.emit(
+        r_atk = self.events.emit(
             Event.ON_CALC_ATK_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
         final_atk = round_half_down(final_atk * r_atk/4096)
@@ -347,7 +319,6 @@ class DamageCalculator:
         return final_atk
 
     def calc_final_defense(self,
-                           events: EventManager,
                            attacker: Pokemon,
                            defender: Pokemon,
                            move: Move,
@@ -357,7 +328,6 @@ class DamageCalculator:
         ランク補正、特性、持ち物などの補正を適用します。
 
         Args:
-            events: イベントマネージャー
             attacker: 攻撃側のポケモン
             defender: 防御側のポケモン
             move: 技
@@ -369,7 +339,7 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        move_category = attacker.effective_move_category(move, events)
+        move_category = attacker.effective_move_category(move, self.battle)
 
         # ステータス
         if move_category == "物理" or "physical" in move.data.labels:
@@ -398,9 +368,9 @@ class DamageCalculator:
         final_def = int(final_def * r_rank)
 
         # その他の補正
-        r_def = events.emit(
+        r_def = self.events.emit(
             Event.ON_CALC_DEF_MODIFIER,
-            EventContext(attacker=attacker, defender=defender, move=move),
+            BattleContext(attacker=attacker, defender=defender, move=move),
             4096
         )
         final_def = round_half_down(final_def * r_def/4096)

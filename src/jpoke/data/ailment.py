@@ -1,7 +1,7 @@
 from functools import partial
-from jpoke.core.event import Event, Handler
-from .models import AilmentData
+from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import common, ailment as h
+from .models import AilmentData
 
 
 def common_setup():
@@ -32,7 +32,7 @@ AILMENTS: dict[str, AilmentData] = {
     ),
     "まひ": AilmentData(
         handlers={
-            Event.ON_CALC_SPEED: h.AilmentHandler(
+            DomainEvent.ON_CALC_SPEED: h.AilmentHandler(
                 h.まひ_speed,
                 subject_spec="source:self",
                 log="never",

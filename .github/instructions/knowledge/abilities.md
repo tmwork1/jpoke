@@ -31,7 +31,7 @@
 
 ```python
 # タイプ一致補正強化（てきおうりょく）
-def てきおうりょく_power(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def てきおうりょく_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """タイプ一致技の威力を2倍に（通常1.5倍の代わり）"""
     move = ctx.move
     attacker = ctx.attacker
@@ -52,7 +52,7 @@ def てきおうりょく_power(battle: Battle, ctx: EventContext, value: Any) -
 接触技でまひ付与等
 
 ```python
-def せいでんき_on_contact(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def せいでんき_on_contact(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """接触技を受けたとき、30%の確率で相手をまひ状態にする"""
     move = ctx.move
     attacker = ctx.attacker
@@ -85,7 +85,7 @@ def せいでんき_on_contact(battle: Battle, ctx: EventContext, value: Any) ->
 class PokemonState:
     ability_counters: dict[str, int] = Field(default_factory=dict)
 
-def なまけ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def なまけ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """1ターンおきに行動できなくなる"""
     pokemon = ctx.source
     
@@ -98,7 +98,7 @@ def なまけ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Handler
     
     return HandlerReturn(True)
 
-def なまけ_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def なまけ_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """偶数ターンは行動不可"""
     pokemon = ctx.source
     counter = pokemon.ability_counters.get("なまけ", 0)
@@ -113,7 +113,7 @@ def なまけ_try_action(battle: Battle, ctx: EventContext, value: Any) -> Handl
 ### フォルムチェンジ系（バトルスイッチ等）
 
 ```python
-def バトルスイッチ_before_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def バトルスイッチ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """攻撃技使用前にブレードフォルムに変更"""
     pokemon = ctx.source
     move = ctx.move
@@ -132,7 +132,7 @@ def バトルスイッチ_before_move(battle: Battle, ctx: EventContext, value: 
 ### 複数条件判定（ようりょくそ等）
 
 ```python
-def ようりょくそ_speed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ようりょくそ_speed(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """晴れ状態の時、素早さが2倍"""
     pokemon = ctx.source
     

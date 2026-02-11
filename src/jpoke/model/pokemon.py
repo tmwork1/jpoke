@@ -6,14 +6,14 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core.event import EventManager
+    from jpoke.core import Battle
 
 from jpoke.utils.type_defs import Nature, PokeType, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
 from jpoke.utils import fast_copy
-
-from jpoke.core.event import Event, EventContext
+from jpoke.enums import Event
 from jpoke.data import pokedex
+from jpoke.core import BattleContext
 
 from .ability import Ability
 from .item import Item
@@ -198,38 +198,38 @@ class Pokemon:
             "terastal": self._terastal,
         }
 
-    def switch_in(self, events: EventManager):
+    def switch_in(self, battle: Battle):
         """ポケモンを場に出す。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
 
         Note:
             特性、持ち物、状態異常、揮発性状態のハンドラを登録し、
             observedフラグをTrueにする。
         """
         self.revealed = True
-        self.ability.register_handlers(events, self)
-        self.item.register_handlers(events, self)
-        self.ailment.register_handlers(events, self)
+        self.ability.register_handlers(battle.domains, battle.events, self)
+        self.item.register_handlers(battle.domains, battle.events, self)
+        self.ailment.register_handlers(battle.domains, battle.events, self)
         for volatile in self.volatiles.values():
-            volatile.register_handlers(events, self)
+            volatile.register_handlers(battle.domains, battle.events, self)
 
-    def switch_out(self, events: EventManager):
+    def switch_out(self, battle: Battle):
         """ポケモンを引っ込める。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
 
         Note:
             バトル状態をリセットし、全てのハンドラを解除する。
         """
         self.bench_reset()
-        self.ability.unregister_handlers(events, self)
-        self.item.unregister_handlers(events, self)
-        self.ailment.unregister_handlers(events, self)
+        self.ability.unregister_handlers(battle.domains, battle.events, self)
+        self.item.unregister_handlers(battle.domains, battle.events, self)
+        self.ailment.unregister_handlers(battle.domains, battle.events, self)
         for volatile in self.volatiles.values():
-            volatile.unregister_handlers(events, self)
+            volatile.unregister_handlers(battle.domains, battle.events, self)
 
     @property
     def name(self) -> str:
@@ -779,11 +779,11 @@ class Pokemon:
             if move in [mv, mv.name]:
                 return mv
 
-    def is_floating(self, events: EventManager) -> bool:
+    def is_floating(self, battle: Battle) -> bool:
         """浮いている状態か判定する。
 
         Args:
-            events: イベントマネージャー
+            battle: Battleインスタンス
 
         Returns:
             浮いていればTrue
@@ -792,18 +792,18 @@ class Pokemon:
             タイプや特性、技の効果を考慮して判定する。
         """
         floating = "ひこう" in self.types
-        floating &= events.emit(
+        floating &= battle.events.emit(
             Event.ON_CHECK_FLOATING,
-            EventContext(source=self),
+            BattleContext(source=self),
             floating
         )
         return floating
 
-    def is_trapped(self, events: EventManager) -> bool:
+    def is_trapped(self, battle: Battle) -> bool:
         """逃げられない状態か判定する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
 
         Returns:
             逃げられない場合True
@@ -811,35 +811,35 @@ class Pokemon:
         Note:
             ゴーストタイプは逃げられる。
         """
-        trapped = events.emit(
+        trapped = battle.events.emit(
             Event.ON_CHECK_TRAPPED,
-            EventContext(source=self),
+            BattleContext(source=self),
             False
         )
         trapped &= "ゴースト" not in self.types
         return trapped
 
-    def is_nervous(self, events: EventManager) -> bool:
+    def is_nervous(self, battle: Battle) -> bool:
         """びんじょう状態か判定する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
 
         Returns:
             びんじょう状態の場合True
         """
-        return events.emit(
+        return battle.events.emit(
             Event.ON_CHECK_NERVOUS,
-            EventContext(source=self),
+            BattleContext(source=self),
             False
         )
 
-    def effective_move_type(self, move: Move, events: EventManager) -> str:
+    def effective_move_type(self, move: Move, battle: Battle) -> str:
         """技の有効タイプを取得する。
 
         Args:
             move: 技オブジェクト
-            events: イベントマネージャー
+            battle: バトルインスタンス
 
         Returns:
             有効タイプ
@@ -847,18 +847,18 @@ class Pokemon:
         Note:
             特性や効果によるタイプ変化を考慮する。
         """
-        events.emit(
+        battle.events.emit(
             Event.ON_CHECK_MOVE_TYPE,
-            EventContext(source=self, move=move)
+            BattleContext(source=self, move=move)
         )
         return move._type
 
-    def effective_move_category(self, move: Move, events: EventManager) -> MoveCategory:
+    def effective_move_category(self, move: Move, battle: Battle) -> MoveCategory:
         """技の有効分類を取得する。
 
         Args:
             move: 技オブジェクト
-            events: イベントマネージャー
+            battle: バトルインスタンス
 
         Returns:
             有効分類（物理、特殊、変化）
@@ -866,21 +866,21 @@ class Pokemon:
         Note:
             特性や効果による分類変化を考慮する。
         """
-        return events.emit(
+        return battle.events.emit(
             Event.ON_CHECK_MOVE_CATEGORY,
-            EventContext(source=self, move=move),
+            BattleContext(source=self, move=move),
             value=move.category
         )
 
     def apply_ailment(self,
-                      events: EventManager,
+                      battle: Battle,
                       name: AilmentName,
                       source: Pokemon | None = None,
                       force: bool = False) -> bool:
         """状態異常を付与する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
             name: 状態異常名
             source: 状態異常の原因となったポケモン
             force: Trueの場合、既存の状態異常を上書き
@@ -901,26 +901,26 @@ class Pokemon:
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
-        if not events.emit(
+        if not battle.events.emit(
             Event.ON_BEFORE_APPLY_AILMENT,
-            EventContext(target=self, source=source),
+            BattleContext(target=self, source=source),
             name
         ):
             return False
 
         # 既存のハンドラを削除
         if self.ailment.is_active:
-            self.ailment.unregister_handlers(events, self)
+            self.ailment.unregister_handlers(battle.domains, battle.events, self)
         # 新しい状態異常を設定してハンドラ登録
         self.ailment = Ailment(name)
-        self.ailment.register_handlers(events, self)
+        self.ailment.register_handlers(battle.domains, battle.events, self)
         return True
 
-    def cure_ailment(self, events: EventManager, source: Pokemon | None = None) -> bool:
+    def cure_ailment(self, battle: Battle, source: Pokemon | None = None) -> bool:
         """状態異常を治療する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
             source: 治療の原因となったポケモン
 
         Returns:
@@ -928,7 +928,7 @@ class Pokemon:
         """
         if not self.ailment.is_active:
             return False
-        self.ailment.unregister_handlers(events, self)
+        self.ailment.unregister_handlers(battle.domains, battle.events, self)
         self.ailment = Ailment("")
         return True
 
@@ -944,14 +944,14 @@ class Pokemon:
         return name in self.volatiles and self.volatiles[name].is_active
 
     def apply_volatile(self,
-                       events: EventManager,
+                       battle: Battle,
                        name: VolatileName,
                        count: int = 1,
                        source: Pokemon | None = None) -> bool:
         """揮発性状態を付与する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
             name: 揮発性状態名
             source: 揮発性状態の原因となったポケモン
 
@@ -967,27 +967,27 @@ class Pokemon:
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
-        if not events.emit(
+        if not battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
-            EventContext(target=self, move=None, attacker=source, defender=None),
+            BattleContext(target=self, move=None, attacker=source, defender=None),
             name
         ):
             return False
 
         volatile = Volatile(name, count=count)
         volatile.source_pokemon = source
-        volatile.register_handlers(events, self)
+        volatile.register_handlers(battle.domains, battle.events, self)
         self.volatiles[name] = volatile
         return True
 
     def remove_volatile(self,
-                        events: EventManager,
+                        battle: Battle,
                         name: VolatileName,
                         source: Pokemon | None = None) -> bool:
         """揮発性状態を解除する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
             name: 揮発性状態名
             source: 解除の原因となったポケモン
 
@@ -999,5 +999,5 @@ class Pokemon:
         """
         if not self.check_volatile(name):
             return False
-        self.volatiles.pop(name).unregister_handlers(events, self)
+        self.volatiles.pop(name).unregister_handlers(battle.domains, battle.events, self)
         return True

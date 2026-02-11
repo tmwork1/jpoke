@@ -1,8 +1,10 @@
-from jpoke import Battle, Player, Pokemon
+from jpoke.core import Battle, Player, BattleContext
+from jpoke.model import Pokemon
 from jpoke.utils.type_defs import VolatileName, Weather, Terrain
-from jpoke.utils.enums import Command
+from jpoke.enums import Event, Command
 
 # 定数定義
+BASE_MODIFIER = 4096  # 補正計算の基準値
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
 DEFAULT_POKEMON = "ピカチュウ"  # デフォルトのポケモン種族名
 
@@ -22,19 +24,17 @@ class CustomPlayer(Player):
         return battle.get_available_action_commands(self)[0]
 
 
-def start_battle(
-    ally: list[Pokemon] | None = None,
-    foe: list[Pokemon] | None = None,
-    turn: int = 0,
-    weather: tuple[Weather, int] | None = None,
-    terrain: tuple[Terrain, int] | None = None,
-    ally_volatile: dict[VolatileName, int] | None = None,
-    foe_volatile: dict[VolatileName, int] | None = None,
-    ally_side_field: dict[str, int] | None = None,
-    foe_side_field: dict[str, int] | None = None,
-    global_field: dict[str, int] | None = None,
-    accuracy: int | None = 100,
-) -> Battle:
+def start_battle(ally: list[Pokemon] | None = None,
+                 foe: list[Pokemon] | None = None,
+                 turn: int = 0,
+                 weather: tuple[Weather, int] | None = None,
+                 terrain: tuple[Terrain, int] | None = None,
+                 ally_volatile: dict[VolatileName, int] | None = None,
+                 foe_volatile: dict[VolatileName, int] | None = None,
+                 ally_side_field: dict[str, int] | None = None,
+                 foe_side_field: dict[str, int] | None = None,
+                 global_field: dict[str, int] | None = None,
+                 accuracy: int | None = 100) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
@@ -68,34 +68,30 @@ def start_battle(
 
     # 天候・地形の有効化
     if weather:
-        weather_name, weather_count = weather
-        battle.weather_mgr.activate(weather_name, weather_count)
+        name, weather_count = weather
+        battle.weather_manager.activate(name, weather_count)
     if terrain:
-        terrain_name, terrain_count = terrain
-        battle.terrain_mgr.activate(terrain_name, terrain_count)
+        name, terrain_count = terrain
+        battle.terrain_manager.activate(name, terrain_count)
 
     # 命中率の設定
     if accuracy is not None:
         battle.test_option.accuracy = accuracy
 
-    # バトル開始（advance_turnは使わず内部フェーズを実行）
-    run_turn(battle)
-    battle.print_logs()
-
     # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
     if ally_side_field:
-        for field_name, layers in ally_side_field.items():
-            battle.side_mgrs[0].fields[field_name].activate(battle.events, DEFAULT_DURATION)
-            battle.side_mgrs[0].fields[field_name].layers = layers
+        for name, layers in ally_side_field.items():
+            battle.side_manager[0].fields[name].activate(battle, DEFAULT_DURATION)
+            battle.side_manager[0].fields[name].count = layers
     if foe_side_field:
-        for field_name, layers in foe_side_field.items():
-            battle.side_mgrs[1].fields[field_name].activate(battle.events, DEFAULT_DURATION)
-            battle.side_mgrs[1].fields[field_name].layers = layers
+        for name, layers in foe_side_field.items():
+            battle.side_manager[1].fields[name].activate(battle, DEFAULT_DURATION)
+            battle.side_manager[1].fields[name].count = layers
 
     # グローバルフィールドの有効化
     if global_field:
-        for field_name, count in global_field.items():
-            battle.field_mgr.fields[field_name].activate(battle.events, count)
+        for name, count in global_field.items():
+            battle.field_manager.fields[name].activate(battle, count)
 
     # 揮発効果の適用
     if ally_volatile or foe_volatile:
@@ -103,11 +99,11 @@ def start_battle(
         for idx, mon in enumerate(battle.actives):
             if volatiles[idx]:
                 for name, count in volatiles[idx].items():
-                    mon.apply_volatile(battle.events, name, count=count)
+                    mon.apply_volatile(battle, name, count=count)
 
     # ターン進行
-    for _ in range(turn):
-        run_turn(battle)
+    for _ in range(turn+1):
+        battle.advance_turn()
         battle.print_logs()
         if battle.judge_winner():
             break
@@ -115,32 +111,55 @@ def start_battle(
     return battle
 
 
-def tick_fields(battle: Battle, ticks: int = 1):
-    """フィールド効果のカウントを経過させる。
+def create_power_modifier_context(battle: Battle, attacker_idx: int = 0) -> BattleContext:
+    """技威力補正のコンテキストを作成するヘルパー関数。
 
     Args:
         battle: Battleインスタンス
-        ticks: 経過させるカウント数（デフォルト: 1）
+        attacker_idx: 攻撃側のインデックス（デフォルト: 0）
+
+    Returns:
+        BattleContext: コンテキスト
     """
-    for _ in range(ticks):
-        # 天候のカウントダウン
-        if battle.weather_mgr.current.is_active:
-            battle.weather_mgr.tick()
+    defender_idx = 1 - attacker_idx
+    return BattleContext(
+        attacker=battle.actives[attacker_idx],
+        defender=battle.actives[defender_idx],
+        move=battle.actives[attacker_idx].moves[0]
+    )
 
-        # 地形のカウントダウン
-        if battle.terrain_mgr.current.is_active:
-            battle.terrain_mgr.tick()
 
-        # グローバルフィールドのカウントダウン
-        for field in battle.field_mgr.fields.values():
-            if field.is_active:
-                battle.field_mgr.tick(field.data.name)
+def assert_power_modifier(battle: Battle, expected: float, message: str = ""):
+    """技威力補正値を検証するヘルパー関数。
 
-        # サイドフィールドのカウントダウン
-        for side in battle.side_mgrs:
-            for field in side.fields.values():
-                if field.is_active:
-                    side.tick(field.data.name)
+    Args:
+        battle: Battleインスタンス
+        expected: 期待される補正値（倍率）
+        message: アサーション失敗時のメッセージ
+    """
+    ctx = create_power_modifier_context(battle)
+    expected_value = int(BASE_MODIFIER * expected)
+    actual_modifier = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, BASE_MODIFIER)
+    # 4096基準の整数値として計算（value * multiplier // 4096の逆算）
+    assert actual_modifier == expected_value, f"{message}: expected {expected_value} ({expected}x), got {actual_modifier}"
+
+
+def create_def_modifier_context(battle: Battle, defender_idx: int = 0) -> BattleContext:
+    """防御補正のコンテキストを作成するヘルパー関数。"""
+    attacker_idx = 1 - defender_idx
+    return BattleContext(
+        attacker=battle.actives[attacker_idx],
+        defender=battle.actives[defender_idx],
+        move=battle.actives[attacker_idx].moves[0]
+    )
+
+
+def assert_def_modifier(battle: Battle, expected: float, message: str = ""):
+    """防御補正値を検証するヘルパー関数。"""
+    ctx = create_def_modifier_context(battle)
+    actual_modifier = battle.events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, BASE_MODIFIER)
+    expected_value = int(BASE_MODIFIER * expected)
+    assert actual_modifier == expected_value, f"{message}: expected {expected_value} ({expected}x), got {actual_modifier}"
 
 
 def prepare_action_order(battle: Battle):
@@ -153,23 +172,6 @@ def prepare_action_order(battle: Battle):
         if not player.reserved_commands:
             command = player.choose_action_command(battle)
             player.reserve_command(command)
-
-
-def run_turn(battle: Battle, commands: dict[Player, Command] | None = None):
-    """テスト用にターンを1つ進める。
-
-    advance_turn() には依存せず、内部のフェーズ処理を直接呼び出す。
-
-    Args:
-        battle: Battleインスタンス
-        commands: 予約するコマンド辞書（任意）
-    """
-    if commands:
-        for player, command in commands.items():
-            player.reserve_command(command)
-            battle.add_command_log(player, command)
-
-    battle.turn_controller._process_turn_phases()
 
 
 def can_switch(battle: Battle, idx: int) -> bool:
@@ -190,58 +192,6 @@ def can_switch(battle: Battle, idx: int) -> bool:
 
     commands = battle.get_available_action_commands(battle.players[idx])
     return any(c.is_switch() for c in commands)
-
-
-def assert_field_active(battle: Battle, field_type: str, field_name: str, active: bool = True):
-    """フィールドが有効/無効であることを検証する。
-
-    Args:
-        battle: Battleインスタンス
-        field_type: フィールドタイプ ('weather', 'terrain', 'global', 'ally_side', 'foe_side')
-        field_name: フィールド名
-        active: 有効であるべきか（デフォルト: True）
-
-    Raises:
-        AssertionError: フィールドの状態が期待と異なる場合
-    """
-    if field_type == 'weather':
-        is_active = battle.weather_mgr.current.is_active and battle.weather_mgr.current.data.name == field_name
-    elif field_type == 'terrain':
-        is_active = battle.terrain_mgr.current.is_active and battle.terrain_mgr.current.data.name == field_name
-    elif field_type == 'global':
-        is_active = battle.field_mgr.fields[field_name].is_active
-    elif field_type == 'ally_side':
-        is_active = battle.side_mgrs[0].fields[field_name].is_active
-    elif field_type == 'foe_side':
-        is_active = battle.side_mgrs[1].fields[field_name].is_active
-    else:
-        raise ValueError(f"Unknown field type: {field_type}")
-
-    assert is_active == active, f"{field_type} field '{field_name}' should be {'active' if active else 'inactive'}, but is {'active' if is_active else 'inactive'}"
-
-
-def get_field_count(battle: Battle, field_type: str, field_name: str) -> int:
-    """フィールドの残りカウントを取得する。
-
-    Args:
-        battle: Battleインスタンス
-        field_type: フィールドタイプ ('weather', 'terrain', 'global', 'ally_side', 'foe_side')
-        field_name: フィールド名
-
-    Returns:
-        int: フィールドの残りカウント
-    """
-    if field_type == 'weather':
-        return battle.weather_mgr.current.count if battle.weather_mgr.current.is_active else 0
-    elif field_type == 'terrain':
-        return battle.terrain_mgr.current.count if battle.terrain_mgr.current.is_active else 0
-    elif field_type == 'global':
-        return battle.field_mgr.fields[field_name].count
-    elif field_type in ['ally_side', 'foe_side']:
-        idx = 0 if field_type == 'ally_side' else 1
-        return battle.side_mgrs[idx].fields[field_name].count
-    else:
-        raise ValueError(f"Unknown field type: {field_type}")
 
 
 def assert_log_contains(battle: Battle, text: str, player_idx: int | None = None, turn: int | None = None):

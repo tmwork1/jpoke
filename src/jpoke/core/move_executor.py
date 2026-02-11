@@ -2,16 +2,17 @@
 
 技の発動、命中判定、ダメージ適用などの処理を担当。
 """
-
+from __future__ import annotations
 from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Battle, DomainManager, EventManager
 
 from jpoke.model import Pokemon, Move
-from jpoke.utils.enums import Command
+from jpoke.enums import Command
 from jpoke.utils.constants import HIT_RANK_MODIFIERS
-from .event import Event, EventContext
 
-if TYPE_CHECKING:
-    from .battle import Battle
+from .event import Event
+from .context import BattleContext
 
 
 class MoveExecutor:
@@ -39,6 +40,16 @@ class MoveExecutor:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
+
+    @property
+    def domains(self) -> DomainManager:
+        """ドメイン管理システムへのショートカットプロパティ。"""
+        return self.battle.domains
+
+    @property
+    def events(self) -> EventManager:
+        """イベント管理システムへのショートカットプロパティ。"""
+        return self.battle.events
 
     def command_to_move(self, player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
@@ -77,9 +88,9 @@ class MoveExecutor:
             return True
 
         # 技の命中変更 + 命中補正
-        accuracy = self.battle.events.emit(
+        accuracy = self.events.emit(
             Event.ON_MODIFY_ACCURACY,
-            EventContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
+            BattleContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
             move.accuracy
         )
 
@@ -95,6 +106,41 @@ class MoveExecutor:
 
         return 100 * self.battle.random.random() < accuracy
 
+    def calc_critical_rank(self, attacker: Pokemon, move: Move) -> int:
+        """急所ランクの計算。
+        Args:
+            attacker: 攻撃側のポケモン
+            move: 使用する技
+
+        Returns:
+            急所ランク
+        """
+        defender = self.battle.foe(attacker)
+        rank = self.events.emit(
+            Event.ON_MODIFY_CRITICAL_RANK,
+            BattleContext(attacker=attacker, defender=defender, move=move),
+            move.critical_rank
+        )
+        return max(0, min(3, rank))
+
+    def check_critical(self, rank: int) -> bool:
+        """急所判定を行う。
+
+        急所ランクに基づいて急所確率を計算します：
+        - ランク0: 1/24（約4.2%）
+        - ランク1: 1/8（12.5%）
+        - ランク2: 1/2（50%）
+        - ランク3以上: 1/1（100%、上限）
+
+        Args:
+            critical_rank: 急所ランク（0～3以上）
+
+        Returns:
+            bool: 急所に当たるかどうか
+        """
+        critical_rates = [1/24, 1/8, 1/2, 1.0]
+        return self.battle.random.random() < critical_rates[rank]
+
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行。
 
@@ -105,45 +151,36 @@ class MoveExecutor:
             attacker: 攻撃側のポケモン
             move: 使用する技
         """
-        ctx = EventContext(
+        ctx = BattleContext(
             attacker=attacker,
             defender=self.battle.foe(attacker),
             move=move
         )
 
         # 技のハンドラを登録
-        move.register_handlers(self.battle.events, attacker)
+        move.register_handlers(self.domains, self.events, attacker)
 
         # 行動成功判定（行動者自身を対象にする）
-        if not self.battle.events.emit(Event.ON_TRY_ACTION, ctx, True):
+        if not self.events.emit(Event.ON_TRY_ACTION, ctx, True):
             return
 
         # 技の宣言、PP消費
-        self.battle.events.emit(Event.ON_CONSUME_PP, ctx)
+        self.events.emit(Event.ON_CONSUME_PP, ctx)
 
         # 発動成功判定
-        if not self.battle.events.emit(Event.ON_TRY_MOVE, ctx, True):
+        if not self.events.emit(Event.ON_TRY_MOVE, ctx, True):
             pass
 
         # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
-        if self.battle.events.emit(Event.ON_CHECK_PROTECT, ctx, False):
+        if self.events.emit(Event.ON_CHECK_PROTECT, ctx, False):
             return
 
         # 姿消し・無敵判定（ON_TRY_MOVE Priority 100: 無効化判定）
-        if self.battle.events.emit(Event.ON_CHECK_INVULNERABLE, ctx, False):
+        if self.events.emit(Event.ON_CHECK_INVULNERABLE, ctx, False):
             return
 
         # 反射判定（ON_TRY_MOVE Priority 100: マジックコート等による反射）
-        if self.battle.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
-            return
-
-        # 先制技の有効判定（例: サイコフィールド）
-        priority_valid = self.battle.events.emit(
-            Event.ON_CHECK_PRIORITY_VALID,
-            ctx,
-            True
-        )
-        if not priority_valid:
+        if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
             return
 
         # 発動した技の確定
@@ -155,21 +192,25 @@ class MoveExecutor:
 
         # 無効判定（ON_TRY_IMMUNE: Priority 10-100）
         # Priority 30: みがわり、Priority 100: その他の判定
-        is_immune = self.battle.events.emit(Event.ON_TRY_IMMUNE, ctx, False)
+        is_immune = self.events.emit(Event.ON_TRY_IMMUNE, ctx, False)
         if is_immune:
             return
 
+        # 急所判定
+        critical_rank = self.calc_critical_rank(attacker, move)
+        critical = self.check_critical(critical_rank)
+
         # ダメージ計算
-        damage = self.battle.calc_damage(attacker, move)
+        damage = self.battle.determine_damage(attacker, move, critical=critical)
 
         # HPコストの支払い
-        self.battle.events.emit(Event.ON_PAY_HP, ctx)
+        self.events.emit(Event.ON_PAY_HP, ctx)
 
         # ダメージ修正
-        damage = self.battle.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
+        damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 
         # ダメージ適用前処理
-        damage = self.battle.events.emit(Event.ON_BEFORE_DAMAGE_APPLY, ctx, damage)
+        damage = self.events.emit(Event.ON_BEFORE_DAMAGE_APPLY, ctx, damage)
 
         # ダメージの適用
         if damage:
@@ -177,18 +218,18 @@ class MoveExecutor:
 
         # ひんし時の処理
         if damage and ctx.defender and ctx.defender.hp == 0:
-            self.battle.events.emit(Event.ON_FAINT, ctx)
+            self.events.emit(Event.ON_FAINT, ctx)
 
         # 技を当てたときの処理（ダメージ情報を含める）
         ctx.damage = damage
-        self.battle.events.emit(Event.ON_HIT, ctx)
+        self.events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えたときの処理
         if damage:
-            self.battle.events.emit(Event.ON_DAMAGE_1, ctx)
+            self.events.emit(Event.ON_DAMAGE_1, ctx)
 
         if damage:
-            self.battle.events.emit(Event.ON_DAMAGE_2, ctx)
+            self.events.emit(Event.ON_DAMAGE_2, ctx)
 
         # 技のハンドラを解除
-        move.unregister_handlers(self.battle.events, attacker)
+        move.unregister_handlers(self.domains, self.events, attacker)

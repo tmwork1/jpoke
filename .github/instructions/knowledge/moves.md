@@ -50,7 +50,7 @@
 ### 2. 追加効果付き技
 
 ```python
-def かえんほうしゃ_burn(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かえんほうしゃ_burn(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """10%の確率でやけど付与"""
     defender = ctx.defender
     
@@ -100,7 +100,7 @@ def かえんほうしゃ_burn(battle: Battle, ctx: EventContext, value: Any) ->
 ### 4. ランク補正技
 
 ```python
-def つるぎのまい_attack_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def つるぎのまい_attack_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """攻撃ランク+2"""
     attacker = ctx.attacker
     
@@ -151,7 +151,7 @@ from jpoke.handlers.common import activate_weather, activate_terrain
 ### 6. 特殊威力計算技
 
 ```python
-def ジャイロボール_power(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ジャイロボール_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """相手の素早さ÷自分の素早さ × 25（最大150）"""
     attacker = ctx.attacker
     defender = ctx.defender
@@ -214,7 +214,7 @@ def ジャイロボール_power(battle: Battle, ctx: EventContext, value: Any) -
 ### 4. 連続攻撃技
 
 ```python
-def おうふくビンタ_multi_hit(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def おうふくビンタ_multi_hit(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """2-5回連続攻撃"""
     # ヒット数決定
     hits = random.choices([2, 3, 4, 5], weights=[3/8, 3/8, 1/8, 1/8])[0]
@@ -228,7 +228,7 @@ def おうふくビンタ_multi_hit(battle: Battle, ctx: EventContext, value: An
 ### 5. 反動技
 
 ```python
-def すてみタックル_recoil(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def すてみタックル_recoil(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """与えたダメージの1/4を反動で受ける"""
     attacker = ctx.attacker
     damage_dealt = ctx.damage  # 与えたダメージ
@@ -252,7 +252,7 @@ def すてみタックル_recoil(battle: Battle, ctx: EventContext, value: Any) 
 ### 6. HP吸収技
 
 ```python
-def きゅうけつ_drain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def きゅうけつ_drain(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """与えたダメージの1/2を回復"""
     attacker = ctx.attacker
     damage_dealt = ctx.damage
@@ -302,7 +302,7 @@ if random.random() > 0.1:
 
 ```python
 # 例: アンコール中は同じ技しか使えない
-def アンコール_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def アンコール_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """アンコール中は指定技以外使用不可"""
     pokemon = ctx.source
     move = ctx.move

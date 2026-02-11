@@ -9,9 +9,9 @@ from functools import partial
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
-from jpoke.utils.enums import Interrupt, Event
-from jpoke.core.event import EventContext, HandlerReturn, Handler
 from jpoke.utils.type_defs import LogPolicy, RoleSpec, PokeType
+from jpoke.enums import Interrupt
+from jpoke.core import BattleContext, HandlerReturn, Handler
 from . import common
 
 
@@ -33,7 +33,7 @@ class ItemHandler(Handler):
 
 
 def modify_power_by_type(battle: Battle,
-                         ctx: EventContext,
+                         ctx: BattleContext,
                          value: Any,
                          type_: PokeType,
                          modifier: float) -> HandlerReturn:
@@ -44,7 +44,7 @@ def modify_power_by_type(battle: Battle,
 
 
 def modify_super_effective_damage(battle: Battle,
-                                  ctx: EventContext,
+                                  ctx: BattleContext,
                                   value: Any,
                                   type_: PokeType,
                                   modifier: float) -> HandlerReturn:
@@ -55,21 +55,21 @@ def modify_super_effective_damage(battle: Battle,
     return HandlerReturn(False, value)
 
 
-def いのちのたま(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def いのちのたま(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_HITのハンドラ
     success = ctx.move.category != "変化" and \
         common.modify_hp(battle, ctx, value, target_spec="attacker:self", r=-1/8)
     return HandlerReturn(success)
 
 
-def だっしゅつボタン(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def だっしゅつボタン(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_DAMAGEのハンドラ
     player = battle.find_player(ctx.defender)
     player.interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn(True)
 
 
-def だっしゅつパック(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def だっしゅつパック(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_MODIFY_STATのハンドラ
     # valueは{stat: change}の辞書
     player = battle.find_player(ctx.target)
@@ -81,12 +81,12 @@ def だっしゅつパック(battle: Battle, ctx: EventContext, value: Any) -> H
 
 # ===== 難易度1: HP回復系アイテム =====
 
-def オボンのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def オボンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: HP50%以下時にHP25%回復
     return HandlerReturn(False)
 
 
-def クラボのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def クラボのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: まひ状態時にまひを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "まひ":
@@ -94,7 +94,7 @@ def クラボのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(False)
 
 
-def カゴのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def カゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: ねむり状態時にねむりを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "ねむり":
@@ -102,7 +102,7 @@ def カゴのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn
     return HandlerReturn(False)
 
 
-def モモンのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def モモンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: どく状態時にどくを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "どく":
@@ -110,7 +110,7 @@ def モモンのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(False)
 
 
-def チーゴのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def チーゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: やけど状態時にやけどを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "やけど":
@@ -118,7 +118,7 @@ def チーゴのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(False)
 
 
-def ナナシのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ナナシのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: こおり状態時にこおりを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "こおり":
@@ -126,44 +126,44 @@ def ナナシのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(False)
 
 
-def キーのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def キーのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: こんらん状態時にこんらんを治す
     return HandlerReturn(False)
 
 
-def ヒメリのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ヒメリのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(False)
 
 
-def オレンのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def オレンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(False)
 
 
-def ひかりごけ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ひかりごけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(False)
 
 
-def きゅうこん(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def きゅうこん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(False)
 
 
 # ===== 難易度1: 火力補正系アイテム =====
 
-def ちからのハチマキ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちからのハチマキ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_CALC_POWER_MODIFIER: 物理技1.1倍
     if ctx.move.category == "物理":
         return HandlerReturn(True, value * 11 // 10)
     return HandlerReturn(False, value)
 
 
-def ものしりメガネ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ものしりメガネ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_CALC_POWER_MODIFIER: 特殊技1.1倍
     if ctx.move.category == "特殊":
         return HandlerReturn(True, value * 11 // 10)
     return HandlerReturn(False, value)
 
 
-def ラムのみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ラムのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: すべての状態異常を回復する（消費型）
     target = ctx.resolve_role(battle, "source:self")
 

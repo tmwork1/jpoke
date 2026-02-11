@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 import json
 
-from jpoke.utils.enums import Command
+from jpoke.enums import Command
 from jpoke.utils import fast_copy
 
 

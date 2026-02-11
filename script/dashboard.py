@@ -35,7 +35,7 @@ def has_handlers(data: Any, exclude_common: bool = False) -> bool:
 
     # 技の場合、共通ハンドラ（ON_CONSUME_PP）を除外
     if exclude_common:
-        from jpoke.core.event import Event
+        from jpoke.core import Event
         handlers = {k: v for k, v in data.handlers.items() if k != Event.ON_CONSUME_PP}
         return len(handlers) > 0
 

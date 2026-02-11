@@ -108,7 +108,7 @@ class Pokemon:
         if hasattr(self, 'battle'):
             self.battle.event_manager.fire_event(
                 Event.ON_FORM_CHANGE,
-                EventContext(source=self, old_form=old_form, new_form=new_form)
+                BattleContext(source=self, old_form=old_form, new_form=new_form)
             )
         
         logger.info(f"{self.name}が{old_form}から{new_form}にフォルムチェンジ！")
@@ -193,7 +193,7 @@ POKEMON_FORMS = {
 ```python
 # src/jpoke/handlers/ability.py
 
-def ばけのかわ_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ばけのかわ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     ダメージを無効化し、フォルムを変化させる
     
@@ -261,7 +261,7 @@ def test_ばけのかわ():
 **条件**: 攻撃技使用でブレードフォルム、キングシールド使用でシールドフォルム
 
 ```python
-def バトルスイッチ_on_try_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def バトルスイッチ_on_try_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     技使用前にフォルムを変更
     
@@ -300,7 +300,7 @@ ABILITIES["バトルスイッチ"] = AbilityData(
 **条件**: HP50%以下でダルマモード発動、HP50%超で通常モードに戻る
 
 ```python
-def ダルマモード_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ダルマモード_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """HP50%判定でフォルム変化"""
     pokemon = ctx.defender
     
@@ -364,7 +364,7 @@ class Pokemon:
 ```python
 # src/jpoke/handlers/item.py
 
-def こだわり系_on_try_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def こだわり系_on_try_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     技選択を制限する
     
@@ -386,7 +386,7 @@ def こだわり系_on_try_move(battle: Battle, ctx: EventContext, value: Any) -
     
     return HandlerReturn(True)
 
-def こだわり系_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def こだわり系_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """交代時に技固定を解除"""
     pokemon = ctx.source
     pokemon.unlock_move()
@@ -437,14 +437,14 @@ class Battle:
 ```python
 # src/jpoke/handlers/ability.py
 
-def かがくへんかガス_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かがくへんかガス_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """特性抑制を開始"""
     battle.ability_suppression = True
     battle.suppression_source = ctx.source
     battle.logger.log_message(f"{ctx.source.name}のかがくへんかガスが発動！")
     return HandlerReturn(True)
 
-def かがくへんかガス_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かがくへんかガス_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """特性抑制を解除"""
     battle.ability_suppression = False
     battle.suppression_source = None
@@ -475,7 +475,7 @@ ABILITIES["かがくへんかガス"] = AbilityData(
 ```python
 # src/jpoke/core/event.py（EventManager 拡張）
 
-def fire_event(self, event: Event, ctx: EventContext) -> List[HandlerReturn]:
+def fire_event(self, event: Event, ctx: BattleContext) -> List[HandlerReturn]:
     """イベント発火"""
     # 特性抑制中は特性ハンドラをスキップ
     handlers = self.get_handlers(event)

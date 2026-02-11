@@ -14,8 +14,8 @@ from functools import partial
 
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy, AilmentName, Stat
-from jpoke.utils.enums import Event, Interrupt
-from jpoke.core.event import Handler, EventContext, HandlerReturn
+from jpoke.enums import Event, Interrupt
+from jpoke.core import Handler, BattleContext, HandlerReturn
 from . import common
 
 
@@ -44,14 +44,14 @@ class MoveHandler(Handler):
         super().__init__(func, subject_spec, "move", log, log_text, priority)
 
 
-def consume_pp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """技のPPを消費する。
 
     技を使用した際にPPを減らします。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -63,14 +63,14 @@ def consume_pp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return HandlerReturn(True)
 
 
-def pivot(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 
     とんぼがえり、ボルトチェンジなどの交代技で、攻撃後に交代を行います。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -83,14 +83,14 @@ def pivot(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return HandlerReturn(success)
 
 
-def blow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
 
     ほえる、ふきとばしなどで、相手を強制的に交代させます。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
 
     Returns:
@@ -107,7 +107,7 @@ def blow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
 
 # ===== 技個別のハンドラ =====
 
-def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かみなりの天候による命中率補正。
 
     雨: 必中
@@ -115,13 +115,13 @@ def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在の命中率
 
     Returns:
         HandlerReturn: 補正があればTrue、なければFalse
     """
-    weather = battle.weather_mgr.current.name
+    weather = battle.weather_manager.current.name
     if weather == "あめ":
         return HandlerReturn(True, None)  # 必中
     elif weather == "はれ":
@@ -129,7 +129,7 @@ def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(False, value)
 
 
-def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ぼうふうの天候による命中率補正。
 
     雨: 必中
@@ -137,13 +137,13 @@ def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在の命中率
 
     Returns:
         HandlerReturn: 補正があればTrue、なければFalse
     """
-    weather = battle.weather_mgr.current.name
+    weather = battle.weather_manager.current.name
     if weather == "あめ":
         return HandlerReturn(True, None)  # 必中
     elif weather == "はれ":
@@ -151,20 +151,20 @@ def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(False, value)
 
 
-def ふぶき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふぶきの天候による命中率補正。
 
     雪: 必中
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: 現在の命中率
 
     Returns:
         HandlerReturn: 補正があればTrue、なければFalse
     """
-    weather = battle.weather_mgr.current.name
+    weather = battle.weather_manager.current.name
     if weather == "ゆき":
         return HandlerReturn(True, None)  # 必中
     return HandlerReturn(False, value)

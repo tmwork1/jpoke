@@ -374,7 +374,7 @@ def handler(battle, ctx, value):
     pass
 
 # ✅ OK
-def handler(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def handler(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     pass
 ```
 

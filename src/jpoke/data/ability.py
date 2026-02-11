@@ -4,9 +4,11 @@ Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
 """
 from functools import partial
-from jpoke.core.event import Event, HandlerReturn
-from .models import AbilityData
+
+from jpoke.enums import DomainEvent, Event
+from jpoke.core import HandlerReturn
 from jpoke.handlers import common, ability as h
+from .models import AbilityData
 
 
 def common_setup():
@@ -269,7 +271,7 @@ ABILITIES: dict[str, AbilityData] = {
     "すなおこし": AbilityData(),
     "すなかき": AbilityData(
         handlers={
-            Event.ON_CALC_SPEED: h.AbilityHandler(
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
                 h.すなかき,
                 subject_spec="source:self",
                 log="never",

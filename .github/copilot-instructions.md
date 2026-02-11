@@ -83,7 +83,7 @@ docs/
 
 ### 型ヒント必須
 ```python
-def handler(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def handler(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ハンドラの説明
     
     Args:
@@ -156,14 +156,14 @@ assert abs(value - 1.5) < 0.01
 ### Handler基本パターン
 ```python
 # 補正値計算
-def 特性_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 特性_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     if not condition:
         return HandlerReturn(False)
     modified = (value * 6144) // 4096  # 1.5倍
     return HandlerReturn(True, modified)
 
 # 状態付与
-def 技_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 技_ailment(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     if ctx.defender.ailment:
         return HandlerReturn(False)
     ctx.defender.set_ailment("まひ")

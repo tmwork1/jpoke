@@ -1,6 +1,9 @@
-from jpoke.core.event import Event, Handler, HandlerReturn
-from .models import FieldData
+from functools import partial
+
+from jpoke.enums import DomainEvent, Event
+from jpoke.core import Handler, HandlerReturn
 from jpoke.handlers import common, field as h
+from .models import FieldData
 
 
 def common_setup():
@@ -20,7 +23,13 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="attacker:self",
                 log="never",
             ),
-            # TODO: こおり状態の防止
+            # TODO: こおり状態の防止処理の実装
+            Event.ON_TURN_END_1: Handler(
+                h.tick_weather,
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "あめ": FieldData(
@@ -31,13 +40,20 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="attacker:self",
                 log="never",
             ),
+            Event.ON_TURN_END_1: Handler(
+                h.tick_weather,
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "すなあらし": FieldData(
         turn_extension_item="さらさらいわ",
         handlers={
-            Event.ON_TURN_END_2: Handler(
-                h.すなあらし_damage,
+            Event.ON_TURN_END_1: Handler(
+                h.すなあらし_turn_end,
+                priority=10,
                 subject_spec="source:self",
                 log_text="すなあらしダメージ",
             ),
@@ -56,7 +72,12 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
                 log="never",
             ),
-        },
+            Event.ON_TURN_END_1: Handler(
+                h.tick_weather,
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ), },
     ),
     # ===== 地形 (Terrain) =====
     "エレキフィールド": FieldData(
@@ -71,6 +92,12 @@ FIELDS: dict[str, FieldData] = {
                 h.エレキフィールド_prevent_sleep,
                 subject_spec="target:self",
                 log="on_success",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                h.tick_terrain,
+                priority=20,
+                subject_spec="source:self",
+                log="never",
             ),
         },
     ),
@@ -87,6 +114,12 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
                 log_text="グラスフィールド回復",
             ),
+            Event.ON_TURN_END_4: Handler(
+                h.tick_terrain,
+                priority=20,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "サイコフィールド": FieldData(
@@ -97,9 +130,16 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="attacker:self",
                 log="never",
             ),
-            Event.ON_CHECK_PRIORITY_VALID: Handler(
+            Event.ON_TRY_MOVE: Handler(
                 h.サイコフィールド_block_priority,
+                priority=100,
                 subject_spec="defender:self",
+                log="never",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                h.tick_terrain,
+                priority=20,
+                subject_spec="source:self",
                 log="never",
             ),
         },
@@ -122,6 +162,12 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
                 log="on_success",
             ),
+            Event.ON_TURN_END_4: Handler(
+                h.tick_terrain,
+                priority=20,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     # ===== グローバルフィールド (GlobalField) =====
@@ -137,12 +183,24 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
                 log="never",
             ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_global_field, name="じゅうりょく"),
+                priority=20,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "トリックルーム": FieldData(
         handlers={
-            Event.ON_CHECK_SPEED_REVERSE: Handler(
+            DomainEvent.ON_CHECK_SPEED_REVERSE: Handler(
                 h.トリックルーム_reverse_speed,
+                subject_spec="source:self",
+                log="never",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_global_field, name="トリックルーム"),
+                priority=20,
                 subject_spec="source:self",
                 log="never",
             ),
@@ -158,6 +216,12 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
                 log="never",
             ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_side_field, name="リフレクター"),
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "ひかりのかべ": FieldData(
@@ -168,6 +232,12 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
                 log="never",
             ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_side_field, name="ひかりのかべ"),
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "オーロラベール": FieldData(
@@ -176,6 +246,12 @@ FIELDS: dict[str, FieldData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: Handler(
                 h.オーロラベール_reduce_damage,
                 subject_spec="defender:self",
+                log="never",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_side_field, name="オーロラベール"),
+                priority=10,
+                subject_spec="source:self",
                 log="never",
             ),
         },
@@ -189,6 +265,12 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
                 log="on_success",
             ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_side_field, name="しんぴのまもり"),
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "しろいきり": FieldData(
@@ -198,12 +280,24 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
                 log="on_success",
             ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_side_field, name="しろいきり"),
+                priority=10,
+                subject_spec="source:self",
+                log="never",
+            ),
         },
     ),
     "おいかぜ": FieldData(
         handlers={
-            Event.ON_CALC_SPEED: Handler(
+            DomainEvent.ON_CALC_SPEED: Handler(
                 h.おいかぜ_speed_boost,
+                subject_spec="source:self",
+                log="never",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_side_field, name="おいかぜ"),
+                priority=10,
                 subject_spec="source:self",
                 log="never",
             ),
@@ -211,10 +305,10 @@ FIELDS: dict[str, FieldData] = {
     ),
     "ねがいごと": FieldData(
         handlers={
-            Event.ON_TURN_END_3: Handler(
+            Event.ON_TURN_END_2: Handler(
                 h.ねがいごと_heal,
+                priority=20,
                 subject_spec="target:self",
-                log_text="ねがいごと",
             ),
         },
     ),

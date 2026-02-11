@@ -120,7 +120,7 @@
 - ❌ **不足している部分**:
   - `handlers/ability.py` の関数: 型ヒント不完全
     ```python
-    def ありじごく(battle: Battle, ctx: EventContext, value: Any):
+    def ありじごく(battle: Battle, ctx: BattleContext, value: Any):
         # valueの型が `Any` で広すぎる
     ```
   - `handlers/move.py`: 一部の関数で型ヒント不完全
@@ -129,10 +129,10 @@
 **改善提案**:
 ```python
 # 現在（Not Good）
-def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     
 # 改善後
-def かちき(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
 ```
 
 ---
@@ -149,7 +149,7 @@ def かちき(battle: Battle, ctx: EventContext, value: dict[str, int]) -> Handl
 - ⚠️ **不足している部分**:
   - `handlers/ability.py` の関数: docstring なし ❌
     ```python
-    def ありじごく(battle: Battle, ctx: EventContext, value: Any):
+    def ありじごく(battle: Battle, ctx: BattleContext, value: Any):
         # ON_CHECK_TRAPPED
         # コメントのみで、フォーマルなdocstringなし
     ```
@@ -169,13 +169,13 @@ def かちき(battle: Battle, ctx: EventContext, value: dict[str, int]) -> Handl
 
 ```python
 # 改善前
-def ありじごく(battle: Battle, ctx: EventContext, value: Any):
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any):
     # ON_CHECK_TRAPPED
     result = not ctx.source.is_floating(battle.events)
     return HandlerReturn(True, result)
 
 # 改善後
-def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性の効果を発動する。
     
     ポケモンが浮いていない場合、交代を制限する。
@@ -209,7 +209,7 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 
 **例**: handlers/ability.py
 ```python
-def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_MODIFY_STAT
     # valueは{stat: change}の辞書
     has_negative = any(v < 0 for v in value.values())
@@ -409,7 +409,7 @@ dmgs[i] = apply_damage_modifiers(dmgs[i], [r_atk_type, r_def_type, r_burn, r_dmg
 
 全50以上のハンドラ関数に対して、以下の形式でdocstringを追加：
 ```python
-def 特性名(battle: Battle, ctx: EventContext, value: type) -> HandlerReturn:
+def 特性名(battle: Battle, ctx: BattleContext, value: type) -> HandlerReturn:
     """特性の効果説明
     
     詳細な動作の説明

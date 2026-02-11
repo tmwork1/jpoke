@@ -6,14 +6,14 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, get_args, Generic, TypeVar
 if TYPE_CHECKING:
-    from jpoke.core import Player, EventManager
+    from jpoke.core import Battle, Player, DomainManager, EventManager
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
 from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain
-from jpoke.utils.enums import Event
+from jpoke.enums import Event
 from jpoke.model import Field
-from jpoke.core.event import EventContext
+from jpoke.core import BattleContext
 
 T = TypeVar("T")
 
@@ -28,15 +28,15 @@ class BaseFieldManager(Generic[T]):
         init_game()実装不要。ゲームの初期化ではインスタンスを再生成するため。
     """
 
-    def __init__(self, events: EventManager, owners: list[Player], fields: dict[T, Field]):
+    def __init__(self, battle: Battle, owners: list[Player], fields: dict[T, Field]):
         """BaseFieldManagerを初期化する。
 
         Args:
-            events: イベント管理システム
+            battle: 親となるBattleインスタンス
             owners: フィールド効果の所有者リスト
             fields: フィールド名とFieldオブジェクトの辞書
         """
-        self.events = events
+        self.battle = battle
         self.owners = owners
         self.fields = fields
 
@@ -55,23 +55,34 @@ class BaseFieldManager(Generic[T]):
         fast_copy(self, new, keys_to_deepcopy=["fields"])
         return new
 
-    def update_reference(self, events: EventManager, owners: list[Player]):
+    def update_reference(self, new_battle: Battle, new_owners: list[Player]):
         """ディープコピー後の参照を更新する。
 
         Args:
-            events: 新しいイベント管理システム
+            battle: 新しいBattleインスタンス
             owners: 新しい所有者リスト
         """
-        self.events = events
-        self.owners = owners
+        self.battle = new_battle
+        self.owners = new_owners
         for field in self.fields.values():
-            field.update_reference(owners)
+            field.update_reference(new_owners)
+            if not field.is_active:
+                continue
             # アクティブなフィールドのハンドラーを再登録
-            if field.is_active:
-                for owner in owners:
-                    field.register_handlers(events, owner)
+            for owner in new_owners:
+                field.register_handlers(self.domains, self.events, owner)
 
-    def tick(self, name: T) -> bool:
+    @property
+    def domains(self) -> DomainManager:
+        """ドメイン管理システムへのショートカットプロパティ。"""
+        return self.battle.domains
+
+    @property
+    def events(self) -> EventManager:
+        """イベント管理システムへのショートカットプロパティ。"""
+        return self.battle.events
+
+    def tick_down(self, name: T):
         """フィールド効果のカウントを1減らす。
 
         カウントが0になった場合、効果を解除します。
@@ -83,12 +94,9 @@ class BaseFieldManager(Generic[T]):
             bool: カウントダウンが実行された場合True
         """
         field = self.fields[name]
-        if not field.is_active:
-            return False
         field.count -= 1
         if not field.count:
-            field.deactivate(self.events)
-        return True
+            field.deactivate(self.battle)
 
 
 class ExclusiveFieldManager(BaseFieldManager[T]):
@@ -101,17 +109,17 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         current: 現在有効なフィールド
     """
 
-    def __init__(self, events: EventManager, owners: list[Player], kind: type[T]):
+    def __init__(self, battle: Battle, owners: list[Player], kind: type[T]):
         """ExclusiveFieldManagerを初期化する。
 
         Args:
-            events: イベント管理システム
+            battle: Battleインスタンス
             owners: フィールド効果の所有者リスト
             kind: フィールドタイプ（Weather, Terrainなど）
         """
         names = get_args(kind)
         fields = {name: Field(name, owners) for name in names}
-        super().__init__(events, owners, fields)
+        super().__init__(battle, owners, fields)
         self._default = fields[names[0]]
         self.current = self._default
 
@@ -132,14 +140,14 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         if self.current is field:
             return False
         if self.current.is_active:
-            self.current.deactivate(self.events)
+            self.current.deactivate(self.battle)
 
         count = self.events.emit(
             Event.ON_CHECK_DURATION,
-            EventContext(source=source, field=field),
+            BattleContext(source=source, field=field),
             count
         )
-        field.activate(self.events, count)
+        field.activate(self.battle, count)
         self.current = field
         return True
 
@@ -151,17 +159,17 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         """
         if not self.current.is_active:
             return False
-        self.current.deactivate(self.events)
+        self.current.deactivate(self.battle)
         self.current = self._default
         return True
 
-    def tick(self) -> bool:
+    def tick_down(self) -> None:
         """現在のフィールド効果のカウントを1減らす。
 
         Returns:
             bool: カウントダウンが実行された場合True
         """
-        return super().tick(self.current.name)
+        super().tick_down(self.current.name)
 
 
 class StackableFieldManager(BaseFieldManager[T]):
@@ -183,7 +191,7 @@ class StackableFieldManager(BaseFieldManager[T]):
         field = self.fields[name]
         if field.is_active:
             return False
-        field.activate(self.events, count)
+        field.activate(self.battle, count)
         return True
 
     def deactivate(self, name: T) -> bool:
@@ -198,7 +206,7 @@ class StackableFieldManager(BaseFieldManager[T]):
         field = self.fields[name]
         if not field.is_active:
             return False
-        field.deactivate(self.events)
+        field.deactivate(self.battle)
         return True
 
 
@@ -208,14 +216,21 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
     晴れ、雨、砂嵐、霰などの天候状態を管理します。
     """
 
-    def __init__(self, events: EventManager, players: list[Player]):
+    def __init__(self, battle: Battle):
         """WeatherManagerを初期化する。
 
         Args:
-            events: イベント管理システム
-            players: プレイヤーのリスト
+            battle: Battleインスタンス
         """
-        super().__init__(events, players, Weather)
+        super().__init__(battle, battle.players, Weather)
+
+    def update_reference(self, new_battle: Battle):
+        """ディープコピー後の参照を更新する。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        return super().update_reference(new_battle, new_battle.players)
 
 
 class TerrainManager(ExclusiveFieldManager[Terrain]):
@@ -224,14 +239,21 @@ class TerrainManager(ExclusiveFieldManager[Terrain]):
     エレキフィールド、グラスフィールド、ミストフィールド、サイコフィールドなどを管理します。
     """
 
-    def __init__(self, events: EventManager, players: list[Player]):
+    def __init__(self, battle: Battle):
         """TerrainManagerを初期化する。
 
         Args:
-            events: イベント管理システム
-            players: プレイヤーのリスト
+            battle: Battleインスタンス
         """
-        super().__init__(events, players, Terrain)
+        super().__init__(battle, battle.players, Terrain)
+
+    def update_reference(self, new_battle: Battle):
+        """ディープコピー後の参照を更新する。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        return super().update_reference(new_battle, new_battle.players)
 
 
 class GlobalFieldManager(StackableFieldManager[GlobalField]):
@@ -240,21 +262,28 @@ class GlobalFieldManager(StackableFieldManager[GlobalField]):
     じゅうりょく、トリックルームなど、場全体に影響する効果を管理します。
     """
 
-    def __init__(self, events: EventManager, players: list[Player]):
+    def __init__(self, battle: Battle):
         """GlobalFieldManagerを初期化する。
 
         Args:
-            events: イベント管理システム
-            players: プレイヤーのリスト
+            battle: Battleインスタンス
         """
         super().__init__(
-            events,
-            players,
+            battle,
+            battle.players,
             {
-                "じゅうりょく": Field("じゅうりょく", players),
-                "トリックルーム": Field("トリックルーム", players),
+                "じゅうりょく": Field("じゅうりょく", battle.players),
+                "トリックルーム": Field("トリックルーム", battle.players),
             }
         )
+
+    def update_reference(self, new_battle: Battle):
+        """ディープコピー後の参照を更新する。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        return super().update_reference(new_battle, new_battle.players)
 
 
 class SideFieldManager(StackableFieldManager[SideField]):
@@ -264,19 +293,20 @@ class SideFieldManager(StackableFieldManager[SideField]):
     片方のプレイヤー側の場にのみ影響する効果を管理します。
     """
 
-    def __init__(self, events: EventManager, player: Player):
+    def __init__(self, battle: Battle, player: Player):
         """SideFieldManagerを初期化する。
 
         Args:
-            events: イベント管理システム
+            battle: Battleインスタンス
             player: 効果を管理するプレイヤー
         """
         super().__init__(
-            events,
+            battle,
             [player],
             {
                 "リフレクター": Field("リフレクター", [player]),
                 "ひかりのかべ": Field("ひかりのかべ", [player]),
+                "オーロラベール": Field("オーロラベール", [player]),
                 "しんぴのまもり": Field("しんぴのまもり", [player]),
                 "しろいきり": Field("しろいきり", [player]),
                 "おいかぜ": Field("おいかぜ", [player]),
@@ -285,15 +315,14 @@ class SideFieldManager(StackableFieldManager[SideField]):
                 "どくびし": Field("どくびし", [player]),
                 "ステルスロック": Field("ステルスロック", [player]),
                 "ねばねばネット": Field("ねばねばネット", [player]),
-                "オーロラベール": Field("オーロラベール", [player]),
             }
         )
 
-    def update_reference(self, events: EventManager, player: Player):
+    def update_reference(self, new_battle: Battle, new_owner: Player):
         """ディープコピー後の参照を更新する。
 
         Args:
-            events: 新しいイベント管理システム
+            battle: 新しいBattleインスタンス
             player: 新しいプレイヤー
         """
-        super().update_reference(events, [player])
+        super().update_reference(new_battle, [new_owner])

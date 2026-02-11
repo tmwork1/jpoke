@@ -6,11 +6,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .battle import Battle
+    from jpoke.core import Battle, BattleContext
     from jpoke.model import Move
 
+from jpoke.enums import DomainEvent
 from jpoke.model import Pokemon
-from .event import Event, EventContext
+from .context import BattleContext
 
 
 class SpeedCalculator:
@@ -56,9 +57,9 @@ class SpeedCalculator:
         Returns:
             補正後の実効素早さ
         """
-        return self.battle.events.emit(
-            Event.ON_CALC_SPEED,
-            EventContext(source=mon),
+        return self.battle.domains.emit(
+            DomainEvent.ON_CALC_SPEED,
+            BattleContext(source=mon),
             mon.stats["S"]
         )
 
@@ -83,9 +84,9 @@ class SpeedCalculator:
         base_speed = self.calc_effective_speed(mon)
 
         # 素早さ反転の適用
-        return self.battle.events.emit(
-            Event.ON_CHECK_SPEED_REVERSE,
-            EventContext(source=mon),
+        return self.battle.domains.emit(
+            DomainEvent.ON_CHECK_SPEED_REVERSE,
+            BattleContext(source=mon),
             base_speed
         )
 
@@ -103,9 +104,9 @@ class SpeedCalculator:
         base_priority = move.priority if move else 0
 
         # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
-        return self.battle.events.emit(
-            Event.ON_MODIFY_MOVE_PRIORITY,
-            EventContext(attacker=attacker, move=move),
+        return self.battle.domains.emit(
+            DomainEvent.ON_MODIFY_MOVE_PRIORITY,
+            BattleContext(attacker=attacker, move=move),
             base_priority
         )
 

@@ -1,9 +1,13 @@
-from typing import Literal
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Handler
+    from jpoke.enums import Event
+
 from dataclasses import dataclass, field
 
 from jpoke.utils.constants import STATS
 from jpoke.utils.type_defs import MoveCategory, PokeType, MoveLabel
-from jpoke.core.event import Event, Handler
 
 
 class PokemonData:

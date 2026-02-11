@@ -8,8 +8,8 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, Player
     from jpoke.model import Pokemon
 
-from jpoke.utils.enums import Command, Interrupt
-from jpoke.core.event import Event, EventContext
+from jpoke.enums import Event, Command, Interrupt
+from .context import BattleContext
 
 
 class TurnController:
@@ -145,7 +145,7 @@ class TurnController:
             self.battle.events.emit(Event.ON_BEFORE_ACTION)
 
         # 交代処理
-        for mon in self.battle.calc_speed_order():
+        for mon in self.battle.determine_speed_order():
             # 交代フラグ
             idx = self.battle.actives.index(mon)
             interrupt = Interrupt.ejectpack_on_switch(idx)
@@ -167,7 +167,7 @@ class TurnController:
             self.battle.run_interrupt_switch(interrupt)
 
         # 技の処理
-        for mon in self.battle.calc_action_order():
+        for mon in self.battle.determine_action_order():
             player = self.battle.find_player(mon)
 
             # 行動前に交代していたらスキップ
@@ -182,7 +182,7 @@ class TurnController:
                 move = self.battle.command_to_move(player, command)
 
                 # 行動前の処理（各ポケモンごとに技を渡して発火）
-                ctx = EventContext(source=mon, target=mon)
+                ctx = BattleContext(source=mon, target=mon)
                 result_move = self.battle.events.emit(Event.ON_BEFORE_MOVE, ctx=ctx, value=move)
 
                 # ハンドラーが技をNoneにした場合（ブロック）はスキップ

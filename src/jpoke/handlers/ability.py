@@ -6,10 +6,10 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, BattleContext
 
-from jpoke.core.event import HandlerReturn, Handler
 from jpoke.utils.type_defs import LogPolicy, RoleSpec
+from jpoke.core import HandlerReturn, Handler
 from . import common
 
 
@@ -30,12 +30,12 @@ class AbilityHandler(Handler):
         )
 
 
-def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性: 浮いていないポケモンの交代を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_CHECK_TRAPPED)
+        ctx: コンテキスト (ON_CHECK_TRAPPED)
             - source: 交代を試みるポケモン
         value: イベント値（未使用）
 
@@ -45,16 +45,16 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     """
     # ポケモンが浮いているかどうかを判定
     # 浮いている = ふゆう、でんじふゆう、テレキネシス等
-    result = not ctx.source.is_floating(battle.events)
+    result = not ctx.source.is_floating(battle)
     return HandlerReturn(True, result)
 
 
-def かげふみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かげふみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かげふみ特性: かげふみ持ち以外のポケモンの交代を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_CHECK_TRAPPED)
+        ctx: コンテキスト (ON_CHECK_TRAPPED)
             - source: 交代を試みるポケモン
         value: イベント値（未使用）
 
@@ -66,12 +66,12 @@ def かげふみ(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn
     return HandlerReturn(True, result)
 
 
-def じりょく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def じりょく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じりょく特性: はがねタイプのポケモンの交代を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_CHECK_TRAPPED)
+        ctx: コンテキスト (ON_CHECK_TRAPPED)
             - source: 交代を試みるポケモン
         value: イベント値（未使用）
 
@@ -83,12 +83,12 @@ def じりょく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn
     return HandlerReturn(True, result)
 
 
-def かちき(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
     """かちき特性: 能力が下がると特攻が2段階上昇する。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_MODIFY_STAT)
+        ctx: コンテキスト (ON_MODIFY_STAT)
             - target: 能力変化の対象（自分）
             - source: 能力変化の原因
         value: 能力変化の辞書 {stat: change}
@@ -106,12 +106,12 @@ def かちき(battle: Battle, ctx: EventContext, value: dict[str, int]) -> Handl
     return HandlerReturn(result)
 
 
-def すなかき(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すなかき特性: すなあらし中に素早さが2倍になる。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_CALC_SPEED)
+        ctx: コンテキスト
         value: 元の素早さ値
 
     Returns:
@@ -122,12 +122,12 @@ def すなかき(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn
     return HandlerReturn(True, value)
 
 
-def めんえき(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """めんえき特性: どく・もうどく状態を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -141,12 +141,12 @@ def めんえき(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn
     return HandlerReturn(False, value)
 
 
-def ふみん(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def ふみん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """ふみん特性: ねむり状態を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -160,12 +160,12 @@ def ふみん(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
     return HandlerReturn(False, value)
 
 
-def やるき(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """やるき特性: ねむり状態を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -179,7 +179,7 @@ def やるき(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
     return HandlerReturn(False, value)
 
 
-def マイペース(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def マイペース(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """マイペース特性: こんらん状態を防ぐ（揮発状態の実装が必要）。
 
     Note:
@@ -187,7 +187,7 @@ def マイペース(battle: Battle, ctx: EventContext, value: str) -> HandlerRet
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -197,12 +197,12 @@ def マイペース(battle: Battle, ctx: EventContext, value: str) -> HandlerRet
     return HandlerReturn(False, value)
 
 
-def じゅうなん(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def じゅうなん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """じゅうなん特性: まひ状態を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -216,12 +216,12 @@ def じゅうなん(battle: Battle, ctx: EventContext, value: str) -> HandlerRet
     return HandlerReturn(False, value)
 
 
-def みずのベール(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def みずのベール(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """みずのベール特性: やけど状態を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -235,12 +235,12 @@ def みずのベール(battle: Battle, ctx: EventContext, value: str) -> Handler
     return HandlerReturn(False, value)
 
 
-def マグマのよろい(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def マグマのよろい(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """マグマのよろい特性: こおり状態を防ぐ。
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:
@@ -254,7 +254,7 @@ def マグマのよろい(battle: Battle, ctx: EventContext, value: str) -> Hand
     return HandlerReturn(False, value)
 
 
-def どんかん(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+def どんかん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """どんかん特性: メロメロ・ちょうはつ・ゆうわく・いかくを防ぐ。
 
     Note:
@@ -263,7 +263,7 @@ def どんかん(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
         value: 付与しようとする状態異常名
 
     Returns:

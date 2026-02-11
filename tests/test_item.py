@@ -2,8 +2,8 @@
 import math
 from types import SimpleNamespace
 from jpoke import Pokemon
-from jpoke.core.event import EventContext
-from jpoke.utils.enums import Event
+from jpoke.core import BattleContext
+from jpoke.enums import Event
 from jpoke.data import ITEMS
 import test_utils as t
 
@@ -41,7 +41,7 @@ def test_さらさらいわ():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
     )
-    battle.weather_mgr.activate("すなあらし", 5, source=battle.actives[0])
+    battle.weather_manager.activate("すなあらし", 5, source=battle.actives[0])
     assert battle.weather.count == 8
 
 
@@ -51,7 +51,7 @@ def test_だっしゅつパック():
         ally=[Pokemon("ピカチュウ", item="だっしゅつパック"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", ability="いかく")],
     )
-    assert battle.players[0].active_idx != 0
+    assert battle.players[0].active_idx == 1
     assert battle.players[0].team[0].item.revealed
     assert not battle.players[0].team[0].item._enabled
 
@@ -83,7 +83,7 @@ def test_たべのこし():
     battle = t.start_battle(ally=[mon], turn=1)
     assert not battle.actives[0].item.revealed
     mon._hp = 1  # テスト用に内部変数を直接変更
-    battle.events.emit(Event.ON_TURN_END_2, EventContext(source=battle.actives[0]), None)
+    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=battle.actives[0]), None)
     assert battle.actives[0].item.revealed
     assert battle.actives[0].hp == 1 + mon.max_hp // 16
 
@@ -104,7 +104,7 @@ def test_タイプ強化アイテム():
             ally=[Pokemon("ピカチュウ", item=item_name)],
             foe=[Pokemon("ピカチュウ")],
         )
-        ctx = EventContext(
+        ctx = BattleContext(
             attacker=battle.actives[0],
             defender=battle.actives[1],
             move=_dummy_move(type_name),
@@ -126,7 +126,7 @@ def test_タイプ半減実():
             ally=[Pokemon("ピカチュウ", item=item_name)],
             foe=[Pokemon("ピカチュウ")],
         )
-        ctx = EventContext(
+        ctx = BattleContext(
             attacker=battle.actives[0],
             defender=battle.actives[1],
             move=_dummy_move(type_name),

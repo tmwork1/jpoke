@@ -174,7 +174,7 @@ class Example(BaseModel):
 
 #### 2. ハンドラ実装
 \`\`\`python
-def handler_function(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def handler_function(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ハンドラ説明
     
     Args:
@@ -283,7 +283,7 @@ logger.debug(f"威力補正: {modifier}")
 
 #### ハンドラ実装パターン
 ```python
-def 特性_effect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 特性_effect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """特性の効果説明
     
     Args:

@@ -6,13 +6,21 @@
 from enum import Enum, auto
 
 
+class DomainEvent(Enum):
+    ON_CALC_SPEED = auto()
+    ON_CHECK_SPEED_REVERSE = auto()
+    ON_MODIFY_MOVE_PRIORITY = auto()
+
+
 class Event(Enum):
     """バトルイベントの種類
 
     イベントは大きく3つのカテゴリに分類される：
     - アクション系: ON_BEFORE_ACTION, ON_SWITCH_IN など
     - チェック系: ON_CHECK_PP_CONSUMED, ON_CHECK_FLOATING など
-    - 計算系: ON_CALC_SPEED, ON_CALC_ACCURACY など
+    - 計算系: ON_CALC_ACCURACY など
+
+    行動順に関与するものは enums/domain.py に分離されている。
     """
     # アクション系イベント（emit/handlerの主な参照先）
     ON_BEFORE_ACTION = auto()  # emit: core/turn_controller.py; handlers: data/ailment.py,data/volatile.py
@@ -61,14 +69,10 @@ class Event(Enum):
     ON_CHECK_NERVOUS = auto()  # emit: model/pokemon.py is_nervous; handlers: data/ability.py
     ON_CHECK_MOVE_TYPE = auto()  # emit: model/pokemon.py effective_move_type
     ON_CHECK_MOVE_CATEGORY = auto()  # emit: model/pokemon.py effective_move_category
-    ON_CHECK_PRIORITY_VALID = auto()  # emit: core/move_executor.py; handlers: data/field.py
 
     # 計算系イベント
-    ON_CALC_SPEED = auto()  # emit: core/speed_calculator.py; handlers: data/ability.py,data/ailment.py,data/field.py
-    ON_CHECK_SPEED_REVERSE = auto()  # emit: core/speed_calculator.py
-    ON_MODIFY_MOVE_PRIORITY = auto()  # emit: core/speed_calculator.py; handlers: data/field.py
     ON_MODIFY_ACCURACY = auto()  # emit: core/move_executor.py; handlers: data/field.py
-    ON_MODIFY_CRITICAL = auto()  # emit: core/damage.py; handlers: data/ability.py,data/item.py
+    ON_MODIFY_CRITICAL_RANK = auto()  # emit: core/damage.py; handlers: data/ability.py,data/item.py
     ON_CALC_POWER_MODIFIER = auto()  # emit: core/damage.py; handlers: data/field.py
     ON_CALC_ATK_MODIFIER = auto()  # emit: core/damage.py
     ON_CALC_DEF_MODIFIER = auto()  # emit: core/damage.py; handlers: data/field.py

@@ -6,9 +6,9 @@ Note:
 from dataclasses import dataclass
 from functools import partial
 
-from jpoke.utils.enums import Event
+from jpoke.enums import Event
 from jpoke.utils.type_defs import RoleSpec, AilmentName
-from jpoke.core.event import Handler, HandlerReturn
+from jpoke.core import Handler, HandlerReturn
 from jpoke.handlers import common, move as h, volatile as v
 from .models import MoveData
 

@@ -5,7 +5,7 @@ Note:
 """
 from functools import partial
 
-from jpoke.utils.enums import Event
+from jpoke.enums import Event
 from jpoke.handlers import common, volatile as h
 from .models import VolatileData
 
@@ -31,7 +31,7 @@ VOLATILES: dict[str, VolatileData] = {
     "アクアリング": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(common.heal_hp, from_="source:self", r=1/16),
+                partial(common.modify_hp, target_role="source:self", r=1/16),
                 subject_spec="source:self",
                 priority=10,
             ),
@@ -101,7 +101,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "急所ランク": VolatileData(
         handlers={
-            Event.ON_MODIFY_CRITICAL: h.VolatileHandler(
+            Event.ON_MODIFY_CRITICAL_RANK: h.VolatileHandler(
                 h.急所ランク_calc_critical,
                 subject_spec="attacker:self",
                 log="never",

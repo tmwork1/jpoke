@@ -12,7 +12,7 @@
 `handlers/ability.py` の関数は以下の問題を抱えている：
 
 ```python
-def ありじごく(battle: Battle, ctx: EventContext, value: Any):
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any):
     # ON_CHECK_TRAPPED
     result = not ctx.source.is_floating(battle.events)
     return HandlerReturn(True, result)
@@ -30,7 +30,7 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any):
 #### レベル1: 基本的なdocstring追加（最低限）
 
 ```python
-def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性。
     
     浮いていないポケモンの交代を制限する。
@@ -42,7 +42,7 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 #### レベル2: Args/Returns を追加（推奨）
 
 ```python
-def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性。
     
     浮いていないポケモンの交代を制限する。
@@ -62,7 +62,7 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 #### レベル3: 例と注意文を追加（充実）
 
 ```python
-def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性。
     
     浮きポケモンを除き、すべてのポケモンの交代を制限する。
@@ -93,7 +93,7 @@ def ありじごく(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 #### レベル4: 型ヒント強化（最高品質）
 
 ```python
-def ありじごく(battle: "Battle", ctx: EventContext, value: None) -> HandlerReturn:
+def ありじごく(battle: "Battle", ctx: BattleContext, value: None) -> HandlerReturn:
     """ありじごく特性。
     
     浮きポケモンを除き、すべてのポケモンの交代を制限する。
@@ -113,7 +113,7 @@ def ありじごく(battle: "Battle", ctx: EventContext, value: None) -> Handler
 #### レベル5: インラインコメント追加（参考実装）
 
 ```python
-def ありじごく(battle: "Battle", ctx: EventContext, value: None) -> HandlerReturn:
+def ありじごく(battle: "Battle", ctx: BattleContext, value: None) -> HandlerReturn:
     """ありじごく特性。
     
     浮きポケモンを除き、すべてのポケモンの交代を制限する。
@@ -144,7 +144,7 @@ def ありじごく(battle: "Battle", ctx: EventContext, value: None) -> Handler
 #### パターン A: 状態異常予防型
 
 ```python
-def めんえき(battle: "Battle", ctx: EventContext, value: str) -> HandlerReturn:
+def めんえき(battle: "Battle", ctx: BattleContext, value: str) -> HandlerReturn:
     """めんえき特性: どく状態を防ぐ。
     
     Args:
@@ -165,7 +165,7 @@ def めんえき(battle: "Battle", ctx: EventContext, value: str) -> HandlerRetu
 #### パターン B: 能力ランク補正型
 
 ```python
-def すなかき(battle: "Battle", ctx: EventContext, value: int) -> HandlerReturn:
+def すなかき(battle: "Battle", ctx: BattleContext, value: int) -> HandlerReturn:
     """すなかき特性: すなあらし中に素早さが2倍になる。
     
     Args:
@@ -184,7 +184,7 @@ def すなかき(battle: "Battle", ctx: EventContext, value: int) -> HandlerRetu
 #### パターン C: ダメージ軽減型
 
 ```python
-def ハードロック(battle: "Battle", ctx: EventContext, value: int) -> HandlerReturn:
+def ハードロック(battle: "Battle", ctx: BattleContext, value: int) -> HandlerReturn:
     """ハードロック特性: 効果ばつぐん(2倍以上)を0.75倍に軽減。
     
     Args:
@@ -212,7 +212,7 @@ def ハードロック(battle: "Battle", ctx: EventContext, value: int) -> Handl
 ### 現状の問題
 
 ```python
-def describe_event(ctx: EventContext, value: Any) -> HandlerReturn:
+def describe_event(ctx: BattleContext, value: Any) -> HandlerReturn:
     # valueの型が `Any` で、何が渡されるか不明
     # 呼び出し側でも何を期待するか不明確
     pass
@@ -226,7 +226,7 @@ def describe_event(ctx: EventContext, value: Any) -> HandlerReturn:
 from typing import Union
 
 def describe_event(
-    ctx: EventContext, 
+    ctx: BattleContext, 
     value: Union[int, str, dict[str, int]]
 ) -> HandlerReturn:
     """
@@ -246,7 +246,7 @@ from typing import Literal
 
 def on_calc_accuracy(
     battle: Battle,
-    ctx: EventContext,
+    ctx: BattleContext,
     value: int  # 命中率（0～100）
 ) -> HandlerReturn:
     """命中率を計算する。
@@ -261,7 +261,7 @@ def on_calc_accuracy(
 
 def on_before_apply_ailment(
     battle: Battle,
-    ctx: EventContext,
+    ctx: BattleContext,
     value: str  # 状態異常名
 ) -> HandlerReturn:
     """状態異常を付与する前の処理。
@@ -290,7 +290,7 @@ StatChange = dict[Literal["H", "A", "B", "C", "D", "S"], int]
 # ハンドラで使用
 def めんえき(
     battle: Battle,
-    ctx: EventContext,
+    ctx: BattleContext,
     value: AilmentName
 ) -> HandlerReturn:
     # valueが文字列で、かつ状態異常名に限定される
@@ -306,7 +306,7 @@ def めんえき(
 ### 現状の問題
 
 ```python
-def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     has_negative = any(v < 0 for v in value.values())
     result = has_negative and ctx.source != ctx.target and ...
     return HandlerReturn(result)
@@ -318,7 +318,7 @@ def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
 #### レベル1: 簡潔なコメント
 
 ```python
-def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # 能力が低下したかチェック
     has_negative = any(v < 0 for v in value.values())
     
@@ -332,7 +332,7 @@ def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
 #### レベル2: 詳細なコメント（参考資料付き）
 
 ```python
-def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # かちき特性: 相手の能力が低下した場合、自分の特攻を+2段階上げる
     # 仕様: https://wiki.xn--rckteqa2e.com/wiki/%E3%81%8B%E3%81%A1%E3%81%8D
     
@@ -356,7 +356,7 @@ def かちき(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
 #### レベル3: Docstring + コメント（最高品質）
 
 ```python
-def かちき(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
+def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
     """かちき特性: 能力が低下すると特攻が上がる。
     
     相手の能力が低下した場合、自分の特攻を2段階上昇させる。

@@ -5,12 +5,12 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Move
 
 from jpoke.utils.type_defs import RoleSpec, PokeType, Stat, AilmentName, Weather, Terrain, Side
-from jpoke.utils.enums import Event
-from jpoke.core.event import EventContext, HandlerReturn
+from jpoke.enums import Event
+from jpoke.core import BattleContext, HandlerReturn
 
 
 def modify_hp(battle: Battle,
-              ctx: EventContext,
+              ctx: BattleContext,
               value: Any,
               target_spec: RoleSpec,
               v: int = 0,
@@ -24,7 +24,7 @@ def modify_hp(battle: Battle,
 
 
 def drain_hp(battle: Battle,
-             ctx: EventContext,
+             ctx: BattleContext,
              value: Any,
              from_: RoleSpec,
              to_: RoleSpec | None = None,
@@ -44,45 +44,8 @@ def drain_hp(battle: Battle,
     return HandlerReturn(success)
 
 
-def heal_hp(battle: Battle,
-            ctx: EventContext,
-            value: Any,
-            from_: RoleSpec,
-            v: int = 0,
-            r: float = 0,
-            chance: float = 1) -> HandlerReturn:
-    """指定したポケモンのHPを回復する
-
-    Args:
-        battle: バトルインスタンス
-        ctx: イベントコンテキスト
-        value: イベント値（未使用）
-        from_: 回復対象のRoleSpec
-        v: 回復する固定HP量
-        r: 最大HPに対する回復割合
-        chance: 発動確率（デフォルト: 1）
-
-    Returns:
-        HandlerReturn: 成功時True
-    """
-    if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
-
-    from_mon = ctx.resolve_role(battle, from_)
-
-    # 回復量を計算
-    if v:
-        heal_amount = v
-    else:
-        heal_amount = max(1, int(from_mon.max_hp * r))
-
-    # HP回復を実行
-    actual_heal = battle.modify_hp(from_mon, v=heal_amount)
-    return HandlerReturn(actual_heal > 0)
-
-
 def modify_stat(battle: Battle,
-                ctx: EventContext,
+                ctx: BattleContext,
                 value: Any,
                 stat: Stat,
                 v: int,
@@ -98,7 +61,7 @@ def modify_stat(battle: Battle,
 
 
 def modify_stats(battle: Battle,
-                 ctx: EventContext,
+                 ctx: BattleContext,
                  value: Any,
                  stats: dict[Stat, int],
                  target_spec: RoleSpec,
@@ -111,7 +74,7 @@ def modify_stats(battle: Battle,
 
     Args:
         battle: バトルインスタンス
-        ctx: イベントコンテキスト
+        ctx: コンテキスト
         value: イベント値（未使用）
         stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
         target_spec: 対象のRoleSpec
@@ -134,7 +97,7 @@ def modify_stats(battle: Battle,
 
 
 def apply_ailment(battle: Battle,
-                  ctx: EventContext,
+                  ctx: BattleContext,
                   value: Any,
                   ailment: AilmentName,
                   target_spec: RoleSpec,
@@ -144,12 +107,12 @@ def apply_ailment(battle: Battle,
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = target.apply_ailment(battle.events, ailment, source=source)
+    success = target.apply_ailment(battle, ailment, source=source)
     return HandlerReturn(success)
 
 
 def apply_volatile(battle: Battle,
-                   ctx: EventContext,
+                   ctx: BattleContext,
                    value: Any,
                    volatile: str,
                    target_spec: RoleSpec,
@@ -160,12 +123,12 @@ def apply_volatile(battle: Battle,
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = target.apply_volatile(battle.events, volatile, count=count, source=source)
+    success = target.apply_volatile(battle, volatile, count=count, source=source)
     return HandlerReturn(success)
 
 
 def cure_ailment(battle: Battle,
-                 ctx: EventContext,
+                 ctx: BattleContext,
                  value: Any,
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
@@ -174,34 +137,34 @@ def cure_ailment(battle: Battle,
         return HandlerReturn(False)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = target.cure_ailment(battle.events, source=source)
+    success = target.cure_ailment(battle, source=source)
     return HandlerReturn(success)
 
 
 def activate_weather(battle: Battle,
-                     ctx: EventContext,
+                     ctx: BattleContext,
                      value: Any,
                      source_spec: RoleSpec,
                      weather: Weather,
                      count: int = 5) -> HandlerReturn:
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.weather_mgr.activate(weather, count, source=source)
+    success = battle.weather_manager.activate(weather, count, source=source)
     return HandlerReturn(success)
 
 
 def activate_terrain(battle: Battle,
-                     ctx: EventContext,
+                     ctx: BattleContext,
                      value: Any,
                      source_spec: RoleSpec,
                      terrain: Terrain,
                      count: int = 5) -> HandlerReturn:
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.terrain_mgr.activate(terrain, count, source=source)
+    success = battle.terrain_manager.activate(terrain, count, source=source)
     return HandlerReturn(success)
 
 
 def resolve_field_count(battle: Battle,
-                        ctx: EventContext,
+                        ctx: BattleContext,
                         value: Any,
                         field: Weather | Terrain,
                         additonal_count: int) -> HandlerReturn:
@@ -218,7 +181,7 @@ def calc_effectiveness(battle: Battle,
     """技のタイプ相性を計算する"""
     value = battle.events.emit(
         Event.ON_CALC_DEF_TYPE_MODIFIER,
-        EventContext(attacker=attacker, defender=defender, move=move),
+        BattleContext(attacker=attacker, defender=defender, move=move),
         4096
     ).value > 4096
     return value / 4096

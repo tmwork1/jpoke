@@ -7,7 +7,7 @@
 ### 1. 単純な条件発動
 
 ```python
-def 特性_condition_check(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 特性_condition_check(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """条件チェック型の特性
     
     条件を満たす場合のみ効果を発動する基本パターン
@@ -25,7 +25,7 @@ def 特性_condition_check(battle: Battle, ctx: EventContext, value: Any) -> Han
 ### 2. 補正値計算
 
 ```python
-def 特性_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 特性_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """補正値を返すパターン（威力・ダメージ・素早さ等）
     
     4096基準: 1.5倍 = 6144, 0.5倍 = 2048
@@ -44,7 +44,7 @@ def 特性_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
 ### 3. 状態付与
 
 ```python
-def 技_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def 技_ailment(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """状態異常付与パターン"""
     target = ctx.defender
     
@@ -267,7 +267,7 @@ def test_複合効果():
 ### 推奨パターン
 
 ```python
-def handler_function(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def handler_function(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """エラーハンドリング付きハンドラ"""
     try:
         # 処理

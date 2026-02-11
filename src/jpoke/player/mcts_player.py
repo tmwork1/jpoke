@@ -1,4 +1,4 @@
-from jpoke.utils.enums import Command
+from jpoke.enums import Command
 from jpoke.core import Battle, Player
 
 

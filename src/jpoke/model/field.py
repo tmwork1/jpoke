@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import EventManager, Player
+    from jpoke.core import Battle, Player
 
 from jpoke.utils import fast_copy
 from jpoke.data.field import FIELDS
@@ -36,11 +36,11 @@ class Field(GameEffect):
             count: 初期ターン数（0の場合は非アクティブ）
         """
         super().__init__(FIELDS[name])
-        self.data: FieldData  # IDE hint
         self.owners: list[Player] = owners
         self.count = count
-        self.layers = 0  # まきびし、どくびしなどの層数管理
         self.reveal()
+
+        self.data: FieldData  # IDE hint
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -56,26 +56,26 @@ class Field(GameEffect):
         """
         self.owners = owners
 
-    def activate(self, events: EventManager, count: int):
+    def activate(self, battle: Battle, count: int):
         """フィールド効果を有効化する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
             count: フィールド効果の継続ターン数
         """
         self.count = count
         for player in self.owners:
-            self.register_handlers(events, player)
+            self.register_handlers(battle.domains, battle.events, player)
 
-    def deactivate(self, events: EventManager):
+    def deactivate(self, battle: Battle):
         """フィールド効果を無効化する。
 
         Args:
-            events: イベントマネージャー
+            battle: バトルインスタンス
         """
         self.count = 0
         for player in self.owners:
-            self.unregister_handlers(events, player)
+            self.unregister_handlers(battle.domains, battle.events, player)
 
     @property
     def name(self) -> str:

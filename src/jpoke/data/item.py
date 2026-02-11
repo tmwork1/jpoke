@@ -5,8 +5,8 @@ Note:
 """
 from functools import partial
 
-from jpoke.utils.enums import Event
-from jpoke.core.event import HandlerReturn
+from jpoke.enums import Event
+from jpoke.core import HandlerReturn
 from jpoke.handlers import common, item as h
 from .models import ItemData
 

@@ -11,13 +11,15 @@ import json
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat
-from jpoke.utils.enums import Command, Interrupt
+from jpoke.utils.type_defs import Stat, GlobalField, SideField
+from jpoke.enums import Event, Command, Interrupt
 from jpoke.utils import fast_copy
 
 from jpoke.model import Pokemon, Move, Field
 
-from .event import Event, EventManager, EventContext
+from .domain import DomainManager
+from .event import EventManager
+from .context import BattleContext
 from .player import Player
 from .logger import Logger
 from .damage import DamageCalculator, DamageContext
@@ -86,19 +88,24 @@ class Battle:
         self.turn: int = -1
         self.winner_idx: int | None = None
 
+        self.domains = DomainManager(self)
         self.events = EventManager(self)
+
         self.logger = Logger()
         self.random = Random(self.seed)
-        self.damage_calculator: DamageCalculator = DamageCalculator()
-        self.move_executor: MoveExecutor = MoveExecutor(self)
-        self.switch_manager: SwitchManager = SwitchManager(self)
+
         self.turn_controller: TurnController = TurnController(self)
         self.speed_calculator: SpeedCalculator = SpeedCalculator(self)
+        self.switch_manager: SwitchManager = SwitchManager(self)
+        self.move_executor: MoveExecutor = MoveExecutor(self)
+        self.damage_calculator: DamageCalculator = DamageCalculator(self)
 
-        self.weather_mgr: WeatherManager = WeatherManager(self.events, self.players)
-        self.terrain_mgr: TerrainManager = TerrainManager(self.events, self.players)
-        self.field_mgr: GlobalFieldManager = GlobalFieldManager(self.events, self.players)
-        self.side_mgrs: list[SideFieldManager] = [SideFieldManager(self.events, pl) for pl in self.players]
+        self.weather_manager: WeatherManager = WeatherManager(self)
+        self.terrain_manager: TerrainManager = TerrainManager(self)
+        self.field_manager: GlobalFieldManager = GlobalFieldManager(self)
+        self.side_manager: list[SideFieldManager] = [
+            SideFieldManager(self, player) for player in self.players
+        ]
 
         self.test_option: TestOption = TestOption()
 
@@ -120,21 +127,26 @@ class Battle:
             "field_mgr", "side_mgrs"
         ])
 
-        # 複製したインスタンスが複製後を参照するように再代入する
+        # 複製したBattleインスタンスへの参照を各マネージャークラスに更新
         new._update_reference()
 
         return new
 
     def _update_reference(self):
-        """Battle インスタンスの参照を各マネージャークラスに更新する。"""
+        """ディープコピー後のBattleインスタンスへの参照を各マネージャークラスに更新する。"""
         self.events.update_reference(self)
-        self.move_executor.update_reference(self)
-        self.switch_manager.update_reference(self)
+
         self.turn_controller.update_reference(self)
         self.speed_calculator.update_reference(self)
-        self.field_mgr.update_reference(self.events, self.players)
-        for i, side in enumerate(self.side_mgrs):
-            side.update_reference(self.events, self.players[i])
+        self.switch_manager.update_reference(self)
+        self.move_executor.update_reference(self)
+        self.damage_calculator.update_reference(self)
+
+        self.weather_manager.update_reference(self)
+        self.terrain_manager.update_reference(self)
+        self.field_manager.update_reference(self)
+        for i, side in enumerate(self.side_manager):
+            side.update_reference(self, self.players[i])
 
     def init_game(self):
         """ゲーム初期化。
@@ -143,16 +155,17 @@ class Battle:
         self.events = EventManager(self)
         self.logger = Logger()
         self.random = Random(self.seed)
-        self.damage_calculator = DamageCalculator()
-        self.move_executor = MoveExecutor(self)
-        self.switch_manager = SwitchManager(self)
+
         self.turn_controller = TurnController(self)
         self.speed_calculator = SpeedCalculator(self)
+        self.switch_manager = SwitchManager(self)
+        self.move_executor = MoveExecutor(self)
+        self.damage_calculator = DamageCalculator(self)
 
-        self.weather_mgr = WeatherManager(self.events, self.players)
-        self.terrain_mgr = TerrainManager(self.events, self.players)
-        self.field_mgr = GlobalFieldManager(self.events, self.players)
-        self.side_mgrs = [SideFieldManager(self.events, pl) for pl in self.players]
+        self.weather_manager = WeatherManager(self)
+        self.terrain_manager = TerrainManager(self)
+        self.field_manager = GlobalFieldManager(self)
+        self.side_manager = [SideFieldManager(self, player) for player in self.players]
 
         # 各プレイヤーとポケモンの初期化
         for player in self.players:
@@ -161,17 +174,6 @@ class Battle:
     def init_turn(self):
         """ターン初期化（TurnControllerへの委譲）。"""
         self.turn_controller.init_turn()
-
-    def get_side(self, source: Player | Pokemon) -> SideFieldManager:
-        """プレイヤーまたはポケモンからサイドフィールドマネージャーを取得。
-
-        Args:
-            source: Player または Pokemon インスタンス
-
-        Returns:
-            SideFieldManager: 対応するサイドフィールドマネージャー
-        """
-        return self.side_mgrs[self.get_player_index(source)]
 
     @property
     def actives(self) -> list[Pokemon]:
@@ -189,7 +191,7 @@ class Battle:
         Returns:
             Field: 現在の天候フィールド
         """
-        return self.weather_mgr.current
+        return self.weather_manager.current
 
     @property
     def terrain(self) -> Field:
@@ -198,7 +200,34 @@ class Battle:
         Returns:
             Field: 現在のフィールド
         """
-        return self.terrain_mgr.current
+        return self.terrain_manager.current
+
+    def get_global_field(self, name: GlobalField) -> Field:
+        """グローバルフィールド効果を取得。"""
+        return self.field_manager.fields[name]
+
+    def get_side(self, source: Player | Pokemon) -> SideFieldManager:
+        """プレイヤーまたはポケモンからサイドフィールドマネージャーを取得。
+
+        Args:
+            source: Player または Pokemon インスタンス
+
+        Returns:
+            SideFieldManager: 対応するサイドフィールドマネージャー
+        """
+        return self.side_manager[self.get_player_index(source)]
+
+    def get_side_field(self, source: Player | Pokemon, name: SideField) -> Field:
+        """サイドフィールド効果を取得。
+
+        Args:
+            source: Player または Pokemon インスタンス
+            name: フィールド効果の名前
+
+        Returns:
+            Field: 対応するサイドフィールド効果
+        """
+        return self.get_side(source).fields[name]
 
     def export_log(self, file):
         """バトルログをJSON形式でエクスポート。
@@ -357,7 +386,7 @@ class Battle:
         Returns:
             list[Command]: 交代可能なコマンドのリスト（交代不可の場合は空リスト）
         """
-        if player.active.is_trapped(self.events):
+        if player.active.is_trapped(self):
             return []
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
                 if mon in player.selection and mon is not player.active]
@@ -402,7 +431,7 @@ class Battle:
         """
         return self.speed_calculator.calc_effective_speed(mon)
 
-    def calc_speed_order(self) -> list[Pokemon]:
+    def determine_speed_order(self) -> list[Pokemon]:
         """素早さ順序を計算（SpeedCalculatorへの委譲）。
 
         Returns:
@@ -410,7 +439,7 @@ class Battle:
         """
         return self.speed_calculator.calc_speed_order()
 
-    def calc_action_order(self) -> list[Pokemon]:
+    def determine_action_order(self) -> list[Pokemon]:
         """行動順序を計算（SpeedCalculatorへの委譲）。
 
         Returns:
@@ -418,7 +447,7 @@ class Battle:
         """
         return self.speed_calculator.calc_action_order()
 
-    def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
+    def determine_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
 
         Args:
@@ -557,7 +586,7 @@ class Battle:
         """
         stats = self.events.emit(
             Event.ON_BEFORE_MODIFY_STAT,
-            EventContext(target=target, source=source),
+            BattleContext(target=target, source=source),
             stats
         )
 
@@ -576,17 +605,17 @@ class Battle:
         if any_success:
             self.events.emit(
                 Event.ON_MODIFY_STAT,
-                EventContext(target=target, source=source),
+                BattleContext(target=target, source=source),
                 actual_changes
             )
 
         return any_success
 
-    def calc_damage(self,
-                    attacker: Pokemon,
-                    move: Move | str,
-                    critical: bool = False,
-                    self_harm: bool = False) -> int:
+    def determine_damage(self,
+                         attacker: Pokemon,
+                         move: Move | str,
+                         critical: bool = False,
+                         self_harm: bool = False) -> int:
         """ダメージを計算してランダムに1つ選択する。
 
         Args:
@@ -598,14 +627,14 @@ class Battle:
         Returns:
             int: 計算されたダメージ値
         """
-        damages = self.calc_damages(attacker, move, critical, self_harm)
+        damages = self.determine_damage_range(attacker, move, critical, self_harm)
         return self.random.choice(damages)
 
-    def calc_damages(self,
-                     attacker: Pokemon,
-                     move: Move | str,
-                     critical: bool = False,
-                     self_harm: bool = False) -> list[int]:
+    def determine_damage_range(self,
+                               attacker: Pokemon,
+                               move: Move | str,
+                               critical: bool = False,
+                               self_harm: bool = False) -> list[int]:
         """可能なダメージ値のリストを計算する。
 
         乱数によるダメージ幅を考慮した全ての可能なダメージ値を返します。
@@ -622,8 +651,8 @@ class Battle:
         if isinstance(move, str):
             move = Move(move)
         defender = attacker if self_harm else self.foe(attacker)
-        ctx = DamageContext(critical, self_harm)
-        damages, ctx = self.damage_calculator.single_hit_damages(self.events, attacker, defender, move, ctx)
+        dmg_ctx = DamageContext(critical=critical, self_harm=self_harm)
+        damages, dmg_ctx = self.damage_calculator.calc_damage_range(attacker, defender, move, dmg_ctx)
         return damages
 
     def has_interrupt(self) -> bool:
