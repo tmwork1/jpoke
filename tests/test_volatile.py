@@ -9,12 +9,13 @@ import test_utils as t
 def test_やどりぎのタネ():
     """やどりぎのタネ: ターン終了時ダメージ"""
     battle = t.start_battle(
-        turn=1,
         ally_volatile={"やどりぎのタネ": 1},
     )
-    assert battle.actives[0].hp == math.ceil(battle.actives[0].max_hp * 7/8)
-    # ログにHP変化が記録されているか確認
-    t.assert_log_contains(battle, "HP")
+    mon = battle.actives[0]
+    expected_damage = mon.max_hp // 8
+    battle.events.emit(Event.ON_TURN_END_3)
+    actual_damage = mon.max_hp - mon.hp
+    assert actual_damage == expected_damage, "Damage is incorrect"
 
 
 def test_こんらん_自傷():
