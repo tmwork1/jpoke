@@ -51,6 +51,24 @@ MOVES: dict[str, MoveData] = {
     # -------------------------
     # 攻撃技
     # -------------------------
+    "わるあがき": MoveData(
+        type="ステラ",
+        category="物理",
+        pp=999,
+        power=40,
+        labels=["contact", "non_encore"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                partial(common.modify_hp, target_spec="attacker:self", r=-1/4),
+            )
+        }
+    ),
+    "こんらん": MoveData(
+        type="ステラ",
+        category="物理",
+        pp=999,
+        power=40,
+    ),
     "１０まんばりき": MoveData(
         type="じめん",
         category="物理",
@@ -2462,18 +2480,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         labels=["contact"],
-    ),
-    "わるあがき": MoveData(
-        type="ステラ",
-        category="物理",
-        pp=999,
-        power=40,
-        labels=["contact", "non_encore"],
-        handlers={
-            Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_hp, target_spec="attacker:self", r=-1/4),
-            )
-        }
     ),
     "１０まんボルト": MoveData(
         type="でんき",

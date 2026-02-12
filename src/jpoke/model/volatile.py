@@ -30,7 +30,10 @@ class Volatile(GameEffect):
         bench_reset()の実装は不要。
     """
 
-    def __init__(self, name: VolatileName = "", count: int = 1) -> None:
+    def __init__(self,
+                 name: VolatileName,
+                 count: int = 1,
+                 source: Pokemon | None = None) -> None:
         """揮発性状態を初期化する。
 
         Args:
@@ -38,11 +41,11 @@ class Volatile(GameEffect):
         """
         super().__init__(VOLATILES[name])
         self.count: int = count
+        self.source: Pokemon | None = source
         self.sub_hp: int = 0  # みがわりのHP管理用
         self.disabled_move_name: str = ""  # かなしばり用
         self.locked_move_name: str = ""  # アンコール用
         self.last_move_name: str = ""  # いちゃもん用
-        self.source_pokemon: Pokemon | None = None  # バインド等の使用者
 
     def __deepcopy__(self, memo):
         cls = self.__class__

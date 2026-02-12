@@ -61,7 +61,7 @@ def test_paralysis_action_disabled_high_rate():
     mon = battle.actives[0]
     mon.apply_ailment(battle, "まひ")
     # 必ず行動不能になる設定
-    battle.test_option.ailment_trigger_rate = 1.0
+    battle.test_option.trigger_ailment = True
     result = battle.events.emit(Event.ON_TRY_ACTION, BattleContext(attacker=mon), True)
     # HandlerReturnがFalseを返すことを確認（行動不能）
     assert not result, "Paralysis action disabled (trigger_rate=1.0)"
@@ -74,7 +74,7 @@ def test_paralysis_action_enabled_low_rate():
     mon.apply_ailment(battle, "まひ")
 
     # 必ず行動できる設定
-    battle.test_option.ailment_trigger_rate = 0.0
+    battle.test_option.trigger_ailment = False
     result = battle.events.emit(Event.ON_TRY_ACTION, BattleContext(attacker=mon), True)
     # 行動可能であることを確認（Noneではなくsuccessがあればよい）
     # ON_TRY_ACTIONはコントロールフロー用のイベントなのでNoneが返ることもある
@@ -174,7 +174,7 @@ def test_freeze_thaw_high_rate():
     mon.apply_ailment(battle, "こおり")
 
     # 必ず解凍される設定でテスト
-    battle.test_option.ailment_trigger_rate = 1.0
+    battle.test_option.trigger_ailment = True
     result = battle.events.emit(Event.ON_TRY_ACTION, BattleContext(attacker=mon), True)
     assert mon.ailment.name == "", "Freeze: Thaw failed (trigger_rate=1.0)"
 
@@ -190,7 +190,7 @@ def test_freeze_persist_low_rate():
     mon.apply_ailment(battle, "こおり")
 
     # 解凍されない設定でテスト
-    battle.test_option.ailment_trigger_rate = 0.0
+    battle.test_option.trigger_ailment = False
     result = battle.events.emit(Event.ON_TRY_ACTION, BattleContext(attacker=mon), True)
     assert mon.ailment.name == "こおり", "Freeze: Status persistence failed (trigger_rate=0.0)"
 

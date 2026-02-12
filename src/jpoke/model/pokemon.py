@@ -704,10 +704,10 @@ class Pokemon:
             急所ランク（volatileの急所ランク状態から取得）
 
         Note:
-            volatile["急所ランク"]が存在しない場合は0を返す。
+            volatile["きゅうしょアップ"]が存在しない場合は0を返す。
         """
-        if self.check_volatile("急所ランク"):
-            return self.volatiles["急所ランク"].count
+        if self.has_volatile("きゅうしょアップ"):
+            return self.volatiles["きゅうしょアップ"].count
         return 0
 
     @critical_rank.setter
@@ -718,18 +718,18 @@ class Pokemon:
             value: 設定する急所ランク値
 
         Note:
-            内部的にvolatile["急所ランク"]を管理するため、
+            内部的にvolatile["きゅうしょアップ"]を管理するため、
             テストやデバッグ用に使用される。
         """
         if value <= 0:
             # 急所ランクが0以下の場合は状態を削除
-            if self.check_volatile("急所ランク"):
-                del self.volatiles["急所ランク"]
+            if self.has_volatile("きゅうしょアップ"):
+                del self.volatiles["きゅうしょアップ"]
         else:
             # 急所ランク状態を作成または更新
-            if not self.check_volatile("急所ランク"):
-                self.volatiles["急所ランク"] = Volatile("急所ランク", count=0)
-            self.volatiles["急所ランク"].count = value
+            if not self.has_volatile("きゅうしょアップ"):
+                self.volatiles["きゅうしょアップ"] = Volatile("きゅうしょアップ", count=0)
+            self.volatiles["きゅうしょアップ"].count = value
 
     @property
     def sub_hp(self) -> int:
@@ -741,7 +741,7 @@ class Pokemon:
         Note:
             volatile["みがわり"]が存在しない場合は0を返す。
         """
-        if self.check_volatile("みがわり"):
+        if self.has_volatile("みがわり"):
             return self.volatiles["みがわり"].sub_hp
         return 0
 
@@ -758,11 +758,11 @@ class Pokemon:
         """
         if value <= 0:
             # sub_hpが0以下の場合は状態を削除
-            if self.check_volatile("みがわり"):
+            if self.has_volatile("みがわり"):
                 del self.volatiles["みがわり"]
         else:
             # みがわり状態を作成または更新
-            if not self.check_volatile("みがわり"):
+            if not self.has_volatile("みがわり"):
                 self.volatiles["みがわり"] = Volatile("みがわり", count=0)
             self.volatiles["みがわり"].sub_hp = value
 
@@ -932,7 +932,7 @@ class Pokemon:
         self.ailment = Ailment("")
         return True
 
-    def check_volatile(self, name: VolatileName) -> bool:
+    def has_volatile(self, name: VolatileName) -> bool:
         """指定された揮発性状態を持っているか判定する。
 
         Args:
@@ -947,13 +947,15 @@ class Pokemon:
                        battle: Battle,
                        name: VolatileName,
                        count: int = 1,
-                       source: Pokemon | None = None) -> bool:
+                       source: Pokemon | None = None,
+                       log: bool = True) -> bool:
         """揮発性状態を付与する。
 
         Args:
             battle: バトルインスタンス
             name: 揮発性状態名
             source: 揮発性状態の原因となったポケモン
+            log: ログ出力の有無
 
         Returns:
             付与に成功したTrue
@@ -962,34 +964,37 @@ class Pokemon:
             - force=Falseの場合、既に同じ揮発性状態があれば失敗
         """
         # 既に同じ揮発性状態がある場合は失敗
-        if self.check_volatile(name):
+        if self.has_volatile(name):
             return False
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
         if not battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
-            BattleContext(target=self, move=None, attacker=source, defender=None),
+            BattleContext(target=self, source=source),
             name
         ):
             return False
 
-        volatile = Volatile(name, count=count)
-        volatile.source_pokemon = source
+        volatile = Volatile(name, count=count, source=source)
         volatile.register_handlers(battle.events, self)
         self.volatiles[name] = volatile
+        if log:
+            battle.add_event_log(self, f"{name}付与")
         return True
 
     def remove_volatile(self,
                         battle: Battle,
                         name: VolatileName,
-                        source: Pokemon | None = None) -> bool:
+                        source: Pokemon | None = None,
+                        log: bool = True) -> bool:
         """揮発性状態を解除する。
 
         Args:
             battle: バトルインスタンス
             name: 揮発性状態名
             source: 解除の原因となったポケモン
+            log: ログ出力の有無
 
         Returns:
             解除に成功したTrue
@@ -997,7 +1002,27 @@ class Pokemon:
         Note:
             指定された揮発性状態がない場合は失敗する。
         """
-        if not self.check_volatile(name):
+        if not self.has_volatile(name):
             return False
         self.volatiles.pop(name).unregister_handlers(battle.events, self)
+        if log:
+            battle.add_event_log(self, f"{name}解除")
         return True
+
+    def tick_down_volatile(self, battle: Battle, name: VolatileName):
+        """揮発性状態のターン経過処理を実行する。
+
+        Args:
+            battle: バトルインスタンス
+            name: 揮発性状態名
+
+        Note:
+            揮発性状態のカウントを減少させ、
+            カウントが0になった状態を解除する。
+        """
+        if not self.has_volatile(name):
+            return
+        volatile = self.volatiles[name]
+        volatile.count -= 1
+        if volatile.count == 0:
+            self.remove_volatile(battle, name)

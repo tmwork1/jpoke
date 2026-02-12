@@ -32,8 +32,8 @@ def まひ_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
 def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まひ状態による行動不能チェック（25%確率）"""
     # テスト用に確率を固定できる
-    if battle.test_option.ailment_trigger_rate is not None:
-        trigger = battle.test_option.ailment_trigger_rate >= 0.25
+    if battle.test_option.trigger_ailment is not None:
+        trigger = battle.test_option.trigger_ailment
     else:
         trigger = battle.random.random() < 0.25
 
@@ -72,8 +72,8 @@ def ねむり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """こおり状態による行動不能チェック（20%確率で解凍）"""
     # テスト用に確率を固定できる
-    if battle.test_option.ailment_trigger_rate is not None:
-        thaw = battle.test_option.ailment_trigger_rate >= 0.2
+    if battle.test_option.trigger_ailment is not None:
+        thaw = battle.test_option.trigger_ailment
     else:
         thaw = battle.random.random() < 0.2
 

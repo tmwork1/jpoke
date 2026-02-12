@@ -38,6 +38,11 @@ class TurnController:
         """
         self.battle = battle
 
+    @property
+    def events(self):
+        """BattleのEventManagerへの参照を返す。"""
+        return self.battle.events
+
     def init_turn(self):
         """ターンを初期化し、各プレイヤーの状態をリセット。"""
         for player in self.battle.players:
@@ -142,7 +147,7 @@ class TurnController:
                     self.battle.add_command_log(player, command)
 
             # 行動前の処理
-            self.battle.events.emit(Event.ON_BEFORE_ACTION)
+            self.events.emit(Event.ON_BEFORE_ACTION)
 
         # 交代処理
         for mon in self.battle.determine_speed_order():
@@ -177,13 +182,18 @@ class TurnController:
             if not self.battle.has_interrupt():
                 self.battle.add_event_log(player, f"{player.active.name}の行動")
 
-                # 技の発動
+                # コマンドを取得
                 command = player.reserved_commands.pop(0)
+
+                # 技に変換
                 move = self.battle.command_to_move(player, command)
 
                 # 行動前の処理（各ポケモンごとに技を渡して発火）
-                ctx = BattleContext(source=mon, target=mon)
-                result_move = self.battle.events.emit(Event.ON_BEFORE_MOVE, ctx=ctx, value=move)
+                result_move = self.events.emit(
+                    Event.ON_CHECK_MOVE,
+                    ctx=BattleContext(attacker=mon, defender=self.battle.foe(mon), move=move),
+                    value=move
+                )
 
                 # ハンドラーが技をNoneにした場合（ブロック）はスキップ
                 if result_move is not None:
@@ -209,35 +219,35 @@ class TurnController:
 
         # ターン終了時の処理 (1)
         if not self.battle.has_interrupt():
-            self.battle.events.emit(Event.ON_TURN_END_1)
+            self.events.emit(Event.ON_TURN_END_1)
 
         # ききかいひによる交代 (1)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (2)
         if not self.battle.has_interrupt():
-            self.battle.events.emit(Event.ON_TURN_END_2)
+            self.events.emit(Event.ON_TURN_END_2)
 
         # ききかいひによる交代 (2)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (3)
         if not self.battle.has_interrupt():
-            self.battle.events.emit(Event.ON_TURN_END_3)
+            self.events.emit(Event.ON_TURN_END_3)
 
         # ききかいひによる交代 (3)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (4)
         if not self.battle.has_interrupt():
-            self.battle.events.emit(Event.ON_TURN_END_4)
+            self.events.emit(Event.ON_TURN_END_4)
 
         # ききかいひによる交代 (4)
         self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (5)
         if not self.battle.has_interrupt():
-            self.battle.events.emit(Event.ON_TURN_END_5)
+            self.events.emit(Event.ON_TURN_END_5)
 
             # だっしゅつパックによる割り込みフラグを更新
             self.battle.override_interrupt(Interrupt.EJECTPACK_ON_TURN_END)

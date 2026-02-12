@@ -35,11 +35,14 @@ class TestOption:
 
     Attributes:
         accuracy: 命中率の固定値（Noneの場合は通常計算）
-        ailment_trigger_rate: 状態異常の確率的発動の固定値（Noneの場合は通常の乱数判定）
-            例: 1.0 = 必ず発動, 0.0 = 必ず発動しない
+        trigger_ailment: 状態異常の確率的発動の固定値（Noneの場合は通常の乱数判定）
+            例: True = 必ず発動, False = 必ず発動しない
+        trigger_volatile: 変動状態の確率的発動の固定値（Noneの場合は通常の乱数判定）
+            例: True = 必ず発動, False = 必ず発動しない
     """
     accuracy: int | None = None
-    ailment_trigger_rate: float | None = None
+    trigger_ailment: bool | None = None
+    trigger_volatile: bool | None = None
 
 
 class Battle:
@@ -61,10 +64,10 @@ class Battle:
         switch_manager: 交代管理
         turn_controller: ターン進行制御
         speed_calculator: 素早さ計算機
-        weather_mgr: 天候管理
-        terrain_mgr: フィールド管理
-        field_mgr: グローバル場の状態管理
-        side_mgrs: 各プレイヤー側の場の状態管理
+        weather_manager: 天候管理
+        terrain_manager: フィールド管理
+        field_manager: グローバル場の状態管理
+        side_manager: 各プレイヤー側の場の状態管理
         test_option: テスト用オプション設定
     """
 

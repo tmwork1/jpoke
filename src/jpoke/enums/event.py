@@ -26,7 +26,7 @@ class Event(Enum):
     ON_BEFORE_ACTION = auto()  # emit: core/turn_controller.py; handlers: data/ailment.py,data/volatile.py
     ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py,data/field.py
     ON_SWITCH_OUT = auto()  # emit: core/switch_manager.py
-    ON_BEFORE_MOVE = auto()  # emit: core/turn_controller.py; handlers: data/volatile.py
+    ON_CHECK_MOVE = auto()  # emit: core/turn_controller.py; handlers: data/volatile.py
     ON_TRY_ACTION = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_ACTION
     ON_CONSUME_PP = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_CONSUME_PP
     ON_TRY_MOVE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_MOVE

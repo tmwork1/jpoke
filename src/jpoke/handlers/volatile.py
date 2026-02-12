@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec, LogPolicy
+from jpoke.utils.type_defs import RoleSpec, LogPolicy, VolatileName
 from jpoke.enums import Event
 from jpoke.core import Handler, HandlerReturn
 from . import common
@@ -23,76 +23,39 @@ class VolatileHandler(Handler):
         super().__init__(func, subject_spec, "volatile", log, None, priority)
 
 
+def remove_volatile(battle: Battle, ctx: BattleContext, value: Any,
+                    name: VolatileName, log: bool = False) -> HandlerReturn:
+    """揮発状態の解除処理
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値（未使用）
+        name: 対象の揮発状態名
+    """
+    ctx.source.remove_volatile(battle, name, log=log)
+    return HandlerReturn()
+
+
+def tick_down_volatile(battle: Battle, ctx: BattleContext, value: Any, name: VolatileName) -> HandlerReturn:
+    """揮発状態のターン経過処理
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値（未使用）
+        name: 対象の揮発状態名
+    """
+    ctx.source.tick_down_volatile(battle, name)
+    return HandlerReturn()
+
+
 def _protect_block(battle: Battle, ctx: BattleContext, value: Any) -> bool:
     if not ctx.move:
         return False
     if "unprotectable" in ctx.move.data.labels or "anti_protect" in ctx.move.data.labels:
         return False
     return True
-
-
-def あくむ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """あくむのターン終了時ダメージ
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    # ねむり状態でない場合は解除
-    if ctx.source.ailment.name != "ねむり":
-        ctx.source.remove_volatile("あくむ")
-        return HandlerReturn(True)
-
-    # ダメージ適用（最大HPの1/4）
-    damage = max(1, ctx.source.max_hp // 4)
-    battle.modify_hp(ctx.source, v=-damage)
-    battle.add_event_log(ctx.source, "はあくむにうなされている！")
-
-    return HandlerReturn(True)
-
-
-def あめまみれ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """あめまみれのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["あめまみれ"].tick_down()
-    if ctx.source.volatiles["あめまみれ"].count <= 0:
-        ctx.source.remove_volatile("あめまみれ")
-        battle.add_event_log(ctx.source, "のあめまみれが解けた！")
-    return HandlerReturn(True)
-
-
-def あばれる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """あばれる状態を付与する
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 成功時True
-    """
-    user = ctx.attacker
-    if not user:
-        return HandlerReturn(False)
-
-    count = battle.random.randint(2, 3)
-    if not user.apply_volatile(battle, "あばれる", count=count, source=user):
-        return HandlerReturn(False)
-    user.volatiles["あばれる"].locked_move_name = ctx.move.name if ctx.move else ""
-    return HandlerReturn(True)
 
 
 def あばれる_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -119,7 +82,7 @@ def あばれる_before_move(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(True)
 
 
-def あばれる_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def あばれる_after_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
 
     Args:
@@ -130,13 +93,62 @@ def あばれる_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Han
     Returns:
         HandlerReturn: 常にTrue
     """
-    ctx.source.volatiles["あばれる"].tick_down()
-    if ctx.source.volatiles["あばれる"].count <= 0:
-        # あばれる終了後にこんらん状態へ
-        ctx.source.remove_volatile("あばれる")
-        battle.add_event_log(ctx.source, "はあばれた後こんらんした！")
+    ctx.source.tick_down_volatile(battle, "あばれる")
+    if not ctx.source.has_volatile("あばれる"):
         # こんらん状態を付与 (1~4ターン)
-        ctx.source.apply_volatile(battle, "こんらん", source=ctx.source)
+        ctx.source.apply_volatile(battle, "こんらん", count=battle.random.randint(1, 4))
+    return HandlerReturn(True)
+
+
+def あめまみれ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """あめまみれのターン経過処理
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: 常にTrue
+    """
+    tick_down_volatile(battle, ctx, value, "あめまみれ")
+    if ctx.source.has_volatile("あめまみれ"):
+        ctx.source.modify_stats({"S": -1}, source=battle.foe(ctx.source))
+    return HandlerReturn(True)
+
+
+def アンコール_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """アンコールによる技の固定
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 使用しようとしている技（Move）
+
+    Returns:
+        HandlerReturn: 固定技以外の場合は差し替える
+    """
+    move = value
+    if move is None:
+        return HandlerReturn(True)
+
+    volatile = ctx.target.volatiles.get("アンコール") if ctx.target else None
+    if not volatile:
+        return HandlerReturn(True)
+
+    if not volatile.locked_move_name:
+        if ctx.target.executed_move:
+            volatile.locked_move_name = ctx.target.executed_move.name
+        else:
+            ctx.target.remove_volatile(battle.events, "アンコール")
+            return HandlerReturn(True)
+
+    locked = volatile.locked_move_name
+    if move.name != locked:
+        forced = ctx.target.find_move(locked)
+        if forced and forced.pp > 0:
+            return HandlerReturn(True, forced)
+        ctx.target.remove_volatile(battle.events, "アンコール")
     return HandlerReturn(True)
 
 
@@ -227,25 +239,6 @@ def おんねん_on_faint(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(True)
 
 
-def かいふくふうじ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """かいふくふうじのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["かいふくふうじ"].tick_down()
-    if ctx.source.volatiles["かいふくふうじ"].count <= 0:
-        ctx.source.volatiles["かいふくふうじ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["かいふくふうじ"]
-        battle.add_event_log(ctx.source, "のかいふくふうじが解けた！")
-    return HandlerReturn(True)
-
-
 def かえんのまもり_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かえんのまもりの保護判定とやけど付与
 
@@ -310,25 +303,6 @@ def かなしばり_before_move(battle: Battle, ctx: BattleContext, value: Any) 
     return HandlerReturn(True)
 
 
-def かなしばり_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """かなしばりのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["かなしばり"].tick_down()
-    if ctx.source.volatiles["かなしばり"].count <= 0:
-        ctx.source.volatiles["かなしばり"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["かなしばり"]
-        battle.add_event_log(ctx.source, "のかなしばりが解けた！")
-    return HandlerReturn(True)
-
-
 def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 
@@ -341,61 +315,31 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         HandlerReturn: 自傷した場合はFalse（行動中断）、しなかった場合はTrue
     """
     # ターンカウント減少（1～4ターンで自然治癒）
-    ctx.target.volatiles["こんらん"].tick_down()
-    if ctx.target.volatiles["こんらん"].count <= 0:
-        ctx.target.volatiles["こんらん"].unregister_handlers(battle.events, ctx.target)
-        del ctx.target.volatiles["こんらん"]
-        battle.add_event_log(ctx.target, f"の混乱が解けた！")
-        return HandlerReturn(True)
+    ctx.attacker.tick_down_volatile(battle, "こんらん")
+
+    # カウントが0になったら解除
+    if not ctx.attacker.has_volatile("こんらん"):
+        return HandlerReturn(value=True)
+
+    battle.add_event_log(ctx.attacker, "は混乱している！")
 
     # テスト用に確率を固定できる
-    if battle.test_option.ailment_trigger_rate is not None:
-        confused = battle.test_option.ailment_trigger_rate >= 0.33
+    if battle.test_option.trigger_volatile is not None:
+        confused = battle.test_option.trigger_volatile
     else:
         confused = battle.random.random() < 0.33
 
     if confused:
-        # 自傷ダメージ計算（威力40の物理技、タイプ相性なし）
-        # レベル補正: (2 * level / 5 + 2)
-        level_factor = (2 * ctx.target.level / 5 + 2)
-        # 威力40
-        power = 40
-        # 攻撃と防御の比率（物理攻撃なので防御を使用）
-        attack = ctx.target.stats["A"]
-        defense = ctx.target.stats["B"]  # 物理攻撃なので防御(B)を使用
-        # ベースダメージ
-        base_damage = int(level_factor * power * attack / defense / 50) + 2
-        # ランダム補正（85～100%）
-        random_factor = battle.random.randint(85, 100) / 100
-        damage = int(base_damage * random_factor)
-
+        damage = battle.determine_damage(
+            attacker=ctx.attacker,
+            move="こんらん",
+            self_harm=True,
+        )
         # ダメージ適用
-        actual_damage = battle.modify_hp(ctx.target, v=-damage)
-        if actual_damage:
-            battle.add_event_log(ctx.target, "は混乱している！")
-            battle.add_event_log(ctx.target, "は自分を攻撃した！")
+        battle.modify_hp(ctx.attacker, v=-damage)
+        battle.add_event_log(ctx.attacker, "は自分を攻撃した！")
         return HandlerReturn(False, stop_event=True)
 
-    battle.add_event_log(ctx.target, "は混乱している！")
-    return HandlerReturn(True)
-
-
-def さしおさえ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """さしおさえのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["さしおさえ"].tick_down()
-    if ctx.source.volatiles["さしおさえ"].count <= 0:
-        ctx.source.volatiles["さしおさえ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["さしおさえ"]
-        battle.add_event_log(ctx.source, "のさしおさえが解けた！")
     return HandlerReturn(True)
 
 
@@ -460,58 +404,6 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> H
     return HandlerReturn(False, value)
 
 
-def さわぐ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """さわぐ状態のターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["さわぐ"].tick_down()
-    if ctx.source.volatiles["さわぐ"].count <= 0:
-        ctx.source.volatiles["さわぐ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["さわぐ"]
-        battle.add_event_log(ctx.source, "のさわぐが静まった！")
-    return HandlerReturn(True)
-
-
-def そうでん_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """そうでん状態による技タイプ変換
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if ctx.move:
-        ctx.move._type = "でんき"
-    return HandlerReturn(True)
-
-
-def そうでん_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """そうでんのターン経過処理（ターン終了時に解除）
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if "そうでん" in ctx.source.volatiles:
-        ctx.source.volatiles["そうでん"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["そうでん"]
-    return HandlerReturn(True)
-
-
 def たくわえる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """たくわえるの蓄積処理
 
@@ -538,28 +430,6 @@ def たくわえる_apply(battle: Battle, ctx: BattleContext, value: Any) -> Han
 
     volatile.tick_up()
     battle.modify_stats(user, {"B": 1, "D": 1}, source=user)
-    return HandlerReturn(True)
-
-
-def たこがため_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """たこがためのターン終了時防御・特防ダウン
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    # 防御・特防を各1段階ダウン
-    if ctx.source.rank["B"] > -6:
-        ctx.source.rank["B"] -= 1
-        battle.add_event_log(ctx.source, "のぼうぎょが下がった！")
-    if ctx.source.rank["D"] > -6:
-        ctx.source.rank["D"] -= 1
-        battle.add_event_log(ctx.source, "のとくぼうが下がった！")
-
     return HandlerReturn(True)
 
 
@@ -621,25 +491,6 @@ def ちょうはつ_before_move(battle: Battle, ctx: BattleContext, value: Any) 
     return HandlerReturn(True)
 
 
-def ちょうはつ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ちょうはつのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["ちょうはつ"].tick_down()
-    if ctx.source.volatiles["ちょうはつ"].count <= 0:
-        ctx.source.volatiles["ちょうはつ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["ちょうはつ"]
-        battle.add_event_log(ctx.source, "のちょうはつが解けた！")
-    return HandlerReturn(True)
-
-
 def にげられない_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """にげられない状態による交代制限
 
@@ -665,14 +516,10 @@ def ねむけ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     Returns:
         HandlerReturn: 常にTrue
     """
-    ctx.source.volatiles["ねむけ"].tick_down()
-    if ctx.source.volatiles["ねむけ"].count <= 0:
-        # ねむり状態に移行
-        ctx.source.volatiles["ねむけ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["ねむけ"]
-        battle.add_event_log(ctx.source, "は眠ってしまった！")
+    ctx.source.tick_down_volatile(battle, "ねむけ")
+    if not ctx.source.has_volatile("ねむけ"):
         # ねむり状態を付与 (1~3ターン)
-        ctx.source.apply_ailment(battle.events, "ねむり", source=ctx.source)
+        ctx.source.apply_ailment(battle, "ねむり")
     return HandlerReturn(True)
 
 
@@ -701,7 +548,7 @@ def ひるみ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     Returns:
         HandlerReturn: 行動不能の場合はFalse
     """
-    if not ctx.target or not ctx.target.check_volatile("ひるみ"):
+    if not ctx.target or not ctx.target.has_volatile("ひるみ"):
         return HandlerReturn(True)
 
     ctx.target.remove_volatile(battle.events, "ひるみ")
@@ -720,7 +567,7 @@ def ひるみ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     Returns:
         HandlerReturn: 常にTrue
     """
-    if ctx.source and ctx.source.check_volatile("ひるみ"):
+    if ctx.source and ctx.source.has_volatile("ひるみ"):
         ctx.source.remove_volatile(battle.events, "ひるみ")
     return HandlerReturn(True)
 
@@ -759,10 +606,8 @@ def ほろびのうた_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
     Returns:
         HandlerReturn: 常にTrue
     """
-    ctx.source.volatiles["ほろびのうた"].tick_down()
-    if ctx.source.volatiles["ほろびのうた"].count <= 0:
-        ctx.source.volatiles["ほろびのうた"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["ほろびのうた"]
+    ctx.source.tick_down_volatile(battle, "ほろびのうた")
+    if not ctx.source.has_volatile("ほろびのうた"):
         # ひんしにする
         battle.modify_hp(ctx.source, v=-ctx.source.hp)
         battle.add_event_log(ctx.source, "はほろびのうたで倒れた！")
@@ -848,7 +693,7 @@ def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
         HandlerReturn: 成功時True
     """
     user = ctx.attacker
-    if not user or not user.check_volatile("みがわり"):
+    if not user or not user.has_volatile("みがわり"):
         return HandlerReturn(False)
 
     cost = user.max_hp // 4
@@ -879,7 +724,7 @@ def みがわり_before_damage_apply(battle: Battle, ctx: BattleContext, value: 
     if not ctx.defender or not ctx.move or not value:
         return HandlerReturn(False, value)
 
-    if not ctx.defender.check_volatile("みがわり"):
+    if not ctx.defender.has_volatile("みがわり"):
         return HandlerReturn(False, value)
 
     sub_hp = ctx.defender.volatiles["みがわり"].sub_hp
@@ -915,7 +760,7 @@ def みがわり_check_substitute(battle: Battle, ctx: BattleContext, value: Any
     if not ctx.defender or not ctx.move:
         return HandlerReturn(False, value)
 
-    if not ctx.defender.check_volatile("みがわり"):
+    if not ctx.defender.has_volatile("みがわり"):
         return HandlerReturn(False, value)
 
     sub_hp = ctx.defender.volatiles["みがわり"].sub_hp
@@ -929,117 +774,6 @@ def みがわり_check_substitute(battle: Battle, ctx: BattleContext, value: Any
         return HandlerReturn(True, True)
 
     return HandlerReturn(False, value)
-
-
-def じごくずき_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """じごくずきのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["じごくずき"].tick_down()
-    if ctx.source.volatiles["じごくずき"].count <= 0:
-        ctx.source.volatiles["じごくずき"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["じごくずき"]
-        battle.add_event_log(ctx.source, "のじごくずきが解けた！")
-    return HandlerReturn(True)
-
-
-def じゅうでん_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """じゅうでんのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["じゅうでん"].tick_down()
-    if ctx.source.volatiles["じゅうでん"].count <= 0:
-        ctx.source.volatiles["じゅうでん"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["じゅうでん"]
-        battle.add_event_log(ctx.source, "のじゅうでんが解けた！")
-    return HandlerReturn(True)
-
-
-def でんじふゆう_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """でんじふゆうのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["でんじふゆう"].tick_down()
-    if ctx.source.volatiles["でんじふゆう"].count <= 0:
-        ctx.source.volatiles["でんじふゆう"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["でんじふゆう"]
-        battle.add_event_log(ctx.source, "のでんじふゆうが解けた！")
-    return HandlerReturn(True)
-
-
-def アンコール_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """アンコールによる技の固定
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 使用しようとしている技（Move）
-
-    Returns:
-        HandlerReturn: 固定技以外の場合は差し替える
-    """
-    move = value
-    if move is None:
-        return HandlerReturn(True)
-
-    volatile = ctx.target.volatiles.get("アンコール") if ctx.target else None
-    if not volatile:
-        return HandlerReturn(True)
-
-    if not volatile.locked_move_name:
-        if ctx.target.executed_move:
-            volatile.locked_move_name = ctx.target.executed_move.name
-        else:
-            ctx.target.remove_volatile(battle.events, "アンコール")
-            return HandlerReturn(True)
-
-    locked = volatile.locked_move_name
-    if move.name != locked:
-        forced = ctx.target.find_move(locked)
-        if forced and forced.pp > 0:
-            return HandlerReturn(True, forced)
-        ctx.target.remove_volatile(battle.events, "アンコール")
-    return HandlerReturn(True)
-
-
-def アンコール_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """アンコールのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["アンコール"].tick_down()
-    if ctx.source.volatiles["アンコール"].count <= 0:
-        ctx.source.volatiles["アンコール"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["アンコール"]
-        battle.add_event_log(ctx.source, "のアンコールが解けた！")
-    return HandlerReturn(True)
 
 
 def キングシールド_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1130,25 +864,6 @@ def タールショット_damage_modifier(battle: Battle, ctx: BattleContext, va
     return HandlerReturn(False, value)
 
 
-def テレキネシス_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """テレキネシスのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    ctx.source.volatiles["テレキネシス"].tick_down()
-    if ctx.source.volatiles["テレキネシス"].count <= 0:
-        ctx.source.volatiles["テレキネシス"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["テレキネシス"]
-        battle.add_event_log(ctx.source, "のテレキネシスが解けた！")
-    return HandlerReturn(True)
-
-
 def トーチカ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """トーチカの保護判定とどく付与
 
@@ -1218,8 +933,8 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         HandlerReturn: 行動不能の場合はFalse、行動可能の場合はTrue
     """
     # テスト用に確率を固定できる
-    if battle.test_option.ailment_trigger_rate is not None:
-        infatuated = battle.test_option.ailment_trigger_rate >= 0.5
+    if battle.test_option.trigger_volatile is not None:
+        infatuated = battle.test_option.trigger_volatile
     else:
         infatuated = battle.random.random() < 0.5
 
@@ -1242,7 +957,7 @@ def ロックオン_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> 
         HandlerReturn: 必中の場合はNoneを返す
     """
     volatile = ctx.defender.volatiles.get("ロックオン") if ctx.defender else None
-    if volatile and volatile.source_pokemon is ctx.attacker:
+    if volatile and volatile.source is ctx.attacker:
         return HandlerReturn(True, None)
     return HandlerReturn(False, value)
 
@@ -1262,7 +977,7 @@ def ロックオン_on_hit(battle: Battle, ctx: BattleContext, value: Any) -> Ha
         return HandlerReturn(False)
 
     volatile = ctx.defender.volatiles.get("ロックオン")
-    if volatile and volatile.source_pokemon is ctx.attacker:
+    if volatile and volatile.source is ctx.attacker:
         volatile.unregister_handlers(battle.events, ctx.defender)
         del ctx.defender.volatiles["ロックオン"]
         return HandlerReturn(True)
@@ -1324,7 +1039,7 @@ def バインド_source_switch_out(battle: Battle, ctx: BattleContext, value: An
             if "バインド" in pokemon.volatiles:
                 volatile = pokemon.volatiles["バインド"]
                 # このバインドの使用者が交代するポケモンなら解除
-                if hasattr(volatile, 'source_pokemon') and volatile.source_pokemon is ctx.source:
+                if hasattr(volatile, 'source_pokemon') and volatile.source is ctx.source:
                     volatile.unregister_handlers(battle.events, pokemon)
                     del pokemon.volatiles["バインド"]
                     battle.add_event_log(pokemon, "のバインドが解けた！")
@@ -1380,26 +1095,6 @@ def 姿消し_check_invulnerable(battle: Battle, ctx: BattleContext, value: Any,
     return HandlerReturn(True, True)
 
 
-def 姿消し_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """姿消し状態のターン終了時処理（2ターン目で攻撃実行）
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    # カウントダウン
-    ctx.source.volatiles["姿消し"].tick_down()
-    if ctx.source.volatiles["姿消し"].count <= 0:
-        # 2ターン目で攻撃を実行（技の処理で行うため、ここでは状態解除のみ）
-        ctx.source.volatiles["姿消し"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["姿消し"]
-    return HandlerReturn(True)
-
-
 def 急所ランク_calc_critical(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """急所ランク状態による急所補正
 
@@ -1411,7 +1106,7 @@ def 急所ランク_calc_critical(battle: Battle, ctx: BattleContext, value: Any
     Returns:
         HandlerReturn: 補正後の急所ランク
     """
-    volatile = ctx.attacker.volatiles.get("急所ランク") if ctx.attacker else None
+    volatile = ctx.attacker.volatiles.get("きゅうしょアップ") if ctx.attacker else None
     if not volatile:
         return HandlerReturn(False, value)
 
