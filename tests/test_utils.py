@@ -66,6 +66,10 @@ def start_battle(ally: list[Pokemon] | None = None,
 
     battle = Battle(players)
 
+    # 0ターン目の進行
+    battle.advance_turn()
+    battle.print_logs()
+
     # 天候・地形の有効化
     if weather:
         name, weather_count = weather
@@ -97,12 +101,13 @@ def start_battle(ally: list[Pokemon] | None = None,
     if ally_volatile or foe_volatile:
         volatiles = [ally_volatile, foe_volatile]
         for idx, mon in enumerate(battle.actives):
-            if volatiles[idx]:
-                for name, count in volatiles[idx].items():
-                    mon.apply_volatile(battle, name, count=count)
+            if not volatiles[idx]:
+                continue
+            for name, count in volatiles[idx].items():
+                mon.apply_volatile(battle, name, count=count)
 
     # ターン進行
-    for _ in range(turn+1):
+    for _ in range(turn):
         battle.advance_turn()
         battle.print_logs()
         if battle.judge_winner():
