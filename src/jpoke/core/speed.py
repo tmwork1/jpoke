@@ -6,7 +6,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle, BattleContext, EventManager
     from jpoke.model import Move
 
 from jpoke.enums import DomainEvent
@@ -40,6 +40,11 @@ class SpeedCalculator:
         """
         self.battle = battle
 
+    @property
+    def events(self) -> EventManager:
+        """イベント管理システムへのショートカットプロパティ。"""
+        return self.battle.events
+
     def calc_effective_speed(self, mon: Pokemon) -> int:
         """ポケモンの実効素早さを計算。
 
@@ -57,7 +62,7 @@ class SpeedCalculator:
         Returns:
             補正後の実効素早さ
         """
-        return self.battle.domains.emit(
+        return self.battle.events.emit(
             DomainEvent.ON_CALC_SPEED,
             BattleContext(source=mon),
             mon.stats["S"]
@@ -84,7 +89,7 @@ class SpeedCalculator:
         base_speed = self.calc_effective_speed(mon)
 
         # 素早さ反転の適用
-        return self.battle.domains.emit(
+        return self.battle.events.emit(
             DomainEvent.ON_CHECK_SPEED_REVERSE,
             BattleContext(source=mon),
             base_speed
@@ -104,7 +109,7 @@ class SpeedCalculator:
         base_priority = move.priority if move else 0
 
         # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
-        return self.battle.domains.emit(
+        return self.battle.events.emit(
             DomainEvent.ON_MODIFY_MOVE_PRIORITY,
             BattleContext(attacker=attacker, move=move),
             base_priority

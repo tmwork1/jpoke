@@ -17,7 +17,6 @@ from jpoke.utils import fast_copy
 
 from jpoke.model import Pokemon, Move, Field
 
-from .domain import DomainManager
 from .event import EventManager
 from .context import BattleContext
 from .player import Player
@@ -88,11 +87,9 @@ class Battle:
         self.turn: int = -1
         self.winner_idx: int | None = None
 
-        self.domains = DomainManager(self)
-        self.events = EventManager(self)
-
-        self.logger = Logger()
         self.random = Random(self.seed)
+        self.events = EventManager(self)
+        self.logger = Logger()
 
         self.turn_controller: TurnController = TurnController(self)
         self.speed_calculator: SpeedCalculator = SpeedCalculator(self)

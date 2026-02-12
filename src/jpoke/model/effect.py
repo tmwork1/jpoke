@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, Self
 if TYPE_CHECKING:
-    from jpoke.core import DomainManager, EventManager, Handler, Player
+    from jpoke.core import EventManager, Handler, Player
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
@@ -113,7 +113,6 @@ class GameEffect:
         self._enabled = False
 
     def register_handlers(self,
-                          domains: DomainManager,
                           events: EventManager,
                           subject: Pokemon | Player) -> None:
         """イベントハンドラを登録する。
@@ -121,7 +120,6 @@ class GameEffect:
         効果が無効化されている場合は登録を行わない。
 
         Args:
-            domains: ドメインマネージャー
             events: イベントマネージャー
             subject: ハンドラの対象となるポケモンまたはプレイヤー
         """
@@ -129,43 +127,29 @@ class GameEffect:
             return
 
         for event, handler in self.data.handlers.items():
-            # Manegerを選択
-            if isinstance(event, DomainEvent):
-                manager = domains
-            else:
-                manager = events
-
             # handlerがリストの場合は各要素を登録
             if isinstance(handler, list):
                 for h in handler:
-                    manager.on(event, h, subject)
+                    events.on(event, h, subject)
             else:
-                manager.on(event, handler, subject)
+                events.on(event, handler, subject)
 
     def unregister_handlers(self,
-                            domains: DomainManager,
                             events: EventManager,
                             subject: Pokemon | Player) -> None:
         """イベントハンドラを解除する。
 
         Args:
-            domains: ドメインマネージャー
             events: イベントマネージャー
             subject: ハンドラの対象となるポケモンまたはプレイヤー
         """
         for event, handler in self.data.handlers.items():
-            # Manegerを選択
-            if isinstance(event, DomainEvent):
-                manager = domains
-            else:
-                manager = events
-
             # handlerがリストの場合は各要素を解除
             if isinstance(handler, list):
                 for h in handler:
-                    manager.off(event, h, subject)
+                    events.off(event, h, subject)
             else:
-                manager.off(event, handler, subject)
+                events.off(event, handler, subject)
 
     def __eq__(self, value: Self | str) -> bool:
         """等価性の比較を行う。

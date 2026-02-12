@@ -209,11 +209,11 @@ class Pokemon:
             observedフラグをTrueにする。
         """
         self.revealed = True
-        self.ability.register_handlers(battle.domains, battle.events, self)
-        self.item.register_handlers(battle.domains, battle.events, self)
-        self.ailment.register_handlers(battle.domains, battle.events, self)
+        self.ability.register_handlers(battle.events, self)
+        self.item.register_handlers(battle.events, self)
+        self.ailment.register_handlers(battle.events, self)
         for volatile in self.volatiles.values():
-            volatile.register_handlers(battle.domains, battle.events, self)
+            volatile.register_handlers(battle.events, self)
 
     def switch_out(self, battle: Battle):
         """ポケモンを引っ込める。
@@ -225,11 +225,11 @@ class Pokemon:
             バトル状態をリセットし、全てのハンドラを解除する。
         """
         self.bench_reset()
-        self.ability.unregister_handlers(battle.domains, battle.events, self)
-        self.item.unregister_handlers(battle.domains, battle.events, self)
-        self.ailment.unregister_handlers(battle.domains, battle.events, self)
+        self.ability.unregister_handlers(battle.events, self)
+        self.item.unregister_handlers(battle.events, self)
+        self.ailment.unregister_handlers(battle.events, self)
         for volatile in self.volatiles.values():
-            volatile.unregister_handlers(battle.domains, battle.events, self)
+            volatile.unregister_handlers(battle.events, self)
 
     @property
     def name(self) -> str:
@@ -910,10 +910,10 @@ class Pokemon:
 
         # 既存のハンドラを削除
         if self.ailment.is_active:
-            self.ailment.unregister_handlers(battle.domains, battle.events, self)
+            self.ailment.unregister_handlers(battle.events, self)
         # 新しい状態異常を設定してハンドラ登録
         self.ailment = Ailment(name)
-        self.ailment.register_handlers(battle.domains, battle.events, self)
+        self.ailment.register_handlers(battle.events, self)
         return True
 
     def cure_ailment(self, battle: Battle, source: Pokemon | None = None) -> bool:
@@ -928,7 +928,7 @@ class Pokemon:
         """
         if not self.ailment.is_active:
             return False
-        self.ailment.unregister_handlers(battle.domains, battle.events, self)
+        self.ailment.unregister_handlers(battle.events, self)
         self.ailment = Ailment("")
         return True
 
@@ -976,7 +976,7 @@ class Pokemon:
 
         volatile = Volatile(name, count=count)
         volatile.source_pokemon = source
-        volatile.register_handlers(battle.domains, battle.events, self)
+        volatile.register_handlers(battle.events, self)
         self.volatiles[name] = volatile
         return True
 
@@ -999,5 +999,5 @@ class Pokemon:
         """
         if not self.check_volatile(name):
             return False
-        self.volatiles.pop(name).unregister_handlers(battle.domains, battle.events, self)
+        self.volatiles.pop(name).unregister_handlers(battle.events, self)
         return True

@@ -5,7 +5,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle, DomainManager, EventManager
+    from jpoke.core import Battle, EventManager
 
 from jpoke.model import Pokemon, Move
 from jpoke.enums import Command
@@ -40,11 +40,6 @@ class MoveExecutor:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
-
-    @property
-    def domains(self) -> DomainManager:
-        """ドメイン管理システムへのショートカットプロパティ。"""
-        return self.battle.domains
 
     @property
     def events(self) -> EventManager:
@@ -158,7 +153,7 @@ class MoveExecutor:
         )
 
         # 技のハンドラを登録
-        move.register_handlers(self.domains, self.events, attacker)
+        move.register_handlers(self.events, attacker)
 
         # 行動成功判定（行動者自身を対象にする）
         if not self.events.emit(Event.ON_TRY_ACTION, ctx, True):
@@ -232,4 +227,4 @@ class MoveExecutor:
             self.events.emit(Event.ON_DAMAGE_2, ctx)
 
         # 技のハンドラを解除
-        move.unregister_handlers(self.domains, self.events, attacker)
+        move.unregister_handlers(self.events, attacker)

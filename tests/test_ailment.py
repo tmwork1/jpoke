@@ -2,7 +2,6 @@
 
 """状態異常ハンドラの単体テスト"""
 import pytest
-import math
 
 from jpoke.enums import Event
 from jpoke.core import BattleContext

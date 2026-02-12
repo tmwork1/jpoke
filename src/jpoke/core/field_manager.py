@@ -6,7 +6,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, get_args, Generic, TypeVar
 if TYPE_CHECKING:
-    from jpoke.core import Battle, Player, DomainManager, EventManager
+    from jpoke.core import Battle, Player, EventManager
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
@@ -70,12 +70,7 @@ class BaseFieldManager(Generic[T]):
                 continue
             # アクティブなフィールドのハンドラーを再登録
             for owner in new_owners:
-                field.register_handlers(self.domains, self.events, owner)
-
-    @property
-    def domains(self) -> DomainManager:
-        """ドメイン管理システムへのショートカットプロパティ。"""
-        return self.battle.domains
+                field.register_handlers(self.events, owner)
 
     @property
     def events(self) -> EventManager:

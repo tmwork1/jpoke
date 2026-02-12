@@ -65,7 +65,7 @@ class Field(GameEffect):
         """
         self.count = count
         for player in self.owners:
-            self.register_handlers(battle.domains, battle.events, player)
+            self.register_handlers(battle.events, player)
 
     def deactivate(self, battle: Battle):
         """フィールド効果を無効化する。
@@ -75,7 +75,7 @@ class Field(GameEffect):
         """
         self.count = 0
         for player in self.owners:
-            self.unregister_handlers(battle.domains, battle.events, player)
+            self.unregister_handlers(battle.events, player)
 
     @property
     def name(self) -> str:
