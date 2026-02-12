@@ -143,7 +143,7 @@ VOLATILES: dict[str, VolatileData] = {
     "きゅうしょアップ": VolatileData(
         handlers={
             Event.ON_MODIFY_CRITICAL_RANK: h.VolatileHandler(
-                h.急所ランク_calc_critical,
+                h.きゅうしょランク_calc_critical,
                 subject_spec="attacker:self",
                 log="never",
                 priority=50,
@@ -441,16 +441,10 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=50,
             ),
             Event.ON_HIT: h.VolatileHandler(
-                h.ロックオン_on_hit,
+                partial(h.remove_volatile, name="ロックオン"),
                 subject_spec="defender:self",
                 log="never",
                 priority=50,
-            ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
-                h.ロックオン_turn_end,
-                subject_spec="source:self",
-                log="never",
-                priority=100,
             ),
         }
     ),
