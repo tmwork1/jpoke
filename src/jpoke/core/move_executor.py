@@ -46,23 +46,6 @@ class MoveExecutor:
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def command_to_move(self, player, command: Command) -> Move:
-        """コマンドから技オブジェクトを取得。
-
-        Args:
-            player: プレイヤー
-            command: 実行するコマンド
-
-        Returns:
-            技オブジェクト
-        """
-        if command == Command.STRUGGLE:
-            return Move("わるあがき")
-        elif command.is_zmove():
-            return Move("わるあがき")
-        else:
-            return player.active.moves[command.idx]
-
     def check_hit(self, attacker: Pokemon, move: Move) -> bool:
         """技の命中判定。
 
@@ -146,14 +129,34 @@ class MoveExecutor:
             attacker: 攻撃側のポケモン
             move: 使用する技
         """
-        ctx = BattleContext(
-            attacker=attacker,
-            defender=self.battle.foe(attacker),
-            move=move
-        )
+        defender = self.battle.foe(attacker)
+        ctx = BattleContext(attacker=attacker, defender=defender)
+
+        # 技の変更 (アンコールなど)
+        move = self.events.emit(Event.ON_MODIFY_MOVE, ctx, move)
+
+        if move is None:
+            return
+
+        if isinstance(move, str):
+            move = Move(move)
+
+        ctx.move = move
 
         # 技のハンドラを登録
-        move.register_handlers(self.events, attacker)
+        ctx.move.register_handlers(self.events, attacker)
+
+        # 技の実行
+        self._execute_move(attacker, ctx)
+
+        # 技のハンドラを解除
+        ctx.move.unregister_handlers(self.events, attacker)
+
+    def _execute_move(self, attacker: Pokemon, ctx: BattleContext):
+        """技を実行する内部メソッド。
+        """
+        # 技の準備行動
+        self.events.emit(Event.ON_PREPARE_MOVE, ctx)
 
         # 行動成功判定（行動者自身を対象にする）
         if not self.events.emit(Event.ON_TRY_ACTION, ctx, True):
@@ -179,10 +182,10 @@ class MoveExecutor:
             return
 
         # 発動した技の確定
-        attacker.executed_move = move
+        attacker.executed_move = ctx.move
 
         # 命中判定（仕様書: ON_TRY_MOVE終了後のInterrupt）
-        if not self.check_hit(attacker, move):
+        if not self.check_hit(attacker, ctx.move):
             return
 
         # 無効判定（ON_TRY_IMMUNE: Priority 10-100）
@@ -192,11 +195,11 @@ class MoveExecutor:
             return
 
         # 急所判定
-        critical_rank = self.calc_critical_rank(attacker, move)
+        critical_rank = self.calc_critical_rank(attacker, ctx.move)
         critical = self.check_critical(critical_rank)
 
         # ダメージ計算
-        damage = self.battle.determine_damage(attacker, move, critical=critical)
+        damage = self.battle.determine_damage(attacker, ctx.move, critical=critical)
 
         # HPコストの支払い
         self.events.emit(Event.ON_PAY_HP, ctx)
@@ -211,9 +214,9 @@ class MoveExecutor:
         if damage:
             self.battle.modify_hp(ctx.defender, -damage)
 
-        # ひんし時の処理
-        if damage and ctx.defender and ctx.defender.hp == 0:
-            self.events.emit(Event.ON_FAINT, ctx)
+            # ひんし時の処理
+            if ctx.defender.hp == 0:
+                ctx.fainted = True
 
         # 技を当てたときの処理（ダメージ情報を含める）
         ctx.damage = damage
@@ -221,10 +224,4 @@ class MoveExecutor:
 
         # ダメージを与えたときの処理
         if damage:
-            self.events.emit(Event.ON_DAMAGE_1, ctx)
-
-        if damage:
-            self.events.emit(Event.ON_DAMAGE_2, ctx)
-
-        # 技のハンドラを解除
-        move.unregister_handlers(self.events, attacker)
+            self.events.emit(Event.ON_DAMAGE, ctx)

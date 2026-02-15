@@ -1,5 +1,3 @@
-# TODO: assert 文は英語表記
-
 """状態異常ハンドラの単体テスト"""
 import pytest
 

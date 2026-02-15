@@ -3,52 +3,98 @@
 """揮発性状態ハンドラの単体テスト"""
 from jpoke import Pokemon
 from jpoke.core import BattleContext
-from jpoke.enums import Event
+from jpoke.enums import Event, Command
 import test_utils as t
 
 
 def test_アクアリング():
     """アクアリング: ターン終了時回復"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        ally_volatile={"アクアリング": 1},
-    )
+    battle = t.start_battle(ally_volatile={"アクアリング": 1})
     battle.actives[0]._hp = 1
     expected_heal = battle.actives[0].max_hp // 16
     battle.events.emit(Event.ON_TURN_END_3)
-    assert battle.actives[0].hp == 1 + expected_heal
+    actual_heal = battle.actives[0].hp - 1
+    assert actual_heal == expected_heal, "Incorect heal amount"
     # ログにHP変化が含まれるか確認
-    t.assert_log_contains(battle, "HP")
+    t.assert_log_contains(battle, "アクアリング")
 
 
-def test_あばれる():
-    # TODO: 実装
-    pass
+def test_あばれる_action():
+    """あばれる: 強制行動"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["あばれる"])],
+    )
+    attacker = battle.actives[0]
+    attacker.apply_volatile(battle, "あばれる", count=2, move="あばれる")
+    commands = battle.get_available_action_commands(battle.players[0])
+    assert commands == [Command.RAMPAGE], "あばれる状態で強制行動コマンドが利用可能"
+
+    initial_pp = attacker.moves[0].pp
+    battle.advance_turn()  # 1ターン進める
+    battle.print_logs()
+    assert attacker.moves[0].pp == initial_pp, "あばれるで技のPPが消費されている"
+
+
+def test_あばれる_tick():
+    battle = t.start_battle(ally_volatile={"あばれる": 2})
+    attacker, defender = battle.actives
+    ctx = BattleContext(attacker=attacker, defender=defender)
+    battle.events.emit(Event.ON_DAMAGE, ctx)
+    assert attacker.volatiles["あばれる"].count == 1
+    battle.events.emit(Event.ON_DAMAGE, ctx)
+    assert not attacker.has_volatile("あばれる")
+    assert attacker.has_volatile("こんらん")
 
 
 def test_あめまみれ():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(ally_volatile={"あめまみれ": 2})
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert battle.actives[0].rank["S"] == -1
+    t.assert_log_contains(battle, "あめまみれ")
 
 
-def test_アンコール():
-    # TODO: 実装
-    pass
+def test_アンコール_modify_command_options():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
+    )
+    player = battle.players[0]
+    mon = player.active
+    mon.apply_volatile(battle, "アンコール", move="なきごえ")
+    commands = battle.get_available_action_commands(player)
+    assert commands == [Command.MOVE_1], "アンコールでencored_move_name以外の技が使用可能"
 
 
-def test_いちゃもん():
-    # TODO: 実装
-    pass
+def test_いちゃもん_modify_command_options():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
+    )
+    player = battle.players[0]
+    mon = player.active
+    mon.apply_volatile(battle, "いちゃもん", move="たいあたり")
+    commands = battle.get_available_action_commands(player)
+    assert all(cmd.idx == 1 for cmd in commands), "いちゃもんでlast_move_name以外の技が使用可能"
 
 
 def test_うちおとす():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ポッポ")],
+        ally_volatile={"うちおとす": 1}
+    )
+    assert not battle.actives[0].is_floating(battle)
 
 
 def test_おんねん():
-    # TODO: 実装保留
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_volatile={"おんねん": 1},
+    )
+    battle.actives[1]._hp = 1  # 確実にひんしになるようにHPを1にする
+    battle.advance_turn()  # 1ターン進める
+    battle.print_logs()
+    # おんねんで技のPPが0になっていることを確認
+    assert battle.actives[0].moves[0].pp == 0
+    # ログにおんねんメッセージが含まれるか確認
+    t.assert_log_contains(battle, "おんねん")
 
 
 def test_かいふくふうじ():
@@ -63,7 +109,7 @@ def test_かなしばり():
         ally_volatile={"かなしばり": 4},
     )
     # 禁止技を設定
-    battle.actives[0].volatiles["かなしばり"].disabled_move_name = "はねる"
+    battle.actives[0].volatiles["かなしばり"].move_name = "はねる"
     assert battle.actives[0].has_volatile("かなしばり")
 
 
@@ -125,8 +171,8 @@ def test_しおづけ():
     battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=battle.actives[0]), None)
     # しおづけダメージが発生
     assert battle.actives[0].hp == initial_hp - expected_damage
-    # ログにHP変化が含まれるか確認
-    t.assert_log_contains(battle, "HP")
+    # ログにしおづけメッセージが含まれるか確認
+    t.assert_log_contains(battle, "しおづけ")
 
 
 def test_じごくずき():
@@ -158,7 +204,7 @@ def test_ちょうはつ():
     # ひかりのかべ（変化技）を使おうとする
     initial_side_fields = len([f for f in battle.side_manager[0].fields.values() if f.is_active])
     ctx = BattleContext(source=battle.actives[0], target=battle.actives[0])
-    battle.events.emit(Event.ON_CHECK_MOVE, ctx, battle.actives[0].moves[0])
+    battle.events.emit(Event.ON_TRY_ACTION, ctx, battle.actives[0].moves[0])
     battle.print_logs()
     # ひかりのかべが発動していない（技が失敗した）
     active_side_fields = len([f for f in battle.side_manager[0].fields.values() if f.is_active])
@@ -198,8 +244,8 @@ def test_ねをはる_heal():
     expected_heal = battle.actives[0].max_hp // 16
     battle.events.emit(Event.ON_TURN_END_3)
     assert battle.actives[0].hp == 1 + expected_heal
-    # ログにHP変化が含まれるか確認
-    t.assert_log_contains(battle, "HP")
+    # ログにねをはるメッセージが含まれるか確認
+    t.assert_log_contains(battle, "ねをはる")
 
 
 def test_ねをはる_switch_denied():
@@ -222,8 +268,8 @@ def test_のろい():
     battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon), None)
     # のろいダメージが発生
     assert mon.hp == mon.max_hp - expected_damage
-    # ログにHP変化が含まれるか確認
-    t.assert_log_contains(battle, "HP")
+    # ログにのろいメッセージが含まれるか確認
+    t.assert_log_contains(battle, "のろい")
 
 
 def test_バインド_damage():

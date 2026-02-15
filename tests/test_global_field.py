@@ -1,5 +1,3 @@
-# TODO: assert 分は英語に統一する
-
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import math
 from jpoke import Battle, Pokemon

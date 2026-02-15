@@ -150,9 +150,9 @@ class TurnController:
             self.events.emit(Event.ON_BEFORE_ACTION)
 
         # 交代処理
-        for mon in self.battle.determine_speed_order():
+        for attacker in self.battle.determine_speed_order():
             # 交代フラグ
-            idx = self.battle.actives.index(mon)
+            idx = self.battle.actives.index(attacker)
             interrupt = Interrupt.ejectpack_on_switch(idx)
 
             # 交代
@@ -171,9 +171,12 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
+        # 行動前の処理 (テラスタルなど)
+        self.events.emit(Event.ON_BEFORE_MOVE)
+
         # 技の処理
-        for mon in self.battle.determine_action_order():
-            player = self.battle.find_player(mon)
+        for attacker in self.battle.determine_action_order():
+            player = self.battle.find_player(attacker)
 
             # 行動前に交代していたらスキップ
             if player.has_switched:
@@ -181,23 +184,11 @@ class TurnController:
 
             if not self.battle.has_interrupt():
                 self.battle.add_event_log(player, f"{player.active.name}の行動")
-
                 # コマンドを取得
                 command = player.reserved_commands.pop(0)
-
-                # 技に変換
+                # 技を実行
                 move = self.battle.command_to_move(player, command)
-
-                # 行動前の処理（各ポケモンごとに技を渡して発火）
-                result_move = self.events.emit(
-                    Event.ON_CHECK_MOVE,
-                    ctx=BattleContext(attacker=mon, defender=self.battle.foe(mon), move=move),
-                    value=move
-                )
-
-                # ハンドラーが技をNoneにした場合（ブロック）はスキップ
-                if result_move is not None:
-                    self.battle.run_move(mon, result_move)
+                self.battle.run_move(attacker, move)
 
             # だっしゅつボタンによる交代
             self.battle.run_interrupt_switch(Interrupt.EJECTBUTTON)

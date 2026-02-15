@@ -23,10 +23,15 @@ class Event(Enum):
     行動順に関与するものは enums/domain.py に分離されている。
     """
     # アクション系イベント（emit/handlerの主な参照先）
-    ON_BEFORE_ACTION = auto()  # emit: core/turn_controller.py; handlers: data/ailment.py,data/volatile.py
     ON_SWITCH_IN = auto()  # emit: core/switch_manager.py; handlers: data/ability.py,data/field.py
     ON_SWITCH_OUT = auto()  # emit: core/switch_manager.py
-    ON_CHECK_MOVE = auto()  # emit: core/turn_controller.py; handlers: data/volatile.py
+
+    ON_MODIFY_COMMAND_OPTIONS = auto()  # emit: core/battle.py get_available_commands; handlers: data/ability.py,data/field.py
+    ON_BEFORE_ACTION = auto()  # emit: core/turn_controller.py; handlers: data/ailment.py,data/volatile.py
+    ON_BEFORE_MOVE = auto()
+    ON_MODIFY_MOVE = auto()
+    ON_PREPARE_MOVE = auto()
+
     ON_TRY_ACTION = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_ACTION
     ON_CONSUME_PP = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_CONSUME_PP
     ON_TRY_MOVE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_TRY_MOVE
@@ -39,11 +44,8 @@ class Event(Enum):
     ON_PAY_HP = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_PAY_HP
     ON_MODIFY_DAMAGE = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_MODIFY_DAMAGE
     ON_BEFORE_DAMAGE_APPLY = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_BEFORE_DAMAGE_APPLY
-    ON_FAINT = auto()  # emit: core/move_executor.py | spec: turn_flow.md ON_FAINT
     ON_MOVE_SECONDARY = auto()  # 未使用
-    ON_DAMAGE_1 = auto()  # emit: core/move_executor.py; handlers: data/item.py
-    ON_DAMAGE_2 = auto()  # emit: core/move_executor.py
-    ON_AFTER_PIVOT = auto()  # 未使用
+    ON_DAMAGE = auto()  # emit: core/move_executor.py; handlers: data/item.py
 
     # ターン終了イベント
     ON_TURN_END_1 = auto()  # emit: core/turn_controller.py; handlers: data/field.py,data/ailment.py,data/volatile.py

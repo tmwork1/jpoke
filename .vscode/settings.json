@@ -5,6 +5,7 @@
     "terminal.integrated.env.windows": {
         "PYTHONPATH": "${workspaceFolder}/src"
     },
+    "python.defaultInterpreterPath": ".venv/Scripts/python.exe",
     "python.languageServer": "Pylance",
     "[python]": {
         "editor.defaultFormatter": "ms-python.autopep8",
@@ -13,19 +14,10 @@
     "autopep8.args": [
         "--max-line-length=150"
     ],
-    "chat.tools.terminal.autoApprove": {
-        "/^C:/Users/tmtmp/AppData/Local/Programs/Python/Python313/python\\.exe tests/ailment\\.py$/": {
-            "approve": true,
-            "matchCommandLine": true
-        },
-        "/^python tests/run\\.py field\\.py$/": {
-            "approve": true,
-            "matchCommandLine": true
-        }
-    },
+    // Testing
     "python.testing.pytestArgs": [
         "tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
+    "python.testing.pytestEnabled": true
 }

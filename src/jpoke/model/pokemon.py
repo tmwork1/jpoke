@@ -742,7 +742,7 @@ class Pokemon:
             volatile["みがわり"]が存在しない場合は0を返す。
         """
         if self.has_volatile("みがわり"):
-            return self.volatiles["みがわり"].sub_hp
+            return self.volatiles["みがわり"].hp
         return 0
 
     @sub_hp.setter
@@ -764,7 +764,7 @@ class Pokemon:
             # みがわり状態を作成または更新
             if not self.has_volatile("みがわり"):
                 self.volatiles["みがわり"] = Volatile("みがわり", count=0)
-            self.volatiles["みがわり"].sub_hp = value
+            self.volatiles["みがわり"].hp = value
 
     def find_move(self, move: Move | str) -> Move | None:
         """技を検索する。
@@ -791,7 +791,7 @@ class Pokemon:
         Note:
             タイプや特性、技の効果を考慮して判定する。
         """
-        floating = "ひこう" in self.types
+        floating = self.has_type("ひこう")
         floating &= battle.events.emit(
             Event.ON_CHECK_FLOATING,
             BattleContext(source=self),
@@ -816,7 +816,7 @@ class Pokemon:
             BattleContext(source=self),
             False
         )
-        trapped &= "ゴースト" not in self.types
+        trapped &= not self.has_type("ゴースト")
         return trapped
 
     def is_nervous(self, battle: Battle) -> bool:
@@ -947,15 +947,17 @@ class Pokemon:
                        battle: Battle,
                        name: VolatileName,
                        count: int = 1,
-                       source: Pokemon | None = None,
-                       log: bool = True) -> bool:
+                       move: Move | str = "",
+                       hp: int = 0,
+                       source: Pokemon | None = None) -> bool:
         """揮発性状態を付与する。
 
         Args:
             battle: バトルインスタンス
             name: 揮発性状態名
+            move: 関連する技オブジェクトまたは技名
+            hp: 関連するHP値
             source: 揮発性状態の原因となったポケモン
-            log: ログ出力の有無
 
         Returns:
             付与に成功したTrue
@@ -976,25 +978,24 @@ class Pokemon:
         ):
             return False
 
-        volatile = Volatile(name, count=count, source=source)
+        if isinstance(move, Move):
+            move = move.name
+
+        volatile = Volatile(name, count=count, move_name=move, hp=hp)
         volatile.register_handlers(battle.events, self)
         self.volatiles[name] = volatile
-        if log:
-            battle.add_event_log(self, f"{name}付与")
         return True
 
     def remove_volatile(self,
                         battle: Battle,
                         name: VolatileName,
-                        source: Pokemon | None = None,
-                        log: bool = True) -> bool:
+                        source: Pokemon | None = None) -> bool:
         """揮発性状態を解除する。
 
         Args:
             battle: バトルインスタンス
             name: 揮発性状態名
             source: 解除の原因となったポケモン
-            log: ログ出力の有無
 
         Returns:
             解除に成功したTrue
@@ -1005,24 +1006,4 @@ class Pokemon:
         if not self.has_volatile(name):
             return False
         self.volatiles.pop(name).unregister_handlers(battle.events, self)
-        if log:
-            battle.add_event_log(self, f"{name}解除")
         return True
-
-    def tick_down_volatile(self, battle: Battle, name: VolatileName):
-        """揮発性状態のターン経過処理を実行する。
-
-        Args:
-            battle: バトルインスタンス
-            name: 揮発性状態名
-
-        Note:
-            揮発性状態のカウントを減少させ、
-            カウントが0になった状態を解除する。
-        """
-        if not self.has_volatile(name):
-            return
-        volatile = self.volatiles[name]
-        volatile.count -= 1
-        if volatile.count == 0:
-            self.remove_volatile(battle, name)

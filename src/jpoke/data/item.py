@@ -340,7 +340,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=30,
         handlers={
-            Event.ON_DAMAGE_1: h.ItemHandler(
+            Event.ON_DAMAGE: h.ItemHandler(
                 h.だっしゅつボタン,
                 subject_spec="defender:self",
             )

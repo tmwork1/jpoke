@@ -42,8 +42,8 @@ def common_setup() -> None:
 # TODO: 追加効果が登録されているイベントを修正
 # ON_PAY_HP : HPコスト消費
 # ON_HIT : attackerのランク変動、hp吸収による回復など
-# ON_DAMAGE_1 : defenderのランク変動など
-# ON_DAMAGE_2 : 反動ダメージなど
+# ON_DAMAGE : defenderのランク変動など
+# ON_DAMAGE : 反動ダメージなど
 # 詳細は docs/spec/turn_flow.md を参照
 
 # TODO: 定義内の空行を削除
@@ -123,7 +123,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=75,
         labels=["contact"],
         handlers={
-            Event.ON_DAMAGE_1: h.MoveHandler(
+            Event.ON_DAMAGE: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, chance=0.3,
                         target_spec="defender:self", source_spec="attacker:self")
             )
@@ -267,9 +267,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
-                v.あばれる_apply,
-            )
         }
     ),
     "あんこくきょうだ": MoveData(
@@ -5112,11 +5109,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
-                v.たくわえる_apply,
-            )
         }
     ),
     "たてこもる": MoveData(

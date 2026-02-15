@@ -405,17 +405,27 @@ class Battle:
         n = len(player.active.moves)
 
         # 通常技
-        commands = Command.move_commands()[:n]
+        commands = Command.regular_move_commands()[:n]
 
         # テラスタル
         if player.can_use_terastal():
             commands += Command.terastal_commands()[:n]
 
-        # わるあがき
-        if not commands:
-            commands = [Command.STRUGGLE]
+        # コマンド修正
+        commands = self.events.emit(
+            Event.ON_MODIFY_COMMAND_OPTIONS,
+            BattleContext(source=player.active),
+            commands
+        )
 
-        # 交代コマンド
+        if Command.RAMPAGE in commands:
+            return [Command.RAMPAGE]
+
+        # 技がない場合はわるあがきを追加
+        if not any(cmd.is_move_family() for cmd in commands):
+            commands += [Command.STRUGGLE]
+
+        # 交代コマンドを追加
         commands += self.get_available_switch_commands(player)
 
         return commands
@@ -492,8 +502,8 @@ class Battle:
         """
         self.move_executor.run_move(attacker, move)
 
-    def command_to_move(self, player: Player, command: Command) -> Move:
-        """コマンドから技オブジェクトを取得（MoveExecutorへの委譲）。
+    def command_to_move(self, player, command: Command) -> Move:
+        """コマンドから技オブジェクトを取得。
 
         Args:
             player: プレイヤー
@@ -502,7 +512,15 @@ class Battle:
         Returns:
             技オブジェクト
         """
-        return self.move_executor.command_to_move(player, command)
+        attacker = player.active
+        if command == Command.STRUGGLE:
+            return Move("わるあがき")
+        elif command == Command.RAMPAGE:
+            return Move(attacker.volatiles["あばれる"].move_name)
+        elif command.is_z_move():
+            return Move("わるあがき")
+        else:
+            return attacker.moves[command.idx]
 
     def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0) -> bool:
         """ポケモンのHPを変更する。

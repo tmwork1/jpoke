@@ -54,6 +54,8 @@ class BattleContext:
         self.field = field
         self.damage = damage
 
+        self.fainted: bool = False  # 攻撃によりひんしになったかどうかのフラグ
+
     @property
     def attacker(self) -> Pokemon | None:
         """攻撃側のポケモン（source のエイリアス）。"""

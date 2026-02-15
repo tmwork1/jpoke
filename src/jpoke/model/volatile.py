@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     from jpoke.core import EventManager
     from jpoke.model.pokemon import Pokemon
@@ -33,7 +33,8 @@ class Volatile(GameEffect):
     def __init__(self,
                  name: VolatileName,
                  count: int = 1,
-                 source: Pokemon | None = None) -> None:
+                 move_name: str = "",
+                 hp: int = 0):
         """揮発性状態を初期化する。
 
         Args:
@@ -41,11 +42,8 @@ class Volatile(GameEffect):
         """
         super().__init__(VOLATILES[name])
         self.count: int = count
-        self.source: Pokemon | None = source
-        self.sub_hp: int = 0  # みがわりのHP管理用
-        self.disabled_move_name: str = ""  # かなしばり用
-        self.locked_move_name: str = ""  # アンコール用
-        self.last_move_name: str = ""  # いちゃもん用
+        self.move_name: str = move_name  # あばれる用
+        self.hp: int = hp
 
     def __deepcopy__(self, memo):
         cls = self.__class__

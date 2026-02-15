@@ -19,10 +19,8 @@ class Command(Enum):
     - ZMOVE: Zワザ使用
     """
     # 特殊コマンド
-    NONE = auto()
-    STRUGGLE = auto()
-    FORCED = auto()
-    SKIP = auto()
+    STRUGGLE = auto()  # わるあがき
+    RAMPAGE = auto()  # あばれる（強制技）
 
     # 選出コマンド (0-9)
     SELECT_0 = auto()
@@ -125,7 +123,7 @@ class Command(Enum):
         """コマンドのインデックス (0-9)"""
         return int(self.name[-1])
 
-    def is_select(self) -> bool:
+    def is_selection(self) -> bool:
         """選出コマンドかどうか"""
         return self.name[:-2] == "SELECT"
 
@@ -133,35 +131,38 @@ class Command(Enum):
         """交代コマンドかどうか"""
         return self.name[:-2] == "SWITCH"
 
-    def is_move(self) -> bool:
+    def is_regular_move(self) -> bool:
         """技コマンドかどうか"""
         return self.name[:-2] == "MOVE"
 
-    def is_terastal(self) -> bool:
+    def is_terastal_move(self) -> bool:
         """テラスタルコマンドかどうか"""
         return self.name[:-2] == "TERASTAL"
 
-    def is_megaevol(self) -> bool:
+    def is_megaevol_move(self) -> bool:
         """メガシンカコマンドかどうか"""
         return self.name[:-2] == "MEGAEVOL"
 
-    def is_gigamax(self) -> bool:
+    def is_gigamax_move(self) -> bool:
         """ダイマックスコマンドかどうか"""
         return self.name[:-2] == "GIGAMAX"
 
-    def is_zmove(self) -> bool:
+    def is_z_move(self) -> bool:
         """Zワザコマンドかどうか"""
         return self.name[:-2] == "ZMOVE"
 
-    def is_action(self) -> bool:
-        """アクションコマンドかどうか（技系全般）"""
-        return self.is_move() or self.is_terastal() or \
-            self.is_megaevol() or self.is_gigamax() or self.is_zmove()
+    def is_move_family(self) -> bool:
+        """技系全般かどうか（）"""
+        return self.is_regular_move() or \
+            self.is_terastal_move() or \
+            self.is_megaevol_move() or \
+            self.is_gigamax_move() or \
+            self.is_z_move()
 
     @classmethod
     def selection_commands(cls):
         """全ての選出コマンドを取得"""
-        return [x for x in cls if x.is_select()]
+        return [x for x in cls if x.is_selection()]
 
     @classmethod
     def switch_commands(cls):
@@ -169,31 +170,31 @@ class Command(Enum):
         return [x for x in cls if x.is_switch()]
 
     @classmethod
-    def action_commands(cls):
-        """全てのアクションコマンドを取得"""
-        return [x for x in cls if x.is_action()]
+    def all_move_commands(cls):
+        """全ての技系コマンドを取得"""
+        return [x for x in cls if x.is_move_family()]
 
     @classmethod
-    def move_commands(cls):
+    def regular_move_commands(cls):
         """全ての技コマンドを取得"""
-        return [x for x in cls if x.is_move()]
+        return [x for x in cls if x.is_regular_move()]
 
     @classmethod
     def terastal_commands(cls):
         """全てのテラスタルコマンドを取得"""
-        return [x for x in cls if x.is_terastal()]
+        return [x for x in cls if x.is_terastal_move()]
 
     @classmethod
     def megaevol_commands(cls):
         """全てのメガシンカコマンドを取得"""
-        return [x for x in cls if x.is_megaevol()]
+        return [x for x in cls if x.is_megaevol_move()]
 
     @classmethod
     def gigamax_commands(cls):
         """全てのダイマックスコマンドを取得"""
-        return [x for x in cls if x.is_gigamax()]
+        return [x for x in cls if x.is_gigamax_move()]
 
     @classmethod
     def zmove_commands(cls):
         """全てのZワザコマンドを取得"""
-        return [x for x in cls if x.is_zmove()]
+        return [x for x in cls if x.is_z_move()]
