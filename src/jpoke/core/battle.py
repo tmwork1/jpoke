@@ -560,10 +560,9 @@ class Battle:
         """
         if r:
             v = int(from_.max_hp * r)
-        success = self.modify_hp(from_, -v)
-        if success:
-            return success, self.modify_hp(to_, v)
-        return success, False
+        if self.modify_hp(from_, -v):
+            return True, self.modify_hp(to_, v)
+        return False, False
 
     def modify_stat(self,
                     target: Pokemon,

@@ -11,6 +11,18 @@ from jpoke.utils.type_defs import ContextRole, RoleSpec, LogPolicy, EffectSource
 from jpoke.core.player import Player
 
 
+class HandlerReturn(NamedTuple):
+    """ハンドラ関数の戻り値。
+
+    - success: 処理が成功したか（または行われたか）どうか
+    - value: 補正値などの連鎖計算に使う値（省略可）
+    - stop_event: イベント処理を停止するかどうか（省略可）
+    """
+    success: bool = False
+    value: Any = None
+    stop_event: bool = False
+
+
 @dataclass
 class Handler:
     """ドメイン/イベントハンドラの定義。
@@ -25,10 +37,10 @@ class Handler:
     - subject_spec="source:self": トリガーの source（登場したポケモン）が自分自身の時に発動
     - target_spec="source:foe": 効果の対象は source から見て相手側のポケモン
     """
-    func: Callable
+    func: Callable[..., HandlerReturn]
     subject_spec: RoleSpec
     source_type: EffectSource | None = None
-    log: LogPolicy = "always"
+    log: LogPolicy = "on_success"
     log_text: str | None = None
     priority: int = 100
     once: bool = False
@@ -64,10 +76,10 @@ class Handler:
         if not subject:
             return
 
-        text = ""
         if self.log_text is not None:
             text = self.log_text
         else:
+            text = ""
             match self.source_type:
                 case "ability":
                     subject.ability.reveal()
@@ -81,25 +93,14 @@ class Handler:
                 case "ailment":
                     text = subject.ailment.name
                 case "volatile":
-                    text = self.log_text if self.log_text else ""
+                    # 揮発性状態は多岐にわたるため自動ログ機能はなし
+                    pass
 
-        if not success:
-            text += " 失敗"
+            if not success:
+                text += " 失敗"
 
         if text:
             battle.add_event_log(subject, text)
-
-
-class HandlerReturn(NamedTuple):
-    """ハンドラ関数の戻り値。
-
-    - success: 処理が成功したか（または行われたか）どうか
-    - value: 補正値などの連鎖計算に使う値（省略可）
-    - stop_event: イベント処理を停止するかどうか（省略可）
-    """
-    success: bool = False
-    value: Any = None
-    stop_event: bool = False
 
 
 @dataclass
