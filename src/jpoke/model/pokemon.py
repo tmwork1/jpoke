@@ -103,7 +103,7 @@ class Pokemon:
 
     def bench_reset(self):
         """ベンチに戻ったときのリセット処理"""
-        self.volatiles: dict[str, Volatile] = {}
+        self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}

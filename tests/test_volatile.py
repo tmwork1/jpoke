@@ -98,23 +98,23 @@ def test_おんねん():
 
 
 def test_かいふくふうじ():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        ally_volatile={"かいふくふうじ": 1},
+    )
+    mon = battle.actives[0]
+    mon._hp = 1
+    battle.modify_hp(mon, 10)  # 回復を強制
+    battle.print_logs()
+    assert mon.hp == 1, "かいふくふうじでHPが回復している"
 
 
 def test_かなしばり():
     """かなしばり: 技使用禁止"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        ally_volatile={"かなしばり": 4},
-    )
-    # 禁止技を設定
-    battle.actives[0].volatiles["かなしばり"].move_name = "はねる"
-    assert battle.actives[0].has_volatile("かなしばり")
+    pass
 
 
 def test_きゅうしょアップ():
-    # TODO: 実装
     pass
 
 

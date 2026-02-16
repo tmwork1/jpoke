@@ -150,34 +150,3 @@ class GameEffect:
                     events.off(event, h, subject)
             else:
                 events.off(event, handler, subject)
-
-    def __eq__(self, value: Self | str) -> bool:
-        """等価性の比較を行う。
-
-        文字列との比較では名前を比較し、
-        オブジェクトとの比較では同一性 (is) を確認する。
-
-        Args:
-            value: 比較対象 (GameEffect インスタンスまたは文字列)
-
-        Returns:
-            等しい場合 True、異なる場合 False
-        """
-        if isinstance(value, str):
-            return self.name == value
-        else:
-            return self is value
-
-    def __ne__(self, value: Self | str) -> bool:
-        """非等価性の比較を行う。
-
-        Args:
-            value: 比較対象 (GameEffect インスタンスまたは文字列)
-
-        Returns:
-            異なる場合 True、等しい場合 False
-        """
-        if isinstance(value, str):
-            return self.name != value
-        else:
-            return self is not value

@@ -134,12 +134,12 @@ class MoveExecutor:
 
         # 技の変更 (アンコールなど)
         move = self.events.emit(Event.ON_MODIFY_MOVE, ctx, move)
-
         if move is None:
             return
 
-        if isinstance(move, str):
-            move = Move(move)
+        # PPが0の技はわるあがきに置き換える
+        if move.pp == 0:
+            move = Move("わるあがき")
 
         ctx.move = move
 

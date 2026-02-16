@@ -5,7 +5,7 @@ Note:
 """
 from functools import partial
 
-from jpoke.enums import Event, Command
+from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 from jpoke.handlers import common, volatile as h
 from .models import VolatileData
@@ -42,7 +42,8 @@ VOLATILES: dict[str, VolatileData] = {
     "あばれる": VolatileData(
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=[Command.RAMPAGE], stop_event=True),
+                h.あばれる_modify_command_options,
+                subject_spec="source:self",
             ),
             Event.ON_DAMAGE: h.VolatileHandler(
                 h.あばれる_tick,
@@ -56,7 +57,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_TURN_END_3: h.VolatileHandler(
                 h.あめまみれ,
                 subject_spec="source:self",
-                log="on_success",
             ),
         }
     ),
@@ -66,7 +66,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.アンコール_modify_command_options,
                 subject_spec="source:self",
             ),
-            Event.ON_BEFORE_MOVE: h.VolatileHandler(
+            Event.ON_MODIFY_MOVE: h.VolatileHandler(
                 h.アンコール_modify_move,
                 subject_spec="attacker:self",
                 priority=200
@@ -74,7 +74,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(h.tick_volatile, name="アンコール"),
                 subject_spec="source:self",
-                log="on_success",
             ),
         }
     ),
@@ -91,7 +90,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CHECK_FLOATING: h.VolatileHandler(
                 lambda *args: HandlerReturn(value=False),
                 subject_spec="source:self",
-                log="never",
             ),
         }
     ),
@@ -105,33 +103,37 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_DAMAGE: h.VolatileHandler(
                 h.おんねん,
                 subject_spec="defender:self",
-                log="on_success",
                 priority=10
             ),
         }
     ),
     "かいふくふうじ": VolatileData(
         handlers={
+            Event.ON_BEFORE_HEAL: h.VolatileHandler(
+                h.かいふくふうじ,
+                subject_spec="target:self",
+            ),
             Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(h.tick_volatile, name="かいふくふうじ"),
                 subject_spec="source:self",
-                log="on_success",
                 priority=100
             ),
         }
     ),
     "かなしばり": VolatileData(
         handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.かなしばり_modify_command_options,
+                subject_spec="source:self",
+            ),
             Event.ON_TRY_ACTION: h.VolatileHandler(
-                h.かなしばり_before_move,
+                h.かなしばり_try_action,
                 subject_spec="attacker:self",
-                log="on_success",
-                priority=200
+                priority=100
             ),
             Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(h.tick_volatile, name="かなしばり"),
                 subject_spec="source:self",
-                log="on_success",
                 priority=100
             ),
         }
@@ -139,10 +141,8 @@ VOLATILES: dict[str, VolatileData] = {
     "きゅうしょアップ": VolatileData(
         handlers={
             Event.ON_MODIFY_CRITICAL_RANK: h.VolatileHandler(
-                h.きゅうしょランク_calc_critical,
+                h.きゅうしょアップ,
                 subject_spec="attacker:self",
-                log="never",
-                priority=50,
             ),
         }
     ),

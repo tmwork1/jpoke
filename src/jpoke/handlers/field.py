@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
-from jpoke.utils.type_defs import GlobalField, SideField
+from jpoke.utils.type_defs import GlobalField, SideField, VolatileName
 from jpoke.core import BattleContext, HandlerReturn
 
 
@@ -153,7 +153,7 @@ def ミストフィールド_prevent_ailment(battle: Battle, ctx: BattleContext,
     return HandlerReturn(False, value)
 
 
-def ミストフィールド_prevent_volatile(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ミストフィールド_prevent_volatile(battle: Battle, ctx: BattleContext, value: VolatileName) -> HandlerReturn:
     """ミストフィールドで混乱無効"""
     # valueは揮発状態名（VolatileName）
     if value == "こんらん" and not ctx.target.is_floating(battle):

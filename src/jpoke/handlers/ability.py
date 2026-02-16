@@ -118,7 +118,7 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
         HandlerReturn: (True, 補正後の素早さ)
             - すなあらし中は2倍、それ以外は元の値
     """
-    value = value * 2 if battle.weather == "すなあらし" else value
+    value = value * 2 if battle.weather.name == "すなあらし" else value
     return HandlerReturn(True, value)
 
 
@@ -141,7 +141,7 @@ def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerRetur
     return HandlerReturn(False, value)
 
 
-def ふみん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふみん特性: ねむり状態を防ぐ。
 
     Args:

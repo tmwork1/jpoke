@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy, VolatileName
-from jpoke.enums import Event
+from jpoke.enums import Event, Command
 from jpoke.core import Handler, HandlerReturn
 from . import common
 
@@ -83,6 +83,20 @@ def _protect_block(battle: Battle, ctx: BattleContext, value: Any) -> bool:
     return True
 
 
+def あばれる_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """あばれる状態によるコマンドオプション変更
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: あばれる状態の技コマンドのみを残したリスト
+    """
+    return HandlerReturn(value=[Command.RAMPAGE], stop_event=True)
+
+
 def あばれる_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
     解除されたらこんらん状態を付与する
@@ -110,15 +124,13 @@ def あめまみれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
         value: イベント値（未使用）
 
     Returns:
-        HandlerReturn: 常にTrue
+        HandlerReturn: 
     """
     tick_volatile(battle, ctx, value, "あめまみれ")
-    if ctx.source.has_volatile("あめまみれ"):
-        return common.modify_stats(
-            battle, ctx, value, {"S": -1},
-            target_spec="source:self", source_spec="source:foe"
-        )
-    return HandlerReturn(True)
+    mon = ctx.source
+    if mon.has_volatile("あめまみれ") and battle.modify_stat(mon, "S", -1):
+        battle.add_event_log(mon, "あめまみれ")
+    return HandlerReturn()
 
 
 def アンコール_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -155,15 +167,10 @@ def アンコール_modify_move(battle: Battle, ctx: BattleContext, value: Any) 
     Returns:
         HandlerReturn: 固定技以外の場合は差し替える
     """
-    move = ctx.move
-    volatile = ctx.attacker.volatiles["アンコール"]
-
-    if move != volatile.move_name:
-        forced = ctx.attacker.find_move(volatile.move_name)
-        if forced.pp == 0:
-            forced = "わるあがき"
-        return HandlerReturn(True, value=forced)
-    return HandlerReturn(True)
+    mon = ctx.attacker
+    volatile = mon.volatiles["アンコール"]
+    move = mon.find_move(volatile.move_name)
+    return HandlerReturn(value=move)
 
 
 def いちゃもん_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -177,11 +184,12 @@ def いちゃもん_modify_command_options(battle: Battle, ctx: BattleContext, v
     Returns:
         HandlerReturn: 新しいコマンドオプションのリスト
     """
-    last_move_name = ctx.attacker.volatiles["いちゃもん"].move_name
+    mon = ctx.attacker
+    last_move_name = mon.volatiles["いちゃもん"].move_name
     new_options = []
     for cmd in value:
         if not cmd.is_move_family() or \
-                ctx.attacker.moves[cmd.idx].name != last_move_name:
+                mon.moves[cmd.idx].name != last_move_name:
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
 
@@ -200,11 +208,48 @@ def おんねん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     if ctx.fainted and ctx.move:
         ctx.move.pp = 0
         battle.add_event_log(ctx.attacker, f"おんねんで{ctx.move.name}のPPが0になった！")
-        return HandlerReturn(True)
-    return HandlerReturn(False)
+    return HandlerReturn()
 
 
-def かなしばり_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かいふくふうじ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """
+    かいふくふうじ状態による回復無効化
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 回復量
+
+    Returns:
+        HandlerReturn: 回復無効化の場合は0、それ以外は元の回復量
+    """
+    if value > 0:
+        battle.add_event_log(ctx.target, "回復不可")
+        value = 0
+    return HandlerReturn(value=value)
+
+
+def かなしばり_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かなしばりによるコマンドオプション変更
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: 新しいコマンドオプションのリスト
+    """
+    forbidden_name = ctx.attacker.volatiles["かなしばり"].move_name
+    new_options = []
+    for cmd in value:
+        if not cmd.is_move_family() or \
+                ctx.attacker.moves[cmd.idx].name != forbidden_name:
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
+
+
+def かなしばり_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かなしばりによる技の使用禁止
 
     Args:
@@ -215,24 +260,14 @@ def かなしばり_before_move(battle: Battle, ctx: BattleContext, value: Any) 
     Returns:
         HandlerReturn: 禁止技の場合はvalue=None、それ以外はTrue
     """
-    # valueはMoveオブジェクト
-    move = value
-
-    # moveがNoneの場合はスキップ
-    if move is None:
-        return HandlerReturn(True)
-
-    volatile = ctx.attacker.volatiles.get("かなしばり")
-
-    if volatile and hasattr(volatile, 'disabled_move_name'):
-        if move.name == volatile.move_name:
-            battle.add_event_log(ctx.attacker, f"は{move.name}を使えない！")
-            return HandlerReturn(False, value=None, stop_event=True)
-
-    return HandlerReturn(True)
+    volatile = ctx.attacker.volatiles["かなしばり"]
+    if ctx.move.name == volatile.move_name:
+        battle.add_event_log(ctx.attacker, "かなしばりで技が使えない")
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
-def きゅうしょランク_calc_critical(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def きゅうしょアップ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """急所ランク状態による急所補正
 
     Args:
@@ -243,12 +278,8 @@ def きゅうしょランク_calc_critical(battle: Battle, ctx: BattleContext, v
     Returns:
         HandlerReturn: 補正後の急所ランク
     """
-    volatile = ctx.attacker.volatiles.get("きゅうしょアップ") if ctx.attacker else None
-    if not volatile:
-        return HandlerReturn(False, value)
-
-    bonus = max(1, volatile.count)
-    return HandlerReturn(True, value + bonus)
+    volatile = ctx.attacker.volatiles["きゅうしょアップ"]
+    return HandlerReturn(value + volatile.count)
 
 
 def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

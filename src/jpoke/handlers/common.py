@@ -40,8 +40,10 @@ def drain_hp(battle: Battle,
     else:
         to_mon = battle.foe(from_mon)
 
-    success, _ = battle.drain_hp(from_mon, to_mon, v, r)
-    return HandlerReturn(success)
+    v = battle.modify_hp(from_mon, -v, r)
+    if v:
+        battle.modify_hp(to_mon, v)
+    return HandlerReturn(success=(v != 0))
 
 
 def modify_stat(battle: Battle,

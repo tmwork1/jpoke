@@ -59,9 +59,10 @@ class Event(Enum):
     ON_END = auto()  # 未使用
 
     # 状態異常・能力変化前イベント
-    ON_BEFORE_APPLY_AILMENT = auto()  # emit: model/pokemon.py apply_ailment; handlers: data/ability.py,data/field.py
-    ON_BEFORE_APPLY_VOLATILE = auto()  # emit: model/pokemon.py apply_volatile; handlers: data/field.py
-    ON_BEFORE_MODIFY_STAT = auto()  # 未使用
+    ON_BEFORE_HEAL = auto()
+    ON_BEFORE_APPLY_AILMENT = auto()
+    ON_BEFORE_APPLY_VOLATILE = auto()
+    ON_BEFORE_MODIFY_STAT = auto()
 
     # チェック系イベント
     ON_CHECK_PP_CONSUMED = auto()  # emit: handlers/move.py consume_pp

@@ -533,36 +533,28 @@ class Battle:
         Returns:
             bool: HP変更が成功した場合True
         """
+        if v == 0 and r == 0:
+            return False
+
         if r:
             v = int(target.max_hp * r)
 
-        if v and (v := target.modify_hp(v)):
-            self.add_event_log(
-                self.find_player(target),
-                f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}"
+        if v > 0:
+            v = self.events.emit(
+                Event.ON_BEFORE_HEAL,
+                BattleContext(target=target),
+                v
             )
+
+        if (v := target.modify_hp(v)):
+            text = f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}"
+            self.add_event_log(target, text)
+
             # HPがゼロになった場合、勝敗判定を実行
             if target.hp == 0:
                 self.judge_winner()
 
-        return bool(v)
-
-    def drain_hp(self, from_: Pokemon, to_: Pokemon, v: int = 0, r: float = 0) -> tuple[bool, bool]:
-        """HPを吸収。
-        Args:
-            from_: HPを吸収されるポケモン
-            to_: HPを吸収するポケモン
-            v: 固定値で吸収するHP量
-            r: 最大HP割合で吸収するHP量
-
-        Returns:
-            成功したかどうかのタプル（吸収される側、吸収する側）
-        """
-        if r:
-            v = int(from_.max_hp * r)
-        if self.modify_hp(from_, -v):
-            return True, self.modify_hp(to_, v)
-        return False, False
+        return v != 0
 
     def modify_stat(self,
                     target: Pokemon,
@@ -613,8 +605,8 @@ class Battle:
         # すべての能力変化を適用してログを記録
         for stat, v in stats.items():
             if v and (actual_v := target.modify_stat(stat, v)):
-                self.add_event_log(self.find_player(target),
-                                   f"{stat}{'+' if actual_v >= 0 else ''}{actual_v}")
+                text = f"{stat}{'+' if actual_v >= 0 else ''}{actual_v}"
+                self.add_event_log(self.find_player(target), text)
                 actual_changes[stat] = actual_v
                 any_success = True
 
