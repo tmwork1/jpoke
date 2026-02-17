@@ -53,13 +53,11 @@ class DamageContext:
 
     Attributes:
         critical: 急所に当たるかどうか
-        self_harm: 自分自身へのダメージかどうか
         power_multiplier: 技威力の倍率
         is_lethal_calc: 致死率計算中かどうか
         _flags: ダメージ計算に関するフラグのリスト
     """
     critical: bool = False
-    self_harm: bool = False
     power_multiplier: float = 1
     is_lethal_calc: bool = False
     _flags: list[DamageFlag] = field(default_factory=list)
@@ -88,12 +86,6 @@ class DamageCalculator:
 
     def __init__(self, battle: Battle):
         self.battle: Battle = battle
-
-        self.lethal_num: int = 0
-        self.lethal_prob: float = 0.
-        self.hp_dstr: dict = {}
-        self.damage_dstr: dict = {}
-        self.damage_ratio_dstr: dict = {}
 
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。

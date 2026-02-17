@@ -25,7 +25,7 @@ class MoveExecutor:
         battle: 親となるBattleインスタンス
     """
 
-    def __init__(self, battle: 'Battle'):
+    def __init__(self, battle: Battle):
         """MoveExecutorを初期化。
 
         Args:
@@ -33,7 +33,7 @@ class MoveExecutor:
         """
         self.battle = battle
 
-    def update_reference(self, battle: 'Battle'):
+    def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
 
         Args:
@@ -84,24 +84,7 @@ class MoveExecutor:
 
         return 100 * self.battle.random.random() < accuracy
 
-    def calc_critical_rank(self, attacker: Pokemon, move: Move) -> int:
-        """急所ランクの計算。
-        Args:
-            attacker: 攻撃側のポケモン
-            move: 使用する技
-
-        Returns:
-            急所ランク
-        """
-        defender = self.battle.foe(attacker)
-        rank = self.events.emit(
-            Event.ON_MODIFY_CRITICAL_RANK,
-            BattleContext(attacker=attacker, defender=defender, move=move),
-            move.critical_rank
-        )
-        return max(0, min(3, rank))
-
-    def check_critical(self, rank: int) -> bool:
+    def check_critical(self, ctx: BattleContext) -> bool:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
@@ -111,12 +94,18 @@ class MoveExecutor:
         - ランク3以上: 1/1（100%、上限）
 
         Args:
-            critical_rank: 急所ランク（0～3以上）
+            ctx: バトルコンテキスト
 
         Returns:
             bool: 急所に当たるかどうか
         """
-        critical_rates = [1/24, 1/8, 1/2, 1.0]
+        rank = self.events.emit(
+            Event.ON_CALC_CRITICAL_RANK,
+            ctx,
+            ctx.move.critical_rank
+        )
+        rank = max(0, min(3, rank))
+        critical_rates = [1/24, 1/8, 1/2, 1]
         return self.battle.random.random() < critical_rates[rank]
 
     def run_move(self, attacker: Pokemon, move: Move):
@@ -144,15 +133,15 @@ class MoveExecutor:
         ctx.move = move
 
         # 技のハンドラを登録
-        ctx.move.register_handlers(self.events, attacker)
+        ctx.move.register_handlers(self.events, ctx.attacker)
 
         # 技の実行
-        self._execute_move(attacker, ctx)
+        self._execute_move(ctx)
 
         # 技のハンドラを解除
-        ctx.move.unregister_handlers(self.events, attacker)
+        ctx.move.unregister_handlers(self.events, ctx.attacker)
 
-    def _execute_move(self, attacker: Pokemon, ctx: BattleContext):
+    def _execute_move(self, ctx: BattleContext):
         """技を実行する内部メソッド。
         """
         # 技の準備行動
@@ -182,10 +171,10 @@ class MoveExecutor:
             return
 
         # 発動した技の確定
-        attacker.executed_move = ctx.move
+        ctx.attacker.executed_move = ctx.move
 
         # 命中判定（仕様書: ON_TRY_MOVE終了後のInterrupt）
-        if not self.check_hit(attacker, ctx.move):
+        if not self.check_hit(ctx.attacker, ctx.move):
             return
 
         # 無効判定（ON_TRY_IMMUNE: Priority 10-100）
@@ -195,11 +184,12 @@ class MoveExecutor:
             return
 
         # 急所判定
-        critical_rank = self.calc_critical_rank(attacker, ctx.move)
-        critical = self.check_critical(critical_rank)
+        critical = self.check_critical(ctx)
 
         # ダメージ計算
-        damage = self.battle.determine_damage(attacker, ctx.move, critical=critical)
+        damage = self.battle.determine_damage(
+            ctx.attacker, ctx.defender, ctx.move, critical=critical
+        )
 
         # HPコストの支払い
         self.events.emit(Event.ON_PAY_HP, ctx)

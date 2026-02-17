@@ -622,9 +622,9 @@ class Battle:
 
     def determine_damage(self,
                          attacker: Pokemon,
+                         defender: Pokemon,
                          move: Move | str,
-                         critical: bool = False,
-                         self_harm: bool = False) -> int:
+                         critical: bool = False) -> int:
         """ダメージを計算してランダムに1つ選択する。
 
         Args:
@@ -636,32 +636,32 @@ class Battle:
         Returns:
             int: 計算されたダメージ値
         """
-        damages = self.determine_damage_range(attacker, move, critical, self_harm)
+        damages = self.determine_damage_range(attacker, defender, move, critical)
         return self.random.choice(damages)
 
     def determine_damage_range(self,
                                attacker: Pokemon,
+                               defender: Pokemon,
                                move: Move | str,
-                               critical: bool = False,
-                               self_harm: bool = False) -> list[int]:
+                               critical: bool = False) -> list[int]:
         """可能なダメージ値のリストを計算する。
 
         乱数によるダメージ幅を考慮した全ての可能なダメージ値を返します。
 
         Args:
             attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
             move: 使用する技（MoveオブジェクトまたはID文字列）
             critical: 急所に当たるかどうか
-            self_harm: 自分自身へのダメージかどうか
 
         Returns:
             list[int]: 可能なダメージ値のリスト
         """
         if isinstance(move, str):
             move = Move(move)
-        defender = attacker if self_harm else self.foe(attacker)
-        dmg_ctx = DamageContext(critical=critical, self_harm=self_harm)
-        damages, dmg_ctx = self.damage_calculator.calc_damage_range(attacker, defender, move, dmg_ctx)
+        dmg_ctx = DamageContext(critical=critical)
+        damages, dmg_ctx = self.damage_calculator.calc_damage_range(
+            attacker, defender, move, dmg_ctx)
         return damages
 
     def has_interrupt(self) -> bool:

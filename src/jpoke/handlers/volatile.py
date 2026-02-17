@@ -66,13 +66,37 @@ def tick_volatile(battle: Battle,
         log: 解除時にログを出力するか
     """
     mon = ctx.source
-    if not mon.has_volatile(name):
-        return HandlerReturn(False)
     volatile = mon.volatiles[name]
-    volatile.count -= 1
+    volatile.tick_down()
     if volatile.count == 0 and mon.remove_volatile(battle, name) and log:
         battle.add_event_log(mon, f"{name}解除")
     return HandlerReturn(True)
+
+
+def restrict_commands(battle: Battle,
+                      ctx: BattleContext,
+                      value: Any,
+                      name: VolatileName) -> HandlerReturn:
+    """特定の技しか使えない揮発状態によるコマンドオプション変更
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: 固定技以外の技コマンドを削除したリスト
+    """
+    locked = ctx.attacker.volatiles[name].move_name
+
+    # 固定技以外の技コマンドを削除
+    new_options = []
+    for cmd in value:
+        if not cmd.is_move_family() or \
+                ctx.attacker.moves[cmd.idx].name == locked:
+            new_options.append(cmd)
+
+    return HandlerReturn(value=new_options)
 
 
 def _protect_block(battle: Battle, ctx: BattleContext, value: Any) -> bool:
@@ -131,29 +155,6 @@ def あめまみれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     if mon.has_volatile("あめまみれ") and battle.modify_stat(mon, "S", -1):
         battle.add_event_log(mon, "あめまみれ")
     return HandlerReturn()
-
-
-def アンコール_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """アンコールによるコマンドオプション変更
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: コマンドオプションのリスト
-
-    Returns:
-        HandlerReturn: 固定技以外の技コマンドを削除したリスト
-    """
-    locked = ctx.attacker.volatiles["アンコール"].move_name
-
-    # 固定技以外の技コマンドを削除
-    new_options = []
-    for cmd in value:
-        if not cmd.is_move_family() or \
-                (cmd.is_regular_move() and ctx.attacker.moves[cmd.idx].name == locked):
-            new_options.append(cmd)
-
-    return HandlerReturn(value=new_options)
 
 
 def アンコール_modify_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -279,10 +280,10 @@ def きゅうしょアップ(battle: Battle, ctx: BattleContext, value: Any) -> 
         HandlerReturn: 補正後の急所ランク
     """
     volatile = ctx.attacker.volatiles["きゅうしょアップ"]
-    return HandlerReturn(value + volatile.count)
+    return HandlerReturn(value=value+volatile.count)
 
 
-def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def こんらん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 
     Args:
@@ -293,20 +294,22 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     Returns:
         HandlerReturn: 自傷した場合はFalse（行動中断）、しなかった場合はTrue
     """
+    volatile = ctx.attacker.volatiles["こんらん"]
+
     # ターンカウント減少（1～4ターンで自然治癒）
-    ctx.attacker.tick_volatile(battle, "こんらん")
+    volatile.tick_down()
 
     # カウントが0になったら解除
-    if not ctx.attacker.has_volatile("こんらん"):
+    if volatile.count == 0:
         return HandlerReturn(value=True)
 
-    battle.add_event_log(ctx.attacker, "は混乱している！")
+    battle.add_event_log(ctx.attacker, "混乱している")
 
-    # テスト用に確率を固定できる
     if battle.test_option.trigger_volatile is not None:
+        # テスト用に確率を固定
         confused = battle.test_option.trigger_volatile
     else:
-        confused = battle.random.random() < 0.33
+        confused = battle.random.random() < 1/3
 
     if confused:
         damage = battle.determine_damage(
@@ -316,10 +319,10 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         )
         # ダメージ適用
         battle.modify_hp(ctx.attacker, v=-damage)
-        battle.add_event_log(ctx.attacker, "は自分を攻撃した！")
-        return HandlerReturn(False, stop_event=True)
+        battle.add_event_log(ctx.attacker, "自傷")
+        return HandlerReturn(value=False, stop_event=True)
 
-    return HandlerReturn(True)
+    return HandlerReturn(value=True)
 
 
 def さわぐ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -383,6 +386,68 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> H
     return HandlerReturn(False, value)
 
 
+def しおづけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """しおづけ状態のターン終了時ダメージ
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: ダメージが発生した場合True
+    """
+    mon = ctx.source
+    r = -1/8
+    if mon.has_type("みず") or mon.has_type("はがね"):
+        r *= 2
+    success = battle.modify_hp(mon, r=r)
+    return HandlerReturn(success=success)
+
+
+def じごくずき_restrict_commands(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """じごくづき状態によるコマンドオプション変更
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: コマンドオプションのリスト
+
+    Returns:
+        HandlerReturn: じごくづき以外の技コマンドを削除したリスト
+    """
+    new_options = []
+    for cmd in value:
+        if not cmd.is_move_family() or \
+                "sound" not in ctx.attacker.moves[cmd.idx].labels:
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
+
+
+def じごくづき_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """じごくづき状態による技の不発"""
+    if "sound" in ctx.move.labels:
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
+
+
+def じゅうでん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """じゅうでん状態による威力補正
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 威力補正値（4096基準）
+
+    Returns:
+        HandlerReturn: 補正後の値
+    """
+    if ctx.move.type == "でんき":
+        value *= 2
+        ctx.attacker.remove_volatile(battle, "じゅうでん")
+    return HandlerReturn(value=value)
+
+
 def タールショット_damage_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """タールショット状態でほのお技のダメージ補正
 
@@ -395,7 +460,7 @@ def タールショット_damage_modifier(battle: Battle, ctx: BattleContext, va
         HandlerReturn: 補正後の値
     """
     if ctx.move and ctx.move.type == "ほのお":
-        return HandlerReturn(True, value * 8192 // 4096)
+        return HandlerReturn(True, value * 2)
     return HandlerReturn(False, value)
 
 
@@ -427,7 +492,7 @@ def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value:
         HandlerReturn: 補正後の値
     """
     if ctx.move and ctx.move.name in ["のしかかり", "ふみつけ", "ドラゴンダイブ", "サンダープリズン"]:
-        return HandlerReturn(True, value * 8192 // 4096)
+        return HandlerReturn(True, value * 2)
     return HandlerReturn(False, value)
 
 
@@ -683,7 +748,7 @@ def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: An
         HandlerReturn: 補正後の値
     """
     if ctx.move and ctx.move.name in ["ころがる", "アイスボール"]:
-        return HandlerReturn(True, value * 8192 // 4096)
+        return HandlerReturn(True, value * 2)
     return HandlerReturn(False, value)
 
 

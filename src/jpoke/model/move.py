@@ -1,5 +1,5 @@
 
-from jpoke.utils.type_defs import PokeType, MoveCategory
+from jpoke.utils.type_defs import PokeType, MoveCategory, MoveLabel
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
 from jpoke.data.models import MoveData
@@ -115,3 +115,12 @@ class Move(GameEffect):
             技の急所ランク
         """
         return self.data.critical_rank
+
+    @property
+    def labels(self) -> list[MoveLabel]:
+        """技の表示名を取得する。
+
+        Returns:
+            技の表示名
+        """
+        return self.data.labels

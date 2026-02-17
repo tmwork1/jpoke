@@ -63,7 +63,7 @@ VOLATILES: dict[str, VolatileData] = {
     "アンコール": VolatileData(
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                h.アンコール_modify_command_options,
+                partial(h.restrict_commands, name="アンコール"),
                 subject_spec="source:self",
             ),
             Event.ON_MODIFY_MOVE: h.VolatileHandler(
@@ -140,7 +140,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "きゅうしょアップ": VolatileData(
         handlers={
-            Event.ON_MODIFY_CRITICAL_RANK: h.VolatileHandler(
+            Event.ON_CALC_CRITICAL_RANK: h.VolatileHandler(
                 h.きゅうしょアップ,
                 subject_spec="attacker:self",
             ),
@@ -148,68 +148,58 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "こだわり": VolatileData(
         handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                partial(h.restrict_commands, name="こだわり"),
+                subject_spec="source:self",
+            )
         }
     ),
     "こんらん": VolatileData(
         handlers={
             Event.ON_TRY_ACTION: h.VolatileHandler(
-                h.こんらん_action,
+                h.こんらん,
                 subject_spec="attacker:self",
-                log="on_success",
                 priority=110
             ),
         }
     ),
     "さわぐ": VolatileData(
         handlers={
-            Event.ON_TRY_ACTION: h.VolatileHandler(
-                h.さわぐ_before_move,
-                subject_spec="attacker:self",
-                log="never",
-                priority=200
-            ),
-            Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
-                h.さわぐ_prevent_sleep,
-                subject_spec="attacker:self",
-                log="never",
-                priority=50
-            ),
-            # TODO: 複数ハンドラ登録を可能にする
-            # Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
-            #     h.さわぐ_prevent_sleep,
-            #     subject_spec="attacker:foe",
-            #     log="never",
-            #     priority=50
-            #  ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(h.tick_volatile, name="さわぐ"),
-                subject_spec="source:self",
-                log="on_success",
-                priority=100
-            ),
+            # TODO: 実装(低優先度)
         }
     ),
     "しおづけ": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(common.drain_hp, from_="source:self", r=1/8),
+                h.しおづけ,
                 subject_spec="source:self",
                 priority=90,
+                log="on_success",
             ),
         }
     ),
     "じごくずき": VolatileData(
         handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.じごくずき_restrict_commands,
+                subject_spec="source:self",
+            ),
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.じごくづき_try_action,
+                subject_spec="attacker:self",
+            ),
             Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(h.tick_volatile, name="じごくずき"),
                 subject_spec="source:self",
-                log="on_success",
-                priority=100
             ),
         }
     ),
     "じゅうでん": VolatileData(
         handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.じゅうでん,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "たくわえる": VolatileData(

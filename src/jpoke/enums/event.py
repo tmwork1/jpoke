@@ -75,7 +75,7 @@ class Event(Enum):
 
     # 計算系イベント
     ON_MODIFY_ACCURACY = auto()  # emit: core/move_executor.py; handlers: data/field.py
-    ON_MODIFY_CRITICAL_RANK = auto()  # emit: core/damage.py; handlers: data/ability.py,data/item.py
+    ON_CALC_CRITICAL_RANK = auto()  # emit: core/damage.py; handlers: data/ability.py,data/item.py
     ON_CALC_POWER_MODIFIER = auto()  # emit: core/damage.py; handlers: data/field.py
     ON_CALC_ATK_MODIFIER = auto()  # emit: core/damage.py
     ON_CALC_DEF_MODIFIER = auto()  # emit: core/damage.py; handlers: data/field.py
