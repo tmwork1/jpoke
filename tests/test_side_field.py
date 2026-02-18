@@ -1,72 +1,79 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import math
-from jpoke import Battle, Pokemon
-from jpoke.core import Event, BattleContext
-from jpoke.model.move import Move
+
+from jpoke.enums import Event
+from jpoke.core import BattleContext
+from jpoke.model import Pokemon, Move
 import test_utils as t
 
 # 定数定義
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
 
-# 威力補正の期待値（4096基準）
-BASE_MODIFIER = 4096  # 補正計算の基準値
-DAMAGE_WALL_MODIFIER = 0.5  # 壁によるダメージ軽減
 
-
-def test_リフレクター_ダメージ軽減():
+def test_リフレクター_物理半減():
     """リフレクター: 物理技ダメージ軽減"""
     battle = t.start_battle(
-        foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
-        ally_side_field={"リフレクター": 5},
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_side_field={"リフレクター": 5},
     )
-    ctx = BattleContext(
-        attacker=battle.actives[1],
-        defender=battle.actives[0],
-        move=battle.actives[1].moves[0]
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DAMAGE_MODIFIER,
+                         expected=2048)
+
+
+def test_リフレクター_特殊軽減なし():
+    """リフレクター: 特殊技が軽減されないことを確認"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        foe_side_field={"リフレクター": 5},
     )
-    modifier = battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, BASE_MODIFIER)
-    expected = BASE_MODIFIER * DAMAGE_WALL_MODIFIER
-    assert modifier == expected, "reflector damage wall modifier is incorrect"
-
-# TODO: リフレクター　特殊技が軽減されないことを確認するテスト追加
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DAMAGE_MODIFIER,
+                         expected=4096)
 
 
-def test_ひかりのかべ_ダメージ軽減():
+def test_ひかりのかべ_特殊半減():
     """ひかりのかべ: 特殊技ダメージ軽減"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        ally_side_field={"ひかりのかべ": 5},
+        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        foe_side_field={"ひかりのかべ": 5},
     )
-    ctx = BattleContext(
-        attacker=battle.actives[1],
-        defender=battle.actives[0],
-        move=battle.actives[1].moves[0]
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DAMAGE_MODIFIER,
+                         expected=2048)
+
+
+def test_ひかりのかべ_物理軽減なし():
+    """ひかりのかべ: 物理技が軽減されないことを確認"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_side_field={"ひかりのかべ": 5},
     )
-    modifier = battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, BASE_MODIFIER)
-    expected = BASE_MODIFIER * DAMAGE_WALL_MODIFIER
-    assert modifier == expected, "light screen damage wall modifier is incorrect"
-
-# TODO: ひかりのかべ　物理技が軽減されないことを確認するテスト追加
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DAMAGE_MODIFIER,
+                         expected=4096)
 
 
-def test_オーロラベール_ダメージ軽減():
+def test_オーロラベール_物理半減():
     """オーロラベール: ダメージ0.5倍"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
-        ally_side_field={"オーロラベール": 1},
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_side_field={"オーロラベール": 1},
     )
-    ctx = BattleContext(
-        attacker=battle.actives[1],
-        defender=battle.actives[0],
-        move=battle.actives[1].moves[0]
-    )
-    modifier = battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, BASE_MODIFIER)
-    expected = BASE_MODIFIER * DAMAGE_WALL_MODIFIER
-    assert modifier == expected, "aurora veil damage wall modifier is incorrect"
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DAMAGE_MODIFIER,
+                         expected=2048)
 
-# TODO: オーロラベール　特殊技も半減されることを確認するテスト追加
+
+def test_オーロラベール_特殊半減():
+    """オーロラベール: ダメージ0.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        foe_side_field={"オーロラベール": 1},
+    )
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DAMAGE_MODIFIER,
+                         expected=2048)
 
 
 def test_しんぴのまもり():
@@ -98,20 +105,21 @@ def test_おいかぜ():
 def test_ねがいごと_回復と解除():
     """ねがいごと: ターン終了時回復と解除"""
     battle = t.start_battle(ally_side_field={"ねがいごと": 2})
-    field = battle.side_manager[0].fields["ねがいごと"]
-    target = battle.actives[0]
+    field = battle.get_side_field(battle.players[0], "ねがいごと")
 
     # HPを減らして回復確認
-    target._hp = 1
-    initial_hp = target.hp
+    mon = battle.actives[0]
+    mon._hp = 1
 
-    battle.events.emit(Event.ON_TURN_END_3)
-    assert target.hp == initial_hp, "No wish heal occurred"
+    heal = 20
+    field.heal = heal
+
+    battle.events.emit(Event.ON_TURN_END_2)
+    assert mon.hp == 1, "No wish heal occurred"
     assert field.count == 1, "Wish field count did not decrease"
 
-    battle.events.emit(Event.ON_TURN_END_3)
-    expected_hp = initial_hp + target.max_hp // 2
-    assert target.hp == expected_hp, "Wish heal amount is incorrect"
+    battle.events.emit(Event.ON_TURN_END_2)
+    assert mon.hp == 1 + heal, "Wish heal amount is incorrect"
     assert not field.is_active, "Wish field did not deactivate"
 
 

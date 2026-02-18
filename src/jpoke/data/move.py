@@ -3,7 +3,6 @@
 Note:
     このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
 """
-from dataclasses import dataclass
 from functools import partial
 
 from jpoke.enums import Event
@@ -871,8 +870,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=100,
         accuracy=95,
-
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "ジェットパンチ": MoveData(
         type="みず",
@@ -1582,8 +1580,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=75,
-
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "ドラゴンテール": MoveData(
         type="ドラゴン",
@@ -1774,8 +1771,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=85,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "ハードプレス": MoveData(
         type="はがね",
@@ -1946,7 +1942,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "ひけん・ちえなみ": MoveData(
         type="あく",
@@ -2030,8 +2026,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "フライングプレス": MoveData(
         type="かくとう",
@@ -2039,7 +2034,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=95,
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "フリーズボルト": MoveData(
         type="こおり",
@@ -2127,7 +2122,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        labels=["contact"],
+        labels=["minimize", "contact"],
     ),
     "ホイールスピン": MoveData(
         type="はがね",

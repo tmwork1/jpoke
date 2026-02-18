@@ -13,31 +13,29 @@ def tick_weather(battle: Battle, ctx: BattleContext, value: Any):
     # 1P側でのみカウントダウンを実行
     if battle.find_player(ctx.source) is battle.players[0]:
         battle.weather_manager.tick_down()
-        return HandlerReturn(True)
-    return HandlerReturn(False)
+    return HandlerReturn()
 
 
 def tick_terrain(battle: Battle, ctx: BattleContext, value: Any):
     # 1P側でのみカウントダウンを実行
     if battle.find_player(ctx.source) is battle.players[0]:
         battle.terrain_manager.tick_down()
-        return HandlerReturn(True)
-    return HandlerReturn(False)
+    return HandlerReturn()
 
 
 def tick_global_field(battle: Battle, ctx: BattleContext, value: Any, name: GlobalField) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
     if battle.find_player(ctx.source) is battle.players[0]:
         battle.field_manager.tick_down(name)
-        return HandlerReturn(True)
-    return HandlerReturn(False)
+    return HandlerReturn()
 
 
 def tick_side_field(battle: Battle, ctx: BattleContext, value: Any, name: SideField) -> HandlerReturn:
     player = battle.find_player(ctx.source)
     side = battle.get_side(player)
     side.tick_down(name)
-    return HandlerReturn(True)
+    return HandlerReturn()
+
 
 # ===== 天候ハンドラ =====
 
@@ -76,24 +74,24 @@ def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
 
 def すなあらし_spdef_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
-    if ctx.defender.has_type("いわ"):
-        return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
-    return HandlerReturn(False, value)
+    if ctx.defender.has_type("いわ") and ctx.move.category == "特殊":
+        value = value * 6144 // 4096  # 1.5倍
+    return HandlerReturn(value=value)
 
 
 def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
-    if ctx.defender.has_type("こおり"):
-        return HandlerReturn(True, value * 6144 // 4096)  # 1.5倍
-    return HandlerReturn(False, value)
-
+    if ctx.defender.has_type("こおり") and ctx.move.category == "物理":
+        value = value * 6144 // 4096  # 1.5倍
+    return HandlerReturn(value=value)
 
 # ===== 地形ハンドラ =====
+
 
 def エレキフィールド_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """エレキフィールドでの電気技威力1.3倍"""
     if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle):
-        return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
+        return HandlerReturn(True, value * 5325 // 4096)  # 1.3倍
     return HandlerReturn(False, value)
 
 
@@ -110,7 +108,7 @@ def グラスフィールド_power_modifier(battle: Battle, ctx: BattleContext, 
     """グラスフィールドでの草技威力1.3倍・地面技威力0.5倍"""
     # 草技威力1.3倍（攻撃側が接地している場合）
     if ctx.move.type == "くさ" and not ctx.attacker.is_floating(battle):
-        return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
+        return HandlerReturn(True, value * 5325 // 4096)  # 1.3倍
     # 地面範囲技威力0.5倍（じしん、じならし、マグニチュード）
     if ctx.move.name in ["じしん", "じならし", "マグニチュード"]:
         return HandlerReturn(True, value * 2048 // 4096)  # 0.5倍
@@ -128,7 +126,7 @@ def グラスフィールド_heal(battle: Battle, ctx: BattleContext, value: Any
 def サイコフィールド_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """サイコフィールドでのエスパー技威力1.3倍"""
     if ctx.move.type == "エスパー" and not ctx.attacker.is_floating(battle):
-        return HandlerReturn(True, value * 5324 // 4096)  # 1.3倍
+        return HandlerReturn(True, value * 5325 // 4096)  # 1.3倍
     return HandlerReturn(False, value)
 
 
@@ -239,11 +237,12 @@ def おいかぜ_speed_boost(battle: Battle, ctx: BattleContext, value: Any) -> 
 def ねがいごと_heal(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねがいごとのターン終了時HP回復"""
     side = battle.get_side(ctx.target)
+    field = side.fields["ねがいごと"]
     side.tick_down("ねがいごと")
-    success = False
-    if side.fields["ねがいごと"].count == 0:
-        success = battle.modify_hp(ctx.target, r=0.5)
-    return HandlerReturn(success)
+    if field.count == 0 and battle.modify_hp(ctx.target, v=field.heal):
+        battle.add_event_log(ctx.target, "ねがいごとで回復")
+        field.heal = 0
+    return HandlerReturn()
 
 
 def まきびし_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

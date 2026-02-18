@@ -208,27 +208,22 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "タールショット": VolatileData(
         handlers={
-            Event.ON_CALC_DAMAGE_MODIFIER: h.VolatileHandler(
+            Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
                 h.タールショット_damage_modifier,
                 subject_spec="defender:self",
                 log="never",
-                priority=80,
             ),
         }
     ),
     "ちいさくなる": VolatileData(
         handlers={
             Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
-                h.ちいさくなる_accuracy_modifier,
+                h.ちいさくなる_guaranteed_hit,
                 subject_spec="defender:self",
-                log="never",
-                priority=50,
             ),
             Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
                 h.ちいさくなる_power_modifier,
                 subject_spec="defender:self",
-                log="never",
-                priority=80,
             ),
         }
     ),
@@ -328,9 +323,7 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ひるみ_action,
                 subject_spec="attacker:self",
-                log="never",
                 priority=40,
-                once=True,
             ),
         }
     ),

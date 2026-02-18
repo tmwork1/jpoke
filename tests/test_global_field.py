@@ -1,8 +1,8 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import math
 from jpoke import Battle, Pokemon
-from jpoke.enums import Command
-from jpoke.core import Event, BattleContext
+from jpoke.enums import Command, Event
+from jpoke.core import BattleContext
 from jpoke.model.move import Move
 import test_utils as t
 
@@ -10,119 +10,110 @@ import test_utils as t
 # 定数定義
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
 
-# 威力補正の期待値（4096基準）
-WEATHER_BOOST = 1.5  # 天候による威力強化
-WEATHER_NERF = 0.5   # 天候による威力弱化
-TERRAIN_BOOST = 1.3  # 地形による威力強化
-TERRAIN_NERF = 0.5   # 地形による威力弱化
 
-# ダメージ計算
-SANDSTORM_DAMAGE_RATIO = 1 / 16  # すなあらしダメージ後のHP割合
-
-
-def test_はれ_ほのお技強化():
+def test_はれ_boost_fire():
     """はれ: ほのお技威力1.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
         weather=("はれ", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, WEATHER_BOOST, "はれでほのお技が強化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=6144)
 
 
-def test_はれ_みず技弱化():
+def test_はれ_weaken_water():
     """はれ: みず技威力0.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
         weather=("はれ", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, WEATHER_NERF, "はれでみず技が弱化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=2048)
 
 
-def test_あめ_みず技強化():
+def test_あめ_boost_water():
     """あめ: みず技威力1.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
         weather=("あめ", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, WEATHER_BOOST, "あめでみず技が強化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=6144)
 
 
-def test_あめ_ほのお技弱化():
+def test_あめ_weaken_fire():
     """あめ: ほのお技威力0.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
         weather=("あめ", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, WEATHER_NERF, "あめでほのお技が弱化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=2048)
 
 
-def test_すなあらし_ダメージ():
+def test_すなあらし_damage():
     """すなあらし: ターン終了時ダメージ"""
     battle = t.start_battle(weather=("すなあらし", DEFAULT_DURATION))
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END_1)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
-    expected_damages = [int(mon.max_hp * SANDSTORM_DAMAGE_RATIO) for mon in battle.actives]
+    expected_damages = [mon.max_hp // 16 for mon in battle.actives]
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
 
 
-def test_すなあらし_いわタイプ無効():
-    """すなあらし: いわタイプは無効"""
+def test_すなあらし_no_damage_for_rock():
+    """すなあらし: いわタイプはダメージを受けない"""
     battle = t.start_battle(
         ally=[Pokemon("イシツブテ")],
         weather=("すなあらし", DEFAULT_DURATION),
     )
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END_1)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
-    expected_damages = [0, int(battle.actives[1].max_hp * SANDSTORM_DAMAGE_RATIO)]
+    expected_damages = [0, battle.actives[1].max_hp // 16]
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
 
 
-def test_すなあらし_いわタイプ特防上昇():
+def test_すなあらし_rock_spdef_boost():
     """すなあらし: いわタイプ特防1.5倍"""
     battle = t.start_battle(
-        ally=[Pokemon("イシツブテ")],
-        foe=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        ally=[Pokemon("ピカチュウ", moves=["スピードスター"])],
+        foe=[Pokemon("イシツブテ")],
         weather=("すなあらし", DEFAULT_DURATION),
     )
-    t.assert_def_modifier(battle, WEATHER_BOOST, "すなあらしでいわタイプの防御補正が上がらない")
-
-    battle_no_boost = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        weather=("すなあらし", DEFAULT_DURATION),
-    )
-    t.assert_def_modifier(battle_no_boost, 1.0, "すなあらしで非いわタイプの防御補正が変化した")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DEF_MODIFIER,
+                         expected=6144)
 
 
-def test_ゆき_こおりタイプ防御上昇():
+def test_ゆき_ice_def_boost():
     """ゆき: こおりタイプ防御1.5倍"""
     battle = t.start_battle(
-        ally=[Pokemon("ユキワラシ")],
-        foe=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ユキワラシ")],
         weather=("ゆき", DEFAULT_DURATION),
     )
-    t.assert_def_modifier(battle, WEATHER_BOOST, "ゆきでこおりタイプの防御補正が上がらない")
-
-    battle_no_boost = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        weather=("ゆき", DEFAULT_DURATION),
-    )
-    t.assert_def_modifier(battle_no_boost, 1.0, "ゆきで非こおりタイプの防御補正が変化した")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DEF_MODIFIER,
+                         expected=6144)
 
 
-def test_エレキフィールド_でんき技強化():
+def test_エレキフィールド_boost_electric():
     """エレキフィールド: でんき技威力1.3倍"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, TERRAIN_BOOST, "エレキフィールドででんき技が強化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=5325)
 
     # TODO: 浮いているポケモンは強化されないことを確認
 
 
-def test_エレキフィールド_ねむり無効():
+def test_エレキフィールド_prevent_sleep():
     """エレキフィールド: ねむり無効"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
@@ -138,13 +129,15 @@ def test_エレキフィールド_ねむり無効():
 # TODO: エレキフィールドでのねむけ(揮発状態)防止のテストを追加。浮いているポケモンは防止されないことも確認
 
 
-def test_グラスフィールド_くさ技強化():
+def test_グラスフィールド_boost_grass():
     """グラスフィールド: くさ技威力1.3倍"""
     battle = t.start_battle(
         ally=[Pokemon("フシギダネ", moves=["はっぱカッター"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, TERRAIN_BOOST, "グラスフィールドでくさ技が強化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=5325)
 
     # TODO: 浮いているポケモンは強化されないことを確認
 
@@ -155,7 +148,9 @@ def test_グラスフィールド_じしん弱化():
         ally=[Pokemon("サンドパン", moves=["じしん"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, TERRAIN_NERF, "グラスフィールドでじしんが弱化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=2048)
 
 
 def test_グラスフィールド_じならし弱化():
@@ -164,10 +159,12 @@ def test_グラスフィールド_じならし弱化():
         ally=[Pokemon("サンドパン", moves=["じならし"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, TERRAIN_NERF, "グラスフィールドでじならしが弱化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=2048)
 
 
-def test_グラスフィールド_ターン終了回復():
+def test_グラスフィールド_heal():
     """グラスフィールド: ターン終了時1/16回復"""
     battle = t.start_battle(
         terrain=("グラスフィールド", DEFAULT_DURATION),
@@ -181,13 +178,15 @@ def test_グラスフィールド_ターン終了回復():
     # TODO: 浮いているポケモンは回復しないことも確認
 
 
-def test_サイコフィールド_エスパー技強化():
+def test_サイコフィールド_boost_psychic():
     """サイコフィールド: エスパー技威力1.3倍"""
     battle = t.start_battle(
         ally=[Pokemon("フーディン", moves=["サイコキネシス"])],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, TERRAIN_BOOST, "サイコフィールドでエスパー技が強化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=5325)
 
     # TODO: 浮いているポケモンは強化されないことを確認
 
@@ -234,7 +233,9 @@ def test_ミストフィールド_ドラゴン技弱化():
         ally=[Pokemon("カイリュー", moves=["りゅうのはどう"])],
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
-    t.assert_power_modifier(battle, TERRAIN_NERF, "ミストフィールドでドラゴン技が弱化されない")
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=2048)
 
 
 def test_ミストフィールド_混乱防止():
@@ -274,13 +275,7 @@ def test_ミストフィールド_状態異常防止():
 def test_じゅうりょく_命中補正():
     """じゅうりょく: 命中率5/3倍"""
     battle = t.start_battle(global_field={"じゅうりょく": DEFAULT_DURATION})
-    ctx = BattleContext(
-        attacker=battle.actives[0],
-        defender=battle.actives[1],
-        move=battle.actives[0].moves[0]
-    )
-    result = battle.events.emit(Event.ON_MODIFY_ACCURACY, ctx, 30)
-    assert result == 50, "じゅうりょくで命中率補正が正しく適用されない"
+    t.assert_accuracy(battle, base=30, expected=50)
 
 
 def test_じゅうりょく_浮遊無効():
@@ -311,9 +306,7 @@ def test_トリックルーム_技優先度():
         foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
         global_field={"トリックルーム": 5},
     )
-    for player in battle.players:
-        player.init_turn()
-        player.reserve_command(Command.MOVE_0)
+    t.reserve_command(battle)
     action_order = battle.determine_action_order()
     assert action_order[0] == battle.actives[1], "トリックルームで優先度が考慮されない"
 

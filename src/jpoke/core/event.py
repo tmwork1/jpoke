@@ -139,15 +139,14 @@ class EventManager:
             if not isinstance(result, HandlerReturn):
                 raise ValueError("Handler function must return HandlerReturn")
 
-            if result.value is not None:
-                value = result.value
-
             # log_policy に基づいてログを出力
             rh.handler.write_log(self.battle, context, result.success)
 
             # 一度きりのハンドラを解除
             if rh.handler.once:
                 self.off(event, rh.handler, rh._subject)
+
+            value = result.value
 
             # イベント停止フラグの処理
             if result.stop_event:

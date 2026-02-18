@@ -353,7 +353,7 @@ class Battle:
         Returns:
             Pokemon: 対戦相手のポケモン
         """
-        return self.actives[not self.actives.index(active)]
+        return self.actives[1 - self.actives.index(active)]
 
     def rival(self, player: Player) -> Player:
         """指定したプレイヤーの対戦相手を取得する。
@@ -364,7 +364,7 @@ class Battle:
         Returns:
             Player: 対戦相手のプレイヤー
         """
-        return self.players[not self.players.index(player)]
+        return self.players[1 - self.players.index(player)]
 
     def get_available_selection_commands(self, player: Player) -> list[Command]:
         """ポケモン選出時に使用可能なコマンドを取得する。

@@ -314,8 +314,8 @@ def こんらん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     if confused:
         damage = battle.determine_damage(
             attacker=ctx.attacker,
+            defender=ctx.attacker,
             move="こんらん",
-            self_harm=True,
         )
         # ダメージ適用
         battle.modify_hp(ctx.attacker, v=-damage)
@@ -459,12 +459,12 @@ def タールショット_damage_modifier(battle: Battle, ctx: BattleContext, va
     Returns:
         HandlerReturn: 補正後の値
     """
-    if ctx.move and ctx.move.type == "ほのお":
-        return HandlerReturn(True, value * 2)
-    return HandlerReturn(False, value)
+    if ctx.move.type == "ほのお":
+        value *= 2
+    return HandlerReturn(value=value)
 
 
-def ちいさくなる_accuracy_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ちいさくなる_guaranteed_hit(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちいさくなる状態への必中補正
 
     Args:
@@ -475,9 +475,9 @@ def ちいさくなる_accuracy_modifier(battle: Battle, ctx: BattleContext, val
     Returns:
         HandlerReturn: 必中の場合はNoneを返す
     """
-    if ctx.move and ctx.move.name in ["のしかかり", "ふみつけ", "ドラゴンダイブ", "サンダープリズン"]:
-        return HandlerReturn(True, None)
-    return HandlerReturn(False, value)
+    if "minimize" in ctx.move.data.labels:
+        return HandlerReturn(value=None, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -491,9 +491,9 @@ def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value:
     Returns:
         HandlerReturn: 補正後の値
     """
-    if ctx.move and ctx.move.name in ["のしかかり", "ふみつけ", "ドラゴンダイブ", "サンダープリズン"]:
-        return HandlerReturn(True, value * 2)
-    return HandlerReturn(False, value)
+    if "minimize" in ctx.move.data.labels:
+        value *= 2
+    return HandlerReturn(value=value)
 
 
 def ちょうはつ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -653,8 +653,9 @@ def ひるみ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     Returns:
         HandlerReturn: 行動不能の場合はFalse
     """
-    battle.add_event_log(ctx.attacker, "はひるんで動けない！")
-    return HandlerReturn(False, stop_event=True)
+    battle.add_event_log(ctx.attacker, "ひるみ")
+    ctx.attacker.remove_volatile(battle, "ひるみ")
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def ひるみ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

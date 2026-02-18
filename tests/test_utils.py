@@ -4,7 +4,6 @@ from jpoke.utils.type_defs import VolatileName, Weather, Terrain
 from jpoke.enums import Event, Command
 
 # 定数定義
-BASE_MODIFIER = 4096  # 補正計算の基準値
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
 DEFAULT_POKEMON = "ピカチュウ"  # デフォルトのポケモン種族名
 
@@ -116,67 +115,47 @@ def start_battle(ally: list[Pokemon] | None = None,
     return battle
 
 
-def create_power_modifier_context(battle: Battle, attacker_idx: int = 0) -> BattleContext:
-    """技威力補正のコンテキストを作成するヘルパー関数。
-
-    Args:
-        battle: Battleインスタンス
-        attacker_idx: 攻撃側のインデックス（デフォルト: 0）
-
-    Returns:
-        BattleContext: コンテキスト
-    """
-    defender_idx = 1 - attacker_idx
-    return BattleContext(
-        attacker=battle.actives[attacker_idx],
-        defender=battle.actives[defender_idx],
-        move=battle.actives[attacker_idx].moves[0]
+def assert_damage_calc(battle: Battle,
+                       event: Event,
+                       expected: int,
+                       base: int = 4096,
+                       atk_idx: int = 0):
+    """ダメージ計算の補正値を検証するヘルパー関数。"""
+    attacker = battle.actives[atk_idx]
+    defender = battle.actives[1 - atk_idx]
+    v = battle.events.emit(
+        event,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        base
     )
+    assert v == expected, f"Expected {expected} but got {v} for event {event}"
 
 
-def assert_power_modifier(battle: Battle, expected: float, message: str = ""):
-    """技威力補正値を検証するヘルパー関数。
-
-    Args:
-        battle: Battleインスタンス
-        expected: 期待される補正値（倍率）
-        message: アサーション失敗時のメッセージ
-    """
-    ctx = create_power_modifier_context(battle)
-    expected_value = int(BASE_MODIFIER * expected)
-    actual_modifier = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, BASE_MODIFIER)
-    # 4096基準の整数値として計算（value * multiplier // 4096の逆算）
-    assert actual_modifier == expected_value, f"{message}: expected {expected_value} ({expected}x), got {actual_modifier}"
-
-
-def create_def_modifier_context(battle: Battle, defender_idx: int = 0) -> BattleContext:
-    """防御補正のコンテキストを作成するヘルパー関数。"""
-    attacker_idx = 1 - defender_idx
-    return BattleContext(
-        attacker=battle.actives[attacker_idx],
-        defender=battle.actives[defender_idx],
-        move=battle.actives[attacker_idx].moves[0]
+def assert_accuracy(battle: Battle,
+                    expected: float | None,
+                    base: float = 100,
+                    atk_idx: int = 0):
+    """命中率補正値を検証するヘルパー関数。"""
+    attacker = battle.actives[atk_idx]
+    defender = battle.actives[1 - atk_idx]
+    v = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        base
     )
+    assert v == expected, f"Expected {expected} but got {v} for accuracy calculation"
 
 
-def assert_def_modifier(battle: Battle, expected: float, message: str = ""):
-    """防御補正値を検証するヘルパー関数。"""
-    ctx = create_def_modifier_context(battle)
-    actual_modifier = battle.events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, BASE_MODIFIER)
-    expected_value = int(BASE_MODIFIER * expected)
-    assert actual_modifier == expected_value, f"{message}: expected {expected_value} ({expected}x), got {actual_modifier}"
-
-
-def prepare_action_order(battle: Battle):
-    """行動順計算のため、各プレイヤーのコマンドを予約する。
+def reserve_command(battle: Battle):
+    """各プレイヤーがコマンドを予約した状態にする
 
     Args:
         battle: Battleインスタンス
     """
     for player in battle.players:
-        if not player.reserved_commands:
-            command = player.choose_action_command(battle)
-            player.reserve_command(command)
+        player.init_turn()
+        command = player.choose_action_command(battle)
+        player.reserve_command(command)
 
 
 def can_switch(battle: Battle, idx: int) -> bool:

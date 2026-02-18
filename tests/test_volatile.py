@@ -186,7 +186,7 @@ def test_こんらん_action():
 # TODO: さわぐのテスト実装(低優先度)
 
 
-def test_しおづけ():
+def test_しおづけ_x1():
     """しおづけ: ターン終了時ダメージ"""
     battle = t.start_battle(ally_volatile={"しおづけ": 1})
     mon = battle.actives[0]
@@ -197,7 +197,7 @@ def test_しおづけ():
     t.assert_log_contains(battle, "しおづけ")
 
 
-def test_しおづけ_():
+def test_しおづけ_x2():
     """しおづけ: ターン終了時ダメージ"""
     battle = t.start_battle(
         ally=[Pokemon("ゼニガメ")],
@@ -237,13 +237,27 @@ def test_じゅうでん():
 
 
 def test_タールショット():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["ひのこ"])],
+        foe_volatile={"タールショット": 1}
+    )
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_DEF_TYPE_MODIFIER,
+                         8192)
 
 
 def test_ちいさくなる():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["のしかかり"])],
+        foe_volatile={"ちいさくなる": 1}
+    )
+    # 必中
+    t.assert_accuracy(battle, expected=None)
+
+    # 威力2倍
+    t.assert_damage_calc(battle,
+                         Event.ON_CALC_POWER_MODIFIER,
+                         expected=8192)
 
 
 def test_ちょうはつ():
@@ -364,15 +378,13 @@ def test_バインド_ghost_can_switch():
 def test_ひるみ():
     """ひるみ: 行動不能（1ターン）"""
     battle = t.start_battle(ally_volatile={"ひるみ": 1})
+    attacker, defender = battle.actives
     battle.events.emit(
         Event.ON_TRY_ACTION,
-        BattleContext(attacker=battle.actives[0])
+        BattleContext(attacker=attacker, defender=defender)
     )
-    battle.print_logs()
-    # ひるみ状態が解除されていることを確認
-    assert not battle.actives[0].has_volatile("ひるみ")
-    # ログにひるみメッセージが含まれるか確認
-    t.assert_log_contains(battle, "ひるんだ")
+    assert not attacker.has_volatile("ひるみ")
+    t.assert_log_contains(battle, "ひるみ")
 
 
 def test_ふういん():

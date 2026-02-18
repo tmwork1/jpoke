@@ -89,4 +89,5 @@ MoveLabel = Literal[
     "slash",
     "sound",
     "wind",
+    "minimize",
 ]
