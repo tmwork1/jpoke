@@ -1,5 +1,5 @@
 
-from jpoke.utils.type_defs import PokeType, MoveCategory, MoveLabel
+from jpoke.utils.type_defs import Type, MoveCategory, MoveLabel
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
 from jpoke.data.models import MoveData
@@ -27,7 +27,7 @@ class Move(GameEffect):
         super().__init__(MOVES[name])
         self._initial_pp: int = pp if pp else self.data.pp
         self.pp: int = self._initial_pp
-        self._type: PokeType = self.data.type
+        self._type: Type = self.data.type
         self.data: MoveData  # type hint
 
     def init_game(self):

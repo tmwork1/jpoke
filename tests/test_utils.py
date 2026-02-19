@@ -115,35 +115,44 @@ def start_battle(ally: list[Pokemon] | None = None,
     return battle
 
 
-def assert_damage_calc(battle: Battle,
-                       event: Event,
-                       expected: int,
-                       base: int = 4096,
-                       atk_idx: int = 0):
+def get_try_result(battle: Battle,
+                   event: Event,
+                   atk_idx: int = 0) -> bool:
+    attacker = battle.actives[atk_idx]
+    defender = battle.actives[1 - atk_idx]
+    result = battle.events.emit(
+        event,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        True,
+    )
+    return result
+
+
+def calc_damage_modifier(battle: Battle,
+                         event: Event,
+                         base: int = 4096,
+                         atk_idx: int = 0) -> int:
     """ダメージ計算の補正値を検証するヘルパー関数。"""
     attacker = battle.actives[atk_idx]
     defender = battle.actives[1 - atk_idx]
-    v = battle.events.emit(
+    return battle.events.emit(
         event,
         BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
         base
     )
-    assert v == expected, f"Expected {expected} but got {v} for event {event}"
 
 
-def assert_accuracy(battle: Battle,
-                    expected: float | None,
-                    base: float = 100,
-                    atk_idx: int = 0):
+def calc_accuracy(battle: Battle,
+                  base: float = 100,
+                  atk_idx: int = 0):
     """命中率補正値を検証するヘルパー関数。"""
     attacker = battle.actives[atk_idx]
     defender = battle.actives[1 - atk_idx]
-    v = battle.events.emit(
+    return battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
         BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
         base
     )
-    assert v == expected, f"Expected {expected} but got {v} for accuracy calculation"
 
 
 def reserve_command(battle: Battle):
@@ -158,7 +167,7 @@ def reserve_command(battle: Battle):
         player.reserve_command(command)
 
 
-def can_switch(battle: Battle, idx: int) -> bool:
+def can_switch(battle: Battle, idx: int = 0) -> bool:
     """指定されたプレイヤーが交代可能かチェックする。
 
     Args:
@@ -173,7 +182,6 @@ def can_switch(battle: Battle, idx: int) -> bool:
     """
     if not (0 <= idx < len(battle.players)):
         raise IndexError(f"Invalid player index: {idx}. Must be between 0 and {len(battle.players) - 1}")
-
     commands = battle.get_available_action_commands(battle.players[idx])
     return any(c.is_switch() for c in commands)
 

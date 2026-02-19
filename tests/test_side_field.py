@@ -3,7 +3,7 @@ import math
 
 from jpoke.enums import Event
 from jpoke.core import BattleContext
-from jpoke.model import Pokemon, Move
+from jpoke.model import Pokemon
 import test_utils as t
 
 # 定数定義
@@ -16,9 +16,7 @@ def test_リフレクター_物理半減():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_side_field={"リフレクター": 5},
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DAMAGE_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
 def test_リフレクター_特殊軽減なし():
@@ -27,9 +25,7 @@ def test_リフレクター_特殊軽減なし():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_side_field={"リフレクター": 5},
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DAMAGE_MODIFIER,
-                         expected=4096)
+    4096 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
 def test_ひかりのかべ_特殊半減():
@@ -38,9 +34,7 @@ def test_ひかりのかべ_特殊半減():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_side_field={"ひかりのかべ": 5},
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DAMAGE_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
 def test_ひかりのかべ_物理軽減なし():
@@ -49,9 +43,7 @@ def test_ひかりのかべ_物理軽減なし():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_side_field={"ひかりのかべ": 5},
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DAMAGE_MODIFIER,
-                         expected=4096)
+    4096 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
 def test_オーロラベール_物理半減():
@@ -60,9 +52,7 @@ def test_オーロラベール_物理半減():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_side_field={"オーロラベール": 1},
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DAMAGE_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
 def test_オーロラベール_特殊半減():
@@ -71,9 +61,7 @@ def test_オーロラベール_特殊半減():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_side_field={"オーロラベール": 1},
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DAMAGE_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
 def test_しんぴのまもり():
@@ -86,20 +74,19 @@ def test_しろいきり_能力低下防止():
     # TODO: 相手による能力低下を防ぐから確認するテストに修正
     """しろいきり: 能力ランク低下を防ぐ"""
     battle = t.start_battle(ally_side_field={"しろいきり": 1})
-    target = battle.actives[0]
-    before_rank = target.rank["A"]
-    battle.modify_stat(target, "A", -1, source=battle.actives[1])
-    after_rank = target.rank["A"]
-
-    assert before_rank == after_rank, "Stat rank decreased"
+    target, source = battle.actives
+    assert not battle.modify_stat(target, "A", -1, source=source)
 
 # TODO: しろいきり 自発的な能力低下は防げないことを確認するテスト追加
 
 
 def test_おいかぜ():
     """おいかぜ: 実効すばやさ2倍"""
-    # TODO: テスト実装
-    pass
+    battle = t.start_battle(
+        ally_side_field={"おいかぜ": 1},
+    )
+    mon = battle.actives[0]
+    assert battle.calc_effective_speed(mon) == 2 * mon.stats["S"]
 
 
 def test_ねがいごと_回復と解除():

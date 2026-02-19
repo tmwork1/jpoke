@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
-from jpoke.utils.type_defs import Nature, PokeType, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
+from jpoke.utils.type_defs import Nature, Type, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
 from jpoke.utils import fast_copy
 from jpoke.enums import Event
@@ -52,7 +52,7 @@ class Pokemon:
                  ability: str | Ability = "",
                  item: str | Item = "",
                  moves: list[str | Move] = ["はねる"],
-                 terastal: PokeType = "ステラ") -> None:
+                 terastal: Type = "ステラ") -> None:
         """ポケモンを初期化する。
 
         Args:
@@ -69,7 +69,7 @@ class Pokemon:
         self.gender: Gender = gender
         self._nature: Nature = nature
         self._level: int = level
-        self._terastal: PokeType = terastal
+        self._terastal: Type = terastal
 
         # 内部変数の初期化
         self._ability: Ability = Ability()
@@ -579,7 +579,7 @@ class Pokemon:
         self._stats_manager.effort = effort
         self.update_stats()
 
-    def has_type(self, type_: PokeType) -> bool:
+    def has_type(self, type_: Type) -> bool:
         """指定されたタイプを持っているか判定する。
 
         Args:
@@ -792,7 +792,7 @@ class Pokemon:
             タイプや特性、技の効果を考慮して判定する。
         """
         floating = self.has_type("ひこう")
-        floating &= battle.events.emit(
+        floating = battle.events.emit(
             Event.ON_CHECK_FLOATING,
             BattleContext(source=self),
             floating
@@ -875,6 +875,7 @@ class Pokemon:
     def apply_ailment(self,
                       battle: Battle,
                       name: AilmentName,
+                      count: int = 0,
                       source: Pokemon | None = None,
                       force: bool = False) -> bool:
         """状態異常を付与する。
@@ -882,6 +883,7 @@ class Pokemon:
         Args:
             battle: バトルインスタンス
             name: 状態異常名
+            count: 状態異常のカウント
             source: 状態異常の原因となったポケモン
             force: Trueの場合、既存の状態異常を上書き
 
@@ -895,24 +897,26 @@ class Pokemon:
         # force=True でない限り上書き不可
         if self.ailment.is_active and not force:
             return False
+
         # 重ねがけ不可
         if name == self.ailment.name:
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
-        if not battle.events.emit(
+        name = battle.events.emit(
             Event.ON_BEFORE_APPLY_AILMENT,
             BattleContext(target=self, source=source),
             name
-        ):
+        )
+        if not name:
             return False
 
         # 既存のハンドラを削除
-        if self.ailment.is_active:
-            self.ailment.unregister_handlers(battle.events, self)
+        self.ailment.unregister_handlers(battle.events, self)
+
         # 新しい状態異常を設定してハンドラ登録
-        self.ailment = Ailment(name)
+        self.ailment = Ailment(name, count=count)
         self.ailment.register_handlers(battle.events, self)
         return True
 
@@ -929,19 +933,8 @@ class Pokemon:
         if not self.ailment.is_active:
             return False
         self.ailment.unregister_handlers(battle.events, self)
-        self.ailment = Ailment("")
+        self.ailment = Ailment()
         return True
-
-    def has_volatile(self, name: VolatileName) -> bool:
-        """指定された揮発性状態を持っているか判定する。
-
-        Args:
-            name: 揮発性状態名
-
-        Returns:
-            指定揮発性状態を持っていればTrue
-        """
-        return name in self.volatiles and self.volatiles[name].is_active
 
     def apply_volatile(self,
                        battle: Battle,
@@ -971,11 +964,12 @@ class Pokemon:
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
-        if not battle.events.emit(
+        name = battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
             BattleContext(target=self, source=source),
             name
-        ):
+        )
+        if not name:
             return False
 
         if isinstance(move, Move):
@@ -1007,3 +1001,14 @@ class Pokemon:
             return False
         self.volatiles.pop(name).unregister_handlers(battle.events, self)
         return True
+
+    def has_volatile(self, name: VolatileName) -> bool:
+        """指定された揮発性状態を持っているか判定する。
+
+        Args:
+            name: 揮発性状態名
+
+        Returns:
+            指定揮発性状態を持っていればTrue
+        """
+        return name in self.volatiles and self.volatiles[name].is_active

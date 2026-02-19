@@ -61,7 +61,10 @@ class Event(Enum):
     # 状態異常・能力変化前イベント
     ON_BEFORE_HEAL = auto()
     ON_BEFORE_APPLY_AILMENT = auto()
+
     ON_BEFORE_APPLY_VOLATILE = auto()
+    ON_VOLATILE_END = auto()
+
     ON_BEFORE_MODIFY_STAT = auto()
 
     # チェック系イベント

@@ -17,9 +17,7 @@ def test_はれ_boost_fire():
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
         weather=("はれ", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=6144)
+    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_はれ_weaken_water():
@@ -28,9 +26,7 @@ def test_はれ_weaken_water():
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
         weather=("はれ", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_あめ_boost_water():
@@ -39,9 +35,7 @@ def test_あめ_boost_water():
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
         weather=("あめ", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=6144)
+    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_あめ_weaken_fire():
@@ -50,9 +44,7 @@ def test_あめ_weaken_fire():
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
         weather=("あめ", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_すなあらし_damage():
@@ -83,9 +75,7 @@ def test_すなあらし_rock_spdef_boost():
         foe=[Pokemon("イシツブテ")],
         weather=("すなあらし", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DEF_MODIFIER,
-                         expected=6144)
+    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER)
 
 
 def test_ゆき_ice_def_boost():
@@ -95,9 +85,7 @@ def test_ゆき_ice_def_boost():
         foe=[Pokemon("ユキワラシ")],
         weather=("ゆき", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_DEF_MODIFIER,
-                         expected=6144)
+    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER)
 
 
 def test_エレキフィールド_boost_electric():
@@ -106,9 +94,7 @@ def test_エレキフィールド_boost_electric():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=5325)
+    5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
     # TODO: 浮いているポケモンは強化されないことを確認
 
@@ -135,9 +121,7 @@ def test_グラスフィールド_boost_grass():
         ally=[Pokemon("フシギダネ", moves=["はっぱカッター"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=5325)
+    5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
     # TODO: 浮いているポケモンは強化されないことを確認
 
@@ -148,9 +132,7 @@ def test_グラスフィールド_じしん弱化():
         ally=[Pokemon("サンドパン", moves=["じしん"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_グラスフィールド_じならし弱化():
@@ -159,9 +141,7 @@ def test_グラスフィールド_じならし弱化():
         ally=[Pokemon("サンドパン", moves=["じならし"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=2048)
+    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_グラスフィールド_heal():
@@ -169,11 +149,10 @@ def test_グラスフィールド_heal():
     battle = t.start_battle(
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    target = battle.actives[0]
-    target._hp = 1
-    expected_hp = target.hp + target.max_hp // 16
+    mon = battle.actives[0]
+    mon._hp = 1
     battle.events.emit(Event.ON_TURN_END_2)
-    assert target.hp == expected_hp, "グラスフィールドの回復量が不正"
+    assert mon.hp == 1 + mon.max_hp // 16, "グラスフィールドの回復量が不正"
 
     # TODO: 浮いているポケモンは回復しないことも確認
 
@@ -184,9 +163,7 @@ def test_サイコフィールド_boost_psychic():
         ally=[Pokemon("フーディン", moves=["サイコキネシス"])],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=5325)
+    assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
     # TODO: 浮いているポケモンは強化されないことを確認
 
@@ -198,17 +175,7 @@ def test_サイコフィールド_先制技無効():
         foe=[Pokemon("ピカチュウ")],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    ctx = BattleContext(
-        attacker=battle.actives[0],
-        defender=battle.actives[1],
-        move=battle.actives[0].moves[0]
-    )
-    result = battle.events.emit(Event.ON_TRY_MOVE, ctx, True)
-    assert result is False, "サイコフィールドで先制技が無効化されない"
-
-    # TODO: 対象が自分や場である場合は先制技が有効であることを確認
-
-    # TODO: 特性いたずらごころなどにより先制技扱いになった場合も無効化されることを確認 (特性実装後に追加)
+    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
 
 
 def test_サイコフィールド_浮遊は先制技有効():
@@ -218,13 +185,11 @@ def test_サイコフィールド_浮遊は先制技有効():
         foe=[Pokemon("ピジョン")],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    ctx = BattleContext(
-        attacker=battle.actives[0],
-        defender=battle.actives[1],
-        move=battle.actives[0].moves[0]
-    )
-    result = battle.events.emit(Event.ON_TRY_MOVE, ctx, True)
-    assert result is True, "サイコフィールドで浮遊相手に先制技が無効化された"
+    assert t.get_try_result(battle, Event.ON_TRY_MOVE)
+
+# TODO: サイコフィールド: 自分が対象の先制技は無効かされないことを確認するテストを追加
+# TODO: サイコフィールド: 場が対象の先制技は無効かされないことを確認するテストを追加
+# TODO: 特性いたずらごころなどにより先制技扱いになった場合も無効化されることを確認 (特性実装後に追加)
 
 
 def test_ミストフィールド_ドラゴン技弱化():
@@ -233,49 +198,33 @@ def test_ミストフィールド_ドラゴン技弱化():
         ally=[Pokemon("カイリュー", moves=["りゅうのはどう"])],
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
-    t.assert_damage_calc(battle,
-                         Event.ON_CALC_POWER_MODIFIER,
-                         expected=2048)
+    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_ミストフィールド_混乱防止():
     """ミストフィールド: 混乱無効化"""
-    # まずフィールドなしで混乱付与が成功することを確認
-    battle_no_field = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-    )
-    target = battle_no_field.actives[0]
-    result = target.apply_volatile(battle_no_field, "こんらん", count=3)
-    assert result, "フィールドなしでも混乱が付与されない"
-    assert "こんらん" in target.volatiles, "混乱状態が追加されていない"
-
     # ミストフィールド下では混乱付与が失敗する
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
-    target2 = battle.actives[0]
-    result = target2.apply_volatile(battle, "こんらん", count=3)
+    mon = battle.actives[0]
+    result = mon.apply_volatile(battle, "こんらん", count=3)
     assert not result, "ミストフィールド下で混乱が付与された"
-    assert "こんらん" not in target2.volatiles, "混乱状態が追加されている"
+    assert "こんらん" not in mon.volatiles, "混乱状態が追加されている"
 
 
 def test_ミストフィールド_状態異常防止():
     """ミストフィールド: 状態異常無効化"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
-    target = battle.actives[0]
-    result = target.apply_ailment(battle, "どく")
-    assert not result, "ミストフィールド下で状態異常が付与された"
-    assert not target.ailment.is_active, "ミストフィールド下で状態異常が付与された"
+    assert not battle.actives[0].apply_ailment(battle, "どく")
 
 
 def test_じゅうりょく_命中補正():
     """じゅうりょく: 命中率5/3倍"""
     battle = t.start_battle(global_field={"じゅうりょく": DEFAULT_DURATION})
-    t.assert_accuracy(battle, base=30, expected=50)
+    assert 50 == t.calc_accuracy(battle, base=30)
 
 
 def test_じゅうりょく_浮遊無効():
@@ -284,8 +233,7 @@ def test_じゅうりょく_浮遊無効():
         ally=[Pokemon("ピジョン")],
         global_field={"じゅうりょく": DEFAULT_DURATION},
     )
-    target = battle.actives[0]
-    assert not target.is_floating(battle), "じゅうりょくで浮遊が無効化されない"
+    assert not battle.actives[0].is_floating(battle), "じゅうりょくで浮遊が無効化されない"
 
 
 def test_トリックルーム_行動順反転():

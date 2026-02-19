@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon, Move
 
-from jpoke.utils.type_defs import RoleSpec, PokeType, Stat, AilmentName, Weather, Terrain, Side
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain
 from jpoke.enums import Event
 from jpoke.core import BattleContext, HandlerReturn
 
@@ -116,13 +116,19 @@ def apply_ailment(battle: Battle,
 def apply_volatile(battle: Battle,
                    ctx: BattleContext,
                    value: Any,
-                   volatile: str,
+                   volatile: VolatileName,
                    target_spec: RoleSpec,
                    source_spec: RoleSpec | None = None,
-                   count: int = 1,
+                   count: int | None = None,
                    chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
+    if count is None:
+        match volatile:
+            case "こんらん":
+                count = battle.random.randint(1, 4)
+            case _:
+                count = 1
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = target.apply_volatile(battle, volatile, count=count, source=source)

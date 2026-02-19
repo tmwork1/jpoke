@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import EventManager
+    from jpoke.core import Battle
     from jpoke.model.pokemon import Pokemon
 
 from jpoke.utils.type_defs import AilmentName

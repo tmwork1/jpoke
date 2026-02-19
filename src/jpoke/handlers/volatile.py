@@ -121,24 +121,6 @@ def あばれる_modify_command_options(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=[Command.RAMPAGE], stop_event=True)
 
 
-def あばれる_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """あばれる状態のターン経過処理
-    解除されたらこんらん状態を付与する
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    tick_volatile(battle, ctx, value, "あばれる")
-    if not ctx.source.has_volatile("あばれる"):
-        ctx.source.apply_volatile(battle, "こんらん", count=battle.random.randint(1, 4))
-    return HandlerReturn(True)
-
-
 def あめまみれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あめまみれのターン経過処理
 
@@ -496,7 +478,7 @@ def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value:
     return HandlerReturn(value=value)
 
 
-def ちょうはつ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ちょうはつ_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちょうはつによる変化技の使用禁止
 
     Args:
@@ -507,33 +489,10 @@ def ちょうはつ_before_move(battle: Battle, ctx: BattleContext, value: Any) 
     Returns:
         HandlerReturn: 変化技の場合はvalue=None（使用禁止）、攻撃技の場合はTrue
     """
-    # valueはMoveオブジェクト
-    move = value
-
-    # moveがNoneの場合はスキップ
-    if move is None:
-        return HandlerReturn(True)
-
-    # 変化技の場合は使用失敗
-    if move.data.category == "変化":
-        battle.add_event_log(ctx.attacker, f"はちょうはつで{move.name}が使えない！")
-        return HandlerReturn(False, value=None, stop_event=True)
-
-    return HandlerReturn(True)
-
-
-def にげられない_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """にげられない状態による交代制限
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在のtrapped値（OR演算で更新）
-
-    Returns:
-        HandlerReturn: True（trapped）
-    """
-    return HandlerReturn(True, value | True)
+    if ctx.move.category == "変化":
+        battle.add_event_log(ctx.attacker, f"ちょうはつ: {ctx.move.name}不発")
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 def ねむけ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -549,9 +508,9 @@ def ねむけ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     """
     ctx.source.tick_volatile(battle, "ねむけ")
     if not ctx.source.has_volatile("ねむけ"):
-        # ねむり状態を付与 (1~3ターン)
-        ctx.source.apply_ailment(battle, "ねむり")
-    return HandlerReturn(True)
+        count = battle.random.randint(1, 3)
+        ctx.source.apply_ailment(battle, "ねむり", count=count)
+    return HandlerReturn()
 
 
 def ねをはる_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
