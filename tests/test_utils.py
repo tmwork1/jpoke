@@ -155,19 +155,23 @@ def calc_accuracy(battle: Battle,
     )
 
 
-def reserve_command(battle: Battle):
+def reserve_command(battle: Battle,
+                    ally_command: Command | None = None,
+                    foe_command: Command | None = None):
     """各プレイヤーがコマンドを予約した状態にする
 
     Args:
         battle: Battleインスタンス
     """
-    for player in battle.players:
+    commands = [ally_command, foe_command]
+    for player, cmd in zip(battle.players, commands):
         player.init_turn()
-        command = player.choose_action_command(battle)
-        player.reserve_command(command)
+        if cmd is None:
+            cmd = player.choose_action_command(battle)
+        player.reserve_command(cmd)
 
 
-def can_switch(battle: Battle, idx: int = 0) -> bool:
+def can_switch(battle: Battle, idx: int) -> bool:
     """指定されたプレイヤーが交代可能かチェックする。
 
     Args:

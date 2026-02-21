@@ -93,7 +93,7 @@ class Handler:
                 case "ailment":
                     text = subject.ailment.name
                 case "volatile":
-                    # 揮発性状態は多岐にわたるため自動ログ機能はなし
+                    # どの Volatile か特定できないため、自動ログはサポートしない
                     pass
 
             if not success:

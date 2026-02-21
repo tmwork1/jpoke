@@ -281,11 +281,20 @@ def test_にげられない():
         ally_volatile={"にげられない": 1},
     )
     # 交代コマンドが利用不可
-    assert not t.can_switch(battle)
+    assert not t.can_switch(battle, 0)
 
 
 def test_ねむけ():
-    pass
+    battle = t.start_battle(
+        ally_volatile={"ねむけ": 2}
+    )
+    mon = battle.actives[0]
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert not mon.has_volatile("ねむけ")
+    assert mon.has_ailment("ねむり")
 
 
 def test_ねをはる_heal():
@@ -306,57 +315,56 @@ def test_ねをはる_switch_denied():
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"ねをはる": 1},
     )
-    assert not t.can_switch(battle)
+    assert not t.can_switch(battle, 0)
 
 
-def test_のろい():
+def test_のろい_damage():
     """のろい: ターン終了時ダメージ"""
     battle = t.start_battle(ally_volatile={"のろい": 1})
     mon = battle.actives[0]
-    expected_damage = mon.max_hp // 4
-    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon), None)
-    # のろいダメージが発生
-    assert mon.hp == mon.max_hp - expected_damage
-    # ログにのろいメッセージが含まれるか確認
+    battle.events.emit(Event.ON_TURN_END_3)
+    damage = mon.max_hp - mon.hp
+    assert damage == mon.max_hp // 4
     t.assert_log_contains(battle, "のろい")
 
 
 def test_バインド_damage():
     """バインド: ターン終了時ダメージ"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        ally_volatile={"バインド": 3},
+        ally_volatile={"バインド": 2},
     )
-    initial_hp = battle.actives[0].hp
-    expected_damage = battle.actives[0].max_hp // 8
-    # 1ターン進める
-    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=battle.actives[0]), None)
-    # バインドダメージが発生
-    assert battle.actives[0].hp == initial_hp - expected_damage
-    # ログにバインドメッセージが含まれるか確認
-    t.assert_log_contains(battle, "バインド")
+    mon = battle.actives[0]
+    expected_damage = mon.max_hp // 8
+    # 1ターン進めてダメージを受ける
+    battle.events.emit(Event.ON_TURN_END_3)
+    hp = mon.hp
+    assert hp == mon.max_hp - expected_damage
+    t.assert_log_contains(battle, "バインドダメージ")
+    # 1ターン進めて解除される
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert mon.hp == hp
+    t.assert_log_contains(battle, "解除")
 
 
 def test_バインド_switch_denied():
-    """バインド: 通常タイプは交代不可"""
+    """バインド: 交代不可"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"バインド": 3},
     )
-    # ゴーストタイプでないので交代コマンドが利用不可
-    commands = battle.get_available_action_commands(battle.players[0])
-    has_switch = any(c.is_switch() for c in commands)
-    assert not has_switch, f"バインド状態で交代コマンドが利用可能: {[str(c) for c in commands]}"
+    assert not t.can_switch(battle, 0)
 
 
-def test_バインド_ghost_can_switch():
-    """バインド: ゴーストタイプは交代可能"""
+def test_バインド_source_switch_out():
+    """バインドの発生源が退場した場合、バインドが解除される"""
     battle = t.start_battle(
-        ally=[Pokemon("ゲンガー"), Pokemon("ピカチュウ")],
-        ally_volatile={"バインド": 3},
+        ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        foe_volatile={"バインド": 3},
     )
-    # ゴーストタイプなので交代可能
-    assert t.can_switch(battle, 0)
+    t.reserve_command(battle, ally_command=Command.SWITCH_1)
+    battle.advance_turn()
+    battle.print_logs()
+    assert not battle.actives[1].has_volatile("バインド")
 
 
 def test_ひるみ():

@@ -872,6 +872,17 @@ class Pokemon:
             value=move.category
         )
 
+    def has_ailment(self, name: AilmentName) -> bool:
+        """指定された状態異常を持っているか判定する。
+
+        Args:
+            name: 状態異常名
+
+        Returns:
+            指定状態異常を持っていればTrue
+        """
+        return self.ailment.is_active and self.ailment.name == name
+
     def apply_ailment(self,
                       battle: Battle,
                       name: AilmentName,
@@ -936,6 +947,33 @@ class Pokemon:
         self.ailment = Ailment()
         return True
 
+    def tick_down_ailment(self, battle: Battle) -> bool:
+        """状態異常のターン経過処理を行う。
+
+        Args:
+            battle: バトルインスタンス
+
+        Returns:
+            ターン経過処理を行った場合True、状態異常がない場合False
+        """
+        if not self.ailment.is_active:
+            return False
+        self.ailment.count -= 1
+        if self.ailment.count == 0:
+            self.cure_ailment(battle)
+        return True
+
+    def has_volatile(self, name: VolatileName) -> bool:
+        """指定された揮発性状態を持っているか判定する。
+
+        Args:
+            name: 揮発性状態名
+
+        Returns:
+            指定揮発性状態を持っていればTrue
+        """
+        return name in self.volatiles and self.volatiles[name].is_active
+
     def apply_volatile(self,
                        battle: Battle,
                        name: VolatileName,
@@ -982,8 +1020,7 @@ class Pokemon:
 
     def remove_volatile(self,
                         battle: Battle,
-                        name: VolatileName,
-                        source: Pokemon | None = None) -> bool:
+                        name: VolatileName) -> bool:
         """揮発性状態を解除する。
 
         Args:
@@ -1002,13 +1039,20 @@ class Pokemon:
         self.volatiles.pop(name).unregister_handlers(battle.events, self)
         return True
 
-    def has_volatile(self, name: VolatileName) -> bool:
-        """指定された揮発性状態を持っているか判定する。
+    def tick_down_volatile(self, battle: Battle, name: VolatileName) -> bool:
+        """揮発性状態のターン経過処理を行う。
 
         Args:
+            battle: バトルインスタンス
             name: 揮発性状態名
 
         Returns:
-            指定揮発性状態を持っていればTrue
+            ターン経過処理を行った場合True、指定された揮発性状態がない場合False
         """
-        return name in self.volatiles and self.volatiles[name].is_active
+        if not self.has_volatile(name):
+            return False
+        volatile = self.volatiles[name]
+        volatile.count -= 1
+        if volatile.count == 0:
+            self.remove_volatile(battle, name)
+        return True

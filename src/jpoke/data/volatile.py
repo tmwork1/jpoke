@@ -46,13 +46,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_DAMAGE: h.VolatileHandler(
-                partial(h.tick_volatile, name="あばれる"),
-                subject_spec="source:self",
+                h.あばれる_tick,
+                subject_spec="attacker:self",
                 priority=180
-            ),
-            Event.ON_VOLATILE_END: h.VolatileHandler(
-                partial(common.apply_volatile, name="こんらん"),
-                subject_spec="source:self",
             ),
         }
     ),
@@ -161,7 +157,7 @@ VOLATILES: dict[str, VolatileData] = {
     "こんらん": VolatileData(
         handlers={
             Event.ON_TRY_ACTION: h.VolatileHandler(
-                h.こんらん,
+                h.こんらん_action,
                 subject_spec="attacker:self",
                 priority=110
             ),
@@ -201,7 +197,7 @@ VOLATILES: dict[str, VolatileData] = {
     "じゅうでん": VolatileData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
-                h.じゅうでん,
+                h.じゅうでん_boost,
                 subject_spec="attacker:self",
             ),
         }
@@ -278,7 +274,7 @@ VOLATILES: dict[str, VolatileData] = {
     "ねむけ": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                h.ねむけ_turn_end,
+                h.ねむけ_tick,
                 subject_spec="source:self",
                 log="on_success",
                 priority=100
@@ -294,17 +290,19 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=10
             ),
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                h.ねをはる_check_trapped,
+                lambda *args: HandlerReturn(value=True),
                 subject_spec="source:self",
-                log="on_success",
-                priority=200
+            ),
+            Event.ON_CHECK_FLOATING: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=False, stop_event=True),
+                subject_spec="source:self",
             ),
         }
     ),
     "のろい": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(common.drain_hp, from_="source:self", r=1/4),
+                h.のろい_damage,
                 subject_spec="source:self",
                 priority=70,
             ),
@@ -313,16 +311,18 @@ VOLATILES: dict[str, VolatileData] = {
     "バインド": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                h.バインド_turn_end,
+                h.バインド_damage,
                 subject_spec="source:self",
                 log="on_success",
                 priority=70
             ),
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                h.バインド_check_trapped,
+                lambda *args: HandlerReturn(value=True),
                 subject_spec="source:self",
-                log="on_success",
-                priority=200
+            ),
+            Event.ON_SWITCH_OUT: h.VolatileHandler(
+                h.バインド_swith_out,
+                subject_spec="source:foe",
             ),
         }
     ),

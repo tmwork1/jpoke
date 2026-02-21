@@ -61,10 +61,7 @@ class Event(Enum):
     # 状態異常・能力変化前イベント
     ON_BEFORE_HEAL = auto()
     ON_BEFORE_APPLY_AILMENT = auto()
-
     ON_BEFORE_APPLY_VOLATILE = auto()
-    ON_VOLATILE_END = auto()
-
     ON_BEFORE_MODIFY_STAT = auto()
 
     # チェック系イベント
@@ -78,6 +75,7 @@ class Event(Enum):
 
     # 計算系イベント
     ON_MODIFY_ACCURACY = auto()  # emit: core/move_executor.py; handlers: data/field.py
+    ON_MODIFY_BIND_DAMAGE_RATIO = auto()  # emit: core/move_executor.py; handlers: data/field.py
     ON_CALC_CRITICAL_RANK = auto()  # emit: core/damage.py; handlers: data/ability.py,data/item.py
     ON_CALC_POWER_MODIFIER = auto()  # emit: core/damage.py; handlers: data/field.py
     ON_CALC_ATK_MODIFIER = auto()  # emit: core/damage.py

@@ -59,7 +59,7 @@ def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> Handle
 def ねむり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねむり状態による行動不能チェック"""
     mon = ctx.attacker
-    mon.ailment.tick_down()
+    mon.tick_down_ailment(battle)
     if mon.ailment.count == 0:
         # 眠りから覚めた：ハンドラを解除して空の状態に
         mon.cure_ailment(battle)

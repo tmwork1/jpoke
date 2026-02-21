@@ -55,17 +55,3 @@ class Volatile(GameEffect):
     def is_active(self) -> bool:
         """揮発性状態が実在するかどうか"""
         return self.count > 0
-
-    def tick_up(self, ) -> bool:
-        """揮発性状態のカウンターを1増加させる"""
-        if self.count < self.max_count:
-            self.count += 1
-            return True
-        return False
-
-    def tick_down(self) -> bool:
-        """揮発性状態のカウンターを1減少させる"""
-        if self.count > 0:
-            self.count -= 1
-            return True
-        return False

@@ -49,17 +49,3 @@ class Ailment(GameEffect):
     def is_active(self) -> bool:
         """状態異常が実在するかどうか（空でない状態異常が存在する）"""
         return self.name != ""
-
-    def tick_up(self, ) -> bool:
-        """状態異常のカウンターを1増加させる"""
-        if self.count < self.max_count:
-            self.count += 1
-            return True
-        return False
-
-    def tick_down(self, ) -> bool:
-        """状態異常のカウンターを1減少させる"""
-        if self.count > 0:
-            self.count -= 1
-            return True
-        return False
