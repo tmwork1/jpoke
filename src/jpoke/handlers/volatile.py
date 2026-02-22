@@ -19,13 +19,14 @@ class VolatileHandler(Handler):
                  func: Callable,
                  subject_spec: RoleSpec = "source:self",
                  log: LogPolicy = "never",
+                 log_text: str | None = None,
                  priority: int = 100,
                  once: bool = False):
         super().__init__(func,
                          subject_spec,
                          source_type="volatile",
                          log=log,
-                         log_text=None,
+                         log_text=log_text,
                          priority=priority,
                          once=once)
 
