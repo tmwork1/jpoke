@@ -337,20 +337,13 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ふういん": VolatileData(
         handlers={
-            Event.ON_TRY_ACTION: h.VolatileHandler(
-                h.ふういん_before_move,
-                subject_spec="source:foe",
-                log="on_success",
-                priority=200
-            ),
         }
     ),
     "ほろびのうた": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                h.ほろびのうた_turn_end,
+                h.ほろびのうた_tick,
                 subject_spec="source:self",
-                log="on_success",
                 priority=110
             ),
         }
@@ -358,22 +351,14 @@ VOLATILES: dict[str, VolatileData] = {
     "マジックコート": VolatileData(
         handlers={
             Event.ON_CHECK_REFLECT: h.VolatileHandler(
-                h.マジックコート_before_damage,
+                h.マジックコート_reflect,
                 subject_spec="defender:self",
-                log="on_success",
                 priority=200
             ),
         }
     ),
     "まるくなる": VolatileData(
-        handlers={
-            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
-                h.まるくなる_power_modifier,
-                subject_spec="attacker:self",
-                log="never",
-                priority=80,
-            ),
-        }
+        handlers={}
     ),
     "みがわり": VolatileData(
         handlers={
@@ -406,7 +391,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.メロメロ_action,
                 subject_spec="attacker:self",
-                log="on_success",
                 priority=130
             ),
         }
@@ -416,6 +400,8 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(common.drain_hp, from_="source:self", r=1/8),
                 subject_spec="source:self",
+                log="on_success",
+                log_text="やどりぎのタネ",
                 priority=20,
             ),
         }

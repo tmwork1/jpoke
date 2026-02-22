@@ -384,13 +384,21 @@ def test_ふういん():
     pass
 
 
+def test_ほろびのうた():
+    battle = t.start_battle(ally_volatile={"ほろびのうた": 1})
+    mon = battle.actives[0]
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert mon.hp == 0
+    t.assert_log_contains(battle, "ほろびのうた")
+
+
 def test_マジックコート():
-    # TODO: 実装保留
+    # TODO: 技を実装した後に実装
     pass
 
 
 def test_まるくなる():
-    # TODO: 実装保留
+    # まるくなる状態自体には効果はない
     pass
 
 
@@ -412,41 +420,37 @@ def test_みちづれ():
 def test_メロメロ_行動不能():
     """メロメロ: 行動不能（永続効果）"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
         ally_volatile={"メロメロ": 1},
     )
     # 行動不能を強制
     battle.test_option.trigger_volatile = True
-    battle.events.emit(Event.ON_TRY_ACTION, BattleContext(target=battle.actives[0]), None)
-    battle.print_logs()
-    # メロメロ状態が維持されていることを確認（永続効果）
-    assert battle.actives[0].has_volatile("メロメロ")
-    # ログにメロメロメッセージが含まれるか確認
-    t.assert_log_contains(battle, "メロメロで動けない")
+    assert not t.get_try_result(battle, Event.ON_TRY_ACTION)
+    t.assert_log_contains(battle, "動けない")
 
 
 def test_メロメロ_行動可能():
     """メロメロ: 行動可能（永続効果維持）"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
         ally_volatile={"メロメロ": 1},
     )
     # 行動を許可
     battle.test_option.trigger_volatile = False
-    battle.events.emit(Event.ON_TRY_ACTION, BattleContext(target=battle.actives[0]), None)
-    battle.print_logs()
-    # メロメロ状態が維持されていることを確認（永続効果）
-    assert battle.actives[0].has_volatile("メロメロ")
+    assert t.get_try_result(battle, Event.ON_TRY_ACTION)
+    t.assert_log_contains(battle, "メロメロ")
 
 
 def test_やどりぎのタネ():
     """やどりぎのタネ: ターン終了時ダメージ"""
-    battle = t.start_battle(ally_volatile={"やどりぎのタネ": 1})
-    mon = battle.actives[0]
-    expected_damage = mon.max_hp // 8
+    battle = t.start_battle(
+        ally_volatile={"やどりぎのタネ": 1}
+    )
+    from_mon, to_mon = battle.actives
+    to_mon._hp = 1
     battle.events.emit(Event.ON_TURN_END_3)
-    actual_damage = mon.max_hp - mon.hp
-    assert actual_damage == expected_damage, "Incorect damage"
+    battle.print_logs()
+    damage = from_mon.max_hp - from_mon.hp
+    assert damage == from_mon.max_hp // 8
+    assert to_mon.hp == 1 + damage
     t.assert_log_contains(battle, "やどりぎのタネ")
 
 

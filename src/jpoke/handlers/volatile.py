@@ -147,7 +147,7 @@ def あめまみれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
         value: イベント値（未使用）
 
     Returns:
-        HandlerReturn: 
+        HandlerReturn:
     """
     tick_volatile(battle, ctx, value, "あめまみれ")
     mon = ctx.source
@@ -606,67 +606,23 @@ def ひるみ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ふういん_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ふういんによる技の使用禁止
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 使用しようとしている技（Move）
-
-    Returns:
-        HandlerReturn: 封印された技の場合はvalue=None、それ以外はTrue
-    """
-    move = value
-    if move is None or not ctx.attacker:
-        return HandlerReturn(True)
-
-    owner = battle.foe(ctx.attacker)
-    if owner and owner.has_move(move.name):
-        battle.add_event_log(ctx.attacker, f"はふういんで{move.name}が使えない！")
-        return HandlerReturn(False, value=None, stop_event=True)
-
-    return HandlerReturn(True)
+def ふういん_(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    return HandlerReturn()
 
 
-def ほろびのうた_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ほろびのうたのターン経過処理
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
+def ほろびのうた_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ほろびのうたのターン経過処理"""
     tick_volatile(battle, ctx, value, "ほろびのうた")
     if not ctx.source.has_volatile("ほろびのうた"):
-        # ひんしにする
         battle.modify_hp(ctx.source, v=-ctx.source.hp)
-        battle.add_event_log(ctx.source, "はほろびのうたで倒れた！")
-    return HandlerReturn(True)
+        battle.add_event_log(ctx.source, "ほろびのうた")
+    return HandlerReturn()
 
 
-def マジックコート_before_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """マジックコートによる変化技の跳ね返し
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値
-
-    Returns:
-        HandlerReturn: 変化技を跳ね返す
-    """
-    if not ctx.move or ctx.move.category != "変化":
-        return HandlerReturn(False)
-
-    if "reflectable" not in ctx.move.data.labels:
-        return HandlerReturn(False)
-
-    # 簡易反射: 元の効果を無効化
-    return HandlerReturn(True, None, stop_event=True)
+def マジックコート_reflect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """マジックコートによる変化技の跳ね返し"""
+    reflected = "reflectable" in ctx.move.labels
+    return HandlerReturn(value=reflected)
 
 
 def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -815,11 +771,11 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     else:
         infatuated = battle.random.random() < 0.5
 
+    battle.add_event_log(ctx.attacker, "メロメロ")
     if infatuated:
-        battle.add_event_log(ctx.attacker, "はメロメロで動けない！")
-        return HandlerReturn(False, stop_event=True)
-
-    return HandlerReturn(True)
+        battle.add_event_log(ctx.attacker, "動けない")
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 def ロックオン_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

@@ -156,7 +156,7 @@ class MoveExecutor:
 
         # 発動成功判定
         if not self.events.emit(Event.ON_TRY_MOVE, ctx, True):
-            pass
+            return
 
         # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
         if self.events.emit(Event.ON_CHECK_PROTECT, ctx, False):
@@ -166,9 +166,9 @@ class MoveExecutor:
         if self.events.emit(Event.ON_CHECK_INVULNERABLE, ctx, False):
             return
 
-        # 反射判定（ON_TRY_MOVE Priority 100: マジックコート等による反射）
+        # 反射判定
         if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
-            return
+            ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move

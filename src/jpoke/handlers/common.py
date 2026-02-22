@@ -30,20 +30,22 @@ def drain_hp(battle: Battle,
              to_: RoleSpec | None = None,
              v: int = 0,
              r: float = 0,
+             heal_rate: float = 1,
              chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(False)
 
     from_mon = ctx.resolve_role(battle, from_)
-    if to_ is not None:
-        to_mon = ctx.resolve_role(battle, to_)
-    else:
+    if to_ is None:
         to_mon = battle.foe(from_mon)
+    else:
+        to_mon = ctx.resolve_role(battle, to_)
 
-    v = battle.modify_hp(from_mon, -v, r)
-    if v:
-        battle.modify_hp(to_mon, v)
-    return HandlerReturn(success=(v != 0))
+    success = battle.modify_hp(from_mon, -v, -r)
+    if success:
+        battle.modify_hp(to_mon, v * heal_rate, r * heal_rate)
+
+    return HandlerReturn(success=success)
 
 
 def modify_stat(battle: Battle,
