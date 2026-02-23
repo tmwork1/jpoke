@@ -101,7 +101,7 @@ def restrict_commands(battle: Battle,
 def _protect_block(battle: Battle, ctx: BattleContext, value: Any) -> bool:
     if not ctx.move:
         return False
-    if "unprotectable" in ctx.move.data.labels or "anti_protect" in ctx.move.data.labels:
+    if ctx.move.has_label(["unprotectable", "anti_protect"]):
         return False
     return True
 
@@ -417,14 +417,14 @@ def じごくずき_restrict_commands(battle: Battle, ctx: BattleContext, value:
     new_options = []
     for cmd in value:
         if not cmd.is_move_family() or \
-                "sound" not in ctx.attacker.moves[cmd.idx].labels:
+                not ctx.attacker.moves[cmd.idx].has_label("sound"):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
 
 
 def じごくづき_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じごくづき状態による技の不発"""
-    if "sound" in ctx.move.labels:
+    if ctx.move.has_label("sound"):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -473,7 +473,7 @@ def ちいさくなる_guaranteed_hit(battle: Battle, ctx: BattleContext, value:
     Returns:
         HandlerReturn: 必中の場合はNoneを返す
     """
-    if "minimize" in ctx.move.data.labels:
+    if ctx.move.has_label("minimize"):
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -489,7 +489,7 @@ def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value:
     Returns:
         HandlerReturn: 補正後の値
     """
-    if "minimize" in ctx.move.data.labels:
+    if ctx.move.has_label("minimize"):
         value *= 2
     return HandlerReturn(value=value)
 
@@ -622,7 +622,7 @@ def ほろびのうた_tick(battle: Battle, ctx: BattleContext, value: Any) -> H
 
 def マジックコート_reflect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
-    reflected = "reflectable" in ctx.move.labels
+    reflected = ctx.move.has_label("reflectable")
     return HandlerReturn(value=reflected)
 
 
@@ -643,21 +643,12 @@ def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: An
 
 
 def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """みちづれ状態のひんし時処理（相手もひんしにする）
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if not ctx.attacker:
-        return HandlerReturn(False)
-
-    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp)
-    return HandlerReturn(True)
+    """みちづれ状態のひんし時処理（相手もひんしにする）"""
+    if ctx.fainted:
+        mon = ctx.attacker
+        battle.modify_hp(mon, v=-mon.hp)
+        battle.add_event_log(mon, "みちづれ")
+    return HandlerReturn()
 
 
 def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -689,70 +680,38 @@ def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(True)
 
 
-def みがわり_before_damage_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """みがわりがダメージを肩代わりする
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: ダメージ量
-
-    Returns:
-        HandlerReturn: 肩代わりした場合はダメージを0にする
-    """
-    if not ctx.defender or not ctx.move or not value:
-        return HandlerReturn(False, value)
-
-    if not ctx.defender.has_volatile("みがわり"):
-        return HandlerReturn(False, value)
-
-    sub_hp = ctx.defender.volatiles["みがわり"].hp
-    if sub_hp <= 0:
-        return HandlerReturn(False, value)
-
-    if "ignore_substitute" in ctx.move.data.labels:
-        return HandlerReturn(False, value)
-
-    ctx.defender.volatiles["みがわり"].hp -= value
-    if ctx.defender.volatiles["みがわり"].hp <= 0:
-        ctx.defender.volatiles["みがわり"].hp = 0
-        ctx.defender.volatiles["みがわり"].unregister_handlers(battle.events, ctx.defender)
-        del ctx.defender.volatiles["みがわり"]
-        battle.add_event_log(ctx.defender, "のみがわりがこわれた！")
-    return HandlerReturn(True, 0)
+def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """みがわりによる技の無効化判定"""
+    hit_substitute = battle.move_executor.hit_substitute(ctx)
+    immune = hit_substitute and ctx.move.category == "変化"
+    if immune:
+        battle.add_event_log(ctx.defender, "みがわりにより無効")
+        return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=False)
 
 
-def みがわり_check_substitute(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """みがわりが変化技と特定の技を防ぐ
+def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """みがわりがダメージを肩代わりする"""
+    damage = value
+    hit_substitute = battle.move_executor.hit_substitute(ctx)
+    if not hit_substitute:
+        return HandlerReturn(value=damage)
 
-    ON_TRY_IMMUNE Priority 30 として実行され、みがわり状態のポケモンを保護します。
-    変化技および ignore_substitute フラグのない技は防ぎます。
+    battle.add_event_log(ctx.defender, "みがわり被弾")
+    volatile = ctx.defender.volatiles["みがわり"]
+    damage = min(volatile.hp, damage)
+    volatile.hp -= damage
 
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト（defender: みがわり状態のポケモン）
-        value: 現在の判定値（他のハンドラからの継続値）
+    # みがわり消滅
+    if volatile.hp == 0:
+        ctx.defender.remove_volatile(battle, "みがわり")
+        battle.add_event_log(ctx.defender, "みがわり消滅")
 
-    Returns:
-        HandlerReturn: 防ぐ場合はTrue、防がない場合はvalue（False通常）
-    """
-    if not ctx.defender or not ctx.move:
-        return HandlerReturn(False, value)
+    # みがわりに与えたダメージをコンテキストに保存しておく（後の処理で使用するため）
+    ctx.substitute_damage = damage
 
-    if not ctx.defender.has_volatile("みがわり"):
-        return HandlerReturn(False, value)
-
-    sub_hp = ctx.defender.volatiles["みがわり"].hp
-    if sub_hp <= 0:
-        return HandlerReturn(False, value)
-
-    if "ignore_substitute" in ctx.move.data.labels:
-        return HandlerReturn(False, value)
-
-    if ctx.move.data.power == 0 or ctx.move.category == "変化":
-        return HandlerReturn(True, True)
-
-    return HandlerReturn(False, value)
+    # 被ダメージは0とする
+    return HandlerReturn(value=0)
 
 
 def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -779,8 +738,8 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     return HandlerReturn(value=True)
 
 
-def ロックオン_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ロックオン状態による必中化
+def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ロックオン状態による命中補正
 
     Args:
         battle: バトルインスタンス
@@ -788,15 +747,14 @@ def ロックオン_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> 
         value: 命中率
 
     Returns:
-        HandlerReturn: 必中の場合はNoneを返す
+        HandlerReturn: 補正後の命中率
     """
-    volatile = ctx.defender.volatiles.get("ロックオン") if ctx.defender else None
-    if volatile and volatile.source is ctx.attacker:
-        return HandlerReturn(True, None)
-    return HandlerReturn(False, value)
-
+    ctx.attacker.remove_volatile(battle, "ロックオン")
+    return HandlerReturn(value=None, stop_event=True)
 
 # まもる系
+
+
 def キングシールド_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """キングシールドの保護判定と攻撃低下
 
@@ -811,7 +769,7 @@ def キングシールド_check_protect(battle: Battle, ctx: BattleContext, valu
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
         battle.modify_stat(ctx.attacker, "A", -2, source=ctx.defender)
     return HandlerReturn(True, True)
 
@@ -847,7 +805,7 @@ def スレッドトラップ_check_protect(battle: Battle, ctx: BattleContext, v
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
         battle.modify_stat(ctx.attacker, "S", -1, source=ctx.defender)
     return HandlerReturn(True, True)
 
@@ -883,7 +841,7 @@ def トーチカ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
         common.apply_ailment(battle, ctx, value, "どく", target_spec="attacker:self", source_spec="defender:self")
     return HandlerReturn(True, True)
 
@@ -938,7 +896,7 @@ def かえんのまもり_check_protect(battle: Battle, ctx: BattleContext, valu
     if not _protect_block(battle, ctx, value):
         return HandlerReturn(False, value)
 
-    if ctx.attacker and ctx.move and "contact" in ctx.move.data.labels and ctx.move.category != "変化":
+    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
         common.apply_ailment(battle, ctx, value, "やけど", target_spec="attacker:self", source_spec="defender:self")
     return HandlerReturn(True, True)
 

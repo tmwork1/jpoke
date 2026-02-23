@@ -17,8 +17,7 @@ def test_アクアリング():
     battle.events.emit(Event.ON_TURN_END_3)
     actual_heal = battle.actives[0].hp - 1
     assert actual_heal == expected_heal, "Incorect heal amount"
-    # ログにHP変化が含まれるか確認
-    t.assert_log_contains(battle, "アクアリング")
+    assert t.log_contains(battle, "アクアリング")
 
 
 def test_あばれる_action():
@@ -56,7 +55,7 @@ def test_あめまみれ():
     )
     battle.events.emit(Event.ON_TURN_END_3)
     assert battle.actives[0].rank["S"] == -1
-    t.assert_log_contains(battle, "あめまみれ")
+    assert t.log_contains(battle, "あめまみれ")
 
 
 def test_アンコール():
@@ -89,18 +88,15 @@ def test_うちおとす():
     assert not battle.actives[0].is_floating(battle)
 
 
-def test_おんねん():
+def test_おんねん_noPP():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        ally=[Pokemon("ライチュウ", moves=["たいあたり"])],
         foe_volatile={"おんねん": 1},
     )
     battle.actives[1]._hp = 1  # 確実にひんしになるようにHPを1にする
     battle.advance_turn()  # 1ターン進める
-    battle.print_logs()
-    # おんねんで技のPPが0になっていることを確認
     assert battle.actives[0].moves[0].pp == 0
-    # ログにおんねんメッセージが含まれるか確認
-    t.assert_log_contains(battle, "おんねん")
+    assert t.log_contains(battle, "おんねん")
 
 
 def test_かいふくふうじ():
@@ -111,7 +107,7 @@ def test_かいふくふうじ():
     mon = battle.actives[0]
     mon._hp = 1
     battle.modify_hp(mon, 10)  # 回復を強制
-    battle.print_logs()
+    assert t.log_contains(battle, "かいふくふうじ")
     assert mon.hp == 1, "かいふくふうじでHPが回復している"
 
 
@@ -164,8 +160,8 @@ def test_こんらん_self_damage():
     assert defender.hp == defender.max_hp
     assert attacker.volatiles["こんらん"].count == 1
     # ログに混乱メッセージが含まれるか確認
-    t.assert_log_contains(battle, "混乱")
-    t.assert_log_contains(battle, "自傷")
+    assert t.log_contains(battle, "混乱")
+    assert t.log_contains(battle, "自傷")
 
 
 def test_こんらん_action():
@@ -180,8 +176,8 @@ def test_こんらん_action():
     assert attacker.hp == attacker.max_hp
     assert attacker.volatiles["こんらん"].count == 1
     # ログに混乱メッセージが含まれるか確認
-    t.assert_log_contains(battle, "混乱")
-    t.assert_log_not_contains(battle, "自傷")
+    assert t.log_contains(battle, "混乱")
+    assert not t.log_contains(battle, "自傷")
 
 # TODO: さわぐのテスト実装(低優先度)
 
@@ -196,7 +192,7 @@ def test_しおづけ_x1():
     battle.events.emit(Event.ON_TURN_END_3)
     actual_damage = mon.max_hp - mon.hp
     assert actual_damage == expected_damage
-    t.assert_log_contains(battle, "しおづけ")
+    assert t.log_contains(battle, "しおづけ")
 
 
 def test_しおづけ_x2():
@@ -210,7 +206,7 @@ def test_しおづけ_x2():
     battle.events.emit(Event.ON_TURN_END_3)
     actual_damage = mon.max_hp - mon.hp
     assert actual_damage == expected_damage
-    t.assert_log_contains(battle, "しおづけ")
+    assert t.log_contains(battle, "しおづけ")
 
 
 def test_じごくずき_restrict_commands():
@@ -259,7 +255,7 @@ def test_ちょうはつ():
         ally_volatile={"ちょうはつ": 3},
     )
     assert not t.get_try_result(battle, Event.ON_TRY_ACTION)
-    t.assert_log_contains(battle, "ちょうはつ")
+    assert t.log_contains(battle, "ちょうはつ")
 
 
 def test_でんじふゆう():
@@ -306,7 +302,7 @@ def test_ねをはる_heal():
     mon._hp = 1
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == 1 + mon.max_hp // 16
-    t.assert_log_contains(battle, "ねをはる")
+    assert t.log_contains(battle, "ねをはる")
 
 
 def test_ねをはる_switch_denied():
@@ -325,7 +321,7 @@ def test_のろい_damage():
     battle.events.emit(Event.ON_TURN_END_3)
     damage = mon.max_hp - mon.hp
     assert damage == mon.max_hp // 4
-    t.assert_log_contains(battle, "のろい")
+    assert t.log_contains(battle, "のろい")
 
 
 def test_バインド_damage():
@@ -339,11 +335,11 @@ def test_バインド_damage():
     battle.events.emit(Event.ON_TURN_END_3)
     hp = mon.hp
     assert hp == mon.max_hp - expected_damage
-    t.assert_log_contains(battle, "バインドダメージ")
+    assert t.log_contains(battle, "バインドダメージ")
     # 1ターン進めて解除される
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == hp
-    t.assert_log_contains(battle, "解除")
+    assert t.log_contains(battle, "解除")
 
 
 def test_バインド_switch_denied():
@@ -376,7 +372,7 @@ def test_ひるみ():
         BattleContext(attacker=attacker, defender=defender)
     )
     assert not attacker.has_volatile("ひるみ")
-    t.assert_log_contains(battle, "ひるみ")
+    assert t.log_contains(battle, "ひるみ")
 
 
 def test_ふういん():
@@ -389,7 +385,7 @@ def test_ほろびのうた():
     mon = battle.actives[0]
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == 0
-    t.assert_log_contains(battle, "ほろびのうた")
+    assert t.log_contains(battle, "ほろびのうた")
 
 
 def test_マジックコート():
@@ -403,18 +399,52 @@ def test_まるくなる():
 
 
 def test_みがわり_immune():
-    # TODO: 実装
-    pass
+    """みがわり: 技を無効化する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["キノコのほうし"])],
+        foe_volatile={"みがわり": 1},
+    )
+    assert t.get_try_result(battle, Event.ON_TRY_IMMUNE)
+    assert t.log_contains(battle, "みがわり")
 
 
-def test_みがわり_damage():
-    # TODO: 実装
-    pass
+def test_みがわり_hit():
+    """みがわり: 技が命中する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    defender = battle.actives[1]
+    defender.apply_volatile(battle, "みがわり", hp=100)
+    volatile = defender.volatiles["みがわり"]
+    battle.advance_turn()
+    assert 0 < volatile.hp < 100
+    assert t.log_contains(battle, "みがわり", 1)
+
+
+def test_みがわり_破壊():
+    """みがわり: 技が命中する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    defender = battle.actives[1]
+    defender.apply_volatile(battle, "みがわり", hp=1)
+    battle.advance_turn()
+    battle.print_logs()
+    assert not defender.has_volatile("みがわり")
+    assert t.log_contains(battle, "みがわり", 1)
 
 
 def test_みちづれ():
-    # TODO: 実装保留
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_volatile={"みちづれ": 1},
+    )
+    attacker, defender = battle.actives
+    defender._hp = 1  # 確実にひんしになるようにHPを1にする
+    battle.advance_turn()  # 1ターン進める
+    assert attacker.hp == 0
+    assert defender.hp == 0
+    assert t.log_contains(battle, "みちづれ")
 
 
 def test_メロメロ_行動不能():
@@ -425,7 +455,7 @@ def test_メロメロ_行動不能():
     # 行動不能を強制
     battle.test_option.trigger_volatile = True
     assert not t.get_try_result(battle, Event.ON_TRY_ACTION)
-    t.assert_log_contains(battle, "動けない")
+    assert t.log_contains(battle, "動けない")
 
 
 def test_メロメロ_行動可能():
@@ -436,7 +466,7 @@ def test_メロメロ_行動可能():
     # 行動を許可
     battle.test_option.trigger_volatile = False
     assert t.get_try_result(battle, Event.ON_TRY_ACTION)
-    t.assert_log_contains(battle, "メロメロ")
+    assert t.log_contains(battle, "メロメロ")
 
 
 def test_やどりぎのタネ():
@@ -451,12 +481,15 @@ def test_やどりぎのタネ():
     damage = from_mon.max_hp - from_mon.hp
     assert damage == from_mon.max_hp // 8
     assert to_mon.hp == 1 + damage
-    t.assert_log_contains(battle, "やどりぎのタネ")
+    assert t.log_contains(battle, "やどりぎのタネ")
 
 
 def test_ロックオン():
-    # TODO: 実装保留
-    pass
+    battle = t.start_battle(
+        ally_volatile={"ロックオン": 1},
+    )
+    assert t.calc_accuracy(battle, base=30) is None
+    assert not battle.actives[0].has_volatile("ロックオン")
 
 
 def test_トーチカ():

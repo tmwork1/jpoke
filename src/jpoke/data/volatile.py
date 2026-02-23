@@ -363,16 +363,14 @@ VOLATILES: dict[str, VolatileData] = {
     "みがわり": VolatileData(
         handlers={
             Event.ON_TRY_IMMUNE: h.VolatileHandler(
-                h.みがわり_check_substitute,
+                h.みがわり_immune,
                 subject_spec="defender:self",
-                log="never",
-                priority=30,  # ON_TRY_IMMUNE Priority 30: みがわりによる無効化
+                priority=30,
             ),
-            Event.ON_BEFORE_DAMAGE_APPLY: h.VolatileHandler(
-                h.みがわり_before_damage_apply,
+            Event.ON_MODIFY_DAMAGE: h.VolatileHandler(
+                h.みがわり_modify_damage,
                 subject_spec="defender:self",
-                log="never",
-                priority=50,
+                priority=20,
             ),
         }
     ),
@@ -381,7 +379,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_DAMAGE: h.VolatileHandler(
                 h.みちづれ,
                 subject_spec="defender:self",
-                log="on_success",
                 priority=30
             ),
         }
@@ -409,16 +406,8 @@ VOLATILES: dict[str, VolatileData] = {
     "ロックオン": VolatileData(
         handlers={
             Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
-                h.ロックオン_accuracy,
-                subject_spec="defender:self",
-                log="never",
-                priority=50,
-            ),
-            Event.ON_HIT: h.VolatileHandler(
-                partial(h.remove_volatile, name="ロックオン"),
-                subject_spec="defender:self",
-                log="never",
-                priority=50,
+                h.ロックオン_modify_accuracy,
+                subject_spec="attacker:self",
             ),
         }
     ),

@@ -108,6 +108,27 @@ class MoveExecutor:
         critical_rates = [1/24, 1/8, 1/2, 1]
         return self.battle.random.random() < critical_rates[rank]
 
+    def hit_substitute(self, ctx: BattleContext) -> bool:
+        """みがわりに技が当たるかどうかを判定する。
+
+        Args:
+            ctx: バトルコンテキスト
+
+        Returns:
+            bool: 技がみがわりに当たる場合True
+        """
+        move_labels = [
+            "bypass_substitute",
+            "sound",
+        ]
+        hit = ctx.move.is_attack or not ctx.move.has_label(move_labels)
+        hit = self.battle.events.emit(
+            Event.ON_CHECK_HIT_SUBSTITUTE,
+            ctx,
+            hit
+        )
+        return hit
+
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行。
 
@@ -177,11 +198,12 @@ class MoveExecutor:
         if not self.check_hit(ctx.attacker, ctx.move):
             return
 
-        # 無効判定（ON_TRY_IMMUNE: Priority 10-100）
-        # Priority 30: みがわり、Priority 100: その他の判定
-        is_immune = self.events.emit(Event.ON_TRY_IMMUNE, ctx, False)
-        if is_immune:
+        # 無効判定 (みがわり含む)
+        if self.events.emit(Event.ON_TRY_IMMUNE, ctx, False):
             return
+
+        # HPコストの支払い
+        self.events.emit(Event.ON_PAY_HP, ctx)
 
         # 急所判定
         critical = self.check_critical(ctx)
@@ -191,25 +213,18 @@ class MoveExecutor:
             ctx.attacker, ctx.defender, ctx.move, critical=critical
         )
 
-        # HPコストの支払い
-        self.events.emit(Event.ON_PAY_HP, ctx)
-
         # ダメージ修正
-        damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
-
-        # ダメージ適用前処理
-        damage = self.events.emit(Event.ON_BEFORE_DAMAGE_APPLY, ctx, damage)
+        ctx.damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 
         # ダメージの適用
-        if damage:
-            self.battle.modify_hp(ctx.defender, -damage)
+        if ctx.damage:
+            self.battle.modify_hp(ctx.defender, -ctx.damage)
 
             # ひんし時の処理
             if ctx.defender.hp == 0:
                 ctx.fainted = True
 
         # 技を当てたときの処理（ダメージ情報を含める）
-        ctx.damage = damage
         self.events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えたときの処理

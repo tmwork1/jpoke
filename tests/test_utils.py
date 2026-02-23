@@ -190,8 +190,11 @@ def can_switch(battle: Battle, idx: int) -> bool:
     return any(c.is_switch() for c in commands)
 
 
-def assert_log_contains(battle: Battle, text: str, player_idx: int | None = None, turn: int | None = None):
-    """指定したテキストがログに含まれていることを検証する。
+def log_contains(battle: Battle,
+                 text: str,
+                 player_idx: int | None = None,
+                 turn: int | None = None) -> bool:
+    """指定したテキストがログに含まれているか検査する。
 
     Args:
         battle: Battleインスタンス
@@ -199,8 +202,8 @@ def assert_log_contains(battle: Battle, text: str, player_idx: int | None = None
         player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
         turn: ターン番号（Noneの場合は現在のターン）
 
-    Raises:
-        AssertionError: ログにテキストが含まれていない場合
+    Returns:
+        bool: ログにテキストが含まれている場合True、そうでない場合False
     """
     if turn is None:
         turn = battle.turn
@@ -211,40 +214,10 @@ def assert_log_contains(battle: Battle, text: str, player_idx: int | None = None
         # 特定プレイヤーのログをチェック
         player = battle.players[player_idx]
         logs = event_logs.get(player, [])
-        assert any(text in log for log in logs), f"Log does not contain '{text}'. Logs: {logs}"
+        return any(text in log for log in logs)
     else:
         # 全プレイヤーのログをチェック
         all_logs = []
         for logs in event_logs.values():
             all_logs.extend(logs)
-        assert any(text in log for log in all_logs), f"Log does not contain '{text}'. Logs: {all_logs}"
-
-
-def assert_log_not_contains(battle: Battle, text: str, player_idx: int | None = None, turn: int | None = None):
-    """指定したテキストがログに含まれていないことを検証する。
-
-    Args:
-        battle: Battleインスタンス
-        text: ログに含まれるべきでないテキスト
-        player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
-        turn: ターン番号（Noneの場合は現在のターン）
-
-    Raises:
-        AssertionError: ログにテキストが含まれている場合
-    """
-    if turn is None:
-        turn = battle.turn
-
-    event_logs = battle.get_event_logs(turn)
-
-    if player_idx is not None:
-        # 特定プレイヤーのログをチェック
-        player = battle.players[player_idx]
-        logs = event_logs.get(player, [])
-        assert not any(text in log for log in logs), f"Log should not contain '{text}'. Logs: {logs}"
-    else:
-        # 全プレイヤーのログをチェック
-        all_logs = []
-        for logs in event_logs.values():
-            all_logs.extend(logs)
-        assert not any(text in log for log in all_logs), f"Log should not contain '{text}'. Logs: {all_logs}"
+        return any(text in log for log in all_logs)

@@ -79,6 +79,7 @@ BoostSource = Literal["", "ability", "item", "weather", "terrain"]
 MoveLabel = Literal[
     "bite",
     "bullet",
+    "bypass_substitute",
     "contact",
     "dance",
     "heal",
