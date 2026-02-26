@@ -745,23 +745,28 @@ def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     return HandlerReturn(value=None, stop_event=True)
 
 
-def かえんのまもり_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """接触した相手をやけど状態にする"""
+def まもる_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """まもるの保護判定"""
     pass
 
 
-def キングシールド_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """接触した相手の攻撃ランクを1段階下げる"""
+def かえんのまもり_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かえんのまもりの保護判定。接触した相手をやけど状態にする"""
     pass
 
 
-def スレッドトラップ_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """接触した相手の素早さランクを1段階下げる"""
+def キングシールド_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """キングシールドの保護判定。接触した相手の攻撃ランクを1段階下げる"""
     pass
 
 
-def トーチカ_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """接触した相手をどく状態にする"""
+def スレッドトラップ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """スレッドトラップの保護判定。接触した相手の素早さランクを1段階下げる"""
+    pass
+
+
+def トーチカ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """トーチカの保護判定。接触した相手をどく状態にする"""
     pass
 
 
