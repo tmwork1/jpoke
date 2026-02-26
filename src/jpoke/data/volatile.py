@@ -415,80 +415,81 @@ VOLATILES: dict[str, VolatileData] = {
     "まもる": VolatileData(
         handlers={
             Event.ON_CHECK_PROTECT: h.VolatileHandler(
-                h.まもる_check_protect,
+                lambda *args: HandlerReturn(value=True),
                 subject_spec="defender:self",
-                log="never",
-                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+                priority=10,
             ),
             Event.ON_TURN_END_1: h.VolatileHandler(
                 partial(h.remove_volatile, name="まもる"),
                 subject_spec="source:self",
-                log="never",
-                priority=200
-            ),
-        }
-    ),
-    "トーチカ": VolatileData(
-        handlers={
-            Event.ON_CHECK_PROTECT: h.VolatileHandler(
-                h.トーチカ_check_protect,
-                subject_spec="defender:self",
-                log="never",
-                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
-            ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
-                partial(h.remove_volatile, name="トーチカ"),
-                subject_spec="source:self",
-                log="never",
-                priority=200
-            ),
-        }
-    ),
-    "キングシールド": VolatileData(
-        handlers={
-            Event.ON_CHECK_PROTECT: h.VolatileHandler(
-                h.キングシールド_check_protect,
-                subject_spec="defender:self",
-                log="never",
-                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
-            ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
-                partial(h.remove_volatile, name="キングシールド"),
-                subject_spec="source:self",
-                log="never",
-                priority=200
-            ),
-        }
-    ),
-    "スレッドトラップ": VolatileData(
-        handlers={
-            Event.ON_CHECK_PROTECT: h.VolatileHandler(
-                h.スレッドトラップ_check_protect,
-                subject_spec="defender:self",
-                log="never",
-                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
-            ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
-                partial(h.remove_volatile, name="スレッドトラップ"),
-                subject_spec="source:self",
-                log="never",
-                priority=200
             ),
         }
     ),
     "かえんのまもり": VolatileData(
         handlers={
             Event.ON_CHECK_PROTECT: h.VolatileHandler(
-                h.かえんのまもり_check_protect,
+                lambda *args: HandlerReturn(value=True),
                 subject_spec="defender:self",
-                log="never",
-                priority=100  # ON_TRY_MOVE Priority 100: 無効化判定
+                priority=10,
+            ),
+            Event.ON_PROTECT_SUCCESS: h.VolatileHandler(
+                h.かえんのまもり_protect_success,
+                subject_spec="attacker:self",
             ),
             Event.ON_TURN_END_1: h.VolatileHandler(
                 partial(h.remove_volatile, name="かえんのまもり"),
                 subject_spec="source:self",
-                log="never",
-                priority=200
+            ),
+        }
+    ),
+    "キングシールド": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=True),
+                subject_spec="defender:self",
+                priority=10,
+            ),
+            Event.ON_PROTECT_SUCCESS: h.VolatileHandler(
+                h.キングシールド_protect_success,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                partial(h.remove_volatile, name="キングシールド"),
+                subject_spec="source:self",
+            ),
+        }
+    ),
+    "スレッドトラップ": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=True),
+                subject_spec="defender:self",
+                priority=10,
+            ),
+            Event.ON_PROTECT_SUCCESS: h.VolatileHandler(
+                h.スレッドトラップ_protect_success,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                partial(h.remove_volatile, name="スレッドトラップ"),
+                subject_spec="source:self",
+            ),
+        }
+    ),
+    "トーチカ": VolatileData(
+        handlers={
+            Event.ON_CHECK_PROTECT: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=True),
+                subject_spec="defender:self",
+                priority=10,
+            ),
+            Event.ON_PROTECT_SUCCESS: h.VolatileHandler(
+                h.トーチカ_protect_success,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                partial(h.remove_volatile, name="トーチカ"),
+                subject_spec="source:self",
             ),
         }
     ),
@@ -499,7 +500,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
                 partial(h.姿消し_check_invulnerable, allowed_moves=["じしん", "マグニチュード"]),
                 subject_spec="defender:self",
-                log="never",
                 priority=50
             ),
         }
@@ -509,7 +509,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
                 partial(h.姿消し_check_invulnerable, allowed_moves=["かぜおこし", "たつまき", "かみなり"]),
                 subject_spec="defender:self",
-                log="never",
                 priority=50
             ),
         }
@@ -519,7 +518,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
                 partial(h.姿消し_check_invulnerable, allowed_moves=["なみのり", "うずしお"]),
                 subject_spec="defender:self",
-                log="never",
                 priority=50
             ),
         }
@@ -529,7 +527,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
                 partial(h.姿消し_check_invulnerable, allowed_moves=[]),
                 subject_spec="defender:self",
-                log="never",
                 priority=50
             ),
         }

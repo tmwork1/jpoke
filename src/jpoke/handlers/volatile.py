@@ -98,14 +98,6 @@ def restrict_commands(battle: Battle,
     return HandlerReturn(value=new_options)
 
 
-def _protect_block(battle: Battle, ctx: BattleContext, value: Any) -> bool:
-    if not ctx.move:
-        return False
-    if ctx.move.has_label(["unprotectable", "anti_protect"]):
-        return False
-    return True
-
-
 def あばれる_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あばれる状態によるコマンドオプション変更
 
@@ -225,7 +217,7 @@ def かいふくふうじ(battle: Battle, ctx: BattleContext, value: Any) -> Han
         HandlerReturn: 回復無効化の場合は0、それ以外は元の回復量
     """
     if value > 0:
-        battle.add_event_log(ctx.target, "回復不可")
+        battle.add_event_log(ctx.target, "失敗: かいふくふうじ")
         value = 0
     return HandlerReturn(value=value)
 
@@ -752,115 +744,28 @@ def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     ctx.attacker.remove_volatile(battle, "ロックオン")
     return HandlerReturn(value=None, stop_event=True)
 
-# まもる系
+
+def かえんのまもり_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """接触した相手をやけど状態にする"""
+    pass
 
 
-def キングシールド_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """キングシールドの保護判定と攻撃低下
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 判定値
-
-    Returns:
-        HandlerReturn: 防御する場合True
-    """
-    if not _protect_block(battle, ctx, value):
-        return HandlerReturn(False, value)
-
-    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
-        battle.modify_stat(ctx.attacker, "A", -2, source=ctx.defender)
-    return HandlerReturn(True, True)
+def キングシールド_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """接触した相手の攻撃ランクを1段階下げる"""
+    pass
 
 
-def キングシールド_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """キングシールド状態のターン終了時解除
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if "キングシールド" in ctx.source.volatiles:
-        ctx.source.volatiles["キングシールド"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["キングシールド"]
-    return HandlerReturn(True)
+def スレッドトラップ_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """接触した相手の素早さランクを1段階下げる"""
+    pass
 
 
-def スレッドトラップ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """スレッドトラップの保護判定と素早さ低下
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 判定値
-
-    Returns:
-        HandlerReturn: 防御する場合True
-    """
-    if not _protect_block(battle, ctx, value):
-        return HandlerReturn(False, value)
-
-    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
-        battle.modify_stat(ctx.attacker, "S", -1, source=ctx.defender)
-    return HandlerReturn(True, True)
+def トーチカ_protect_success(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """接触した相手をどく状態にする"""
+    pass
 
 
-def スレッドトラップ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """スレッドトラップ状態のターン終了時解除
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if "スレッドトラップ" in ctx.source.volatiles:
-        ctx.source.volatiles["スレッドトラップ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["スレッドトラップ"]
-    return HandlerReturn(True)
-
-
-def トーチカ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """トーチカの保護判定とどく付与
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 判定値
-
-    Returns:
-        HandlerReturn: 防御する場合True
-    """
-    if not _protect_block(battle, ctx, value):
-        return HandlerReturn(False, value)
-
-    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
-        common.apply_ailment(battle, ctx, value, "どく", target_spec="attacker:self", source_spec="defender:self")
-    return HandlerReturn(True, True)
-
-
-def トーチカ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """トーチカ状態のターン終了時解除
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if "トーチカ" in ctx.source.volatiles:
-        ctx.source.volatiles["トーチカ"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["トーチカ"]
-    return HandlerReturn(True)
+# かくれる系
 
 
 def 姿消し_check_invulnerable(battle: Battle, ctx: BattleContext, value: Any, allowed_moves: list[str]) -> HandlerReturn:
@@ -930,8 +835,8 @@ def まもる_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> H
         HandlerReturn: 防御する場合True
     """
     if _protect_block(battle, ctx, value):
-        return HandlerReturn(True, True)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value=True)
+    return HandlerReturn(value=False)
 
 
 def まもる_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

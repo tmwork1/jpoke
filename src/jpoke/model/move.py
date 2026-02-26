@@ -117,6 +117,15 @@ class Move(GameEffect):
         return self.data.critical_rank
 
     @property
+    def self_targeting(self) -> bool:
+        """技が自分を対象にするかどうかを取得する。
+
+        Returns:
+            技が自分を対象にする場合True
+        """
+        return self.data.self_targeting
+
+    @property
     def is_attack(self) -> bool:
         """技が攻撃技かどうかを判定する。
 
@@ -124,15 +133,6 @@ class Move(GameEffect):
             技が物理または特殊技の場合True
         """
         return self.category in ["物理", "特殊"]
-
-    @property
-    def is_contact(self) -> bool:
-        """技が接触技かどうかを判定する。
-
-        Returns:
-            技が接触技の場合True
-        """
-        return "contact" in self.data.labels
 
     def has_label(self, label: MoveLabel | list[MoveLabel]) -> bool:
         """技が特定のラベルを持っているかを判定する。
@@ -147,3 +147,12 @@ class Move(GameEffect):
         if isinstance(label, list):
             return any(s in self.data.labels for s in label)
         return label in self.data.labels
+
+    @property
+    def is_contact(self) -> bool:
+        """技が接触技かどうかを判定する。
+
+        Returns:
+            技が接触技の場合True
+        """
+        return "contact" in self.data.labels

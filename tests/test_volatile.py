@@ -106,7 +106,7 @@ def test_かいふくふうじ():
     )
     mon = battle.actives[0]
     mon._hp = 1
-    battle.modify_hp(mon, 10)  # 回復を強制
+    battle.modify_hp(mon, 10)
     assert t.log_contains(battle, "かいふくふうじ")
     assert mon.hp == 1, "かいふくふうじでHPが回復している"
 

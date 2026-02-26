@@ -38,6 +38,7 @@ class Event(Enum):
     ON_TRY_IMMUNE = auto()
     ON_CHECK_SUBSTITUTE = auto()
     ON_CHECK_PROTECT = auto()
+    ON_PROTECT_SUCCESS = auto()
     ON_CHECK_INVULNERABLE = auto()
     ON_CHECK_REFLECT = auto()
     ON_HIT = auto()

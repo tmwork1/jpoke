@@ -181,6 +181,7 @@ class MoveExecutor:
 
         # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
         if self.events.emit(Event.ON_CHECK_PROTECT, ctx, False):
+            self.events.emit(Event.ON_PROTECT_SUCCESS, ctx)
             return
 
         # 姿消し・無敵判定（ON_TRY_MOVE Priority 100: 無効化判定）

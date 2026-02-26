@@ -6,7 +6,6 @@ Note:
 from functools import partial
 
 from jpoke.enums import Event
-from jpoke.utils.type_defs import RoleSpec, AilmentName
 from jpoke.core import Handler, HandlerReturn
 from jpoke.handlers import common, move as h, volatile as v
 from .models import MoveData
@@ -27,15 +26,22 @@ def common_setup() -> None:
     Note:
         dictインスタンスはスキップされます（MoveDataオブジェクトのみ処理）
     """
-    for name, obj in MOVES.items():
-        MOVES[name].name = name
+    for name, data in MOVES.items():
+        data.name = name
 
         # 共通ハンドラを追加
-        MOVES[name].handlers[Event.ON_CONSUME_PP] = h.MoveHandler(
+        data.handlers[Event.ON_CONSUME_PP] = h.MoveHandler(
             h.consume_pp,
             subject_spec="attacker:self",
             log="always"
         )
+
+        # まもるで無効化されないハンドラを追加
+        if data.self_targeting or "unprotectable" in data.labels:
+            data.handlers[Event.ON_CHECK_PROTECT] = h.MoveHandler(
+                lambda *args: HandlerReturn(value=False, stop_event=True),
+                subject_spec="defender:self",
+            )
 
 
 # TODO: 追加効果が登録されているイベントを修正
