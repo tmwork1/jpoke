@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .player import Player
 
 from jpoke.model import Pokemon
-from jpoke.enums import Interrupt
+from jpoke.enums import Interrupt, LogCode
 
 from .event import Event
 from .context import BattleContext
@@ -85,12 +85,14 @@ class SwitchManager:
         if old is not None:
             self.battle.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
             old.switch_out(self.battle)
-            self.battle.add_event_log(player, f"{old.name} {'交代' if old.hp else '瀕死'}")
+            self.battle.add_event_log(player, LogCode.SWITCH_OUT,
+                                      payload={"pokemon": old.name})
 
         # 入場
         player.active_idx = player.team.index(new)
         new.switch_in(self.battle)
-        self.battle.add_event_log(player, f"{new.name} 着地")
+        self.battle.add_event_log(player, LogCode.SWITCH_IN,
+                                  payload={"pokemon": new.name})
 
         # ポケモンが場に出た時の処理
         if emit:
@@ -140,7 +142,8 @@ class SwitchManager:
 
             # 交代を引き起こしたアイテムを消費させる
             if flag.consume_item():
-                self.battle.add_event_log(player, f"{player.active.item.name}消費")
+                self.battle.add_event_log(player, LogCode.CONSUME_ITEM,
+                                          payload={"item": player.active.item.name})
                 player.active.item.consume()
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得

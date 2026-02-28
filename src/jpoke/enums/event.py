@@ -74,6 +74,7 @@ class Event(Enum):
     ON_CHECK_MOVE_TYPE = auto()
     ON_CHECK_MOVE_CATEGORY = auto()
     ON_CHECK_HIT_SUBSTITUTE = auto()
+    ON_CHECK_CONTACT = auto()
 
     # 計算系イベント
     ON_MODIFY_ACCURACY = auto()

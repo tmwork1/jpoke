@@ -12,7 +12,7 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.utils.type_defs import Stat, GlobalField, SideField
-from jpoke.enums import Event, Command, Interrupt
+from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
 from jpoke.model import Pokemon, Move, Field
@@ -20,7 +20,7 @@ from jpoke.model import Pokemon, Move, Field
 from .event import EventManager
 from .context import BattleContext
 from .player import Player
-from .logger import Logger
+from .event_logger import EventLogger
 from .damage import DamageCalculator, DamageContext
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
@@ -92,7 +92,7 @@ class Battle:
 
         self.random = Random(self.seed)
         self.events = EventManager(self)
-        self.logger = Logger()
+        self.event_logger = EventLogger()
 
         self.turn_controller: TurnController = TurnController(self)
         self.speed_calculator: SpeedCalculator = SpeedCalculator(self)
@@ -153,7 +153,7 @@ class Battle:
         """
         # 管理クラスの初期化
         self.events = EventManager(self)
-        self.logger = Logger()
+        self.event_logger = EventLogger()
         self.random = Random(self.seed)
 
         self.turn_controller = TurnController(self)
@@ -243,7 +243,7 @@ class Battle:
                 "team": [mon.to_dict() for mon in player.team],
             })
 
-        self.logger.export_log(file, self.seed, players_data)
+        self.event_logger.export(file, self.seed, players_data)
 
     @classmethod
     def reconstruct_from_log(cls, file) -> Self:
@@ -546,10 +546,10 @@ class Battle:
                 v
             )
 
-        if (v := target.modify_hp(v)):
-            text = f"HP {'+' if v >= 0 else ''}{v} >> {target.hp}"
-            self.add_event_log(target, text)
-
+        v = target.modify_hp(v)
+        if v != 0:
+            self.add_event_log(target, LogCode.MODIFY_HP,
+                               payload={"value": abs(v)})
             # HPがゼロになった場合、勝敗判定を実行
             if target.hp == 0:
                 self.judge_winner()
@@ -604,10 +604,14 @@ class Battle:
 
         # すべての能力変化を適用してログを記録
         for stat, v in stats.items():
-            if v and (actual_v := target.modify_stat(stat, v)):
-                text = f"{stat}{'+' if actual_v >= 0 else ''}{actual_v}"
-                self.add_event_log(self.find_player(target), text)
-                actual_changes[stat] = actual_v
+            if v == 0:
+                continue
+            v = target.modify_stat(stat, v)
+            if v != 0:
+                self.add_event_log(target,
+                                   LogCode.MODIFY_STAT,
+                                   payload={"stat": stat, "value": v})
+                actual_changes[stat] = v
                 any_success = True
 
         # すべての変化が完了した後にイベントを1回だけ発火
@@ -716,27 +720,22 @@ class Battle:
             command: 選択されたコマンド
         """
         idx = self.get_player_index(source)
-        self.logger.add_command_log(self.turn, idx, command)
+        self.event_logger.add_command_log(self.turn, idx, command)
 
-    def add_event_log(self, source: Player | Pokemon, text: str):
+    def add_event_log(self,
+                      source: Player | Pokemon | int,
+                      log: LogCode,
+                      payload: dict | None = None):
         """イベントログを追加。
 
         Args:
-            source: Player または Pokemon インスタンス
-            text: イベントの内容
+            source: Player または Pokemon インスタンス、またはプレイヤーインデックス
+            log: イベントの内容を表すLogCode列挙値 
+            payload: イベントの詳細情報（必要に応じて）
         """
-        idx = self.get_player_index(source)
-        self.logger.add_event_log(self.turn, idx, text)
-
-    def add_damage_log(self, source: Player | Pokemon, text: str):
-        """ダメージログを追加。
-
-        Args:
-            source: Player または Pokemon インスタンス
-            text: ダメージの詳細情報
-        """
-        idx = self.get_player_index(source)
-        self.logger.add_damage_log(self.turn, idx, text)
+        if not isinstance(source, int):
+            idx = self.get_player_index(source)
+        self.event_logger.add(self.turn, idx, log, payload)
 
     def get_event_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
         """指定したターンの全プレイヤーのイベントログを取得。
@@ -749,21 +748,7 @@ class Battle:
         """
         if turn is None:
             turn = self.turn
-        return {player: self.logger.get_event_logs(turn, i)
-                for i, player in enumerate(self.players)}
-
-    def get_damage_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
-        """指定したターンの全プレイヤーのダメージログを取得。
-
-        Args:
-            turn: ターン番号（Noneの場合は現在のターン）
-
-        Returns:
-            Playerをキーとしたダメージテキストのリストの辞書
-        """
-        if turn is None:
-            turn = self.turn
-        return {player: self.logger.get_damage_logs(turn, i)
+        return {player: self.event_logger.get(turn, i)
                 for i, player in enumerate(self.players)}
 
     def print_logs(self, turn: int | None = None):
@@ -777,8 +762,8 @@ class Battle:
 
         print(f"Turn {turn}")
         for i, player in enumerate(self.players):
-            event_logs = self.logger.get_event_logs(turn, i)
-            damage_logs = self.logger.get_damage_logs(turn, i)
+            event_logs = self.event_logger.get(turn, i)
+            damage_logs = self.event_logger.get_damage_logs(turn, i)
             print(f"\t{player.name}\t{event_logs} {damage_logs}")
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):

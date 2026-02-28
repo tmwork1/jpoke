@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy, VolatileName
-from jpoke.enums import Event, Command
+from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn, BattleContext
 from . import common
 
@@ -745,29 +745,69 @@ def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     return HandlerReturn(value=None, stop_event=True)
 
 
-def まもる_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def _protect_success(battle: Battle, ctx: BattleContext) -> bool:
+    if ctx.move.bypass_protect:
+        return False
+
+    success = battle.events.emit(
+        Event.ON_CHECK_PROTECT,
+        ctx,
+        True
+    )
+    return True
+
+
+def まもる_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まもるの保護判定"""
-    pass
+    success = _protect_success(battle, ctx)
+    if success:
+        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
-def かえんのまもり_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かえんのまもり_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かえんのまもりの保護判定。接触した相手をやけど状態にする"""
-    pass
+    success = _protect_success(battle, ctx)
+    if success:
+        battle.add_event_log(ctx.defender, "攻撃を防いだ")
+        if battle.move_executor.is_contact(ctx):
+            common.apply_ailment(battle, ctx, value, "やけど", target_spec="attacker:self", source_spec="defender:self")
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
-def キングシールド_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def キングシールド_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """キングシールドの保護判定。接触した相手の攻撃ランクを1段階下げる"""
-    pass
+    success = _protect_success(battle, ctx)
+    if success:
+        battle.add_event_log(ctx.defender, "攻撃を防いだ")
+        if battle.move_executor.is_contact(ctx):
+            battle.modify_stat(ctx.attacker, "A", -1, source=ctx.defender)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
-def スレッドトラップ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def スレッドトラップ_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """スレッドトラップの保護判定。接触した相手の素早さランクを1段階下げる"""
-    pass
+    success = _protect_success(battle, ctx)
+    if success:
+        battle.add_event_log(ctx.defender, "攻撃を防いだ")
+        if battle.move_executor.is_contact(ctx):
+            battle.modify_stat(ctx.attacker, "S", -1, source=ctx.defender)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
-def トーチカ_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def トーチカ_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """トーチカの保護判定。接触した相手をどく状態にする"""
-    pass
+    success = _protect_success(battle, ctx)
+    if success:
+        battle.add_event_log(ctx.defender, "攻撃を防いだ")
+        if battle.move_executor.is_contact(ctx):
+            common.apply_ailment(battle, ctx, value, "どく", target_spec="attacker:self", source_spec="defender:self")
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 # かくれる系
@@ -790,72 +830,3 @@ def 姿消し_check_invulnerable(battle: Battle, ctx: BattleContext, value: Any,
     if ctx.move.name in allowed_moves:
         return HandlerReturn(False, value)
     return HandlerReturn(True, True)
-
-
-def かえんのまもり_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """かえんのまもりの保護判定とやけど付与
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 判定値
-
-    Returns:
-        HandlerReturn: 防御する場合True
-    """
-    if not _protect_block(battle, ctx, value):
-        return HandlerReturn(False, value)
-
-    if ctx.attacker and ctx.move and ctx.move.is_contact and ctx.move.category != "変化":
-        common.apply_ailment(battle, ctx, value, "やけど", target_spec="attacker:self", source_spec="defender:self")
-    return HandlerReturn(True, True)
-
-
-def かえんのまもり_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """かえんのまもり状態のターン終了時解除
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if "かえんのまもり" in ctx.source.volatiles:
-        ctx.source.volatiles["かえんのまもり"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["かえんのまもり"]
-    return HandlerReturn(True)
-
-
-def まもる_check_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """まもるの保護判定
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 判定値
-
-    Returns:
-        HandlerReturn: 防御する場合True
-    """
-    if _protect_block(battle, ctx, value):
-        return HandlerReturn(value=True)
-    return HandlerReturn(value=False)
-
-
-def まもる_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """まもる状態のターン終了時解除
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue
-    """
-    if "まもる" in ctx.source.volatiles:
-        ctx.source.volatiles["まもる"].unregister_handlers(battle.events, ctx.source)
-        del ctx.source.volatiles["まもる"]
-    return HandlerReturn(True)

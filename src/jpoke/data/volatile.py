@@ -411,11 +411,10 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
-    # まもる系
     "まもる": VolatileData(
         handlers={
             Event.ON_TRY_MOVE: h.VolatileHandler(
-                h.まもる_check_protect,
+                h.まもる_protect,
                 subject_spec="defender:self",
                 priority=100,
             ),
@@ -428,7 +427,7 @@ VOLATILES: dict[str, VolatileData] = {
     "かえんのまもり": VolatileData(
         handlers={
             Event.ON_TRY_MOVE: h.VolatileHandler(
-                h.かえんのまもり_check_protect,
+                h.かえんのまもり_protect,
                 subject_spec="defender:self",
                 priority=100,
             ),
@@ -441,7 +440,7 @@ VOLATILES: dict[str, VolatileData] = {
     "キングシールド": VolatileData(
         handlers={
             Event.ON_TRY_MOVE: h.VolatileHandler(
-                h.キングシールド_check_protect,
+                h.キングシールド_protect,
                 subject_spec="defender:self",
                 priority=100,
             ),
@@ -454,7 +453,7 @@ VOLATILES: dict[str, VolatileData] = {
     "スレッドトラップ": VolatileData(
         handlers={
             Event.ON_TRY_MOVE: h.VolatileHandler(
-                h.スレッドトラップ_check_protect,
+                h.スレッドトラップ_protect,
                 subject_spec="defender:self",
                 priority=100,
             ),
@@ -467,7 +466,7 @@ VOLATILES: dict[str, VolatileData] = {
     "トーチカ": VolatileData(
         handlers={
             Event.ON_TRY_MOVE: h.VolatileHandler(
-                h.トーチカ_check_protect,
+                h.トーチカ_protect,
                 subject_spec="defender:self",
                 priority=100,
             ),

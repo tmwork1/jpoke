@@ -231,3 +231,35 @@ class MoveExecutor:
         # ダメージを与えたときの処理
         if damage:
             self.events.emit(Event.ON_DAMAGE, ctx)
+
+    def generate_context(self, attacker: Pokemon, move: Move) -> BattleContext:
+        """BattleContextを生成する。
+
+        Args:
+            attacker: 技を使用するポケモン
+            move: 使用する技（技コマンドの場合は必須）
+
+        Returns:
+            BattleContext: 技の使用に関するコンテキスト情報
+        """
+        return BattleContext(
+            attacker=attacker,
+            defender=self.battle.foe(attacker),
+            move=move
+        )
+
+    def is_contact(self, ctx: BattleContext) -> bool:
+        """技が接触技かどうかを判定する。
+        Args:
+            ctx: BattleContextインスタンス
+
+         Returns:
+            技が接触技の場合True
+        """
+        is_contact = ctx.move.has_label("contact")
+        is_contact = self.events.emit(
+            Event.ON_CHECK_CONTACT,
+            ctx,
+            is_contact
+        )
+        return is_contact

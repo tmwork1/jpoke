@@ -8,6 +8,7 @@ from .event import DomainEvent, Event
 from .interrupt import Interrupt
 from .damage import DamageFlag
 from .command import Command
+from .log import LogCode
 
 __all__ = [
     "DomainEvent",
@@ -15,4 +16,5 @@ __all__ = [
     "Interrupt",
     "DamageFlag",
     "Command",
+    "LogCode",
 ]

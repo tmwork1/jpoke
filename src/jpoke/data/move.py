@@ -36,13 +36,6 @@ def common_setup() -> None:
             log="always"
         )
 
-        # まもるで無効化されないハンドラを追加
-        if data.self_targeting or "unprotectable" in data.labels:
-            data.handlers[Event.ON_CHECK_PROTECT] = h.MoveHandler(
-                lambda *args: HandlerReturn(value=False, stop_event=True),
-                subject_spec="defender:self",
-            )
-
 
 # TODO: 追加効果が登録されているイベントを修正
 # ON_PAY_HP : HPコスト消費
@@ -5214,6 +5207,7 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
+        self_targeting=True,
         labels=["dance"],
         handlers={
         }

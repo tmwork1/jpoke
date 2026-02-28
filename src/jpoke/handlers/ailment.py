@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, LogPolicy
+from jpoke.enums import LogCode
 from jpoke.core import Handler, HandlerReturn
 
 
@@ -38,7 +39,8 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
         trigger = battle.random.random() < 0.25
 
     if trigger:
-        battle.add_event_log(ctx.attacker, "まひで動けなかった")
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "まひ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -65,7 +67,8 @@ def ねむり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         mon.cure_ailment(battle)
         return HandlerReturn(value=True)
     # まだ眠っている
-    battle.add_event_log(mon, "眠っている")
+    battle.add_event_log(mon, LogCode.ACTION_BLOCKED,
+                         payload={"reason": "ねむり"})
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -83,5 +86,6 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         mon.cure_ailment(battle)
         return HandlerReturn(value=True)
     # まだ凍っている
-    battle.add_event_log(mon, "凍っている")
+    battle.add_event_log(mon, LogCode.ACTION_BLOCKED,
+                         payload={"reason": "こおり"})
     return HandlerReturn(value=False, stop_event=True)

@@ -492,24 +492,70 @@ def test_ロックオン():
     assert not battle.actives[0].has_volatile("ロックオン")
 
 
+def test_まもる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    battle.actives[1].apply_volatile(battle, "まもる", count=1)
+    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert t.log_contains(battle, "防いだ")
+
+
+def test_まもる_self_target():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["つるぎのまい"])],
+    )
+    battle.actives[1].apply_volatile(battle, "まもる", count=1)
+    assert t.get_try_result(battle, Event.ON_TRY_MOVE)
+
+
 def test_トーチカ():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    battle.actives[1].apply_volatile(battle, "トーチカ", count=1)
+    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert t.log_contains(battle, "防いだ")
+    assert battle.actives[0].has_ailment("どく")
+
+# TODO: トーチカで非接触のときに毒にならないパターンのテストも実装
 
 
 def test_キングシールド():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    battle.actives[1].apply_volatile(battle, "キングシールド", count=1)
+    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert t.log_contains(battle, "防いだ")
+    assert battle.actives[0].rank["A"] == -1
+
+# TODO: キングシールドで非接触のときに攻撃ダウンしないパターンのテストも実装
 
 
 def test_スレッドトラップ():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    battle.actives[1].apply_volatile(battle, "スレッドトラップ", count=1)
+    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert t.log_contains(battle, "防いだ")
+    assert battle.actives[0].rank["S"] == -1
+
+# TODO: スレッドトラップで非接触のときに素早さダウンしないパターンのテストも実装
 
 
 def test_かえんのまもり():
-    # TODO: 実装
-    pass
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    battle.actives[1].apply_volatile(battle, "かえんのまもり", count=1)
+    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert t.log_contains(battle, "防いだ")
+    assert battle.actives[0].has_ailment("やけど")
+
+# TODO: かえんのまもりで非接触のときにやけどにならないパターンのテストも実装
+# TODO: かえんのまもりで補助技を防げないパターンのテストも実装
 
 
 def test_あなをほる_evade():

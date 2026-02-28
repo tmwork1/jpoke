@@ -8,8 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, Player
     from jpoke.model import Pokemon
 
-from jpoke.enums import Event, Command, Interrupt
-from .context import BattleContext
+from jpoke.enums import Event, Command, Interrupt, LogCode
 
 
 class TurnController:
@@ -76,7 +75,7 @@ class TurnController:
                 n_alive += 1
         return n_alive + alpha * total_hp / total_max_hp
 
-    def judge_winner(self) -> "Player | None":
+    def judge_winner(self) -> Player | None:
         """勝者を判定して返す。
 
         Returns:
@@ -88,10 +87,11 @@ class TurnController:
         TOD_scores = [self.calc_tod_score(pl) for pl in self.battle.players]
         if 0 in TOD_scores:
             loser_idx = TOD_scores.index(0)
-            self.battle.winner_idx = int(not loser_idx)
-            self.battle.add_event_log(self.battle.players[self.battle.winner_idx], "勝ち")
-            self.battle.add_event_log(self.battle.players[loser_idx], "負け")
-            return self.battle.players[self.battle.winner_idx]
+            winner_idx = (loser_idx + 1) % 2
+            self.battle.winner_idx = winner_idx
+            self.battle.add_event_log(winner_idx, LogCode.WIN)
+            self.battle.add_event_log(loser_idx, LogCode.LOSE)
+            return self.battle.players[winner_idx]
 
         return None
 
@@ -183,7 +183,8 @@ class TurnController:
                 continue
 
             if not self.battle.has_interrupt():
-                self.battle.add_event_log(player, f"{player.active.name}の行動")
+                self.battle.add_event_log(player, LogCode.ACTION_START,
+                                          payload={"pokemon": attacker.name})
                 # コマンドを取得
                 command = player.reserved_commands.pop(0)
                 # 技を実行

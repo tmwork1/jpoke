@@ -155,4 +155,13 @@ class Move(GameEffect):
         Returns:
             技が接触技の場合True
         """
-        return "contact" in self.data.labels
+        return self.has_label("contact")
+
+    @property
+    def bypass_protect(self) -> bool:
+        """技がまもるを無視するかどうかを判定する。
+
+        Returns:
+            技がまもるを無視する場合True
+        """
+        return self.data.self_targeting or self.has_label("unprotectable")
