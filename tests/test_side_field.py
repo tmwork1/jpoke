@@ -71,7 +71,7 @@ def test_しんぴのまもり():
 
 
 def test_しろいきり_能力低下防止():
-    # TODO: 相手による能力低下を防ぐから確認するテストに修正
+    # TODO: 相手による能力低下を防ぐか確認するテストに修正
     """しろいきり: 能力ランク低下を防ぐ"""
     battle = t.start_battle(ally_side_field={"しろいきり": 1})
     target, source = battle.actives

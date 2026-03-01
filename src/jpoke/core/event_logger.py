@@ -87,7 +87,7 @@ class EventLogger:
         """
         self.logs.append(EventLog(turn, idx, log, payload))
 
-    def get(self, turn: int, idx: int) -> list[str]:
+    def get(self, turn: int, idx: int) -> list[EventLog]:
         """指定したターンとプレイヤーのイベントログを取得。
 
         Args:
@@ -95,7 +95,65 @@ class EventLogger:
             idx: プレイヤーインデックス (0 or 1)
 
         Returns:
-            イベントテキストのリスト
+            EventLog オブジェクトのリスト
         """
-        return [log.text for log in self.logs if
+        return [log for log in self.logs if
                 log.turn == turn and log.idx == idx]
+
+    def add_text_log(self, turn: int, idx: int, text: str) -> None:
+        """プレーンテキストのイベントログを追加（TEXT_LOGコードを使用）。
+
+        ハンドラ関数内で簡単にテキストログを記入するために使用します。
+
+        Args:
+            turn: ターン番号
+            idx: プレイヤーインデックス (0 or 1)
+            text: ログテキスト
+        """
+        self.add(turn, idx, LogCode.TEXT_LOG, payload={"text": text})
+
+    def add_ability_log(self, turn: int, idx: int, ability_name: str,
+                        success: bool = True) -> None:
+        """特性ハンドラのログを追加。
+
+        Args:
+            turn: ターン番号
+            idx: プレイヤーインデックス (0 or 1)
+            ability_name: 特性名
+            success: 発動成功フラグ（Falseの場合は「失敗」が末尾に付く）
+        """
+        text = ability_name
+        if not success:
+            text += "失敗"
+        self.add(turn, idx, LogCode.ABILITY_TRIGGERED,
+                 payload={"ability": ability_name, "text": text})
+
+    def add_item_log(self, turn: int, idx: int, item_name: str,
+                     success: bool = True) -> None:
+        """持ち物ハンドラのログを追加。
+
+        Args:
+            turn: ターン番号
+            idx: プレイヤーインデックス (0 or 1)
+            item_name: 持ち物名
+            success: 発動成功フラグ（Falseの場合は「失敗」が末尾に付く）
+        """
+        text = item_name
+        if not success:
+            text += "失敗"
+        self.add(turn, idx, LogCode.CONSUME_ITEM,
+                 payload={"item": item_name, "text": text})
+
+    def add_volatile_log(self, turn: int, idx: int, volatile_name: str,
+                         applied: bool = True) -> None:
+        """揮発状態のログを追加。
+
+        Args:
+            turn: ターン番号
+            idx: プレイヤーインデックス (0 or 1)
+            volatile_name: 揮発状態名
+            applied: True の場合は適用、False の場合は解除
+        """
+        log_code = LogCode.VOLATILE_APPLIED if applied else LogCode.VOLATILE_REMOVED
+        self.add(turn, idx, log_code,
+                 payload={"volatile": volatile_name})

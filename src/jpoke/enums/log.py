@@ -15,3 +15,8 @@ class LogCode(Enum):
     CONSUME_ITEM = auto()
     CURE_AILMENT = auto()
     APPLY_AILMENT = auto()
+    ABILITY_TRIGGERED = auto()
+    MOVE_USED = auto()
+    VOLATILE_APPLIED = auto()
+    VOLATILE_REMOVED = auto()
+    TEXT_LOG = auto()

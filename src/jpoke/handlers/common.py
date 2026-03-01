@@ -17,10 +17,10 @@ def modify_hp(battle: Battle,
               r: float = 0,
               chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     success = battle.modify_hp(target, v, r)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def drain_hp(battle: Battle,
@@ -33,7 +33,7 @@ def drain_hp(battle: Battle,
              heal_rate: float = 1,
              chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     from_mon = ctx.resolve_role(battle, from_)
     if to_ is None:
@@ -45,7 +45,7 @@ def drain_hp(battle: Battle,
     if success:
         battle.modify_hp(to_mon, v * heal_rate, r * heal_rate)
 
-    return HandlerReturn(success=success)
+    return HandlerReturn(value=success)
 
 
 def modify_stat(battle: Battle,
@@ -57,11 +57,11 @@ def modify_stat(battle: Battle,
                 source_spec: RoleSpec | None = None,
                 chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = battle.modify_stat(target, stat, v, source=source)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def modify_stats(battle: Battle,
@@ -89,7 +89,7 @@ def modify_stats(battle: Battle,
         HandlerReturn: いずれかの能力が変化した場合True
     """
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -97,7 +97,7 @@ def modify_stats(battle: Battle,
     # battle.modify_stats()を使って一度に処理
     success = battle.modify_stats(target, stats, source=source)
 
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def apply_ailment(battle: Battle,
@@ -108,11 +108,11 @@ def apply_ailment(battle: Battle,
                   source_spec: RoleSpec | None = None,
                   chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = target.apply_ailment(battle, ailment, source=source)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def apply_volatile(battle: Battle,
@@ -124,7 +124,7 @@ def apply_volatile(battle: Battle,
                    count: int | None = None,
                    chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
     if count is None:
         match volatile:
             case "こんらん":
@@ -134,7 +134,7 @@ def apply_volatile(battle: Battle,
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = target.apply_volatile(battle, volatile, count=count, source=source)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def cure_ailment(battle: Battle,
@@ -144,11 +144,11 @@ def cure_ailment(battle: Battle,
                  source_spec: RoleSpec | None = None,
                  chance: float = 1) -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(False)
+        return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = target.cure_ailment(battle, source=source)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def activate_weather(battle: Battle,
@@ -159,7 +159,7 @@ def activate_weather(battle: Battle,
                      count: int = 5) -> HandlerReturn:
     source = ctx.resolve_role(battle, source_spec)
     success = battle.weather_manager.activate(weather, count, source=source)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def activate_terrain(battle: Battle,
@@ -170,7 +170,7 @@ def activate_terrain(battle: Battle,
                      count: int = 5) -> HandlerReturn:
     source = ctx.resolve_role(battle, source_spec)
     success = battle.terrain_manager.activate(terrain, count, source=source)
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def resolve_field_count(battle: Battle,
@@ -179,9 +179,9 @@ def resolve_field_count(battle: Battle,
                         field: Weather | Terrain,
                         additonal_count: int) -> HandlerReturn:
     if ctx.field.orig_name == field:
-        return HandlerReturn(True, value + additonal_count)
+        return HandlerReturn(value=value + additonal_count)
     else:
-        return HandlerReturn(False, value)
+        return HandlerReturn(value=value)
 
 
 def calc_effectiveness(battle: Battle,

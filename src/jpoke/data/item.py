@@ -84,7 +84,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="いわ", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -115,7 +114,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="くさ", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -135,9 +133,8 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_CHECK_TRAPPED: h.ItemHandler(
-                lambda *args: HandlerReturn(True, False, stop_event=True),
+                lambda *args: HandlerReturn(value=False, stop_event=True),
                 subject_spec="source:self",
-                log="never",
                 priority=-100,
             )
         }
@@ -149,7 +146,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="むし", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -188,7 +184,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="あく", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -231,7 +226,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CHECK_DURATION: h.ItemHandler(
                 partial(common.resolve_field_count, field="すなあらし", additonal_count=3),
                 subject_spec="source:self",
-                log="never",
             )
         }
     ),
@@ -242,7 +236,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="でんき", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -269,7 +262,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="ノーマル", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         },
     ),
@@ -288,7 +280,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="みず", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         },
     ),
@@ -303,7 +294,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="ひこう", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -318,7 +308,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="フェアリー", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -366,7 +355,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ちからのハチマキ,
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -397,7 +385,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="どく", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -408,7 +395,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="こおり", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -431,7 +417,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="ノーマル", modifier=6144/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -446,7 +431,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="ゴースト", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -516,7 +500,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="エスパー", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -531,7 +514,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="はがね", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -550,7 +532,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="ほのお", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         },
     ),
@@ -561,7 +542,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ものしりメガネ,
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -576,7 +556,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="じめん", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -591,7 +570,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="フェアリー", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -602,7 +580,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 partial(h.modify_power_by_type, type_="ドラゴン", modifier=4915/4096),
                 subject_spec="attacker:self",
-                log="never",
             )
         }
     ),
@@ -804,7 +781,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="ノーマル", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -815,7 +791,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="くさ", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
         # handlers=_type_damage_handler("くさ", 2048/4096)
@@ -827,7 +802,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="ほのお", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -838,7 +812,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="みず", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -849,7 +822,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="でんき", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -860,7 +832,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="ゴースト", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -871,7 +842,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="いわ", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -882,7 +852,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="むし", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -893,7 +862,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="エスパー", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -904,7 +872,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="ひこう", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -915,7 +882,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="じめん", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -926,7 +892,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="どく", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -937,7 +902,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="かくとう", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -948,7 +912,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="こおり", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -959,7 +922,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="はがね", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -970,7 +932,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="あく", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -981,7 +942,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="ドラゴン", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),
@@ -992,7 +952,6 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 partial(h.modify_super_effective_damage, type_="フェアリー", modifier=2048/4096),
                 subject_spec="defender:self",
-                log="never",
             )
         }
     ),

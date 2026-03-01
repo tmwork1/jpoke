@@ -280,7 +280,7 @@ class Battle:
         return new
 
     def masked_copy(self, perspective: Player) -> Self:
-        # TODO: implement more detailed masking
+        # TODO: implement more detailed masking (copilotには任せない)
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
             perspective: 情報を完全に保持するプレイヤー
@@ -763,8 +763,9 @@ class Battle:
         print(f"Turn {turn}")
         for i, player in enumerate(self.players):
             event_logs = self.event_logger.get(turn, i)
-            damage_logs = self.event_logger.get_damage_logs(turn, i)
-            print(f"\t{player.name}\t{event_logs} {damage_logs}")
+            # イベントログをテキスト表現に変換
+            log_texts = [f"{log.log.name}:{log.payload}" for log in event_logs]
+            print(f"\t{player.name}\t{log_texts}")
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):
         """ターンを進める（TurnControllerへの委譲）。

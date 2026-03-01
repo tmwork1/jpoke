@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import LogPolicy, RoleSpec
+from jpoke.utils.type_defs import RoleSpec
 from jpoke.core import HandlerReturn, Handler
 from . import common
 
@@ -17,14 +17,12 @@ class AbilityHandler(Handler):
     def __init__(self,
                  func: Callable,
                  subject_spec: RoleSpec,
-                 log: LogPolicy = "on_success",
                  priority: int = 100,
                  once: bool = False) -> None:
         super().__init__(
             func=func,
             subject_spec=subject_spec,
             source_type="ability",
-            log=log,
             priority=priority,
             once=once,
         )
@@ -46,7 +44,7 @@ def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     # ポケモンが浮いているかどうかを判定
     # 浮いている = ふゆう、でんじふゆう、テレキネシス等
     result = not ctx.source.is_floating(battle)
-    return HandlerReturn(True, result)
+    return HandlerReturn(value=result)
 
 
 def かげふみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -63,7 +61,7 @@ def かげふみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
             - かげふみ持ち以外はTrue（交代制限）
     """
     result = ctx.source.ability != "かげふみ"
-    return HandlerReturn(True, result)
+    return HandlerReturn(value=result)
 
 
 def じりょく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -80,7 +78,7 @@ def じりょく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
             - はがねタイプの場合はTrue（交代制限）
     """
     result = ctx.source.has_type("はがね")
-    return HandlerReturn(True, result)
+    return HandlerReturn(value=result)
 
 
 def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
@@ -103,7 +101,7 @@ def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> Hand
     result = has_negative and \
         ctx.source != ctx.target and \
         common.modify_stat(battle, ctx, value, "C", +2, target_spec="target:self", source_spec="target:self")
-    return HandlerReturn(result)
+    return HandlerReturn(value=result)
 
 
 def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -119,7 +117,7 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
             - すなあらし中は2倍、それ以外は元の値
     """
     value = value * 2 if battle.weather.name == "すなあらし" else value
-    return HandlerReturn(True, value)
+    return HandlerReturn(value=value)
 
 
 def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -137,8 +135,10 @@ def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerRetur
     """
     # どく・もうどく状態を防ぐ
     if value in ["どく", "もうどく"]:
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        idx = battle.get_player_index(ctx.target)
+        battle.event_logger.add_ability_log(battle.turn, idx, "めんえき", success=True)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -156,8 +156,10 @@ def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     # ねむり状態を防ぐ
     if value == "ねむり":
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        idx = battle.get_player_index(ctx.target)
+        battle.event_logger.add_ability_log(battle.turn, idx, "ふみん", success=True)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -175,8 +177,10 @@ def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """
     # ねむり状態を防ぐ（ふみんと同じ効果）
     if value == "ねむり":
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        idx = battle.get_player_index(ctx.target)
+        battle.event_logger.add_ability_log(battle.turn, idx, "やるき", success=True)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def マイペース(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -194,7 +198,7 @@ def マイペース(battle: Battle, ctx: BattleContext, value: str) -> HandlerRe
         HandlerReturn: (False, value) - 状態異常は防がない
     """
     # 状態異常は防がない（こんらんは揮発状態で別処理）
-    return HandlerReturn(False, value)
+    return HandlerReturn(value=value)
 
 
 def じゅうなん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:

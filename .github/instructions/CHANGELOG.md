@@ -1,5 +1,27 @@
 # 変更履歴
 
+## 2026年3月1日
+
+### 指示書の大幅更新
+
+- .github/copilot-instructions.md: HandlerReturn の仕様変更（stop_event が bool に）を反映
+- .github/instructions/architecture.md: BattleContext のエイリアス仕様、マネージャー構成の最新化
+- 実装状況の追加（状態異常100%完了、フィールド効果100%完了等）
+- ファイル構成の詳細化（core/, model/, data/, handlers/ 配下のファイル一覧）
+
+**背景:**
+プロジェクトの成長に伴い、HandlerReturn の仕様が NamedTuple に変更され、BattleContext のエイリアス機能が追加されました。また、多数のマネージャークラスが core/field_manager.py に整理され、フィールド効果管理が体系化されました。
+
+**主な変更点:**
+- HandlerReturn: `stop_event` が `HandlerResult` から `bool` に変更
+- BattleContext: `source`/`target` と `attacker`/`defender` のエイリアス関係を明確化
+- Battle クラス: WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager の導入
+- 実装進捗: 状態異常（6/6）、フィールド効果（21/21）完了
+
+**影響ファイル:** .github/copilot-instructions.md, .github/instructions/architecture.md
+
+---
+
 ## ハルシネーション記録
 
 ### オートガード の架空実装（2026年2月6日 削除）

@@ -36,7 +36,7 @@ MoveCategory = Literal["物理", "特殊", "変化"]
 
 AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"]
 
-# TODO: volatileの実装と完全に一致させる
+# TODO: 実装されているvolatileをすべて含める
 VolatileName = Literal[
     "アクアリング",
     "あめまみれ",

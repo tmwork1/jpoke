@@ -32,17 +32,9 @@ def common_setup() -> None:
         # 共通ハンドラを追加
         data.handlers[Event.ON_CONSUME_PP] = h.MoveHandler(
             h.consume_pp,
-            subject_spec="attacker:self",
-            log="always"
+            subject_spec="attacker:self"
         )
 
-
-# TODO: 追加効果が登録されているイベントを修正
-# ON_PAY_HP : HPコスト消費
-# ON_HIT : attackerのランク変動、hp吸収による回復など
-# ON_DAMAGE : defenderのランク変動など
-# ON_DAMAGE : 反動ダメージなど
-# 詳細は docs/spec/turn_flow.md を参照
 
 # TODO: 定義内の空行を削除
 MOVES: dict[str, MoveData] = {
@@ -2786,8 +2778,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 h.かみなり_accuracy,
-                subject_spec="attacker:self",
-                log="never",
+                subject_spec="attacker:self"
             )
         }
     ),
@@ -3655,8 +3646,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 h.ふぶき_accuracy,
-                subject_spec="attacker:self",
-                log="never",
+                subject_spec="attacker:self"
             )
         }
     ),
@@ -3779,8 +3769,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
                 h.ぼうふう_accuracy,
-                subject_spec="attacker:self",
-                log="never",
+                subject_spec="attacker:self"
             )
         }
     ),

@@ -5,8 +5,9 @@ from .models import AilmentData
 
 
 def common_setup():
-    # TODO: docstring 追加
+    """共通のセットアップ処理"""
     for name in AILMENTS:
+        # name属性をセット
         AILMENTS[name].name = name
 
 
@@ -35,13 +36,11 @@ AILMENTS: dict[str, AilmentData] = {
             DomainEvent.ON_CALC_SPEED: h.AilmentHandler(
                 h.まひ_speed,
                 subject_spec="source:self",
-                log="never",
             ),
             Event.ON_TRY_ACTION: h.AilmentHandler(
                 h.まひ_action,
                 subject_spec="attacker:self",
                 priority=120,
-                log="never",
             )
         }
     ),
@@ -55,7 +54,6 @@ AILMENTS: dict[str, AilmentData] = {
                 h.やけど_damage,
                 subject_spec="source:self",
                 priority=40,
-                log="never",
             )
         }
     ),

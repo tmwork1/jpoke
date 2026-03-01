@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
-from jpoke.utils.type_defs import RoleSpec, LogPolicy, VolatileName
+from jpoke.utils.type_defs import RoleSpec, VolatileName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn, BattleContext
 from . import common
@@ -18,15 +18,11 @@ class VolatileHandler(Handler):
     def __init__(self,
                  func: Callable,
                  subject_spec: RoleSpec = "source:self",
-                 log: LogPolicy = "never",
-                 log_text: str | None = None,
                  priority: int = 100,
                  once: bool = False):
         super().__init__(func,
                          subject_spec,
                          source_type="volatile",
-                         log=log,
-                         log_text=log_text,
                          priority=priority,
                          once=once)
 
@@ -328,12 +324,12 @@ def さわぐ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     """
     user = ctx.attacker
     if not user:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     if not user.apply_volatile(battle.events, "さわぐ", count=3, source=user):
-        return HandlerReturn(False)
+        return HandlerReturn()
     user.volatiles["さわぐ"].move_name = ctx.move.name if ctx.move else ""
-    return HandlerReturn(True)
+    return HandlerReturn(value=True)
 
 
 def さわぐ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -350,14 +346,14 @@ def さわぐ_before_move(battle: Battle, ctx: BattleContext, value: Any) -> Han
     move = value
     volatile = ctx.attacker.volatiles.get("さわぐ") if ctx.attacker else None
     if not volatile or not move:
-        return HandlerReturn(True)
+        return HandlerReturn(value=True)
 
     locked = volatile.move_name
     if locked and move.name != locked:
         forced = ctx.attacker.find_move(locked)
         if forced:
-            return HandlerReturn(True, forced)
-    return HandlerReturn(True)
+            return HandlerReturn(value=forced)
+    return HandlerReturn(value=True)
 
 
 def さわぐ_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -372,8 +368,8 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> H
         HandlerReturn: ねむりを防ぐ場合は空文字列
     """
     if value == "ねむり":
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def しおづけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -630,8 +626,8 @@ def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: An
         HandlerReturn: 補正後の値
     """
     if ctx.move and ctx.move.name in ["ころがる", "アイスボール"]:
-        return HandlerReturn(True, value * 2)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value=value * 2)
+    return HandlerReturn(value=value)
 
 
 def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -656,20 +652,20 @@ def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     """
     user = ctx.attacker
     if not user or not user.has_volatile("みがわり"):
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     cost = user.max_hp // 4
     if user.hp <= cost:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     if not battle.modify_hp(user, v=-cost):
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     if not user.apply_volatile(battle.events, "みがわり", source=user):
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     user.volatiles["みがわり"].hp = cost
-    return HandlerReturn(True)
+    return HandlerReturn(value=True)
 
 
 def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -826,7 +822,7 @@ def 姿消し_check_invulnerable(battle: Battle, ctx: BattleContext, value: Any,
         HandlerReturn: 回避する場合True
     """
     if not ctx.move:
-        return HandlerReturn(False, value)
+        return HandlerReturn(value=value)
     if ctx.move.name in allowed_moves:
-        return HandlerReturn(False, value)
-    return HandlerReturn(True, True)
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=True)

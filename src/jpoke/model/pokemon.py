@@ -124,7 +124,7 @@ class Pokemon:
             これらのデータはログに含まれていない、または
             復元ロジックが複雑なため保留中
         """
-        # TODO: (保留) ability, item, movesの復元
+        # TODO: ability, item, movesの復元 (あとまわし)
         # データ形式の設計とcreate_*メソッドの実装が必要
         # - mon.ability = cls.create_ability(data["ability"])
         # - mon.item = cls.create_item(data["item"])
@@ -358,11 +358,7 @@ class Pokemon:
             else:
                 return [self.terastal]
         else:
-            if self.name == 'アルセウス':
-                # TODO: アルセウスのタイプ変化
-                return ["ノーマル"]
-            else:
-                return self.data.types
+            return self.data.types
 
     @property
     def max_hp(self) -> int:

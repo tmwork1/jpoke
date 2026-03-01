@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from functools import partial
 
 
-from jpoke.utils.type_defs import RoleSpec, LogPolicy, AilmentName, Stat
+from jpoke.utils.type_defs import RoleSpec, AilmentName, Stat
 from jpoke.enums import Event, Interrupt
 from jpoke.core import Handler, BattleContext, HandlerReturn
 from . import common
@@ -22,26 +22,22 @@ from . import common
 class MoveHandler(Handler):
     """技ハンドラの派生クラス。
 
-    source_type="move" と log="never" をデフォルトとして設定します。
+    source_type="move" をデフォルトとして設定します。
     技の効果を実装する際に使用します。
     """
 
     def __init__(self,
                  func: Callable,
                  subject_spec: RoleSpec = "attacker:self",
-                 log: LogPolicy = "never",
-                 log_text: str | None = None,
                  priority: int = 100):
         """MoveHandlerを初期化する。
 
         Args:
             func: イベント発生時に呼ばれる処理関数
-            subject_spec: ログ出力対象のロール指定
-            log: ログ出力ポリシー ("always", "on_success", "never")
-            log_text: カスタムログテキスト（Noneの場合は技名を使用）
+            subject_spec: ハンドラの対象を指定するロール
             priority: ハンドラの優先度
         """
-        super().__init__(func, subject_spec, "move", log, log_text, priority)
+        super().__init__(func, subject_spec, "move", priority)
 
 
 def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -60,7 +56,7 @@ def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     v = battle.events.emit(Event.ON_CHECK_PP_CONSUMED, ctx, 1)
     ctx.move.pp = max(0, ctx.move.pp - v)
     battle.add_event_log(ctx.attacker, f"PP -{v}")
-    return HandlerReturn(True)
+    return HandlerReturn()
 
 
 def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -80,7 +76,7 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     success = bool(battle.get_available_switch_commands(player))
     if success:
         player.interrupt = Interrupt.PIVOT
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -102,7 +98,7 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     if success:
         command = battle.random.choice(commands)
         battle.run_switch(player, player.team[command.idx])
-    return HandlerReturn(success)
+    return HandlerReturn(value=success)
 
 
 # ===== 技個別のハンドラ =====
@@ -123,10 +119,10 @@ def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     """
     weather = battle.weather_manager.current.name
     if weather == "あめ":
-        return HandlerReturn(True, None)  # 必中
+        return HandlerReturn(value=None)  # 必中
     elif weather == "はれ":
-        return HandlerReturn(True, 50)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value=50)
+    return HandlerReturn(value=value)
 
 
 def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -145,10 +141,10 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     """
     weather = battle.weather_manager.current.name
     if weather == "あめ":
-        return HandlerReturn(True, None)  # 必中
+        return HandlerReturn(value=None)  # 必中
     elif weather == "はれ":
-        return HandlerReturn(True, 50)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value=50)
+    return HandlerReturn(value=value)
 
 
 def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -166,5 +162,5 @@ def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     """
     weather = battle.weather_manager.current.name
     if weather == "ゆき":
-        return HandlerReturn(True, None)  # 必中
-    return HandlerReturn(False, value)
+        return HandlerReturn(value=None)  # 必中
+    return HandlerReturn(value=value)

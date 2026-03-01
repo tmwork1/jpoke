@@ -36,7 +36,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
                 h.ありじごく,
                 subject_spec="source:foe",
-                log="never",
             )
         }
     ),
@@ -45,7 +44,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="source:foe", source_spec="source:self"),
                 subject_spec="source:self",
-                log="always",
             )
         },
     ),
@@ -95,7 +93,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
                 h.かげふみ,
                 subject_spec="source:foe",
-                log="never",
             )
         }
     ),
@@ -144,14 +141,12 @@ ABILITIES: dict[str, AbilityData] = {
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                lambda *args: HandlerReturn(True),
+                lambda *args: HandlerReturn(),
                 subject_spec="source:self",
-                log="always",
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
-                lambda *args: HandlerReturn(True, True),
+                lambda *args: HandlerReturn(value=True),
                 subject_spec="source:foe",
-                log="never",
             ),
         }
     ),
@@ -234,7 +229,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.じゅうなん,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -254,7 +248,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
                 h.じりょく,
                 subject_spec="source:foe",
-                log="never",
             )
         }
     ),
@@ -274,7 +267,6 @@ ABILITIES: dict[str, AbilityData] = {
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
                 h.すなかき,
                 subject_spec="source:self",
-                log="never",
             )
         }
     ),
@@ -304,7 +296,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 partial(common.apply_ailment, ailment="ねむり", target_spec="source:self", source_spec="source:self"),
                 subject_spec="source:self",
-                log="always",
             )
         }
     ),
@@ -374,7 +365,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.どんかん,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -470,7 +460,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.ふみん,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -516,7 +505,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.みずのベール,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -527,7 +515,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.めんえき,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -540,7 +527,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.やるき,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -781,7 +767,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.マイペース,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
@@ -790,7 +775,6 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.マグマのよろい,
                 subject_spec="target:self",
-                log="on_fail",
             )
         }
     ),
