@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec
+from jpoke.enums import LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
 
@@ -136,7 +137,7 @@ def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerRetur
     # どく・もうどく状態を防ぐ
     if value in ["どく", "もうどく"]:
         idx = battle.get_player_index(ctx.target)
-        battle.event_logger.add_ability_log(battle.turn, idx, "めんえき", success=True)
+        battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "めんえき", "success": True})
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
@@ -157,7 +158,7 @@ def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ねむり状態を防ぐ
     if value == "ねむり":
         idx = battle.get_player_index(ctx.target)
-        battle.event_logger.add_ability_log(battle.turn, idx, "ふみん", success=True)
+        battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "ふみん", "success": True})
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
@@ -178,7 +179,7 @@ def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     # ねむり状態を防ぐ（ふみんと同じ効果）
     if value == "ねむり":
         idx = battle.get_player_index(ctx.target)
-        battle.event_logger.add_ability_log(battle.turn, idx, "やるき", success=True)
+        battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "やるき", "success": True})
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 

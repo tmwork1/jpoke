@@ -17,10 +17,19 @@ class Payload(TypedDict, total=False):
     イベントログに付随する追加情報を格納するための辞書構造。
     例えば、技の名前、ダメージ量、状態異常の種類などが含まれる。
     """
+    # 汎用フィールド
+    text: str | None = None
+    success: bool | None = None
+
+    # 特定のソース
     pokemon: str | None = None
     ability: str | None = None
     item: str | None = None
     move: str | None = None
+    volatile: str | None = None
+    ailment: str | None = None
+
+    # その他
     stat: Stat | None = None
     value: int | None = None
     reason: str | None = None
@@ -51,6 +60,72 @@ class EventLog:
             ログデータを含む辞書
         """
         return vars(self).copy()
+
+    def render(self) -> str:
+        """ログエントリをテキスト表現に変換。
+
+        LogCode と Payload から人間が読める文字列を生成します。
+
+        Returns:
+            ログのテキスト表現
+        """
+        if not self.payload:
+            return self.log.name
+
+        # LogCode に応じた適切なテキスト変換
+        match self.log:
+            case LogCode.TEXT_LOG:
+                return self.payload.get("text", "")
+
+            case LogCode.ABILITY_TRIGGERED:
+                ability = self.payload.get("ability", "特性")
+                success = self.payload.get("success", True)
+                text = ability
+                if not success:
+                    text += "失敗"
+                return text
+
+            case LogCode.CONSUME_ITEM:
+                item = self.payload.get("item", "持ち物")
+                success = self.payload.get("success", True)
+                text = item
+                if not success:
+                    text += "失敗"
+                return text
+
+            case LogCode.VOLATILE_APPLIED:
+                volatile = self.payload.get("volatile", "揮発状態")
+                return f"{volatile}が付与された"
+
+            case LogCode.VOLATILE_REMOVED:
+                volatile = self.payload.get("volatile", "揮発状態")
+                return f"{volatile}が解除された"
+
+            case LogCode.APPLY_AILMENT:
+                ailment = self.payload.get("ailment", "状態異常")
+                return f"{ailment}になった"
+
+            case LogCode.CURE_AILMENT:
+                ailment = self.payload.get("ailment", "状態異常")
+                return f"{ailment}が回復した"
+
+            case LogCode.MODIFY_STAT:
+                stat = self.payload.get("stat", "能力値")
+                change = self.payload.get("value", 0)
+                direction = "上がった" if change > 0 else "下がった"
+                return f"{stat}が{direction}"
+
+            case LogCode.MODIFY_HP:
+                value = self.payload.get("value", 0)
+                direction = "回復" if value > 0 else "ダメージ"
+                return f"{direction}"
+
+            case LogCode.ACTION_BLOCKED:
+                reason = self.payload.get("reason", "")
+                return f"{reason}で動けない" if reason else "動けない"
+
+            case _:
+                return self.log.name
 
 
 class EventLogger:
@@ -99,61 +174,3 @@ class EventLogger:
         """
         return [log for log in self.logs if
                 log.turn == turn and log.idx == idx]
-
-    def add_text_log(self, turn: int, idx: int, text: str) -> None:
-        """プレーンテキストのイベントログを追加（TEXT_LOGコードを使用）。
-
-        ハンドラ関数内で簡単にテキストログを記入するために使用します。
-
-        Args:
-            turn: ターン番号
-            idx: プレイヤーインデックス (0 or 1)
-            text: ログテキスト
-        """
-        self.add(turn, idx, LogCode.TEXT_LOG, payload={"text": text})
-
-    def add_ability_log(self, turn: int, idx: int, ability_name: str,
-                        success: bool = True) -> None:
-        """特性ハンドラのログを追加。
-
-        Args:
-            turn: ターン番号
-            idx: プレイヤーインデックス (0 or 1)
-            ability_name: 特性名
-            success: 発動成功フラグ（Falseの場合は「失敗」が末尾に付く）
-        """
-        text = ability_name
-        if not success:
-            text += "失敗"
-        self.add(turn, idx, LogCode.ABILITY_TRIGGERED,
-                 payload={"ability": ability_name, "text": text})
-
-    def add_item_log(self, turn: int, idx: int, item_name: str,
-                     success: bool = True) -> None:
-        """持ち物ハンドラのログを追加。
-
-        Args:
-            turn: ターン番号
-            idx: プレイヤーインデックス (0 or 1)
-            item_name: 持ち物名
-            success: 発動成功フラグ（Falseの場合は「失敗」が末尾に付く）
-        """
-        text = item_name
-        if not success:
-            text += "失敗"
-        self.add(turn, idx, LogCode.CONSUME_ITEM,
-                 payload={"item": item_name, "text": text})
-
-    def add_volatile_log(self, turn: int, idx: int, volatile_name: str,
-                         applied: bool = True) -> None:
-        """揮発状態のログを追加。
-
-        Args:
-            turn: ターン番号
-            idx: プレイヤーインデックス (0 or 1)
-            volatile_name: 揮発状態名
-            applied: True の場合は適用、False の場合は解除
-        """
-        log_code = LogCode.VOLATILE_APPLIED if applied else LogCode.VOLATILE_REMOVED
-        self.add(turn, idx, log_code,
-                 payload={"volatile": volatile_name})

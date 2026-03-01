@@ -214,10 +214,10 @@ def log_contains(battle: Battle,
         # 特定プレイヤーのログをチェック
         player = battle.players[player_idx]
         logs = event_logs.get(player, [])
-        return any(text in log for log in logs)
+        return any(text in log.render() for log in logs)
     else:
         # 全プレイヤーのログをチェック
         all_logs = []
         for logs in event_logs.values():
             all_logs.extend(logs)
-        return any(text in log for log in all_logs)
+        return any(text in log.render() for log in all_logs)

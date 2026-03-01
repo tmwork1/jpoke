@@ -737,14 +737,14 @@ class Battle:
             idx = self.get_player_index(source)
         self.event_logger.add(self.turn, idx, log, payload)
 
-    def get_event_logs(self, turn: int | None = None) -> dict[Player, list[str]]:
+    def get_event_logs(self, turn: int | None = None) -> dict[Player, list]:
         """指定したターンの全プレイヤーのイベントログを取得。
 
         Args:
             turn: ターン番号（Noneの場合は現在のターン）
 
         Returns:
-            Playerをキーとしたイベントテキストのリストの辞書
+            Playerをキーとしたイベントログ(EventLog)のリストの辞書
         """
         if turn is None:
             turn = self.turn
@@ -764,8 +764,9 @@ class Battle:
         for i, player in enumerate(self.players):
             event_logs = self.event_logger.get(turn, i)
             # イベントログをテキスト表現に変換
-            log_texts = [f"{log.log.name}:{log.payload}" for log in event_logs]
-            print(f"\t{player.name}\t{log_texts}")
+            log_texts = [log.render() for log in event_logs]
+            if log_texts:
+                print(f"\t{player.name}\t{log_texts}")
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):
         """ターンを進める（TurnControllerへの委譲）。

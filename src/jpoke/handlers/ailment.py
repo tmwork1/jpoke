@@ -38,7 +38,7 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
 
     if trigger:
         idx = battle.get_player_index(ctx.attacker)
-        battle.event_logger.add_text_log(battle.turn, idx, "まひで動けない！")
+        battle.event_logger.add(battle.turn, idx, LogCode.ACTION_BLOCKED, payload={"reason": "まひ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -66,7 +66,7 @@ def ねむり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         return HandlerReturn(value=True)
     # まだ眠っている
     idx = battle.get_player_index(mon)
-    battle.event_logger.add_text_log(battle.turn, idx, f"{mon.name}は眠っていて動けない！")
+    battle.event_logger.add(battle.turn, idx, LogCode.ACTION_BLOCKED, payload={"reason": "ねむり"})
     return HandlerReturn(value=False, stop_event=True)
 
 
