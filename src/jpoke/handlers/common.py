@@ -19,8 +19,8 @@ def modify_hp(battle: Battle,
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
-    success = battle.modify_hp(target, v, r)
-    return HandlerReturn(value=success)
+    v = battle.modify_hp(target, v, r)
+    return HandlerReturn(value=v)
 
 
 def drain_hp(battle: Battle,
@@ -41,11 +41,11 @@ def drain_hp(battle: Battle,
     else:
         to_mon = ctx.resolve_role(battle, to_)
 
-    success = battle.modify_hp(from_mon, -v, -r)
-    if success:
+    v = battle.modify_hp(from_mon, -v, -r)
+    if v:
         battle.modify_hp(to_mon, v * heal_rate, r * heal_rate)
 
-    return HandlerReturn(value=success)
+    return HandlerReturn(value=v)
 
 
 def modify_stat(battle: Battle,
@@ -106,12 +106,13 @@ def apply_ailment(battle: Battle,
                   ailment: AilmentName,
                   target_spec: RoleSpec,
                   source_spec: RoleSpec | None = None,
-                  chance: float = 1) -> HandlerReturn:
+                  chance: float = 1,
+                  reason: str = "") -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = target.apply_ailment(battle, ailment, source=source)
+    success = battle.status_manager.apply_ailment(target, ailment, source=source)
     return HandlerReturn(value=success)
 
 
@@ -133,7 +134,7 @@ def apply_volatile(battle: Battle,
                 count = 1
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = target.apply_volatile(battle, volatile, count=count, source=source)
+    success = battle.volatile_manager.apply_volatile(target, volatile, count=count, source=source)
     return HandlerReturn(value=success)
 
 
@@ -147,7 +148,7 @@ def cure_ailment(battle: Battle,
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = target.cure_ailment(battle, source=source)
+    success = battle.status_manager.cure_ailment(target, source=source)
     return HandlerReturn(value=success)
 
 

@@ -115,10 +115,13 @@ class EventLog:
                 direction = "上がった" if change > 0 else "下がった"
                 return f"{stat}が{direction}"
 
-            case LogCode.MODIFY_HP:
+            case LogCode.HEAL:
                 value = self.payload.get("value", 0)
-                direction = "回復" if value > 0 else "ダメージ"
-                return f"{direction}"
+                return f"{value}回復"
+
+            case LogCode.DAMAGE:
+                value = self.payload.get("value", 0)
+                return f"{value}ダメージ"
 
             case LogCode.ACTION_BLOCKED:
                 reason = self.payload.get("reason", "")

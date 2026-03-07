@@ -44,7 +44,7 @@ def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     """
     # ポケモンが浮いているかどうかを判定
     # 浮いている = ふゆう、でんじふゆう、テレキネシス等
-    result = not ctx.source.is_floating(battle)
+    result = not battle.query_manager.is_floating(ctx.source)
     return HandlerReturn(value=result)
 
 
@@ -217,8 +217,8 @@ def じゅうなん(battle: Battle, ctx: BattleContext, value: str) -> HandlerRe
     """
     # まひ状態を防ぐ
     if value == "まひ":
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def みずのベール(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -236,8 +236,8 @@ def みずのベール(battle: Battle, ctx: BattleContext, value: str) -> Handle
     """
     # やけど状態を防ぐ
     if value == "やけど":
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def マグマのよろい(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -255,11 +255,11 @@ def マグマのよろい(battle: Battle, ctx: BattleContext, value: str) -> Han
     """
     # こおり状態を防ぐ
     if value == "こおり":
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
-def どんかん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def どんかん_prevent_volatile(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """どんかん特性: メロメロ・ちょうはつ・ゆうわく・いかくを防ぐ。
 
     Note:
@@ -274,5 +274,6 @@ def どんかん(battle: Battle, ctx: BattleContext, value: str) -> HandlerRetur
     Returns:
         HandlerReturn: (False, value) - 状態異常は防がない
     """
-    # 状態異常は防がない（メロメロ等は揮発状態で別処理）
-    return HandlerReturn(False, value)
+    if value in ["メロメロ", "ちょうはつ", "ゆうわく", "いかく"]:
+        return HandlerReturn(value="", stop_event=True)  # 防いでイベント停止
+    return HandlerReturn(value=value)

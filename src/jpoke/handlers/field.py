@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle
 
+from jpoke.enums import LogCode
 from jpoke.utils.type_defs import GlobalField, SideField, VolatileName
 from jpoke.core import BattleContext, HandlerReturn
 
@@ -70,13 +71,11 @@ def あめ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> Han
 def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """砂嵐のダメージ"""
     tick_weather(battle, ctx, value)
-    if battle.weather.count == 0:
-        return HandlerReturn(False)
-    success = ctx.source and \
-        not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
-        ctx.source.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"] and \
-        battle.modify_hp(ctx.source, r=-1/16)
-    return HandlerReturn(value=success)
+    if battle.weather == "すなあらし" and \
+            not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
+            ctx.source.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]:
+        battle.modify_hp(ctx.source, r=-1/16, reason="すなあらしダメージ")
+    return HandlerReturn()
 
 
 def すなあらし_spdef_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -97,21 +96,21 @@ def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 
 def エレキフィールド_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """エレキフィールドでの電気技威力1.3倍"""
-    if ctx.move.type == "でんき" and not ctx.attacker.is_floating(battle):
+    if ctx.move.type == "でんき" and not battle.query_manager.is_floating(ctx.attacker):
         value = value * 5325 // 4096  # 1.3倍
     return HandlerReturn(value=value)
 
 
 def エレキフィールド_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """エレキフィールドでねむり無効"""
-    if value == "ねむり" and not ctx.target.is_floating(battle):
+    if value == "ねむり" and not battle.query_manager.is_floating(ctx.target):
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
 
 def エレキフィールド_prevent_nemuke(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """エレキフィールドでねむけ無効"""
-    if value == "ねむけ" and not ctx.target.is_floating(battle):
+    if value == "ねむけ" and not battle.query_manager.is_floating(ctx.target):
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
@@ -119,7 +118,7 @@ def エレキフィールド_prevent_nemuke(battle: Battle, ctx: BattleContext, 
 def グラスフィールド_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """グラスフィールドでの草技威力1.3倍・地面技威力0.5倍"""
     # 草技威力1.3倍（攻撃側が接地している場合）
-    if ctx.move.type == "くさ" and not ctx.attacker.is_floating(battle):
+    if ctx.move.type == "くさ" and not battle.query_manager.is_floating(ctx.attacker):
         value = value * 5325 // 4096  # 1.3倍
     # 地面範囲技威力0.5倍（じしん、じならし、マグニチュード）
     if ctx.move.name in ["じしん", "じならし", "マグニチュード"]:
@@ -129,46 +128,44 @@ def グラスフィールド_power_modifier(battle: Battle, ctx: BattleContext, 
 
 def グラスフィールド_heal(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """グラスフィールドのターン終了時回復"""
-    success = ctx.source and \
-        not ctx.source.is_floating(battle) and \
-        battle.modify_hp(ctx.source, r=1/16)
-    return HandlerReturn(success)
+    if not battle.query_manager.is_floating(ctx.source):
+        battle.modify_hp(ctx.source, r=1/16, reason="グラスフィールド")
+    return HandlerReturn()
 
 
 def サイコフィールド_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """サイコフィールドでのエスパー技威力1.3倍"""
-    if ctx.move.type == "エスパー" and not ctx.attacker.is_floating(battle):
+    if ctx.move.type == "エスパー" and not battle.query_manager.is_floating(ctx.attacker):
         value = value * 5325 // 4096  # 1.3倍
     return HandlerReturn(value=value)
 
 
 def サイコフィールド_block_priority(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """サイコフィールドで先制技無効"""
-    if ctx.move.priority > 0 and not ctx.defender.is_floating(battle):
-        return HandlerReturn(True, False, stop_event=True)
-    return HandlerReturn(False, value)
+    if ctx.move.priority > 0 and not battle.query_manager.is_floating(ctx.defender):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 def ミストフィールド_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ミストフィールドでのドラゴン技威力0.5倍"""
-    if ctx.move.type == "ドラゴン" and not ctx.defender.is_floating(battle):
+    if ctx.move.type == "ドラゴン" and not battle.query_manager.is_floating(ctx.defender):
         value = value * 2048 // 4096  # 0.5倍
     return HandlerReturn(value=value)
 
 
 def ミストフィールド_prevent_ailment(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ミストフィールドで状態異常無効"""
-    if not ctx.target.is_floating(battle):
-        return HandlerReturn(True, "", stop_event=True)
-    return HandlerReturn(False, value)
+    if not battle.query_manager.is_floating(ctx.target):
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def ミストフィールド_prevent_volatile(battle: Battle, ctx: BattleContext, value: VolatileName) -> HandlerReturn:
     """ミストフィールドで混乱無効"""
-    # valueは揮発状態名（VolatileName）
-    if value == "こんらん" and not ctx.target.is_floating(battle):
-        return HandlerReturn(True, "", stop_event=True)  # 防いでイベント停止
-    return HandlerReturn(False, value)  # 防がない
+    if value == "こんらん" and not battle.query_manager.is_floating(ctx.target):
+        return HandlerReturn(value="", stop_event=True)  # 防いでイベント停止
+    return HandlerReturn(value=value)  # 防がない
 
 
 # ===== グローバルフィールドハンドラ =====
@@ -258,15 +255,15 @@ def ねがいごと_heal(battle: Battle, ctx: BattleContext, value: Any) -> Hand
     side = battle.get_side(ctx.target)
     field = side.fields["ねがいごと"]
     side.tick_down("ねがいごと")
-    if field.count == 0 and battle.modify_hp(ctx.target, v=field.heal):
-        battle.add_event_log(ctx.target, "ねがいごとで回復")
+    if field.count == 0:
+        battle.modify_hp(ctx.target, v=field.heal, reason="ねがいごと")
         field.heal = 0
     return HandlerReturn()
 
 
 def まきびし_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まきびしのダメージ"""
-    if not ctx.source or ctx.source.is_floating(battle):
+    if not ctx.source or battle.query_manager.is_floating(ctx.source):
         return HandlerReturn()
 
     # 対象のサイドのまきびしフィールドを取得
@@ -287,7 +284,7 @@ def まきびし_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 def どくびし_poison(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """どくびしの毒付与"""
     if not ctx.source:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     # 対象のサイドのどくびしフィールドを取得
     side = battle.get_side(ctx.source)
@@ -301,13 +298,13 @@ def どくびし_poison(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         side.deactivate("どくびし")
         return HandlerReturn()
 
-    if ctx.source.is_floating(battle):
+    if battle.query_manager.is_floating(ctx.source):
         return HandlerReturn()
 
     # 層数に応じて「どく」または「もうどく」を付与
     ailment = "もうどく" if dokubishi_field.count >= 2 else "どく"
-    success = ctx.source.apply_ailment(battle, ailment, source=ctx.source)
-    return HandlerReturn(success)
+    battle.status_manager.apply_ailment(ctx.source, ailment, source=ctx.source)
+    return HandlerReturn()
 
 
 def ステルスロック_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -316,7 +313,7 @@ def ステルスロック_damage(battle: Battle, ctx: BattleContext, value: Any)
     from jpoke.utils.constants import TYPE_MODIFIER
 
     if not ctx.source:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     effectiveness = 1.0
 
@@ -333,20 +330,20 @@ def ステルスロック_damage(battle: Battle, ctx: BattleContext, value: Any)
         0.25: -1/32,
     }.get(effectiveness, -1/8)
 
-    success = battle.modify_hp(ctx.source, r=damage_ratio)
-    return HandlerReturn(success)
+    battle.modify_hp(ctx.source, r=damage_ratio)
+    return HandlerReturn()
 
 
 def ねばねばネット_speed_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねばねばネットの素早さダウン"""
-    if not ctx.source or ctx.source.is_floating(battle):
-        return HandlerReturn(False)
+    if not ctx.source or battle.query_manager.is_floating(ctx.source):
+        return HandlerReturn()
 
     # 対象のサイドのねばねばネットフィールドを取得
     nebanet_field = battle.get_side(ctx.source).fields.get("ねばねばネット")
     if not nebanet_field or nebanet_field.count == 0:
-        return HandlerReturn(False)
+        return HandlerReturn()
 
     # 素早さランクを1段階下げる
-    success = battle.modify_stat(ctx.source, "S", -1, source=ctx.source)
-    return HandlerReturn(success)
+    battle.modify_stat(ctx.source, "S", -1, source=ctx.source)
+    return HandlerReturn()

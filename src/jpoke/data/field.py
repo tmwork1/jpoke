@@ -122,7 +122,7 @@ FIELDS: dict[str, FieldData] = {
                 h.サイコフィールド_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TRY_MOVE: Handler(
+            Event.ON_CHECK_MOVE: Handler(
                 h.サイコフィールド_block_priority,
                 priority=100,
                 subject_spec="defender:self",

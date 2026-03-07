@@ -42,6 +42,31 @@ class SwitchManager:
         """
         self.battle = battle
 
+    def register_switch_in_handlers(self, mon: Pokemon):
+        """ポケモンの入場時ハンドラーを登録する。
+
+        Args:
+            mon: 場に出るポケモン
+        """
+        mon.revealed = True
+        mon.ability.register_handlers(self.battle.events, mon)
+        mon.item.register_handlers(self.battle.events, mon)
+        mon.ailment.register_handlers(self.battle.events, mon)
+        for volatile in mon.volatiles.values():
+            volatile.register_handlers(self.battle.events, mon)
+
+    def unregister_switch_out_handlers(self, mon: Pokemon):
+        """ポケモンの退場時ハンドラーを解除する。
+
+        Args:
+            mon: 引っ込むポケモン
+        """
+        mon.ability.unregister_handlers(self.battle.events, mon)
+        mon.item.unregister_handlers(self.battle.events, mon)
+        mon.ailment.unregister_handlers(self.battle.events, mon)
+        for volatile in mon.volatiles.values():
+            volatile.unregister_handlers(self.battle.events, mon)
+
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
 
@@ -67,7 +92,7 @@ class SwitchManager:
                 if only_first:
                     return
 
-    def run_switch(self, player: 'Player', new: Pokemon, emit: bool = True):
+    def run_switch(self, player: Player, new: Pokemon, emit: bool = True):
         """ポケモンを交代。
 
         退場処理、入場処理、イベント発火を行う。
@@ -84,13 +109,14 @@ class SwitchManager:
         old = player.active
         if old is not None:
             self.battle.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
-            old.switch_out(self.battle)
+            self.unregister_switch_out_handlers(old)
+            old.bench_reset()
             self.battle.add_event_log(player, LogCode.SWITCH_OUT,
                                       payload={"pokemon": old.name})
 
         # 入場
         player.active_idx = player.team.index(new)
-        new.switch_in(self.battle)
+        self.register_switch_in_handlers(new)
         self.battle.add_event_log(player, LogCode.SWITCH_IN,
                                   payload={"pokemon": new.name})
 

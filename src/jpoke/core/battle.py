@@ -27,6 +27,7 @@ from .move_executor import MoveExecutor
 from .switch import SwitchManager
 from .turn import TurnController
 from .speed import SpeedCalculator
+from .pokemon_state import AilmentManager, VolatileManager, PokemonQueryManager
 
 
 @dataclass
@@ -99,6 +100,9 @@ class Battle:
         self.switch_manager: SwitchManager = SwitchManager(self)
         self.move_executor: MoveExecutor = MoveExecutor(self)
         self.damage_calculator: DamageCalculator = DamageCalculator(self)
+        self.status_manager: AilmentManager = AilmentManager(self)
+        self.volatile_manager: VolatileManager = VolatileManager(self)
+        self.query_manager: PokemonQueryManager = PokemonQueryManager(self)
 
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
@@ -141,6 +145,9 @@ class Battle:
         self.switch_manager.update_reference(self)
         self.move_executor.update_reference(self)
         self.damage_calculator.update_reference(self)
+        self.status_manager.update_reference(self)
+        self.volatile_manager.update_reference(self)
+        self.query_manager.update_reference(self)
 
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
@@ -161,6 +168,9 @@ class Battle:
         self.switch_manager = SwitchManager(self)
         self.move_executor = MoveExecutor(self)
         self.damage_calculator = DamageCalculator(self)
+        self.status_manager = AilmentManager(self)
+        self.volatile_manager = VolatileManager(self)
+        self.query_manager = PokemonQueryManager(self)
 
         self.weather_manager = WeatherManager(self)
         self.terrain_manager = TerrainManager(self)
@@ -386,7 +396,7 @@ class Battle:
         Returns:
             list[Command]: 交代可能なコマンドのリスト（交代不可の場合は空リスト）
         """
-        if player.active.is_trapped(self):
+        if self.query_manager.is_trapped(player.active):
             return []
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
                 if mon in player.selection and mon is not player.active]
@@ -522,19 +532,20 @@ class Battle:
         else:
             return attacker.moves[command.idx]
 
-    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0) -> bool:
+    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: str = "") -> int:
         """ポケモンのHPを変更する。
 
         Args:
             target: 対象のポケモン
             v: 変更する固定HP量
             r: 最大HPに対する割合（0.0～1.0）
+            reason: 変更の理由
 
         Returns:
-            bool: HP変更が成功した場合True
+            int: 変更されたHP量
         """
         if v == 0 and r == 0:
-            return False
+            return 0
 
         if r:
             v = int(target.max_hp * r)
@@ -547,20 +558,23 @@ class Battle:
             )
 
         v = target.modify_hp(v)
-        if v != 0:
-            self.add_event_log(target, LogCode.MODIFY_HP,
-                               payload={"value": abs(v)})
+        if v > 0:
+            self.add_event_log(target, LogCode.HEAL,
+                               payload={"value": v, "reason": reason})
+        elif v < 0:
+            self.add_event_log(target, LogCode.DAMAGE,
+                               payload={"value": -v, "reason": reason})
             # HPがゼロになった場合、勝敗判定を実行
             if target.hp == 0:
                 self.judge_winner()
 
-        return v != 0
+        return v
 
     def modify_stat(self,
                     target: Pokemon,
                     stat: Stat,
                     v: int,
-                    source: Pokemon | None = None) -> bool:
+                    source: Pokemon | None = None) -> dict[Stat, int]:
         """ポケモンの能力ランクを変更する。
 
         内部的にはmodify_stats()を呼び出して処理します。
@@ -572,14 +586,15 @@ class Battle:
             source: 変更の原因となったポケモン（Noneの場合もある）
 
         Returns:
-            bool: ランク変更が成功した場合True
+            dict[Stat, int]: 実際に変更された能力ランクの辞書
         """
         return self.modify_stats(target, {stat: v}, source)
 
     def modify_stats(self,
                      target: Pokemon,
                      stats: dict[Stat, int],
-                     source: Pokemon | None = None) -> bool:
+                     source: Pokemon | None = None,
+                     reason: str = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する。
 
         しろいハーブなどのアイテムが正しく動作するよう、
@@ -589,9 +604,9 @@ class Battle:
             target: 対象のポケモン
             stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
             source: 変更の原因となったポケモン（Noneの場合もある）
-
+            reason: 変更の理由
         Returns:
-            bool: いずれかのランク変更が成功した場合True
+            dict[Stat, int]: 実際に変更された能力ランクの辞書
         """
         stats = self.events.emit(
             Event.ON_BEFORE_MODIFY_STAT,
@@ -608,9 +623,8 @@ class Battle:
                 continue
             v = target.modify_stat(stat, v)
             if v != 0:
-                self.add_event_log(target,
-                                   LogCode.MODIFY_STAT,
-                                   payload={"stat": stat, "value": v})
+                self.add_event_log(target, LogCode.MODIFY_STAT,
+                                   payload={"stat": stat, "value": v, "reason": reason})
                 actual_changes[stat] = v
                 any_success = True
 
@@ -622,7 +636,7 @@ class Battle:
                 actual_changes
             )
 
-        return any_success
+        return actual_changes
 
     def determine_damage(self,
                          attacker: Pokemon,

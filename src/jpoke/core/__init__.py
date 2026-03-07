@@ -3,3 +3,4 @@ from .context import BattleContext
 from .event import EventManager
 from .battle import Battle
 from .player import Player
+from .pokemon_state import AilmentManager, VolatileManager, PokemonQueryManager

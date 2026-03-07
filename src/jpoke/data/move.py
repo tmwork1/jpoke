@@ -244,7 +244,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="あなをほる", target_spec="attacker:self", source_spec="attacker:self", count=1),
             )
         }
@@ -3019,7 +3019,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["non_negoto", "sound"],
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 v.さわぐ_apply,
             )
         }
@@ -4560,7 +4560,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="かえんのまもり", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5041,7 +5041,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="スレッドトラップ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5119,7 +5119,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ちいさくなる", target_spec="attacker:self", source_spec="attacker:self"),
             ),
             Event.ON_HIT: h.MoveHandler(
@@ -5297,7 +5297,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="トーチカ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5703,7 +5703,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ふういん", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5874,7 +5874,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5887,7 +5887,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まるくなる", target_spec="attacker:self", source_spec="attacker:self"),
             ),
             Event.ON_HIT: h.MoveHandler(
@@ -5919,7 +5919,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 v.みがわり_apply,
             )
         }
@@ -5933,7 +5933,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5962,7 +5962,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="みちづれ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -6161,7 +6161,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="キングシールド", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }

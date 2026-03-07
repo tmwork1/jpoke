@@ -264,7 +264,7 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        move_category = attacker.effective_move_category(move, self.battle)
+        move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
 
         # ステータス
         if move == 'イカサマ':
@@ -331,7 +331,7 @@ class DamageCalculator:
         if not dmg_ctx:
             dmg_ctx = DamageContext()
 
-        move_category = attacker.effective_move_category(move, self.battle)
+        move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
 
         # ステータス
         if move_category == "物理" or move.has_label("physical"):

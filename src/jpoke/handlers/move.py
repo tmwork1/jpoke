@@ -14,7 +14,7 @@ from functools import partial
 
 
 from jpoke.utils.type_defs import RoleSpec, AilmentName, Stat
-from jpoke.enums import Event, Interrupt
+from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import Handler, BattleContext, HandlerReturn
 from . import common
 
@@ -55,7 +55,8 @@ def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     v = battle.events.emit(Event.ON_CHECK_PP_CONSUMED, ctx, 1)
     ctx.move.pp = max(0, ctx.move.pp - v)
-    battle.add_event_log(ctx.attacker, f"PP -{v}")
+    battle.add_event_log(ctx.attacker,  LogCode.CONSUME_PP,
+                         payload={"move": ctx.move.name, "value": v})
     return HandlerReturn()
 
 

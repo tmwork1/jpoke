@@ -106,7 +106,7 @@ def test_エレキフィールド_prevent_sleep():
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
     target = battle.actives[0]
-    result = target.apply_ailment(battle, "ねむり")
+    result = battle.status_manager.apply_ailment(target, "ねむり")
     assert not result, "エレキフィールド下でねむりが付与された"
     assert not target.ailment.is_active, "エレキフィールド下でねむり状態が付与された"
 
@@ -175,7 +175,7 @@ def test_サイコフィールド_先制技無効():
         foe=[Pokemon("ピカチュウ")],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
 
 
 def test_サイコフィールド_浮遊は先制技有効():
@@ -185,7 +185,7 @@ def test_サイコフィールド_浮遊は先制技有効():
         foe=[Pokemon("ピジョン")],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    assert t.get_try_result(battle, Event.ON_TRY_MOVE)
+    assert t.get_try_result(battle, Event.ON_CHECK_MOVE)
 
 # TODO: サイコフィールド: 自分が対象の先制技は無効かされないことを確認するテストを追加
 # TODO: サイコフィールド: 場が対象の先制技は無効かされないことを確認するテストを追加
@@ -208,7 +208,7 @@ def test_ミストフィールド_混乱防止():
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
     mon = battle.actives[0]
-    result = mon.apply_volatile(battle, "こんらん", count=3)
+    result = battle.volatile_manager.apply_volatile(mon, "こんらん", count=3)
     assert not result, "ミストフィールド下で混乱が付与された"
     assert "こんらん" not in mon.volatiles, "混乱状態が追加されている"
 
@@ -218,7 +218,7 @@ def test_ミストフィールド_状態異常防止():
     battle = t.start_battle(
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
-    assert not battle.actives[0].apply_ailment(battle, "どく")
+    assert not battle.status_manager.apply_ailment(battle.actives[0], "どく")
 
 
 def test_じゅうりょく_命中補正():
@@ -233,7 +233,7 @@ def test_じゅうりょく_浮遊無効():
         ally=[Pokemon("ピジョン")],
         global_field={"じゅうりょく": DEFAULT_DURATION},
     )
-    assert not battle.actives[0].is_floating(battle), "じゅうりょくで浮遊が無効化されない"
+    assert not battle.query_manager.is_floating(battle.actives[0]), "じゅうりょくで浮遅が無効化されない"
 
 
 def test_トリックルーム_行動順反転():

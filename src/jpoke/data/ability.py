@@ -363,7 +363,7 @@ ABILITIES: dict[str, AbilityData] = {
     "どんかん": AbilityData(
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                h.どんかん,
+                h.どんかん_prevent_volatile,
                 subject_spec="target:self",
             )
         }

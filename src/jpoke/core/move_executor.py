@@ -166,26 +166,17 @@ class MoveExecutor:
         """技を実行する内部メソッド。
         """
         # 技の準備行動
-        self.events.emit(Event.ON_PREPARE_MOVE, ctx)
+        self.events.emit(Event.ON_SETUP_MOVE, ctx)
 
         # 行動成功判定（行動者自身を対象にする）
-        if not self.events.emit(Event.ON_TRY_ACTION, ctx, True):
+        if not self.events.emit(Event.ON_CHECK_ACTION, ctx, True):
             return
 
         # 技の宣言、PP消費
         self.events.emit(Event.ON_CONSUME_PP, ctx)
 
         # 発動成功判定
-        if not self.events.emit(Event.ON_TRY_MOVE, ctx, True):
-            return
-
-        # まもる系判定（ON_TRY_MOVE Priority 100: 無効化判定）
-        if self.events.emit(Event.ON_CHECK_PROTECT, ctx, False):
-            self.events.emit(Event.ON_PROTECT_SUCCESS, ctx)
-            return
-
-        # 姿消し・無敵判定（ON_TRY_MOVE Priority 100: 無効化判定）
-        if self.events.emit(Event.ON_CHECK_INVULNERABLE, ctx, False):
+        if not self.events.emit(Event.ON_CHECK_MOVE, ctx, True):
             return
 
         # 反射判定
@@ -200,7 +191,7 @@ class MoveExecutor:
             return
 
         # 無効判定 (みがわり含む)
-        if self.events.emit(Event.ON_TRY_IMMUNE, ctx, False):
+        if self.events.emit(Event.ON_CHECK_IMMUNE, ctx, False):
             return
 
         # HPコストの支払い
@@ -263,3 +254,41 @@ class MoveExecutor:
             is_contact
         )
         return is_contact
+
+    def get_effective_move_type(self, attacker: Pokemon, move: Move) -> str:
+        """技の有効タイプを取得する。
+
+        Args:
+            attacker: 技を使用するポケモン
+            move: 技オブジェクト
+
+        Returns:
+            有効タイプ
+
+        Note:
+            特性や効果によるタイプ変化を考慮する。
+        """
+        self.events.emit(
+            Event.ON_CHECK_MOVE_TYPE,
+            BattleContext(source=attacker, move=move)
+        )
+        return move._type
+
+    def get_effective_move_category(self, attacker: Pokemon, move: Move) -> str:
+        """技の有効分類を取得する。
+
+        Args:
+            attacker: 技を使用するポケモン
+            move: 技オブジェクト
+
+        Returns:
+            有効分類（物理、特殊、変化）
+
+        Note:
+            特性や効果による分類変化を考慮する。
+        """
+        return self.events.emit(
+            Event.ON_CHECK_MOVE_CATEGORY,
+            BattleContext(source=attacker, move=move),
+            value=move.category
+        )

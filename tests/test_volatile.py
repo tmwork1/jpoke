@@ -26,7 +26,7 @@ def test_あばれる_action():
         ally=[Pokemon("ピカチュウ", moves=["あばれる"])],
     )
     attacker = battle.actives[0]
-    attacker.apply_volatile(battle, "あばれる", count=2, move="あばれる")
+    battle.volatile_manager.apply_volatile(attacker, "あばれる", count=2, move="あばれる")
     commands = battle.get_available_action_commands(battle.players[0])
     assert commands == [Command.RAMPAGE], "あばれる状態で強制行動コマンドが利用可能"
 
@@ -64,7 +64,7 @@ def test_アンコール():
     )
     player = battle.players[0]
     mon = player.active
-    mon.apply_volatile(battle, "アンコール", move="なきごえ")
+    battle.volatile_manager.apply_volatile(mon, "アンコール", move="なきごえ")
     commands = battle.get_available_action_commands(player)
     assert all(cmd.idx == 1 for cmd in commands)
 
@@ -75,7 +75,7 @@ def test_いちゃもん_modify_command_options():
     )
     player = battle.players[0]
     mon = player.active
-    mon.apply_volatile(battle, "いちゃもん", move="たいあたり")
+    battle.volatile_manager.apply_volatile(mon, "いちゃもん", move="たいあたり")
     commands = battle.get_available_action_commands(player)
     assert all(cmd.idx == 1 for cmd in commands), "いちゃもんでlast_move_name以外の技が使用可能"
 
@@ -85,7 +85,7 @@ def test_うちおとす():
         ally=[Pokemon("ポッポ")],
         ally_volatile={"うちおとす": 1}
     )
-    assert not battle.actives[0].is_floating(battle)
+    assert not battle.query_manager.is_floating(battle.actives[0])
 
 
 def test_おんねん_noPP():
@@ -118,7 +118,7 @@ def test_かなしばり_modify_command_options():
     )
     player = battle.players[0]
     mon = player.active
-    mon.apply_volatile(battle, "かなしばり", move="たいあたり")
+    battle.volatile_manager.apply_volatile(mon, "かなしばり", move="たいあたり")
     commands = battle.get_available_action_commands(player)
     assert all(cmd.idx != 0 for cmd in commands)
 
@@ -142,7 +142,7 @@ def test_こだわり():
     )
     player = battle.players[0]
     mon = player.active
-    mon.apply_volatile(battle, "こだわり", move="なきごえ")
+    battle.volatile_manager.apply_volatile(mon, "こだわり", move="なきごえ")
     commands = battle.get_available_action_commands(player)
     assert all(cmd.idx == 1 for cmd in commands)
 
@@ -155,7 +155,7 @@ def test_こんらん_self_damage():
     attacker, defender = battle.actives
     # 自傷を強制
     battle.test_option.trigger_volatile = True
-    assert not t.get_try_result(battle, Event.ON_TRY_ACTION)
+    assert not t.get_try_result(battle, Event.ON_CHECK_ACTION)
     assert attacker.hp < attacker.max_hp
     assert defender.hp == defender.max_hp
     assert attacker.volatiles["こんらん"].count == 1
@@ -172,7 +172,7 @@ def test_こんらん_action():
     attacker, defender = battle.actives
     # 行動を許可
     battle.test_option.trigger_volatile = False
-    assert t.get_try_result(battle, Event.ON_TRY_ACTION)
+    assert t.get_try_result(battle, Event.ON_CHECK_ACTION)
     assert attacker.hp == attacker.max_hp
     assert attacker.volatiles["こんらん"].count == 1
     # ログに混乱メッセージが含まれるか確認
@@ -254,7 +254,7 @@ def test_ちょうはつ():
         ally=[Pokemon("ピカチュウ", moves=["ひかりのかべ"])],
         ally_volatile={"ちょうはつ": 3},
     )
-    assert not t.get_try_result(battle, Event.ON_TRY_ACTION)
+    assert not t.get_try_result(battle, Event.ON_CHECK_ACTION)
     assert t.log_contains(battle, "ちょうはつ")
 
 
@@ -262,7 +262,7 @@ def test_でんじふゆう():
     battle = t.start_battle(
         ally_volatile={"でんじふゆう": 1},
     )
-    assert battle.actives[0].is_floating(battle)
+    assert battle.query_manager.is_floating(battle.actives[0])
 
 
 def test_とくせいなし():
@@ -368,7 +368,7 @@ def test_ひるみ():
     battle = t.start_battle(ally_volatile={"ひるみ": 1})
     attacker, defender = battle.actives
     battle.events.emit(
-        Event.ON_TRY_ACTION,
+        Event.ON_CHECK_ACTION,
         BattleContext(attacker=attacker, defender=defender)
     )
     assert not attacker.has_volatile("ひるみ")
@@ -404,7 +404,7 @@ def test_みがわり_immune():
         ally=[Pokemon("ピカチュウ", moves=["キノコのほうし"])],
         foe_volatile={"みがわり": 1},
     )
-    assert t.get_try_result(battle, Event.ON_TRY_IMMUNE)
+    assert t.get_try_result(battle, Event.ON_CHECK_IMMUNE)
     assert t.log_contains(battle, "みがわり")
 
 
@@ -414,7 +414,7 @@ def test_みがわり_hit():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     defender = battle.actives[1]
-    defender.apply_volatile(battle, "みがわり", hp=100)
+    battle.volatile_manager.apply_volatile(defender, "みがわり", hp=100)
     volatile = defender.volatiles["みがわり"]
     battle.advance_turn()
     assert 0 < volatile.hp < 100
@@ -427,7 +427,7 @@ def test_みがわり_破壊():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     defender = battle.actives[1]
-    defender.apply_volatile(battle, "みがわり", hp=1)
+    battle.volatile_manager.apply_volatile(defender, "みがわり", hp=1)
     battle.advance_turn()
     battle.print_logs()
     assert not defender.has_volatile("みがわり")
@@ -454,7 +454,7 @@ def test_メロメロ_行動不能():
     )
     # 行動不能を強制
     battle.test_option.trigger_volatile = True
-    assert not t.get_try_result(battle, Event.ON_TRY_ACTION)
+    assert not t.get_try_result(battle, Event.ON_CHECK_ACTION)
     assert t.log_contains(battle, "動けない")
 
 
@@ -465,7 +465,7 @@ def test_メロメロ_行動可能():
     )
     # 行動を許可
     battle.test_option.trigger_volatile = False
-    assert t.get_try_result(battle, Event.ON_TRY_ACTION)
+    assert t.get_try_result(battle, Event.ON_CHECK_ACTION)
     assert t.log_contains(battle, "メロメロ")
 
 
@@ -496,8 +496,8 @@ def test_まもる():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
-    battle.actives[1].apply_volatile(battle, "まもる", count=1)
-    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    battle.volatile_manager.apply_volatile(battle.actives[1], "まもる", count=1)
+    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
     assert t.log_contains(battle, "防いだ")
 
 
@@ -505,16 +505,16 @@ def test_まもる_self_target():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["つるぎのまい"])],
     )
-    battle.actives[1].apply_volatile(battle, "まもる", count=1)
-    assert t.get_try_result(battle, Event.ON_TRY_MOVE)
+    battle.volatile_manager.apply_volatile(battle.actives[1], "まもる", count=1)
+    assert t.get_try_result(battle, Event.ON_CHECK_MOVE)
 
 
 def test_トーチカ():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
-    battle.actives[1].apply_volatile(battle, "トーチカ", count=1)
-    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    battle.volatile_manager.apply_volatile(battle.actives[1], "トーチカ", count=1)
+    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
     assert t.log_contains(battle, "防いだ")
     assert battle.actives[0].has_ailment("どく")
 
@@ -525,8 +525,8 @@ def test_キングシールド():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
-    battle.actives[1].apply_volatile(battle, "キングシールド", count=1)
-    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    battle.volatile_manager.apply_volatile(battle.actives[1], "キングシールド", count=1)
+    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
     assert t.log_contains(battle, "防いだ")
     assert battle.actives[0].rank["A"] == -1
 
@@ -537,8 +537,8 @@ def test_スレッドトラップ():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
-    battle.actives[1].apply_volatile(battle, "スレッドトラップ", count=1)
-    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    battle.volatile_manager.apply_volatile(battle.actives[1], "スレッドトラップ", count=1)
+    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
     assert t.log_contains(battle, "防いだ")
     assert battle.actives[0].rank["S"] == -1
 
@@ -549,8 +549,8 @@ def test_かえんのまもり():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
-    battle.actives[1].apply_volatile(battle, "かえんのまもり", count=1)
-    assert not t.get_try_result(battle, Event.ON_TRY_MOVE)
+    battle.volatile_manager.apply_volatile(battle.actives[1], "かえんのまもり", count=1)
+    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
     assert t.log_contains(battle, "防いだ")
     assert battle.actives[0].has_ailment("やけど")
 
