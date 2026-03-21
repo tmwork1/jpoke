@@ -11,7 +11,7 @@ import test_utils as t
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
 
 
-def test_はれ_boost_fire():
+def test_はれ_ほのお強化():
     """はれ: ほのお技威力1.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
@@ -20,7 +20,7 @@ def test_はれ_boost_fire():
     6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
-def test_はれ_weaken_water():
+def test_はれ_みず弱化():
     """はれ: みず技威力0.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
@@ -29,7 +29,7 @@ def test_はれ_weaken_water():
     2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
-def test_あめ_boost_water():
+def test_あめ_みず強化():
     """あめ: みず技威力1.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
@@ -38,7 +38,7 @@ def test_あめ_boost_water():
     6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
-def test_あめ_weaken_fire():
+def test_あめ_ほのお弱化():
     """あめ: ほのお技威力0.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
@@ -47,7 +47,7 @@ def test_あめ_weaken_fire():
     2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
-def test_すなあらし_damage():
+def test_すなあらし_ダメージ():
     """すなあらし: ターン終了時ダメージ"""
     battle = t.start_battle(
         weather=("すなあらし", DEFAULT_DURATION)
@@ -58,7 +58,7 @@ def test_すなあらし_damage():
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
 
 
-def test_すなあらし_no_damage_for_rock():
+def test_すなあらし_いわ無効():
     """すなあらし: いわタイプはダメージを受けない"""
     battle = t.start_battle(
         ally=[Pokemon("イシツブテ")],
@@ -70,7 +70,7 @@ def test_すなあらし_no_damage_for_rock():
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
 
 
-def test_すなあらし_rock_spdef_boost():
+def test_すなあらし_いわ特防強化():
     """すなあらし: いわタイプ特防1.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["スピードスター"])],
@@ -80,7 +80,7 @@ def test_すなあらし_rock_spdef_boost():
     6144 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER)
 
 
-def test_ゆき_ice_def_boost():
+def test_ゆき_こおり防御強化():
     """ゆき: こおりタイプ防御1.5倍"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
@@ -90,7 +90,7 @@ def test_ゆき_ice_def_boost():
     6144 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER)
 
 
-def test_エレキフィールド_boost_electric():
+def test_エレキフィールド_でんき強化():
     """エレキフィールド: でんき技威力1.3倍"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
@@ -105,7 +105,7 @@ def test_エレキフィールド_boost_electric():
     assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
 
 
-def test_エレキフィールド_prevent_sleep():
+def test_エレキフィールド_ねむり防止():
     """エレキフィールド: ねむり無効"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
@@ -125,7 +125,7 @@ def test_エレキフィールド_prevent_sleep():
     assert floating_target.ailment.is_active
 
 
-def test_エレキフィールド_prevent_nemuke():
+def test_エレキフィールド_ねむけ防止():
     battle = t.start_battle(
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
@@ -142,7 +142,7 @@ def test_エレキフィールド_prevent_nemuke():
     assert floating_target.has_volatile("ねむけ")
 
 
-def test_グラスフィールド_boost_grass():
+def test_グラスフィールド_くさ強化():
     """グラスフィールド: くさ技威力1.3倍"""
     battle = t.start_battle(
         ally=[Pokemon("フシギダネ", moves=["はっぱカッター"])],
@@ -175,7 +175,7 @@ def test_グラスフィールド_じならし弱化():
     2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
-def test_グラスフィールド_heal():
+def test_グラスフィールド_回復():
     """グラスフィールド: ターン終了時1/16回復"""
     battle = t.start_battle(
         terrain=("グラスフィールド", DEFAULT_DURATION),
@@ -195,7 +195,7 @@ def test_グラスフィールド_heal():
     assert floating_mon.hp == 1
 
 
-def test_サイコフィールド_boost_psychic():
+def test_サイコフィールド_エスパー強化():
     """サイコフィールド: エスパー技威力1.3倍"""
     battle = t.start_battle(
         ally=[Pokemon("フーディン", moves=["サイコキネシス"])],

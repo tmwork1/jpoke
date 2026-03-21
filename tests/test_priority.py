@@ -9,7 +9,7 @@ from jpoke.enums import Command
 import test_utils as t
 
 
-def test_positive_priority():
+def test_正の優先度():
     """優先度プラスの技は優先度0の技より先に行動する。"""
     battle = t.start_battle(
         ally=[Pokemon("フシギダネ", moves=["しんそく"])]
@@ -19,7 +19,7 @@ def test_positive_priority():
     assert order[0] == battle.actives[0], "Incorrect action order"
 
 
-def test_negative_priority():
+def test_負の優先度():
     """優先度-6の技は優先度0の技より後に行動する。"""
     battle = t.start_battle(
         ally=[Pokemon("ゲンガー", moves=["あてみなげ"])]

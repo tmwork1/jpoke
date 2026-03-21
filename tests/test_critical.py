@@ -4,7 +4,7 @@ from jpoke.enums import Event
 import test_utils as t
 
 
-def test_critical_damage_multiplier():
+def test_急所_ダメージ倍率():
     """急所ダメージが1.5倍になることを確認"""
     battle = t.start_battle()
     attacker, defender = battle.actives

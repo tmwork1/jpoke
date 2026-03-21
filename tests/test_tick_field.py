@@ -12,7 +12,7 @@ from test_utils import start_battle
 
 
 @pytest.mark.parametrize("field", ["はれ", "あめ", "すなあらし", "ゆき"])
-def test_tick_weather(field: Weather):
+def test_天候カウント減少(field: Weather):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END_1
     initial_duration = 2
@@ -30,7 +30,7 @@ def test_tick_weather(field: Weather):
 
 
 @pytest.mark.parametrize("field", ["エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"])
-def test_tick_terrain(field: Terrain):
+def test_地形カウント減少(field: Terrain):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END_4
     initial_duration = 2
@@ -48,7 +48,7 @@ def test_tick_terrain(field: Terrain):
 
 
 @pytest.mark.parametrize("field", ["じゅうりょく", "トリックルーム"])
-def test_tick_global_field(field: GlobalField):
+def test_全体フィールドカウント減少(field: GlobalField):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END_4
     initial_duration = 2
@@ -68,7 +68,7 @@ def test_tick_global_field(field: GlobalField):
 @pytest.mark.parametrize("field", [
     "リフレクター", "ひかりのかべ", "オーロラベール", "しんぴのまもり", "しろいきり", "おいかぜ"
 ])
-def test_tick_side_field(field: SideField):
+def test_サイドフィールドカウント減少(field: SideField):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END_4
     initial_duration = 2

@@ -8,7 +8,7 @@ from jpoke.model import Pokemon
 import test_utils as t
 
 
-def test_どく_damage():
+def test_どく_ダメージ():
     """どく: ターン終了時ダメージ"""
     battle = t.start_battle()
     mon = battle.actives[0]
@@ -18,7 +18,7 @@ def test_どく_damage():
     assert damage == mon.max_hp // 8, "Poison damage is incorrect"
 
 
-def test_もうどく_damage():
+def test_もうどく_ダメージ():
     """もうどく: ターン経過でダメージ増加"""
     battle = t.start_battle()
     mon = battle.actives[0]
@@ -32,7 +32,7 @@ def test_もうどく_damage():
         assert damage == mon.max_hp * (i + 1) // 16
 
 
-def test_まひ_speed_reduction():
+def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
@@ -42,7 +42,7 @@ def test_まひ_speed_reduction():
     assert paralysis_speed == normal_speed // 2, "Paralysis speed reduction is incorrect"
 
 
-def test_まひ_action_blocked():
+def test_まひ_行動不能():
     """まひ: 行動不能"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
@@ -53,7 +53,7 @@ def test_まひ_action_blocked():
     assert not result, "Paralysis action disabled (trigger_rate=1.0)"
 
 
-def test_まひ_action_success():
+def test_まひ_行動成功():
     """まひ: 行動可能"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
@@ -64,7 +64,7 @@ def test_まひ_action_success():
     assert result, "Paralysis action enabled (trigger_rate=0.0)"
 
 
-def test_やけど_modify_damage():
+def test_やけど_ダメージ補正あり():
     """やけど: 物理技ダメージ半減"""
     battle = t.start_battle(
         ally=[Pokemon("カビゴン", moves=["たいあたり"])],
@@ -74,7 +74,7 @@ def test_やけど_modify_damage():
     assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_BURN_MODIFIER)
 
 
-def test_やけど_not_modify_damage():
+def test_やけど_ダメージ補正なし():
     """やけど: 特殊技ダメージは変わらず"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
@@ -83,7 +83,7 @@ def test_やけど_not_modify_damage():
     assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_BURN_MODIFIER)
 
 
-def test_やけど_damage():
+def test_やけど_ダメージ():
     """やけど: ターン終了時ダメージ"""
     battle = t.start_battle()
     mon = battle.actives[0]
@@ -93,7 +93,7 @@ def test_やけど_damage():
     assert actual_damage == mon.max_hp // 16, f"Burn damage is incorrect: expected {mon.max_hp // 16} but got {actual_damage}"
 
 
-def test_ねむり_count():
+def test_ねむり_カウント():
     """ねむり: ターン経過で回復"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
@@ -111,7 +111,7 @@ def test_ねむり_count():
     assert not mon.ailment.is_active
 
 
-def test_こおり_action_blocked():
+def test_こおり_行動不能():
     """こおり: 状態維持（確率テスト - trigger_rate=0.0）"""
     battle = t.start_battle()
     mon = battle.actives[0]
@@ -122,7 +122,7 @@ def test_こおり_action_blocked():
     assert mon.ailment.name == "こおり", "Freeze: Status persistence failed (trigger_rate=0.0)"
 
 
-def test_こおり_action_success():
+def test_こおり_行動成功():
     """こおり: 解凍（確率テスト - trigger_rate=1.0）"""
     battle = t.start_battle()
     mon = battle.actives[0]

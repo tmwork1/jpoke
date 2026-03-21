@@ -1,7 +1,7 @@
 from jpoke.model import Pokemon
 
 
-def test_reconstruct_from_log_restores_core_fields():
+def test_ログ再構築():
     data = {
         "name": "ピカチュウ",
         "gender": "オス",

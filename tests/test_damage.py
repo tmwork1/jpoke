@@ -17,7 +17,7 @@ import test_utils as t
         (Pokemon("ピカチュウ", terastal="ほのお", moves=["でんきショック"]), True, 1.5),
     ]
 )
-def test_calc_atk_type_modifier(attacker: Pokemon, terastallize: bool, expected: int):
+def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, expected: int):
     battle = t.start_battle(
         ally=[attacker],
         foe=[Pokemon("ピカチュウ")],
@@ -42,7 +42,7 @@ def test_calc_atk_type_modifier(attacker: Pokemon, terastallize: bool, expected:
         ("たいあたり", "ゴース", 0.0),
     ]
 )
-def test_calc_def_type_modifier(move_name: str, defender_name: str, expected: float):
+def test_防御側タイプ相性補正計算(move_name: str, defender_name: str, expected: float):
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=[move_name])],
         foe=[Pokemon(defender_name)],
@@ -54,7 +54,7 @@ def test_calc_def_type_modifier(move_name: str, defender_name: str, expected: fl
     assert battle.damage_calculator.calc_def_type_modifier(ctx) == pytest.approx(expected)
 
 
-def test_calc_def_type_modifier_with_direct_arguments():
+def test_防御側タイプ相性補正計算_直接引数():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ")],
         foe=[Pokemon("フシギバナ")],

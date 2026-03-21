@@ -17,7 +17,7 @@ def test_アクアリング():
     assert t.log_contains(battle, LogCode.HEAL)
 
 
-def test_あばれる_action():
+def test_あばれる_行動固定():
     """あばれる: 強制行動"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["あばれる"])],
@@ -32,7 +32,7 @@ def test_あばれる_action():
     assert attacker.moves[0].pp == initial_pp, "あばれるで技のPPが消費されている"
 
 
-def test_あばれる_tick():
+def test_あばれる_カウント進行():
     battle = t.start_battle(
         ally_volatile={"あばれる": 2}
     )
@@ -65,7 +65,7 @@ def test_アンコール():
     assert all(cmd.idx == 1 for cmd in commands)
 
 
-def test_いちゃもん_modify_command_options():
+def test_いちゃもん_コマンド制限():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
@@ -84,7 +84,7 @@ def test_うちおとす():
     assert not battle.query_manager.is_floating(battle.actives[0])
 
 
-def test_おんねん_reduce_pp():
+def test_おんねん_ＰＰ減少():
     battle = t.start_battle(
         ally=[Pokemon("ライチュウ", moves=["たいあたり"])],
         foe_volatile={"おんねん": 1},
@@ -107,7 +107,7 @@ def test_かいふくふうじ():
     assert mon.hp == 1, "かいふくふうじでHPが回復している"
 
 
-def test_かなしばり_modify_command_options():
+def test_かなしばり_コマンド制限():
     """かなしばり: 技使用禁止"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
@@ -143,7 +143,7 @@ def test_こだわり():
     assert all(cmd.idx == 1 for cmd in commands)
 
 
-def test_こんらん_self_damage():
+def test_こんらん_自傷ダメージ():
     """こんらん: 自傷ダメージ"""
     battle = t.start_battle(
         ally_volatile={"こんらん": 2}
@@ -157,7 +157,7 @@ def test_こんらん_self_damage():
     assert attacker.volatiles["こんらん"].count == 1
 
 
-def test_こんらん_action():
+def test_こんらん_通常行動():
     """こんらん: 通常行動可能"""
     battle = t.start_battle(
         ally_volatile={"こんらん": 2}
@@ -179,7 +179,7 @@ def test_さわぐ_ねむりを防ぐ():
     assert not target.ailment.is_active
 
 
-def test_しおづけ_x1():
+def test_しおづけ_一倍():
     """しおづけ: ターン終了時ダメージ"""
     battle = t.start_battle(
         ally_volatile={"しおづけ": 1}
@@ -192,7 +192,7 @@ def test_しおづけ_x1():
     assert t.log_contains(battle, LogCode.DAMAGE)
 
 
-def test_しおづけ_x2():
+def test_しおづけ_二倍():
     """しおづけ: ターン終了時ダメージ"""
     battle = t.start_battle(
         ally=[Pokemon("ゼニガメ")],
@@ -206,7 +206,7 @@ def test_しおづけ_x2():
     assert t.log_contains(battle, LogCode.DAMAGE)
 
 
-def test_じごくずき_restrict_commands():
+def test_じごくずき_コマンド制限():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["うたう", "たいあたり"])],
         ally_volatile={"じごくずき": 2}
@@ -298,7 +298,7 @@ def test_ねむけ():
     assert mon.has_ailment("ねむり")
 
 
-def test_ねをはる_heal():
+def test_ねをはる_回復():
     """ねをはる: ターン終了時回復"""
     battle = t.start_battle(
         ally_volatile={"ねをはる": 1}
@@ -310,7 +310,7 @@ def test_ねをはる_heal():
     assert t.log_contains(battle, LogCode.HEAL)
 
 
-def test_ねをはる_switch_denied():
+def test_ねをはる_交代不可():
     """ねをはる: 交代不可"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
@@ -319,7 +319,7 @@ def test_ねをはる_switch_denied():
     assert not t.can_switch(battle, 0)
 
 
-def test_のろい_damage():
+def test_のろい_ダメージ():
     """のろい: ターン終了時ダメージ"""
     battle = t.start_battle(ally_volatile={"のろい": 1})
     mon = battle.actives[0]
@@ -329,7 +329,7 @@ def test_のろい_damage():
     assert t.log_contains(battle, LogCode.DAMAGE)
 
 
-def test_バインド_damage():
+def test_バインド_ダメージ():
     """バインド: ターン終了時ダメージ"""
     battle = t.start_battle(
         ally_volatile={"バインド": 2},
@@ -347,7 +347,7 @@ def test_バインド_damage():
     assert t.log_contains(battle, LogCode.VOLATILE_REMOVED)
 
 
-def test_バインド_switch_denied():
+def test_バインド_交代不可():
     """バインド: 交代不可"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
@@ -356,7 +356,7 @@ def test_バインド_switch_denied():
     assert not t.can_switch(battle, 0)
 
 
-def test_バインド_source_switch_out():
+def test_バインド_発生源交代解除():
     """バインドの発生源が退場した場合、バインドが解除される"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
@@ -425,7 +425,7 @@ def test_まるくなる():
     pass
 
 
-def test_みがわり_immune():
+def test_みがわり_無効化():
     """みがわり: 技を無効化する"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["キノコのほうし"])],
@@ -435,7 +435,7 @@ def test_みがわり_immune():
     assert t.log_contains(battle, LogCode.MOVE_IMMUNE)
 
 
-def test_みがわり_hit():
+def test_みがわり_命中():
     """みがわり: 技が命中する"""
     battle = t.start_battle(
         foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
@@ -526,7 +526,7 @@ def test_まもる():
     assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
 
 
-def test_まもる_self_target():
+def test_まもる_自分対象():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["つるぎのまい"])],
     )
@@ -618,7 +618,7 @@ def test_かえんのまもり_変化技は防げない():
     assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
 
 
-def test_あなをほる_evade():
+def test_あなをほる_回避():
     """技を回避する"""
     battle = t.start_battle(
         foe_volatile={"あなをほる": 1},
@@ -632,7 +632,7 @@ def test_あなをほる_evade():
     assert result
 
 
-def test_あなをほる_hit():
+def test_あなをほる_命中():
     """技が命中する"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["じしん"])],
@@ -647,7 +647,7 @@ def test_あなをほる_hit():
     assert not result
 
 
-def test_そらをとぶ_evade():
+def test_そらをとぶ_回避():
     """技を回避する"""
     battle = t.start_battle(
         foe_volatile={"そらをとぶ": 1},
@@ -661,7 +661,7 @@ def test_そらをとぶ_evade():
     assert result
 
 
-def test_そらをとぶ_hit():
+def test_そらをとぶ_命中():
     """技が命中する"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["かみなり"])],
@@ -676,7 +676,7 @@ def test_そらをとぶ_hit():
     assert not result
 
 
-def test_ダイビング_evade():
+def test_ダイビング_回避():
     """技を回避する"""
     battle = t.start_battle(
         foe_volatile={"ダイビング": 1},
@@ -690,7 +690,7 @@ def test_ダイビング_evade():
     assert result
 
 
-def test_ダイビング_hit():
+def test_ダイビング_命中():
     """技が命中する"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["なみのり"])],
@@ -705,7 +705,7 @@ def test_ダイビング_hit():
     assert not result
 
 
-def test_シャドーダイブ_evade():
+def test_シャドーダイブ_回避():
     """技を回避する"""
     battle = t.start_battle(
         foe_volatile={"シャドーダイブ": 1},
@@ -719,7 +719,7 @@ def test_シャドーダイブ_evade():
     assert result
 
 
-def test_シャドーダイブ_hit():
+def test_シャドーダイブ_命中():
     """技が命中する"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["シャドーダイブ"])],
