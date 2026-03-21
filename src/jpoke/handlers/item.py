@@ -7,11 +7,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 from functools import partial
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, Type
 from jpoke.enums import Interrupt
-from jpoke.core import BattleContext, HandlerReturn, Handler
+from jpoke.core import HandlerReturn, Handler
 from . import common
 
 
@@ -36,8 +36,8 @@ def modify_power_by_type(battle: Battle,
                          type_: Type,
                          modifier: float) -> HandlerReturn:
     # ON_CALC_POWER_MODIFIER
-    if ctx.move and ctx.move.type == type_:
-        return HandlerReturn(value=value * modifier)
+    if ctx.move.type == type_:
+        value = int(value * modifier)
     return HandlerReturn(value=value)
 
 
@@ -47,37 +47,41 @@ def modify_super_effective_damage(battle: Battle,
                                   type_: Type,
                                   modifier: float) -> HandlerReturn:
     # ON_CALC_DAMAGE_MODIFIER
-    if ctx.move and ctx.move.type == type_ and \
-            common.calc_effectiveness(battle, ctx.attacker, ctx.defender, ctx.move) > 1:
-        return HandlerReturn(value=value * modifier)
+    if ctx.move.type == type_ and battle.damage_calculator.calc_def_type_modifier(ctx) > 1:
+        value = int(value * modifier)
     return HandlerReturn(value=value)
 
 
-def いのちのたま(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # ON_HITのハンドラ
-    success = ctx.move.category != "変化" and \
-        common.modify_hp(battle, ctx, value, target_spec="attacker:self", r=-1/8)
-    return HandlerReturn(value=success)
+def いのちのたま_recoil(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    if ctx.move.category != "変化" and \
+            common.modify_hp(battle, ctx, value, target_spec="attacker:self", r=-1/8):
+        ctx.attacker.item.revealed = True
+    return HandlerReturn()
 
 
 def だっしゅつボタン(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # ON_DAMAGEのハンドラ
     player = battle.find_player(ctx.defender)
     player.interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn()
 
 
 def だっしゅつパック(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # ON_MODIFY_STATのハンドラ
     # valueは{stat: change}の辞書
     player = battle.find_player(ctx.target)
-    success = any(v < 0 for v in value.values()) and bool(battle.get_available_switch_commands(player))
-    if success:
+    if any(v < 0 for v in value.values()) and \
+            bool(battle.get_available_switch_commands(player)):
         player.interrupt = Interrupt.REQUESTED
-    return HandlerReturn(value=success)
+    return HandlerReturn()
 
+
+def たべのこし(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    # 毎ターンHPを1/16回復
+    if battle.modify_hp(ctx.source, r=1/16):
+        ctx.source.item.revealed = True
+    return HandlerReturn()
 
 # ===== 難易度1: HP回復系アイテム =====
+
 
 def オボンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: HP50%以下時にHP25%回復

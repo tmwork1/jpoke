@@ -18,21 +18,19 @@ class Payload(TypedDict, total=False):
     例えば、技の名前、ダメージ量、状態異常の種類などが含まれる。
     """
     # 汎用フィールド
-    text: str | None = None
-    success: bool | None = None
+    reason: str | None = None
 
     # 特定のソース
     pokemon: str | None = None
     ability: str | None = None
     item: str | None = None
     move: str | None = None
-    volatile: str | None = None
     ailment: str | None = None
+    volatile: str | None = None
 
     # その他
     stat: Stat | None = None
     value: int | None = None
-    reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -65,9 +63,27 @@ class EventLog:
         """ログエントリをテキスト表現に変換。
 
         LogCode と Payload から人間が読める文字列を生成します。
+        reasonがある場合は"[基本記述]:[reason]"形式で統一します。
 
         Returns:
             ログのテキスト表現
+        """
+        if not self.payload:
+            return self.log.name
+
+        # reasonを統一フォーマットで付与
+        reason = self.payload.get("reason")
+        base_text = self._get_base_text()
+
+        if reason:
+            return f"{base_text}:{reason}"
+        return base_text
+
+    def _get_base_text(self) -> str:
+        """LogCodeに対応する基本的なテキストを生成。
+
+        Returns:
+            基本的なテキスト表現
         """
         if not self.payload:
             return self.log.name
@@ -78,32 +94,26 @@ class EventLog:
                 return self.payload.get("text", "")
 
             case LogCode.ABILITY_TRIGGERED:
-                ability = self.payload.get("ability", "特性")
-                success = self.payload.get("success", True)
-                text = ability
-                if not success:
-                    text += "失敗"
-                return text
+                return self.payload.get("ability", "特性")
 
             case LogCode.CONSUME_ITEM:
                 item = self.payload.get("item", "持ち物")
-                success = self.payload.get("success", True)
-                text = item
-                if not success:
-                    text += "失敗"
-                return text
+                return item
 
             case LogCode.VOLATILE_APPLIED:
-                volatile = self.payload.get("volatile", "揮発状態")
+                volatile = self.payload["volatile"]
                 return f"{volatile}が付与された"
 
             case LogCode.VOLATILE_REMOVED:
-                volatile = self.payload.get("volatile", "揮発状態")
+                volatile = self.payload["volatile"]
                 return f"{volatile}が解除された"
+
+            case LogCode.VOLATILE_STATUS:
+                return self.payload["volatile"]
 
             case LogCode.APPLY_AILMENT:
                 ailment = self.payload.get("ailment", "状態異常")
-                return f"{ailment}になった"
+                return f"{ailment}が付与された"
 
             case LogCode.CURE_AILMENT:
                 ailment = self.payload.get("ailment", "状態異常")
@@ -124,8 +134,13 @@ class EventLog:
                 return f"{value}ダメージ"
 
             case LogCode.ACTION_BLOCKED:
-                reason = self.payload.get("reason", "")
-                return f"{reason}で動けない" if reason else "動けない"
+                return "動けない"
+
+            case LogCode.HIT_SUBSTITUTE:
+                return "みがわりにヒット"
+
+            case LogCode.PROTECT_SUCCESS:
+                return "攻撃を防いだ"
 
             case _:
                 return self.log.name

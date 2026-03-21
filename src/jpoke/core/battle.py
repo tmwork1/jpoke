@@ -21,6 +21,7 @@ from .event import EventManager
 from .context import BattleContext
 from .player import Player
 from .event_logger import EventLogger
+from .command_logger import CommandLogger
 from .damage import DamageCalculator, DamageContext
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
@@ -94,13 +95,14 @@ class Battle:
         self.random = Random(self.seed)
         self.events = EventManager(self)
         self.event_logger = EventLogger()
+        self.command_logger = CommandLogger()
 
         self.turn_controller: TurnController = TurnController(self)
         self.speed_calculator: SpeedCalculator = SpeedCalculator(self)
         self.switch_manager: SwitchManager = SwitchManager(self)
         self.move_executor: MoveExecutor = MoveExecutor(self)
         self.damage_calculator: DamageCalculator = DamageCalculator(self)
-        self.status_manager: AilmentManager = AilmentManager(self)
+        self.ailment_manager: AilmentManager = AilmentManager(self)
         self.volatile_manager: VolatileManager = VolatileManager(self)
         self.query_manager: PokemonQueryManager = PokemonQueryManager(self)
 
@@ -145,7 +147,7 @@ class Battle:
         self.switch_manager.update_reference(self)
         self.move_executor.update_reference(self)
         self.damage_calculator.update_reference(self)
-        self.status_manager.update_reference(self)
+        self.ailment_manager.update_reference(self)
         self.volatile_manager.update_reference(self)
         self.query_manager.update_reference(self)
 
@@ -161,6 +163,7 @@ class Battle:
         # 管理クラスの初期化
         self.events = EventManager(self)
         self.event_logger = EventLogger()
+        self.command_logger = CommandLogger()
         self.random = Random(self.seed)
 
         self.turn_controller = TurnController(self)
@@ -168,7 +171,7 @@ class Battle:
         self.switch_manager = SwitchManager(self)
         self.move_executor = MoveExecutor(self)
         self.damage_calculator = DamageCalculator(self)
-        self.status_manager = AilmentManager(self)
+        self.ailment_manager = AilmentManager(self)
         self.volatile_manager = VolatileManager(self)
         self.query_manager = PokemonQueryManager(self)
 
@@ -290,7 +293,7 @@ class Battle:
         return new
 
     def masked_copy(self, perspective: Player) -> Self:
-        # TODO: implement more detailed masking (copilotには任せない)
+        # TODO (copilotには任せない) implement more detailed masking
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
             perspective: 情報を完全に保持するプレイヤー
@@ -559,9 +562,11 @@ class Battle:
 
         v = target.modify_hp(v)
         if v > 0:
+            v = min(v, target.max_hp - target.hp)
             self.add_event_log(target, LogCode.HEAL,
                                payload={"value": v, "reason": reason})
         elif v < 0:
+            v = max(v, -target.hp)
             self.add_event_log(target, LogCode.DAMAGE,
                                payload={"value": -v, "reason": reason})
             # HPがゼロになった場合、勝敗判定を実行
@@ -574,7 +579,8 @@ class Battle:
                     target: Pokemon,
                     stat: Stat,
                     v: int,
-                    source: Pokemon | None = None) -> dict[Stat, int]:
+                    source: Pokemon | None = None,
+                    reason: str = "") -> dict[Stat, int]:
         """ポケモンの能力ランクを変更する。
 
         内部的にはmodify_stats()を呼び出して処理します。
@@ -584,11 +590,12 @@ class Battle:
             stat: 変更する能力値（"A", "B", "C", "D", "S"）
             v: 変更するランク数
             source: 変更の原因となったポケモン（Noneの場合もある）
+            reason: 変更の理由
 
         Returns:
             dict[Stat, int]: 実際に変更された能力ランクの辞書
         """
-        return self.modify_stats(target, {stat: v}, source)
+        return self.modify_stats(target, {stat: v}, source, reason)
 
     def modify_stats(self,
                      target: Pokemon,
@@ -734,7 +741,7 @@ class Battle:
             command: 選択されたコマンド
         """
         idx = self.get_player_index(source)
-        self.event_logger.add_command_log(self.turn, idx, command)
+        self.command_logger.add(self.turn, idx, command)
 
     def add_event_log(self,
                       source: Player | Pokemon | int,
@@ -747,7 +754,9 @@ class Battle:
             log: イベントの内容を表すLogCode列挙値 
             payload: イベントの詳細情報（必要に応じて）
         """
-        if not isinstance(source, int):
+        if isinstance(source, int):
+            idx = source
+        else:
             idx = self.get_player_index(source)
         self.event_logger.add(self.turn, idx, log, payload)
 

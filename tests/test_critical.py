@@ -10,7 +10,9 @@ def test_critical_damage_multiplier():
     attacker, defender = battle.actives
     normal_damages = battle.determine_damage_range(attacker, defender, "たいあたり", critical=False)
     critical_damages = battle.determine_damage_range(attacker, defender, "たいあたり", critical=True)
-    assert critical_damages[0]/normal_damages[0] > 1.4
+    print(normal_damages)
+    print(critical_damages)
+    assert 1.4 < critical_damages[0]/normal_damages[0] < 1.6
 
 
 if __name__ == "__main__":

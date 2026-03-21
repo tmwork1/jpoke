@@ -158,7 +158,6 @@ def check_ability_ignored(battle: Battle, attacker: Pokemon, defender: Pokemon) 
         return True
     
     # かがくへんかガス
-    # TODO: 実装
     
     return False
 ```

@@ -32,9 +32,10 @@ class Volatile(GameEffect):
 
     def __init__(self,
                  name: VolatileName,
-                 count: int = 1,
+                 count: int = 0,
                  move_name: str = "",
-                 hp: int = 0):
+                 hp: int = 0,
+                 bind_damage_ratio: float = 1/8):
         """揮発性状態を初期化する。
 
         Args:
@@ -44,6 +45,7 @@ class Volatile(GameEffect):
         self.count: int = count
         self.move_name: str = move_name  # あばれる用
         self.hp: int = hp
+        self.bind_damage_ratio: float = bind_damage_ratio  # バインドのダメージ比率
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -55,3 +57,7 @@ class Volatile(GameEffect):
     def is_active(self) -> bool:
         """揮発性状態が実在するかどうか"""
         return self.count > 0
+
+    def tick(self):
+        """揮発性状態のターン経過処理を行う"""
+        self.count = max(0, self.count - 1)

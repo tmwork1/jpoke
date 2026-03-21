@@ -17,8 +17,8 @@ class AilmentHandler(Handler):
 
 
 def もうどく(battle: Battle, ctx: BattleContext, value: Any):
-    ctx.source.ailment.count += 1
-    r = max(-1, -ctx.source.ailment.count/16)
+    battle.ailment_manager.tick(ctx.source)
+    r = -ctx.source.ailment.elapsed_turns/16
     battle.modify_hp(ctx.source, r=r, reason="もうどく")
     return HandlerReturn()
 
@@ -56,13 +56,13 @@ def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> Handle
     return HandlerReturn(value=value)
 
 
-def ねむり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねむり状態による行動不能チェック"""
     mon = ctx.attacker
-    battle.status_manager.tick_down_ailment(mon)
-    if mon.ailment.count == 0:
+    battle.ailment_manager.tick(mon)
+    if not mon.has_ailment("ねむり"):
         # 眠りから覚めた：ハンドラを解除して空の状態に
-        battle.status_manager.cure_ailment(mon)
+        battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
     # まだ眠っている
     idx = battle.get_player_index(mon)
@@ -81,7 +81,7 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     mon = ctx.attacker
     if thaw:
         # 解凍した：ハンドラを解除して空の状態に
-        battle.status_manager.cure_ailment(mon)
+        battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
     # まだ凍っている
     battle.add_event_log(mon, LogCode.ACTION_BLOCKED,

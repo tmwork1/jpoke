@@ -1,12 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
-    from jpoke.core import Battle
-    from jpoke.model import Pokemon, Move
+    from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain
 from jpoke.enums import Event
-from jpoke.core import BattleContext, HandlerReturn
+from jpoke.core import HandlerReturn
 
 
 def modify_hp(battle: Battle,
@@ -15,11 +14,12 @@ def modify_hp(battle: Battle,
               target_spec: RoleSpec,
               v: int = 0,
               r: float = 0,
-              chance: float = 1) -> HandlerReturn:
+              chance: float = 1,
+              reason: str = "") -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
-    v = battle.modify_hp(target, v, r)
+    v = battle.modify_hp(target, v, r, reason=reason)
     return HandlerReturn(value=v)
 
 
@@ -31,19 +31,22 @@ def drain_hp(battle: Battle,
              v: int = 0,
              r: float = 0,
              heal_rate: float = 1,
-             chance: float = 1) -> HandlerReturn:
+             chance: float = 1,
+             reason: str = "") -> HandlerReturn:
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
 
+    # from_とto_から対象のポケモンを解決
     from_mon = ctx.resolve_role(battle, from_)
     if to_ is None:
         to_mon = battle.foe(from_mon)
     else:
         to_mon = ctx.resolve_role(battle, to_)
 
-    v = battle.modify_hp(from_mon, -v, -r)
+    v = battle.modify_hp(from_mon, -v, -r, reason=reason)
+    print(f"{v=}")
     if v:
-        battle.modify_hp(to_mon, v * heal_rate, r * heal_rate)
+        battle.modify_hp(to_mon, -v * heal_rate, reason=reason)
 
     return HandlerReturn(value=v)
 
@@ -112,7 +115,7 @@ def apply_ailment(battle: Battle,
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.status_manager.apply_ailment(target, ailment, source=source)
+    success = battle.ailment_manager.apply(target, ailment, source=source)
     return HandlerReturn(value=success)
 
 
@@ -134,7 +137,7 @@ def apply_volatile(battle: Battle,
                 count = 1
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.volatile_manager.apply_volatile(target, volatile, count=count, source=source)
+    success = battle.volatile_manager.apply_(target, volatile, count=count, source=source)
     return HandlerReturn(value=success)
 
 
@@ -148,7 +151,7 @@ def cure_ailment(battle: Battle,
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.status_manager.cure_ailment(target, source=source)
+    success = battle.ailment_manager.remove(target, source=source)
     return HandlerReturn(value=success)
 
 
@@ -183,16 +186,3 @@ def resolve_field_count(battle: Battle,
         return HandlerReturn(value=value + additonal_count)
     else:
         return HandlerReturn(value=value)
-
-
-def calc_effectiveness(battle: Battle,
-                       attacker: Pokemon,
-                       defender: Pokemon,
-                       move: Move) -> float:
-    """技のタイプ相性を計算する"""
-    value = battle.events.emit(
-        Event.ON_CALC_DEF_TYPE_MODIFIER,
-        BattleContext(attacker=attacker, defender=defender, move=move),
-        4096
-    ).value > 4096
-    return value / 4096

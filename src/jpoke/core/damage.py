@@ -15,6 +15,7 @@ from decimal import Decimal, ROUND_HALF_DOWN
 from jpoke.utils.type_defs import Stat
 from jpoke.enums import Event, DamageFlag
 from jpoke.utils import fast_copy
+from jpoke.utils.constants import TYPE_MODIFIER
 
 from .context import BattleContext
 
@@ -136,10 +137,12 @@ class DamageCalculator:
         if not move.data.power:
             return [0], dmg_ctx
 
+        ctx = BattleContext(attacker=attacker, defender=defender, move=move)
+
         # 最終威力・攻撃・防御
-        final_pow = self.calc_final_power(attacker, defender, move, dmg_ctx)
-        final_atk = self.calc_final_attack(attacker, defender, move, dmg_ctx)
-        final_def = self.calc_final_defense(attacker, defender, move, dmg_ctx)
+        final_pow = self.calc_final_power(ctx, dmg_ctx)
+        final_atk = self.calc_final_attack(ctx, dmg_ctx)
+        final_def = self.calc_final_defense(ctx, dmg_ctx)
 
         # 最大乱数ダメージ
         max_dmg = int(int(int(attacker.level*0.4+2)*final_pow*final_atk/final_def)/50+2)
@@ -151,40 +154,34 @@ class DamageCalculator:
 
         # -- ここで乱数が適用される(計算はループ内で実行) --
 
-        # 攻撃タイプ補正
-        r_atk_type = self.events.emit(
-            Event.ON_CALC_ATK_TYPE_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
-            4096
-        )
+        # タイプ一致補正
+        r_atk_type = self.calc_atk_type_modifier(ctx)
 
-        # 防御タイプ補正
-        r_def_type = self.events.emit(
-            Event.ON_CALC_DEF_TYPE_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
-            4096
-        )
+        # タイプ相性補正
+        r_def_type = self.calc_def_type_modifier(ctx)
 
         # やけど補正（タイプ相性の後、ダメージ補正の前）
         r_burn = self.events.emit(
             Event.ON_CALC_BURN_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             4096
-        )
+        ) / 4096
 
         # ダメージ補正
         r_dmg = self.events.emit(
             Event.ON_CALC_DAMAGE_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             4096
-        )
+        ) / 4096
 
         # まもる貫通系補正（Z技、ダイマックス技等）
         r_protect = self.events.emit(
             Event.ON_CALC_PROTECT_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             4096
-        )
+        ) / 4096
+
+        print(f"{r_atk_type=}, {r_def_type=}, {r_burn=}, {r_dmg=}, {r_protect=}")
 
         dmgs = [0]*16
         for i in range(16):
@@ -192,17 +189,17 @@ class DamageCalculator:
             dmgs[i] = int(max_dmg * (0.85+0.01*i))
 
             # タイプ補正
-            dmgs[i] = round_half_down(dmgs[i] * r_atk_type / 4096)
-            dmgs[i] = round_half_down(dmgs[i] * r_def_type / 4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_atk_type)
+            dmgs[i] = round_half_down(dmgs[i] * r_def_type)
 
             # やけど補正
-            dmgs[i] = round_half_down(dmgs[i] * r_burn / 4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_burn)
 
             # ダメージ補正
-            dmgs[i] = round_half_down(dmgs[i] * r_dmg / 4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_dmg)
 
             # まもる貫通系補正
-            dmgs[i] = round_half_down(dmgs[i] * r_protect / 4096)
+            dmgs[i] = round_half_down(dmgs[i] * r_protect)
 
             # 最低ダメージ補償
             if dmgs[i] == 0 and r_def_type * r_dmg > 0:
@@ -210,17 +207,99 @@ class DamageCalculator:
 
         return dmgs, dmg_ctx
 
+    def calc_atk_type_modifier(self, ctx: BattleContext) -> float:
+        """タイプ一致補正（STAB）を計算する。
+
+        テラスタルの有無を考慮してSTAB補正値を計算し、
+        ON_CALC_ATK_TYPE_MODIFIER イベントを発火して返す。
+
+        仕様は docs/spec/damage_calc.md の「タイプ一致補正の詳細」を参照。
+
+        Args:
+            ctx: 攻防・技の情報を持つバトルコンテキスト
+
+        Returns:
+            float: タイプ一致補正
+        """
+        attacker = ctx.attacker
+        move_type = ctx.move.type
+
+        base_modifier = 4096
+
+        if attacker.is_terastallized:
+            tera_type = attacker._terastal
+            original_types = attacker.data.types
+            tera_matches = tera_type == move_type
+            original_matches = move_type in original_types
+
+            if tera_matches and original_matches:
+                # テラスタイプ・元タイプ両方が技タイプと一致 → 2.0倍
+                base_modifier = 8192
+            elif tera_matches:
+                # テラスタイプのみ一致 → 1.5倍
+                base_modifier = 6144
+            elif original_matches:
+                # 元タイプのみ一致（テラスタイプ異なる） → 1.5倍
+                base_modifier = 6144
+        else:
+            if move_type in attacker.data.types:
+                base_modifier = 6144
+
+        v = self.events.emit(
+            Event.ON_CALC_ATK_TYPE_MODIFIER,
+            ctx,
+            base_modifier
+        )
+        return v / 4096
+
+    def calc_def_type_modifier(self,
+                               ctx: BattleContext | None = None,
+                               attacker=None,
+                               defender=None,
+                               move=None) -> float:
+        """タイプ相性補正を計算する。
+
+        攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
+        ON_CALC_DEF_TYPE_MODIFIER イベントを発火して倍率（float）で返す。
+
+        Args:
+            ctx: 攻防・技の情報を持つバトルコンテキスト（Noneの場合は以下の個別引数を使用）
+            attacker: 攻撃側ポケモン
+            defender: 防御側ポケモン
+            move: 技オブジェクトまたは技名文字列
+
+        Returns:
+            float: タイプ相性倍率（1.0=等倍、2.0=効果ばつぐん等）
+        """
+        if ctx is None:
+            from jpoke.model import Move as MoveModel
+            ctx = BattleContext(
+                attacker=attacker,
+                defender=defender,
+                move=MoveModel(move) if isinstance(move, str) else move,
+            )
+
+        base_modifier = 4096
+        if ctx.move and ctx.defender:
+            for defender_type in ctx.defender.types:
+                type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
+                rate = type_chart.get(defender_type, 1.0)
+                base_modifier = int(base_modifier * rate)
+
+        v = self.events.emit(
+            Event.ON_CALC_DEF_TYPE_MODIFIER,
+            ctx,
+            base_modifier
+        )
+        return v / 4096
+
     def calc_final_power(self,
-                         attacker: Pokemon,
-                         defender: Pokemon,
-                         move: Move,
+                         ctx: BattleContext,
                          dmg_ctx: DamageContext | None = None) -> int:
         """最終威力を計算する。
 
         Args:
-            attacker: 攻撃側のポケモン
-            defender: 防御側のポケモン
-            move: 技
+            ctx: 攻防・技の情報を持つバトルコンテキスト
             dmg_ctx: ダメージコンテキスト
 
         Returns:
@@ -230,12 +309,12 @@ class DamageCalculator:
             dmg_ctx = DamageContext()
 
         # 技威力
-        final_pow = move.data.power * dmg_ctx.power_multiplier
+        final_pow = ctx.move.data.power * dmg_ctx.power_multiplier
 
         # その他の補正
         r_pow = self.events.emit(
             Event.ON_CALC_POWER_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             4096
         )
         final_pow = round_half_down(final_pow * r_pow/4096)
@@ -244,18 +323,14 @@ class DamageCalculator:
         return final_pow
 
     def calc_final_attack(self,
-                          attacker: Pokemon,
-                          defender: Pokemon,
-                          move: Move,
+                          ctx: BattleContext,
                           dmg_ctx: DamageContext | None = None) -> int:
         """最終攻撃力を計算する。
 
         ランク補正、特性、持ち物などの補正を適用します。
 
         Args:
-            attacker: 攻撃側のポケモン
-            defender: 防御側のポケモン
-            move: 技
+            ctx: 攻防・技の情報を持つバトルコンテキスト
             dmg_ctx: ダメージコンテキスト
 
         Returns:
@@ -263,6 +338,10 @@ class DamageCalculator:
         """
         if not dmg_ctx:
             dmg_ctx = DamageContext()
+
+        attacker = ctx.attacker
+        defender = ctx.defender
+        move = ctx.move
 
         move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
 
@@ -283,11 +362,11 @@ class DamageCalculator:
         # ランク補正の修正
         def_ability: Ability = self.events.emit(
             Event.ON_CHECK_DEF_ABILITY,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             defender.ability
         )
 
-        # TODO: 特性てんねんのハンドラとして実装する
+        # TODO (特性実装時でよい) 特性てんねんのハンドラとして実装する
         if def_ability == 'てんねん' and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_ATK_RANK_BY_TENNEN)
@@ -302,7 +381,7 @@ class DamageCalculator:
         # その他の補正
         r_atk = self.events.emit(
             Event.ON_CALC_ATK_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             4096
         )
         final_atk = round_half_down(final_atk * r_atk/4096)
@@ -311,18 +390,14 @@ class DamageCalculator:
         return final_atk
 
     def calc_final_defense(self,
-                           attacker: Pokemon,
-                           defender: Pokemon,
-                           move: Move,
+                           ctx: BattleContext,
                            dmg_ctx: DamageContext | None = None) -> int:
         """最終防御力を計算する。
 
         ランク補正、特性、持ち物などの補正を適用します。
 
         Args:
-            attacker: 攻撃側のポケモン
-            defender: 防御側のポケモン
-            move: 技
+            ctx: 攻防・技の情報を持つバトルコンテキスト
             dmg_ctx: ダメージコンテキスト
 
         Returns:
@@ -330,6 +405,10 @@ class DamageCalculator:
         """
         if not dmg_ctx:
             dmg_ctx = DamageContext()
+
+        attacker = ctx.attacker
+        defender = ctx.defender
+        move = ctx.move
 
         move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
 
@@ -347,7 +426,7 @@ class DamageCalculator:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_MOVE)
 
-        # TODO: 特性てんねんのハンドラとして実装する
+        # TODO (特性実装時でよい) 特性てんねんのハンドラとして実装する
         if attacker.ability == 'てんねん' and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_TENNEN)
@@ -362,7 +441,7 @@ class DamageCalculator:
         # その他の補正
         r_def = self.events.emit(
             Event.ON_CALC_DEF_MODIFIER,
-            BattleContext(attacker=attacker, defender=defender, move=move),
+            ctx,
             4096
         )
         final_def = round_half_down(final_def * r_def/4096)

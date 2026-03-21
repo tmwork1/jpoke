@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle
-    from jpoke.model import Move, Pokemon, Field
+    from jpoke.model import Pokemon, Field
 
+from jpoke.model import Move
 from jpoke.utils.type_defs import ContextRole, RoleSpec
 
 

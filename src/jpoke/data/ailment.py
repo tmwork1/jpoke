@@ -60,7 +60,7 @@ AILMENTS: dict[str, AilmentData] = {
     "ねむり": AilmentData(
         handlers={
             Event.ON_CHECK_ACTION: h.AilmentHandler(
-                h.ねむり_action,
+                h.ねむり_check_action,
                 subject_spec="attacker:self",
                 priority=10,
             ),

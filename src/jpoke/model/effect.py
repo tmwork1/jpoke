@@ -33,37 +33,17 @@ class GameEffect:
         Args:
             data: 効果データ (AbilityData, ItemData など)
         """
-        self.data = data
-        self.reset_effect()
+        self.data: EffectData = data
+        self.enabled: bool = True
+        self.revealed: bool = False
 
     def reset_effect(self) -> None:
         """効果の状態をリセットする。
 
         効果の有効/無効状態と公開状態を初期状態に戻す。
         """
-        self._enabled = True
-        self._revealed = False
-
-    @property
-    def effect_enabled(self) -> bool:
-        """効果が有効化されているかどうか。
-
-        Returns:
-            効果が有効な場合 True、無効な場合 False
-        """
-        return self._enabled
-
-    @property
-    def revealed(self) -> bool:
-        """効果が公開されているかどうか。
-
-        効果が発動したり使用されたりして、相手プレイヤーに
-        判明した状態かどうかを示す。
-
-        Returns:
-            公開されている場合 True、非公開の場合 False
-        """
-        return self._revealed
+        self.enabled = True
+        self.revealed = False
 
     @property
     def name(self) -> str:
@@ -75,7 +55,7 @@ class GameEffect:
         Returns:
             有効な場合は効果名、無効な場合は空文字
         """
-        return self.data.name if self._enabled else ""
+        return self.data.name if self.enabled else ""
 
     @property
     def orig_name(self) -> str:
@@ -89,29 +69,6 @@ class GameEffect:
         """
         return self.data.name
 
-    def reveal(self) -> None:
-        """効果を公開状態にする。
-
-        効果が発動したり使用されたりして、相手プレイヤーに
-        判明した際に呼び出す。
-        """
-        self._revealed = True
-
-    def enable(self) -> None:
-        """効果を有効化する。
-
-        無効化されていた効果を再び有効にする。
-        """
-        self._enabled = True
-
-    def disable(self) -> None:
-        """効果を無効化する。
-
-        効果を一時的または恒久的に無効にする。
-        無効化された効果はハンドラが登録されず、name プロパティは空文字を返す。
-        """
-        self._enabled = False
-
     def register_handlers(self,
                           events: EventManager,
                           subject: Pokemon | Player) -> None:
@@ -123,7 +80,7 @@ class GameEffect:
             events: イベントマネージャー
             subject: ハンドラの対象となるポケモンまたはプレイヤー
         """
-        if not self._enabled:
+        if not self.enabled:
             return
 
         for event, handler in self.data.handlers.items():

@@ -1,7 +1,7 @@
 from jpoke.core import Battle, Player, BattleContext
 from jpoke.model import Pokemon
 from jpoke.utils.type_defs import VolatileName, Weather, Terrain
-from jpoke.enums import Event, Command
+from jpoke.enums import Event, Command, LogCode
 
 # 定数定義
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
@@ -103,7 +103,7 @@ def start_battle(ally: list[Pokemon] | None = None,
             if not volatiles[idx]:
                 continue
             for name, count in volatiles[idx].items():
-                battle.volatile_manager.apply_volatile(mon, name, count=count)
+                battle.volatile_manager.apply_(mon, name, count=count)
 
     # ターン進行
     for _ in range(turn):
@@ -115,9 +115,42 @@ def start_battle(ally: list[Pokemon] | None = None,
     return battle
 
 
-def get_try_result(battle: Battle,
-                   event: Event,
-                   atk_idx: int = 0) -> bool:
+def log_contains(battle: Battle,
+                 log_code: LogCode,
+                 player_idx: int | None = None,
+                 turn: int | None = None) -> bool:
+    """指定したLogCodeがログに含まれているか検査する。
+
+    Args:
+        battle: Battleインスタンス
+        log_code: ログに含まれるべきLogCode
+        player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
+        turn: ターン番号（Noneの場合は現在のターン）
+
+    Returns:
+        bool: ログにLogCodeが含まれている場合True、そうでない場合False
+    """
+    if turn is None:
+        turn = battle.turn
+
+    event_logs = battle.get_event_logs(turn)
+
+    if player_idx is not None:
+        # 特定プレイヤーのログをチェック
+        player = battle.players[player_idx]
+        logs = event_logs.get(player, [])
+        return any(log.log == log_code for log in logs)
+    else:
+        # 全プレイヤーのログをチェック
+        all_logs = []
+        for logs in event_logs.values():
+            all_logs.extend(logs)
+        return any(log.log == log_code for log in all_logs)
+
+
+def check_event_result(battle: Battle,
+                       event: Event,
+                       atk_idx: int = 0) -> bool:
     attacker = battle.actives[atk_idx]
     defender = battle.actives[1 - atk_idx]
     result = battle.events.emit(
@@ -188,36 +221,3 @@ def can_switch(battle: Battle, idx: int) -> bool:
         raise IndexError(f"Invalid player index: {idx}. Must be between 0 and {len(battle.players) - 1}")
     commands = battle.get_available_action_commands(battle.players[idx])
     return any(c.is_switch() for c in commands)
-
-
-def log_contains(battle: Battle,
-                 text: str,
-                 player_idx: int | None = None,
-                 turn: int | None = None) -> bool:
-    """指定したテキストがログに含まれているか検査する。
-
-    Args:
-        battle: Battleインスタンス
-        text: ログに含まれるべきテキスト
-        player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
-        turn: ターン番号（Noneの場合は現在のターン）
-
-    Returns:
-        bool: ログにテキストが含まれている場合True、そうでない場合False
-    """
-    if turn is None:
-        turn = battle.turn
-
-    event_logs = battle.get_event_logs(turn)
-
-    if player_idx is not None:
-        # 特定プレイヤーのログをチェック
-        player = battle.players[player_idx]
-        logs = event_logs.get(player, [])
-        return any(text in log.render() for log in logs)
-    else:
-        # 全プレイヤーのログをチェック
-        all_logs = []
-        for logs in event_logs.values():
-            all_logs.extend(logs)
-        return any(text in log.render() for log in all_logs)

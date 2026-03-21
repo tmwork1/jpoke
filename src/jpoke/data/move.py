@@ -36,7 +36,6 @@ def common_setup() -> None:
         )
 
 
-# TODO: 定義内の空行を削除
 MOVES: dict[str, MoveData] = {
     # -------------------------
     # 攻撃技
@@ -4558,6 +4557,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
+        self_targeting=True,
 
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(
@@ -4762,7 +4762,6 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=2,
-
     ),
     "こらえる": MoveData(
         type="ノーマル",
@@ -4809,7 +4808,6 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=2,
-
     ),
     "さいはい": MoveData(
         type="エスパー",
@@ -5039,6 +5037,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
+        self_targeting=True,
 
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(
@@ -5232,7 +5231,6 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         priority=5,
-
     ),
     "てっぺき": MoveData(
         type="はがね",
@@ -5295,6 +5293,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
+        self_targeting=True,
 
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(
@@ -5693,7 +5692,6 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=3,
-
     ),
     "ふういん": MoveData(
         type="エスパー",
@@ -5872,6 +5870,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
+        self_targeting=True,
 
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(
@@ -5931,6 +5930,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
+        self_targeting=True,
 
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(
@@ -6098,7 +6098,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=0,
         accuracy=0,
-
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
@@ -6112,7 +6111,6 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=3,
-
     ),
     "わたほうし": MoveData(
         type="くさ",
@@ -6159,6 +6157,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         priority=4,
+        self_targeting=True,
 
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(

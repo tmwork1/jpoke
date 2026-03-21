@@ -48,7 +48,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=False,
         handlers={
             Event.ON_HIT: h.ItemHandler(
-                h.いのちのたま,
+                h.いのちのたま_recoil,
                 subject_spec="attacker:self",
             )
         }
@@ -343,7 +343,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_TURN_END_2: h.ItemHandler(
-                partial(common.modify_hp, target_spec="source:self", r=1/16),
+                h.たべのこし,
                 subject_spec="source:self",
             )
         }

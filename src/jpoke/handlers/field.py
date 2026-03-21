@@ -1,11 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import Battle, BattleContext
 
 from jpoke.enums import LogCode
 from jpoke.utils.type_defs import GlobalField, SideField, VolatileName
-from jpoke.core import BattleContext, HandlerReturn
+from jpoke.core import HandlerReturn
+from jpoke.handlers import common
 
 
 # ===== カウントダウン =====
@@ -71,7 +72,7 @@ def あめ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> Han
 def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """砂嵐のダメージ"""
     tick_weather(battle, ctx, value)
-    if battle.weather == "すなあらし" and \
+    if battle.weather.name == "すなあらし" and \
             not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
             ctx.source.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]:
         battle.modify_hp(ctx.source, r=-1/16, reason="すなあらしダメージ")
@@ -303,34 +304,16 @@ def どくびし_poison(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 
     # 層数に応じて「どく」または「もうどく」を付与
     ailment = "もうどく" if dokubishi_field.count >= 2 else "どく"
-    battle.status_manager.apply_ailment(ctx.source, ailment, source=ctx.source)
+    battle.ailment_manager.apply(ctx.source, ailment, source=ctx.source)
     return HandlerReturn()
 
 
 def ステルスロック_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # TODO: common.calc_effectivenessを使うように修正
     """ステルスロックのダメージ（岩タイプ相性依存）"""
-    from jpoke.utils.constants import TYPE_MODIFIER
-
-    if not ctx.source:
-        return HandlerReturn()
-
-    effectiveness = 1.0
-
-    # 岩タイプとの相性計算
-    for poke_type in ctx.source.types:
-        effectiveness *= TYPE_MODIFIER["いわ"][poke_type]
-
-    # ダメージ倍率を決定
-    damage_ratio = {
-        4.0: -1/2,
-        2.0: -1/4,
-        1.0: -1/8,
-        0.5: -1/16,
-        0.25: -1/32,
-    }.get(effectiveness, -1/8)
-
-    battle.modify_hp(ctx.source, r=damage_ratio)
+    r = battle.damage_calculator.calc_def_type_modifier(
+        defender=ctx.source, move="ステルスロック"
+    )
+    battle.modify_hp(ctx.source, r=-1/8*r, reason="ステルスロック")
     return HandlerReturn()
 
 

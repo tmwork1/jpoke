@@ -51,12 +51,12 @@ def check_todo_in_file(filepath: str, name: str) -> bool:
         name: 項目名
 
     Returns:
-        TODOコメントがある場合 True
+        todoコメントがある場合 True
     """
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
-            # TODO: <項目名> のパターンを検索
+            # todo: <項目名> のパターンを検索
             pattern = rf'#\s*TODO:.*{re.escape(name)}'
             return bool(re.search(pattern, content, re.IGNORECASE))
     except (FileNotFoundError, IOError):
@@ -91,7 +91,7 @@ def analyze_category(
         # ハンドラの有無をチェック
         has_impl = has_handlers(data, exclude_common=exclude_common)
 
-        # TODOコメントの有無をチェック
+        # todoコメントの有無をチェック
         has_todo = check_todo_in_file(data_file, name)
 
         if has_impl and not has_todo:

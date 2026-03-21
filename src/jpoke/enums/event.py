@@ -78,7 +78,7 @@ class Event(Enum):
 
     # 計算系イベント
     ON_MODIFY_ACCURACY = auto()
-    ON_MODIFY_BIND_DAMAGE_RATIO = auto()
+    ON_MODIFY_BIND_DAMAGE = auto()
     ON_CALC_CRITICAL_RANK = auto()
     ON_CALC_POWER_MODIFIER = auto()
     ON_CALC_ATK_MODIFIER = auto()

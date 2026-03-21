@@ -6,14 +6,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import Nature, Type, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
 from jpoke.utils import fast_copy
 from jpoke.enums import Event
 from jpoke.data import pokedex
-from jpoke.core import BattleContext
 
 from .ability import Ability
 from .item import Item
@@ -119,23 +118,19 @@ class Pokemon:
         Returns:
             復元されたPokemonインスタンス
 
-        Note:
-            特性、持ち物、技の復元は未実装
-            これらのデータはログに含まれていない、または
-            復元ロジックが複雑なため保留中
         """
-        # TODO: ability, item, movesの復元 (あとまわし)
-        # データ形式の設計とcreate_*メソッドの実装が必要
-        # - mon.ability = cls.create_ability(data["ability"])
-        # - mon.item = cls.create_item(data["item"])
-        # - mon.moves = [cls.create_move(s) for s in data["moves"]]
-        mon = cls(data["name"])
-        mon.gender = data["gender"]
-        mon.level = data["level"]
-        mon.nature = data["nature"]
-        mon.indiv = data["indiv"]
-        mon.effort = data["effort"]
-        mon.terastal = data["terastal"]
+        mon = cls(
+            name=data["name"],
+            gender=data.get("gender", ""),
+            nature=data.get("nature", "まじめ"),
+            level=data.get("level", 50),
+            ability=data.get("ability", ""),
+            item=data.get("item", ""),
+            moves=data.get("moves", ["はねる"]),
+            terastal=data.get("terastal", "ステラ"),
+        )
+        mon.indiv = data.get("indiv", mon.indiv)
+        mon.effort = data.get("effort", mon.effort)
         return mon
 
     def __deepcopy__(self, memo):

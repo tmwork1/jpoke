@@ -9,13 +9,14 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import Battle, BattleContext
+    from jpoke.utils.type_defs import RoleSpec, AilmentName, Stat
+
 from functools import partial
 
 
-from jpoke.utils.type_defs import RoleSpec, AilmentName, Stat
 from jpoke.enums import Event, Interrupt, LogCode
-from jpoke.core import Handler, BattleContext, HandlerReturn
+from jpoke.core import Handler, HandlerReturn
 from . import common
 
 

@@ -53,7 +53,7 @@ def test_だっしゅつパック():
     )
     assert battle.players[0].active_idx == 1
     assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item._enabled
+    assert not battle.players[0].team[0].item.enabled
 
 
 def test_だっしゅつパック_能力上昇では発動しない():
@@ -74,18 +74,23 @@ def test_だっしゅつボタン():
     )
     assert battle.players[0].active_idx != 0
     assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item._enabled
+    assert not battle.players[0].team[0].item.enabled
 
 
 def test_たべのこし():
     """たべのこし: ターン終了時回復"""
-    mon = Pokemon("ピカチュウ", item="たべのこし")
-    battle = t.start_battle(ally=[mon], turn=1)
-    assert not battle.actives[0].item.revealed
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", item="たべのこし")],
+    )
+    mon = battle.actives[0]
+    # HPが満タンのときは回復しない
+    battle.events.emit(Event.ON_TURN_END_2)
+    battle.print_logs()
+    assert not mon.item.revealed
     mon._hp = 1  # テスト用に内部変数を直接変更
-    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=battle.actives[0]), None)
-    assert battle.actives[0].item.revealed
-    assert battle.actives[0].hp == 1 + mon.max_hp // 16
+    battle.events.emit(Event.ON_TURN_END_2)
+    assert mon.item.revealed
+    assert mon.hp == 1 + mon.max_hp // 16
 
 
 def _dummy_move(type_name: str) -> SimpleNamespace:

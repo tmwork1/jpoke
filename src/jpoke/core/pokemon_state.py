@@ -39,18 +39,18 @@ class AilmentManager:
         """
         self.battle = battle
 
-    def apply_ailment(self,
-                      pokemon: Pokemon,
-                      name: AilmentName,
-                      count: int = 0,
-                      source: Pokemon | None = None,
-                      force: bool = False) -> bool:
+    def apply(self,
+              mon: Pokemon,
+              name: AilmentName,
+              count: int | None = None,
+              source: Pokemon | None = None,
+              force: bool = False) -> bool:
         """状態異常を付与する。
 
         Args:
-            pokemon: 対象のポケモン
+            mon: 対象のポケモン
             name: 状態異常名
-            count: 状態異常のカウント
+            count: 継続ターン数（必要な状態異常のみ）
             source: 状態異常の原因となったポケモン
             force: Trueの場合、既存の状態異常を上書き
 
@@ -62,61 +62,61 @@ class AilmentManager:
             - 同じ状態異常の重ね掛けは不可
         """
         # force=True でない限り上書き不可
-        if pokemon.ailment.is_active and not force:
+        if mon.ailment.is_active and not force:
             return False
 
         # 重ねがけ不可
-        if name == pokemon.ailment.name:
+        if name == mon.ailment.name:
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
         name = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_AILMENT,
-            BattleContext(target=pokemon, source=source),
+            BattleContext(target=mon, source=source),
             name
         )
         if not name:
             return False
 
         # 既存のハンドラを削除
-        pokemon.ailment.unregister_handlers(self.battle.events, pokemon)
+        mon.ailment.unregister_handlers(self.battle.events, mon)
 
         # 新しい状態異常を設定してハンドラ登録
-        pokemon.ailment = Ailment(name, count=count)
-        pokemon.ailment.register_handlers(self.battle.events, pokemon)
+        mon.ailment = Ailment(name, count=count)
+        mon.ailment.register_handlers(self.battle.events, mon)
         return True
 
-    def cure_ailment(self, pokemon: Pokemon, source: Pokemon | None = None) -> bool:
-        """状態異常を治療する。
+    def remove(self, mon: Pokemon, source: Pokemon | None = None) -> bool:
+        """状態異常を解除する。
 
         Args:
-            pokemon: 対象のポケモン
-            source: 治療の原因となったポケモン
+            mon: 対象のポケモン
+            source: 解除の原因となったポケモン
 
         Returns:
-            治療に成功したらTrue
+            解除に成功したらTrue
         """
-        if not pokemon.ailment.is_active:
+        if not mon.ailment.is_active:
             return False
-        pokemon.ailment.unregister_handlers(self.battle.events, pokemon)
-        pokemon.ailment = Ailment()
+        mon.ailment.unregister_handlers(self.battle.events, mon)
+        mon.ailment = Ailment()
         return True
 
-    def tick_down_ailment(self, pokemon: Pokemon) -> bool:
+    def tick(self, mon: Pokemon) -> bool:
         """状態異常のターン経過処理を行う。
 
         Args:
-            pokemon: 対象のポケモン
+            mon: 対象のポケモン
 
         Returns:
             ターン経過処理を行った場合True、状態異常がない場合False
         """
-        if not pokemon.ailment.is_active:
+        if not mon.ailment.is_active:
             return False
-        pokemon.ailment.count -= 1
-        if pokemon.ailment.count == 0:
-            self.cure_ailment(pokemon)
+        mon.ailment.tick()
+        if mon.ailment.count == 0:
+            self.remove(mon)
         return True
 
 
@@ -146,17 +146,17 @@ class VolatileManager:
         """
         self.battle = battle
 
-    def apply_volatile(self,
-                       pokemon: Pokemon,
-                       name: VolatileName,
-                       count: int = 1,
-                       move: Move | str = "",
-                       hp: int = 0,
-                       source: Pokemon | None = None) -> bool:
+    def apply_(self,
+               mon: Pokemon,
+               name: VolatileName,
+               count: int = 1,
+               move: Move | str = "",
+               hp: int = 0,
+               source: Pokemon | None = None) -> bool:
         """揮発性状態を付与する。
 
         Args:
-            pokemon: 対象のポケモン
+            mon: 対象のポケモン
             name: 揮発性状態名
             count: 継続ターン数
             move: 関連する技オブジェクトまたは技名
@@ -170,14 +170,14 @@ class VolatileManager:
             - 既に同じ揮発性状態があれば失敗
         """
         # 既に同じ揮発性状態がある場合は失敗
-        if pokemon.has_volatile(name):
+        if mon.has_volatile(name):
             return False
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
         name = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
-            BattleContext(target=pokemon, source=source),
+            BattleContext(target=mon, source=source),
             name
         )
         if not name:
@@ -187,15 +187,15 @@ class VolatileManager:
             move = move.name
 
         volatile = Volatile(name, count=count, move_name=move, hp=hp)
-        volatile.register_handlers(self.battle.events, pokemon)
-        pokemon.volatiles[name] = volatile
+        volatile.register_handlers(self.battle.events, mon)
+        mon.volatiles[name] = volatile
         return True
 
-    def remove_volatile(self, pokemon: Pokemon, name: VolatileName) -> bool:
+    def remove(self, mon: Pokemon, name: VolatileName) -> bool:
         """揮発性状態を解除する。
 
         Args:
-            pokemon: 対象のポケモン
+            mon: 対象のポケモン
             name: 揮発性状態名
 
         Returns:
@@ -204,27 +204,27 @@ class VolatileManager:
         Note:
             指定された揮発性状態がない場合は失敗する。
         """
-        if not pokemon.has_volatile(name):
+        if not mon.has_volatile(name):
             return False
-        pokemon.volatiles.pop(name).unregister_handlers(self.battle.events, pokemon)
+        mon.volatiles.pop(name).unregister_handlers(self.battle.events, mon)
         return True
 
-    def tick_down_volatile(self, pokemon: Pokemon, name: VolatileName) -> bool:
+    def tick(self, mon: Pokemon, name: VolatileName) -> bool:
         """揮発性状態のターン経過処理を行う。
 
         Args:
-            pokemon: 対象のポケモン
+            mon: 対象のポケモン
             name: 揮発性状態名
 
         Returns:
             ターン経過処理を行った場合True、指定された揮発性状態がない場合False
         """
-        if not pokemon.has_volatile(name):
+        if not mon.has_volatile(name):
             return False
-        volatile = pokemon.volatiles[name]
-        volatile.count -= 1
+        volatile = mon.volatiles[name]
+        volatile.tick()
         if volatile.count == 0:
-            self.remove_volatile(pokemon, name)
+            self.remove(mon, name)
         return True
 
 

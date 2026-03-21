@@ -39,7 +39,7 @@ class Field(GameEffect):
         self.owners: list[Player] = owners
         self.count: int = count
         self.heal: int = 0  # ねがいごと用
-        self.reveal()
+        self.revealed = True
 
         self.data: FieldData  # IDE hint
 

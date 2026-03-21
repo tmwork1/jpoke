@@ -49,7 +49,9 @@ def test_あめ_weaken_fire():
 
 def test_すなあらし_damage():
     """すなあらし: ターン終了時ダメージ"""
-    battle = t.start_battle(weather=("すなあらし", DEFAULT_DURATION))
+    battle = t.start_battle(
+        weather=("すなあらし", DEFAULT_DURATION)
+    )
     battle.events.emit(Event.ON_TURN_END_1)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
     expected_damages = [mon.max_hp // 16 for mon in battle.actives]
@@ -94,9 +96,13 @@ def test_エレキフィールド_boost_electric():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
-    5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
-    # TODO: 浮いているポケモンは強化されないことを確認
+    floating_battle = t.start_battle(
+        ally=[Pokemon("ピジョン", moves=["でんきショック"])],
+        terrain=("エレキフィールド", DEFAULT_DURATION),
+    )
+    assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_エレキフィールド_prevent_sleep():
@@ -106,13 +112,34 @@ def test_エレキフィールド_prevent_sleep():
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
     target = battle.actives[0]
-    result = battle.status_manager.apply_ailment(target, "ねむり")
+    result = battle.ailment_manager.apply(target, "ねむり")
     assert not result, "エレキフィールド下でねむりが付与された"
     assert not target.ailment.is_active, "エレキフィールド下でねむり状態が付与された"
 
-    # TODO: 浮いているポケモンはねむりが付与されることを確認
+    floating_battle = t.start_battle(
+        ally=[Pokemon("ピジョン")],
+        terrain=("エレキフィールド", DEFAULT_DURATION),
+    )
+    floating_target = floating_battle.actives[0]
+    assert floating_battle.ailment_manager.apply(floating_target, "ねむり")
+    assert floating_target.ailment.is_active
 
-# TODO: エレキフィールドでのねむけ(揮発状態)防止のテストを追加。浮いているポケモンは防止されないことも確認
+
+def test_エレキフィールド_prevent_nemuke():
+    battle = t.start_battle(
+        terrain=("エレキフィールド", DEFAULT_DURATION),
+    )
+    target = battle.actives[0]
+    assert not battle.volatile_manager.apply_(target, "ねむけ", count=2)
+    assert not target.has_volatile("ねむけ")
+
+    floating_battle = t.start_battle(
+        ally=[Pokemon("ピジョン")],
+        terrain=("エレキフィールド", DEFAULT_DURATION),
+    )
+    floating_target = floating_battle.actives[0]
+    assert floating_battle.volatile_manager.apply_(floating_target, "ねむけ", count=2)
+    assert floating_target.has_volatile("ねむけ")
 
 
 def test_グラスフィールド_boost_grass():
@@ -121,9 +148,13 @@ def test_グラスフィールド_boost_grass():
         ally=[Pokemon("フシギダネ", moves=["はっぱカッター"])],
         terrain=("グラスフィールド", DEFAULT_DURATION),
     )
-    5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
-    # TODO: 浮いているポケモンは強化されないことを確認
+    floating_battle = t.start_battle(
+        ally=[Pokemon("ピジョン", moves=["はっぱカッター"])],
+        terrain=("グラスフィールド", DEFAULT_DURATION),
+    )
+    assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_グラスフィールド_じしん弱化():
@@ -154,7 +185,14 @@ def test_グラスフィールド_heal():
     battle.events.emit(Event.ON_TURN_END_2)
     assert mon.hp == 1 + mon.max_hp // 16, "グラスフィールドの回復量が不正"
 
-    # TODO: 浮いているポケモンは回復しないことも確認
+    floating_battle = t.start_battle(
+        ally=[Pokemon("ピジョン")],
+        terrain=("グラスフィールド", DEFAULT_DURATION),
+    )
+    floating_mon = floating_battle.actives[0]
+    floating_mon._hp = 1
+    floating_battle.events.emit(Event.ON_TURN_END_2)
+    assert floating_mon.hp == 1
 
 
 def test_サイコフィールド_boost_psychic():
@@ -165,7 +203,11 @@ def test_サイコフィールド_boost_psychic():
     )
     assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
-    # TODO: 浮いているポケモンは強化されないことを確認
+    floating_battle = t.start_battle(
+        ally=[Pokemon("ピジョン", moves=["サイコキネシス"])],
+        terrain=("サイコフィールド", DEFAULT_DURATION),
+    )
+    assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_サイコフィールド_先制技無効():
@@ -175,7 +217,7 @@ def test_サイコフィールド_先制技無効():
         foe=[Pokemon("ピカチュウ")],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    assert not t.get_try_result(battle, Event.ON_CHECK_MOVE)
+    assert not t.check_event_result(battle, Event.ON_CHECK_MOVE)
 
 
 def test_サイコフィールド_浮遊は先制技有効():
@@ -185,11 +227,7 @@ def test_サイコフィールド_浮遊は先制技有効():
         foe=[Pokemon("ピジョン")],
         terrain=("サイコフィールド", DEFAULT_DURATION),
     )
-    assert t.get_try_result(battle, Event.ON_CHECK_MOVE)
-
-# TODO: サイコフィールド: 自分が対象の先制技は無効かされないことを確認するテストを追加
-# TODO: サイコフィールド: 場が対象の先制技は無効かされないことを確認するテストを追加
-# TODO: 特性いたずらごころなどにより先制技扱いになった場合も無効化されることを確認 (特性実装後に追加)
+    assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
 
 
 def test_ミストフィールド_ドラゴン技弱化():
@@ -208,7 +246,7 @@ def test_ミストフィールド_混乱防止():
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
     mon = battle.actives[0]
-    result = battle.volatile_manager.apply_volatile(mon, "こんらん", count=3)
+    result = battle.volatile_manager.apply_(mon, "こんらん", count=3)
     assert not result, "ミストフィールド下で混乱が付与された"
     assert "こんらん" not in mon.volatiles, "混乱状態が追加されている"
 
@@ -218,7 +256,7 @@ def test_ミストフィールド_状態異常防止():
     battle = t.start_battle(
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
-    assert not battle.status_manager.apply_ailment(battle.actives[0], "どく")
+    assert not battle.ailment_manager.apply(battle.actives[0], "どく")
 
 
 def test_じゅうりょく_命中補正():

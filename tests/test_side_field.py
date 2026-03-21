@@ -66,18 +66,27 @@ def test_オーロラベール_特殊半減():
 
 def test_しんぴのまもり():
     """しんぴのまもり: 状態異常防止"""
-    # TODO: テスト実装
-    pass
+    battle = t.start_battle(ally_side_field={"しんぴのまもり": 1})
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "どく")
+    assert not target.ailment.is_active
+    assert not battle.volatile_manager.apply_(target, "こんらん", count=3)
+    assert not target.has_volatile("こんらん")
 
 
 def test_しろいきり_能力低下防止():
-    # TODO: 相手による能力低下を防ぐか確認するテストに修正
     """しろいきり: 能力ランク低下を防ぐ"""
     battle = t.start_battle(ally_side_field={"しろいきり": 1})
     target, source = battle.actives
     assert not battle.modify_stat(target, "A", -1, source=source)
 
-# TODO: しろいきり 自発的な能力低下は防げないことを確認するテスト追加
+
+def test_しろいきり_自発的な能力低下は防げない():
+    battle = t.start_battle(ally_side_field={"しろいきり": 1})
+    target = battle.actives[0]
+    assert battle.modify_stat(target, "A", -1, source=target)
+    assert target.rank["A"] == -1
 
 
 def test_おいかぜ():
@@ -154,7 +163,15 @@ def test_まきびし_3層():
     actual_damage = active.max_hp - active.hp
     assert expected_damage == actual_damage, "Damage is incorrect"
 
-# TODO: まきびしで浮いているポケモンがダメージを受けないことを確認するテスト追加
+
+def test_まきびし_浮いているポケモンはダメージを受けない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        ally_side_field={"まきびし": 3},
+    )
+    player = battle.players[0]
+    battle.run_switch(player, player.team[1])
+    assert player.active.hp == player.active.max_hp
 
 
 def test_どくびし_1層():
@@ -178,8 +195,28 @@ def test_どくびし_2層():
     battle.run_switch(player, player.team[1])
     assert player.active.ailment.name == "もうどく", "Badly poison status not applied"
 
-# TODO: どくびしで浮いているポケモンが状態異常にならないことを確認するテスト追加
-# TODO: どくタイプのポケモンが着地したときにどくびしが解除されることを確認するテスト追加
+
+def test_どくびし_浮いているポケモンには効かない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        ally_side_field={"どくびし": 2},
+    )
+    player = battle.players[0]
+    battle.run_switch(player, player.team[1])
+    assert not player.active.ailment.is_active
+
+
+def test_どくびし_どくタイプが着地すると解除される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ"), Pokemon("フシギダネ")],
+        ally_side_field={"どくびし": 2},
+    )
+    player = battle.players[0]
+    battle.run_switch(player, player.team[1])
+    field = battle.get_side_field(player, "どくびし")
+    assert not field.is_active
+    assert field.count == 0
+    assert not player.active.ailment.is_active
 
 
 def test_ステルスロック_x1():
@@ -190,11 +227,9 @@ def test_ステルスロック_x1():
     )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-
-    active = player.active
-    expected_damage = active.max_hp // 8
-    actual_damage = active.max_hp - active.hp
-    assert expected_damage == actual_damage, "Stealth Rock damage is incorrect"
+    mon = player.active
+    actual_damage = mon.max_hp - mon.hp
+    assert actual_damage == mon.max_hp // 8
 
 
 def test_ステルスロック_x4():
@@ -205,11 +240,9 @@ def test_ステルスロック_x4():
     )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-
-    active = player.active
-    expected_damage = active.max_hp // 2  # 4倍弱点なので1/2ダメージ
-    actual_damage = active.max_hp - active.hp
-    assert expected_damage == actual_damage, "Stealth Rock damage is incorrect"
+    mon = player.active
+    actual_damage = mon.max_hp - mon.hp
+    assert actual_damage == mon.max_hp // 2
 
 
 def test_ねばねばネット():
@@ -224,7 +257,15 @@ def test_ねばねばネット():
     after_rank = player.active.rank["S"]
     assert after_rank == before_rank - 1, "Speed rank not decreased"
 
-# TODO: ねばねばネットで浮いているポケモンの素早さが下がらないことを確認するテスト追加
+
+def test_ねばねばネット_浮いているポケモンには効かない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        ally_side_field={"ねばねばネット": 1},
+    )
+    player = battle.players[0]
+    battle.run_switch(player, player.team[1])
+    assert player.active.rank["S"] == 0
 
 
 if __name__ == "__main__":

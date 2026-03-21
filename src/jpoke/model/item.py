@@ -38,5 +38,5 @@ class Item(GameEffect):
         アイテムを公開状態にし、無効化する。
         消費されたアイテムは効果を失い、二度と使用できなくなる。
         """
-        self.reveal()
-        self.disable()
+        self.revealed = True
+        self.enabled = False

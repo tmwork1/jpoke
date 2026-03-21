@@ -174,24 +174,22 @@
 |-----|---------|---------|---------|
 | 急所 | 1.5倍 | 6144 | 急所に当たった場合（第6世代以降） |
 | ランダム補正 | 0.85～1.0倍 | 3482～4096 | 16段階のランダム値 |
-| タイプ一致（STAB） | 1.5倍 | 6144 | 攻撃側のタイプと技タイプが一致 |
-| タイプ一致（てきおうりょく） | 2.0倍 | 8192 | 特性てきおうりょくでタイプ一致 |
+| タイプ一致 | 1.5倍 | 6144 | 攻撃側のタイプと技タイプが一致 |
 | タイプ相性 | 0～4.0倍 | 0～16384 | 防御側のタイプとの相性 |
 | やけど（物理技） | 0.5倍 | 2048 | やけど状態で物理技使用 |
 | 複数対象（ダブル） | 0.75倍 | 3072 | ダブルバトルで複数対象の技 |
 
-```python
-def round_half_down(v: float) -> int:
-    """五捨五超入で丸める。
-    
-    0.5は切り捨て、0.5より大きい値は切り上げます。
-    """
-    return int(Decimal(str(v)).quantize(Decimal('0'), rounding=ROUND_HALF_DOWN))
+##### タイプ一致補正の詳細
+**テラスタルしていない場合**
+- 攻撃側のタイプと技のタイプが同じ場合、ダメージが1.5倍になります。
+- 攻撃側のタイプと技のタイプが同じ場合、かつ特性がてきおうりょくの場合は2倍になります。
+**テラスタルしている場合**
+- テラスタイプと技のタイプが同じ場合、ダメージが1.5倍になります。
+- テラスタイプと技のタイプが同じ場合、かつ特性がてきおうりょくの場合はダメージが2.0倍になります。
+- テラスタイプと攻撃側のタイプと技のタイプが同じ場合、ダメージが2.0倍になります。
+- テラスタイプと攻撃側のタイプと技のタイプが同じ場合、かつ特性がてきおうりょくの場合は2.25倍になります。
+- 攻撃側のタイプと技のタイプが同じ場合でも、テラスタイプが異なる場合、ダメージは1.5倍になります。特性がてきおうりょくの場合でも1.5倍のままです。
 
-# 使用例
-round_half_down(10.5)   # → 10 (切り捨て)
-round_half_down(10.51)  # → 11 (切り上げ)
-round_half_down(10.4)   # → 10 (切り捨て)
 ```
 
 ## 補正適用の順序（重要）
@@ -238,86 +236,6 @@ round_half_down(10.4)   # → 10 (切り捨て)
 
 基礎ダメージ計算後、以下の順序で補正を適用します。
 
-#### 実装コード例
-
-```python
-# 基礎ダメージ計算
-base_damage = int(int(int(level * 2 // 5 + 2) * final_pow * final_atk // final_def) // 50 + 2)
-
-# TODO: 複数対象、おやこあい、天気、きょけんとつげき補正
-# これらは基礎ダメージに直接適用される（イベント化予定）
-
-# 急所補正
-if critical:
-    base_damage = round_half_down(base_damage * 6144 / 4096)  # 1.5倍
-
-# 各乱数パターンでダメージ計算
-for i in range(16):  # 乱数16通り
-    dmg = int(base_damage * (85 + i) / 100)  # ランダム補正（85～100%）切り捨て
-    
-    # TODO: タイプ一致補正（STABイベント化予定）
-    # dmg = round_half_down(dmg * stab / 4096)
-    
-    # タイプ相性補正（攻撃側）
-    dmg = round_half_down(dmg * r_atk_type / 4096)
-    
-    # タイプ相性補正（防御側）
-    dmg = round_half_down(dmg * r_def_type / 4096)
-    
-    # やけど補正
-    dmg = round_half_down(dmg * r_burn / 4096)
-    
-    # ダメージ補正（壁、特性、アイテム等）
-    dmg = round_half_down(dmg * r_dmg / 4096)
-    
-    # まもる貫通系補正
-    dmg = round_half_down(dmg * r_protect / 4096)
-    
-    # 最小ダメージ保証
-    if dmg == 0 and r_def_type > 0:  # タイプ相性が0でない
-        dmg = 1
-    
-    damages[i] = dmg
-```
-
-#### イベントから補正値を取得
-
-```python
-# タイプ相性補正（攻撃側）
-r_atk_type = events.emit(
-    Event.ON_CALC_ATK_TYPE_MODIFIER,
-    イベントContext(attacker=attacker, defender=defender, move=move),
-    4096  # 初期値（等倍）
-)
-
-# タイプ相性補正（防御側）
-r_def_type = events.emit(
-    Event.ON_CALC_DEF_TYPE_MODIFIER,
-    イベントContext(attacker=attacker, defender=defender, move=move),
-    4096
-)
-
-# やけど補正
-r_burn = events.emit(
-    Event.ON_CALC_BURN_MODIFIER,
-    イベントContext(attacker=attacker, defender=defender, move=move),
-    4096
-)
-
-# ダメージ補正
-r_dmg = events.emit(
-    Event.ON_CALC_DAMAGE_MODIFIER,
-    イベントContext(attacker=attacker, defender=defender, move=move),
-    4096
-)
-
-# まもる貫通系補正
-r_protect = events.emit(
-    Event.ON_CALC_PROTECT_MODIFIER,
-    イベントContext(attacker=attacker, defender=defender, move=move),
-    4096
-)
-```
 
 ## 参考資料
 
