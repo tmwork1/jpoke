@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import EventManager
     from jpoke.model.pokemon import Pokemon

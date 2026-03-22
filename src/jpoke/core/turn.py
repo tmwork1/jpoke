@@ -172,7 +172,7 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-        # 行動前の処理 (テラスタルなど)
+        # 技発動フェーズに移る直前の処理 (テラスタルなど)
         self.events.emit(Event.ON_BEFORE_MOVE)
 
         # 技の処理
@@ -186,8 +186,10 @@ class TurnController:
             if not self.battle.has_interrupt():
                 self.battle.add_event_log(player, LogCode.ACTION_START,
                                           payload={"pokemon": attacker.name})
+
                 # コマンドを取得
                 command = player.reserved_commands.pop(0)
+
                 # 技を実行
                 move = self.battle.command_to_move(player, command)
                 self.battle.run_move(attacker, move)

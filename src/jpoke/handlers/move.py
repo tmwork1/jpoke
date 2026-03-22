@@ -127,6 +127,21 @@ def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
+def きあいパンチ_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """きあいパンチの発動可否を判定する。
+
+    行動前に実際の攻撃ダメージを受けていた場合は不発になる。
+    """
+    if ctx.attacker.hits_taken > 0:
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.ACTION_BLOCKED,
+            payload={"reason": "きあいパンチ"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ぼうふうの天候による命中率補正。
 
@@ -165,4 +180,33 @@ def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     weather = battle.weather_manager.current.name
     if weather == "ゆき":
         return HandlerReturn(value=None)  # 必中
+    return HandlerReturn(value=value)
+
+
+def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """はやてがえしの発動条件を判定する。
+
+    相手が未行動かつ優先攻撃技を選択している時のみ成功する。
+    """
+    defender_player = battle.find_player(ctx.defender)
+
+    # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
+    if not defender_player.reserved_commands:
+        return HandlerReturn(value=False, stop_event=True)
+
+    defender_command = defender_player.reserved_commands[0]
+    is_move_command = defender_command.is_move_execution()
+    if not is_move_command:
+        return HandlerReturn(value=False, stop_event=True)
+
+    defender_move = battle.command_to_move(defender_player, defender_command)
+
+    # 優先度が上がっていても変化技には失敗する。
+    if not defender_move.is_attack:
+        return HandlerReturn(value=False, stop_event=True)
+
+    priority = battle.speed_calculator.calc_move_priority(ctx.defender, defender_move)
+    if priority <= 0:
+        return HandlerReturn(value=False, stop_event=True)
+
     return HandlerReturn(value=value)

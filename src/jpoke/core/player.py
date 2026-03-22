@@ -91,6 +91,8 @@ class Player:
         交代フラグをクリアする。
         """
         self.has_switched = False
+        if self.active is not None:
+            self.active.init_turn()
 
     def reserve_command(self, command: Command):
         """コマンドを予約する。

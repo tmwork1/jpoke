@@ -121,6 +121,13 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
+def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
+    if ctx.move.has_label("punch"):
+        value = value * 4915 // 4096
+    return HandlerReturn(value=value)
+
+
 def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """めんえき特性: どく・もうどく状態を防ぐ。
 

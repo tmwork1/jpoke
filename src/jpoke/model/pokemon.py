@@ -108,6 +108,10 @@ class Pokemon:
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
 
+    def init_turn(self):
+        """ターン初期化処理。"""
+        self.hits_taken = 0
+
     @classmethod
     def reconstruct_from_log(cls, data: dict) -> Pokemon:
         """ログデータからポケモンを復元する。

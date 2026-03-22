@@ -311,7 +311,14 @@ ABILITIES: dict[str, AbilityData] = {
     "ちどりあし": AbilityData(),
     "ちょすい": AbilityData(),
     "てきおうりょく": AbilityData(),
-    "てつのこぶし": AbilityData(),
+    "てつのこぶし": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.てつのこぶし,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "てつのトゲ": AbilityData(
         flags=[
             "undeniable"

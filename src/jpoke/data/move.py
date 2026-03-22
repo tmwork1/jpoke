@@ -590,6 +590,12 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         priority=-3,
         labels=["contact", "non_negoto", "punch"],
+        handlers={
+            Event.ON_CHECK_MOVE: h.MoveHandler(
+                h.きあいパンチ_check_move,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "ギガインパクト": MoveData(
         type="ノーマル",
@@ -1905,6 +1911,14 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         priority=3,
         labels=["contact"],
+        handlers={
+            Event.ON_CHECK_MOVE: h.MoveHandler(
+                h.はやてがえし_check_move,
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                partial(common.apply_volatile, volatile="ひるみ", target_spec="defender:self", source_spec="attacker:self"),
+            )
+        }
     ),
     "バリアーラッシュ": MoveData(
         type="エスパー",

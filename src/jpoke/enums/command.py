@@ -159,6 +159,10 @@ class Command(Enum):
             self.is_gigamax_move() or \
             self.is_z_move()
 
+    def is_move_execution(self) -> bool:
+        """実際に技実行へ進むコマンドかどうか。"""
+        return self.is_move_family() or self in {Command.FORCED, Command.STRUGGLE}
+
     @classmethod
     def selection_commands(cls):
         """全ての選出コマンドを取得"""

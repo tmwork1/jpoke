@@ -30,7 +30,6 @@ class Event(Enum):
     ON_BEFORE_ACTION = auto()
     ON_BEFORE_MOVE = auto()
     ON_MODIFY_MOVE = auto()
-    ON_SETUP_MOVE = auto()
 
     ON_CHECK_ACTION = auto()
     ON_CONSUME_PP = auto()

@@ -165,9 +165,6 @@ class MoveExecutor:
     def _execute_move(self, ctx: BattleContext):
         """技を実行する内部メソッド。
         """
-        # 技の準備行動
-        self.events.emit(Event.ON_SETUP_MOVE, ctx)
-
         # 行動成功判定（行動者自身を対象にする）
         if not self.events.emit(Event.ON_CHECK_ACTION, ctx, True):
             return
@@ -214,7 +211,9 @@ class MoveExecutor:
 
         # ダメージの適用
         if ctx.damage:
-            self.battle.modify_hp(ctx.defender, -ctx.damage)
+            hp_delta = self.battle.modify_hp(ctx.defender, -ctx.damage)
+            if hp_delta < 0:
+                ctx.defender.hits_taken += 1
 
             # ひんし時の処理
             if ctx.defender.hp == 0:
