@@ -43,7 +43,7 @@ class Volatile(GameEffect):
         """
         super().__init__(VOLATILES[name])
         self.count: int = count
-        self.move_name: str = move_name  # あばれる用
+        self.move_name: str = move_name
         self.hp: int = hp
         self.bind_damage_ratio: float = bind_damage_ratio  # バインドのダメージ比率
 

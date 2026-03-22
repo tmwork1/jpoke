@@ -71,7 +71,7 @@ def test_しんぴのまもり():
 
     assert not battle.ailment_manager.apply(target, "どく")
     assert not target.ailment.is_active
-    assert not battle.volatile_manager.apply_(target, "こんらん", count=3)
+    assert not battle.volatile_manager.apply(target, "こんらん", count=3)
     assert not target.has_volatile("こんらん")
 
 

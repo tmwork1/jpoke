@@ -103,7 +103,7 @@ def start_battle(ally: list[Pokemon] | None = None,
             if not volatiles[idx]:
                 continue
             for name, count in volatiles[idx].items():
-                battle.volatile_manager.apply_(mon, name, count=count)
+                battle.volatile_manager.apply(mon, name, count=count)
 
     # ターン進行
     for _ in range(turn):

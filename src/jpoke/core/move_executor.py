@@ -175,6 +175,10 @@ class MoveExecutor:
         # 技の宣言、PP消費
         self.events.emit(Event.ON_CONSUME_PP, ctx)
 
+        # 溜め技の準備処理
+        if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
+            return
+
         # 発動成功判定
         if not self.events.emit(Event.ON_CHECK_MOVE, ctx, True):
             return
@@ -186,7 +190,7 @@ class MoveExecutor:
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
 
-        # 命中判定（仕様書: ON_TRY_MOVE終了後のInterrupt）
+        # 命中判定
         if not self.check_hit(ctx.attacker, ctx.move):
             return
 
@@ -292,5 +296,3 @@ class MoveExecutor:
             BattleContext(source=attacker, move=move),
             value=move.category
         )
-
-

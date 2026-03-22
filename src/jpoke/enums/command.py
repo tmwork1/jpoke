@@ -20,7 +20,7 @@ class Command(Enum):
     """
     # 特殊コマンド
     STRUGGLE = auto()  # わるあがき
-    RAMPAGE = auto()  # あばれる（強制技）
+    FORCED = auto()  # 強制再行動（あばれる/かくれる技の2ターン目）
 
     # 選出コマンド (0-9)
     SELECT_0 = auto()

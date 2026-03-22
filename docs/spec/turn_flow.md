@@ -8,7 +8,7 @@
 - **同一Priority値の複数の処理は、実行順序が不定である**（ハンドラーの登録順、素早さなど実装依存）
 - **イベント全体の発火順序は、ターン処理フロー内で定義された順（Interrupt含む）に従う**
 
-例）ON_TRY_MOVE イベント内：
+例）ON_CHECK_MOVE イベント内：
 ```
 Priority 10: こだわり系判定
 Priority 20: ミクルのみ消費
@@ -158,7 +158,7 @@ Priority 40-100: その他判定
 |----------|------|
 | 20 | アンコール |
 
-## Event.ON_PREPARE_MOVE
+## Event.ON_SETUP_MOVE
 
 特定の技の準備行動
 
@@ -171,7 +171,7 @@ Priority 40-100: その他判定
 
 ---
 
-## Event.ON_TRY_ACTION
+## Event.ON_CHECK_ACTION
 
 行動可能かどうかの判定
 
@@ -215,10 +215,22 @@ PP消費時の処理
 
 ---
 
-## Event.ON_TRY_MOVE
+## Event.ON_MOVE_CHARGE
 
-技使用可能かどうかの判定（膨大な判定処理）
+技をためる処理
 
+| Priority | 処理 |
+|----------|------|
+| 100 | みらいよち・はめつのねがい: 状態付与 |
+| 100 | いかり: いかり状態になる |
+| 100 | へんげんじざい・リベロの発動 |
+| 100 | ロケットずつき: ぼうぎょ上昇 |
+| 100 | メテオビーム: とくこう上昇 |
+| 100 | 隠れる技: 状態変化 |
+
+## Event.ON_CHECK_MOVE
+
+技使用可能かどうかの判定
 
 | Priority | 処理 |
 |----------|------|
@@ -257,10 +269,6 @@ PP消費時の処理
 | 50 | エコーボイス: 次ターン威力上昇 |
 | 50 | いかり: いかり状態になる |
 | 60 | へんげんじざい・リベロの発動 |
-| 70 | ロケットずつき: ぼうぎょ上昇 |
-| 70 | メテオビーム: とくこう上昇 |
-| 70 | 姿を隠す技: 状態変化 |
-| 70 | ダイビング: フォルムチェンジ |
 | 70 | パワフルハーブ使用・溜め中断 |
 | 80 | よこどりで技が盗まれる |
 | 90 | 対象が全員ひんし |
@@ -343,7 +351,7 @@ PP消費時の処理
 
 ---
 
-## Event.ON_TRY_IMMUNE
+## Event.ON_CHECK_IMMUNE
 
 技が無効化されないかの最終判定
 
@@ -713,9 +721,9 @@ HP支払い時の処理
 ### イベント別進捗
 
 - ON_SWITCH_IN: 0/100+
-- ON_TRY_ACTION: 0/30+
-- ON_TRY_MOVE: 0/150+
-- ON_TRY_IMMUNE: 0/100+
+- ON_CHECK_ACTION: 0/30+
+- ON_CHECK_MOVE: 0/150+
+- ON_CHECK_IMMUNE: 0/100+
 - ON_MODIFY_DAMAGE: 0/7
 - ON_HIT: 0/9
 - ON_DAMAGE: 0/30+
@@ -724,7 +732,7 @@ HP支払い時の処理
 
 ## 関連ファイル
 
-- 実装: [src/jpoke/core/turn_controller.py](../../src/jpoke/core/turn_controller.py)
+- 実装: [src/jpoke/core/turn.py](../../src/jpoke/core/turn.py)
 - ハンドラー: [src/jpoke/handlers/](../../src/jpoke/handlers/)
 
 ---

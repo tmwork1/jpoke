@@ -130,7 +130,7 @@ def test_エレキフィールド_ねむけ防止():
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
     target = battle.actives[0]
-    assert not battle.volatile_manager.apply_(target, "ねむけ", count=2)
+    assert not battle.volatile_manager.apply(target, "ねむけ", count=2)
     assert not target.has_volatile("ねむけ")
 
     floating_battle = t.start_battle(
@@ -138,7 +138,7 @@ def test_エレキフィールド_ねむけ防止():
         terrain=("エレキフィールド", DEFAULT_DURATION),
     )
     floating_target = floating_battle.actives[0]
-    assert floating_battle.volatile_manager.apply_(floating_target, "ねむけ", count=2)
+    assert floating_battle.volatile_manager.apply(floating_target, "ねむけ", count=2)
     assert floating_target.has_volatile("ねむけ")
 
 
@@ -246,7 +246,7 @@ def test_ミストフィールド_混乱防止():
         terrain=("ミストフィールド", DEFAULT_DURATION),
     )
     mon = battle.actives[0]
-    result = battle.volatile_manager.apply_(mon, "こんらん", count=3)
+    result = battle.volatile_manager.apply(mon, "こんらん", count=3)
     assert not result, "ミストフィールド下で混乱が付与された"
     assert "こんらん" not in mon.volatiles, "混乱状態が追加されている"
 

@@ -431,12 +431,12 @@ class Battle:
             commands
         )
 
-        if Command.RAMPAGE in commands:
-            return [Command.RAMPAGE]
+        if Command.FORCED in commands:
+            return [Command.FORCED]
 
         # 技がない場合はわるあがきを追加
-        if not any(cmd.is_move_family() for cmd in commands):
-            commands += [Command.STRUGGLE]
+        if not commands:
+            commands = [Command.STRUGGLE]
 
         # 交代コマンドを追加
         commands += self.get_available_switch_commands(player)
@@ -528,8 +528,11 @@ class Battle:
         attacker = player.active
         if command == Command.STRUGGLE:
             return Move("わるあがき")
-        elif command == Command.RAMPAGE:
-            return Move(attacker.volatiles["あばれる"].move_name)
+        elif command == Command.FORCED:
+            move_name = self.query_manager.get_forced_move_name(attacker)
+            if move_name:
+                return Move(move_name)
+            return Move("わるあがき")
         elif command.is_z_move():
             return Move("わるあがき")
         else:

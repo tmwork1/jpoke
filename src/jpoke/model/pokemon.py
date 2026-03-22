@@ -757,4 +757,4 @@ class Pokemon:
         Returns:
             指定揮発性状態を持っていればTrue
         """
-        return name in self.volatiles and self.volatiles[name].is_active
+        return name in self.volatiles

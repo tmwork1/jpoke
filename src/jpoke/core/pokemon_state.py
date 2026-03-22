@@ -146,13 +146,13 @@ class VolatileManager:
         """
         self.battle = battle
 
-    def apply_(self,
-               mon: Pokemon,
-               name: VolatileName,
-               count: int = 1,
-               move: Move | str = "",
-               hp: int = 0,
-               source: Pokemon | None = None) -> bool:
+    def apply(self,
+              mon: Pokemon,
+              name: VolatileName,
+              count: int = 1,
+              move: Move | str = "",
+              hp: int = 0,
+              source: Pokemon | None = None) -> bool:
         """揮発性状態を付与する。
 
         Args:
@@ -204,8 +204,17 @@ class VolatileManager:
         Note:
             指定された揮発性状態がない場合は失敗する。
         """
+        # count=0 の失効直後も辞書には残っているため、存在判定は辞書キーで行う。
         if not mon.has_volatile(name):
             return False
+
+        # 揮発状態の終了時イベントを発火する。
+        self.battle.events.emit(
+            Event.ON_VOLATILE_END,
+            BattleContext(source=mon),
+            name,
+        )
+
         mon.volatiles.pop(name).unregister_handlers(self.battle.events, mon)
         return True
 
@@ -295,16 +304,23 @@ class PokemonQueryManager:
         return trapped
 
     def is_nervous(self, pokemon: Pokemon) -> bool:
-        """びんじょう状態か判定する。
+        """きんちょうかん状態か判定する。
 
         Args:
             pokemon: 対象のポケモン
 
         Returns:
-            びんじょう状態の場合True
+            きんちょうかん状態の場合True
         """
         return self.battle.events.emit(
             Event.ON_CHECK_NERVOUS,
             BattleContext(source=pokemon),
             False
         )
+
+    def get_forced_move_name(self, pokemon: Pokemon) -> str | None:
+        """強制行動中のポケモンが実行すべき技名を返す。"""
+        for volatile in pokemon.volatiles.values():
+            if volatile.data.forced:
+                return volatile.move_name
+        return None

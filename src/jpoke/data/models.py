@@ -70,4 +70,5 @@ class AilmentData:
 @dataclass
 class VolatileData:
     handlers: dict[Event, Handler] = field(default_factory=dict)
+    forced: bool = False
     name: str = ""

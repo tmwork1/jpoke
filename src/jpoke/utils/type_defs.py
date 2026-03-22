@@ -2,7 +2,7 @@ from typing import Literal
 
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
-# role:side 形式で、特定の側のロールを指定 (例: "target:foe", "source:self")
+# role:side 形式で、特定の側のロールを指定
 RoleSpec = Literal[
     "source:self", "source:foe",
     "target:self", "target:foe",
@@ -52,6 +52,7 @@ VolatileName = Literal[
     "こだわり",
     "こんらん",
     "さわぐ",
+    "さわがしい",
     "しおづけ",
     "じごくずき",
     "じゅうでん",
@@ -78,6 +79,7 @@ VolatileName = Literal[
     "メロメロ",
     "やどりぎのタネ",
     "ロックオン",
+    "かくれる",
     "あなをほる",
     "そらをとぶ",
     "ダイビング",

@@ -169,8 +169,10 @@ class EventManager:
         # ハンドラの対象の判定
         if rh.handler.side == "self":
             return ctx_mon == rh.subject
-        else:
+        elif rh.handler.side == "foe":
             return ctx_mon == self.battle.foe(rh.subject)
+        else:
+            return False
 
     def _sort_handlers(self, rhs: list[RegisteredHandler]) -> list[RegisteredHandler]:
         if len(rhs) <= 1:

@@ -109,6 +109,11 @@ class SwitchManager:
         old = player.active
         if old is not None:
             self.battle.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
+
+            # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
+            for name in list(old.volatiles.keys()):
+                self.battle.volatile_manager.remove(old, name)
+
             self.unregister_switch_out_handlers(old)
             old.bench_reset()
             self.battle.add_event_log(player, LogCode.SWITCH_OUT,

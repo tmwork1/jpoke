@@ -34,12 +34,12 @@ class Event(Enum):
 
     ON_CHECK_ACTION = auto()
     ON_CONSUME_PP = auto()
+    ON_MOVE_CHARGE = auto()
     ON_CHECK_MOVE = auto()
     ON_CHECK_IMMUNE = auto()
     ON_CHECK_SUBSTITUTE = auto()
     ON_CHECK_PROTECT = auto()
     ON_PROTECT_SUCCESS = auto()
-    ON_CHECK_INVULNERABLE = auto()
     ON_CHECK_REFLECT = auto()
     ON_HIT = auto()
     ON_PAY_HP = auto()
@@ -63,6 +63,7 @@ class Event(Enum):
     ON_BEFORE_HEAL = auto()
     ON_BEFORE_APPLY_AILMENT = auto()
     ON_BEFORE_APPLY_VOLATILE = auto()
+    ON_VOLATILE_END = auto()
     ON_BEFORE_MODIFY_STAT = auto()
 
     # チェック系イベント

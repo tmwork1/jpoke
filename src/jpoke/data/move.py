@@ -88,7 +88,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
     ),
     "アームハンマー": MoveData(
         type="かくとう",
@@ -243,8 +242,8 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
-                partial(common.apply_volatile, volatile="あなをほる", target_spec="attacker:self", source_spec="attacker:self", count=1),
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                partial(v.charge_hidden_move, name="あなをほる"),
             )
         }
     ),
@@ -1007,6 +1006,11 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                partial(v.charge_hidden_move, name="シャドーダイブ"),
+            )
+        }
     ),
     "シャドーパンチ": MoveData(
         type="ゴースト",
@@ -1160,6 +1164,11 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=95,
         labels=["contact"],
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                partial(v.charge_hidden_move, name="そらをとぶ"),
+            )
+        }
     ),
     "たいあたり": MoveData(
         type="ノーマル",
@@ -1185,6 +1194,11 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                partial(v.charge_hidden_move, name="ダイビング"),
+            )
+        }
     ),
     "だいふんげき": MoveData(
         type="ほのお",

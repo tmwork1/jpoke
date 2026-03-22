@@ -5,7 +5,7 @@ Note:
 """
 from functools import partial
 
-from jpoke.enums import Event
+from jpoke.enums import Event, Command
 from jpoke.core import HandlerReturn
 from jpoke.handlers import common, volatile as h
 from .models import VolatileData
@@ -24,7 +24,12 @@ def common_setup() -> None:
     for name, data in VOLATILES.items():
         VOLATILES[name].name = name
         for event in data.handlers:
-            data.handlers[event].log_text = name
+            handler = data.handlers[event]
+            if isinstance(handler, list):
+                for hnd in handler:
+                    hnd.log_text = name
+            else:
+                handler.log_text = name
 
 
 VOLATILES: dict[str, VolatileData] = {
@@ -39,9 +44,10 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "あばれる": VolatileData(
+        forced=True,
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                h.あばれる_modify_command_options,
+                lambda *args: HandlerReturn(value=[Command.FORCED], stop_event=True),
                 subject_spec="source:self",
             ),
             Event.ON_DAMAGE: h.VolatileHandler(
@@ -165,17 +171,36 @@ VOLATILES: dict[str, VolatileData] = {
     "さわぐ": VolatileData(
         handlers={
             Event.ON_MODIFY_MOVE: h.VolatileHandler(
-                h.さわぐ_before_move,
+                h.さわぐ_modify_move,
                 subject_spec="attacker:self",
-                priority=200,
             ),
             Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
                 h.さわぐ_prevent_sleep,
                 subject_spec="target:self",
             ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.VolatileHandler(
+                h.さわぐ_prevent_nemuke,
+                subject_spec="target:self",
+            ),
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(h.tick_volatile, name="さわぐ"),
+                h.さわぐ_tick,
                 subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.さわぐ_on_volatile_end,
+                subject_spec="source:self",
+            ),
+        }
+    ),
+    "さわがしい": VolatileData(
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
+                h.さわぐ_prevent_sleep,
+                subject_spec="target:self",
+            ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.VolatileHandler(
+                h.さわぐ_prevent_nemuke,
+                subject_spec="target:self",
             ),
         }
     ),
@@ -341,8 +366,8 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ふういん": VolatileData(
         handlers={
-            Event.ON_MODIFY_MOVE: h.VolatileHandler(
-                h.ふういん_,
+            Event.ON_CHECK_ACTION: h.VolatileHandler(
+                h.ふういん,
                 subject_spec="defender:self",
                 priority=100,
             ),
@@ -483,41 +508,25 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
-
-    # 隠れる系
-    "あなをほる": VolatileData(
+    "かくれる": VolatileData(
+        forced=True,
         handlers={
-            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
-                partial(h.姿消し_check_invulnerable, allowed_moves=["じしん", "マグニチュード"]),
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=True),
+                subject_spec="source:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=[Command.FORCED], stop_event=True),
+                subject_spec="source:self",
+            ),
+            Event.ON_CHECK_MOVE: h.VolatileHandler(
+                h.check_hidden_move,
                 subject_spec="defender:self",
                 priority=50
             ),
-        }
-    ),
-    "そらをとぶ": VolatileData(
-        handlers={
-            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
-                partial(h.姿消し_check_invulnerable, allowed_moves=["かぜおこし", "たつまき", "かみなり"]),
-                subject_spec="defender:self",
-                priority=50
-            ),
-        }
-    ),
-    "ダイビング": VolatileData(
-        handlers={
-            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
-                partial(h.姿消し_check_invulnerable, allowed_moves=["なみのり", "うずしお"]),
-                subject_spec="defender:self",
-                priority=50
-            ),
-        }
-    ),
-    "シャドーダイブ": VolatileData(
-        handlers={
-            Event.ON_CHECK_INVULNERABLE: h.VolatileHandler(
-                partial(h.姿消し_check_invulnerable, allowed_moves=[]),
-                subject_spec="defender:self",
-                priority=50
+            Event.ON_HIT: h.VolatileHandler(
+                partial(h.remove_volatile, name="かくれる"),
+                subject_spec="attacker:self",
             ),
         }
     ),
