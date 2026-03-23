@@ -181,8 +181,6 @@ class DamageCalculator:
             4096
         ) / 4096
 
-        print(f"{r_atk_type=}, {r_def_type=}, {r_burn=}, {r_dmg=}, {r_protect=}")
-
         dmgs = [0]*16
         for i in range(16):
             # 乱数 85~100%

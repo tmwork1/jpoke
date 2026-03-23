@@ -6,7 +6,7 @@ from jpoke.enums import LogCode
 import test_utils as t
 
 
-def test_はやてがえし_成功条件_先制攻撃技にのみ成功():
+def test_はやてがえし_先制攻撃技に成功():
     """はやてがえし: 相手が先制攻撃技を選んだ時のみ成功し、ひるませる。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["はやてがえし"])],
@@ -22,7 +22,7 @@ def test_はやてがえし_成功条件_先制攻撃技にのみ成功():
     assert t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=1)
 
 
-def test_はやてがえし_失敗条件_通常攻撃技には失敗():
+def test_はやてがえし_通常攻撃技には失敗():
     """はやてがえし: 優先度0の攻撃技を選んだ相手には失敗する。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["はやてがえし"])],
@@ -38,7 +38,7 @@ def test_はやてがえし_失敗条件_通常攻撃技には失敗():
     assert not t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=1)
 
 
-def test_はやてがえし_失敗条件_先制変化技には失敗():
+def test_はやてがえし_先制変化技には失敗():
     """はやてがえし: 先制変化技（まもる）には失敗する。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["はやてがえし"])],
@@ -52,7 +52,7 @@ def test_はやてがえし_失敗条件_先制変化技には失敗():
     assert not t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=1)
 
 
-def test_きあいパンチ_成功条件_行動前にダメージを受けていない():
+def test_きあいパンチ_行動前にダメージを受けず成功():
     """きあいパンチ: 行動前に被弾していなければ成功する。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["きあいパンチ"])],
@@ -66,7 +66,7 @@ def test_きあいパンチ_成功条件_行動前にダメージを受けてい
     assert battle.actives[1].hp < before_foe_hp
 
 
-def test_きあいパンチ_失敗条件_行動前に攻撃ダメージを受ける():
+def test_きあいパンチ_攻撃ダメージを受けると失敗():
     """きあいパンチ: 行動前に攻撃ダメージを受けた場合は不発。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["きあいパンチ"])],
@@ -83,7 +83,7 @@ def test_きあいパンチ_失敗条件_行動前に攻撃ダメージを受け
     assert t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=0)
 
 
-def test_きあいパンチ_成功条件_みがわりへの被弾では中断しない():
+def test_きあいパンチ_みがわりへの被弾では中断しない():
     """きあいパンチ: みがわりが被弾しても使用者は中断されない。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["きあいパンチ"])],
