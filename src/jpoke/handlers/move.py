@@ -119,6 +119,19 @@ def _is_type_immune(battle: Battle, ctx: BattleContext) -> bool:
     return False
 
 
+def ohko_check_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """一撃必殺技のタイプ無効判定。"""
+    immune = _is_type_immune(battle, ctx)
+    return HandlerReturn(value=immune, stop_event=immune)
+
+
+def ohko_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """一撃必殺技の確定ダメージを計算する。"""
+    if _is_type_immune(battle, ctx):
+        return HandlerReturn(value=0)
+    return HandlerReturn(value=ctx.defender.hp)
+
+
 def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     if _is_type_immune(battle, ctx):
@@ -127,20 +140,18 @@ def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
+def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
+    ctx.いのちがけ_original_hp = ctx.attacker.hp
+    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="いのちがけ")
+    return HandlerReturn()
+
+
 def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """いのちがけの固定ダメージを計算する。"""
+    """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
     if _is_type_immune(battle, ctx):
         return HandlerReturn(value=0)
-
-    return HandlerReturn(value=ctx.attacker.hp)
-
-
-def いのちがけ_hit(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """いのちがけ命中時に使用者をひんしにする。"""
-    substitute_damage = getattr(ctx, "substitute_damage", 0)
-    if ctx.damage > 0 or substitute_damage > 0:
-        battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="いのちがけ")
-    return HandlerReturn()
+    return HandlerReturn(value=getattr(ctx, "いのちがけ_original_hp", 0))
 
 
 def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

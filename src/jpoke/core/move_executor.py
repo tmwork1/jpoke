@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
 from jpoke.model import Pokemon, Move
-from jpoke.enums import Command, LogCode
+from jpoke.enums import Command
 from jpoke.utils.constants import HIT_RANK_MODIFIERS
 
 from .event import Event
@@ -115,22 +115,10 @@ class MoveExecutor:
             self.events.emit(Event.ON_STATUS_HIT, ctx)
             return True
 
-        if ctx.move.has_label("ohko"):
-            type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
-            if type_modifier == 0:
-                self.battle.add_event_log(
-                    ctx.defender,
-                    LogCode.MOVE_IMMUNE,
-                    payload={"move": ctx.move.name, "reason": "タイプ"},
-                )
-                return False
-
-            damage = ctx.defender.hp
-        else:
-            critical = self.check_critical(ctx)
-            damage = self.battle.determine_damage(
-                ctx.attacker, ctx.defender, ctx.move, critical=critical
-            )
+        critical = self.check_critical(ctx)
+        damage = self.battle.determine_damage(
+            ctx.attacker, ctx.defender, ctx.move, critical=critical
+        )
 
         ctx.damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 

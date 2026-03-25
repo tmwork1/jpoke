@@ -1053,6 +1053,16 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         accuracy=30,
         labels=["ohko"],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+                h.ohko_check_immune,
+                subject_spec="defender:self",
+            ),
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.ohko_modify_damage,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "しんそく": MoveData(
         type="ノーマル",
@@ -1384,6 +1394,16 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=30,
         labels=["ohko", "contact"],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+                h.ohko_check_immune,
+                subject_spec="defender:self",
+            ),
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.ohko_modify_damage,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "つばさでうつ": MoveData(
         type="ひこう",
@@ -1871,6 +1891,16 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=30,
         labels=["ohko", "contact"],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+                h.ohko_check_immune,
+                subject_spec="defender:self",
+            ),
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.ohko_modify_damage,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "はさむ": MoveData(
         type="ノーマル",
@@ -2628,7 +2658,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_PAY_HP: h.MoveHandler(
-                h.いのちがけ_hit,
+                h.いのちがけ_pay_hp,
                 subject_spec="attacker:self",
             ),
             Event.ON_MODIFY_DAMAGE: h.MoveHandler(
@@ -3256,6 +3286,16 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=30,
         labels=["ohko"],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+                h.ohko_check_immune,
+                subject_spec="defender:self",
+            ),
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.ohko_modify_damage,
+                subject_spec="attacker:self",
+            ),
+        }
 
     ),
     "ソーラービーム": MoveData(
