@@ -32,7 +32,9 @@ class BattleContext:
                  defender: Pokemon | None = None,
                  move: Move | None = None,
                  field: Field | None = None,
-                 damage: int = 0):
+                 damage: int = 0,
+                 hit_index: int = 1,
+                 hit_count: int = 1):
         """BattleContext を初期化する。
 
         Args:
@@ -54,6 +56,8 @@ class BattleContext:
         self.move = move
         self.field = field
         self.damage = damage
+        self.hit_index = hit_index
+        self.hit_count = hit_count
 
         self.fainted: bool = False  # 攻撃によりひんしになったかどうかのフラグ
 
@@ -62,10 +66,18 @@ class BattleContext:
         """攻撃側のポケモン（source のエイリアス）。"""
         return self.source
 
+    @attacker.setter
+    def attacker(self, value: Pokemon | None):
+        self.source = value
+
     @property
     def defender(self) -> Pokemon | None:
         """防御側のポケモン（target のエイリアス）。"""
         return self.target
+
+    @defender.setter
+    def defender(self, value: Pokemon | None):
+        self.target = value
 
     def get(self, role: ContextRole) -> Pokemon | None:
         """指定されたロールのポケモンを取得する。

@@ -40,6 +40,7 @@ class Event(Enum):
     ON_CHECK_PROTECT = auto()
     ON_PROTECT_SUCCESS = auto()
     ON_CHECK_REFLECT = auto()
+    ON_STATUS_HIT = auto()
     ON_HIT = auto()
     ON_PAY_HP = auto()
     ON_MODIFY_DAMAGE = auto()

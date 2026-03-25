@@ -105,6 +105,60 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
 
 # ===== 技個別のハンドラ =====
 
+
+def _is_type_immune(battle: Battle, ctx: BattleContext) -> bool:
+    """タイプ相性で無効化されるかどうかを判定する。"""
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
+    if type_modifier == 0:
+        battle.add_event_log(
+            ctx.defender,
+            LogCode.MOVE_IMMUNE,
+            payload={"move": ctx.move.name, "reason": "タイプ"},
+        )
+        return True
+    return False
+
+
+def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """対象の現在HPの半分を与える固定ダメージを計算する。"""
+    if _is_type_immune(battle, ctx):
+        return HandlerReturn(value=0)
+
+    return HandlerReturn(value=max(1, ctx.defender.hp // 2))
+
+
+def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """いのちがけの固定ダメージを計算する。"""
+    if _is_type_immune(battle, ctx):
+        return HandlerReturn(value=0)
+
+    return HandlerReturn(value=ctx.attacker.hp)
+
+
+def いのちがけ_hit(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """いのちがけ命中時に使用者をひんしにする。"""
+    substitute_damage = getattr(ctx, "substitute_damage", 0)
+    if ctx.damage > 0 or substitute_damage > 0:
+        battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="いのちがけ")
+    return HandlerReturn()
+
+
+def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """使用者レベルと同値の固定ダメージを計算する。"""
+    if _is_type_immune(battle, ctx):
+        return HandlerReturn(value=0)
+
+    return HandlerReturn(value=ctx.attacker.level)
+
+
+def がむしゃら_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """がむしゃらの固定ダメージを計算する。"""
+    if _is_type_immune(battle, ctx):
+        return HandlerReturn(value=0)
+
+    return HandlerReturn(value=max(0, ctx.defender.hp - ctx.attacker.hp))
+
+
 def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かみなりの天候による命中率補正。
 

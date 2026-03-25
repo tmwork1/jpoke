@@ -1,4 +1,4 @@
-"""技データ定義モジュール。
+﻿"""技データ定義モジュール。
 
 Note:
     このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
@@ -280,6 +280,12 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         accuracy=90,
         labels=["contact"],
+        handlers={
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.HP_ratio_damage,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "いじげんラッシュ": MoveData(
         type="あく",
@@ -523,6 +529,12 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.がむしゃら_modify_damage,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "からげんき": MoveData(
         type="ノーマル",
@@ -1040,6 +1052,7 @@ MOVES: dict[str, MoveData] = {
         category="物理",
         pp=5,
         accuracy=30,
+        labels=["ohko"],
     ),
     "しんそく": MoveData(
         type="ノーマル",
@@ -1300,6 +1313,12 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.level_fixed_damage,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "ついばむ": MoveData(
         type="ひこう",
@@ -1364,7 +1383,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=30,
-        labels=["contact"],
+        labels=["ohko", "contact"],
     ),
     "つばさでうつ": MoveData(
         type="ひこう",
@@ -1851,7 +1870,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=30,
-        labels=["contact"],
+        labels=["ohko", "contact"],
     ),
     "はさむ": MoveData(
         type="ノーマル",
@@ -2606,7 +2625,17 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=5,
         power=0,
-        accuracy=100
+        accuracy=100,
+        handlers={
+            Event.ON_PAY_HP: h.MoveHandler(
+                h.いのちがけ_hit,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.いのちがけ_modify_damage,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "いびき": MoveData(
         type="ノーマル",
@@ -2785,7 +2814,13 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=10,
         power=0,
-        accuracy=90
+        accuracy=90,
+        handlers={
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.HP_ratio_damage,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "かふんだんご": MoveData(
         type="むし",
@@ -3220,6 +3255,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=0,
         accuracy=30,
+        labels=["ohko"],
 
     ),
     "ソーラービーム": MoveData(
@@ -3428,7 +3464,13 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=15,
         power=0,
-        accuracy=100
+        accuracy=100,
+        handlers={
+            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+                h.level_fixed_damage,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "なみのり": MoveData(
         type="みず",
@@ -4246,7 +4288,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="EVA", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4259,7 +4301,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4304,7 +4346,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["non_encore"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="アンコール", target_spec="defender:self", source_spec="attacker:self", count=3),
             )
         }
@@ -4342,7 +4384,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="いちゃもん", target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4403,7 +4445,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         labels=["sound"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4416,7 +4458,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4461,7 +4503,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="ACC", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4609,7 +4651,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -4630,7 +4672,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -4675,7 +4717,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="EVA", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4688,7 +4730,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         labels=["sound"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4741,7 +4783,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -4778,7 +4820,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=3, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -4808,7 +4850,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -4901,7 +4943,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5024,7 +5066,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         labels=["wind"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.activate_weather, weather="すなあらし", source_spec="attacker:self"),
             )
         }
@@ -5037,7 +5079,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="ACC", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5105,10 +5147,10 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="タールショット", target_spec="defender:self", source_spec="attacker:self"),
             ),
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5149,7 +5191,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ちいさくなる", target_spec="attacker:self", source_spec="attacker:self"),
             ),
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="EVA", v=2, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5268,7 +5310,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=2, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5352,7 +5394,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_ailment, ailment="もうどく", target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5430,7 +5472,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="D", v=2, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5467,7 +5509,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["sound"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5488,7 +5530,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5534,7 +5576,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5750,7 +5792,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["dance"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=-2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
@@ -5846,7 +5888,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=3, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5917,7 +5959,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_CHECK_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まるくなる", target_spec="attacker:self", source_spec="attacker:self"),
             ),
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -6115,7 +6157,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ロックオン", target_spec="defender:self", source_spec="attacker:self", count=2),
             )
         }
@@ -6127,7 +6169,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -6156,7 +6198,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="C", v=2, target_spec="attacker:self", source_spec="attacker:self"),
             )
         }

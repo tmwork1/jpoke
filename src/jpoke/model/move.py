@@ -28,6 +28,7 @@ class Move(GameEffect):
         self._initial_pp: int = pp if pp else self.data.pp
         self.pp: int = self._initial_pp
         self._type: Type = self.data.type
+        self._power: int | None = self.data.power
         self.data: MoveData  # type hint
 
     def init_game(self):
@@ -38,6 +39,7 @@ class Move(GameEffect):
         self.reset_effect()
         self.pp = self._initial_pp
         self._type = self.data.type
+        self._power = self.data.power
 
     def bench_reset(self):
         """ベンチに戻ったときのリセット処理。
@@ -45,6 +47,7 @@ class Move(GameEffect):
         技のタイプを元の状態にリセットする。
         """
         self._type: str = self.data.type
+        self._power = self.data.power
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -97,6 +100,13 @@ class Move(GameEffect):
             技の優先度
         """
         return self.data.priority
+
+    @property
+    def power(self) -> int | None:
+        return self._power
+
+    def set_power(self, power: int | None):
+        self._power = power
 
     @property
     def accuracy(self) -> int | None:

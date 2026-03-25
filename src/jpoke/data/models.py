@@ -49,6 +49,10 @@ class MoveData:
     priority: int = 0
     critical_rank: int = 0
     self_targeting: bool = False
+    min_hits: int = 1
+    max_hits: int = 1
+    check_hit_each_time: bool = False
+    power_sequence: tuple[int, ...] = ()
     labels: list[MoveLabel] = field(default_factory=list)
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""

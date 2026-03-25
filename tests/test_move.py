@@ -2,7 +2,8 @@
 
 import pytest
 from jpoke import Pokemon
-from jpoke.enums import LogCode
+from jpoke.core import Handler, HandlerReturn
+from jpoke.enums import Event, LogCode, Command
 import test_utils as t
 
 
@@ -98,6 +99,76 @@ def test_きあいパンチ_みがわりへの被弾では中断しない():
 
     assert battle.actives[1].hp < before_foe_hp
     assert battle.actives[0].hp == before_ally_hp
+
+
+def test_変化技は_ON_STATUS_HIT_のみ発火する():
+    """変化技実行時は ON_HIT ではなく ON_STATUS_HIT が発火する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["まもる"])],
+        foe=[Pokemon("ピカチュウ", moves=["はねる"])],
+    )
+
+    count = {"hit": 0, "status_hit": 0}
+
+    def on_hit(_, __, value):
+        count["hit"] += 1
+        return HandlerReturn(value)
+
+    def on_status_hit(_, __, value):
+        count["status_hit"] += 1
+        return HandlerReturn(value)
+
+    battle.events.on(
+        Event.ON_HIT,
+        Handler(on_hit, subject_spec="attacker:self"),
+        battle.actives[0],
+    )
+    battle.events.on(
+        Event.ON_STATUS_HIT,
+        Handler(on_status_hit, subject_spec="attacker:self"),
+        battle.actives[0],
+    )
+
+    t.reserve_command(battle, ally_command=Command.MOVE_0, foe_command=Command.MOVE_0)
+    battle.advance_turn()
+
+    assert count["status_hit"] == 1
+    assert count["hit"] == 0
+
+
+def test_攻撃技は_ON_HIT_のみ発火する():
+    """攻撃技実行時は ON_STATUS_HIT ではなく ON_HIT が発火する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", moves=["はねる"])],
+    )
+
+    count = {"hit": 0, "status_hit": 0}
+
+    def on_hit(_, __, value):
+        count["hit"] += 1
+        return HandlerReturn(value)
+
+    def on_status_hit(_, __, value):
+        count["status_hit"] += 1
+        return HandlerReturn(value)
+
+    battle.events.on(
+        Event.ON_HIT,
+        Handler(on_hit, subject_spec="attacker:self"),
+        battle.actives[0],
+    )
+    battle.events.on(
+        Event.ON_STATUS_HIT,
+        Handler(on_status_hit, subject_spec="attacker:self"),
+        battle.actives[0],
+    )
+
+    t.reserve_command(battle, ally_command=Command.MOVE_0, foe_command=Command.MOVE_0)
+    battle.advance_turn()
+
+    assert count["hit"] == 1
+    assert count["status_hit"] == 0
 
 
 if __name__ == "__main__":

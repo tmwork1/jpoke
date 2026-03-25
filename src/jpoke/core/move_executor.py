@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
 from jpoke.model import Pokemon, Move
-from jpoke.enums import Command
+from jpoke.enums import Command, LogCode
 from jpoke.utils.constants import HIT_RANK_MODIFIERS
 
 from .event import Event
@@ -45,6 +45,109 @@ class MoveExecutor:
     def events(self) -> EventManager:
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
+
+    def _resolve_hit_count(self, attacker: Pokemon, move: Move) -> int:
+        """連続技の実ヒット回数を決定する。
+
+        Args:
+            attacker: 技を使用するポケモン
+            move: 使用する技
+
+        Returns:
+            今回の実ヒット回数
+        """
+        min_hits = move.data.min_hits
+        max_hits = move.data.max_hits
+
+        if max_hits <= 1:
+            return 1
+        if min_hits == max_hits:
+            return max_hits
+
+        # TODO - スキルリンクの処理をイベントハンドラに移す
+        if attacker.ability.name == "スキルリンク":
+            return max_hits
+
+        # TODO - いかさまダイスの処理をイベントハンドラに移す
+        if attacker.item.name == "いかさまダイス" and (min_hits, max_hits) == (2, 5):
+            return 4 if self.battle.random.random() < 0.5 else 5
+
+        if (min_hits, max_hits) == (2, 5):
+            roll = self.battle.random.random()
+            if roll < 0.375:
+                return 2
+            if roll < 0.75:
+                return 3
+            if roll < 0.875:
+                return 4
+            return 5
+
+        return self.battle.random.randint(min_hits, max_hits)
+
+    def _resolve_hit_power(self, move: Move, hit_index: int) -> int | None:
+        """現在ヒットの威力を取得する。
+
+        Args:
+            move: 使用する技
+            hit_index: 1 始まりのヒット番号
+
+        Returns:
+            ヒットごとの威力。指定がなければ基礎威力を返す。
+        """
+        if move.data.power_sequence:
+            idx = min(hit_index - 1, len(move.data.power_sequence) - 1)
+            return move.data.power_sequence[idx]
+        return move.data.power
+
+    def _execute_hit(self, ctx: BattleContext) -> bool:
+        """1 ヒット分の処理を実行する。
+
+        Args:
+            ctx: 技実行中のバトルコンテキスト
+
+        Returns:
+            処理を継続できる場合はTrue。無効化などで終了する場合はFalse。
+        """
+        if self.events.emit(Event.ON_CHECK_IMMUNE, ctx, False):
+            return False
+
+        if not ctx.move.is_attack:
+            self.events.emit(Event.ON_STATUS_HIT, ctx)
+            return True
+
+        if ctx.move.has_label("ohko"):
+            type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
+            if type_modifier == 0:
+                self.battle.add_event_log(
+                    ctx.defender,
+                    LogCode.MOVE_IMMUNE,
+                    payload={"move": ctx.move.name, "reason": "タイプ"},
+                )
+                return False
+
+            damage = ctx.defender.hp
+        else:
+            critical = self.check_critical(ctx)
+            damage = self.battle.determine_damage(
+                ctx.attacker, ctx.defender, ctx.move, critical=critical
+            )
+
+        ctx.damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
+
+        if ctx.damage:
+            hp_delta = self.battle.modify_hp(ctx.defender, -ctx.damage)
+            if hp_delta < 0:
+                ctx.defender.hits_taken += 1
+
+            if ctx.defender.hp == 0:
+                ctx.fainted = True
+
+        self.events.emit(Event.ON_HIT, ctx)
+
+        if ctx.damage:
+            self.events.emit(Event.ON_DAMAGE, ctx)
+
+        return True
 
     def check_hit(self, attacker: Pokemon, move: Move) -> bool:
         """技の命中判定。
@@ -148,8 +251,8 @@ class MoveExecutor:
             return
 
         # PPが0の技はわるあがきに置き換える
-        if move.pp == 0:
-            move = Move("わるあがき")
+        # if move.pp == 0:
+        #    move = Move("わるあがき")
 
         ctx.move = move
 
@@ -163,9 +266,14 @@ class MoveExecutor:
         ctx.move.unregister_handlers(self.events, ctx.attacker)
 
     def _execute_move(self, ctx: BattleContext):
-        """技を実行する内部メソッド。
+        """技実行の内部フローを処理する。
+
+        行動可否チェックから PP 消費、命中判定、連続ヒット処理までを担当する。
+
+        Args:
+            ctx: 技実行中のバトルコンテキスト
         """
-        # 行動成功判定（行動者自身を対象にする）
+        # 行動成功判定
         if not self.events.emit(Event.ON_CHECK_ACTION, ctx, True):
             return
 
@@ -187,44 +295,37 @@ class MoveExecutor:
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
 
-        # 命中判定
-        if not self.check_hit(ctx.attacker, ctx.move):
-            return
-
-        # 無効判定 (みがわり含む)
-        if self.events.emit(Event.ON_CHECK_IMMUNE, ctx, False):
-            return
-
         # HPコストの支払い
         self.events.emit(Event.ON_PAY_HP, ctx)
 
-        # 急所判定
-        critical = self.check_critical(ctx)
+        # 連続技のヒット回数を決定
+        hit_count = self._resolve_hit_count(ctx.attacker, ctx.move)
+        ctx.hit_count = hit_count
 
-        # ダメージ計算
-        damage = self.battle.determine_damage(
-            ctx.attacker, ctx.defender, ctx.move, critical=critical
-        )
+        # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
+        should_check_hit = ctx.move.accuracy is not None and not ctx.move.self_targeting
 
-        # ダメージ修正
-        ctx.damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
+        for hit_index in range(1, hit_count + 1):
+            ctx.hit_index = hit_index
+            ctx.fainted = False
+            ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_index))
 
-        # ダメージの適用
-        if ctx.damage:
-            hp_delta = self.battle.modify_hp(ctx.defender, -ctx.damage)
-            if hp_delta < 0:
-                ctx.defender.hits_taken += 1
+            # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
+            need_hit_check = should_check_hit and \
+                (ctx.move.data.check_hit_each_time or hit_index == 1)
+            if need_hit_check and not self.check_hit(ctx.attacker, ctx.move):
+                break
 
-            # ひんし時の処理
-            if ctx.defender.hp == 0:
-                ctx.fainted = True
+            # 無効化されたら中断
+            if not self._execute_hit(ctx):
+                break
 
-        # 技を当てたときの処理（ダメージ情報を含める）
-        self.events.emit(Event.ON_HIT, ctx)
+            # ひんしになったら中断
+            if ctx.fainted:
+                break
 
-        # ダメージを与えたときの処理
-        if damage:
-            self.events.emit(Event.ON_DAMAGE, ctx)
+        # 技の威力を元に戻す（トリプルアクセルなどのため）
+        ctx.move.set_power(ctx.move.data.power)
 
     def generate_context(self, attacker: Pokemon, move: Move) -> BattleContext:
         """BattleContextを生成する。

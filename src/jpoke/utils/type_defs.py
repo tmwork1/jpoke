@@ -106,6 +106,7 @@ MoveLabel = Literal[
     "dance",
     "heal",
     "non_encore",
+    "ohko",
     "powder",
     "pulse",
     "punch",

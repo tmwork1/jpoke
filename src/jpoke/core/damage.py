@@ -134,7 +134,7 @@ class DamageCalculator:
             ダメージのリスト
             ダメージコンテキスト
         """
-        if not move.data.power:
+        if not move.power:
             return [0], dmg_ctx
 
         ctx = BattleContext(attacker=attacker, defender=defender, move=move)
@@ -307,7 +307,7 @@ class DamageCalculator:
             dmg_ctx = DamageContext()
 
         # 技威力
-        final_pow = ctx.move.data.power * dmg_ctx.power_multiplier
+        final_pow = ctx.move.power * dmg_ctx.power_multiplier
 
         # その他の補正
         r_pow = self.events.emit(
