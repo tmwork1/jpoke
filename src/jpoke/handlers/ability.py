@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec
-from jpoke.enums import LogCode
+from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
 
@@ -284,3 +284,57 @@ def どんかん_prevent_volatile(battle: Battle, ctx: BattleContext, value: str
     if value in ["メロメロ", "ちょうはつ", "ゆうわく", "いかく"]:
         return HandlerReturn(value="", stop_event=True)  # 防いでイベント停止
     return HandlerReturn(value=value)
+
+
+def おうごんのからだ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """おうごんのからだ特性: 他のポケモンからの変化技を無効化する。
+
+    酸化しない丈夫な黄金の体が、相手からの変化技をすべて受けつけない。
+    ただし、自分が対象の変化技や場を対象とした技は防がない。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_CHECK_IMMUNE)
+            - target: 防御側（自分）
+            - attacker: 攻撃側（相手）
+            - move: 使用する技
+        value: 現在の無効化状態（初期値：False）
+
+    Returns:
+        HandlerReturn: 変化技を無効化した場合True, stop_event=True
+    """
+    # 場対象技は防がない
+    if ctx.move.field_targeting:
+        return HandlerReturn(value=value)
+
+    # 変化技以外は防がない
+    if ctx.move.category != "変化":
+        return HandlerReturn(value=value)
+
+    # 自分対象技は防がない
+    if ctx.move.self_targeting:
+        return HandlerReturn(value=value)
+
+    # 自分が使う変化技は防がない（同じポケモン）
+    if ctx.attacker == ctx.target:
+        return HandlerReturn(value=value)
+
+    # 防御側特性を確認（かたやぶり・きんしのちから対応）
+    def_ability = battle.events.emit(
+        Event.ON_CHECK_DEF_ABILITY,
+        ctx,
+        ctx.target.ability,
+    )
+
+    # おうごんのからだじゃなければ防がない
+    if def_ability.name != "おうごんのからだ":
+        return HandlerReturn(value=value)
+
+    # ログ出力
+    idx = battle.get_player_index(ctx.target)
+    battle.event_logger.add(
+        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "おうごんのからだ", "success": True}
+    )
+
+    return HandlerReturn(value=True, stop_event=True)

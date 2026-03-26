@@ -247,6 +247,11 @@ class MoveExecutor:
         # 技のハンドラを登録
         ctx.move.register_handlers(self.events, ctx.attacker)
 
+        # 技タイプを実行直前に再評価する。
+        # （テラバーストなどの可変タイプ技対応）
+        move_type = self.get_effective_move_type(ctx.attacker, ctx.move)
+        ctx.move.set_type(move_type)
+
         # 技の実行
         self._execute_move(ctx)
 
@@ -301,6 +306,7 @@ class MoveExecutor:
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = should_check_hit and \
                 (ctx.move.data.check_hit_each_time or hit_index == 1)
+
             if need_hit_check and not self.check_hit(ctx.attacker, ctx.move):
                 break
 
@@ -360,11 +366,12 @@ class MoveExecutor:
         Note:
             特性や効果によるタイプ変化を考慮する。
         """
-        self.events.emit(
-            Event.ON_CHECK_MOVE_TYPE,
-            BattleContext(source=attacker, move=move)
+        # move自身は変更せず、イベント結果の有効タイプを返す。
+        return self.events.emit(
+            Event.ON_MODIFY_MOVE_TYPE,
+            BattleContext(source=attacker, move=move),
+            value=move.data.type,
         )
-        return move._type
 
     def get_effective_move_category(self, attacker: Pokemon, move: Move) -> str:
         """技の有効分類を取得する。
@@ -380,7 +387,7 @@ class MoveExecutor:
             特性や効果による分類変化を考慮する。
         """
         return self.events.emit(
-            Event.ON_CHECK_MOVE_CATEGORY,
+            Event.ON_MODIFY_MOVE_CATEGORY,
             BattleContext(source=attacker, move=move),
             value=move.category
         )

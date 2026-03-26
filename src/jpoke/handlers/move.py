@@ -248,6 +248,24 @@ def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
+def テラバースト_check_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """テラバーストのタイプを判定する。"""
+    if ctx.source and ctx.source.is_terastallized and ctx.source.terastal:
+        return HandlerReturn(value=ctx.source.terastal)
+    return HandlerReturn(value=value)
+
+
+def テラバースト_check_move_category(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """テラバーストの分類（物理/特殊）を判定する。"""
+    if not (ctx.source and ctx.source.is_terastallized):
+        return HandlerReturn(value=value)
+
+    atk = ctx.source.stats["A"]
+    spa = ctx.source.stats["C"]
+    category = "物理" if atk > spa else "特殊"
+    return HandlerReturn(value=category)
+
+
 def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """はやてがえしの発動条件を判定する。
 

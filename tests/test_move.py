@@ -136,6 +136,45 @@ def test_変化技は_ON_STATUS_HIT_のみ発火する():
     assert count["hit"] == 0
 
 
+def test_テラスタルコマンドで技前にテラスタルする():
+    """テラスタルコマンドを選ぶと技発動前にテラスタル状態になる。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ほのお", moves=["ひのこ"])],
+        foe=[Pokemon("コイキング", moves=["はねる"])],
+    )
+
+    t.reserve_command(
+        battle,
+        ally_command=Command.TERASTAL_0,
+        foe_command=Command.MOVE_0,
+    )
+
+    battle.advance_turn()
+
+    assert battle.actives[0].is_terastallized
+    assert battle.actives[0].terastal == "ほのお"
+    assert battle.actives[0].types == ["ほのお"]
+
+
+def test_テラスタル後は再度テラスタルコマンドを選べない():
+    """一度テラスタルした後は次ターンのコマンド候補にテラスタルが出ない。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ほのお", moves=["ひのこ"])],
+        foe=[Pokemon("コイキング", moves=["はねる"])],
+    )
+
+    t.reserve_command(
+        battle,
+        ally_command=Command.TERASTAL_0,
+        foe_command=Command.MOVE_0,
+    )
+    battle.advance_turn()
+
+    commands = battle.get_available_action_commands(battle.players[0])
+
+    assert Command.TERASTAL_0 not in commands
+
+
 def test_攻撃技は_ON_HIT_のみ発火する():
     """攻撃技実行時は ON_STATUS_HIT ではなく ON_HIT が発火する。"""
     battle = t.start_battle(

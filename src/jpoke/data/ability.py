@@ -68,7 +68,14 @@ ABILITIES: dict[str, AbilityData] = {
     "うるおいボイス": AbilityData(),
     "うるおいボディ": AbilityData(),
     "えんかく": AbilityData(),
-    "おうごんのからだ": AbilityData(),
+    "おうごんのからだ": AbilityData(
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.おうごんのからだ,
+                subject_spec="target:self",
+            )
+        }
+    ),
     "おどりこ": AbilityData(
         flags=[
             "undeniable"
@@ -158,12 +165,6 @@ ABILITIES: dict[str, AbilityData] = {
     "ぎゃくじょう": AbilityData(
         flags=[
             "undeniable"
-        ]
-    ),
-    "ぎょぐん": AbilityData(
-        flags=[
-            "unreproducible",
-            "protected"
         ]
     ),
     "くいしんぼう": AbilityData(),
@@ -338,11 +339,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "でんきエンジン": AbilityData(),
     "とうそうしん": AbilityData(),
-    "とびだすなかみ": AbilityData(
-        flags=[
-            "undeniable"
-        ]
-    ),
     "とれないにおい": AbilityData(
         flags=[
             "undeniable"
@@ -455,7 +451,6 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "ふしぎなうろこ": AbilityData(),
-    "ふしぎなまもり": AbilityData(),
     "ふしょく": AbilityData(),
     "ふとうのけん": AbilityData(
         flags=[
@@ -632,7 +627,6 @@ ABILITIES: dict[str, AbilityData] = {
     "スイートベール": AbilityData(),
     "スカイスキン": AbilityData(),
     "スキルリンク": AbilityData(),
-    "スクリューおびれ": AbilityData(),
     "スナイパー": AbilityData(),
     "スロースタート": AbilityData(),
     "スワームチェンジ": AbilityData(
@@ -649,12 +643,6 @@ ABILITIES: dict[str, AbilityData] = {
     "ソウルハート": AbilityData(),
     "ターボブレイズ": AbilityData(),
     "ダウンロード": AbilityData(),
-    "ダルマモード": AbilityData(
-        flags=[
-            "unreproducible",
-            "protected"
-        ]
-    ),
     "ダークオーラ": AbilityData(
         flags=[
             "undeniable"

@@ -108,6 +108,14 @@ class Move(GameEffect):
     def set_power(self, power: int | None):
         self._power = power
 
+    def set_type(self, type_: Type):
+        """技タイプを明示的に設定する。"""
+        self._type = type_
+
+    def reset_type(self):
+        """技タイプをデータ定義の初期値へ戻す。"""
+        self._type = self.data.type
+
     @property
     def accuracy(self) -> int | None:
         """技の命中率を取得する。
@@ -134,6 +142,15 @@ class Move(GameEffect):
             技が自分を対象にする場合True
         """
         return self.data.self_targeting
+
+    @property
+    def field_targeting(self) -> bool:
+        """技が場を対象にするかどうかを取得する。
+
+        Returns:
+            技が場を対象にする場合True
+        """
+        return self.data.field_targeting
 
     @property
     def is_attack(self) -> bool:

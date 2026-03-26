@@ -49,6 +49,7 @@ class MoveData:
     priority: int = 0
     critical_rank: int = 0
     self_targeting: bool = False
+    field_targeting: bool = False
     min_hits: int = 1
     max_hits: int = 1
     check_hit_each_time: bool = False

@@ -113,6 +113,14 @@ class TurnController:
         """ターンカウントを進行させる。"""
         self.battle.turn += 1
 
+    def _run_terastal(self):
+        """技発動前にテラスタルコマンドを実行する。"""
+        for attacker in self.battle.determine_action_order():
+            player = self.battle.find_player(attacker)
+            command = player.reserved_commands[0]
+            if command.is_terastal_move() and player.can_use_terastal():
+                attacker.terastallize()
+
     def _process_turn_phases(self):
         """内部的なターン進行処理を実行。
 
@@ -173,6 +181,7 @@ class TurnController:
             self.battle.run_interrupt_switch(interrupt)
 
         # 技発動フェーズに移る直前の処理 (テラスタルなど)
+        self._run_terastal()
         self.events.emit(Event.ON_BEFORE_MOVE)
 
         # 技の処理

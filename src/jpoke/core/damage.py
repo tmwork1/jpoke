@@ -316,9 +316,37 @@ class DamageCalculator:
             4096
         )
         final_pow = round_half_down(final_pow * r_pow/4096)
+
+        # テラスタル時の威力60底上げ補正
+        # 対象: テラスタイプ一致かつ非連続技かつ優先度+1未満
+        if self._can_apply_terastal_power_floor(ctx):
+            final_pow = max(final_pow, 60)
+
         final_pow = max(1, final_pow)
 
         return final_pow
+
+    def _can_apply_terastal_power_floor(self, ctx: BattleContext) -> bool:
+        """テラスタル時の威力60底上げ補正が適用可能か判定する。"""
+        attacker = ctx.attacker
+        move = ctx.move
+
+        if not attacker.is_terastallized:
+            return False
+        if not attacker.terastal:
+            return False
+        if move.type != attacker.terastal:
+            return False
+
+        # 連続攻撃技は対象外
+        if move.data.max_hits > 1:
+            return False
+
+        # 優先度+1以上の技は対象外
+        if move.priority >= 1:
+            return False
+
+        return True
 
     def calc_final_attack(self,
                           ctx: BattleContext,

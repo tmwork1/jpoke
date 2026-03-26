@@ -444,14 +444,10 @@ class Pokemon:
         """
         return not self.is_terastallized and self._terastal is not None
 
-    def terastallize(self) -> bool:
-        """テラスタルを実行する。
-
-        Returns:
-            テラスタルに成功した場合True
-        """
-        self.is_terastallized = self.can_terastallize()
-        return self.is_terastallized
+    def terastallize(self):
+        """テラスタルする"""
+        if self.can_terastallize():
+            self.is_terastallized = True
 
     @property
     def stats(self) -> dict[Stat, int]:

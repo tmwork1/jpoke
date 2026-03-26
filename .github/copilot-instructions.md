@@ -32,6 +32,7 @@
 
 ## テストと文書
 - `tests/` に焦点の絞れたテストを追加または更新し、可能な範囲で `tests/test_utils.py` の helper を再利用する。
+- 作業後は必ず `progress/` 配下の該当ファイルを更新し、実装状況とテスト状況を最新化する。
 - 実装数が変わる場合は `script/dashboard.py` を使って `dashboard.json` と `README.md` を更新する。
 - 調査は `docs/spec/`、実行計画は `docs/plan/`、実装追跡は `docs/checklist/` を使う。
 - `.github/` の指示書は短く保ち、現実に存在するファイルと現在のコードにだけ結び付ける。
