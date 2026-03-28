@@ -266,6 +266,26 @@ def テラバースト_check_move_category(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=category)
 
 
+def テラバースト_stellar_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ステラテラスタル時のテラバースト威力100補正。
+
+    ステラ テラスタル中はテラバーストの威力が80→100になる。
+    ON_CALC_POWER_MODIFIER のスケール（4096=1.0倍）で返す。
+    """
+    if ctx.attacker and ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
+        # 4096 * 100 / 80 = 5120
+        return HandlerReturn(value=5120)
+    return HandlerReturn(value=value)
+
+
+def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ステラテラスタル時のテラバースト発動後の攻撃・特攻-1段階効果。"""
+    if ctx.attacker and ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
+        battle.modify_stat(ctx.attacker, "A", -1, source=ctx.attacker)
+        battle.modify_stat(ctx.attacker, "C", -1, source=ctx.attacker)
+    return HandlerReturn()
+
+
 def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """はやてがえしの発動条件を判定する。
 

@@ -117,6 +117,8 @@ class TurnController:
         """技発動前にテラスタルコマンドを実行する。"""
         for attacker in self.battle.determine_action_order():
             player = self.battle.find_player(attacker)
+            if not player.reserved_commands:
+                continue
             command = player.reserved_commands[0]
             if command.is_terastal_move() and player.can_use_terastal():
                 attacker.terastallize()

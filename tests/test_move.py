@@ -210,5 +210,45 @@ def test_攻撃技は_ON_HIT_のみ発火する():
     assert count["status_hit"] == 0
 
 
+def test_テラバースト_ステラ時に攻撃と特攻が1段階低下():
+    """ステラ テラスタル中にテラバーストを使うと攻撃・特攻が-1段階になる。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["テラバースト"])],
+        foe=[Pokemon("コイキング", moves=["はねる"])],
+    )
+    attacker = battle.actives[0]
+
+    t.reserve_command(
+        battle,
+        ally_command=Command.TERASTAL_0,
+        foe_command=Command.MOVE_0,
+    )
+    battle.advance_turn()
+
+    assert attacker.is_terastallized
+    assert attacker.rank["A"] == -1
+    assert attacker.rank["C"] == -1
+
+
+def test_テラバースト_非ステラ時は能力低下しない():
+    """通常テラスタル中のテラバーストでは能力低下は起きない。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ほのお", moves=["テラバースト"])],
+        foe=[Pokemon("コイキング", moves=["はねる"])],
+    )
+    attacker = battle.actives[0]
+
+    t.reserve_command(
+        battle,
+        ally_command=Command.TERASTAL_0,
+        foe_command=Command.MOVE_0,
+    )
+    battle.advance_turn()
+
+    assert attacker.is_terastallized
+    assert attacker.rank["A"] == 0
+    assert attacker.rank["C"] == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

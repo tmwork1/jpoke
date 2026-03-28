@@ -96,6 +96,8 @@ class Pokemon:
         self.is_terastallized: bool = False
         self._hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
+        # ステラ テラスタル補正を消費したタイプの集合
+        self.stellar_boosted_types: set = set()
 
         # 場に出ているときの状態をリセット
         self.bench_reset()

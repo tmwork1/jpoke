@@ -223,25 +223,32 @@ class DamageCalculator:
         move_type = ctx.move.type
 
         base_modifier = 4096
+        original_matches = move_type in attacker.data.types
 
-        if attacker.is_terastallized:
-            tera_type = attacker._terastal
-            original_types = attacker.data.types
-            tera_matches = tera_type == move_type
-            original_matches = move_type in original_types
-
-            if tera_matches and original_matches:
-                # テラスタイプ・元タイプ両方が技タイプと一致 → 2.0倍
-                base_modifier = 8192
-            elif tera_matches:
-                # テラスタイプのみ一致 → 1.5倍
-                base_modifier = 6144
-            elif original_matches:
-                # 元タイプのみ一致（テラスタイプ異なる） → 1.5倍
+        if not attacker.is_terastallized:
+            if original_matches:
                 base_modifier = 6144
         else:
-            if move_type in attacker.data.types:
-                base_modifier = 6144
+            tera_type = attacker._terastal
+
+            if tera_type == 'ステラ':
+                # ステラ補正: タイプ一致補正の代替
+                already_boosted = move_type in getattr(attacker, 'stellar_boosted_types', set())
+
+                if original_matches:
+                    # 元タイプ一致技: 初回2.0倍、以降1.5倍
+                    base_modifier = 6144 if already_boosted else 8192
+                else:
+                    # 不一致技: 初回1.2倍、以降1.0倍
+                    base_modifier = 4096 if already_boosted else 4915
+            else:
+                tera_matches = tera_type == move_type
+                if tera_matches and original_matches:
+                    # テラスタイプ・元タイプ両方が技タイプと一致 → 2.0倍
+                    base_modifier = 8192
+                elif tera_matches or original_matches:
+                    # テラスタイプ一致、または元タイプ一致 → 1.5倍
+                    base_modifier = 6144
 
         v = self.events.emit(
             Event.ON_CALC_ATK_TYPE_MODIFIER,
@@ -283,6 +290,11 @@ class DamageCalculator:
                 type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
                 rate = type_chart.get(defender_type, 1.0)
                 base_modifier = int(base_modifier * rate)
+
+        # ステラ技はテラスタルポケモンに対して効果抜群（2.0倍）
+        if (ctx.move and ctx.move.type == 'ステラ'
+                and ctx.defender and ctx.defender.is_terastallized):
+            base_modifier = 8192
 
         v = self.events.emit(
             Event.ON_CALC_DEF_TYPE_MODIFIER,
@@ -372,11 +384,11 @@ class DamageCalculator:
         move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
 
         # ステータス
-        if move == 'イカサマ':
+        if move.name == 'イカサマ':
             final_atk = defender.stats["A"]
             r_rank = rank_modifier(defender.rank["A"])
         else:
-            if move == 'ボディプレス':
+            if move.name == 'ボディプレス':
                 stat = "B"
             elif move_category == "物理":
                 stat = "A"
@@ -393,7 +405,7 @@ class DamageCalculator:
         )
 
         # TODO (特性実装時でよい) 特性てんねんのハンドラとして実装する
-        if def_ability == 'てんねん' and r_rank != 1:
+        if def_ability.name == 'てんねん' and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_ATK_RANK_BY_TENNEN)
 
@@ -453,7 +465,7 @@ class DamageCalculator:
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_MOVE)
 
         # TODO (特性実装時でよい) 特性てんねんのハンドラとして実装する
-        if attacker.ability == 'てんねん' and r_rank != 1:
+        if attacker.ability.name == 'てんねん' and r_rank != 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_TENNEN)
 

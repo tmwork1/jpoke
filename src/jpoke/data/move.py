@@ -3438,6 +3438,14 @@ MOVES: dict[str, MoveData] = {
                 h.テラバースト_check_move_category,
                 subject_spec="source:self",
             ),
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                h.テラバースト_stellar_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                h.テラバースト_stellar_stat_drop,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "でんきショック": MoveData(

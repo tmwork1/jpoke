@@ -138,5 +138,111 @@ def test_テラスタル時の威力60底上げ補正(move_name: str,
     assert battle.damage_calculator.calc_final_power(ctx) == expected
 
 
+def test_ステラSTAB_元タイプ一致_初回2倍_以降1倍5():
+    """ステラ テラスタル中、元タイプ一致技は初回2.0倍、2回目以降1.5倍。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["でんきショック"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    # 初回: 元タイプ一致 → 2.0倍
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(2.0)
+
+    # 消費済みに設定してから再計算
+    attacker.stellar_boosted_types.add("でんき")
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(1.5)
+
+
+def test_ステラSTAB_不一致技_初回1倍2_以降1倍0():
+    """ステラ テラスタル中、不一致技は初回1.2倍、2回目以降1.0倍。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    # 初回: 不一致 → 1.2倍
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(4915 / 4096)
+
+    # 消費済みに設定してから再計算
+    attacker.stellar_boosted_types.add("ほのお")
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(1.0)
+
+
+def test_ステラ技_テラスタルポケモンへ効果抜群():
+    """ステラタイプの技はテラスタル済みポケモンに対して2.0倍の相性補正。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["テラバースト"])],
+        foe=[Pokemon("コイキング", terastal="みず")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+    # テラバーストのタイプをステラに設定
+    move_type = battle.move_executor.get_effective_move_type(attacker, move)
+    move.set_type(move_type)
+
+    ctx = BattleContext(attacker=attacker, defender=defender, move=move)
+
+    # 非テラスタル相手: 等倍
+    assert battle.damage_calculator.calc_def_type_modifier(ctx) == pytest.approx(1.0)
+
+    # テラスタル相手: 効果抜群
+    defender.terastallize()
+    assert battle.damage_calculator.calc_def_type_modifier(ctx) == pytest.approx(2.0)
+
+    move.unregister_handlers(battle.events, attacker)
+
+
+def test_テラバースト_ステラ時に威力100():
+    """ステラ テラスタル中のテラバーストは威力が100になる。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["テラバースト"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+
+    ctx = BattleContext(attacker=attacker, defender=defender, move=move)
+    assert battle.damage_calculator.calc_final_power(ctx) == 100
+
+    move.unregister_handlers(battle.events, attacker)
+
+
+def test_テラバースト_非ステラ時は威力80():
+    """通常テラスタル中のテラバーストは威力80のまま。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", terastal="ほのお", moves=["テラバースト"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+
+    ctx = BattleContext(attacker=attacker, defender=defender, move=move)
+    assert battle.damage_calculator.calc_final_power(ctx) == 80
+
+    move.unregister_handlers(battle.events, attacker)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

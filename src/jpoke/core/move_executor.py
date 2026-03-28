@@ -134,6 +134,9 @@ class MoveExecutor:
 
         if ctx.damage:
             self.events.emit(Event.ON_DAMAGE, ctx)
+            # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
+            if ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
+                ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
         return True
 
