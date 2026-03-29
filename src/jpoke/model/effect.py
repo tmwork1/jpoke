@@ -84,12 +84,7 @@ class GameEffect:
             return
 
         for event, handler in self.data.handlers.items():
-            # handlerがリストの場合は各要素を登録
-            if isinstance(handler, list):
-                for h in handler:
-                    events.on(event, h, subject)
-            else:
-                events.on(event, handler, subject)
+            events.on(event, handler, subject)
 
     def unregister_handlers(self,
                             events: EventManager,
@@ -101,9 +96,4 @@ class GameEffect:
             subject: ハンドラの対象となるポケモンまたはプレイヤー
         """
         for event, handler in self.data.handlers.items():
-            # handlerがリストの場合は各要素を解除
-            if isinstance(handler, list):
-                for h in handler:
-                    events.off(event, h, subject)
-            else:
-                events.off(event, handler, subject)
+            events.off(event, handler, subject)

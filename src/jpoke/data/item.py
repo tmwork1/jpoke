@@ -372,7 +372,19 @@ ITEMS: dict[str, ItemData] = {
     ),
     "とくせいガード": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_CHECK_ABILITY_ENABLED: h.ItemHandler(
+                h.とくせいガード_check_enabled,
+                subject_spec="source:self",
+                priority=30,
+            ),
+            Event.ON_CHECK_DEF_ABILITY: h.ItemHandler(
+                h.とくせいガード_check_def_ability,
+                subject_spec="target:self",
+                priority=200,
+            ),
+        }
     ),
     "どくどくだま": ItemData(
         consumable=False,

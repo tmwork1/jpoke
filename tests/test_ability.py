@@ -9,6 +9,14 @@ from jpoke.model import Move
 import test_utils as t
 
 
+def _set_raw_stats(mon: Pokemon, a: int, b: int, c: int, d: int, s: int):
+    mon._stats_manager.stats[1] = a
+    mon._stats_manager.stats[2] = b
+    mon._stats_manager.stats[3] = c
+    mon._stats_manager.stats[4] = d
+    mon._stats_manager.stats[5] = s
+
+
 def test_ありじごく_非浮遊相手は交代不可():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
@@ -63,6 +71,165 @@ def test_かちき_自分由来の能力低下では発動しない():
     mon = battle.actives[0]
     battle.modify_stat(mon, "A", -1, source=mon)
     assert mon.rank["C"] == 0
+
+
+def test_かがくへんかガス_登場中はいかくが不発():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="いかく")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    assert battle.actives[0].ability.enabled is False
+    assert battle.actives[1].ability.enabled is True
+    assert battle.actives[1].rank["A"] == 0
+
+
+def test_かがくへんかガス_解除後は特性が再び有効化される():
+    battle = t.start_battle(
+        ally=[
+            Pokemon("ピカチュウ", ability="かがくへんかガス"),
+            Pokemon("ライチュウ"),
+        ],
+        foe=[
+            Pokemon("ピカチュウ", ability="いかく"),
+            Pokemon("ライチュウ"),
+        ],
+    )
+
+    # ガス発生中は相手のいかくが無効
+    assert battle.actives[1].ability.enabled is False
+
+    # ガス持ちを引っ込めると、相手の特性は有効化される
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert battle.actives[1].ability.enabled is True
+
+    # 相手のいかく持ちが再登場すると、いかくが発動する
+    battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[1])
+    battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[0])
+    assert battle.actives[0].rank["A"] == -1
+
+
+def test_かがくへんかガス_とくせいガード持ちは無効化されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="いかく", item="とくせいガード")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    assert battle.actives[0].ability.enabled is True
+
+
+def test_こだいかっせい_はれで発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="こだいかっせい")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 999),
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_active
+    assert mon.paradox_boost_source == "weather"
+
+
+def test_クォークチャージ_場条件なしならブーストエナジーを消費する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="クォークチャージ", item="ブーストエナジー")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_active
+    assert mon.paradox_boost_source == "item"
+    assert not mon.item.enabled
+
+
+def test_こだいかっせい_はれ中はブーストエナジー未消費_解除後に消費発動():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="こだいかっせい", item="ブーストエナジー")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 999),
+    )
+    mon = battle.actives[0]
+
+    # start_battle は初期交代後に天候を設定するため、テスト前提を再構築する。
+    mon.item = "ブーストエナジー"
+    mon.paradox_item_activated_once = False
+    mon.paradox_boost_active = False
+    mon.paradox_boost_source = ""
+    mon.paradox_boost_stat = ""
+    battle.refresh_paradox_boost_states()
+
+    assert mon.paradox_boost_source == "weather"
+    assert mon.item.enabled
+
+    battle.weather_manager.deactivate()
+
+    assert mon.paradox_boost_active
+    assert mon.paradox_boost_source == "item"
+    assert not mon.item.enabled
+
+
+def test_こだいかっせい_同値時は攻撃優先で上昇能力を選ぶ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="こだいかっせい")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 999),
+    )
+    mon = battle.actives[0]
+    _set_raw_stats(mon, a=200, b=200, c=100, d=100, s=100)
+
+    mon.paradox_boost_active = False
+    mon.paradox_boost_source = ""
+    mon.paradox_boost_stat = ""
+    battle.refresh_paradox_boost_states()
+
+    assert mon.paradox_boost_stat == "A"
+
+
+def test_クォークチャージ_素早さ上昇が実効素早さに反映される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="クォークチャージ")],
+        foe=[Pokemon("ピカチュウ")],
+        terrain=("エレキフィールド", 999),
+    )
+    mon = battle.actives[0]
+    _set_raw_stats(mon, a=100, b=100, c=100, d=100, s=220)
+
+    mon.paradox_boost_active = False
+    mon.paradox_boost_source = ""
+    mon.paradox_boost_stat = ""
+    battle.refresh_paradox_boost_states()
+
+    assert mon.paradox_boost_stat == "S"
+    assert battle.calc_effective_speed(mon) == mon.stats["S"] * 6144 // 4096
+
+
+def test_こだいかっせい_かがくへんかガス中は補正停止_解除後に復帰する():
+    battle = t.start_battle(
+        ally=[
+            Pokemon("ピカチュウ", ability="こだいかっせい", moves=["でんこうせっか"]),
+            Pokemon("ライチュウ"),
+        ],
+        foe=[
+            Pokemon("ピカチュウ"),
+            Pokemon("ピカチュウ", ability="かがくへんかガス"),
+        ],
+        weather=("はれ", 999),
+    )
+    mon = battle.actives[0]
+    _set_raw_stats(mon, a=220, b=100, c=100, d=100, s=100)
+    mon.paradox_boost_active = False
+    mon.paradox_boost_source = ""
+    mon.paradox_boost_stat = ""
+    battle.refresh_paradox_boost_states()
+
+    assert mon.paradox_boost_stat == "A"
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 5325
+
+    battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[1])
+
+    assert battle.actives[0].ability.enabled is False
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 4096
+
+    battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[0])
+
+    assert battle.actives[0].ability.enabled is True
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 5325
 
 
 def test_きんちょうかん_相手をきんちょうかん状態にする():

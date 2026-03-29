@@ -470,6 +470,44 @@ class Battle:
         """
         return self.speed_calculator.calc_action_order()
 
+    def refresh_ability_enabled_states(self):
+        """場の状況に応じて特性の有効/無効状態を再計算する。
+
+        Note:
+            ON_CHECK_ABILITY_ENABLEDイベントを使用して判定を実施。
+            ハンドラは入場時に特性・持ち物から通常登録される。
+        """
+        actives = [mon for mon in self.actives if mon is not None]
+
+        for mon in actives:
+            ability = mon.ability
+
+            # 基本判定：生存していれば有効
+            # とくせいなし等の追加無効化条件は各ハンドラ側で判定する
+            should_enable = mon.alive
+
+            # イベント駆動で有効/無効を判定
+            # context の source は判定対象ポケモン。
+            should_enable = self.events.emit(
+                Event.ON_CHECK_ABILITY_ENABLED,
+                BattleContext(source=mon),
+                should_enable
+            )
+
+            ability.enabled = should_enable
+
+        self.refresh_paradox_boost_states()
+
+    def refresh_paradox_boost_states(self):
+        """こだいかっせい・クォークチャージの発動状態を再判定する。"""
+        actives = [mon for mon in self.actives if mon is not None]
+        for mon in actives:
+            self.events.emit(
+                Event.ON_FIELD_CHANGE,
+                BattleContext(source=mon),
+                None,
+            )
+
     def determine_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
 

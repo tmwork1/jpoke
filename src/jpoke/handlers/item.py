@@ -175,3 +175,47 @@ def ラムのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
 
     # volatiles（こんらん等）はここでは処理しない（状態異常のみ対応）
     return HandlerReturn()
+
+
+def とくせいガード_check_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
+    """とくせいガード所持時の特性有効化判定。
+
+    ON_CHECK_ABILITY_ENABLED で評価し、所持者の特性を常に有効に保つ。
+    """
+    return HandlerReturn(value=True)
+
+
+_MOLD_BREAKER_ABILITIES = frozenset({"かたやぶり", "ターボブレイズ", "テラボルテージ"})
+
+
+def とくせいガード_check_def_ability(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """とくせいガード: かたやぶり系特性による防御側特性の無視を防ぐ。
+
+    かたやぶり / ターボブレイズ / テラボルテージ のような特性を持つ攻撃側が
+    技を使用しても、とくせいガード所持者の特性は無視されない。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_CHECK_DEF_ABILITY)
+            - attacker: 攻撃側
+            - target: 防御側（とくせいガード所持者）
+        value: 現在の防御側特性（かたやぶり等でNoneになっている可能性あり）
+
+    Returns:
+        HandlerReturn: 攻撃側がかたやぶり系特性を持ち有効な場合は防御側の元の特性を返す
+    """
+    attacker = ctx.attacker
+    if attacker is None:
+        return HandlerReturn(value=value)
+
+    if attacker.ability.name not in _MOLD_BREAKER_ABILITIES:
+        return HandlerReturn(value=value)
+
+    if not attacker.ability.enabled:
+        return HandlerReturn(value=value)
+
+    # かたやぶり系の無視を防ぐ: 防御側の元の特性を返す
+    defender = ctx.target
+    if defender is not None:
+        return HandlerReturn(value=defender.ability)
+    return HandlerReturn(value=value)

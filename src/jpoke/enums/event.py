@@ -42,6 +42,10 @@ class Event(Enum):
     # handle: ability.py（すなおこし・いかくなど登場時能力）, field.py（エントリーハザード）
     ON_SWITCH_IN = auto()
 
+    # emit: core/field_manager.py（天候・地形が変化した直後）
+    # handle: ability.py（こだいかっせい・クォークチャージの再判定）
+    ON_FIELD_CHANGE = auto()
+
     # emit: core/switch.py（退場直前）
     # handle: volatile.py（バインド状態の解除など）
     ON_SWITCH_OUT = auto()
@@ -181,6 +185,10 @@ class Event(Enum):
     #          volatile.py（アイスフェイス等の状態ブロック）
     ON_BEFORE_APPLY_VOLATILE = auto()
 
+    # emit: core/pokemon_state.py（揮発性状態を付与した直後）
+    # handle: volatile.py（とくせいなし等、付与直後に同期が必要な後処理）
+    ON_APPLY_VOLATILE = auto()
+
     # emit: core/pokemon_state.py（揮発性状態が終了したとき）
     # handle: volatile.py（状態終了時の後処理・ハンドラ解除を呼び出す内部イベント）
     ON_VOLATILE_END = auto()
@@ -214,6 +222,11 @@ class Event(Enum):
     # emit: core/pokemon_state.py（いかく等の割り込み処理で怯え確認）
     # handle: ability.py（マイペース・にげごし等で怯えを無効化）
     ON_CHECK_NERVOUS = auto()
+
+    # emit: core/battle.py（特性の有効/無効状態を判定）
+    # handle: ability.py（かがくへんかガス・undeniable）/ item.py（とくせいガード）
+    # priority: 10(かがくへんかガス無効化) -> 20(undeniable保護) -> 30(とくせいガード保護)
+    ON_CHECK_ABILITY_ENABLED = auto()
 
     # emit: core/move_executor.py（技タイプを書き換える）
     # handle: ability.py（ノーマルスキン・フェアリースキン等のタイプ変換能力）

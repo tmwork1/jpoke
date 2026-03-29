@@ -189,6 +189,13 @@ class VolatileManager:
         volatile = Volatile(name, count=count, move_name=move, hp=hp)
         volatile.register_handlers(self.battle.events, mon)
         mon.volatiles[name] = volatile
+
+        # 付与後フック
+        self.battle.events.emit(
+            Event.ON_APPLY_VOLATILE,
+            BattleContext(source=mon),
+            name,
+        )
         return True
 
     def remove(self, mon: Pokemon, name: VolatileName) -> bool:

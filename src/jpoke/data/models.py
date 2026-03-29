@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from dataclasses import dataclass, field
 
 from jpoke.utils.constants import STATS
-from jpoke.utils.type_defs import MoveCategory, Type, MoveLabel
+from jpoke.utils.type_defs import AbilityFlag, MoveCategory, Type, MoveLabel
 
 
 class PokemonData:
@@ -24,7 +24,7 @@ class PokemonData:
 
 @dataclass
 class AbilityData:
-    flags: list[str] = field(default_factory=list)
+    flags: list[AbilityFlag] = field(default_factory=list)
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
 

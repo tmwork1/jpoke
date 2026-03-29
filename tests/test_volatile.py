@@ -314,6 +314,13 @@ def test_とくせいなし():
     assert result is None
 
 
+def test_とくせいなし_特性有効状態も無効化する():
+    battle = t.start_battle(
+        foe_volatile={"とくせいなし": 1},
+    )
+    assert battle.actives[1].ability.enabled is False
+
+
 def test_にげられない():
     """にげられない: 交代不可"""
     battle = t.start_battle(

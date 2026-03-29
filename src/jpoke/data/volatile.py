@@ -25,11 +25,7 @@ def common_setup() -> None:
         VOLATILES[name].name = name
         for event in data.handlers:
             handler = data.handlers[event]
-            if isinstance(handler, list):
-                for hnd in handler:
-                    hnd.log_text = name
-            else:
-                handler.log_text = name
+            handler.log_text = name
 
 
 VOLATILES: dict[str, VolatileData] = {
@@ -292,6 +288,19 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CHECK_DEF_ABILITY: h.VolatileHandler(
                 lambda *args: HandlerReturn(value=None),
                 subject_spec="defender:self",
+            ),
+            Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=False),
+                subject_spec="source:self",
+                priority=5,
+            ),
+            Event.ON_APPLY_VOLATILE: h.VolatileHandler(
+                h.とくせいなし_on_volatile_apply,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.とくせいなし_on_volatile_end,
+                subject_spec="source:self",
             ),
         }
     ),

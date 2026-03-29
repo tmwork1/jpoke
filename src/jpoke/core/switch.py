@@ -122,6 +122,7 @@ class SwitchManager:
         # 入場
         player.active_idx = player.team.index(new)
         self.register_switch_in_handlers(new)
+        self.battle.refresh_ability_enabled_states()
         self.battle.add_event_log(player, LogCode.SWITCH_IN,
                                   payload={"pokemon": new.name})
 
@@ -149,6 +150,7 @@ class SwitchManager:
             self.run_switch(pl, new, emit=False)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
+        self.battle.refresh_ability_enabled_states()
         self.battle.events.emit(Event.ON_SWITCH_IN)
 
         # だっしゅつパックによる割り込みフラグを更新

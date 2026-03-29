@@ -109,6 +109,10 @@ class Pokemon:
         self.hits_taken: int = 0
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
+        self.paradox_boost_active: bool = False
+        self.paradox_boost_stat: str = ""
+        self.paradox_boost_source: BoostSource = ""
+        self.paradox_item_activated_once: bool = False
 
     def init_turn(self):
         """ターン初期化処理。"""
