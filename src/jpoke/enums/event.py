@@ -43,8 +43,12 @@ class Event(Enum):
     ON_SWITCH_IN = auto()
 
     # emit: core/field_manager.py（天候・地形が変化した直後）
-    # handle: ability.py（こだいかっせい・クォークチャージの再判定）
+    # handle: ability.py（こだいかっせい・クォークチャージの再判定）など
     ON_FIELD_CHANGE = auto()
+
+    # emit: core/battle.py（特性有効状態変化後の再判定要求）
+    # handle: ability.py（こだいかっせい・クォークチャージの再判定）
+    ON_REFRESH_PARADOX_BOOST = auto()
 
     # emit: core/switch.py（退場直前）
     # handle: volatile.py（バインド状態の解除など）
@@ -267,6 +271,10 @@ class Event(Enum):
     #          data/field.py・volatile.py（テラインブーストなど）
     ON_CALC_POWER_MODIFIER = auto()
 
+    # emit: core/damage.py（攻撃側のランク補正値を計算）
+    # handle: ability.py（てんねん等による攻撃ランク無視）
+    ON_CALC_ATK_RANK_MODIFIER = auto()
+
     # emit: core/damage.py（攻撃側の実数値＋ランク補正を計算）
     # handle: ability.py（こだわりハチマキ等の攻撃倍率）
     #          data/item.py（各種強化アイテム）
@@ -275,6 +283,10 @@ class Event(Enum):
     # emit: core/damage.py（防御側の実数値＋ランク補正を計算）
     # handle: data/field.py（グラスフィールドでの物理防御上昇等）
     ON_CALC_DEF_MODIFIER = auto()
+
+    # emit: core/damage.py（防御側のランク補正値を計算）
+    # handle: ability.py（てんねん等による防御ランク無視）
+    ON_CALC_DEF_RANK_MODIFIER = auto()
 
     # emit: core/damage.py（攻撃側のタイプ一致・テラスタル補正を計算）
     # handle: ability.py（てきおうりょく等によるSTAB 2倍化）
@@ -303,7 +315,7 @@ class Event(Enum):
 
     # emit: core/damage.py（防御側の能力動作確認）
     # handle: volatile.py（かたやぶり等による防御側能力の無効化チェック）
-    ON_CHECK_DEF_ABILITY = auto()
+    ON_CHECK_DEF_ABILITY_ENABLED = auto()
 
     # emit: 未実装（吸収技のHP回収量計算用に予約）
     # handle: 未実装（おおきなねっこ等による回収量増加を想定）

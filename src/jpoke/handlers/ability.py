@@ -29,141 +29,6 @@ class AbilityHandler(Handler):
         )
 
 
-PARADOX_ABILITIES = {"こだいかっせい", "クォークチャージ"}
-PARADOX_STAT_ORDER = ("A", "B", "C", "D", "S")
-PARADOX_FIELD_BY_ABILITY = {
-    "こだいかっせい": "はれ",
-    "クォークチャージ": "エレキフィールド",
-}
-PARADOX_FIELD_SOURCE_BY_ABILITY = {
-    "こだいかっせい": "weather",
-    "クォークチャージ": "terrain",
-}
-
-
-def _rank_modifier(v: int) -> float:
-    return (2 + v) / 2 if v >= 0 else 2 / (2 - v)
-
-
-def _effective_stat_with_rank(mon, stat: str) -> float:
-    return mon.stats[stat] * _rank_modifier(mon.rank[stat])
-
-
-def _select_paradox_boost_stat(mon) -> str:
-    best_stat = ""
-    best_value = -1.0
-    for stat in PARADOX_STAT_ORDER:
-        value = _effective_stat_with_rank(mon, stat)
-        if value > best_value:
-            best_stat = stat
-            best_value = value
-    return best_stat
-
-
-def _is_paradox_field_active(battle: Battle, ability_name: str) -> bool:
-    if ability_name == "こだいかっせい":
-        return battle.weather.name == PARADOX_FIELD_BY_ABILITY[ability_name]
-    return battle.terrain.name == PARADOX_FIELD_BY_ABILITY[ability_name]
-
-
-def _can_consume_boost_energy(mon) -> bool:
-    return mon.item.name == "ブーストエナジー" and mon.item.enabled
-
-
-def _deactivate_paradox_boost(mon) -> None:
-    mon.paradox_boost_active = False
-    mon.paradox_boost_stat = ""
-    mon.paradox_boost_source = ""
-
-
-def _activate_paradox_boost(battle: Battle, mon, source: str) -> None:
-    mon.paradox_boost_active = True
-    mon.paradox_boost_stat = _select_paradox_boost_stat(mon)
-    mon.paradox_boost_source = source
-
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.orig_name, "success": True}
-    )
-
-    if source == "item" and mon.item.name == "ブーストエナジー" and mon.item.enabled:
-        battle.add_event_log(mon, LogCode.CONSUME_ITEM, payload={"item": "ブーストエナジー"})
-        mon.item.consume()
-        mon.paradox_item_activated_once = True
-
-
-def _refresh_paradox_boost(battle: Battle, mon) -> None:
-    ability_name = mon.ability.orig_name
-    if ability_name not in PARADOX_ABILITIES:
-        return
-
-    field_source = PARADOX_FIELD_SOURCE_BY_ABILITY[ability_name]
-    field_active = _is_paradox_field_active(battle, ability_name)
-    can_consume_item = _can_consume_boost_energy(mon) and not mon.paradox_item_activated_once
-
-    if mon.paradox_boost_active:
-        if mon.paradox_boost_source == "item":
-            return
-        if mon.paradox_boost_source == field_source and field_active:
-            return
-
-        _deactivate_paradox_boost(mon)
-        if can_consume_item:
-            _activate_paradox_boost(battle, mon, "item")
-        return
-
-    if field_active:
-        _activate_paradox_boost(battle, mon, field_source)
-        return
-
-    if can_consume_item:
-        _activate_paradox_boost(battle, mon, "item")
-
-
-def パラドックスチャージ_refresh(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    _refresh_paradox_boost(battle, ctx.source)
-    return HandlerReturn(value=value)
-
-
-def パラドックスチャージ_on_calc_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    mon = ctx.source
-    if mon.paradox_boost_active and mon.paradox_boost_stat == "S":
-        value = value * 6144 // 4096
-    return HandlerReturn(value=value)
-
-
-def パラドックスチャージ_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    attacker = ctx.attacker
-    defender = ctx.defender
-
-    if ctx.move.name == "イカサマ":
-        boost_mon = defender
-        stat = "A"
-    elif ctx.move.name == "ボディプレス":
-        boost_mon = attacker
-        stat = "B"
-    else:
-        move_category = battle.move_executor.get_effective_move_category(attacker, ctx.move)
-        boost_mon = attacker
-        stat = "A" if move_category == "物理" else "C"
-
-    if boost_mon.paradox_boost_active and boost_mon.paradox_boost_stat == stat:
-        value = value * 5325 // 4096
-    return HandlerReturn(value=value)
-
-
-def パラドックスチャージ_on_calc_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-    stat = "B" if move_category == "物理" or ctx.move.has_label("physical") else "D"
-
-    if ctx.defender.paradox_boost_active and ctx.defender.paradox_boost_stat == stat:
-        value = value * 5325 // 4096
-    return HandlerReturn(value=value)
-
-
 def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性: 浮いていないポケモンの交代を防ぐ。
 
@@ -274,6 +139,23 @@ def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> Handle
     """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
     if ctx.move.has_label("punch"):
         value = value * 4915 // 4096
+    return HandlerReturn(value=value)
+
+
+def てんねん_on_calc_atk_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
+    """てんねん特性: 防御側のとき相手の攻撃ランク補正を無視する。"""
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+
+    if value != 1:
+        return HandlerReturn(value=1)
+    return HandlerReturn(value=value)
+
+
+def てんねん_on_calc_def_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
+    """てんねん特性: 攻撃側のとき相手の防御ランク補正を無視する。"""
+    if value != 1:
+        return HandlerReturn(value=1)
     return HandlerReturn(value=value)
 
 
@@ -468,15 +350,12 @@ def おうごんのからだ(battle: Battle, ctx: BattleContext, value: Any) -> 
     if ctx.attacker == ctx.target:
         return HandlerReturn(value=value)
 
-    # 防御側特性を確認（かたやぶり・きんしのちから対応）
-    def_ability = battle.events.emit(
-        Event.ON_CHECK_DEF_ABILITY,
-        ctx,
-        ctx.target.ability,
-    )
+    # かたやぶり系で防御側特性が無視される場合は発動しない。
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
 
-    # おうごんのからだじゃなければ防がない（かたやぶり等でNoneになった場合も含む）
-    if def_ability is None or def_ability.name != "おうごんのからだ":
+    # 自身がおうごんのからだでない場合は防がない。
+    if ctx.target.ability.orig_name != "おうごんのからだ":
         return HandlerReturn(value=value)
 
     # ログ出力
@@ -547,11 +426,6 @@ def undeniable_check_enabled(battle: Battle, ctx: BattleContext, should_enable: 
         HandlerReturn: undeniable フラグ持ちなら True（保護）、それ以外は should_enable をそのまま返す
     """
     source_ability = ctx.source.ability
-    # SV仕様では こだいかっせい / クォークチャージ は
-    # かがくへんかガスで無効化されるため、undeniable 保護の対象外にする。
-    if source_ability.orig_name in PARADOX_ABILITIES:
-        return HandlerReturn(value=should_enable)
-
     if "undeniable" in source_ability.data.flags:
         return HandlerReturn(value=True)
     return HandlerReturn(value=should_enable)
@@ -577,8 +451,8 @@ def announce_ability_on_switch_in(battle: Battle, ctx: BattleContext, value: Any
     return HandlerReturn(value=value)
 
 
-def かたやぶり_check_def_ability(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """かたやぶり系特性: 無視できる防御側特性をNoneに変換する (ON_CHECK_DEF_ABILITY, priority=100)。
+def かたやぶり_check_def_ability_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """かたやぶり系特性: 無視できる防御側特性の無視フラグを立てる。
 
     かたやぶり / ターボブレイズ / テラボルテージ で共用。
     防御側が とくせいガード を持つ場合は、とくせいガード側ハンドラ (priority=200) が
@@ -586,15 +460,33 @@ def かたやぶり_check_def_ability(battle: Battle, ctx: BattleContext, value:
 
     Args:
         battle: バトルインスタンス
-        ctx: コンテキスト (ON_CHECK_DEF_ABILITY)
+        ctx: コンテキスト (ON_CHECK_DEF_ABILITY_ENABLED)
             - attacker: かたやぶり系特性所持ポケモン
             - defender: 防御側のポケモン
-        value: 現在の防御側特性（Ability または None）
+        value: 現在の防御側特性有効フラグ
 
     Returns:
-        HandlerReturn: 無視できる特性の場合はNone、それ以外はvalueをそのまま返す
+        HandlerReturn: 無視対象なら False、それ以外は value
     """
-    defender_ability = ctx.defender.ability
-    if "mold_breaker_ignorable" in defender_ability.data.flags:
-        return HandlerReturn(value=None)
+    if "mold_breaker_ignorable" in ctx.defender.ability.data.flags:
+        return HandlerReturn(value=False)
     return HandlerReturn(value=value)
+
+
+def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ばけのかわ特性: 初回の攻撃技ダメージを防ぐ。"""
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+
+    # ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
+    ctx.defender.ability.enabled = False
+    battle.modify_hp(ctx.defender, r=-1 / 8, reason="ばけのかわ")
+
+    idx = battle.get_player_index(ctx.defender)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "ばけのかわ", "success": True},
+    )
+    return HandlerReturn(value=0)

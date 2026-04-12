@@ -35,7 +35,7 @@ class Ability(GameEffect):
 
         特性の状態をリセットし、カウンターを0に戻す。
         """
-        self.count: int = 0
+        self.count = 0
 
     def __deepcopy__(self, memo):
         cls = self.__class__

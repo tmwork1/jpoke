@@ -144,7 +144,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         )
         field.activate(self.battle, count)
         self.current = field
-        self.battle.refresh_paradox_boost_states()
+        self.events.emit(Event.ON_FIELD_CHANGE)
         return True
 
     def deactivate(self) -> bool:
@@ -157,7 +157,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             return False
         self.current.deactivate(self.battle)
         self.current = self._default
-        self.battle.refresh_paradox_boost_states()
+        self.events.emit(Event.ON_FIELD_CHANGE)
         return True
 
     def tick_down(self) -> None:

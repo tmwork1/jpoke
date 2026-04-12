@@ -4,7 +4,6 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain
-from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 
 

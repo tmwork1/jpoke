@@ -86,6 +86,11 @@ class Pokemon:
         # 初期ステータス計算
         self.update_stats()
 
+        # パラドックス特性の状態はコンストラクタで属性を明示し、bench_resetで値を初期化する。
+        self.paradox_boost_active: bool = False
+        self.paradox_boost_stat: Stat | None = None
+        self.paradox_boost_source: BoostSource = ""
+
         self.init_game()
 
     def init_game(self):
@@ -99,20 +104,26 @@ class Pokemon:
         # ステラ テラスタル補正を消費したタイプの集合
         self.stellar_boosted_types: set = set()
 
-        # 場に出ているときの状態をリセット
-        self.bench_reset()
-
-    def bench_reset(self):
-        """ベンチに戻ったときのリセット処理"""
+        # bench_reset() は再初期化専用にし、属性の初回定義はここで行う。
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
-        self.paradox_boost_active: bool = False
-        self.paradox_boost_stat: str = ""
-        self.paradox_boost_source: BoostSource = ""
-        self.paradox_item_activated_once: bool = False
+
+        # 場に出ているときの状態をリセット
+        self.bench_reset()
+
+    def bench_reset(self):
+        """ベンチに戻ったときのリセット処理"""
+        self.volatiles = {}
+        self.active_turn = 0
+        self.hits_taken = 0
+        self.rank = {k: 0 for k in STATS}
+        self.executed_move = None
+        self.paradox_boost_active = False
+        self.paradox_boost_stat = None
+        self.paradox_boost_source = ""
 
     def init_turn(self):
         """ターン初期化処理。"""

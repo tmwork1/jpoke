@@ -375,12 +375,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_CHECK_ABILITY_ENABLED: h.ItemHandler(
-                h.とくせいガード_check_enabled,
+                lambda *args: HandlerReturn(value=True, stop_event=True),
                 subject_spec="source:self",
                 priority=30,
             ),
-            Event.ON_CHECK_DEF_ABILITY: h.ItemHandler(
-                h.とくせいガード_check_def_ability,
+            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.ItemHandler(
+                lambda *args: HandlerReturn(value=True, stop_event=True),
                 subject_spec="target:self",
                 priority=200,
             ),

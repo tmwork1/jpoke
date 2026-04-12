@@ -3,11 +3,12 @@
 Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
 """
+
 from functools import partial
 
 from jpoke.enums import DomainEvent, Event
 from jpoke.core import HandlerReturn
-from jpoke.handlers import common, ability as h
+from jpoke.handlers import common, ability as h, ability_paradox as hp
 from .models import AbilityData
 
 
@@ -153,8 +154,8 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY: h.AbilityHandler(
-                h.かたやぶり_check_def_ability,
+            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.AbilityHandler(
+                h.かたやぶり_check_def_ability_enabled,
                 subject_spec="attacker:self",
                 priority=100,
             ),
@@ -257,29 +258,33 @@ ABILITIES: dict[str, AbilityData] = {
     "こだいかっせい": AbilityData(
         flags=[
             "unreproducible",
-            "undeniable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.パラドックスチャージ_refresh,
+                hp.パラドックスチャージ_refresh,
                 subject_spec="source:self",
                 priority=200,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
-                h.パラドックスチャージ_refresh,
+                hp.パラドックスチャージ_refresh,
+                subject_spec="source:self",
+                priority=200,
+            ),
+            Event.ON_REFRESH_PARADOX_BOOST: h.AbilityHandler(
+                hp.パラドックスチャージ_refresh,
                 subject_spec="source:self",
                 priority=200,
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
-                h.パラドックスチャージ_on_calc_speed,
+                hp.パラドックスチャージ_on_calc_speed,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.パラドックスチャージ_on_calc_atk_modifier,
+                hp.パラドックスチャージ_on_calc_atk_modifier,
                 subject_spec="attacker:self",
             ),
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.パラドックスチャージ_on_calc_def_modifier,
+                hp.パラドックスチャージ_on_calc_def_modifier,
                 subject_spec="defender:self",
             ),
         }
@@ -497,7 +502,17 @@ ABILITIES: dict[str, AbilityData] = {
     "てんねん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_RANK_MODIFIER: h.AbilityHandler(
+                h.てんねん_on_calc_atk_rank_modifier,
+                subject_spec="defender:self",
+            ),
+            Event.ON_CALC_DEF_RANK_MODIFIER: h.AbilityHandler(
+                h.てんねん_on_calc_def_rank_modifier,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "てんのめぐみ": AbilityData(),
     "でんきにかえる": AbilityData(
@@ -616,7 +631,15 @@ ABILITIES: dict[str, AbilityData] = {
             "protected",
             "one_time",
             "mold_breaker_ignorable",
-        ]
+            "undeniable",
+        ],
+        handlers={
+            Event.ON_MODIFY_DAMAGE: h.AbilityHandler(
+                h.ばけのかわ_modify_damage,
+                subject_spec="defender:self",
+                priority=10,
+            )
+        }
     ),
     "ばんけん": AbilityData(
         flags=[
@@ -872,29 +895,33 @@ ABILITIES: dict[str, AbilityData] = {
     "クォークチャージ": AbilityData(
         flags=[
             "unreproducible",
-            "undeniable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.パラドックスチャージ_refresh,
+                hp.パラドックスチャージ_refresh,
                 subject_spec="source:self",
                 priority=200,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
-                h.パラドックスチャージ_refresh,
+                hp.パラドックスチャージ_refresh,
+                subject_spec="source:self",
+                priority=200,
+            ),
+            Event.ON_REFRESH_PARADOX_BOOST: h.AbilityHandler(
+                hp.パラドックスチャージ_refresh,
                 subject_spec="source:self",
                 priority=200,
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
-                h.パラドックスチャージ_on_calc_speed,
+                hp.パラドックスチャージ_on_calc_speed,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.パラドックスチャージ_on_calc_atk_modifier,
+                hp.パラドックスチャージ_on_calc_atk_modifier,
                 subject_spec="attacker:self",
             ),
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.パラドックスチャージ_on_calc_def_modifier,
+                hp.パラドックスチャージ_on_calc_def_modifier,
                 subject_spec="defender:self",
             ),
         }
@@ -952,8 +979,8 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY: h.AbilityHandler(
-                h.かたやぶり_check_def_ability,
+            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.AbilityHandler(
+                h.かたやぶり_check_def_ability_enabled,
                 subject_spec="attacker:self",
                 priority=100,
             ),
@@ -990,8 +1017,8 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY: h.AbilityHandler(
-                h.かたやぶり_check_def_ability,
+            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.AbilityHandler(
+                h.かたやぶり_check_def_ability_enabled,
                 subject_spec="attacker:self",
                 priority=100,
             ),

@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon, Field
 
+from jpoke.enums import Event
 from jpoke.model import Move
 from jpoke.utils.type_defs import ContextRole, RoleSpec
 
@@ -60,6 +61,7 @@ class BattleContext:
         self.hit_count = hit_count
 
         self.fainted: bool = False  # 攻撃によりひんしになったかどうかのフラグ
+        self.def_ability_enabled: bool = True
 
     @property
     def attacker(self) -> Pokemon | None:
@@ -114,3 +116,11 @@ class BattleContext:
         if mon and side == "foe":
             mon = battle.foe(mon)
         return mon
+
+    def check_def_ability_enabled(self, battle: Battle) -> bool:
+        """防御側特性が有効かどうかを更新し、その結果を返す。"""
+        return battle.events.emit(
+            Event.ON_CHECK_DEF_ABILITY_ENABLED,
+            self,
+            True,
+        )

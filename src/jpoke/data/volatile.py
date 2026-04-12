@@ -285,8 +285,8 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "とくせいなし": VolatileData(
         handlers={
-            Event.ON_CHECK_DEF_ABILITY: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=None),
+            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=False),
                 subject_spec="defender:self",
             ),
             Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(

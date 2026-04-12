@@ -55,12 +55,10 @@ class DamageContext:
     Attributes:
         critical: 急所に当たるかどうか
         power_multiplier: 技威力の倍率
-        is_lethal_calc: 致死率計算中かどうか
         _flags: ダメージ計算に関するフラグのリスト
     """
     critical: bool = False
     power_multiplier: float = 1
-    is_lethal_calc: bool = False
     _flags: list[DamageFlag] = field(default_factory=list)
 
     def add_flag(self, flag: DamageFlag):
@@ -397,17 +395,14 @@ class DamageCalculator:
             final_atk = attacker.stats[stat]
             r_rank = rank_modifier(attacker.rank[stat])
 
-        # ランク補正の修正
-        def_ability: Ability = self.events.emit(
-            Event.ON_CHECK_DEF_ABILITY,
-            ctx,
-            defender.ability
-        )
+        # ランク補正の修正（かたやぶり等で防御側特性が無視される場合は適用しない）
+        ctx.check_def_ability_enabled(self.battle)
 
-        # TODO (特性実装時でよい) 特性てんねんのハンドラとして実装する
-        if def_ability.name == 'てんねん' and r_rank != 1:
-            r_rank = 1
-            dmg_ctx.add_flag(DamageFlag.IGNORE_ATK_RANK_BY_TENNEN)
+        r_rank = self.events.emit(
+            Event.ON_CALC_ATK_RANK_MODIFIER,
+            ctx,
+            r_rank,
+        )
 
         if dmg_ctx.critical and r_rank < 1:
             r_rank = 1
@@ -464,10 +459,11 @@ class DamageCalculator:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_MOVE)
 
-        # TODO (特性実装時でよい) 特性てんねんのハンドラとして実装する
-        if attacker.ability.name == 'てんねん' and r_rank != 1:
-            r_rank = 1
-            dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_TENNEN)
+        r_rank = self.events.emit(
+            Event.ON_CALC_DEF_RANK_MODIFIER,
+            ctx,
+            r_rank,
+        )
 
         if dmg_ctx.critical and r_rank > 1:
             r_rank = 1

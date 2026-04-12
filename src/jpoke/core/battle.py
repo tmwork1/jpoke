@@ -482,6 +482,10 @@ class Battle:
         for mon in actives:
             ability = mon.ability
 
+            # one_time 特性は一度無効化されたら交代後も再有効化しない。
+            if "one_time" in ability.data.flags and not ability.enabled:
+                continue
+
             # 基本判定：生存していれば有効
             # とくせいなし等の追加無効化条件は各ハンドラ側で判定する
             should_enable = mon.alive
@@ -500,13 +504,7 @@ class Battle:
 
     def refresh_paradox_boost_states(self):
         """こだいかっせい・クォークチャージの発動状態を再判定する。"""
-        actives = [mon for mon in self.actives if mon is not None]
-        for mon in actives:
-            self.events.emit(
-                Event.ON_FIELD_CHANGE,
-                BattleContext(source=mon),
-                None,
-            )
+        self.events.emit(Event.ON_REFRESH_PARADOX_BOOST)
 
     def determine_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。

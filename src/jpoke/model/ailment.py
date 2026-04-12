@@ -40,7 +40,7 @@ class Ailment(GameEffect):
         """ベンチに戻ったときのリセット処理
         経過ターンはリセットされるが、カウントはリセットされない。
         """
-        self.elapsed_turns: int = 0
+        self.elapsed_turns = 0
 
     def __deepcopy__(self, memo):
         cls = self.__class__

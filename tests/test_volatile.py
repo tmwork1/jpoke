@@ -307,11 +307,11 @@ def test_とくせいなし():
     )
     attacker, defender = battle.actives
     result = battle.events.emit(
-        Event.ON_CHECK_DEF_ABILITY,
+        Event.ON_CHECK_DEF_ABILITY_ENABLED,
         BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        defender.ability.name,
+        True,
     )
-    assert result is None
+    assert result is False
 
 
 def test_とくせいなし_特性有効状態も無効化する():

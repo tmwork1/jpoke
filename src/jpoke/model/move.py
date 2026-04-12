@@ -46,7 +46,7 @@ class Move(GameEffect):
 
         技のタイプを元の状態にリセットする。
         """
-        self._type: str = self.data.type
+        self._type = self.data.type
         self._power = self.data.power
 
     def __deepcopy__(self, memo):
