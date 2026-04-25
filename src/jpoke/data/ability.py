@@ -855,7 +855,14 @@ ABILITIES: dict[str, AbilityData] = {
     "わるいてぐせ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.わるいてぐせ_steal_item,
+                subject_spec="defender:self",
+                priority=180,
+            )
+        }
     ),
     "アイスフェイス": AbilityData(
         flags=[
@@ -1189,7 +1196,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "マジシャン": AbilityData(),
+    "マジシャン": AbilityData(
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.マジシャン_steal_item,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "マジックガード": AbilityData(
         flags=[
             "undeniable"

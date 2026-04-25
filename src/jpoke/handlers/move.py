@@ -248,7 +248,7 @@ def ついばむ_berry_steal(battle: Battle, ctx: BattleContext, value: Any) -> 
     """ついばむ・むしくいのきのみ奪取効果。"""
     if not _can_apply_item_hit_effect(ctx):
         return HandlerReturn(value=False)
-    if ctx.attacker.item.name:
+    if ctx.attacker.has_item():
         return HandlerReturn(value=False)
     if not _is_berry(ctx.defender.item.name):
         return HandlerReturn(value=False)
@@ -261,7 +261,7 @@ def どろぼう_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> H
     """どろぼう・ほしがるの持ち物奪取効果。"""
     if not _can_apply_item_hit_effect(ctx):
         return HandlerReturn(value=False)
-    if ctx.attacker.item.name:
+    if ctx.attacker.has_item():
         return HandlerReturn(value=False)
 
     success = battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
@@ -270,7 +270,7 @@ def どろぼう_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> H
 
 def はたきおとす_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はたきおとすの持ち物所持時1.5倍補正。"""
-    if ctx.defender.item.name:
+    if ctx.defender.has_item():
         value = value * 6144 // 4096
     return HandlerReturn(value=value)
 
@@ -292,6 +292,18 @@ def やきつくす_remove_berry(battle: Battle, ctx: BattleContext, value: Any)
         return HandlerReturn(value=False)
 
     success = battle.remove_item(ctx.attacker, ctx.defender, move=ctx.move, reason="burn")
+    return HandlerReturn(value=success)
+
+
+def ふしょくガス_remove_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ふしょくガスの持ち物除去効果。"""
+    success = battle.remove_item(
+        ctx.attacker,
+        ctx.defender,
+        move=ctx.move,
+        reason="gas",
+        check_on_empty=True,
+    )
     return HandlerReturn(value=success)
 
 

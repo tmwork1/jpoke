@@ -156,6 +156,32 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=False, stop_event=True)
 
 
+def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """マジシャン特性: 攻撃成功後に相手の持ち物を奪う。"""
+    if ctx.damage <= 0:
+        return HandlerReturn(value=value)
+    if ctx.attacker.has_item() or not ctx.defender.has_item():
+        return HandlerReturn(value=value)
+    if ctx.move.category == "変化":
+        return HandlerReturn(value=value)
+
+    battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """わるいてぐせ特性: 直接攻撃を受けた後に相手の持ち物を奪う。"""
+    if ctx.damage <= 0:
+        return HandlerReturn(value=value)
+    if ctx.defender.has_item() or not ctx.attacker.has_item():
+        return HandlerReturn(value=value)
+    if not battle.move_executor.is_contact(ctx):
+        return HandlerReturn(value=value)
+
+    battle.take_item(ctx.defender, ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
 def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
     if ctx.move.has_label("punch"):

@@ -129,31 +129,6 @@ class Pokemon:
         """ターン初期化処理。"""
         self.hits_taken = 0
 
-    @classmethod
-    def reconstruct_from_log(cls, data: dict) -> Pokemon:
-        """ログデータからポケモンを復元する。
-
-        Args:
-            data: ポケモンのログデータ（辞書形式）
-
-        Returns:
-            復元されたPokemonインスタンス
-
-        """
-        mon = cls(
-            name=data["name"],
-            gender=data.get("gender", ""),
-            nature=data.get("nature", "まじめ"),
-            level=data.get("level", 50),
-            ability=data.get("ability", ""),
-            item=data.get("item", ""),
-            moves=data.get("moves", ["はねる"]),
-            terastal=data.get("terastal", "ステラ"),
-        )
-        mon.indiv = data.get("indiv", mon.indiv)
-        mon.effort = data.get("effort", mon.effort)
-        return mon
-
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。
 
@@ -222,6 +197,20 @@ class Pokemon:
             ポケモンの種族名
         """
         return self.data.name
+
+    def has_item(self, name: str | None = None) -> bool:
+        """持ち物を持っているか判定する。
+
+        Args:
+            name: 持ち物名（Noneの場合は何らかの持ち物を持っているかを判定）
+
+        Returns:
+            nameが指定された場合はその持ち物を持っているか、
+            Noneの場合は何らかの持ち物を持っている場合True
+        """
+        if name is None:
+            return bool(self.item.name)
+        return self.item.name == name
 
     @property
     def alive(self) -> bool:
@@ -409,7 +398,7 @@ class Pokemon:
                 w = int(w*0.5*10)/10
             case 'ヘヴィメタル':
                 w *= 2
-        if self.item.name == 'かるいし':
+        if self.has_item('かるいし'):
             w = int(w*0.5*10)/10
         return w
 

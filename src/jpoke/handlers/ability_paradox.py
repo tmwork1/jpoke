@@ -38,7 +38,7 @@ def _select_paradox_boost_stat(mon) -> Stat:
 
 def _can_consume_boost_energy(mon) -> bool:
     """ブーストエナジーを今消費できる状態かを判定する。"""
-    return mon.item.name == "ブーストエナジー" and mon.item.enabled
+    return mon.has_item("ブーストエナジー") and mon.item.enabled
 
 
 def _deactivate_paradox_boost(mon) -> None:
@@ -62,7 +62,7 @@ def _activate_paradox_boost(battle: Battle, mon, source: str) -> None:
         payload={"ability": mon.ability.orig_name, "success": True}
     )
 
-    if source == "item" and mon.item.name == "ブーストエナジー" and mon.item.enabled:
+    if source == "item" and mon.has_item("ブーストエナジー") and mon.item.enabled:
         # ブーストエナジー起動時は消費する。
         battle.add_event_log(mon, LogCode.CONSUME_ITEM, payload={"item": "ブーストエナジー"})
         mon.item.consume()

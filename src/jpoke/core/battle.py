@@ -28,6 +28,7 @@ from .move_executor import MoveExecutor
 from .switch import SwitchManager
 from .turn import TurnController
 from .speed import SpeedCalculator
+from .item_manager import ItemManager
 from .pokemon_state import AilmentManager, VolatileManager, PokemonQueryManager
 
 
@@ -105,6 +106,7 @@ class Battle:
         self.ailment_manager: AilmentManager = AilmentManager(self)
         self.volatile_manager: VolatileManager = VolatileManager(self)
         self.query_manager: PokemonQueryManager = PokemonQueryManager(self)
+        self.item_manager: ItemManager = ItemManager(self)
 
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
@@ -128,9 +130,12 @@ class Battle:
         new = cls.__new__(cls)
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
-            "players", "events", "logger", "random", "damage_calculator",
-            "move_executor", "switch_manager", "turn_controller", "speed_calculator",
-            "field_mgr", "side_mgrs"
+            "players", "events", "event_logger", "command_logger", "random",
+            "turn_controller", "speed_calculator", "switch_manager",
+            "move_executor", "damage_calculator",
+            "ailment_manager", "volatile_manager", "query_manager",
+            "item_manager",
+            "weather_manager", "terrain_manager", "field_manager", "side_manager",
         ])
 
         # 複製したBattleインスタンスへの参照を各マネージャークラスに更新
@@ -150,6 +155,7 @@ class Battle:
         self.ailment_manager.update_reference(self)
         self.volatile_manager.update_reference(self)
         self.query_manager.update_reference(self)
+        self.item_manager.update_reference(self)
 
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
@@ -174,6 +180,7 @@ class Battle:
         self.ailment_manager = AilmentManager(self)
         self.volatile_manager = VolatileManager(self)
         self.query_manager = PokemonQueryManager(self)
+        self.item_manager = ItemManager(self)
 
         self.weather_manager = WeatherManager(self)
         self.terrain_manager = TerrainManager(self)
@@ -258,40 +265,6 @@ class Battle:
 
         self.event_logger.export(file, self.seed, players_data)
 
-    @classmethod
-    def reconstruct_from_log(cls, file) -> Self:
-        """ログファイルからBattleインスタンスを再構築する。
-
-        Args:
-            file: ログファイルのパス
-
-        Returns:
-            Self: 再構築されたBattleインスタンス
-        """
-        with open(file, encoding="utf-8") as f:
-            data = json.load(f)
-
-        new = cls(
-            [Player(), Player()],
-            seed=data["seed"],
-        )
-
-        for i, player in enumerate(new.players):
-            player_data = data["players"][i]
-            player.name = player_data["name"]
-            player.selection_idxes = player_data["selection_indexes"]
-
-            for p in player_data["team"]:
-                mon = Pokemon.reconstruct_from_log(p)
-                player.team.append(mon)
-
-            for t, command_names in player_data["commands"].items():
-                for s in command_names:
-                    command = Command[s]
-                    player.reserve_command(command)
-
-        return new
-
     def masked_copy(self, perspective: Player) -> Self:
         # TODO (copilotには任せない) implement more detailed masking
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
@@ -320,10 +293,7 @@ class Battle:
         Raises:
             Exception: ポケモンが見つからない場合
         """
-        for player in self.players:
-            if mon in player.team:
-                return player
-        raise Exception("Player not found.")
+        return self.players[self.find_player_index(mon)]
 
     def find_player_index(self, mon: Pokemon) -> int:
         """ポケモンが所属するプレイヤーのインデックスを検索する。
@@ -552,69 +522,43 @@ class Battle:
         self.move_executor.run_move(attacker, move)
 
     def set_item(self, target: Pokemon, item: str | Item) -> None:
-        """ポケモンの持ち物を更新し、必要なハンドラ登録も同期する。"""
-        old_item = target.item
-        old_item.unregister_handlers(self.events, target)
-
-        target.item = item
-
-        if target in self.actives:
-            target.item.register_handlers(self.events, target)
+        """ポケモンの持ち物を更新する（ItemManagerへの委譲）。"""
+        self.item_manager.set_item(target, item)
 
     def can_change_item(self,
                         source: Pokemon,
                         target: Pokemon,
                         move: Move | None = None,
                         reason: str = "") -> bool:
-        """持ち物変更が許可されるかを共通イベントで判定する。"""
-        ctx = BattleContext(source=source, target=target, move=move)
-        ctx.item_change_reason = reason
-        return self.events.emit(Event.ON_CHECK_ITEM_CHANGE, ctx, True)
+        """持ち物変更可否を判定する（ItemManagerへの委譲）。"""
+        return self.item_manager.can_change_item(source, target, move=move, reason=reason)
 
     def swap_items(self, source: Pokemon, target: Pokemon, move: Move | None = None) -> bool:
-        """2体の持ち物を入れ替える。"""
-        if not source.item.name and not target.item.name:
-            return False
-        if not self.can_change_item(source, source, move=move, reason="swap"):
-            return False
-        if not self.can_change_item(source, target, move=move, reason="swap"):
-            return False
-
-        source_item = source.item.name
-        target_item = target.item.name
-        self.set_item(source, target_item)
-        self.set_item(target, source_item)
-        return True
+        """2体の持ち物を入れ替える（ItemManagerへの委譲）。"""
+        return self.item_manager.swap_items(source, target, move=move)
 
     def take_item(self,
                   source: Pokemon,
                   target: Pokemon,
                   move: Move | None = None,
                   reason: str = "steal") -> bool:
-        """対象の持ち物を source に移す。"""
-        if not target.item.name:
-            return False
-        if not self.can_change_item(source, target, move=move, reason=reason):
-            return False
-
-        item_name = target.item.name
-        self.set_item(source, item_name)
-        self.set_item(target, "")
-        return True
+        """対象の持ち物を source に移す（ItemManagerへの委譲）。"""
+        return self.item_manager.take_item(source, target, move=move, reason=reason)
 
     def remove_item(self,
                     source: Pokemon,
                     target: Pokemon,
                     move: Move | None = None,
-                    reason: str = "remove") -> bool:
-        """対象の持ち物を失わせる。"""
-        if not target.item.name:
-            return False
-        if not self.can_change_item(source, target, move=move, reason=reason):
-            return False
-
-        self.set_item(target, "")
-        return True
+                    reason: str = "remove",
+                    check_on_empty: bool = False) -> bool:
+        """対象の持ち物を失わせる（ItemManagerへの委譲）。"""
+        return self.item_manager.remove_item(
+            source,
+            target,
+            move=move,
+            reason=reason,
+            check_on_empty=check_on_empty,
+        )
 
     def command_to_move(self, player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
@@ -665,12 +609,11 @@ class Battle:
             )
 
         v = target.modify_hp(v)
+
         if v > 0:
-            v = min(v, target.max_hp - target.hp)
             self.add_event_log(target, LogCode.HEAL,
                                payload={"value": v, "reason": reason})
         elif v < 0:
-            v = max(v, -target.hp)
             self.add_event_log(target, LogCode.DAMAGE,
                                payload={"value": -v, "reason": reason})
             # HPがゼロになった場合、勝敗判定を実行

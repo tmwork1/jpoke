@@ -69,7 +69,7 @@ class MoveExecutor:
             return max_hits
 
         # TODO - いかさまダイスの処理をイベントハンドラに移す
-        if attacker.item.name == "いかさまダイス" and (min_hits, max_hits) == (2, 5):
+        if attacker.has_item("いかさまダイス") and (min_hits, max_hits) == (2, 5):
             return 4 if self.battle.random.random() < 0.5 else 5
 
         if (min_hits, max_hits) == (2, 5):
