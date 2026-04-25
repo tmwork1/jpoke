@@ -323,6 +323,93 @@ def test_すなかき_すなあらし以外では素早さ据え置き():
     assert battle.calc_effective_speed(mon) == mon.stats["S"]
 
 
+def test_ねんちゃく_相手のトリックを無効化する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく", item="たべのこし")],
+        foe=[Pokemon("ピカチュウ", item="こだわりスカーフ", moves=["トリック"])],
+    )
+    defender, attacker = battle.actives
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.item.name == "たべのこし"
+    assert attacker.item.name == "こだわりスカーフ"
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_ねんちゃく_道具なしでも相手のトリックを無効化する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく")],
+        foe=[Pokemon("ピカチュウ", item="こだわりスカーフ", moves=["トリック"])],
+    )
+    defender, attacker = battle.actives
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.item.name == ""
+    assert attacker.item.name == "こだわりスカーフ"
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_ねんちゃく_自分のトリックは阻害しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく", item="たべのこし", moves=["トリック"])],
+        foe=[Pokemon("ピカチュウ", item="こだわりスカーフ")],
+    )
+    attacker, defender = battle.actives
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert attacker.item.name == "こだわりスカーフ"
+    assert defender.item.name == "たべのこし"
+
+
+def test_ねんちゃく_どろぼうで奪われない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく", item="たべのこし")],
+        foe=[Pokemon("ピカチュウ", moves=["どろぼう"])],
+    )
+    defender, attacker = battle.actives
+    battle.determine_damage = lambda *args, **kwargs: 10
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.item.name == "たべのこし"
+    assert attacker.item.name == ""
+    assert defender.hp < defender.max_hp
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_ねんちゃく_はたきおとすで失わない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく", item="たべのこし")],
+        foe=[Pokemon("ピカチュウ", moves=["はたきおとす"])],
+    )
+    defender, attacker = battle.actives
+    battle.determine_damage = lambda *args, **kwargs: 10
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.item.name == "たべのこし"
+    assert defender.hp < defender.max_hp
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_ねんちゃく_かがくへんかガス中はトリックを防げない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく", item="たべのこし")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス", item="こだわりスカーフ", moves=["トリック"])],
+    )
+    defender, attacker = battle.actives
+
+    assert defender.ability.enabled is False
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.item.name == "こだわりスカーフ"
+    assert attacker.item.name == "たべのこし"
+
+
 def test_ぜったいねむり_登場時にねむり状態になる():
     battle = t.start_battle(ally=[Pokemon("ピカチュウ", ability="ぜったいねむり")])
     assert battle.actives[0].ailment.name == "ねむり"

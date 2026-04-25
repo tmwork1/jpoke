@@ -229,6 +229,72 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
+def _can_apply_item_hit_effect(ctx: BattleContext) -> bool:
+    """命中後の持ち物操作効果が適用可能かを判定する。"""
+    return ctx.damage > 0 or ctx.fainted
+
+
+def _is_berry(item_name: str) -> bool:
+    return item_name.endswith("のみ")
+
+
+def すりかえ_swap_items(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """すりかえ・トリックの持ち物交換効果。"""
+    success = battle.swap_items(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=success)
+
+
+def ついばむ_berry_steal(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ついばむ・むしくいのきのみ奪取効果。"""
+    if not _can_apply_item_hit_effect(ctx):
+        return HandlerReturn(value=False)
+    if ctx.attacker.item.name:
+        return HandlerReturn(value=False)
+    if not _is_berry(ctx.defender.item.name):
+        return HandlerReturn(value=False)
+
+    success = battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=success)
+
+
+def どろぼう_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """どろぼう・ほしがるの持ち物奪取効果。"""
+    if not _can_apply_item_hit_effect(ctx):
+        return HandlerReturn(value=False)
+    if ctx.attacker.item.name:
+        return HandlerReturn(value=False)
+
+    success = battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=success)
+
+
+def はたきおとす_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """はたきおとすの持ち物所持時1.5倍補正。"""
+    if ctx.defender.item.name:
+        value = value * 6144 // 4096
+    return HandlerReturn(value=value)
+
+
+def はたきおとす_remove_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """はたきおとすの持ち物除去効果。"""
+    if not _can_apply_item_hit_effect(ctx):
+        return HandlerReturn(value=False)
+
+    success = battle.remove_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=success)
+
+
+def やきつくす_remove_berry(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """やきつくすのきのみ焼却効果。"""
+    if ctx.damage <= 0:
+        return HandlerReturn(value=False)
+    if not _is_berry(ctx.defender.item.name):
+        return HandlerReturn(value=False)
+
+    success = battle.remove_item(ctx.attacker, ctx.defender, move=ctx.move, reason="burn")
+    return HandlerReturn(value=success)
+
+
 def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふぶきの天候による命中率補正。
 

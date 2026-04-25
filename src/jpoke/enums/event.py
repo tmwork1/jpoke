@@ -232,6 +232,10 @@ class Event(Enum):
     # priority: 10(かがくへんかガス無効化) -> 20(undeniable保護) -> 30(とくせいガード保護)
     ON_CHECK_ABILITY_ENABLED = auto()
 
+    # emit: core/battle.py（持ち物の交換・奪取・除去可否を判定）
+    # handle: ability.py（ねんちゃく）
+    ON_CHECK_ITEM_CHANGE = auto()
+
     # emit: core/move_executor.py（技タイプを書き換える）
     # handle: ability.py（ノーマルスキン・フェアリースキン等のタイプ変換能力）
     #          data/item.py（プレート・Zクリスタル等によるタイプ変換）

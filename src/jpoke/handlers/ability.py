@@ -135,6 +135,27 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
+def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ねんちゃく特性: 相手から受ける持ち物交換・奪取・除去を防ぐ。"""
+    if not value:
+        return HandlerReturn(value=value)
+
+    if ctx.source == ctx.target:
+        return HandlerReturn(value=value)
+
+    if ctx.move is not None and not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+
+    idx = battle.get_player_index(ctx.target)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "ねんちゃく", "success": True},
+    )
+    return HandlerReturn(value=False, stop_event=True)
+
+
 def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
     if ctx.move.has_label("punch"):

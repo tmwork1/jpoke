@@ -1339,6 +1339,11 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                h.ついばむ_berry_steal,
+            )
+        }
     ),
     "つけあがる": MoveData(
         type="あく",
@@ -1746,6 +1751,11 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                h.どろぼう_steal_item,
+            )
+        }
     ),
     "とんぼがえり": MoveData(
         type="むし",
@@ -1925,6 +1935,14 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                h.はたきおとす_power,
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                h.はたきおとす_remove_item,
+            )
+        }
     ),
     "はたく": MoveData(
         type="ノーマル",
@@ -2240,6 +2258,11 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                h.どろぼう_steal_item,
+            )
+        }
     ),
     "ほっぺすりすり": MoveData(
         type="でんき",
@@ -2357,6 +2380,11 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                h.ついばむ_berry_steal,
+            )
+        }
     ),
     "むねんのつるぎ": MoveData(
         type="ほのお",
@@ -4150,7 +4178,12 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=15,
         power=60,
-        accuracy=100
+        accuracy=100,
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                h.やきつくす_remove_berry,
+            )
+        }
     ),
     "ゆめくい": MoveData(
         type="エスパー",
@@ -5164,7 +5197,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                h.すりかえ_swap_items,
+            )
+        }
     ),
     "スレッドトラップ": MoveData(
         type="むし",
@@ -5519,7 +5556,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=100,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                h.すりかえ_swap_items,
+            )
+        }
     ),
     "トリックルーム": MoveData(
         type="エスパー",

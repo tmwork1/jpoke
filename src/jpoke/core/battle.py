@@ -15,7 +15,7 @@ from jpoke.utils.type_defs import Stat, GlobalField, SideField
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
-from jpoke.model import Pokemon, Move, Field
+from jpoke.model import Pokemon, Move, Field, Item
 
 from .event import EventManager
 from .context import BattleContext
@@ -550,6 +550,71 @@ class Battle:
             move: 使用する技
         """
         self.move_executor.run_move(attacker, move)
+
+    def set_item(self, target: Pokemon, item: str | Item) -> None:
+        """ポケモンの持ち物を更新し、必要なハンドラ登録も同期する。"""
+        old_item = target.item
+        old_item.unregister_handlers(self.events, target)
+
+        target.item = item
+
+        if target in self.actives:
+            target.item.register_handlers(self.events, target)
+
+    def can_change_item(self,
+                        source: Pokemon,
+                        target: Pokemon,
+                        move: Move | None = None,
+                        reason: str = "") -> bool:
+        """持ち物変更が許可されるかを共通イベントで判定する。"""
+        ctx = BattleContext(source=source, target=target, move=move)
+        ctx.item_change_reason = reason
+        return self.events.emit(Event.ON_CHECK_ITEM_CHANGE, ctx, True)
+
+    def swap_items(self, source: Pokemon, target: Pokemon, move: Move | None = None) -> bool:
+        """2体の持ち物を入れ替える。"""
+        if not source.item.name and not target.item.name:
+            return False
+        if not self.can_change_item(source, source, move=move, reason="swap"):
+            return False
+        if not self.can_change_item(source, target, move=move, reason="swap"):
+            return False
+
+        source_item = source.item.name
+        target_item = target.item.name
+        self.set_item(source, target_item)
+        self.set_item(target, source_item)
+        return True
+
+    def take_item(self,
+                  source: Pokemon,
+                  target: Pokemon,
+                  move: Move | None = None,
+                  reason: str = "steal") -> bool:
+        """対象の持ち物を source に移す。"""
+        if not target.item.name:
+            return False
+        if not self.can_change_item(source, target, move=move, reason=reason):
+            return False
+
+        item_name = target.item.name
+        self.set_item(source, item_name)
+        self.set_item(target, "")
+        return True
+
+    def remove_item(self,
+                    source: Pokemon,
+                    target: Pokemon,
+                    move: Move | None = None,
+                    reason: str = "remove") -> bool:
+        """対象の持ち物を失わせる。"""
+        if not target.item.name:
+            return False
+        if not self.can_change_item(source, target, move=move, reason=reason):
+            return False
+
+        self.set_item(target, "")
+        return True
 
     def command_to_move(self, player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
