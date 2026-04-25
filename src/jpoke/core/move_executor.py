@@ -127,7 +127,7 @@ class MoveExecutor:
             if hp_delta < 0:
                 ctx.defender.hits_taken += 1
 
-            if ctx.defender.hp == 0:
+            if ctx.defender.fainted:
                 ctx.fainted = True
 
         self.events.emit(Event.ON_HIT, ctx)

@@ -158,11 +158,9 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, valu
 
 def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジシャン特性: 攻撃成功後に相手の持ち物を奪う。"""
-    if ctx.damage <= 0:
+    if ctx.damage == 0:
         return HandlerReturn(value=value)
     if ctx.attacker.has_item() or not ctx.defender.has_item():
-        return HandlerReturn(value=value)
-    if ctx.move.category == "変化":
         return HandlerReturn(value=value)
 
     battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
@@ -171,7 +169,9 @@ def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -
 
 def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """わるいてぐせ特性: 直接攻撃を受けた後に相手の持ち物を奪う。"""
-    if ctx.damage <= 0:
+    if ctx.damage == 0:
+        return HandlerReturn(value=value)
+    if ctx.defender.fainted:
         return HandlerReturn(value=value)
     if ctx.defender.has_item() or not ctx.attacker.has_item():
         return HandlerReturn(value=value)

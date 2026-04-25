@@ -12,11 +12,15 @@
 4. `src/jpoke/core/battle.py`
 5. `src/jpoke/data/models.py`
 6. 対象となる `src/jpoke/data/` 配下のファイル
-7. 対象となる `src/jpoke/handlers/` 配下のファイル
+7. 対象となる `src/jpoke/handlers/` 配下のファイル（特性パラドックスは `handlers/ability_paradox.py`）
 8. `tests/test_utils.py` と最も近い既存テスト
 
 ## 現在のアーキテクチャ
-- `Battle` は event、turn、speed、switch、damage、ailment、volatile、query、weather、terrain、global field、side field の各 manager を束ねる facade である。
+- `Battle` は event、turn、speed、switch、damage、ailment、volatile、query、status、item、command、ability、weather、terrain、global field、side field の各 manager を束ねる facade である。
+	- `ability_manager` (`AbilityManager`): 特性の入場登録・解除
+	- `item_manager` (`ItemManager`): アイテム効果の登録・解除
+	- `command_manager` (`CommandManager`): コマンド受付・強制行動管理
+	- `status_manager` (`StatusManager`): HP/ランク以外のポケモン状態の一括管理
 - 効果宣言は `src/jpoke/data/*.py`、効果本体は `src/jpoke/handlers/*.py` または `src/jpoke/handlers/common.py` に置く。
 - `BattleContext` は `source` と `target` を保持し、`attacker` と `defender` はその別名である。
 - `HandlerReturn` は現状 `value` と `stop_event` だけを持つ。`success` や log policy がある前提で案内や実装をしないこと。
@@ -34,5 +38,5 @@
 - `tests/` に焦点の絞れたテストを追加または更新し、可能な範囲で `tests/test_utils.py` の helper を再利用する。
 - 作業後は必ず `progress/` 配下の該当ファイルを更新し、実装状況とテスト状況を最新化する。
 - 実装数が変わる場合は `script/dashboard.py` を使って `dashboard.json` と `README.md` を更新する。
-- 調査は `docs/spec/`、実行計画は `docs/plan/`、実装追跡は `docs/checklist/` を使う。
+- 調査は `spec/`（トップレベル）、実行計画は `plan/`、進捗追跡は `progress/` を使う。
 - `.github/` の指示書は短く保ち、現実に存在するファイルと現在のコードにだけ結び付ける。

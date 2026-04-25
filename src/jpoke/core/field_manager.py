@@ -59,8 +59,8 @@ class BaseFieldManager(Generic[T]):
         """ディープコピー後の参照を更新する。
 
         Args:
-            battle: 新しいBattleインスタンス
-            owners: 新しい所有者リスト
+            new_battle: 新しいBattleインスタンス
+            new_owners: 新しい所有者リスト
         """
         self.battle = new_battle
         self.owners = new_owners

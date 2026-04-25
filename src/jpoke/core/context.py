@@ -1,3 +1,9 @@
+"""バトル中のイベント文脈を扱うモジュール。
+
+ハンドラ実行で参照する source/target、技、ダメージ値などを保持する
+`BattleContext` を提供する。
+"""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -46,6 +52,8 @@ class BattleContext:
             move: 使用された技
             field: 場の状態
             damage: 与えたダメージ値（デフォルト0）
+            hit_index: マルチヒット時の現在ヒット番号（1始まり）
+            hit_count: マルチヒット時の総ヒット回数
 
         Note:
             attacker が指定された場合は source に、

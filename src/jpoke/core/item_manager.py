@@ -12,16 +12,31 @@ from .context import BattleContext
 
 
 class ItemManager:
-    """持ち物の変更・入れ替え・奪取・消失の共通処理を管理する。"""
+    """持ち物の変更処理と関連ハンドラ同期を管理する。"""
 
     def __init__(self, battle: "Battle"):
+        """ItemManagerを初期化する。
+
+        Args:
+            battle: 親となるBattleインスタンス
+        """
         self.battle = battle
 
     def update_reference(self, battle: "Battle"):
+        """Battleインスタンスの参照を更新する。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
         self.battle = battle
 
     def set_item(self, target: Pokemon, item: str | Item) -> None:
-        """ポケモンの持ち物を更新し、必要なハンドラ登録も同期する。"""
+        """ポケモンの持ち物を更新し、ハンドラ登録も同期する。
+
+        Args:
+            target: 持ち物を変更するポケモン
+            item: 新しい持ち物
+        """
         old_item = target.item
         old_item.unregister_handlers(self.battle.events, target)
 
@@ -35,7 +50,17 @@ class ItemManager:
                         target: Pokemon,
                         move: Move | None = None,
                         reason: str = "") -> bool:
-        """持ち物変更が許可されるかを共通イベントで判定する。"""
+        """持ち物変更が許可されるかを共通イベントで判定する。
+
+        Args:
+            source: 変更の発生源となるポケモン
+            target: 持ち物変更の対象ポケモン
+            move: 関連する技
+            reason: 変更理由
+
+        Returns:
+            変更可能な場合はTrue
+        """
         return self.battle.events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
             BattleContext(source=source, target=target, move=move),
@@ -43,7 +68,16 @@ class ItemManager:
         )
 
     def swap_items(self, source: Pokemon, target: Pokemon, move: Move | None = None) -> bool:
-        """2体の持ち物を入れ替える。"""
+        """2体の持ち物を入れ替える。
+
+        Args:
+            source: 入れ替え元のポケモン
+            target: 入れ替え先のポケモン
+            move: 関連する技
+
+        Returns:
+            入れ替えに成功した場合はTrue
+        """
         if not source.has_item() and not target.has_item():
             return False
         if not self.can_change_item(source, source, move=move, reason="swap"):
@@ -62,7 +96,17 @@ class ItemManager:
                   target: Pokemon,
                   move: Move | None = None,
                   reason: str = "steal") -> bool:
-        """対象の持ち物を source に移す。"""
+        """対象の持ち物を source に移す。
+
+        Args:
+            source: 持ち物を受け取るポケモン
+            target: 持ち物を失うポケモン
+            move: 関連する技
+            reason: 変更理由
+
+        Returns:
+            奪取に成功した場合はTrue
+        """
         if not target.has_item():
             return False
         if not self.can_change_item(source, target, move=move, reason=reason):
@@ -79,7 +123,18 @@ class ItemManager:
                     move: Move | None = None,
                     reason: str = "remove",
                     check_on_empty: bool = False) -> bool:
-        """対象の持ち物を失わせる。"""
+        """対象の持ち物を失わせる。
+
+        Args:
+            source: 変更の発生源となるポケモン
+            target: 持ち物を失うポケモン
+            move: 関連する技
+            reason: 変更理由
+            check_on_empty: 空持ち物に対してもイベント判定を行うか
+
+        Returns:
+            取り外しに成功した場合はTrue
+        """
         if not check_on_empty and not target.has_item():
             return False
         if not self.can_change_item(source, target, move=move, reason=reason):

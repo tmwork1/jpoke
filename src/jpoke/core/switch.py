@@ -206,7 +206,7 @@ class SwitchManager:
         # 交代フラグを設定
         if not self.has_interrupt():
             for player in self.battle.players:
-                if player.active.hp == 0:
+                if player.active.fainted:
                     player.interrupt = Interrupt.FAINTED
 
         # 交代を行うプレイヤー

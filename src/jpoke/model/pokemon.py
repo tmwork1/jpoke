@@ -222,7 +222,7 @@ class Pokemon:
         return self.hp > 0
 
     @property
-    def faited(self) -> bool:
+    def fainted(self) -> bool:
         """ポケモンが瀕死状態かどうかを取得する。
 
         Returns:

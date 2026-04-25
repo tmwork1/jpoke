@@ -96,14 +96,14 @@ class SpeedCalculator:
         )
 
     def calc_move_priority(self, attacker: Pokemon, move: Move) -> int:
-        """ポケモンの行動順序キーを計算する。
+        """技による優先度補正後の優先度を計算する。
 
         Args:
-            mon: 対象のポケモン
-            move_priority: 使用する技の優先度
+            attacker: 攻撃側のポケモン
+            move: 使用する技
 
         Returns:
-            (優先度, 行動素早さ) のタプル
+            修正後の優先度
         """
         # 技の優先度を取得（基本値）
         base_priority = move.priority if move else 0

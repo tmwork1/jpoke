@@ -105,7 +105,7 @@ class DamageCalculator:
         """ディープコピー後の参照を更新する。
 
         Args:
-            battle: 新しいBattleインスタンス
+            new_battle: 新しいBattleインスタンス
         """
         self.battle = new_battle
 
@@ -119,8 +119,7 @@ class DamageCalculator:
                           defender: Pokemon,
                           move: Move,
                           dmg_ctx: DamageContext) -> tuple[list[int], DamageContext | None]:
-        """
-        1回の攻撃で与えるダメージを計算する
+        """1回の攻撃で与えるダメージ乱数列を計算する。
 
         Args:
             attacker: 攻撃側
@@ -129,8 +128,9 @@ class DamageCalculator:
             dmg_ctx: ダメージコンテキスト
 
         Returns:
-            ダメージのリスト
-            ダメージコンテキスト
+            tuple[list[int], DamageContext | None]:
+                - 16段階乱数に対応するダメージリスト
+                - 計算後のダメージコンテキスト
         """
         if not move.power:
             return [0], dmg_ctx

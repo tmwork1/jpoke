@@ -27,7 +27,7 @@ class EventManager:
     """
 
     def __init__(self, battle: Battle) -> None:
-        """BaseHandlerManagerを初期化する。
+        """EventManagerを初期化する。
 
         Args:
             battle: バトルインスタンス
@@ -36,13 +36,13 @@ class EventManager:
         self.handlers: dict[Event, list[RegisteredHandler]] = {}
 
     def __deepcopy__(self, memo):
-        """BaseHandlerManagerインスタンスのディープコピーを作成する。
+        """EventManagerインスタンスのディープコピーを作成する。
 
         Args:
             memo: コピー済みオブジェクトのメモ辞書
 
         Returns:
-            BaseHandlerManager: コピーされたBaseHandlerManagerインスタンス
+            EventManager: コピーされたEventManagerインスタンス
         """
         cls = self.__class__
         new = cls.__new__(cls)

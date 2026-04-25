@@ -1,3 +1,5 @@
+"""複数の効果実装で使い回す共通ハンドラ群。"""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
@@ -15,6 +17,21 @@ def modify_hp(battle: Battle,
               r: float = 0,
               chance: float = 1,
               reason: str = "") -> HandlerReturn:
+    """対象のHPを固定値または割合で増減させる。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント連鎖値（未使用）
+        target_spec: HP変更対象のRoleSpec
+        v: HP増減の固定値
+        r: 最大HPに対する増減割合
+        chance: 発動確率
+        reason: 変更理由
+
+    Returns:
+        実際に変化したHP量を value に持つ HandlerReturn
+    """
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
@@ -32,6 +49,23 @@ def drain_hp(battle: Battle,
              heal_rate: float = 1,
              chance: float = 1,
              reason: str = "") -> HandlerReturn:
+    """HPを奪い、奪った量に応じて回復させる。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント連鎖値（未使用）
+        from_: HPを失う側のRoleSpec
+        to_: 回復する側のRoleSpec。Noneなら from_ の相手
+        v: 吸収する固定値
+        r: 吸収する割合
+        heal_rate: 回復倍率
+        chance: 発動確率
+        reason: 変更理由
+
+    Returns:
+        実際に吸収したHP量を value に持つ HandlerReturn
+    """
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
 
@@ -58,6 +92,21 @@ def modify_stat(battle: Battle,
                 target_spec: RoleSpec,
                 source_spec: RoleSpec | None = None,
                 chance: float = 1) -> HandlerReturn:
+    """能力ランクを1種類だけ変更する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト
+        value: イベント連鎖値（未使用）
+        stat: 変更する能力
+        v: ランク変化量
+        target_spec: 変更対象のRoleSpec
+        source_spec: 変化の原因となるRoleSpec
+        chance: 発動確率
+
+    Returns:
+        変化が成功したかを value に持つ HandlerReturn
+    """
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
@@ -110,6 +159,7 @@ def apply_ailment(battle: Battle,
                   source_spec: RoleSpec | None = None,
                   chance: float = 1,
                   reason: str = "") -> HandlerReturn:
+    """状態異常を付与する。"""
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
@@ -126,6 +176,7 @@ def apply_volatile(battle: Battle,
                    source_spec: RoleSpec | None = None,
                    count: int | None = None,
                    chance: float = 1) -> HandlerReturn:
+    """揮発状態を付与する。"""
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     if count is None:

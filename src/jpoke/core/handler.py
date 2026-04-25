@@ -1,3 +1,8 @@
+"""イベントハンドラ定義を扱うモジュール。
+
+ハンドラ本体の型、戻り値、登録済みハンドラ情報を定義する。
+"""
+
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, NamedTuple
 if TYPE_CHECKING:
@@ -75,9 +80,6 @@ class RegisteredHandler:
         Args:
             old: 複製前のBattle
             new: 複製後のBattle
-
-        Returns:
-            Pokemon | Player: 対応する新しい対象
         """
         if isinstance(self._subject, Player):
             player_idx = old.players.index(self._subject)

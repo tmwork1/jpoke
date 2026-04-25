@@ -157,9 +157,11 @@ class EventLogger:
     """
 
     def __init__(self):
+        """EventLoggerを初期化する。"""
         self.logs: list[EventLog] = []
 
     def __deepcopy__(self, memo):
+        """EventLoggerのディープコピーを作成する。"""
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new

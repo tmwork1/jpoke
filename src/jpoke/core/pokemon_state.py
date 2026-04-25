@@ -390,7 +390,7 @@ class StatusManager:
         elif v < 0:
             self.battle.add_event_log(target, LogCode.DAMAGE,
                                       payload={"value": -v, "reason": reason})
-            if target.hp == 0:
+            if target.fainted:
                 self.battle.judge_winner()
 
         return v
