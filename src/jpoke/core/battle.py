@@ -30,6 +30,7 @@ from .turn import TurnController
 from .speed import SpeedCalculator
 from .item_manager import ItemManager
 from .command_manager import CommandManager
+from .ability_manager import AbilityManager
 from .pokemon_state import AilmentManager, VolatileManager, PokemonQuery, StatusManager
 
 
@@ -110,6 +111,7 @@ class Battle:
         self.status_manager: StatusManager = StatusManager(self)
         self.item_manager: ItemManager = ItemManager(self)
         self.command_manager: CommandManager = CommandManager(self)
+        self.ability_manager: AbilityManager = AbilityManager(self)
 
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
@@ -138,7 +140,7 @@ class Battle:
             "move_executor", "damage_calculator",
             "ailment_manager", "volatile_manager", "query_manager",
             "status_manager", "item_manager",
-            "command_manager",
+            "command_manager", "ability_manager",
             "weather_manager", "terrain_manager", "field_manager", "side_manager",
         ])
 
@@ -162,6 +164,7 @@ class Battle:
         self.status_manager.update_reference(self)
         self.item_manager.update_reference(self)
         self.command_manager.update_reference(self)
+        self.ability_manager.update_reference(self)
 
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
@@ -189,6 +192,7 @@ class Battle:
         self.status_manager = StatusManager(self)
         self.item_manager = ItemManager(self)
         self.command_manager = CommandManager(self)
+        self.ability_manager = AbilityManager(self)
 
         self.weather_manager = WeatherManager(self)
         self.terrain_manager = TerrainManager(self)
@@ -420,40 +424,12 @@ class Battle:
         return self.speed_calculator.calc_action_order()
 
     def refresh_ability_enabled_states(self):
-        """場の状況に応じて特性の有効/無効状態を再計算する。
-
-        Note:
-            ON_CHECK_ABILITY_ENABLEDイベントを使用して判定を実施。
-            ハンドラは入場時に特性・持ち物から通常登録される。
-        """
-        actives = [mon for mon in self.actives if mon is not None]
-
-        for mon in actives:
-            ability = mon.ability
-
-            # one_time 特性は一度無効化されたら交代後も再有効化しない。
-            if "one_time" in ability.data.flags and not ability.enabled:
-                continue
-
-            # 基本判定：生存していれば有効
-            # とくせいなし等の追加無効化条件は各ハンドラ側で判定する
-            should_enable = mon.alive
-
-            # イベント駆動で有効/無効を判定
-            # context の source は判定対象ポケモン。
-            should_enable = self.events.emit(
-                Event.ON_CHECK_ABILITY_ENABLED,
-                BattleContext(source=mon),
-                should_enable
-            )
-
-            ability.enabled = should_enable
-
-        self.refresh_paradox_boost_states()
+        """場の状況に応じて特性の有効/無効状態を再計算する（AbilityManagerへの委譲）。"""
+        self.ability_manager.refresh_ability_enabled_states()
 
     def refresh_paradox_boost_states(self):
-        """こだいかっせい・クォークチャージの発動状態を再判定する。"""
-        self.events.emit(Event.ON_REFRESH_PARADOX_BOOST)
+        """こだいかっせい・クォークチャージの発動状態を再判定する（AbilityManagerへの委譲）。"""
+        self.ability_manager.refresh_paradox_boost_states()
 
     def determine_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
