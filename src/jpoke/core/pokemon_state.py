@@ -8,8 +8,8 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
 
 from jpoke.model import Pokemon, Move, Ailment, Volatile
-from jpoke.utils.type_defs import AilmentName, VolatileName
-from jpoke.enums import Event
+from jpoke.utils.type_defs import AilmentName, VolatileName, Stat
+from jpoke.enums import Event, LogCode
 from jpoke.core import BattleContext
 
 
@@ -244,18 +244,17 @@ class VolatileManager:
         return True
 
 
-class PokemonQueryManager:
-    """ポケモンの状態判定クエリを管理するクラス。
+class PokemonQuery:
+    """ポケモン個体に関する読み取り専用クエリをまとめたクラス。
 
-    浮遊、束縛、びんじょう状態などの判定を担当。
-    Pokemonクラスからクエリロジックを分離し、単一責任原則を実現。
+    状態を変更せず、イベントを通じて現在の判定結果を返す。
 
     Attributes:
         battle: 親となるBattleインスタンス
     """
 
     def __init__(self, battle: Battle):
-        """PokemonQueryManagerを初期化。
+        """PokemonQueryを初期化。
 
         Args:
             battle: 親となるBattleインスタンス
@@ -331,3 +330,139 @@ class PokemonQueryManager:
             if volatile.data.forced:
                 return volatile.move_name
         return None
+
+
+class StatusManager:
+    """HPと能力ランクの更新を管理するクラス。
+
+    HPやランクを変更する際に必要なイベント発火・ログ記録・勝敗判定トリガーを一括して担当する。
+
+    Attributes:
+        battle: 親となるBattleインスタンス
+    """
+
+    def __init__(self, battle: "Battle"):
+        """StatusManagerを初期化。
+
+        Args:
+            battle: 親となるBattleインスタンス
+        """
+        self.battle = battle
+
+    def update_reference(self, battle: "Battle"):
+        """Battleインスタンスの参照を更新。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
+
+    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: str = "") -> int:
+        """ポケモンのHPを変更する。
+
+        Args:
+            target: 対象のポケモン
+            v: 変更する固定HP量
+            r: 最大HPに対する割合（0.0〜1.0）。v と同時指定時は r が優先される
+            reason: 変更の理由（ログ記録用）
+
+        Returns:
+            実際に変化したHP量（正=回復、負=ダメージ）
+        """
+        if v == 0 and r == 0:
+            return 0
+
+        if r:
+            v = int(target.max_hp * r)
+
+        if v > 0:
+            v = self.battle.events.emit(
+                Event.ON_BEFORE_HEAL,
+                BattleContext(target=target),
+                v
+            )
+
+        v = target.modify_hp(v)
+
+        if v > 0:
+            self.battle.add_event_log(target, LogCode.HEAL,
+                                      payload={"value": v, "reason": reason})
+        elif v < 0:
+            self.battle.add_event_log(target, LogCode.DAMAGE,
+                                      payload={"value": -v, "reason": reason})
+            if target.hp == 0:
+                self.battle.judge_winner()
+
+        return v
+
+    def modify_stat(self,
+                    target: Pokemon,
+                    stat: Stat,
+                    v: int,
+                    source: Pokemon | None = None,
+                    reason: str = "") -> dict[Stat, int]:
+        """ポケモンの能力ランクを1つ変更する。
+
+        内部的には modify_stats() を呼び出して処理する。
+
+        Args:
+            target: 対象のポケモン
+            stat: 変更する能力値（"A", "B", "C", "D", "S" 等）
+            v: 変更するランク数（正=上昇、負=下降）
+            source: 変更の原因となったポケモン
+            reason: 変更の理由（ログ記録用）
+
+        Returns:
+            実際に変化した能力とランク量の辞書
+        """
+        return self.modify_stats(target, {stat: v}, source, reason)
+
+    def modify_stats(self,
+                     target: Pokemon,
+                     stats: dict[Stat, int],
+                     source: Pokemon | None = None,
+                     reason: str = "") -> dict[Stat, int]:
+        """ポケモンの複数の能力ランクを同時に変更する。
+
+        しろいハーブなどのアイテムが正しく動作するよう、
+        複数の能力変化を一度に処理してから ON_MODIFY_STAT を1回発火する。
+
+        Args:
+            target: 対象のポケモン
+            stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
+            source: 変更の原因となったポケモン
+            reason: 変更の理由（ログ記録用）
+
+        Returns:
+            実際に変化した能力とランク量の辞書
+        """
+        stats = self.battle.events.emit(
+            Event.ON_BEFORE_MODIFY_STAT,
+            BattleContext(target=target, source=source),
+            stats
+        )
+
+        any_success = False
+        actual_changes = {}
+
+        for stat_key, stat_value in stats.items():
+            if stat_value == 0:
+                continue
+            actual_value = target.modify_stat(stat_key, stat_value)
+            if actual_value != 0:
+                self.battle.add_event_log(
+                    target,
+                    LogCode.MODIFY_STAT,
+                    payload={"stat": stat_key, "value": actual_value, "reason": reason},
+                )
+                actual_changes[stat_key] = actual_value
+                any_success = True
+
+        if any_success:
+            self.battle.events.emit(
+                Event.ON_MODIFY_STAT,
+                BattleContext(target=target, source=source),
+                actual_changes
+            )
+
+        return actual_changes

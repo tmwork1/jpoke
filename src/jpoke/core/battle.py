@@ -29,7 +29,8 @@ from .switch import SwitchManager
 from .turn import TurnController
 from .speed import SpeedCalculator
 from .item_manager import ItemManager
-from .pokemon_state import AilmentManager, VolatileManager, PokemonQueryManager
+from .command_manager import CommandManager
+from .pokemon_state import AilmentManager, VolatileManager, PokemonQuery, StatusManager
 
 
 @dataclass
@@ -105,8 +106,10 @@ class Battle:
         self.damage_calculator: DamageCalculator = DamageCalculator(self)
         self.ailment_manager: AilmentManager = AilmentManager(self)
         self.volatile_manager: VolatileManager = VolatileManager(self)
-        self.query_manager: PokemonQueryManager = PokemonQueryManager(self)
+        self.query_manager: PokemonQuery = PokemonQuery(self)
+        self.status_manager: StatusManager = StatusManager(self)
         self.item_manager: ItemManager = ItemManager(self)
+        self.command_manager: CommandManager = CommandManager(self)
 
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
@@ -134,7 +137,8 @@ class Battle:
             "turn_controller", "speed_calculator", "switch_manager",
             "move_executor", "damage_calculator",
             "ailment_manager", "volatile_manager", "query_manager",
-            "item_manager",
+            "status_manager", "item_manager",
+            "command_manager",
             "weather_manager", "terrain_manager", "field_manager", "side_manager",
         ])
 
@@ -155,7 +159,9 @@ class Battle:
         self.ailment_manager.update_reference(self)
         self.volatile_manager.update_reference(self)
         self.query_manager.update_reference(self)
+        self.status_manager.update_reference(self)
         self.item_manager.update_reference(self)
+        self.command_manager.update_reference(self)
 
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
@@ -179,8 +185,10 @@ class Battle:
         self.damage_calculator = DamageCalculator(self)
         self.ailment_manager = AilmentManager(self)
         self.volatile_manager = VolatileManager(self)
-        self.query_manager = PokemonQueryManager(self)
+        self.query_manager = PokemonQuery(self)
+        self.status_manager = StatusManager(self)
         self.item_manager = ItemManager(self)
+        self.command_manager = CommandManager(self)
 
         self.weather_manager = WeatherManager(self)
         self.terrain_manager = TerrainManager(self)
@@ -358,7 +366,7 @@ class Battle:
         Returns:
             list[Command]: 選出可能なコマンドのリスト
         """
-        return Command.selection_commands()[:len(player.team)]
+        return self.command_manager.get_available_selection_commands(player)
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
         """交代可能なコマンドのリストを取得する。
@@ -369,10 +377,7 @@ class Battle:
         Returns:
             list[Command]: 交代可能なコマンドのリスト（交代不可の場合は空リスト）
         """
-        if self.query_manager.is_trapped(player.active):
-            return []
-        return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
-                if mon in player.selection and mon is not player.active]
+        return self.command_manager.get_available_switch_commands(player)
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。
@@ -385,33 +390,7 @@ class Battle:
         Returns:
             list[Command]: 使用可能なコマンドのリスト
         """
-        n = len(player.active.moves)
-
-        # 通常技
-        commands = Command.regular_move_commands()[:n]
-
-        # テラスタル
-        if player.can_use_terastal():
-            commands += Command.terastal_commands()[:n]
-
-        # コマンド修正
-        commands = self.events.emit(
-            Event.ON_MODIFY_COMMAND_OPTIONS,
-            BattleContext(source=player.active),
-            commands
-        )
-
-        if Command.FORCED in commands:
-            return [Command.FORCED]
-
-        # 技がない場合はわるあがきを追加
-        if not commands:
-            commands = [Command.STRUGGLE]
-
-        # 交代コマンドを追加
-        commands += self.get_available_switch_commands(player)
-
-        return commands
+        return self.command_manager.get_available_action_commands(player)
 
     def calc_effective_speed(self, mon: Pokemon) -> int:
         """実効素早さを計算（SpeedCalculatorへの委譲）。
@@ -560,7 +539,7 @@ class Battle:
             check_on_empty=check_on_empty,
         )
 
-    def command_to_move(self, player, command: Command) -> Move:
+    def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
 
         Args:
@@ -570,57 +549,11 @@ class Battle:
         Returns:
             技オブジェクト
         """
-        attacker = player.active
-        if command == Command.STRUGGLE:
-            return Move("わるあがき")
-        elif command == Command.FORCED:
-            move_name = self.query_manager.get_forced_move_name(attacker)
-            if move_name:
-                return Move(move_name)
-            return Move("わるあがき")
-        elif command.is_z_move():
-            return Move("わるあがき")
-        else:
-            return attacker.moves[command.idx]
+        return self.command_manager.command_to_move(player, command)
 
     def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: str = "") -> int:
-        """ポケモンのHPを変更する。
-
-        Args:
-            target: 対象のポケモン
-            v: 変更する固定HP量
-            r: 最大HPに対する割合（0.0～1.0）
-            reason: 変更の理由
-
-        Returns:
-            int: 変更されたHP量
-        """
-        if v == 0 and r == 0:
-            return 0
-
-        if r:
-            v = int(target.max_hp * r)
-
-        if v > 0:
-            v = self.events.emit(
-                Event.ON_BEFORE_HEAL,
-                BattleContext(target=target),
-                v
-            )
-
-        v = target.modify_hp(v)
-
-        if v > 0:
-            self.add_event_log(target, LogCode.HEAL,
-                               payload={"value": v, "reason": reason})
-        elif v < 0:
-            self.add_event_log(target, LogCode.DAMAGE,
-                               payload={"value": -v, "reason": reason})
-            # HPがゼロになった場合、勝敗判定を実行
-            if target.hp == 0:
-                self.judge_winner()
-
-        return v
+        """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
+        return self.status_manager.modify_hp(target, v=v, r=r, reason=reason)
 
     def modify_stat(self,
                     target: Pokemon,
@@ -628,69 +561,16 @@ class Battle:
                     v: int,
                     source: Pokemon | None = None,
                     reason: str = "") -> dict[Stat, int]:
-        """ポケモンの能力ランクを変更する。
-
-        内部的にはmodify_stats()を呼び出して処理します。
-
-        Args:
-            target: 対象のポケモン
-            stat: 変更する能力値（"A", "B", "C", "D", "S"）
-            v: 変更するランク数
-            source: 変更の原因となったポケモン（Noneの場合もある）
-            reason: 変更の理由
-
-        Returns:
-            dict[Stat, int]: 実際に変更された能力ランクの辞書
-        """
-        return self.modify_stats(target, {stat: v}, source, reason)
+        """ポケモンの能力ランクを変更する（StatusManagerへの委譲）。"""
+        return self.status_manager.modify_stat(target, stat, v, source=source, reason=reason)
 
     def modify_stats(self,
                      target: Pokemon,
                      stats: dict[Stat, int],
                      source: Pokemon | None = None,
                      reason: str = "") -> dict[Stat, int]:
-        """ポケモンの複数の能力ランクを同時に変更する。
-
-        しろいハーブなどのアイテムが正しく動作するよう、
-        複数の能力変化を一度に処理し、最後にイベントを発火します。
-
-        Args:
-            target: 対象のポケモン
-            stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
-            source: 変更の原因となったポケモン（Noneの場合もある）
-            reason: 変更の理由
-        Returns:
-            dict[Stat, int]: 実際に変更された能力ランクの辞書
-        """
-        stats = self.events.emit(
-            Event.ON_BEFORE_MODIFY_STAT,
-            BattleContext(target=target, source=source),
-            stats
-        )
-
-        any_success = False
-        actual_changes = {}
-
-        # すべての能力変化を適用してログを記録
-        for stat, v in stats.items():
-            if v == 0:
-                continue
-            v = target.modify_stat(stat, v)
-            if v != 0:
-                self.add_event_log(target, LogCode.MODIFY_STAT,
-                                   payload={"stat": stat, "value": v, "reason": reason})
-                actual_changes[stat] = v
-                any_success = True
-
-        # すべての変化が完了した後にイベントを1回だけ発火
-        if any_success:
-            self.events.emit(
-                Event.ON_MODIFY_STAT,
-                BattleContext(target=target, source=source),
-                actual_changes
-            )
-
-        return actual_changes
+        """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
+        return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
 
     def determine_damage(self,
                          attacker: Pokemon,
