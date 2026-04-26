@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event
 from jpoke.model import Pokemon, Move, Item
+from jpoke.utils.type_defs import ItemLostCause
 
 from .context import BattleContext
 
@@ -87,6 +88,10 @@ class ItemManager:
 
         source_item = source.item.name
         target_item = target.item.name
+        if source.has_item():
+            source.item.lose(cause="swap")
+        if target.has_item():
+            target.item.lose(cause="swap")
         self.set_item(source, target_item)
         self.set_item(target, source_item)
         return True
@@ -95,7 +100,7 @@ class ItemManager:
                   source: Pokemon,
                   target: Pokemon,
                   move: Move | None = None,
-                  reason: str = "steal") -> bool:
+                  reason: ItemLostCause = "steal") -> bool:
         """対象の持ち物を source に移す。
 
         Args:
@@ -113,6 +118,7 @@ class ItemManager:
             return False
 
         item_name = target.item.name
+        target.item.lose(cause=reason)
         self.set_item(source, item_name)
         self.set_item(target, "")
         return True
@@ -121,7 +127,7 @@ class ItemManager:
                     source: Pokemon,
                     target: Pokemon,
                     move: Move | None = None,
-                    reason: str = "remove",
+                    reason: ItemLostCause = "remove",
                     check_on_empty: bool = False) -> bool:
         """対象の持ち物を失わせる。
 
@@ -142,5 +148,6 @@ class ItemManager:
         if not target.has_item():
             return False
 
+        target.item.lose(cause=reason)
         self.set_item(target, "")
         return True

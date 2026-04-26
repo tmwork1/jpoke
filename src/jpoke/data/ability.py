@@ -318,7 +318,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "しゅうかく": AbilityData(),
+    "しゅうかく": AbilityData(
+        handlers={
+            Event.ON_TURN_END_5: h.AbilityHandler(
+                h.しゅうかく_on_turn_end,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "しょうりのほし": AbilityData(
         flags=[
             "undeniable"
@@ -622,7 +629,17 @@ ABILITIES: dict[str, AbilityData] = {
     "はらぺこスイッチ": AbilityData(
         flags=[
             "unreproducible"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.はらぺこスイッチ_on_switch_out,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END_5: h.AbilityHandler(
+                h.はらぺこスイッチ_on_turn_end,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "はりきり": AbilityData(),
     "はりこみ": AbilityData(),

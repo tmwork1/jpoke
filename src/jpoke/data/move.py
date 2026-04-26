@@ -74,7 +74,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         critical_rank=1,
     ),
- "ＤＤラリアット": MoveData(
+    "ＤＤラリアット": MoveData(
         type="あく",
         category="物理",
         pp=10,
@@ -400,7 +400,12 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=110,
         accuracy=100,
-
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
+                h.オーラぐるま_check_move_type,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "おどろかす": MoveData(
         type="ゴースト",

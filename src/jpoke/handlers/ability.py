@@ -29,6 +29,36 @@ class AbilityHandler(Handler):
         )
 
 
+def _set_harapeko_form(mon, *, hangry: bool) -> None:
+    """はらぺこスイッチ用のフォルム状態を更新する。"""
+    mon.ability.is_hangry = hangry
+
+
+def _toggle_harapeko_form(mon) -> None:
+    """はらぺこスイッチ用のフォルム状態を反転する。"""
+    mon.ability.is_hangry = not mon.ability.is_hangry
+
+
+def _is_berry_item(item_name: str) -> bool:
+    return item_name.endswith("のみ")
+
+
+def _is_harvest_sunny_rate_100(battle: Battle) -> bool:
+    if battle.weather.name != "はれ":
+        return False
+
+    # ノーてんき / エアロックが有効なら晴れ補正は無効。
+    for mon in battle.actives:
+        if mon.ability.name in ["ノーてんき", "エアロック"]:
+            return False
+    return True
+
+
+def _get_harvest_chance(battle: Battle) -> float:
+    """しゅうかくの発動確率を返す。"""
+    return 1.0 if _is_harvest_sunny_rate_100(battle) else 0.5
+
+
 def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性: 浮いていないポケモンの交代を防ぐ。
 
@@ -94,6 +124,68 @@ def じりょく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     """
     result = ctx.source.has_type("はがね")
     return HandlerReturn(value=result)
+
+
+def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """しゅうかく特性: ターン終了時に消費したきのみを復活させる。"""
+    mon = ctx.source
+
+    if mon.has_item():
+        return HandlerReturn(value=value)
+
+    if not mon.item.lost or mon.item.lost_cause != "consume":
+        return HandlerReturn(value=value)
+
+    berry_name = mon.item.orig_name
+    if not _is_berry_item(berry_name):
+        return HandlerReturn(value=value)
+
+    chance = _get_harvest_chance(battle)
+    if battle.random.random() >= chance:
+        return HandlerReturn(value=value)
+
+    battle.set_item(mon, berry_name)
+
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "しゅうかく", "success": True},
+    )
+
+    # 復活直後に使用条件を満たすきのみは、その場で使用される。
+    battle.events.emit(Event.ON_ITEM_RESTORED, ctx.__class__(source=mon))
+    return HandlerReturn(value=value)
+
+
+def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
+    # テラスタル中に交代した場合は現在のフォルムを維持する。
+    # ただし瀕死退場時はまんぷくへ戻す。
+    if ctx.source.is_terastallized and ctx.source.alive:
+        return HandlerReturn(value=value)
+
+    _set_harapeko_form(ctx.source, hangry=False)
+    return HandlerReturn(value=value)
+
+
+def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """はらぺこスイッチ特性: ターン終了時にフォルムを切り替える。"""
+    if ctx.source.is_terastallized:
+        return HandlerReturn(value=value)
+
+    _toggle_harapeko_form(ctx.source)
+    return HandlerReturn(value=value)
+
+
+def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+    """はらぺこスイッチ特性: オーラぐるまのタイプをフォルムで変える。"""
+    if ctx.move is None or ctx.move.name != "オーラぐるま":
+        return HandlerReturn(value=value)
+
+    move_type = "あく" if ctx.source.ability.is_hangry else "でんき"
+    return HandlerReturn(value=move_type)
 
 
 def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:

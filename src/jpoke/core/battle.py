@@ -11,7 +11,7 @@ import json
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, GlobalField, SideField
+from jpoke.utils.type_defs import Stat, GlobalField, SideField, ItemLostCause
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -496,7 +496,7 @@ class Battle:
                   source: Pokemon,
                   target: Pokemon,
                   move: Move | None = None,
-                  reason: str = "steal") -> bool:
+                  reason: ItemLostCause = "steal") -> bool:
         """対象の持ち物を source に移す（ItemManagerへの委譲）。"""
         return self.item_manager.take_item(source, target, move=move, reason=reason)
 
@@ -504,7 +504,7 @@ class Battle:
                     source: Pokemon,
                     target: Pokemon,
                     move: Move | None = None,
-                    reason: str = "remove",
+                    reason: ItemLostCause = "remove",
                     check_on_empty: bool = False) -> bool:
         """対象の持ち物を失わせる（ItemManagerへの委譲）。"""
         return self.item_manager.remove_item(

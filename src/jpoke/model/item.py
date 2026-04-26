@@ -1,5 +1,6 @@
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
+from jpoke.utils.type_defs import ItemLostCause
 
 from .effect import GameEffect
 
@@ -18,6 +19,8 @@ class Item(GameEffect):
             name: 持ち物名。空文字列の場合は持ち物なしとして扱う
         """
         super().__init__(ITEMS[name])
+        self.lost: bool = False
+        self.lost_cause: ItemLostCause = ""
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -31,6 +34,15 @@ class Item(GameEffect):
         持ち物の状態をリセットし、ゲーム開始時の状態にする。
         """
         self.reset_effect()
+        self.lost: bool = False
+        self.lost_cause: ItemLostCause = ""
+
+    def lose(self, cause: ItemLostCause = "remove"):
+        """アイテムを喪失状態にする。"""
+        self.revealed = True
+        self.enabled = False
+        self.lost = True
+        self.lost_cause = cause
 
     def consume(self):
         """アイテムを消費する。
@@ -38,5 +50,4 @@ class Item(GameEffect):
         アイテムを公開状態にし、無効化する。
         消費されたアイテムは効果を失い、二度と使用できなくなる。
         """
-        self.revealed = True
-        self.enabled = False
+        self.lose(cause="consume")

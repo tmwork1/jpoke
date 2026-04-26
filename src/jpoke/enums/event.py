@@ -62,6 +62,10 @@ class Event(Enum):
     # handle: volatile.py（強制アクション許可チェック）
     ON_BEFORE_ACTION = auto()
 
+    # emit: handlers/ability.py（しゅうかく等で持ち物が復活した直後）
+    # handle: data/item.py（復活したきのみの即時使用判定）
+    ON_ITEM_RESTORED = auto()
+
     # emit: core/turn.py（技を使用しようとする直前）
     # handle: 現時点でハンドラ登録なし（将来の拡張用スロット）
     ON_BEFORE_MOVE = auto()

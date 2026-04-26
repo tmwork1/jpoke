@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, Type
-from jpoke.enums import Interrupt
+from jpoke.enums import Interrupt, LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
 
@@ -28,6 +28,15 @@ class ItemHandler(Handler):
             priority=priority,
             once=once,
         )
+
+
+def _consume_self_item(battle: Battle, target) -> bool:
+    if not target.has_item():
+        return False
+
+    battle.add_event_log(target, LogCode.CONSUME_ITEM, payload={"item": target.item.name})
+    target.item.consume()
+    return True
 
 
 def modify_power_by_type(battle: Battle,
@@ -85,6 +94,13 @@ def たべのこし(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
 
 def オボンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: HP50%以下時にHP25%回復
+    target = ctx.resolve_role(battle, "source:self")
+    if target.hp * 2 > target.max_hp:
+        return HandlerReturn()
+
+    healed = battle.modify_hp(target, r=1/4, reason="オボンのみ")
+    if healed > 0:
+        _consume_self_item(battle, target)
     return HandlerReturn()
 
 
@@ -92,7 +108,10 @@ def クラボのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     # ON_BEFORE_ACTION: まひ状態時にまひを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "まひ":
-        return common.cure_ailment(battle, ctx, value, "source:self")
+        result = common.cure_ailment(battle, ctx, value, "source:self")
+        if result.value:
+            _consume_self_item(battle, target)
+        return result
     return HandlerReturn()
 
 
@@ -100,7 +119,10 @@ def カゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     # ON_BEFORE_ACTION: ねむり状態時にねむりを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "ねむり":
-        return common.cure_ailment(battle, ctx, value, "source:self")
+        result = common.cure_ailment(battle, ctx, value, "source:self")
+        if result.value:
+            _consume_self_item(battle, target)
+        return result
     return HandlerReturn()
 
 
@@ -108,7 +130,10 @@ def モモンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     # ON_BEFORE_ACTION: どく状態時にどくを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "どく":
-        return common.cure_ailment(battle, ctx, value, "source:self")
+        result = common.cure_ailment(battle, ctx, value, "source:self")
+        if result.value:
+            _consume_self_item(battle, target)
+        return result
     return HandlerReturn()
 
 
@@ -116,7 +141,10 @@ def チーゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     # ON_BEFORE_ACTION: やけど状態時にやけどを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "やけど":
-        return common.cure_ailment(battle, ctx, value, "source:self")
+        result = common.cure_ailment(battle, ctx, value, "source:self")
+        if result.value:
+            _consume_self_item(battle, target)
+        return result
     return HandlerReturn()
 
 
@@ -124,7 +152,10 @@ def ナナシのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     # ON_BEFORE_ACTION: こおり状態時にこおりを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "こおり":
-        return common.cure_ailment(battle, ctx, value, "source:self")
+        result = common.cure_ailment(battle, ctx, value, "source:self")
+        if result.value:
+            _consume_self_item(battle, target)
+        return result
     return HandlerReturn()
 
 
@@ -171,7 +202,10 @@ def ラムのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
 
     # 状態異常をチェック
     if target.ailment:
-        return common.cure_ailment(battle, ctx, value, "source:self")
+        result = common.cure_ailment(battle, ctx, value, "source:self")
+        if result.value:
+            _consume_self_item(battle, target)
+        return result
 
     # volatiles（こんらん等）はここでは処理しない（状態異常のみ対応）
     return HandlerReturn()

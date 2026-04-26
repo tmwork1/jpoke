@@ -643,18 +643,40 @@ ITEMS: dict[str, ItemData] = {
                 h.オボンのみ,
                 subject_spec="source:self",
                 priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
+                h.オボンのみ,
+                subject_spec="source:self",
+                priority=75,
             )
         }
     ),
     "ラムのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.ラムのみ,
+                subject_spec="source:self",
+                priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
+                h.ラムのみ,
+                subject_spec="source:self",
+                priority=75,
+            )
+        }
     ),
     "クラボのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.クラボのみ,
+                subject_spec="source:self",
+                priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
                 h.クラボのみ,
                 subject_spec="source:self",
                 priority=75,
@@ -669,6 +691,11 @@ ITEMS: dict[str, ItemData] = {
                 h.カゴのみ,
                 subject_spec="source:self",
                 priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
+                h.カゴのみ,
+                subject_spec="source:self",
+                priority=75,
             )
         }
     ),
@@ -677,6 +704,11 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.モモンのみ,
+                subject_spec="source:self",
+                priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
                 h.モモンのみ,
                 subject_spec="source:self",
                 priority=75,
@@ -691,6 +723,11 @@ ITEMS: dict[str, ItemData] = {
                 h.チーゴのみ,
                 subject_spec="source:self",
                 priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
+                h.チーゴのみ,
+                subject_spec="source:self",
+                priority=75,
             )
         }
     ),
@@ -699,6 +736,11 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.ナナシのみ,
+                subject_spec="source:self",
+                priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
                 h.ナナシのみ,
                 subject_spec="source:self",
                 priority=75,
@@ -713,6 +755,11 @@ ITEMS: dict[str, ItemData] = {
                 h.キーのみ,
                 subject_spec="source:self",
                 priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
+                h.キーのみ,
+                subject_spec="source:self",
+                priority=75,
             )
         }
     ),
@@ -724,6 +771,11 @@ ITEMS: dict[str, ItemData] = {
                 h.ヒメリのみ,
                 subject_spec="source:self",
                 priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
+                h.ヒメリのみ,
+                subject_spec="source:self",
+                priority=75,
             )
         }
     ),
@@ -732,6 +784,11 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
+                h.オレンのみ,
+                subject_spec="source:self",
+                priority=75,
+            ),
+            Event.ON_ITEM_RESTORED: h.ItemHandler(
                 h.オレンのみ,
                 subject_spec="source:self",
                 priority=75,

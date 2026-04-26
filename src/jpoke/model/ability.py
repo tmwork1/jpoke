@@ -22,6 +22,7 @@ class Ability(GameEffect):
         """
         super().__init__(ABILITIES[name])
         self.count: int = 0
+        self.is_hangry: bool = False
 
     def init_game(self):
         """ゲーム初期化処理。
@@ -36,6 +37,7 @@ class Ability(GameEffect):
         特性の状態をリセットし、カウンターを0に戻す。
         """
         self.count = 0
+        self.is_hangry = False
 
     def __deepcopy__(self, memo):
         cls = self.__class__

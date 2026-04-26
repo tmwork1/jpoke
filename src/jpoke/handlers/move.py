@@ -333,6 +333,13 @@ def テラバースト_check_move_type(battle: Battle, ctx: BattleContext, value
     return HandlerReturn(value=value)
 
 
+def オーラぐるま_check_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """オーラぐるまのタイプを判定する。"""
+    if ctx.source and ctx.source.ability.is_hangry:
+        return HandlerReturn(value="あく")
+    return HandlerReturn(value=value)
+
+
 def テラバースト_check_move_category(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
     if not (ctx.source and ctx.source.is_terastallized):
