@@ -33,7 +33,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "いかさまダイス": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_MODIFY_HIT_COUNT: h.ItemHandler(
+                h.いかさまダイス_modify_hit_count,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "いしずえのめん": ItemData(
         consumable=False,

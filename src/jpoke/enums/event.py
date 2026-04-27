@@ -74,6 +74,10 @@ class Event(Enum):
     # handle: volatile.py（アンコールによる技プロパティ上書き、メトロノームなど）
     ON_MODIFY_MOVE = auto()
 
+    # emit: core/move_executor.py（連続技の最終ヒット数を決定）
+    # handle: ability.py（スキルリンク・おやこあい）/ item.py（いかさまダイス）
+    ON_MODIFY_HIT_COUNT = auto()
+
     # emit: core/move_executor.py（行動実行可否の判定）
     # handle: ailment.py（まひ・ねむり・こおり）, volatile.py（こんらん・ひるみ・どろぼう状態等）
     ON_CHECK_ACTION = auto()

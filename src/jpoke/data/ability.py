@@ -105,7 +105,18 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "おみとおし": AbilityData(),
     "おもてなし": AbilityData(),
-    "おやこあい": AbilityData(),
+    "おやこあい": AbilityData(
+        handlers={
+            Event.ON_MODIFY_HIT_COUNT: h.AbilityHandler(
+                h.おやこあい_modify_hit_count,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MODIFY_DAMAGE: h.AbilityHandler(
+                h.おやこあい_modify_damage,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "おわりのだいち": AbilityData(
         flags=[
             "undeniable"
@@ -988,7 +999,14 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "スカイスキン": AbilityData(),
-    "スキルリンク": AbilityData(),
+    "スキルリンク": AbilityData(
+        handlers={
+            Event.ON_MODIFY_HIT_COUNT: h.AbilityHandler(
+                h.スキルリンク_modify_hit_count,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "スナイパー": AbilityData(),
     "スロースタート": AbilityData(),
     "スワームチェンジ": AbilityData(

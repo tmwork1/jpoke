@@ -60,29 +60,27 @@ class MoveExecutor:
         max_hits = move.data.max_hits
 
         if max_hits <= 1:
-            return 1
-        if min_hits == max_hits:
-            return max_hits
-
-        # TODO - スキルリンクの処理をイベントハンドラに移す
-        if attacker.ability.name == "スキルリンク":
-            return max_hits
-
-        # TODO - いかさまダイスの処理をイベントハンドラに移す
-        if attacker.has_item("いかさまダイス") and (min_hits, max_hits) == (2, 5):
-            return 4 if self.battle.random.random() < 0.5 else 5
-
-        if (min_hits, max_hits) == (2, 5):
+            base_hit_count = 1
+        elif min_hits == max_hits:
+            base_hit_count = max_hits
+        elif (min_hits, max_hits) == (2, 5):
             roll = self.battle.random.random()
             if roll < 0.375:
-                return 2
-            if roll < 0.75:
-                return 3
-            if roll < 0.875:
-                return 4
-            return 5
+                base_hit_count = 2
+            elif roll < 0.75:
+                base_hit_count = 3
+            elif roll < 0.875:
+                base_hit_count = 4
+            else:
+                base_hit_count = 5
+        else:
+            base_hit_count = self.battle.random.randint(min_hits, max_hits)
 
-        return self.battle.random.randint(min_hits, max_hits)
+        return self.events.emit(
+            Event.ON_MODIFY_HIT_COUNT,
+            BattleContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
+            base_hit_count
+        )
 
     def _resolve_hit_power(self, move: Move, hit_index: int) -> int | None:
         """現在ヒットの威力を取得する。

@@ -227,6 +227,13 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
+def スキルリンク_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """スキルリンク特性: 連続技のヒット数を最大にする。"""
+    if ctx.move.data.max_hits <= 1:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=ctx.move.data.max_hits)
+
+
 def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ねんちゃく特性: 相手から受ける持ち物交換・奪取・除去を防ぐ。"""
     if not value:
@@ -279,6 +286,26 @@ def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> Handle
     if ctx.move.has_label("punch"):
         value = value * 4915 // 4096
     return HandlerReturn(value=value)
+
+
+def おやこあい_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """おやこあい特性: 単発攻撃技を2ヒット化する。"""
+    if not ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    if ctx.move.data.max_hits > 1:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=2)
+
+
+def おやこあい_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """おやこあい特性: 2ヒット目のダメージを減衰させる。"""
+    if ctx.hit_count < 2:
+        return HandlerReturn(value=value)
+    if ctx.hit_index != 2:
+        return HandlerReturn(value=value)
+
+    reduced = value // 4
+    return HandlerReturn(value=reduced)
 
 
 def てんねん_on_calc_atk_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
