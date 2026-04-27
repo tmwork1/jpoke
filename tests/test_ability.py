@@ -139,9 +139,9 @@ def test_ぎゃくじょう_かがくへんかガス中は発動しない():
     assert defender.rank["C"] == 0
 
 
-def test_にげごし_HP半分超から半分以下で割り込み交代する():
+def test_ききかいひ_HP半分超から半分以下で割り込み交代する():
     battle = t.start_battle(
-        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        ally=[Pokemon("コソクムシ", ability="ききかいひ"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
     )
     defender = battle.actives[0]
@@ -160,9 +160,9 @@ def test_にげごし_HP半分超から半分以下で割り込み交代する()
     assert battle.players[0].active_idx == 1
 
 
-def test_にげごし_被弾前HPが半分以下なら発動しない():
+def test_ききかいひ_被弾前HPが半分以下なら発動しない():
     battle = t.start_battle(
-        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        ally=[Pokemon("コソクムシ", ability="ききかいひ"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
     )
     defender = battle.actives[0]
@@ -177,9 +177,9 @@ def test_にげごし_被弾前HPが半分以下なら発動しない():
     assert battle.players[0].active_idx == 0
 
 
-def test_にげごし_やけどダメージでも発動する():
+def test_ききかいひ_やけどダメージでも発動する():
     battle = t.start_battle(
-        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        ally=[Pokemon("コソクムシ", ability="ききかいひ"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
@@ -191,9 +191,9 @@ def test_にげごし_やけどダメージでも発動する():
     assert battle.players[0].interrupt == Interrupt.EMERGENCY
 
 
-def test_にげごし_こんらん自傷では発動しない():
+def test_ききかいひ_こんらん自傷では発動しない():
     battle = t.start_battle(
-        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        ally=[Pokemon("コソクムシ", ability="ききかいひ"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]

@@ -182,32 +182,20 @@ def ぎゃくじょう(battle: Battle, ctx: BattleContext, value: Any) -> Handle
 
 
 def ききかいひ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ききかいひ特性: 攻撃でHP が半分以下になった時、交代する。"""
-    if ctx.move is None or not ctx.move.is_attack:
+    """ききかいひ特性: HPが半分以下になったとき交代する。"""
+    mon = ctx.target
+    if mon is None or mon.fainted:
         return HandlerReturn(value=value)
-    if ctx.attacker is None or ctx.defender is None:
-        return HandlerReturn(value=value)
-    if ctx.move_damage == 0:
-        return HandlerReturn(value=value)
-    if ctx.defender.fainted:
+    # こんらん自傷、いたみわけでは交代できない
+    if ctx.hp_change_reason in {"self_attack", "pain_split"}:
         return HandlerReturn(value=value)
 
-    # マルチヒット時は全ヒットのダメージを累算し、最終ヒット後に判定する
-    if not hasattr(ctx, "total_damage"):
-        ctx.total_damage = 0
-    ctx.total_damage += ctx.move_damage
-
-    if ctx.hit_index != ctx.hit_count:
+    hp_after = mon.hp
+    hp_before = hp_after + ctx.hp_change
+    if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
         return HandlerReturn(value=value)
 
-    hp_after = ctx.defender.hp
-    hp_before = hp_after + ctx.total_damage
-    del ctx.total_damage
-
-    if not _crossed_half_hp(hp_before, hp_after, ctx.defender.max_hp):
-        return HandlerReturn(value=value)
-
-    _trigger_emergency_switch(battle, ctx.defender, "ききかいひ")
+    _trigger_emergency_switch(battle, mon, mon.ability.orig_name)
     return HandlerReturn(value=value)
 
 
@@ -355,24 +343,6 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, valu
         payload={"ability": "ねんちゃく", "success": True},
     )
     return HandlerReturn(value=False, stop_event=True)
-
-
-def にげごし(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """にげごし特性: HPが半分以下になったとき交代する。"""
-    mon = ctx.target
-    if mon is None or mon.fainted:
-        return HandlerReturn(value=value)
-    # こんらん自傷、いたみわけでは交代できない
-    if ctx.hp_change_reason in {"self_attack", "pain_split"}:
-        return HandlerReturn(value=value)
-
-    hp_after = mon.hp
-    hp_before = hp_after + ctx.hp_change  # hp_change = hp_before - hp_after なので加算
-    if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
-        return HandlerReturn(value=value)
-
-    _trigger_emergency_switch(battle, mon, "にげごし")
-    return HandlerReturn(value=value)
 
 
 def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

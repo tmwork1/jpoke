@@ -206,7 +206,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ききかいひ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_HP_CHANGED: h.AbilityHandler(
+                h.ききかいひ,
+                subject_spec="target:self",
+            )
+        }
     ),
     "きけんよち": AbilityData(),
     "きみょうなくすり": AbilityData(),
@@ -594,7 +600,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_HP_CHANGED: h.AbilityHandler(
-                h.にげごし,
+                h.ききかいひ,
                 subject_spec="target:self",
             )
         }
