@@ -19,7 +19,7 @@ class AilmentHandler(Handler):
 def もうどく(battle: Battle, ctx: BattleContext, value: Any):
     battle.ailment_manager.tick(ctx.source)
     r = -ctx.source.ailment.elapsed_turns/16
-    battle.modify_hp(ctx.source, r=r, reason="もうどく")
+    battle.modify_hp(ctx.source, r=r)
     return HandlerReturn()
 
 
@@ -45,7 +45,7 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
 
 def やけど_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """やけど状態によるターン終了時ダメージ（1/16）"""
-    battle.modify_hp(ctx.source, r=-1/16, reason="やけど")
+    battle.modify_hp(ctx.source, r=-1/16)
     return HandlerReturn()
 
 

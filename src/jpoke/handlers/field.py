@@ -75,7 +75,7 @@ def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
     if battle.weather.name == "すなあらし" and \
             not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
             ctx.source.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]:
-        battle.modify_hp(ctx.source, r=-1/16, reason="すなあらしダメージ")
+        battle.modify_hp(ctx.source, r=-1/16)
     return HandlerReturn()
 
 
@@ -130,7 +130,7 @@ def グラスフィールド_power_modifier(battle: Battle, ctx: BattleContext, 
 def グラスフィールド_heal(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """グラスフィールドのターン終了時回復"""
     if not battle.query_manager.is_floating(ctx.source):
-        battle.modify_hp(ctx.source, r=1/16, reason="グラスフィールド")
+        battle.modify_hp(ctx.source, r=1/16)
     return HandlerReturn()
 
 
@@ -257,7 +257,7 @@ def ねがいごと_heal(battle: Battle, ctx: BattleContext, value: Any) -> Hand
     field = side.fields["ねがいごと"]
     side.tick_down("ねがいごと")
     if field.count == 0:
-        battle.modify_hp(ctx.target, v=field.heal, reason="ねがいごと")
+        battle.modify_hp(ctx.target, v=field.heal)
         field.heal = 0
     return HandlerReturn()
 
@@ -313,7 +313,7 @@ def ステルスロック_damage(battle: Battle, ctx: BattleContext, value: Any)
     r = battle.damage_calculator.calc_def_type_modifier(
         defender=ctx.source, move="ステルスロック"
     )
-    battle.modify_hp(ctx.source, r=-1/8*r, reason="ステルスロック")
+    battle.modify_hp(ctx.source, r=-1/8*r)
     return HandlerReturn()
 
 

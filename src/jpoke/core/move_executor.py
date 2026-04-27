@@ -118,10 +118,10 @@ class MoveExecutor:
             ctx.attacker, ctx.defender, ctx.move, critical=critical
         )
 
-        ctx.damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
+        ctx.move_damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 
-        if ctx.damage:
-            hp_delta = self.battle.modify_hp(ctx.defender, -ctx.damage)
+        if ctx.move_damage:
+            hp_delta = self.battle.modify_hp(ctx.defender, -ctx.move_damage, reason="move_damage")
             if hp_delta < 0:
                 ctx.defender.hits_taken += 1
 
@@ -130,7 +130,7 @@ class MoveExecutor:
 
         self.events.emit(Event.ON_HIT, ctx)
 
-        if ctx.damage:
+        if ctx.move_damage:
             self.events.emit(Event.ON_DAMAGE, ctx)
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
             if ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':

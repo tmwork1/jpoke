@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event
 from jpoke.model import Move
-from jpoke.utils.type_defs import ContextRole, RoleSpec
+from jpoke.utils.type_defs import ContextRole, RoleSpec, HPChangeReason
 
 
 class BattleContext:
@@ -29,7 +29,9 @@ class BattleContext:
         target: イベントの対象となるポケモン（defender のエイリアス）
         move: 使用された技
         field: 場の状態
-        damage: 与えたダメージ値（ON_HIT 等で使用）
+        hp_change: HP変動量（負=減少、正=回復）
+        hp_change_reason: HP変動の原因（"move_damage", "burn", "poison" など）
+        move_damage: 技によるダメージ値（hp_change_reason が "move_damage" かつ hp_change < 0 のときのみ -hp_change、それ以外は 0）
     """
 
     def __init__(self,
@@ -39,7 +41,8 @@ class BattleContext:
                  defender: Pokemon | None = None,
                  move: Move | None = None,
                  field: Field | None = None,
-                 damage: int = 0,
+                 hp_change: int = 0,
+                 hp_change_reason: HPChangeReason = "move_damage",
                  hit_index: int = 1,
                  hit_count: int = 1):
         """BattleContext を初期化する。
@@ -51,7 +54,8 @@ class BattleContext:
             defender: 防御側のポケモン（target のエイリアス）
             move: 使用された技
             field: 場の状態
-            damage: 与えたダメージ値（デフォルト0）
+            hp_change: HP変動量（負=減少、正=回復）
+            hp_change_reason: HP変動の原因
             hit_index: マルチヒット時の現在ヒット番号（1始まり）
             hit_count: マルチヒット時の総ヒット回数
 
@@ -64,12 +68,37 @@ class BattleContext:
         self.target = defender if defender is not None else target
         self.move = move
         self.field = field
-        self.damage = damage
+        self.hp_change = hp_change
+        self.hp_change_reason: HPChangeReason = hp_change_reason
         self.hit_index = hit_index
         self.hit_count = hit_count
 
         self.fainted: bool = False  # 攻撃によりひんしになったかどうかのフラグ
         self.def_ability_enabled: bool = True
+
+    @property
+    def move_damage(self) -> int:
+        """技によるダメージを返す。
+
+        hp_change_reason が "move_damage" かつ hp_change が負の場合のみダメージを返す。
+        それ以外（状態異常ダメージなど）は 0 を返す。
+        """
+        if self.hp_change_reason == "move_damage" and self.hp_change < 0:
+            return -self.hp_change
+        else:
+            return 0
+
+    @move_damage.setter
+    def move_damage(self, value: int):
+        """技によるダメージを設定。
+
+        内部的に hp_change と hp_change_reason を設定する。
+        """
+        if value > 0:
+            self.hp_change = -value
+            self.hp_change_reason = "move_damage"
+        else:
+            self.hp_change = 0
 
     @property
     def attacker(self) -> Pokemon | None:
@@ -124,6 +153,11 @@ class BattleContext:
         if mon and side == "foe":
             mon = battle.foe(mon)
         return mon
+
+    @property
+    def is_self_target(self) -> bool:
+        """攻撃側と防御側が同一ポケモン（自傷）かどうかを返す。"""
+        return self.source is not None and self.source is self.target
 
     def check_def_ability_enabled(self, battle: Battle) -> bool:
         """防御側特性が有効かどうかを更新し、その結果を返す。"""

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec
+from jpoke.utils.type_defs import RoleSpec, HPChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
@@ -59,6 +59,32 @@ def _get_harvest_chance(battle: Battle) -> float:
     return 1.0 if _is_harvest_sunny_rate_100(battle) else 0.5
 
 
+def _trigger_emergency_switch(battle: Battle, mon, ability_name: str) -> bool:
+    """緊急交代を発動する。"""
+    from jpoke.enums import Interrupt
+
+    player = battle.find_player(mon)
+    if player.interrupt != Interrupt.NONE:
+        return False
+    if not battle.get_available_switch_commands(player):
+        return False
+
+    player.interrupt = Interrupt.EMERGENCY
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": ability_name, "success": True},
+    )
+    return True
+
+
+def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
+    """HPが最大HPの50%を跨いだかどうかを判定する。"""
+    return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
+
+
 def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性: 浮いていないポケモンの交代を防ぐ。
 
@@ -106,6 +132,82 @@ def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": "かがくへんかガス", "success": True}
     )
+    return HandlerReturn(value=value)
+
+
+def ぎゃくじょう(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
+    if ctx.move is None or not ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    if ctx.attacker is None or ctx.defender is None:
+        return HandlerReturn(value=value)
+    if ctx.move_damage == 0:
+        return HandlerReturn(value=value)
+    if ctx.defender.fainted:
+        return HandlerReturn(value=value)
+
+    # マルチヒット時は全ヒットのダメージを累算し、最終ヒット後に判定する
+    if not hasattr(ctx, "total_damage"):
+        ctx.total_damage = 0
+    ctx.total_damage += ctx.move_damage
+
+    if ctx.hit_index != ctx.hit_count:
+        return HandlerReturn(value=value)
+
+    hp_after = ctx.defender.hp
+    hp_before = hp_after + ctx.total_damage
+    del ctx.total_damage
+
+    if not _crossed_half_hp(hp_before, hp_after, ctx.defender.max_hp):
+        return HandlerReturn(value=value)
+
+    changed = battle.modify_stat(
+        ctx.defender,
+        "C",
+        +1,
+        source=ctx.attacker,
+        reason="ぎゃくじょう",
+    )
+    if not changed:
+        return HandlerReturn(value=value)
+
+    idx = battle.get_player_index(ctx.defender)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "ぎゃくじょう", "success": True},
+    )
+    return HandlerReturn(value=value)
+
+
+def ききかいひ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ききかいひ特性: 攻撃でHP が半分以下になった時、交代する。"""
+    if ctx.move is None or not ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    if ctx.attacker is None or ctx.defender is None:
+        return HandlerReturn(value=value)
+    if ctx.move_damage == 0:
+        return HandlerReturn(value=value)
+    if ctx.defender.fainted:
+        return HandlerReturn(value=value)
+
+    # マルチヒット時は全ヒットのダメージを累算し、最終ヒット後に判定する
+    if not hasattr(ctx, "total_damage"):
+        ctx.total_damage = 0
+    ctx.total_damage += ctx.move_damage
+
+    if ctx.hit_index != ctx.hit_count:
+        return HandlerReturn(value=value)
+
+    hp_after = ctx.defender.hp
+    hp_before = hp_after + ctx.total_damage
+    del ctx.total_damage
+
+    if not _crossed_half_hp(hp_before, hp_after, ctx.defender.max_hp):
+        return HandlerReturn(value=value)
+
+    _trigger_emergency_switch(battle, ctx.defender, "ききかいひ")
     return HandlerReturn(value=value)
 
 
@@ -255,9 +357,27 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=False, stop_event=True)
 
 
+def にげごし(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """にげごし特性: HPが半分以下になったとき交代する。"""
+    mon = ctx.target
+    if mon is None or mon.fainted:
+        return HandlerReturn(value=value)
+    # こんらん自傷、いたみわけでは交代できない
+    if ctx.hp_change_reason in {"self_attack", "pain_split"}:
+        return HandlerReturn(value=value)
+
+    hp_after = mon.hp
+    hp_before = hp_after + ctx.hp_change  # hp_change = hp_before - hp_after なので加算
+    if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
+        return HandlerReturn(value=value)
+
+    _trigger_emergency_switch(battle, mon, "にげごし")
+    return HandlerReturn(value=value)
+
+
 def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジシャン特性: 攻撃成功後に相手の持ち物を奪う。"""
-    if ctx.damage == 0:
+    if ctx.move_damage == 0:
         return HandlerReturn(value=value)
     if ctx.attacker.has_item() or not ctx.defender.has_item():
         return HandlerReturn(value=value)
@@ -268,7 +388,7 @@ def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -
 
 def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """わるいてぐせ特性: 直接攻撃を受けた後に相手の持ち物を奪う。"""
-    if ctx.damage == 0:
+    if ctx.move_damage == 0:
         return HandlerReturn(value=value)
     if ctx.defender.fainted:
         return HandlerReturn(value=value)
@@ -646,7 +766,7 @@ def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int
 
     # ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
     ctx.defender.ability.enabled = False
-    battle.modify_hp(ctx.defender, r=-1 / 8, reason="ばけのかわ")
+    battle.modify_hp(ctx.defender, r=-1/8)
 
     idx = battle.get_player_index(ctx.defender)
     battle.event_logger.add(

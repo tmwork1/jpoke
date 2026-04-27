@@ -33,7 +33,7 @@ VOLATILES: dict[str, VolatileData] = {
     "アクアリング": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(common.modify_hp, target_spec="source:self", r=1/16, reason="アクアリング"),
+                partial(common.modify_hp, target_spec="source:self", r=1/16),
                 subject_spec="source:self",
                 priority=10,
             ),
@@ -324,7 +324,7 @@ VOLATILES: dict[str, VolatileData] = {
     "ねをはる": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(common.modify_hp, target_spec="source:self", r=1/16, reason="ねをはる"),
+                partial(common.modify_hp, target_spec="source:self", r=1/16),
                 subject_spec="source:self",
                 priority=10
             ),
@@ -438,7 +438,7 @@ VOLATILES: dict[str, VolatileData] = {
     "やどりぎのタネ": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(common.drain_hp, from_="source:self", r=1/8, reason="やどりぎのタネ"),
+                partial(common.drain_hp, from_="source:self", r=1/8),
                 subject_spec="source:self",
                 priority=20,
             ),

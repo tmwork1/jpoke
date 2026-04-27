@@ -3,7 +3,7 @@ import pytest
 
 from jpoke import Pokemon
 from jpoke.core import BattleContext
-from jpoke.enums import Event, LogCode, Command
+from jpoke.enums import Event, Interrupt, LogCode, Command
 from jpoke.model import Move
 
 import test_utils as t
@@ -71,6 +71,137 @@ def test_かちき_自分由来の能力低下では発動しない():
     mon = battle.actives[0]
     battle.modify_stat(mon, "A", -1, source=mon)
     assert mon.rank["C"] == 0
+
+
+def test_ぎゃくじょう_HP半分超から半分以下で特攻1段階アップ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぎゃくじょう")],
+        foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    damage = defender.max_hp - defender.max_hp // 2
+    battle.determine_damage = lambda *_args, **_kwargs: damage
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.rank["C"] == 1
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_ぎゃくじょう_被弾前HPが半分以下なら発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぎゃくじょう")],
+        foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    defender._hp = defender.max_hp // 2
+    battle.determine_damage = lambda *_args, **_kwargs: 1
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.rank["C"] == 0
+
+
+def test_ぎゃくじょう_連続攻撃では最終ヒット後に1回だけ判定する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぎゃくじょう")],
+        foe=[Pokemon("ピカチュウ", moves=["にどげり"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    damages = iter([10, 60])
+    battle.determine_damage = lambda *_args, **_kwargs: next(damages)
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.rank["C"] == 1
+
+
+def test_ぎゃくじょう_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぎゃくじょう")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス", moves=["でんこうせっか"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    damage = defender.max_hp - defender.max_hp // 2
+    battle.determine_damage = lambda *_args, **_kwargs: damage
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.ability.enabled is False
+    assert defender.rank["C"] == 0
+
+
+def test_にげごし_HP半分超から半分以下で割り込み交代する():
+    battle = t.start_battle(
+        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    damage = defender.max_hp - defender.max_hp // 2
+    battle.determine_damage = lambda *_args, **_kwargs: damage
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert battle.players[0].interrupt == Interrupt.EMERGENCY
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+    battle.run_interrupt_switch(Interrupt.EMERGENCY)
+
+    assert battle.players[0].active_idx == 1
+
+
+def test_にげごし_被弾前HPが半分以下なら発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    defender._hp = defender.max_hp // 2
+    battle.determine_damage = lambda *_args, **_kwargs: 1
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert battle.players[0].interrupt == Interrupt.NONE
+    assert battle.players[0].active_idx == 0
+
+
+def test_にげごし_やけどダメージでも発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+
+    mon._hp = mon.max_hp // 2 + 1
+    battle.ailment_manager.apply(mon, "やけど")
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+
+    assert battle.players[0].interrupt == Interrupt.EMERGENCY
+
+
+def test_にげごし_こんらん自傷では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("コソクムシ", ability="にげごし"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+
+    mon._hp = mon.max_hp // 2 + 1
+    battle.modify_hp(mon, v=-1, reason="self_attack")
+
+    assert battle.players[0].interrupt == Interrupt.NONE
 
 
 def test_かがくへんかガス_登場中はいかくが不発():

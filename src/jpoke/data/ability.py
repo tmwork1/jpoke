@@ -244,9 +244,12 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "ぎゃくじょう": AbilityData(
-        flags=[
-            "undeniable"
-        ]
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.ぎゃくじょう,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "くいしんぼう": AbilityData(),
     "くさのけがわ": AbilityData(
@@ -588,7 +591,13 @@ ABILITIES: dict[str, AbilityData] = {
     "にげごし": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_HP_CHANGED: h.AbilityHandler(
+                h.にげごし,
+                subject_spec="target:self",
+            )
+        }
     ),
     "ぬめぬめ": AbilityData(
         flags=[

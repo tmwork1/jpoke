@@ -11,7 +11,7 @@ import json
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, GlobalField, SideField, ItemLostCause
+from jpoke.utils.type_defs import Stat, GlobalField, SideField, ItemLostCause, HPChangeReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -527,7 +527,7 @@ class Battle:
         """
         return self.command_manager.command_to_move(player, command)
 
-    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: str = "") -> int:
+    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: HPChangeReason = "other") -> int:
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_hp(target, v=v, r=r, reason=reason)
 

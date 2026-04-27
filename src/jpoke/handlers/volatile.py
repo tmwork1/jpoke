@@ -368,7 +368,7 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         move="こんらん",
     )
     # ダメージ適用
-    battle.modify_hp(ctx.attacker, v=-damage, reason="こんらん自傷")
+    battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -481,7 +481,7 @@ def しおづけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     r = -1/8
     if mon.has_type("みず") or mon.has_type("はがね"):
         r *= 2
-    battle.modify_hp(mon, r=r, reason="しおづけ")
+    battle.modify_hp(mon, r=r)
     return HandlerReturn()
 
 
@@ -624,7 +624,7 @@ def のろい_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         HandlerReturn: ダメージが発生した場合True
     """
     mon = ctx.source
-    battle.modify_hp(mon, r=-1/4, reason="のろい")
+    battle.modify_hp(mon, r=-1/4)
     return HandlerReturn()
 
 
@@ -690,7 +690,7 @@ def ほろびのうた_tick(battle: Battle, ctx: BattleContext, value: Any) -> H
     tick_volatile(battle, ctx, value, "ほろびのうた")
     mon = ctx.source
     if not mon.has_volatile("ほろびのうた"):
-        battle.modify_hp(mon, v=-mon.hp, reason="ほろびのうた")
+        battle.modify_hp(mon, v=-mon.hp)
     return HandlerReturn()
 
 
@@ -720,7 +720,7 @@ def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     """みちづれ状態のひんし時処理（相手もひんしにする）"""
     if ctx.fainted:
         mon = ctx.attacker
-        battle.modify_hp(mon, v=-mon.hp, reason="みちづれ")
+        battle.modify_hp(mon, v=-mon.hp)
     return HandlerReturn()
 
 

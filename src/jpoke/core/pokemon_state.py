@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
 
 from jpoke.model import Pokemon, Move, Ailment, Volatile
-from jpoke.utils.type_defs import AilmentName, VolatileName, Stat
+from jpoke.utils.type_defs import AilmentName, VolatileName, Stat, HPChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import BattleContext
 
@@ -357,20 +357,22 @@ class StatusManager:
         """
         self.battle = battle
 
-    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: str = "") -> int:
+    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: HPChangeReason = "other") -> int:
         """ポケモンのHPを変更する。
 
         Args:
             target: 対象のポケモン
             v: 変更する固定HP量
-            r: 最大HPに対する割合（0.0〜1.0）。v と同時指定時は r が優先される
-            reason: 変更の理由（ログ記録用）
+            r: 最大HPに対する割合（0.0～1.0）。v と同時指定時は r が優先される
+            reason: 変更の理由
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）
         """
         if v == 0 and r == 0:
             return 0
+
+        hp_before = target.hp
 
         if r:
             v = int(target.max_hp * r)
@@ -383,6 +385,7 @@ class StatusManager:
             )
 
         v = target.modify_hp(v)
+        hp_after = target.hp
 
         if v > 0:
             self.battle.add_event_log(target, LogCode.HEAL,
@@ -390,6 +393,14 @@ class StatusManager:
         elif v < 0:
             self.battle.add_event_log(target, LogCode.DAMAGE,
                                       payload={"value": -v, "reason": reason})
+            self.battle.events.emit(
+                Event.ON_HP_CHANGED,
+                BattleContext(
+                    target=target,
+                    hp_change=hp_before - hp_after,
+                    hp_change_reason=reason,
+                ),
+            )
             if target.fainted:
                 self.battle.judge_winner()
 

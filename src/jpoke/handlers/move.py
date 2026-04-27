@@ -143,7 +143,7 @@ def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
 def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
     ctx.いのちがけ_original_hp = ctx.attacker.hp
-    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="いのちがけ")
+    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="move_damage")
     return HandlerReturn()
 
 
@@ -231,7 +231,7 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
 
 def _can_apply_item_hit_effect(ctx: BattleContext) -> bool:
     """命中後の持ち物操作効果が適用可能かを判定する。"""
-    return ctx.damage > 0 or ctx.fainted
+    return ctx.move_damage > 0 or ctx.fainted
 
 
 def _is_berry(item_name: str) -> bool:
@@ -286,7 +286,7 @@ def はたきおとす_remove_item(battle: Battle, ctx: BattleContext, value: An
 
 def やきつくす_remove_berry(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """やきつくすのきのみ焼却効果。"""
-    if ctx.damage <= 0:
+    if ctx.move_damage <= 0:
         return HandlerReturn(value=False)
     if not _is_berry(ctx.defender.item.name):
         return HandlerReturn(value=False)
