@@ -75,7 +75,7 @@ def play_game(row_probs: tuple[float, float, float],
 
     battle = Battle([p0, p1], seed=seed)
     battle.test_option.accuracy = 100
-    battle.advance_turn()  # Turn 0: 初期繰り出し
+    battle.start()  # Turn 0: 初期繰り出し
 
     while battle.judge_winner() is None and battle.turn <= max_turns:
         battle.advance_turn()

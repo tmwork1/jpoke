@@ -65,8 +65,8 @@ def start_battle(ally: list[Pokemon] | None = None,
 
     battle = Battle(players)
 
-    # 0ターン目の進行
-    battle.advance_turn()
+    # 0ターン目の開始処理
+    battle.start()
     battle.print_logs()
 
     # 天候・地形の有効化

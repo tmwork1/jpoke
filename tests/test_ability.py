@@ -731,7 +731,7 @@ def test_ばけのかわ_連続技の2発目以降は防がない():
     assert defender.hp == before_hp - defender.max_hp // 8 - 10
 
 
-def test_ばけのかわ_one_timeは交代しても再有効化されない():
+def test_ばけのかわ_per_battle_onceは交代しても再有効化されない():
     battle = t.start_battle(
         ally=[
             Pokemon("ピカチュウ", moves=["でんこうせっか"]),
@@ -753,7 +753,7 @@ def test_ばけのかわ_one_timeは交代しても再有効化されない():
     battle.move_executor.run_move(attacker, attacker.moves[0])
     assert defender.ability.enabled is False
 
-    # 交代して戻っても one_time 特性は再有効化されない
+    # 交代して戻っても per_battle_once 特性は再有効化されない
     battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[1])
     battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[0])
     defender = battle.players[1].active
@@ -828,6 +828,71 @@ def test_おやこあい_かがくへんかガス中は2ヒット化しない():
     battle.advance_turn()
 
     assert battle.actives[1].hits_taken == 1
+
+
+@pytest.mark.parametrize("ability_name", ["へんげんじざい", "リベロ"])
+def test_へんげんじざいリベロ_技タイプへ変化して同一滞在で1回のみ発動(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name, moves=["でんこうせっか", "アイアンテール"])],
+        foe=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+    assert attacker.types == ["ノーマル"]
+    assert attacker.ability.activated_since_switch_in is True
+
+    battle.move_executor.run_move(attacker, attacker.moves[1])
+    assert attacker.types == ["ノーマル"]
+    assert attacker.ability.activated_since_switch_in is True
+
+
+@pytest.mark.parametrize("ability_name", ["へんげんじざい", "リベロ"])
+def test_へんげんじざいリベロ_交代でリセットされ再発動できる(ability_name: str):
+    battle = t.start_battle(
+        ally=[
+            Pokemon("ピカチュウ", ability=ability_name, moves=["でんこうせっか", "アイアンテール"]),
+            Pokemon("ライチュウ"),
+        ],
+        foe=[Pokemon("カビゴン")],
+    )
+    player = battle.players[0]
+    mon = player.team[0]
+
+    battle.move_executor.run_move(mon, mon.moves[0])
+    assert mon.types == ["ノーマル"]
+    assert mon.ability.activated_since_switch_in is True
+
+    battle.switch_manager.run_switch(player, player.team[1])
+    assert mon.types == ["でんき"]
+    assert mon.ability.activated_since_switch_in is False
+
+    battle.switch_manager.run_switch(player, mon)
+    battle.move_executor.run_move(mon, mon.moves[1])
+
+    assert mon.types == ["はがね"]
+    assert mon.ability.activated_since_switch_in is True
+
+
+@pytest.mark.parametrize("ability_name", ["へんげんじざい", "リベロ"])
+def test_へんげんじざいリベロ_タイプ変化後にガスで無効化されても戻らない(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name, moves=["でんこうせっか"])],
+        foe=[
+            Pokemon("カビゴン"),
+            Pokemon("ピカチュウ", ability="かがくへんかガス"),
+        ],
+    )
+    attacker = battle.actives[0]
+    foe_player = battle.players[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+    assert attacker.types == ["ノーマル"]
+
+    battle.switch_manager.run_switch(foe_player, foe_player.team[1])
+
+    assert attacker.ability.enabled is False
+    assert attacker.types == ["ノーマル"]
 
 
 def test_はらぺこスイッチ_ターン終了時にフォルムが交互に切り替わる():

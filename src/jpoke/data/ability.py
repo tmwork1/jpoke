@@ -194,7 +194,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "かんろなミツ": AbilityData(
         flags=[
-            "one_time"
+            "per_battle_once"
         ]
     ),
     "がんじょう": AbilityData(
@@ -678,7 +678,7 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "unreproducible",
             "protected",
-            "one_time",
+            "per_battle_once",
             "mold_breaker_ignorable",
             "undeniable",
         ],
@@ -723,7 +723,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ふくつのこころ": AbilityData(),
     "ふくつのたて": AbilityData(
         flags=[
-            "one_time"
+            "per_battle_once"
         ]
     ),
     "ふしぎなうろこ": AbilityData(
@@ -734,7 +734,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ふしょく": AbilityData(),
     "ふとうのけん": AbilityData(
         flags=[
-            "one_time"
+            "per_battle_once"
         ]
     ),
     "ふみん": AbilityData(
@@ -761,7 +761,15 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "へんげんじざい": AbilityData(),
+    "へんげんじざい": AbilityData(
+        handlers={
+            Event.ON_MOVE_CHARGE: h.AbilityHandler(
+                h.へんげんじざいリベロ_on_move_charge,
+                subject_spec="source:self",
+                priority=100,
+            )
+        }
+    ),
     "へんしょく": AbilityData(
         flags=[
             "undeniable"
@@ -1316,7 +1324,15 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "リベロ": AbilityData(),
+    "リベロ": AbilityData(
+        handlers={
+            Event.ON_MOVE_CHARGE: h.AbilityHandler(
+                h.へんげんじざいリベロ_on_move_charge,
+                subject_spec="source:self",
+                priority=100,
+            )
+        }
+    ),
     "リミットシールド": AbilityData(
         flags=[
             "unreproducible",

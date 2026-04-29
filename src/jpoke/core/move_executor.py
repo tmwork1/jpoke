@@ -170,7 +170,7 @@ class MoveExecutor:
 
         # ランク補正
         defender = self.battle.foe(attacker)
-        rank_diff = attacker.rank["acc"] - defender.rank["eva"]
+        rank_diff = attacker.rank["ACC"] - defender.rank["EVA"]
         rank_diff = max(-6, min(6, rank_diff))
         accuracy = int(accuracy * HIT_RANK_MODIFIERS[rank_diff])
 

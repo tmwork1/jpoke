@@ -136,6 +136,17 @@ class EventLog:
             case LogCode.ACTION_BLOCKED:
                 return "動けない"
 
+            case LogCode.ACTION_START:
+                pokemon = self.payload.get("pokemon", "ポケモン")
+                return f"{pokemon} 行動"
+
+            case LogCode.CONSUME_PP:
+                move = self.payload.get("move", "技")
+                value = self.payload.get("value")
+                if value is None:
+                    return f"{move} PP消費"
+                return f"{move} PP-{value}"
+
             case LogCode.HIT_SUBSTITUTE:
                 return "みがわりにヒット"
 

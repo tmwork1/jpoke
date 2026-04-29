@@ -1,42 +1,38 @@
 # Copilot 指示
 
-## 対象範囲
+## 対象
 - ポケモン SV のシングルバトルのみを対象とする。
 - 既存コードが対応していない限り、ダブルバトル前提の設計はしない。
-- 大きく残っている実装領域は特性、アイテム、技である。状態異常、場、揮発性状態の大半はすでに揃っている。
 
-## 先に読むコード
+## 最新実装スナップショット（2026-04-29）
+
+進捗判断の基準は「データ定義での明示 `handlers` 登録」とする。
+
+| カテゴリ | 総数 | 実装済み（明示 handlers） | 未実装 |
+| --- | ---: | ---: | ---: |
+| 特性 | 299 | 38 | 261 |
+| 持ち物 | 154 | 59 | 95 |
+| 技 | 693 | 130 | 563 |
+
+補足:
+- 仕様書ファイル数: 特性 87 / 持ち物 38 / 技 64
+- 専用テスト関数数: `tests/test_ability.py` 71 / `tests/test_item.py` 10 / `tests/test_move.py` 12
+
+## 実装時の参照順
 1. `src/jpoke/core/handler.py`
 2. `src/jpoke/core/context.py`
 3. `src/jpoke/core/event.py`
 4. `src/jpoke/core/battle.py`
 5. `src/jpoke/data/models.py`
-6. 対象となる `src/jpoke/data/` 配下のファイル
-7. 対象となる `src/jpoke/handlers/` 配下のファイル（特性パラドックスは `handlers/ability_paradox.py`）
-8. `tests/test_utils.py` と最も近い既存テスト
+6. 対象 `src/jpoke/data/` と `src/jpoke/handlers/`
+7. `tests/test_utils.py` と最寄りの既存テスト
 
-## 現在のアーキテクチャ
-- `Battle` は event、turn、speed、switch、damage、ailment、volatile、query、status、item、command、ability、weather、terrain、global field、side field の各 manager を束ねる facade である。
-	- `ability_manager` (`AbilityManager`): 特性の入場登録・解除
-	- `item_manager` (`ItemManager`): アイテム効果の登録・解除
-	- `command_manager` (`CommandManager`): コマンド受付・強制行動管理
-	- `status_manager` (`StatusManager`): HP/ランク以外のポケモン状態の一括管理
-- 効果宣言は `src/jpoke/data/*.py`、効果本体は `src/jpoke/handlers/*.py` または `src/jpoke/handlers/common.py` に置く。
-- `BattleContext` は `source` と `target` を保持し、`attacker` と `defender` はその別名である。
-- `HandlerReturn` は現状 `value` と `stop_event` だけを持つ。`success` や log policy がある前提で案内や実装をしないこと。
-- `Handler` は現状 `func`、`subject_spec`、`source_type`、`priority`、`once` を使う。
+## ルールの置き場所
+- リポジトリ全体の方針はこのファイルに置く。
+- Python 実装の詳細ルールは `.github/instructions/python.instructions.md` を使う。
+- 文書更新の詳細ルールは `.github/instructions/docs.instructions.md` を使う。
 
-## 実装ルール
-- 通常イベントでは `source` と `target` を優先し、ダメージ系イベントで主に `attacker` と `defender` を使う。
-- 状態変更は直接書き換えず、manager や共通 helper を優先して使う。
-- `Pokemon.hp` へ直接代入してはいけない。`battle.modify_hp(...)` を使うこと。
-- ランク変化、状態異常、揮発性状態、天候、地形には `src/jpoke/handlers/common.py` の既存 helper を優先する。
-- 追加実装は既存の日本語命名とデータ並び順に合わせる。
-- 同じパターンを複数箇所で使わない限り、新しい抽象化は増やさない。
-
-## テストと文書
-- `tests/` に焦点の絞れたテストを追加または更新し、可能な範囲で `tests/test_utils.py` の helper を再利用する。
-- 作業後は必ず `progress/` 配下の該当ファイルを更新し、実装状況とテスト状況を最新化する。
-- 実装数が変わる場合は `script/dashboard.py` を使って `dashboard.json` と `README.md` を更新する。
-- 調査は `spec/`（トップレベル）、実行計画は `plan/`、進捗追跡は `progress/` を使う。
-- `.github/` の指示書は短く保ち、現実に存在するファイルと現在のコードにだけ結び付ける。
+## 作業後の更新ルール
+- 実装を変更したら、対応する `progress/*.md` を更新する。
+- `README.md` の集計は `progress/*.md` と一致させる。
+- `.github/` 配下の指示書は短く保ち、重複する説明を増やさない。

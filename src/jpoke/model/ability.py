@@ -23,6 +23,7 @@ class Ability(GameEffect):
         super().__init__(ABILITIES[name])
         self.count: int = 0
         self.is_hangry: bool = False
+        self.activated_since_switch_in: bool = False
 
     def init_game(self):
         """ゲーム初期化処理。
@@ -38,6 +39,7 @@ class Ability(GameEffect):
         """
         self.count = 0
         self.is_hangry = False
+        self.activated_since_switch_in = False
 
     def __deepcopy__(self, memo):
         cls = self.__class__

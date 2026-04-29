@@ -91,6 +91,19 @@ class Pokemon:
         self.paradox_boost_stat: Stat | None = None
         self.paradox_boost_source: BoostSource = ""
 
+        # バトル中に利用する属性はコンストラクタで明示的に定義する。
+        self.revealed: bool = False
+        self.is_terastallized: bool = False
+        self._hp: int = self.max_hp
+        self.ailment: Ailment = Ailment()
+        self.stellar_boosted_types: set = set()
+        self.volatiles: dict[VolatileName, Volatile] = {}
+        self.active_turn: int = 0
+        self.hits_taken: int = 0
+        self.rank: dict[Stat, int] = {k: 0 for k in STATS}
+        self.executed_move: Move | None = None
+        self.ability_override_type: Type | None = None
+
         self.init_game()
 
     def init_game(self):
@@ -98,18 +111,11 @@ class Pokemon:
         ポケモンのバトル状態を初期化する。
         """
         self.revealed = False
-        self.is_terastallized: bool = False
-        self._hp: int = self.max_hp
-        self.ailment: Ailment = Ailment()
+        self.is_terastallized = False
+        self._hp = self.max_hp
+        self.ailment = Ailment()
         # ステラ テラスタル補正を消費したタイプの集合
-        self.stellar_boosted_types: set = set()
-
-        # bench_reset() は再初期化専用にし、属性の初回定義はここで行う。
-        self.volatiles: dict[VolatileName, Volatile] = {}
-        self.active_turn: int = 0
-        self.hits_taken: int = 0
-        self.rank: dict[Stat, int] = {k: 0 for k in STATS}
-        self.executed_move: Move | None = None
+        self.stellar_boosted_types = set()
 
         # 場に出ているときの状態をリセット
         self.bench_reset()
@@ -121,6 +127,8 @@ class Pokemon:
         self.hits_taken = 0
         self.rank = {k: 0 for k in STATS}
         self.executed_move = None
+        self.ability_override_type = None
+        self.ability.activated_since_switch_in = False
         self.paradox_boost_active = False
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
@@ -148,12 +156,8 @@ class Pokemon:
         ])
         return new
 
-    def __str__(self):
-        """ポケモンの情報を文字列化する。
-
-        Returns:
-            str: ポケモンの詳細情報
-        """
+    def show(self):
+        """ポケモンの情報を文字列化して表示する。"""
         sep = '\n\t'
         s = f"{self.name}{sep}"
         s += f"HP {self.hp}/{self.max_hp} ({self.hp_ratio*100:.0f}%){sep}"
@@ -168,7 +172,7 @@ class Pokemon:
             s += f"{st}({ef})-" if ef else f"{st}-"
         s = s[:-1] + sep
         s += "/".join(move.name for move in self.moves)
-        return s
+        print(s)
 
     def to_dict(self) -> dict:
         """ポケモンの情報を辞書形式で返す。
@@ -330,6 +334,8 @@ class Pokemon:
                 return self.data.types
             else:
                 return [self.terastal]
+        elif self.ability_override_type is not None:
+            return [self.ability_override_type]
         else:
             return self.data.types
 

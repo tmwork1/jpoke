@@ -464,6 +464,13 @@ class Battle:
         """ポケモン選出処理（TurnControllerへの委譲）。"""
         self.turn_controller.run_selection()
 
+    def start(self):
+        """バトル開始処理を実行する（TurnControllerへの委譲）。
+
+        選出と初期繰り出しを完了し、以降の `advance_turn` を可能にする。
+        """
+        self.turn_controller.start()
+
     def check_hit(self, attacker: Pokemon, move: Move) -> bool:
         """技の命中判定（MoveExecutorへの委譲）。
 

@@ -467,6 +467,38 @@ def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, should_e
     return HandlerReturn(value=should_enable)
 
 
+def へんげんじざいリベロ_on_move_charge(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """へんげんじざい・リベロ: 技実行前に技タイプへ自身のタイプを変更する。"""
+    if not value:
+        return HandlerReturn(value=value)
+    if ctx.source is None or ctx.move is None:
+        return HandlerReturn(value=value)
+    if ctx.source.is_terastallized:
+        return HandlerReturn(value=value)
+    if ctx.source.ability.activated_since_switch_in:
+        return HandlerReturn(value=value)
+
+    move_type = ctx.move.type
+    if not move_type:
+        return HandlerReturn(value=value)
+
+    # 現在タイプと同じ技では発動しない。
+    if ctx.source.has_type(move_type):
+        return HandlerReturn(value=value)
+
+    ctx.source.ability_override_type = move_type
+    ctx.source.ability.activated_since_switch_in = True
+
+    idx = battle.get_player_index(ctx.source)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": ctx.source.ability.orig_name, "success": True},
+    )
+    return HandlerReturn(value=value)
+
+
 def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """やるき特性: ねむり状態を防ぐ。
 

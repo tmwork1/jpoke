@@ -102,12 +102,33 @@ class TurnController:
         Args:
             commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
         """
+        if self.battle.turn < 0:
+            raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
+
         # 引数のコマンドをスケジュールに追加する
         if commands:
             for player, command in commands.items():
                 player.reserve_command(command)
                 self.battle.add_command_log(player, command)
         self._process_turn_phases()
+
+    def start(self):
+        """バトル開始処理を実行する。
+
+        選出と初期繰り出しを行い、バトルを0ターン目の開始状態にする。
+        """
+        if self.battle.turn >= 0:
+            raise RuntimeError("Battle already started.")
+
+        self.update_turn_count()
+
+        # ポケモンを選出
+        self.run_selection()
+        # ポケモンを場に出す
+        self.battle.run_initial_switch()
+
+        # だっしゅつパックによる交代
+        self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
     def update_turn_count(self):
         """ターンカウントを進行させる。"""
@@ -131,19 +152,6 @@ class TurnController:
         # ターンの更新
         if not self.battle.has_interrupt():
             self.update_turn_count()
-
-        # 0ターン目の処理
-        if self.battle.turn == 0:
-            if not self.battle.has_interrupt():
-                # ポケモンを選出
-                self.run_selection()
-                # ポケモンを場に出す
-                self.battle.run_initial_switch()
-
-            # だっしゅつパックによる交代
-            self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
-
-            return
 
         # 通常ターンの処理
         if not self.battle.has_interrupt():

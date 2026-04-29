@@ -61,8 +61,8 @@ class AbilityManager:
         for mon in actives:
             ability = mon.ability
 
-            # one_time 特性は一度無効化されたら交代後も再有効化しない。
-            if "one_time" in ability.data.flags and not ability.enabled:
+            # per_battle_once 特性は一度無効化されたら交代後も再有効化しない。
+            if "per_battle_once" in ability.data.flags and not ability.enabled:
                 continue
 
             # 基本判定：生存していれば有効

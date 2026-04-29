@@ -15,13 +15,13 @@
 ### コアシステム
 
 - **Battle** ([core/battle.py](src/jpoke/core/battle.py)) - バトル全体を管理
-- **TurnController** ([core/turn_controller.py](src/jpoke/core/turn_controller.py)) - ターン進行制御
+- **TurnManager** ([core/turn.py](src/jpoke/core/turn.py)) - ターン進行制御
 - **MoveExecutor** ([core/move_executor.py](src/jpoke/core/move_executor.py)) - 技の実行処理
 - **DamageCalculator** ([core/damage.py](src/jpoke/core/damage.py)) - ダメージ計算
-- **SpeedCalculator** ([core/speed_calculator.py](src/jpoke/core/speed_calculator.py)) - 行動順計算
+- **SpeedManager** ([core/speed.py](src/jpoke/core/speed.py)) - 行動順計算
 - **EventManager** ([core/event.py](src/jpoke/core/event.py)) - イベント駆動システム
 - **FieldManager** ([core/field_manager.py](src/jpoke/core/field_manager.py)) - フィールド効果管理
-- **SwitchManager** ([core/switch_manager.py](src/jpoke/core/switch_manager.py)) - 交代処理
+- **SwitchManager** ([core/switch.py](src/jpoke/core/switch.py)) - 交代処理
 
 ### データモデル
 
@@ -33,7 +33,7 @@
 
 ### データ定義
 
-- **ABILITIES** ([data/ability.py](src/jpoke/data/ability.py)) - 特性定義（304種）
+- **ABILITIES** ([data/ability.py](src/jpoke/data/ability.py)) - 特性定義（299種）
 - **ITEMS** ([data/item.py](src/jpoke/data/item.py)) - アイテム定義（154種）
 - **FIELDS** ([data/field.py](src/jpoke/data/field.py)) - フィールド効果定義（18種）
 - **VOLATILES** ([data/volatile.py](src/jpoke/data/volatile.py)) - 揮発性状態定義（24種）
@@ -48,73 +48,34 @@
 - **VolatileHandlers** ([handlers/volatile.py](src/jpoke/handlers/volatile.py)) - 揮発性状態の実装
 - **AilmentHandlers** ([handlers/ailment.py](src/jpoke/handlers/ailment.py)) - 状態異常の実装
 
-## 実装状況（2026年2月8日時点）
+## 実装状況（2026年4月29日時点）
 
-### カウント方法の注記
+### 集計基準
 
-**このプロジェクトでは実装進捗のカウント方法が異なる場所で使い分けられています：**
+- 特性・持ち物・技の進捗は、`src/jpoke/data/*.py` の `*Data(..., handlers={...})` 明示定義を実装済みとして集計する。
+- 仕様書・テスト件数は進捗管理の補助指標として扱う。
 
-- **checklist/** - **ハンドラ単位**でカウント
-  - 例：「はれ」は「炎技1.5倍」と「かみなり・ぼうふう命中補正」の2つのハンドラに分かれて計数
-  - [docs/checklist/field.md](docs/checklist/field.md) では全32個のハンドラを個別追跡
-
-- **README** - **要素全体**としてカウント
-  - 例：「はれ」は1つのフィールド効果要素として1カウント
-  - ハンドラが複数あっても、要素として実装が完了していれば1とカウント
-
-### サマリー
+### サマリー（コード基準）
 
 | カテゴリ | 実装済み | 総数 | 進捗率 |
-|---------|---------|------|--------|
-| **状態異常** | 6 | 6 | **100.0%** ✅ |
-| **フィールド効果** | 21 | 21 | **100.0%** ✅ |
-| **揮発性状態** | 48 | 50 | 96.0% |
-| **アイテム** | 56 | 154 | 36.4% |
-| **技** | 129 | 691 | 18.7% |
-| **特性** | 17 | 304 | 5.6% |
+| --- | ---: | ---: | ---: |
+| **特性** | 38 | 299 | 12.7% |
+| **持ち物** | 59 | 154 | 38.3% |
+| **技** | 130 | 693 | 18.8% |
 
-### 最新改善：コード品質とアーキテクチャの改善 ✅
+### 仕様書・テストの補助指標
 
-**コード品質向上**:
-- ✅ handler/ability.py に包括的な docstring を追加（Args/Returns/Notes）
-- ✅ type hint を改善（Any → str、int、dict など）
-- ✅ volatile.py を五十音順に再編成（69関数）
-- ✅ TODO comments を詳細に記載
+| カテゴリ | 仕様書ファイル数 | 専用テスト関数数 |
+| --- | ---: | ---: |
+| **特性** | 87 | 71 |
+| **持ち物** | 38 | 10 |
+| **技** | 64 | 12 |
 
-**アーキテクチャ改善**:
-- ✅ Volatile クラスへの状態管理の集約
-  - `sub_hp`（みがわりHP）と `critical_rank`（急所ランク）を移行
-  - Pokemon クラスから古い属性を削除
-- ✅ property accessor でテスト互換性を確保
-- ✅ data/handlers モジュールに五十音順の説明を追記
+最新の詳細一覧は以下を参照:
 
-**テスト実績**:
-- 全テスト 178/179 成功（99.4%）
-- volatile.py 再編成後も全機能正常動作
-
-### 実装完了項目
-
-#### フィールド効果（18/18）✅
-- エレキフィールド、グラスフィールド、サイコフィールド、ミストフィールド
-- ステルスロック、まきびし、どくびし、ねばねばネット
-- リフレクター、ひかりのかべ、オーロラベール
-- しろいきり、しんぴのまもり、おいかぜ、トリックルーム
-- ワイドガード、ファストガード、まもる
-
-#### 状態異常（2/6）
-- どく、もうどく
-
-#### 揮発性状態（1/24）
-- みがわり
-
-#### アイテム（6/154）
-- きあいのタスキ、こだわりハチマキ、こだわりメガネ、こだわりスカーフ
-- とつげきチョッキ、いのちのたま
-
-#### 特性（9/304）
-- いかく、かちき、きんちょうかん
-- ありじごく、かげふみ、じりょく
-- すなかき、グラスメイカー、ぜったいねむり
+- [progress/ability.md](progress/ability.md)
+- [progress/item.md](progress/item.md)
+- [progress/move.md](progress/move.md)
 
 ## 主要機能
 
@@ -146,54 +107,22 @@ $$
 
 すばやさランク補正、特性、フィールド効果を考慮した行動順を決定します。
 
-## 開発ツール
-
-### 実装状況ダッシュボード
-
-```bash
-python -m jpoke.utils.dashboard
-```
-
-各カテゴリの実装状況をJSON形式で出力します（[dashboard.json](dashboard.json)）。
-
-### テスト
+## テスト
 
 pytest でテストを実行します。テストコードは **失敗時のみ出力** が表示されます。成功したテストは結果を表示せずに進行します。
 
 ```bash
-# 全テスト実行（tests フォルダから）
-cd tests
-python run.py
+# 全テスト実行
+python tests/run.py
 
 # または pytest を直接使用
-pytest ailment.py ability.py move.py volatile.py -v
+pytest tests -v
 
 # 個別テスト実行
-python ailment.py
-python move.py
-python ability.py
-python volatile.py
+pytest tests/test_ability.py -v
+pytest tests/test_item.py -v
+pytest tests/test_move.py -v
 ```
-python tests/volatile.py
-```
-
-## 今後の実装予定
-
-### 優先度高
-1. **基本的な状態異常** - まひ、ねむり、こおり、やけど
-2. **主要な揮発性状態** - ちょうはつ、アンコール、しめつける、やどりぎのタネ
-3. **よく使われる特性** - てんねん、マルチスケイル、がんじょう、ばけのかわ
-4. **主要なアイテム** - たべのこし、オボンのみ、ゴツゴツメット
-
-### 優先度中
-- 複数回攻撃技の実装
-- 天候効果の追加
-- 連続技・反動技の実装
-
-### 優先度低
-- AIプレイヤーの改善（MCTS実装）
-- UI/UXの改善
-- パフォーマンス最適化
 
 ## ライセンス
 
