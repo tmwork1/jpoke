@@ -8,6 +8,7 @@ from .context import BattleContext
 
 if TYPE_CHECKING:
     from .battle import Battle
+    from jpoke.model import Pokemon
 
 
 class AbilityManager:
@@ -32,6 +33,21 @@ class AbilityManager:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
+
+    def set_ability_enabled(self, mon: "Pokemon", enabled: bool) -> None:
+        """特性の有効/無効状態を更新し、ハンドラ登録状態を同期する。"""
+        ability = mon.ability
+        if ability.enabled == enabled:
+            return
+
+        if ability.enabled:
+            ability.unregister_handlers(self.battle.events, mon)
+            ability.enabled = False
+            return
+
+        ability.enabled = True
+        if mon in self.battle.actives:
+            ability.register_handlers(self.battle.events, mon)
 
     def refresh_ability_enabled_states(self):
         """場の状況に応じて特性の有効/無効状態を再計算する。
@@ -61,7 +77,7 @@ class AbilityManager:
                 should_enable
             )
 
-            ability.enabled = should_enable
+            self.set_ability_enabled(mon, should_enable)
 
         self.refresh_paradox_boost_states()
 

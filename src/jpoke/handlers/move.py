@@ -23,7 +23,6 @@ from . import common
 class MoveHandler(Handler):
     """技ハンドラの派生クラス。
 
-    source_type="move" をデフォルトとして設定します。
     技の効果を実装する際に使用します。
     """
 
@@ -38,7 +37,7 @@ class MoveHandler(Handler):
             subject_spec: ハンドラの対象を指定するロール
             priority: ハンドラの優先度
         """
-        super().__init__(func, subject_spec, "move", priority)
+        super().__init__(func, subject_spec, priority=priority)
 
 
 def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

@@ -134,12 +134,6 @@ class EventManager:
                 # print(f"  Handler skipped: {rh}")
                 continue
 
-            # 特性が無効化されている場合、登録済みハンドラは実行しない。
-            if rh.handler.source_type == "ability":
-                ability = getattr(rh.subject, "ability", None)
-                if ability is None or not ability.enabled:
-                    continue
-
             result = rh.handler.func(self.battle, context, value)
 
             if not isinstance(result, HandlerReturn):

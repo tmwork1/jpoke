@@ -208,9 +208,10 @@ class Pokemon:
             nameが指定された場合はその持ち物を持っているか、
             Noneの場合は何らかの持ち物を持っている場合True
         """
+        item_name = self.item.orig_name
         if name is None:
-            return bool(self.item.name) and not self.item.lost
-        return self.item.name == name and not self.item.lost
+            return bool(item_name) and not self.item.lost
+        return item_name == name and not self.item.lost
 
     @property
     def alive(self) -> bool:

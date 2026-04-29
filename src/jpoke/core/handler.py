@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.type_defs import ContextRole, RoleSpec, EffectSource, Side
+from jpoke.utils.type_defs import ContextRole, RoleSpec, Side
 from jpoke.core.player import Player
 
 
@@ -42,7 +42,6 @@ class Handler:
     """
     func: Callable[..., HandlerReturn]
     subject_spec: RoleSpec
-    source_type: EffectSource | None = None
     priority: int = 100
     once: bool = False
 

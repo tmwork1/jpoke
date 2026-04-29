@@ -10,8 +10,6 @@ RoleSpec = Literal[
     "defender:self",
 ]
 
-EffectSource = Literal["ability", "item", "move", "ailment", "volatile"]
-
 LogPolicy = Literal["always", "on_success", "on_failure", "never"]
 
 Side = Literal["self", "foe"]

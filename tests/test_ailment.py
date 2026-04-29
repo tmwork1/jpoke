@@ -32,6 +32,22 @@ def test_もうどく_ダメージ():
         assert damage == mon.max_hp * (i + 1) // 16
 
 
+def test_どくタイプには通常どくが入らない():
+    battle = t.start_battle(ally=[Pokemon("フシギダネ")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "どく")
+    assert not target.ailment.is_active
+
+
+def test_はがねタイプには通常もうどくが入らない():
+    battle = t.start_battle(ally=[Pokemon("コイル")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "もうどく")
+    assert not target.ailment.is_active
+
+
 def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])

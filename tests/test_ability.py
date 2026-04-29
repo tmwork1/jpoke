@@ -545,6 +545,60 @@ def test_ねんちゃく_自己起因の道具変更は阻害しない():
     assert result is True
 
 
+def test_ぶきよう_たべのこしは発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぶきよう", item="たべのこし")],
+    )
+    mon = battle.actives[0]
+
+    mon._hp = mon.max_hp - 20
+    before_hp = mon.hp
+    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=mon))
+
+    assert mon.hp == before_hp
+    assert mon.has_item("たべのこし")
+
+
+def test_ぶきよう_かがくへんかガス中はたべのこしが発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぶきよう", item="たべのこし")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+
+    mon._hp = mon.max_hp - 20
+    before_hp = mon.hp
+    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=mon))
+
+    assert mon.hp > before_hp
+    assert mon.has_item("たべのこし")
+
+
+def test_ぶきよう_かがくへんかガス退場後はたべのこし回復が止まる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぶきよう", item="たべのこし")],
+        foe=[
+            Pokemon("ピカチュウ", ability="かがくへんかガス"),
+            Pokemon("ライチュウ"),
+        ],
+    )
+    mon = battle.actives[0]
+
+    mon._hp = mon.max_hp - 20
+    before_heal = mon.hp
+    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=mon))
+    after_heal = mon.hp
+    assert after_heal > before_heal
+
+    battle.switch_manager.run_switch(battle.players[1], battle.players[1].team[1])
+
+    mon._hp = mon.max_hp - 20
+    before_block = mon.hp
+    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=mon))
+
+    assert mon.hp == before_block
+
+
 def test_ぜったいねむり_登場時にねむり状態になる():
     battle = t.start_battle(ally=[Pokemon("ピカチュウ", ability="ぜったいねむり")])
     assert battle.actives[0].ailment.name == "ねむり"
@@ -863,6 +917,31 @@ def test_マイペース_状態異常は防がない_現実装確認():
     mon = battle.actives[0]
     assert battle.ailment_manager.apply(mon, "どく")
     assert mon.ailment.name == "どく"
+
+
+def test_ふしょく持ち由来ならどくタイプにもどくが入る():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ふしょく")],
+        foe=[Pokemon("フシギダネ")],
+    )
+    source = battle.actives[0]
+    target = battle.actives[1]
+
+    assert battle.ailment_manager.apply(target, "どく", source=source)
+    assert target.ailment.name == "どく"
+
+
+def test_ふしょく無効化中はどくタイプにどくが入らない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ふしょく")],
+        foe=[Pokemon("フシギダネ")],
+    )
+    source = battle.actives[0]
+    target = battle.actives[1]
+    source.ability.enabled = False
+
+    assert not battle.ailment_manager.apply(target, "どく", source=source)
+    assert not target.ailment.is_active
 
 
 def test_おうごんのからだ_相手の変化技を無効化():

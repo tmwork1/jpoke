@@ -244,6 +244,10 @@ class Event(Enum):
     # priority: 10(かがくへんかガス無効化) -> 20(undeniable保護) -> 30(とくせいガード保護)
     ON_CHECK_ABILITY_ENABLED = auto()
 
+    # emit: core/item_manager.py（道具効果の有効/無効状態を判定）
+    # handle: ability.py（ぶきよう等、道具効果を抑制する特性）
+    ON_CHECK_ITEM_ENABLED = auto()
+
     # emit: core/battle.py（持ち物の交換・奪取・除去可否を判定）
     # handle: ability.py（ねんちゃく）
     ON_CHECK_ITEM_CHANGE = auto()

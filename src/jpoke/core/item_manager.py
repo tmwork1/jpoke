@@ -45,6 +45,51 @@ class ItemManager:
 
         if target in self.battle.actives:
             target.item.register_handlers(self.battle.events, target)
+            self.refresh_item_enabled_states()
+
+    def set_item_enabled(self, mon: Pokemon, enabled: bool) -> None:
+        """道具効果の有効/無効状態を更新し、ハンドラ登録状態を同期する。"""
+        item = mon.item
+        if item.enabled == enabled:
+            return
+
+        if item.enabled:
+            item.unregister_handlers(self.battle.events, mon)
+            item.enabled = False
+            return
+
+        item.enabled = True
+        if mon in self.battle.actives and mon.has_item():
+            item.register_handlers(self.battle.events, mon)
+
+    def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
+        """対象の道具を喪失状態にする。"""
+        if not target.has_item():
+            return False
+
+        self.set_item_enabled(target, False)
+        target.item.revealed = True
+        target.item.lost = True
+        target.item.lost_cause = cause
+        return True
+
+    def consume_item(self, target: Pokemon) -> bool:
+        """対象の道具を消費状態にする。"""
+        return self.lose_item(target, cause="consume")
+
+    def refresh_item_enabled_states(self):
+        """場の状況に応じて道具効果の有効/無効状態を再計算する。"""
+        actives = [mon for mon in self.battle.actives if mon is not None]
+
+        for mon in actives:
+            should_enable = mon.alive and mon.has_item()
+            should_enable = self.battle.events.emit(
+                Event.ON_CHECK_ITEM_ENABLED,
+                BattleContext(source=mon),
+                should_enable,
+            )
+
+            self.set_item_enabled(mon, should_enable)
 
     def can_change_item(self,
                         source: Pokemon,
@@ -89,9 +134,9 @@ class ItemManager:
         source_item = source.item.name
         target_item = target.item.name
         if source.has_item():
-            source.item.lose(cause="swap")
+            self.lose_item(source, cause="swap")
         if target.has_item():
-            target.item.lose(cause="swap")
+            self.lose_item(target, cause="swap")
         self.set_item(source, target_item)
         self.set_item(target, source_item)
         return True
@@ -118,7 +163,7 @@ class ItemManager:
             return False
 
         item_name = target.item.name
-        target.item.lose(cause=reason)
+        self.lose_item(target, cause=reason)
         self.set_item(source, item_name)
         self.set_item(target, "")
         return True
@@ -148,6 +193,6 @@ class ItemManager:
         if not target.has_item():
             return False
 
-        target.item.lose(cause=reason)
+        self.lose_item(target, cause=reason)
         self.set_item(target, "")
         return True

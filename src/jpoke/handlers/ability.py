@@ -23,7 +23,6 @@ class AbilityHandler(Handler):
         super().__init__(
             func=func,
             subject_spec=subject_spec,
-            source_type="ability",
             priority=priority,
             once=once,
         )
@@ -123,7 +122,7 @@ def かげふみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
 
 def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かがくへんかガス特性: 場の特性有効状態を再計算する。"""
-    battle.refresh_ability_enabled_states()
+    battle.refresh_effect_enabled_states()
 
     idx = battle.get_player_index(ctx.source)
     battle.event_logger.add(
@@ -457,6 +456,17 @@ def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=value)
 
 
+def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
+    """ぶきよう特性: 所持道具の効果を無効化する。"""
+    if not should_enable:
+        return HandlerReturn(value=should_enable)
+
+    if ctx.source.ability.orig_name == "ぶきよう" and ctx.source.ability.enabled:
+        return HandlerReturn(value=False)
+
+    return HandlerReturn(value=should_enable)
+
+
 def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """やるき特性: ねむり状態を防ぐ。
 
@@ -735,7 +745,7 @@ def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int
         return HandlerReturn(value=value)
 
     # ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
-    ctx.defender.ability.enabled = False
+    battle.set_ability_enabled(ctx.defender, False)
     battle.modify_hp(ctx.defender, r=-1/8)
 
     idx = battle.get_player_index(ctx.defender)

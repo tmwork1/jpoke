@@ -65,7 +65,7 @@ def _activate_paradox_boost(battle: Battle, mon, source: str) -> None:
     if source == "item" and mon.has_item("ブーストエナジー") and mon.item.enabled:
         # ブーストエナジー起動時は消費する。
         battle.add_event_log(mon, LogCode.CONSUME_ITEM, payload={"item": "ブーストエナジー"})
-        mon.item.consume()
+        battle.consume_item(mon)
 
 
 def _refresh_paradox_boost(battle: Battle, mon) -> None:

@@ -24,7 +24,6 @@ class ItemHandler(Handler):
         super().__init__(
             func=func,
             subject_spec=subject_spec,
-            source_type="item",
             priority=priority,
             once=once,
         )
@@ -35,7 +34,7 @@ def _consume_self_item(battle: Battle, target) -> bool:
         return False
 
     battle.add_event_log(target, LogCode.CONSUME_ITEM, payload={"item": target.item.name})
-    target.item.consume()
+    battle.consume_item(target)
     return True
 
 

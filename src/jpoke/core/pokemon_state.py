@@ -39,6 +39,20 @@ class AilmentManager:
         """
         self.battle = battle
 
+    @staticmethod
+    def _is_blocked_by_poison_type_immunity(mon: Pokemon,
+                                            source: Pokemon | None,
+                                            name: AilmentName) -> bool:
+        if name not in ("どく", "もうどく"):
+            return False
+        if not (mon.has_type("どく") or mon.has_type("はがね")):
+            return False
+        return not (
+            source is not None
+            and source.ability.name == "ふしょく"
+            and source.ability.enabled
+        )
+
     def apply(self,
               mon: Pokemon,
               name: AilmentName,
@@ -67,6 +81,10 @@ class AilmentManager:
 
         # 重ねがけ不可
         if name == mon.ailment.name:
+            return False
+
+        # 毒/猛毒は、原則として毒・鋼タイプには無効。
+        if self._is_blocked_by_poison_type_immunity(mon, source, name):
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック

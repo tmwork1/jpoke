@@ -753,7 +753,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "ぶきよう": AbilityData(),
+    "ぶきよう": AbilityData(
+        handlers={
+            Event.ON_CHECK_ITEM_ENABLED: h.AbilityHandler(
+                h.ぶきよう_check_item_enabled,
+                subject_spec="source:self",
+            )
+        }
+    ),
     "へんげんじざい": AbilityData(),
     "へんしょく": AbilityData(
         flags=[
