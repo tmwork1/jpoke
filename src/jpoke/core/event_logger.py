@@ -129,10 +129,9 @@ class EventLog:
                 return f"{stat}が{direction}"
 
             case LogCode.HP_CHANGED:
-                pokemon = self.payload.get("pokemon", "ポケモン")
                 value = self.payload.get("value", 0)
                 percent = self.payload.get("percent", 0)
-                s = f"{pokemon}  HP "
+                s = "HP "
                 if value > 0:
                     s += "+"
                 s += f"{value} (残り {percent}%)"
@@ -142,9 +141,8 @@ class EventLog:
                 return "動けない"
 
             case LogCode.ACTION_START:
-                pokemon = self.payload.get("pokemon", "ポケモン")
                 action_order = self.payload.get("action_order", "行動")
-                return f"{pokemon} {action_order}"
+                return action_order
 
             case LogCode.CONSUME_PP:
                 move = self.payload.get("move", "技")

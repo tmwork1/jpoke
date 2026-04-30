@@ -704,6 +704,10 @@ class Battle:
             idx = source
         else:
             idx = self.get_player_index(source)
+        if isinstance(source, Pokemon) and payload is not None and "pokemon" not in payload:
+            payload = {"pokemon": source.name, **payload}
+        elif isinstance(source, Pokemon) and payload is None:
+            payload = {"pokemon": source.name}
         self.event_logger.add(self.turn, idx, log, payload)
 
     def get_event_logs(self, turn: int | None = None) -> dict[Player, list]:
@@ -729,13 +733,11 @@ class Battle:
         if turn is None:
             turn = self.turn
 
-        print(f"Turn {turn}")
-        for i, player in enumerate(self.players):
-            event_logs = self.event_logger.get(turn, i)
-            # イベントログをテキスト表現に変換
-            log_texts = [log.render() for log in event_logs]
-            if log_texts:
-                print(f"\t{player.name}\t{log_texts}")
+        event_logs = [log for log in self.event_logger.logs if log.turn == turn]
+        for log in event_logs:
+            player = self.players[log.idx]
+            pokemon = log.payload.get("pokemon", "?") if log.payload else "?"
+            print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):
         """ターンを進める（TurnControllerへの委譲）。
