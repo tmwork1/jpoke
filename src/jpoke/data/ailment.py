@@ -72,6 +72,10 @@ AILMENTS: dict[str, AilmentData] = {
                 h.こおり_action,
                 subject_spec="attacker:self",
                 priority=10,
+            ),
+            Event.ON_DAMAGE: h.AilmentHandler(
+                h.こおり_on_damage,
+                subject_spec="defender:self",
             )
         }
     ),

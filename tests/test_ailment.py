@@ -48,6 +48,30 @@ def test_はがねタイプには通常もうどくが入らない():
     assert not target.ailment.is_active
 
 
+def test_ほのおタイプにはやけどが入らない():
+    battle = t.start_battle(ally=[Pokemon("ヒトカゲ")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "やけど")
+    assert not target.ailment.is_active
+
+
+def test_でんきタイプにはまひが入らない():
+    battle = t.start_battle(ally=[Pokemon("ピカチュウ")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "まひ")
+    assert not target.ailment.is_active
+
+
+def test_こおりタイプにはこおりが入らない():
+    battle = t.start_battle(ally=[Pokemon("ラプラス")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "こおり")
+    assert not target.ailment.is_active
+
+
 def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
     battle = t.start_battle(ally=[Pokemon("リザードン")])
@@ -127,6 +151,26 @@ def test_ねむり_カウント():
     assert not mon.ailment.is_active
 
 
+def test_ねむり中はいびきを使える():
+    battle = t.start_battle(ally=[Pokemon("ピカチュウ", moves=["いびき"])])
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "ねむり", count=2)
+
+    assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
+    assert mon.ailment.name == "ねむり"
+    assert mon.ailment.count == 1
+
+
+def test_ねむり中はねごとを使える():
+    battle = t.start_battle(ally=[Pokemon("ピカチュウ", moves=["ねごと"])])
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "ねむり", count=2)
+
+    assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
+    assert mon.ailment.name == "ねむり"
+    assert mon.ailment.count == 1
+
+
 def test_こおり_行動不能():
     """こおり: 状態維持（確率テスト - trigger_rate=0.0）"""
     battle = t.start_battle()
@@ -147,6 +191,20 @@ def test_こおり_行動成功():
     battle.test_option.trigger_ailment = True
     assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
     assert not mon.ailment.is_active, "Freeze: Thaw failed (trigger_rate=1.0)"
+
+
+def test_こおり_ほのお技被弾で解凍する():
+    battle = t.start_battle(
+        ally=[Pokemon("リザードン", moves=["かえんほうしゃ"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    frozen = battle.actives[1]
+    battle.ailment_manager.apply(frozen, "こおり")
+
+    t.reserve_command(battle)
+    battle.advance_turn()
+
+    assert not frozen.ailment.is_active
 
 
 if __name__ == "__main__":

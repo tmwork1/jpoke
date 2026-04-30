@@ -64,6 +64,10 @@ def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
         # 眠りから覚めた：ハンドラを解除して空の状態に
         battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
+
+    if ctx.move and ctx.move.name in ["いびき", "ねごと"]:
+        return HandlerReturn(value=True)
+
     # まだ眠っている
     idx = battle.get_player_index(mon)
     battle.event_logger.add(battle.turn, idx, LogCode.ACTION_BLOCKED, payload={"reason": "ねむり"})
@@ -87,3 +91,10 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     battle.add_event_log(mon, LogCode.ACTION_BLOCKED,
                          payload={"reason": "こおり"})
     return HandlerReturn(value=False, stop_event=True)
+
+
+def こおり_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """こおり状態でほのお技ダメージを受けたら解凍する。"""
+    if ctx.move_damage > 0 and ctx.move and ctx.move.type == "ほのお":
+        battle.ailment_manager.remove(ctx.defender)
+    return HandlerReturn()

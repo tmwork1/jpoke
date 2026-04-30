@@ -53,6 +53,17 @@ class AilmentManager:
             and source.ability.enabled
         )
 
+    @staticmethod
+    def _is_blocked_by_non_poison_type_immunity(mon: Pokemon,
+                                                name: AilmentName) -> bool:
+        if name == "やけど":
+            return mon.has_type("ほのお")
+        if name == "まひ":
+            return mon.has_type("でんき")
+        if name == "こおり":
+            return mon.has_type("こおり")
+        return False
+
     def apply(self,
               mon: Pokemon,
               name: AilmentName,
@@ -85,6 +96,10 @@ class AilmentManager:
 
         # 毒/猛毒は、原則として毒・鋼タイプには無効。
         if self._is_blocked_by_poison_type_immunity(mon, source, name):
+            return False
+
+        # 第9世代のタイプ由来無効。
+        if self._is_blocked_by_non_poison_type_immunity(mon, name):
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
