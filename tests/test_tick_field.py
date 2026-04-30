@@ -47,7 +47,7 @@ def test_地形カウント減少(field: Terrain):
     assert not field.is_active, f"{field.name} should be inactive"
 
 
-@pytest.mark.parametrize("field", ["じゅうりょく", "トリックルーム"])
+@pytest.mark.parametrize("field", ["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム"])
 def test_全体フィールドカウント減少(field: GlobalField):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END_4

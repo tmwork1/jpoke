@@ -28,7 +28,11 @@ def tick_terrain(battle: Battle, ctx: BattleContext, value: Any):
 def tick_global_field(battle: Battle, ctx: BattleContext, value: Any, name: GlobalField) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
     if battle.find_player(ctx.source) is battle.players[0]:
+        field = battle.field_manager.fields[name]
+        was_active = field.is_active
         battle.field_manager.tick_down(name)
+        if name == "マジックルーム" and was_active and not field.is_active:
+            battle.refresh_item_enabled_states()
     return HandlerReturn()
 
 
@@ -184,6 +188,41 @@ def じゅうりょく_grounded(battle: Battle, ctx: BattleContext, value: Any) 
 def トリックルーム_reverse_speed(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """トリックルームで素早さ反転"""
     return HandlerReturn(value=-value)
+
+
+def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
+    """マジックルーム中は持ち物効果を無効化する。"""
+    return HandlerReturn(value=False)
+
+
+def _rank_modifier(rank: int) -> float:
+    return (2 + rank) / 2 if rank >= 0 else 2 / (2 - rank)
+
+
+def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
+    """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
+    if not ctx.defender or not ctx.move:
+        return HandlerReturn(value=value)
+    if ctx.move.has_label("ignore_rank"):
+        return HandlerReturn(value=value)
+
+    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+    swap_to_stat = "D" if move_category == "物理" or ctx.move.has_label("physical") else "B"
+    return HandlerReturn(value=_rank_modifier(ctx.defender.rank[swap_to_stat]))
+
+
+def ワンダールーム_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ワンダールーム中は防御実数値参照を入れ替える。"""
+    if not ctx.defender or not ctx.move:
+        return HandlerReturn(value=value)
+
+    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+    base_stat = "B" if move_category == "物理" or ctx.move.has_label("physical") else "D"
+    swap_to_stat = "D" if base_stat == "B" else "B"
+
+    base_value = max(1, ctx.defender.stats[base_stat])
+    swap_value = max(1, ctx.defender.stats[swap_to_stat])
+    return HandlerReturn(value=value * swap_value // base_value)
 
 
 # ===== サイドフィールドハンドラ =====

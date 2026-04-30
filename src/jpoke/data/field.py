@@ -187,6 +187,36 @@ FIELDS: dict[str, FieldData] = {
             ),
         },
     ),
+    "マジックルーム": FieldData(
+        handlers={
+            Event.ON_CHECK_ITEM_ENABLED: Handler(
+                h.マジックルーム_check_item_enabled,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_global_field, name="マジックルーム"),
+                priority=20,
+                subject_spec="source:self",
+            ),
+        },
+    ),
+    "ワンダールーム": FieldData(
+        handlers={
+            Event.ON_CALC_DEF_RANK_MODIFIER: Handler(
+                h.ワンダールーム_def_rank_modifier,
+                subject_spec="defender:self",
+            ),
+            Event.ON_CALC_DEF_MODIFIER: Handler(
+                h.ワンダールーム_def_modifier,
+                subject_spec="defender:self",
+            ),
+            Event.ON_TURN_END_4: Handler(
+                partial(h.tick_global_field, name="ワンダールーム"),
+                priority=20,
+                subject_spec="source:self",
+            ),
+        },
+    ),
 
     # ===== サイドフィールド (SideField) =====
     "リフレクター": FieldData(

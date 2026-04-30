@@ -5107,6 +5107,11 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
         field_targeting=True,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(common.activate_global_field, global_field="じゅうりょく", source_spec="attacker:self"),
+            )
+        }
     ),
     "しょうりのまい": MoveData(
         type="かくとう",
@@ -5591,6 +5596,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
         priority=-7,
         field_targeting=True,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(common.activate_global_field, global_field="トリックルーム", source_spec="attacker:self", toggle=True),
+            )
+        }
     ),
     "ドわすれ": MoveData(
         type="エスパー",
@@ -6044,7 +6054,12 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-
+        field_targeting=True,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(common.activate_global_field, global_field="マジックルーム", source_spec="attacker:self", toggle=True),
+            )
+        }
     ),
     "まねっこ": MoveData(
         type="ノーマル",
@@ -6338,7 +6353,13 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=0,
         accuracy=0,
-        labels=[]
+        field_targeting=True,
+        labels=[],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(common.activate_global_field, global_field="ワンダールーム", source_spec="attacker:self", toggle=True),
+            )
+        }
     ),
     "あてみなげ": MoveData(
         type="ノーマル",

@@ -297,6 +297,97 @@ def test_トリックルーム_技優先度():
     assert action_order[0] == battle.actives[1], "トリックルームで優先度が考慮されない"
 
 
+def test_マジックルーム_道具効果無効化():
+    """マジックルーム: 持ち物効果が無効化される"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", item="じしゃく", moves=["でんきショック"])],
+        global_field={"マジックルーム": DEFAULT_DURATION},
+    )
+    battle.refresh_item_enabled_states()
+    assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_マジックルーム_終了で道具効果復活():
+    """マジックルーム: 解除後に持ち物効果が復活する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", item="じしゃく", moves=["でんきショック"])],
+        global_field={"マジックルーム": 1},
+    )
+    battle.refresh_item_enabled_states()
+    assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+    battle.events.emit(Event.ON_TURN_END_4)
+    assert 4915 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_マジックルーム_再使用で解除():
+    """マジックルーム: 効果中に再使用すると解除される"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", item="じしゃく", moves=["マジックルーム", "でんきショック"])],
+    )
+    user = battle.actives[0]
+
+    battle.run_move(user, user.moves[0])
+    assert battle.get_global_field("マジックルーム").is_active
+    assert not user.item.enabled
+
+    battle.run_move(user, user.moves[0])
+    assert not battle.get_global_field("マジックルーム").is_active
+    assert user.item.enabled
+
+
+def test_ワンダールーム_物理技は特防側を参照():
+    """ワンダールーム: 物理技の防御参照が特防側に入れ替わる"""
+    normal = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    normal_defender = normal.actives[1]
+    normal_defender.rank["B"] = 6
+    normal_defender.rank["D"] = -6
+    normal_ctx = BattleContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
+    normal_def = normal.damage_calculator.calc_final_defense(normal_ctx)
+
+    wonder = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ")],
+        global_field={"ワンダールーム": DEFAULT_DURATION},
+    )
+    wonder_defender = wonder.actives[1]
+    wonder_defender.rank["B"] = 6
+    wonder_defender.rank["D"] = -6
+    wonder_ctx = BattleContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
+    wonder_def = wonder.damage_calculator.calc_final_defense(wonder_ctx)
+
+    assert wonder_def < normal_def
+
+
+def test_ワンダールーム_特殊技は防御側を参照():
+    """ワンダールーム: 特殊技の防御参照が防御側に入れ替わる"""
+    normal = t.start_battle(
+        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    normal_defender = normal.actives[1]
+    normal_defender.rank["B"] = -6
+    normal_defender.rank["D"] = 6
+    normal_ctx = BattleContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
+    normal_def = normal.damage_calculator.calc_final_defense(normal_ctx)
+
+    wonder = t.start_battle(
+        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        foe=[Pokemon("ピカチュウ")],
+        global_field={"ワンダールーム": DEFAULT_DURATION},
+    )
+    wonder_defender = wonder.actives[1]
+    wonder_defender.rank["B"] = -6
+    wonder_defender.rank["D"] = 6
+    wonder_ctx = BattleContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
+    wonder_def = wonder.damage_calculator.calc_final_defense(wonder_ctx)
+
+    assert wonder_def < normal_def
+
+
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])

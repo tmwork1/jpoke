@@ -271,6 +271,8 @@ class GlobalFieldManager(StackableFieldManager[GlobalField]):
             {
                 "じゅうりょく": Field("じゅうりょく", battle.players),
                 "トリックルーム": Field("トリックルーム", battle.players),
+                "マジックルーム": Field("マジックルーム", battle.players),
+                "ワンダールーム": Field("ワンダールーム", battle.players),
             }
         )
 

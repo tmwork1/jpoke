@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
 from jpoke.core import HandlerReturn
 
 
@@ -224,6 +224,27 @@ def activate_terrain(battle: Battle,
                      count: int = 5) -> HandlerReturn:
     source = ctx.resolve_role(battle, source_spec)
     success = battle.terrain_manager.activate(terrain, count, source=source)
+    return HandlerReturn(value=success)
+
+
+def activate_global_field(battle: Battle,
+                          ctx: BattleContext,
+                          value: Any,
+                          source_spec: RoleSpec,
+                          global_field: GlobalField,
+                          count: int = 5,
+                          toggle: bool = False) -> HandlerReturn:
+    source = ctx.resolve_role(battle, source_spec)
+    manager = battle.field_manager
+
+    if toggle and manager.fields[global_field].is_active:
+        success = manager.deactivate(global_field)
+    else:
+        success = manager.activate(global_field, count)
+
+    if success and global_field == "マジックルーム":
+        battle.refresh_item_enabled_states()
+
     return HandlerReturn(value=success)
 
 
