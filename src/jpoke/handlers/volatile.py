@@ -270,11 +270,9 @@ def かいふくふうじ(battle: Battle, ctx: BattleContext, value: Any) -> Han
     Returns:
         HandlerReturn: 回復無効化の場合は0、それ以外は元の回復量
     """
-    if value > 0:
-        battle.add_event_log(ctx.target, LogCode.HEAL_BLOCKED,
-                             payload={"reason": "かいふくふうじ"})
-        value = 0
-    return HandlerReturn(value=value)
+    battle.add_event_log(ctx.target, LogCode.HEAL_BLOCKED,
+                         payload={"reason": "かいふくふうじ"})
+    return HandlerReturn(value=0)
 
 
 def かなしばり_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -484,7 +482,7 @@ def しおづけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     return HandlerReturn()
 
 
-def じごくずき_restrict_commands(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じごくづき状態によるコマンドオプション変更
 
     Args:
@@ -739,7 +737,7 @@ def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     if mon.hp <= cost:
         return HandlerReturn()
 
-    if not battle.modify_hp(mon, v=-cost):
+    if not battle.modify_hp(mon, v=-cost, reason="self_cost"):
         return HandlerReturn()
 
     battle.volatile_manager.apply(

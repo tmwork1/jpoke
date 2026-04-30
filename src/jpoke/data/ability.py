@@ -1299,7 +1299,13 @@ ABILITIES: dict[str, AbilityData] = {
     "マジックガード": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+                h.マジックガード,
+                subject_spec="target:self",
+            )
+        }
     ),
     "マジックミラー": AbilityData(
         flags=[

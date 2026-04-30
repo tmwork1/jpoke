@@ -209,10 +209,10 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
-    "じごくずき": VolatileData(
+    "じごくづき": VolatileData(
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                h.じごくずき_restrict_commands,
+                h.じごくづき_restrict_commands,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_ACTION: h.VolatileHandler(
@@ -220,7 +220,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_TURN_END_3: h.VolatileHandler(
-                partial(h.tick_volatile, name="じごくずき"),
+                partial(h.tick_volatile, name="じごくづき"),
                 subject_spec="source:self",
             ),
         }
@@ -401,7 +401,12 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "まるくなる": VolatileData(
-        handlers={}
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.まるくなる_power_modifier,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "みがわり": VolatileData(
         handlers={

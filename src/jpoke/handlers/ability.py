@@ -556,6 +556,15 @@ def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=value)
 
 
+def マジックガード(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """マジックガード特性: 間接ダメージを無効化する。"""
+    # 直接ダメージ・自己由来の特定HP変動は無効化しない。
+    if ctx.hp_change_reason in {"move_damage", "pain_split", "self_attack", "self_cost"}:
+        return HandlerReturn(value=value)
+
+    return HandlerReturn(value=0)
+
+
 def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
     """ぶきよう特性: 所持道具の効果を無効化する。"""
     if not should_enable:

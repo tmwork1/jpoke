@@ -423,6 +423,17 @@ class StatusManager:
                 v
             )
 
+        if v < 0:
+            v = self.battle.events.emit(
+                Event.ON_BEFORE_DAMAGE_APPLY,
+                BattleContext(
+                    target=target,
+                    hp_change=v,
+                    hp_change_reason=reason,
+                ),
+                v,
+            )
+
         v = target.modify_hp(v)
         hp_after = target.hp
 

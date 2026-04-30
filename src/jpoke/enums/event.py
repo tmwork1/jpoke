@@ -133,8 +133,8 @@ class Event(Enum):
     #          volatile.py（まもる状態によるダメージ無効化）
     ON_MODIFY_DAMAGE = auto()
 
-    # emit: 未実装（ダメージ適用直前フック用に予約）
-    # handle: 未実装
+    # emit: core/pokemon_state.py（HP減少適用直前）
+    # handle: ability.py（マジックガード等、ダメージ適用前に値を調整する特性）
     ON_BEFORE_DAMAGE_APPLY = auto()
 
     # emit: 未実装（追加効果処理フック用に予約）

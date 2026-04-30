@@ -142,7 +142,7 @@ def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
 def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
     ctx.いのちがけ_original_hp = ctx.attacker.hp
-    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="move_damage")
+    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost")
     return HandlerReturn()
 
 

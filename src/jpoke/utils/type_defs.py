@@ -100,6 +100,7 @@ HPChangeReason = Literal[
     "move_damage",          # 技によるダメージ
     "self_attack",          # こんらん自傷（ききかいひ不発）
     "pain_split",           # いたみわけ（ききかいひ不発）
+    "self_cost",            # 自己HP消費（みがわり等）
     "other",                # その他のダメージ
 ]
 
@@ -130,4 +131,3 @@ AbilityFlag = Literal[
     "per_battle_once",  # 対戦中に一度だけ成立する性質を持つ特性。
     "mold_breaker_ignorable",  # かたやぶり系特性で無視される対象特性。
 ]
-

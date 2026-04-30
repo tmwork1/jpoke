@@ -245,10 +245,10 @@ def test_しおづけ_二倍():
     assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
-def test_じごくずき_コマンド制限():
+def test_じごくづき_コマンド制限():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["うたう", "たいあたり"])],
-        ally_volatile={"じごくずき": 2}
+        ally_volatile={"じごくづき": 2}
     )
     player = battle.players[0]
     commands = battle.get_available_action_commands(player)

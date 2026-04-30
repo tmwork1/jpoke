@@ -48,7 +48,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "non_encore"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_hp, target_spec="attacker:self", r=-1/4),
+                partial(common.modify_hp, target_spec="attacker:self", r=-1/4, reason="self_cost"),
             )
         }
     ),
