@@ -84,6 +84,11 @@ class DamageCalculator:
     """
 
     def __init__(self, battle: Battle):
+        """ダメージ計算機を初期化する。
+
+        Args:
+            battle: 現在進行中のバトルインスタンス
+        """
         self.battle: Battle = battle
 
     def __deepcopy__(self, memo):

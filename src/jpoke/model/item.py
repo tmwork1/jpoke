@@ -23,6 +23,7 @@ class Item(GameEffect):
         self.lost_cause: ItemLostCause = ""
 
     def __deepcopy__(self, memo):
+        """持ち物オブジェクトのディープコピーを作成する。"""
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new

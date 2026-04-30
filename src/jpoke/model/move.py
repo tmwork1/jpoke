@@ -103,9 +103,11 @@ class Move(GameEffect):
 
     @property
     def power(self) -> int | None:
+        """技の現在の威力を取得する。一部の効果で変更されている可能性がある。"""
         return self._power
 
     def set_power(self, power: int | None):
+        """技の威力を上書きする。data の元値は変更されない。"""
         self._power = power
 
     def set_type(self, type_: Type):

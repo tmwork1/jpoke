@@ -25,3 +25,9 @@ description: "このリポジトリの計画書、調査メモ、README、Copilo
 - リポジトリ全体の既定ルールは `copilot-instructions.md` に置く。
 - ファイル単位のルールは `.instructions.md` に置く。
 - `.github/instructions/` に、実装判断へ直接効かない migration log や changelog は置かない。
+
+## Markdown ファイルの文字化け防止
+- Markdown を新規作成・更新するときは **`replace_string_in_file` / `create_file` ツールを最優先**にする。PowerShell の `Set-Content` / `Get-Content` による書き込みは使わない。
+- PowerShell で書き込む場合は `[System.IO.File]::WriteAllText(path, content, [System.Text.UTF8Encoding]::new($false))` を使い、BOM なし UTF-8 で保存する。
+- `@' ... '@` ヒアストリングに日本語全角文字を含める場合は、ファイルをいったんツールで読んでから部分置換する（一括生成しない）。
+- 更新後は `git diff --stat` や見出し行の存在確認を行い、文字化けやブロック欠落がないことを検証する。

@@ -42,6 +42,7 @@ class Ability(GameEffect):
         self.activated_since_switch_in = False
 
     def __deepcopy__(self, memo):
+        """特性オブジェクトのディープコピーを作成する。"""
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
