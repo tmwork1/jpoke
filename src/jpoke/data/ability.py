@@ -1150,6 +1150,7 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_CHECK_ACTION: h.AbilityHandler(
                 h.バトルスイッチ_check_action,
                 subject_spec="attacker:self",
+                priority=200,
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.バトルスイッチ_on_switch_out,
