@@ -136,6 +136,8 @@ class DamageCalculator:
             return [0], dmg_ctx
 
         ctx = BattleContext(attacker=attacker, defender=defender, move=move)
+        # ダメージ補正ハンドラ（壁など）で参照できるよう急所情報を共有する。
+        ctx.critical = dmg_ctx.critical
 
         # 最終威力・攻撃・防御
         final_pow = self.calc_final_power(ctx, dmg_ctx)

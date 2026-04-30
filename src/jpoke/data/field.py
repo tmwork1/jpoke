@@ -193,6 +193,10 @@ FIELDS: dict[str, FieldData] = {
                 h.マジックルーム_check_item_enabled,
                 subject_spec="source:self",
             ),
+            Event.ON_FIELD_DEACTIVATE: Handler(
+                h.マジックルーム_on_field_deactivate,
+                subject_spec="source:self",
+            ),
             Event.ON_TURN_END_4: Handler(
                 partial(h.tick_global_field, name="マジックルーム"),
                 priority=20,

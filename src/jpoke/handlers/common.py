@@ -197,6 +197,7 @@ def cure_ailment(battle: Battle,
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
                  chance: float = 1) -> HandlerReturn:
+    """状態異常を回復する。"""
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
@@ -211,6 +212,7 @@ def activate_weather(battle: Battle,
                      source_spec: RoleSpec,
                      weather: Weather,
                      count: int = 5) -> HandlerReturn:
+    """天候を発動する。"""
     source = ctx.resolve_role(battle, source_spec)
     success = battle.weather_manager.activate(weather, count, source=source)
     return HandlerReturn(value=success)
@@ -222,6 +224,7 @@ def activate_terrain(battle: Battle,
                      source_spec: RoleSpec,
                      terrain: Terrain,
                      count: int = 5) -> HandlerReturn:
+    """地形を発動する。"""
     source = ctx.resolve_role(battle, source_spec)
     success = battle.terrain_manager.activate(terrain, count, source=source)
     return HandlerReturn(value=success)
@@ -234,15 +237,16 @@ def activate_global_field(battle: Battle,
                           global_field: GlobalField,
                           count: int = 5,
                           toggle: bool = False) -> HandlerReturn:
-    source = ctx.resolve_role(battle, source_spec)
+    """グローバルフィールドを発動・解除する。"""
     manager = battle.field_manager
+    was_active = manager.fields[global_field].is_active
 
-    if toggle and manager.fields[global_field].is_active:
+    if toggle and was_active:
         success = manager.deactivate(global_field)
     else:
         success = manager.activate(global_field, count)
 
-    if success and global_field == "マジックルーム":
+    if success and global_field == "マジックルーム" and not was_active:
         battle.refresh_item_enabled_states()
 
     return HandlerReturn(value=success)
@@ -253,6 +257,7 @@ def resolve_field_count(battle: Battle,
                         value: Any,
                         field: Weather | Terrain,
                         additonal_count: int) -> HandlerReturn:
+    """指定場状態と一致するとき継続ターン数に加算する。"""
     if ctx.field.orig_name == field:
         return HandlerReturn(value=value + additonal_count)
     else:

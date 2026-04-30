@@ -46,6 +46,10 @@ class Event(Enum):
     # handle: ability.py（こだいかっせい・クォークチャージの再判定）など
     ON_FIELD_CHANGE = auto()
 
+    # emit: core/field_manager.py（場効果が解除される直前）
+    # handle: data/field.py（マジックルーム終了時の持ち物再判定など）
+    ON_FIELD_DEACTIVATE = auto()
+
     # emit: core/battle.py（特性有効状態変化後の再判定要求）
     # handle: ability.py（こだいかっせい・クォークチャージの再判定）
     ON_REFRESH_PARADOX_BOOST = auto()

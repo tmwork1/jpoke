@@ -91,7 +91,13 @@ class BaseFieldManager(Generic[T]):
         field = self.fields[name]
         field.count -= 1
         if not field.count:
-            field.deactivate(self.battle)
+            self._deactivate_field(field)
+
+    def _deactivate_field(self, field: Field):
+        """解除イベントを発火してからフィールドを無効化する。"""
+        field.count = 0
+        self.events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
+        field.deactivate(self.battle)
 
 
 class ExclusiveFieldManager(BaseFieldManager[T]):
@@ -135,7 +141,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         if self.current is field:
             return False
         if self.current.is_active:
-            self.current.deactivate(self.battle)
+            self._deactivate_field(self.current)
 
         count = self.events.emit(
             Event.ON_CHECK_DURATION,
@@ -155,7 +161,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         """
         if not self.current.is_active:
             return False
-        self.current.deactivate(self.battle)
+        self._deactivate_field(self.current)
         self.current = self._default
         self.events.emit(Event.ON_FIELD_CHANGE)
         return True
@@ -203,7 +209,7 @@ class StackableFieldManager(BaseFieldManager[T]):
         field = self.fields[name]
         if not field.is_active:
             return False
-        field.deactivate(self.battle)
+        self._deactivate_field(field)
         return True
 
 

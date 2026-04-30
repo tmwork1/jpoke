@@ -28,11 +28,7 @@ def tick_terrain(battle: Battle, ctx: BattleContext, value: Any):
 def tick_global_field(battle: Battle, ctx: BattleContext, value: Any, name: GlobalField) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
     if battle.find_player(ctx.source) is battle.players[0]:
-        field = battle.field_manager.fields[name]
-        was_active = field.is_active
         battle.field_manager.tick_down(name)
-        if name == "マジックルーム" and was_active and not field.is_active:
-            battle.refresh_item_enabled_states()
     return HandlerReturn()
 
 
@@ -192,7 +188,17 @@ def トリックルーム_reverse_speed(battle: Battle, ctx: BattleContext, valu
 
 def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
     """マジックルーム中は持ち物効果を無効化する。"""
-    return HandlerReturn(value=False)
+    field = battle.get_global_field("マジックルーム")
+    if field.is_active:
+        return HandlerReturn(value=False)
+    return HandlerReturn(value=should_enable)
+
+
+def マジックルーム_on_field_deactivate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """マジックルーム解除時に持ち物有効状態を再計算する。"""
+    if value and value.orig_name == "マジックルーム":
+        battle.refresh_item_enabled_states()
+    return HandlerReturn()
 
 
 def _rank_modifier(rank: int) -> float:
@@ -229,6 +235,8 @@ def ワンダールーム_def_modifier(battle: Battle, ctx: BattleContext, value
 
 def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """リフレクターで物理技ダメージ軽減"""
+    if getattr(ctx, "critical", False):
+        return HandlerReturn(value=value)
     if ctx.move.category == "物理":
         # 0.5倍にするため、4096基準で 2048/4096
         return HandlerReturn(value=value * 2048 // 4096)
@@ -237,6 +245,8 @@ def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: 
 
 def ひかりのかべ_reduce_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """光の壁で特殊技ダメージ軽減"""
+    if getattr(ctx, "critical", False):
+        return HandlerReturn(value=value)
     if ctx.move.category == "特殊":
         # 0.5倍にするため、4096基準で 2048/4096
         value = value * 2048 // 4096
@@ -251,6 +261,9 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: BattleContext, valu
 
     aurora_field = battle.get_side(ctx.defender).fields.get("オーロラベール")
     if not aurora_field or not aurora_field.is_active:
+        return HandlerReturn(value=value)
+
+    if getattr(ctx, "critical", False):
         return HandlerReturn(value=value)
 
     # ダメージを0.5倍に軽減（物理・特殊両対応）
@@ -296,7 +309,8 @@ def ねがいごと_heal(battle: Battle, ctx: BattleContext, value: Any) -> Hand
     field = side.fields["ねがいごと"]
     side.tick_down("ねがいごと")
     if field.count == 0:
-        battle.modify_hp(ctx.target, v=field.heal)
+        heal = field.heal if field.heal > 0 else ctx.target.max_hp // 2
+        battle.modify_hp(ctx.target, v=heal)
         field.heal = 0
     return HandlerReturn()
 

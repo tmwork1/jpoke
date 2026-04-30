@@ -64,6 +64,48 @@ def test_オーロラベール_特殊半減():
     2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
 
 
+def test_リフレクター_急所では軽減されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_side_field={"リフレクター": 5},
+    )
+    ctx = BattleContext(
+        attacker=battle.actives[0],
+        defender=battle.actives[1],
+        move=battle.actives[0].moves[0],
+    )
+    ctx.critical = True
+    assert battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) == 4096
+
+
+def test_ひかりのかべ_急所では軽減されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        foe_side_field={"ひかりのかべ": 5},
+    )
+    ctx = BattleContext(
+        attacker=battle.actives[0],
+        defender=battle.actives[1],
+        move=battle.actives[0].moves[0],
+    )
+    ctx.critical = True
+    assert battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) == 4096
+
+
+def test_オーロラベール_急所では軽減されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_side_field={"オーロラベール": 1},
+    )
+    ctx = BattleContext(
+        attacker=battle.actives[0],
+        defender=battle.actives[1],
+        move=battle.actives[0].moves[0],
+    )
+    ctx.critical = True
+    assert battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) == 4096
+
+
 def test_しんぴのまもり():
     """しんぴのまもり: 状態異常防止"""
     battle = t.start_battle(ally_side_field={"しんぴのまもり": 1})
@@ -117,6 +159,17 @@ def test_ねがいごと_回復と解除():
     battle.events.emit(Event.ON_TURN_END_2)
     assert mon.hp == 1 + heal, "Wish heal amount is incorrect"
     assert not field.is_active, "Wish field did not deactivate"
+
+
+def test_ねがいごと_回復量未設定時は最大HP半分で回復する():
+    battle = t.start_battle(ally_side_field={"ねがいごと": 1})
+    mon = battle.actives[0]
+    mon._hp = 1
+
+    battle.events.emit(Event.ON_TURN_END_2)
+
+    expected_hp = 1 + mon.max_hp // 2
+    assert mon.hp == expected_hp
 
 
 def test_まきびし_1層():
