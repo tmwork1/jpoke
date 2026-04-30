@@ -200,14 +200,6 @@ class TurnController:
                 continue
 
             if not self.battle.has_interrupt():
-                self.battle.add_event_log(
-                    player, LogCode.ACTION_START,
-                    payload={
-                        "pokemon": attacker.name,
-                        "action_order": action_order,
-                    }
-                )
-
                 # コマンドを取得
                 command = player.reserved_commands.pop(0)
 
