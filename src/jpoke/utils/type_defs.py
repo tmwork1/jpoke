@@ -124,9 +124,10 @@ MoveLabel = Literal[
 ]
 
 AbilityFlag = Literal[
-    "unreproducible",  # トレース・なかまづくり等でコピー/再現させない特性。
+    "uncopyable",  # トレース・なかまづくり等でコピー/再現させない特性。
     "protected",  # スキルスワップ等の上書き・変更から保護する特性。
     "undeniable",  # かがくへんかガス等でも基本的に無効化されない特性。
     "per_battle_once",  # 対戦中に一度だけ成立する性質を持つ特性。
     "mold_breaker_ignorable",  # かたやぶり系特性で無視される対象特性。
 ]
+

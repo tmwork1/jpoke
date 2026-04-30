@@ -1,4 +1,4 @@
-﻿"""特性データ定義モジュール。
+"""特性データ定義モジュール。
 
 Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
@@ -32,7 +32,7 @@ ABILITIES: dict[str, AbilityData] = {
     "": AbilityData(name=""),
     "ARシステム": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ]
     ),
@@ -79,7 +79,7 @@ ABILITIES: dict[str, AbilityData] = {
     "いわはこび": AbilityData(),
     "うのミサイル": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected",
             "undeniable"
         ]
@@ -129,7 +129,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "かがくへんかガス": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -184,7 +184,7 @@ ABILITIES: dict[str, AbilityData] = {
     "かるわざ": AbilityData(),
     "かわりもの": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "かんそうはだ": AbilityData(
@@ -277,7 +277,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "こだいかっせい": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -353,7 +353,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "しれいとう": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "しろいけむり": AbilityData(
@@ -410,7 +410,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "じんばいったい": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ]
     ),
@@ -461,7 +461,7 @@ ABILITIES: dict[str, AbilityData] = {
     "せいでんき": AbilityData(),
     "ぜったいねむり": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected",
             "undeniable"
         ],
@@ -523,7 +523,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "てんきや": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "てんねん": AbilityData(
@@ -560,7 +560,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "どくくぐつ": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "どくげしょう": AbilityData(
@@ -654,7 +654,7 @@ ABILITIES: dict[str, AbilityData] = {
     "はやてのつばさ": AbilityData(),
     "はらぺこスイッチ": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ],
         handlers={
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -676,7 +676,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ばけのかわ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected",
             "per_battle_once",
             "mold_breaker_ignorable",
@@ -924,7 +924,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "アイスフェイス": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected",
             "mold_breaker_ignorable",
         ]
@@ -938,7 +938,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "イリュージョン": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "エアロック": AbilityData(
@@ -965,7 +965,7 @@ ABILITIES: dict[str, AbilityData] = {
     "クイックドロウ": AbilityData(),
     "クォークチャージ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -1041,13 +1041,13 @@ ABILITIES: dict[str, AbilityData] = {
     "スロースタート": AbilityData(),
     "スワームチェンジ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ]
     ),
     "ゼロフォーミング": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "ソウルハート": AbilityData(),
@@ -1079,13 +1079,13 @@ ABILITIES: dict[str, AbilityData] = {
     "テクニシャン": AbilityData(),
     "テラスシェル": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "mold_breaker_ignorable",
         ]
     ),
     "テラスチェンジ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ]
     ),
@@ -1115,7 +1115,7 @@ ABILITIES: dict[str, AbilityData] = {
     "トランジスタ": AbilityData(),
     "トレース": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "ナイトメア": AbilityData(),
@@ -1143,7 +1143,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "バトルスイッチ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ],
         handlers={
@@ -1205,7 +1205,7 @@ ABILITIES: dict[str, AbilityData] = {
     "フェアリースキン": AbilityData(),
     "フラワーギフト": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "mold_breaker_ignorable",
         ]
     ),
@@ -1245,7 +1245,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ポイズンヒール": AbilityData(),
     "マイティチェンジ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ],
         handlers={
@@ -1303,7 +1303,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "マルチタイプ": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ]
     ),
@@ -1352,7 +1352,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "リミットシールド": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected",
             "undeniable"
         ]
@@ -1364,13 +1364,13 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "レシーバー": AbilityData(
         flags=[
-            "unreproducible"
+            "uncopyable"
         ]
     ),
     "ＡＲシステム": AbilityData(),
     "おもかげやどし": AbilityData(
         flags=[
-            "unreproducible",
+            "uncopyable",
             "protected"
         ]
     )
@@ -1378,3 +1378,4 @@ ABILITIES: dict[str, AbilityData] = {
 
 
 common_setup()
+
