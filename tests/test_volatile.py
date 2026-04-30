@@ -119,6 +119,17 @@ def test_かなしばり_コマンド制限():
     assert all(cmd.idx != 0 for cmd in commands)
 
 
+def test_かなしばり_実行ブロック():
+    """かなしばり: 封じた技の実行をブロックする"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "かなしばり", move="たいあたり")
+    assert not t.check_event_result(battle, Event.ON_CHECK_ACTION)
+    assert t.log_contains(battle, LogCode.ACTION_BLOCKED)
+
+
 def test_きゅうしょアップ():
     battle = t.start_battle(
         ally_volatile={"きゅうしょアップ": 2}
@@ -255,6 +266,15 @@ def test_じごくづき_コマンド制限():
     assert all(cmd.idx != 0 for cmd in commands)
 
 
+def test_じごくづき_実行ブロック():
+    """じごくづき: 音技の実行をブロックする"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["うたう"])],
+        ally_volatile={"じごくづき": 2}
+    )
+    assert not t.check_event_result(battle, Event.ON_CHECK_ACTION)
+
+
 def test_じゅうでん():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
@@ -365,6 +385,14 @@ def test_ねをはる_交代不可():
     assert not t.can_switch(battle, 0)
 
 
+def test_ねをはる_浮遊無効():
+    """ねをはる: でんじふゆう等による浮遊状態を無効化する"""
+    battle = t.start_battle(
+        ally_volatile={"ねをはる": 1, "でんじふゆう": 5}
+    )
+    assert not battle.query_manager.is_floating(battle.actives[0])
+
+
 def test_のろい_ダメージ():
     """のろい: ターン終了時ダメージ"""
     battle = t.start_battle(ally_volatile={"のろい": 1})
@@ -448,6 +476,20 @@ def test_ほろびのうた():
     assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
+def test_ほろびのうた_カウント進行():
+    """ほろびのうた: 3ターン後にひんし（カウント進行確認）"""
+    battle = t.start_battle(ally_volatile={"ほろびのうた": 3})
+    mon = battle.actives[0]
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert mon.hp > 0, "count=3→2でまだひんしにならない"
+    assert mon.volatiles["ほろびのうた"].count == 2
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert mon.hp > 0, "count=2→1でまだひんしにならない"
+    assert mon.volatiles["ほろびのうた"].count == 1
+    battle.events.emit(Event.ON_TURN_END_3)
+    assert mon.hp == 0, "count=1→0でひんし"
+
+
 def test_マジックコート():
     class DummyMove:
         def __init__(self):
@@ -467,8 +509,21 @@ def test_マジックコート():
 
 
 def test_まるくなる():
-    # まるくなる状態自体には効果はない
-    pass
+    """まるくなる: ころがる・アイスボールの威力が2倍になる"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["ころがる"])],
+        ally_volatile={"まるくなる": 1}
+    )
+    assert 8192 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_まるくなる_他技は倍にならない():
+    """まるくなる: ころがる以外では威力変化なし"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        ally_volatile={"まるくなる": 1}
+    )
+    assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
 def test_みがわり_無効化():
