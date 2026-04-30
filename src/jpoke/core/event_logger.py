@@ -130,11 +130,12 @@ class EventLog:
 
             case LogCode.HP_CHANGED:
                 value = self.payload.get("value", 0)
-                percent = self.payload.get("percent", 0)
+                hp = self.payload.get("hp", "?")
+                max_hp = self.payload.get("max_hp", "?")
                 s = "HP "
                 if value > 0:
                     s += "+"
-                s += f"{value} (残り {percent}%)"
+                s += f"{value} ({hp}/{max_hp})"
                 return s
 
             case LogCode.ACTION_BLOCKED:
@@ -146,10 +147,8 @@ class EventLog:
 
             case LogCode.CONSUME_PP:
                 move = self.payload.get("move", "技")
-                value = self.payload.get("value")
-                if value is None:
-                    return f"{move} PP消費"
-                return f"{move} PP-{value}"
+                value = self.payload.get("value", "?")
+                return f"{move} PP -{value}"
 
             case LogCode.HIT_SUBSTITUTE:
                 return "みがわりにヒット"

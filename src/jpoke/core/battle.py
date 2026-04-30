@@ -736,7 +736,7 @@ class Battle:
         event_logs = [log for log in self.event_logger.logs if log.turn == turn]
         for log in event_logs:
             player = self.players[log.idx]
-            pokemon = log.payload.get("pokemon", "?") if log.payload else "?"
+            pokemon = log.payload.get("pokemon", "") if log.payload else ""
             print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):

@@ -407,7 +407,8 @@ class StatusManager:
             payload={
                 "pokemon": target.name,
                 "value": hp_change,
-                "percent": hp_percent,
+                "hp": target.hp,
+                "max_hp": target.max_hp,
                 "reason": reason,
             },
             log=LogCode.HP_CHANGED,
