@@ -444,6 +444,39 @@ def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> Handle
     return HandlerReturn(value=value)
 
 
+def トレース_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """トレース特性: 入場時に相手のコピー可能な特性へ変更する。"""
+    mon = ctx.source
+    foe = battle.foe(mon)
+
+    copied_ability = foe.ability.name
+    if not copied_ability:
+        return HandlerReturn(value=value)
+    if "uncopyable" in foe.ability.data.flags:
+        return HandlerReturn(value=value)
+
+    battle.set_ability(mon, copied_ability)
+
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "トレース", "success": True},
+    )
+
+    # コピー直後に入場時処理を再評価し、いかく等の登場時効果を即時反映する。
+    battle.events.emit(Event.ON_SWITCH_IN, ctx.__class__(source=mon))
+    return HandlerReturn(value=value)
+
+
+def トレース_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """トレース特性: 交代時に元の特性へ戻す。"""
+    mon = ctx.source
+    battle.set_ability(mon, mon.base_ability_name, refresh_enabled_states=False)
+    return HandlerReturn(value=value)
+
+
 def おやこあい_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """おやこあい特性: 単発攻撃技を2ヒット化する。"""
     if not ctx.move.is_attack:

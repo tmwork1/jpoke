@@ -617,6 +617,59 @@ def test_てつのこぶし_パンチ技威力補正():
     assert 4915 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
+def test_トレース_相手のコピー可能特性をコピーする():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="トレース")],
+        foe=[Pokemon("ピカチュウ", ability="すなかき")],
+    )
+    assert battle.actives[0].ability.orig_name == "すなかき"
+
+
+def test_トレース_いかくコピー時はいかくが即時発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="トレース")],
+        foe=[Pokemon("ピカチュウ", ability="いかく")],
+    )
+    assert battle.actives[0].ability.orig_name == "いかく"
+    assert battle.actives[1].rank["A"] == -1
+
+
+def test_トレース_uncopyable特性のみは不発():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="トレース")],
+        foe=[Pokemon("ピカチュウ", ability="トレース")],
+    )
+    assert battle.actives[0].ability.orig_name == "トレース"
+
+
+def test_トレース_かがくへんかガス中は不発():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="トレース")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    assert battle.actives[0].ability.enabled is False
+    assert battle.actives[0].ability.orig_name == "トレース"
+
+
+def test_トレース_交代で元の特性に戻り再入場で再コピーする():
+    battle = t.start_battle(
+        ally=[
+            Pokemon("ピカチュウ", ability="トレース"),
+            Pokemon("ライチュウ"),
+        ],
+        foe=[Pokemon("ピカチュウ", ability="すなかき")],
+    )
+
+    tracer = battle.players[0].team[0]
+    assert tracer.ability.orig_name == "すなかき"
+
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert tracer.ability.orig_name == "トレース"
+
+    battle.switch_manager.run_switch(battle.players[0], tracer)
+    assert tracer.ability.orig_name == "すなかき"
+
+
 def test_てつのこぶし_パンチ技以外は補正なし():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="てつのこぶし", moves=["でんきショック"])],

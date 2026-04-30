@@ -78,6 +78,7 @@ class Pokemon:
         self.ability = ability
         self.item = item
         self.moves = moves
+        self.base_ability_name: str = self.ability.orig_name
 
         # ステータス計算マネージャー
         self._stats_manager = PokemonStats()
@@ -127,6 +128,8 @@ class Pokemon:
         self.rank = {k: 0 for k in STATS}
         self.executed_move = None
         self.ability_override_type = None
+        if self.ability.orig_name != self.base_ability_name:
+            self.ability = self.base_ability_name
         self.ability.activated_since_switch_in = False
         self.paradox_boost_active = False
         self.paradox_boost_stat = None

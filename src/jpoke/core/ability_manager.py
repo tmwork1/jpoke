@@ -49,6 +49,29 @@ class AbilityManager:
         if mon in self.battle.actives:
             ability.register_handlers(self.battle.events, mon)
 
+    def set_ability(self,
+                    mon: "Pokemon",
+                    ability_name: str,
+                    refresh_enabled_states: bool = True) -> None:
+        """ポケモンの特性を更新し、ハンドラ登録状態を同期する。"""
+        if mon.ability.orig_name == ability_name:
+            return
+
+        was_active = mon in self.battle.actives
+        was_enabled = mon.ability.enabled
+
+        if was_active:
+            mon.ability.unregister_handlers(self.battle.events, mon)
+
+        mon.ability = ability_name
+        mon.ability.enabled = was_enabled
+
+        if was_active and mon.ability.enabled:
+            mon.ability.register_handlers(self.battle.events, mon)
+
+        if refresh_enabled_states:
+            self.refresh_ability_enabled_states()
+
     def refresh_ability_enabled_states(self):
         """場の状況に応じて特性の有効/無効状態を再計算する。
 

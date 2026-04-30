@@ -1116,7 +1116,17 @@ ABILITIES: dict[str, AbilityData] = {
     "トレース": AbilityData(
         flags=[
             "uncopyable"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.トレース_on_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.トレース_on_switch_out,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "ナイトメア": AbilityData(),
     "ノーてんき": AbilityData(
@@ -1378,4 +1388,3 @@ ABILITIES: dict[str, AbilityData] = {
 
 
 common_setup()
-

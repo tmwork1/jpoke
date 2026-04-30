@@ -512,6 +512,17 @@ class Battle:
         """ポケモンの特性有効状態を更新する（AbilityManagerへの委譲）。"""
         self.ability_manager.set_ability_enabled(target, enabled)
 
+    def set_ability(self,
+                    target: Pokemon,
+                    ability_name: str,
+                    refresh_enabled_states: bool = True) -> None:
+        """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
+        self.ability_manager.set_ability(
+            target,
+            ability_name,
+            refresh_enabled_states=refresh_enabled_states,
+        )
+
     def can_change_item(self,
                         source: Pokemon,
                         target: Pokemon,
