@@ -287,7 +287,20 @@ class DamageCalculator:
             for defender_type in ctx.defender.types:
                 type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
                 rate = type_chart.get(defender_type, 1.0)
+                if (
+                    ctx.move.type == "じめん"
+                    and defender_type == "ひこう"
+                    and not self.battle.query_manager.is_floating(ctx.defender)
+                ):
+                    rate = 1.0
                 base_modifier = int(base_modifier * rate)
+
+            if (
+                ctx.move.type == "じめん"
+                and self.battle.query_manager.is_floating(ctx.defender)
+                and not ctx.defender.has_type("ひこう")
+            ):
+                base_modifier = 0
 
         # ステラ技はテラスタルポケモンに対して効果抜群（2.0倍）
         if (ctx.move and ctx.move.type == 'ステラ'

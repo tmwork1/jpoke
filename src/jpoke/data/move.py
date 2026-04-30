@@ -4489,6 +4489,11 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=0,
 
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                h.いたみわけ,
+            )
+        }
     ),
     "いちゃもん": MoveData(
         type="あく",

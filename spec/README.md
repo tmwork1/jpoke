@@ -15,7 +15,6 @@
 | 命中・回避 | [accuracy.md](accuracy.md) | 命中率・回避率の整理 |
 | 急所 | [critical.md](critical.md) | 急所ランク・計算 |
 | 状態異常 | [ailment.md](ailment.md) | どく・まひ・やけど・ねむり・こおり |
-| フィールド概要 | [field.md](field.md) | 天候・地形の概要 |
 | グローバル場 | [global_field/](global_field/) | 天候・地形の個別メモ |
 | サイド場 | [side_field/](side_field/) | リフレクター等サイド効果 |
 | 揮発性状態 | [volatile/](volatile/) | こんらん等一時的な状態 |

@@ -139,6 +139,23 @@ def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
+def いたみわけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """両者の現在HPを平均化する。"""
+    shared_hp = (ctx.attacker.hp + ctx.defender.hp) // 2
+
+    battle.modify_hp(
+        ctx.attacker,
+        v=shared_hp - ctx.attacker.hp,
+        reason="pain_split",
+    )
+    battle.modify_hp(
+        ctx.defender,
+        v=shared_hp - ctx.defender.hp,
+        reason="pain_split",
+    )
+    return HandlerReturn()
+
+
 def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
     ctx.いのちがけ_original_hp = ctx.attacker.hp

@@ -46,7 +46,13 @@ ABILITIES: dict[str, AbilityData] = {
     "あまのじゃく": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.あまのじゃく,
+                subject_spec="target:self",
+            )
+        }
     ),
     "あめうけざら": AbilityData(),
     "あめふらし": AbilityData(),

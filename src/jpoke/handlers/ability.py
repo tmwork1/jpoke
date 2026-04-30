@@ -78,6 +78,11 @@ def _trigger_emergency_switch(battle: Battle, mon, ability_name: str) -> bool:
 
     player.interrupt = Interrupt.EMERGENCY
     idx = battle.get_player_index(mon)
+
+
+def あまのじゃく(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
+    """あまのじゃく特性: 能力変化量の符号を反転する。"""
+    return HandlerReturn(value={stat: -delta for stat, delta in value.items()})
     battle.event_logger.add(
         battle.turn,
         idx,

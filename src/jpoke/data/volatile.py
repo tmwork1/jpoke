@@ -89,7 +89,7 @@ VOLATILES: dict[str, VolatileData] = {
     "うちおとす": VolatileData(
         handlers={
             Event.ON_CHECK_FLOATING: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False),
+                lambda *args: HandlerReturn(value=False, stop_event=True),
                 subject_spec="source:self",
             ),
         }
@@ -286,11 +286,15 @@ VOLATILES: dict[str, VolatileData] = {
     "とくせいなし": VolatileData(
         handlers={
             Event.ON_CHECK_DEF_ABILITY_ENABLED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False),
+                lambda battle, ctx, value: HandlerReturn(
+                    value=False if ctx.defender.has_volatile("とくせいなし") else value
+                ),
                 subject_spec="defender:self",
             ),
             Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False),
+                lambda battle, ctx, value: HandlerReturn(
+                    value=False if ctx.source.has_volatile("とくせいなし") else value
+                ),
                 subject_spec="source:self",
                 priority=5,
             ),

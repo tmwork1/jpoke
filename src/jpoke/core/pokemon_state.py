@@ -233,14 +233,16 @@ class VolatileManager:
         if not mon.has_volatile(name):
             return False
 
-        # 揮発状態の終了時イベントを発火する。
+        volatile = mon.volatiles.pop(name)
+
+        # 終了時ハンドラ内では、現在の保持状態に基づく再計算が行えるよう先に辞書から外す。
         self.battle.events.emit(
             Event.ON_VOLATILE_END,
             BattleContext(source=mon),
             name,
         )
 
-        mon.volatiles.pop(name).unregister_handlers(self.battle.events, mon)
+        volatile.unregister_handlers(self.battle.events, mon)
         return True
 
     def tick(self, mon: Pokemon, name: VolatileName) -> bool:
@@ -419,7 +421,7 @@ class StatusManager:
         if v > 0:
             v = self.battle.events.emit(
                 Event.ON_BEFORE_HEAL,
-                BattleContext(target=target),
+                BattleContext(target=target, hp_change=v, hp_change_reason=reason),
                 v
             )
 
