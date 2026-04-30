@@ -1145,7 +1145,17 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "unreproducible",
             "protected"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_ACTION: h.AbilityHandler(
+                h.バトルスイッチ_check_action,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.バトルスイッチ_on_switch_out,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "バリアフリー": AbilityData(),
     "パステルベール": AbilityData(

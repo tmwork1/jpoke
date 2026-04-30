@@ -36,7 +36,7 @@ def build_random_pokemon(n_moves: int) -> Optional[Pokemon]:
     """
     # ランダムなポケモンを選択
     pokemon_names = list(pokedex.keys())
-    pokemon_name = random.choice(pokemon_names)
+    name = random.choice(pokemon_names)
 
     # ランダムな特性を選択
     ability_names = list(ABILITIES.keys())
@@ -51,7 +51,7 @@ def build_random_pokemon(n_moves: int) -> Optional[Pokemon]:
     selected_moves = random.sample(move_names, n_moves)
 
     # ポケモンを構築
-    mon = Pokemon(pokemon_name, ability=ability, item=item, moves=selected_moves)
+    mon = Pokemon(name, ability=ability, item=item, moves=selected_moves)
     return mon
 
 
@@ -80,9 +80,11 @@ def play_game(seed: int = None, max_turns: int = 10) -> tuple[Player | None, int
     battle = Battle([p0, p1], seed=seed)
     battle.start()
 
-    while (winner := battle.judge_winner()) is None and battle.turn <= max_turns:
+    while (winner := battle.judge_winner()) is None:
         battle.advance_turn()
         battle.print_logs()
+        if battle.turn == max_turns:
+            break
 
     return winner, battle.turn
 

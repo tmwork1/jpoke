@@ -14,6 +14,11 @@ from jpoke.core import HandlerReturn, Handler
 from . import common
 
 
+AEGISLASH_NAME = "ギルガルド"
+AEGISLASH_SHIELD_ALIAS = "ギルガルド(シールド)"
+AEGISLASH_BLADE_ALIAS = "ギルガルド(ブレード)"
+
+
 class AbilityHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -275,6 +280,43 @@ def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: BattleContext
 
     move_type = "あく" if ctx.source.ability.is_hangry else "でんき"
     return HandlerReturn(value=move_type)
+
+
+def バトルスイッチ_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """バトルスイッチ特性: 行動前に必要なフォルムへ切り替える。"""
+    mon = ctx.source
+    if mon is None or mon.name != AEGISLASH_NAME or ctx.move is None:
+        return HandlerReturn(value=value)
+
+    next_alias = ""
+    if mon.alias == AEGISLASH_SHIELD_ALIAS and ctx.move.is_attack:
+        next_alias = AEGISLASH_BLADE_ALIAS
+    elif mon.alias == AEGISLASH_BLADE_ALIAS and ctx.move.name == "キングシールド":
+        next_alias = AEGISLASH_SHIELD_ALIAS
+
+    if not next_alias:
+        return HandlerReturn(value=value)
+
+    mon.set_form(next_alias)
+
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "バトルスイッチ", "success": True},
+    )
+    return HandlerReturn(value=value)
+
+
+def バトルスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """バトルスイッチ特性: 交代時にシールドフォルムへ戻す。"""
+    mon = ctx.source
+    if mon is None or mon.name != AEGISLASH_NAME:
+        return HandlerReturn(value=value)
+
+    mon.set_form(AEGISLASH_SHIELD_ALIAS)
+    return HandlerReturn(value=value)
 
 
 def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:

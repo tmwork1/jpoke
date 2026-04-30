@@ -14,7 +14,7 @@ def test_アクアリング():
     battle.events.emit(Event.ON_TURN_END_3)
     actual_heal = battle.actives[0].hp - 1
     assert actual_heal == battle.actives[0].max_hp // 16
-    assert t.log_contains(battle, LogCode.HEAL)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_あばれる_行動固定():
@@ -228,7 +228,7 @@ def test_しおづけ_一倍():
     battle.events.emit(Event.ON_TURN_END_3)
     actual_damage = mon.max_hp - mon.hp
     assert actual_damage == expected_damage
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_しおづけ_二倍():
@@ -242,7 +242,7 @@ def test_しおづけ_二倍():
     battle.events.emit(Event.ON_TURN_END_3)
     actual_damage = mon.max_hp - mon.hp
     assert actual_damage == expected_damage
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_じごくずき_コマンド制限():
@@ -353,7 +353,7 @@ def test_ねをはる_回復():
     mon._hp = 1
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == 1 + mon.max_hp // 16
-    assert t.log_contains(battle, LogCode.HEAL)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_ねをはる_交代不可():
@@ -372,7 +372,7 @@ def test_のろい_ダメージ():
     battle.events.emit(Event.ON_TURN_END_3)
     damage = mon.max_hp - mon.hp
     assert damage == mon.max_hp // 4
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_バインド_ダメージ():
@@ -386,7 +386,7 @@ def test_バインド_ダメージ():
     battle.events.emit(Event.ON_TURN_END_3)
     hp = mon.hp
     assert hp == mon.max_hp - expected_damage
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
     # 1ターン進めて解除される
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == hp
@@ -445,7 +445,7 @@ def test_ほろびのうた():
     mon = battle.actives[0]
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == 0
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_マジックコート():
@@ -516,7 +516,7 @@ def test_みちづれ():
     battle.advance_turn()  # 1ターン進める
     assert attacker.hp == 0
     assert defender.hp == 0
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_メロメロ_行動不能():
@@ -552,7 +552,7 @@ def test_やどりぎのタネ():
     damage = from_mon.max_hp - from_mon.hp
     assert damage == from_mon.max_hp // 8
     assert to_mon.hp == 1 + damage
-    assert t.log_contains(battle, LogCode.DAMAGE)
+    assert t.log_contains(battle, LogCode.HP_CHANGED)
 
 
 def test_ロックオン():

@@ -28,7 +28,7 @@ def init():
 
     global pokedex
     for d in data.values():
-        pokedex[d["name"]] = PokemonData(d)
+        pokedex[d["alias"]] = PokemonData(d)
 
 
 init()

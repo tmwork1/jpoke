@@ -375,6 +375,27 @@ class StatusManager:
         """
         self.battle = battle
 
+    def _add_hp_change_logs(self,
+                            target: Pokemon,
+                            hp_change: int,
+                            reason: HPChangeReason) -> None:
+        """HP変動に関するログをまとめて追加する。"""
+        if hp_change == 0:
+            return
+
+        hp_percent = round(target.hp_ratio * 100)
+
+        self.battle.add_event_log(
+            target,
+            payload={
+                "pokemon": target.name,
+                "value": hp_change,
+                "percent": hp_percent,
+                "reason": reason,
+            },
+            log=LogCode.HP_CHANGED,
+        )
+
     def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: HPChangeReason = "other") -> int:
         """ポケモンのHPを変更する。
 
@@ -405,12 +426,10 @@ class StatusManager:
         v = target.modify_hp(v)
         hp_after = target.hp
 
-        if v > 0:
-            self.battle.add_event_log(target, LogCode.HEAL,
-                                      payload={"value": v, "reason": reason})
-        elif v < 0:
-            self.battle.add_event_log(target, LogCode.DAMAGE,
-                                      payload={"value": -v, "reason": reason})
+        if v != 0:
+            self._add_hp_change_logs(target, v, reason)
+
+        if v < 0:
             self.battle.events.emit(
                 Event.ON_HP_CHANGED,
                 BattleContext(

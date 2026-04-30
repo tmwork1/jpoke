@@ -8,10 +8,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import Nature, Type, Stat, MoveCategory, Gender, BoostSource, AilmentName, VolatileName
+from jpoke.utils.type_defs import Nature, Type, Stat, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
 from jpoke.utils import fast_copy
-from jpoke.enums import Event
 from jpoke.data import pokedex
 
 from .ability import Ability
@@ -201,6 +200,24 @@ class Pokemon:
             ポケモンの種族名
         """
         return self.data.name
+
+    @property
+    def alias(self) -> str:
+        """ポケモンの図鑑エイリアスを取得する。"""
+        return self.data.alias
+
+    def set_form(self, alias: str, keep_damage: bool = True) -> None:
+        """ポケモンのフォルムをエイリアス指定で切り替える。
+
+        Args:
+            alias: 変更先フォルムの図鑑エイリアス
+            keep_damage: Trueの場合、現在の被ダメージ量を維持する
+        """
+        if self.alias == alias:
+            return
+
+        self.data = pokedex[alias]
+        self.update_stats(keep_damage=keep_damage)
 
     def has_item(self, name: str | None = None) -> bool:
         """持ち物を持っているか判定する。

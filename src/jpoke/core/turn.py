@@ -105,11 +105,16 @@ class TurnController:
         if self.battle.turn < 0:
             raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
 
+        # 割り込み中でなければ、ターン開始時にカウントを進める
+        if not self.battle.has_interrupt():
+            self.battle.turn += 1
+
         # 引数のコマンドをスケジュールに追加する
         if commands:
             for player, command in commands.items():
                 player.reserve_command(command)
                 self.battle.add_command_log(player, command)
+
         self._process_turn_phases()
 
     def start(self):
@@ -120,7 +125,7 @@ class TurnController:
         if self.battle.turn >= 0:
             raise RuntimeError("Battle already started.")
 
-        self.update_turn_count()
+        self.battle.turn = 0
 
         # ポケモンを選出
         self.run_selection()
@@ -129,10 +134,6 @@ class TurnController:
 
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
-
-    def update_turn_count(self):
-        """ターンカウントを進行させる。"""
-        self.battle.turn += 1
 
     def _run_terastal(self):
         """技発動前にテラスタルコマンドを実行する。"""
@@ -149,10 +150,6 @@ class TurnController:
 
         割り込みの有無に応じて、ターンの各フェーズを順番に処理する。
         """
-        # ターンの更新
-        if not self.battle.has_interrupt():
-            self.update_turn_count()
-
         # 通常ターンの処理
         if not self.battle.has_interrupt():
             # ターン初期化
@@ -195,16 +192,21 @@ class TurnController:
         self.events.emit(Event.ON_BEFORE_MOVE)
 
         # 技の処理
-        for attacker in self.battle.determine_action_order():
+        action_orders = ["先攻", "後攻"]
+        for attacker, action_order in zip(self.battle.determine_action_order(), action_orders):
             player = self.battle.find_player(attacker)
 
-            # 行動前に交代していたらスキップ
             if player.has_switched:
                 continue
 
             if not self.battle.has_interrupt():
-                self.battle.add_event_log(player, LogCode.ACTION_START,
-                                          payload={"pokemon": attacker.name})
+                self.battle.add_event_log(
+                    player, LogCode.ACTION_START,
+                    payload={
+                        "pokemon": attacker.name,
+                        "action_order": action_order,
+                    }
+                )
 
                 # コマンドを取得
                 command = player.reserved_commands.pop(0)

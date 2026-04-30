@@ -25,12 +25,15 @@ class Payload(TypedDict, total=False):
     ability: str | None = None
     item: str | None = None
     move: str | None = None
+    action_order: str | None = None
     ailment: str | None = None
     volatile: str | None = None
+    text: str | None = None
 
     # その他
     stat: Stat | None = None
     value: int | None = None
+    percent: int | None = None
 
 
 @dataclass(frozen=True)
@@ -76,7 +79,7 @@ class EventLog:
         base_text = self._get_base_text()
 
         if reason:
-            return f"{base_text}:{reason}"
+            return f"{base_text} [{reason}]"
         return base_text
 
     def _get_base_text(self) -> str:
@@ -125,20 +128,23 @@ class EventLog:
                 direction = "上がった" if change > 0 else "下がった"
                 return f"{stat}が{direction}"
 
-            case LogCode.HEAL:
+            case LogCode.HP_CHANGED:
+                pokemon = self.payload.get("pokemon", "ポケモン")
                 value = self.payload.get("value", 0)
-                return f"{value}回復"
-
-            case LogCode.DAMAGE:
-                value = self.payload.get("value", 0)
-                return f"{value}ダメージ"
+                percent = self.payload.get("percent", 0)
+                s = f"{pokemon}  HP "
+                if value > 0:
+                    s += "+"
+                s += f"{value} (残り {percent}%)"
+                return s
 
             case LogCode.ACTION_BLOCKED:
                 return "動けない"
 
             case LogCode.ACTION_START:
                 pokemon = self.payload.get("pokemon", "ポケモン")
-                return f"{pokemon} 行動"
+                action_order = self.payload.get("action_order", "行動")
+                return f"{pokemon} {action_order}"
 
             case LogCode.CONSUME_PP:
                 move = self.payload.get("move", "技")
