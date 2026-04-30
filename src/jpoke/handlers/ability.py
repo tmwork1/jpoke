@@ -17,6 +17,9 @@ from . import common
 AEGISLASH_NAME = "ギルガルド"
 AEGISLASH_SHIELD_ALIAS = "ギルガルド(シールド)"
 AEGISLASH_BLADE_ALIAS = "ギルガルド(ブレード)"
+PALAFIN_NAME = "イルカマン"
+PALAFIN_ZERO_ALIAS = "イルカマン(ナイーブ)"
+PALAFIN_HERO_ALIAS = "イルカマン(マイティ)"
 
 
 class AbilityHandler(Handler):
@@ -394,6 +397,28 @@ def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -
         return HandlerReturn(value=value)
 
     battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def マイティチェンジ_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """マイティチェンジ特性: ナイーブフォルムで引っ込むとマイティフォルムへ変化する。"""
+    mon = ctx.source
+    if mon is None or mon.name != PALAFIN_NAME:
+        return HandlerReturn(value=value)
+    if mon.alias != PALAFIN_ZERO_ALIAS:
+        return HandlerReturn(value=value)
+    if not mon.alive:
+        return HandlerReturn(value=value)
+
+    mon.set_form(PALAFIN_HERO_ALIAS)
+
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "マイティチェンジ", "success": True},
+    )
     return HandlerReturn(value=value)
 
 

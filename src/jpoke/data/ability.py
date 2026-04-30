@@ -1246,7 +1246,13 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "unreproducible",
             "protected"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.マイティチェンジ_on_switch_out,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "マイナス": AbilityData(),
     "マイペース": AbilityData(

@@ -1029,6 +1029,69 @@ def test_バトルスイッチ_交代時はシールドへ戻る():
     assert aegislash.alias == "ギルガルド(シールド)"
 
 
+def test_マイティチェンジ_ナイーブで交代するとマイティへ変化する():
+    battle = t.start_battle(
+        ally=[Pokemon("イルカマン(ナイーブ)", ability="マイティチェンジ"), Pokemon("ピカチュウ")],
+        foe=[Pokemon("コイキング")],
+    )
+    player = battle.players[0]
+    palafin = player.team[0]
+
+    battle.switch_manager.run_switch(player, player.team[1])
+
+    assert palafin.alias == "イルカマン(マイティ)"
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_マイティチェンジ_だっしゅつボタン交代でも変化する():
+    battle = t.start_battle(
+        ally=[
+            Pokemon("イルカマン(ナイーブ)", ability="マイティチェンジ", item="だっしゅつボタン"),
+            Pokemon("ピカチュウ"),
+        ],
+        foe=[Pokemon("コイキング", moves=["たいあたり"])],
+    )
+    palafin = battle.players[0].team[0]
+    attacker = battle.actives[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+    assert battle.players[0].interrupt == Interrupt.EJECTBUTTON
+
+    battle.run_interrupt_switch(Interrupt.EJECTBUTTON)
+
+    assert palafin.alias == "イルカマン(マイティ)"
+
+
+def test_マイティチェンジ_ひんし退場では変化しない():
+    battle = t.start_battle(
+        ally=[Pokemon("イルカマン(ナイーブ)", ability="マイティチェンジ"), Pokemon("ピカチュウ")],
+        foe=[Pokemon("コイキング")],
+    )
+    player = battle.players[0]
+    palafin = player.team[0]
+
+    battle.modify_hp(palafin, v=-palafin.max_hp, reason="other")
+    assert palafin.fainted
+
+    battle.run_faint_switch()
+
+    assert palafin.alias == "イルカマン(ナイーブ)"
+
+
+def test_マイティチェンジ_既にマイティなら追加変化しない():
+    battle = t.start_battle(
+        ally=[Pokemon("イルカマン(マイティ)", ability="マイティチェンジ"), Pokemon("ピカチュウ")],
+        foe=[Pokemon("コイキング")],
+    )
+    player = battle.players[0]
+    palafin = player.team[0]
+
+    battle.switch_manager.run_switch(player, player.team[1])
+
+    assert palafin.alias == "イルカマン(マイティ)"
+    assert not t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
 @pytest.mark.parametrize(
     "ability_name, ailment_name",
     [
