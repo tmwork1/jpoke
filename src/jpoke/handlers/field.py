@@ -99,15 +99,15 @@ _FLYING_WEAK_TYPES = frozenset({"でんき", "いわ", "こおり"})
 
 
 def おおひでり_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """おおひでり中にみずタイプ攻撃技を失敗させる (ON_CHECK_MOVE priority 10)"""
-    if ctx.move.type == "みず" and ctx.move.is_attack:
+    """おおひでり中にみずタイプ技を失敗させる（攻撃技・変化技を問わない）(ON_CHECK_MOVE priority 10)"""
+    if ctx.move.type == "みず":
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def おおあめ_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """おおあめ中にほのおタイプ攻撃技を失敗させる (ON_CHECK_MOVE priority 10)"""
-    if ctx.move.type == "ほのお" and ctx.move.is_attack:
+    """おおあめ中にほのおタイプ技を失敗させる（攻撃技・変化技を問わない）(ON_CHECK_MOVE priority 10)"""
+    if ctx.move.type == "ほのお":
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

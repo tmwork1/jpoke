@@ -114,8 +114,3 @@ class Field(GameEffect):
     def is_rainy(self) -> bool:
         """あめ・おおあめ相当かどうかを判定する。"""
         return self.name in {"あめ", "おおあめ"}
-
-    @property
-    def is_strong(self) -> bool:
-        """強天候（おおひでり / おおあめ / らんきりゅう）かどうかを判定する。"""
-        return self.name in {"おおひでり", "おおあめ", "らんきりゅう"}

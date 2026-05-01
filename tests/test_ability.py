@@ -5,6 +5,7 @@ from jpoke import Pokemon
 from jpoke.core import BattleContext
 from jpoke.enums import Event, Interrupt, LogCode, Command
 from jpoke.model import Move
+from jpoke.utils.type_defs import STRONG_WEATHERS
 
 import test_utils as t
 
@@ -2314,7 +2315,7 @@ def test_強天候始動特性_登場時に対応天候を展開する(ability_n
         foe=[Pokemon("ライチュウ")],
     )
     assert battle.weather.name == weather_name
-    assert battle.weather.is_strong
+    assert battle.weather.name in STRONG_WEATHERS
 
 
 @pytest.mark.parametrize(
@@ -2345,6 +2346,26 @@ def test_強天候始動特性_通常天候から上書きされない():
     battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[0])
 
     assert battle.weather.name == "おおひでり"
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name",
+    [
+        ("おわりのだいち", "おおひでり"),
+        ("はじまりのうみ", "おおあめ"),
+        ("デルタストリーム", "らんきりゅう"),
+    ],
+)
+def test_強天候始動特性_退場時に解除される(ability_name: str, weather_name: str):
+    """強天候始動特性: 特性持ちが退場すると強天候が解除される"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert battle.weather.name == weather_name
+
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert not battle.weather.is_active
 
 
 if __name__ == "__main__":

@@ -230,8 +230,7 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
 
     def activate(self, name: Weather, count: int, source=None) -> bool:
         """天候を発動する。強天候中は通常天候への切り替えをブロックする。"""
-        current_name = self.current.name
-        if current_name in STRONG_WEATHERS and name not in STRONG_WEATHERS:
+        if self.current.name in STRONG_WEATHERS and name not in STRONG_WEATHERS:
             return False
         return super().activate(name, count, source=source)
 

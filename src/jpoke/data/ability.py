@@ -169,7 +169,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 partial(common.activate_weather, weather="おおひでり", source_spec="source:self"),
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                partial(common.deactivate_weather, weather="おおひでり"),
+                subject_spec="source:self",
+            ),
         },
     ),
     "かいりきバサミ": AbilityData(
@@ -846,7 +850,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 partial(common.activate_weather, weather="おおあめ", source_spec="source:self"),
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                partial(common.deactivate_weather, weather="おおあめ"),
+                subject_spec="source:self",
+            ),
         },
     ),
     "はっこう": AbilityData(
@@ -1523,7 +1531,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 partial(common.activate_weather, weather="らんきりゅう", source_spec="source:self"),
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                partial(common.deactivate_weather, weather="らんきりゅう"),
+                subject_spec="source:self",
+            ),
         },
     ),
     "トランジスタ": AbilityData(

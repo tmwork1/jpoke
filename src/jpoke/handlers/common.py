@@ -218,6 +218,16 @@ def activate_weather(battle: Battle,
     return HandlerReturn(value=success)
 
 
+def deactivate_weather(battle: Battle,
+                       ctx: BattleContext,
+                       value: Any,
+                       weather: Weather) -> HandlerReturn:
+    """指定天候が現在有効な場合に解除する。"""
+    if battle.weather.name == weather:
+        battle.weather_manager.deactivate()
+    return HandlerReturn(value=value)
+
+
 def activate_terrain(battle: Battle,
                      ctx: BattleContext,
                      value: Any,
