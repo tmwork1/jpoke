@@ -104,6 +104,11 @@ HPChangeReason = Literal[
     "other",                # その他のダメージ
 ]
 
+StatChangeReason = Literal[
+    "",                     # 通常（理由なし）
+    "ミラーアーマー",       # ミラーアーマーによる反射
+]
+
 ItemLostCause = Literal["", "consume", "remove", "swap", "steal", "burn", "gas"]
 
 MoveLabel = Literal[

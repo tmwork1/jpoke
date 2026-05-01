@@ -1,4 +1,4 @@
-﻿"""技データ定義モジュール。
+"""技データ定義モジュール。
 
 Note:
     このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
@@ -328,7 +328,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=90,
-
     ),
     "インファイト": MoveData(
         type="かくとう",
@@ -995,7 +994,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=200,
         accuracy=100,
-
     ),
     "しめつける": MoveData(
         type="ノーマル",
@@ -1101,7 +1099,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=25,
         accuracy=90,
-
     ),
     "ずつき": MoveData(
         type="ノーマル",
@@ -1168,7 +1165,6 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=95,
 
-
     ),
     "ソウルクラッシュ": MoveData(
         type="フェアリー",
@@ -1219,7 +1215,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=250,
         accuracy=100,
-
     ),
     "ダイビング": MoveData(
         type="みず",
@@ -1247,7 +1242,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=95,
-
     ),
     "たきのぼり": MoveData(
         type="みず",
@@ -1264,7 +1258,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=80,
-
     ),
     "たたきつける": MoveData(
         type="ノーマル",
@@ -1439,7 +1432,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=90,
-
     ),
     "つららばり": MoveData(
         type="こおり",
@@ -1447,7 +1439,6 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=25,
         accuracy=100,
-
     ),
     "つるのムチ": MoveData(
         type="くさ",
@@ -1514,7 +1505,6 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         power=15,
         accuracy=100,
-
     ),
     "どくばりセンボン": MoveData(
         type="どく",
@@ -1522,7 +1512,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=60,
         accuracy=100,
-
     ),
     "どげざつき": MoveData(
         type="あく",
@@ -1625,7 +1614,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-
     ),
     "ドラゴンクロー": MoveData(
         type="ドラゴン",
@@ -1779,7 +1767,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-
     ),
     "にぎりつぶす": MoveData(
         type="ノーマル",
@@ -2064,7 +2051,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=85,
-
     ),
     "びりびりちくちく": MoveData(
         type="でんき",
@@ -2100,7 +2086,6 @@ MOVES: dict[str, MoveData] = {
         power=30,
         accuracy=100,
         priority=2,
-
     ),
     "ふくろだたき": MoveData(
         type="あく",
@@ -2140,7 +2125,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=90,
-
 
     ),
     "ブリザードランス": MoveData(
@@ -2254,7 +2238,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=25,
         accuracy=90,
-
     ),
     "ほしがる": MoveData(
         type="ノーマル",
@@ -2352,7 +2335,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=25,
         accuracy=95,
-
     ),
     "みだれづき": MoveData(
         type="ノーマル",
@@ -2451,7 +2433,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-
     ),
     "もろはのずつき": MoveData(
         type="いわ",
@@ -2659,7 +2640,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=80,
         accuracy=100,
-
     ),
     "いてつくしせん": MoveData(
         type="エスパー",
@@ -2747,7 +2727,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-
     ),
     "エアカッター": MoveData(
         type="ひこう",
@@ -2825,7 +2804,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=130,
         accuracy=100,
-
     ),
     "オーバードライブ": MoveData(
         type="でんき",
@@ -2862,7 +2840,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-
     ),
     "かえんほうしゃ": MoveData(
         type="ほのお",
@@ -2870,7 +2847,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-
     ),
     "かぜおこし": MoveData(
         type="ひこう",
@@ -2939,7 +2915,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-
     ),
     "きまぐレーザー": MoveData(
         type="ドラゴン",
@@ -2976,7 +2951,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-
     ),
     "クロロブラスト": MoveData(
         type="くさ",
@@ -2984,7 +2958,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=95,
-
     ),
     "ゲップ": MoveData(
         type="どく",
@@ -3000,7 +2973,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=60,
         accuracy=100,
-
     ),
     "こおりのいぶき": MoveData(
         type="こおり",
@@ -3017,7 +2989,6 @@ MOVES: dict[str, MoveData] = {
         power=140,
         accuracy=90,
 
-
     ),
     "ゴールドラッシュ": MoveData(
         type="はがね",
@@ -3025,7 +2996,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-
     ),
     "こがらしあらし": MoveData(
         type="ひこう",
@@ -3069,7 +3039,6 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=40,
         accuracy=100,
-
     ),
     "こんげんのはどう": MoveData(
         type="みず",
@@ -3085,7 +3054,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-
     ),
     "サイコキネシス": MoveData(
         type="エスパー",
@@ -3106,7 +3074,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
     ),
     "サイコノイズ": MoveData(
         type="エスパー",
@@ -3135,7 +3102,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
-
     ),
     "さばきのつぶて": MoveData(
         type="ノーマル",
@@ -3171,7 +3137,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=85,
-
     ),
     "シェルアームズ": MoveData(
         type="どく",
@@ -3210,7 +3175,6 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=90,
 
-
     ),
     "シャドーボール": MoveData(
         type="ゴースト",
@@ -3232,7 +3196,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-
     ),
     "しんくうは": MoveData(
         type="かくとう",
@@ -3248,7 +3211,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=80,
         accuracy=100,
-
     ),
     "しんぴのちから": MoveData(
         type="エスパー",
@@ -3256,7 +3218,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=70,
         accuracy=90,
-
     ),
     "しんぴのつるぎ": MoveData(
         type="かくとう",
@@ -3280,7 +3241,6 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=20,
         accuracy=100,
-
     ),
     "スケイルノイズ": MoveData(
         type="ドラゴン",
@@ -3303,7 +3263,6 @@ MOVES: dict[str, MoveData] = {
         power=110,
         accuracy=95,
 
-
     ),
     "スピードスター": MoveData(
         type="ノーマル",
@@ -3318,7 +3277,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=30,
         accuracy=70,
-
     ),
     "ぜったいれいど": MoveData(
         type="こおり",
@@ -3337,7 +3295,6 @@ MOVES: dict[str, MoveData] = {
                 subject_spec="attacker:self",
             ),
         }
-
     ),
     "ソーラービーム": MoveData(
         type="くさ",
@@ -3345,7 +3302,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-
     ),
     "だいちのちから": MoveData(
         type="じめん",
@@ -3353,7 +3309,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-
     ),
     "だいちのはどう": MoveData(
         type="ノーマル",
@@ -3377,7 +3332,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=110,
         accuracy=85,
-
     ),
     "タキオンカッター": MoveData(
         type="はがね",
@@ -3385,7 +3339,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-
     ),
     "だくりゅう": MoveData(
         type="みず",
@@ -3393,7 +3346,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=85,
-
     ),
     "たたりめ": MoveData(
         type="ゴースト",
@@ -3438,7 +3390,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=40,
         accuracy=100,
-
     ),
     "てっていこうせん": MoveData(
         type="はがね",
@@ -3446,7 +3397,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=95,
-
     ),
     "テラクラスター": MoveData(
         type="ノーマル",
@@ -3454,7 +3404,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-
     ),
     "テラバースト": MoveData(
         type="ノーマル",
@@ -3487,7 +3436,6 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=40,
         accuracy=100,
-
     ),
     "でんげきは": MoveData(
         type="でんき",
@@ -3515,7 +3463,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-
     ),
     "トライアタック": MoveData(
         type="ノーマル",
@@ -3523,7 +3470,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
     ),
     "ドラゴンエナジー": MoveData(
         type="ドラゴン",
@@ -3547,7 +3493,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=20,
         accuracy=100,
-
     ),
     "ナイトバースト": MoveData(
         type="あく",
@@ -3555,7 +3500,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=95,
-
     ),
     "ナイトヘッド": MoveData(
         type="ゴースト",
@@ -3593,7 +3537,6 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
 
-
     ),
     "ねっとう": MoveData(
         type="みず",
@@ -3601,7 +3544,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-
 
     ),
     "ねっぷう": MoveData(
@@ -3647,7 +3589,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-
     ),
     "ハイドロカノン": MoveData(
         type="みず",
@@ -3655,7 +3596,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-
     ),
     "ハイドロスチーム": MoveData(
         type="みず",
@@ -3663,7 +3603,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-
     ),
     "ハイドロポンプ": MoveData(
         type="みず",
@@ -3686,7 +3625,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-
     ),
     "はきだす": MoveData(
         type="ノーマル",
@@ -3725,7 +3663,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-
     ),
     "はめつのねがい": MoveData(
         type="はがね",
@@ -3740,7 +3677,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-
     ),
     "はるのあらし": MoveData(
         type="フェアリー",
@@ -3764,7 +3700,6 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=40,
         accuracy=100,
-
     ),
     "ひゃっきやこう": MoveData(
         type="ゴースト",
@@ -3772,7 +3707,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=60,
         accuracy=100,
-
     ),
     "ひやみず": MoveData(
         type="みず",
@@ -3793,7 +3727,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-
     ),
     "ぶきみなじゅもん": MoveData(
         type="エスパー",
@@ -3823,7 +3756,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-
     ),
     "ブラッドムーン": MoveData(
         type="ノーマル",
@@ -3831,7 +3763,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=100,
-
     ),
     "フリーズドライ": MoveData(
         type="こおり",
@@ -3839,7 +3770,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-
     ),
     "プリズムレーザー": MoveData(
         type="エスパー",
@@ -3847,7 +3777,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=160,
         accuracy=100,
-
     ),
     "フルールカノン": MoveData(
         type="フェアリー",
@@ -3877,7 +3806,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-
     ),
     "ふんか": MoveData(
         type="ほのお",
@@ -3903,7 +3831,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=95,
         accuracy=100,
-
     ),
     "ヘドロこうげき": MoveData(
         type="どく",
@@ -3911,7 +3838,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-
     ),
     "ヘドロばくだん": MoveData(
         type="どく",
@@ -3935,7 +3861,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-
     ),
     "ぼうふう": MoveData(
         type="ひこう",
@@ -3980,7 +3905,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-
     ),
     "マグマストーム": MoveData(
         type="ほのお",
@@ -4052,7 +3976,6 @@ MOVES: dict[str, MoveData] = {
         power=15,
         accuracy=100,
         priority=1,
-
     ),
     "みずでっぽう": MoveData(
         type="みず",
@@ -4067,7 +3990,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-
     ),
     "ミストボール": MoveData(
         type="エスパー",
@@ -4128,7 +4050,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=95,
         accuracy=100,
-
     ),
     "むしのさざめき": MoveData(
         type="むし",
@@ -4163,7 +4084,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=40,
         accuracy=100,
-
     ),
     "めざめるダンス": MoveData(
         type="ノーマル",
@@ -4179,7 +4099,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=90,
-
     ),
     "もえあがるいかり": MoveData(
         type="あく",
@@ -4187,7 +4106,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-
     ),
     "やきつくす": MoveData(
         type="ほのお",
@@ -4207,7 +4125,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=100,
         accuracy=100,
-
     ),
     "ようかいえき": MoveData(
         type="どく",
@@ -4215,7 +4132,6 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         power=40,
         accuracy=100,
-
     ),
     "ようせいのかぜ": MoveData(
         type="フェアリー",
@@ -4290,7 +4206,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
-
     ),
     "りゅうのはどう": MoveData(
         type="ドラゴン",
@@ -4306,7 +4221,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-
     ),
     "りんしょう": MoveData(
         type="ノーマル",
@@ -4335,7 +4249,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-
     ),
     "れんごく": MoveData(
         type="ほのお",
@@ -4343,7 +4256,6 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=50,
-
     ),
     "ワイドフォース": MoveData(
         type="エスパー",
@@ -4366,31 +4278,24 @@ MOVES: dict[str, MoveData] = {
         type="みず",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "あくび": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "あくまのキッス": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=75,
-
     ),
     "あさのひざし": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -4398,7 +4303,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -4411,7 +4315,6 @@ MOVES: dict[str, MoveData] = {
         type="フェアリー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -4424,39 +4327,30 @@ MOVES: dict[str, MoveData] = {
         type="みず",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
-
     ),
     "あやしいひかり": MoveData(
         type="ゴースト",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "アロマセラピー": MoveData(
         type="くさ",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
-
     ),
     "アロマミスト": MoveData(
         type="フェアリー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "アンコール": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=100,
         labels=["non_encore"],
         handlers={
@@ -4469,24 +4363,19 @@ MOVES: dict[str, MoveData] = {
         type="どく",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "いかりのこな": MoveData(
         type="むし",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         priority=2,
-
     ),
     "いたみわけ": MoveData(
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -4499,7 +4388,6 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -4512,15 +4400,12 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=40,
-        power=0,
         accuracy=95,
-
     ),
     "いのちのしずく": MoveData(
         type="みず",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -4528,15 +4413,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=85,
-
     ),
     "いやしのすず": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["sound"],
     ),
@@ -4544,7 +4426,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -4552,7 +4433,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -4560,7 +4440,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=40,
-        power=0,
         accuracy=85,
         labels=["sound"],
         handlers={
@@ -4573,7 +4452,6 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -4586,7 +4464,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=55,
         labels=["sound"],
     ),
@@ -4594,23 +4471,18 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "うらみ": MoveData(
         type="ゴースト",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "エレキフィールド": MoveData(
         type="でんき",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -4618,7 +4490,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -4631,7 +4502,6 @@ MOVES: dict[str, MoveData] = {
         type="ひこう",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
         field_targeting=True,
         labels=["wind"],
@@ -4640,7 +4510,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=40,
-        power=0,
         accuracy=0,
         labels=["non_negoto"],
     ),
@@ -4648,7 +4517,6 @@ MOVES: dict[str, MoveData] = {
         type="こおり",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -4656,31 +4524,24 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "おきみやげ": MoveData(
         type="あく",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "おさきにどうぞ": MoveData(
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "おたけび": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=100,
         labels=["sound"],
     ),
@@ -4688,63 +4549,48 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "おちゃかい": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "おにび": MoveData(
         type="ほのお",
         category="変化",
         pp=15,
-        power=0,
         accuracy=85,
-
     ),
     "ガードシェア": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "ガードスワップ": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "かいでんぱ": MoveData(
         type="でんき",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "かいふくふうじ": MoveData(
         type="エスパー",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "かえんのまもり": MoveData(
         type="ほのお",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
         self_targeting=True,
@@ -4759,15 +4605,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "かたくなる": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -4780,15 +4623,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "からにこもる": MoveData(
         type="みず",
         category="変化",
         pp=40,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -4801,31 +4641,24 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "きあいだめ": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
-
     ),
     "ギアチェンジ": MoveData(
         type="はがね",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "キノコのほうし": MoveData(
         type="くさ",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
         labels=["powder"],
     ),
@@ -4833,7 +4666,6 @@ MOVES: dict[str, MoveData] = {
         type="ひこう",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -4846,7 +4678,6 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=40,
-        power=0,
         accuracy=85,
         labels=["sound"],
         handlers={
@@ -4859,15 +4690,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "グラスフィールド": MoveData(
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -4875,7 +4703,6 @@ MOVES: dict[str, MoveData] = {
         type="こおり",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -4883,15 +4710,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=100,
-
     ),
     "こうごうせい": MoveData(
         type="くさ",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -4899,7 +4723,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -4912,31 +4735,24 @@ MOVES: dict[str, MoveData] = {
         type="かくとう",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "コートチェンジ": MoveData(
         type="ノーマル",
         category="変化",
         pp=100,
-        power=0,
         accuracy=0,
-
     ),
     "コスモパワー": MoveData(
         type="エスパー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "コットンガード": MoveData(
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -4949,7 +4765,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         priority=2,
     ),
@@ -4957,16 +4772,13 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
-
     ),
     "こわいかお": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -4979,7 +4791,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=0,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -4987,7 +4798,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -4995,7 +4805,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
         priority=2,
     ),
@@ -5003,47 +4812,36 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "さいみんじゅつ": MoveData(
         type="エスパー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=60,
-
     ),
     "さきおくり": MoveData(
         type="あく",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "さむいギャグ": MoveData(
         type="こおり",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "じこあんじ": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "じこさいせい": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5051,15 +4849,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "しっぽをふる": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -5072,15 +4867,12 @@ MOVES: dict[str, MoveData] = {
         type="でんき",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "しびれごな": MoveData(
         type="くさ",
         category="変化",
         pp=30,
-        power=0,
         accuracy=75,
         labels=["powder"],
     ),
@@ -5088,7 +4880,6 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5096,15 +4887,12 @@ MOVES: dict[str, MoveData] = {
         type="でんき",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "じゅうりょく": MoveData(
         type="エスパー",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         field_targeting=True,
         handlers={
@@ -5117,7 +4905,6 @@ MOVES: dict[str, MoveData] = {
         type="かくとう",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["dance"],
     ),
@@ -5125,7 +4912,6 @@ MOVES: dict[str, MoveData] = {
         type="こおり",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -5133,7 +4919,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=25,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -5141,23 +4926,18 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "スキルスワップ": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "スケッチ": MoveData(
         type="ノーマル",
         category="変化",
         pp=0,
-        power=0,
         accuracy=100,
         labels=["non_encore", "non_negoto"],
     ),
@@ -5165,7 +4945,6 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
         labels=["sound"],
     ),
@@ -5173,7 +4952,6 @@ MOVES: dict[str, MoveData] = {
         type="いわ",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -5181,7 +4959,6 @@ MOVES: dict[str, MoveData] = {
         type="じめん",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5200,7 +4977,6 @@ MOVES: dict[str, MoveData] = {
         type="じめん",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -5213,15 +4989,12 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "すりかえ": MoveData(
         type="あく",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -5233,7 +5006,6 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
         self_targeting=True,
@@ -5248,15 +5020,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "ソウルビート": MoveData(
         type="ドラゴン",
         category="変化",
         pp=100,
-        power=0,
         accuracy=0,
         labels=["dance", "sound"],
     ),
@@ -5264,15 +5033,12 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=10,
-        power=0,
         accuracy=50,
-
     ),
     "タールショット": MoveData(
         type="いわ",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -5288,7 +5054,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         handlers={
         }
@@ -5297,15 +5062,12 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "タマゴうみ": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5313,7 +5075,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -5329,7 +5090,6 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
         labels=["heal"],
     ),
@@ -5337,7 +5097,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=55,
         labels=["sound"],
     ),
@@ -5345,7 +5104,6 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         labels=["dance"],
     ),
@@ -5353,15 +5111,12 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "つきのひかり": MoveData(
         type="フェアリー",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5369,26 +5124,20 @@ MOVES: dict[str, MoveData] = {
         type="フェアリー",
         category="変化",
         pp=30,
-        power=0,
         accuracy=100,
         priority=1,
-
     ),
     "つぼをつく": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
-
     ),
     "つめとぎ": MoveData(
         type="あく",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "つるぎのまい": MoveData(
         type="ノーマル",
@@ -5403,31 +5152,24 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
-
     ),
     "テクスチャー２": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
-
     ),
     "デコレーション": MoveData(
         type="フェアリー",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "てだすけ": MoveData(
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
         priority=5,
     ),
@@ -5435,7 +5177,6 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -5448,48 +5189,37 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         priority=-6,
-
     ),
     "てんしのキッス": MoveData(
         type="フェアリー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=75,
-
     ),
     "でんじは": MoveData(
         type="でんき",
         category="変化",
         pp=20,
-        power=0,
         accuracy=90,
-
     ),
     "でんじふゆう": MoveData(
         type="でんき",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "とおせんぼう": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=100,
-
     ),
     "トーチカ": MoveData(
         type="どく",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
         self_targeting=True,
@@ -5504,7 +5234,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=40,
-        power=0,
         accuracy=0,
         labels=["sound"],
     ),
@@ -5512,9 +5241,7 @@ MOVES: dict[str, MoveData] = {
         type="どく",
         category="変化",
         pp=40,
-        power=0,
         accuracy=90,
-
     ),
     "どくどく": MoveData(
         type="どく",
@@ -5532,15 +5259,12 @@ MOVES: dict[str, MoveData] = {
         type="どく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "どくのこな": MoveData(
         type="どく",
         category="変化",
         pp=35,
-        power=0,
         accuracy=75,
         labels=["powder"],
     ),
@@ -5548,7 +5272,6 @@ MOVES: dict[str, MoveData] = {
         type="どく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -5556,31 +5279,24 @@ MOVES: dict[str, MoveData] = {
         type="どく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "とける": MoveData(
         type="どく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "ドラゴンエール": MoveData(
         type="ドラゴン",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "トリック": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -5592,7 +5308,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         priority=-7,
         field_targeting=True,
@@ -5606,7 +5321,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -5619,7 +5333,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         labels=["sound"],
     ),
@@ -5627,23 +5340,18 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "なかよくする": MoveData(
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "なきごえ": MoveData(
         type="ノーマル",
         category="変化",
         pp=40,
-        power=0,
         accuracy=100,
         labels=["sound"],
         handlers={
@@ -5656,7 +5364,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5664,7 +5371,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -5677,40 +5383,31 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "なりきり": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "ニードルガード": MoveData(
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
-
     ),
     "にほんばれ": MoveData(
         type="ほのお",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
-
     ),
     "にらみつける": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=100,
 
         handlers={
@@ -5723,7 +5420,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
         labels=["heal"],
@@ -5732,7 +5428,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["non_encore", "non_negoto"],
     ),
@@ -5740,7 +5435,6 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -5748,7 +5442,6 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=15,
-        power=0,
         accuracy=75,
         labels=["powder"],
     ),
@@ -5756,7 +5449,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5764,15 +5456,12 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "のみこむ": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5780,47 +5469,36 @@ MOVES: dict[str, MoveData] = {
         type="ゴースト",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "ハートスワップ": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "はいすいのじん": MoveData(
         type="かくとう",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
-
     ),
     "ハッピータイム": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
-
     ),
     "バトンタッチ": MoveData(
         type="ノーマル",
         category="変化",
         pp=40,
-        power=0,
         accuracy=0,
-
     ),
     "はねやすめ": MoveData(
         type="ひこう",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5834,47 +5512,36 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "はらだいこ": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "パワーシェア": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "パワースワップ": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "パワートリック": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
-
     ),
     "ひかりのかべ": MoveData(
         type="エスパー",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -5882,23 +5549,18 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "ビルドアップ": MoveData(
         type="かくとう",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "ファストガード": MoveData(
         type="かくとう",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
         priority=3,
     ),
@@ -5906,7 +5568,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -5919,15 +5580,12 @@ MOVES: dict[str, MoveData] = {
         type="フェアリー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "フェザーダンス": MoveData(
         type="ひこう",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
         labels=["dance"],
         handlers={
@@ -5950,7 +5608,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
         labels=["dance"],
     ),
@@ -5958,7 +5615,6 @@ MOVES: dict[str, MoveData] = {
         type="フェアリー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -5966,31 +5622,24 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=0,
-
     ),
     "ブレイブチャージ": MoveData(
         type="エスパー",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "へびにらみ": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-        power=0,
         accuracy=100,
-
     ),
     "へんしん": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=100,
         labels=["non_encore"],
     ),
@@ -5998,15 +5647,12 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "ほえる": MoveData(
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         priority=-6,
         labels=["sound"],
@@ -6015,15 +5661,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "ほたるび": MoveData(
         type="むし",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -6036,7 +5679,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["sound"],
     ),
@@ -6044,7 +5686,6 @@ MOVES: dict[str, MoveData] = {
         type="じめん",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -6052,7 +5693,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
         handlers={
@@ -6065,7 +5705,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         labels=["non_negoto"],
     ),
@@ -6073,15 +5712,12 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "まもる": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
         self_targeting=True,
@@ -6096,7 +5732,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=40,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -6112,7 +5747,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -6120,7 +5754,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["dance", "heal"],
     ),
@@ -6128,7 +5761,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -6141,7 +5773,6 @@ MOVES: dict[str, MoveData] = {
         type="かくとう",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         priority=4,
         self_targeting=True,
@@ -6156,7 +5787,6 @@ MOVES: dict[str, MoveData] = {
         type="フェアリー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
     ),
@@ -6164,15 +5794,12 @@ MOVES: dict[str, MoveData] = {
         type="みず",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "みちづれ": MoveData(
         type="ゴースト",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -6185,15 +5812,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=0,
-
     ),
     "ミルクのみ": MoveData(
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
         labels=["heal"],
     ),
@@ -6201,31 +5825,24 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "めいそう": MoveData(
         type="エスパー",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "メロメロ": MoveData(
         type="ノーマル",
         category="変化",
         pp=15,
-        power=0,
         accuracy=100,
-
     ),
     "ものまね": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["non_encore", "non_negoto"],
     ),
@@ -6233,31 +5850,24 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=20,
-        power=0,
         accuracy=100,
-
     ),
     "やどりぎのタネ": MoveData(
         type="くさ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=90,
-
     ),
     "ゆきげしき": MoveData(
         type="こおり",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "ゆびをふる": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         labels=["non_negoto"],
     ),
@@ -6265,9 +5875,7 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
-
     ),
     "リフレクター": MoveData(
         type="エスパー",
@@ -6281,15 +5889,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
-
     ),
     "りゅうのまい": MoveData(
         type="ドラゴン",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         labels=["dance"],
     ),
@@ -6297,7 +5902,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -6310,7 +5914,6 @@ MOVES: dict[str, MoveData] = {
         type="いわ",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -6322,7 +5925,6 @@ MOVES: dict[str, MoveData] = {
         type="いわ",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=3,
     ),
@@ -6330,7 +5932,6 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=40,
-        power=0,
         accuracy=100,
         labels=["powder"],
     ),
@@ -6338,7 +5939,6 @@ MOVES: dict[str, MoveData] = {
         type="あく",
         category="変化",
         pp=20,
-        power=0,
         accuracy=0,
 
         handlers={
@@ -6351,7 +5951,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         field_targeting=True,
         labels=[],
@@ -6374,7 +5973,6 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=10,
-        power=0,
         accuracy=0,
         priority=4,
         self_targeting=True,
@@ -6392,7 +5990,6 @@ MOVES: dict[str, MoveData] = {
         power=150,
         accuracy=100,
         priority=-5,
-
     ),
 }
 

@@ -25,7 +25,11 @@ class RandomPlayer(Player):
         return random.choice(available_commands)
 
 
-def build_random_pokemon(n_moves: int) -> Optional[Pokemon]:
+def build_random_pokemon(name: str | None = None,
+                         ability: str | None = None,
+                         item: str | None = None,
+                         moves: list[str] | None = None,
+                         n_moves: int = 1) -> Optional[Pokemon]:
     """ランダムなポケモンを構築する。
 
     Args:
@@ -35,23 +39,27 @@ def build_random_pokemon(n_moves: int) -> Optional[Pokemon]:
         構築されたPokemonインスタンス、またはランダム選択に失敗した場合はNone
     """
     # ランダムなポケモンを選択
-    pokemon_names = list(pokedex.keys())
-    name = random.choice(pokemon_names)
+    if name is None:
+        pokemon_names = list(pokedex.keys())
+        name = random.choice(pokemon_names)
 
     # ランダムな特性を選択
-    ability_names = list(ABILITIES.keys())
-    ability = random.choice(ability_names)
+    if ability is None:
+        ability_names = list(ABILITIES.keys())
+        ability = random.choice(ability_names)
 
     # ランダムなアイテムを選択
-    item_names = list(ITEMS.keys())
-    item = random.choice(item_names)
+    if item is None:
+        item_names = list(ITEMS.keys())
+        item = random.choice(item_names)
 
     # ランダムな技を選択
-    move_names = list(MOVES.keys())
-    selected_moves = random.sample(move_names, n_moves)
+    if moves is None:
+        move_names = list(MOVES.keys())
+        moves = random.sample(move_names, n_moves)
 
     # ポケモンを構築
-    mon = Pokemon(name, ability=ability, item=item, moves=selected_moves)
+    mon = Pokemon(name, ability=ability, item=item, moves=moves)
     return mon
 
 
@@ -65,19 +73,28 @@ def play_game(seed: int = None, max_turns: int = 10) -> tuple[Player | None, int
     Returns:
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
-    # プレイヤーを作成
-    p0 = RandomPlayer(name="Player1")
-    p1 = RandomPlayer(name="Player2")
+    names = [None, None]
+    abilities = [None, None]
+    items = [None, None]
+    moves = [None, None]
 
-    # ランダムなポケモンをチームに追加
-    p0.team.append(build_random_pokemon(n_moves=1))
-    p1.team.append(build_random_pokemon(n_moves=1))
-
-    p0.team[0].show()
-    p1.team[0].show()
+    players = []
+    for i in range(2):
+        players.append(RandomPlayer(name=f"Player{i+1}"))
+        mon = build_random_pokemon(
+            name=None,
+            ability=None,
+            item=None,
+            moves=None,
+            n_moves=1,
+        )
+        if mon is None:
+            raise ValueError("ランダムなポケモンの構築に失敗しました。")
+        mon.show()
+        players[i].team.append(mon)
 
     # バトルを作成・実行
-    battle = Battle([p0, p1], seed=seed)
+    battle = Battle(players, seed=seed)
     battle.start()
 
     while (winner := battle.judge_winner()) is None:

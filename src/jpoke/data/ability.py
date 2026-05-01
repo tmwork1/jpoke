@@ -497,7 +497,14 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "だっぴ": AbilityData(),
     "ちからずく": AbilityData(),
-    "ちからもち": AbilityData(),
+    "ちからもち": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.ちからもちヨガパワー_on_calc_atk_modifier,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ちくでん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -961,7 +968,13 @@ ABILITIES: dict[str, AbilityData] = {
     "カブトアーマー": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_CRITICAL_RANK: h.AbilityHandler(
+                h.カブトアーマー_on_calc_critical_rank,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "カーリーヘアー": AbilityData(
         flags=[
@@ -1082,7 +1095,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "テクニシャン": AbilityData(),
+    "テクニシャン": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.テクニシャン_on_calc_power_modifier,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "テラスシェル": AbilityData(
         flags=[
             "uncopyable",
@@ -1316,7 +1336,14 @@ ABILITIES: dict[str, AbilityData] = {
     "マジックミラー": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_REFLECT: h.AbilityHandler(
+                h.マジックミラー_reflect,
+                subject_spec="defender:self",
+                priority=200,
+            )
+        }
     ),
     "マルチスケイル": AbilityData(
         flags=[
@@ -1343,7 +1370,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ミラーアーマー": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.ミラーアーマー_reflect_stat_drop,
+                subject_spec="target:self",
+            )
+        }
     ),
     "ムラっけ": AbilityData(),
     "メガランチャー": AbilityData(),
@@ -1357,7 +1390,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "ヨガパワー": AbilityData(),
+    "ヨガパワー": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.ちからもちヨガパワー_on_calc_atk_modifier,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ライトメタル": AbilityData(
         flags=[
             "mold_breaker_ignorable"

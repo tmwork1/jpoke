@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
 
 from jpoke.model import Pokemon, Move, Ailment, Volatile
-from jpoke.utils.type_defs import AilmentName, VolatileName, Stat, HPChangeReason
+from jpoke.utils.type_defs import AilmentName, VolatileName, Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import BattleContext
 
@@ -459,13 +459,15 @@ class StatusManager:
             self._add_hp_change_logs(target, v, reason)
 
         if v < 0:
+            hp_delta = hp_before - hp_after
             self.battle.events.emit(
                 Event.ON_HP_CHANGED,
                 BattleContext(
                     target=target,
-                    hp_change=hp_before - hp_after,
+                    hp_change=hp_delta,
                     hp_change_reason=reason,
                 ),
+                hp_delta,
             )
             if target.fainted:
                 self.battle.judge_winner()
@@ -477,7 +479,7 @@ class StatusManager:
                     stat: Stat,
                     v: int,
                     source: Pokemon | None = None,
-                    reason: str = "") -> dict[Stat, int]:
+                    reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの能力ランクを1つ変更する。
 
         内部的には modify_stats() を呼び出して処理する。
@@ -498,7 +500,7 @@ class StatusManager:
                      target: Pokemon,
                      stats: dict[Stat, int],
                      source: Pokemon | None = None,
-                     reason: str = "") -> dict[Stat, int]:
+                     reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する。
 
         しろいハーブなどのアイテムが正しく動作するよう、
@@ -515,7 +517,7 @@ class StatusManager:
         """
         stats = self.battle.events.emit(
             Event.ON_BEFORE_MODIFY_STAT,
-            BattleContext(target=target, source=source),
+            BattleContext(target=target, source=source, stat_change_reason=reason),
             stats
         )
 

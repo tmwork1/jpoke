@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event
 from jpoke.model import Move
-from jpoke.utils.type_defs import ContextRole, RoleSpec, HPChangeReason
+from jpoke.utils.type_defs import ContextRole, RoleSpec, HPChangeReason, StatChangeReason
 
 
 class BattleContext:
@@ -32,6 +32,7 @@ class BattleContext:
         hp_change: HP変動量（負=減少、正=回復）
         hp_change_reason: HP変動の原因（"move_damage", "burn", "poison" など）
         move_damage: 技によるダメージ値（hp_change_reason が "move_damage" かつ hp_change < 0 のときのみ -hp_change、それ以外は 0）
+        stat_change_reason: 能力ランク変化の理由（"" は通常、"ミラーアーマー" は反射）
     """
 
     def __init__(self,
@@ -43,6 +44,7 @@ class BattleContext:
                  field: Field | None = None,
                  hp_change: int = 0,
                  hp_change_reason: HPChangeReason = "move_damage",
+                 stat_change_reason: StatChangeReason = "",
                  hit_index: int = 1,
                  hit_count: int = 1):
         """BattleContext を初期化する。
@@ -56,6 +58,7 @@ class BattleContext:
             field: 場の状態
             hp_change: HP変動量（負=減少、正=回復）
             hp_change_reason: HP変動の原因
+            stat_change_reason: 能力ランク変化の理由
             hit_index: マルチヒット時の現在ヒット番号（1始まり）
             hit_count: マルチヒット時の総ヒット回数
 
@@ -70,6 +73,7 @@ class BattleContext:
         self.field = field
         self.hp_change = hp_change
         self.hp_change_reason: HPChangeReason = hp_change_reason
+        self.stat_change_reason: StatChangeReason = stat_change_reason
         self.hit_index = hit_index
         self.hit_count = hit_count
 

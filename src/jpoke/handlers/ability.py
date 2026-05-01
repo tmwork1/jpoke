@@ -193,7 +193,7 @@ def ぎゃくじょう(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def ききかいひ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ききかいひ(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ききかいひ特性: HPが半分以下になったとき交代する。"""
     mon = ctx.target
     if mon is None or mon.fainted:
@@ -203,7 +203,7 @@ def ききかいひ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
         return HandlerReturn(value=value)
 
     hp_after = mon.hp
-    hp_before = hp_after + ctx.hp_change
+    hp_before = hp_after + value
     if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
         return HandlerReturn(value=value)
 
@@ -350,6 +350,13 @@ def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> Hand
     return HandlerReturn(value=result)
 
 
+def カブトアーマー_on_calc_critical_rank(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """カブトアーマー特性: 防御側の急所ランクを無効化する。"""
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=0)
+
+
 def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すなかき特性: すなあらし中に素早さが2倍になる。
 
@@ -447,6 +454,25 @@ def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> Handle
     if ctx.move.has_label("punch"):
         value = value * 4915 // 4096
     return HandlerReturn(value=value)
+
+
+def ちからもちヨガパワー_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。"""
+    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+    if move_category != "物理":
+        return HandlerReturn(value=value)
+    if ctx.move.name in ["イカサマ", "ボディプレス"]:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=value * 8192 // 4096)
+
+
+def テクニシャン_on_calc_power_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """テクニシャン特性: 元威力60以下の技威力補正を1.5倍にする。"""
+    if ctx.move.data.power is None:
+        return HandlerReturn(value=value)
+    if ctx.move.data.power > 60:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=value * 6144 // 4096)
 
 
 def トレース_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -568,6 +594,37 @@ def マジックガード(battle: Battle, ctx: BattleContext, value: int) -> Han
         return HandlerReturn(value=value)
 
     return HandlerReturn(value=0)
+
+
+def マジックミラー_reflect(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """マジックミラー特性: 反射対象の変化技を跳ね返す。"""
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+
+    reflected = ctx.move.has_label("reflectable")
+    return HandlerReturn(value=reflected)
+
+
+def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """ミラーアーマー特性: 相手由来の能力ランク低下を反射する。"""
+    # 反射由来の低下は再反射しない（無限反射防止）
+    if ctx.stat_change_reason == "ミラーアーマー":
+        return HandlerReturn(value=value)
+    # 自己デメリット・source 不明は反射しない
+    if ctx.source is None or ctx.source is ctx.target:
+        return HandlerReturn(value=value)
+    # かたやぶり系で防御側特性が無効化されている場合は反射しない
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+    # 低下分のみ抽出
+    drops = {stat: v for stat, v in value.items() if v < 0}
+    if not drops:
+        return HandlerReturn(value=value)
+    # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
+    battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
+    # 自分側の低下分を除去（上昇分は残す）
+    filtered = {stat: v for stat, v in value.items() if v > 0}
+    return HandlerReturn(value=filtered)
 
 
 def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:

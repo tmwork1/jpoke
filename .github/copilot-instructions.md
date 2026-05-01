@@ -33,6 +33,7 @@
 - 文書更新の詳細ルールは `.github/instructions/docs.instructions.md` を使う。
 
 ## 作業後の更新ルール
-- 実装を変更したら、対応する `progress/*.md` を更新する。
+- 作業完了前チェックとして、実装を変更したら対応する `progress/*.md` を必ず更新する。
+- 進捗更新漏れを防ぐため、最終報告前に「変更ファイル」と `progress/*.md` の整合を確認する。
 - `README.md` の集計は `progress/*.md` と一致させる。
 - `.github/` 配下の指示書は短く保ち、重複する説明を増やさない。

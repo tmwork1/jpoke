@@ -116,8 +116,8 @@ class Event(Enum):
     # handle: 未実装（キングシールド等の反撃処理を想定）
     ON_PROTECT_SUCCESS = auto()
 
-    # emit: core/move_executor.py（マジックコート反射確認）
-    # handle: volatile.py（マジックコートによる変化技の跳ね返し）
+    # emit: core/move_executor.py（反射確認）
+    # handle: volatile.py（マジックコート）, ability.py（マジックミラー）
     ON_CHECK_REFLECT = auto()
 
     # emit: core/move_executor.py（変化技命中時）
