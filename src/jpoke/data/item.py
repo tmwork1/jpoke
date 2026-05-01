@@ -128,7 +128,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.きゅうこん,
+                h.きゅうこん_cure_freeze,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -326,7 +326,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=50,
         handlers={
             Event.ON_MODIFY_STAT: h.ItemHandler(
-                h.だっしゅつパック,
+                h.だっしゅつパック_on_stat_down,
                 subject_spec="target:self",
             )
         }
@@ -336,7 +336,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_DAMAGE: h.ItemHandler(
-                h.だっしゅつボタン,
+                h.だっしゅつボタン_trigger_switch,
                 subject_spec="defender:self",
             )
         }
@@ -349,7 +349,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_TURN_END_2: h.ItemHandler(
-                h.たべのこし,
+                h.たべのこし_heal_hp,
                 subject_spec="source:self",
             )
         }
@@ -359,7 +359,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
-                h.ちからのハチマキ,
+                h.ちからのハチマキ_boost_physical,
                 subject_spec="attacker:self",
             )
         }
@@ -469,7 +469,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ひかりごけ,
+                h.ひかりごけ_cure_burn,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -558,7 +558,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
-                h.ものしりメガネ,
+                h.ものしりメガネ_boost_special,
                 subject_spec="attacker:self",
             )
         }
@@ -646,12 +646,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.オボンのみ,
+                h.オボンのみ_heal_hp,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.オボンのみ,
+                h.オボンのみ_heal_hp,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -662,12 +662,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ラムのみ,
+                h.ラムのみ_cure_ailments,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.ラムのみ,
+                h.ラムのみ_cure_ailments,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -678,12 +678,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.クラボのみ,
+                h.クラボのみ_cure_paralysis,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.クラボのみ,
+                h.クラボのみ_cure_paralysis,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -694,12 +694,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.カゴのみ,
+                h.カゴのみ_cure_sleep,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.カゴのみ,
+                h.カゴのみ_cure_sleep,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -710,12 +710,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.モモンのみ,
+                h.モモンのみ_cure_poison,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.モモンのみ,
+                h.モモンのみ_cure_poison,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -726,12 +726,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.チーゴのみ,
+                h.チーゴのみ_cure_burn,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.チーゴのみ,
+                h.チーゴのみ_cure_burn,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -742,12 +742,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ナナシのみ,
+                h.ナナシのみ_cure_freeze,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.ナナシのみ,
+                h.ナナシのみ_cure_freeze,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -758,12 +758,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.キーのみ,
+                h.キーのみ_cure_confusion,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.キーのみ,
+                h.キーのみ_cure_confusion,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -774,12 +774,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ヒメリのみ,
+                h.ヒメリのみ_cure_paralysis_hp,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.ヒメリのみ,
+                h.ヒメリのみ_cure_paralysis_hp,
                 subject_spec="source:self",
                 priority=75,
             )
@@ -790,12 +790,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.オレンのみ,
+                h.オレンのみ_cure_confusion,
                 subject_spec="source:self",
                 priority=75,
             ),
             Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.オレンのみ,
+                h.オレンのみ_cure_confusion,
                 subject_spec="source:self",
                 priority=75,
             )

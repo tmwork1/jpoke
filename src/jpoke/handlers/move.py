@@ -139,7 +139,7 @@ def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
-def いたみわけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いたみわけ_equalize_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """両者の現在HPを平均化する。"""
     shared_hp = (ctx.attacker.hp + ctx.defender.hp) // 2
 

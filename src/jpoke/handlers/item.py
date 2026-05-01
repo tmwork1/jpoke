@@ -76,13 +76,13 @@ def いかさまダイス_modify_hit_count(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=adjusted)
 
 
-def だっしゅつボタン(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def だっしゅつボタン_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     player = battle.find_player(ctx.defender)
     player.interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn()
 
 
-def だっしゅつパック(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def だっしゅつパック_on_stat_down(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # valueは{stat: change}の辞書
     player = battle.find_player(ctx.target)
     if any(v < 0 for v in value.values()) and \
@@ -91,7 +91,7 @@ def だっしゅつパック(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn()
 
 
-def たべのこし(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def たべのこし_heal_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # 毎ターンHPを1/16回復
     if battle.modify_hp(ctx.source, r=1/16):
         ctx.source.item.revealed = True
@@ -100,7 +100,7 @@ def たべのこし(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
 # ===== 難易度1: HP回復系アイテム =====
 
 
-def オボンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def オボンのみ_heal_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: HP50%以下時にHP25%回復
     target = ctx.resolve_role(battle, "source:self")
     if target.hp * 2 > target.max_hp:
@@ -112,7 +112,7 @@ def オボンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn()
 
 
-def クラボのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def クラボのみ_cure_paralysis(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: まひ状態時にまひを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "まひ":
@@ -123,7 +123,7 @@ def クラボのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn()
 
 
-def カゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def カゴのみ_cure_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: ねむり状態時にねむりを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "ねむり":
@@ -134,7 +134,7 @@ def カゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     return HandlerReturn()
 
 
-def モモンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def モモンのみ_cure_poison(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: どく状態時にどくを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "どく":
@@ -145,7 +145,7 @@ def モモンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn()
 
 
-def チーゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def チーゴのみ_cure_burn(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: やけど状態時にやけどを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "やけど":
@@ -156,7 +156,7 @@ def チーゴのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn()
 
 
-def ナナシのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ナナシのみ_cure_freeze(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: こおり状態時にこおりを治す
     target = ctx.resolve_role(battle, "source:self")
     if target.ailment == "こおり":
@@ -167,44 +167,44 @@ def ナナシのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn()
 
 
-def キーのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def キーのみ_cure_confusion(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: こんらん状態時にこんらんを治す
     return HandlerReturn()
 
 
-def ヒメリのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ヒメリのみ_cure_paralysis_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn()
 
 
-def オレンのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def オレンのみ_cure_confusion(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn()
 
 
-def ひかりごけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ひかりごけ_cure_burn(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn()
 
 
-def きゅうこん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def きゅうこん_cure_freeze(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn()
 
 
 # ===== 難易度1: 火力補正系アイテム =====
 
-def ちからのハチマキ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ちからのハチマキ_boost_physical(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_CALC_POWER_MODIFIER: 物理技1.1倍
     if ctx.move.category == "物理":
         return HandlerReturn(value=value * 11 // 10)
     return HandlerReturn(value=value)
 
 
-def ものしりメガネ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ものしりメガネ_boost_special(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_CALC_POWER_MODIFIER: 特殊技1.1倍
     if ctx.move.category == "特殊":
         return HandlerReturn(value=value * 11 // 10)
     return HandlerReturn(value=value)
 
 
-def ラムのみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ラムのみ_cure_ailments(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # ON_BEFORE_ACTION: すべての状態異常を回復する（消費型）
     target = ctx.resolve_role(battle, "source:self")
 

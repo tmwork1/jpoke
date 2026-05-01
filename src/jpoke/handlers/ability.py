@@ -87,7 +87,7 @@ def _trigger_emergency_switch(battle: Battle, mon, ability_name: str) -> bool:
     return True
 
 
-def あまのじゃく(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
+def あまのじゃく_modify_stat(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
     """あまのじゃく特性: 能力変化量の符号を反転する。"""
     return HandlerReturn(value={stat: -delta for stat, delta in value.items()})
 
@@ -97,7 +97,7 @@ def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
     return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
 
 
-def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ありじごく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ありじごく特性: 浮いていないポケモンの交代を防ぐ。
 
     Args:
@@ -116,7 +116,7 @@ def ありじごく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn(value=result)
 
 
-def かげふみ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かげふみ_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かげふみ特性: かげふみ持ち以外のポケモンの交代を防ぐ。
 
     Args:
@@ -147,7 +147,7 @@ def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value
     return HandlerReturn(value=value)
 
 
-def ぎゃくじょう(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ぎゃくじょう_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
     if ctx.move is None or not ctx.move.is_attack:
         return HandlerReturn(value=value)
@@ -193,7 +193,7 @@ def ぎゃくじょう(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def ききかいひ(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def ききかいひ_on_hp_change(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ききかいひ特性: HPが半分以下になったとき交代する。"""
     mon = ctx.target
     if mon is None or mon.fainted:
@@ -211,7 +211,7 @@ def ききかいひ(battle: Battle, ctx: BattleContext, value: int) -> HandlerRe
     return HandlerReturn(value=value)
 
 
-def じりょく(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def じりょく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じりょく特性: はがねタイプのポケモンの交代を防ぐ。
 
     Args:
@@ -327,7 +327,7 @@ def バトルスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=value)
 
 
-def かちき(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
+def かちき_on_stat_down(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
     """かちき特性: 能力が下がると特攻が2段階上昇する。
 
     Args:
@@ -357,7 +357,7 @@ def カブトアーマー_on_calc_critical_rank(battle: Battle, ctx: BattleConte
     return HandlerReturn(value=0)
 
 
-def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def すなかき_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すなかき特性: すなあらし中に素早さが2倍になる。
 
     Args:
@@ -373,7 +373,7 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
-def すいすい(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すいすい特性: あめ中に素早さが2倍になる。"""
     if battle.weather.name == "あめ":
         value *= 2
@@ -456,7 +456,7 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any
     return HandlerReturn(value=value)
 
 
-def てつのこぶし(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def てつのこぶし_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
     if ctx.move.has_label("punch"):
         value = value * 4915 // 4096
@@ -552,7 +552,7 @@ def てんねん_on_calc_def_rank_modifier(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=value)
 
 
-def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def めんえき_prevent_poison(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """めんえき特性: どく・もうどく状態を防ぐ。
 
     Args:
@@ -627,7 +627,7 @@ def ノーガード_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     return HandlerReturn(value=value)
 
 
-def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふみん特性: ねむり状態を防ぐ。
 
     Args:
@@ -648,7 +648,7 @@ def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=value)
 
 
-def マジックガード(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def マジックガード_reduce_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """マジックガード特性: 間接ダメージを無効化する。"""
     # 直接ダメージ・自己由来の特定HP変動は無効化しない。
     if ctx.hp_change_reason in {"move_damage", "pain_split", "self_attack", "self_cost"}:
@@ -731,7 +731,7 @@ def へんげんじざいリベロ_on_move_charge(battle: Battle, ctx: BattleCon
     return HandlerReturn(value=value)
 
 
-def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def やるき_prevent_sleep(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """やるき特性: ねむり状態を防ぐ。
 
     Args:
@@ -752,14 +752,14 @@ def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     return HandlerReturn(value=value)
 
 
-def ようりょくそ(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def ようりょくそ_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ようりょくそ特性: はれ中に素早さが2倍になる。"""
     if battle.weather.name == "はれ":
         value *= 2
     return HandlerReturn(value=value)
 
 
-def マイペース(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def マイペース_prevent_confusion(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """マイペース特性: こんらん状態を防ぐ（揮発状態の実装が必要）。
 
     Note:
@@ -777,7 +777,7 @@ def マイペース(battle: Battle, ctx: BattleContext, value: str) -> HandlerRe
     return HandlerReturn(value=value)
 
 
-def じゅうなん(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def じゅうなん_prevent_paralysis(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """じゅうなん特性: まひ状態を防ぐ。
 
     Args:
@@ -796,7 +796,7 @@ def じゅうなん(battle: Battle, ctx: BattleContext, value: str) -> HandlerRe
     return HandlerReturn(value=value)
 
 
-def みずのベール(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def みずのベール_prevent_burn(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """みずのベール特性: やけど状態を防ぐ。
 
     Args:
@@ -815,7 +815,7 @@ def みずのベール(battle: Battle, ctx: BattleContext, value: str) -> Handle
     return HandlerReturn(value=value)
 
 
-def マグマのよろい(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+def マグマのよろい_prevent_freeze(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """マグマのよろい特性: こおり状態を防ぐ。
 
     Args:
@@ -854,7 +854,7 @@ def どんかん_prevent_volatile(battle: Battle, ctx: BattleContext, value: str
     return HandlerReturn(value=value)
 
 
-def おうごんのからだ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """おうごんのからだ特性: 他のポケモンからの変化技を無効化する。
 
     酸化しない丈夫な黄金の体が、相手からの変化技をすべて受けつけない。

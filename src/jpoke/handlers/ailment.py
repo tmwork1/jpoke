@@ -16,7 +16,7 @@ class AilmentHandler(Handler):
         super().__init__(func, subject_spec, priority=priority)
 
 
-def もうどく(battle: Battle, ctx: BattleContext, value: Any):
+def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):
     battle.ailment_manager.tick(ctx.source)
     r = -ctx.source.ailment.elapsed_turns/16
     battle.modify_hp(ctx.source, r=r)

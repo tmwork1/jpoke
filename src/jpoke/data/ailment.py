@@ -25,7 +25,7 @@ AILMENTS: dict[str, AilmentData] = {
     "もうどく": AilmentData(
         handlers={
             Event.ON_TURN_END_3: h.AilmentHandler(
-                h.もうどく,
+                h.もうどく_damage,
                 subject_spec="source:self",
                 priority=30,
             )

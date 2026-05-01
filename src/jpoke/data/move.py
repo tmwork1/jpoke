@@ -4379,7 +4379,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.いたみわけ,
+                h.いたみわけ_equalize_hp,
             )
         }
     ),
