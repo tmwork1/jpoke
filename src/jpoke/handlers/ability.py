@@ -373,6 +373,13 @@ def すなかき(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
+def すいすい(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """すいすい特性: あめ中に素早さが2倍になる。"""
+    if battle.weather.name == "あめ":
+        value *= 2
+    return HandlerReturn(value=value)
+
+
 def スキルリンク_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """スキルリンク特性: 連続技のヒット数を最大にする。"""
     if ctx.move.data.max_hits <= 1:
@@ -688,6 +695,13 @@ def やるき(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "やるき", "success": True})
         return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ようりょくそ(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ようりょくそ特性: はれ中に素早さが2倍になる。"""
+    if battle.weather.name == "はれ":
+        value *= 2
     return HandlerReturn(value=value)
 
 

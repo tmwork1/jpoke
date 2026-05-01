@@ -1,4 +1,4 @@
-"""一撃必殺技の単体テスト。"""
+﻿"""一撃必殺技の単体テスト。"""
 
 import pytest
 from jpoke import Pokemon
@@ -7,7 +7,7 @@ import test_utils as t
 
 
 def test_一撃必殺技_命中時は相手を一撃で倒す():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["つのドリル"])],
         foe=[Pokemon("ピカチュウ", moves=["はねる"])],
         accuracy=100,
@@ -20,7 +20,7 @@ def test_一撃必殺技_命中時は相手を一撃で倒す():
 
 
 def test_一撃必殺技_外した時はダメージを与えない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["つのドリル"])],
         foe=[Pokemon("ピカチュウ", moves=["はねる"])],
         accuracy=0,
@@ -41,7 +41,7 @@ def test_一撃必殺技_外した時はダメージを与えない():
     ],
 )
 def test_一撃必殺技_タイプ相性で無効化される(move_name: str, foe_name: str):
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=[move_name])],
         foe=[Pokemon(foe_name, moves=["はねる"])],
         accuracy=100,
@@ -57,3 +57,4 @@ def test_一撃必殺技_タイプ相性で無効化される(move_name: str, fo
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

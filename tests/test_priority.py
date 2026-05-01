@@ -1,4 +1,4 @@
-"""優先度システムのテスト。
+﻿"""優先度システムのテスト。
 
 優先度の範囲（-7～+5）、計算、行動順への適用を検証。
 """
@@ -11,7 +11,7 @@ import test_utils as t
 
 def test_正の優先度():
     """優先度プラスの技は優先度0の技より先に行動する。"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("フシギダネ", moves=["しんそく"])]
     )
     t.reserve_command(battle)
@@ -21,7 +21,7 @@ def test_正の優先度():
 
 def test_負の優先度():
     """優先度-6の技は優先度0の技より後に行動する。"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ゲンガー", moves=["あてみなげ"])]
     )
     t.reserve_command(battle)
@@ -31,3 +31,4 @@ def test_負の優先度():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

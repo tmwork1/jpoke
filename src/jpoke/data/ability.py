@@ -55,7 +55,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "あめうけざら": AbilityData(),
-    "あめふらし": AbilityData(),
+    "あめふらし": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="あめ", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
     "ありじごく": AbilityData(
         handlers={
             Event.ON_CHECK_TRAPPED: h.AbilityHandler(
@@ -420,7 +427,14 @@ ABILITIES: dict[str, AbilityData] = {
             "protected"
         ]
     ),
-    "すいすい": AbilityData(),
+    "すいすい": AbilityData(
+        handlers={
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
+                h.すいすい,
+                subject_spec="source:self",
+            )
+        }
+    ),
     "すいほう": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -428,7 +442,14 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "すじがねいり": AbilityData(),
     "すてみ": AbilityData(),
-    "すなおこし": AbilityData(),
+    "すなおこし": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="すなあらし", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
     "すなかき": AbilityData(
         handlers={
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
@@ -708,7 +729,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "ひでり": AbilityData(),
+    "ひでり": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="はれ", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
     "ひとでなし": AbilityData(),
     "ひひいろのこどう": AbilityData(),
     "ひらいしん": AbilityData(
@@ -887,8 +915,22 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "ゆきふらし": AbilityData(),
-    "ようりょくそ": AbilityData(),
+    "ゆきふらし": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="ゆき", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
+    "ようりょくそ": AbilityData(
+        handlers={
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
+                h.ようりょくそ,
+                subject_spec="source:self",
+            )
+        }
+    ),
     "よちむ": AbilityData(),
     "よびみず": AbilityData(
         flags=[

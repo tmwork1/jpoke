@@ -1,4 +1,4 @@
-"""揮発性状態ハンドラの単体テスト"""
+﻿"""揮発性状態ハンドラの単体テスト"""
 from jpoke import Pokemon
 from jpoke.core import BattleContext
 from jpoke.enums import Event, Command, LogCode
@@ -7,7 +7,7 @@ import test_utils as t
 
 def test_アクアリング():
     """アクアリング: ターン終了時回復"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"アクアリング": 1}
     )
     battle.actives[0]._hp = 1
@@ -18,7 +18,7 @@ def test_アクアリング():
 
 
 def test_アクアリング_最大HPでは回復しない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"アクアリング": 1}
     )
     mon = battle.actives[0]
@@ -27,7 +27,7 @@ def test_アクアリング_最大HPでは回復しない():
 
 
 def test_アクアリング_かいふくふうじ中は回復しない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"アクアリング": 1, "かいふくふうじ": 1}
     )
     mon = battle.actives[0]
@@ -39,7 +39,7 @@ def test_アクアリング_かいふくふうじ中は回復しない():
 
 def test_あばれる_行動固定():
     """あばれる: 強制行動"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["あばれる"])],
     )
     attacker = battle.actives[0]
@@ -53,7 +53,7 @@ def test_あばれる_行動固定():
 
 
 def test_あばれる_カウント進行():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"あばれる": 2}
     )
     attacker, defender = battle.actives
@@ -66,7 +66,7 @@ def test_あばれる_カウント進行():
 
 
 def test_あばれる_3ターン継続():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"あばれる": 3}
     )
     attacker, defender = battle.actives
@@ -81,7 +81,7 @@ def test_あばれる_3ターン継続():
 
 
 def test_あばれる_2ターン継続():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"あばれる": 2}
     )
     attacker, defender = battle.actives
@@ -94,7 +94,7 @@ def test_あばれる_2ターン継続():
 
 
 def test_あめまみれ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"あめまみれ": 2}
     )
     battle.events.emit(Event.ON_TURN_END_3)
@@ -103,7 +103,7 @@ def test_あめまみれ():
 
 
 def test_あめまみれ_ランク最低では下がらない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"あめまみれ": 2}
     )
     mon = battle.actives[0]
@@ -113,7 +113,7 @@ def test_あめまみれ_ランク最低では下がらない():
 
 
 def test_アンコール():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     player = battle.players[0]
@@ -124,7 +124,7 @@ def test_アンコール():
 
 
 def test_アンコール_実行時も技固定():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     mon = battle.actives[0]
@@ -138,7 +138,7 @@ def test_アンコール_実行時も技固定():
 
 
 def test_アンコール_3ターン後に解除():
-    battle = t.start_battle(ally_volatile={"アンコール": 3})
+    battle = t.start_default_battle(ally_volatile={"アンコール": 3})
     mon = battle.actives[0]
     for _ in range(3):
         battle.events.emit(Event.ON_TURN_END_3)
@@ -146,7 +146,7 @@ def test_アンコール_3ターン後に解除():
 
 
 def test_アンコール_対象技が使用不能ならわるあがきになる():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     mon = battle.players[0].active
@@ -157,7 +157,7 @@ def test_アンコール_対象技が使用不能ならわるあがきになる(
 
 
 def test_いちゃもん_コマンド制限():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     player = battle.players[0]
@@ -168,7 +168,7 @@ def test_いちゃもん_コマンド制限():
 
 
 def test_いちゃもん_別の技は選択できる():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ", "でんこうせっか"])],
     )
     mon = battle.players[0].active
@@ -179,7 +179,7 @@ def test_いちゃもん_別の技は選択できる():
 
 
 def test_いちゃもん_技が1つしかない場合はわるあがきになる():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     mon = battle.players[0].active
@@ -189,7 +189,7 @@ def test_いちゃもん_技が1つしかない場合はわるあがきになる
 
 
 def test_うちおとす():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ポッポ")],
         ally_volatile={"うちおとす": 1}
     )
@@ -197,7 +197,7 @@ def test_うちおとす():
 
 
 def test_うちおとす_でんじふゆうより優先される():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ポッポ")],
         ally_volatile={"うちおとす": 1, "でんじふゆう": 5}
     )
@@ -205,7 +205,7 @@ def test_うちおとす_でんじふゆうより優先される():
 
 
 def test_うちおとす_じめん技が通る():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["じしん"])],
         foe=[Pokemon("ポッポ", moves=["はねる"])],
         foe_volatile={"うちおとす": 1},
@@ -217,7 +217,7 @@ def test_うちおとす_じめん技が通る():
 
 
 def test_おんねん_ＰＰ減少():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ライチュウ", moves=["たいあたり"])],
         foe_volatile={"おんねん": 1},
     )
@@ -228,7 +228,7 @@ def test_おんねん_ＰＰ減少():
 
 
 def test_おんねん_倒しきれないと不発():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ライチュウ", moves=["たいあたり"])],
         foe_volatile={"おんねん": 1},
     )
@@ -239,7 +239,7 @@ def test_おんねん_倒しきれないと不発():
 
 
 def test_かいふくふうじ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ")],
         ally_volatile={"かいふくふうじ": 1},
     )
@@ -251,7 +251,7 @@ def test_かいふくふうじ():
 
 
 def test_かいふくふうじ_5ターン後に解除():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"かいふくふうじ": 5},
     )
     mon = battle.actives[0]
@@ -261,7 +261,7 @@ def test_かいふくふうじ_5ターン後に解除():
 
 
 def test_かいふくふうじ_いたみわけは防がない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["いたみわけ"])],
         foe=[Pokemon("カビゴン")],
         ally_volatile={"かいふくふうじ": 1},
@@ -276,7 +276,7 @@ def test_かいふくふうじ_いたみわけは防がない():
 
 def test_かなしばり_コマンド制限():
     """かなしばり: 技使用禁止"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     player = battle.players[0]
@@ -288,7 +288,7 @@ def test_かなしばり_コマンド制限():
 
 def test_かなしばり_実行ブロック():
     """かなしばり: 封じた技の実行をブロックする"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     mon = battle.actives[0]
@@ -298,7 +298,7 @@ def test_かなしばり_実行ブロック():
 
 
 def test_かなしばり_4ターン後に解除():
-    battle = t.start_battle(ally_volatile={"かなしばり": 4})
+    battle = t.start_default_battle(ally_volatile={"かなしばり": 4})
     mon = battle.actives[0]
     mon.volatiles["かなしばり"].move_name = "たいあたり"
     for _ in range(4):
@@ -307,7 +307,7 @@ def test_かなしばり_4ターン後に解除():
 
 
 def test_かなしばり_交代で解除():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"かなしばり": 4},
     )
@@ -318,7 +318,7 @@ def test_かなしばり_交代で解除():
 
 
 def test_きゅうしょアップ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"きゅうしょアップ": 2}
     )
     attacker, defender = battle.actives
@@ -331,7 +331,7 @@ def test_きゅうしょアップ():
 
 
 def test_きゅうしょアップ_他補正と合算():
-    battle = t.start_battle(ally_volatile={"きゅうしょアップ": 2})
+    battle = t.start_default_battle(ally_volatile={"きゅうしょアップ": 2})
     attacker, defender = battle.actives
     rank = battle.events.emit(
         Event.ON_CALC_CRITICAL_RANK,
@@ -342,7 +342,7 @@ def test_きゅうしょアップ_他補正と合算():
 
 
 def test_こだわり():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     player = battle.players[0]
@@ -353,7 +353,7 @@ def test_こだわり():
 
 
 def test_こだわり_交代で解除():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"こだわり": 1},
     )
@@ -364,7 +364,7 @@ def test_こだわり_交代で解除():
 
 
 def test_こだわり_固定技が封じられるとわるあがきになる():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     mon = battle.players[0].active
@@ -376,7 +376,7 @@ def test_こだわり_固定技が封じられるとわるあがきになる():
 
 def test_こんらん_自傷ダメージ():
     """こんらん: 自傷ダメージ"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"こんらん": 2}
     )
     attacker, defender = battle.actives
@@ -390,7 +390,7 @@ def test_こんらん_自傷ダメージ():
 
 def test_こんらん_通常行動():
     """こんらん: 通常行動可能"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"こんらん": 2}
     )
     attacker, defender = battle.actives
@@ -402,42 +402,42 @@ def test_こんらん_通常行動():
 
 
 def test_こんらん_カウント満了で解除():
-    battle = t.start_battle(ally_volatile={"こんらん": 1})
+    battle = t.start_default_battle(ally_volatile={"こんらん": 1})
     battle.test_option.trigger_volatile = False
     assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
     assert not battle.actives[0].has_volatile("こんらん")
 
 
 def test_さわぐ_ねむりを防ぐ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"さわぐ": 2}
     )
     assert not battle.ailment_manager.apply(battle.actives[0], "ねむり")
 
 
 def test_さわぐ_ねむけを防ぐ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"さわぐ": 2}
     )
     assert not battle.volatile_manager.apply(battle.actives[0], "ねむけ", count=2)
 
 
 def test_さわがしい_ねむりを防ぐ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe_volatile={"さわがしい": 2}
     )
     assert not battle.ailment_manager.apply(battle.actives[1], "ねむり")
 
 
 def test_さわがしい_ねむけを防ぐ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe_volatile={"さわがしい": 2}
     )
     assert not battle.volatile_manager.apply(battle.actives[1], "ねむけ", count=2)
 
 
 def test_さわぐ終了時_さわがしいを解除する():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"さわぐ": 1},
         foe_volatile={"さわがしい": 2},
     )
@@ -447,7 +447,7 @@ def test_さわぐ終了時_さわがしいを解除する():
 
 
 def test_さわぐ交代時_さわがしいを解除する():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"さわぐ": 2},
         foe_volatile={"さわがしい": 2},
@@ -457,7 +457,7 @@ def test_さわぐ交代時_さわがしいを解除する():
 
 
 def test_さわぐ_技固定():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["さわぐ", "たいあたり"])],
     )
     mon = battle.actives[0]
@@ -472,7 +472,7 @@ def test_さわぐ_技固定():
 
 def test_しおづけ_一倍():
     """しおづけ: ターン終了時ダメージ"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"しおづけ": 1}
     )
     mon = battle.actives[0]
@@ -485,7 +485,7 @@ def test_しおづけ_一倍():
 
 def test_しおづけ_二倍():
     """しおづけ: ターン終了時ダメージ"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ゼニガメ")],
         ally_volatile={"しおづけ": 1}
     )
@@ -498,7 +498,7 @@ def test_しおづけ_二倍():
 
 
 def test_しおづけ_はがねタイプも二倍():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("コイル")],
         ally_volatile={"しおづけ": 1}
     )
@@ -508,7 +508,7 @@ def test_しおづけ_はがねタイプも二倍():
 
 
 def test_じごくづき_コマンド制限():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["うたう", "たいあたり"])],
         ally_volatile={"じごくづき": 2}
     )
@@ -519,7 +519,7 @@ def test_じごくづき_コマンド制限():
 
 def test_じごくづき_実行ブロック():
     """じごくづき: 音技の実行をブロックする"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["うたう"])],
         ally_volatile={"じごくづき": 2}
     )
@@ -527,7 +527,7 @@ def test_じごくづき_実行ブロック():
 
 
 def test_じごくづき_2ターン後に解除():
-    battle = t.start_battle(ally_volatile={"じごくづき": 2})
+    battle = t.start_default_battle(ally_volatile={"じごくづき": 2})
     mon = battle.actives[0]
     for _ in range(2):
         battle.events.emit(Event.ON_TURN_END_3)
@@ -535,7 +535,7 @@ def test_じごくづき_2ターン後に解除():
 
 
 def test_じごくづき_交代で解除():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"じごくづき": 2}
     )
@@ -544,7 +544,7 @@ def test_じごくづき_交代で解除():
 
 
 def test_じゅうでん():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         ally_volatile={"じゅうでん": 1}
     )
@@ -553,7 +553,7 @@ def test_じゅうでん():
 
 
 def test_じゅうでん_非でんき技では残る():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         ally_volatile={"じゅうでん": 1}
     )
@@ -562,7 +562,7 @@ def test_じゅうでん_非でんき技では残る():
 
 
 def test_タールショット():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["ひのこ"])],
         foe_volatile={"タールショット": 1}
     )
@@ -570,7 +570,7 @@ def test_タールショット():
 
 
 def test_タールショット_ほのお以外は変化しない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_volatile={"タールショット": 1}
     )
@@ -578,7 +578,7 @@ def test_タールショット_ほのお以外は変化しない():
 
 
 def test_ちいさくなる():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["のしかかり"])],
         foe_volatile={"ちいさくなる": 1}
     )
@@ -590,7 +590,7 @@ def test_ちいさくなる():
 
 
 def test_ちいさくなる_対象外技には影響しない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_volatile={"ちいさくなる": 1}
     )
@@ -600,7 +600,7 @@ def test_ちいさくなる_対象外技には影響しない():
 
 def test_ちょうはつ():
     """ちょうはつ: 変化技使用不可"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["ひかりのかべ"])],
         ally_volatile={"ちょうはつ": 3},
     )
@@ -609,7 +609,7 @@ def test_ちょうはつ():
 
 
 def test_ちょうはつ_攻撃技は使える():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         ally_volatile={"ちょうはつ": 3},
     )
@@ -617,7 +617,7 @@ def test_ちょうはつ_攻撃技は使える():
 
 
 def test_ちょうはつ_3ターン後に解除():
-    battle = t.start_battle(ally_volatile={"ちょうはつ": 3})
+    battle = t.start_default_battle(ally_volatile={"ちょうはつ": 3})
     mon = battle.actives[0]
     for _ in range(3):
         battle.events.emit(Event.ON_TURN_END_3)
@@ -625,14 +625,14 @@ def test_ちょうはつ_3ターン後に解除():
 
 
 def test_でんじふゆう():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"でんじふゆう": 1},
     )
     assert battle.query_manager.is_floating(battle.actives[0])
 
 
 def test_でんじふゆう_ターン経過で解除():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"でんじふゆう": 1},
     )
     mon = battle.actives[0]
@@ -641,7 +641,7 @@ def test_でんじふゆう_ターン経過で解除():
 
 
 def test_でんじふゆう_5ターン継続():
-    battle = t.start_battle(ally_volatile={"でんじふゆう": 5})
+    battle = t.start_default_battle(ally_volatile={"でんじふゆう": 5})
     mon = battle.actives[0]
     for _ in range(4):
         battle.events.emit(Event.ON_TURN_END_3)
@@ -651,7 +651,7 @@ def test_でんじふゆう_5ターン継続():
 
 
 def test_でんじふゆう_じめん技を無効化する():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe=[Pokemon("サンド", moves=["じしん"])],
         ally_volatile={"でんじふゆう": 5},
@@ -663,7 +663,7 @@ def test_でんじふゆう_じめん技を無効化する():
 
 
 def test_とくせいなし():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe_volatile={"とくせいなし": 1},
     )
     attacker, defender = battle.actives
@@ -676,14 +676,14 @@ def test_とくせいなし():
 
 
 def test_とくせいなし_特性有効状態も無効化する():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe_volatile={"とくせいなし": 1},
     )
     assert battle.actives[1].ability.enabled is False
 
 
 def test_とくせいなし_解除時に特性有効状態が戻る():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe=[Pokemon("コダック", ability="しめりけ")],
         foe_volatile={"とくせいなし": 1},
     )
@@ -694,7 +694,7 @@ def test_とくせいなし_解除時に特性有効状態が戻る():
 
 def test_にげられない():
     """にげられない: 交代不可"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"にげられない": 1},
     )
@@ -703,7 +703,7 @@ def test_にげられない():
 
 
 def test_にげられない_解除後は交代可能():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"にげられない": 1},
     )
@@ -712,7 +712,7 @@ def test_にげられない_解除後は交代可能():
 
 
 def test_ねむけ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"ねむけ": 2}
     )
     mon = battle.actives[0]
@@ -725,7 +725,7 @@ def test_ねむけ():
 
 
 def test_ねむけ_睡眠無効なら失敗する():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("スリープ", ability="ふみん")],
         ally_volatile={"ねむけ": 1}
     )
@@ -737,7 +737,7 @@ def test_ねむけ_睡眠無効なら失敗する():
 
 def test_ねをはる_回復():
     """ねをはる: ターン終了時回復"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"ねをはる": 1}
     )
     mon = battle.actives[0]
@@ -749,7 +749,7 @@ def test_ねをはる_回復():
 
 def test_ねをはる_交代不可():
     """ねをはる: 交代不可"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"ねをはる": 1},
     )
@@ -758,7 +758,7 @@ def test_ねをはる_交代不可():
 
 def test_ねをはる_浮遊無効():
     """ねをはる: でんじふゆう等による浮遊状態を無効化する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"ねをはる": 1, "でんじふゆう": 5}
     )
     assert not battle.query_manager.is_floating(battle.actives[0])
@@ -766,7 +766,7 @@ def test_ねをはる_浮遊無効():
 
 def test_のろい_ダメージ():
     """のろい: ターン終了時ダメージ"""
-    battle = t.start_battle(ally_volatile={"のろい": 1})
+    battle = t.start_default_battle(ally_volatile={"のろい": 1})
     mon = battle.actives[0]
     battle.events.emit(Event.ON_TURN_END_3)
     damage = mon.max_hp - mon.hp
@@ -775,7 +775,7 @@ def test_のろい_ダメージ():
 
 
 def test_のろい_複数ターン継続():
-    battle = t.start_battle(ally_volatile={"のろい": 1})
+    battle = t.start_default_battle(ally_volatile={"のろい": 1})
     mon = battle.actives[0]
     battle.events.emit(Event.ON_TURN_END_3)
     hp = mon.hp
@@ -785,7 +785,7 @@ def test_のろい_複数ターン継続():
 
 def test_バインド_ダメージ():
     """バインド: ターン終了時ダメージ"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"バインド": 2},
     )
     mon = battle.actives[0]
@@ -803,7 +803,7 @@ def test_バインド_ダメージ():
 
 def test_バインド_交代不可():
     """バインド: 交代不可"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         ally_volatile={"バインド": 3},
     )
@@ -812,7 +812,7 @@ def test_バインド_交代不可():
 
 def test_バインド_発生源交代解除():
     """バインドの発生源が退場した場合、バインドが解除される"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         foe_volatile={"バインド": 3},
     )
@@ -823,7 +823,7 @@ def test_バインド_発生源交代解除():
 
 def test_ひるみ():
     """ひるみ: 行動不能（1ターン）"""
-    battle = t.start_battle(ally_volatile={"ひるみ": 1})
+    battle = t.start_default_battle(ally_volatile={"ひるみ": 1})
     attacker, defender = battle.actives
     battle.events.emit(
         Event.ON_CHECK_ACTION,
@@ -834,7 +834,7 @@ def test_ひるみ():
 
 
 def test_ふういん():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_volatile={"ふういん": 1},
@@ -849,7 +849,7 @@ def test_ふういん():
 
 
 def test_ふういん_非共通技は使える():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["なきごえ"])],
         foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_volatile={"ふういん": 1},
@@ -864,7 +864,7 @@ def test_ふういん_非共通技は使える():
 
 
 def test_ほろびのうた():
-    battle = t.start_battle(ally_volatile={"ほろびのうた": 1})
+    battle = t.start_default_battle(ally_volatile={"ほろびのうた": 1})
     mon = battle.actives[0]
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == 0
@@ -873,7 +873,7 @@ def test_ほろびのうた():
 
 def test_ほろびのうた_カウント進行():
     """ほろびのうた: 3ターン後にひんし（カウント進行確認）"""
-    battle = t.start_battle(ally_volatile={"ほろびのうた": 3})
+    battle = t.start_default_battle(ally_volatile={"ほろびのうた": 3})
     mon = battle.actives[0]
     battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp > 0, "count=3→2でまだひんしにならない"
@@ -893,7 +893,7 @@ def test_マジックコート():
         def has_label(self, label):
             return label == "reflectable"
 
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     attacker, defender = battle.actives
     battle.volatile_manager.apply(defender, "マジックコート", count=1)
     assert battle.events.emit(
@@ -911,7 +911,7 @@ def test_マジックコート_非反射技は反射しない():
         def has_label(self, label):
             return False
 
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     attacker, defender = battle.actives
     battle.volatile_manager.apply(defender, "マジックコート", count=1)
     assert not battle.events.emit(
@@ -923,7 +923,7 @@ def test_マジックコート_非反射技は反射しない():
 
 def test_まるくなる():
     """まるくなる: ころがる・アイスボールの威力が2倍になる"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["ころがる"])],
         ally_volatile={"まるくなる": 1}
     )
@@ -932,7 +932,7 @@ def test_まるくなる():
 
 def test_まるくなる_他技は倍にならない():
     """まるくなる: ころがる以外では威力変化なし"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         ally_volatile={"まるくなる": 1}
     )
@@ -940,7 +940,7 @@ def test_まるくなる_他技は倍にならない():
 
 
 def test_まるくなる_未付与ではころがるは倍にならない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["ころがる"])],
     )
     assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
@@ -951,7 +951,7 @@ def test_まるくなる_アイスボールも倍になる():
         def __init__(self):
             self.name = "アイスボール"
 
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"まるくなる": 1}
     )
     attacker, defender = battle.actives
@@ -965,7 +965,7 @@ def test_まるくなる_アイスボールも倍になる():
 
 def test_みがわり_無効化():
     """みがわり: 技を無効化する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["キノコのほうし"])],
         foe_volatile={"みがわり": 1},
     )
@@ -974,7 +974,7 @@ def test_みがわり_無効化():
 
 
 def test_みがわり_攻撃技は無効化しない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_volatile={"みがわり": 1},
     )
@@ -989,7 +989,7 @@ def test_みがわり_攻撃技は無効化しない():
 
 def test_みがわり_命中():
     """みがわり: 技が命中する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     defender = battle.actives[0]
@@ -1002,7 +1002,7 @@ def test_みがわり_命中():
 
 def test_みがわり_破壊():
     """みがわり: 技が命中する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     defender = battle.actives[0]
@@ -1013,7 +1013,7 @@ def test_みがわり_破壊():
 
 
 def test_みちづれ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_volatile={"みちづれ": 1},
     )
@@ -1026,7 +1026,7 @@ def test_みちづれ():
 
 
 def test_みちづれ_倒しきれなければ不発():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_volatile={"みちづれ": 1},
     )
@@ -1038,7 +1038,7 @@ def test_みちづれ_倒しきれなければ不発():
 
 def test_メロメロ_行動不能():
     """メロメロ: 行動不能（永続効果）"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"メロメロ": 1},
     )
     # 行動不能を強制
@@ -1049,7 +1049,7 @@ def test_メロメロ_行動不能():
 
 def test_メロメロ_行動可能():
     """メロメロ: 行動可能（永続効果維持）"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"メロメロ": 1},
     )
     # 行動を許可
@@ -1060,7 +1060,7 @@ def test_メロメロ_行動可能():
 
 def test_やどりぎのタネ():
     """やどりぎのタネ: ターン終了時ダメージ"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"やどりぎのタネ": 1}
     )
     from_mon, to_mon = battle.actives
@@ -1073,7 +1073,7 @@ def test_やどりぎのタネ():
 
 
 def test_やどりぎのタネ_回復先満タンでも対象のHPは減る():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"やどりぎのタネ": 1}
     )
     target_mon, heal_mon = battle.actives
@@ -1084,7 +1084,7 @@ def test_やどりぎのタネ_回復先満タンでも対象のHPは減る():
 
 
 def test_ロックオン():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally_volatile={"ロックオン": 1},
     )
     assert t.calc_accuracy(battle, base=30) is None
@@ -1092,7 +1092,7 @@ def test_ロックオン():
 
 
 def test_ロックオン_無効相手でも解除される():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["じしん"])],
         foe=[Pokemon("ポッポ")],
         ally_volatile={"ロックオン": 1},
@@ -1102,7 +1102,7 @@ def test_ロックオン_無効相手でも解除される():
 
 
 def test_まもる():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
@@ -1111,7 +1111,7 @@ def test_まもる():
 
 
 def test_まもる_自分対象():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["つるぎのまい"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
@@ -1119,7 +1119,7 @@ def test_まもる_自分対象():
 
 
 def test_まもる_ターン終了で解除():
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "まもる", count=1)
     battle.events.emit(Event.ON_TURN_END_1)
@@ -1127,7 +1127,7 @@ def test_まもる_ターン終了で解除():
 
 
 def test_トーチカ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "トーチカ", count=1)
@@ -1137,7 +1137,7 @@ def test_トーチカ():
 
 
 def test_トーチカ_非接触では毒にならない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "トーチカ", count=1)
@@ -1146,7 +1146,7 @@ def test_トーチカ_非接触では毒にならない():
 
 
 def test_トーチカ_ターン終了で解除():
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "トーチカ", count=1)
     battle.events.emit(Event.ON_TURN_END_1)
@@ -1154,7 +1154,7 @@ def test_トーチカ_ターン終了で解除():
 
 
 def test_キングシールド():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
@@ -1164,7 +1164,7 @@ def test_キングシールド():
 
 
 def test_キングシールド_非接触では攻撃が下がらない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
@@ -1173,7 +1173,7 @@ def test_キングシールド_非接触では攻撃が下がらない():
 
 
 def test_キングシールド_ターン終了で解除():
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "キングシールド", count=1)
     battle.events.emit(Event.ON_TURN_END_1)
@@ -1181,7 +1181,7 @@ def test_キングシールド_ターン終了で解除():
 
 
 def test_スレッドトラップ():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
@@ -1191,7 +1191,7 @@ def test_スレッドトラップ():
 
 
 def test_スレッドトラップ_非接触では素早さが下がらない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
@@ -1200,7 +1200,7 @@ def test_スレッドトラップ_非接触では素早さが下がらない():
 
 
 def test_スレッドトラップ_ターン終了で解除():
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "スレッドトラップ", count=1)
     battle.events.emit(Event.ON_TURN_END_1)
@@ -1208,7 +1208,7 @@ def test_スレッドトラップ_ターン終了で解除():
 
 
 def test_かえんのまもり():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
@@ -1218,7 +1218,7 @@ def test_かえんのまもり():
 
 
 def test_かえんのまもり_非接触ではやけどにならない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
@@ -1227,7 +1227,7 @@ def test_かえんのまもり_非接触ではやけどにならない():
 
 
 def test_かえんのまもり_変化技は防げない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんじは"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
@@ -1235,7 +1235,7 @@ def test_かえんのまもり_変化技は防げない():
 
 
 def test_かえんのまもり_ターン終了で解除():
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "かえんのまもり", count=1)
     battle.events.emit(Event.ON_TURN_END_1)
@@ -1244,7 +1244,7 @@ def test_かえんのまもり_ターン終了で解除():
 
 def test_あなをほる_回避():
     """技を回避する"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     attacker, defender = battle.actives
     battle.volatile_manager.apply(defender, "かくれる", count=1, move="あなをほる")
     result = battle.events.emit(
@@ -1257,7 +1257,7 @@ def test_あなをほる_回避():
 
 def test_あなをほる_命中():
     """技が命中する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["じしん"])],
     )
     attacker, defender = battle.actives
@@ -1272,7 +1272,7 @@ def test_あなをほる_命中():
 
 def test_そらをとぶ_回避():
     """技を回避する"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     attacker, defender = battle.actives
     battle.volatile_manager.apply(defender, "かくれる", count=1, move="そらをとぶ")
     result = battle.events.emit(
@@ -1285,7 +1285,7 @@ def test_そらをとぶ_回避():
 
 def test_そらをとぶ_命中():
     """技が命中する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["かみなり"])],
     )
     attacker, defender = battle.actives
@@ -1300,7 +1300,7 @@ def test_そらをとぶ_命中():
 
 def test_ダイビング_回避():
     """技を回避する"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     attacker, defender = battle.actives
     battle.volatile_manager.apply(defender, "かくれる", count=1, move="ダイビング")
     result = battle.events.emit(
@@ -1313,7 +1313,7 @@ def test_ダイビング_回避():
 
 def test_ダイビング_命中():
     """技が命中する"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["なみのり"])],
     )
     attacker, defender = battle.actives
@@ -1328,7 +1328,7 @@ def test_ダイビング_命中():
 
 def test_シャドーダイブ_回避():
     """技を回避する"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     attacker, defender = battle.actives
     battle.volatile_manager.apply(defender, "かくれる", count=1, move="シャドーダイブ")
     result = battle.events.emit(
@@ -1341,7 +1341,7 @@ def test_シャドーダイブ_回避():
 
 def test_シャドーダイブ_命中():
     """技が命中しない"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["シャドーダイブ"])],
     )
     attacker, defender = battle.actives
@@ -1355,7 +1355,7 @@ def test_シャドーダイブ_命中():
 
 
 def test_あなをほる_潜伏中は交代できない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["あなをほる"]), Pokemon("ライチュウ")],
     )
     battle.volatile_manager.apply(battle.actives[0], "かくれる", count=1, move="あなをほる")
@@ -1363,7 +1363,7 @@ def test_あなをほる_潜伏中は交代できない():
 
 
 def test_あなをほる_潜伏中はコマンドが固定される():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["あなをほる", "なきごえ"])],
     )
     mon = battle.actives[0]
@@ -1373,7 +1373,7 @@ def test_あなをほる_潜伏中はコマンドが固定される():
 
 
 def test_あなをほる_強制行動ターンはPPを消費しない():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["あなをほる"])],
     )
     attacker = battle.actives[0]
@@ -1386,3 +1386,4 @@ def test_あなをほる_強制行動ターンはPPを消費しない():
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])
+

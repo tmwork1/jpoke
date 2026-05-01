@@ -1,4 +1,4 @@
-"""固定ダメージ技の単体テスト。"""
+﻿"""固定ダメージ技の単体テスト。"""
 
 import pytest
 
@@ -8,7 +8,7 @@ import test_utils as t
 
 
 def test_ナイトヘッド_与ダメージは使用者レベル固定():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", level=50, moves=["ナイトヘッド"])],
     )
     before_hp = battle.actives[1].hp
@@ -17,7 +17,7 @@ def test_ナイトヘッド_与ダメージは使用者レベル固定():
 
 
 def test_ちきゅうなげ_ゴーストには無効():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["ちきゅうなげ"])],
         foe=[Pokemon("ゴース", moves=["はねる"])],
     )
@@ -27,7 +27,7 @@ def test_ちきゅうなげ_ゴーストには無効():
 
 
 def test_いかりのまえば_現在HPの半分を与える_最低1():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["いかりのまえば"])],
     )
     battle.actives[1]._hp = 1
@@ -43,7 +43,7 @@ def test_いかりのまえば_現在HPの半分を与える_最低1():
     ],
 )
 def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defender_hp: int, expected_damage: int):
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["がむしゃら"])],
     )
     battle.modify_hp(battle.actives[0], v=attacker_hp - battle.actives[0].hp)
@@ -54,7 +54,7 @@ def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defe
 
 
 def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["いのちがけ"])],
     )
     battle.actives[0]._hp = 40
@@ -65,3 +65,4 @@ def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

@@ -1,4 +1,4 @@
-"""状態異常ハンドラの単体テスト"""
+﻿"""状態異常ハンドラの単体テスト"""
 import pytest
 
 from jpoke.enums import Event
@@ -10,7 +10,7 @@ import test_utils as t
 
 def test_どく_ダメージ():
     """どく: ターン終了時ダメージ"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "どく")
     battle.events.emit(Event.ON_TURN_END_3)
@@ -20,7 +20,7 @@ def test_どく_ダメージ():
 
 def test_もうどく_ダメージ():
     """もうどく: ターン経過でダメージ増加"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "もうどく")
     # nターン目: n/16ダメージ
@@ -33,7 +33,7 @@ def test_もうどく_ダメージ():
 
 
 def test_どくタイプには通常どくが入らない():
-    battle = t.start_battle(ally=[Pokemon("フシギダネ")])
+    battle = t.start_default_battle(ally=[Pokemon("フシギダネ")])
     target = battle.actives[0]
 
     assert not battle.ailment_manager.apply(target, "どく")
@@ -41,7 +41,7 @@ def test_どくタイプには通常どくが入らない():
 
 
 def test_はがねタイプには通常もうどくが入らない():
-    battle = t.start_battle(ally=[Pokemon("コイル")])
+    battle = t.start_default_battle(ally=[Pokemon("コイル")])
     target = battle.actives[0]
 
     assert not battle.ailment_manager.apply(target, "もうどく")
@@ -49,7 +49,7 @@ def test_はがねタイプには通常もうどくが入らない():
 
 
 def test_ほのおタイプにはやけどが入らない():
-    battle = t.start_battle(ally=[Pokemon("ヒトカゲ")])
+    battle = t.start_default_battle(ally=[Pokemon("ヒトカゲ")])
     target = battle.actives[0]
 
     assert not battle.ailment_manager.apply(target, "やけど")
@@ -57,7 +57,7 @@ def test_ほのおタイプにはやけどが入らない():
 
 
 def test_でんきタイプにはまひが入らない():
-    battle = t.start_battle(ally=[Pokemon("ピカチュウ")])
+    battle = t.start_default_battle(ally=[Pokemon("ピカチュウ")])
     target = battle.actives[0]
 
     assert not battle.ailment_manager.apply(target, "まひ")
@@ -65,7 +65,7 @@ def test_でんきタイプにはまひが入らない():
 
 
 def test_こおりタイプにはこおりが入らない():
-    battle = t.start_battle(ally=[Pokemon("ラプラス")])
+    battle = t.start_default_battle(ally=[Pokemon("ラプラス")])
     target = battle.actives[0]
 
     assert not battle.ailment_manager.apply(target, "こおり")
@@ -74,7 +74,7 @@ def test_こおりタイプにはこおりが入らない():
 
 def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
-    battle = t.start_battle(ally=[Pokemon("リザードン")])
+    battle = t.start_default_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
     normal_speed = battle.calc_effective_speed(mon)
     battle.ailment_manager.apply(mon, "まひ")
@@ -84,7 +84,7 @@ def test_まひ_すばやさ低下():
 
 def test_まひ_行動不能():
     """まひ: 行動不能"""
-    battle = t.start_battle(ally=[Pokemon("リザードン")])
+    battle = t.start_default_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動不能になる設定
@@ -95,7 +95,7 @@ def test_まひ_行動不能():
 
 def test_まひ_行動成功():
     """まひ: 行動可能"""
-    battle = t.start_battle(ally=[Pokemon("リザードン")])
+    battle = t.start_default_battle(ally=[Pokemon("リザードン")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動できる設定
@@ -106,7 +106,7 @@ def test_まひ_行動成功():
 
 def test_やけど_ダメージ補正あり():
     """やけど: 物理技ダメージ半減"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("カビゴン", moves=["たいあたり"])],
         foe=[Pokemon("ピカチュウ")]
     )
@@ -116,7 +116,7 @@ def test_やけど_ダメージ補正あり():
 
 def test_やけど_ダメージ補正なし():
     """やけど: 特殊技ダメージは変わらず"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
         foe=[Pokemon("ピカチュウ")]
     )
@@ -125,7 +125,7 @@ def test_やけど_ダメージ補正なし():
 
 def test_やけど_ダメージ():
     """やけど: ターン終了時ダメージ"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "やけど")
     battle.events.emit(Event.ON_TURN_END_3)
@@ -135,7 +135,7 @@ def test_やけど_ダメージ():
 
 def test_ねむり_カウント():
     """ねむり: ターン経過で回復"""
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
@@ -152,7 +152,7 @@ def test_ねむり_カウント():
 
 
 def test_ねむり中はいびきを使える():
-    battle = t.start_battle(ally=[Pokemon("ピカチュウ", moves=["いびき"])])
+    battle = t.start_default_battle(ally=[Pokemon("ピカチュウ", moves=["いびき"])])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "ねむり", count=2)
 
@@ -162,7 +162,7 @@ def test_ねむり中はいびきを使える():
 
 
 def test_ねむり中はねごとを使える():
-    battle = t.start_battle(ally=[Pokemon("ピカチュウ", moves=["ねごと"])])
+    battle = t.start_default_battle(ally=[Pokemon("ピカチュウ", moves=["ねごと"])])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "ねむり", count=2)
 
@@ -173,7 +173,7 @@ def test_ねむり中はねごとを使える():
 
 def test_こおり_行動不能():
     """こおり: 状態維持（確率テスト - trigger_rate=0.0）"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "こおり")
     # 解凍されない設定でテスト
@@ -184,7 +184,7 @@ def test_こおり_行動不能():
 
 def test_こおり_行動成功():
     """こおり: 解凍（確率テスト - trigger_rate=1.0）"""
-    battle = t.start_battle()
+    battle = t.start_default_battle()
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "こおり")
     # 必ず解凍される設定でテスト
@@ -194,7 +194,7 @@ def test_こおり_行動成功():
 
 
 def test_こおり_ほのお技被弾で解凍する():
-    battle = t.start_battle(
+    battle = t.start_default_battle(
         ally=[Pokemon("リザードン", moves=["かえんほうしゃ"])],
         foe=[Pokemon("ピカチュウ")],
     )
@@ -209,3 +209,4 @@ def test_こおり_ほのお技被弾で解凍する():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+

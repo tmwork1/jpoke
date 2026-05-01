@@ -5,7 +5,7 @@ from jpoke.enums import Event, Command, LogCode
 
 # 定数定義
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
-DEFAULT_POKEMON = "ピカチュウ"  # デフォルトのポケモン種族名
+DEFAULT_POKEMON = "ピカチュウ"  # 明示的デフォルトで利用するポケモン種族名
 
 
 class CustomPlayer(Player):
@@ -23,8 +23,8 @@ class CustomPlayer(Player):
         return battle.get_available_action_commands(self)[0]
 
 
-def start_battle(ally: list[Pokemon] | None = None,
-                 foe: list[Pokemon] | None = None,
+def start_battle(ally: list[Pokemon],
+                 foe: list[Pokemon],
                  turn: int = 0,
                  weather: tuple[Weather, int] | None = None,
                  terrain: tuple[Terrain, int] | None = None,
@@ -37,8 +37,8 @@ def start_battle(ally: list[Pokemon] | None = None,
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
-        ally: 味方のポケモンリスト（Noneの場合はデフォルトポケモン）
-        foe: 相手のポケモンリスト（Noneの場合はデフォルトポケモン）
+        ally: 味方のポケモンリスト
+        foe: 相手のポケモンリスト
         turn: 開始前に進めるターン数（デフォルト: 0）
         weather: 初期天候のタプル(天候名, カウント)（Noneの場合は天候なし）
         terrain: 初期地形のタプル(地形名, カウント)（Noneの場合は地形なし）
@@ -54,9 +54,9 @@ def start_battle(ally: list[Pokemon] | None = None,
     """
     # プレイヤーとバトルのセットアップ
     if not ally:
-        ally = [Pokemon(DEFAULT_POKEMON)]
+        raise ValueError("ally must contain at least one Pokemon")
     if not foe:
-        foe = [Pokemon(DEFAULT_POKEMON)]
+        raise ValueError("foe must contain at least one Pokemon")
 
     players = [CustomPlayer() for _ in range(2)]
     for player, mons in zip(players, [ally, foe]):
@@ -113,6 +113,13 @@ def start_battle(ally: list[Pokemon] | None = None,
             break
 
     return battle
+
+
+def start_default_battle(**kwargs) -> Battle:
+    """明示的にデフォルトポケモンを使ってバトルを初期化する。"""
+    kwargs.setdefault("ally", [Pokemon(DEFAULT_POKEMON)])
+    kwargs.setdefault("foe", [Pokemon(DEFAULT_POKEMON)])
+    return start_battle(**kwargs)
 
 
 def log_contains(battle: Battle,
