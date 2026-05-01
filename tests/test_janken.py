@@ -1,4 +1,4 @@
-﻿"""エビワラーじゃんけんのテスト。"""
+"""エビワラーじゃんけんのテスト。"""
 
 import pytest
 
@@ -16,7 +16,7 @@ def _hitmonchan(move: str) -> Pokemon:
 
 
 def test_マッハパンチのダメージ範囲():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("マッハパンチ")],
         foe=[_hitmonchan("はねる")],
     )
@@ -28,7 +28,7 @@ def test_マッハパンチのダメージ範囲():
 
 
 def test_はやてがえしのダメージ範囲():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("はやてがえし")],
         foe=[_hitmonchan("はねる")],
     )
@@ -40,7 +40,7 @@ def test_はやてがえしのダメージ範囲():
 
 
 def test_きあいパンチのダメージ範囲():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("きあいパンチ")],
         foe=[_hitmonchan("はねる")],
     )
@@ -52,7 +52,7 @@ def test_きあいパンチのダメージ範囲():
 
 
 def test_はやてがえしがマッハパンチに勝つ():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("はやてがえし")],
         foe=[_hitmonchan("マッハパンチ")],
     )
@@ -65,7 +65,7 @@ def test_はやてがえしがマッハパンチに勝つ():
 
 
 def test_きあいパンチがはやてがえしに勝つ():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("きあいパンチ")],
         foe=[_hitmonchan("はやてがえし")],
     )
@@ -77,7 +77,7 @@ def test_きあいパンチがはやてがえしに勝つ():
 
 
 def test_マッハパンチがきあいパンチに勝つ():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("マッハパンチ")],
         foe=[_hitmonchan("きあいパンチ")],
     )
@@ -90,7 +90,7 @@ def test_マッハパンチがきあいパンチに勝つ():
 
 def test_きあいパンチ同士はどちらか一方のみ成功する():
     """同速同条件のきあいパンチ同士は、片方だけが行動成功する想定。"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("きあいパンチ")],
         foe=[_hitmonchan("きあいパンチ")],
     )
@@ -99,7 +99,7 @@ def test_きあいパンチ同士はどちらか一方のみ成功する():
 
 
 def test_はやてがえし同士はどちらか一方のみ成功する():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("はやてがえし")],
         foe=[_hitmonchan("はやてがえし")],
     )
@@ -112,7 +112,7 @@ def test_はやてがえし同士はどちらか一方のみ成功する():
 
 
 def test_マッハパンチ同士は両者がダメージを受ける():
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[_hitmonchan("マッハパンチ")],
         foe=[_hitmonchan("マッハパンチ")],
     )

@@ -5,7 +5,6 @@ from jpoke.enums import Event, Command, LogCode
 
 # 定数定義
 DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
-DEFAULT_POKEMON = "ピカチュウ"  # 明示的デフォルトで利用するポケモン種族名
 
 
 class CustomPlayer(Player):
@@ -113,13 +112,6 @@ def start_battle(ally: list[Pokemon],
             break
 
     return battle
-
-
-def start_default_battle(**kwargs) -> Battle:
-    """明示的にデフォルトポケモンを使ってバトルを初期化する。"""
-    kwargs.setdefault("ally", [Pokemon(DEFAULT_POKEMON)])
-    kwargs.setdefault("foe", [Pokemon(DEFAULT_POKEMON)])
-    return start_battle(**kwargs)
 
 
 def log_contains(battle: Battle,

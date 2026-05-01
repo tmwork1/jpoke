@@ -1,4 +1,4 @@
-﻿"""連続技ハンドラの単体テスト。"""
+"""連続技ハンドラの単体テスト。"""
 
 import pytest
 from jpoke import Pokemon
@@ -7,7 +7,7 @@ import test_utils as t
 
 def test_にどげり_命中判定1回で2回ヒットする():
     """にどげり: 命中判定は1回だけで、2ヒットする。"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", moves=["にどげり"])],
     )
     call_count = 0
@@ -28,7 +28,7 @@ def test_にどげり_命中判定1回で2回ヒットする():
 
 def test_タネマシンガン_スキルリンクで5回ヒットする():
     """タネマシンガン: スキルリンクなら5ヒット固定になる。"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", ability="スキルリンク", moves=["タネマシンガン"])],
     )
     battle.advance_turn()
@@ -50,7 +50,7 @@ def test_タネマシンガン_スキルリンクで5回ヒットする():
 )
 def test_タネマシンガン_ヒット数が2から5の範囲で決まる(roll: float, expected: int):
     """タネマシンガン: 乱数ロールに応じて2~5ヒットが決まる。"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", moves=["タネマシンガン"])],
     )
     attacker = battle.actives[0]
@@ -68,7 +68,7 @@ def test_タネマシンガン_ヒット数が2から5の範囲で決まる(roll
 
 def test_タネマシンガン_相手HP1で最初の1発で処理中断():
     """タネマシンガン: 相手の初期HPが1のときに、最初の1発で相手がひんしになり処理が中断される。"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", moves=["タネマシンガン"])],
     )
 
@@ -95,7 +95,7 @@ def test_タネマシンガン_相手HP1で最初の1発で処理中断():
 
 def test_トリプルアクセル_各ヒットで命中判定と威力更新を行う():
     """トリプルアクセル: 各ヒットで命中判定し、威力が20→40→60で更新される。"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", moves=["トリプルアクセル"])],
     )
     call_count = 0

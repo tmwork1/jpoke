@@ -1,4 +1,4 @@
-﻿"""持ち物ハンドラの単体テスト"""
+"""持ち物ハンドラの単体テスト"""
 import math
 from types import SimpleNamespace
 from jpoke import Pokemon
@@ -10,7 +10,7 @@ import test_utils as t
 
 def test_いのちのたま():
     """いのちのたま: 攻撃技でダメージ"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["たいあたり"])],
         turn=1
     )
@@ -20,7 +20,7 @@ def test_いのちのたま():
 
 def test_いのちのたま_変化技では発動しない():
     """いのちのたま: 変化技では発動しない"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["はねる"])],
         turn=1
     )
@@ -29,7 +29,7 @@ def test_いのちのたま_変化技では発動しない():
 
 def test_きれいなぬけがら():
     """きれいなぬけがら: 交代防止無効"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", item="きれいなぬけがら") for _ in range(2)],
         foe=[Pokemon("ピカチュウ", ability="かげふみ")],
     )
@@ -38,7 +38,7 @@ def test_きれいなぬけがら():
 
 def test_さらさらいわ():
     """さらさらいわ: 天候延長"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
     )
     battle.weather_manager.activate("すなあらし", 5, source=battle.actives[0])
@@ -47,7 +47,7 @@ def test_さらさらいわ():
 
 def test_だっしゅつパック():
     """だっしゅつパック: 能力ダウンで交代"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", item="だっしゅつパック"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", ability="いかく")],
     )
@@ -58,7 +58,7 @@ def test_だっしゅつパック():
 
 def test_だっしゅつパック_能力上昇では発動しない():
     """だっしゅつパック: 能力上昇では発動しない"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", item="だっしゅつパック", moves=["つるぎのまい"]), Pokemon("ライチュウ")],
         turn=1,
     )
@@ -67,7 +67,7 @@ def test_だっしゅつパック_能力上昇では発動しない():
 
 def test_だっしゅつボタン():
     """だっしゅつボタン: ダメージを受けて交代"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", item="だっしゅつボタン"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         turn=1,
@@ -79,7 +79,7 @@ def test_だっしゅつボタン():
 
 def test_たべのこし():
     """たべのこし: ターン終了時回復"""
-    battle = t.start_default_battle(
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
         ally=[Pokemon("ピカチュウ", item="たべのこし")],
     )
     mon = battle.actives[0]
@@ -105,7 +105,7 @@ def test_タイプ強化アイテム():
             continue
 
         type_name, modifier = next(iter(data.power_modifier_by_type.items()))
-        battle = t.start_default_battle(
+        battle = t.start_battle(
             ally=[Pokemon("ピカチュウ", item=item_name)],
             foe=[Pokemon("ピカチュウ")],
         )
@@ -127,7 +127,7 @@ def test_タイプ半減実():
             continue
 
         type_name, modifier = next(iter(data.damage_modifier_by_type.items()))
-        battle = t.start_default_battle(
+        battle = t.start_battle(
             ally=[Pokemon("ピカチュウ", item=item_name)],
             foe=[Pokemon("ピカチュウ")],
         )
