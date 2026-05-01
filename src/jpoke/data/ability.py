@@ -92,7 +92,18 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "いしあたま": AbilityData(),
-    "いたずらごころ": AbilityData(),
+    "いたずらごころ": AbilityData(
+        handlers={
+            DomainEvent.ON_MODIFY_MOVE_PRIORITY: h.AbilityHandler(
+                h.いたずらごころ_modify_move_priority,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.いたずらごころ_block_dark_target,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "いやしのこころ": AbilityData(),
     "いろめがね": AbilityData(
         handlers={
@@ -649,7 +660,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ちょすい": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.ちょすい_check_immune,
+                subject_spec="defender:self",
+            )
+        },
     ),
     "てきおうりょく": AbilityData(),
     "てつのこぶし": AbilityData(
@@ -730,7 +747,13 @@ ABILITIES: dict[str, AbilityData] = {
     "どしょく": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.どしょく_check_immune,
+                subject_spec="defender:self",
+            )
+        },
     ),
     "どんかん": AbilityData(
         flags=[
@@ -897,7 +920,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ひらいしん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.ひらいしん_check_immune,
+                subject_spec="defender:self",
+            )
+        },
     ),
     "びびり": AbilityData(
         flags=[
@@ -1078,7 +1107,29 @@ ABILITIES: dict[str, AbilityData] = {
     "もらいび": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.もらいび_on_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.もらいび_check_immune,
+                subject_spec="defender:self",
+            ),
+            Event.ON_MOVE_CHARGE: h.AbilityHandler(
+                h.もらいび_on_move_charge,
+                subject_spec="source:self",
+            ),
+            Event.ON_MOVE_END: h.AbilityHandler(
+                h.もらいび_on_move_end,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.もらいび_modify_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "やるき": AbilityData(
         flags=[
@@ -1122,7 +1173,13 @@ ABILITIES: dict[str, AbilityData] = {
     "よびみず": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.よびみず_check_immune,
+                subject_spec="defender:self",
+            )
+        },
     ),
     "よわき": AbilityData(
         handlers={

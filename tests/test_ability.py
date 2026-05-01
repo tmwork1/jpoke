@@ -41,6 +41,195 @@ def test_いかく_登場時に相手攻撃1段階ダウン():
     assert battle.actives[0].rank["A"] == -1
 
 
+def test_いたずらごころ_変化技の優先度が1上がる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="いたずらごころ", moves=["でんじは"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+
+    assert attacker.moves[0].priority == 0
+    assert battle.speed_calculator.calc_move_priority(attacker, attacker.moves[0]) == 1
+
+
+def test_いたずらごころ_あくタイプ相手には変化技が無効化される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="いたずらごころ", moves=["でんじは"])],
+        foe=[Pokemon("ヘルガー")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert not defender.has_ailment("まひ")
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=1)
+
+
+def test_いたずらごころ_自己対象の変化技はあくタイプ相手でも成功する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="いたずらごころ", moves=["かえんのまもり"])],
+        foe=[Pokemon("ヘルガー")],
+    )
+    attacker = battle.actives[0]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert attacker.has_volatile("かえんのまもり")
+
+
+def test_ちょすい_みず技を無効化して4分の1回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちょすい")],
+        foe=[Pokemon("ピカチュウ", moves=["なみのり"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    battle.modify_hp(defender, v=-20, reason="other")
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == min(defender.max_hp, before + defender.max_hp // 4)
+
+
+def test_ちょすい_かたやぶりには貫通される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちょすい")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["なみのり"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < before
+
+
+def test_ちょすい_みず変化技も無効化する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちょすい")],
+        foe=[Pokemon("ピカチュウ", moves=["みずびたし"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    immune = battle.events.emit(Event.ON_CHECK_IMMUNE, ctx, False)
+
+    assert immune is True
+
+
+def test_もらいび_自分対象技では相手の吸収特性は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["かえんのまもり"])],
+        foe=[Pokemon("ピカチュウ", ability="もらいび")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert attacker.has_volatile("かえんのまもり")
+    assert defender.ability.state == "idle"
+
+
+def test_どしょく_じめん技を無効化して4分の1回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="どしょく")],
+        foe=[Pokemon("ピカチュウ", moves=["じしん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    battle.modify_hp(defender, v=-20, reason="other")
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == min(defender.max_hp, before + defender.max_hp // 4)
+
+
+def test_ひらいしん_でんき技を無効化して特攻1段階上昇する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ひらいしん")],
+        foe=[Pokemon("ピカチュウ", moves=["スパーク"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == before
+    assert defender.rank["C"] == 1
+
+
+def test_よびみず_みず技を無効化して特攻1段階上昇する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="よびみず")],
+        foe=[Pokemon("ピカチュウ", moves=["なみのり"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == before
+    assert defender.rank["C"] == 1
+
+
+def test_もらいび_吸収後は最初の炎技のみ1_5倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="もらいび", moves=["かえんほうしゃ"])],
+        foe=[Pokemon("ピカチュウ", moves=["かえんほうしゃ"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == before
+    assert defender.ability.state == "charged"
+
+    # 1回目: ほのお技 + charged -> active -> idle へ遷移
+    first_ctx = BattleContext(attacker=defender, defender=attacker, move=defender.moves[0])
+    battle.events.emit(Event.ON_MOVE_CHARGE, first_ctx, True)
+    first_modifier = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, first_ctx, 4096)
+    battle.events.emit(Event.ON_MOVE_END, first_ctx)
+
+    assert defender.ability.state == "idle"
+    assert first_modifier == 6144
+
+    # 2回目: ほのお技ですが、状態は idle なので等倍
+    second_ctx = BattleContext(attacker=defender, defender=attacker, move=defender.moves[0])
+    battle.events.emit(Event.ON_MOVE_CHARGE, second_ctx, True)
+    second_modifier = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, second_ctx, 4096)
+    battle.events.emit(Event.ON_MOVE_END, second_ctx)
+
+    assert defender.ability.state == "idle"
+    assert second_modifier == 4096
+
+
+def test_もらいび_かたやぶりには貫通される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="もらいび")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["かえんほうしゃ"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < before
+    assert defender.ability.state == "idle"
+
+
 def test_かげふみ_かげふみ持ち以外は交代不可():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],

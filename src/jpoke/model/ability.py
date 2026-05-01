@@ -1,5 +1,6 @@
 from jpoke.utils import fast_copy
 from jpoke.data import ABILITIES
+from jpoke.utils.type_defs import AbilityState
 
 from .effect import GameEffect
 
@@ -12,6 +13,7 @@ class Ability(GameEffect):
 
     Attributes:
         count: 特性の発動回数などを記録するカウンター
+        state: 特性の状態を表す文字列。必要に応じて Literal を拡張する。
     """
 
     def __init__(self, name: str = "") -> None:
@@ -22,6 +24,7 @@ class Ability(GameEffect):
         """
         super().__init__(ABILITIES[name])
         self.count: int = 0
+        self.state: AbilityState = ""
         self.is_hangry: bool = False
         self.activated_since_switch_in: bool = False
 
@@ -38,6 +41,7 @@ class Ability(GameEffect):
         特性の状態をリセットし、カウンターを0に戻す。
         """
         self.count = 0
+        self.state = ""
         self.is_hangry = False
         self.activated_since_switch_in = False
 

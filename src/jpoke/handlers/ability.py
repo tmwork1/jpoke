@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec, HPChangeReason
+from jpoke.utils.type_defs import RoleSpec, HPChangeReason, Type, Stat
 from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
@@ -83,9 +83,85 @@ def _trigger_emergency_switch(battle: Battle, mon, ability_name: str) -> bool:
     return True
 
 
+def _handle_type_absorb(battle: Battle,
+                        ctx: BattleContext,
+                        value: bool,
+                        *,
+                        ability_name: str,
+                        move_type: Type,
+                        heal_ratio: float = 0,
+                        raise_stat: Stat | None = None) -> HandlerReturn:
+    """タイプ一致技を無効化し、副次効果（回復/能力上昇）を適用する。"""
+    if value:
+        return HandlerReturn(value=value)
+    if ctx.move is None:
+        return HandlerReturn(value=value)
+    if not ctx.is_foe_target:
+        return HandlerReturn(value=value)
+    if ctx.move.type != move_type:
+        return HandlerReturn(value=value)
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+
+    target = ctx.defender
+
+    if heal_ratio > 0:
+        battle.modify_hp(target, r=heal_ratio, reason="ability")
+
+    if raise_stat is not None:
+        battle.modify_stat(
+            target,
+            raise_stat,
+            1,
+            source=ctx.attacker,
+            reason=ability_name,
+        )
+
+    idx = battle.get_player_index(target)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": ability_name, "success": True},
+    )
+    return HandlerReturn(value=True, stop_event=True)
+
+
 def あまのじゃく_modify_stat(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
     """あまのじゃく特性: 能力変化量の符号を反転する。"""
     return HandlerReturn(value={stat: -delta for stat, delta in value.items()})
+
+
+def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """いたずらごころ特性: 変化技の優先度を+1する。"""
+    if ctx.move is None:
+        return HandlerReturn(value=value)
+    if ctx.move.category != "変化":
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=value + 1)
+
+
+def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """いたずらごころ特性: 優先度が上がった変化技はあくタイプ相手に無効化される。"""
+    if value:
+        return HandlerReturn(value=value)
+    if ctx.move is None or ctx.move.category != "変化":
+        return HandlerReturn(value=value)
+    if ctx.move.priority < 0:
+        return HandlerReturn(value=value)
+    if not ctx.is_foe_target:
+        return HandlerReturn(value=value)
+    if not ctx.defender.has_type("あく"):
+        return HandlerReturn(value=value)
+
+    idx = battle.get_player_index(ctx.defender)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "いたずらごころ", "success": True},
+    )
+    return HandlerReturn(value=True, stop_event=True)
 
 
 def ありじごく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -249,6 +325,115 @@ def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
 
     # 復活直後に使用条件を満たすきのみは、その場で使用される。
     battle.events.emit(Event.ON_ITEM_RESTORED, ctx.__class__(source=mon))
+    return HandlerReturn(value=value)
+
+
+def ちょすい_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ちょすい特性: みず技を無効化し最大HPの1/4回復する。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="ちょすい",
+        move_type="みず",
+        heal_ratio=1 / 4,
+    )
+
+
+def どしょく_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """どしょく特性: じめん技を無効化し最大HPの1/4回復する。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="どしょく",
+        move_type="じめん",
+        heal_ratio=1 / 4,
+    )
+
+
+def ひらいしん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ひらいしん特性: でんき技を無効化し特攻を1段階上げる。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="ひらいしん",
+        move_type="でんき",
+        raise_stat="C",
+    )
+
+
+def よびみず_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """よびみず特性: みず技を無効化し特攻を1段階上げる。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="よびみず",
+        move_type="みず",
+        raise_stat="C",
+    )
+
+
+def もらいび_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """もらいび特性: ほのお技を無効化し、炎技強化状態を有効化する。"""
+    if value:
+        return HandlerReturn(value=value)
+    if ctx.move is None:
+        return HandlerReturn(value=value)
+    if not ctx.is_foe_target:
+        return HandlerReturn(value=value)
+    if ctx.move.type != "ほのお":
+        return HandlerReturn(value=value)
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+
+    ctx.defender.ability.state = "charged"
+
+    idx = battle.get_player_index(ctx.defender)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "もらいび", "success": True},
+    )
+    return HandlerReturn(value=True, stop_event=True)
+
+
+def もらいび_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """もらいび特性: 登場時に炎技強化状態を初期化する。"""
+    ctx.source.ability.state = "idle"
+    return HandlerReturn(value=value)
+
+
+def もらいび_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """もらいび特性: 吸収後の最初のほのお技のみ威力を1.5倍にする。"""
+    if ctx.move is None or ctx.move.type != "ほのお":
+        return HandlerReturn(value=value)
+    if ctx.attacker.ability.state != "active":
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=common.apply_modifier(value, 6144))
+
+
+def もらいび_on_move_charge(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """もらいび特性: ほのお技使用時に強化適用予約。"""
+    if not value:
+        return HandlerReturn(value=value)
+    if ctx.move is None or ctx.move.type != "ほのお":
+        return HandlerReturn(value=value)
+    if ctx.source.ability.state != "charged":
+        return HandlerReturn(value=value)
+
+    ctx.source.ability.state = "active"
+    return HandlerReturn(value=value)
+
+
+def もらいび_on_move_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """もらいび特性: 行動終了時に強化を消費済みにする。"""
+    state = ctx.source.ability.state
+    if state == "active":
+        ctx.source.ability.state = "idle"
     return HandlerReturn(value=value)
 
 
@@ -1237,20 +1422,12 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
     Returns:
         HandlerReturn: 変化技を無効化した場合True, stop_event=True
     """
-    # 場対象技は防がない
-    if ctx.move.field_targeting:
-        return HandlerReturn(value=value)
-
     # 変化技以外は防がない
     if ctx.move.category != "変化":
         return HandlerReturn(value=value)
 
-    # 自分対象技は防がない
-    if ctx.move.self_targeting:
-        return HandlerReturn(value=value)
-
-    # 自分が使う変化技は防がない（同じポケモン）
-    if ctx.attacker == ctx.target:
+    # 相手対象以外（自分対象・場対象・同一対象）は防がない。
+    if not ctx.is_foe_target:
         return HandlerReturn(value=value)
 
     # かたやぶり系で防御側特性が無視される場合は発動しない。

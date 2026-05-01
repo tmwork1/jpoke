@@ -322,6 +322,9 @@ class MoveExecutor:
         # 技の威力を元に戻す（トリプルアクセルなどのため）
         ctx.move.set_power(ctx.move.data.power)
 
+        # 技実行完了後の処理（状態管理・撤去など）
+        self.events.emit(Event.ON_MOVE_END, ctx)
+
     def generate_context(self, attacker: Pokemon, move: Move) -> BattleContext:
         """BattleContextを生成する。
 

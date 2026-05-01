@@ -160,8 +160,19 @@ class BattleContext:
 
     @property
     def is_self_target(self) -> bool:
-        """攻撃側と防御側が同一ポケモン（自傷）かどうかを返す。"""
+        """攻撃側と防御側が同一ポケモンかどうかを返す。"""
         return self.source is not None and self.source is self.target
+
+    @property
+    def is_foe_target(self) -> bool:
+        """相手を対象にした行動かどうかを返す。"""
+        if self.source is None or self.target is None:
+            return False
+        if self.source is self.target:
+            return False
+        if self.move is not None and (self.move.self_targeting or self.move.field_targeting):
+            return False
+        return True
 
     def check_def_ability_enabled(self, battle: Battle) -> bool:
         """防御側特性が有効かどうかを更新し、その結果を返す。"""

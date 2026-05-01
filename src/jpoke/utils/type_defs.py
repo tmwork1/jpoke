@@ -1,5 +1,9 @@
 from typing import Literal
 
+# ========== 特性状態定義 ==========
+AbilityState = Literal["", "idle", "charged", "active"]
+
+# ========== 汎用型定義 ==========
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
 # role:side 形式で、特定の側のロールを指定
