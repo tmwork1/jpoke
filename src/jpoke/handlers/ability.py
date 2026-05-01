@@ -573,6 +573,60 @@ def めんえき(battle: Battle, ctx: BattleContext, value: str) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
+def クリアボディ_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """クリアボディ特性: 相手による能力ランク低下を無効化する。
+
+    自分の技や反動による能力低下は防げない。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_MODIFY_STAT)
+            - target: クリアボディ持ちのポケモン
+            - source: 能力変更の原因となったポケモン（Noneなら相手由来）
+        value: ランク修正値の辞書 {stat: delta}
+
+    Returns:
+        HandlerReturn: 相手由来の低下のみ除去した値
+    """
+    # 自己低下（source == target または source is None）の場合は保護しない
+    # 相手由来（source != target かつ source is not None）の場合のみ低下を除去
+    if ctx.source is None or ctx.source == ctx.target:
+        # 自己低下：何もしない
+        return HandlerReturn(value=value)
+
+    # 相手由来の低下：低下分（v < 0）を除去して上昇分（v >= 0）のみ返す
+    filtered = {stat: v for stat, v in value.items() if v >= 0}
+    return HandlerReturn(value=filtered)
+
+
+def ノーガード_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ノーガード特性: 命中判定を必中化する。
+
+    攻撃側がノーガード、または防御側がノーガードの場合、
+    命中率を None（必中）に設定する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_MODIFY_ACCURACY)
+            - attacker: 攻撃側のポケモン
+            - defender: 防御側のポケモン
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: None（必中化）またはそのまま
+    """
+    if value is None:
+        return HandlerReturn(value=None)
+
+    attacker_no_guard = ctx.attacker.ability.name == "ノーガード"
+    defender_no_guard = ctx.defender.ability.name == "ノーガード"
+
+    if attacker_no_guard or defender_no_guard:
+        return HandlerReturn(value=None)
+
+    return HandlerReturn(value=value)
+
+
 def ふみん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふみん特性: ねむり状態を防ぐ。
 

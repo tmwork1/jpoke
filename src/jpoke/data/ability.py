@@ -792,7 +792,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ふゆう": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_FLOATING: h.AbilityHandler(
+                lambda *args: HandlerReturn(value=True),
+                subject_spec="source:self",
+            )
+        }
     ),
     "ぶきよう": AbilityData(
         handlers={
@@ -1001,7 +1007,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "エレキメイカー": AbilityData(),
+    "エレキメイカー": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_terrain, terrain="エレキフィールド", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
     "オーラブレイク": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -1061,7 +1074,13 @@ ABILITIES: dict[str, AbilityData] = {
     "クリアボディ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.クリアボディ_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "グラスメイカー": AbilityData(
         handlers={
@@ -1071,7 +1090,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "サイコメイカー": AbilityData(),
+    "サイコメイカー": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_terrain, terrain="サイコフィールド", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
     "サンパワー": AbilityData(),
     "サーフテール": AbilityData(),
     "シェルアーマー": AbilityData(
@@ -1205,7 +1231,19 @@ ABILITIES: dict[str, AbilityData] = {
     "ノーガード": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_ACCURACY: [
+                h.AbilityHandler(
+                    h.ノーガード_modify_accuracy,
+                    subject_spec="attacker:self",
+                ),
+                h.AbilityHandler(
+                    h.ノーガード_modify_accuracy,
+                    subject_spec="defender:self",
+                ),
+            ]
+        }
     ),
     "ノーマルスキン": AbilityData(),
     "ハドロンエンジン": AbilityData(),
@@ -1403,7 +1441,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "ミストメイカー": AbilityData(),
+    "ミストメイカー": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_terrain, terrain="ミストフィールド", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        }
+    ),
     "ミラクルスキン": AbilityData(
         flags=[
             "mold_breaker_ignorable"

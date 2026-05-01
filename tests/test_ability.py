@@ -972,12 +972,89 @@ def test_ぜったいねむり_登場時にねむり状態になる():
     assert battle.actives[0].ailment.name == "ねむり"
 
 
-def test_グラスメイカー_登場時にグラスフィールド展開():
+@pytest.mark.parametrize(
+    "ability_name, terrain_name",
+    [
+        ("エレキメイカー", "エレキフィールド"),
+        ("グラスメイカー", "グラスフィールド"),
+        ("サイコメイカー", "サイコフィールド"),
+        ("ミストメイカー", "ミストフィールド"),
+    ],
+)
+def test_地形始動特性_登場時に対応地形を展開する(ability_name: str, terrain_name: str):
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", ability="グラスメイカー")],
-        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability=ability_name)],
+        foe=[Pokemon("ライチュウ")],
     )
-    assert battle.terrain.name == "グラスフィールド"
+    assert battle.terrain.name == terrain_name
+    assert battle.terrain.count == 5
+
+
+@pytest.mark.parametrize(
+    "ability_name, terrain_name",
+    [
+        ("エレキメイカー", "エレキフィールド"),
+        ("グラスメイカー", "グラスフィールド"),
+        ("サイコメイカー", "サイコフィールド"),
+        ("ミストメイカー", "ミストフィールド"),
+    ],
+)
+def test_地形始動特性_同一地形が有効時は継続ターンを更新しない(ability_name: str, terrain_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name), Pokemon("ライチュウ")],
+        foe=[Pokemon("ライチュウ")],
+    )
+
+    battle.terrain.count = 2
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[0])
+
+    assert battle.terrain.name == terrain_name
+    assert battle.terrain.count == 2
+
+
+@pytest.mark.parametrize(
+    "ability_name, terrain_name, initial_terrain",
+    [
+        ("エレキメイカー", "エレキフィールド", "サイコフィールド"),
+        ("グラスメイカー", "グラスフィールド", "ミストフィールド"),
+        ("サイコメイカー", "サイコフィールド", "グラスフィールド"),
+        ("ミストメイカー", "ミストフィールド", "エレキフィールド"),
+    ],
+)
+def test_地形始動特性_別地形を上書きする(ability_name: str, terrain_name: str, initial_terrain: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+        terrain=(initial_terrain, 999),
+    )
+
+    # start_battle は初期入場後に terrain を設定するため、再登場で特性を発動させる。
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[0])
+
+    assert battle.terrain.name == terrain_name
+    assert battle.terrain.count == 5
+
+
+@pytest.mark.parametrize(
+    "ability_name",
+    ["エレキメイカー", "サイコメイカー", "ミストメイカー", "グラスメイカー"],
+)
+def test_地形始動特性_かがくへんかガス中は発動しない(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+
+    assert battle.actives[0].ability.enabled is False
+    assert battle.terrain.name == ""
+
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[0])
+
+    assert battle.actives[0].ability.enabled is False
+    assert battle.terrain.name == ""
 
 
 def test_てつのこぶし_パンチ技威力補正():
@@ -1636,6 +1713,123 @@ def test_おうごんのからだ_場が対象の技は無効化しない():
     immune = battle.events.emit(Event.ON_CHECK_IMMUNE, ctx, False)
 
     assert immune is False
+
+
+def test_ふゆう_浮遊状態になる():
+    """ふゆう: ふゆう持ちが浮遊状態を返す。"""
+    battle = t.start_battle(ally=[Pokemon("フワンテ", ability="ふゆう")],
+                            foe=[Pokemon("ピカチュウ")])
+    ally_mon = battle.actives[0]
+
+    # ON_CHECK_FLOATING イベントで True を返す
+    floating = battle.events.emit(
+        Event.ON_CHECK_FLOATING,
+        BattleContext(source=ally_mon),
+        False
+    )
+    assert floating is True
+
+
+def test_ふゆう_じめん技が通らない():
+    """ふゆう: ふゆう持ちはじめん技を無効化できる。"""
+    battle = t.start_battle(ally=[Pokemon("フワンテ", ability="ふゆう", moves=["スキルスワップ"])],
+                            foe=[Pokemon("ピカチュウ", moves=["じしん"])])
+
+    # ふゆう持ちはis_floatingで浮いている扱い
+    assert battle.query_manager.is_floating(battle.actives[0])
+
+
+def test_クリアボディ_いかくを防ぐ():
+    """クリアボディ: いかくによる攻撃低下を防ぐ。"""
+    battle = t.start_battle(ally=[Pokemon("トゲピー", ability="クリアボディ")],
+                            foe=[Pokemon("ウインディ", ability="いかく")])
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    # クリアボディは攻撃の能力低下（-1）を防ぐ
+    # ON_MODIFY_STATで能力低下をイベント発火して検証
+    # 相手由来の能力低下なので source=foe_mon で指定
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"A": -1},  # いかくと同じ攻撃-1の能力低下
+    )
+    # クリアボディにより負の能力変化が除去される
+    assert stat_change == {}
+
+
+def test_クリアボディ_能力低下を防ぐ():
+    """クリアボディ: 相手由来の能力ランク低下を防ぐ。"""
+    battle = t.start_battle(ally=[Pokemon("トゲピー", ability="クリアボディ")],
+                            foe=[Pokemon("ピカチュウ")])
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    # クリアボディは相手による複数の能力低下を防ぐ
+    # 相手由来の能力低下なので source=foe_mon で指定
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"A": -1, "C": -2, "D": -1},
+    )
+    # クリアボディにより負の能力変化がすべて除去される
+    assert stat_change == {}
+
+
+def test_クリアボディ_自己低下技は防げない():
+    """クリアボディ: 自分の技による能力低下は防げない。"""
+    battle = t.start_battle(
+        ally=[Pokemon("テッポウオ", ability="クリアボディ")],
+        foe=[Pokemon("ピカチュウ")]
+    )
+    ally_mon = battle.actives[0]
+
+    # 自分が原因の能力低下（source == target）はクリアボディで防がれない
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=ally_mon),
+        {"B": -1},  # 自分の技による防御-1
+    )
+    # クリアボディは自己低下を防げない（修正値がそのまま）
+    assert stat_change == {"B": -1}
+
+
+def test_ノーガード_攻撃側で必中化():
+    """ノーガード: 攻撃側がノーガード時に低命中技が必中になる。"""
+    battle = t.start_battle(ally=[Pokemon("テッポウオ", ability="ノーガード", moves=["かみなり"])],
+                            foe=[Pokemon("ピカチュウ")])
+
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+
+    # かみなりは70%命中。ノーガードで必中化される
+    accuracy = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        move.accuracy,
+    )
+
+    assert accuracy is None
+
+
+def test_ノーガード_防御側で必中化():
+    """ノーガード: 防御側がノーガード時に低命中技が必中になる。"""
+    battle = t.start_battle(ally=[Pokemon("ピカチュウ", moves=["かみなり"])],
+                            foe=[Pokemon("テッポウオ", ability="ノーガード")])
+
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+
+    # かみなりは70%命中。防御側がノーガードで必中化される
+    accuracy = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        move.accuracy,
+    )
+
+    assert accuracy is None
 
 
 if __name__ == "__main__":

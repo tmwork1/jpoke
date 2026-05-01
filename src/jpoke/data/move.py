@@ -98,8 +98,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
         handlers={
              Event.ON_HIT: h.MoveHandler(
-                 partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"
-                         ),
+                 partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"),
              )
         }
     ),
