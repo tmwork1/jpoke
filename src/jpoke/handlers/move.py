@@ -250,10 +250,6 @@ def _can_apply_item_hit_effect(ctx: BattleContext) -> bool:
     return ctx.move_damage > 0 or ctx.fainted
 
 
-def _is_berry(item_name: str) -> bool:
-    return item_name.endswith("のみ")
-
-
 def すりかえ_swap_items(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """すりかえ・トリックの持ち物交換効果。"""
     success = battle.swap_items(ctx.attacker, ctx.defender, move=ctx.move)
@@ -266,7 +262,7 @@ def ついばむ_berry_steal(battle: Battle, ctx: BattleContext, value: Any) -> 
         return HandlerReturn(value=False)
     if ctx.attacker.has_item():
         return HandlerReturn(value=False)
-    if not _is_berry(ctx.defender.item.name):
+    if not common.is_berry_item(ctx.defender.item.name):
         return HandlerReturn(value=False)
 
     success = battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
@@ -304,7 +300,7 @@ def やきつくす_remove_berry(battle: Battle, ctx: BattleContext, value: Any)
     """やきつくすのきのみ焼却効果。"""
     if ctx.move_damage <= 0:
         return HandlerReturn(value=False)
-    if not _is_berry(ctx.defender.item.name):
+    if not common.is_berry_item(ctx.defender.item.name):
         return HandlerReturn(value=False)
 
     success = battle.remove_item(ctx.attacker, ctx.defender, move=ctx.move, reason="burn")

@@ -40,7 +40,13 @@ ABILITIES: dict[str, AbilityData] = {
     "あついしぼう": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.あついしぼう_modify_atk,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "あとだし": AbilityData(),
     "あまのじゃく": AbilityData(
@@ -88,8 +94,22 @@ ABILITIES: dict[str, AbilityData] = {
     "いしあたま": AbilityData(),
     "いたずらごころ": AbilityData(),
     "いやしのこころ": AbilityData(),
-    "いろめがね": AbilityData(),
-    "いわはこび": AbilityData(),
+    "いろめがね": AbilityData(
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.いろめがね_modify_damage,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "いわはこび": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.いわはこび_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "うのミサイル": AbilityData(
         flags=[
             "uncopyable",
@@ -171,7 +191,14 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "かそく": AbilityData(),
-    "かたいツメ": AbilityData(),
+    "かたいツメ": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.かたいツメ_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "かたやぶり": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -215,7 +242,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "がんじょうあご": AbilityData(),
+    "がんじょうあご": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.がんじょうあご_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ききかいひ": AbilityData(
         flags=[
             "undeniable"
@@ -241,7 +275,13 @@ ABILITIES: dict[str, AbilityData] = {
     "きよめのしお": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.きよめのしお_modify_atk,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "きれあじ": AbilityData(),
     "きんしのちから": AbilityData(),
@@ -274,7 +314,13 @@ ABILITIES: dict[str, AbilityData] = {
     "くさのけがわ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
+                h.くさのけがわ_modify_def,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "くだけるよろい": AbilityData(
         flags=[
@@ -282,11 +328,24 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "くろのいななき": AbilityData(),
-    "げきりゅう": AbilityData(),
+    "げきりゅう": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.しんりょくもうかげきりゅうむしのしらせ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "こおりのりんぷん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.こおりのりんぷん_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "こだいかっせい": AbilityData(
         flags=[
@@ -332,8 +391,27 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "こんじょう": AbilityData(),
-    "ごりむちゅう": AbilityData(),
+    "こんじょう": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.こんじょう_modify_atk,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_BURN_MODIFIER: h.AbilityHandler(
+                h.こんじょう_ignore_burn_penalty,
+                subject_spec="attacker:self",
+                priority=200,
+            ),
+        }
+    ),
+    "ごりむちゅう": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.ごりむちゅう_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "さいせいりょく": AbilityData(),
     "さまようたましい": AbilityData(
         flags=[
@@ -380,7 +458,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "しんりょく": AbilityData(),
+    "しんりょく": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.しんりょくもうかげきりゅうむしのしらせ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "じきゅうりょく": AbilityData(
         flags=[
             "undeniable"
@@ -438,7 +523,19 @@ ABILITIES: dict[str, AbilityData] = {
     "すいほう": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: [
+                h.AbilityHandler(
+                    h.すいほう_modify_atk,
+                    subject_spec="attacker:self",
+                ),
+                h.AbilityHandler(
+                    h.すいほう_modify_atk,
+                    subject_spec="defender:self",
+                ),
+            ]
+        }
     ),
     "すじがねいり": AbilityData(),
     "すてみ": AbilityData(),
@@ -463,7 +560,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "すなのちから": AbilityData(),
+    "すなのちから": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.すなのちから_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "すなはき": AbilityData(
         flags=[
             "undeniable"
@@ -508,7 +612,13 @@ ABILITIES: dict[str, AbilityData] = {
     "たいねつ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.たいねつ_modify_atk,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "たまひろい": AbilityData(),
     "たんじゅん": AbilityData(
@@ -609,7 +719,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "どくぼうそう": AbilityData(),
+    "どくぼうそう": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.どくぼうそう_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "どしょく": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -649,7 +766,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "ねつぼうそう": AbilityData(),
+    "ねつぼうそう": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.ねつぼうそう_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ねんちゃく": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -666,8 +790,25 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "はがねつかい": AbilityData(),
-    "はがねのせいしん": AbilityData(),
+    "はがねつかい": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.はがねつかい_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "はがねのせいしん": AbilityData(
+        flags=[
+            "undeniable"
+        ],
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.はがねのせいしん_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "はじまりのうみ": AbilityData(
         flags=[
             "undeniable"
@@ -702,7 +843,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "はりきり": AbilityData(),
-    "はりこみ": AbilityData(),
+    "はりこみ": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.はりこみ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "はんすう": AbilityData(
         flags=[
             "undeniable"
@@ -738,7 +886,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ひとでなし": AbilityData(),
-    "ひひいろのこどう": AbilityData(),
+    "ひひいろのこどう": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.ひひいろのこどう_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ひらいしん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -770,7 +925,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ふしぎなうろこ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
+                h.ふしぎなうろこ_modify_def,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "ふしょく": AbilityData(),
     "ふとうのけん": AbilityData(
@@ -875,7 +1036,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "みつあつめ": AbilityData(),
-    "むしのしらせ": AbilityData(),
+    "むしのしらせ": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.しんりょくもうかげきりゅうむしのしらせ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "めんえき": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -887,12 +1055,25 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "もうか": AbilityData(),
+    "もうか": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.しんりょくもうかげきりゅうむしのしらせ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ものひろい": AbilityData(),
     "もふもふ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.もふもふ_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "もらいび": AbilityData(
         flags=[
@@ -943,8 +1124,22 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "よわき": AbilityData(),
-    "りゅうのあぎと": AbilityData(),
+    "よわき": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.よわき_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "りゅうのあぎと": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.りゅうのあぎと_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "りんぷん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -953,19 +1148,44 @@ ABILITIES: dict[str, AbilityData] = {
     "わざわいのうつわ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.わざわいのうつわ_modify_atk,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "わざわいのおふだ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.わざわいのおふだ_modify_atk,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "わざわいのたま": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
+                h.わざわいのたま_modify_def,
+                subject_spec="attacker:self",
+            )
+        }
     ),
-    "わざわいのつるぎ": AbilityData(),
+    "わざわいのつるぎ": AbilityData(
+        handlers={
+            Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
+                h.わざわいのつるぎ_modify_def,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "わたげ": AbilityData(
         flags=[
             "undeniable"
@@ -991,7 +1211,14 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "アイスボディ": AbilityData(),
-    "アナライズ": AbilityData(),
+    "アナライズ": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.アナライズ_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "アロマベール": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -1124,8 +1351,26 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "スナイパー": AbilityData(),
-    "スロースタート": AbilityData(),
+    "スナイパー": AbilityData(
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.スナイパー_modify_damage,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
+    "スロースタート": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.スロースタート_on_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.スロースタート_modify_atk,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "スワームチェンジ": AbilityData(
         flags=[
             "uncopyable",
@@ -1206,7 +1451,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "トランジスタ": AbilityData(),
+    "トランジスタ": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.トランジスタ_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "トレース": AbilityData(
         flags=[
             "uncopyable"
@@ -1246,11 +1498,24 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ノーマルスキン": AbilityData(),
-    "ハドロンエンジン": AbilityData(),
+    "ハドロンエンジン": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
+                h.ハドロンエンジン_modify_atk,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ハードロック": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.フィルターハードロックプリズムアーマー_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "バッテリー": AbilityData(
         flags=[
@@ -1288,7 +1553,17 @@ ABILITIES: dict[str, AbilityData] = {
     "パンクロック": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.パンクロック_modify_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.パンクロック_reduce_damage,
+                subject_spec="defender:self",
+            ),
+        }
     ),
     "ヒーリングシフト": AbilityData(),
     "ビビッドボディ": AbilityData(
@@ -1299,18 +1574,36 @@ ABILITIES: dict[str, AbilityData] = {
     "ビーストブースト": AbilityData(),
     "ファントムガード": AbilityData(
         flags=[
-            "undeniable"
-        ]
+            "mold_breaker_ignorable"
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.マルチスケイルファントムガード_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "ファーコート": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
+                h.ファーコート_modify_def,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "フィルター": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.フィルターハードロックプリズムアーマー_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "フェアリーオーラ": AbilityData(
         flags=[
@@ -1336,12 +1629,25 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "ブレインフォース": AbilityData(),
+    "ブレインフォース": AbilityData(
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.ブレインフォース_modify_damage,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "プラス": AbilityData(),
     "プリズムアーマー": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.フィルターハードロックプリズムアーマー_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "プレッシャー": AbilityData(
         flags=[
@@ -1428,7 +1734,13 @@ ABILITIES: dict[str, AbilityData] = {
     "マルチスケイル": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
+                h.マルチスケイルファントムガード_modify_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "マルチタイプ": AbilityData(
         flags=[
@@ -1466,7 +1778,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ムラっけ": AbilityData(),
-    "メガランチャー": AbilityData(),
+    "メガランチャー": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.メガランチャー_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "メタルプロテクト": AbilityData(
         flags=[
             "undeniable"

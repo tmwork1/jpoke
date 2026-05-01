@@ -1832,5 +1832,281 @@ def test_ノーガード_防御側で必中化():
     assert accuracy is None
 
 
+def test_がんじょうあご_かみつき技で威力補正1_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="がんじょうあご", moves=["かみつく"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER) == 6144
+
+
+def test_かたいツメ_接触技のみ威力補正1_3倍():
+    battle_contact = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたいツメ", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle_contact, Event.ON_CALC_POWER_MODIFIER) == 5325
+
+    battle_non_contact = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたいツメ", moves=["１０まんボルト"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle_non_contact, Event.ON_CALC_POWER_MODIFIER) == 4096
+
+
+def test_メガランチャー_はどう技で威力補正1_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="メガランチャー", moves=["りゅうのはどう"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER) == 6144
+
+
+def test_パンクロック_音技で威力1_3倍かつ被ダメ0_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="パンクロック", moves=["バークアウト"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER) == 5325
+
+    battle2 = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["バークアウト"])],
+        foe=[Pokemon("ピカチュウ", ability="パンクロック", moves=["バークアウト"])],
+    )
+    assert t.calc_damage_modifier(battle2, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 2048
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("しんりょく", "エナジーボール"),
+        ("もうか", "かえんほうしゃ"),
+        ("げきりゅう", "なみのり"),
+        ("むしのしらせ", "むしのていこう"),
+    ],
+)
+def test_ピンチ系特性_HP1_3以下で攻撃補正1_5倍(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name, moves=[move_name])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon._hp = mon.max_hp // 3
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 6144
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name, expected",
+    [
+        ("いわはこび", "いわなだれ", 6144),
+        ("はがねつかい", "アイアンヘッド", 6144),
+        ("りゅうのあぎと", "りゅうのはどう", 6144),
+        ("トランジスタ", "１０まんボルト", 5325),
+    ],
+)
+def test_タイプ依存攻撃補正特性(ability_name: str, move_name: str, expected: int):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name, moves=[move_name])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == expected
+
+
+def test_こんじょう_状態異常で攻撃1_5倍かつやけど半減を無効化():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="こんじょう", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "やけど")
+
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 6144
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_BURN_MODIFIER) == 4096
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("あついしぼう", "かえんほうしゃ"),
+        ("あついしぼう", "れいとうビーム"),
+        ("たいねつ", "かえんほうしゃ"),
+        ("きよめのしお", "シャドーボール"),
+    ],
+)
+def test_受ける技タイプで攻撃補正半減する特性(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=[move_name])],
+        foe=[Pokemon("ピカチュウ", ability=ability_name)],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER, atk_idx=0) == 2048
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("わざわいのおふだ", "でんこうせっか"),
+        ("わざわいのうつわ", "１０まんボルト"),
+    ],
+)
+def test_わざわいおふだうつわ_相手攻撃補正を0_75倍(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=[move_name])],
+        foe=[Pokemon("ピカチュウ", ability=ability_name)],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER, atk_idx=0) == 3072
+
+
+def test_わざわいのおふだ_かたやぶりで無効化されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="わざわいのおふだ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 3072
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("わざわいのつるぎ", "でんこうせっか"),
+        ("わざわいのたま", "１０まんボルト"),
+    ],
+)
+def test_わざわいつるぎたま_相手防御補正を0_75倍(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name, moves=[move_name])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER) == 3072
+
+
+def test_いろめがね_いまひとつの最終ダメージが2倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="いろめがね", moves=["むしのていこう"])],
+        foe=[Pokemon("ピジョン")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 8192
+
+
+def test_ブレインフォース_効果抜群の最終ダメージが1_25倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ブレインフォース", moves=["１０まんボルト"])],
+        foe=[Pokemon("ピジョン")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 5120
+
+
+@pytest.mark.parametrize("ability_name", ["フィルター", "ハードロック", "プリズムアーマー"])
+def test_防御側特性_効果抜群ダメージを0_75倍(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["じしん"])],
+        foe=[Pokemon("コイル", ability=ability_name)],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 3072
+
+
+@pytest.mark.parametrize("ability_name", ["マルチスケイル", "ファントムガード"])
+def test_HP満タン時半減特性(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability=ability_name)],
+    )
+    defender = battle.actives[1]
+
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 2048
+    defender._hp -= 1
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 4096
+
+
+@pytest.mark.parametrize("ability_name", ["マルチスケイル", "ファントムガード"])
+def test_マルチスケイル系_連続技2発目以降は半減しない(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["にどげり"])],
+        foe=[Pokemon("ピカチュウ", ability=ability_name)],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+
+    first_hit = battle.events.emit(
+        Event.ON_CALC_DAMAGE_MODIFIER,
+        BattleContext(attacker=attacker, defender=defender, move=move, hit_index=1, hit_count=2),
+        4096,
+    )
+    defender._hp -= 1
+    second_hit = battle.events.emit(
+        Event.ON_CALC_DAMAGE_MODIFIER,
+        BattleContext(attacker=attacker, defender=defender, move=move, hit_index=2, hit_count=2),
+        4096,
+    )
+
+    assert first_hit == 2048
+    assert second_hit == 4096
+
+
+@pytest.mark.parametrize("ability_name", ["マルチスケイル", "ファントムガード"])
+def test_マルチスケイル系_かたやぶりで無効化される(ability_name: str):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability=ability_name)],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_こおりのりんぷん_特殊技のみ被ダメ半減():
+    battle_sp = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+        foe=[Pokemon("ピカチュウ", ability="こおりのりんぷん")],
+    )
+    assert t.calc_damage_modifier(battle_sp, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 2048
+
+    battle_ph = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="こおりのりんぷん")],
+    )
+    assert t.calc_damage_modifier(battle_ph, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 4096
+
+
+def test_こおりのりんぷん_かたやぶりで無効化される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["１０まんボルト"])],
+        foe=[Pokemon("ピカチュウ", ability="こおりのりんぷん")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_スナイパー_急所時の最終ダメージを1_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="スナイパー", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx.critical = True
+
+    assert battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) == 6144
+
+
+def test_スロースタート_登場5ターン未満は物理攻撃補正0_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="スロースタート", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 2048
+
+    battle.turn = battle.actives[0].ability.count + 5
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 4096
+
+
+def test_よわき_HP半分以下で攻撃補正0_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="よわき", moves=["１０まんボルト"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker._hp = attacker.max_hp // 2
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 2048
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

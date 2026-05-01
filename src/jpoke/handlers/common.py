@@ -262,3 +262,123 @@ def resolve_field_count(battle: Battle,
         return HandlerReturn(value=value + additonal_count)
     else:
         return HandlerReturn(value=value)
+
+
+def is_special_move(battle: Battle, ctx: BattleContext) -> bool:
+    """特殊技かどうかを判定する。
+
+    特殊技カテゴリ且つphysicalラベルなし。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+
+    Returns:
+        bool: 特殊技ならTrue
+    """
+    if ctx.move is None:
+        return False
+    category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+    return category == "特殊" and not ctx.move.has_label("physical")
+
+
+def is_physical_move(battle: Battle, ctx: BattleContext) -> bool:
+    """物理技かどうかを判定する。
+
+    物理技カテゴリまたはphysicalラベル持ち。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+
+    Returns:
+        bool: 物理技ならTrue
+    """
+    if ctx.move is None:
+        return False
+    category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+    return category == "物理" or ctx.move.has_label("physical")
+
+
+def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:
+    """効果抜群かどうかを判定する。
+
+    タイプ相性補正が1より大きいかどうか。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+
+    Returns:
+        bool: 効果抜群ならTrue
+    """
+    if ctx.move is None:
+        return False
+    return battle.damage_calculator.calc_def_type_modifier(ctx) > 1
+
+
+def is_not_very_effective(battle: Battle, ctx: BattleContext) -> bool:
+    """今ひとつかどうかを判定する。
+
+    タイプ相性補正が0より大きく1より小さいかどうか。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+
+    Returns:
+        bool: 今ひとつならTrue
+    """
+    if ctx.move is None:
+        return False
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
+    return 0 < type_modifier < 1
+
+
+def is_berry_item(item_name: str) -> bool:
+    """アイテムがきのみかどうかを判定する。
+
+    Args:
+        item_name: アイテム名
+
+    Returns:
+        bool: きのみなら True
+    """
+    return item_name.endswith("のみ")
+
+
+def apply_modifier(value: int, modifier: int) -> int:
+    """4096基準の補正値を適用する。
+
+    ポケモンの倍率計算は4096を基準とした固定小数点で実装されているため、
+    この関数でまとめて補正を計算する。
+
+    例：
+        - 倍率 1.5倍 = 6144 (4096 * 1.5)
+        - 倍率 0.5倍 = 2048 (4096 * 0.5)
+
+    Args:
+        value: 元の値
+        modifier: 4096基準の補正値
+
+    Returns:
+        int: 補正後の値
+    """
+    return value * modifier // 4096
+
+
+def crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
+    """HPが最大HPの50%を跨いだかどうかを判定する。
+
+    HPが 50% 超から 50% 以下へ移行したかを判定する。
+    特性やアイテムの効果発動判定に使用。
+
+    Args:
+        hp_before: ダメージ前のHP
+        hp_after: ダメージ後のHP
+        max_hp: 最大HP
+
+    Returns:
+        bool: 50%を跨いだら True
+    """
+    return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
