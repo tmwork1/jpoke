@@ -2297,5 +2297,55 @@ def test_よわき_HP半分以下で攻撃補正0_5倍():
     assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 2048
 
 
+# ===== 強天候始動特性 =====
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name",
+    [
+        ("おわりのだいち", "おおひでり"),
+        ("はじまりのうみ", "おおあめ"),
+        ("デルタストリーム", "らんきりゅう"),
+    ],
+)
+def test_強天候始動特性_登場時に対応天候を展開する(ability_name: str, weather_name: str):
+    """強天候始動特性: 登場時に対応する強天候を展開する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name)],
+        foe=[Pokemon("ライチュウ")],
+    )
+    assert battle.weather.name == weather_name
+    assert battle.weather.is_strong
+
+
+@pytest.mark.parametrize(
+    "normal_weather",
+    ["はれ", "あめ", "すなあらし", "ゆき"],
+)
+def test_強天候始動特性_通常天候を上書きする(normal_weather: str):
+    """強天候始動特性: 通常天候が展開中でも強天候を展開する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="おわりのだいち"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=(normal_weather, 999),
+    )
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[0])
+
+    assert battle.weather.name == "おおひでり"
+
+
+def test_強天候始動特性_通常天候から上書きされない():
+    """通常天候始動特性: 強天候展開中は発動しない"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="あめふらし"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", 999),
+    )
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[0])
+
+    assert battle.weather.name == "おおひでり"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

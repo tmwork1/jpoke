@@ -200,10 +200,9 @@ def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     Returns:
         HandlerReturn: 補正があればTrue、なければFalse
     """
-    weather = battle.weather_manager.current.name
-    if weather == "あめ":
+    if battle.weather.is_rainy:
         return HandlerReturn(value=None)  # 必中
-    elif weather == "はれ":
+    elif battle.weather.is_sunny:
         return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
@@ -237,10 +236,9 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     Returns:
         HandlerReturn: 補正があればTrue、なければFalse
     """
-    weather = battle.weather_manager.current.name
-    if weather == "あめ":
+    if battle.weather.is_rainy:
         return HandlerReturn(value=None)  # 必中
-    elif weather == "はれ":
+    elif battle.weather.is_sunny:
         return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 

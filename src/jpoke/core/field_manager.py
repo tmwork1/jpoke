@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain
+from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain, STRONG_WEATHERS
 from jpoke.enums import Event
 from jpoke.model import Field
 from jpoke.core import BattleContext
@@ -217,6 +217,7 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
     """天候を管理するクラス。
 
     晴れ、雨、砂嵐、霰などの天候状態を管理します。
+    強天候（おおひでり・おおあめ・らんきりゅう）は通常天候で上書きできません。
     """
 
     def __init__(self, battle: Battle):
@@ -226,6 +227,13 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
             battle: Battleインスタンス
         """
         super().__init__(battle, battle.players, Weather)
+
+    def activate(self, name: Weather, count: int, source=None) -> bool:
+        """天候を発動する。強天候中は通常天候への切り替えをブロックする。"""
+        current_name = self.current.name
+        if current_name in STRONG_WEATHERS and name not in STRONG_WEATHERS:
+            return False
+        return super().activate(name, count, source=source)
 
     def update_reference(self, new_battle: Battle):
         """ディープコピー後の参照を更新する。

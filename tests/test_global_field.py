@@ -388,6 +388,139 @@ def test_ワンダールーム_特殊技は防御側を参照():
     assert wonder_def < normal_def
 
 
+# ===== おおひでり =====
+
+def test_おおひでり_ほのお強化():
+    """おおひでり: ほのお技威力1.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", DEFAULT_DURATION),
+    )
+    assert 6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_おおひでり_みず弱化():
+    """おおひでり: みず技威力0.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", DEFAULT_DURATION),
+    )
+    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_おおひでり_みず攻撃技を失敗させる():
+    """おおひでり: みずタイプ攻撃技は失敗する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", DEFAULT_DURATION),
+    )
+    assert not t.check_event_result(battle, Event.ON_CHECK_MOVE)
+
+
+def test_おおひでり_ほのお技はブロックされない():
+    """おおひでり: ほのお技はブロックされない"""
+    battle = t.start_battle(
+        ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", DEFAULT_DURATION),
+    )
+    assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
+
+
+# ===== おおあめ =====
+
+def test_おおあめ_みず強化():
+    """おおあめ: みず技威力1.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", DEFAULT_DURATION),
+    )
+    assert 6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_おおあめ_ほのお弱化():
+    """おおあめ: ほのお技威力0.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", DEFAULT_DURATION),
+    )
+    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+
+
+def test_おおあめ_ほのお攻撃技を失敗させる():
+    """おおあめ: ほのおタイプ攻撃技は失敗する"""
+    battle = t.start_battle(
+        ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", DEFAULT_DURATION),
+    )
+    assert not t.check_event_result(battle, Event.ON_CHECK_MOVE)
+
+
+def test_おおあめ_みず技はブロックされない():
+    """おおあめ: みず技はブロックされない"""
+    battle = t.start_battle(
+        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", DEFAULT_DURATION),
+    )
+    assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
+
+
+# ===== らんきりゅう =====
+
+def test_らんきりゅう_ひこう弱点軽減_でんき():
+    """らんきりゅう: ひこうタイプへのでんき技弱点を0.5倍軽減"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        foe=[Pokemon("ピジョン")],
+        weather=("らんきりゅう", DEFAULT_DURATION),
+    )
+    # ×2弱点 → ×1相当（4096 → 2048）
+    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER)
+
+
+def test_らんきりゅう_ひこう以外は軽減しない():
+    """らんきりゅう: ひこうタイプでなければ軽減しない"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("らんきりゅう", DEFAULT_DURATION),
+    )
+    assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER)
+
+
+# ===== 強天候 上書き制御 =====
+
+def test_強天候中は通常天候で上書きできない():
+    """おおひでり中に通常天候(はれ)を発動しようとしても上書きされない"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", DEFAULT_DURATION),
+    )
+    result = battle.weather_manager.activate("はれ", 5)
+    assert result is False
+    assert battle.weather.name == "おおひでり"
+
+
+def test_強天候同士は上書きできる():
+    """おおひでり中におおあめを発動すると上書きされる"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", DEFAULT_DURATION),
+    )
+    result = battle.weather_manager.activate("おおあめ", DEFAULT_DURATION)
+    assert result is True
+    assert battle.weather.name == "おおあめ"
+
+
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__, "-v"])

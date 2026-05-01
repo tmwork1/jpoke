@@ -92,6 +92,34 @@ def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         value = value * 6144 // 4096  # 1.5倍
     return HandlerReturn(value=value)
 
+
+# ===== 強天候ハンドラ =====
+
+_FLYING_WEAK_TYPES = frozenset({"でんき", "いわ", "こおり"})
+
+
+def おおひでり_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """おおひでり中にみずタイプ攻撃技を失敗させる (ON_CHECK_MOVE priority 10)"""
+    if ctx.move.type == "みず" and ctx.move.is_attack:
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def おおあめ_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """おおあめ中にほのおタイプ攻撃技を失敗させる (ON_CHECK_MOVE priority 10)"""
+    if ctx.move.type == "ほのお" and ctx.move.is_attack:
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def らんきりゅう_type_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する
+    (ON_CALC_DEF_TYPE_MODIFIER)"""
+    if ctx.defender.has_type("ひこう") and ctx.move.type in _FLYING_WEAK_TYPES:
+        value = int(value * 2048 // 4096)  # ×0.5
+    return HandlerReturn(value=value)
+
+
 # ===== 地形ハンドラ =====
 
 

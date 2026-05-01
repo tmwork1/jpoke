@@ -74,6 +74,45 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
             ), },
     ),
+    # ===== 強天候 (Strong Weather) =====
+    "おおひでり": FieldData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: Handler(
+                h.はれ_power_modifier,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_BEFORE_APPLY_AILMENT: Handler(
+                h.はれ_prevent_freeze,
+                subject_spec="target:self",
+            ),
+            Event.ON_CHECK_MOVE: Handler(
+                h.おおひでり_block_move,
+                priority=10,
+                subject_spec="attacker:self",
+            ),
+        },
+    ),
+    "おおあめ": FieldData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: Handler(
+                h.あめ_power_modifier,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CHECK_MOVE: Handler(
+                h.おおあめ_block_move,
+                priority=10,
+                subject_spec="attacker:self",
+            ),
+        },
+    ),
+    "らんきりゅう": FieldData(
+        handlers={
+            Event.ON_CALC_DEF_TYPE_MODIFIER: Handler(
+                h.らんきりゅう_type_modifier,
+                subject_spec="defender:self",
+            ),
+        },
+    ),
     # ===== 地形 (Terrain) =====
     "エレキフィールド": FieldData(
         turn_extension_item="グランドコート",

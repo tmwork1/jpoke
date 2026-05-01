@@ -164,7 +164,13 @@ ABILITIES: dict[str, AbilityData] = {
     "おわりのだいち": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="おおひでり", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        },
     ),
     "かいりきバサミ": AbilityData(
         flags=[
@@ -835,7 +841,13 @@ ABILITIES: dict[str, AbilityData] = {
     "はじまりのうみ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="おおあめ", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        },
     ),
     "はっこう": AbilityData(
         flags=[
@@ -1506,7 +1518,13 @@ ABILITIES: dict[str, AbilityData] = {
     "デルタストリーム": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                partial(common.activate_weather, weather="らんきりゅう", source_spec="source:self"),
+                subject_spec="source:self",
+            )
+        },
     ),
     "トランジスタ": AbilityData(
         handlers={
