@@ -1556,9 +1556,9 @@ def ちからずく_modify_power(battle: Battle, ctx: BattleContext, value: int)
 
 def ちからずく_on_move_secondary(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """ちからずく特性: 追加効果対象技の追加効果確率を 0 にする。"""
-    if ctx.move is None or not ctx.move.data.move_secondary:
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=0.0)
+    if ctx.move is not None and ctx.move.data.move_secondary:
+        value = 0.0
+    return HandlerReturn(value=value)
 
 
 def てんのめぐみ_on_move_secondary(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
