@@ -87,15 +87,13 @@ def _handle_type_absorb(battle: Battle,
                         heal_ratio: float = 0,
                         raise_stat: Stat | None = None) -> HandlerReturn:
     """タイプ一致技を無効化し、副次効果（回復/能力上昇）を適用する。"""
-    if value:
-        return HandlerReturn(value=value)
-    if ctx.move is None:
-        return HandlerReturn(value=value)
-    if not ctx.is_foe_target:
-        return HandlerReturn(value=value)
-    if ctx.move.type != move_type:
-        return HandlerReturn(value=value)
-    if not ctx.check_def_ability_enabled(battle):
+    if (
+        value
+        or ctx.move is None
+        or not ctx.is_foe_target
+        or ctx.move.type != move_type
+        or not ctx.check_def_ability_enabled(battle)
+    ):
         return HandlerReturn(value=value)
 
     target = ctx.defender
@@ -136,15 +134,14 @@ def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContex
 
 def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """いたずらごころ特性: 優先度が上がった変化技はあくタイプ相手に無効化される。"""
-    if value:
-        return HandlerReturn(value=value)
-    if ctx.move is None or ctx.move.category != "変化":
-        return HandlerReturn(value=value)
-    if ctx.move.priority < 0:
-        return HandlerReturn(value=value)
-    if not ctx.is_foe_target:
-        return HandlerReturn(value=value)
-    if not ctx.defender.has_type("あく"):
+    if (
+        value
+        or ctx.move is None
+        or ctx.move.category != "変化"
+        or ctx.move.priority < 0
+        or not ctx.is_foe_target
+        or not ctx.defender.has_type("あく")
+    ):
         return HandlerReturn(value=value)
 
     idx = battle.get_player_index(ctx.defender)
@@ -216,13 +213,14 @@ def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value
 
 def ぎゃくじょう_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
-    if ctx.move is None or not ctx.move.is_attack:
-        return HandlerReturn(value=value)
-    if ctx.attacker is None or ctx.defender is None:
-        return HandlerReturn(value=value)
-    if ctx.move_damage == 0:
-        return HandlerReturn(value=value)
-    if ctx.defender.fainted:
+    if (
+        ctx.move is None
+        or not ctx.move.is_attack
+        or ctx.attacker is None
+        or ctx.defender is None
+        or ctx.move_damage == 0
+        or ctx.defender.fainted
+    ):
         return HandlerReturn(value=value)
 
     # マルチヒット時は全ヒットのダメージを累算し、最終ヒット後に判定する
@@ -299,14 +297,13 @@ def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
     """しゅうかく特性: ターン終了時に消費したきのみを復活させる。"""
     mon = ctx.source
 
-    if mon.has_item():
-        return HandlerReturn(value=value)
-
-    if not mon.item.lost or mon.item.lost_cause != "consume":
-        return HandlerReturn(value=value)
-
     berry_name = mon.item.orig_name
-    if not common.is_berry_item(berry_name):
+    if (
+        mon.has_item()
+        or not mon.item.lost
+        or mon.item.lost_cause != "consume"
+        or not common.is_berry_item(berry_name)
+    ):
         return HandlerReturn(value=value)
 
     chance = _get_harvest_chance(battle)
@@ -378,15 +375,13 @@ def よびみず_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
 
 def もらいび_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """もらいび特性: ほのお技を無効化し、炎技強化状態を有効化する。"""
-    if value:
-        return HandlerReturn(value=value)
-    if ctx.move is None:
-        return HandlerReturn(value=value)
-    if not ctx.is_foe_target:
-        return HandlerReturn(value=value)
-    if ctx.move.type != "ほのお":
-        return HandlerReturn(value=value)
-    if not ctx.check_def_ability_enabled(battle):
+    if (
+        value
+        or ctx.move is None
+        or not ctx.is_foe_target
+        or ctx.move.type != "ほのお"
+        or not ctx.check_def_ability_enabled(battle)
+    ):
         return HandlerReturn(value=value)
 
     ctx.defender.ability.state = "charged"
@@ -560,12 +555,11 @@ def スキルリンク_modify_hit_count(battle: Battle, ctx: BattleContext, valu
 
 def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ねんちゃく特性: 相手から受ける持ち物交換・奪取・除去を防ぐ。"""
-    should_block = (
+    if (
         value
         and ctx.source != ctx.target
         and (ctx.move is None or ctx.check_def_ability_enabled(battle))
-    )
-    if should_block:
+    ):
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(
             battle.turn,
@@ -1009,9 +1003,7 @@ def トレース_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) ->
     foe = battle.foe(mon)
 
     copied_ability = foe.ability.name
-    if not copied_ability:
-        return HandlerReturn(value=value)
-    if "uncopyable" in foe.ability.data.flags:
+    if not copied_ability or "uncopyable" in foe.ability.data.flags:
         return HandlerReturn(value=value)
 
     battle.set_ability(mon, copied_ability)
@@ -1038,38 +1030,29 @@ def トレース_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -
 
 def おやこあい_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """おやこあい特性: 単発攻撃技を2ヒット化する。"""
-    if not ctx.move.is_attack:
-        return HandlerReturn(value=value)
-    if ctx.move.data.max_hits > 1:
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=2)
+    if ctx.move.is_attack and ctx.move.data.max_hits <= 1:
+        value = 2
+    return HandlerReturn(value=value)
 
 
 def おやこあい_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """おやこあい特性: 2ヒット目のダメージを減衰させる。"""
-    if ctx.hit_count < 2:
-        return HandlerReturn(value=value)
-    if ctx.hit_index != 2:
-        return HandlerReturn(value=value)
-
-    reduced = value // 4
-    return HandlerReturn(value=reduced)
+    if ctx.hit_count >= 2 and ctx.hit_index == 2:
+        value //= 4
+    return HandlerReturn(value=value)
 
 
 def てんねん_on_calc_atk_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """てんねん特性: 防御側のとき相手の攻撃ランク補正を無視する。"""
-    if not ctx.check_def_ability_enabled(battle):
-        return HandlerReturn(value=value)
-
-    if value != 1:
-        return HandlerReturn(value=1)
+    if ctx.check_def_ability_enabled(battle) and value != 1:
+        value = 1
     return HandlerReturn(value=value)
 
 
 def てんねん_on_calc_def_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """てんねん特性: 攻撃側のとき相手の防御ランク補正を無視する。"""
     if value != 1:
-        return HandlerReturn(value=1)
+        value = 1
     return HandlerReturn(value=value)
 
 
@@ -1086,12 +1069,13 @@ def めんえき_prevent_poison(battle: Battle, ctx: BattleContext, value: str) 
             - どく/もうどくの場合: (True, "", stop_event=True)
             - それ以外: (False, value)
     """
-    # どく・もうどく状態を防ぐ
+    stop_event = False
     if value in ["どく", "もうどく"]:
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "めんえき", "success": True})
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def クリアボディ_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
@@ -1109,15 +1093,11 @@ def クリアボディ_modify_stat(battle: Battle, ctx: BattleContext, value: di
     Returns:
         HandlerReturn: 相手由来の低下のみ除去した値
     """
-    # 自己低下（source == target または source is None）の場合は保護しない
-    # 相手由来（source != target かつ source is not None）の場合のみ低下を除去
-    if ctx.source is None or ctx.source == ctx.target:
-        # 自己低下：何もしない
-        return HandlerReturn(value=value)
-
-    # 相手由来の低下：低下分（v < 0）を除去して上昇分（v >= 0）のみ返す
-    filtered = {stat: v for stat, v in value.items() if v >= 0}
-    return HandlerReturn(value=filtered)
+    # 自己低下（source == target または source is None）の場合は保護しない。
+    # 相手由来（source != target かつ source is not None）の場合のみ低下を除去する。
+    if ctx.source is not None and ctx.source != ctx.target:
+        value = {stat: v for stat, v in value.items() if v >= 0}
+    return HandlerReturn(value=value)
 
 
 def ノーガード_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1136,23 +1116,21 @@ def ノーガード_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     Returns:
         HandlerReturn: None（必中化）またはそのまま
     """
-    if value is None:
-        return HandlerReturn(value=None)
-
-    attacker_no_guard = ctx.attacker.ability.name == "ノーガード"
-    defender_no_guard = ctx.defender.ability.name == "ノーガード"
-
-    if attacker_no_guard or defender_no_guard:
-        return HandlerReturn(value=None)
-
+    if value is not None:
+        attacker_no_guard = ctx.attacker.ability.name == "ノーガード"
+        defender_no_guard = ctx.defender.ability.name == "ノーガード"
+        if attacker_no_guard or defender_no_guard:
+            value = None
     return HandlerReturn(value=value)
 
 
 def ノーてんき_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ノーてんき特性: 天候効果を無効化する。"""
-    if not value:
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=False, stop_event=True)
+    stop_event = False
+    if value:
+        value = False
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1168,82 +1146,69 @@ def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> H
             - ねむりの場合: (True, "", stop_event=True)
             - それ以外: (False, value)
     """
-    # ねむり状態を防ぐ
+    stop_event = False
     if value == "ねむり":
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "ふみん", "success": True})
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def マジックガード_reduce_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """マジックガード特性: 間接ダメージを無効化する。"""
     # 直接ダメージ・自己由来の特定HP変動は無効化しない。
-    if ctx.hp_change_reason in {"move_damage", "pain_split", "self_attack", "self_cost"}:
-        return HandlerReturn(value=value)
-
-    return HandlerReturn(value=0)
+    if ctx.hp_change_reason not in {"move_damage", "pain_split", "self_attack", "self_cost"}:
+        value = 0
+    return HandlerReturn(value=value)
 
 
 def マジックミラー_reflect(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """マジックミラー特性: 反射対象の変化技を跳ね返す。"""
-    if not ctx.check_def_ability_enabled(battle):
-        return HandlerReturn(value=value)
-
-    reflected = ctx.move.has_label("reflectable")
-    return HandlerReturn(value=reflected)
+    if ctx.check_def_ability_enabled(battle):
+        value = ctx.move.has_label("reflectable")
+    return HandlerReturn(value=value)
 
 
 def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """ミラーアーマー特性: 相手由来の能力ランク低下を反射する。"""
-    # 反射由来の低下は再反射しない（無限反射防止）
-    if ctx.stat_change_reason == "ミラーアーマー":
-        return HandlerReturn(value=value)
-    # 自己デメリット・source 不明は反射しない
-    if ctx.source is None or ctx.source is ctx.target:
-        return HandlerReturn(value=value)
-    # かたやぶり系で防御側特性が無効化されている場合は反射しない
-    if not ctx.check_def_ability_enabled(battle):
-        return HandlerReturn(value=value)
-    # 低下分のみ抽出
-    drops = {stat: v for stat, v in value.items() if v < 0}
-    if not drops:
-        return HandlerReturn(value=value)
-    # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
-    battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
-    # 自分側の低下分を除去（上昇分は残す）
-    filtered = {stat: v for stat, v in value.items() if v > 0}
-    return HandlerReturn(value=filtered)
+    can_reflect = (
+        ctx.stat_change_reason != "ミラーアーマー"
+        and ctx.source is not None
+        and ctx.source is not ctx.target
+        and ctx.check_def_ability_enabled(battle)
+    )
+    if can_reflect:
+        drops = {stat: v for stat, v in value.items() if v < 0}
+        if drops:
+            # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
+            battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
+            # 自分側の低下分を除去（上昇分は残す）
+            value = {stat: v for stat, v in value.items() if v > 0}
+    return HandlerReturn(value=value)
 
 
 def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
     """ぶきよう特性: 所持道具の効果を無効化する。"""
-    if not should_enable:
-        return HandlerReturn(value=should_enable)
-
-    if ctx.source.ability.orig_name == "ぶきよう" and ctx.source.ability.enabled:
-        return HandlerReturn(value=False)
-
+    if should_enable and ctx.source.ability.orig_name == "ぶきよう" and ctx.source.ability.enabled:
+        should_enable = False
     return HandlerReturn(value=should_enable)
 
 
 def へんげんじざいリベロ_on_move_charge(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """へんげんじざい・リベロ: 技実行前に技タイプへ自身のタイプを変更する。"""
-    if not value:
-        return HandlerReturn(value=value)
-    if ctx.source is None or ctx.move is None:
-        return HandlerReturn(value=value)
-    if ctx.source.is_terastallized:
-        return HandlerReturn(value=value)
-    if ctx.source.ability.activated_since_switch_in:
+    if (
+        not value
+        or ctx.source is None
+        or ctx.move is None
+        or ctx.source.is_terastallized
+        or ctx.source.ability.activated_since_switch_in
+    ):
         return HandlerReturn(value=value)
 
     move_type = ctx.move.type
-    if not move_type:
-        return HandlerReturn(value=value)
-
     # 現在タイプと同じ技では発動しない。
-    if ctx.source.has_type(move_type):
+    if not move_type or ctx.source.has_type(move_type):
         return HandlerReturn(value=value)
 
     ctx.source.ability_override_type = move_type
@@ -1272,12 +1237,13 @@ def やるき_prevent_sleep(battle: Battle, ctx: BattleContext, value: str) -> H
             - ねむりの場合: (True, "", stop_event=True)
             - それ以外: (False, value)
     """
-    # ねむり状態を防ぐ（ふみんと同じ効果）
+    stop_event = False
     if value == "ねむり":
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "やるき", "success": True})
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def ようりょくそ_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -1319,10 +1285,11 @@ def じゅうなん_prevent_paralysis(battle: Battle, ctx: BattleContext, value:
             - まひの場合: (True, "", stop_event=True)
             - それ以外: (False, value)
     """
-    # まひ状態を防ぐ
+    stop_event = False
     if value == "まひ":
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def みずのベール_prevent_burn(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -1338,10 +1305,11 @@ def みずのベール_prevent_burn(battle: Battle, ctx: BattleContext, value: s
             - やけどの場合: (True, "", stop_event=True)
             - それ以外: (False, value)
     """
-    # やけど状態を防ぐ
+    stop_event = False
     if value == "やけど":
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def マグマのよろい_prevent_freeze(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -1357,10 +1325,11 @@ def マグマのよろい_prevent_freeze(battle: Battle, ctx: BattleContext, val
             - こおりの場合: (True, "", stop_event=True)
             - それ以外: (False, value)
     """
-    # こおり状態を防ぐ
+    stop_event = False
     if value == "こおり":
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def どんかん_prevent_volatile(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
@@ -1378,9 +1347,11 @@ def どんかん_prevent_volatile(battle: Battle, ctx: BattleContext, value: str
     Returns:
         HandlerReturn: (False, value) - 状態異常は防がない
     """
+    stop_event = False
     if value in ["メロメロ", "ちょうはつ", "ゆうわく", "いかく"]:
-        return HandlerReturn(value="", stop_event=True)  # 防いでイベント停止
-    return HandlerReturn(value=value)
+        value = ""
+        stop_event = True
+    return HandlerReturn(value=value, stop_event=stop_event)
 
 
 def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1400,20 +1371,13 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
     Returns:
         HandlerReturn: 変化技を無効化した場合True, stop_event=True
     """
-    # 変化技以外は防がない
-    if ctx.move.category != "変化":
-        return HandlerReturn(value=value)
-
-    # 相手対象以外（自分対象・場対象・同一対象）は防がない。
-    if not ctx.is_foe_target:
-        return HandlerReturn(value=value)
-
-    # かたやぶり系で防御側特性が無視される場合は発動しない。
-    if not ctx.check_def_ability_enabled(battle):
-        return HandlerReturn(value=value)
-
-    # 自身がおうごんのからだでない場合は防がない。
-    if ctx.target.ability.orig_name != "おうごんのからだ":
+    # 変化技以外、自分対象や場対象、かたやぶり系、自身が非所持なら防がない。
+    if (
+        ctx.move.category != "変化"
+        or not ctx.is_foe_target
+        or not ctx.check_def_ability_enabled(battle)
+        or ctx.target.ability.orig_name != "おうごんのからだ"
+    ):
         return HandlerReturn(value=value)
 
     # ログ出力
@@ -1554,9 +1518,7 @@ def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int
 
 def がんじょう_block_ohko(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """がんじょう特性: 一撃必殺技を無効化する。(ON_CHECK_IMMUNE / subject_spec="target:self")"""
-    if ctx.move is None or not ctx.move.has_label("ohko"):
-        return HandlerReturn(value=value)
-    if not ctx.check_def_ability_enabled(battle):
+    if ctx.move is None or not ctx.move.has_label("ohko") or not ctx.check_def_ability_enabled(battle):
         return HandlerReturn(value=value)
     idx = battle.get_player_index(ctx.target)
     battle.event_logger.add(
@@ -1568,12 +1530,12 @@ def がんじょう_block_ohko(battle: Battle, ctx: BattleContext, value: Any) -
 
 def がんじょう_survive_lethal(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """がんじょう特性: HP満タン時の致死ダメージをHP1残しに補正する。(ON_BEFORE_DAMAGE_APPLY / subject_spec="target:self")"""
-    if ctx.hp_change_reason != "move_damage":
-        return HandlerReturn(value=value)
     target = ctx.target
-    if target.hp < target.max_hp:
-        return HandlerReturn(value=value)
-    if target.hp + value > 0:
+    if (
+        ctx.hp_change_reason != "move_damage"
+        or target.hp < target.max_hp
+        or target.hp + value > 0
+    ):
         return HandlerReturn(value=value)
     idx = battle.get_player_index(target)
     battle.event_logger.add(
@@ -1629,13 +1591,9 @@ def マルチタイプ_on_switch_in(battle: Battle, ctx: BattleContext, value: A
 
 def マルチタイプ_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """マルチタイプ特性: プレートの奪取・交換を防ぐ。(ON_CHECK_ITEM_CHANGE / subject_spec="target:self")"""
-    if not value:
-        return HandlerReturn(value=value)
-    if ctx.source == ctx.target:
-        return HandlerReturn(value=value)
     # 持ち物がプレートの場合のみ保護
     item_name = ctx.target.item.orig_name if ctx.target.has_item() else ""
-    if item_name not in PLATE_TO_TYPE:
+    if not value or ctx.source == ctx.target or item_name not in PLATE_TO_TYPE:
         return HandlerReturn(value=value)
     idx = battle.get_player_index(ctx.target)
     battle.event_logger.add(
@@ -1659,12 +1617,8 @@ def ARシステム_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) 
 
 def ARシステム_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ARシステム特性: メモリの奪取・交換を防ぐ。(ON_CHECK_ITEM_CHANGE / subject_spec="target:self")"""
-    if not value:
-        return HandlerReturn(value=value)
-    if ctx.source == ctx.target:
-        return HandlerReturn(value=value)
     item_name = ctx.target.item.orig_name if ctx.target.has_item() else ""
-    if item_name not in MEMORY_TO_TYPE:
+    if not value or ctx.source == ctx.target or item_name not in MEMORY_TO_TYPE:
         return HandlerReturn(value=value)
     idx = battle.get_player_index(ctx.target)
     battle.event_logger.add(
