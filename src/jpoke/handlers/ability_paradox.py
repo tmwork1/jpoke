@@ -74,7 +74,8 @@ def _refresh_paradox_boost(battle: Battle, mon) -> None:
     # 能力ごとに参照する場の状態が異なる。
     if ability_name == "こだいかっせい":
         field_source = "weather"
-        field_active = battle.weather.name == "はれ"
+        active_weather = battle.weather
+        field_active = active_weather is not None and active_weather.name == "はれ"
     else:
         field_source = "terrain"
         field_active = battle.terrain.name == "エレキフィールド"

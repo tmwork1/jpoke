@@ -233,6 +233,10 @@ class Event(Enum):
     # handle: 各フィールド・揮発性状態の持続ターン管理ハンドラ
     ON_CHECK_DURATION = auto()
 
+    # emit: core/battle.py（天候効果が有効かどうかを判定）
+    # handle: ability.py（エアロック・ノーてんき で天候効果を無効化）
+    ON_CHECK_WEATHER_ENABLED = auto()
+
     # emit: core/pokemon_state.py（地面技の着地確認等）
     # handle: volatile.py（マグネットライズ・テレキネシス等で浮遊判定を返す）
     #          data/field.py（じゅうりょく発動中は全ポケモンを接地扱いにする）

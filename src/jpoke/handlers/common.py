@@ -5,8 +5,15 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Terrain, GlobalField
+from jpoke.enums import Event
 from jpoke.core import HandlerReturn
+
+
+def _calc_effective_chance(battle: Battle, ctx: BattleContext, chance: float) -> float:
+    """追加効果補正後の実効確率を返す。"""
+    effective = battle.events.emit(Event.ON_MOVE_SECONDARY, ctx, chance)
+    return min(1.0, max(0.0, effective))
 
 
 def modify_hp(battle: Battle,
@@ -32,7 +39,8 @@ def modify_hp(battle: Battle,
     Returns:
         実際に変化したHP量を value に持つ HandlerReturn
     """
-    if chance < 1 and battle.random.random() >= chance:
+    effective_chance = _calc_effective_chance(battle, ctx, chance)
+    if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     v = battle.modify_hp(target, v, r, reason=reason)
@@ -66,7 +74,8 @@ def drain_hp(battle: Battle,
     Returns:
         実際に吸収したHP量を value に持つ HandlerReturn
     """
-    if chance < 1 and battle.random.random() >= chance:
+    effective_chance = _calc_effective_chance(battle, ctx, chance)
+    if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn()
 
     # from_とto_から対象のポケモンを解決
@@ -77,7 +86,6 @@ def drain_hp(battle: Battle,
         to_mon = ctx.resolve_role(battle, to_)
 
     v = battle.modify_hp(from_mon, -v, -r, reason=reason)
-    print(f"{v=}")
     if v:
         battle.modify_hp(to_mon, -v * heal_rate, reason=reason)
 
@@ -107,7 +115,8 @@ def modify_stat(battle: Battle,
     Returns:
         変化が成功したかを value に持つ HandlerReturn
     """
-    if chance < 1 and battle.random.random() >= chance:
+    effective_chance = _calc_effective_chance(battle, ctx, chance)
+    if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -139,7 +148,8 @@ def modify_stats(battle: Battle,
     Returns:
         HandlerReturn: いずれかの能力が変化した場合True
     """
-    if chance < 1 and battle.random.random() >= chance:
+    effective_chance = _calc_effective_chance(battle, ctx, chance)
+    if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn()
 
     target = ctx.resolve_role(battle, target_spec)
@@ -160,7 +170,8 @@ def apply_ailment(battle: Battle,
                   chance: float = 1,
                   reason: str = "") -> HandlerReturn:
     """状態異常を付与する。"""
-    if chance < 1 and battle.random.random() >= chance:
+    effective_chance = _calc_effective_chance(battle, ctx, chance)
+    if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -177,7 +188,8 @@ def apply_volatile(battle: Battle,
                    count: int | None = None,
                    chance: float = 1) -> HandlerReturn:
     """揮発状態を付与する。"""
-    if chance < 1 and battle.random.random() >= chance:
+    effective_chance = _calc_effective_chance(battle, ctx, chance)
+    if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn()
     if count is None:
         match volatile:
@@ -223,7 +235,7 @@ def deactivate_weather(battle: Battle,
                        value: Any,
                        weather: Weather) -> HandlerReturn:
     """指定天候が現在有効な場合に解除する。"""
-    if battle.weather.name == weather:
+    if battle.raw_weather.name == weather:
         battle.weather_manager.deactivate()
     return HandlerReturn(value=value)
 

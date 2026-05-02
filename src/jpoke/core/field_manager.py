@@ -228,6 +228,14 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
         """
         super().__init__(battle, battle.players, Weather)
 
+    @property
+    def active(self) -> Field | None:
+        """現在有効な天候オブジェクトを返す。"""
+        if self.current.name == "":
+            return None
+        enabled = bool(self.events.emit(Event.ON_CHECK_WEATHER_ENABLED, value=True))
+        return self.current if enabled else None
+
     def activate(self, name: Weather, count: int, source=None) -> bool:
         """天候を発動する。強天候中は通常天候への切り替えをブロックする。"""
         if self.current.name in STRONG_WEATHERS and name not in STRONG_WEATHERS:

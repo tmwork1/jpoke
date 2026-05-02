@@ -17,7 +17,7 @@ def test_天候カウント減少(field: Weather):
     event = Event.ON_TURN_END_1
     initial_duration = 2
     battle = start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")], weather=(field, initial_duration))
-    field = battle.weather
+    field = battle.raw_weather
     # 初期カウント確認
     assert field.count == initial_duration
     # カウントダウン確認
@@ -72,10 +72,10 @@ def test_サイドフィールドカウント減少(field: SideField):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END_4
     initial_duration = 2
-    battle = start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")], 
-        ally_side_field={field: initial_duration},
-        foe_side_field={field: initial_duration},
-    )
+    battle = start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")],
+                          ally_side_field={field: initial_duration},
+                          foe_side_field={field: initial_duration},
+                          )
     fields = [
         battle.get_side_field(player, field) for player in battle.players
     ]
@@ -92,4 +92,3 @@ def test_サイドフィールドカウント減少(field: SideField):
 
 if __name__ == "__main__":
     pytest.main([__file__])
-

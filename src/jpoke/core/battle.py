@@ -217,13 +217,18 @@ class Battle:
         return [pl.active for pl in self.players]
 
     @property
-    def weather(self) -> Field:
-        """現在の天候を取得。
+    def raw_weather(self) -> Field:
+        """現在セットされている天候を取得。
 
         Returns:
-            Field: 現在の天候フィールド
+            Field: 現在セットされている天候フィールド
         """
         return self.weather_manager.current
+
+    @property
+    def weather(self) -> Field | None:
+        """有効な天候オブジェクトを返す。判定ロジックは WeatherManager に委譲する。"""
+        return self.weather_manager.active
 
     @property
     def terrain(self) -> Field:

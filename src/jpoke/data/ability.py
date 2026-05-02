@@ -34,7 +34,17 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ARシステム_on_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
+                h.ARシステム_prevent_item_change,
+                subject_spec="target:self",
+            ),
+        }
     ),
     "あくしゅう": AbilityData(),
     "あついしぼう": AbilityData(
@@ -412,6 +422,21 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
+    "がんじょう": AbilityData(
+        flags=[
+            "mold_breaker_ignorable"
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.がんじょう_block_ohko,
+                subject_spec="target:self",
+            ),
+            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+                h.がんじょう_survive_lethal,
+                subject_spec="target:self",
+            ),
+        }
+    ),
     "こんじょう": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -648,7 +673,18 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "だっぴ": AbilityData(),
-    "ちからずく": AbilityData(),
+    "ちからずく": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.ちからずく_modify_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MOVE_SECONDARY: h.AbilityHandler(
+                h.ちからずく_on_move_secondary,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "ちからもち": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -712,7 +748,14 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
-    "てんのめぐみ": AbilityData(),
+    "てんのめぐみ": AbilityData(
+        handlers={
+            Event.ON_MOVE_SECONDARY: h.AbilityHandler(
+                h.てんのめぐみ_on_move_secondary,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "でんきにかえる": AbilityData(
         flags=[
             "undeniable"
@@ -1309,7 +1352,13 @@ ABILITIES: dict[str, AbilityData] = {
     "エアロック": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
+                h.エアロック_check_weather_enabled,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "エレキメイカー": AbilityData(
         handlers={
@@ -1565,7 +1614,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ノーてんき": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
+                h.ノーてんき_check_weather_enabled,
+                subject_spec="source:self",
+            ),
+        },
     ),
     "ノーガード": AbilityData(
         flags=[
@@ -1833,7 +1888,17 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected"
-        ]
+        ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.マルチタイプ_on_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
+                h.マルチタイプ_prevent_item_change,
+                subject_spec="target:self",
+            ),
+        }
     ),
     "ミイラ": AbilityData(
         flags=[

@@ -317,6 +317,10 @@ ITEMS: dict[str, ItemData] = {
             )
         }
     ),
+    "フェアリーメモリ": ItemData(
+        consumable=False,
+        fling_power=50,
+    ),
     "せんせいのツメ": ItemData(
         consumable=False,
         fling_power=80

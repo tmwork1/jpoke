@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, HPChangeReason, Type, Stat
+from jpoke.utils.constants import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
@@ -47,14 +48,8 @@ def _toggle_harapeko_form(mon) -> None:
 
 
 def _is_harvest_sunny_rate_100(battle: Battle) -> bool:
-    if battle.weather.name != "はれ":
-        return False
-
-    # ノーてんき / エアロックが有効なら晴れ補正は無効。
-    for mon in battle.actives:
-        if mon.ability.name in ["ノーてんき", "エアロック"]:
-            return False
-    return True
+    active = battle.weather
+    return active is not None and active.name == "はれ"
 
 
 def _get_harvest_chance(battle: Battle) -> float:
@@ -162,6 +157,13 @@ def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, 
         payload={"ability": "いたずらごころ", "success": True},
     )
     return HandlerReturn(value=True, stop_event=True)
+
+
+def エアロック_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """エアロック特性: 天候効果を無効化する。"""
+    if not value:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def ありじごく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -545,13 +547,16 @@ def すなかき_modify_speed(battle: Battle, ctx: BattleContext, value: int) ->
         HandlerReturn: (True, 補正後の素早さ)
             - すなあらし中は2倍、それ以外は元の値
     """
-    value = value * 2 if battle.weather.name == "すなあらし" else value
+    active = battle.weather
+    if active is not None and active.name == "すなあらし":
+        value *= 2
     return HandlerReturn(value=value)
 
 
 def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すいすい特性: あめ中に素早さが2倍になる。"""
-    if battle.weather.name == "あめ":
+    active = battle.weather
+    if active is not None and active.name == "あめ":
         value *= 2
     return HandlerReturn(value=value)
 
@@ -671,7 +676,8 @@ def すなのちから_modify_power(battle: Battle, ctx: BattleContext, value: i
     """すなのちから特性: すなあらし中の岩/地面/鋼技の威力を1.3倍にする。"""
     if ctx.move is None:
         return HandlerReturn(value=value)
-    if battle.weather.name != "すなあらし":
+    active = battle.weather
+    if active is None or active.name != "すなあらし":
         return HandlerReturn(value=value)
     if ctx.move.type not in ["いわ", "じめん", "はがね"]:
         return HandlerReturn(value=value)
@@ -805,7 +811,8 @@ def トランジスタ_modify_atk(battle: Battle, ctx: BattleContext, value: int
 
 def ひひいろのこどう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ひひいろのこどう特性: はれ中の攻撃補正を1.33倍にする。"""
-    if battle.weather.name == "はれ":
+    active = battle.weather
+    if active is not None and active.name == "はれ":
         return HandlerReturn(value=common.apply_modifier(value, 5461))
     return HandlerReturn(value=value)
 
@@ -920,7 +927,8 @@ def くさのけがわ_modify_def(battle: Battle, ctx: BattleContext, value: int
     """くさのけがわ特性: ゆき中の物理技への防御補正を1.5倍にする。"""
     if not ctx.check_def_ability_enabled(battle):
         return HandlerReturn(value=value)
-    if battle.weather.name != "ゆき":
+    active = battle.weather
+    if active is None or active.name != "ゆき":
         return HandlerReturn(value=value)
     if common.is_physical_move(battle, ctx):
         return HandlerReturn(value=common.apply_modifier(value, 6144))
@@ -1178,6 +1186,13 @@ def ノーガード_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     return HandlerReturn(value=value)
 
 
+def ノーてんき_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ノーてんき特性: 天候効果を無効化する。"""
+    if not value:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=False, stop_event=True)
+
+
 def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふみん特性: ねむり状態を防ぐ。
 
@@ -1305,7 +1320,8 @@ def やるき_prevent_sleep(battle: Battle, ctx: BattleContext, value: str) -> H
 
 def ようりょくそ_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ようりょくそ特性: はれ中に素早さが2倍になる。"""
-    if battle.weather.name == "はれ":
+    active = battle.weather
+    if active is not None and active.name == "はれ":
         value *= 2
     return HandlerReturn(value=value)
 
@@ -1570,3 +1586,129 @@ def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int
         payload={"ability": "ばけのかわ", "success": True},
     )
     return HandlerReturn(value=0)
+
+
+# ===== がんじょう =====
+
+def がんじょう_block_ohko(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """がんじょう特性: 一撃必殺技を無効化する。(ON_CHECK_IMMUNE / subject_spec="target:self")"""
+    if ctx.move is None or not ctx.move.has_label("ohko"):
+        return HandlerReturn(value=value)
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+    idx = battle.get_player_index(ctx.target)
+    battle.event_logger.add(
+        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "がんじょう", "success": True},
+    )
+    return HandlerReturn(value=True, stop_event=True)
+
+
+def がんじょう_survive_lethal(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """がんじょう特性: HP満タン時の致死ダメージをHP1残しに補正する。(ON_BEFORE_DAMAGE_APPLY / subject_spec="target:self")"""
+    if ctx.hp_change_reason != "move_damage":
+        return HandlerReturn(value=value)
+    target = ctx.target
+    if target.hp < target.max_hp:
+        return HandlerReturn(value=value)
+    if target.hp + value > 0:
+        return HandlerReturn(value=value)
+    idx = battle.get_player_index(target)
+    battle.event_logger.add(
+        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "がんじょう", "success": True},
+    )
+    return HandlerReturn(value=-target.hp+1)
+
+
+# ===== ちからずく =====
+
+def ちからずく_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ちからずく特性: 追加効果ありの技の威力を 1.3 倍にする。(ON_CALC_POWER_MODIFIER / subject_spec="attacker:self")"""
+    if ctx.move is None:
+        return HandlerReturn(value=value)
+    if not ctx.move.data.move_secondary:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=common.apply_modifier(value, 5325))
+
+
+def ちからずく_on_move_secondary(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
+    """ちからずく特性: 追加効果対象技の追加効果確率を 0 にする。"""
+    if ctx.move is None or not ctx.move.data.move_secondary:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=0.0)
+
+
+def てんのめぐみ_on_move_secondary(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
+    """てんのめぐみ特性: 追加効果対象技の追加効果確率を2倍にする。"""
+    if ctx.move is None or not ctx.move.data.move_secondary:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=min(1.0, value * 2))
+
+
+# ===== マルチタイプ / ARシステム 共通 =====
+
+
+def _apply_multitype(mon, item_table: dict[str, str]) -> None:
+    """道具に応じてポケモンのタイプを変更する共通ロジック。"""
+    item_name = mon.item.orig_name if mon.has_item() else ""
+    mon.ability_override_type = item_table.get(item_name)
+
+
+def マルチタイプ_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """マルチタイプ特性: 登場時にプレートに合わせてタイプを変更する。"""
+    _apply_multitype(ctx.source, PLATE_TO_TYPE)
+    idx = battle.get_player_index(ctx.source)
+    if ctx.source.ability_override_type is not None:
+        battle.event_logger.add(
+            battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+            payload={"ability": "マルチタイプ", "success": True},
+        )
+    return HandlerReturn(value=value)
+
+
+def マルチタイプ_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """マルチタイプ特性: プレートの奪取・交換を防ぐ。(ON_CHECK_ITEM_CHANGE / subject_spec="target:self")"""
+    if not value:
+        return HandlerReturn(value=value)
+    if ctx.source == ctx.target:
+        return HandlerReturn(value=value)
+    # 持ち物がプレートの場合のみ保護
+    item_name = ctx.target.item.orig_name if ctx.target.has_item() else ""
+    if item_name not in PLATE_TO_TYPE:
+        return HandlerReturn(value=value)
+    idx = battle.get_player_index(ctx.target)
+    battle.event_logger.add(
+        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "マルチタイプ", "success": True},
+    )
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def ARシステム_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ARシステム特性: 登場時にメモリに合わせてタイプを変更する。"""
+    _apply_multitype(ctx.source, MEMORY_TO_TYPE)
+    idx = battle.get_player_index(ctx.source)
+    if ctx.source.ability_override_type is not None:
+        battle.event_logger.add(
+            battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+            payload={"ability": "ARシステム", "success": True},
+        )
+    return HandlerReturn(value=value)
+
+
+def ARシステム_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ARシステム特性: メモリの奪取・交換を防ぐ。(ON_CHECK_ITEM_CHANGE / subject_spec="target:self")"""
+    if not value:
+        return HandlerReturn(value=value)
+    if ctx.source == ctx.target:
+        return HandlerReturn(value=value)
+    item_name = ctx.target.item.orig_name if ctx.target.has_item() else ""
+    if item_name not in MEMORY_TO_TYPE:
+        return HandlerReturn(value=value)
+    idx = battle.get_player_index(ctx.target)
+    battle.event_logger.add(
+        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "ARシステム", "success": True},
+    )
+    return HandlerReturn(value=False, stop_event=True)

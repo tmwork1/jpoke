@@ -55,8 +55,18 @@ class MoveData:
     check_hit_each_time: bool = False
     power_sequence: tuple[int, ...] = ()
     labels: list[MoveLabel] = field(default_factory=list)
+    move_secondary: bool = False  # 追加効果判定（ちからずく/てんのめぐみの対象）
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
+
+    @property
+    def sheer_force(self) -> bool:
+        """互換プロパティ: 旧名 sheer_force は move_secondary と同義。"""
+        return self.move_secondary
+
+    @sheer_force.setter
+    def sheer_force(self, value: bool) -> None:
+        self.move_secondary = value
 
 
 @dataclass

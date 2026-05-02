@@ -520,7 +520,7 @@ def test_強天候中は通常天候で上書きできない():
     )
     result = battle.weather_manager.activate("はれ", 5)
     assert result is False
-    assert battle.weather.name == "おおひでり"
+    assert battle.raw_weather.name == "おおひでり"
 
 
 def test_強天候同士は上書きできる():
@@ -532,7 +532,7 @@ def test_強天候同士は上書きできる():
     )
     result = battle.weather_manager.activate("おおあめ", DEFAULT_DURATION)
     assert result is True
-    assert battle.weather.name == "おおあめ"
+    assert battle.raw_weather.name == "おおあめ"
 
 
 if __name__ == "__main__":
