@@ -1151,21 +1151,26 @@ def クリアボディ_modify_stat(battle: Battle, ctx: BattleContext, value: di
     """クリアボディ特性: 相手による能力ランク低下を無効化する。
 
     自分の技や反動による能力低下は防げない。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト (ON_MODIFY_STAT)
-            - target: クリアボディ持ちのポケモン
-            - source: 能力変更の原因となったポケモン（Noneなら相手由来）
-        value: ランク修正値の辞書 {stat: delta}
-
-    Returns:
-        HandlerReturn: 相手由来の低下のみ除去した値
     """
-    # 自己低下（source == target または source is None）の場合は保護しない。
-    # 相手由来（source != target かつ source is not None）の場合のみ低下を除去する。
-    if ctx.source is not None and ctx.source != ctx.target:
-        value = {stat: v for stat, v in value.items() if v >= 0}
+    value = common.block_stat_drop(value, ctx)
+    return HandlerReturn(value=value)
+
+
+def かいりきバサミ_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """かいりきバサミ特性: 相手によるこうげきランク低下を無効化する。"""
+    value = common.block_stat_drop(value, ctx, "A")
+    return HandlerReturn(value=value)
+
+
+def はとむね_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """はとむね特性: 相手によるぼうぎょランク低下を無効化する。"""
+    value = common.block_stat_drop(value, ctx, "B")
+    return HandlerReturn(value=value)
+
+
+def するどいめ_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """するどいめ特性: 相手による命中率ランク低下を無効化する。"""
+    value = common.block_stat_drop(value, ctx, "ACC")
     return HandlerReturn(value=value)
 
 
@@ -1548,7 +1553,7 @@ def かたやぶり_check_def_ability_enabled(battle: Battle, ctx: BattleContext
         HandlerReturn: 無視対象なら False、それ以外は value
     """
     if "mold_breaker_ignorable" in ctx.defender.ability.data.flags:
-        return HandlerReturn(value=False)
+        value = False
     return HandlerReturn(value=value)
 
 

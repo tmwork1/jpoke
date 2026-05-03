@@ -389,6 +389,22 @@ def apply_modifier(value: int, modifier: int) -> int:
     return value * modifier // 4096
 
 
+def block_stat_drop(value: dict, ctx: BattleContext, stat: str | None = None) -> dict:
+    """相手由来のランク低下を除去する共通処理。
+
+    Args:
+        value: ランク修正値の辞書 {stat: delta}
+        ctx: コンテキスト（source/target を参照）
+        stat: 対象 stat 名。None の場合は全 stat が対象（クリアボディ系）。
+    """
+    if ctx.source is not None and ctx.source != ctx.target:
+        if stat is None:
+            value = {s: v for s, v in value.items() if v >= 0}
+        else:
+            value = {s: v for s, v in value.items() if s != stat or v >= 0}
+    return value
+
+
 def crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
     """HPが最大HPの50%を跨いだかどうかを判定する。
 

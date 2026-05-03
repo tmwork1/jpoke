@@ -210,7 +210,13 @@ ABILITIES: dict[str, AbilityData] = {
     "かいりきバサミ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.かいりきバサミ_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "かがくへんかガス": AbilityData(
         flags=[
@@ -524,7 +530,13 @@ ABILITIES: dict[str, AbilityData] = {
     "しろいけむり": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.クリアボディ_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "しろのいななき": AbilityData(),
     "しんがん": AbilityData(
@@ -651,7 +663,13 @@ ABILITIES: dict[str, AbilityData] = {
     "するどいめ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.するどいめ_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "せいぎのこころ": AbilityData(
         flags=[
@@ -936,7 +954,13 @@ ABILITIES: dict[str, AbilityData] = {
     "はとむね": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.はとむね_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "はやあし": AbilityData(),
     "はやおき": AbilityData(),
