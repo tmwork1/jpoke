@@ -1882,6 +1882,7 @@ def てんのめぐみ_on_modify_secondary_chance(battle: Battle, ctx: BattleCon
 def リーフガード_prevent_ailment(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """リーフガード特性: にほんばれ/おおひでり中に状態異常付与を防ぐ。"""
     active = battle.weather
+    print(f"{ctx.check_def_ability_enabled(battle)=}")
     if (
         active is not None
         and active.name in ("はれ", "おおひでり")

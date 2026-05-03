@@ -1785,6 +1785,8 @@ def test_マイティチェンジ_既にマイティなら追加変化しない(
     assert palafin.alias == "イルカマン(マイティ)"
     assert not t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
 
+# TODO かたやぶりのポケモンが技によって付与する状態異常は防げないこともテストする
+
 
 @pytest.mark.parametrize(
     "ability_name, ailment_name",
@@ -3485,6 +3487,19 @@ def test_リーフガード_はれ以外では発動しない():
     mon = battle.actives[0]
     assert battle.ailment_manager.apply(mon, "どく")
     assert mon.ailment.is_active
+
+
+def test_リーフガード_かたやぶりの状態異常技は防げない():
+    """かたやぶり由来の技による状態異常はリーフガードを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="リーフガード")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+        weather=("はれ", 5),
+    )
+    target = battle.actives[0]
+    attacker = battle.actives[1]
+    battle.ailment_manager.apply(target, "まひ", source=attacker)
+    assert target.ailment.name == "まひ"
 
 
 def test_リーフガード_かたやぶりと対面中のどくびしは毒にならない():

@@ -159,11 +159,6 @@ class BattleContext:
         return mon
 
     @property
-    def is_self_target(self) -> bool:
-        """攻撃側と防御側が同一ポケモンかどうかを返す。"""
-        return self.source is not None and self.source is self.target
-
-    @property
     def is_foe_target(self) -> bool:
         """相手を対象にした行動かどうかを返す。"""
         if self.source is None or self.target is None:
@@ -174,15 +169,10 @@ class BattleContext:
             return False
         return True
 
-    @property
-    def is_attacking(self) -> bool:
-        """攻撃行動かどうかを返す。"""
-        return self.move is not None
-
     def check_def_ability_enabled(self, battle: Battle) -> bool:
         """防御側特性が有効かどうかを更新し、その結果を返す。"""
-        if not self.is_attacking:
-            return True  # 攻撃行動でない場合は特性無効化の対象外
+        # TODO 現在が技による攻防フェーズでなければそのままTrueを返す必要がある
+        # Battleクラスにphaseの概念を追加する必要がありそう。
         return battle.events.emit(
             Event.ON_CHECK_DEF_ABILITY_ENABLED,
             self,
