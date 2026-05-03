@@ -554,7 +554,13 @@ ABILITIES: dict[str, AbilityData] = {
     "さめはだ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.さめはだ_on_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "しぜんかいふく": AbilityData(
         handlers={
@@ -888,7 +894,13 @@ ABILITIES: dict[str, AbilityData] = {
     "てつのトゲ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.てつのトゲ_on_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "てんきや": AbilityData(
         flags=[
@@ -962,7 +974,13 @@ ABILITIES: dict[str, AbilityData] = {
     "どくのトゲ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.どくのトゲ_on_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "どくぼうそう": AbilityData(
         handlers={
@@ -1276,7 +1294,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ほのおのからだ": AbilityData(
         flags=[
             "undeniable"
-        ]
+        ],
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.ほのおのからだ_on_damage,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "ほろびのボディ": AbilityData(
         flags=[

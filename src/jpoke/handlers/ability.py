@@ -58,6 +58,45 @@ def _get_harvest_chance(battle: Battle) -> float:
     return 1.0 if _is_harvest_sunny_rate_100(battle) else 0.5
 
 
+def _is_contact_damage_event(battle: Battle, ctx: BattleContext) -> bool:
+    """接触技での被弾後イベントかどうかを判定する。"""
+    return ctx.has_move_context and battle.move_executor.is_contact(ctx)
+
+
+def _apply_contact_counter_ailment(
+    battle: Battle,
+    ctx: BattleContext,
+    *,
+    ailment: str,
+    chance: float,
+) -> bool:
+    """接触被弾時カウンターの状態異常付与を試行する。"""
+    if not _is_contact_damage_event(battle, ctx) or battle.random.random() >= chance:
+        return False
+
+    battle.ailment_manager.apply(
+        ctx.attacker,
+        ailment,
+        source=ctx.defender,
+        origin_ctx=ctx,
+    )
+    return True
+
+
+def _apply_contact_counter_chip(
+    battle: Battle,
+    ctx: BattleContext,
+    *,
+    ratio: float,
+) -> bool:
+    """接触被弾時カウンターの固定割合ダメージを適用する。"""
+    if not _is_contact_damage_event(battle, ctx) or ctx.attacker.fainted:
+        return False
+
+    battle.modify_hp(ctx.attacker, r=-ratio, reason="ability")
+    return True
+
+
 def _trigger_emergency_switch(battle: Battle, mon, ability_name: str) -> bool:
     """緊急交代を発動する。"""
     from jpoke.enums import Interrupt
@@ -395,6 +434,12 @@ def さいせいりょく_on_switch_out(battle: Battle, ctx: BattleContext, valu
             battle.turn, idx, LogCode.ABILITY_TRIGGERED,
             payload={"ability": "さいせいりょく", "success": True},
         )
+    return HandlerReturn(value=value)
+
+
+def さめはだ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """さめはだ特性: 接触技を受けた相手に最大HPの1/8ダメージを与える。"""
+    _apply_contact_counter_chip(battle, ctx, ratio=1/8)
     return HandlerReturn(value=value)
 
 
@@ -884,19 +929,7 @@ def せいしんりょく_block_intimidate(battle: Battle, ctx: BattleContext, v
 
 def せいでんき_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """せいでんき特性: 直接攻撃を受けた相手を30%でまひにする。"""
-    if (
-        not ctx.has_move_context
-        or not battle.move_executor.is_contact(ctx)
-        or battle.random.random() >= 0.3
-    ):
-        return HandlerReturn(value=value)
-
-    battle.ailment_manager.apply(
-        ctx.attacker,
-        "まひ",
-        source=ctx.defender,
-        origin_ctx=ctx,
-    )
+    _apply_contact_counter_ailment(battle, ctx, ailment="まひ", chance=0.3)
     return HandlerReturn(value=value)
 
 
@@ -918,10 +951,22 @@ def どくしゅ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
+def どくのトゲ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """どくのトゲ特性: 直接攻撃を受けた相手を30%でどくにする。"""
+    _apply_contact_counter_ailment(battle, ctx, ailment="どく", chance=0.3)
+    return HandlerReturn(value=value)
+
+
 def てつのこぶし_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
     if ctx.move.has_label("punch"):
         value = common.apply_modifier(value, 4915)
+    return HandlerReturn(value=value)
+
+
+def てつのトゲ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """てつのトゲ特性: 接触技を受けた相手に最大HPの1/8ダメージを与える。"""
+    _apply_contact_counter_chip(battle, ctx, ratio=1/8)
     return HandlerReturn(value=value)
 
 
@@ -1056,6 +1101,12 @@ def ぼうだん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         and ctx.check_def_ability_enabled(battle)
     ):
         return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ほのおのからだ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
+    _apply_contact_counter_ailment(battle, ctx, ailment="やけど", chance=0.3)
     return HandlerReturn(value=value)
 
 

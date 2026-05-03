@@ -1456,6 +1456,134 @@ def test_どくしゅ_非接触技では発動しない():
     assert not defender.ailment.is_active
 
 
+def test_さめはだ_接触技で被弾時に相手へ最大HPの8分の1ダメージ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="さめはだ")],
+        foe=[Pokemon("イーブイ", moves=["たいあたり"])],
+    )
+    attacker = battle.actives[1]
+    hp_before = attacker.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert attacker.hp == hp_before - attacker.max_hp // 8
+
+
+def test_さめはだ_非接触技では反撃ダメージを与えない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="さめはだ")],
+        foe=[Pokemon("イーブイ", moves=["はどうだん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    hp_before = attacker.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < defender.max_hp
+    assert attacker.hp == hp_before
+
+
+def test_てつのトゲ_接触技で被弾時に相手へ最大HPの8分の1ダメージ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="てつのトゲ")],
+        foe=[Pokemon("イーブイ", moves=["たいあたり"])],
+    )
+    attacker = battle.actives[1]
+    hp_before = attacker.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert attacker.hp == hp_before - attacker.max_hp // 8
+
+
+def test_てつのトゲ_非接触技では反撃ダメージを与えない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="てつのトゲ")],
+        foe=[Pokemon("イーブイ", moves=["はどうだん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    hp_before = attacker.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < defender.max_hp
+    assert attacker.hp == hp_before
+
+
+def test_どくのトゲ_接触技で被弾時に30パーセントで相手をどく():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="どくのトゲ")],
+        foe=[Pokemon("イーブイ", moves=["たいあたり"])],
+    )
+    attacker = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert attacker.has_ailment("どく")
+
+
+def test_どくのトゲ_非接触技では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="どくのトゲ")],
+        foe=[Pokemon("イーブイ", moves=["はどうだん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert defender.hp < defender.max_hp
+    assert not attacker.ailment.is_active
+
+
+def test_ほのおのからだ_接触技で被弾時に30パーセントで相手をやけど():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ほのおのからだ")],
+        foe=[Pokemon("イーブイ", moves=["たいあたり"])],
+    )
+    attacker = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert attacker.has_ailment("やけど")
+
+
+def test_ほのおのからだ_非接触技では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ほのおのからだ")],
+        foe=[Pokemon("イーブイ", moves=["はどうだん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert defender.hp < defender.max_hp
+    assert not attacker.ailment.is_active
+
+
 def test_でんきエンジン_でんき技を無効化して素早さ1段階上昇():
     battle = t.start_battle(
         ally=[Pokemon("イーブイ", ability="でんきエンジン")],
