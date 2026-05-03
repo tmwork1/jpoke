@@ -123,6 +123,110 @@ def test_ちょすい_みず変化技も無効化する():
     assert immune is True
 
 
+def test_そうしょく_くさ技を無効化して攻撃1段階上昇する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="そうしょく")],
+        foe=[Pokemon("ピカチュウ", moves=["エナジーボール"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before_hp = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == before_hp
+    assert defender.rank["A"] == 1
+
+
+def test_そうしょく_くさ以外の技では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="そうしょく")],
+        foe=[Pokemon("ピカチュウ", moves=["はどうだん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before_hp = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < before_hp
+    assert defender.rank["A"] == 0
+
+
+def test_そうしょく_かたやぶりには貫通される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="そうしょく")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["エナジーボール"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before_hp = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < before_hp
+    assert defender.rank["A"] == 0
+
+
+def test_ちくでん_でんき技を無効化して4分の1回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちくでん")],
+        foe=[Pokemon("ピカチュウ", moves=["スパーク"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    battle.modify_hp(defender, v=-20, reason="other")
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == min(defender.max_hp, before + defender.max_hp // 4)
+
+
+def test_ちくでん_かたやぶりには貫通される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちくでん")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["スパーク"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < before
+
+
+def test_ちくでん_でんき変化技も無効化する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちくでん")],
+        foe=[Pokemon("ピカチュウ", moves=["でんじは"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    immune = battle.events.emit(Event.ON_CHECK_IMMUNE, ctx, False)
+
+    assert immune is True
+
+
+def test_ちくでん_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ちくでん")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス", moves=["スパーク"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.ability.enabled is False
+    assert defender.hp < before
+
+
 def test_もらいび_自分対象技では相手の吸収特性は発動しない():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["かえんのまもり"])],
@@ -3763,6 +3867,58 @@ def test_ゆきがくれ_かたやぶりで命中率補正なし():
     assert result == move.accuracy
 
 
+def test_ふくがん_命中率を5325_4096倍にする():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ふくがん", moves=["かみなり"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        move.accuracy,
+    )
+
+    expected = move.accuracy * 5325 // 4096
+    assert result == expected
+
+
+def test_ふくがん_一撃必殺技には適用されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ふくがん", moves=["つのドリル"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=battle.actives[1], move=move),
+        30,
+    )
+    assert result == 30
+
+
+def test_ふくがん_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ふくがん", moves=["かみなり"])],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=battle.actives[1], move=move),
+        move.accuracy,
+    )
+    assert attacker.ability.enabled is False
+    assert result == move.accuracy
+
+
 # ===== リーフガード =====
 
 @pytest.mark.parametrize("weather_name,weather_count", [("はれ", 5), ("おおひでり", 999)])
@@ -4092,6 +4248,81 @@ def test_はりきり_一撃必殺技の命中率は下がらない():
     )
     # 命中率ペナルティがかからない
     assert accuracy == 30
+
+
+def test_だっぴ_ターン終了時に30パーセントで状態異常を回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="だっぴ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.events.emit(Event.ON_TURN_END_2)
+    finally:
+        battle.random.random = orig_random
+
+    assert not mon.ailment.is_active
+
+
+def test_だっぴ_発動ターンはどくダメージを受けない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="だっぴ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+    hp_before = mon.hp
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.events.emit(Event.ON_TURN_END_2)
+        battle.events.emit(Event.ON_TURN_END_3)
+    finally:
+        battle.random.random = orig_random
+
+    assert mon.hp == hp_before
+
+
+def test_だっぴ_非発動時は状態異常が残る():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="だっぴ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.99
+    try:
+        battle.events.emit(Event.ON_TURN_END_2)
+    finally:
+        battle.random.random = orig_random
+
+    assert mon.ailment.is_active
+
+
+def test_だっぴ_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="だっぴ")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.events.emit(Event.ON_TURN_END_2)
+    finally:
+        battle.random.random = orig_random
+
+    assert mon.ability.enabled is False
+    assert mon.ailment.is_active
 
 
 if __name__ == "__main__":

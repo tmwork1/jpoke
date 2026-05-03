@@ -33,6 +33,56 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, e
     assert battle.damage_calculator.calc_atk_type_modifier(ctx) == expected
 
 
+def test_てきおうりょく_通常時STABが2倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="てきおうりょく", moves=["でんきショック"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(2.0)
+
+
+def test_てきおうりょく_元タイプ一致テラスタルで2_25倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("リザードン", ability="てきおうりょく", terastal="ほのお", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(2.25)
+
+
+def test_てきおうりょく_非一致タイプは補正しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="てきおうりょく", moves=["ひのこ"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(1.0)
+
+
+def test_てきおうりょく_かがくへんかガス中は無効化される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="てきおうりょく", moves=["でんきショック"])],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    assert attacker.ability.enabled is False
+    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(1.5)
+
+
 @pytest.mark.parametrize(
     ("move_name", "defender_name", "expected"),
     [
@@ -246,4 +296,3 @@ def test_テラバースト_非ステラ時は威力80():
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

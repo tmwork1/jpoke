@@ -172,6 +172,31 @@ def たんじゅん_modify_stat(battle: Battle, ctx: BattleContext, value: dict[
     return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
 
 
+def だっぴ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """だっぴ特性: ターン終了時に30%で状態異常を回復する。"""
+    mon = ctx.source
+    if mon is None or not mon.alive or not mon.ability.enabled or not mon.ailment.is_active:
+        return HandlerReturn(value=value)
+
+    result = common.cure_ailment(
+        battle,
+        ctx,
+        value,
+        target_spec="source:self",
+        source_spec="source:self",
+        chance=0.3,
+    )
+    if result.value:
+        idx = battle.get_player_index(mon)
+        battle.event_logger.add(
+            battle.turn,
+            idx,
+            LogCode.ABILITY_TRIGGERED,
+            payload={"ability": "だっぴ", "success": True},
+        )
+    return HandlerReturn(value=value)
+
+
 def あとだし_on_calc_back_tier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """あとだし特性: 同一優先度の行動の中で最後に行動する（後攻ティア -1）。"""
     return HandlerReturn(value=-1)
@@ -565,6 +590,30 @@ def どしょく_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         ability_name="どしょく",
         move_type="じめん",
         heal_ratio=1 / 4,
+    )
+
+
+def ちくでん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ちくでん特性: でんき技を無効化し最大HPの1/4回復する。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="ちくでん",
+        move_type="でんき",
+        heal_ratio=1 / 4,
+    )
+
+
+def そうしょく_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """そうしょく特性: くさ技を無効化し攻撃を1段階上げる。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="そうしょく",
+        move_type="くさ",
+        raise_stat="A",
     )
 
 
@@ -1588,6 +1637,23 @@ def てんねん_on_calc_def_rank_modifier(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=value)
 
 
+def てきおうりょく_modify_stab(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """てきおうりょく特性: タイプ一致補正を強化する。"""
+    attacker = ctx.attacker
+    if attacker is None or not attacker.ability.enabled:
+        return HandlerReturn(value=value)
+
+    # ステラテラスタル時はてきおうりょくがSTAB補正に影響しない。
+    if attacker.is_terastallized and attacker._terastal == "ステラ":
+        return HandlerReturn(value=value)
+
+    if value == 6144:
+        return HandlerReturn(value=8192)
+    if value == 8192:
+        return HandlerReturn(value=9216)
+    return HandlerReturn(value=value)
+
+
 def めんえき_prevent_poison(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
     """めんえき特性: どく・もうどく状態を防ぐ。
 
@@ -1685,6 +1751,19 @@ def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: Any) -> H
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "ふみん", "success": True})
         return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ふくがん_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ふくがん特性: 使用技の命中率を1.3倍にする（一撃必殺技を除く）。"""
+    if (
+        value is not None
+        and ctx.move is not None
+        and not ctx.move.has_label("ohko")
+        and ctx.attacker is not None
+        and ctx.attacker.ability.enabled
+    ):
+        value = common.apply_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 

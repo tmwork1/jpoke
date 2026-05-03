@@ -814,7 +814,13 @@ ABILITIES: dict[str, AbilityData] = {
     "そうしょく": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.そうしょく_check_immune,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "そうだいしょう": AbilityData(),
     "たいねつ": AbilityData(
@@ -840,7 +846,15 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "だっぴ": AbilityData(),
+    "だっぴ": AbilityData(
+        handlers={
+            Event.ON_TURN_END_2: h.AbilityHandler(
+                h.だっぴ_on_turn_end,
+                subject_spec="source:self",
+                priority=90,
+            ),
+        }
+    ),
     "ちからずく": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -864,7 +878,13 @@ ABILITIES: dict[str, AbilityData] = {
     "ちくでん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.ちくでん_check_immune,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "ちどりあし": AbilityData(
         flags=[
@@ -882,7 +902,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         },
     ),
-    "てきおうりょく": AbilityData(),
+    "てきおうりょく": AbilityData(
+        handlers={
+            Event.ON_CALC_ATK_TYPE_MODIFIER: h.AbilityHandler(
+                h.てきおうりょく_modify_stab,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "てつのこぶし": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -1217,7 +1244,14 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "ふかしのこぶし": AbilityData(),
-    "ふくがん": AbilityData(),
+    "ふくがん": AbilityData(
+        handlers={
+            Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
+                h.ふくがん_modify_accuracy,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "ふくつのこころ": AbilityData(),
     "ふくつのたて": AbilityData(
         flags=[
