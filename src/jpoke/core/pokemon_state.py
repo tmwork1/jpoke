@@ -445,15 +445,10 @@ class StatusManager:
             v = int(target.max_hp * r)
 
         if reason == "poison":
+            # NOTE: ON_MODIFY_POISON_DAMAGE はポイズンヒール特性で毒ダメージを回復に変換するため必須。
+            # 値の符号反転（負→正）が必要なため、ON_BEFORE_DAMAGE_APPLY では代替不可。
             v = self.battle.events.emit(
                 Event.ON_MODIFY_POISON_DAMAGE,
-                BattleContext(target=target, hp_change=v, hp_change_reason=reason),
-                v,
-            )
-
-        if reason == "recoil":
-            v = self.battle.events.emit(
-                Event.ON_MODIFY_RECOIL,
                 BattleContext(target=target, hp_change=v, hp_change_reason=reason),
                 v,
             )

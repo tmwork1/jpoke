@@ -83,9 +83,8 @@ def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
     tick_weather(battle, ctx, value)
     active = battle.weather
     if active is not None and active.name == "すなあらし" and \
-            not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]) and \
-            ctx.source.ability.name not in ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]:
-        battle.modify_hp(ctx.source, r=-1/16)
+            not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]):
+        battle.modify_hp(ctx.source, r=-1/16, reason="sandstorm_damage")
     return HandlerReturn()
 
 

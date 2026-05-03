@@ -533,8 +533,3 @@ def test_強天候同士は上書きできる():
     result = battle.weather_manager.activate("おおあめ", DEFAULT_DURATION)
     assert result is True
     assert battle.raw_weather.name == "おおあめ"
-
-
-if __name__ == "__main__":
-    import pytest
-    pytest.main([__file__, "-v"])

@@ -156,10 +156,10 @@ def あめうけざら_on_turn_end(battle: Battle, ctx: BattleContext, value: An
     return HandlerReturn(value=value)
 
 
-def いしあたま_on_modify_recoil(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    """いしあたま特性: 反動ダメージを受けない（技起因の反動のみ）。"""
-    if ctx.target.ability.enabled:
-        value = 0
+def いしあたま_ignore_recoil(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """いしあたま特性: 反動ダメージを受けない。"""
+    if ctx.hp_change_reason == "recoil" and ctx.target.ability.enabled:
+        return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -770,6 +770,27 @@ def すなかき_modify_speed(battle: Battle, ctx: BattleContext, value: int) ->
     return HandlerReturn(value=value)
 
 
+def すなかき_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """すなかき特性: すなあらしのダメージを受けない。"""
+    if ctx.hp_change_reason == "sandstorm_damage":
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """すながくれ特性: すなあらしのダメージを受けない。"""
+    if ctx.hp_change_reason == "sandstorm_damage":
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def すなのちから_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """すなのちから特性: すなあらしのダメージを受けない。"""
+    if ctx.hp_change_reason == "sandstorm_damage":
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すいすい特性: あめ中に素早さが2倍になる。"""
     active = battle.weather
@@ -840,6 +861,24 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any
         and battle.move_executor.is_contact(ctx)
     ):
         battle.take_item(ctx.defender, ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def せいしんりょく_prevent_flinch(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+    """せいしんりょく特性: ひるみ状態を防ぐ。"""
+    if value == "ひるみ" and ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def せいしんりょく_block_intimidate(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """せいしんりょく特性: いかくによる攻撃ランク低下を無効化する。"""
+    if (
+        ctx.source is not None
+        and ctx.source.ability.orig_name == "いかく"
+        and ctx.check_def_ability_enabled(battle)
+    ):
+        value = common.block_stat_drop(value, ctx, "A")
     return HandlerReturn(value=value)
 
 
@@ -989,6 +1028,37 @@ def ぼうおん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
     return HandlerReturn(value=value)
 
 
+def ぼうじん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ぼうじん特性: 粉・胞子系の技を無効化する。"""
+    if (
+        not value
+        and ctx.move is not None
+        and ctx.move.has_label("powder")
+        and ctx.check_def_ability_enabled(battle)
+    ):
+        return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ぼうじん_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ぼうじん特性: すなあらしのダメージを受けない。"""
+    if ctx.hp_change_reason == "sandstorm_damage":
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ぼうだん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ぼうだん特性: 弾の技を無効化する。"""
+    if (
+        not value
+        and ctx.move is not None
+        and ctx.move.has_label("bullet")
+        and ctx.check_def_ability_enabled(battle)
+    ):
+        return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def すなのちから_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すなのちから特性: すなあらし中の岩/地面/鋼技の威力を1.3倍にする。"""
     active = battle.weather
@@ -1067,6 +1137,24 @@ def こんじょう_ignore_burn_penalty(battle: Battle, ctx: BattleContext, valu
     """こんじょう特性: 状態異常時はやけどの物理半減を無効化する。"""
     if ctx.attacker.ailment.is_active and common.is_physical_move(battle, ctx):
         value = 4096
+    return HandlerReturn(value=value)
+
+
+def はりきり_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
+    if common.is_physical_move(battle, ctx):
+        value = common.apply_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def はりきり_modify_accuracy(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
+    if (
+        common.is_physical_move(battle, ctx)
+        and not ctx.move.has_label("ohko")  # 一撃必殺技は命中率ペナルティなし
+        and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
+    ):
+        value = common.apply_modifier(value, 3277)
     return HandlerReturn(value=value)
 
 
