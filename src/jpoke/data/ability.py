@@ -387,7 +387,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "きれあじ": AbilityData(),
+    "きれあじ": AbilityData(
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.きれあじ_modify_power,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "きんしのちから": AbilityData(),
     "きんちょうかん": AbilityData(
         handlers={
@@ -622,7 +629,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "じしんかじょう": AbilityData(),
+    "じしんかじょう": AbilityData(
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.じしんかじょう_on_damage,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "じゅうなん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -746,7 +760,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "せいでんき": AbilityData(),
+    "せいでんき": AbilityData(
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.せいでんき_on_damage,
+                subject_spec="defender:self",
+            )
+        }
+    ),
     "ぜったいねむり": AbilityData(
         flags=[
             "uncopyable",
@@ -781,7 +802,13 @@ ABILITIES: dict[str, AbilityData] = {
     "たんじゅん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.たんじゅん_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "だっぴ": AbilityData(),
     "ちからずく": AbilityData(
@@ -875,7 +902,13 @@ ABILITIES: dict[str, AbilityData] = {
     "でんきエンジン": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CHECK_IMMUNE: h.AbilityHandler(
+                h.でんきエンジン_check_immune,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "とうそうしん": AbilityData(),
     "とれないにおい": AbilityData(
@@ -893,7 +926,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "どくしゅ": AbilityData(),
+    "どくしゅ": AbilityData(
+        handlers={
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.どくしゅ_on_damage,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "どくのくさり": AbilityData(),
     "どくのトゲ": AbilityData(
         flags=[

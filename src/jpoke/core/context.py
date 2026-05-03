@@ -122,6 +122,15 @@ class BattleContext:
     def defender(self, value: Pokemon | None):
         self.target = value
 
+    @property
+    def has_move_context(self) -> bool:
+        """move と attacker/defender が揃った文脈かどうか。"""
+        return (
+            self.move is not None
+            and self.attacker is not None
+            and self.defender is not None
+        )
+
     def get(self, role: ContextRole) -> Pokemon | None:
         """指定されたロールのポケモンを取得する。
 

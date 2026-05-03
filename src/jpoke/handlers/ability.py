@@ -126,6 +126,13 @@ def あまのじゃく_modify_stat(battle: Battle, ctx: BattleContext, value: di
     return HandlerReturn(value={stat: -delta for stat, delta in value.items()})
 
 
+def たんじゅん_modify_stat(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
+    """たんじゅん特性: 能力変化量を2倍にする。"""
+    if not ctx.check_def_ability_enabled(battle):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
+
+
 def あとだし_on_calc_back_tier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """あとだし特性: 同一優先度の行動の中で最後に行動する（後攻ティア -1）。"""
     return HandlerReturn(value=-1)
@@ -244,14 +251,7 @@ def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value
 
 def ぎゃくじょう_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
-    if (
-        ctx.move is None
-        or not ctx.move.is_attack
-        or ctx.attacker is None
-        or ctx.defender is None
-        or ctx.move_damage == 0
-        or ctx.defender.fainted
-    ):
+    if ctx.defender.fainted:
         return HandlerReturn(value=value)
 
     # マルチヒット時は全ヒットのダメージを累算し、最終ヒット後に判定する
@@ -326,6 +326,13 @@ def きゅうばん_check_blow(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def きれあじ_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """きれあじ特性: きる技の威力を1.5倍にする。"""
+    if ctx.move is not None and ctx.move.has_label("slash"):
+        value = common.apply_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
 def じりょく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じりょく特性: はがねタイプのポケモンの交代を防ぐ。
 
@@ -341,6 +348,31 @@ def じりょく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -
     """
     result = ctx.source.has_type("はがね")
     return HandlerReturn(value=result)
+
+
+def じしんかじょう_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
+    if not ctx.defender.fainted:
+        return HandlerReturn(value=value)
+
+    changed = battle.modify_stat(
+        ctx.attacker,
+        "A",
+        +1,
+        source=ctx.attacker,
+        reason="じしんかじょう",
+    )
+    if not changed:
+        return HandlerReturn(value=value)
+
+    idx = battle.get_player_index(ctx.attacker)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "じしんかじょう", "success": True},
+    )
+    return HandlerReturn(value=value)
 
 
 def ポイズンヒール_modify_poison_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -500,6 +532,18 @@ def ひらいしん_check_immune(battle: Battle, ctx: BattleContext, value: bool
         ability_name="ひらいしん",
         move_type="でんき",
         raise_stat="C",
+    )
+
+
+def でんきエンジン_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """でんきエンジン特性: でんき技を無効化し素早さを1段階上げる。"""
+    return _handle_type_absorb(
+        battle,
+        ctx,
+        value,
+        ability_name="でんきエンジン",
+        move_type="でんき",
+        raise_stat="S",
     )
 
 
@@ -796,6 +840,42 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any
         and battle.move_executor.is_contact(ctx)
     ):
         battle.take_item(ctx.defender, ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def せいでんき_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """せいでんき特性: 直接攻撃を受けた相手を30%でまひにする。"""
+    if (
+        not ctx.has_move_context
+        or not battle.move_executor.is_contact(ctx)
+        or battle.random.random() >= 0.3
+    ):
+        return HandlerReturn(value=value)
+
+    battle.ailment_manager.apply(
+        ctx.attacker,
+        "まひ",
+        source=ctx.defender,
+        origin_ctx=ctx,
+    )
+    return HandlerReturn(value=value)
+
+
+def どくしゅ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """どくしゅ特性: 直接攻撃でダメージを与えた相手を30%でどくにする。"""
+    if (
+        not ctx.has_move_context
+        or not battle.move_executor.is_contact(ctx)
+        or battle.random.random() >= 0.3
+    ):
+        return HandlerReturn(value=value)
+
+    battle.ailment_manager.apply(
+        ctx.defender,
+        "どく",
+        source=ctx.attacker,
+        origin_ctx=ctx,
+    )
     return HandlerReturn(value=value)
 
 

@@ -1316,6 +1316,176 @@ def test_てつのこぶし_パンチ技以外は補正なし():
     assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
+def test_きれあじ_きる技は威力補正1_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="きれあじ", moves=["きりさく"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER) == 6144
+
+
+def test_きれあじ_きる技以外は補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="きれあじ", moves=["でんきショック"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER) == 4096
+
+
+def test_たんじゅん_能力上昇量が2倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="たんじゅん")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    target, source = battle.actives
+
+    battle.modify_stat(target, "A", +1, source=source)
+
+    assert target.rank["A"] == 2
+
+
+def test_たんじゅん_能力下降量も2倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="たんじゅん")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    target, source = battle.actives
+
+    battle.modify_stat(target, "A", -1, source=source)
+
+    assert target.rank["A"] == -2
+
+
+def test_じしんかじょう_攻撃技で相手を倒すと攻撃1段階上昇():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="じしんかじょう", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1), reason="other")
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.fainted
+    assert attacker.rank["A"] == 1
+
+
+def test_じしんかじょう_相手を倒せないと発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="じしんかじょう", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert attacker.rank["A"] == 0
+
+
+def test_せいでんき_接触技で被弾時に30パーセントで相手をまひ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="せいでんき")],
+        foe=[Pokemon("イーブイ", moves=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert defender.hp < defender.max_hp
+    assert attacker.has_ailment("まひ")
+
+
+def test_せいでんき_非接触技では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="せいでんき")],
+        foe=[Pokemon("イーブイ", moves=["はどうだん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert defender.hp < defender.max_hp
+    assert not attacker.has_ailment("まひ")
+
+
+def test_どくしゅ_接触技で与ダメ時に30パーセントでどく付与():
+    battle = t.start_battle(
+        ally=[Pokemon("イーブイ", ability="どくしゅ", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert defender.has_ailment("どく")
+
+
+def test_どくしゅ_非接触技では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("イーブイ", ability="どくしゅ", moves=["はどうだん"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    orig_random = battle.random.random
+    battle.random.random = lambda: 0.0
+    try:
+        battle.move_executor.run_move(attacker, attacker.moves[0])
+    finally:
+        battle.random.random = orig_random
+
+    assert not defender.ailment.is_active
+
+
+def test_でんきエンジン_でんき技を無効化して素早さ1段階上昇():
+    battle = t.start_battle(
+        ally=[Pokemon("イーブイ", ability="でんきエンジン")],
+        foe=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before_hp = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp == before_hp
+    assert defender.rank["S"] == 1
+
+
+def test_でんきエンジン_かたやぶりでは無効化される():
+    battle = t.start_battle(
+        ally=[Pokemon("イーブイ", ability="でんきエンジン")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["１０まんボルト"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    before_hp = defender.hp
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.hp < before_hp
+    assert defender.rank["S"] == 0
+
+
 def test_てんねん_防御側なら攻撃ランク補正を無視する():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
