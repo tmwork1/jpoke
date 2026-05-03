@@ -2792,5 +2792,29 @@ def test_さいせいりょく_かがくへんかガス中は発動しない():
     assert mon.hp == before
 
 
+def test_いしあたま_反動技を使っても反動ダメージを受けない():
+    battle = t.start_battle(
+        ally=[Pokemon("ゴンベ", ability="いしあたま", moves=["すてみタックル"])],
+        foe=[Pokemon("ヤドン")],
+    )
+    attacker = battle.actives[0]
+    before = attacker.hp
+    t.reserve_command(battle, Command.MOVE_0)
+    battle.advance_turn()
+    assert attacker.hp == before
+
+
+def test_いしあたま_かがくへんかガス中は反動ダメージを受ける():
+    battle = t.start_battle(
+        ally=[Pokemon("ゴンベ", ability="いしあたま", moves=["すてみタックル"])],
+        foe=[Pokemon("マタドガス", ability="かがくへんかガス")],
+    )
+    attacker = battle.actives[0]
+    before = attacker.hp
+    t.reserve_command(battle, Command.MOVE_0)
+    battle.advance_turn()
+    assert attacker.hp < before
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

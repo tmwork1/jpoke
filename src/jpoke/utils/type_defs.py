@@ -106,6 +106,7 @@ BoostSource = Literal["", "ability", "item", "weather", "terrain"]
 HPChangeReason = Literal[
     "move_damage",          # 技によるダメージ
     "poison",               # どく/もうどくによる定期HP変化
+    "recoil",               # 反動ダメージ（すてみタックル・フレアドライブ等）
     "self_attack",          # こんらん自傷（ききかいひ不発）
     "pain_split",           # いたみわけ（ききかいひ不発）
     "self_cost",            # 自己HP消費（みがわり等）

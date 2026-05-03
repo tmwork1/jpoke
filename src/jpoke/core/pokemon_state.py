@@ -441,6 +441,13 @@ class StatusManager:
                 v,
             )
 
+        if reason == "recoil":
+            v = self.battle.events.emit(
+                Event.ON_MODIFY_RECOIL,
+                BattleContext(target=target, hp_change=v, hp_change_reason=reason),
+                v,
+            )
+
         if v > 0:
             v = self.battle.events.emit(
                 Event.ON_BEFORE_HEAL,

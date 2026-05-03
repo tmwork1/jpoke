@@ -148,6 +148,13 @@ def あめうけざら_on_turn_end(battle: Battle, ctx: BattleContext, value: An
     return HandlerReturn(value=value)
 
 
+def いしあたま_on_modify_recoil(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """いしあたま特性: 反動ダメージを受けない（技起因の反動のみ）。"""
+    if ctx.target.ability.enabled:
+        value = 0
+    return HandlerReturn(value=value)
+
+
 def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """いたずらごころ特性: 変化技の優先度を+1する。"""
     if ctx.move is not None and ctx.move.category == "変化":

@@ -56,6 +56,7 @@ class MoveData:
     power_sequence: tuple[int, ...] = ()
     labels: list[MoveLabel] = field(default_factory=list)
     move_secondary: bool = False  # 追加効果判定（ちからずく/てんのめぐみの対象）
+    recoil_ratio: float = 0  # 反動割合（与えたダメージに対する割合）。0 なら反動なし。
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
 

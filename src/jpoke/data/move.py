@@ -358,7 +358,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-
+        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "うちおとす": MoveData(
@@ -374,7 +374,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-
+        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "ウッドホーン": MoveData(
@@ -1148,6 +1148,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
+        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "ストーンエッジ": MoveData(
@@ -1579,7 +1580,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=90,
         accuracy=85,
-
+        recoil_ratio=1/4,
         labels=["contact"],
     ),
     "とっておき": MoveData(
@@ -2207,7 +2208,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-
+        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "ブレイククロー": MoveData(
@@ -2241,7 +2242,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-
+        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "プレゼント": MoveData(
@@ -2385,7 +2386,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-
+        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "まきつく": MoveData(
@@ -2641,7 +2642,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-
+        recoil_ratio=1/4,
         labels=["contact"],
     ),
     "１０まんボルト": MoveData(

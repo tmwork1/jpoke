@@ -115,7 +115,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "いしあたま": AbilityData(),
+    "いしあたま": AbilityData(
+        handlers={
+            Event.ON_MODIFY_RECOIL: h.AbilityHandler(
+                h.いしあたま_on_modify_recoil,
+                subject_spec="target:self",
+            ),
+        }
+    ),
     "いたずらごころ": AbilityData(
         handlers={
             DomainEvent.ON_MODIFY_MOVE_PRIORITY: h.AbilityHandler(
