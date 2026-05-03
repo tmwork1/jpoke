@@ -174,8 +174,15 @@ class BattleContext:
             return False
         return True
 
+    @property
+    def is_attacking(self) -> bool:
+        """攻撃行動かどうかを返す。"""
+        return self.move is not None
+
     def check_def_ability_enabled(self, battle: Battle) -> bool:
         """防御側特性が有効かどうかを更新し、その結果を返す。"""
+        if not self.is_attacking:
+            return True  # 攻撃行動でない場合は特性無効化の対象外
         return battle.events.emit(
             Event.ON_CHECK_DEF_ABILITY_ENABLED,
             self,

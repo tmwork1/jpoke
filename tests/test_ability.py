@@ -2614,24 +2614,12 @@ def test_ARシステム_メモリなしでタイプ変更なし():
 
 # ===== あめうけざら =====
 
-def test_あめうけざら_あめ中にターン終了時1_16回復():
+@pytest.mark.parametrize("weather_name,weather_count", [("あめ", 5), ("おおあめ", 999)])
+def test_あめうけざら_あめおおあめ中にターン終了1_16回復(weather_name: str, weather_count: int):
     battle = t.start_battle(
         ally=[Pokemon("ヤドン", ability="あめうけざら")],
         foe=[Pokemon("ピカチュウ")],
-        weather=("あめ", 5),
-    )
-    mon = battle.actives[0]
-    battle.modify_hp(mon, v=-50, reason="other")
-    before = mon.hp
-    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
-    assert mon.hp == before + mon.max_hp // 16
-
-
-def test_あめうけざら_おおあめでも発動する():
-    battle = t.start_battle(
-        ally=[Pokemon("ヤドン", ability="あめうけざら")],
-        foe=[Pokemon("ピカチュウ")],
-        weather=("おおあめ", 999),
+        weather=(weather_name, weather_count),
     )
     mon = battle.actives[0]
     battle.modify_hp(mon, v=-50, reason="other")
@@ -3037,6 +3025,479 @@ def test_しろいけむり_全能力低下を防ぐ():
         {"A": -1, "C": -2, "D": -1},
     )
     assert stat_change == {}
+
+
+# ===== きょううん =====
+
+def test_きょううん_急所ランクが1上がる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="きょううん", moves=["つじぎり"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_CALC_CRITICAL_RANK,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        0,
+    )
+    assert result == 1
+
+
+# ===== ぼうおん =====
+
+def test_ぼうおん_音技を無効化する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぼうおん")],
+        foe=[Pokemon("ピカチュウ", moves=["バークアウト"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_CHECK_IMMUNE,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        False,
+    )
+    assert result is True
+
+
+def test_ぼうおん_非音技は無効化しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぼうおん")],
+        foe=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_CHECK_IMMUNE,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        False,
+    )
+    assert result is False
+
+
+def test_ぼうおん_かたやぶりには無効化されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぼうおん")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["バークアウト"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_CHECK_IMMUNE,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        False,
+    )
+    assert result is False
+
+
+# ===== りんぷん =====
+
+def test_りんぷん_追加効果確率を0にする():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["アクアステップ"])],
+        foe=[Pokemon("ピカチュウ", ability="りんぷん")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    result = battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, 0.3)
+    assert result == 0.0
+
+
+def test_りんぷん_かたやぶりには無効化される():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["アクアステップ"])],
+        foe=[Pokemon("ピカチュウ", ability="りんぷん")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    result = battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, 0.3)
+    assert result == 0.3
+
+
+# ===== スカイスキン =====
+
+def test_スカイスキン_ノーマル技をひこうタイプに変換する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="スカイスキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    result = battle.move_executor.get_effective_move_type(attacker, move)
+    assert result == "ひこう"
+
+
+def test_スカイスキン_変換した技の威力が4915倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="スカイスキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4915
+
+
+def test_スカイスキン_元からひこうタイプの技は威力補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="スカイスキン", moves=["アクロバット"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4096
+
+
+# ===== ノーマルスキン =====
+
+def test_ノーマルスキン_ほのお技をノーマルタイプに変換する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ノーマルスキン", moves=["かえんほうしゃ"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    result = battle.move_executor.get_effective_move_type(attacker, move)
+    assert result == "ノーマル"
+
+
+def test_ノーマルスキン_変換した技の威力が4915倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ノーマルスキン", moves=["かえんほうしゃ"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4915
+
+
+def test_ノーマルスキン_元からノーマルタイプの技は威力補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ノーマルスキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4096
+
+
+# ===== フェアリースキン =====
+
+def test_フェアリースキン_ノーマル技をフェアリータイプに変換する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="フェアリースキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    result = battle.move_executor.get_effective_move_type(attacker, move)
+    assert result == "フェアリー"
+
+
+def test_フェアリースキン_変換した技の威力が4915倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="フェアリースキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4915
+
+
+def test_フェアリースキン_元からフェアリータイプの技は威力補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="フェアリースキン", moves=["じゃれつく"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4096
+
+
+# ===== フリーズスキン =====
+
+def test_フリーズスキン_ノーマル技をこおりタイプに変換する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="フリーズスキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    result = battle.move_executor.get_effective_move_type(attacker, move)
+    assert result == "こおり"
+
+
+def test_フリーズスキン_変換した技の威力が4915倍になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="フリーズスキン", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4915
+
+
+def test_フリーズスキン_元からこおりタイプの技は威力補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="フリーズスキン", moves=["アイススピナー"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+    assert result == 4096
+
+
+# ===== サンパワー =====
+
+@pytest.mark.parametrize("weather_name,weather_count", [("はれ", 5), ("おおひでり", 999)])
+def test_サンパワー_はれおおひでり中に特殊技の特攻1_5倍(weather_name: str, weather_count: int):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="サンパワー", moves=["１０まんボルト"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=(weather_name, weather_count),
+    )
+    result = t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER)
+    assert result == 6144
+
+
+def test_サンパワー_はれ中でも物理技は補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="サンパワー", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    result = t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER)
+    assert result == 4096
+
+
+def test_サンパワー_はれ中にターン終了時1_8ダメージ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="サンパワー")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before - mon.max_hp // 8
+
+
+def test_サンパワー_はれ以外ではターン終了時ダメージなし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="サンパワー")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before
+
+
+# ===== しぜんかいふく =====
+
+def test_しぜんかいふく_交代時に状態異常回復():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="しぜんかいふく"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+    assert mon.ailment.is_active
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert not mon.ailment.is_active
+
+
+def test_しぜんかいふく_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="しぜんかいふく"), Pokemon("ライチュウ")],
+        foe=[Pokemon("マタドガス", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+    assert mon.ailment.is_active
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert mon.ailment.is_active
+
+
+# ===== しめりけ =====
+
+def test_しめりけ_じばくを失敗させる():
+    """しめりけ持ちが防御側のとき、相手のじばくを失敗させる。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["じばく"])],
+        foe=[Pokemon("ニョロモ", ability="しめりけ")],
+    )
+    result = t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert not result
+
+
+def test_しめりけ_自分の爆発技も失敗させる():
+    """しめりけ持ちが自分でじばくを使おうとしても失敗する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ニョロモ", ability="しめりけ", moves=["じばく"])],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    result = t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert not result
+
+
+def test_しめりけ_爆発ラベルなし技は通す():
+    """しめりけ持ちでも爆発技でなければ通す。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        foe=[Pokemon("ニョロモ", ability="しめりけ")],
+    )
+    result = t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert result
+
+
+def test_しめりけ_かたやぶりで爆発技が通る():
+    """かたやぶり持ちはしめりけを無視してじばくを使える。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["じばく"])],
+        foe=[Pokemon("ニョロモ", ability="しめりけ")],
+    )
+    result = t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert result
+
+
+# ===== ゆきかき =====
+
+def test_ゆきかき_ゆきで素早さ2倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ゆきかき")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("ゆき", 5),
+    )
+    mon = battle.actives[0]
+    assert battle.calc_effective_speed(mon) == mon.stats["S"] * 2
+
+
+def test_ゆきかき_ゆき以外では素早さ据え置き():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ゆきかき")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert battle.calc_effective_speed(mon) == mon.stats["S"]
+
+
+# ===== ゆきがくれ =====
+
+def test_ゆきがくれ_ゆきで命中率3277_4096倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+        foe=[Pokemon("ユキノオー", ability="ゆきがくれ")],
+        weather=("ゆき", 5),
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+    result = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        move.accuracy,
+    )
+    expected = move.accuracy * 3277 // 4096
+    assert result == expected
+
+
+def test_ゆきがくれ_ゆき以外では命中率変化なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+        foe=[Pokemon("ユキノオー", ability="ゆきがくれ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+    result = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        move.accuracy,
+    )
+    assert result == move.accuracy
+
+
+def test_ゆきがくれ_かたやぶりで命中率補正なし():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["１０まんボルト"])],
+        foe=[Pokemon("ユキノオー", ability="ゆきがくれ")],
+        weather=("ゆき", 5),
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+    result = battle.events.emit(
+        Event.ON_MODIFY_ACCURACY,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        move.accuracy,
+    )
+    assert result == move.accuracy
+
+
+# ===== リーフガード =====
+
+@pytest.mark.parametrize("weather_name,weather_count", [("はれ", 5), ("おおひでり", 999)])
+def test_リーフガード_はれおおひでり中に状態異常を防ぐ(weather_name: str, weather_count: int):
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="リーフガード")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=(weather_name, weather_count),
+    )
+    mon = battle.actives[0]
+    assert not battle.ailment_manager.apply(mon, "どく")
+    assert not mon.ailment.is_active
+
+
+def test_リーフガード_はれ以外では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="リーフガード")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert battle.ailment_manager.apply(mon, "どく")
+    assert mon.ailment.is_active
+
+
+def test_リーフガード_かたやぶりと対面中のどくびしは毒にならない():
+    """かたやぶりの特性無視は技使用の瞬間のみ。どくびし踏みは技ではないためリーフガードで防ぐ。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="リーフガード"), Pokemon("ライチュウ", ability="リーフガード")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+        weather=("はれ", 5),
+        ally_side_field={"どくびし": 1},
+    )
+    player = battle.players[0]
+    battle.run_switch(player, player.team[1])
+    assert not player.active.ailment.is_active
 
 
 if __name__ == "__main__":

@@ -137,6 +137,7 @@ MoveLabel = Literal[
     "sound",  # 音技。ぼうおん等の対象判定に使う。
     "wind",  # 風技。かぜのり等の対象判定に使う。
     "minimize",  # ちいさくなる対象との相互作用を持つ技。
+    "explosion",  # 爆発技。しめりけ等の対象判定に使う。
 ]
 
 AbilityFlag = Literal[

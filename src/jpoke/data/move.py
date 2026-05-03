@@ -1025,6 +1025,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=200,
         accuracy=100,
+        labels=["explosion"],
     ),
     "しめつける": MoveData(
         type="ノーマル",
@@ -1252,6 +1253,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=250,
         accuracy=100,
+        labels=["explosion"],
     ),
     "ダイビング": MoveData(
         type="みず",
@@ -4144,6 +4146,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
+        labels=["explosion"],
     ),
     "ミストボール": MoveData(
         move_secondary=True,
