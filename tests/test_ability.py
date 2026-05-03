@@ -3498,8 +3498,9 @@ def test_リーフガード_かたやぶりの状態異常技は防げない():
     )
     target = battle.actives[0]
     attacker = battle.actives[1]
-    battle.ailment_manager.apply(target, "まひ", source=attacker)
-    assert target.ailment.name == "まひ"
+    origin_ctx = BattleContext(source=attacker, target=target, move=Move("さいみんじゅつ"))
+    battle.ailment_manager.apply(target, "ねむり", source=attacker, origin_ctx=origin_ctx)
+    assert target.ailment.name == "ねむり"
 
 
 def test_リーフガード_かたやぶりと対面中のどくびしは毒にならない():

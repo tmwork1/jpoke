@@ -175,7 +175,7 @@ def apply_ailment(battle: Battle,
         return HandlerReturn()
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.ailment_manager.apply(target, ailment, source=source)
+    success = battle.ailment_manager.apply(target, ailment, source=source, origin_ctx=ctx)
     return HandlerReturn(value=success)
 
 
@@ -199,7 +199,7 @@ def apply_volatile(battle: Battle,
                 count = 1
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.volatile_manager.apply(target, volatile, count=count, source=source)
+    success = battle.volatile_manager.apply(target, volatile, count=count, source=source, origin_ctx=ctx)
     return HandlerReturn(value=success)
 
 

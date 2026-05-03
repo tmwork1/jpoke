@@ -169,10 +169,33 @@ class BattleContext:
             return False
         return True
 
+    def derive(self, **kwargs) -> "BattleContext":
+        """このコンテキストを基に新しい BattleContext を派生する。
+
+        source/target/move/field/hit_index/hit_count を引き継ぎ、
+        kwargs で指定したフィールドを上書きする。
+
+        Args:
+            **kwargs: 上書きするフィールド（source, target, move, field, hp_change,
+                      hp_change_reason, stat_change_reason, hit_index, hit_count）
+
+        Returns:
+            派生した BattleContext
+        """
+        return BattleContext(
+            source=kwargs.get("source", self.source),
+            target=kwargs.get("target", self.target),
+            move=kwargs.get("move", self.move),
+            field=kwargs.get("field", self.field),
+            hp_change=kwargs.get("hp_change", self.hp_change),
+            hp_change_reason=kwargs.get("hp_change_reason", self.hp_change_reason),
+            stat_change_reason=kwargs.get("stat_change_reason", self.stat_change_reason),
+            hit_index=kwargs.get("hit_index", self.hit_index),
+            hit_count=kwargs.get("hit_count", self.hit_count),
+        )
+
     def check_def_ability_enabled(self, battle: Battle) -> bool:
         """防御側特性が有効かどうかを更新し、その結果を返す。"""
-        # TODO 現在が技による攻防フェーズでなければそのままTrueを返す必要がある
-        # Battleクラスにphaseの概念を追加する必要がありそう。
         return battle.events.emit(
             Event.ON_CHECK_DEF_ABILITY_ENABLED,
             self,

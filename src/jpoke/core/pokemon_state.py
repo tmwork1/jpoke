@@ -69,7 +69,8 @@ class AilmentManager:
               name: AilmentName,
               count: int | None = None,
               source: Pokemon | None = None,
-              force: bool = False) -> bool:
+              force: bool = False,
+              origin_ctx: BattleContext | None = None) -> bool:
         """状態異常を付与する。
 
         Args:
@@ -104,9 +105,13 @@ class AilmentManager:
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
+        if origin_ctx is not None:
+            ailment_ctx = origin_ctx.derive(target=mon, source=source)
+        else:
+            ailment_ctx = BattleContext(target=mon, source=source)
         name = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_AILMENT,
-            BattleContext(target=mon, source=source),
+            ailment_ctx,
             name
         )
         if not name:
@@ -185,7 +190,8 @@ class VolatileManager:
               count: int = 1,
               move: Move | str = "",
               hp: int = 0,
-              source: Pokemon | None = None) -> bool:
+              source: Pokemon | None = None,
+              origin_ctx: BattleContext | None = None) -> bool:
         """揮発性状態を付与する。
 
         Args:
@@ -208,9 +214,13 @@ class VolatileManager:
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
+        if origin_ctx is not None:
+            volatile_ctx = origin_ctx.derive(target=mon, source=source)
+        else:
+            volatile_ctx = BattleContext(target=mon, source=source)
         name = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
-            BattleContext(target=mon, source=source),
+            volatile_ctx,
             name
         )
         if not name:
