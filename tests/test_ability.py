@@ -2542,7 +2542,7 @@ def test_てんのめぐみ_追加効果対象技の確率が2倍になる():
     )
     attacker = battle.actives[0]
     ctx = BattleContext(attacker=attacker, move=attacker.moves[0])
-    result = battle.events.emit(Event.ON_MOVE_SECONDARY, ctx, 0.3)
+    result = battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, 0.3)
     assert result == 0.6
 
 
@@ -2554,7 +2554,7 @@ def test_てんのめぐみ_確率が1を超えないようにクランプされ
     )
     attacker = battle.actives[0]
     ctx = BattleContext(attacker=attacker, move=attacker.moves[0])
-    result = battle.events.emit(Event.ON_MOVE_SECONDARY, ctx, 0.7)
+    result = battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, 0.7)
     assert result == 1.0
 
 

@@ -679,8 +679,8 @@ ABILITIES: dict[str, AbilityData] = {
                 h.ちからずく_modify_power,
                 subject_spec="attacker:self",
             ),
-            Event.ON_MOVE_SECONDARY: h.AbilityHandler(
-                h.ちからずく_on_move_secondary,
+            Event.ON_MODIFY_SECONDARY_CHANCE: h.AbilityHandler(
+                h.ちからずく_on_modify_secondary_chance,
                 subject_spec="attacker:self",
             ),
         }
@@ -750,8 +750,8 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "てんのめぐみ": AbilityData(
         handlers={
-            Event.ON_MOVE_SECONDARY: h.AbilityHandler(
-                h.てんのめぐみ_on_move_secondary,
+            Event.ON_MODIFY_SECONDARY_CHANCE: h.AbilityHandler(
+                h.てんのめぐみ_on_modify_secondary_chance,
                 subject_spec="attacker:self",
             ),
         }

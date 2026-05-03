@@ -141,9 +141,9 @@ class Event(Enum):
     # handle: ability.py（マジックガード等、ダメージ適用前に値を調整する特性）
     ON_BEFORE_DAMAGE_APPLY = auto()
 
-    # emit: 未実装（追加効果処理フック用に予約）
-    # handle: 未実装
-    ON_MOVE_SECONDARY = auto()
+    # emit: handlers/common.py（追加効果の実効確率を計算する直前）
+    # handle: ability.py（ちからずく: 確率→0, てんのめぐみ: 確率×2 等）
+    ON_MODIFY_SECONDARY_CHANCE = auto()
 
     # emit: core/move_executor.py（ダメージ適用後）
     # handle: volatile.py（いのちがけ・カウンター等、被ダメージトリガー処理）
