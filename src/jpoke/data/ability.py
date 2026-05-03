@@ -58,7 +58,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "あとだし": AbilityData(),
+    "あとだし": AbilityData(
+        handlers={
+            DomainEvent.ON_CALC_BACK_TIER: h.AbilityHandler(
+                h.あとだし_on_calc_back_tier,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "あまのじゃく": AbilityData(
         flags=[
             "mold_breaker_ignorable"

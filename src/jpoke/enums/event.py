@@ -21,6 +21,10 @@ class DomainEvent(Enum):
     # emit: core/speed.py  handle: DomainEvent として優先度を加算・減算（いたずらごころ等）
     ON_MODIFY_MOVE_PRIORITY = auto()
 
+    # emit: core/speed.py（行動順決定時）  handle: あとだし等が -1 を返して後攻ティアを付与
+    # value=0 が標準。低い値ほど後攻（降順ソートのため）
+    ON_CALC_BACK_TIER = auto()
+
 
 class Event(Enum):
     """バトルイベントの種類。

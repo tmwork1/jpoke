@@ -125,6 +125,11 @@ def あまのじゃく_modify_stat(battle: Battle, ctx: BattleContext, value: di
     return HandlerReturn(value={stat: -delta for stat, delta in value.items()})
 
 
+def あとだし_on_calc_back_tier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """あとだし特性: 同一優先度の行動の中で最後に行動する（後攻ティア -1）。"""
+    return HandlerReturn(value=-1)
+
+
 def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """いたずらごころ特性: 変化技の優先度を+1する。"""
     if ctx.move is not None and ctx.move.category == "変化":

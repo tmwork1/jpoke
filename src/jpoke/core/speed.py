@@ -163,9 +163,16 @@ class SpeedCalculator:
             move = self.battle.command_to_move(self.battle.players[i], command)
             move_priority = self.calc_move_priority(mon, move)
 
-            # 優先度と素早さをペアで保持（同値時のランダルを可能にするため）
-            # タプル (優先度, 素早さ) の形式で保持し、Python のタプル比較を利用
-            action_key = (move_priority, speed_key)
+            # 後攻ティアを計算（0=通常, -1=あとだし等）
+            back_tier = self.battle.events.emit(
+                DomainEvent.ON_CALC_BACK_TIER,
+                BattleContext(attacker=mon, move=move),
+                0
+            )
+
+            # 優先度・後攻ティア・素早さの3要素タプルで行動順を決定
+            # タプル降順ソートで (高優先度, 高ティア, 高速) が先攻
+            action_key = (move_priority, back_tier, speed_key)
             speeds.append(action_key)
             actives.append(mon)
 
