@@ -248,7 +248,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "かそく": AbilityData(),
+    "かそく": AbilityData(
+        handlers={
+            Event.ON_TURN_END_5: h.AbilityHandler(
+                h.かそく_on_turn_end,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "かたいツメ": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -279,7 +286,18 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "かるわざ": AbilityData(),
+    "かるわざ": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.かるわざ_on_switch_in,
+                subject_spec="source:self",
+            ),
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
+                h.かるわざ_modify_speed,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "かわりもの": AbilityData(
         flags=[
             "uncopyable"

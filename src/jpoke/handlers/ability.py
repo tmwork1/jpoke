@@ -568,6 +568,45 @@ def かちき_on_stat_down(battle: Battle, ctx: BattleContext, value: dict[str, 
     return HandlerReturn(value=result)
 
 
+def かるわざ_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かるわざ特性: 入場時に発動可否の初期状態を記録する。"""
+    mon = ctx.source
+    # "idle": 入場時に持ち物あり（消失で発動可能）
+    # "inactive": 入場時に持ち物なし（この在場中は発動しない）
+    mon.ability.state = "idle" if mon.has_item() else "inactive"
+    return HandlerReturn(value=value)
+
+
+def かるわざ_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """かるわざ特性: 持ち物消失中は素早さを2倍にする。"""
+    mon = ctx.source
+
+    # 入場時に持ち物がなかった個体は、この在場中は発動しない。
+    if mon.ability.state == "inactive":
+        return HandlerReturn(value=value)
+
+    # 発動中に持ち物を再取得したら解除（再消費で再発動できる状態へ戻す）。
+    if mon.ability.state == "active" and mon.has_item():
+        mon.ability.state = "idle"
+        return HandlerReturn(value=value)
+
+    # 持ち物を失ったら発動状態へ遷移。
+    if mon.ability.state == "idle" and mon.item.lost:
+        mon.ability.state = "active"
+
+    if mon.ability.state == "active" and not mon.has_item():
+        value *= 2
+    return HandlerReturn(value=value)
+
+
+def かそく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かそく特性: 行動済みならターン終了時に素早さを1段階上げる。"""
+    mon = ctx.source
+    if mon is not None and mon.executed_move is not None:
+        battle.modify_stat(mon, "S", +1, source=mon)
+    return HandlerReturn(value=value)
+
+
 def カブトアーマー_on_calc_critical_rank(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """カブトアーマー特性: 防御側の急所ランクを無効化する。"""
     if ctx.check_def_ability_enabled(battle):
