@@ -16,7 +16,7 @@ AILMENTS: dict[str, AilmentData] = {
     "どく": AilmentData(
         handlers={
             Event.ON_TURN_END_3: h.AilmentHandler(
-                partial(common.modify_hp, target_spec="source:self", r=-1/8),
+                h.どく_damage,
                 subject_spec="source:self",
                 priority=30,
             )

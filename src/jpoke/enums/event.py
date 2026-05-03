@@ -145,6 +145,10 @@ class Event(Enum):
     # handle: ability.py（マジックガード等、ダメージ適用前に値を調整する特性）
     ON_BEFORE_DAMAGE_APPLY = auto()
 
+    # emit: core/pokemon_state.py（reason="poison" のHP変化適用前）
+    # handle: ability.py（ポイズンヒール等、どく/もうどく由来のHP変化量を補正）
+    ON_MODIFY_POISON_DAMAGE = auto()
+
     # emit: handlers/common.py（追加効果の実効確率を計算する直前）
     # handle: ability.py（ちからずく: 確率→0, てんのめぐみ: 確率×2 等）
     ON_MODIFY_SECONDARY_CHANCE = auto()

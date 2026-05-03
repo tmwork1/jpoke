@@ -270,7 +270,7 @@ def かいふくふうじ(battle: Battle, ctx: BattleContext, value: Any) -> Han
     Returns:
         HandlerReturn: 回復無効化の場合は0、それ以外は元の回復量
     """
-    if ctx.hp_change_reason == "pain_split":
+    if ctx.hp_change_reason in ("pain_split", "bench_heal"):
         return HandlerReturn(value=value)
 
     battle.add_event_log(ctx.target, LogCode.HEAL_BLOCKED,

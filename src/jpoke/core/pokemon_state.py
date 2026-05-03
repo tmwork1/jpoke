@@ -434,6 +434,13 @@ class StatusManager:
         if r:
             v = int(target.max_hp * r)
 
+        if reason == "poison":
+            v = self.battle.events.emit(
+                Event.ON_MODIFY_POISON_DAMAGE,
+                BattleContext(target=target, hp_change=v, hp_change_reason=reason),
+                v,
+            )
+
         if v > 0:
             v = self.battle.events.emit(
                 Event.ON_BEFORE_HEAL,

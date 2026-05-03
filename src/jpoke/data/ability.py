@@ -77,7 +77,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "あめうけざら": AbilityData(),
+    "あめうけざら": AbilityData(
+        handlers={
+            Event.ON_TURN_END_3: h.AbilityHandler(
+                h.あめうけざら_on_turn_end,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "あめふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -465,7 +472,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "さいせいりょく": AbilityData(),
+    "さいせいりょく": AbilityData(
+        handlers={
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.さいせいりょく_on_switch_out,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "さまようたましい": AbilityData(
         flags=[
             "undeniable"
@@ -1337,7 +1351,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable",
         ]
     ),
-    "アイスボディ": AbilityData(),
+    "アイスボディ": AbilityData(
+        handlers={
+            Event.ON_TURN_END_3: h.AbilityHandler(
+                h.アイスボディ_on_turn_end,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "アナライズ": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -1813,7 +1834,14 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ]
     ),
-    "ポイズンヒール": AbilityData(),
+    "ポイズンヒール": AbilityData(
+        handlers={
+            Event.ON_MODIFY_POISON_DAMAGE: h.AbilityHandler(
+                h.ポイズンヒール_modify_poison_damage,
+                subject_spec="target:self",
+            )
+        }
+    ),
     "マイティチェンジ": AbilityData(
         flags=[
             "uncopyable",

@@ -18,8 +18,16 @@ class AilmentHandler(Handler):
 
 def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):
     battle.ailment_manager.tick(ctx.source)
-    r = -ctx.source.ailment.elapsed_turns/16
-    battle.modify_hp(ctx.source, r=r)
+    mon = ctx.source
+    damage = -(mon.max_hp * mon.ailment.elapsed_turns // 16)
+    battle.modify_hp(mon, v=damage, reason="poison")
+    return HandlerReturn()
+
+
+def どく_damage(battle: Battle, ctx: BattleContext, value: Any):
+    """どく状態によるターン終了時ダメージ（1/8）。"""
+    mon = ctx.source
+    battle.modify_hp(mon, v=-(mon.max_hp // 8), reason="poison")
     return HandlerReturn()
 
 

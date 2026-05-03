@@ -2612,5 +2612,185 @@ def test_ARシステム_メモリなしでタイプ変更なし():
     assert mon.ability_override_type is None
 
 
+# ===== あめうけざら =====
+
+def test_あめうけざら_あめ中にターン終了時1_16回復():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="あめうけざら")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("あめ", 5),
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before + mon.max_hp // 16
+
+
+def test_あめうけざら_おおあめでも発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="あめうけざら")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", 999),
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before + mon.max_hp // 16
+
+
+def test_あめうけざら_あめ以外では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="あめうけざら")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before
+
+
+def test_あめうけざら_ばんのうがさ所持時は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="あめうけざら", item="ばんのうがさ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("あめ", 5),
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before
+
+
+# ===== アイスボディ =====
+
+def test_アイスボディ_ゆき中にターン終了時1_16回復():
+    battle = t.start_battle(
+        ally=[Pokemon("ユキノオー", ability="アイスボディ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("ゆき", 5),
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before + mon.max_hp // 16
+
+
+def test_アイスボディ_ゆき以外では発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ユキノオー", ability="アイスボディ")],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before
+
+
+# ===== ポイズンヒール =====
+
+def test_ポイズンヒール_どく状態で1_8回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("グライオン", ability="ポイズンヒール")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before + mon.max_hp // 8
+
+
+def test_ポイズンヒール_もうどく状態でも固定1_8回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("グライオン", ability="ポイズンヒール")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "もうどく")
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    # もうどくのターン数を5にしてもダメージではなく1/8回復
+    for _ in range(5):
+        battle.ailment_manager.tick(mon)
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before + mon.max_hp // 8
+
+
+def test_ポイズンヒール_かいふくふうじ中は回復もダメージも受けない():
+    battle = t.start_battle(
+        ally=[Pokemon("グライオン", ability="ポイズンヒール")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+    battle.volatile_manager.apply(mon, "かいふくふうじ")
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    assert mon.hp == before
+
+
+def test_ポイズンヒール_かがくへんかガス中はどくダメージを受ける():
+    battle = t.start_battle(
+        ally=[Pokemon("グライオン", ability="ポイズンヒール")],
+        foe=[Pokemon("マタドガス", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+    battle.modify_hp(mon, v=-50, reason="other")
+    before = mon.hp
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    # かがくへんかガスでポイズンヒール無効→どくダメージ
+    assert mon.hp == before - mon.max_hp // 8
+
+
+# ===== さいせいりょく =====
+
+def test_さいせいりょく_交代で控えに戻った時1_3回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="さいせいりょく"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-60, reason="other")
+    before = mon.hp
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert mon.hp == min(mon.max_hp, before + mon.max_hp // 3)
+
+
+def test_さいせいりょく_かいふくふうじ中でも回復する():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="さいせいりょく"), Pokemon("ライチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "かいふくふうじ")
+    battle.modify_hp(mon, v=-60, reason="other")
+    before = mon.hp
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert mon.hp == min(mon.max_hp, before + mon.max_hp // 3)
+
+
+def test_さいせいりょく_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ヤドン", ability="さいせいりょく"), Pokemon("ライチュウ")],
+        foe=[Pokemon("マタドガス", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-60, reason="other")
+    before = mon.hp
+    battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
+    assert mon.hp == before
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
