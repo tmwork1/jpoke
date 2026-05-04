@@ -2642,13 +2642,21 @@ def test_マルチスケイル系_連続技2発目以降は半減しない(abili
     assert second_hit == 4096
 
 
-@pytest.mark.parametrize("ability_name", ["マルチスケイル", "ファントムガード"])
+@pytest.mark.parametrize("ability_name", ["マルチスケイル"])
 def test_マルチスケイル系_かたやぶりで無効化される(ability_name: str):
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
         foe=[Pokemon("ピカチュウ", ability=ability_name)],
     )
     assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_ファントムガード_かたやぶりでは無効化されない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="ファントムガード")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 2048
 
 
 def test_こおりのりんぷん_特殊技のみ被ダメ半減():

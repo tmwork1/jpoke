@@ -2096,9 +2096,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ビーストブースト": AbilityData(),
     "ファントムガード": AbilityData(
-        flags=[
-            "mold_breaker_ignorable"
-        ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.マルチスケイルファントムガード_modify_damage,
