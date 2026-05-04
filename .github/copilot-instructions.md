@@ -32,6 +32,11 @@
 - Python 実装の詳細ルールは `.github/instructions/python.instructions.md` を使う。
 - 文書更新の詳細ルールは `.github/instructions/docs.instructions.md` を使う。
 
+## 実装方針メモ
+- `data/*.py` の `partial(...)` は宣言的な定数束縛に留める。
+- `handlers/*` では lambda を増やさず、名前付き関数か共通 helper を優先する。
+- 特性・技・道具の意味が強い処理は、汎用 `partial(...)` で直接表さず `handlers/*` に寄せる。
+
 ## 作業後の更新ルール
 - 作業完了前チェックとして、実装を変更したら対応する `progress/*.md` を必ず更新する。
 - 進捗更新漏れを防ぐため、最終報告前に「変更ファイル」と `progress/*.md` の整合を確認する。

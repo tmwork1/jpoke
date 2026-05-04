@@ -39,31 +39,6 @@ class AbilityHandler(Handler):
         )
 
 
-def _set_harapeko_form(mon, *, hangry: bool) -> None:
-    """はらぺこスイッチ用のフォルム状態を更新する。"""
-    mon.ability.is_hangry = hangry
-
-
-def _toggle_harapeko_form(mon) -> None:
-    """はらぺこスイッチ用のフォルム状態を反転する。"""
-    mon.ability.is_hangry = not mon.ability.is_hangry
-
-
-def _is_harvest_sunny_rate_100(battle: Battle) -> bool:
-    active = battle.weather
-    return active is not None and active.name == "はれ"
-
-
-def _get_harvest_chance(battle: Battle) -> float:
-    """しゅうかくの発動確率を返す。"""
-    return 1.0 if _is_harvest_sunny_rate_100(battle) else 0.5
-
-
-def _is_contact_damage_event(battle: Battle, ctx: BattleContext) -> bool:
-    """接触技での被弾後イベントかどうかを判定する。"""
-    return ctx.has_move_context and battle.move_executor.is_contact(ctx)
-
-
 def _apply_contact_counter_ailment(
     battle: Battle,
     ctx: BattleContext,
@@ -72,7 +47,7 @@ def _apply_contact_counter_ailment(
     chance: float,
 ) -> bool:
     """接触被弾時カウンターの状態異常付与を試行する。"""
-    if not _is_contact_damage_event(battle, ctx) or battle.random.random() >= chance:
+    if not battle.move_executor.is_contact(ctx) or battle.random.random() >= chance:
         return False
 
     battle.ailment_manager.apply(
@@ -91,7 +66,7 @@ def _apply_contact_counter_chip(
     ratio: float,
 ) -> bool:
     """接触被弾時カウンターの固定割合ダメージを適用する。"""
-    if not _is_contact_damage_event(battle, ctx) or ctx.attacker.fainted:
+    if not battle.move_executor.is_contact(ctx) or ctx.attacker.fainted:
         return False
 
     battle.modify_hp(ctx.attacker, r=-ratio, reason="ability")
@@ -168,9 +143,9 @@ def あまのじゃく_modify_stat(battle: Battle, ctx: BattleContext, value: di
 
 def たんじゅん_modify_stat(battle: Battle, ctx: BattleContext, value: dict[str, int]) -> HandlerReturn:
     """たんじゅん特性: 能力変化量を2倍にする。"""
-    if not ctx.check_def_ability_enabled(battle):
-        return HandlerReturn(value=value)
-    return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
+    if ctx.check_def_ability_enabled(battle):
+        value = {stat: delta * 2 for stat, delta in value.items()}
+    return HandlerReturn(value=value)
 
 
 def だっぴ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -435,6 +410,16 @@ def きれあじ_modify_power(battle: Battle, ctx: BattleContext, value: int) ->
     return HandlerReturn(value=value)
 
 
+def きんちょうかん_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """きんちょうかん特性: 登場時の処理（ログ用途のフック）。"""
+    return HandlerReturn(value=value)
+
+
+def きんちょうかん_check_nervous(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """きんちょうかん特性: 相手のきのみ使用を禁止する。"""
+    return HandlerReturn(value=True)
+
+
 def じりょく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じりょく特性: はがねタイプのポケモンの交代を防ぐ。
 
@@ -588,7 +573,7 @@ def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
     ):
         return HandlerReturn(value=value)
 
-    chance = _get_harvest_chance(battle)
+    chance = 1.0 if (battle.weather is not None and battle.weather.is_sunny) else 0.5
     if battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
@@ -753,7 +738,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, v
     if ctx.source.is_terastallized and ctx.source.alive:
         return HandlerReturn(value=value)
 
-    _set_harapeko_form(ctx.source, hangry=False)
+    ctx.source.ability.is_hangry = False
     return HandlerReturn(value=value)
 
 
@@ -762,7 +747,7 @@ def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: BattleContext, val
     if ctx.source.is_terastallized:
         return HandlerReturn(value=value)
 
-    _toggle_harapeko_form(ctx.source)
+    ctx.source.ability.is_hangry = not ctx.source.ability.is_hangry
     return HandlerReturn(value=value)
 
 
@@ -1883,6 +1868,11 @@ def ふくがん_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any)
     ):
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
+
+
+def ふゆう_check_floating(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """ふゆう特性: 常に浮遊状態として扱う。"""
+    return HandlerReturn(value=True)
 
 
 def マジックガード_reduce_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:

@@ -353,6 +353,8 @@ class MoveExecutor:
          Returns:
             技が接触技の場合True
         """
+        if ctx.move is None:
+            return False
         is_contact = ctx.move.has_label("contact")
         is_contact = self.events.emit(
             Event.ON_CHECK_CONTACT,

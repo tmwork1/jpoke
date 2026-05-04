@@ -7,7 +7,6 @@ Note:
 from functools import partial
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.core import HandlerReturn
 from jpoke.handlers import common, ability as h, ability_paradox as hp
 from .models import AbilityData
 
@@ -399,11 +398,11 @@ ABILITIES: dict[str, AbilityData] = {
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                lambda *args: HandlerReturn(),
+                h.きんちょうかん_on_switch_in,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.きんちょうかん_check_nervous,
                 subject_spec="source:foe",
             ),
         }
@@ -1324,7 +1323,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CHECK_FLOATING: h.AbilityHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.ふゆう_check_floating,
                 subject_spec="source:self",
             )
         }
