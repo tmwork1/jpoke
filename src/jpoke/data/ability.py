@@ -758,7 +758,14 @@ ABILITIES: dict[str, AbilityData] = {
             "undeniable"
         ]
     ),
-    "すりぬけ": AbilityData(),
+    "すりぬけ": AbilityData(
+        handlers={
+            Event.ON_CHECK_INFILTRATE: h.AbilityHandler(
+                h.すりぬけ_check_infiltrate,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "するどいめ": AbilityData(
         flags=[
             "mold_breaker_ignorable"

@@ -923,6 +923,13 @@ def すなのちから_ignore_sandstorm_damage(battle: Battle, ctx: BattleContex
     return HandlerReturn(value=value)
 
 
+def すりぬけ_check_infiltrate(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """すりぬけ特性: 相手の壁・みがわりを貫通して攻撃する。"""
+    if ctx.attacker.ability.enabled:
+        return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すいすい特性: あめ中に素早さが2倍になる。"""
     active = battle.weather

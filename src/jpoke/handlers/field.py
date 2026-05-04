@@ -274,7 +274,7 @@ def ワンダールーム_def_modifier(battle: Battle, ctx: BattleContext, value
 
 def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """リフレクターで物理技ダメージ軽減"""
-    if getattr(ctx, "critical", False):
+    if getattr(ctx, "critical", False) or ctx.check_infiltrate(battle):
         return HandlerReturn(value=value)
     if ctx.move.category == "物理":
         # 0.5倍にするため、4096基準で 2048/4096
@@ -284,7 +284,7 @@ def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: 
 
 def ひかりのかべ_reduce_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """光の壁で特殊技ダメージ軽減"""
-    if getattr(ctx, "critical", False):
+    if getattr(ctx, "critical", False) or ctx.check_infiltrate(battle):
         return HandlerReturn(value=value)
     if ctx.move.category == "特殊":
         # 0.5倍にするため、4096基準で 2048/4096
@@ -302,7 +302,7 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: BattleContext, valu
     if not aurora_field or not aurora_field.is_active:
         return HandlerReturn(value=value)
 
-    if getattr(ctx, "critical", False):
+    if getattr(ctx, "critical", False) or ctx.check_infiltrate(battle):
         return HandlerReturn(value=value)
 
     # ダメージを0.5倍に軽減（物理・特殊両対応）
@@ -314,11 +314,15 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: BattleContext, valu
 
 def しんぴのまもり_prevent_ailment(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しんぴのまもりで状態異常無効"""
+    if ctx.check_infiltrate(battle):
+        return HandlerReturn(value=value)
     return HandlerReturn(value="")
 
 
 def しんぴのまもり_prevent_volatile(battle: Battle, ctx: BattleContext, value: VolatileName) -> HandlerReturn:
     """しんぴのまもりで揮発状態無効"""
+    if ctx.check_infiltrate(battle):
+        return HandlerReturn(value=value)
     # valueは揮発状態名（VolatileName）
     if value in ["こんらん", "ねむけ"]:
         return HandlerReturn(value="")
@@ -327,7 +331,7 @@ def しんぴのまもり_prevent_volatile(battle: Battle, ctx: BattleContext, v
 
 def しろいきり_prevent_stat_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しろいきりで能力低下を防ぐ"""
-    if ctx.target == ctx.source:
+    if ctx.target == ctx.source or ctx.check_infiltrate(battle):
         return HandlerReturn(value=value)
 
     filtered = {stat: v for stat, v in value.items() if v >= 0}

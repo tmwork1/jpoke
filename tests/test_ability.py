@@ -4636,5 +4636,93 @@ def test_ムラっけ_かがくへんかガス中は発動しない():
     assert mon.rank["B"] == 0
 
 
+# ===== すりぬけ =====
+
+def test_すりぬけ_リフレクターを無視する():
+    """すりぬけ: リフレクター中でも物理技が軽減されない"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability="すりぬけ", moves=["たいあたり"])],
+        foe_side_field={"リフレクター": 5},
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_すりぬけ_ひかりのかべを無視する():
+    """すりぬけ: ひかりのかべ中でも特殊技が軽減されない"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability="すりぬけ", moves=["でんきショック"])],
+        foe_side_field={"ひかりのかべ": 5},
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_すりぬけ_オーロラベールを無視する():
+    """すりぬけ: オーロラベール中でも物理技が軽減されない"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability="すりぬけ", moves=["たいあたり"])],
+        foe_side_field={"オーロラベール": 5},
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_すりぬけ_みがわり越しに変化技が通る():
+    """すりぬけ: みがわり状態の相手に変化技が当たる"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability="すりぬけ", moves=["キノコのほうし"])],
+        foe_volatile={"みがわり": 1},
+    )
+    assert not t.check_event_result(battle, Event.ON_CHECK_IMMUNE)
+
+
+def test_すりぬけなし_リフレクターで軽減される():
+    """すりぬけなし: リフレクターで物理技が正常に軽減される"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe_side_field={"リフレクター": 5},
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 2048
+
+
+def test_すりぬけ_しんぴのまもりを貫通して状態異常が入る():
+    """すりぬけ: しんぴのまもり中でも相手に状態異常を与えられる"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability="すりぬけ")],
+        foe_side_field={"しんぴのまもり": 5},
+    )
+    attacker, defender = battle.actives
+    assert battle.ailment_manager.apply(defender, "どく", source=attacker)
+    assert defender.ailment.is_active
+
+
+def test_すりぬけ_しんぴのまもりを貫通してこんらんが入る():
+    """すりぬけ: しんぴのまもり中でも相手にこんらんを与えられる"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", ability="すりぬけ")],
+        foe_side_field={"しんぴのまもり": 5},
+    )
+    attacker, defender = battle.actives
+    assert battle.volatile_manager.apply(defender, "こんらん", count=3, source=attacker)
+    assert defender.has_volatile("こんらん")
+
+
+def test_すりぬけなし_しんぴのまもりで状態異常が防がれる():
+    """すりぬけなし: しんぴのまもりが状態異常を正常に防ぐ"""
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ")],
+        foe_side_field={"しんぴのまもり": 5},
+    )
+    attacker, defender = battle.actives
+    assert not battle.ailment_manager.apply(defender, "どく", source=attacker)
+    assert not defender.ailment.is_active
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -210,3 +210,11 @@ class BattleContext:
             self,
             True,
         )
+
+    def check_infiltrate(self, battle: Battle) -> bool:
+        """攻撃側がすりぬけ系特性を持ち、壁・みがわりを貫通するかを返す。"""
+        return battle.events.emit(
+            Event.ON_CHECK_INFILTRATE,
+            self,
+            False,
+        )

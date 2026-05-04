@@ -751,7 +751,7 @@ def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
 def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりによる技の無効化判定"""
     hit_substitute = battle.move_executor.hit_substitute(ctx)
-    immune = hit_substitute and ctx.move.category == "変化"
+    immune = hit_substitute and ctx.move.category == "変化" and not ctx.check_infiltrate(battle)
     if immune:
         battle.add_event_log(ctx.defender, LogCode.MOVE_IMMUNE,
                              payload={"move": ctx.move.name, "reason": "みがわり"})
@@ -763,7 +763,7 @@ def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -
     """みがわりがダメージを肩代わりする"""
     damage = value
     hit_substitute = battle.move_executor.hit_substitute(ctx)
-    if not hit_substitute:
+    if not hit_substitute or ctx.check_infiltrate(battle):
         return HandlerReturn(value=damage)
 
     battle.add_event_log(ctx.defender, LogCode.HIT_SUBSTITUTE,

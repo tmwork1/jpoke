@@ -358,6 +358,10 @@ class Event(Enum):
     # handle: volatile.py（かたやぶり等による防御側能力の無効化チェック）
     ON_CHECK_DEF_ABILITY_ENABLED = auto()
 
+    # emit: core/context.py（壁・みがわり等を貫通するか問い合わせ）
+    # handle: ability.py（すりぬけ等が True を返して貫通を宣言）
+    ON_CHECK_INFILTRATE = auto()
+
     # emit: 未実装（吸収技のHP回収量計算用に予約）
     # handle: 未実装（おおきなねっこ等による回収量増加を想定）
     ON_CALC_DRAIN = auto()
