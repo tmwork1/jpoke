@@ -1206,7 +1206,18 @@ def test_ねんちゃく_自己起因の道具変更は阻害しない():
     assert result is True
 
 
-def test_ぶきよう_たべのこしは発動しない():
+def test_ねんちゃく_かたやぶりの技起因では道具変更を阻害しない():
+    """ねんちゃく: かたやぶり持ちが技を使って道具変更しようとする場合は阻害できない。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねんちゃく", item="たべのこし")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    self_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    result = battle.can_change_item(foe_mon, self_mon, move=Move("トリック"))
+
+    assert result is True
     battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
                             ally=[Pokemon("ピカチュウ", ability="ぶきよう", item="たべのこし")],
                             )
@@ -1465,7 +1476,21 @@ def test_たんじゅん_能力下降量も2倍になる():
     assert target.rank["A"] == -2
 
 
-def test_じしんかじょう_攻撃技で相手を倒すと攻撃1段階上昇():
+def test_たんじゅん_かたやぶりで無効化される():
+    """たんじゅん: かたやぶり持ちの場合、たんじゅんによる2倍補正は働かない。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="たんじゅん")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    target = battle.actives[0]
+    source = battle.actives[1]
+
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=target, source=source),
+        {"A": -1},
+    )
+    assert stat_change == {"A": -1}
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="じしんかじょう", moves=["たいあたり"])],
         foe=[Pokemon("ピカチュウ")],
@@ -1783,6 +1808,23 @@ def test_どんかん_指定状態をイベント段階で無効化():
     )
     assert blocked == ""
     assert allowed == "どく"
+
+
+def test_どんかん_かたやぶりで無効化される():
+    """どんかん: かたやぶり持ちによるメロメロはどんかんを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="どんかん")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    mon = battle.actives[0]
+    attacker = battle.actives[1]
+
+    blocked = battle.events.emit(
+        Event.ON_BEFORE_APPLY_AILMENT,
+        BattleContext(target=mon, source=attacker, move=Move("あまえる")),
+        "メロメロ",
+    )
+    assert blocked == "メロメロ"
 
 
 def test_ばけのかわ_初回の攻撃技ダメージを防ぐ():
@@ -2314,6 +2356,21 @@ def test_おうごんのからだ_場が対象の技は無効化しない():
     assert immune is False
 
 
+def test_おうごんのからだ_かたやぶりで無効化される():
+    """おうごんのからだ: かたやぶり持ちの変化技はおうごんのからだを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("サーフゴー", ability="おうごんのからだ")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    ctx = BattleContext(attacker=foe_mon, defender=ally_mon, move=Move("あまいかおり"))
+    immune = battle.events.emit(Event.ON_CHECK_IMMUNE, ctx, False)
+
+    assert immune is False
+
+
 def test_ふゆう_浮遊状態になる():
     """ふゆう: ふゆう持ちが浮遊状態を返す。"""
     battle = t.start_battle(ally=[Pokemon("フワンテ", ability="ふゆう")],
@@ -2338,7 +2395,19 @@ def test_ふゆう_じめん技が通らない():
     assert battle.query_manager.is_floating(battle.actives[0])
 
 
-def test_クリアボディ_いかくを防ぐ():
+def test_ふゆう_かたやぶりでじめん技が通る():
+    """ふゆう: かたやぶり持ちからのじしんはふゆうを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("フワンテ", ability="ふゆう")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["じしん"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+
+    immune = battle.events.emit(Event.ON_CHECK_IMMUNE, ctx, False)
+
+    assert immune is False
     """クリアボディ: いかくによる攻撃低下を防ぐ。"""
     battle = t.start_battle(ally=[Pokemon("トゲピー", ability="クリアボディ")],
                             foe=[Pokemon("ウインディ", ability="いかく")])
@@ -2391,6 +2460,23 @@ def test_クリアボディ_自己低下技は防げない():
     )
     # クリアボディは自己低下を防げない（修正値がそのまま）
     assert stat_change == {"B": -1}
+
+
+def test_クリアボディ_かたやぶりで無効化される():
+    """クリアボディ: かたやぶり持ちによる能力低下はクリアボディを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("トゲピー", ability="クリアボディ")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"A": -1},
+    )
+    assert stat_change == {"A": -1}
 
 
 def test_ノーガード_攻撃側で必中化():
@@ -2475,6 +2561,15 @@ def test_パンクロック_音技で威力1_3倍かつ被ダメ0_5倍():
     assert t.calc_damage_modifier(battle2, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 2048
 
 
+def test_パンクロック_かたやぶりで音技軽減が無効化される():
+    """パンクロック: かたやぶり持ちの音技はパンクロックの被ダメ軽減を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["バークアウト"])],
+        foe=[Pokemon("ピカチュウ", ability="パンクロック")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
 @pytest.mark.parametrize(
     "ability_name, move_name",
     [
@@ -2540,6 +2635,62 @@ def test_受ける技タイプで攻撃補正半減する特性(ability_name: st
     assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER, atk_idx=0) == 2048
 
 
+def test_きよめのしお_かたやぶりで無効化される():
+    """きよめのしお: かたやぶり持ちのゴースト技はきよめのしおを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["シャドーボール"])],
+        foe=[Pokemon("ピカチュウ", ability="きよめのしお")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 4096
+
+
+def test_すいほう_かたやぶりでほのお技の軽減が無効化される():
+    """すいほう: かたやぶり持ちのほのお技はすいほうの防御補正を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["かえんほうしゃ"])],
+        foe=[Pokemon("ピカチュウ", ability="すいほう")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 4096
+
+
+def test_くさのけがわ_かたやぶりで無効化される():
+    """くさのけがわ: かたやぶり持ちの物理技はくさのけがわを貫通する（ゆき中）。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="くさのけがわ")],
+        weather=("ゆき", 5),
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER) == 4096
+
+
+def test_たいねつ_かたやぶりで無効化される():
+    """たいねつ: かたやぶり持ちのほのお技はたいねつの攻撃補正半減を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["かえんほうしゃ"])],
+        foe=[Pokemon("ピカチュウ", ability="たいねつ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 4096
+
+
+def test_ふしぎなうろこ_かたやぶりで無効化される():
+    """ふしぎなうろこ: かたやぶり持ちの物理技はふしぎなうろこの防御補正を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="ふしぎなうろこ")],
+    )
+    battle.ailment_manager.apply(battle.actives[1], "やけど")
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER) == 4096
+
+
+def test_ファーコート_かたやぶりで無効化される():
+    """ファーコート: かたやぶり持ちの物理技はファーコートの防御補正を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="ファーコート")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER) == 4096
+
+
 @pytest.mark.parametrize(
     "ability_name, move_name",
     [
@@ -2601,6 +2752,33 @@ def test_防御側特性_効果抜群ダメージを0_75倍(ability_name: str):
         foe=[Pokemon("コイル", ability=ability_name)],
     )
     assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER, atk_idx=0) == 3072
+
+
+def test_フィルター_かたやぶりで無効化される():
+    """フィルター: かたやぶり持ちの効果抜群技はフィルターの軽減を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["じしん"])],
+        foe=[Pokemon("コイル", ability="フィルター")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_もふもふ_かたやぶりで無効化される():
+    """もふもふ: かたやぶり持ちの接触技はもふもふの防御補正を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんこうせっか"])],
+        foe=[Pokemon("ピカチュウ", ability="もふもふ")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
+
+
+def test_ハードロック_かたやぶりで無効化される():
+    """ハードロック: かたやぶり持ちの効果抜群技はハードロックの軽減を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["じしん"])],
+        foe=[Pokemon("コイル", ability="ハードロック")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER) == 4096
 
 
 @pytest.mark.parametrize("ability_name", ["マルチスケイル", "ファントムガード"])
@@ -3380,7 +3558,21 @@ def test_かいりきバサミ_自己低下は防げない():
     assert stat_change == {"A": -1}
 
 
-def test_はとむね_ぼうぎょ低下を防ぐ():
+def test_かいりきバサミ_かたやぶりで無効化される():
+    """かいりきバサミ: かたやぶり持ちによるこうげき低下はかいりきバサミを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("カイリキー", ability="かいりきバサミ")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"A": -1},
+    )
+    assert stat_change == {"A": -1}
     """はとむね: 相手によるぼうぎょランク低下を防ぐ。"""
     battle = t.start_battle(
         ally=[Pokemon("トゲキッス", ability="はとむね")],
@@ -3414,6 +3606,23 @@ def test_はとむね_こうげき低下は防げない():
     assert stat_change == {"A": -1}
 
 
+def test_はとむね_かたやぶりで無効化される():
+    """はとむね: かたやぶり持ちによるぼうぎょ低下ははとむねを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("トゲキッス", ability="はとむね")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"B": -1},
+    )
+    assert stat_change == {"B": -1}
+
+
 def test_するどいめ_命中率低下を防ぐ():
     """するどいめ: 相手による命中率ランク低下を防ぐ。"""
     battle = t.start_battle(
@@ -3431,6 +3640,23 @@ def test_するどいめ_命中率低下を防ぐ():
     assert stat_change == {}
 
 
+def test_するどいめ_かたやぶりで無効化される():
+    """するどいめ: かたやぶり持ちによる命中率低下はするどいめを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="するどいめ")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"ACC": -1},
+    )
+    assert stat_change == {"ACC": -1}
+
+
 def test_しろいけむり_全能力低下を防ぐ():
     """しろいけむり: 相手による全能力ランク低下を防ぐ（クリアボディ同効果）。"""
     battle = t.start_battle(
@@ -3446,6 +3672,23 @@ def test_しろいけむり_全能力低下を防ぐ():
         {"A": -1, "C": -2, "D": -1},
     )
     assert stat_change == {}
+
+
+def test_しろいけむり_かたやぶりで無効化される():
+    """しろいけむり: かたやぶり持ちによる能力低下はしろいけむりを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("コータス", ability="しろいけむり")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    ally_mon = battle.actives[0]
+    foe_mon = battle.actives[1]
+
+    stat_change = battle.events.emit(
+        Event.ON_MODIFY_STAT,
+        BattleContext(target=ally_mon, source=foe_mon),
+        {"A": -1},
+    )
+    assert stat_change == {"A": -1}
 
 
 # ===== きょううん =====
@@ -3503,7 +3746,7 @@ def test_ぼうおん_非音技は無効化しない():
     assert result is False
 
 
-def test_ぼうおん_かたやぶりには無効化されない():
+def test_ぼうおん_かたやぶりで無効化される():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="ぼうおん")],
         foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["バークアウト"])],
@@ -4095,6 +4338,24 @@ def test_ぼうじん_非粉技は無効化しない():
     assert result is False
 
 
+def test_ぼうじん_かたやぶりで無効化される():
+    """ぼうじん: かたやぶり持ちの粉技はぼうじんを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ぼうじん")],
+        foe=[Pokemon("ナゾノクサ", ability="かたやぶり", moves=["ねむりごな"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+
+    result = battle.events.emit(
+        Event.ON_CHECK_IMMUNE,
+        BattleContext(attacker=attacker, defender=defender, move=move),
+        False,
+    )
+    assert result is False
+
+
 # ===== ぼうだん =====
 
 def test_ぼうだん_弾技を無効化する():
@@ -4386,9 +4647,55 @@ def test_ねつこうかん_かがくへんかガス中は発動しない():
     assert defender.rank["A"] == 0
 
 
+def test_ねつこうかん_かたやぶりでやけどが通る():
+    """ねつこうかん: かたやぶり持ちによるやけどはねつこうかんを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねつこうかん")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    mon = battle.actives[0]
+    attacker = battle.actives[1]
+
+    blocked = battle.events.emit(
+        Event.ON_BEFORE_APPLY_AILMENT,
+        BattleContext(target=mon, source=attacker, move=Move("おにび")),
+        "やけど",
+    )
+    assert blocked == "やけど"
+
+
+def test_ふみん_かたやぶりで無効化される():
+    """ふみん: かたやぶり持ちが使うねむり技はふみんを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ふみん")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    mon = battle.actives[0]
+    attacker = battle.actives[1]
+    blocked = battle.events.emit(
+        Event.ON_BEFORE_APPLY_AILMENT,
+        BattleContext(target=mon, source=attacker, move=Move("さいみんじゅつ")),
+        "ねむり",
+    )
+    assert blocked == "ねむり"
+
+
+def test_めんえき_かたやぶりで無効化される():
+    """めんえき: かたやぶり持ちが使うどく技はめんえきを貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="めんえき")],
+        foe=[Pokemon("ピカチュウ", ability="かたやぶり")],
+    )
+    mon = battle.actives[0]
+    attacker = battle.actives[1]
+    blocked = battle.events.emit(
+        Event.ON_BEFORE_APPLY_AILMENT,
+        BattleContext(target=mon, source=attacker, move=Move("どくどく")),
+        "どく",
+    )
+    assert blocked == "どく"
 # ──────────────────────────────────────────────────────────────────
-# はやあし
-# ──────────────────────────────────────────────────────────────────
+
 
 def test_はやあし_どく状態で素早さ1_5倍():
     battle = t.start_battle(
@@ -4586,6 +4893,15 @@ def test_テラスシェル_かがくへんかガス中は発動しない():
         foe=[Pokemon("ピカチュウ", ability="テラスシェル")],
     )
     assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER, atk_idx=0) == 4096
+
+
+def test_テラスシェル_かたやぶりで無効化される():
+    """テラスシェル: かたやぶり持ちの技はテラスシェルの半減を貫通する。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ", ability="テラスシェル")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER) == 4096
 
 
 # ──────────────────────────────────────────────────────────────────
