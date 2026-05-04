@@ -575,9 +575,17 @@ class Battle:
         """
         return self.command_manager.command_to_move(player, command)
 
-    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: HPChangeReason = "other") -> int:
+    def modify_hp(
+        self,
+        target: Pokemon,
+        v: int = 0,
+        r: float = 0,
+        reason: HPChangeReason = "other",
+        source: Pokemon | None = None,
+        move: Move | None = None,
+    ) -> int:
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_hp(target, v=v, r=r, reason=reason)
+        return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source, move=move)
 
     def modify_stat(self,
                     target: Pokemon,

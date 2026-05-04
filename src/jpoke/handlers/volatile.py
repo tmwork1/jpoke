@@ -5,6 +5,7 @@ Note:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
+from functools import partial
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
@@ -250,11 +251,11 @@ def おんねん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     Returns:
         HandlerReturn: 常にTrue
     """
-    print(f"{ctx.fainted=}, {ctx.move.name=}")
-    if ctx.fainted:
-        ctx.move.pp = 0
-        battle.add_event_log(ctx.attacker, LogCode.CONSUME_PP,
-                             payload={"move": ctx.move.name, "reason": "おんねん", "value": 0})
+    if ctx.move is None:
+        return HandlerReturn()
+    ctx.move.pp = 0
+    battle.add_event_log(ctx.attacker, LogCode.CONSUME_PP,
+                         payload={"move": ctx.move.name, "reason": "おんねん", "value": 0})
     return HandlerReturn()
 
 
@@ -718,9 +719,10 @@ def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: An
 
 def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みちづれ状態のひんし時処理（相手もひんしにする）"""
-    if ctx.fainted:
-        mon = ctx.attacker
-        battle.modify_hp(mon, v=-mon.hp)
+    mon = ctx.attacker
+    if mon is None:
+        return HandlerReturn()
+    battle.modify_hp(mon, v=-mon.hp)
     return HandlerReturn()
 
 
@@ -835,61 +837,99 @@ def _protect_success(battle: Battle, ctx: BattleContext) -> bool:
         ctx,
         True
     )
-    return True
+    return success
+
+
+def _run_protect(battle: Battle,
+                 ctx: BattleContext,
+                 value: Any,
+                 *,
+                 on_contact: Callable | None = None,
+                 protect_non_attack: bool = True) -> HandlerReturn:
+    """protect系の共通骨格。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値
+        on_contact: 接触時の追加効果関数 (battle, ctx, value) -> None
+        protect_non_attack: False の場合、変化技を保護しない
+    """
+    if not protect_non_attack and not ctx.move.is_attack:
+        return HandlerReturn(value=True)
+
+    if _protect_success(battle, ctx):
+        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
+                             payload={"move": ctx.move.name})
+        if on_contact is not None and battle.move_executor.is_contact(ctx):
+            on_contact(battle, ctx, value)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 def まもる_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まもるの保護判定"""
-    if _protect_success(battle, ctx):
-        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
-                             payload={"move": ctx.move.name})
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return _run_protect(battle, ctx, value)
 
 
 def かえんのまもり_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かえんのまもりの保護判定。接触した相手をやけど状態にする"""
-    if not ctx.move.is_attack:
-        return HandlerReturn(value=True)
-
-    success = _protect_success(battle, ctx)
-    if success:
-        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
-                             payload={"move": ctx.move.name})
-        if battle.move_executor.is_contact(ctx):
-            common.apply_ailment(battle, ctx, value, "やけど", target_spec="attacker:self", source_spec="defender:self")
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return _run_protect(
+        battle,
+        ctx,
+        value,
+        on_contact=partial(
+            common.apply_ailment,
+            ailment="やけど",
+            target_spec="attacker:self",
+            source_spec="defender:self",
+        ),
+        protect_non_attack=False,
+    )
 
 
 def キングシールド_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """キングシールドの保護判定。接触した相手の攻撃ランクを1段階下げる"""
-    if _protect_success(battle, ctx):
-        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
-                             payload={"move": ctx.move.name})
-        if battle.move_executor.is_contact(ctx):
-            battle.modify_stat(ctx.attacker, "A", -1, source=ctx.defender)
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return _run_protect(
+        battle,
+        ctx,
+        value,
+        on_contact=partial(
+            common.modify_stat,
+            stat="A",
+            v=-1,
+            target_spec="attacker:self",
+            source_spec="defender:self",
+        ),
+    )
 
 
 def スレッドトラップ_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """スレッドトラップの保護判定。接触した相手の素早さランクを1段階下げる"""
-    if _protect_success(battle, ctx):
-        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
-                             payload={"move": ctx.move.name})
-        if battle.move_executor.is_contact(ctx):
-            battle.modify_stat(ctx.attacker, "S", -1, source=ctx.defender)
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return _run_protect(
+        battle,
+        ctx,
+        value,
+        on_contact=partial(
+            common.modify_stat,
+            stat="S",
+            v=-1,
+            target_spec="attacker:self",
+            source_spec="defender:self",
+        ),
+    )
 
 
 def トーチカ_protect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """トーチカの保護判定。接触した相手をどく状態にする"""
-    if _protect_success(battle, ctx):
-        battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
-                             payload={"move": ctx.move.name})
-        if battle.move_executor.is_contact(ctx):
-            common.apply_ailment(battle, ctx, value, "どく", target_spec="attacker:self", source_spec="defender:self")
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return _run_protect(
+        battle,
+        ctx,
+        value,
+        on_contact=partial(
+            common.apply_ailment,
+            ailment="どく",
+            target_spec="attacker:self",
+            source_spec="defender:self",
+        ),
+    )

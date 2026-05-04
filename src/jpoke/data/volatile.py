@@ -101,9 +101,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
                 priority=10
             ),
-            Event.ON_DAMAGE: h.VolatileHandler(
+            Event.ON_FAINTED: h.VolatileHandler(
                 h.おんねん,
-                subject_spec="defender:self",
+                subject_spec="target:self",
                 priority=10
             ),
         }
@@ -428,9 +428,9 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "みちづれ": VolatileData(
         handlers={
-            Event.ON_DAMAGE: h.VolatileHandler(
+            Event.ON_FAINTED: h.VolatileHandler(
                 h.みちづれ,
-                subject_spec="defender:self",
+                subject_spec="target:self",
                 priority=30
             ),
         }

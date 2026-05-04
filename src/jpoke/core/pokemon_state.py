@@ -424,7 +424,13 @@ class StatusManager:
             log=LogCode.HP_CHANGED,
         )
 
-    def modify_hp(self, target: Pokemon, v: int = 0, r: float = 0, reason: HPChangeReason = "other") -> int:
+    def modify_hp(self,
+                  target: Pokemon,
+                  v: int = 0,
+                  r: float = 0,
+                  reason: HPChangeReason = "other",
+                  source: Pokemon | None = None,
+                  move: Move | None = None) -> int:
         """ポケモンのHPを変更する。
 
         Args:
@@ -432,6 +438,8 @@ class StatusManager:
             v: 変更する固定HP量
             r: 最大HPに対する割合（0.0～1.0）。v と同時指定時は r が優先される
             reason: 変更の理由
+            source: ダメージ源のポケモン（技によるひんし時に ON_FAINTED へ渡す）
+            move: 使用された技（技によるひんし時に ON_FAINTED へ渡す）
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）
@@ -489,6 +497,11 @@ class StatusManager:
                 hp_delta,
             )
             if target.fainted:
+                self.battle.events.emit(
+                    Event.ON_FAINTED,
+                    BattleContext(target=target, attacker=source, move=move, hp_change_reason=reason),
+                )
+                self.battle.switch_manager.unregister_switch_out_handlers(target)
                 self.battle.judge_winner()
 
         return v

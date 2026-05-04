@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
-from jpoke.enums import Event
+from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn
 
 
@@ -400,3 +400,52 @@ def crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
         bool: 50%を跨いだら True
     """
     return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
+
+
+def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, reason: str) -> HandlerReturn:
+    """指定された hp_change_reason のダメージを無効化する。
+
+    Args:
+        battle: バトルインスタンス（未使用、ハンドラ署名に合わせて受け取る）
+        ctx: イベントコンテキスト
+        value: HPダメージ量
+        reason: 無効化対象の hp_change_reason
+
+    Returns:
+        reason が一致すれば value=0 かつ stop_event=True、それ以外は value をそのまま返す
+    """
+    if ctx.hp_change_reason == reason:
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def prevent_ailment(
+    battle: Battle,
+    ctx: BattleContext,
+    value: str,
+    *,
+    ailment_names: list[str],
+    ability_name: str,
+) -> HandlerReturn:
+    """状態異常付与を防ぐ共通ハンドラ。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
+        value: 付与しようとする状態異常名
+        ailment_names: 防ぐ対象の状態異常名リスト
+        ability_name: ログに記録する特性名
+
+    Returns:
+        対象の状態異常なら value="" かつ stop_event=True、それ以外は value をそのまま返す
+    """
+    if value in ailment_names and ctx.check_def_ability_enabled(battle):
+        idx = battle.get_player_index(ctx.target)
+        battle.event_logger.add(
+            battle.turn,
+            idx,
+            LogCode.ABILITY_TRIGGERED,
+            payload={"ability": ability_name, "success": True},
+        )
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)

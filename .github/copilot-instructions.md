@@ -28,14 +28,9 @@
 7. `tests/test_utils.py` と最寄りの既存テスト
 
 ## ルールの置き場所
-- リポジトリ全体の方針はこのファイルに置く。
-- Python 実装の詳細ルールは `.github/instructions/python.instructions.md` を使う。
-- 文書更新の詳細ルールは `.github/instructions/docs.instructions.md` を使う。
-
-## 実装方針メモ
-- `data/*.py` の `partial(...)` は宣言的な定数束縛に留める。
-- `handlers/*` では lambda を増やさず、名前付き関数か共通 helper を優先する。
-- 特性・技・道具の意味が強い処理は、汎用 `partial(...)` で直接表さず `handlers/*` に寄せる。
+- リポジトリ全体の方針（対象、実装時の参照、進捗管理）はこのファイルに置く。
+- Python 実装の詳細ルール（Handler の約束事、状態変更、イベント駆動、テスト）は `.github/instructions/python.instructions.md` を参照。
+- 文書更新の詳細ルール（計画書、README、仕様書）は `.github/instructions/docs.instructions.md` を参照。
 
 ## 作業後の更新ルール
 - 作業完了前チェックとして、実装を変更したら対応する `progress/*.md` を必ず更新する。

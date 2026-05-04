@@ -121,7 +121,13 @@ class MoveExecutor:
         ctx.move_damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
 
         if ctx.move_damage:
-            hp_delta = self.battle.modify_hp(ctx.defender, -ctx.move_damage, reason="move_damage")
+            hp_delta = self.battle.modify_hp(
+                ctx.defender,
+                -ctx.move_damage,
+                reason="move_damage",
+                source=ctx.attacker,
+                move=ctx.move,
+            )
             if hp_delta < 0:
                 ctx.defender.hits_taken += 1
 

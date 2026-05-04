@@ -87,7 +87,7 @@ ABILITIES: dict[str, AbilityData] = {
     "あめふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_weather, weather="あめ", source_spec="source:self"),
+                partial(h._activate_weather_with_log, weather="あめ", ability_name="あめふらし"),
                 subject_spec="source:self",
             )
         }
@@ -103,7 +103,7 @@ ABILITIES: dict[str, AbilityData] = {
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="source:foe", source_spec="source:self"),
+                h.いかく_on_switch_in,
                 subject_spec="source:self",
             )
         },
@@ -712,7 +712,7 @@ ABILITIES: dict[str, AbilityData] = {
     "すなおこし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_weather, weather="すなあらし", source_spec="source:self"),
+                partial(h._activate_weather_with_log, weather="すなあらし", ability_name="すなおこし"),
                 subject_spec="source:self",
             )
         }
@@ -812,7 +812,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.apply_ailment, ailment="ねむり", target_spec="source:self", source_spec="source:self"),
+                partial(h._apply_ailment_with_log, ailment="ねむり", ability_name="ぜったいねむり"),
                 subject_spec="source:self",
             )
         }
@@ -1127,7 +1127,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_weather, weather="おおあめ", source_spec="source:self"),
+                partial(h._activate_weather_with_log, weather="おおあめ", ability_name="はじまりのうみ"),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -1227,7 +1227,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ひでり": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_weather, weather="はれ", source_spec="source:self"),
+                partial(h._activate_weather_with_log, weather="はれ", ability_name="ひでり"),
                 subject_spec="source:self",
             )
         }
@@ -1535,7 +1535,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ゆきふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_weather, weather="ゆき", source_spec="source:self"),
+                partial(h._activate_weather_with_log, weather="ゆき", ability_name="ゆきふらし"),
                 subject_spec="source:self",
             )
         }
@@ -1692,7 +1692,7 @@ ABILITIES: dict[str, AbilityData] = {
     "エレキメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_terrain, terrain="エレキフィールド", source_spec="source:self"),
+                partial(h._activate_terrain_with_log, terrain="エレキフィールド", ability_name="エレキメイカー"),
                 subject_spec="source:self",
             )
         }
@@ -1767,7 +1767,7 @@ ABILITIES: dict[str, AbilityData] = {
     "グラスメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_terrain, terrain="グラスフィールド", source_spec="source:self"),
+                partial(h._activate_terrain_with_log, terrain="グラスフィールド", ability_name="グラスメイカー"),
                 subject_spec="source:self",
             )
         }
@@ -1775,7 +1775,7 @@ ABILITIES: dict[str, AbilityData] = {
     "サイコメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_terrain, terrain="サイコフィールド", source_spec="source:self"),
+                partial(h._activate_terrain_with_log, terrain="サイコフィールド", ability_name="サイコメイカー"),
                 subject_spec="source:self",
             )
         }
@@ -1948,7 +1948,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_weather, weather="らんきりゅう", source_spec="source:self"),
+                partial(h._activate_weather_with_log, weather="らんきりゅう", ability_name="デルタストリーム"),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -2318,7 +2318,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ミストメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(common.activate_terrain, terrain="ミストフィールド", source_spec="source:self"),
+                partial(h._activate_terrain_with_log, terrain="ミストフィールド", ability_name="ミストメイカー"),
                 subject_spec="source:self",
             )
         }
