@@ -10,40 +10,14 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Ability, Move
 
 from dataclasses import dataclass, field
-from decimal import Decimal, ROUND_HALF_DOWN
 
 from jpoke.utils.type_defs import Stat
 from jpoke.enums import Event, DamageFlag
 from jpoke.utils import fast_copy
 from jpoke.utils.constants import TYPE_MODIFIER
+from jpoke.utils.battle_math import rank_modifier, round_half_down
 
 from .context import BattleContext
-
-
-def rank_modifier(v: float) -> float:
-    """ランク補正値を計算する。
-
-    Args:
-        v: ランク値（-6～+6）
-
-    Returns:
-        float: 補正倍率
-    """
-    return (2+v)/2 if v >= 0 else 2/(2-v)
-
-
-def round_half_down(v: float) -> int:
-    """五捨五超入で丸める。
-
-    0.5は切り捨て、0.5より大きい値は切り上げます。
-
-    Args:
-        v: 対象の値
-
-    Returns:
-        int: 丸められた整数値
-    """
-    return int(Decimal(str(v)).quantize(Decimal('0'), rounding=ROUND_HALF_DOWN))
 
 
 @dataclass

@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.enums import LogCode
+from jpoke.utils.battle_math import rank_modifier
 from jpoke.utils.type_defs import GlobalField, SideField, VolatileName
 from jpoke.core import HandlerReturn
 from jpoke.handlers import common
@@ -243,10 +244,6 @@ def マジックルーム_on_field_deactivate(battle: Battle, ctx: BattleContext
     return HandlerReturn()
 
 
-def _rank_modifier(rank: int) -> float:
-    return (2 + rank) / 2 if rank >= 0 else 2 / (2 - rank)
-
-
 def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
     if not ctx.defender or not ctx.move:
@@ -256,7 +253,7 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, 
 
     move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
     swap_to_stat = "D" if move_category == "物理" or ctx.move.has_label("physical") else "B"
-    return HandlerReturn(value=_rank_modifier(ctx.defender.rank[swap_to_stat]))
+    return HandlerReturn(value=rank_modifier(ctx.defender.rank[swap_to_stat]))
 
 
 def ワンダールーム_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:

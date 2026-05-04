@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Terrain, GlobalField
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
 from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 
@@ -367,26 +367,6 @@ def is_berry_item(item_name: str) -> bool:
         bool: きのみなら True
     """
     return item_name.endswith("のみ")
-
-
-def apply_modifier(value: int, modifier: int) -> int:
-    """4096基準の補正値を適用する。
-
-    ポケモンの倍率計算は4096を基準とした固定小数点で実装されているため、
-    この関数でまとめて補正を計算する。
-
-    例：
-        - 倍率 1.5倍 = 6144 (4096 * 1.5)
-        - 倍率 0.5倍 = 2048 (4096 * 0.5)
-
-    Args:
-        value: 元の値
-        modifier: 4096基準の補正値
-
-    Returns:
-        int: 補正後の値
-    """
-    return value * modifier // 4096
 
 
 def block_stat_drop(value: dict, ctx: BattleContext, stat: str | None = None) -> dict:

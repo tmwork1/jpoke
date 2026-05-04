@@ -4325,5 +4325,316 @@ def test_だっぴ_かがくへんかガス中は発動しない():
     assert mon.ailment.is_active
 
 
+# ──────────────────────────────────────────────────────────────────
+# ねつこうかん
+# ──────────────────────────────────────────────────────────────────
+
+def test_ねつこうかん_ほのお技でこうげき1段階アップ():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねつこうかん")],
+        foe=[Pokemon("ピカチュウ", moves=["かえんほうしゃ"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.rank["A"] == 1
+    assert t.log_contains(battle, LogCode.ABILITY_TRIGGERED, player_idx=0)
+
+
+def test_ねつこうかん_やけど状態にならない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねつこうかん")],
+        foe=[Pokemon("ピカチュウ", moves=["おにび"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert not defender.ailment.is_active
+
+
+def test_ねつこうかん_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ねつこうかん")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス", moves=["かえんほうしゃ"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+
+    battle.move_executor.run_move(attacker, attacker.moves[0])
+
+    assert defender.rank["A"] == 0
+
+
+# ──────────────────────────────────────────────────────────────────
+# はやあし
+# ──────────────────────────────────────────────────────────────────
+
+def test_はやあし_どく状態で素早さ1_5倍():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="はやあし")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+
+    base = mon.stats["S"]
+    assert battle.calc_effective_speed(mon) == base * 3 // 2
+
+
+def test_はやあし_まひ状態で素早さ低下を無視して1_5倍():
+    # ピカチュウはでんきタイプでまひ免疫があるためカビゴン（ノーマル）を使用
+    battle = t.start_battle(
+        ally=[Pokemon("カビゴン", ability="はやあし")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "まひ")
+
+    base = mon.stats["S"]
+    # まひ_speed による 1/2 ペナルティを打ち消して 1.5倍（*3）
+    assert battle.calc_effective_speed(mon) == (base // 2) * 3
+
+
+def test_はやあし_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="はやあし")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "どく")
+
+    base = mon.stats["S"]
+    # かがくへんかガスで ability.enabled=False → はやあし 発動せず素早さ据え置き
+    assert battle.calc_effective_speed(mon) == base
+
+
+# ──────────────────────────────────────────────────────────────────
+# ダウンロード
+# ──────────────────────────────────────────────────────────────────
+
+def test_ダウンロード_相手防御が特防より低い場合攻撃アップ():
+    foe = Pokemon("ピカチュウ")
+    _set_raw_stats(foe, a=100, b=50, c=100, d=100, s=100)  # B=50 < D=100 → 攻撃+1
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ダウンロード")],
+        foe=[foe],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["A"] == 1
+    assert mon.rank["C"] == 0
+
+
+def test_ダウンロード_相手防御が特防以上の場合特攻アップ():
+    foe = Pokemon("ピカチュウ")
+    _set_raw_stats(foe, a=100, b=100, c=100, d=50, s=100)  # B=100 > D=50 → 特攻+1
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ダウンロード")],
+        foe=[foe],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["A"] == 0
+    assert mon.rank["C"] == 1
+
+
+def test_ダウンロード_防御と特防が等しい場合特攻アップ():
+    foe = Pokemon("ピカチュウ")
+    _set_raw_stats(foe, a=100, b=100, c=100, d=100, s=100)  # B=D=100 → 特攻+1
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ダウンロード")],
+        foe=[foe],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["A"] == 0
+    assert mon.rank["C"] == 1
+
+
+def test_ダウンロード_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ダウンロード")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["A"] == 0
+    assert mon.rank["C"] == 0
+
+
+# ──────────────────────────────────────────────────────────────────
+# ひとでなし
+# ──────────────────────────────────────────────────────────────────
+
+def test_ひとでなし_どく状態の相手には急所ランク最大相当になる():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ひとでなし", moves=["つじぎり"])],
+        foe=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "どく", source=attacker)
+
+    rank = battle.events.emit(
+        Event.ON_CALC_CRITICAL_RANK,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        0,
+    )
+    assert rank == 10
+
+
+def test_ひとでなし_非どく状態の相手には急所ランクを変更しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ひとでなし", moves=["つじぎり"])],
+        foe=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    rank = battle.events.emit(
+        Event.ON_CALC_CRITICAL_RANK,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        1,
+    )
+    assert rank == 1
+
+
+def test_ひとでなし_カブトアーマー相手には急所化しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ひとでなし", moves=["つじぎり"])],
+        foe=[Pokemon("カビゴン", ability="カブトアーマー")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "どく", source=attacker)
+
+    rank = battle.events.emit(
+        Event.ON_CALC_CRITICAL_RANK,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        0,
+    )
+    assert rank == 0
+
+
+def test_ひとでなし_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ひとでなし", moves=["つじぎり"])],
+        foe=[Pokemon("カビゴン", ability="かがくへんかガス")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "どく", source=attacker)
+
+    rank = battle.events.emit(
+        Event.ON_CALC_CRITICAL_RANK,
+        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        0,
+    )
+    assert rank == 0
+
+
+# ──────────────────────────────────────────────────────────────────
+# テラスシェル
+# ──────────────────────────────────────────────────────────────────
+
+def test_テラスシェル_HP満タンで等倍技を半減する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ", ability="テラスシェル")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER, atk_idx=0) == 2048
+
+
+def test_テラスシェル_HP満タンで抜群技を半減する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["じしん"])],
+        foe=[Pokemon("コイル", ability="テラスシェル")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER, base=16384, atk_idx=0) == 8192
+
+
+def test_テラスシェル_HP満タンでないと発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ", ability="テラスシェル")],
+    )
+    defender = battle.actives[1]
+    battle.modify_hp(defender, v=-1, reason="test")
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER, atk_idx=0) == 4096
+
+
+def test_テラスシェル_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かがくへんかガス", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ", ability="テラスシェル")],
+    )
+    assert t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER, atk_idx=0) == 4096
+
+
+# ──────────────────────────────────────────────────────────────────
+# ムラっけ
+# ──────────────────────────────────────────────────────────────────
+
+def test_ムラっけ_ターン終了時に別々の能力が上昇と下降する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ムラっけ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    choices = iter(["A", "B"])
+    battle.random.choice = lambda seq: next(choices)
+
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+
+    assert mon.rank["A"] == 2
+    assert mon.rank["B"] == -1
+
+
+def test_ムラっけ_全能力が最大なら下降のみ発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ムラっけ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    for stat in ("A", "B", "C", "D", "S"):
+        mon.rank[stat] = 6
+    battle.random.choice = lambda seq: seq[0]
+
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+
+    assert mon.rank["A"] == 5
+    assert mon.rank["B"] == 6
+
+
+def test_ムラっけ_全能力が最小なら上昇のみ発動する():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ムラっけ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    for stat in ("A", "B", "C", "D", "S"):
+        mon.rank[stat] = -6
+    battle.random.choice = lambda seq: seq[0]
+
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+
+    assert mon.rank["A"] == -4
+    assert mon.rank["B"] == -6
+
+
+def test_ムラっけ_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="ムラっけ")],
+        foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.random.choice = lambda seq: seq[0]
+
+    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+
+    assert mon.rank["A"] == 0
+    assert mon.rank["B"] == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

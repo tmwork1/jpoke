@@ -1060,7 +1060,17 @@ ABILITIES: dict[str, AbilityData] = {
     "ねつこうかん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.ねつこうかん_prevent_burn,
+                subject_spec="target:self",
+            ),
+            Event.ON_DAMAGE: h.AbilityHandler(
+                h.ねつこうかん_on_damage,
+                subject_spec="defender:self",
+            ),
+        }
     ),
     "ねつぼうそう": AbilityData(
         handlers={
@@ -1136,7 +1146,15 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "はやあし": AbilityData(),
+    "はやあし": AbilityData(
+        handlers={
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
+                h.はやあし_modify_speed,
+                subject_spec="source:self",
+                priority=200,
+            ),
+        }
+    ),
     "はやおき": AbilityData(),
     "はやてのつばさ": AbilityData(),
     "はらぺこスイッチ": AbilityData(
@@ -1208,7 +1226,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "ひとでなし": AbilityData(),
+    "ひとでなし": AbilityData(
+        handlers={
+            Event.ON_CALC_CRITICAL_RANK: h.AbilityHandler(
+                h.ひとでなし_modify_critical_rank,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "ひひいろのこどう": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -1765,7 +1790,13 @@ ABILITIES: dict[str, AbilityData] = {
     "シェルアーマー": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_CRITICAL_RANK: h.AbilityHandler(
+                h.カブトアーマー_on_calc_critical_rank,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "シンクロ": AbilityData(
         flags=[
@@ -1842,7 +1873,14 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
-    "ダウンロード": AbilityData(),
+    "ダウンロード": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ダウンロード_on_switch_in,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ダークオーラ": AbilityData(
         flags=[
             "undeniable",
@@ -1866,7 +1904,13 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "mold_breaker_ignorable",
-        ]
+        ],
+        handlers={
+            Event.ON_CALC_DEF_TYPE_MODIFIER: h.AbilityHandler(
+                h.テラスシェル_modify_def_type_modifier,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "テラスチェンジ": AbilityData(
         flags=[
@@ -2289,7 +2333,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "ムラっけ": AbilityData(),
+    "ムラっけ": AbilityData(
+        handlers={
+            Event.ON_TURN_END_3: h.AbilityHandler(
+                h.ムラっけ_on_turn_end,
+                subject_spec="source:self",
+            )
+        }
+    ),
     "メガランチャー": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(

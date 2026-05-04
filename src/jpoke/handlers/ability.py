@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils.type_defs import RoleSpec, HPChangeReason, Type, Stat
 from jpoke.utils.constants import PLATE_TO_TYPE, MEMORY_TO_TYPE
+from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn, Handler
 from . import common
@@ -194,6 +195,43 @@ def だっぴ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Han
             LogCode.ABILITY_TRIGGERED,
             payload={"ability": "だっぴ", "success": True},
         )
+    return HandlerReturn(value=value)
+
+
+def ダウンロード_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ダウンロード特性: 入場時に相手の防御と特防を比較し、低い方に対応する攻撃能力を上げる。"""
+    mon = ctx.source
+    if not mon.ability.enabled:
+        return HandlerReturn(value=value)
+
+    foe = battle.foe(mon)
+
+    def _rank_eff(pokemon, stat: str) -> float:
+        return pokemon.stats[stat] * rank_modifier(pokemon.rank[stat])
+
+    foe_def = _rank_eff(foe, "B")
+    foe_spd = _rank_eff(foe, "D")
+
+    # 防御 < 特防 なら攻撃+1、防御 >= 特防 なら特攻+1
+    boost_stat = "A" if foe_def < foe_spd else "C"
+
+    changed = battle.modify_stat(
+        mon,
+        boost_stat,
+        +1,
+        source=mon,
+        reason="ダウンロード",
+    )
+    if not changed:
+        return HandlerReturn(value=value)
+
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "ダウンロード", "success": True},
+    )
     return HandlerReturn(value=value)
 
 
@@ -393,7 +431,7 @@ def きゅうばん_check_blow(battle: Battle, ctx: BattleContext, value: Any) -
 def きれあじ_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """きれあじ特性: きる技の威力を1.5倍にする。"""
     if ctx.move is not None and ctx.move.has_label("slash"):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -477,7 +515,7 @@ def サンパワー_modify_atk(battle: Battle, ctx: BattleContext, value: int) -
         and ctx.move is not None
         and common.is_special_move(battle, ctx)
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -689,7 +727,7 @@ def もらいび_modify_power(battle: Battle, ctx: BattleContext, value: int) ->
         and ctx.move.type == "ほのお"
         and ctx.attacker.ability.state == "active"
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -835,7 +873,7 @@ def かそく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Han
 def カブトアーマー_on_calc_critical_rank(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """カブトアーマー特性: 防御側の急所ランクを無効化する。"""
     if ctx.check_def_ability_enabled(battle):
-        value = 0
+        return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1009,7 +1047,7 @@ def どくのトゲ_on_damage(battle: Battle, ctx: BattleContext, value: Any) ->
 def てつのこぶし_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """てつのこぶし特性: パンチ技の威力を1.2倍にする。"""
     if ctx.move.has_label("punch"):
-        value = common.apply_modifier(value, 4915)
+        value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
 
@@ -1022,14 +1060,14 @@ def てつのトゲ_on_damage(battle: Battle, ctx: BattleContext, value: Any) ->
 def がんじょうあご_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """がんじょうあご特性: かみつき技の威力を1.5倍にする。"""
     if ctx.move is not None and ctx.move.has_label("bite"):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def かたいツメ_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """かたいツメ特性: 直接攻撃の威力を1.3倍にする。"""
     if ctx.move is not None and battle.move_executor.is_contact(ctx):
-        value = common.apply_modifier(value, 5325)
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
@@ -1053,7 +1091,7 @@ def かんそうはだ_modify_fire_damage(battle: Battle, ctx: BattleContext, va
         and ctx.move.type == "ほのお"
         and ctx.move.category != "変化"
     ):
-        value = common.apply_modifier(value, 5120)  # 5/4倍 = 5120/4096
+        value = apply_fixed_modifier(value, 5120)  # 5/4倍 = 5120/4096
     return HandlerReturn(value=value)
 
 
@@ -1099,14 +1137,14 @@ def かんそうはだ_on_turn_end(battle: Battle, ctx: BattleContext, value: An
 def メガランチャー_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """メガランチャー特性: はどう技の威力を1.5倍にする。"""
     if ctx.move is not None and ctx.move.has_label("pulse"):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def パンクロック_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """パンクロック特性: 音技の威力を1.3倍にする。"""
     if ctx.move is not None and ctx.move.has_label("sound"):
-        value = common.apply_modifier(value, 5325)
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
@@ -1168,7 +1206,7 @@ def すなのちから_modify_power(battle: Battle, ctx: BattleContext, value: i
         and active.name == "すなあらし"
         and ctx.move.type in ["いわ", "じめん", "はがね"]
     ):
-        value = common.apply_modifier(value, 5325)
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
@@ -1180,7 +1218,7 @@ def どくぼうそう_modify_power(battle: Battle, ctx: BattleContext, value: i
         and ctx.move.type == "どく"
         and common.is_special_move(battle, ctx)
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -1192,7 +1230,46 @@ def ねつぼうそう_modify_power(battle: Battle, ctx: BattleContext, value: i
         and ctx.move.type == "ほのお"
         and common.is_special_move(battle, ctx)
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def ねつこうかん_prevent_burn(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
+    """ねつこうかん特性: やけど状態を防ぐ。"""
+    if value == "やけど" and ctx.check_def_ability_enabled(battle):
+        idx = battle.get_player_index(ctx.target)
+        battle.event_logger.add(battle.turn, idx, LogCode.ABILITY_TRIGGERED, payload={"ability": "ねつこうかん", "success": True})
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ねつこうかん_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ねつこうかん特性: ほのおタイプの攻撃技でダメージを受けたとき、こうげきが1段階上がる。"""
+    if (
+        not ctx.has_move_context
+        or ctx.move.type != "ほのお"
+        or ctx.defender.fainted
+        or not ctx.check_def_ability_enabled(battle)
+    ):
+        return HandlerReturn(value=value)
+
+    changed = battle.modify_stat(
+        ctx.defender,
+        "A",
+        +1,
+        source=ctx.attacker,
+        reason="ねつこうかん",
+    )
+    if not changed:
+        return HandlerReturn(value=value)
+
+    idx = battle.get_player_index(ctx.defender)
+    battle.event_logger.add(
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
+        payload={"ability": "ねつこうかん", "success": True},
+    )
     return HandlerReturn(value=value)
 
 
@@ -1218,7 +1295,7 @@ def アナライズ_modify_power(battle: Battle, ctx: BattleContext, value: int)
         defender_player = battle.find_player(ctx.defender)
         acted_before = ctx.defender.executed_move is not None or defender_player.has_switched
         if acted_before:
-            value = common.apply_modifier(value, 5325)
+            value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
@@ -1229,7 +1306,7 @@ def こんじょう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -
         and common.is_physical_move(battle, ctx)
         and ctx.move.name not in ["イカサマ", "ボディプレス"]
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -1240,10 +1317,24 @@ def こんじょう_ignore_burn_penalty(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=value)
 
 
+def はやあし_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """はやあし特性: 状態異常時に素早さが1.5倍になる。まひの素早さ低下も無効化する。"""
+    mon = ctx.source
+    if not mon.ailment.is_active or not mon.ability.enabled:
+        return HandlerReturn(value=value)
+
+    if mon.has_ailment("まひ"):
+        # まひ_speed による 1/2 ペナルティを打ち消して 1.5 倍（合計 *3）
+        value = value * 3
+    else:
+        value = value * 1.5
+    return HandlerReturn(value=value)
+
+
 def はりきり_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
     if common.is_physical_move(battle, ctx):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -1254,14 +1345,14 @@ def はりきり_modify_accuracy(battle: Battle, ctx: BattleContext, value: int)
         and not ctx.move.has_label("ohko")  # 一撃必殺技は命中率ペナルティなし
         and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
     ):
-        value = common.apply_modifier(value, 3277)
+        value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
 
 
 def はりこみ_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。"""
     if ctx.defender is not None and battle.find_player(ctx.defender).has_switched:
-        value = common.apply_modifier(value, 8192)
+        value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
@@ -1279,49 +1370,58 @@ def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle:
         and ctx.attacker.hp * 3 <= ctx.attacker.max_hp
         and ctx.move.type == required_type
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def いわはこび_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """いわはこび特性: いわ技の攻撃補正を1.5倍にする。"""
     if ctx.move is not None and ctx.move.type == "いわ":
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def はがねつかい_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はがねつかい特性: はがね技の攻撃補正を1.5倍にする。"""
     if ctx.move is not None and ctx.move.type == "はがね":
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def はがねのせいしん_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はがねのせいしん特性: はがね技の威力を1.5倍にする。"""
     if ctx.move is not None and ctx.move.type == "はがね":
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def りゅうのあぎと_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """りゅうのあぎと特性: ドラゴン技の攻撃補正を1.5倍にする。"""
     if ctx.move is not None and ctx.move.type == "ドラゴン":
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def ごりむちゅう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ごりむちゅう特性: 物理技の攻撃補正を1.5倍にする。"""
     if common.is_physical_move(battle, ctx) and ctx.move.name not in ["イカサマ", "ボディプレス"]:
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def トランジスタ_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """トランジスタ特性: でんき技の攻撃補正を1.3倍にする。"""
     if ctx.move is not None and ctx.move.type == "でんき":
-        value = common.apply_modifier(value, 5325)
+        value = apply_fixed_modifier(value, 5325)
+    return HandlerReturn(value=value)
+
+
+def ひとでなし_modify_critical_rank(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """ひとでなし特性: どく/もうどく状態の相手への攻撃を必ず急所にする。"""
+    if ctx.attacker.ability.enabled and (
+        ctx.defender.has_ailment("どく") or ctx.defender.has_ailment("もうどく")
+    ):
+        value = 10
     return HandlerReturn(value=value)
 
 
@@ -1329,14 +1429,14 @@ def ひひいろのこどう_modify_atk(battle: Battle, ctx: BattleContext, valu
     """ひひいろのこどう特性: はれ中の攻撃補正を1.33倍にする。"""
     active = battle.weather
     if active is not None and active.name == "はれ":
-        value = common.apply_modifier(value, 5461)
+        value = apply_fixed_modifier(value, 5461)
     return HandlerReturn(value=value)
 
 
 def ハドロンエンジン_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ハドロンエンジン特性: エレキフィールド中の攻撃補正を1.33倍にする。"""
     if battle.terrain.name == "エレキフィールド":
-        value = common.apply_modifier(value, 5461)
+        value = apply_fixed_modifier(value, 5461)
     return HandlerReturn(value=value)
 
 
@@ -1353,28 +1453,28 @@ def スロースタート_modify_atk(battle: Battle, ctx: BattleContext, value: 
         and common.is_physical_move(battle, ctx)
         and ctx.move.name not in ["イカサマ", "ボディプレス"]
     ):
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
 def よわき_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """よわき特性: HP半分以下で攻撃補正を0.5倍にする。"""
     if ctx.attacker.hp * 2 <= ctx.attacker.max_hp:
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
 def あついしぼう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """あついしぼう特性: 炎/氷技を受けるとき攻撃補正を0.5倍にする。"""
     if ctx.check_def_ability_enabled(battle) and ctx.move is not None and ctx.move.type in ["ほのお", "こおり"]:
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
 def たいねつ_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """たいねつ特性: 炎技を受けるとき攻撃補正を0.5倍にする。"""
     if ctx.check_def_ability_enabled(battle) and ctx.move is not None and ctx.move.type == "ほのお":
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -1382,14 +1482,14 @@ def すいほう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> H
     """すいほう特性: 水技の攻撃補正2倍、炎技被ダメ計算時の攻撃補正0.5倍。"""
     if ctx.move is not None:
         if ctx.attacker.ability.orig_name == "すいほう" and ctx.move.type == "みず":
-            value = common.apply_modifier(value, 8192)
+            value = apply_fixed_modifier(value, 8192)
 
         if (
             ctx.defender.ability.orig_name == "すいほう"
             and ctx.move.type == "ほのお"
             and ctx.check_def_ability_enabled(battle)
         ):
-            value = common.apply_modifier(value, 2048)
+            value = apply_fixed_modifier(value, 2048)
 
     return HandlerReturn(value=value)
 
@@ -1397,28 +1497,28 @@ def すいほう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> H
 def きよめのしお_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """きよめのしお特性: ゴースト技を受けるとき攻撃補正を0.5倍にする。"""
     if ctx.check_def_ability_enabled(battle) and ctx.move is not None and ctx.move.type == "ゴースト":
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
 def わざわいのおふだ_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """わざわいのおふだ特性: 自分以外の攻撃補正を0.75倍にする。"""
     if ctx.attacker is not ctx.defender:
-        value = common.apply_modifier(value, 3072)
+        value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def わざわいのうつわ_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """わざわいのうつわ特性: 自分以外の特攻補正を0.75倍にする。"""
     if ctx.attacker is not ctx.defender:
-        value = common.apply_modifier(value, 3072)
+        value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def ファーコート_modify_def(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ファーコート特性: 物理技に対する防御補正を2倍にする。"""
     if ctx.check_def_ability_enabled(battle) and common.is_physical_move(battle, ctx):
-        value = common.apply_modifier(value, 8192)
+        value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
@@ -1429,7 +1529,7 @@ def ふしぎなうろこ_modify_def(battle: Battle, ctx: BattleContext, value: 
         and ctx.defender.ailment.is_active
         and common.is_physical_move(battle, ctx)
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -1442,42 +1542,42 @@ def くさのけがわ_modify_def(battle: Battle, ctx: BattleContext, value: int
         and active.name == "ゆき"
         and common.is_physical_move(battle, ctx)
     ):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def わざわいのつるぎ_modify_def(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """わざわいのつるぎ特性: 自分以外の防御補正を0.75倍にする。"""
     if ctx.attacker is not ctx.defender:
-        value = common.apply_modifier(value, 3072)
+        value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def わざわいのたま_modify_def(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """わざわいのたま特性: 自分以外の特防補正を0.75倍にする。"""
     if ctx.attacker is not ctx.defender:
-        value = common.apply_modifier(value, 3072)
+        value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def いろめがね_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """いろめがね特性: いまひとつの技の最終ダメージ補正を2倍にする。"""
     if common.is_not_very_effective(battle, ctx):
-        value = common.apply_modifier(value, 8192)
+        value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
 def スナイパー_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """スナイパー特性: 急所時の最終ダメージ補正を1.5倍にする。"""
     if getattr(ctx, "critical", False):
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def ブレインフォース_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ブレインフォース特性: 効果抜群時の最終ダメージ補正を1.25倍にする。"""
     if common.is_super_effective(battle, ctx):
-        value = common.apply_modifier(value, 5120)
+        value = apply_fixed_modifier(value, 5120)
     return HandlerReturn(value=value)
 
 
@@ -1488,21 +1588,21 @@ def フィルターハードロックプリズムアーマー_modify_damage(
 ) -> HandlerReturn:
     """防御側特性: 効果抜群の技ダメージを0.75倍にする。"""
     if ctx.check_def_ability_enabled(battle) and common.is_super_effective(battle, ctx):
-        value = common.apply_modifier(value, 3072)
+        value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 
 def マルチスケイルファントムガード_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """防御側特性: HP満タン時の被ダメージを0.5倍にする。"""
     if ctx.check_def_ability_enabled(battle) and ctx.defender.hp == ctx.defender.max_hp:
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
 def こおりのりんぷん_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """こおりのりんぷん特性: 特殊技で受けるダメージを0.5倍にする。"""
     if ctx.check_def_ability_enabled(battle) and common.is_special_move(battle, ctx):
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -1513,7 +1613,7 @@ def パンクロック_reduce_damage(battle: Battle, ctx: BattleContext, value: 
         and ctx.move is not None
         and ctx.move.has_label("sound")
     ):
-        value = common.apply_modifier(value, 2048)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -1521,9 +1621,9 @@ def もふもふ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -
     """もふもふ特性: 接触技被ダメ0.5倍・炎技被ダメ2倍を適用する。"""
     if ctx.check_def_ability_enabled(battle):
         if ctx.move is not None and battle.move_executor.is_contact(ctx):
-            value = common.apply_modifier(value, 2048)
+            value = apply_fixed_modifier(value, 2048)
         if ctx.move is not None and ctx.move.type == "ほのお":
-            value = common.apply_modifier(value, 8192)
+            value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
@@ -1531,14 +1631,25 @@ def ちからもちヨガパワー_on_calc_atk_modifier(battle: Battle, ctx: Bat
     """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。"""
     move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
     if move_category == "物理" and ctx.move.name not in ["イカサマ", "ボディプレス"]:
-        value = common.apply_modifier(value, 8192)
+        value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
 def テクニシャン_on_calc_power_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """テクニシャン特性: 元威力60以下の技威力補正を1.5倍にする。"""
     if ctx.move.data.power is not None and ctx.move.data.power <= 60:
-        value = common.apply_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def テラスシェル_modify_def_type_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """テラスシェル特性: HP満タン時、等倍以上のタイプ相性を半減する。"""
+    if (
+        value >= 4096
+        and ctx.defender.hp == ctx.defender.max_hp
+        and ctx.check_def_ability_enabled(battle)
+    ):
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -1552,7 +1663,7 @@ def _skin_modify_move_type(battle: Battle, ctx: BattleContext, value: str, *, fr
 def _skin_modify_power(battle: Battle, ctx: BattleContext, value: int, *, trigger_type: str) -> HandlerReturn:
     """スキン系特性共通: trigger_type だった技の威力を 4915/4096 倍にする。"""
     if ctx.move is not None and ctx.move.data.type == trigger_type:
-        value = common.apply_modifier(value, 4915)
+        value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
 
@@ -1574,7 +1685,7 @@ def ノーマルスキン_modify_move_type(battle: Battle, ctx: BattleContext, v
 def ノーマルスキン_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ノーマルスキン特性: 変換した技の威力を4915/4096倍にする。"""
     if ctx.move is not None and ctx.move.data.type not in ("ノーマル", "ステラ"):
-        value = common.apply_modifier(value, 4915)
+        value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
 
@@ -1763,7 +1874,7 @@ def ふくがん_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any)
         and ctx.attacker is not None
         and ctx.attacker.ability.enabled
     ):
-        value = common.apply_modifier(value, 5325)
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
@@ -1797,6 +1908,37 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: BattleContext, 
             battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
             # 自分側の低下分を除去（上昇分は残す）
             value = {stat: v for stat, v in value.items() if v > 0}
+    return HandlerReturn(value=value)
+
+
+def ムラっけ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ムラっけ特性: ターン終了時に1能力+2、別の1能力-1する。"""
+    mon = ctx.source
+    if mon is None or not mon.alive or not mon.ability.enabled:
+        return HandlerReturn(value=value)
+
+    stats: tuple[Stat, ...] = ("A", "B", "C", "D", "S")
+    raised_stat: Stat | None = None
+    changed = False
+
+    up_candidates = [stat for stat in stats if mon.rank[stat] < 6]
+    if up_candidates:
+        raised_stat = battle.random.choice(up_candidates)
+        changed = battle.modify_stat(mon, raised_stat, +2, source=mon, reason="ムラっけ") or changed
+
+    down_candidates = [stat for stat in stats if mon.rank[stat] > -6 and stat != raised_stat]
+    if down_candidates:
+        lowered_stat = battle.random.choice(down_candidates)
+        changed = battle.modify_stat(mon, lowered_stat, -1, source=mon, reason="ムラっけ") or changed
+
+    if changed:
+        idx = battle.get_player_index(mon)
+        battle.event_logger.add(
+            battle.turn,
+            idx,
+            LogCode.ABILITY_TRIGGERED,
+            payload={"ability": "ムラっけ", "success": True},
+        )
     return HandlerReturn(value=value)
 
 
@@ -1875,7 +2017,7 @@ def ゆきがくれ_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
         return HandlerReturn(value=value)
     active = battle.weather
     if active is not None and active.name == "ゆき" and ctx.check_def_ability_enabled(battle):
-        value = common.apply_modifier(value, 3277)
+        value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
 
 
@@ -2159,7 +2301,7 @@ def がんじょう_survive_lethal(battle: Battle, ctx: BattleContext, value: in
 def ちからずく_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ちからずく特性: 追加効果ありの技の威力を 1.3 倍にする。(ON_CALC_POWER_MODIFIER / subject_spec="attacker:self")"""
     if ctx.move is not None and ctx.move.data.move_secondary:
-        value = common.apply_modifier(value, 5325)
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 

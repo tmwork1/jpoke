@@ -6,20 +6,16 @@ from typing import TYPE_CHECKING, Any
 
 from jpoke.core import HandlerReturn
 from jpoke.enums import LogCode
+from jpoke.utils.battle_math import rank_modifier
 from jpoke.utils.type_defs import Stat
 
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 
-def _rank_modifier(v: int) -> float:
-    """能力ランク補正値を倍率に変換する。"""
-    return (2 + v) / 2 if v >= 0 else 2 / (2 - v)
-
-
 def _effective_stat_with_rank(mon, stat: str) -> float:
     """指定能力の実効値（ランク補正込み）を返す。"""
-    return mon.stats[stat] * _rank_modifier(mon.rank[stat])
+    return mon.stats[stat] * rank_modifier(mon.rank[stat])
 
 
 def _select_paradox_boost_stat(mon) -> Stat:
