@@ -2219,8 +2219,7 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
 def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
     """かがくへんかガス無効化判定（priority=10）。
 
-    かがくへんかガスが場に発動していると、以下を除く特性を無効化する：
-    - かがくへんかガス自身
+    かがくへんかガスが場に発動していると、gas_proof を除く特性を無効化する。
 
     Args:
         battle: バトルインスタンス
@@ -2232,21 +2231,11 @@ def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, s
         HandlerReturn: ガス発動中で無効化対象なら False、それ以外は should_enable をそのまま返す
     """
     if should_enable:
-        # かがくへんかガスが発動中か判定
-        actives = [mon for mon in battle.actives if mon is not None]
-        gas_active = any(
-            mon.alive and
-            mon.ability.orig_name == "かがくへんかガス" and
-            not mon.has_volatile("とくせいなし")
-            for mon in actives
-        )
-
-        # ガス発動中なので、自身がかがくへんかガスでない限り無効化
+        # 本ハンドラが呼ばれる時点で、かがくへんかガス有効はイベント登録側で保証される。
         source_ability = ctx.source.ability
-        if gas_active and source_ability.orig_name != "かがくへんかガス":
+        if "gas_proof" not in source_ability.data.flags:
             should_enable = False
     return HandlerReturn(value=should_enable)
-
 
 
 def announce_ability_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

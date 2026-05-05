@@ -2292,13 +2292,13 @@ def test_ばけのかわ_かたやぶり系には無視される():
     assert defender.hp < before_hp
 
 
-def test_ばけのかわ_かがくへんかガスで無効化される():
-    """ばけのかわ: かがくへんかガス中は特性が無効化される。"""
+def test_ばけのかわ_かがくへんかガスで無効化されない():
+    """ばけのかわ: gas_proof フラグ持ちのためかがくへんかガス中でも有効のまま。"""
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="ばけのかわ")],
         foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
     )
-    assert battle.actives[0].ability.enabled is False
+    assert battle.actives[0].ability.enabled is True
 
 
 def test_おやこあい_単発攻撃が2ヒットする():

@@ -1,4 +1,4 @@
-﻿"""特性データ定義モジュール。
+"""特性データ定義モジュール。
 
 Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
@@ -22,7 +22,8 @@ ABILITIES: dict[str, AbilityData] = {
     "ARシステム": AbilityData(
         flags=[
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -144,6 +145,8 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected",
+            "gas_proof",
+
         ]
     ),
     "うるおいボイス": AbilityData(),
@@ -162,6 +165,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "おどりこ": AbilityData(
         flags=[
+
         ]
     ),
     "おみとおし": AbilityData(),
@@ -180,6 +184,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "おわりのだいち": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -205,7 +210,8 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "かがくへんかガス": AbilityData(
         flags=[
-            "uncopyable"
+            "uncopyable",
+            "gas_proof",
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -262,7 +268,8 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
-    "かちき": AbilityData(
+    "かちき": AbilityData(
+        flags=[],
         handlers={
             Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.かちき_on_stat_down,
@@ -326,6 +333,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ききかいひ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_HP_CHANGED: h.AbilityHandler(
@@ -393,6 +401,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ぎたい": AbilityData(
         flags=[
+
         ]
     ),
     "ぎゃくじょう": AbilityData(
@@ -417,6 +426,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "くだけるよろい": AbilityData(
         flags=[
+
         ]
     ),
     "くろのいななき": AbilityData(),
@@ -475,6 +485,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "こぼれダネ": AbilityData(
         flags=[
+
         ]
     ),
     "こんがりボディ": AbilityData(
@@ -528,10 +539,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "さまようたましい": AbilityData(
         flags=[
+
         ]
     ),
     "さめはだ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -575,6 +588,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "しょうりのほし": AbilityData(
         flags=[
+
         ]
     ),
     "しれいとう": AbilityData(
@@ -609,6 +623,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "じきゅうりょく": AbilityData(
         flags=[
+
         ]
     ),
     "じしんかじょう": AbilityData(
@@ -632,10 +647,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "じゅくせい": AbilityData(
         flags=[
+
         ]
     ),
     "じょうききかん": AbilityData(
         flags=[
+
         ]
     ),
     "じょおうのいげん": AbilityData(
@@ -729,6 +746,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "すなはき": AbilityData(
         flags=[
+
         ]
     ),
     "すりぬけ": AbilityData(
@@ -752,6 +770,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "せいぎのこころ": AbilityData(
         flags=[
+
         ]
     ),
     "せいしんりょく": AbilityData(
@@ -781,6 +800,8 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected",
+            "gas_proof",
+
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -898,6 +919,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "てつのトゲ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -936,6 +958,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "でんきにかえる": AbilityData(
         flags=[
+
         ]
     ),
     "でんきエンジン": AbilityData(
@@ -952,6 +975,7 @@ ABILITIES: dict[str, AbilityData] = {
     "とうそうしん": AbilityData(),
     "とれないにおい": AbilityData(
         flags=[
+
         ]
     ),
     "どくくぐつ": AbilityData(
@@ -961,6 +985,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "どくげしょう": AbilityData(
         flags=[
+
         ]
     ),
     "どくしゅ": AbilityData(
@@ -974,6 +999,7 @@ ABILITIES: dict[str, AbilityData] = {
     "どくのくさり": AbilityData(),
     "どくのトゲ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -1016,6 +1042,7 @@ ABILITIES: dict[str, AbilityData] = {
     "にげあし": AbilityData(),
     "にげごし": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_HP_CHANGED: h.AbilityHandler(
@@ -1026,6 +1053,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ぬめぬめ": AbilityData(
         flags=[
+
         ]
     ),
     "ねつこうかん": AbilityData(
@@ -1064,6 +1092,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "のろわれボディ": AbilityData(
         flags=[
+
         ]
     ),
     "はがねつかい": AbilityData(
@@ -1076,6 +1105,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はがねのせいしん": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -1086,6 +1116,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はじまりのうみ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -1162,6 +1193,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はんすう": AbilityData(
         flags=[
+
         ]
     ),
     "ばけのかわ": AbilityData(
@@ -1170,6 +1202,7 @@ ABILITIES: dict[str, AbilityData] = {
             "protected",
             "per_battle_once",
             "mold_breaker_ignorable",
+            "gas_proof",
         ],
         handlers={
             Event.ON_MODIFY_DAMAGE: h.AbilityHandler(
@@ -1221,14 +1254,17 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "びびり": AbilityData(
         flags=[
+
         ]
     ),
     "びんじょう": AbilityData(
         flags=[
+
         ]
     ),
     "ふうりょくでんき": AbilityData(
         flags=[
+
         ]
     ),
     "ふかしのこぶし": AbilityData(),
@@ -1304,15 +1340,18 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "へんしょく": AbilityData(
         flags=[
+
         ]
     ),
     "ほうし": AbilityData(
         flags=[
+
         ]
     ),
     "ほおぶくろ": AbilityData(),
     "ほのおのからだ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -1323,6 +1362,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ほろびのボディ": AbilityData(
         flags=[
+
         ]
     ),
     "ぼうおん": AbilityData(
@@ -1364,10 +1404,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "まけんき": AbilityData(
         flags=[
+
         ]
     ),
     "みずがため": AbilityData(
         flags=[
+
         ]
     ),
     "みずのベール": AbilityData(
@@ -1461,6 +1503,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ゆうばく": AbilityData(
         flags=[
+
         ]
     ),
     "ゆきかき": AbilityData(
@@ -1539,6 +1582,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わざわいのうつわ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -1549,6 +1593,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わざわいのおふだ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -1559,6 +1604,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わざわいのたま": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
@@ -1577,10 +1623,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わたげ": AbilityData(
         flags=[
+
         ]
     ),
     "わるいてぐせ": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -1595,6 +1643,7 @@ ABILITIES: dict[str, AbilityData] = {
             "uncopyable",
             "protected",
             "mold_breaker_ignorable",
+            "gas_proof",
         ]
     ),
     "アイスボディ": AbilityData(
@@ -1625,6 +1674,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "エアロック": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
@@ -1659,6 +1709,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "カーリーヘアー": AbilityData(
         flags=[
+
         ]
     ),
     "クイックドロウ": AbilityData(),
@@ -1749,6 +1800,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "シンクロ": AbilityData(
         flags=[
+
         ]
     ),
     "スイートベール": AbilityData(
@@ -1799,7 +1851,8 @@ ABILITIES: dict[str, AbilityData] = {
     "スワームチェンジ": AbilityData(
         flags=[
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         ]
     ),
     "ゼロフォーミング": AbilityData(
@@ -1862,7 +1915,8 @@ ABILITIES: dict[str, AbilityData] = {
     "テラスチェンジ": AbilityData(
         flags=[
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         ]
     ),
     "テラボルテージ": AbilityData(
@@ -1885,6 +1939,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "デルタストリーム": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -1923,6 +1978,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ナイトメア": AbilityData(),
     "ノーてんき": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
@@ -1933,6 +1989,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ノーガード": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_MODIFY_ACCURACY: [
@@ -1980,12 +2037,14 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "バッテリー": AbilityData(
         flags=[
+
         ]
     ),
     "バトルスイッチ": AbilityData(
         flags=[
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         ],
         handlers={
             Event.ON_CHECK_ACTION: h.AbilityHandler(
@@ -2007,6 +2066,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "パワースポット": AbilityData(
         flags=[
+
         ]
     ),
     "パンクロック": AbilityData(
@@ -2117,6 +2177,7 @@ ABILITIES: dict[str, AbilityData] = {
     "プラス": AbilityData(),
     "プリズムアーマー": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
@@ -2127,10 +2188,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "プレッシャー": AbilityData(
         flags=[
+
         ]
     ),
     "ヘドロえき": AbilityData(
         flags=[
+
         ]
     ),
     "ヘヴィメタル": AbilityData(
@@ -2149,7 +2212,8 @@ ABILITIES: dict[str, AbilityData] = {
     "マイティチェンジ": AbilityData(
         flags=[
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         ],
         handlers={
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -2191,6 +2255,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "マジックガード": AbilityData(
         flags=[
+
         ],
         handlers={
             Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
@@ -2225,7 +2290,8 @@ ABILITIES: dict[str, AbilityData] = {
     "マルチタイプ": AbilityData(
         flags=[
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -2240,6 +2306,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ミイラ": AbilityData(
         flags=[
+
         ]
     ),
     "ミストメイカー": AbilityData(
@@ -2284,10 +2351,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "メタルプロテクト": AbilityData(
         flags=[
+
         ]
     ),
     "メロメロボディ": AbilityData(
         flags=[
+
         ]
     ),
     "ヨガパワー": AbilityData(
@@ -2316,6 +2385,8 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected",
+            "gas_proof",
+
         ]
     ),
     "リーフガード": AbilityData(

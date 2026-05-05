@@ -265,8 +265,8 @@ class Event(Enum):
     ON_CHECK_NERVOUS = auto()
 
     # emit: core/battle.py（特性の有効/無効状態を判定）
-    # handle: ability.py（かがくへんかガス・undeniable）/ item.py（とくせいガード）
-    # priority: 10(かがくへんかガス無効化) -> 20(undeniable保護) -> 30(とくせいガード保護)
+    # handle: ability.py（かがくへんかガス）/ item.py（とくせいガード）
+    # priority: 10(かがくへんかガス無効化) -> 30(とくせいガード保護)
     ON_CHECK_ABILITY_ENABLED = auto()
 
     # emit: core/item_manager.py（道具効果の有効/無効状態を判定）

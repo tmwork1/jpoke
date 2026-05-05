@@ -76,7 +76,7 @@ class EventManager:
         Args:
             event: 登録するイベントタイプ
             handler: ハンドラ定義
-            subject: ハンドラの対象（ポケモンまたはプレイヤー）
+            subject: ハンドラの主体（ポケモンまたはプレイヤー）
         """
         # print(f"Register handler: {event} {handler} {subject}")
         self.handlers.setdefault(event, []).append(
