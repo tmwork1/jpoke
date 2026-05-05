@@ -1,4 +1,4 @@
-"""特性データ定義モジュール。
+﻿"""特性データ定義モジュール。
 
 Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
@@ -15,16 +15,6 @@ def common_setup():
     """共通のセットアップ処理"""
     for name in ABILITIES:
         ABILITIES[name].name = name
-
-    # undeniable フラグ持ちは共通で特性有効化保護ハンドラを持つ。
-    for data in ABILITIES.values():
-        if "undeniable" in data.flags and \
-                Event.ON_CHECK_ABILITY_ENABLED not in data.handlers:
-            data.handlers[Event.ON_CHECK_ABILITY_ENABLED] = h.AbilityHandler(
-                h.undeniable_check_enabled,
-                subject_spec="source:self",
-                priority=20,
-            )
 
 
 ABILITIES: dict[str, AbilityData] = {
@@ -111,7 +101,6 @@ ABILITIES: dict[str, AbilityData] = {
     "いかりのこうら": AbilityData(),
     "いかりのつぼ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "いしあたま": AbilityData(
@@ -155,7 +144,6 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected",
-            "undeniable"
         ]
     ),
     "うるおいボイス": AbilityData(),
@@ -174,7 +162,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "おどりこ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "おみとおし": AbilityData(),
@@ -193,7 +180,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "おわりのだいち": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -276,8 +262,7 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
-    "かちき": AbilityData(
-        flags=["undeniable"],
+    "かちき": AbilityData(
         handlers={
             Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.かちき_on_stat_down,
@@ -341,7 +326,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ききかいひ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_HP_CHANGED: h.AbilityHandler(
@@ -409,7 +393,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ぎたい": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ぎゃくじょう": AbilityData(
@@ -434,7 +417,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "くだけるよろい": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "くろのいななき": AbilityData(),
@@ -493,7 +475,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "こぼれダネ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "こんがりボディ": AbilityData(
@@ -547,12 +528,10 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "さまようたましい": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "さめはだ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -596,7 +575,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "しょうりのほし": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "しれいとう": AbilityData(
@@ -631,7 +609,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "じきゅうりょく": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "じしんかじょう": AbilityData(
@@ -655,12 +632,10 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "じゅくせい": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "じょうききかん": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "じょおうのいげん": AbilityData(
@@ -754,7 +729,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "すなはき": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "すりぬけ": AbilityData(
@@ -778,7 +752,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "せいぎのこころ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "せいしんりょく": AbilityData(
@@ -808,7 +781,6 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected",
-            "undeniable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -926,7 +898,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "てつのトゲ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -965,7 +936,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "でんきにかえる": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "でんきエンジン": AbilityData(
@@ -982,7 +952,6 @@ ABILITIES: dict[str, AbilityData] = {
     "とうそうしん": AbilityData(),
     "とれないにおい": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "どくくぐつ": AbilityData(
@@ -992,7 +961,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "どくげしょう": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "どくしゅ": AbilityData(
@@ -1006,7 +974,6 @@ ABILITIES: dict[str, AbilityData] = {
     "どくのくさり": AbilityData(),
     "どくのトゲ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -1049,7 +1016,6 @@ ABILITIES: dict[str, AbilityData] = {
     "にげあし": AbilityData(),
     "にげごし": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_HP_CHANGED: h.AbilityHandler(
@@ -1060,7 +1026,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ぬめぬめ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ねつこうかん": AbilityData(
@@ -1099,7 +1064,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "のろわれボディ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "はがねつかい": AbilityData(
@@ -1112,7 +1076,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はがねのせいしん": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -1123,7 +1086,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はじまりのうみ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -1200,7 +1162,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はんすう": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ばけのかわ": AbilityData(
@@ -1209,7 +1170,6 @@ ABILITIES: dict[str, AbilityData] = {
             "protected",
             "per_battle_once",
             "mold_breaker_ignorable",
-            "undeniable",
         ],
         handlers={
             Event.ON_MODIFY_DAMAGE: h.AbilityHandler(
@@ -1261,17 +1221,14 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "びびり": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "びんじょう": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ふうりょくでんき": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ふかしのこぶし": AbilityData(),
@@ -1347,18 +1304,15 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "へんしょく": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ほうし": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ほおぶくろ": AbilityData(),
     "ほのおのからだ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -1369,7 +1323,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ほろびのボディ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ぼうおん": AbilityData(
@@ -1411,12 +1364,10 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "まけんき": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "みずがため": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "みずのベール": AbilityData(
@@ -1510,7 +1461,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ゆうばく": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ゆきかき": AbilityData(
@@ -1589,7 +1539,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わざわいのうつわ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -1600,7 +1549,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わざわいのおふだ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -1611,7 +1559,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わざわいのたま": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
@@ -1630,12 +1577,10 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "わたげ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "わるいてぐせ": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
@@ -1680,7 +1625,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "エアロック": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
@@ -1715,7 +1659,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "カーリーヘアー": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "クイックドロウ": AbilityData(),
@@ -1806,7 +1749,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "シンクロ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "スイートベール": AbilityData(
@@ -1889,7 +1831,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ダークオーラ": AbilityData(
         flags=[
-            "undeniable",
             "mold_breaker_ignorable",
         ]
     ),
@@ -1944,7 +1885,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "デルタストリーム": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
@@ -1983,7 +1923,6 @@ ABILITIES: dict[str, AbilityData] = {
     "ナイトメア": AbilityData(),
     "ノーてんき": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
@@ -1994,7 +1933,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ノーガード": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_MODIFY_ACCURACY: [
@@ -2042,7 +1980,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "バッテリー": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "バトルスイッチ": AbilityData(
@@ -2070,7 +2007,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "パワースポット": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "パンクロック": AbilityData(
@@ -2127,7 +2063,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "フェアリーオーラ": AbilityData(
         flags=[
-            "undeniable",
             "mold_breaker_ignorable",
         ]
     ),
@@ -2182,7 +2117,6 @@ ABILITIES: dict[str, AbilityData] = {
     "プラス": AbilityData(),
     "プリズムアーマー": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
@@ -2193,12 +2127,10 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "プレッシャー": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ヘドロえき": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ヘヴィメタル": AbilityData(
@@ -2259,7 +2191,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "マジックガード": AbilityData(
         flags=[
-            "undeniable"
         ],
         handlers={
             Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
@@ -2309,7 +2240,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ミイラ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ミストメイカー": AbilityData(
@@ -2354,12 +2284,10 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "メタルプロテクト": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "メロメロボディ": AbilityData(
         flags=[
-            "undeniable"
         ]
     ),
     "ヨガパワー": AbilityData(
@@ -2388,7 +2316,6 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "uncopyable",
             "protected",
-            "undeniable"
         ]
     ),
     "リーフガード": AbilityData(

@@ -2221,7 +2221,6 @@ def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, s
 
     かがくへんかガスが場に発動していると、以下を除く特性を無効化する：
     - かがくへんかガス自身
-    - undeniable フラグを持つ特性（別ハンドラで復元）
 
     Args:
         battle: バトルインスタンス
@@ -2248,26 +2247,6 @@ def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, s
             should_enable = False
     return HandlerReturn(value=should_enable)
 
-
-def undeniable_check_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
-    """undeniable フラグ保護判定（priority=20）。
-
-    undeniable フラグを持つ特性は、かがくへんかガスなどによる無効化を
-    受けない。このハンドラはガス判定の後に評価され、該当特性を保護する。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト (ON_CHECK_ABILITY_ENABLED)
-            - source: 判定対象のポケモン
-        should_enable: 現在の有効化状態
-
-    Returns:
-        HandlerReturn: undeniable フラグ持ちなら True（保護）、それ以外は should_enable をそのまま返す
-    """
-    source_ability = ctx.source.ability
-    if "undeniable" in source_ability.data.flags:
-        return HandlerReturn(value=True)
-    return HandlerReturn(value=should_enable)
 
 
 def announce_ability_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
