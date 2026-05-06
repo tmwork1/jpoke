@@ -184,7 +184,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "おわりのだいち": AbilityData(
         flags=[
-
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
