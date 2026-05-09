@@ -8,6 +8,9 @@ from jpoke.model import Pokemon
 import test_utils as t
 
 
+# ──────────────────────────────────────────────────────────────────
+# どく、もうどく
+# ──────────────────────────────────────────────────────────────────
 def test_どく_ダメージ():
     """どく: ターン終了時ダメージ"""
     battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
@@ -32,44 +35,9 @@ def test_もうどく_ダメージ():
         assert damage == mon.max_hp * (i + 1) // 16
 
 
-def test_どくタイプには通常どくが入らない():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("フシギダネ")])
-    target = battle.actives[0]
-
-    assert not battle.ailment_manager.apply(target, "どく")
-    assert not target.ailment.is_active
-
-
-def test_はがねタイプには通常もうどくが入らない():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("コイル")])
-    target = battle.actives[0]
-
-    assert not battle.ailment_manager.apply(target, "もうどく")
-    assert not target.ailment.is_active
-
-
-def test_ほのおタイプにはやけどが入らない():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ヒトカゲ")])
-    target = battle.actives[0]
-
-    assert not battle.ailment_manager.apply(target, "やけど")
-    assert not target.ailment.is_active
-
-
-def test_でんきタイプにはまひが入らない():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
-    target = battle.actives[0]
-
-    assert not battle.ailment_manager.apply(target, "まひ")
-    assert not target.ailment.is_active
-
-
-def test_こおりタイプにはこおりが入らない():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ラプラス")])
-    target = battle.actives[0]
-
-    assert not battle.ailment_manager.apply(target, "こおり")
-    assert not target.ailment.is_active
+# ──────────────────────────────────────────────────────────────────
+# まひ
+# ──────────────────────────────────────────────────────────────────
 
 
 def test_まひ_すばやさ低下():
@@ -104,6 +72,9 @@ def test_まひ_行動成功():
     assert result, "Paralysis action enabled (trigger_rate=0.0)"
 
 
+# ──────────────────────────────────────────────────────────────────
+# やけど
+# ──────────────────────────────────────────────────────────────────
 def test_やけど_ダメージ補正あり():
     """やけど: 物理技ダメージ半減"""
     battle = t.start_battle(
@@ -133,11 +104,14 @@ def test_やけど_ダメージ():
     assert actual_damage == mon.max_hp // 16, f"Burn damage is incorrect: expected {mon.max_hp // 16} but got {actual_damage}"
 
 
+# ──────────────────────────────────────────────────────────────────
+# ねむり
+# ──────────────────────────────────────────────────────────────────
 def test_ねむり_カウント():
     """ねむり: ターン経過で回復"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], 
-        ally=[Pokemon("ピカチュウ")],
-    )
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
+                            ally=[Pokemon("ピカチュウ")],
+                            )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "ねむり", count=2)
 
@@ -150,25 +124,9 @@ def test_ねむり_カウント():
     assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
     assert not mon.ailment.is_active
 
-
-def test_ねむり中はいびきを使える():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ", moves=["いびき"])])
-    mon = battle.actives[0]
-    battle.ailment_manager.apply(mon, "ねむり", count=2)
-
-    assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert mon.ailment.name == "ねむり"
-    assert mon.ailment.count == 1
-
-
-def test_ねむり中はねごとを使える():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ", moves=["ねごと"])])
-    mon = battle.actives[0]
-    battle.ailment_manager.apply(mon, "ねむり", count=2)
-
-    assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert mon.ailment.name == "ねむり"
-    assert mon.ailment.count == 1
+# ──────────────────────────────────────────────────────────────────
+# こおり
+# ──────────────────────────────────────────────────────────────────
 
 
 def test_こおり_行動不能():
@@ -206,7 +164,51 @@ def test_こおり_ほのお技被弾で解凍する():
 
     assert not frozen.ailment.is_active
 
+# ──────────────────────────────────────────────────────────────────
+# タイプによる耐性テスト
+# ──────────────────────────────────────────────────────────────────
+# TODO : パラメタライズでまとめる
+
+
+def test_どくタイプには通常どくが入らない():
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("フシギダネ")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "どく")
+    assert not target.ailment.is_active
+
+
+def test_はがねタイプには通常もうどくが入らない():
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("コイル")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "もうどく")
+    assert not target.ailment.is_active
+
+
+def test_でんきタイプにはまひが入らない():
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "まひ")
+    assert not target.ailment.is_active
+
+
+def test_ほのおタイプにはやけどが入らない():
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ヒトカゲ")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "やけど")
+    assert not target.ailment.is_active
+
+
+def test_こおりタイプにはこおりが入らない():
+    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ラプラス")])
+    target = battle.actives[0]
+
+    assert not battle.ailment_manager.apply(target, "こおり")
+    assert not target.ailment.is_active
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
-

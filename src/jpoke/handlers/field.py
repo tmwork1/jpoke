@@ -246,9 +246,11 @@ def マジックルーム_on_field_deactivate(battle: Battle, ctx: BattleContext
 
 def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
-    if not ctx.defender or not ctx.move:
-        return HandlerReturn(value=value)
-    if ctx.move.has_label("ignore_rank"):
+    if (
+        not ctx.defender
+        or not ctx.move
+        or ctx.move.has_label("ignore_rank")
+    ):
         return HandlerReturn(value=value)
 
     move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
