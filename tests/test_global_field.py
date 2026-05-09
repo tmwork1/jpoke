@@ -70,6 +70,38 @@ def test_すなあらし_いわ無効():
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
 
 
+@pytest.mark.parametrize("ability_name", ["すなかき", "すながくれ", "すなのちから", "ぼうじん"])
+def test_sandstorm_damage_immunity_direct(ability_name):
+    """各特性: すなあらしダメージを受けない（ON_BEFORE_DAMAGE_APPLY 直接テスト）。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name)],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("すなあらし", 999),
+    )
+    ally_mon = battle.actives[0]
+
+    # ON_BEFORE_DAMAGE_APPLY で直接テスト
+    result = battle.events.emit(
+        Event.ON_BEFORE_DAMAGE_APPLY,
+        BattleContext(target=ally_mon, hp_change_reason="sandstorm_damage"),
+        -6,  # すなあらしダメージ（max_hp 110 の 1/16 ≈ 6）
+    )
+    assert result == 0
+
+
+@pytest.mark.parametrize("ability_name", ["すなかき", "すながくれ", "すなのちから", "ぼうじん"])
+def test_sandstorm_damage_immunity_full_flow(ability_name):
+    """各特性: ON_TURN_END_1 の完全フローでダメージが免除される。"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability=ability_name)],
+        foe=[Pokemon("ピカチュウ")],
+        weather=("すなあらし", 999),
+    )
+    ally_hp_before = battle.actives[0].hp
+    battle.events.emit(Event.ON_TURN_END_1)
+    assert battle.actives[0].hp == ally_hp_before
+
+
 def test_すなあらし_いわ特防強化():
     """すなあらし: いわタイプ特防1.5倍"""
     battle = t.start_battle(
