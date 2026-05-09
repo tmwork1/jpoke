@@ -1672,9 +1672,6 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "エアロック": AbilityData(
-        flags=[
-
-        ],
         handlers={
             Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
                 h.エアロック_check_weather_enabled,
@@ -1976,12 +1973,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ナイトメア": AbilityData(),
     "ノーてんき": AbilityData(
-        flags=[
-
-        ],
         handlers={
             Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
-                h.ノーてんき_check_weather_enabled,
+                h.エアロック_check_weather_enabled,
                 subject_spec="source:self",
             ),
         },

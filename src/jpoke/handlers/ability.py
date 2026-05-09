@@ -370,9 +370,7 @@ def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, 
 
 def エアロック_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """エアロック特性: 天候効果を無効化する。"""
-    if value:
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def ありじごく_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1965,11 +1963,6 @@ def ノーガード_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
         if attacker_no_guard or defender_no_guard:
             value = None
     return HandlerReturn(value=value)
-
-
-def ノーてんき_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
-    """ノーてんき特性: 天候効果を無効化する。"""
-    return HandlerReturn(value=False, stop_event=True)
 
 
 def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
