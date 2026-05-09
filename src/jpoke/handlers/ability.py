@@ -1713,11 +1713,9 @@ def ブレインフォース_modify_damage(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=value)
 
 
-def フィルターハードロックプリズムアーマー_modify_damage(
-    battle: Battle,
-    ctx: BattleContext,
-    value: int,
-) -> HandlerReturn:
+def ハードロック_modify_damage(battle: Battle,
+                         ctx: BattleContext,
+                         value: int) -> HandlerReturn:
     """防御側特性: 効果抜群の技ダメージを0.75倍にする。"""
     if (
         ctx.check_def_ability_enabled(battle)
@@ -1727,7 +1725,7 @@ def フィルターハードロックプリズムアーマー_modify_damage(
     return HandlerReturn(value=value)
 
 
-def マルチスケイルファントムガード_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def マルチスケイル_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """防御側特性: HP満タン時の被ダメージを0.5倍にする。"""
     if (
         ctx.check_def_ability_enabled(battle)
@@ -1765,7 +1763,7 @@ def もふもふ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -
     return HandlerReturn(value=value)
 
 
-def ちからもちヨガパワー_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def ちからもち_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。"""
     move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
     if move_category == "物理" and ctx.move.name not in ["イカサマ", "ボディプレス"]:
@@ -2337,7 +2335,7 @@ def ちからずく_modify_power(battle: Battle, ctx: BattleContext, value: int)
 def ちからずく_on_modify_secondary_chance(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """ちからずく特性: 追加効果対象技の追加効果確率を 0 にする。"""
     if ctx.move is not None and ctx.move.data.move_secondary:
-        value = 0.0
+        return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
 

@@ -862,7 +862,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ちからもち": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.ちからもちヨガパワー_on_calc_atk_modifier,
+                h.ちからもち_on_calc_atk_modifier,
                 subject_spec="attacker:self",
             )
         }
@@ -2017,7 +2017,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.フィルターハードロックプリズムアーマー_modify_damage,
+                h.ハードロック_modify_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2081,7 +2081,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ファントムガード": AbilityData(
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.マルチスケイルファントムガード_modify_damage,
+                h.マルチスケイル_modify_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2103,7 +2103,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.フィルターハードロックプリズムアーマー_modify_damage,
+                h.ハードロック_modify_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2163,12 +2163,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "プラス": AbilityData(),
     "プリズムアーマー": AbilityData(
-        flags=[
-
-        ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.フィルターハードロックプリズムアーマー_modify_damage,
+                h.ハードロック_modify_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2269,7 +2266,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.マルチスケイルファントムガード_modify_damage,
+                h.マルチスケイル_modify_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2352,7 +2349,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ヨガパワー": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.ちからもちヨガパワー_on_calc_atk_modifier,
+                h.ちからもち_on_calc_atk_modifier,
                 subject_spec="attacker:self",
             )
         }

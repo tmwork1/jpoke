@@ -96,6 +96,7 @@ class ItemManager:
                         target: Pokemon,
                         move: Move | None = None,
                         reason: str = "") -> bool:
+        # TODO : 引数を target, source の順に変更し、影響範囲をすべて修正する
         """持ち物変更が許可されるかを共通イベントで判定する。
 
         Args:
@@ -113,7 +114,10 @@ class ItemManager:
             True
         )
 
-    def swap_items(self, source: Pokemon, target: Pokemon, move: Move | None = None) -> bool:
+    def swap_items(self,
+                   mon1: Pokemon,
+                   mon2: Pokemon,
+                   move: Move | None = None) -> bool:
         """2体の持ち物を入れ替える。
 
         Args:
@@ -124,48 +128,50 @@ class ItemManager:
         Returns:
             入れ替えに成功した場合はTrue
         """
-        if not source.has_item() and not target.has_item():
+        if not mon1.has_item() and not mon2.has_item():
             return False
-        if not self.can_change_item(source, source, move=move, reason="swap"):
+        if not self.can_change_item(mon1, mon1, move=move, reason="swap"):
             return False
-        if not self.can_change_item(source, target, move=move, reason="swap"):
+        if not self.can_change_item(mon1, mon2, move=move, reason="swap"):
             return False
 
-        source_item = source.item.name
-        target_item = target.item.name
-        if source.has_item():
-            self.lose_item(source, cause="swap")
-        if target.has_item():
-            self.lose_item(target, cause="swap")
-        self.set_item(source, target_item)
-        self.set_item(target, source_item)
+        source_item = mon1.item.name
+        target_item = mon2.item.name
+        if mon1.has_item():
+            self.lose_item(mon1, cause="swap")
+        if mon2.has_item():
+            self.lose_item(mon2, cause="swap")
+        self.set_item(mon1, target_item)
+        self.set_item(mon2, source_item)
         return True
 
     def take_item(self,
-                  source: Pokemon,
-                  target: Pokemon,
+                  to_mon: Pokemon,
+                  from_mon: Pokemon,
                   move: Move | None = None,
                   reason: ItemLostCause = "steal") -> bool:
-        """対象の持ち物を source に移す。
+        # TODO : 引数を from_mon, to_mon の順に変更し、影響範囲をすべて修正する
+        """対象の持ち物を to_mon に移す。
 
         Args:
-            source: 持ち物を受け取るポケモン
-            target: 持ち物を失うポケモン
+            to_mon: 持ち物を受け取るポケモン
+            from_mon: 持ち物を失うポケモン
             move: 関連する技
             reason: 変更理由
 
         Returns:
             奪取に成功した場合はTrue
         """
-        if not target.has_item():
+
+        if not from_mon.has_item():
             return False
-        if not self.can_change_item(source, target, move=move, reason=reason):
+        if not self.can_change_item(to_mon, from_mon, move=move, reason=reason):
             return False
 
-        item_name = target.item.name
-        self.lose_item(target, cause=reason)
-        self.set_item(source, item_name)
-        self.set_item(target, "")
+        item_name = from_mon.item.name
+        self.lose_item(from_mon, cause=reason)
+        self.set_item(to_mon, item_name)
+        self.set_item(from_mon, "")
         return True
 
     def remove_item(self,
@@ -174,6 +180,7 @@ class ItemManager:
                     move: Move | None = None,
                     reason: ItemLostCause = "remove",
                     check_on_empty: bool = False) -> bool:
+        # TODO : 引数を target, source の順に変更し、影響範囲をすべて修正する
         """対象の持ち物を失わせる。
 
         Args:
