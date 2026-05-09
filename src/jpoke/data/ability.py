@@ -399,9 +399,6 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぎたい": AbilityData(
-        flags=[
-
-        ]
     ),
     "ぎゃくじょう": AbilityData(
         handlers={
@@ -542,9 +539,6 @@ ABILITIES: dict[str, AbilityData] = {
         ]
     ),
     "さめはだ": AbilityData(
-        flags=[
-
-        ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
                 h.さめはだ_on_damage,
@@ -922,7 +916,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
-                h.てつのトゲ_on_damage,
+                h.さめはだ_on_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2343,9 +2337,12 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "メタルプロテクト": AbilityData(
-        flags=[
-
-        ]
+        handlers={
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.クリアボディ_modify_stat,
+                subject_spec="target:self",
+            )
+        }
     ),
     "メロメロボディ": AbilityData(
         flags=[

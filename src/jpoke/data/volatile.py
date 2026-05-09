@@ -10,6 +10,8 @@ from jpoke.core import HandlerReturn
 from jpoke.handlers import common, volatile as h
 from .models import VolatileData
 
+# TODO : lambda式は使わず、名前付き関数をhandlers/volatile.pyに定義する
+
 
 def common_setup() -> None:
     """
@@ -285,18 +287,13 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "とくせいなし": VolatileData(
         handlers={
-            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.VolatileHandler(
-                lambda battle, ctx, value: HandlerReturn(
-                    value=False if ctx.defender.has_volatile("とくせいなし") else value
-                ),
-                subject_spec="defender:self",
-            ),
             Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
-                lambda battle, ctx, value: HandlerReturn(
-                    value=False if ctx.source.has_volatile("とくせいなし") else value
-                ),
+                lambda *args: HandlerReturn(value=False, stop_event=True),
                 subject_spec="source:self",
-                priority=5,
+            ),
+            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.VolatileHandler(
+                lambda *args: HandlerReturn(value=False, stop_event=True),
+                subject_spec="defender:self",
             ),
             Event.ON_APPLY_VOLATILE: h.VolatileHandler(
                 h.とくせいなし_on_volatile_apply,

@@ -672,7 +672,12 @@ def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
     ):
         return HandlerReturn(value=value)
 
-    chance = 1.0 if (battle.weather is not None and battle.weather.is_sunny) else 0.5
+    # 発動確率の計算
+    if battle.weather is not None and battle.weather.is_sunny:
+        chance = 1.0
+    else:
+        chance = 0.5
+
     if battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
@@ -1152,12 +1157,6 @@ def てつのこぶし_modify_power(battle: Battle, ctx: BattleContext, value: i
         modifier=4915,
         move_label="punch",
     )
-
-
-def てつのトゲ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """てつのトゲ特性: 接触技を受けた相手に最大HPの1/8ダメージを与える。"""
-    _apply_contact_counter_chip(battle, ctx, ratio=1/8)
-    return HandlerReturn(value=value)
 
 
 def がんじょうあご_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
