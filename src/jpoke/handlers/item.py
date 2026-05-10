@@ -92,10 +92,10 @@ def だっしゅつパック_on_stat_down(battle: Battle, ctx: BattleContext, va
 
 
 def たべのこし_heal_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # 毎ターンHPを1/16回復
+    # HPを1/16回復
     if battle.modify_hp(ctx.source, r=1/16):
         ctx.source.item.revealed = True
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 # ===== 難易度1: HP回復系アイテム =====
 
