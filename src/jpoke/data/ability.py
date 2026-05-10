@@ -260,13 +260,16 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+                h.かたやぶり_activate,
+                subject_spec="attacker:self",
             ),
             Event.ON_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+                h.かたやぶり_deactivate,
+                subject_spec="attacker:self",
             ),
             Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
                 h.かたやぶり_check_ability_enabled,
                 subject_spec="attacker:self",
-                priority=100,
             ),
         }
     ),
@@ -1859,10 +1862,17 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
+            Event.ON_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+                h.かたやぶり_activate,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+                h.かたやぶり_deactivate,
+                subject_spec="attacker:self",
+            ),
             Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
                 h.かたやぶり_check_ability_enabled,
                 subject_spec="attacker:self",
-                priority=100,
             ),
         }
     ),
@@ -1917,10 +1927,17 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
+            Event.ON_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+                h.かたやぶり_activate,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+                h.かたやぶり_deactivate,
+                subject_spec="attacker:self",
+            ),
             Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
                 h.かたやぶり_check_ability_enabled,
                 subject_spec="attacker:self",
-                priority=100,
             ),
         }
     ),
