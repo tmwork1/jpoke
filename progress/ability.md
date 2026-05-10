@@ -20,304 +20,301 @@
 ## 特性一覧（実装状況付き）
 
 - 実装対象総数: 282件（x 190件 / - 92件）
-- 列
+- 列名
     実装 : 効果処理ハンドラの実装状況
-    型破適用 : 特性かたやぶりにより無効化されるか
-    ガス適用 : かがくへんかガスに無効化されるか
-    型破テスト : かたやぶりによる無効化テストの実施状況
-    ガステスト : かがくへんかガスによる無効化テストの実施状況
+    型破 : 特性かたやぶり
+    ガス : 特性かがくへんかガス
 - 凡例
     x = 実装済み/テスト済み
     - = 未実装/未テスト
-    y = Yes
-    n = No
-    n/a = 適用外 (不要)
 
 
-特性	仕様書	実装	テスト	型破テスト	ガステスト	型破適用	ガス適用
-
-ARシステム	x	x	x	n/a	-	n	n
-アイスフェイス	x	-	-	-	-	y	n
-アイスボディ	x	x	x	n/a	n/a	n	y
-あくしゅう	x	-	-	-	n/a	y	y
-あついしぼう	x	x	x	x	n/a	y	y
-あとだし	x	x	x	n/a	n/a	n	y
-アナライズ	x	x	-	n/a	n/a	n	y
-あまのじゃく	x	x	-	x	n/a	y	y
-あめうけざら	x	x	x	n/a	n/a	n	y
-あめふらし	x	x	x	n/a	n/a	n	y
-ありじごく	x	x	x	n/a	n/a	n	y
-アロマベール	x	-	-	-	n/a	y	y
-いかく	x	x	x	n/a	n/a	n	y
-いかりのこうら	x	-	-	-	n/a	y	y
-いかりのつぼ	x	-	-	n/a	n/a	n	y
-いしあたま	x	x	x	n/a	n/a	n	y
-いたずらごころ	x	x	x	n/a	n/a	n	y
-いろめがね	x	x	x	n/a	n/a	n	y
-いわはこび	x	x	x	n/a	n/a	n	y
-うのミサイル	x	-	-	n/a	-	n	n
-うるおいボイス	x	-	-	-	n/a	y	y
-うるおいボディ	x	-	-	-	n/a	y	y
-エアロック	x	x	x	n/a	n/a	n	y
-エレキメイカー	x	x	x	n/a	n/a	n	y
-えんかく	x	-	-	-	n/a	y	y
-おうごんのからだ	x	x	x	x	n/a	y	y
-オーラブレイク	x	-	-	-	n/a	y	y
-おどりこ	x	保留	-	n/a	n/a	n	y
-おみとおし	x	-	-	-	n/a	y	y
-おもかげやどし	x	-	-	-	n/a	y	y
-おやこあい	x	x	x	n/a	n/a	n	y
-おわりのだいち	x	x	x	n/a	n/a	n	y
-カーリーヘアー	x	-	-	n/a	n/a	n	y
-かいりきバサミ	x	x	x	x	n/a	y	y
-かがくへんかガス	x	x	x	n/a	n/a	n	y
-かげふみ	x	x	x	n/a	n/a	n	y
-かぜのり	x	-	-	-	n/a	y	y
-かそく	x	x	x	n/a	n/a	n	y
-かたいツメ	x	x	x	n/a	n/a	n	y
-かたやぶり	x	x	x	n/a	n/a	n	y
-かちき	x	x	x	n/a	n/a	n	y
-カブトアーマー	x	x	x	x	n/a	y	y
-かるわざ	x	x	x	n/a	n/a	n	y
-がんじょう	x	x	x		n/a	-	-
-がんじょうあご	x	x	x	n/a	n/a	n	y
-かんそうはだ	x	-	-	x	n/a	y	y
-かんろなミツ	x	-	-	-	n/a	y	y
-ききかいひ	x	x	x	n/a	n/a	n	y
-きけんよち	x	-	-	-	n/a	y	y
-ぎたい	x	-	-	n/a	n/a	n	y
-きもったま	x	-	-	-	n/a	y	y
-ぎゃくじょう	x	x	x	n/a	n/a	n	y
-きゅうばん	x	x	-		n/a	-	x
-きょううん	x	x	x	n/a	n/a	n	y
-きよめのしお	x	x	x	x	n/a	y	y
-きれあじ	x	x	x	n/a	n/a	n	y
-きんしのちから	x	-	-	-	n/a	y	y
-きんちょうかん	x	x	x	n/a	n/a	n	y
-くいしんぼう	x	-	-	-	n/a	y	y
-クイックドロウ	x	-	-	-	n/a	y	y
-クォークチャージ	x	x	x	n/a	n/a	n	y
-くさのけがわ	x	x	x	x	n/a	y	y
-くだけるよろい	x	x	x	n/a	n/a	n	y
-グラスメイカー	x	x	x	n/a	n/a	n	y
-クリアボディ	x	x	x	x	n/a	y	y
-くろのいななき	x	-	-	-	n/a	y	y
-げきりゅう	x	x	x	n/a	n/a	n	y
-こおりのりんぷん	x	x	x	x	n/a	y	y
-こだいかっせい	x	x	x	n/a	n/a	n	y
-こぼれダネ	x	x	x	n/a	n/a	n	y
-ごりむちゅう	x	x	x	n/a	n/a	n	y
-こんがりボディ	x	-	-	-	n/a	y	y
-こんじょう	x	x	x	n/a	n/a	n	y
-サーフテール	x	-	-	-	n/a	y	y
-サイコメイカー	x	x	x	n/a	n/a	n	y
-さいせいりょく	x	x	x	n/a	n/a	n	y
-さまようたましい	x	x	x	n/a	n/a	n	y
-さめはだ	x	x	x		n/a	-	x
-サンパワー	x	x	x	x	n/a	y	y
-シェルアーマー	x	-	-	-	n/a	y	y
-じきゅうりょく	x	x	x	n/a	n/a	n	y
-じしんかじょう	x	x	x	n/a	n/a	n	y
-しぜんかいふく	x	x	x	n/a	n/a	n	y
-しめりけ	x	x	x	x	n/a	y	y
-しゅうかく	x	x	-	n/a	n/a	n	y
-じゅうなん	x	x	x	x	n/a	y	y
-じゅくせい	x	-	x	n/a	n/a	n	y
-じょうききかん	x	-	x	n/a	n/a	n	y
-しょうりのほし	x	-	x	n/a	n/a	n	y
-じょおうのいげん	x	-	-	-	n/a	y	y
-じりょく	x	x	x	n/a	n/a	n	y
-しろいけむり	x	x	x	x	n/a	y	y
-しろのいななき	x	-	-	-	n/a	y	y
-しんがん	x	-	-	-	n/a	y	y
-シンクロ	x	-	-	n/a	n/a	n	y
-じんばいったい	x	-	-	n/a	-	n	n
-しんりょく	x	x	x	n/a	n/a	n	y
-スイートベール	x	-	-	-	n/a	y	y
-すいすい	x	x	x	n/a	n/a	n	y
-すいほう	x	x	x	x	n/a	y	y
-スカイスキン	x	x	x	n/a	n/a	n	y
-スキルリンク	x	x	-	n/a	n/a	n	y
-すじがねいり	x	n/a	-	-	n/a	y	y
-すてみ	x	-	-	-	n/a	y	y
-スナイパー	x	x	x	n/a	n/a	n	y
-すなおこし	x	x	x	n/a	n/a	n	y
-すなかき	x	x	x	n/a	n/a	n	y
-すながくれ	x	-	-	-	n/a	y	y
-すなのちから	x	x	-	n/a	n/a	n	y
-すなはき	x	-	-	n/a	n/a	n	y
-すりぬけ	x	x	x	n/a	n/a	n	y
-するどいめ	x	x	x	x	n/a	y	y
-スロースタート	x	x	x	n/a	n/a	n	y
-スワームチェンジ	x	-	-	n/a	-	n	n
-せいぎのこころ	x	-	-	n/a	n/a	n	y
-せいしんりょく	x	x	x	x	n/a	y	y
-せいでんき	x	x	x	n/a	n/a	n	y
-ぜったいねむり	x	-	-	n/a	-	n	n
-ゼロフォーミング	x	-	-	-	n/a	y	y
-そうしょく	x	x	x		n/a	-	x
-そうだいしょう	x	-	-	-	n/a	y	y
-ソウルハート	x	-	-	-	n/a	y	y
-ダークオーラ	x	-	-	-	n/a	y	y
-ターボブレイズ	x	x	x	n/a	n/a	n	y
-たいねつ	x	x	x	x	n/a	y	y
-ダウンロード	x	x	x	n/a	n/a	n	y
-だっぴ	x	x	x	n/a	n/a	n	y
-たんじゅん	x	x	x	x	n/a	y	y
-ちからずく	x	x	x	n/a	n/a	n	y
-ちからもち	x	x	x	n/a	n/a	n	y
-ちくでん	x	x	x	x	n/a	y	y
-ちどりあし	x	-	-	-	n/a	y	y
-ちょすい	x	x	x	x	n/a	y	y
-テイルアーマー	x	-	-	-	n/a	y	y
-てきおうりょく	x	x	x	n/a	n/a	n	y
-テクニシャン	x	x	x	n/a	n/a	n	y
-てつのこぶし	x	x	x	n/a	n/a	n	y
-てつのトゲ	x	x	x	n/a	n/a	n	y
-テラスシェル	x	x	x	x	n/a	y	y
-テラスチェンジ	x	-	-	n/a	-	n	n
-テラボルテージ	x	x	x	n/a	n/a	n	y
-デルタストリーム	x	x	x	n/a	n/a	n	y
-でんきエンジン	x	x	x	x	n/a	y	y
-でんきにかえる	x	-	-	n/a	n/a	n	y
-てんきや	x	-	-	-	n/a	y	y
-てんねん	x	x	x	x	n/a	y	y
-てんのめぐみ	x	x	x	n/a	n/a	n	y
-とうそうしん	x	-	-	-	n/a	y	y
-どくくぐつ	x	-	-	-	n/a	y	y
-どくげしょう	x	-	-	n/a	n/a	n	y
-どくしゅ	x	x	x	n/a	n/a	n	y
-どくのくさり	x	-	-	-	n/a	y	y
-どくのトゲ	x	x	x	n/a	n/a	n	y
-どくぼうそう	x	-	-	n/a	n/a	n	y
-どしょく	x	x	x	x	n/a	y	y
-トランジスタ	x	x	x	n/a	n/a	n	y
-トレース	x	x	x	n/a	n/a	n	y
-とれないにおい	x	-	-	n/a	n/a	n	y
-どんかん	x	x	x	x	n/a	y	y
-ナイトメア	x	-	-	-	n/a	y	y
-なまけ	x	-	-	-	n/a	y	y
-にげごし	x	x	x	n/a	n/a	n	y
-ぬめぬめ	x	-	-	n/a	n/a	n	y
-ねつこうかん	x	x	x	x	n/a	y	y
-ねつぼうそう	x	-	-	n/a	n/a	n	y
-ねんちゃく	x	x	x	x	n/a	y	y
-ノーガード	x	x	x	n/a	n/a	n	y
-ノーてんき	x	x	x	n/a	n/a	n	y
-ノーマルスキン	x	x	x	n/a	n/a	n	y
-のろわれボディ	x	-	-	n/a	n/a	n	y
-ハードロック	x	x	x	x	n/a	y	y
-はがねつかい	x	x	x	n/a	n/a	n	y
-はがねのせいしん	x	x	x	n/a	n/a	n	y
-ばけのかわ	x	x	x	x	-	y	n
-はじまりのうみ	x	x	x	n/a	n/a	n	y
-パステルベール	x	-	-	-	n/a	y	y
-はっこう	x	-	-	-	n/a	y	y
-はとむね	x	x	x	x	n/a	y	y
-バトルスイッチ	x	x	x	n/a	-	n	n
-ハドロンエンジン	x	x	-	n/a	n/a	n	y
-はやあし	x	x	x	n/a	n/a	n	y
-はやおき	x	-	-	-	n/a	y	y
-はやてのつばさ	x	-	-	-	n/a	y	y
-はらぺこスイッチ	x	x	x	n/a	n/a	n	y
-バリアフリー	x	-	-	-	n/a	y	y
-はりきり	x	x	x	n/a	n/a	n	y
-はりこみ	x	x	-	n/a	n/a	n	y
-パワースポット	x	n/a	x	n/a	n/a	n	y
-パンクロック	x	x	x	x	n/a	y	y
-ばんけん	x	-	-	-	n/a	y	y
-はんすう	x	-	-	n/a	n/a	n	y
-ビーストブースト	x	-	-	-	n/a	y	y
-ヒーリングシフト	x	-	-	-	n/a	y	y
-ひでり	x	x	x	n/a	n/a	n	y
-ひとでなし	x	x	x	n/a	n/a	n	y
-ひひいろのこどう	x	x	-	n/a	n/a	n	y
-ビビッドボディ	x	-	-	-	n/a	y	y
-びびり	x	-	-	n/a	n/a	n	y
-ひらいしん	x	x	x	x	n/a	y	y
-びんじょう	x	-	-	n/a	n/a	n	y
-ファーコート	x	x	x	x	n/a	y	y
-ファントムガード	x	x	x		n/a	x	x
-フィルター	x	x	x	x	n/a	y	y
-ふうりょくでんき	x	-	-	n/a	n/a	n	y
-フェアリーオーラ	x	-	-	-	n/a	y	y
-フェアリースキン	x	x	x	n/a	n/a	n	y
-ふかしのこぶし	x	-	-	-	n/a	y	y
-ぶきよう	x	x	x	n/a	n/a	n	y
-ふくがん	x	x	x	n/a	n/a	n	y
-ふくつのこころ	x	-	-	-	n/a	y	y
-ふくつのたて	x	-	-	-	n/a	y	y
-ふしぎなうろこ	x	x	x	x	n/a	y	y
-ふしょく	x	x	x	n/a	n/a	n	y
-ふとうのけん	x	-	-	-	n/a	y	y
-ふみん	x	x	x	x	n/a	y	y
-ふゆう	x	x	x	x	n/a	y	y
-フラワーギフト	x	-	-	-	n/a	y	y
-フラワーベール	x	-	-	-	n/a	y	y
-フリーズスキン	x	x	x	n/a	n/a	n	y
-プリズムアーマー	x	x	x	n/a	n/a	n	y
-ブレインフォース	x	x	x	n/a	n/a	n	y
-プレッシャー	x	-	-	n/a	n/a	n	y
-フレンドガード	x	n/a	-	-	n/a	y	y
-ヘヴィメタル	x	-	-	-	n/a	y	y
-ヘドロえき	x	-	-	n/a	n/a	n	y
-へんげんじざい	x	x	x	n/a	n/a	n	y
-へんしょく	x	x	x	n/a	n/a	n	y
-ポイズンヒール	x	x	x	n/a	n/a	n	y
-ぼうおん	x	x	x	x	n/a	y	y
-ほうし	x	-	-	n/a	n/a	n	y
-ぼうじん	x	x	x	x	n/a	y	y
-ぼうだん	x	x	x	x	n/a	y	y
-ほおぶくろ	x	-	-	-	n/a	y	y
-ほのおのからだ	x	x	x	n/a	n/a	n	y
-ほろびのボディ	x	-	-	n/a	n/a	n	y
-マイティチェンジ	x	x	x	n/a	-	n	n
-マイペース	x	x	x	x	n/a	y	y
-マグマのよろい	x	x	x	x	n/a	y	y
-まけんき	x	x	x	n/a	n/a	n	y
-マジシャン	x	x	-	n/a	n/a	n	y
-マジックガード	x	x	x	n/a	n/a	n	y
-マジックミラー	x	x	x	x	n/a	y	y
-マルチスケイル	x	x	x	x	n/a	y	y
-マルチタイプ	x	x	x	n/a	-	n	n
-ミイラ	x	-	-	n/a	n/a	n	y
-みずがため	x	-	-	n/a	n/a	n	y
-ミストメイカー	x	x	x	n/a	n/a	n	y
-みずのベール	x	x	x	x	n/a	y	y
-ミラーアーマー	x	x	x	x	n/a	y	y
-ミラクルスキン	x	-	-	-	n/a	y	y
-むしのしらせ	x	x	x	n/a	n/a	n	y
-ムラっけ	x	x	x	n/a	n/a	n	y
-メガランチャー	x	x	x	n/a	n/a	n	y
-メタルプロテクト	x	x	x	n/a	n/a	n	y
-メロメロボディ	x	-	-	n/a	n/a	n	y
-めんえき	x	x	x	x	n/a	y	y
-もうか	x	x	x	n/a	n/a	n	y
-ものひろい	x	-	-	-	n/a	y	y
-もふもふ	x	x	x	x	n/a	y	y
-もらいび	x	x	x	x	n/a	y	y
-やるき	x	x	x	x	n/a	y	y
-ゆうばく	x	-	-	n/a	n/a	n	y
-ゆきかき	x	x	x	n/a	n/a	n	y
-ゆきがくれ	x	x	x	x	n/a	y	y
-ゆきふらし	x	x	x	n/a	n/a	n	y
-ようりょくそ	x	x	x	n/a	n/a	n	y
-ヨガパワー	x	x	x	n/a	n/a	n	y
-よちむ	x	-	-	-	n/a	y	y
-よびみず	x	x	x	x	n/a	y	y
-よわき	x	x	x	n/a	n/a	n	y
-ライトメタル	x	-	-	-	n/a	y	y
-リーフガード	x	x	x	x	n/a	y	y
-リベロ	x	x	x	n/a	n/a	n	y
-リミットシールド	x	-	-	n/a	-	n	n
-りゅうのあぎと	x	x	x	n/a	n/a	n	y
-りんぷん	x	x	x	x	n/a	y	y
-わざわいのうつわ	x	x	x	n/a	n/a	n	y
-わざわいのおふだ	x	x	x	n/a	n/a	n	y
-わざわいのたま	x	x	x	n/a	n/a	n	y
-わざわいのつるぎ	x	x	x	n/a	n/a	n	y
-わたげ	x	-	-	n/a	n/a	n	y
-わるいてぐせ	x	x	-	n/a	n/a	n	y
+特性	仕様書	実装	テスト	型破適用	ガス非適用
+ARシステム	x	x	x	-	x
+アイスフェイス	x	-	-	x	x
+アイスボディ	x	x	x	-	-
+あくしゅう	x	-	-	-	-
+あついしぼう	x	x	x	x	-
+あとだし	x	x	x	-	-
+アナライズ	x	x	-	-	-
+あまのじゃく	x	x	-	x	-
+あめうけざら	x	x	x	-	-
+あめふらし	x	x	x	-	-
+ありじごく	x	x	x	-	-
+アロマベール	x	-	-	x	-
+いかく	x	x	x	-	-
+いかりのこうら	x	-	-	-	-
+いかりのつぼ	x	-	-	-	-
+いしあたま	x	x	x	-	-
+いたずらごころ	x	x	x	-	-
+いろめがね	x	x	x	-	-
+いわはこび	x	x	x	-	-
+うのミサイル	x	-	-	-	x
+うるおいボイス	x	-	-	-	-
+うるおいボディ	x	-	-	-	-
+エアロック	x	x	x	-	-
+エレキメイカー	x	x	x	-	-
+えんかく	x	-	-	-	-
+おうごんのからだ	x	x	x	x	-
+オーラブレイク	x	-	-	x	-
+おどりこ	x	保留	-	-	-
+おみとおし	x	-	-	-	-
+おもかげやどし	x	-	-	-	-
+おやこあい	x	x	x	-	-
+おわりのだいち	x	x	x	-	-
+カーリーヘアー	x	-	-	-	-
+かいりきバサミ	x	x	x	x	-
+かがくへんかガス	x	x	x	-	x
+かげふみ	x	x	x	-	-
+かぜのり	x	-	-	x	-
+かそく	x	x	x	-	-
+かたいツメ	x	x	x	-	-
+かたやぶり	x	x	x	-	-
+かちき	x	x	x	-	-
+カブトアーマー	x	x	x	x	-
+かるわざ	x	x	x	-	-
+がんじょう	x	x	x	-	-
+がんじょうあご	x	x	x	-	-
+かんそうはだ	x	-	-	x	-
+かんろなミツ	x	-	-	-	-
+ききかいひ	x	x	x	-	-
+きけんよち	x	-	-	-	-
+ぎたい	x	-	-	-	-
+きもったま	x	-	-	-	-
+ぎゃくじょう	x	x	x	-	-
+きゅうばん	x	x	-	x	-
+きょううん	x	x	x	-	-
+ぎょぐん	x	-	-	-	x
+きよめのしお	x	x	x	x	-
+きれあじ	x	x	x	-	-
+きんしのちから	x	-	-	-	-
+きんちょうかん	x	x	x	-	-
+くいしんぼう	x	-	-	-	-
+クイックドロウ	x	-	-	-	-
+クォークチャージ	x	x	x	-	-
+くさのけがわ	x	x	x	x	-
+くだけるよろい	x	x	x	-	-
+グラスメイカー	x	x	x	-	-
+クリアボディ	x	x	x	x	-
+くろのいななき	x	-	-	-	-
+げきりゅう	x	x	x	-	-
+こおりのりんぷん	x	x	x	x	-
+こだいかっせい	x	x	x	-	-
+こぼれダネ	x	x	x	-	-
+ごりむちゅう	x	x	x	-	-
+こんがりボディ	x	-	-	x	-
+こんじょう	x	x	x	-	-
+サーフテール	x	-	-	-	-
+サイコメイカー	x	x	x	-	-
+さいせいりょく	x	x	x	-	-
+さまようたましい	x	x	x	-	-
+さめはだ	x	x	x	-	-
+サンパワー	x	x	x	-	-
+シェルアーマー	x	-	-	x	-
+じきゅうりょく	x	x	x	-	-
+じしんかじょう	x	x	x	-	-
+しぜんかいふく	x	x	x	-	-
+しめりけ	x	x	x	x	-
+しゅうかく	x	x	-	-	-
+じゅうなん	x	x	x	x	-
+じゅくせい	x	-	x	-	-
+じょうききかん	x	-	x	-	-
+しょうりのほし	x	-	x	-	-
+じょおうのいげん	x	-	-	x	-
+じりょく	x	x	x	-	-
+しろいけむり	x	x	x	x	-
+しろのいななき	x	-	-	-	-
+しんがん	x	-	-	x	-
+シンクロ	x	-	-	-	-
+じんばいったい	x	-	-	-	x
+しんりょく	x	x	x	-	-
+スイートベール	x	-	-	x	-
+すいすい	x	x	x	-	-
+すいほう	x	x	x	x	-
+スカイスキン	x	x	x	-	-
+スキルリンク	x	x	-	-	-
+すじがねいり	x	n/a	-	-	-
+すてみ	x	-	-	-	-
+スナイパー	x	x	x	-	-
+すなおこし	x	x	x	-	-
+すなかき	x	x	x	-	-
+すながくれ	x	-	-	x	-
+すなのちから	x	x	-	-	-
+すなはき	x	-	-	-	-
+すりぬけ	x	x	x	-	-
+するどいめ	x	x	x	x	-
+スロースタート	x	x	x	-	-
+スワームチェンジ	x	-	-	-	x
+せいぎのこころ	x	-	-	-	-
+せいしんりょく	x	x	x	x	-
+せいでんき	x	x	x	-	-
+ぜったいねむり	x	-	-	-	x
+ゼロフォーミング	x	-	-	-	-
+そうしょく	x	x	x	x	-
+そうだいしょう	x	-	-	-	-
+ソウルハート	x	-	-	-	-
+ダークオーラ	x	-	-	x	-
+ターボブレイズ	x	x	x	-	-
+たいねつ	x	x	x	x	-
+ダウンロード	x	x	x	-	-
+だっぴ	x	x	x	-	-
+ダルマモード	-	-	-	-	x
+たんじゅん	x	x	x	x	-
+ちからずく	x	x	x	-	-
+ちからもち	x	x	x	-	-
+ちくでん	x	x	x	x	-
+ちどりあし	x	-	-	x	-
+ちょすい	x	x	x	x	-
+テイルアーマー	x	-	-	x	-
+てきおうりょく	x	x	x	-	-
+テクニシャン	x	x	x	-	-
+てつのこぶし	x	x	x	-	-
+てつのトゲ	x	x	x	-	-
+テラスシェル	x	x	x	x	-
+テラスチェンジ	x	-	-	-	x
+テラボルテージ	x	x	x	-	-
+デルタストリーム	x	x	x	-	-
+でんきエンジン	x	x	x	x	-
+でんきにかえる	x	-	-	-	-
+てんきや	x	-	-	-	-
+てんねん	x	x	x	x	-
+てんのめぐみ	x	x	x	-	-
+とうそうしん	x	-	-	-	-
+どくくぐつ	x	-	-	-	-
+どくげしょう	x	-	-	-	-
+どくしゅ	x	x	x	-	-
+どくのくさり	x	-	-	-	-
+どくのトゲ	x	x	x	-	-
+どくぼうそう	x	-	-	-	-
+どしょく	x	x	x	x	-
+トランジスタ	x	x	x	-	-
+トレース	x	x	x	-	-
+とれないにおい	x	-	-	-	-
+どんかん	x	x	x	x	-
+ナイトメア	x	-	-	-	-
+なまけ	x	-	-	-	-
+にげごし	x	x	x	-	-
+ぬめぬめ	x	-	-	-	-
+ねつこうかん	x	x	x	x	-
+ねつぼうそう	x	-	-	-	-
+ねんちゃく	x	x	x	x	-
+ノーガード	x	x	x	-	-
+ノーてんき	x	x	x	-	-
+ノーマルスキン	x	x	x	-	-
+のろわれボディ	x	-	-	-	-
+ハードロック	x	x	x	x	-
+はがねつかい	x	x	x	-	-
+はがねのせいしん	x	x	x	-	-
+ばけのかわ	x	x	x	x	x
+はじまりのうみ	x	x	x	-	-
+パステルベール	x	-	-	x	-
+はっこう	x	-	-	x	-
+はとむね	x	x	x	x	-
+バトルスイッチ	x	x	x	-	x
+ハドロンエンジン	x	x	-	-	-
+はやあし	x	x	x	-	-
+はやおき	x	-	-	-	-
+はやてのつばさ	x	-	-	-	-
+はらぺこスイッチ	x	x	x	-	-
+バリアフリー	x	-	-	-	-
+はりきり	x	x	x	-	-
+はりこみ	x	x	-	-	-
+パワースポット	x	n/a	x	-	-
+パンクロック	x	x	x	x	-
+ばんけん	x	-	-	x	-
+はんすう	x	-	-	-	-
+ビーストブースト	x	-	-	-	-
+ヒーリングシフト	x	-	-	-	-
+ひでり	x	x	x	-	-
+ひとでなし	x	x	x	-	-
+ひひいろのこどう	x	x	-	-	-
+ビビッドボディ	x	-	-	x	-
+びびり	x	-	-	-	-
+ひらいしん	x	x	x	x	-
+びんじょう	x	-	-	-	-
+ファーコート	x	x	x	x	-
+ファントムガード	x	x	x	-	-
+フィルター	x	x	x	x	-
+ふうりょくでんき	x	-	-	-	-
+フェアリーオーラ	x	-	-	x	-
+フェアリースキン	x	x	x	-	-
+ふかしのこぶし	x	-	-	-	-
+ぶきよう	x	x	x	-	-
+ふくがん	x	x	x	-	-
+ふくつのこころ	x	-	-	-	-
+ふくつのたて	x	-	-	-	-
+ふしぎなうろこ	x	x	x	x	-
+ふしょく	x	x	x	-	-
+ふしぎなまもり	-	-	-	x	-
+ふとうのけん	x	-	-	-	-
+ふみん	x	x	x	x	-
+ふゆう	x	x	x	x	-
+フラワーギフト	x	-	-	x	-
+フラワーベール	x	-	-	x	-
+フリーズスキン	x	x	x	-	-
+プリズムアーマー	x	x	x	-	-
+ブレインフォース	x	x	x	-	-
+プレッシャー	x	-	-	-	-
+フレンドガード	x	n/a	-	x	-
+ヘヴィメタル	x	-	-	x	-
+ヘドロえき	x	-	-	-	-
+へんげんじざい	x	x	x	-	-
+へんしょく	x	x	x	-	-
+ポイズンヒール	x	x	x	-	-
+ぼうおん	x	x	x	x	-
+ほうし	x	-	-	-	-
+ぼうじん	x	x	x	x	-
+ぼうだん	x	x	x	x	-
+ほおぶくろ	x	-	-	-	-
+ほのおのからだ	x	x	x	-	-
+ほろびのボディ	x	-	-	-	-
+マイティチェンジ	x	x	x	-	x
+マイペース	x	x	x	x	-
+マグマのよろい	x	x	x	x	-
+まけんき	x	x	x	-	-
+マジシャン	x	x	-	-	-
+マジックガード	x	x	x	-	-
+マジックミラー	x	x	x	x	-
+マルチスケイル	x	x	x	x	-
+マルチタイプ	x	x	x	-	x
+ミイラ	x	-	-	-	-
+みずがため	x	-	-	-	-
+ミストメイカー	x	x	x	-	-
+みずのベール	x	x	x	x	-
+ミラーアーマー	x	x	x	x	-
+ミラクルスキン	x	-	-	x	-
+むしのしらせ	x	x	x	-	-
+ムラっけ	x	x	x	-	-
+メガランチャー	x	x	x	-	-
+メタルプロテクト	x	x	x	-	-
+メロメロボディ	x	-	-	-	-
+めんえき	x	x	x	x	-
+もうか	x	x	x	-	-
+ものひろい	x	-	-	-	-
+もふもふ	x	x	x	x	-
+もらいび	x	x	x	x	-
+やるき	x	x	x	x	-
+ゆうばく	x	-	-	-	-
+ゆきかき	x	x	x	-	-
+ゆきがくれ	x	x	x	x	-
+ゆきふらし	x	x	x	-	-
+ようりょくそ	x	x	x	-	-
+ヨガパワー	x	x	x	-	-
+よちむ	x	-	-	-	-
+よびみず	x	x	x	x	-
+よわき	x	x	x	-	-
+ライトメタル	x	-	-	x	-
+リーフガード	x	x	x	x	-
+リベロ	x	x	x	-	-
+リミットシールド	x	-	-	-	x
+りゅうのあぎと	x	x	x	-	-
+りんぷん	x	x	x	x	-
+わざわいのうつわ	x	x	x	-	-
+わざわいのおふだ	x	x	x	-	-
+わざわいのたま	x	x	x	-	-
+わざわいのつるぎ	x	x	x	-	-
+わたげ	x	-	-	-	-
+わるいてぐせ	x	x	-	-	-
 
 ## 実装保留（2件）
 
