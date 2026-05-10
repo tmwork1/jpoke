@@ -1178,6 +1178,13 @@ def パンクロック_modify_power(battle: Battle, ctx: BattleContext, value: i
     return HandlerReturn(value=value)
 
 
+def パンクロック_reduce_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+    """パンクロック特性: 音技で受けるダメージを0.5倍にする。"""
+    if ctx.move.has_label("sound"):
+        value = apply_fixed_modifier(value, 2048)
+    return HandlerReturn(value=value)
+
+
 def ぼうおん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ぼうおん特性: 音技を無効化する。"""
     if ctx.move.has_label("sound"):
@@ -1610,13 +1617,6 @@ def マルチスケイル_modify_damage(battle: Battle, ctx: BattleContext, valu
 def こおりのりんぷん_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """こおりのりんぷん特性: 特殊技で受けるダメージを0.5倍にする。"""
     if common.is_special_move(battle, ctx):
-        value = apply_fixed_modifier(value, 2048)
-    return HandlerReturn(value=value)
-
-
-def パンクロック_reduce_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    """パンクロック特性: 音技で受けるダメージを0.5倍にする。"""
-    if ctx.move.has_label("sound"):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 

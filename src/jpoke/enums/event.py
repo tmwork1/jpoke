@@ -363,10 +363,6 @@ class Event(Enum):
     # handle: いのちのたま・たつじんのおび等の最終倍率アイテム
     ON_CALC_FINAL_DAMAGE_MODIFIER = auto()
 
-    # emit: core/damage.py（防御側の能力動作確認）
-    # handle: volatile.py（かたやぶり等による防御側能力の無効化チェック）
-    ON_CHECK_ABILITY_ENABLED = auto()
-
     # emit: core/context.py（壁・みがわり等を貫通するか問い合わせ）
     # handle: ability.py（すりぬけ等が True を返して貫通を宣言）
     ON_CHECK_INFILTRATE = auto()
