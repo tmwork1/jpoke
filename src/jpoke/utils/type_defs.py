@@ -1,9 +1,15 @@
 from typing import Literal
 
-# ========== 特性状態定義 ==========
+EnableKey = Literal[
+    "self",
+    "かがくへんかガス", "かたやぶり",  # 特性
+    "ぶきよう", "マジックルーム",  # アイテム
+]
+
+HandlerSource = Literal["ability", "item", "move", "ailment", "volatile", "field"]
+
 AbilityState = Literal["", "idle", "charged", "active"]
 
-# ========== 汎用型定義 ==========
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
 # role:side 形式で、特定の側のロールを指定
@@ -14,7 +20,6 @@ RoleSpec = Literal[
     "defender:self",
 ]
 
-LogPolicy = Literal["always", "on_success", "on_failure", "never"]
 
 Side = Literal["self", "foe"]
 

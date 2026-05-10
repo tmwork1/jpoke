@@ -7,12 +7,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .battle import Battle
+    from .event_manager import EventManager
     from .player import Player
 
 from jpoke.model import Pokemon
 from jpoke.enums import Interrupt, LogCode
 
-from .event import Event
+from .event_manager import Event
 from .context import BattleContext
 
 
@@ -42,30 +43,35 @@ class SwitchManager:
         """
         self.battle = battle
 
-    def register_switch_in_handlers(self, mon: Pokemon):
+    @property
+    def events(self) -> EventManager:
+        """Battleのイベントシステムへのショートカットプロパティ。"""
+        return self.battle.events
+
+    def switch_in(self, mon: Pokemon):
         """ポケモンの入場時ハンドラーを登録する。
 
         Args:
             mon: 場に出るポケモン
         """
         mon.revealed = True
-        mon.ability.register_handlers(self.battle.events, mon)
-        mon.item.register_handlers(self.battle.events, mon)
-        mon.ailment.register_handlers(self.battle.events, mon)
+        mon.ability.register_handlers(self.events, mon)
+        mon.item.register_handlers(self.events, mon)
+        mon.ailment.register_handlers(self.events, mon)
         for volatile in mon.volatiles.values():
-            volatile.register_handlers(self.battle.events, mon)
+            volatile.register_handlers(self.events, mon)
 
-    def unregister_switch_out_handlers(self, mon: Pokemon):
+    def switch_out(self, mon: Pokemon):
         """ポケモンの退場時ハンドラーを解除する。
 
         Args:
             mon: 引っ込むポケモン
         """
-        mon.ability.unregister_handlers(self.battle.events, mon)
-        mon.item.unregister_handlers(self.battle.events, mon)
-        mon.ailment.unregister_handlers(self.battle.events, mon)
+        mon.ability.unregister_handlers(self.events, mon)
+        mon.item.unregister_handlers(self.events, mon)
+        mon.ailment.unregister_handlers(self.events, mon)
         for volatile in mon.volatiles.values():
-            volatile.unregister_handlers(self.battle.events, mon)
+            volatile.unregister_handlers(self.events, mon)
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
@@ -108,27 +114,31 @@ class SwitchManager:
         # 退場
         old = player.active
         if old is not None:
-            self.battle.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
+            self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
 
             # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
             for name in list(old.volatiles.keys()):
                 self.battle.volatile_manager.remove(old, name)
 
-            self.unregister_switch_out_handlers(old)
+            self.switch_out(old)
+
+            # TODO : 以下の処理もswitch_outメソッドに含める
             old.bench_reset()
             self.battle.add_event_log(player, LogCode.SWITCH_OUT,
                                       payload={"pokemon": old.name})
 
         # 入場
         player.active_idx = player.team.index(new)
-        self.register_switch_in_handlers(new)
+        self.switch_in(new)
+
+        # TODO : 以下の処理もswitch_inメソッドに含める
         self.battle.refresh_effect_enabled_states()
         self.battle.add_event_log(player, LogCode.SWITCH_IN,
                                   payload={"pokemon": new.name})
 
         # ポケモンが場に出た時の処理
         if emit:
-            self.battle.events.emit(Event.ON_SWITCH_IN, BattleContext(source=new))
+            self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=new))
 
             # リクエストがなくなるまで再帰的に交代する
             while self.has_interrupt():
@@ -151,7 +161,7 @@ class SwitchManager:
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
         self.battle.refresh_effect_enabled_states()
-        self.battle.events.emit(Event.ON_SWITCH_IN)
+        self.events.emit(Event.ON_SWITCH_IN)
 
         # だっしゅつパックによる割り込みフラグを更新
         self.override_interrupt(Interrupt.EJECTPACK_ON_START)
@@ -192,7 +202,7 @@ class SwitchManager:
             for mon in self.battle.determine_speed_order():
                 player = self.battle.find_player(mon)
                 if player in switched_players:
-                    self.battle.events.emit(Event.ON_SWITCH_IN, BattleContext(source=mon))
+                    self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=mon))
 
     def run_faint_switch(self):
         """瀕死による交代を実行。

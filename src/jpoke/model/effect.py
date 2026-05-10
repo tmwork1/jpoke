@@ -1,10 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Protocol, Self
+from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from jpoke.core import EventManager, Handler, Player
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
+from jpoke.utils.type_defs import EnableKey
 
 
 class EffectData(Protocol):
@@ -34,16 +35,8 @@ class GameEffect:
             data: 効果データ (AbilityData, ItemData など)
         """
         self.data: EffectData = data
-        self.enabled: bool = True
         self.revealed: bool = False
-
-    def reset_effect(self) -> None:
-        """効果の状態をリセットする。
-
-        効果の有効/無効状態と公開状態を初期状態に戻す。
-        """
-        self.enabled = True
-        self.revealed = False
+        self._enabled: dict[EnableKey, bool] = {"self": True}
 
     @property
     def name(self) -> str:
@@ -68,6 +61,44 @@ class GameEffect:
             効果の名前
         """
         return self.data.name
+
+    @property
+    def enabled(self) -> bool:
+        """効果が有効かどうかを判定する。
+
+        Returns:
+            効果が有効な場合はTrue、無効な場合はFalse
+        """
+        return all(self._enabled.values())
+
+    def get_enabled(self, key: EnableKey) -> bool:
+        """特定のキーによる有効/無効状態を取得する。
+
+        Args:
+            key: 取得したい有効/無効状態のキー
+        """
+        return self._enabled.get(key, True)
+
+    def set_enabled(self, key: EnableKey, enabled: bool) -> None:
+        """効果の有効/無効状態を設定する。
+
+        Args:
+            key: 有効/無効状態のキー
+            enabled: 有効にする場合はTrue、無効にする場合はFalse
+        """
+        self._enabled[key] = enabled
+
+    def replace_enabled(self, states: dict[EnableKey, bool]) -> None:
+        """有効/無効状態を新しい状態に置き換える。
+
+        Args:
+            new_states: 置き換える新しい有効/無効状態の辞書
+        """
+        self._enabled = states
+
+    def reset_enabled(self, initial: bool = True) -> None:
+        """有効/無効状態をリセットする。"""
+        self._enabled = {"self": initial}
 
     def register_handlers(self,
                           events: EventManager,

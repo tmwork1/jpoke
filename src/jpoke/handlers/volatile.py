@@ -40,10 +40,13 @@ class VolatileHandler(Handler):
                  subject_spec: RoleSpec = "source:self",
                  priority: int = 100,
                  once: bool = False):
-        super().__init__(func,
-                         subject_spec,
-                         priority=priority,
-                         once=once)
+        super().__init__(
+            func=func,
+            source="volatile",
+            subject_spec=subject_spec,
+            priority=priority,
+            once=once
+        )
 
 
 def remove_volatile(battle: Battle,
@@ -132,14 +135,14 @@ def tick_volatile(battle: Battle,
     return HandlerReturn()
 
 
-def とくせいなし_on_volatile_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """とくせいなし終了時に特性有効状態を再計算する。"""
+def とくせいなし_on_volatile_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """とくせいなし付与時に特性有効状態を再計算する。"""
     battle.refresh_effect_enabled_states()
     return HandlerReturn(value=value)
 
 
-def とくせいなし_on_volatile_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """とくせいなし付与時に特性有効状態を再計算する。"""
+def とくせいなし_on_volatile_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """とくせいなし終了時に特性有効状態を再計算する。"""
     battle.refresh_effect_enabled_states()
     return HandlerReturn(value=value)
 

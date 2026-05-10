@@ -17,7 +17,7 @@ from jpoke.utils import fast_copy
 
 from jpoke.model import Pokemon, Move, Field, Item
 
-from .event import EventManager
+from .event_manager import EventManager
 from .context import BattleContext
 from .player import Player
 from .event_logger import EventLogger
@@ -214,7 +214,7 @@ class Battle:
         Returns:
             list[Pokemon]: 各プレイヤーの場のポケモン
         """
-        return [pl.active for pl in self.players]
+        return [player.active for player in self.players]
 
     @property
     def raw_weather(self) -> Field:
@@ -428,22 +428,18 @@ class Battle:
         """
         return self.speed_calculator.calc_action_order()
 
-    def refresh_ability_enabled_states(self):
-        """場の状況に応じて特性の有効/無効状態を再計算する（AbilityManagerへの委譲）。"""
-        self.ability_manager.refresh_ability_enabled_states()
-
     def refresh_effect_enabled_states(self):
-        """場の状況に応じて特性・道具の有効/無効状態を再計算する。"""
-        self.refresh_ability_enabled_states()
-        self.refresh_item_enabled_states()
-
-    def refresh_item_enabled_states(self):
-        """場の状況に応じて道具効果の有効/無効状態を再計算する（ItemManagerへの委譲）。"""
-        self.item_manager.refresh_item_enabled_states()
-
-    def refresh_paradox_boost_states(self):
-        """こだいかっせい・クォークチャージの発動状態を再判定する（AbilityManagerへの委譲）。"""
-        self.ability_manager.refresh_paradox_boost_states()
+        """場の状況に応じて特性・アイテム効果の有効/無効状態を再計算する。
+        特性とアイテムは相互に影響を与える可能性があるため、両方を再計算し、結果が安定するまで繰り返す。
+        """
+        prev_results = {}
+        while True:
+            results = {}
+            results |= self.ability_manager.refresh_ability_enabled_states()
+            results |= self.item_manager.refresh_item_enabled_states()
+            if results == prev_results:
+                break
+            prev_results = results
 
     def determine_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
@@ -501,10 +497,6 @@ class Battle:
         """ポケモンの持ち物を更新する（ItemManagerへの委譲）。"""
         self.item_manager.set_item(target, item)
 
-    def set_item_enabled(self, target: Pokemon, enabled: bool) -> None:
-        """ポケモンの道具効果有効状態を更新する（ItemManagerへの委譲）。"""
-        self.item_manager.set_item_enabled(target, enabled)
-
     def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
         """ポケモンの道具を喪失状態にする（ItemManagerへの委譲）。"""
         return self.item_manager.lose_item(target, cause=cause)
@@ -512,10 +504,6 @@ class Battle:
     def consume_item(self, target: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
         return self.item_manager.consume_item(target)
-
-    def set_ability_enabled(self, target: Pokemon, enabled: bool) -> None:
-        """ポケモンの特性有効状態を更新する（AbilityManagerへの委譲）。"""
-        self.ability_manager.set_ability_enabled(target, enabled)
 
     def set_ability(self,
                     target: Pokemon,

@@ -1006,17 +1006,20 @@ def test_はとむね_かたやぶりで無効化される():
 # ──────────────────────────────────────────────────────────────────
 
 
+def test_かがくへんかガス_登場時に相手の特性を無効化():
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
+        foe=[Pokemon("ピカチュウ", ability="いかく")],
+    )
+    assert battle.actives[0].rank["A"] == 0
+    assert not battle.actives[1].ability.revealed
+
+
 def test_かがくへんかガス_解除後は特性が再び有効化される():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="かがくへんかガス"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", ability="いかく")],
     )
-
-    # ガス発生中は相手のいかくが無効
-    assert battle.actives[0].rank["A"] == 0
-    assert not battle.actives[1].ability.revealed
-
-    # ガス持ちを引っ込めると、相手の特性は有効化される
     battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
     assert battle.actives[0].rank["A"] == -1
     assert battle.actives[1].ability.revealed
@@ -4955,25 +4958,30 @@ def test_マルチスケイル_かがくへんかガスで無効化される():
 # ぶきよう
 # ──────────────────────────────────────────────────────────────────
 
-def test_ぶきよう_たべのこしが発動しない():
+def test_ぶきよう_アイテムが無効():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="ぶきよう", item="たべのこし")],
         foe=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
+    assert not mon.item.enabled
+
     mon._hp = 1
     battle.events.emit(Event.ON_TURN_END_2)
     assert mon.hp == 1
 
 
-def test_ぶきよう_かがくへんかガス中はたべのこしが発動する():
+def test_ぶきよう_かがくへんかガス中はアイテムが有効():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="ぶきよう", item="たべのこし")],
         foe=[Pokemon("ピカチュウ", ability="かがくへんかガス")],
     )
     mon = battle.actives[0]
+    assert not mon.ability.enabled
+    assert mon.item.enabled
+
     mon._hp = 1
-    battle.events.emit(Event.ON_TURN_END_2, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END_2)
     assert mon.hp > 1
 
 # ──────────────────────────────────────────────────────────────────
@@ -5301,7 +5309,7 @@ def test_ポイズンヒール_どく状態で1_8回復する():
     battle.ailment_manager.apply(mon, "どく")
     battle.modify_hp(mon, v=-50, reason="other")
     before = mon.hp
-    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == before + mon.max_hp // 8
 
 
@@ -5317,7 +5325,7 @@ def test_ポイズンヒール_もうどく状態でも固定1_8回復する():
     # もうどくのターン数を5にしてもダメージではなく1/8回復
     for _ in range(5):
         battle.ailment_manager.tick(mon)
-    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END_3)
     assert mon.hp == before + mon.max_hp // 8
 
 

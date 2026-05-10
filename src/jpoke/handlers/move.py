@@ -37,7 +37,12 @@ class MoveHandler(Handler):
             subject_spec: ハンドラの対象を指定するロール
             priority: ハンドラの優先度
         """
-        super().__init__(func, subject_spec, priority=priority)
+        super().__init__(
+            func=func,
+            source="move",
+            subject_spec=subject_spec,
+            priority=priority
+        )
 
 
 def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

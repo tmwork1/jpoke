@@ -11,7 +11,7 @@ from jpoke.model import Pokemon, Move
 from jpoke.enums import Command
 from jpoke.utils.constants import HIT_RANK_MODIFIERS
 
-from .event import Event
+from .event_manager import Event
 from .context import BattleContext
 
 

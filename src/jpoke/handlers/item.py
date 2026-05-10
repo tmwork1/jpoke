@@ -23,6 +23,7 @@ class ItemHandler(Handler):
                  once: bool = False) -> None:
         super().__init__(
             func=func,
+            source="item",
             subject_spec=subject_spec,
             priority=priority,
             once=once,

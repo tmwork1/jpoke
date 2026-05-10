@@ -78,7 +78,6 @@ class EventManager:
             handler: ハンドラ定義
             subject: ハンドラの主体（ポケモンまたはプレイヤー）
         """
-        # print(f"Register handler: {event} {handler} {subject}")
         self.handlers.setdefault(event, []).append(
             RegisteredHandler(handler, subject)
         )
@@ -127,12 +126,20 @@ class EventManager:
             handlers = self._sort_handlers(self.handlers.get(event, []))
 
         for rh in handlers:
-            # print(event, rh)
             context = ctx if ctx else self._build_context(rh)
 
+            # コンテキストがハンドラに合致しない場合はスキップ
             if not self._match(context, rh):
-                # print(f"  Handler skipped: {rh}")
                 continue
+
+            # ハンドラの発生源が無効化されている場合はスキップ
+            match rh.handler.source:
+                case "ability":
+                    if not rh.subject.ability.enabled:
+                        continue
+                case "item":
+                    if not rh.subject.item.enabled:
+                        continue
 
             result = rh.handler.func(self.battle, context, value)
 

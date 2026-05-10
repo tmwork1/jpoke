@@ -13,7 +13,12 @@ class AilmentHandler(Handler):
                  func: Callable,
                  subject_spec: RoleSpec,
                  priority: int = 100):
-        super().__init__(func, subject_spec, priority=priority)
+        super().__init__(
+            func=func,
+            source="ailment",
+            subject_spec=subject_spec,
+            priority=priority,
+        )
 
 
 def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):

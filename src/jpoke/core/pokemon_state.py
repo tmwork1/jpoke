@@ -501,7 +501,7 @@ class StatusManager:
                     Event.ON_FAINTED,
                     BattleContext(target=target, attacker=source, move=move, hp_change_reason=reason),
                 )
-                self.battle.switch_manager.unregister_switch_out_handlers(target)
+                self.battle.switch_manager.switch_out(target)
                 self.battle.judge_winner()
 
         return v

@@ -19,7 +19,6 @@ class Item(GameEffect):
             name: 持ち物名。空文字列の場合は持ち物なしとして扱う
         """
         super().__init__(ITEMS[name])
-        self.lost: bool = False
         self.lost_cause: ItemLostCause = ""
 
     def __deepcopy__(self, memo):
@@ -34,15 +33,28 @@ class Item(GameEffect):
 
         持ち物の状態をリセットし、ゲーム開始時の状態にする。
         """
-        self.reset_effect()
-        self.lost: bool = False
-        self.lost_cause: ItemLostCause = ""
+        self.bench_reset()
+
+    def bench_reset(self):
+        """ベンチに戻ったときのリセット処理。
+
+        持ち物の状態をリセットする。
+        """
+        self.lost_cause = ""
+
+    @property
+    def lost(self) -> bool:
+        """アイテムが喪失状態かどうかを判定する。
+
+        Returns:
+            アイテムが喪失状態の場合はTrue、そうでない場合はFalse
+        """
+        return self.get_enabled("self") == False
 
     def lose(self, cause: ItemLostCause = "remove"):
         """アイテムを喪失状態にする。"""
+        self.set_enabled("self", False)
         self.revealed = True
-        self.enabled = False
-        self.lost = True
         self.lost_cause = cause
 
     def consume(self):

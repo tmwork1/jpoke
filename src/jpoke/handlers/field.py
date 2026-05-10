@@ -1,13 +1,26 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.enums import LogCode
 from jpoke.utils.battle_math import rank_modifier
-from jpoke.utils.type_defs import GlobalField, SideField, VolatileName
-from jpoke.core import HandlerReturn
+from jpoke.utils.type_defs import RoleSpec, GlobalField, SideField, VolatileName
+from jpoke.core import HandlerReturn, Handler
 from jpoke.handlers import common
+
+
+class FieldHandler(Handler):
+    def __init__(self,
+                 func: Callable,
+                 subject_spec: RoleSpec,
+                 priority: int = 100):
+        super().__init__(
+            func=func,
+            source="field",
+            subject_spec=subject_spec,
+            priority=priority,
+        )
 
 
 # ===== カウントダウン =====
@@ -229,18 +242,16 @@ def トリックルーム_reverse_speed(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=-value)
 
 
-def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
+def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """マジックルーム中は持ち物効果を無効化する。"""
-    field = battle.get_global_field("マジックルーム")
-    if field.is_active:
-        return HandlerReturn(value=False)
-    return HandlerReturn(value=should_enable)
+    value["マジックルーム"] = False
+    return HandlerReturn(value=value)
 
 
 def マジックルーム_on_field_deactivate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジックルーム解除時に持ち物有効状態を再計算する。"""
     if value and value.orig_name == "マジックルーム":
-        battle.refresh_item_enabled_states()
+        battle.refresh_effect_enabled_states()
     return HandlerReturn()
 
 

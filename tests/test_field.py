@@ -528,7 +528,7 @@ def test_マジックルーム_道具効果無効化():
         ally=[Pokemon("ピカチュウ", item="じしゃく", moves=["でんきショック"])],
         global_field={"マジックルーム": 99},
     )
-    battle.refresh_item_enabled_states()
+    battle.refresh_effect_enabled_states()
     assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
 
@@ -539,7 +539,7 @@ def test_マジックルーム_終了で道具効果復活():
         ally=[Pokemon("ピカチュウ", item="じしゃく", moves=["でんきショック"])],
         global_field={"マジックルーム": 1},
     )
-    battle.refresh_item_enabled_states()
+    battle.refresh_effect_enabled_states()
     assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
 
     battle.events.emit(Event.ON_TURN_END_4)

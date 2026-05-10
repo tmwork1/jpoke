@@ -30,6 +30,21 @@
 無効化によってハンドラを解除すると重複に弱くなるのでしない。
 その代わりに、EventManagerで発火(emit)するときに無効なハンドラをスキップする。
 そのためには、登録されたハンドラからその持ち主を辿れる必要がある。
+- EventManagerにハンドラを所有している作用素オブジェクトそのものを渡してしまうと、作用素を削除しても参照が残ってしまう。
+- 特性とアイテムに限定すれば、現在の subject: Pokemon から容易に辿れる。
+
+EventManager.emit() に追加したコード
+'''
+match rh.handler.source:
+    case "ability":
+        if not rh.subject.ability.enabled:
+            continue
+    case "item":
+        if not rh.subject.item.enabled:
+            continue
+'''
+
+ハンドラ内で直接Effect.enabledを書き換えてしまうと、書き換え処理が重複した場合に誤作動する可能性がある。
 
 
 ## Battleクラスに天候、フィールド、その他global field, side field を自由に設定・解除する関数を持たせる

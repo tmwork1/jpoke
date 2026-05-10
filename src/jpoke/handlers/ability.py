@@ -33,6 +33,7 @@ class AbilityHandler(Handler):
                  once: bool = False) -> None:
         super().__init__(
             func=func,
+            source="ability",
             subject_spec=subject_spec,
             priority=priority,
             once=once,
@@ -409,10 +410,14 @@ def かげふみ_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=result)
 
 
-def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """かがくへんかガス特性: 場の特性有効状態を再計算する。"""
-    battle.refresh_effect_enabled_states()
+def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
+    """かがくへんかガス無効化判定"""
+    value["かがくへんかガス"] = ctx.source.ability.has_flag("gas_proof")
+    return HandlerReturn(value=value)
 
+
+def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """特性を開示する"""
     mon = ctx.source
     mon.ability.revealed = True
     idx = battle.get_player_index(mon)
@@ -2049,11 +2054,9 @@ def ムラっけ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
-    """ぶきよう特性: 所持道具の効果を無効化する。"""
-    if should_enable and ctx.source.ability.name == "ぶきよう" and ctx.source.ability.enabled:
-        should_enable = False
-    return HandlerReturn(value=should_enable)
+def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    value["ぶきよう"] = False
+    return HandlerReturn(value=value)
 
 
 def へんげんじざいリベロ_on_move_charge(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
@@ -2206,28 +2209,6 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
     return HandlerReturn(value=True, stop_event=True)
 
 
-def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, should_enable: bool) -> HandlerReturn:
-    """かがくへんかガス無効化判定（priority=10）。
-
-    かがくへんかガスが場に発動していると、gas_proof を除く特性を無効化する。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト (ON_CHECK_ABILITY_ENABLED)
-            - source: 判定対象のポケモン
-        should_enable: 現在の有効化状態
-
-    Returns:
-        HandlerReturn: ガス発動中で無効化対象なら False、それ以外は should_enable をそのまま返す
-    """
-    if should_enable:
-        # 本ハンドラが呼ばれる時点で、かがくへんかガス有効はイベント登録側で保証される。
-        source_ability = ctx.source.ability
-        if "gas_proof" not in source_ability.data.flags:
-            should_enable = False
-    return HandlerReturn(value=should_enable)
-
-
 def announce_ability_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """汎用: 登場時に特性発動ログを記録する (ON_SWITCH_IN)。
 
@@ -2278,7 +2259,7 @@ def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int
         return HandlerReturn(value=value)
 
     # ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
-    battle.set_ability_enabled(ctx.defender, False)
+    ctx.defender.ability.set_enabled("self", False)
     battle.modify_hp(ctx.defender, r=-1/8)
 
     idx = battle.get_player_index(ctx.defender)

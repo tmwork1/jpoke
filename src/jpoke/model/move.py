@@ -36,7 +36,6 @@ class Move(GameEffect):
 
         PPとタイプをゲーム開始時の状態にリセットする。
         """
-        self.reset_effect()
         self.pp = self._initial_pp
         self._type = self.data.type
         self._power = self.data.power

@@ -4,10 +4,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .battle import Battle
+    from .event_manager import EventManager
 
+from jpoke.utils.type_defs import EnableKey, ItemLostCause
 from jpoke.enums import Event
 from jpoke.model import Pokemon, Move, Item
-from jpoke.utils.type_defs import ItemLostCause
 
 from .context import BattleContext
 
@@ -31,6 +32,30 @@ class ItemManager:
         """
         self.battle = battle
 
+    @property
+    def events(self) -> EventManager:
+        """Battleのイベントシステムへのショートカットプロパティ。"""
+        return self.battle.events
+
+    def refresh_item_enabled_states(self) -> dict[str, dict[EnableKey, bool]]:
+        """場の状況に応じて道具効果の有効/無効状態を再計算する。
+        Returns:
+            dict[str, dict[EnableKey, bool]]: 道具効果の有効/無効状態の辞書
+        """
+        results = {}
+        for i, mon in enumerate(self.battle.actives):
+            if mon is None or not mon.has_item():
+                continue
+            states = self.events.emit(
+                Event.ON_CHECK_ITEM_ENABLED,
+                BattleContext(source=mon),
+                {"self": mon.item.get_enabled("self")}
+            )
+            mon.item.replace_enabled(states)
+            results[f"item_{i+1}"] = states
+
+        return results
+
     def set_item(self, target: Pokemon, item: str | Item) -> None:
         """ポケモンの持ち物を更新し、ハンドラ登録も同期する。
 
@@ -38,58 +63,27 @@ class ItemManager:
             target: 持ち物を変更するポケモン
             item: 新しい持ち物
         """
-        old_item = target.item
-        old_item.unregister_handlers(self.battle.events, target)
+        if target.has_item():
+            target.item.unregister_handlers(self.events, target)
 
         target.item = item
-
         if target in self.battle.actives:
-            target.item.register_handlers(self.battle.events, target)
+            target.item.register_handlers(self.events, target)
             self.refresh_item_enabled_states()
-
-    def set_item_enabled(self, mon: Pokemon, enabled: bool) -> None:
-        """道具効果の有効/無効状態を更新し、ハンドラ登録状態を同期する。"""
-        item = mon.item
-        if item.enabled == enabled:
-            return
-
-        if item.enabled:
-            item.unregister_handlers(self.battle.events, mon)
-            item.enabled = False
-            return
-
-        item.enabled = True
-        if mon in self.battle.actives and mon.has_item():
-            item.register_handlers(self.battle.events, mon)
 
     def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
         """対象の道具を喪失状態にする。"""
         if not target.has_item():
             return False
 
-        self.set_item_enabled(target, False)
-        target.item.revealed = True
-        target.item.lost = True
-        target.item.lost_cause = cause
+        item = target.item
+        item.unregister_handlers(self.events, target)
+        item.lose(cause=cause)
         return True
 
     def consume_item(self, target: Pokemon) -> bool:
         """対象の道具を消費状態にする。"""
         return self.lose_item(target, cause="consume")
-
-    def refresh_item_enabled_states(self):
-        """場の状況に応じて道具効果の有効/無効状態を再計算する。"""
-        actives = [mon for mon in self.battle.actives if mon is not None]
-
-        for mon in actives:
-            should_enable = mon.alive and mon.has_item()
-            should_enable = self.battle.events.emit(
-                Event.ON_CHECK_ITEM_ENABLED,
-                BattleContext(source=mon),
-                should_enable,
-            )
-
-            self.set_item_enabled(mon, should_enable)
 
     def can_change_item(self,
                         source: Pokemon,
@@ -108,7 +102,7 @@ class ItemManager:
         Returns:
             変更可能な場合はTrue
         """
-        return self.battle.events.emit(
+        return self.events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
             BattleContext(source=source, target=target, move=move),
             True
@@ -121,8 +115,8 @@ class ItemManager:
         """2体の持ち物を入れ替える。
 
         Args:
-            source: 入れ替え元のポケモン
-            target: 入れ替え先のポケモン
+            mon1: 入れ替え元のポケモン
+            mon2: 入れ替え先のポケモン
             move: 関連する技
 
         Returns:

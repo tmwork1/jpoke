@@ -268,8 +268,9 @@ def activate_global_field(battle: Battle,
     else:
         success = manager.activate(global_field, count)
 
+    # TODO : この処理は、フィールドが展開されたときのイベントを作成してハンドラで実装すべき
     if success and global_field == "マジックルーム" and not was_active:
-        battle.refresh_item_enabled_states()
+        battle.refresh_effect_enabled_states()
 
     return HandlerReturn(value=success)
 

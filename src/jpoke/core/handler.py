@@ -7,12 +7,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, NamedTuple
 if TYPE_CHECKING:
     from jpoke.core import Battle
-    from jpoke.model import Pokemon, BattleContext
+    from jpoke.model import Pokemon
 
 from typing import Callable
 from dataclasses import dataclass
 
-from jpoke.utils.type_defs import ContextRole, RoleSpec, Side
+from jpoke.utils.type_defs import HandlerSource, ContextRole, RoleSpec, Side
 from jpoke.core.player import Player
 
 
@@ -41,6 +41,7 @@ class Handler:
     - target_spec="source:foe": 効果の対象は source から見て相手側のポケモン
     """
     func: Callable[..., HandlerReturn]
+    source: HandlerSource
     subject_spec: RoleSpec
     priority: int = 100
     once: bool = False

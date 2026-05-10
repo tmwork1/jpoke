@@ -1,14 +1,13 @@
 """特性の有効/無効状態管理モジュール。"""
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
-
-from jpoke.enums import Event
-from .context import BattleContext
-
 if TYPE_CHECKING:
     from .battle import Battle
     from jpoke.model import Pokemon
+
+from jpoke.utils.type_defs import EnableKey
+from jpoke.enums import Event
+from .context import BattleContext
 
 
 class AbilityManager:
@@ -34,23 +33,31 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def set_ability_enabled(self, mon: "Pokemon", enabled: bool) -> None:
-        """特性の有効/無効状態を更新し、ハンドラ登録状態を同期する。"""
-        ability = mon.ability
-        if ability.enabled == enabled:
-            return
+    def refresh_ability_enabled_states(self) -> dict[str, dict[EnableKey, bool]]:
+        """場の状況に応じて特性の有効/無効状態を再計算する。
+        Returns:
+            dict[str, dict[EnableKey, bool]]: 特性の有効/無効状態の辞書
+        """
+        results = {}
+        for i, mon in enumerate(self.battle.actives):
+            if mon is None:
+                continue
 
-        if ability.enabled:
-            ability.unregister_handlers(self.battle.events, mon)
-            ability.enabled = False
-            return
+            states = self.battle.events.emit(
+                Event.ON_CHECK_ABILITY_ENABLED,
+                BattleContext(source=mon),
+                {"self": mon.ability.get_enabled("self")}
+            )
+            mon.ability.replace_enabled(states)
+            results[f"ability_{i+1}"] = states
 
-        ability.enabled = True
-        if mon in self.battle.actives:
-            ability.register_handlers(self.battle.events, mon)
+        # こだいかっせい・クォークチャージの発動状態を再判定する。
+        self.battle.events.emit(Event.ON_REFRESH_PARADOX_BOOST)
+
+        return results
 
     def set_ability(self,
-                    mon: "Pokemon",
+                    mon: Pokemon,
                     ability_name: str,
                     refresh_enabled_states: bool = True) -> None:
         """ポケモンの特性を更新し、ハンドラ登録状態を同期する。"""
@@ -71,39 +78,3 @@ class AbilityManager:
 
         if refresh_enabled_states:
             self.refresh_ability_enabled_states()
-
-    def refresh_ability_enabled_states(self):
-        """場の状況に応じて特性の有効/無効状態を再計算する。
-
-        Note:
-            ON_CHECK_ABILITY_ENABLEDイベントを使用して判定を実施。
-            ハンドラは入場時に特性・持ち物から通常登録される。
-        """
-        actives = [mon for mon in self.battle.actives if mon is not None]
-
-        for mon in actives:
-            ability = mon.ability
-
-            # per_battle_once 特性は一度無効化されたら交代後も再有効化しない。
-            if "per_battle_once" in ability.data.flags and not ability.enabled:
-                continue
-
-            # 基本判定：生存していれば有効
-            # とくせいなし等の追加無効化条件は各ハンドラ側で判定する
-            should_enable = mon.alive
-
-            # イベント駆動で有効/無効を判定
-            # context の source は判定対象ポケモン。
-            should_enable = self.battle.events.emit(
-                Event.ON_CHECK_ABILITY_ENABLED,
-                BattleContext(source=mon),
-                should_enable
-            )
-
-            self.set_ability_enabled(mon, should_enable)
-
-        self.refresh_paradox_boost_states()
-
-    def refresh_paradox_boost_states(self):
-        """こだいかっせい・クォークチャージの発動状態を再判定する。"""
-        self.battle.events.emit(Event.ON_REFRESH_PARADOX_BOOST)
