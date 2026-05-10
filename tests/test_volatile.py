@@ -829,7 +829,7 @@ def test_とくせいなし():
     )
     attacker, defender = battle.actives
     result = battle.events.emit(
-        Event.ON_CHECK_DEF_ABILITY_ENABLED,
+        Event.ON_CHECK_ABILITY_ENABLED,
             BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
         True,
     )

@@ -50,7 +50,6 @@ class AilmentManager:
         return not (
             source is not None
             and source.ability.name == "ふしょく"
-            and source.ability.enabled
         )
 
     @staticmethod

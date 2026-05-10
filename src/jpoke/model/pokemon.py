@@ -87,6 +87,7 @@ class Pokemon:
         self.update_stats()
 
         # パラドックス特性の状態はコンストラクタで属性を明示し、bench_resetで値を初期化する。
+        # TODO : paradox_boost_active は paradox_boost_stat が None でないことと同値なので、paradox_boost_stat を主属性にして整理する。
         self.paradox_boost_active: bool = False
         self.paradox_boost_stat: Stat | None = None
         self.paradox_boost_source: BoostSource = ""

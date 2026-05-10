@@ -58,9 +58,6 @@ def tick_side_field(battle: Battle, ctx: BattleContext, value: Any, name: SideFi
 
 def はれ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """晴れ状態での技威力補正"""
-    active = battle.weather
-    if active is None or active.name not in ["はれ", "おおひでり"]:
-        return HandlerReturn(value=value)
     move_type = ctx.move.type
     if move_type == "ほのお":
         value = value * 6144 // 4096  # 1.5倍
@@ -71,19 +68,13 @@ def はれ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> Han
 
 def はれ_prevent_freeze(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """晴れ状態でこおり無効"""
-    active = battle.weather
-    if active is None or active.name not in ["はれ", "おおひでり"]:
-        return HandlerReturn(value=value)
     if value == "こおり":
-        return HandlerReturn(value="")
+        value = ""
     return HandlerReturn(value=value)
 
 
 def あめ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """雨状態での技威力補正"""
-    active = battle.weather
-    if active is None or active.name not in ["あめ", "おおあめ"]:
-        return HandlerReturn(value=value)
     move_type = ctx.move.type
     if move_type == "みず":
         value = value * 6144 // 4096  # 1.5倍
@@ -93,27 +84,34 @@ def あめ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> Han
 
 
 def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """砂嵐のダメージ"""
+    """すなあらしのターン終了時ダメージ"""
     tick_weather(battle, ctx, value)
-    active = battle.weather
-    if active is not None and active.name == "すなあらし" and \
-            not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"]):
+    if (
+        battle.weather.name == "すなあらし"
+        and not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"])
+    ):
         battle.modify_hp(ctx.source, r=-1/16, reason="sandstorm_damage")
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def すなあらし_spdef_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
-    active = battle.weather
-    if active is not None and active.name == "すなあらし" and ctx.defender.has_type("いわ") and ctx.move.category == "特殊":
+    if (
+        battle.weather.name == "すなあらし"
+        and ctx.defender.has_type("いわ")
+        and ctx.move.category == "特殊"
+    ):
         value = value * 6144 // 4096  # 1.5倍
     return HandlerReturn(value=value)
 
 
 def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
-    active = battle.weather
-    if active is not None and active.name == "ゆき" and ctx.defender.has_type("こおり") and ctx.move.category == "物理":
+    if (
+        battle.weather.name == "ゆき"
+        and ctx.defender.has_type("こおり")
+        and ctx.move.category == "物理"
+    ):
         value = value * 6144 // 4096  # 1.5倍
     return HandlerReturn(value=value)
 
@@ -124,26 +122,26 @@ _FLYING_WEAK_TYPES = frozenset({"でんき", "いわ", "こおり"})
 
 
 def おおひでり_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """おおひでり中にみずタイプ技を失敗させる（攻撃技・変化技を問わない）(ON_CHECK_MOVE priority 10)"""
-    active = battle.weather
-    if active is not None and active.name == "おおひでり" and ctx.move.type == "みず":
+    """おおひでり中にみずタイプ技を失敗させる（攻撃技・変化技を問わない）"""
+    if ctx.move.type == "みず":
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def おおあめ_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """おおあめ中にほのおタイプ技を失敗させる（攻撃技・変化技を問わない）(ON_CHECK_MOVE priority 10)"""
-    active = battle.weather
-    if active is not None and active.name == "おおあめ" and ctx.move.type == "ほのお":
+    """おおあめ中にほのおタイプ技を失敗させる（攻撃技・変化技を問わない）"""
+    if ctx.move.type == "ほのお":
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def らんきりゅう_type_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する
-    (ON_CALC_DEF_TYPE_MODIFIER)"""
-    active = battle.weather
-    if active is not None and active.name == "らんきりゅう" and ctx.defender.has_type("ひこう") and ctx.move.type in _FLYING_WEAK_TYPES:
+    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する"""
+    if (
+        battle.weather.name == "らんきりゅう"
+        and ctx.defender.has_type("ひこう")
+        and ctx.move.type in _FLYING_WEAK_TYPES
+    ):
         value = int(value * 2048 // 4096)  # ×0.5
     return HandlerReturn(value=value)
 

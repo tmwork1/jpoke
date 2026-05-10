@@ -286,6 +286,10 @@ def resolve_field_count(battle: Battle,
     else:
         return HandlerReturn(value=value)
 
+# TODO : is_physical/special_move()
+# move_executorに実装すべきか検討
+# move.has_label("physical")は防御側から見るとphysicalだが攻撃側からはspecialなので、どちらの視点なのか引数で指定できるようにする必要がある
+
 
 def is_special_move(battle: Battle, ctx: BattleContext) -> bool:
     """特殊技かどうかを判定する。
@@ -324,49 +328,19 @@ def is_physical_move(battle: Battle, ctx: BattleContext) -> bool:
 
 
 def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:
-    """効果抜群かどうかを判定する。
-
-    タイプ相性補正が1より大きいかどうか。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-
-    Returns:
-        bool: 効果抜群ならTrue
-    """
-    if ctx.move is None:
-        return False
-    return battle.damage_calculator.calc_def_type_modifier(ctx) > 1
+    """効果抜群かどうかを判定する。"""
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
+    return type_modifier > 1
 
 
 def is_not_very_effective(battle: Battle, ctx: BattleContext) -> bool:
-    """今ひとつかどうかを判定する。
-
-    タイプ相性補正が0より大きく1より小さいかどうか。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-
-    Returns:
-        bool: 今ひとつならTrue
-    """
-    if ctx.move is None:
-        return False
+    """今ひとつかどうかを判定する。"""
     type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return 0 < type_modifier < 1
 
 
 def is_berry_item(item_name: str) -> bool:
-    """アイテムがきのみかどうかを判定する。
-
-    Args:
-        item_name: アイテム名
-
-    Returns:
-        bool: きのみなら True
-    """
+    """アイテムがきのみかどうかを判定する。"""
     return item_name.endswith("のみ")
 
 
@@ -419,15 +393,15 @@ def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, r
         return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
+# TODO : 特性による処理を前提にしているため、common.pyではなくability.pyに置くべき
 
-def prevent_ailment(
-    battle: Battle,
-    ctx: BattleContext,
-    value: str,
-    *,
-    ailment_names: list[str],
-    ability_name: str,
-) -> HandlerReturn:
+
+def prevent_ailment(battle: Battle,
+                    ctx: BattleContext,
+                    value: str,
+                    *,
+                    ailment_names: list[str],
+                    ability_name: str) -> HandlerReturn:
     """状態異常付与を防ぐ共通ハンドラ。
 
     Args:
@@ -440,7 +414,7 @@ def prevent_ailment(
     Returns:
         対象の状態異常なら value="" かつ stop_event=True、それ以外は value をそのまま返す
     """
-    if value in ailment_names and ctx.check_def_ability_enabled(battle):
+    if value in ailment_names:
         idx = battle.get_player_index(ctx.target)
         battle.event_logger.add(
             battle.turn,

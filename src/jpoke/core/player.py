@@ -174,3 +174,11 @@ class Player:
             テラスタルが使用可能な場合True
         """
         return all(not mon.is_terastallized for mon in self.selection)
+
+    def has_interrupt(self) -> bool:
+        """割り込み状態かどうかを判定する。
+
+        Returns:
+            割り込み状態の場合True
+        """
+        return self.interrupt != Interrupt.NONE

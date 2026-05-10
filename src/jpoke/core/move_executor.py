@@ -258,8 +258,7 @@ class MoveExecutor:
         # 技のハンドラを登録
         ctx.move.register_handlers(self.events, ctx.attacker)
 
-        # 技タイプを実行直前に再評価する。
-        # （テラバーストなどの可変タイプ技対応）
+        # 技タイプを評価する（テラバーストなどの可変タイプ技対応）
         move_type = self.get_effective_move_type(ctx.attacker, ctx.move)
         ctx.move.set_type(move_type)
 
@@ -283,6 +282,9 @@ class MoveExecutor:
 
         # 技の宣言、PP消費
         self.events.emit(Event.ON_CONSUME_PP, ctx)
+
+        # かやたぶりを有効にする
+        self.events.emit(Event.ON_MOLD_BREAKER_ACTIVATE, ctx)
 
         # 溜め技の準備処理
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
@@ -331,6 +333,9 @@ class MoveExecutor:
 
         # 技の威力を元に戻す（トリプルアクセルなどのため）
         ctx.move.set_power(ctx.move.data.power)
+
+        # かやたぶりを無効にする
+        self.events.emit(Event.ON_MOLD_BREAKER_DEACTIVATE, ctx)
 
         # 技実行完了後の処理（状態管理・撤去など）
         self.events.emit(Event.ON_MOVE_END, ctx)

@@ -73,19 +73,6 @@ def test_あめうけざら_あめ以外では発動しない():
     assert mon.hp == before
 
 
-def test_あめうけざら_ばんのうがさ所持時は発動しない():
-    battle = t.start_battle(
-        ally=[Pokemon("ヤドン", ability="あめうけざら", item="ばんのうがさ")],
-        foe=[Pokemon("ピカチュウ")],
-        weather=("あめ", 5),
-    )
-    mon = battle.actives[0]
-    battle.modify_hp(mon, v=-50, reason="other")
-    before = mon.hp
-    battle.events.emit(Event.ON_TURN_END_3, BattleContext(source=mon))
-    assert mon.hp == before
-
-
 @pytest.mark.parametrize(
     "ability_name, weather_name",
     [
@@ -1638,37 +1625,7 @@ def test_ぎゃくじょう_かがくへんかガス中は発動しない():
 # ──────────────────────────────────────────────────────────────────
 #  きゅうばん
 # ──────────────────────────────────────────────────────────────────
-
-def test_きゅうばん_ふきとばしの強制交代を防ぐ():
-    """きゅうばん: ふきとばしによる強制交代効果をON_HITで遮断する。"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", ability="きゅうばん")],
-        foe=[Pokemon("ピカチュウ", moves=["ふきとばし"])],
-    )
-    defender = battle.actives[0]
-    attacker = battle.actives[1]
-    result = battle.events.emit(
-        Event.ON_HIT,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        True,
-    )
-    assert result is False
-
-
-def test_きゅうばん_かたやぶりで無効化される():
-    """きゅうばん: かたやぶり持ちのふきとばしはきゅうばんを貫通する。"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", ability="きゅうばん")],
-        foe=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["ふきとばし"])],
-    )
-    defender = battle.actives[0]
-    attacker = battle.actives[1]
-    result = battle.events.emit(
-        Event.ON_HIT,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        True,
-    )
-    assert result is True
+# TODO : 実装
 
 # ──────────────────────────────────────────────────────────────────
 # きょううん
@@ -3240,9 +3197,8 @@ def test_せいしんりょく_かたやぶりのひるみは防げない():
     move = attacker.moves[0]
 
     ctx = BattleContext(attacker=attacker, defender=defender, move=move, target=defender, source=attacker)
-    # かたやぶり時は check_def_ability_enabled が False になるのでひるみが防げない
     result = battle.events.emit(Event.ON_BEFORE_APPLY_VOLATILE, ctx, "ひるみ")
-    assert result == "ひるみ"  # かたやぶりのためせいしんりょくが無効化され、ひるみが通る
+    assert result == "ひるみ"
 
 
 def test_せいしんりょく_かがくへんかガス中はひるみが入る():

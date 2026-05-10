@@ -214,9 +214,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.かがくへんかガス_switch_in,
+                h.announce_ability_on_switch_in,
                 subject_spec="source:self",
-                priority=0,
             ),
             Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
                 h.かがくへんかガス_check_enabled,
@@ -260,8 +259,12 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.AbilityHandler(
-                h.かたやぶり_check_def_ability_enabled,
+            Event.ON_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+            ),
+            Event.ON_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+            ),
+            Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
+                h.かたやぶり_check_ability_enabled,
                 subject_spec="attacker:self",
                 priority=100,
             ),
@@ -349,10 +352,9 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_HIT: h.AbilityHandler(
-                h.きゅうばん_check_blow,
+            Event.ON_CHECK_BLOW_IMMUNE: h.AbilityHandler(
+                h.きゅうばん_check_blow_immune,
                 subject_spec="defender:self",
-                priority=200,
             ),
         },
     ),
@@ -682,11 +684,11 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_CALC_ATK_MODIFIER: [
                 h.AbilityHandler(
-                    h.すいほう_modify_atk,
+                    h.modify_water_attack,
                     subject_spec="attacker:self",
                 ),
                 h.AbilityHandler(
-                    h.すいほう_modify_atk,
+                    h.modify_fire_attack,
                     subject_spec="defender:self",
                 ),
             ]
@@ -932,11 +934,11 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_ATK_RANK_MODIFIER: h.AbilityHandler(
-                h.てんねん_on_calc_atk_rank_modifier,
+                h.てんねん_ignore_rank,
                 subject_spec="defender:self",
             ),
             Event.ON_CALC_DEF_RANK_MODIFIER: h.AbilityHandler(
-                h.てんねん_on_calc_def_rank_modifier,
+                h.てんねん_ignore_rank,
                 subject_spec="attacker:self",
             ),
         }
@@ -1857,8 +1859,8 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.AbilityHandler(
-                h.かたやぶり_check_def_ability_enabled,
+            Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
+                h.かたやぶり_check_ability_enabled,
                 subject_spec="attacker:self",
                 priority=100,
             ),
@@ -1915,8 +1917,8 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.AbilityHandler(
-                h.かたやぶり_check_def_ability_enabled,
+            Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
+                h.かたやぶり_check_ability_enabled,
                 subject_spec="attacker:self",
                 priority=100,
             ),

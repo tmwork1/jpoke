@@ -5775,7 +5775,11 @@ MOVES: dict[str, MoveData] = {
         priority=-6,
         labels=["wind"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(h.blow)
+            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+                h.check_blow_immune,
+                priority=30,
+            ),
+            Event.ON_HIT: h.MoveHandler(h.blow),
         }
     ),
     "フラフラダンス": MoveData(

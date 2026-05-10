@@ -106,11 +106,11 @@ class Field(GameEffect):
         return self.count > 0
 
     @property
-    def is_sunny(self) -> bool:
+    def sunny(self) -> bool:
         """はれ・おおひでり相当かどうかを判定する。"""
         return self.name in {"はれ", "おおひでり"}
 
     @property
-    def is_rainy(self) -> bool:
+    def rainy(self) -> bool:
         """あめ・おおあめ相当かどうかを判定する。"""
         return self.name in {"あめ", "おおあめ"}

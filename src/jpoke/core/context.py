@@ -203,14 +203,6 @@ class BattleContext:
             hit_count=kwargs.get("hit_count", self.hit_count),
         )
 
-    def check_def_ability_enabled(self, battle: Battle) -> bool:
-        """防御側特性が有効かどうかを更新し、その結果を返す。"""
-        return battle.events.emit(
-            Event.ON_CHECK_DEF_ABILITY_ENABLED,
-            self,
-            True,
-        )
-
     def check_infiltrate(self, battle: Battle) -> bool:
         """攻撃側がすりぬけ系特性を持ち、壁・みがわりを貫通するかを返す。"""
         return battle.events.emit(

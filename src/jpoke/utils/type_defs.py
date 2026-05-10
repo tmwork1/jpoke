@@ -106,7 +106,7 @@ STRONG_WEATHERS: frozenset[str] = frozenset({"おおひでり", "おおあめ", 
 
 Terrain = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 
-BoostSource = Literal["", "ability", "item", "weather", "terrain"]
+BoostSource = Literal["", "ability", "item", "weather", "terrain"]  # TODO : weather, terrain はまとめて field にする
 
 HPChangeReason = Literal[
     "move_damage",          # 技によるダメージ
@@ -121,7 +121,8 @@ HPChangeReason = Literal[
 
 StatChangeReason = Literal[
     "",                     # 通常（理由なし）
-    "ミラーアーマー",       # ミラーアーマーによる反射
+    "いかく",
+    "ミラーアーマー",        # ミラーアーマーによる反射
 ]
 
 ItemLostCause = Literal["", "consume", "remove", "swap", "steal", "burn", "gas"]

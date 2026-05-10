@@ -85,6 +85,12 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=success)
 
 
+def check_blow_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """吹き飛ばし技の効果を防げるかを判定する。"""
+    immune = battle.events.emit(Event.ON_CHECK_BLOW_IMMUNE, ctx, False)
+    return HandlerReturn(value=immune)
+
+
 def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
 
@@ -206,9 +212,9 @@ def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
         HandlerReturn: 補正があればTrue、なければFalse
     """
     weather = battle.weather
-    if weather is not None and weather.is_rainy:
+    if weather is not None and weather.rainy:
         return HandlerReturn(value=None)  # 必中
-    elif weather is not None and weather.is_sunny:
+    elif weather is not None and weather.sunny:
         return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
@@ -243,9 +249,9 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
         HandlerReturn: 補正があればTrue、なければFalse
     """
     weather = battle.weather
-    if weather is not None and weather.is_rainy:
+    if weather is not None and weather.rainy:
         return HandlerReturn(value=None)  # 必中
-    elif weather is not None and weather.is_sunny:
+    elif weather is not None and weather.sunny:
         return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 

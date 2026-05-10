@@ -369,9 +369,6 @@ class DamageCalculator:
             final_atk = attacker.stats[stat]
             r_rank = rank_modifier(attacker.rank[stat])
 
-        # ランク補正の修正（かたやぶり等で防御側特性が無視される場合は適用しない）
-        ctx.check_def_ability_enabled(self.battle)
-
         r_rank = self.events.emit(
             Event.ON_CALC_ATK_RANK_MODIFIER,
             ctx,

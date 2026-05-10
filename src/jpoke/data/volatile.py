@@ -291,7 +291,7 @@ VOLATILES: dict[str, VolatileData] = {
                 lambda *args: HandlerReturn(value=False, stop_event=True),
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.VolatileHandler(
+            Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
                 lambda *args: HandlerReturn(value=False, stop_event=True),
                 subject_spec="defender:self",
             ),

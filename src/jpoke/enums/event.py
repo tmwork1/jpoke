@@ -38,6 +38,11 @@ class Event(Enum):
     各イベントの emit 箇所と代表的な handle 箇所は以下のコメントを参照。
     """
 
+    # TODO : 以下の追加イベントを適切に配置する
+    ON_MOLD_BREAKER_ACTIVATE = auto()
+    ON_MOLD_BREAKER_DEACTIVATE = auto()
+    ON_CHECK_BLOW_IMMUNE = auto()
+
     # ------------------------------------------------------------------ #
     # アクション系イベント
     # ------------------------------------------------------------------ #
@@ -360,7 +365,7 @@ class Event(Enum):
 
     # emit: core/damage.py（防御側の能力動作確認）
     # handle: volatile.py（かたやぶり等による防御側能力の無効化チェック）
-    ON_CHECK_DEF_ABILITY_ENABLED = auto()
+    ON_CHECK_ABILITY_ENABLED = auto()
 
     # emit: core/context.py（壁・みがわり等を貫通するか問い合わせ）
     # handle: ability.py（すりぬけ等が True を返して貫通を宣言）

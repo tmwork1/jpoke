@@ -226,7 +226,7 @@ class Battle:
         return self.weather_manager.current
 
     @property
-    def weather(self) -> Field | None:
+    def weather(self) -> Field:
         """有効な天候オブジェクトを返す。判定ロジックは WeatherManager に委譲する。"""
         return self.weather_manager.active
 
@@ -503,6 +503,7 @@ class Battle:
 
     def consume_item(self, target: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
+        # TODO : アイテム消費時のログ記入までItemManagerに任せるべきか検討
         return self.item_manager.consume_item(target)
 
     def set_ability(self,

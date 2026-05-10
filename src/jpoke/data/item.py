@@ -389,7 +389,7 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=30,
             ),
-            Event.ON_CHECK_DEF_ABILITY_ENABLED: h.ItemHandler(
+            Event.ON_CHECK_ABILITY_ENABLED: h.ItemHandler(
                 lambda *args: HandlerReturn(value=True, stop_event=True),
                 subject_spec="target:self",
                 priority=200,
