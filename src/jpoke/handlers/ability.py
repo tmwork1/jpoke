@@ -1712,7 +1712,7 @@ def スナイパー_modify_damage(battle: Battle, ctx: BattleContext, value: int
 
 
 def ブレインフォース_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    """ブレインフォース特性: 効果抜群時の最終ダメージ補正を1.25倍にする。"""
+    """ブレインフォース特性: 効果抜群のときダメージを1.25倍"""
     if common.is_super_effective(battle, ctx):
         value = apply_fixed_modifier(value, 5120)
     return HandlerReturn(value=value)
@@ -1761,9 +1761,9 @@ def パンクロック_reduce_damage(battle: Battle, ctx: BattleContext, value: 
 def もふもふ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """もふもふ特性: 接触技被ダメ0.5倍・炎技被ダメ2倍を適用する。"""
     if ctx.check_def_ability_enabled(battle):
-        if ctx.move is not None and battle.move_executor.is_contact(ctx):
+        if battle.move_executor.is_contact(ctx):
             value = apply_fixed_modifier(value, 2048)
-        if ctx.move is not None and ctx.move.type == "ほのお":
+        if ctx.move.type == "ほのお":
             value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 

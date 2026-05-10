@@ -236,57 +236,37 @@ class DamageCalculator:
         )
         return v / 4096
 
-    def calc_def_type_modifier(self,
-                               ctx: BattleContext | None = None,
-                               attacker=None,
-                               defender=None,
-                               move=None) -> float:
+    def calc_def_type_modifier(self, ctx: BattleContext) -> float:
         """タイプ相性補正を計算する。
 
         攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
         ON_CALC_DEF_TYPE_MODIFIER イベントを発火して倍率（float）で返す。
 
         Args:
-            ctx: 攻防・技の情報を持つバトルコンテキスト（Noneの場合は以下の個別引数を使用）
-            attacker: 攻撃側ポケモン
-            defender: 防御側ポケモン
-            move: 技オブジェクトまたは技名文字列
+            ctx: 攻防・技の情報を持つバトルコンテキスト
 
         Returns:
             float: タイプ相性倍率（1.0=等倍、2.0=効果ばつぐん等）
         """
-        if ctx is None:
-            from jpoke.model import Move as MoveModel
-            ctx = BattleContext(
-                attacker=attacker,
-                defender=defender,
-                move=MoveModel(move) if isinstance(move, str) else move,
-            )
-
-        base_modifier = 4096
-        if ctx.move and ctx.defender:
-            for defender_type in ctx.defender.types:
-                type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
-                rate = type_chart.get(defender_type, 1.0)
-                if (
-                    ctx.move.type == "じめん"
-                    and defender_type == "ひこう"
-                    and not self.battle.query_manager.is_floating(ctx.defender)
-                ):
-                    rate = 1.0
-                base_modifier = int(base_modifier * rate)
-
-            if (
-                ctx.move.type == "じめん"
-                and self.battle.query_manager.is_floating(ctx.defender)
-                and not ctx.defender.has_type("ひこう")
-            ):
-                base_modifier = 0
-
-        # ステラ技はテラスタルポケモンに対して効果抜群（2.0倍）
-        if (ctx.move and ctx.move.type == 'ステラ'
-                and ctx.defender and ctx.defender.is_terastallized):
+        if (
+            ctx.move.type == 'ステラ'
+            and ctx.defender.is_terastallized
+        ):
+            # テラスタル状態の相手にステラ技が効果抜群になる
             base_modifier = 8192
+        elif (
+            ctx.move.type == "じめん"
+            and self.battle.query_manager.is_floating(ctx.defender)
+        ):
+            # 浮いている相手にはじめん技が無効
+            base_modifier = 0
+        else:
+            # タイプ相性表に基づいて補正を計算
+            base_modifier = 4096
+            for def_type in ctx.defender.types:
+                type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
+                rate = type_chart.get(def_type, 1.0)
+                base_modifier = int(base_modifier * rate)
 
         v = self.events.emit(
             Event.ON_CALC_DEF_TYPE_MODIFIER,
