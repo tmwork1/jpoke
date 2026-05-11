@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from .battle import Battle
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import EnableKey
+from jpoke.utils.type_defs import DisabledReason
 from jpoke.enums import Event
 from .context import BattleContext
 
@@ -33,23 +33,26 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def refresh_ability_enabled_states(self) -> dict[str, dict[EnableKey, bool]]:
+    def refresh_ability_enabled_states(self) -> dict[str, set[DisabledReason]]:
         """場の状況に応じて特性の有効/無効状態を再計算する。
         Returns:
-            dict[str, dict[EnableKey, bool]]: 特性の有効/無効状態の辞書
+            dict[str, set[DisabledReason]]: 特性の有効/無効状態の辞書
         """
         results = {}
         for i, mon in enumerate(self.battle.actives):
-            if mon is None:
+            if (
+                mon is None
+                or mon.ability.self_disabled
+            ):
                 continue
 
-            states = self.battle.events.emit(
+            reasons = self.battle.events.emit(
                 Event.ON_CHECK_ABILITY_ENABLED,
                 BattleContext(source=mon),
-                {"self": mon.ability.get_enabled("self")}
+                set(),
             )
-            mon.ability.replace_enabled(states)
-            results[f"ability_{i+1}"] = states
+            mon.ability.set_disabled_reasons(reasons)
+            results[f"ability_{i+1}"] = reasons
 
         # こだいかっせい・クォークチャージの発動状態を再判定する。
         self.battle.events.emit(Event.ON_REFRESH_PARADOX_BOOST)

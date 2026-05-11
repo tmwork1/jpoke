@@ -1,6 +1,6 @@
 from typing import Literal
 
-EnableKey = Literal[
+DisabledReason = Literal[
     "self",
     "かがくへんかガス", "かたやぶり",  # 特性
     "ぶきよう", "マジックルーム",  # アイテム

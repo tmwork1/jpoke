@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, HPChangeReason, Type, Stat
+from jpoke.utils.type_defs import RoleSpec, HPChangeReason, Type, Stat, DisabledReason
 from jpoke.utils.constants import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
@@ -395,12 +395,6 @@ def かげふみ_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=result)
 
 
-def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
-    """かがくへんかガス無効化判定"""
-    value["かがくへんかガス"] = ctx.source.ability.has_flag("gas_proof")
-    return HandlerReturn(value=value)
-
-
 def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """特性を開示する"""
     mon = ctx.source
@@ -412,6 +406,15 @@ def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": "かがくへんかガス", "success": True}
     )
+    return HandlerReturn(value=value)
+
+
+def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, value: set[DisabledReason]) -> HandlerReturn:
+    """かがくへんかガス無効化判定"""
+    if ctx.source.ability.has_flag("gas_proof"):
+        value.discard("かがくへんかガス")
+    else:
+        value.add("かがくへんかガス")
     return HandlerReturn(value=value)
 
 
@@ -2037,29 +2040,23 @@ def announce_ability_on_switch_in(battle: Battle, ctx: BattleContext, value: Any
     return HandlerReturn(value=value)
 
 
-def かたやぶり_activate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    ctx.attacker.ability.mold_breaker_active = True
-    battle.refresh_effect_enabled_states()
+def かたやぶり_activate(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    ability = ctx.defender.ability
+    if ability.has_flag("mold_breaker_ignorable"):
+        ability.add_disable_reason("かたやぶり")
     return HandlerReturn(value=value)
 
 
-def かたやぶり_deactivate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    ctx.attacker.ability.mold_breaker_active = False
-    battle.refresh_effect_enabled_states()
-    return HandlerReturn(value=value)
-
-
-def かたやぶり_check_ability_enabled(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
-    """かたやぶり系特性: 無視できる防御側特性の無視フラグを立てる。"""
-    if ctx.attacker.mold_breaker_active:
-        value["かたやぶり"] = ctx.defender.ability.has_flag("mold_breaker_ignorable")
+def かたやぶり_deactivate(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    ability = ctx.defender.ability
+    ability.remove_disable_reason("かたやぶり")
     return HandlerReturn(value=value)
 
 
 def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ばけのかわ特性: 初回の攻撃技ダメージを防ぐ。"""
     # ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
-    ctx.defender.ability.set_enabled("self", False)
+    ctx.defender.ability.add_disable_reason("self")
     battle.modify_hp(ctx.defender, r=-1/8)
 
     idx = battle.get_player_index(ctx.defender)

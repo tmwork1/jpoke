@@ -39,8 +39,8 @@ class Event(Enum):
     """
 
     # TODO : 以下の追加イベントを適切に配置する
-    ON_MOLD_BREAKER_ACTIVATE = auto()
-    ON_MOLD_BREAKER_DEACTIVATE = auto()
+    ON_CHANGE_MOLD_BREAKER_ACTIVATE = auto()
+    ON_CHANGE_MOLD_BREAKER_DEACTIVATE = auto()
     ON_CHECK_BLOW_IMMUNE = auto()
 
     # ------------------------------------------------------------------ #

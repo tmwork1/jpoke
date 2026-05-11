@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.utils.type_defs import EnableKey
+from jpoke.utils.type_defs import DisabledReason
 
 
 class EffectData(Protocol):
@@ -36,7 +36,7 @@ class GameEffect:
         """
         self.data: EffectData = data
         self.revealed: bool = False
-        self._enabled: dict[EnableKey, bool] = {"self": True}
+        self._disabled_reasons: set[DisabledReason] = set()
 
     @property
     def name(self) -> str:
@@ -69,36 +69,40 @@ class GameEffect:
         Returns:
             効果が有効な場合はTrue、無効な場合はFalse
         """
-        return all(self._enabled.values())
+        return not self._disabled_reasons
 
-    def get_enabled(self, key: EnableKey) -> bool:
-        """特定のキーによる有効/無効状態を取得する。
+    @property
+    def self_disabled(self) -> bool:
+        """効果が自己無効化されているかを判定する。
+
+        Returns:
+            効果が自己無効化されている場合はTrue、そうでない場合はFalse
+        """
+        return "self" in self._disabled_reasons
+
+    def add_disable_reason(self, reason: DisabledReason) -> None:
+        """
+        効果を無効にする理由を追加する。
+        Args:
+            reason: 無効化の理由を示すキー
+        """
+        self._disabled_reasons.add(reason)
+
+    def remove_disable_reason(self, reason: DisabledReason) -> None:
+        """効果を有効にする理由を削除する。
 
         Args:
-            key: 取得したい有効/無効状態のキー
+            reason: 有効化の理由を示すキー
         """
-        return self._enabled.get(key, True)
+        self._disabled_reasons.discard(reason)
 
-    def set_enabled(self, key: EnableKey, enabled: bool) -> None:
-        """効果の有効/無効状態を設定する。
+    def set_disabled_reasons(self, reasons: set[DisabledReason]) -> None:
+        """無効化の理由を置き換える。
 
         Args:
-            key: 有効/無効状態のキー
-            enabled: 有効にする場合はTrue、無効にする場合はFalse
+            reasons: 新しい無効化理由のセット
         """
-        self._enabled[key] = enabled
-
-    def replace_enabled(self, states: dict[EnableKey, bool]) -> None:
-        """有効/無効状態を新しい状態に置き換える。
-
-        Args:
-            new_states: 置き換える新しい有効/無効状態の辞書
-        """
-        self._enabled = states
-
-    def reset_enabled(self, initial: bool = True) -> None:
-        """有効/無効状態をリセットする。"""
-        self._enabled = {"self": initial}
+        self._disabled_reasons = reasons
 
     def register_handlers(self,
                           events: EventManager,

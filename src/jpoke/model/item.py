@@ -53,7 +53,7 @@ class Item(GameEffect):
 
     def lose(self, cause: ItemLostCause = "remove"):
         """アイテムを喪失状態にする。"""
-        self.set_enabled("self", False)
+        self.add_disable_reason("self")
         self.revealed = True
         self.lost_cause = cause
 

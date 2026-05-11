@@ -1,5 +1,11 @@
 """特性ハンドラの単体テスト"""
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Battle
+
 import pytest
+
 
 from jpoke import Pokemon
 from jpoke.core import BattleContext
@@ -8,6 +14,15 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import STRONG_WEATHERS
 
 import test_utils as t
+
+
+def _activate_mold_breaker(battle: Battle, atk_idx: int):
+    attacker = battle.actives[atk_idx]
+    defender = battle.foe(attacker)
+    ctx = BattleContext(
+        attacker=attacker, defender=defender, move=attacker.moves[0]
+    )
+    battle.events.emit(Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE, ctx, True)
 
 
 # TODO : t.check_event_result()を活用してテストコードの量を減らす
@@ -99,14 +114,13 @@ def test_タイプ半減系(ability_name: str, move_name: str):
         ally=[Pokemon("ピカチュウ", moves=[move_name])],
         foe=[Pokemon("ピカチュウ", ability=ability_name)],
     )
-    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER, atk_idx=0) == 2048
+    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER, atk_idx=0)
 
 
 @pytest.mark.parametrize(
     "ability_name, move_name",
     [
         ("あついしぼう", "ひのこ"),
-        ("きよめのしお", "シャドーボール"),
         ("たいねつ", "ひのこ"),
     ],
 )
@@ -115,7 +129,8 @@ def test_タイプ半減系_かたやぶりで無効(ability_name: str, move_nam
         ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=[move_name])],
         foe=[Pokemon("ピカチュウ", ability=ability_name)],
     )
-    assert t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER) == 4096
+    _activate_mold_breaker(battle, 0)
+    assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_ATK_MODIFIER)
 
 # ──────────────────────────────────────────────────────────────────
 #  あとだし

@@ -262,8 +262,21 @@ class MoveExecutor:
         move_type = self.get_effective_move_type(ctx.attacker, ctx.move)
         ctx.move.set_type(move_type)
 
+        # 行動成功判定
+        if not self.events.emit(Event.ON_CHECK_ACTION, ctx, True):
+            return
+
+        # 技の宣言、PP消費
+        self.events.emit(Event.ON_CONSUME_PP, ctx)
+
+        # かやたぶりを有効にする
+        self.events.emit(Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE, ctx, True)
+
         # 技の実行
         self._execute_move(ctx)
+
+        # かやたぶりを無効にする
+        self.events.emit(Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE, ctx, False)
 
         # 技のハンドラを解除
         ctx.move.unregister_handlers(self.events, ctx.attacker)
@@ -276,17 +289,7 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
-        # 行動成功判定
-        if not self.events.emit(Event.ON_CHECK_ACTION, ctx, True):
-            return
-
-        # 技の宣言、PP消費
-        self.events.emit(Event.ON_CONSUME_PP, ctx)
-
-        # かやたぶりを有効にする
-        self.events.emit(Event.ON_MOLD_BREAKER_ACTIVATE, ctx)
-
-        # 溜め技の準備処理
+        # 溜め技の準備処理ON_MOLD_BREAKER
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
 
@@ -333,9 +336,6 @@ class MoveExecutor:
 
         # 技の威力を元に戻す（トリプルアクセルなどのため）
         ctx.move.set_power(ctx.move.data.power)
-
-        # かやたぶりを無効にする
-        self.events.emit(Event.ON_MOLD_BREAKER_DEACTIVATE, ctx)
 
         # 技実行完了後の処理（状態管理・撤去など）
         self.events.emit(Event.ON_MOVE_END, ctx)

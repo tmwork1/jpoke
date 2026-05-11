@@ -30,8 +30,10 @@ class Ability(GameEffect):
         super().__init__(ABILITIES[name])
         self.count: int = 0
         self.state: AbilityState = ""
+
         self.is_hangry: bool = False
         self.activated_since_switch_in: bool = False
+        self.mold_breaker_active: bool = False
 
         self.data: AbilityData  # 型ヒントのための属性。実際のデータはsuper().__init__で設定される
 
@@ -65,13 +67,12 @@ class Ability(GameEffect):
         特性の有効/無効状態をリセットする。
 
         特性の状態を初期状態に戻す。
-        試合中一度しか発動しない特性は、未発動であれば有効にする。
+        試合中一度しか発動しない特性は自己無効化フラグを維持する。
         """
-        initial = (
-            not self.has_flag("per_battle_once")
-            or self.get_enabled("self")
-        )
-        super().reset_enabled(initial=initial)
+        reasons = set()
+        if self.has_flag("per_battle_once") and self.self_disabled:
+            reasons.add("self")
+        self.set_disabled_reasons(reasons)
 
     def has_flag(self, flag: str) -> bool:
         """特性の状態フラグを判定する。
