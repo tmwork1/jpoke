@@ -5,15 +5,19 @@
 from typing import get_args
 from .type_defs import Stat
 
-RANK_MIN = -6
-"""能力ランクの最小値"""
-
-RANK_MAX = 6
-"""能力ランクの最大値"""
 
 STATS = list(get_args(Stat))
-"""全ステータスのリスト"""
 
+WEATHER_PRIORITY = {
+    "": 0,
+    "はれ": 0,
+    "あめ": 0,
+    "ゆき": 0,
+    "すなあらし": 0,
+    "おおひでり": 1,
+    "おおあめ": 1,
+    "らんきりゅう": 2,
+}
 
 PLATE_TO_TYPE: dict[str, str] = {
     "ひのたまプレート": "ほのお",
@@ -34,7 +38,6 @@ PLATE_TO_TYPE: dict[str, str] = {
     "こうてつのプレート": "はがね",
     "せいれいプレート": "フェアリー",
 }
-"""プレート名と対応タイプの対応表。"""
 
 
 MEMORY_TO_TYPE: dict[str, str] = {
@@ -56,7 +59,6 @@ MEMORY_TO_TYPE: dict[str, str] = {
     "エレクトロメモリ": "でんき",
     "フェアリーメモリ": "フェアリー",
 }
-"""メモリ名と対応タイプの対応表。"""
 
 HIT_RANK_MODIFIERS = {
     -6: 3/9,
@@ -73,6 +75,9 @@ HIT_RANK_MODIFIERS = {
     5:  8/3,
     6:  9/3,
 }
+
+RANK_MIN = min(HIT_RANK_MODIFIERS.keys())
+RANK_MAX = max(HIT_RANK_MODIFIERS.keys())
 
 NATURE_MODIFIER = {
     'まじめ': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],

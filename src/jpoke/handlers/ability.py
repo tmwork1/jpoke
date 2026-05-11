@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, HPChangeReason, Type, Stat, DisabledReason
+from jpoke.utils.type_defs import RoleSpec, Type, Stat, DisabledReason, Weather, Terrain, AilmentName
 from jpoke.utils.constants import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
@@ -42,11 +42,41 @@ class AbilityHandler(Handler):
             once=once,
         )
 
+# 汎用関数
+
+
+def announce_ability(battle: Battle,
+                     ctx: BattleContext,
+                     value: Any,
+                     *,
+                     mon: Pokemon | None = None) -> HandlerReturn:
+    """汎用: 特性発動ログを記録する
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_SWITCH_IN)
+            - source: 登場したポケモン
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: 変更なし
+    """
+    if mon is None:
+        mon = ctx.source
+
+    mon.ability.revealed = True
+    idx = battle.get_player_index(mon)
+    battle.event_logger.add(
+        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        payload={"ability": mon.ability.name, "success": True}
+    )
+    return HandlerReturn(value=value)
+
 
 def _apply_contact_counter_ailment(battle: Battle,
                                    ctx: BattleContext,
                                    *,
-                                   ailment: str,
+                                   ailment: AilmentName,
                                    chance: float) -> bool:
     """接触被弾時カウンターの状態異常付与を試行する。"""
     if (
@@ -155,44 +185,51 @@ def _modify_by_move_condition(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def _activate_weather_with_log(battle: Battle,
-                               ctx: BattleContext,
-                               value: Any,
-                               *,
-                               weather: str) -> HandlerReturn:
+def activate_weather_with_log(battle: Battle,
+                              ctx: BattleContext,
+                              value: Any,
+                              *,
+                              weather: Weather,
+                              count: int,
+                              source: Pokemon | None = None) -> HandlerReturn:
     """天候を変更し、LogCode.ABILITY_TRIGGERED を記録する。"""
-    if not battle.weather_manager.activate(weather, 5, source=ctx.source):
-        return HandlerReturn(value=value)
-
-    mon = ctx.source
-    mon.ability.revealed = True
-
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.name, "success": True}
-    )
+    if source is None:
+        source = ctx.source
+    if battle.weather_manager.activate(weather, count, source=source):
+        announce_ability(battle, ctx, value, mon=source)
     return HandlerReturn(value=value)
 
 
-def _activate_terrain_with_log(battle: Battle,
-                               ctx: BattleContext,
-                               value: Any,
-                               *,
-                               terrain: str) -> HandlerReturn:
+def deactivate_strong_weather(battle: Battle,
+                              ctx: BattleContext,
+                              value: Any,
+                              *,
+                              weather: Weather,
+                              source: Pokemon | None = None) -> HandlerReturn:
+    """強天候を解除する
+    相手の特性が同じ天候を発生させるものなら解除しない。
+    """
+    if source is None:
+        source = ctx.source
+    foe = battle.foe(source)
+    # 相手の特性が同じ天候を発生させるものでない場合に解除する
+    if foe.ability.name != source.ability.name:
+        battle.weather_manager.deactivate()
+    return HandlerReturn(value=value)
+
+
+def activate_terrain_with_log(battle: Battle,
+                              ctx: BattleContext,
+                              value: Any,
+                              *,
+                              terrain: Terrain,
+                              count: int,
+                              source: Pokemon | None = None) -> HandlerReturn:
     """地形を変更し、LogCode.ABILITY_TRIGGERED を記録する。"""
-    battle.terrain_manager.activate(terrain, 5, source=ctx.source)
-    mon = ctx.source
-    mon.ability.revealed = True
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.name, "success": True}
-    )
+    if source is None:
+        source = ctx.source
+    if battle.terrain_manager.activate(terrain, count, source=source):
+        announce_ability(battle, ctx, value, mon=source)
     return HandlerReturn(value=value)
 
 
@@ -200,18 +237,17 @@ def _apply_ailment_with_log(battle: Battle,
                             ctx: BattleContext,
                             value: Any,
                             *,
-                            ailment: str) -> HandlerReturn:
+                            ailment: AilmentName,
+                            target: Pokemon | None = None,
+                            source: Pokemon | None = None) -> HandlerReturn:
     """自身に状態異常を付与し、LogCode.ABILITY_TRIGGERED を記録する。"""
-    mon = ctx.source
-    battle.ailment_manager.apply(mon, ailment, source=mon)
-    mon.ability.revealed = True
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.name, "success": True}
-    )
+    if source is None:
+        source = ctx.source
+    if target is None:
+        target = ctx.target
+
+    if battle.ailment_manager.apply(target, ailment, source=source):
+        announce_ability(battle, ctx, value, mon=source)
     return HandlerReturn(value=value)
 
 
@@ -2015,28 +2051,6 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
             payload={"ability": "おうごんのからだ", "success": True}
         )
         return HandlerReturn(value=True, stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def announce_ability_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """汎用: 登場時に特性発動ログを記録する (ON_SWITCH_IN)。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト (ON_SWITCH_IN)
-            - source: 登場したポケモン
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 変更なし
-    """
-    mon = ctx.source
-    mon.ability.revealed = True
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.name, "success": True}
-    )
     return HandlerReturn(value=value)
 
 

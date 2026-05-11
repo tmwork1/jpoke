@@ -100,10 +100,6 @@ SideField = Literal["リフレクター", "ひかりのかべ", "しんぴのま
                     "まきびし", "どくびし", "ステルスロック", "ねばねばネット", "オーロラベール"]
 
 Weather = Literal["", "はれ", "あめ", "ゆき", "すなあらし", "おおひでり", "おおあめ", "らんきりゅう"]
-
-# 強天候セット（通常天候では上書き不可）
-STRONG_WEATHERS: frozenset[str] = frozenset({"おおひでり", "おおあめ", "らんきりゅう"})
-
 Terrain = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 
 BoostSource = Literal["", "ability", "item", "weather", "terrain"]  # TODO : weather, terrain はまとめて field にする

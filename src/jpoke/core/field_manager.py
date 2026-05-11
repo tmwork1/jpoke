@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain, STRONG_WEATHERS
+from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain
+from jpoke.utils.constants import WEATHER_PRIORITY
 from jpoke.enums import Event
 from jpoke.model import Field
 from jpoke.core import BattleContext
@@ -238,10 +239,14 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
         return self.current
 
     def activate(self, name: Weather, count: int, source=None) -> bool:
-        """天候を発動する。強天候中は通常天候への切り替えをブロックする。"""
-        if self.current.name in STRONG_WEATHERS and name not in STRONG_WEATHERS:
-            return False
-        return super().activate(name, count, source=source)
+        """天候を発動する。
+        天候の上書きは、現在の天候と新しい天候の優先度を比較して決める。
+        """
+        current_priority = WEATHER_PRIORITY[self.current.name]
+        new_priority = WEATHER_PRIORITY[name]
+        if new_priority >= current_priority:
+            return super().activate(name, count, source=source)
+        return False
 
     def update_reference(self, new_battle: Battle):
         """ディープコピー後の参照を更新する。

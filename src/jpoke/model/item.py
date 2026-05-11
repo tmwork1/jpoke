@@ -49,7 +49,7 @@ class Item(GameEffect):
         Returns:
             アイテムが喪失状態の場合はTrue、そうでない場合はFalse
         """
-        return self.get_enabled("self") == False
+        return self.self_disabled
 
     def lose(self, cause: ItemLostCause = "remove"):
         """アイテムを喪失状態にする。"""
