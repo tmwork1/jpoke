@@ -159,18 +159,20 @@ def _activate_weather_with_log(battle: Battle,
                                ctx: BattleContext,
                                value: Any,
                                *,
-                               weather: str,
-                               ability_name: str) -> HandlerReturn:
+                               weather: str) -> HandlerReturn:
     """天候を変更し、LogCode.ABILITY_TRIGGERED を記録する。"""
-    battle.weather_manager.activate(weather, 5, source=ctx.source)
+    if not battle.weather_manager.activate(weather, 5, source=ctx.source):
+        return HandlerReturn(value=value)
+
     mon = ctx.source
     mon.ability.revealed = True
+
     idx = battle.get_player_index(mon)
     battle.event_logger.add(
         battle.turn,
         idx,
         LogCode.ABILITY_TRIGGERED,
-        payload={"ability": ability_name, "success": True}
+        payload={"ability": mon.ability.name, "success": True}
     )
     return HandlerReturn(value=value)
 
@@ -179,8 +181,7 @@ def _activate_terrain_with_log(battle: Battle,
                                ctx: BattleContext,
                                value: Any,
                                *,
-                               terrain: str,
-                               ability_name: str) -> HandlerReturn:
+                               terrain: str) -> HandlerReturn:
     """地形を変更し、LogCode.ABILITY_TRIGGERED を記録する。"""
     battle.terrain_manager.activate(terrain, 5, source=ctx.source)
     mon = ctx.source
@@ -190,7 +191,7 @@ def _activate_terrain_with_log(battle: Battle,
         battle.turn,
         idx,
         LogCode.ABILITY_TRIGGERED,
-        payload={"ability": ability_name, "success": True}
+        payload={"ability": mon.ability.name, "success": True}
     )
     return HandlerReturn(value=value)
 
@@ -199,8 +200,7 @@ def _apply_ailment_with_log(battle: Battle,
                             ctx: BattleContext,
                             value: Any,
                             *,
-                            ailment: str,
-                            ability_name: str) -> HandlerReturn:
+                            ailment: str) -> HandlerReturn:
     """自身に状態異常を付与し、LogCode.ABILITY_TRIGGERED を記録する。"""
     mon = ctx.source
     battle.ailment_manager.apply(mon, ailment, source=mon)
@@ -210,7 +210,7 @@ def _apply_ailment_with_log(battle: Battle,
         battle.turn,
         idx,
         LogCode.ABILITY_TRIGGERED,
-        payload={"ability": ability_name, "success": True}
+        payload={"ability": mon.ability.name, "success": True}
     )
     return HandlerReturn(value=value)
 

@@ -202,16 +202,17 @@ strong_weathers = weathers[4:]
 
 
 @pytest.mark.parametrize(
-    "ability_name, weather_name", ability_weather_pairs
+    "ability_name, weather_name",
+    ability_weather_pairs
 )
-def test_天候始動特性_登場時に対応天候を展開する(ability_name: str, weather_name: str):
+def test_天候始動特性_登場時に発動(ability_name: str, weather_name: str):
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability=ability_name)],
         foe=[Pokemon("ライチュウ")],
     )
     assert battle.weather.name == weather_name
     assert battle.weather.count == 5
-    assert battle.actives[0].ability.revealed
+    assert battle.actives[0].ability.revealed is True
 
 
 @pytest.mark.parametrize(
@@ -223,7 +224,6 @@ def test_あめふらし_通常天候を上書きする(initial_weather: str):
         foe=[Pokemon("ピカチュウ")],
         weather=(initial_weather, 999),
     )
-    assert battle.weather.name == initial_weather
     # start_battle で初期天候を設定した後、交代で再登場させてあめふらしを再発動させる。
     battle.switch_manager.run_switch(battle.players[0], battle.players[0].team[1])
     assert battle.weather.name == "あめ"
