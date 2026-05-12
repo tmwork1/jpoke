@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, VolatileName
+from jpoke.utils.type_defs import RoleSpec, VolatileName, DisabledReason
 from jpoke.utils.constants import HIDDEN_MOVE_ALLOWED_MOVES
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
@@ -342,12 +342,6 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     mon = ctx.attacker
     battle.volatile_manager.tick(mon, "こんらん")
 
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.ACTION_BLOCKED,
-        payload={"reason": "こんらん"}
-    )
-
     if battle.test_option.trigger_volatile is not None:
         # テスト用に確率を固定
         confused = battle.test_option.trigger_volatile
@@ -357,12 +351,19 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     if not confused:
         return HandlerReturn(value=True)
 
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.ACTION_BLOCKED,
+        payload={"reason": "こんらん"}
+    )
+
     # 自傷ダメージの計算（通常のダメージ計算と同様の処理を行う）
     damage = battle.determine_damage(
         attacker=ctx.attacker,
         defender=ctx.attacker,
         move="こんらん",
     )
+
     # ダメージ適用
     battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
     return HandlerReturn(value=False, stop_event=True)
@@ -477,12 +478,14 @@ def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value:
         value: コマンドオプションのリスト
 
     Returns:
-        HandlerReturn: じごくづき以外の技コマンドを削除したリスト
+        HandlerReturn: 音技以外のコマンドのみ選択可能な新しいコマンドオプションのリスト
     """
     new_options = []
     for cmd in value:
-        if not cmd.is_move_family() or \
-                not ctx.attacker.moves[cmd.idx].has_label("sound"):
+        if (
+            not cmd.is_move_family()
+            or not ctx.attacker.moves[cmd.idx].has_label("sound")
+        ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
 
@@ -571,8 +574,11 @@ def ちょうはつ_check_action(battle: Battle, ctx: BattleContext, value: Any)
         HandlerReturn: 変化技の場合はvalue=None（使用禁止）、攻撃技の場合はTrue
     """
     if ctx.move.category == "変化":
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "ちょうはつ", "move": ctx.move.name})
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.ACTION_BLOCKED,
+            payload={"reason": "ちょうはつ", "move": ctx.move.name}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -589,8 +595,14 @@ def とくせいなし_on_volatile_end(battle: Battle, ctx: BattleContext, value
     return HandlerReturn(value=value)
 
 
-def ねむけ_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ねむけのターン経過処理
+def とくせいなし_check_ability_enabled(battle: Battle, ctx: BattleContext, value: set[DisabledReason]) -> HandlerReturn:
+    """とくせいなし状態で特性が無効になるようにする。"""
+    value.add("とくせいなし")
+    return HandlerReturn(value=value)
+
+
+def ねむけ_on_volatile_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ねむけを解除してねむりを付与する
 
     Args:
         battle: バトルインスタンス
@@ -600,11 +612,9 @@ def ねむけ_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRet
     Returns:
         HandlerReturn: 常にTrue
     """
-    battle.volatile_manager.tick(ctx.source, "ねむけ")
-    if not ctx.source.has_volatile("ねむけ"):
-        count = battle.random.randint(1, 3)
-        battle.ailment_manager.apply(ctx.source, "ねむり", count=count)
-    return HandlerReturn(value=value)
+    count = battle.random.randint(1, 3)
+    battle.ailment_manager.apply(ctx.source, "ねむり", count=count)
+    return HandlerReturn(value=True)
 
 
 def のろい_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -618,8 +628,7 @@ def のろい_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     Returns:
         HandlerReturn: ダメージが発生した場合True
     """
-    mon = ctx.source
-    battle.modify_hp(mon, r=-1/4)
+    battle.modify_hp(ctx.source, r=-1/4)
     return HandlerReturn(value=value)
 
 
@@ -658,12 +667,12 @@ def バインド_swith_out(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     Returns:
         HandlerReturn: 常にTrue
     """
-    mon = battle.foe(ctx.source)
-    battle.volatile_manager.remove(mon, "バインド")
+    foe = battle.foe(ctx.source)
+    battle.volatile_manager.remove(foe, "バインド")
     return HandlerReturn(value=value)
 
 
-def ひるみ_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ひるみ_block_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ひるみ状態による行動不能判定
 
     Args:
@@ -674,18 +683,19 @@ def ひるみ_check_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     Returns:
         HandlerReturn: 行動不能の場合はFalse
     """
-    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                         payload={"reason": "ひるみ"})
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.ACTION_BLOCKED,
+        payload={"reason": "ひるみ"}
+    )
     remove_volatile(battle, ctx, value, "ひるみ")
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ほろびのうた_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ほろびのうたのターン経過処理"""
-    battle.volatile_manager.tick(ctx.source, "ほろびのうた")
+def ほろびのうた_faint(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ほろびのうたでひんしになる処理"""
     mon = ctx.source
-    if not mon.has_volatile("ほろびのうた"):
-        battle.modify_hp(mon, v=-mon.hp)
+    battle.modify_hp(mon, v=-mon.hp)
     return HandlerReturn(value=value)
 
 
@@ -706,51 +716,24 @@ def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: An
     Returns:
         HandlerReturn: 補正後の値
     """
-    if ctx.move and ctx.move.name in ["ころがる", "アイスボール"]:
-        return HandlerReturn(value=value * 2)
-    return HandlerReturn(value=value)
-
-
-def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """みちづれ状態のひんし時処理（相手もひんしにする）"""
-    mon = ctx.attacker
-    if mon is None:
-        return HandlerReturn(value=value)
-    battle.modify_hp(mon, v=-mon.hp)
-    return HandlerReturn(value=value)
-
-
-def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """みがわりを生成する
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 成功時True
-    """
-    mon = ctx.attacker
-    cost = mon.max_hp // 4
-    if mon.hp <= cost:
-        return HandlerReturn(value=value)
-
-    if not battle.modify_hp(mon, v=-cost, reason="self_cost"):
-        return HandlerReturn(value=value)
-
-    battle.volatile_manager.apply(
-        mon, "みがわり", source=mon, hp=cost)
+    if ctx.move.name in ["ころがる", "アイスボール"]:
+        value *= 2
     return HandlerReturn(value=value)
 
 
 def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりによる技の無効化判定"""
-    hit_substitute = battle.move_executor.hit_substitute(ctx)
-    immune = hit_substitute and ctx.move.category == "変化" and not ctx.check_infiltrate(battle)
+    hit_substitute = battle.move_executor.check_hit_substitute(ctx)
+    immune = (
+        hit_substitute
+        and ctx.move.category == "変化"
+    )
     if immune:
-        battle.add_event_log(ctx.defender, LogCode.MOVE_IMMUNE,
-                             payload={"move": ctx.move.name, "reason": "みがわり"})
+        battle.add_event_log(
+            ctx.defender,
+            LogCode.MOVE_IMMUNE,
+            payload={"move": ctx.move.name, "reason": "みがわり"}
+        )
         return HandlerReturn(value=True, stop_event=True)
     return HandlerReturn(value=False)
 
@@ -758,25 +741,34 @@ def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりがダメージを肩代わりする"""
     damage = value
-    hit_substitute = battle.move_executor.hit_substitute(ctx)
-    if not hit_substitute or ctx.check_infiltrate(battle):
+    if not battle.move_executor.check_hit_substitute(ctx):
         return HandlerReturn(value=damage)
 
-    battle.add_event_log(ctx.defender, LogCode.HIT_SUBSTITUTE,
-                         payload={"move": ctx.move.name})
+    battle.add_event_log(
+        ctx.defender,
+        LogCode.HIT_SUBSTITUTE,
+        payload={"move": ctx.move.name}
+    )
     volatile = ctx.defender.volatiles["みがわり"]
     damage = min(volatile.hp, damage)
     volatile.hp -= damage
+
+    # みがわりに与えたダメージをコンテキストに保存しておく（後の処理で使用するため）
+    ctx.substitute_damage = damage
 
     # みがわり消滅
     if volatile.hp == 0:
         battle.volatile_manager.remove(ctx.defender, "みがわり")
 
-    # みがわりに与えたダメージをコンテキストに保存しておく（後の処理で使用するため）
-    ctx.substitute_damage = damage
-
     # 被ダメージは0とする
     return HandlerReturn(value=0)
+
+
+def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """みちづれ状態のひんし時処理（相手もひんしにする）"""
+    mon = ctx.attacker
+    battle.modify_hp(mon, v=-mon.hp)
+    return HandlerReturn(value=value)
 
 
 def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -791,8 +783,11 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         HandlerReturn: 行動不能の場合はFalse、行動可能の場合はTrue
     """
     # メロメロ状態の宣言
-    battle.add_event_log(ctx.attacker, LogCode.VOLATILE_STATUS,
-                         payload={"volatile": "メロメロ"})
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.VOLATILE_STATUS,
+        payload={"volatile": "メロメロ"}
+    )
 
     # テスト用に確率を固定できる
     if battle.test_option.trigger_volatile is not None:
@@ -801,8 +796,11 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         action_blocked = battle.random.random() < 0.5
 
     if action_blocked:
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "メロメロ"})
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.ACTION_BLOCKED,
+            payload={"reason": "メロメロ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 

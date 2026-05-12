@@ -2,7 +2,7 @@ from typing import Literal
 
 DisabledReason = Literal[
     "self",
-    "かがくへんかガス", "かたやぶり",  # 特性
+    "かがくへんかガス", "かたやぶり", "とくせいなし",  # 特性
     "ぶきよう", "マジックルーム",  # アイテム
 ]
 

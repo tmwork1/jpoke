@@ -363,9 +363,8 @@ class Event(Enum):
     # handle: いのちのたま・たつじんのおび等の最終倍率アイテム
     ON_CALC_FINAL_DAMAGE_MODIFIER = auto()
 
-    # emit: core/context.py（壁・みがわり等を貫通するか問い合わせ）
-    # handle: ability.py（すりぬけ等が True を返して貫通を宣言）
-    ON_CHECK_INFILTRATE = auto()
+    # emit: core/context.py（壁やしんぴのまもりを貫通するか問い合わせ）
+    ON_CHECK_BYPASS_SCREEN = auto()
 
     # emit: 未実装（吸収技のHP回収量計算用に予約）
     # handle: 未実装（おおきなねっこ等による回収量増加を想定）

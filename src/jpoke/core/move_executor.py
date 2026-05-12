@@ -210,7 +210,7 @@ class MoveExecutor:
         critical_rates = [1/24, 1/8, 1/2, 1]
         return self.battle.random.random() < critical_rates[rank]
 
-    def hit_substitute(self, ctx: BattleContext) -> bool:
+    def check_hit_substitute(self, ctx: BattleContext) -> bool:
         """みがわりに技が当たるかどうかを判定する。
 
         Args:
@@ -219,17 +219,11 @@ class MoveExecutor:
         Returns:
             bool: 技がみがわりに当たる場合True
         """
-        move_labels = [
-            "bypass_substitute",
-            "sound",
-        ]
-        hit = ctx.move.is_attack or not ctx.move.has_label(move_labels)
-        hit = self.battle.events.emit(
+        return self.battle.events.emit(
             Event.ON_CHECK_HIT_SUBSTITUTE,
             ctx,
-            hit
+            ctx.is_foe_target
         )
-        return hit
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行。

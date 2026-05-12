@@ -1,3 +1,5 @@
+# TODO : lambda式は使わず、名前付き関数をhandlers/volatile.pyに定義する
+
 """揮発状態データ定義モジュール。
 
 Note:
@@ -291,20 +293,16 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "とくせいなし": VolatileData(
         handlers={
-            Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False, stop_event=True),
-                subject_spec="source:self",
-            ),
-            Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False, stop_event=True),
-                subject_spec="defender:self",
-            ),
             Event.ON_APPLY_VOLATILE: h.VolatileHandler(
                 h.とくせいなし_on_volatile_apply,
                 subject_spec="source:self",
             ),
             Event.ON_VOLATILE_END: h.VolatileHandler(
                 h.とくせいなし_on_volatile_end,
+                subject_spec="source:self",
+            ),
+            Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
+                h.とくせいなし_check_ability_enabled,
                 subject_spec="source:self",
             ),
         }
@@ -320,9 +318,13 @@ VOLATILES: dict[str, VolatileData] = {
     "ねむけ": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                h.ねむけ_tick,
+                partial(h.tick_volatile, name="ねむけ"),
                 subject_spec="source:self",
-                priority=100
+                priority=100,
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.ねむけ_on_volatile_end,
+                subject_spec="source:self",
             ),
         }
     ),
@@ -372,7 +374,7 @@ VOLATILES: dict[str, VolatileData] = {
     "ひるみ": VolatileData(
         handlers={
             Event.ON_CHECK_ACTION: h.VolatileHandler(
-                h.ひるみ_check_action,
+                h.ひるみ_block_action,
                 subject_spec="attacker:self",
                 priority=40,
             ),
@@ -390,10 +392,14 @@ VOLATILES: dict[str, VolatileData] = {
     "ほろびのうた": VolatileData(
         handlers={
             Event.ON_TURN_END_3: h.VolatileHandler(
-                h.ほろびのうた_tick,
+                partial(h.tick_volatile, name="ほろびのうた"),
                 subject_spec="source:self",
                 priority=110
             ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.ほろびのうた_faint,
+                subject_spec="source:self",
+            )
         }
     ),
     "マジックコート": VolatileData(

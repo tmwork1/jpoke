@@ -1003,8 +1003,13 @@ def すなのちから_ignore_sandstorm_damage(battle: Battle, ctx: BattleContex
     return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm_damage")
 
 
-def すりぬけ_check_infiltrate(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
-    """すりぬけ特性: 相手の壁・みがわりを貫通して攻撃する。"""
+def すりぬけ_bypass_substitute(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """すりぬけ特性: みがわりを無視して攻撃する。"""
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def すりぬけ_bypass_screen(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+    """すりぬけ特性: 相手の壁を貫通して攻撃する。"""
     return HandlerReturn(value=True, stop_event=True)
 
 

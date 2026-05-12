@@ -78,6 +78,7 @@ class BattleContext:
 
         self.critical: bool = critical  # 急所に当たったかどうかのフラグ
         self.fainted: bool = fainted  # 攻撃によりひんしになったかどうかのフラグ
+        self.substitute_damage: int = 0  # みがわりに与えたダメージ（みがわり貫通技用）
 
     @property
     def move_damage(self) -> int:
@@ -203,6 +204,6 @@ class BattleContext:
             fainted=kwargs.get("fainted", self.fainted),
         )
 
-    def check_infiltrate(self, battle: Battle) -> bool:
-        """攻撃側がすりぬけ系特性を持ち、壁・みがわりを貫通するかを返す。"""
-        return battle.events.emit(Event.ON_CHECK_INFILTRATE, self, False)
+    def check_bypass_screen(self, battle: Battle) -> bool:
+        """攻撃側が壁を貫通するかを返す。"""
+        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, self, False)

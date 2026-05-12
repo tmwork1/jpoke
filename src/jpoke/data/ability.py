@@ -745,8 +745,12 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "すりぬけ": AbilityData(
         handlers={
-            Event.ON_CHECK_INFILTRATE: h.AbilityHandler(
-                h.すりぬけ_check_infiltrate,
+            Event.ON_CHECK_HIT_SUBSTITUTE: h.AbilityHandler(
+                h.すりぬけ_bypass_substitute,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CHECK_BYPASS_SCREEN: h.AbilityHandler(
+                h.すりぬけ_bypass_screen,
                 subject_spec="attacker:self",
             )
         }
