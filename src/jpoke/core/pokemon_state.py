@@ -1,3 +1,5 @@
+# TODO : Managerクラスごとにモジュールをわける
+
 """ポケモンの状態管理（状態異常・揮発状態）を行うモジュール。
 
 Pokemonクラスから状態管理ロジックを分離し、Battleクラスに集約する。
@@ -217,6 +219,7 @@ class VolatileManager:
             volatile_ctx = origin_ctx.derive(target=mon, source=source)
         else:
             volatile_ctx = BattleContext(target=mon, source=source)
+
         name = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
             volatile_ctx,
@@ -267,6 +270,14 @@ class VolatileManager:
         )
 
         volatile.unregister_handlers(self.battle.events, mon)
+
+        # ログ記録
+        self.battle.add_event_log(
+            mon,
+            LogCode.VOLATILE_REMOVED,
+            payload={"volatile": name}
+        )
+
         return True
 
     def tick(self, mon: Pokemon, name: VolatileName) -> bool:
@@ -427,7 +438,7 @@ class StatusManager:
                   target: Pokemon,
                   v: int = 0,
                   r: float = 0,
-                  reason: HPChangeReason = "other",
+                  reason: HPChangeReason = "",
                   source: Pokemon | None = None,
                   move: Move | None = None) -> int:
         """ポケモンのHPを変更する。

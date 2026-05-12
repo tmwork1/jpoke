@@ -350,9 +350,13 @@ FIELDS: dict[str, FieldData] = {
     "ねがいごと": FieldData(
         handlers={
             Event.ON_TURN_END_2: h.FieldHandler(
-                h.ねがいごと_heal,
+                partial(h.tick_side_field, name="ねがいごと"),
                 priority=20,
-                subject_spec="target:self",
+                subject_spec="source:self",
+            ),
+            Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
+                h.ねがいごと_heal,
+                subject_spec="source:self",
             ),
         },
     ),

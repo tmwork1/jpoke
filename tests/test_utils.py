@@ -83,17 +83,17 @@ def start_battle(ally: list[Pokemon],
     # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
     if ally_side_field:
         for name, layers in ally_side_field.items():
-            battle.side_manager[0].fields[name].activate(battle, DEFAULT_DURATION)
-            battle.side_manager[0].fields[name].count = layers
+            battle.side_manager[0].get(name).activate(battle, DEFAULT_DURATION)
+            battle.side_manager[0].get(name).count = layers
     if foe_side_field:
         for name, layers in foe_side_field.items():
-            battle.side_manager[1].fields[name].activate(battle, DEFAULT_DURATION)
-            battle.side_manager[1].fields[name].count = layers
+            battle.side_manager[1].get(name).activate(battle, DEFAULT_DURATION)
+            battle.side_manager[1].get(name).count = layers
 
     # グローバルフィールドの有効化
     if global_field:
         for name, count in global_field.items():
-            battle.field_manager.fields[name].activate(battle, count)
+            battle.field_manager.get(name).activate(battle, count)
 
     # 揮発効果の適用
     if ally_volatile or foe_volatile:

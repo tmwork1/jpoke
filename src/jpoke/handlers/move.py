@@ -62,7 +62,7 @@ def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     ctx.move.pp = max(0, ctx.move.pp - v)
     battle.add_event_log(ctx.attacker,  LogCode.CONSUME_PP,
                          payload={"move": ctx.move.name, "value": v})
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -164,14 +164,14 @@ def いたみわけ_equalize_hp(battle: Battle, ctx: BattleContext, value: Any) 
         v=shared_hp - ctx.defender.hp,
         reason="pain_split",
     )
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
     ctx.いのちがけ_original_hp = ctx.attacker.hp
     battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost")
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -391,7 +391,7 @@ def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, val
     if ctx.attacker and ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
         battle.modify_stat(ctx.attacker, "A", -1, source=ctx.attacker)
         battle.modify_stat(ctx.attacker, "C", -1, source=ctx.attacker)
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

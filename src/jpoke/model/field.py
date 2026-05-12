@@ -57,27 +57,6 @@ class Field(GameEffect):
         """
         self.owners = owners
 
-    def activate(self, battle: Battle, count: int):
-        """フィールド効果を有効化する。
-
-        Args:
-            battle: バトルインスタンス
-            count: フィールド効果の継続ターン数
-        """
-        self.count = count
-        for player in self.owners:
-            self.register_handlers(battle.events, player)
-
-    def deactivate(self, battle: Battle):
-        """フィールド効果を無効化する。
-
-        Args:
-            battle: バトルインスタンス
-        """
-        self.count = 0
-        for player in self.owners:
-            self.unregister_handlers(battle.events, player)
-
     @property
     def name(self) -> str:
         """フィールド名を取得する。

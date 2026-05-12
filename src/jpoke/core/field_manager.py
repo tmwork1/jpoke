@@ -78,6 +78,17 @@ class BaseFieldManager(Generic[T]):
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
+    def get(self, name: T) -> Field:
+        """フィールドオブジェクトを取得する。
+
+        Args:
+            name: フィールド名
+
+        Returns:
+            Field: 対応するフィールドオブジェクト
+        """
+        return self.fields[name]
+
     def tick_down(self, name: T):
         """フィールド効果のカウントを1減らす。
 
@@ -89,16 +100,24 @@ class BaseFieldManager(Generic[T]):
         Returns:
             bool: カウントダウンが実行された場合True
         """
-        field = self.fields[name]
+        field = self.get(name)
         field.count -= 1
         if not field.count:
             self._deactivate_field(field)
 
+    def _activate_field(self, name: T, count: int):
+        """フィールドを有効化する。"""
+        field = self.get(name)
+        field.count = count
+        for player in field.owners:
+            field.register_handlers(self.events, player)
+
     def _deactivate_field(self, field: Field):
         """解除イベントを発火してからフィールドを無効化する。"""
-        field.count = 0
         self.events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
-        field.deactivate(self.battle)
+        field.count = 0
+        for player in field.owners:
+            field.unregister_handlers(self.events, player)
 
 
 class ExclusiveFieldManager(BaseFieldManager[T]):
@@ -149,7 +168,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             BattleContext(source=source, field=field),
             count
         )
-        field.activate(self.battle, count)
+        self._activate_field(name, count)
         self.current = field
         self.events.emit(Event.ON_FIELD_CHANGE)
         return True
@@ -192,10 +211,10 @@ class StackableFieldManager(BaseFieldManager[T]):
         Returns:
             bool: 効果が発動された場合True（既に有効な場合はFalse）
         """
-        field = self.fields[name]
+        field = self.get(name)
         if field.is_active:
             return False
-        field.activate(self.battle, count)
+        self._activate_field(name, count)
         return True
 
     def deactivate(self, name: T) -> bool:
@@ -207,7 +226,7 @@ class StackableFieldManager(BaseFieldManager[T]):
         Returns:
             bool: 効果が解除された場合True
         """
-        field = self.fields[name]
+        field = self.get(name)
         if not field.is_active:
             return False
         self._deactivate_field(field)

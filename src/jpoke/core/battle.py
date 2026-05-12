@@ -569,7 +569,7 @@ class Battle:
         target: Pokemon,
         v: int = 0,
         r: float = 0,
-        reason: HPChangeReason = "other",
+        reason: HPChangeReason = "",
         source: Pokemon | None = None,
         move: Move | None = None,
     ) -> int:

@@ -26,14 +26,14 @@ def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):
     mon = ctx.source
     damage = -(mon.max_hp * mon.ailment.elapsed_turns // 16)
     battle.modify_hp(mon, v=damage, reason="poison")
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def どく_damage(battle: Battle, ctx: BattleContext, value: Any):
     """どく状態によるターン終了時ダメージ（1/8）。"""
     mon = ctx.source
     battle.modify_hp(mon, v=-(mon.max_hp // 8), reason="poison")
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def まひ_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -63,7 +63,7 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
 def やけど_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """やけど状態によるターン終了時ダメージ（1/16）"""
     battle.modify_hp(ctx.source, r=-1/16)
-    return HandlerReturn()
+    return HandlerReturn(value=value)
 
 
 def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -118,4 +118,4 @@ def こおり_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     """ほのお技でダメージを受けたら解凍する。"""
     if ctx.move_damage > 0 and ctx.move.type == "ほのお":
         battle.ailment_manager.remove(ctx.defender)
-    return HandlerReturn()
+    return HandlerReturn(value=value)

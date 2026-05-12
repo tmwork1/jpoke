@@ -4,7 +4,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
+    from jpoke.model import Pokemon
 
+from jpoke.model import Move
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
 from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn
@@ -41,7 +43,7 @@ def modify_hp(battle: Battle,
     """
     effective_chance = _calc_effective_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
     target = ctx.resolve_role(battle, target_spec)
     v = battle.modify_hp(target, v, r, reason=reason)
     return HandlerReturn(value=v)
@@ -76,7 +78,7 @@ def drain_hp(battle: Battle,
     """
     effective_chance = _calc_effective_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
 
     # from_とto_から対象のポケモンを解決
     from_mon = ctx.resolve_role(battle, from_)
@@ -117,7 +119,7 @@ def modify_stat(battle: Battle,
     """
     effective_chance = _calc_effective_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = battle.modify_stat(target, stat, v, source=source)
@@ -150,7 +152,7 @@ def modify_stats(battle: Battle,
     """
     effective_chance = _calc_effective_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
 
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
@@ -172,7 +174,7 @@ def apply_ailment(battle: Battle,
     """状態異常を付与する。"""
     effective_chance = _calc_effective_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = battle.ailment_manager.apply(target, ailment, source=source, origin_ctx=ctx)
@@ -190,7 +192,7 @@ def apply_volatile(battle: Battle,
     """揮発状態を付与する。"""
     effective_chance = _calc_effective_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
     if count is None:
         match volatile:
             case "こんらん":
@@ -211,7 +213,7 @@ def cure_ailment(battle: Battle,
                  chance: float = 1) -> HandlerReturn:
     """状態異常を回復する。"""
     if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn()
+        return HandlerReturn(value=value)
     target = ctx.resolve_role(battle, target_spec)
     source = ctx.resolve_role(battle, source_spec)
     success = battle.ailment_manager.remove(target, source=source)
@@ -325,6 +327,14 @@ def is_physical_move(battle: Battle, ctx: BattleContext) -> bool:
         return False
     category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
     return category == "物理" or ctx.move.has_label("physical")
+
+
+def calc_def_type_modifier(battle: Battle, mon: Pokemon, move: Move | str) -> float:
+    """防御側のタイプ相性補正を計算する。"""
+    if isinstance(move, str):
+        move = Move(move)
+    ctx = BattleContext(defender=mon, move=move)
+    return battle.damage_calculator.calc_def_type_modifier(ctx)
 
 
 def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:

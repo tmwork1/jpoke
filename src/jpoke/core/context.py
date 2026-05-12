@@ -41,12 +41,13 @@ class BattleContext:
                  attacker: Pokemon | None = None,
                  defender: Pokemon | None = None,
                  move: Move | None = None,
-                 field: Field | None = None,
                  hp_change: int = 0,
-                 hp_change_reason: HPChangeReason = "move_damage",
+                 hp_change_reason: HPChangeReason = "",
                  stat_change_reason: StatChangeReason = "",
                  hit_index: int = 1,
-                 hit_count: int = 1):
+                 hit_count: int = 1,
+                 critical: bool = False,
+                 fainted: bool = False) -> None:
         """BattleContext を初期化する。
 
         Args:
@@ -55,7 +56,6 @@ class BattleContext:
             attacker: 攻撃側のポケモン（source のエイリアス）
             defender: 防御側のポケモン（target のエイリアス）
             move: 使用された技
-            field: 場の状態
             hp_change: HP変動量（負=減少、正=回復）
             hp_change_reason: HP変動の原因
             stat_change_reason: 能力ランク変化の理由
@@ -70,15 +70,14 @@ class BattleContext:
         self.source = attacker if attacker is not None else source
         self.target = defender if defender is not None else target
         self.move = move
-        self.field = field
         self.hp_change = hp_change
         self.hp_change_reason: HPChangeReason = hp_change_reason
         self.stat_change_reason: StatChangeReason = stat_change_reason
         self.hit_index = hit_index
         self.hit_count = hit_count
 
-        self.fainted: bool = False  # 攻撃によりひんしになったかどうかのフラグ
-        self.def_ability_enabled: bool = True
+        self.critical: bool = critical  # 急所に当たったかどうかのフラグ
+        self.fainted: bool = fainted  # 攻撃によりひんしになったかどうかのフラグ
 
     @property
     def move_damage(self) -> int:
@@ -131,7 +130,7 @@ class BattleContext:
             and self.defender is not None
         )
 
-    def get(self, role: ContextRole) -> Pokemon | None:
+    def get_by_role(self, role: ContextRole) -> Pokemon | None:
         """指定されたロールのポケモンを取得する。
 
         Args:
@@ -162,7 +161,7 @@ class BattleContext:
             return None
 
         role, side = spec.split(":")
-        mon = self.get(role)
+        mon = self.get_by_role(role)
         if mon and side == "foe":
             mon = battle.foe(mon)
         return mon
@@ -195,18 +194,15 @@ class BattleContext:
             source=kwargs.get("source", self.source),
             target=kwargs.get("target", self.target),
             move=kwargs.get("move", self.move),
-            field=kwargs.get("field", self.field),
             hp_change=kwargs.get("hp_change", self.hp_change),
             hp_change_reason=kwargs.get("hp_change_reason", self.hp_change_reason),
             stat_change_reason=kwargs.get("stat_change_reason", self.stat_change_reason),
             hit_index=kwargs.get("hit_index", self.hit_index),
             hit_count=kwargs.get("hit_count", self.hit_count),
+            critical=kwargs.get("critical", self.critical),
+            fainted=kwargs.get("fainted", self.fainted),
         )
 
     def check_infiltrate(self, battle: Battle) -> bool:
         """攻撃側がすりぬけ系特性を持ち、壁・みがわりを貫通するかを返す。"""
-        return battle.events.emit(
-            Event.ON_CHECK_INFILTRATE,
-            self,
-            False,
-        )
+        return battle.events.emit(Event.ON_CHECK_INFILTRATE, self, False)

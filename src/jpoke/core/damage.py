@@ -29,11 +29,11 @@ class DamageContext:
     Attributes:
         critical: 急所に当たるかどうか
         power_multiplier: 技威力の倍率
-        _flags: ダメージ計算に関するフラグのリスト
+        damage_flags: ダメージ計算に関するフラグのリスト
     """
     critical: bool = False
     power_multiplier: float = 1
-    _flags: list[DamageFlag] = field(default_factory=list)
+    _damage_flags: list[DamageFlag] = field(default_factory=list)
 
     def add_flag(self, flag: DamageFlag):
         """ダメージ計算フラグを追加する。
@@ -41,7 +41,7 @@ class DamageContext:
         Args:
             flag: 追加するフラグ
         """
-        self._flags.append(flag)
+        self._damage_flags.append(flag)
 
 
 class DamageCalculator:

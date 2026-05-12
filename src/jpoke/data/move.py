@@ -3232,7 +3232,7 @@ MOVES: dict[str, MoveData] = {
         labels=["non_negoto", "sound"],
         handlers={
             Event.ON_CHECK_MOVE: h.MoveHandler(
-                v.さわぐ_apply,
+                v.さわぐ_on_apply,
             )
         }
     ),

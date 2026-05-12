@@ -169,7 +169,7 @@ class EventManager:
     def _match(self, ctx: BattleContext, rh: RegisteredHandler) -> bool:
         """コンテキストがハンドラにマッチするか判定"""
         # コンテキストの対象の判定
-        ctx_mon = ctx.get(rh.handler.role)
+        ctx_mon = ctx.get_by_role(rh.handler.role)
         if ctx_mon is None:
             return False
 

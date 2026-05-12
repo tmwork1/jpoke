@@ -168,6 +168,18 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "さわぐ": VolatileData(
         handlers={
+            Event.ON_APPLY_VOLATILE: h.VolatileHandler(
+                h.さわぐ_on_apply,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.さわぐ_on_end,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END_3: h.VolatileHandler(
+                partial(h.tick_volatile, name="さわぐ"),
+                subject_spec="source:self",
+            ),
             Event.ON_MODIFY_MOVE: h.VolatileHandler(
                 h.さわぐ_modify_move,
                 subject_spec="attacker:self",
@@ -179,14 +191,6 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.VolatileHandler(
                 h.さわぐ_prevent_nemuke,
                 subject_spec="target:self",
-            ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
-                h.さわぐ_tick,
-                subject_spec="source:self",
-            ),
-            Event.ON_VOLATILE_END: h.VolatileHandler(
-                h.さわぐ_on_volatile_end,
-                subject_spec="source:self",
             ),
         }
     ),
