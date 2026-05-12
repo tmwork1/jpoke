@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     from jpoke.core import Handler
     from jpoke.enums import Event
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from dataclasses import dataclass, field
 
 from jpoke.utils.constants import STATS
-from jpoke.utils.type_defs import AbilityFlag, MoveCategory, Type, MoveLabel
+from jpoke.utils.type_defs import AbilityFlag, Type, MoveCategory, MoveTarget, MoveLabel
 
 
 class PokemonData:
@@ -39,6 +39,13 @@ class ItemData:
     name: str = ""
 
 
+class MultiHit(TypedDict):
+    min: int
+    max: int
+    check_hit_each_time: bool
+    power_sequence: tuple[int, ...]
+
+
 @dataclass
 class MoveData:
     type: Type
@@ -48,26 +55,11 @@ class MoveData:
     accuracy: int | None = None
     priority: int = 0
     critical_rank: int = 0
-    self_targeting: bool = False
-    field_targeting: bool = False
-    min_hits: int = 1
-    max_hits: int = 1
-    check_hit_each_time: bool = False
-    power_sequence: tuple[int, ...] = ()
+    target: MoveTarget = "foe"
+    multi_hit: MultiHit | None = None
     labels: list[MoveLabel] = field(default_factory=list)
-    move_secondary: bool = False  # 追加効果判定（ちからずく/てんのめぐみの対象）
-    recoil_ratio: float = 0  # 反動割合（与えたダメージに対する割合）。0 なら反動なし。
     handlers: dict[Event, Handler] = field(default_factory=dict)
     name: str = ""
-
-    @property
-    def sheer_force(self) -> bool:
-        """互換プロパティ: 旧名 sheer_force は move_secondary と同義。"""
-        return self.move_secondary
-
-    @sheer_force.setter
-    def sheer_force(self, value: bool) -> None:
-        self.move_secondary = value
 
 
 @dataclass

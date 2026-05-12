@@ -734,8 +734,8 @@ def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> Handl
             LogCode.MOVE_IMMUNE,
             payload={"move": ctx.move.name, "reason": "みがわり"}
         )
-        return HandlerReturn(value=True, stop_event=True)
-    return HandlerReturn(value=False)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -820,16 +820,10 @@ def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     return HandlerReturn(value=None, stop_event=True)
 
 
-def _protect_success(battle: Battle, ctx: BattleContext) -> bool:
-    if ctx.move.bypass_protect:
+def _check_protect_success(battle: Battle, ctx: BattleContext) -> bool:
+    if not ctx.move.is_blocked_by_protect:
         return False
-
-    success = battle.events.emit(
-        Event.ON_CHECK_PROTECT,
-        ctx,
-        True
-    )
-    return success
+    return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
 
 
 def _run_protect(battle: Battle,
@@ -850,7 +844,7 @@ def _run_protect(battle: Battle,
     if not protect_non_attack and not ctx.move.is_attack:
         return HandlerReturn(value=True)
 
-    if _protect_success(battle, ctx):
+    if _check_protect_success(battle, ctx):
         battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCESS,
                              payload={"move": ctx.move.name})
         if on_contact is not None and battle.move_executor.is_contact(ctx):

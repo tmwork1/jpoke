@@ -749,7 +749,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.すりぬけ_bypass_substitute,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHECK_BYPASS_SCREEN: h.AbilityHandler(
+            Event.ON_QUERY_BYPASS_SCREEN: h.AbilityHandler(
                 h.すりぬけ_bypass_screen,
                 subject_spec="attacker:self",
             )
@@ -2258,7 +2258,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_REFLECT: h.AbilityHandler(
+            Event.ON_QUERY_REFLECT: h.AbilityHandler(
                 h.マジックミラー_reflect,
                 subject_spec="defender:self",
                 priority=200,

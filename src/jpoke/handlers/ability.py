@@ -140,7 +140,7 @@ def _handle_type_absorb(battle: Battle,
     """タイプ一致技を無効化し、副次効果（回復/能力上昇）を適用する。"""
     if (
         immune
-        or not ctx.is_foe_target
+        or not ctx.move.target != "foe"
         or ctx.move.type != move_type
     ):
         return HandlerReturn(value=immune)
@@ -166,7 +166,7 @@ def _handle_type_absorb(battle: Battle,
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": ability_name, "success": True},
     )
-    return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def _modify_by_move_condition(battle: Battle,
@@ -371,11 +371,9 @@ def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContex
 def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """いたずらごころ特性: 優先度が上がった変化技はあくタイプ相手に無効化される。"""
     if (
-        value
-        or ctx.move is None
-        or ctx.move.category != "変化"
-        or ctx.move.priority < 0
-        or not ctx.is_foe_target
+        ctx.move.category != "変化"
+        or ctx.move.priority <= 0
+        or not ctx.move.is_foe_target
         or not ctx.defender.has_type("あく")
     ):
         return HandlerReturn(value=value)
@@ -387,7 +385,7 @@ def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, 
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": "いたずらごころ", "success": True},
     )
-    return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def エアロック_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
@@ -781,7 +779,7 @@ def よびみず_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
 def もらいび_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """もらいび特性: ほのお技を無効化し、炎技強化状態を有効化する。"""
     if (
-        not ctx.is_foe_target
+        not ctx.move.is_foe_target
         or ctx.move.type != "ほのお"
     ):
         return HandlerReturn(value=value)
@@ -795,7 +793,7 @@ def もらいび_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": "もらいび", "success": True},
     )
-    return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def もらいび_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1010,7 +1008,7 @@ def すりぬけ_bypass_substitute(battle: Battle, ctx: BattleContext, value: bo
 
 def すりぬけ_bypass_screen(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """すりぬけ特性: 相手の壁を貫通して攻撃する。"""
-    return HandlerReturn(value=True, stop_event=True)
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -1029,7 +1027,7 @@ def スキルリンク_modify_hit_count(battle: Battle, ctx: BattleContext, valu
 
 def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ねんちゃく特性: 相手から受ける持ち物交換・奪取・除去を防ぐ。"""
-    if not ctx.is_foe_target:
+    if not ctx.move.is_foe_target:
         return HandlerReturn(value=value)
 
     battle.event_logger.add(
@@ -1109,7 +1107,7 @@ def せいでんき_on_damage(battle: Battle, ctx: BattleContext, value: Any) ->
 def どくしゅ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """どくしゅ特性: 直接攻撃でダメージを与えた相手を30%でどくにする。"""
     if (
-        not ctx.has_move_context
+        not ctx.is_move_context
         or not battle.move_executor.is_contact(ctx)
         or battle.random.random() >= 0.3
     ):
@@ -1232,14 +1230,14 @@ def パンクロック_reduce_damage(battle: Battle, ctx: BattleContext, value: 
 def ぼうおん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ぼうおん特性: 音技を無効化する。"""
     if ctx.move.has_label("sound"):
-        return HandlerReturn(value=True, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def ぼうじん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ぼうじん特性: 粉・胞子系の技を無効化する。"""
     if ctx.move.has_label("powder"):
-        return HandlerReturn(value=True, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1251,7 +1249,7 @@ def ぼうじん_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, val
 def ぼうだん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ぼうだん特性: 弾の技を無効化する。"""
     if ctx.move.has_label("bullet"):
-        return HandlerReturn(value=True, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -2046,10 +2044,10 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
     """おうごんのからだ特性: 他のポケモンからの変化技を無効化する。"""
     if (
         ctx.move.category == "変化"
-        and ctx.is_foe_target
+        and ctx.move.is_foe_target
     ):
         announce_ability(battle, ctx, value, mon=ctx.defender)
-        return HandlerReturn(value=True, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -2092,7 +2090,7 @@ def がんじょう_block_ohko(battle: Battle, ctx: BattleContext, value: Any) -
             battle.turn, idx, LogCode.ABILITY_TRIGGERED,
             payload={"ability": "がんじょう", "success": True},
         )
-        return HandlerReturn(value=True, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 

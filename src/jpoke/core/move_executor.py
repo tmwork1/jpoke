@@ -56,8 +56,8 @@ class MoveExecutor:
         Returns:
             今回の実ヒット回数
         """
-        min_hits = move.data.min_hits
-        max_hits = move.data.max_hits
+        min_hits = move.data.multi_hit["min"]
+        max_hits = move.data.multi_hit["max"]
 
         if max_hits <= 1:
             base_hit_count = 1
@@ -92,10 +92,11 @@ class MoveExecutor:
         Returns:
             ヒットごとの威力。指定がなければ基礎威力を返す。
         """
-        if move.data.power_sequence:
-            idx = min(hit_index - 1, len(move.data.power_sequence) - 1)
-            return move.data.power_sequence[idx]
-        return move.data.power
+        power_sequence = move.data.multi_hit["power_sequence"]
+        if power_sequence:
+            idx = min(hit_index - 1, len(power_sequence) - 1)
+            return power_sequence[idx]
+        return move.power
 
     def _execute_hit(self, ctx: BattleContext) -> bool:
         """1 ヒット分の処理を実行する。
@@ -106,10 +107,11 @@ class MoveExecutor:
         Returns:
             処理を継続できる場合はTrue。無効化などで終了する場合はFalse。
         """
-        if self.events.emit(Event.ON_CHECK_IMMUNE, ctx, False):
+        if self.events.emit(Event.ON_CHECK_IMMUNE, ctx, True):
             return False
 
-        if not ctx.move.is_attack:
+        # 変化技はダメージ計算をせず、効果処理のみ行う
+        if ctx.move.category == "変化":
             self.events.emit(Event.ON_STATUS_HIT, ctx)
             return True
 
@@ -136,15 +138,14 @@ class MoveExecutor:
 
         self.events.emit(Event.ON_HIT, ctx)
 
+        # ダメージを与えた後の処理
         if ctx.move_damage:
+            # ダメージに関連するイベントを発火
             self.events.emit(Event.ON_DAMAGE, ctx)
+
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
             if ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
                 ctx.attacker.stellar_boosted_types.add(ctx.move.type)
-            # 反動ダメージ: recoil_ratio > 0 の技は与えたダメージに応じて自分が反動を受ける
-            if ctx.move.data.recoil_ratio > 0 and not ctx.attacker.fainted:
-                recoil_v = -max(1, int(ctx.move_damage * ctx.move.data.recoil_ratio))
-                self.battle.modify_hp(ctx.attacker, v=recoil_v, reason="recoil")
 
         return True
 
@@ -219,11 +220,9 @@ class MoveExecutor:
         Returns:
             bool: 技がみがわりに当たる場合True
         """
-        return self.battle.events.emit(
-            Event.ON_CHECK_HIT_SUBSTITUTE,
-            ctx,
-            ctx.is_foe_target
-        )
+        if not ctx.move.target != "foe":
+            return False
+        return self.battle.events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行。
@@ -292,7 +291,7 @@ class MoveExecutor:
             return
 
         # 反射判定
-        if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
+        if self.events.emit(Event.ON_QUERY_REFLECT, ctx, False):
             ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 発動した技の確定
@@ -306,16 +305,18 @@ class MoveExecutor:
         ctx.hit_count = hit_count
 
         # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
-        should_check_hit = ctx.move.accuracy is not None and not ctx.move.self_targeting
-
-        for hit_index in range(1, hit_count + 1):
-            ctx.hit_index = hit_index
+        for hit_idx in range(1, hit_count + 1):
+            ctx.hit_index = hit_idx
             ctx.fainted = False
-            ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_index))
+
+            # ヒットごとの技の威力を設定
+            ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_idx))
 
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
-            need_hit_check = should_check_hit and \
-                (ctx.move.data.check_hit_each_time or hit_index == 1)
+            need_hit_check = (
+                ctx.move.accuracy is not None
+                and (ctx.move.has_label("check_hit_each_time") or hit_idx == 1)
+            )
 
             if need_hit_check and not self.check_hit(ctx.attacker, ctx.move):
                 break

@@ -1,5 +1,7 @@
 from typing import Literal
 
+MoveTarget = Literal["foe", "self", "field"]
+
 DisabledReason = Literal[
     "self",
     "かがくへんかガス", "かたやぶり", "とくせいなし",  # 特性
@@ -131,7 +133,9 @@ MoveLabel = Literal[
     "contact",  # 接触技。さめはだ等の接触トリガー判定に使う。
     "dance",  # おどり技。おどりこ等の対象判定に使う。
     "heal",  # 回復技。かいふくふうじ等の対象判定に使う。
-    "non_encore",  # アンコールで指定不可の技。
+    "non_encore",  # アンコールで固定できない技。
+    "non_negoto",  # ねごとで選ばれない技。
+    "unprotectable",  # まもる等の防御効果を無視する技。
     "ohko",  # 一撃必殺技。
     "powder",  # 粉・胞子技。ぼうじん等の対象判定に使う。
     "pulse",  # はどう技。メガランチャー等の対象判定に使う。
@@ -141,6 +145,8 @@ MoveLabel = Literal[
     "wind",  # 風技。かぜのり等の対象判定に使う。
     "minimize",  # ちいさくなる対象との相互作用を持つ技。
     "explosion",  # 爆発技。しめりけ等の対象判定に使う。
+    "check_hit_each_time",  # 連続技で、毎回命中判定を行う技。
+    "secondary_effect",  # 追加効果の有無。ちからずく・てんのめぐみ等の判定に使う。
 ]
 
 AbilityFlag = Literal[

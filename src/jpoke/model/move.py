@@ -1,5 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.utils.type_defs import Type, MoveCategory, MoveLabel, MoveTarget
 
-from jpoke.utils.type_defs import Type, MoveCategory, MoveLabel
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
 from jpoke.data.models import MoveData
@@ -29,6 +32,7 @@ class Move(GameEffect):
         self.pp: int = self._initial_pp
         self._type: Type = self.data.type
         self._power: int | None = self.data.power
+
         self.data: MoveData  # type hint
 
     def init_game(self):
@@ -62,6 +66,20 @@ class Move(GameEffect):
         """
         return {"name": self.name, "pp": self.pp}
 
+    def has_label(self, label: MoveLabel | list[MoveLabel]) -> bool:
+        """技が特定のラベルを持っているかを判定する。
+
+        Args:
+            label: 判定するラベル（単一のラベルまたは複数のラベルのリスト）
+            複数のラベルが指定された場合、いずれかのラベルを持っていればTrueを返す
+
+        Returns:
+            技が指定されたラベルを持っている場合True
+        """
+        if isinstance(label, list):
+            return any(s in self.data.labels for s in label)
+        return label in self.data.labels
+
     def modify_pp(self, v: int):
         """技のPPを増減させる。
 
@@ -74,7 +92,7 @@ class Move(GameEffect):
         self.pp = max(0, min(self.data.pp, self.pp + v))
 
     @property
-    def type(self) -> str:
+    def type(self) -> Type:
         """技の現在のタイプを取得する。
 
         Returns:
@@ -136,22 +154,18 @@ class Move(GameEffect):
         return self.data.critical_rank
 
     @property
-    def self_targeting(self) -> bool:
-        """技が自分を対象にするかどうかを取得する。
-
-        Returns:
-            技が自分を対象にする場合True
-        """
-        return self.data.self_targeting
+    def target(self) -> MoveTarget:
+        """技の対象を取得する。"""
+        return self.data.target
 
     @property
-    def field_targeting(self) -> bool:
-        """技が場を対象にするかどうかを取得する。
+    def is_foe_target(self) -> bool:
+        """技が相手を対象にするかどうかを判定する。
 
         Returns:
-            技が場を対象にする場合True
+            技が相手を対象にする場合True
         """
-        return self.data.field_targeting
+        return self.data.target == "foe"
 
     @property
     def is_attack(self) -> bool:
@@ -161,20 +175,6 @@ class Move(GameEffect):
             技が物理または特殊技の場合True
         """
         return self.category in ["物理", "特殊"]
-
-    def has_label(self, label: MoveLabel | list[MoveLabel]) -> bool:
-        """技が特定のラベルを持っているかを判定する。
-
-        Args:
-            label: 判定するラベル（単一のラベルまたは複数のラベルのリスト）
-            複数のラベルが指定された場合、いずれかのラベルを持っていればTrueを返す
-
-        Returns:
-            技が指定されたラベルを持っている場合True
-        """
-        if isinstance(label, list):
-            return any(s in self.data.labels for s in label)
-        return label in self.data.labels
 
     @property
     def is_contact(self) -> bool:
@@ -186,10 +186,13 @@ class Move(GameEffect):
         return self.has_label("contact")
 
     @property
-    def bypass_protect(self) -> bool:
-        """技がまもるを無視するかどうかを判定する。
+    def is_blocked_by_protect(self) -> bool:
+        """技がまもるで防がれるかどうかを判定する。
 
         Returns:
-            技がまもるを無視する場合True
+            技がまもるで防がれる場合True
         """
-        return self.data.self_targeting or self.has_label("unprotectable")
+        return (
+            self.is_foe_target
+            and not self.has_label("unprotectable")
+        )

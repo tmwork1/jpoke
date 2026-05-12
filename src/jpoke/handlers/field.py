@@ -306,7 +306,7 @@ def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: 
     """リフレクターで物理技ダメージ軽減"""
     if (
         not ctx.critical
-        and not ctx.check_bypass_screen(battle)
+        and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "物理"
     ):
         value = apply_fixed_modifier(value, 2048)
@@ -317,7 +317,7 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: BattleContext, value: 
     """光の壁で特殊技ダメージ軽減"""
     if (
         not ctx.critical
-        and not ctx.check_bypass_screen(battle)
+        and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "特殊"
     ):
         value = apply_fixed_modifier(value, 2048)
@@ -328,7 +328,7 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: BattleContext, valu
     """オーロラベールで物理・特殊技ダメージ軽減"""
     if (
         not ctx.critical
-        and not ctx.check_bypass_screen(battle)
+        and not ctx.can_bypass_screen(battle)
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -336,7 +336,7 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: BattleContext, valu
 
 def しんぴのまもり_prevent_ailment(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しんぴのまもりで状態異常無効"""
-    if not ctx.check_bypass_screen(battle):
+    if not ctx.can_bypass_screen(battle):
         value = ""  # 状態異常名を空にして無効化
     return HandlerReturn(value=value)
 
@@ -344,7 +344,7 @@ def しんぴのまもり_prevent_ailment(battle: Battle, ctx: BattleContext, va
 def しんぴのまもり_prevent_volatile(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しんぴのまもりで揮発状態無効"""
     if (
-        not ctx.check_bypass_screen(battle)
+        not ctx.can_bypass_screen(battle)
         and value in ["こんらん", "ねむけ"]
     ):
         value = ""  # 揮発状態名を空にして無効化
@@ -355,7 +355,7 @@ def しろいきり_prevent_stat_drop(battle: Battle, ctx: BattleContext, value:
     """しろいきりで能力低下を防ぐ"""
     if (
         ctx.is_foe_target
-        and not ctx.check_bypass_screen(battle)
+        and not ctx.can_bypass_screen(battle)
     ):
         value = {stat: v for stat, v in value.items() if v > 0}
     return HandlerReturn(value=value)

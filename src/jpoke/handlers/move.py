@@ -60,8 +60,11 @@ def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     v = battle.events.emit(Event.ON_CHECK_PP_CONSUMED, ctx, 1)
     ctx.move.pp = max(0, ctx.move.pp - v)
-    battle.add_event_log(ctx.attacker,  LogCode.CONSUME_PP,
-                         payload={"move": ctx.move.name, "value": v})
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.CONSUME_PP,
+        payload={"move": ctx.move.name, "value": v}
+    )
     return HandlerReturn(value=value)
 
 
@@ -87,7 +90,7 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
 
 def check_blow_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
-    immune = battle.events.emit(Event.ON_CHECK_BLOW_IMMUNE, ctx, False)
+    immune = battle.events.emit(Event.ON_CHECK_BLOW_IMMUNE, ctx, True)
     return HandlerReturn(value=immune)
 
 
@@ -116,8 +119,16 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
 # ===== 技個別のハンドラ =====
 
 
-def _is_type_immune(battle: Battle, ctx: BattleContext) -> bool:
-    """タイプ相性で無効化されるかどうかを判定する。"""
+def _check_type_immune(battle: Battle, ctx: BattleContext) -> bool:
+    """タイプ相性で無効化されるかどうかを判定する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+
+    Returns:
+        bool: 無効化される場合はFalse、無効化されない場合はTrue
+    """
     type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
     if type_modifier == 0:
         battle.add_event_log(
@@ -125,26 +136,29 @@ def _is_type_immune(battle: Battle, ctx: BattleContext) -> bool:
             LogCode.MOVE_IMMUNE,
             payload={"move": ctx.move.name, "reason": "タイプ"},
         )
-        return True
-    return False
+        return False
+    return True
 
 
 def ohko_check_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """一撃必殺技のタイプ無効判定。"""
-    immune = _is_type_immune(battle, ctx)
-    return HandlerReturn(value=immune, stop_event=immune)
+    if _check_type_immune(battle, ctx):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def ohko_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
-    if _is_type_immune(battle, ctx):
-        return HandlerReturn(value=0)
-    return HandlerReturn(value=ctx.defender.hp)
+    if _check_type_immune(battle, ctx):
+        value = ctx.defender.hp
+    else:
+        value = 0
+    return HandlerReturn(value=value)
 
 
 def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
-    if _is_type_immune(battle, ctx):
+    if _check_type_immune(battle, ctx):
         return HandlerReturn(value=0)
 
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
@@ -176,14 +190,14 @@ def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> Ha
 
 def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
-    if _is_type_immune(battle, ctx):
+    if _check_type_immune(battle, ctx):
         return HandlerReturn(value=0)
     return HandlerReturn(value=getattr(ctx, "いのちがけ_original_hp", 0))
 
 
 def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """使用者レベルと同値の固定ダメージを計算する。"""
-    if _is_type_immune(battle, ctx):
+    if _check_type_immune(battle, ctx):
         return HandlerReturn(value=0)
 
     return HandlerReturn(value=ctx.attacker.level)
@@ -191,7 +205,7 @@ def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handle
 
 def がむしゃら_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """がむしゃらの固定ダメージを計算する。"""
-    if _is_type_immune(battle, ctx):
+    if _check_type_immune(battle, ctx):
         return HandlerReturn(value=0)
 
     return HandlerReturn(value=max(0, ctx.defender.hp - ctx.attacker.hp))
@@ -421,3 +435,13 @@ def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any
         return HandlerReturn(value=False, stop_event=True)
 
     return HandlerReturn(value=value)
+
+
+def みがわり_can_use(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """みがわりが使用可能かを判定する。"""
+    mon = ctx.attacker
+    can_use = (
+        not mon.has_volatile("みがわり")
+        and mon.hp > mon.max_hp // 4
+    )
+    return HandlerReturn(value=can_use, stop_event=not can_use)

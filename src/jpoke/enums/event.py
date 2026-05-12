@@ -127,7 +127,7 @@ class Event(Enum):
 
     # emit: core/move_executor.py（反射確認）
     # handle: volatile.py（マジックコート）, ability.py（マジックミラー）
-    ON_CHECK_REFLECT = auto()
+    ON_QUERY_REFLECT = auto()
 
     # emit: core/move_executor.py（変化技命中時）
     # handle: data/move.py（状態異常・ランク変化などの変化技効果適用）
@@ -364,7 +364,7 @@ class Event(Enum):
     ON_CALC_FINAL_DAMAGE_MODIFIER = auto()
 
     # emit: core/context.py（壁やしんぴのまもりを貫通するか問い合わせ）
-    ON_CHECK_BYPASS_SCREEN = auto()
+    ON_QUERY_BYPASS_SCREEN = auto()
 
     # emit: 未実装（吸収技のHP回収量計算用に予約）
     # handle: 未実装（おおきなねっこ等による回収量増加を想定）
