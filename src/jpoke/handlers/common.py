@@ -344,7 +344,7 @@ def is_berry_item(item_name: str) -> bool:
     return item_name.endswith("のみ")
 
 
-def block_stat_drop(value: dict, ctx: BattleContext, stat: str | None = None) -> dict:
+def block_stat_drop_by_foe(value: dict, ctx: BattleContext, stat: str | None = None) -> dict:
     """相手由来のランク低下を除去する共通処理。
 
     Args:

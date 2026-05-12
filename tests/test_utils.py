@@ -149,15 +149,12 @@ def log_contains(battle: Battle,
 
 def check_event_result(battle: Battle,
                        event: Event,
+                       value: bool = True,
                        atk_idx: int = 0) -> bool:
     attacker = battle.actives[atk_idx]
-    defender = battle.actives[1 - atk_idx]
-    result = battle.events.emit(
-        event,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        True,
-    )
-    return result
+    defender = battle.foe(attacker)
+    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    return battle.events.emit(event, ctx, value)
 
 
 def calc_damage_modifier(battle: Battle,

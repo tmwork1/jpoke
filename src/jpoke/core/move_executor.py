@@ -270,13 +270,13 @@ class MoveExecutor:
         self.events.emit(Event.ON_CONSUME_PP, ctx)
 
         # かやたぶりを有効にする
-        self.events.emit(Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE, ctx, True)
+        self.events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
 
         # 技の実行
         self._execute_move(ctx)
 
         # かやたぶりを無効にする
-        self.events.emit(Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE, ctx, False)
+        self.events.emit(Event.ON_DEACTIVATE_MOLD_BREAKER, ctx)
 
         # 技のハンドラを解除
         ctx.move.unregister_handlers(self.events, ctx.attacker)
@@ -289,7 +289,7 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
-        # 溜め技の準備処理ON_MOLD_BREAKER
+        # 溜め技の準備
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
 

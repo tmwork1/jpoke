@@ -1091,7 +1091,7 @@ def せいしんりょく_prevent_flinch(battle: Battle, ctx: BattleContext, val
 def せいしんりょく_block_intimidate(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """せいしんりょく特性: いかくによる攻撃ランク低下を無効化する。"""
     if ctx.stat_change_reason == "いかく":
-        value = common.block_stat_drop(value, ctx, "A")
+        value = common.block_stat_drop_by_foe(value, ctx, "A")
     return HandlerReturn(value=value)
 
 
@@ -1806,25 +1806,25 @@ def クリアボディ_modify_stat(battle: Battle, ctx: BattleContext, value: di
 
     自分の技や反動による能力低下は防げない。
     """
-    value = common.block_stat_drop(value, ctx)
+    value = common.block_stat_drop_by_foe(value, ctx)
     return HandlerReturn(value=value)
 
 
 def かいりきバサミ_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """かいりきバサミ特性: 相手によるこうげきランク低下を無効化する。"""
-    value = common.block_stat_drop(value, ctx, "A")
+    value = common.block_stat_drop_by_foe(value, ctx, "A")
     return HandlerReturn(value=value)
 
 
 def はとむね_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """はとむね特性: 相手によるぼうぎょランク低下を無効化する。"""
-    value = common.block_stat_drop(value, ctx, "B")
+    value = common.block_stat_drop_by_foe(value, ctx, "B")
     return HandlerReturn(value=value)
 
 
 def するどいめ_modify_stat(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """するどいめ特性: 相手による命中率ランク低下を無効化する。"""
-    value = common.block_stat_drop(value, ctx, "ACC")
+    value = common.block_stat_drop_by_foe(value, ctx, "ACC")
     return HandlerReturn(value=value)
 
 
@@ -2043,13 +2043,7 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
         ctx.move.category == "変化"
         and ctx.is_foe_target
     ):
-        idx = battle.get_player_index(ctx.target)
-        battle.event_logger.add(
-            battle.turn,
-            idx,
-            LogCode.ABILITY_TRIGGERED,
-            payload={"ability": "おうごんのからだ", "success": True}
-        )
+        announce_ability(battle, ctx, value, mon=ctx.defender)
         return HandlerReturn(value=True, stop_event=True)
     return HandlerReturn(value=value)
 

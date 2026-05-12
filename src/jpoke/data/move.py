@@ -4502,6 +4502,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=5,
         accuracy=0,
+        field_targeting=True,
     ),
     "あやしいひかり": MoveData(
         type="ゴースト",
@@ -5140,7 +5141,7 @@ MOVES: dict[str, MoveData] = {
         type="いわ",
         category="変化",
         pp=10,
-        labels=["wind"],
+        field_targeting=True,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.activate_weather, weather="すなあらし", source_spec="attacker:self"),
@@ -5577,6 +5578,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=5,
         accuracy=0,
+        field_targeting=True,
     ),
     "にらみつける": MoveData(
         type="ノーマル",
@@ -6041,6 +6043,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=10,
         accuracy=0,
+        field_targeting=True,
     ),
     "ゆびをふる": MoveData(
         type="ノーマル",

@@ -50,8 +50,12 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
         trigger = battle.random.random() < 0.25
 
     if trigger:
-        idx = battle.get_player_index(ctx.attacker)
-        battle.event_logger.add(battle.turn, idx, LogCode.ACTION_BLOCKED, payload={"reason": "まひ"})
+        battle.event_logger.add(
+            battle.turn,
+            battle.get_player_index(ctx.attacker),
+            LogCode.ACTION_BLOCKED,
+            payload={"reason": "まひ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -65,7 +69,7 @@ def やけど_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
     if ctx.move and ctx.move.category == "物理":
-        return HandlerReturn(value=value * 2048 // 4096)  # 0.5倍
+        value = common.apply_modifier(value, 2048 // 4096)
     return HandlerReturn(value=value)
 
 
@@ -78,12 +82,16 @@ def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
         battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
 
-    if ctx.move and ctx.move.name in ["いびき", "ねごと"]:
+    if ctx.move.name in ["いびき", "ねごと"]:
         return HandlerReturn(value=True)
 
     # まだ眠っている
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(battle.turn, idx, LogCode.ACTION_BLOCKED, payload={"reason": "ねむり"})
+    battle.event_logger.add(
+        battle.turn,
+        battle.get_player_index(mon),
+        LogCode.ACTION_BLOCKED,
+        payload={"reason": "ねむり"}
+    )
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -100,14 +108,14 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         # 解凍した：ハンドラを解除して空の状態に
         battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
+
     # まだ凍っている
-    battle.add_event_log(mon, LogCode.ACTION_BLOCKED,
-                         payload={"reason": "こおり"})
+    battle.add_event_log(mon, LogCode.ACTION_BLOCKED, payload={"reason": "こおり"})
     return HandlerReturn(value=False, stop_event=True)
 
 
 def こおり_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """こおり状態でほのお技ダメージを受けたら解凍する。"""
-    if ctx.move_damage > 0 and ctx.move and ctx.move.type == "ほのお":
+    """ほのお技でダメージを受けたら解凍する。"""
+    if ctx.move_damage > 0 and ctx.move.type == "ほのお":
         battle.ailment_manager.remove(ctx.defender)
     return HandlerReturn()

@@ -159,7 +159,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_CHECK_IMMUNE: h.AbilityHandler(
                 h.おうごんのからだ_block_status_move,
-                subject_spec="target:self",
+                subject_spec="defender:self",
             )
         }
     ),
@@ -259,11 +259,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability,
                 subject_spec="source:self",
             ),
-            Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_activate,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHANGE_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_deactivate,
                 subject_spec="attacker:self",
             ),
@@ -1674,7 +1674,7 @@ ABILITIES: dict[str, AbilityData] = {
     "エレキメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain_with_log, terrain="エレキフィールド"),
+                partial(h.activate_terrain_with_log, terrain="エレキフィールド", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1749,7 +1749,7 @@ ABILITIES: dict[str, AbilityData] = {
     "グラスメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain_with_log, terrain="グラスフィールド"),
+                partial(h.activate_terrain_with_log, terrain="グラスフィールド", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1757,7 +1757,7 @@ ABILITIES: dict[str, AbilityData] = {
     "サイコメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain_with_log, terrain="サイコフィールド"),
+                partial(h.activate_terrain_with_log, terrain="サイコフィールド", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1855,11 +1855,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability,
                 subject_spec="source:self",
             ),
-            Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_activate,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHANGE_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_deactivate,
                 subject_spec="attacker:self",
             ),
@@ -1916,11 +1916,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability,
                 subject_spec="source:self",
             ),
-            Event.ON_CHANGE_MOLD_BREAKER_ACTIVATE: h.AbilityHandler(
+            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_activate,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHANGE_MOLD_BREAKER_DEACTIVATE: h.AbilityHandler(
+            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_deactivate,
                 subject_spec="attacker:self",
             ),
@@ -2297,7 +2297,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ミストメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain_with_log, terrain="ミストフィールド"),
+                partial(h.activate_terrain_with_log, terrain="ミストフィールド", count=5),
                 subject_spec="source:self",
             )
         }
