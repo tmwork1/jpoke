@@ -53,10 +53,10 @@ class TurnController:
 
         各プレイヤーが選出していない場合、方策関数に従って選出を行う。
         """
-        for pl in self.battle.players:
-            if not pl.selection_idxes:
-                commands = pl.choose_selection_commands(self.battle)
-                pl.selection_idxes = [c.idx for c in commands]
+        for player in self.battle.players:
+            if not player.selection_idxes:
+                commands = player.choose_selection_commands(self.battle)
+                player.selection_idxes = [c.idx for c in commands]
 
     def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
@@ -118,7 +118,7 @@ class TurnController:
 
         self._process_turn_phases()
 
-    def start(self):
+    def start_battle(self):
         """バトル開始処理を実行する。
 
         選出と初期繰り出しを行い、バトルを0ターン目の開始状態にする。

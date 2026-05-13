@@ -153,7 +153,7 @@ class SpeedCalculator:
             if player.has_switched:
                 continue
 
-            mon = player.active
+            mon = player.active_mon
 
             # 行動速度を計算
             speed_key = self.calc_speed_order_key(mon)

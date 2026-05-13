@@ -88,7 +88,7 @@ def _apply_contact_counter_ailment(battle: Battle,
             ctx.attacker,
             ailment,
             source=ctx.defender,
-            origin_ctx=ctx,
+            ctx=ctx,
         )
         return True
     return False
@@ -1036,7 +1036,7 @@ def どくしゅ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> Ha
         ctx.defender,
         "どく",
         source=ctx.attacker,
-        origin_ctx=ctx,
+        ctx=ctx,
     )
     return HandlerReturn(value=value)
 

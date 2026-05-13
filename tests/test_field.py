@@ -810,7 +810,7 @@ def test_まきびし_1層():
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
 
-    active = player.active
+    active = player.active_mon
     expected_damage = active.max_hp // 8
     actual_damage = active.max_hp - active.hp
     assert expected_damage == actual_damage, "Damage is incorrect"
@@ -825,7 +825,7 @@ def test_まきびし_2層():
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
 
-    active = player.active
+    active = player.active_mon
     expected_damage = active.max_hp // 6
     actual_damage = active.max_hp - active.hp
     assert expected_damage == actual_damage, "Makibishi x2 damage is incorrect"
@@ -840,7 +840,7 @@ def test_まきびし_3層():
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
 
-    active = player.active
+    active = player.active_mon
     expected_damage = active.max_hp // 4
     actual_damage = active.max_hp - active.hp
     assert expected_damage == actual_damage, "Damage is incorrect"
@@ -853,7 +853,7 @@ def test_まきびし_浮いているポケモンはダメージを受けない(
                             )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    assert player.active.hp == player.active.max_hp
+    assert player.active_mon.hp == player.active_mon.max_hp
 
 # ──────────────────────────────────────────────────────────────────
 # どくびし
@@ -868,7 +868,7 @@ def test_どくびし_1層():
                             )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    assert player.active.ailment.name == "どく", "Poison status not applied"
+    assert player.active_mon.ailment.name == "どく", "Poison status not applied"
 
 
 def test_どくびし_2層():
@@ -879,7 +879,7 @@ def test_どくびし_2層():
                             )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    assert player.active.ailment.name == "もうどく", "Badly poison status not applied"
+    assert player.active_mon.ailment.name == "もうどく", "Badly poison status not applied"
 
 
 def test_どくびし_浮いているポケモンには効かない():
@@ -889,7 +889,7 @@ def test_どくびし_浮いているポケモンには効かない():
                             )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    assert not player.active.ailment.is_active
+    assert not player.active_mon.ailment.is_active
 
 
 def test_どくびし_どくタイプが着地すると解除される():
@@ -902,7 +902,7 @@ def test_どくびし_どくタイプが着地すると解除される():
     field = battle.get_side(player).get("どくびし")
     assert not field.is_active
     assert field.count == 0
-    assert not player.active.ailment.is_active
+    assert not player.active_mon.ailment.is_active
 
 # ──────────────────────────────────────────────────────────────────
 # ステルスロック
@@ -918,7 +918,7 @@ def test_ステルスロック_x1():
     )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    mon = player.active
+    mon = player.active_mon
     actual_damage = mon.max_hp - mon.hp
     assert actual_damage == mon.max_hp // 8
 
@@ -932,7 +932,7 @@ def test_ステルスロック_x4():
     )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    mon = player.active
+    mon = player.active_mon
     actual_damage = mon.max_hp - mon.hp
     assert actual_damage == mon.max_hp // 2
 
@@ -951,7 +951,7 @@ def test_ねばねばネット():
     before_rank = battle.players[0].team[1].rank["S"]
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    after_rank = player.active.rank["S"]
+    after_rank = player.active_mon.rank["S"]
     assert after_rank == before_rank - 1, "Speed rank not decreased"
 
 
@@ -962,7 +962,7 @@ def test_ねばねばネット_浮いているポケモンには効かない():
                             )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    assert player.active.rank["S"] == 0
+    assert player.active_mon.rank["S"] == 0
 
 
 # ──────────────────────────────────────────────────────────────────

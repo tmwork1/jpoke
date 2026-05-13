@@ -98,7 +98,10 @@ class SwitchManager:
                 if only_first:
                     return
 
-    def run_switch(self, player: Player, new: Pokemon, emit: bool = True):
+    def run_switch(self,
+                   player: Player,
+                   new: Pokemon,
+                   emit_switch_in_event: bool = True):
         """ポケモンを交代。
 
         退場処理、入場処理、イベント発火を行う。
@@ -106,13 +109,13 @@ class SwitchManager:
         Args:
             player: 交代を行うプレイヤー
             new: 場に出す新しいポケモン
-            emit: ON_SWITCH_INイベントを発火する場合True
+            emit_switch_in_event: ON_SWITCH_INイベントを発火する場合True
         """
         # 割り込みフラグを破棄
         player.interrupt = Interrupt.NONE
 
         # 退場
-        old = player.active
+        old = player.active_mon
         if old is not None:
             self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
 
@@ -122,7 +125,7 @@ class SwitchManager:
 
             self.switch_out(old)
 
-            # TODO : 以下の処理もswitch_outメソッドに含める
+            # TODO : 以下の処理もswitch_out()メソッドに含める
             old.bench_reset()
             self.battle.add_event_log(player, LogCode.SWITCH_OUT,
                                       payload={"pokemon": old.name})
@@ -131,13 +134,13 @@ class SwitchManager:
         player.active_idx = player.team.index(new)
         self.switch_in(new)
 
-        # TODO : 以下の処理もswitch_inメソッドに含める
+        # TODO : 以下の処理もswitch_in()メソッドに含める
         self.battle.refresh_effect_enabled_states()
         self.battle.add_event_log(player, LogCode.SWITCH_IN,
                                   payload={"pokemon": new.name})
 
         # ポケモンが場に出た時の処理
-        if emit:
+        if emit_switch_in_event:
             self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=new))
 
             # リクエストがなくなるまで再帰的に交代する
@@ -155,9 +158,9 @@ class SwitchManager:
         選出されたポケモンを場に出し、着地処理を実行する。
         """
         # ポケモンを場に出す
-        for pl in self.battle.players:
-            new = pl.selection[0]
-            self.run_switch(pl, new, emit=False)
+        for player in self.battle.players:
+            new = player.selection[0]
+            self.run_switch(player, new, emit_switch_in_event=False)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
         self.battle.refresh_effect_enabled_states()
@@ -185,16 +188,20 @@ class SwitchManager:
 
             # 交代を引き起こしたアイテムを消費させる
             if flag.consume_item():
-                self.battle.add_event_log(player, LogCode.CONSUME_ITEM,
-                                          payload={"item": player.active.item.name})
-                self.battle.consume_item(player.active)
+                self.battle.add_event_log(
+                    player,
+                    LogCode.CONSUME_ITEM,
+                    payload={"item": player.active_mon.item.name}
+                )
+                self.battle.consume_item(player.active_mon)
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
             player.clear_reserved_commands()
             command = player.choose_switch_command(self.battle)
 
             self.battle.add_command_log(player, command)
-            self.run_switch(player, player.team[command.idx], emit=emit_on_each_switch)
+            self.run_switch(player, player.team[command.idx],
+                            emit_switch_in_event=emit_on_each_switch)
             switched_players.append(player)
 
         # 全員の着地処理を同時に実行
@@ -216,7 +223,7 @@ class SwitchManager:
         # 交代フラグを設定
         if not self.has_interrupt():
             for player in self.battle.players:
-                if player.active.fainted:
+                if player.active_mon.fainted:
                     player.interrupt = Interrupt.FAINTED
 
         # 交代を行うプレイヤー

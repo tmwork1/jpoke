@@ -26,9 +26,9 @@ from .command_logger import CommandLogger
 from .damage import DamageCalculator, DamageContext
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
-from .switch import SwitchManager
-from .turn import TurnController
-from .speed import SpeedCalculator
+from .switch_manager import SwitchManager
+from .turn_controller import TurnController
+from .speed_calculator import SpeedCalculator
 from .item_manager import ItemManager
 from .command_manager import CommandManager
 from .ability_manager import AbilityManager
@@ -215,7 +215,7 @@ class Battle:
         Returns:
             list[Pokemon]: 各プレイヤーの場のポケモン
         """
-        return [player.active for player in self.players if player.active is not None]
+        return [player.active_mon for player in self.players if player.active_mon is not None]
 
     def is_active(self, mon: Pokemon) -> bool:
         """指定したポケモンが現在場に出ているか確認。"""
@@ -449,19 +449,7 @@ class Battle:
 
         選出と初期繰り出しを完了し、以降の `advance_turn` を可能にする。
         """
-        self.turn_controller.start()
-
-    def check_hit(self, attacker: Pokemon, move: Move) -> bool:
-        """技の命中判定（MoveExecutorへの委譲）。
-
-        Args:
-            attacker: 攻撃側のポケモン
-            move: 使用する技
-
-        Returns:
-            命中した場合True
-        """
-        return self.move_executor.check_hit(attacker, move)
+        self.turn_controller.start_battle()
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。

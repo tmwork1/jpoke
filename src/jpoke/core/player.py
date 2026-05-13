@@ -91,8 +91,8 @@ class Player:
         交代フラグをクリアする。
         """
         self.has_switched = False
-        if self.active is not None:
-            self.active.init_turn()
+        if self.active_mon is not None:
+            self.active_mon.init_turn()
 
     def reserve_command(self, command: Command):
         """コマンドを予約する。
@@ -147,7 +147,7 @@ class Player:
         return battle.get_available_switch_commands(self)[0]
 
     @property
-    def active(self) -> Pokemon | None:
+    def active_mon(self) -> Pokemon | None:
         """現在場に出ているポケモンを取得する。
 
         Returns:

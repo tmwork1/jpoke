@@ -46,16 +46,16 @@ class MoveExecutor:
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def _resolve_hit_count(self, attacker: Pokemon, move: Move) -> int:
+    def _resolve_hit_count(self, ctx: BattleContext) -> int:
         """連続技の実ヒット回数を決定する。
 
         Args:
-            attacker: 技を使用するポケモン
-            move: 使用する技
+            ctx: バトルコンテキスト
 
         Returns:
             今回の実ヒット回数
         """
+        move = ctx.move
         min_hits, max_hits = move.min_hits, move.max_hits
 
         if max_hits <= 1:
@@ -75,11 +75,7 @@ class MoveExecutor:
         else:
             base_hit_count = self.battle.random.randint(min_hits, max_hits)
 
-        return self.events.emit(
-            Event.ON_MODIFY_HIT_COUNT,
-            BattleContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
-            base_hit_count
-        )
+        return self.events.emit(Event.ON_MODIFY_HIT_COUNT, ctx, base_hit_count)
 
     def _resolve_hit_power(self, move: Move, hit_index: int) -> int | None:
         """現在ヒットの威力を取得する。
@@ -216,7 +212,7 @@ class MoveExecutor:
         Returns:
             bool: 技がみがわりに当たる場合True
         """
-        if not ctx.move.target != "foe":
+        if ctx.move.target != "foe":
             return False
         return self.battle.events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
 
@@ -239,8 +235,8 @@ class MoveExecutor:
             return
 
         # PPが0の技はわるあがきに置き換える
-        # if move.pp == 0:
-        #    move = Move("わるあがき")
+        if move.pp == 0:
+            move = Move("わるあがき")
 
         ctx.move = move
 
@@ -297,7 +293,7 @@ class MoveExecutor:
         self.events.emit(Event.ON_PAY_HP, ctx)
 
         # 連続技のヒット回数を決定
-        hit_count = self._resolve_hit_count(ctx.attacker, ctx.move)
+        hit_count = self._resolve_hit_count(ctx)
         ctx.hit_count = hit_count
 
         # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
@@ -314,7 +310,7 @@ class MoveExecutor:
                 and (ctx.move.has_label("check_hit_each_time") or hit_idx == 1)
             )
 
-            if need_hit_check and not self.check_hit(ctx.attacker, ctx.move):
+            if need_hit_check and not self.check_hit(ctx):
                 break
 
             # 無効化されたら中断
@@ -355,15 +351,11 @@ class MoveExecutor:
          Returns:
             技が接触技の場合True
         """
-        if ctx.move is None:
-            return False
-        is_contact = ctx.move.has_label("contact")
-        is_contact = self.events.emit(
+        return self.events.emit(
             Event.ON_CHECK_CONTACT,
             ctx,
-            is_contact
+            ctx.move.has_label("contact")
         )
-        return is_contact
 
     def get_effective_move_type(self, attacker: Pokemon, move: Move) -> str:
         """技の有効タイプを取得する。

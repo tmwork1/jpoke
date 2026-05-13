@@ -100,6 +100,6 @@ class RegisteredHandler:
             Pokemon | None: 主体のポケモン
         """
         if isinstance(self._subject, Player):
-            return self._subject.active
+            return self._subject.active_mon
         else:
             return self._subject

@@ -42,41 +42,38 @@ class AilmentManager:
         self.battle = battle
 
     @staticmethod
-    def _is_blocked_by_poison_type_immunity(mon: Pokemon,
-                                            source: Pokemon | None,
-                                            name: AilmentName) -> bool:
-        if name not in ("どく", "もうどく"):
-            return False
-        if not (mon.has_type("どく") or mon.has_type("はがね")):
-            return False
-        return not (
-            source is not None
-            and source.ability.name == "ふしょく"
-        )
-
-    @staticmethod
-    def _is_blocked_by_non_poison_type_immunity(mon: Pokemon,
-                                                name: AilmentName) -> bool:
-        if name == "やけど":
-            return mon.has_type("ほのお")
-        if name == "まひ":
-            return mon.has_type("でんき")
-        if name == "こおり":
-            return mon.has_type("こおり")
+    def blocked_by_type(ailment: AilmentName,
+                        target: Pokemon,
+                        source: Pokemon | None) -> bool:
+        """タイプによる状態異常付与の無効化を判定する。"""
+        match ailment:
+            case "どく", "もうどく":
+                if not (target.has_type("どく") or target.has_type("はがね")):
+                    return False
+                return not (
+                    source is not None
+                    and source.ability.name == "ふしょく"
+                )
+            case "やけど":
+                return target.has_type("ほのお")
+            case "まひ":
+                return target.has_type("でんき")
+            case "こおり":
+                return target.has_type("こおり")
         return False
 
     def apply(self,
               mon: Pokemon,
-              name: AilmentName,
+              ailment: AilmentName,
               count: int | None = None,
               source: Pokemon | None = None,
               force: bool = False,
-              origin_ctx: BattleContext | None = None) -> bool:
+              ctx: BattleContext | None = None) -> bool:
         """状態異常を付与する。
 
         Args:
             mon: 対象のポケモン
-            name: 状態異常名
+            ailment: 状態異常名
             count: 継続ターン数（必要な状態異常のみ）
             source: 状態異常の原因となったポケモン
             force: Trueの場合、既存の状態異常を上書き
@@ -93,36 +90,33 @@ class AilmentManager:
             return False
 
         # 重ねがけ不可
-        if name == mon.ailment.name:
+        if ailment == mon.ailment.name:
             return False
 
-        # 毒/猛毒は、原則として毒・鋼タイプには無効。
-        if self._is_blocked_by_poison_type_immunity(mon, source, name):
-            return False
-
-        # 第9世代のタイプ由来無効。
-        if self._is_blocked_by_non_poison_type_immunity(mon, name):
+        # タイプによる無効化をチェック
+        if self.blocked_by_type(ailment, mon, source):
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は状態異常を防ぐ
-        if origin_ctx is not None:
-            ailment_ctx = origin_ctx.derive(target=mon, source=source)
+        if ctx is not None:
+            new_ctx = ctx.derive(target=mon, source=source)
         else:
-            ailment_ctx = BattleContext(target=mon, source=source)
-        name = self.battle.events.emit(
+            new_ctx = BattleContext(target=mon, source=source)
+
+        ailment = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_AILMENT,
-            ailment_ctx,
-            name
+            new_ctx,
+            ailment
         )
-        if not name:
+        if not ailment:
             return False
 
         # 既存のハンドラを削除
         mon.ailment.unregister_handlers(self.battle.events, mon)
 
         # 新しい状態異常を設定してハンドラ登録
-        mon.ailment = Ailment(name, count=count)
+        mon.ailment = Ailment(ailment, count=count)
         mon.ailment.register_handlers(self.battle.events, mon)
         return True
 
@@ -187,21 +181,22 @@ class VolatileManager:
 
     def apply(self,
               mon: Pokemon,
-              name: VolatileName,
+              volatile: VolatileName,
               count: int = 1,
               move: Move | str = "",
               hp: int = 0,
               source: Pokemon | None = None,
-              origin_ctx: BattleContext | None = None) -> bool:
+              ctx: BattleContext | None = None) -> bool:
         """揮発性状態を付与する。
 
         Args:
             mon: 対象のポケモン
-            name: 揮発性状態名
+            volatile: 揮発性状態名
             count: 継続ターン数
             move: 関連する技オブジェクトまたは技名
             hp: 関連するHP値
             source: 揮発性状態の原因となったポケモン
+            ctx: ON_BEFORE_APPLY_VOLATILE イベントの BattleContext
 
         Returns:
             付与に成功したTrue
@@ -210,36 +205,37 @@ class VolatileManager:
             - 既に同じ揮発性状態があれば失敗
         """
         # 既に同じ揮発性状態がある場合は失敗
-        if mon.has_volatile(name):
+        if mon.has_volatile(volatile):
             return False
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         # ハンドラーがvalueを空文字列に変更した場合は揮発状態を防ぐ
-        if origin_ctx is not None:
-            volatile_ctx = origin_ctx.derive(target=mon, source=source)
+        if ctx is not None:
+            new_ctx = ctx.derive(target=mon, source=source)
         else:
-            volatile_ctx = BattleContext(target=mon, source=source)
+            new_ctx = BattleContext(target=mon, source=source)
 
-        name = self.battle.events.emit(
+        volatile = self.battle.events.emit(
             Event.ON_BEFORE_APPLY_VOLATILE,
-            volatile_ctx,
-            name
+            new_ctx,
+            volatile
         )
-        if not name:
+        if not volatile:
             return False
 
         if isinstance(move, Move):
             move = move.name
 
-        volatile = Volatile(name, count=count, move_name=move, hp=hp)
-        volatile.register_handlers(self.battle.events, mon)
-        mon.volatiles[name] = volatile
+        mon.volatiles[volatile] = Volatile(volatile, count=count, move_name=move, hp=hp)
+        mon.volatiles[volatile].register_handlers(self.battle.events, mon)
 
         # 付与後フック
+        # TODO : ON_APPLY_VOLATILE では source=mon だが ON_BEFORE_APPLY_VOLATILE では target=mon である点がややこしい。
+        # イベント名を変えるなど対策を考える。
         self.battle.events.emit(
             Event.ON_APPLY_VOLATILE,
             BattleContext(source=mon),
-            name,
+            volatile,
         )
         return True
 
@@ -420,8 +416,6 @@ class StatusManager:
         if hp_change == 0:
             return
 
-        hp_percent = round(target.hp_ratio * 100)
-
         self.battle.add_event_log(
             target,
             payload={
@@ -509,7 +503,12 @@ class StatusManager:
             if target.fainted:
                 self.battle.events.emit(
                     Event.ON_FAINTED,
-                    BattleContext(target=target, attacker=source, move=move, hp_change_reason=reason),
+                    BattleContext(
+                        attacker=source,
+                        defender=target,
+                        move=move,
+                        hp_change_reason=reason
+                    ),
                 )
                 self.battle.switch_manager.switch_out(target)
                 self.battle.judge_winner()

@@ -35,7 +35,7 @@ class VolatileHandler(Handler):
 def tick_volatile(battle: Battle,
                   ctx: BattleContext,
                   value: Any,
-                  name: VolatileName,
+                  volatile: VolatileName,
                   mon: Pokemon | None = None) -> HandlerReturn:
     """揮発状態のターン経過処理
 
@@ -43,19 +43,19 @@ def tick_volatile(battle: Battle,
         battle: バトルインスタンス
         ctx: コンテキスト
         value: イベント値（未使用）
-        name: 対象の揮発状態名
+        volatile: 対象の揮発状態名
         mon: 対象のポケモン（Noneの場合はctx.source）
     """
     if mon is None:
         mon = ctx.source
-    battle.volatile_manager.tick(mon, name)
+    battle.volatile_manager.tick(mon, volatile)
     return HandlerReturn(value=value)
 
 
 def remove_volatile(battle: Battle,
                     ctx: BattleContext,
                     value: Any,
-                    name: VolatileName,
+                    volatile: VolatileName,
                     mon: Pokemon | None = None,
                     reason: str = "") -> HandlerReturn:
     """揮発状態の解除処理
@@ -64,18 +64,18 @@ def remove_volatile(battle: Battle,
         battle: バトルインスタンス
         ctx: コンテキスト
         value: イベント値（未使用）
-        name: 対象の揮発状態名
+        volatile: 対象の揮発状態名
         mon: 対象のポケモン（Noneの場合はctx.source）
         reason: 解除理由
     """
     if mon is None:
         mon = ctx.source
 
-    if battle.volatile_manager.remove(mon, name):
+    if battle.volatile_manager.remove(mon, volatile):
         battle.add_event_log(
             mon,
             LogCode.VOLATILE_REMOVED,
-            payload={"volatile": name, "reason": reason}
+            payload={"volatile": volatile, "reason": reason}
         )
     return HandlerReturn(value=value)
 
