@@ -42,6 +42,8 @@ Gender = Literal["", "オス", "メス"]
 
 MoveCategory = Literal["物理", "特殊", "変化"]
 
+MoveTarget = Literal["foe", "self", "field"]
+
 AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"]
 
 VolatileName = Literal[
@@ -153,4 +155,5 @@ AbilityFlag = Literal[
     "protected",  # スキルスワップ等の上書き・変更から保護する特性。
     "per_battle_once",  # 対戦中に一度だけ成立する性質を持つ特性。
     "mold_breaker_ignorable",  # かたやぶり系特性で無視される対象特性。
+    "gas_proof",  # かがくへんかガスで無効化されない特性。
 ]

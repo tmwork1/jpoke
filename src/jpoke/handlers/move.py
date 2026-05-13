@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 from functools import partial
 
-
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import Handler, HandlerReturn
 from . import common
@@ -183,7 +182,7 @@ def いたみわけ_equalize_hp(battle: Battle, ctx: BattleContext, value: Any) 
 
 def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
-    ctx.いのちがけ_original_hp = ctx.attacker.hp
+    ctx.hp_cost = ctx.attacker.hp
     battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost")
     return HandlerReturn(value=value)
 
@@ -192,7 +191,7 @@ def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any
     """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
     if _check_type_immune(battle, ctx):
         return HandlerReturn(value=0)
-    return HandlerReturn(value=getattr(ctx, "いのちがけ_original_hp", 0))
+    return HandlerReturn(value=getattr(ctx, "hp_cost", 0))
 
 
 def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

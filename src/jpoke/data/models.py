@@ -2,12 +2,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     from jpoke.core import Handler
-    from jpoke.enums import Event
+    from jpoke.enums import Event, DomainEvent
 
 from dataclasses import dataclass, field
 
 from jpoke.utils.constants import STATS
 from jpoke.utils.type_defs import AbilityFlag, Type, MoveCategory, MoveTarget, MoveLabel
+
+
+HandlersType = dict[Event | DomainEvent, Handler | list[Handler]]
 
 
 class PokemonData:
@@ -25,7 +28,7 @@ class PokemonData:
 @dataclass
 class AbilityData:
     flags: list[AbilityFlag] = field(default_factory=list)
-    handlers: dict[Event, Handler] = field(default_factory=dict)
+    handlers: HandlersType = field(default_factory=dict)
     name: str = ""
 
 
@@ -35,7 +38,7 @@ class ItemData:
     consumable: bool = False
     power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
-    handlers: dict[Event, Handler] = field(default_factory=dict)
+    handlers: HandlersType = field(default_factory=dict)
     name: str = ""
 
 
@@ -58,25 +61,25 @@ class MoveData:
     target: MoveTarget = "foe"
     multi_hit: MultiHit | None = None
     labels: list[MoveLabel] = field(default_factory=list)
-    handlers: dict[Event, Handler] = field(default_factory=dict)
+    handlers: HandlersType = field(default_factory=dict)
     name: str = ""
 
 
 @dataclass
 class FieldData:
     turn_extension_item: str | None = None
-    handlers: dict[Event, Handler] = field(default_factory=dict)
+    handlers: HandlersType = field(default_factory=dict)
     name: str = ""
 
 
 @dataclass
 class AilmentData:
-    handlers: dict[Event, Handler] = field(default_factory=dict)
+    handlers: HandlersType = field(default_factory=dict)
     name: str = ""
 
 
 @dataclass
 class VolatileData:
-    handlers: dict[Event, Handler] = field(default_factory=dict)
+    handlers: HandlersType = field(default_factory=dict)
     forced: bool = False
     name: str = ""
