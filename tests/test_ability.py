@@ -4585,7 +4585,7 @@ def test_マジックミラー_変化技を跳ね返す():
     move = attacker.moves[0]
 
     reflect = battle.events.emit(
-        Event.ON_CHECK_REFLECT,
+        Event.ON_QUERY_REFLECT,
         BattleContext(attacker=attacker, defender=defender, move=move),
         False,
     )

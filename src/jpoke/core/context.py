@@ -94,6 +94,7 @@ class BattleContext:
 
     @move_damage.setter
     def move_damage(self, value: int):
+        # TODO : setterを使わずに def set_move_damage(self, value: int) のように明確にする
         """技によるダメージを設定。
 
         内部的に hp_change と hp_change_reason を設定する。
@@ -123,13 +124,22 @@ class BattleContext:
         self.target = value
 
     @property
-    def has_move_context(self) -> bool:
+    def is_move_context(self) -> bool:
         """move と attacker/defender が揃った文脈かどうか。"""
         return (
             self.move is not None
             and self.attacker is not None
             and self.defender is not None
         )
+
+    @property
+    def is_foe_target(self) -> bool:
+        """技が相手を対象にするかどうかを判定する。
+
+        Returns:
+            技が相手を対象にする場合True
+        """
+        return self.source != self.target
 
     def get_by_role(self, role: ContextRole) -> Pokemon | None:
         """指定されたロールのポケモンを取得する。
@@ -167,17 +177,6 @@ class BattleContext:
             mon = battle.foe(mon)
         return mon
 
-    @property
-    def is_foe_target(self) -> bool:
-        """相手を対象にした行動かどうかを返す。"""
-        if self.source is None or self.target is None:
-            return False
-        if self.source is self.target:
-            return False
-        if self.move is not None and (self.move.self_targeting or self.move.field_targeting):
-            return False
-        return True
-
     def derive(self, **kwargs) -> "BattleContext":
         """このコンテキストを基に新しい BattleContext を派生する。
 
@@ -204,6 +203,6 @@ class BattleContext:
             fainted=kwargs.get("fainted", self.fainted),
         )
 
-    def check_bypass_screen(self, battle: Battle) -> bool:
+    def can_bypass_screen(self, battle: Battle) -> bool:
         """攻撃側が壁を貫通するかを返す。"""
-        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, self, False)
+        return battle.events.emit(Event.ON_QUERY_BYPASS_SCREEN, self, False)

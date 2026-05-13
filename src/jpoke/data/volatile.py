@@ -398,7 +398,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "マジックコート": VolatileData(
         handlers={
-            Event.ON_CHECK_REFLECT: h.VolatileHandler(
+            Event.ON_QUERY_REFLECT: h.VolatileHandler(
                 h.マジックコート_reflect,
                 subject_spec="defender:self",
                 priority=200
