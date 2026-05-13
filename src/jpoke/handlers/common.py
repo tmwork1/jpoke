@@ -402,35 +402,3 @@ def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, r
     if ctx.hp_change_reason == reason:
         return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
-
-# TODO : 特性による処理を前提にしているため、common.pyではなくability.pyに置くべき
-
-
-def prevent_ailment(battle: Battle,
-                    ctx: BattleContext,
-                    value: str,
-                    *,
-                    ailment_names: list[str],
-                    ability_name: str) -> HandlerReturn:
-    """状態異常付与を防ぐ共通ハンドラ。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: イベントコンテキスト (ON_BEFORE_APPLY_AILMENT)
-        value: 付与しようとする状態異常名
-        ailment_names: 防ぐ対象の状態異常名リスト
-        ability_name: ログに記録する特性名
-
-    Returns:
-        対象の状態異常なら value="" かつ stop_event=True、それ以外は value をそのまま返す
-    """
-    if value in ailment_names:
-        idx = battle.get_player_index(ctx.target)
-        battle.event_logger.add(
-            battle.turn,
-            idx,
-            LogCode.ABILITY_TRIGGERED,
-            payload={"ability": ability_name, "success": True},
-        )
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)

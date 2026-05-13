@@ -74,7 +74,7 @@ class Move(GameEffect):
         self.pp = max(0, min(self.data.pp, self.pp + v))
 
     @property
-    def type(self) -> str:
+    def type(self) -> Type:
         """技の現在のタイプを取得する。
 
         Returns:

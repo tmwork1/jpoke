@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.utils.type_defs import DisabledReason
+from jpoke.utils.type_defs import AbilityDisabledReason
 
 
 class EffectData(Protocol):
@@ -36,7 +36,7 @@ class GameEffect:
         """
         self.data: EffectData = data
         self.revealed: bool = False
-        self._disabled_reasons: set[DisabledReason] = set()
+        self._disabled_reasons: set[AbilityDisabledReason] = set()
 
     @property
     def name(self) -> str:
@@ -80,7 +80,7 @@ class GameEffect:
         """
         return "self" in self._disabled_reasons
 
-    def add_disable_reason(self, reason: DisabledReason) -> None:
+    def add_disable_reason(self, reason: AbilityDisabledReason) -> None:
         """
         効果を無効にする理由を追加する。
         Args:
@@ -88,7 +88,7 @@ class GameEffect:
         """
         self._disabled_reasons.add(reason)
 
-    def remove_disable_reason(self, reason: DisabledReason) -> None:
+    def remove_disable_reason(self, reason: AbilityDisabledReason) -> None:
         """効果を有効にする理由を削除する。
 
         Args:
@@ -96,7 +96,7 @@ class GameEffect:
         """
         self._disabled_reasons.discard(reason)
 
-    def set_disabled_reasons(self, reasons: set[DisabledReason]) -> None:
+    def set_disabled_reasons(self, reasons: set[AbilityDisabledReason]) -> None:
         """無効化の理由を置き換える。
 
         Args:

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, VolatileName, DisabledReason
+from jpoke.utils.type_defs import RoleSpec, VolatileName, AbilityDisabledReason
 from jpoke.utils.constants import HIDDEN_MOVE_ALLOWED_MOVES
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
@@ -595,7 +595,7 @@ def とくせいなし_on_volatile_end(battle: Battle, ctx: BattleContext, value
     return HandlerReturn(value=value)
 
 
-def とくせいなし_check_ability_enabled(battle: Battle, ctx: BattleContext, value: set[DisabledReason]) -> HandlerReturn:
+def とくせいなし_check_ability_enabled(battle: Battle, ctx: BattleContext, value: set[AbilityDisabledReason]) -> HandlerReturn:
     """とくせいなし状態で特性が無効になるようにする。"""
     value.add("とくせいなし")
     return HandlerReturn(value=value)
@@ -652,7 +652,7 @@ def バインド_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 
     # ダメージ適用
     r = -mon.volatiles["バインド"].bind_damage_ratio
-    battle.modify_hp(ctx.source, r=r, reason="バインド")
+    battle.modify_hp(ctx.source, r=r)
     return HandlerReturn(value=value)
 
 

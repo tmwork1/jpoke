@@ -1,9 +1,10 @@
 from typing import Literal
 
-DisabledReason = Literal[
-    "self",
-    "かがくへんかガス", "かたやぶり", "とくせいなし",  # 特性
-    "ぶきよう", "マジックルーム",  # アイテム
+AbilityDisabledReason = Literal[
+    "self", "かがくへんかガス", "かたやぶり", "とくせいなし",
+]
+ItemDisabledReason = Literal[
+    "self", "ぶきよう", "マジックルーム"
 ]
 
 HandlerSource = Literal["ability", "item", "move", "ailment", "volatile", "field"]
@@ -107,9 +108,9 @@ BoostSource = Literal["", "ability", "item", "weather", "terrain"]  # TODO : wea
 HPChangeReason = Literal[
     "",                     # その他のダメージ
     "move_damage",          # 技によるダメージ
-    "sandstorm",            # すなあらし等の天候ダメージ
-    "poison",               # どく/もうどくによる定期HP変化
-    "recoil",               # 反動ダメージ（すてみタックル・フレアドライブ等）
+    "sandstorm",            # すなあらし等の天候ダメージ (ぼうじんによる無効化のため)
+    "poison",               # どく/もうどくによる定期HP変化 (ポイズンヒールによる回復のため)
+    "recoil",               # 反動ダメージ（いしあたまによる無効化のため）
     "self_attack",          # こんらん自傷（ききかいひ不発）
     "pain_split",           # いたみわけ（ききかいひ不発）
     "self_cost",            # 自己HP消費（みがわり等）

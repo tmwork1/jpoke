@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from .battle import Battle
     from .event_manager import EventManager
 
-from jpoke.utils.type_defs import DisabledReason, ItemLostCause
+from jpoke.utils.type_defs import AbilityDisabledReason, ItemLostCause
 from jpoke.enums import Event
 from jpoke.model import Pokemon, Move, Item
 
@@ -37,7 +37,7 @@ class ItemManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def refresh_item_enabled_states(self) -> dict[str, set[DisabledReason]]:
+    def refresh_item_enabled_states(self) -> dict[str, set[AbilityDisabledReason]]:
         """場の状況に応じて道具効果の有効/無効状態を再計算する。
         Returns:
             dict[str, set[DisabledReason]]: 道具効果の有効/無効状態の辞書

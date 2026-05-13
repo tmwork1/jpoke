@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from .battle import Battle
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import DisabledReason
+from jpoke.utils.type_defs import AbilityDisabledReason
 from jpoke.enums import Event
 from .context import BattleContext
 
@@ -33,7 +33,7 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def refresh_ability_enabled_states(self) -> dict[str, set[DisabledReason]]:
+    def refresh_ability_enabled_states(self) -> dict[str, set[AbilityDisabledReason]]:
         """場の状況に応じて特性の有効/無効状態を再計算する。
         Returns:
             dict[str, set[DisabledReason]]: 特性の有効/無効状態の辞書

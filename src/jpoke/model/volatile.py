@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import EventManager
     from jpoke.model.pokemon import Pokemon
+    from jpoke.data.volatile import VolatileData
 
 from jpoke.utils.type_defs import VolatileName
 from jpoke.utils import fast_copy
@@ -46,6 +47,8 @@ class Volatile(GameEffect):
         self.move_name: str = move_name
         self.hp: int = hp
         self.bind_damage_ratio: float = bind_damage_ratio  # バインドのダメージ比率
+
+        self.data: VolatileData  # type hint
 
     def __deepcopy__(self, memo):
         cls = self.__class__

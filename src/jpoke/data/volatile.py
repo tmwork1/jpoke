@@ -12,24 +12,18 @@ from jpoke.core import HandlerReturn
 from jpoke.handlers import common, volatile as h
 from .models import VolatileData
 
-# TODO : lambda式は使わず、名前付き関数をhandlers/volatile.pyに定義する
-
 
 def common_setup() -> None:
     """
     各VOLATILEのハンドラにログ用のテキスト（名前）を設定する。
 
     この関数は、VOLATILESディクショナリ内の全てのVolatileDataに対して、
-    各イベントハンドラにlog_text属性として状態名を設定します。
     これにより、ハンドラ実行時のログ出力で状態名を表示できます。
 
     呼び出しタイミング: モジュール初期化時（ファイル末尾）
     """
     for name, data in VOLATILES.items():
         VOLATILES[name].name = name
-        for event in data.handlers:
-            handler = data.handlers[event]
-            handler.log_text = name
 
 
 VOLATILES: dict[str, VolatileData] = {

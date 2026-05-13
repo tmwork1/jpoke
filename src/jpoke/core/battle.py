@@ -7,11 +7,10 @@ from typing import Self
 from dataclasses import dataclass
 
 import time
-import json
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, GlobalField, SideField, ItemLostCause, HPChangeReason
+from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, SideField, ItemLostCause, HPChangeReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -581,7 +580,7 @@ class Battle:
                     stat: Stat,
                     v: int,
                     source: Pokemon | None = None,
-                    reason: str = "") -> dict[Stat, int]:
+                    reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの能力ランクを変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_stat(target, stat, v, source=source, reason=reason)
 
@@ -589,7 +588,7 @@ class Battle:
                      target: Pokemon,
                      stats: dict[Stat, int],
                      source: Pokemon | None = None,
-                     reason: str = "") -> dict[Stat, int]:
+                     reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
 

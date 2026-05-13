@@ -214,7 +214,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.announce_ability,
+                h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
@@ -256,7 +256,7 @@ ABILITIES: dict[str, AbilityData] = {
     "かたやぶり": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.announce_ability,
+                h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
@@ -351,7 +351,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_BLOW_IMMUNE: h.AbilityHandler(
+            Event.ON_QUEERY_BLOW_IMMUNE: h.AbilityHandler(
                 h.きゅうばん_check_blow_immune,
                 subject_spec="defender:self",
             ),
@@ -390,7 +390,7 @@ ABILITIES: dict[str, AbilityData] = {
     "きんちょうかん": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.きんちょうかん_on_switch_in,
+                h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
@@ -1856,7 +1856,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ターボブレイズ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.announce_ability,
+                h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
@@ -1917,7 +1917,7 @@ ABILITIES: dict[str, AbilityData] = {
     "テラボルテージ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.announce_ability,
+                h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
@@ -2217,7 +2217,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.マイペース_prevent_confusion,
                 subject_spec="target:self",
             )

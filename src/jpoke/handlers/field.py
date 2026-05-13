@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import LogCode
 from jpoke.utils.battle_math import rank_modifier
-from jpoke.utils.type_defs import RoleSpec, GlobalField, SideField, VolatileName, DisabledReason
+from jpoke.utils.type_defs import RoleSpec, GlobalField, SideField, VolatileName, AbilityDisabledReason
 from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 from jpoke.handlers import common
@@ -268,7 +268,7 @@ def トリックルーム_reverse_speed(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=-value)
 
 
-def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, value: set(DisabledReason)) -> HandlerReturn:
+def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, value: set[AbilityDisabledReason]) -> HandlerReturn:
     """マジックルーム中は持ち物効果を無効化する。"""
     value.add("マジックルーム")
     return HandlerReturn(value=value)
@@ -285,7 +285,8 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, 
     category_to_stat = {"物理": "D", "特殊": "B"}
     move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
     swapped_stat = category_to_stat.get(move_category)
-    value = rank_modifier(ctx.defender.rank[swapped_stat])
+    rank = ctx.defender.rank[swapped_stat]
+    value = rank_modifier(rank)
     return HandlerReturn(value=value)
 
 

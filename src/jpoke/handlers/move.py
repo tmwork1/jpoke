@@ -87,7 +87,7 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
 
 def check_blow_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
-    immune = battle.events.emit(Event.ON_CHECK_BLOW_IMMUNE, ctx, False)
+    immune = battle.events.emit(Event.ON_QUEERY_BLOW_IMMUNE, ctx, False)
     return HandlerReturn(value=immune)
 
 
