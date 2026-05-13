@@ -91,8 +91,8 @@ class SwitchManager:
             flag: 設定する割り込みフラグ
             only_first: 最初の1体のみに設定する場合True
         """
-        for mon in self.battle.determine_speed_order():
-            player = self.battle.find_player(mon)
+        for mon in self.battle.calc_speed_order():
+            player = self.battle.get_player(mon)
             if player.interrupt == Interrupt.REQUESTED:
                 player.interrupt = flag
                 if only_first:
@@ -199,8 +199,8 @@ class SwitchManager:
 
         # 全員の着地処理を同時に実行
         if not emit_on_each_switch:
-            for mon in self.battle.determine_speed_order():
-                player = self.battle.find_player(mon)
+            for mon in self.battle.calc_speed_order():
+                player = self.battle.get_player(mon)
                 if player in switched_players:
                     self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=mon))
 

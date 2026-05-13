@@ -159,6 +159,24 @@ class Move(GameEffect):
         return self.data.target
 
     @property
+    def max_hits(self) -> int:
+        """技の最大ヒット数を取得する。
+
+        Returns:
+            技の最大ヒット数（1の場合は単発技）
+        """
+        return self.data.multi_hit["max"]
+
+    @property
+    def min_hits(self) -> int:
+        """技の最小ヒット数を取得する。
+
+        Returns:
+            技の最小ヒット数（1の場合は単発技）
+        """
+        return self.data.multi_hit["min"]
+
+    @property
     def is_foe_target(self) -> bool:
         """技が相手を対象にするかどうかを判定する。
 

@@ -249,7 +249,7 @@ class Event(Enum):
 
     # emit: core/field_manager.py（フィールド・場の状態の残りターンを確認）
     # handle: 各フィールド・揮発性状態の持続ターン管理ハンドラ
-    ON_CHECK_DURATION = auto()
+    ON_MODIFY_DURATION = auto()
 
     # emit: core/battle.py（天候効果が有効かどうかを判定）
     # handle: ability.py（エアロック・ノーてんき で天候効果を無効化）

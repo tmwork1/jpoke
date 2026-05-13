@@ -56,8 +56,7 @@ class MoveExecutor:
         Returns:
             今回の実ヒット回数
         """
-        min_hits = move.data.multi_hit["min"]
-        max_hits = move.data.multi_hit["max"]
+        min_hits, max_hits = move.min_hits, move.max_hits
 
         if max_hits <= 1:
             base_hit_count = 1
@@ -116,7 +115,7 @@ class MoveExecutor:
             return True
 
         critical = self.check_critical(ctx)
-        damage = self.battle.determine_damage(
+        damage = self.battle.roll_damage(
             ctx.attacker, ctx.defender, ctx.move, critical=critical
         )
 
@@ -140,21 +139,19 @@ class MoveExecutor:
 
         # ダメージを与えた後の処理
         if ctx.move_damage:
-            # ダメージに関連するイベントを発火
             self.events.emit(Event.ON_DAMAGE, ctx)
 
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
-            if ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
+            if ctx.attacker.active_tera_type == 'ステラ':
                 ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
         return True
 
-    def check_hit(self, attacker: Pokemon, move: Move) -> bool:
+    def check_hit(self, ctx: BattleContext) -> bool:
         """技の命中判定。
 
         Args:
-            attacker: 攻撃側のポケモン
-            move: 使用する技
+            ctx: バトルコンテキスト
 
         Returns:
             命中した場合True
@@ -164,23 +161,22 @@ class MoveExecutor:
             accuracy = self.battle.test_option.accuracy
             return 100 * self.battle.random.random() < accuracy
 
+        attacker = ctx.attacker
+        defender = ctx.defender
+        move = ctx.move
+
         # 命中率がNoneなら必中
         if move.accuracy is None:
             return True
 
         # 技の命中変更 + 命中補正
-        accuracy = self.events.emit(
-            Event.ON_MODIFY_ACCURACY,
-            BattleContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
-            move.accuracy
-        )
+        accuracy = self.events.emit(Event.ON_MODIFY_ACCURACY, ctx, move.accuracy)
 
         # 必中処理：イベントハンドラがNoneを返した場合は必中
         if accuracy is None:
             return True
 
         # ランク補正
-        defender = self.battle.foe(attacker)
         rank_diff = attacker.rank["ACC"] - defender.rank["EVA"]
         rank_diff = max(-6, min(6, rank_diff))
         accuracy = int(accuracy * HIT_RANK_MODIFIERS[rank_diff])
@@ -407,3 +403,12 @@ class MoveExecutor:
             BattleContext(source=attacker, move=move),
             value=move.category
         )
+
+    def deals_physical_damage(self, attacker: Pokemon, move: Move) -> bool:
+        """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
+
+        Returns:
+            技が物理ダメージを与える場合True
+        """
+        category = self.get_effective_move_category(attacker, move)
+        return category == "物理" or move.has_label("physical_damage")

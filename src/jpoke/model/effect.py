@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from jpoke.core import EventManager, Handler, Player
+    from jpoke.data.models import Handlers
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
@@ -15,7 +16,7 @@ class EffectData(Protocol):
     実装すべきインターフェースを定義する。
     """
     name: str
-    handlers: dict[DomainEvent | Event, Handler]
+    handlers: Handlers
 
 
 class GameEffect:

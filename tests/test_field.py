@@ -513,7 +513,7 @@ def test_トリックルーム_技優先度():
         global_field={"トリックルーム": 5},
     )
     t.reserve_command(battle)
-    action_order = battle.determine_action_order()
+    action_order = battle.calc_action_order()
     assert action_order[0] == battle.actives[1], "トリックルームで優先度が考慮されない"
 
 # ──────────────────────────────────────────────────────────────────
@@ -777,7 +777,7 @@ def test_おいかぜ():
 def test_ねがいごと_回復と解除():
     """ねがいごと: ターン終了時回復と解除"""
     battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")], ally_side_field={"ねがいごと": 2})
-    field = battle.get_side_field(battle.players[0], "ねがいごと")
+    field = battle.get_side(battle.players[0]).get("ねがいごと")
 
     # HPを減らして回復確認
     mon = battle.actives[0]
@@ -899,7 +899,7 @@ def test_どくびし_どくタイプが着地すると解除される():
                             )
     player = battle.players[0]
     battle.run_switch(player, player.team[1])
-    field = battle.get_side_field(player, "どくびし")
+    field = battle.get_side(player).get("どくびし")
     assert not field.is_active
     assert field.count == 0
     assert not player.active.ailment.is_active
@@ -1036,7 +1036,7 @@ def test_サイドフィールドカウント減少(field: SideField):
                           foe_side_field={field: initial_duration},
                           )
     fields = [
-        battle.get_side_field(player, field) for player in battle.players
+        battle.get_side(player).get(field) for player in battle.players
     ]
     # 初期カウント確認
     assert all(f.count == initial_duration for f in fields)

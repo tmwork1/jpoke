@@ -14,9 +14,9 @@ import test_utils as t
 @pytest.mark.parametrize(
     ("attacker", "terastallize", "expected"),
     [
-        (Pokemon("ピカチュウ", terastal="でんき", moves=["でんきショック"]), True, 2.0),
-        (Pokemon("ピカチュウ", terastal="ほのお", moves=["ひのこ"]), True, 1.5),
-        (Pokemon("ピカチュウ", terastal="ほのお", moves=["でんきショック"]), True, 1.5),
+        (Pokemon("ピカチュウ", tera_type="でんき", moves=["でんきショック"]), True, 2.0),
+        (Pokemon("ピカチュウ", tera_type="ほのお", moves=["ひのこ"]), True, 1.5),
+        (Pokemon("ピカチュウ", tera_type="ほのお", moves=["でんきショック"]), True, 1.5),
     ]
 )
 def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, expected: int):
@@ -51,7 +51,7 @@ def test_テラスタル時の威力60底上げ補正(move_name: str,
                           terastallize: bool,
                           expected: int):
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", terastal=terastal, moves=[move_name])],
+        ally=[Pokemon("ピカチュウ", tera_type=terastal, moves=[move_name])],
         foe=[Pokemon("ピカチュウ")],
     )
     attacker = battle.actives[0]
@@ -72,7 +72,7 @@ def test_テラスタル時の威力60底上げ補正(move_name: str,
 def test_ステラSTAB_元タイプ一致_初回2倍_以降1倍5():
     """ステラ テラスタル中、元タイプ一致技は初回2.0倍、2回目以降1.5倍。"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["でんきショック"])],
+        ally=[Pokemon("ピカチュウ", tera_type="ステラ", moves=["でんきショック"])],
         foe=[Pokemon("ピカチュウ")],
     )
     attacker = battle.actives[0]
@@ -92,7 +92,7 @@ def test_ステラSTAB_元タイプ一致_初回2倍_以降1倍5():
 def test_ステラSTAB_不一致技_初回1倍2_以降1倍0():
     """ステラ テラスタル中、不一致技は初回1.2倍、2回目以降1.0倍。"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", terastal="ステラ", moves=["ひのこ"])],
+        ally=[Pokemon("ピカチュウ", tera_type="ステラ", moves=["ひのこ"])],
         foe=[Pokemon("ピカチュウ")],
     )
     attacker = battle.actives[0]

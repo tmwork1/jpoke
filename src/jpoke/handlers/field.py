@@ -28,27 +28,27 @@ class FieldHandler(Handler):
 
 def tick_weather(battle: Battle, ctx: BattleContext, value: Any):
     # 1P側でのみカウントダウンを実行
-    if battle.find_player(ctx.source) is battle.players[0]:
+    if battle.get_player(ctx.source) is battle.players[0]:
         battle.weather_manager.tick_down()
     return HandlerReturn(value=value)
 
 
 def tick_terrain(battle: Battle, ctx: BattleContext, value: Any):
     # 1P側でのみカウントダウンを実行
-    if battle.find_player(ctx.source) is battle.players[0]:
+    if battle.get_player(ctx.source) is battle.players[0]:
         battle.terrain_manager.tick_down()
     return HandlerReturn(value=value)
 
 
 def tick_global_field(battle: Battle, ctx: BattleContext, value: Any, name: GlobalField) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
-    if battle.find_player(ctx.source) is battle.players[0]:
+    if battle.get_player(ctx.source) is battle.players[0]:
         battle.field_manager.tick_down(name)
     return HandlerReturn(value=value)
 
 
 def tick_side_field(battle: Battle, ctx: BattleContext, value: Any, name: SideField) -> HandlerReturn:
-    player = battle.find_player(ctx.source)
+    player = battle.get_player(ctx.source)
     side = battle.get_side(player)
     side.tick_down(name)
     return HandlerReturn(value=value)
@@ -293,8 +293,7 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, 
 def ワンダールーム_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ワンダールーム中は防御実数値参照を入れ替える。"""
     catergory_to_stat = {"物理": "D", "特殊": "B"}
-    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-    base_stat = "B" if move_category == "物理" or ctx.move.has_label("physical") else "D"
+    base_stat = "B" if battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move) else "D"
     swapped_stat = catergory_to_stat.get(base_stat, base_stat)
     base_value = max(1, ctx.defender.stats[base_stat])
     swap_value = max(1, ctx.defender.stats[swapped_stat])

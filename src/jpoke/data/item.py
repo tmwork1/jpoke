@@ -224,7 +224,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=False,
         fling_power=10,
         handlers={
-            Event.ON_CHECK_DURATION: h.ItemHandler(
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
                 partial(common.resolve_field_count, field="すなあらし", additonal_count=3),
                 subject_spec="source:self",
             )

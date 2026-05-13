@@ -1964,10 +1964,6 @@ ABILITIES: dict[str, AbilityData] = {
                 h.トレース_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_SWITCH_OUT: h.AbilityHandler(
-                h.トレース_on_switch_out,
-                subject_spec="source:self",
-            ),
         },
     ),
     "ナイトメア": AbilityData(),

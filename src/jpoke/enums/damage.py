@@ -11,4 +11,3 @@ class DamageFlag(Enum):
     CRITICAL = "急所"
     IGNORE_ATK_DOWN_DURING_CRITICAL = "急所 攻撃ランク無視"
     IGNORE_DEF_UP_DURING_CRITICAL = "急所 防御ランク無視"
-    IGNORE_DEF_RANK_BY_MOVE = "技 防御ランク無視"

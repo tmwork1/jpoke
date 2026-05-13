@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils.type_defs import AbilityDisabledReason
 from jpoke.enums import Event
+from jpoke.model import Ability
 from .context import BattleContext
 
 
@@ -59,25 +60,18 @@ class AbilityManager:
 
         return results
 
-    def set_ability(self,
-                    mon: Pokemon,
-                    ability_name: str,
-                    refresh_enabled_states: bool = True) -> None:
+    def set_ability(self, mon: Pokemon, ability: str) -> None:
         """ポケモンの特性を更新し、ハンドラ登録状態を同期する。"""
-        if mon.ability.orig_name == ability_name:
+        if mon.ability.orig_name == ability:
             return
 
-        was_active = mon in self.battle.actives
-        was_enabled = mon.ability.enabled
+        is_active = self.battle.is_active(mon)
 
-        if was_active:
+        if is_active:
             mon.ability.unregister_handlers(self.battle.events, mon)
 
-        mon.ability = ability_name
-        mon.ability.enabled = was_enabled
+        mon.ability = Ability(ability)
 
-        if was_active and mon.ability.enabled:
+        if is_active:
             mon.ability.register_handlers(self.battle.events, mon)
-
-        if refresh_enabled_states:
             self.refresh_ability_enabled_states()

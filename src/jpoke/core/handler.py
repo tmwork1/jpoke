@@ -65,17 +65,17 @@ class Handler:
 class RegisteredHandler:
     """登録済みのイベントハンドラ情報。
 
-    ハンドラとその対象（ポケモンまたはプレイヤー）の組み合わせを保持する。
+    ハンドラとその主体（ポケモンまたはプレイヤー）の組み合わせを保持する。
 
     Attributes:
         handler: ハンドラ定義
-        _subject: ハンドラの対象（ポケモンまたはプレイヤー）
+        _subject: ハンドラの主体（ポケモンまたはプレイヤー）
     """
     handler: Handler
     _subject: Pokemon | Player
 
     def update_reference(self, old: Battle, new: Battle):
-        """Battleの複製後に、対応する新しい対象ポケモンを見つける。
+        """Battleの複製後に、対応する新しい主体ポケモンを見つける。
 
         Args:
             old: 複製前のBattle
@@ -85,19 +85,19 @@ class RegisteredHandler:
             player_idx = old.players.index(self._subject)
             self._subject = new.players[player_idx]
         else:
-            player = old.find_player(self._subject)
+            player = old.get_player(self._subject)
             player_idx = old.players.index(player)
             team_idx = player.team.index(self._subject)
             self._subject = new.players[player_idx].team[team_idx]
 
     @property
-    def subject(self) -> Pokemon:
-        """ハンドラの対象ポケモンを取得する。
+    def subject(self) -> Pokemon | None:
+        """ハンドラの主体ポケモンを取得する。
 
         Playerの場合は現在場に出ているポケモンを返す。
 
         Returns:
-            Pokemon: 対象のポケモン
+            Pokemon | None: 主体のポケモン
         """
         if isinstance(self._subject, Player):
             return self._subject.active

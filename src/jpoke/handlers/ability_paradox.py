@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 from jpoke.core import HandlerReturn
 from jpoke.enums import LogCode
-from jpoke.utils.battle_math import rank_modifier
+from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.utils.type_defs import Stat
 
 
@@ -112,7 +112,7 @@ def パラドックスチャージ_on_calc_speed(battle: Battle, ctx: BattleCont
     """素早さ補正時: S が強化対象なら 1.5 倍補正を適用する。"""
     mon = ctx.source
     if mon.paradox_boost_active and mon.paradox_boost_stat == "S":
-        value = value * 6144 // 4096
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -133,15 +133,16 @@ def パラドックスチャージ_on_calc_atk_modifier(battle: Battle, ctx: Bat
         stat = "A" if move_category == "物理" else "C"
 
     if boost_mon.paradox_boost_active and boost_mon.paradox_boost_stat == stat:
-        value = value * 5325 // 4096
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
 def パラドックスチャージ_on_calc_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
-    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-    stat = "B" if move_category == "物理" or ctx.move.has_label("physical") else "D"
-
-    if ctx.defender.paradox_boost_active and ctx.defender.paradox_boost_stat == stat:
-        value = value * 5325 // 4096
+    stat = "B" if battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move) else "D"
+    if (
+        ctx.defender.paradox_boost_active
+        and ctx.defender.paradox_boost_stat == stat
+    ):
+        value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)

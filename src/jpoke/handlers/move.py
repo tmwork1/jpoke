@@ -80,7 +80,7 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     Returns:
         HandlerReturn: 交代が可能な場合はTrue、不可能な場合はFalse
     """
-    player = battle.find_player(ctx.attacker)
+    player = battle.get_player(ctx.attacker)
     success = bool(battle.get_available_switch_commands(player))
     if success:
         player.interrupt = Interrupt.PIVOT
@@ -106,7 +106,7 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     Returns:
         HandlerReturn: 吹き飛ばしが成功した場合はTrue、失敗した場合はFalse
     """
-    player = battle.find_player(ctx.defender)
+    player = battle.get_player(ctx.defender)
     commands = battle.get_available_switch_commands(player)
     success = bool(commands)
     if success:
@@ -364,8 +364,8 @@ def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Handle
 
 def テラバースト_check_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
-    if ctx.source and ctx.source.is_terastallized and ctx.source.terastal:
-        return HandlerReturn(value=ctx.source.terastal)
+    if ctx.source and ctx.source.terastallized and ctx.source.active_tera_type:
+        return HandlerReturn(value=ctx.source.active_tera_type)
     return HandlerReturn(value=value)
 
 
@@ -378,7 +378,7 @@ def オーラぐるま_check_move_type(battle: Battle, ctx: BattleContext, value
 
 def テラバースト_check_move_category(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
-    if not (ctx.source and ctx.source.is_terastallized):
+    if not (ctx.source and ctx.source.terastallized):
         return HandlerReturn(value=value)
 
     atk = ctx.source.stats["A"]
@@ -393,7 +393,7 @@ def テラバースト_stellar_power(battle: Battle, ctx: BattleContext, value: 
     ステラ テラスタル中はテラバーストの威力が80→100になる。
     ON_CALC_POWER_MODIFIER のスケール（4096=1.0倍）で返す。
     """
-    if ctx.attacker and ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
+    if ctx.attacker and ctx.attacker.terastallized and ctx.attacker.tera_type == 'ステラ':
         # 4096 * 100 / 80 = 5120
         return HandlerReturn(value=5120)
     return HandlerReturn(value=value)
@@ -401,7 +401,7 @@ def テラバースト_stellar_power(battle: Battle, ctx: BattleContext, value: 
 
 def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ステラテラスタル時のテラバースト発動後の攻撃・特攻-1段階効果。"""
-    if ctx.attacker and ctx.attacker.is_terastallized and ctx.attacker._terastal == 'ステラ':
+    if ctx.attacker and ctx.attacker.terastallized and ctx.attacker.tera_type == 'ステラ':
         battle.modify_stat(ctx.attacker, "A", -1, source=ctx.attacker)
         battle.modify_stat(ctx.attacker, "C", -1, source=ctx.attacker)
     return HandlerReturn(value=value)
@@ -412,7 +412,7 @@ def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any
 
     相手が未行動かつ優先攻撃技を選択している時のみ成功する。
     """
-    defender_player = battle.find_player(ctx.defender)
+    defender_player = battle.get_player(ctx.defender)
 
     # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
     if not defender_player.reserved_commands:

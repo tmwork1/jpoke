@@ -60,19 +60,20 @@ class ItemManager:
 
         return results
 
-    def set_item(self, target: Pokemon, item: str | Item) -> None:
+    def set_item(self, mon: Pokemon, item: str) -> None:
         """ポケモンの持ち物を更新し、ハンドラ登録も同期する。
 
         Args:
             target: 持ち物を変更するポケモン
             item: 新しい持ち物
         """
-        if target.has_item():
-            target.item.unregister_handlers(self.events, target)
+        is_active = self.battle.is_active(mon)
+        if mon.has_item():
+            mon.item.unregister_handlers(self.events, mon)
 
-        target.item = item
-        if target in self.battle.actives:
-            target.item.register_handlers(self.events, target)
+        mon.item = Item(item)
+        if is_active:
+            mon.item.register_handlers(self.events, mon)
             self.refresh_item_enabled_states()
 
     def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:

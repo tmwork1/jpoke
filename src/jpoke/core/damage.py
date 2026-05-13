@@ -204,11 +204,11 @@ class DamageCalculator:
         base_modifier = 4096
         original_matches = move_type in attacker.data.types
 
-        if not attacker.is_terastallized:
+        if not attacker.terastallized:
             if original_matches:
                 base_modifier = 6144
         else:
-            tera_type = attacker._terastal
+            tera_type = attacker.tera_type
 
             if tera_type == 'ステラ':
                 # ステラ補正: タイプ一致補正の代替
@@ -250,7 +250,7 @@ class DamageCalculator:
         """
         if (
             ctx.move.type == 'ステラ'
-            and ctx.defender.is_terastallized
+            and ctx.defender.terastallized
         ):
             # テラスタル状態の相手にステラ技が効果抜群になる
             base_modifier = 8192
@@ -315,15 +315,15 @@ class DamageCalculator:
         attacker = ctx.attacker
         move = ctx.move
 
-        if not attacker.is_terastallized:
+        if not attacker.terastallized:
             return False
-        if not attacker.terastal:
+        if not attacker.active_tera_type:
             return False
-        if move.type != attacker.terastal:
+        if move.type != attacker.active_tera_type:
             return False
 
         # 連続攻撃技は対象外
-        if move.data.max_hits > 1:
+        if move.max_hits > 1:
             return False
 
         # 優先度+1以上の技は対象外
@@ -414,10 +414,8 @@ class DamageCalculator:
         defender = ctx.defender
         move = ctx.move
 
-        move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
-
         # ステータス
-        if move_category == "物理" or move.has_label("physical"):
+        if self.battle.move_executor.deals_physical_damage(attacker, move):
             stat = "B"
         else:
             stat = "D"
@@ -426,10 +424,6 @@ class DamageCalculator:
         r_rank = rank_modifier(defender.rank[stat])
 
         # ランク補正の修正
-        if move.has_label("ignore_rank") and r_rank != 1:
-            r_rank = 1
-            dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_RANK_BY_MOVE)
-
         r_rank = self.events.emit(
             Event.ON_CALC_DEF_RANK_MODIFIER,
             ctx,

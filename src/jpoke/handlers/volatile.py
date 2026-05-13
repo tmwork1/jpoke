@@ -197,7 +197,7 @@ def アンコール_modify_move(battle: Battle, ctx: BattleContext, value: Any) 
     """
     mon = ctx.attacker
     volatile = mon.volatiles["アンコール"]
-    move = mon.find_move(volatile.move_name)
+    move = mon.get_move(volatile.move_name)
     return HandlerReturn(value=move)
 
 
@@ -358,7 +358,7 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     )
 
     # 自傷ダメージの計算（通常のダメージ計算と同様の処理を行う）
-    damage = battle.determine_damage(
+    damage = battle.roll_damage(
         attacker=ctx.attacker,
         defender=ctx.attacker,
         move="こんらん",
@@ -407,7 +407,7 @@ def さわぐ_modify_move(battle: Battle, ctx: BattleContext, value: Any) -> Han
     """
     mon = ctx.attacker
     volatile = mon.volatiles["さわぐ"]
-    move = mon.find_move(volatile.move_name)
+    move = mon.get_move(volatile.move_name)
     return HandlerReturn(value=move)
 
 

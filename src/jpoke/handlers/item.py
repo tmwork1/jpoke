@@ -71,22 +71,21 @@ def いのちのたま_recoil(battle: Battle, ctx: BattleContext, value: Any) ->
 
 def いかさまダイス_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """いかさまダイス: 2-5回連続技のヒット数を4回または5回へ補正する。"""
-    min_hits = ctx.move.data.multi_hit["min"]
-    max_hits = ctx.move.data.multi_hit["max"]
+    min_hits, max_hits = ctx.move.min_hits, ctx.move.max_hits
     if (min_hits, max_hits) == (2, 5):
         value = 4 if battle.random.random() < 0.5 else 5
     return HandlerReturn(value=value)
 
 
 def だっしゅつボタン_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    player = battle.find_player(ctx.defender)
+    player = battle.get_player(ctx.defender)
     player.interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn(value=value)
 
 
 def だっしゅつパック_on_stat_down(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # valueは{stat: change}の辞書
-    player = battle.find_player(ctx.target)
+    player = battle.get_player(ctx.target)
     if any(v < 0 for v in value.values()) and \
             bool(battle.get_available_switch_commands(player)):
         player.interrupt = Interrupt.REQUESTED

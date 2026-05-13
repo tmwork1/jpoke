@@ -173,7 +173,7 @@ class Player:
         Returns:
             テラスタルが使用可能な場合True
         """
-        return all(not mon.is_terastallized for mon in self.selection)
+        return all(not mon.terastallized for mon in self.selection)
 
     def has_interrupt(self) -> bool:
         """割り込み状態かどうかを判定する。

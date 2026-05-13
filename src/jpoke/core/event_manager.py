@@ -6,8 +6,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, Handler
-    from jpoke.model import Pokemon, Player
+    from jpoke.core import Battle, Handler, Player
+    from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
 from jpoke.utils import fast_copy
@@ -33,7 +33,7 @@ class EventManager:
             battle: バトルインスタンス
         """
         self.battle = battle
-        self.handlers: dict[Event, list[RegisteredHandler]] = {}
+        self.handlers: dict[Event | DomainEvent, list[RegisteredHandler]] = {}
 
     def __deepcopy__(self, memo):
         """EventManagerインスタンスのディープコピーを作成する。
@@ -68,7 +68,7 @@ class EventManager:
         self.battle = new
 
     def on(self,
-           event: Event,
+           event: Event | DomainEvent,
            handler: Handler,
            subject: Pokemon | Player):
         """イベントにハンドラを登録する。
@@ -83,7 +83,7 @@ class EventManager:
         )
 
     def off(self,
-            event: Event,
+            event: Event | DomainEvent,
             handler: Handler,
             subject: Pokemon | Player):
         """イベントからハンドラを解除する。
@@ -101,7 +101,7 @@ class EventManager:
         ]
 
     def emit(self,
-             event: Event,
+             event: Event | DomainEvent,
              ctx: BattleContext | None = None,
              value: Any = None) -> Any:
         """イベントを発火し、登録されたハンドラを実行する。

@@ -1,3 +1,5 @@
+# TODO : 型ヒントにしか使っていないモジュールは TYPE_CHECKING=True のときだけインポートするようにする
+
 """ポケモンバトルのメインロジックを管理するモジュール。
 
 バトル全体の状態管理、ターン進行、イベント処理、ログ記録などを統括します。
@@ -19,7 +21,7 @@ from jpoke.model import Pokemon, Move, Field, Item
 from .event_manager import EventManager
 from .context import BattleContext
 from .player import Player
-from .event_logger import EventLogger
+from .event_logger import EventLogger, Payload
 from .command_logger import CommandLogger
 from .damage import DamageCalculator, DamageContext
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
@@ -59,7 +61,7 @@ class Battle:
         players: 参加プレイヤーのリスト（通常2人）
         seed: 乱数シード値
         turn: 現在のターン数
-        winner_idx: 勝者のインデックス（勝負がついていない場合はNone）
+        winner: 勝者のPlayerインスタンス（勝負がついていない場合はNone）
         events: イベント管理システム
         logger: バトルログ記録システム
         random: 乱数生成器
@@ -92,7 +94,7 @@ class Battle:
         self.seed: int = seed
 
         self.turn: int = -1
-        self.winner_idx: int | None = None
+        self.winner: Player | None = None
 
         self.random = Random(self.seed)
         self.events = EventManager(self)
@@ -108,9 +110,9 @@ class Battle:
         self.volatile_manager: VolatileManager = VolatileManager(self)
         self.query_manager: PokemonQuery = PokemonQuery(self)
         self.status_manager: StatusManager = StatusManager(self)
-        self.item_manager: ItemManager = ItemManager(self)
         self.command_manager: CommandManager = CommandManager(self)
         self.ability_manager: AbilityManager = AbilityManager(self)
+        self.item_manager: ItemManager = ItemManager(self)
 
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
@@ -161,9 +163,9 @@ class Battle:
         self.volatile_manager.update_reference(self)
         self.query_manager.update_reference(self)
         self.status_manager.update_reference(self)
-        self.item_manager.update_reference(self)
         self.command_manager.update_reference(self)
         self.ability_manager.update_reference(self)
+        self.item_manager.update_reference(self)
 
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
@@ -213,7 +215,11 @@ class Battle:
         Returns:
             list[Pokemon]: 各プレイヤーの場のポケモン
         """
-        return [player.active for player in self.players]
+        return [player.active for player in self.players if player.active is not None]
+
+    def is_active(self, mon: Pokemon) -> bool:
+        """指定したポケモンが現在場に出ているか確認。"""
+        return mon in self.actives
 
     @property
     def raw_weather(self) -> Field:
@@ -253,18 +259,6 @@ class Battle:
         """
         return self.side_manager[self.get_player_index(source)]
 
-    def get_side_field(self, source: Player | Pokemon, name: SideField) -> Field:
-        """サイドフィールド効果を取得。
-
-        Args:
-            source: Player または Pokemon インスタンス
-            name: フィールド効果の名前
-
-        Returns:
-            Field: 対応するサイドフィールド効果
-        """
-        return self.get_side(source).fields[name]
-
     def export_log(self, file):
         """バトルログをJSON形式でエクスポート。
 
@@ -279,10 +273,11 @@ class Battle:
                 "team": [mon.to_dict() for mon in player.team],
             })
 
-        self.event_logger.export(file, self.seed, players_data)
+        # TODO : 実装 (後回し)
+        # self.event_logger.export(file, self.seed, players_data)
 
     def masked_copy(self, perspective: Player) -> Self:
-        # TODO (copilotには任せない) implement more detailed masking
+        # TODO : 実装 (後回し)
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
             perspective: 情報を完全に保持するプレイヤー
@@ -297,7 +292,7 @@ class Battle:
 
         return new
 
-    def find_player(self, mon: Pokemon) -> Player:
+    def get_player(self, mon: Pokemon) -> Player:
         """ポケモンが所属するプレイヤーを検索する。
 
         Args:
@@ -309,24 +304,7 @@ class Battle:
         Raises:
             Exception: ポケモンが見つからない場合
         """
-        return self.players[self.find_player_index(mon)]
-
-    def find_player_index(self, mon: Pokemon) -> int:
-        """ポケモンが所属するプレイヤーのインデックスを検索する。
-
-        Args:
-            mon: 検索対象のポケモン
-
-        Returns:
-            int: プレイヤーのインデックス（0または1）
-
-        Raises:
-            Exception: ポケモンが見つからない場合
-        """
-        for i, player in enumerate(self.players):
-            if mon in player.team:
-                return i
-        raise Exception("Player not found.")
+        return self.players[self.get_player_index(mon)]
 
     def get_player_index(self, source: Player | Pokemon) -> int:
         """プレイヤーまたはポケモンからプレイヤーインデックスを取得。
@@ -340,7 +318,9 @@ class Battle:
         if isinstance(source, Player):
             return self.players.index(source)
         elif isinstance(source, Pokemon):
-            return self.find_player_index(source)
+            for i, player in enumerate(self.players):
+                if source in player.team:
+                    return i
         raise ValueError(f"Invalid source type: {type(source)}")
 
     def foe(self, active: Pokemon) -> Pokemon:
@@ -411,7 +391,7 @@ class Battle:
         """
         return self.speed_calculator.calc_effective_speed(mon)
 
-    def determine_speed_order(self) -> list[Pokemon]:
+    def calc_speed_order(self) -> list[Pokemon]:
         """素早さ順序を計算（SpeedCalculatorへの委譲）。
 
         Returns:
@@ -419,7 +399,7 @@ class Battle:
         """
         return self.speed_calculator.calc_speed_order()
 
-    def determine_action_order(self) -> list[Pokemon]:
+    def calc_action_order(self) -> list[Pokemon]:
         """行動順序を計算（SpeedCalculatorへの委譲）。
 
         Returns:
@@ -440,7 +420,7 @@ class Battle:
                 break
             prev_results = results
 
-    def determine_tod_score(self, player: Player, alpha: float = 1) -> float:
+    def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
 
         Args:
@@ -492,29 +472,22 @@ class Battle:
         """
         self.move_executor.run_move(attacker, move)
 
-    def set_item(self, target: Pokemon, item: str | Item) -> None:
+    def set_item(self, mon: Pokemon, item: str) -> None:
         """ポケモンの持ち物を更新する（ItemManagerへの委譲）。"""
-        self.item_manager.set_item(target, item)
+        self.item_manager.set_item(mon, item)
 
-    def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
+    def lose_item(self, mon: Pokemon, cause: ItemLostCause = "remove") -> bool:
         """ポケモンの道具を喪失状態にする（ItemManagerへの委譲）。"""
-        return self.item_manager.lose_item(target, cause=cause)
+        return self.item_manager.lose_item(mon, cause=cause)
 
-    def consume_item(self, target: Pokemon) -> bool:
+    def consume_item(self, mon: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
         # TODO : アイテム消費時のログ記入までItemManagerに任せるべきか検討
-        return self.item_manager.consume_item(target)
+        return self.item_manager.consume_item(mon)
 
-    def set_ability(self,
-                    target: Pokemon,
-                    ability_name: str,
-                    refresh_enabled_states: bool = True) -> None:
+    def set_ability(self, mon: Pokemon, ability: str) -> None:
         """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
-        self.ability_manager.set_ability(
-            target,
-            ability_name,
-            refresh_enabled_states=refresh_enabled_states,
-        )
+        self.ability_manager.set_ability(mon, ability)
 
     def can_change_item(self,
                         source: Pokemon,
@@ -522,9 +495,13 @@ class Battle:
                         move: Move | None = None,
                         reason: str = "") -> bool:
         """持ち物変更可否を判定する（ItemManagerへの委譲）。"""
+        # TODO : reasonの型をItemLostCauseに統一できるか検討する
         return self.item_manager.can_change_item(source, target, move=move, reason=reason)
 
-    def swap_items(self, source: Pokemon, target: Pokemon, move: Move | None = None) -> bool:
+    def swap_items(self,
+                   source: Pokemon,
+                   target: Pokemon,
+                   move: Move | None = None) -> bool:
         """2体の持ち物を入れ替える（ItemManagerへの委譲）。"""
         return self.item_manager.swap_items(source, target, move=move)
 
@@ -563,16 +540,15 @@ class Battle:
         """
         return self.command_manager.command_to_move(player, command)
 
-    def modify_hp(
-        self,
-        target: Pokemon,
-        v: int = 0,
-        r: float = 0,
-        reason: HPChangeReason = "",
-        source: Pokemon | None = None,
-        move: Move | None = None,
-    ) -> int:
+    def modify_hp(self,
+                  target: Pokemon,
+                  v: int = 0,
+                  r: float = 0,
+                  source: Pokemon | None = None,
+                  reason: HPChangeReason = "",
+                  move: Move | None = None) -> int:
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
+        # TODO reason と move の役割の違いを明確にする。reasonのみで十分かどうか確認する
         return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source, move=move)
 
     def modify_stat(self,
@@ -592,30 +568,30 @@ class Battle:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
 
-    def determine_damage(self,
-                         attacker: Pokemon,
-                         defender: Pokemon,
-                         move: Move | str,
-                         critical: bool = False) -> int:
+    def roll_damage(self,
+                    attacker: Pokemon,
+                    defender: Pokemon,
+                    move: Move | str,
+                    critical: bool = False) -> int:
         """ダメージを計算してランダムに1つ選択する。
 
         Args:
             attacker: 攻撃側のポケモン
+            defender: 防御側のポケモン
             move: 使用する技（MoveオブジェクトまたはID文字列）
             critical: 急所に当たるかどうか
-            self_harm: 自分自身へのダメージかどうか
 
         Returns:
             int: 計算されたダメージ値
         """
-        damages = self.determine_damage_range(attacker, defender, move, critical)
+        damages = self.calc_damage_range(attacker, defender, move, critical)
         return self.random.choice(damages)
 
-    def determine_damage_range(self,
-                               attacker: Pokemon,
-                               defender: Pokemon,
-                               move: Move | str,
-                               critical: bool = False) -> list[int]:
+    def calc_damage_range(self,
+                          attacker: Pokemon,
+                          defender: Pokemon,
+                          move: Move | str,
+                          critical: bool = False) -> list[int]:
         """可能なダメージ値のリストを計算する。
 
         乱数によるダメージ幅を考慮した全ての可能なダメージ値を返します。
@@ -693,7 +669,7 @@ class Battle:
     def add_event_log(self,
                       source: Player | Pokemon | int,
                       log: LogCode,
-                      payload: dict | None = None):
+                      payload: Payload | None = None):
         """イベントログを追加。
 
         Args:

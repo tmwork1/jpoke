@@ -58,7 +58,7 @@ class TurnController:
                 commands = pl.choose_selection_commands(self.battle)
                 pl.selection_idxes = [c.idx for c in commands]
 
-    def calc_tod_score(self, player: "Player", alpha: float = 1) -> float:
+    def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
 
         Args:
@@ -82,17 +82,18 @@ class TurnController:
         Returns:
             勝者のPlayerインスタンス、勝負がついていない場合はNone
         """
-        if self.battle.winner_idx is not None:
-            return self.battle.players[self.battle.winner_idx]
+        if self.battle.winner is not None:
+            return self.battle.winner
 
         TOD_scores = [self.calc_tod_score(pl) for pl in self.battle.players]
         if 0 in TOD_scores:
             loser_idx = TOD_scores.index(0)
-            winner_idx = (loser_idx + 1) % 2
-            self.battle.winner_idx = winner_idx
-            self.battle.add_event_log(winner_idx, LogCode.WIN)
-            self.battle.add_event_log(loser_idx, LogCode.LOSE)
-            return self.battle.players[winner_idx]
+            loser = self.battle.players[loser_idx]
+            winner = self.battle.players[loser_idx - 1]
+            self.battle.add_event_log(winner, LogCode.WIN)
+            self.battle.add_event_log(loser, LogCode.LOSE)
+            self.battle.winner = winner
+            return winner
 
         return None
 
@@ -137,8 +138,8 @@ class TurnController:
 
     def _run_terastal(self):
         """技発動前にテラスタルコマンドを実行する。"""
-        for attacker in self.battle.determine_action_order():
-            player = self.battle.find_player(attacker)
+        for attacker in self.battle.calc_action_order():
+            player = self.battle.get_player(attacker)
             if not player.reserved_commands:
                 continue
             command = player.reserved_commands[0]
@@ -166,7 +167,7 @@ class TurnController:
             self.events.emit(Event.ON_BEFORE_ACTION)
 
         # 交代処理
-        for attacker in self.battle.determine_speed_order():
+        for attacker in self.battle.calc_speed_order():
             # 交代フラグ
             idx = self.battle.actives.index(attacker)
             interrupt = Interrupt.ejectpack_on_switch(idx)
@@ -193,8 +194,8 @@ class TurnController:
 
         # 技の処理
         action_orders = ["先攻", "後攻"]
-        for attacker, action_order in zip(self.battle.determine_action_order(), action_orders):
-            player = self.battle.find_player(attacker)
+        for attacker, action_order in zip(self.battle.calc_action_order(), action_orders):
+            player = self.battle.get_player(attacker)
 
             if player.has_switched:
                 continue

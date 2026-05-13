@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.data import AbilityData
+    from jpoke.data.ability import AbilityData
 
 from jpoke.utils import fast_copy
 from jpoke.data import ABILITIES
@@ -38,7 +38,6 @@ class Ability(GameEffect):
         self.data: AbilityData  # 型ヒントのための属性。実際のデータはsuper().__init__で設定される
 
     def __deepcopy__(self, memo):
-        """特性オブジェクトのディープコピーを作成する。"""
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new

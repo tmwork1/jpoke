@@ -69,8 +69,8 @@ def test_急所_ダメージ倍率():
     """急所ダメージが1.5倍になることを確認"""
     battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
     attacker, defender = battle.actives
-    normal_damages = battle.determine_damage_range(attacker, defender, "たいあたり", critical=False)
-    critical_damages = battle.determine_damage_range(attacker, defender, "たいあたり", critical=True)
+    normal_damages = battle.calc_damage_range(attacker, defender, "たいあたり", critical=False)
+    critical_damages = battle.calc_damage_range(attacker, defender, "たいあたり", critical=True)
     ratio = critical_damages[0] / normal_damages[0]
     assert 1.4 < ratio < 1.6
 

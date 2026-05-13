@@ -288,10 +288,6 @@ def resolve_field_count(battle: Battle,
     else:
         return HandlerReturn(value=value)
 
-# TODO : is_physical/special_move()
-# move_executorに実装すべきか検討
-# move.has_label("physical")は防御側から見るとphysicalだが攻撃側からはspecialなので、どちらの視点なのか引数で指定できるようにする必要がある
-
 
 def is_special_move(battle: Battle, ctx: BattleContext) -> bool:
     """特殊技かどうかを判定する。
@@ -305,10 +301,7 @@ def is_special_move(battle: Battle, ctx: BattleContext) -> bool:
     Returns:
         bool: 特殊技ならTrue
     """
-    if ctx.move is None:
-        return False
-    category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-    return category == "特殊" and not ctx.move.has_label("physical")
+    return "特殊" == battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
 
 
 def is_physical_move(battle: Battle, ctx: BattleContext) -> bool:
@@ -323,10 +316,16 @@ def is_physical_move(battle: Battle, ctx: BattleContext) -> bool:
     Returns:
         bool: 物理技ならTrue
     """
-    if ctx.move is None:
-        return False
-    category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-    return category == "物理" or ctx.move.has_label("physical")
+    return "物理" == battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+
+
+def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
+    """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
+
+    Returns:
+        技が物理ダメージを与える場合True
+    """
+    return battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move)
 
 
 def calc_def_type_modifier(battle: Battle, mon: Pokemon, move: Move | str) -> float:

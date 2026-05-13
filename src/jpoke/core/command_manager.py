@@ -21,18 +21,18 @@ class CommandManager:
     def update_reference(self, battle: Battle):
         self.battle = battle
 
-    def get_available_selection_commands(self, player: "Player") -> list[Command]:
+    def get_available_selection_commands(self, player: Player) -> list[Command]:
         """ポケモン選出時に使用可能なコマンドを取得する。"""
         return Command.selection_commands()[:len(player.team)]
 
-    def get_available_switch_commands(self, player: "Player") -> list[Command]:
+    def get_available_switch_commands(self, player: Player) -> list[Command]:
         """交代可能なコマンドのリストを取得する。"""
         if self.battle.query_manager.is_trapped(player.active):
             return []
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
                 if mon in player.selection and mon is not player.active]
 
-    def get_available_action_commands(self, player: "Player") -> list[Command]:
+    def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
         n = len(player.active.moves)
 
@@ -62,7 +62,7 @@ class CommandManager:
 
         return commands
 
-    def command_to_move(self, player: "Player", command: Command) -> Move:
+    def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得する。"""
         attacker = player.active
         if command == Command.STRUGGLE:

@@ -163,10 +163,10 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         if self.current.is_active:
             self._deactivate_field(self.current)
 
-        count = self.events.emit(
-            Event.ON_CHECK_DURATION,
-            BattleContext(source=source, field=field),
-            count
+        _, count = self.events.emit(
+            Event.ON_MODIFY_DURATION,
+            BattleContext(source=source),
+            [field, count]
         )
         self._activate_field(name, count)
         self.current = field

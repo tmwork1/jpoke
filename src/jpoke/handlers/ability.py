@@ -111,7 +111,7 @@ def _apply_contact_counter_chip(battle: Battle,
 
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon, ability_name: str) -> bool:
     """緊急交代を発動する。"""
-    player = battle.find_player(mon)
+    player = battle.get_player(mon)
     if (
         player.has_interrupt()
         or not battle.get_available_switch_commands(player)
@@ -774,7 +774,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, v
     """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
     # テラスタル中に交代した場合は現在のフォルムを維持する。
     # ただし瀕死退場時はまんぷくへ戻す。
-    if ctx.source.is_terastallized and ctx.source.alive:
+    if ctx.source.terastallized and ctx.source.alive:
         return HandlerReturn(value=value)
 
     ctx.source.ability.is_hangry = False
@@ -783,7 +783,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, v
 
 def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: ターン終了時にフォルムを切り替える。"""
-    if ctx.source.is_terastallized:
+    if ctx.source.terastallized:
         return HandlerReturn(value=value)
 
     ctx.source.ability.is_hangry = not ctx.source.ability.is_hangry
@@ -1237,7 +1237,7 @@ def アイスボディ_on_turn_end(battle: Battle, ctx: BattleContext, value: An
 
 def アナライズ_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。"""
-    defender_player = battle.find_player(ctx.defender)
+    defender_player = battle.get_player(ctx.defender)
     # TODO : 行動順を取得する関数を Battle か TurnManager に実装すべき
     acted_before = ctx.defender.executed_move is not None or defender_player.has_switched
     if acted_before:
@@ -1297,7 +1297,7 @@ def はりきり_modify_accuracy(battle: Battle, ctx: BattleContext, value: int)
 
 def はりこみ_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。"""
-    if ctx.defender is not None and battle.find_player(ctx.defender).has_switched:
+    if ctx.defender is not None and battle.get_player(ctx.defender).has_switched:
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
@@ -1474,7 +1474,7 @@ def わざわいのうつわ_modify_atk(battle: Battle, ctx: BattleContext, valu
 
 def ファーコート_modify_def(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ファーコート特性: 物理技に対する防御補正を2倍にする。"""
-    if common.is_physical_move(battle, ctx):
+    if common.deals_physical_damage(battle, ctx):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
@@ -1483,7 +1483,7 @@ def ふしぎなうろこ_modify_def(battle: Battle, ctx: BattleContext, value: 
     """ふしぎなうろこ特性: 状態異常時に物理技への防御補正を1.5倍にする。"""
     if (
         ctx.defender.ailment.is_active
-        and common.is_physical_move(battle, ctx)
+        and common.deals_physical_damage(battle, ctx)
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -1493,7 +1493,7 @@ def くさのけがわ_modify_def(battle: Battle, ctx: BattleContext, value: int
     """くさのけがわ特性: グラスフィールド中の物理技への防御補正を1.5倍にする。"""
     if (
         battle.terrain.name == "グラスフィールド"
-        and common.is_physical_move(battle, ctx)
+        and common.deals_physical_damage(battle, ctx)
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -1568,8 +1568,10 @@ def もふもふ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -
 
 def ちからもち_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。"""
-    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-    if move_category == "物理" and ctx.move.name not in ["イカサマ", "ボディプレス"]:
+    if (
+        common.is_physical_move(battle, ctx)
+        and ctx.move.name not in ["イカサマ", "ボディプレス"]
+    ):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
@@ -1648,13 +1650,6 @@ def トレース_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def トレース_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """トレース特性: 交代時に元の特性へ戻す。"""
-    mon = ctx.source
-    battle.set_ability(mon, mon.base_ability_name, refresh_enabled_states=False)
-    return HandlerReturn(value=value)
-
-
 def おやこあい_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """おやこあい特性: 単発攻撃技を2ヒット化する。"""
     if ctx.move.is_attack and ctx.move.data.max_hits <= 1:
@@ -1679,7 +1674,7 @@ def てきおうりょく_modify_stab(battle: Battle, ctx: BattleContext, value:
     attacker = ctx.attacker
 
     # ステラテラスタル時はてきおうりょくがSTAB補正に影響しない。
-    if attacker.is_terastallized and attacker._terastal == "ステラ":
+    if attacker.terastallized and attacker.tera_type == "ステラ":
         return HandlerReturn(value=value)
 
     if value == 6144:
@@ -1832,7 +1827,7 @@ def へんげんじざいリベロ_on_move_charge(battle: Battle, ctx: BattleCon
 
     if (
         not ctx.attacker.ability.activated_since_switch_in
-        and not ctx.attacker.is_terastallized
+        and not ctx.attacker.terastallized
         and [move_type] != ctx.attacker.types
     ):
         ctx.attacker.ability_override_type = move_type

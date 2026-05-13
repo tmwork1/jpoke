@@ -86,8 +86,8 @@ def play_game(row_probs: tuple[float, float, float],
     if winner is p1:
         return 0.0
 
-    score0 = battle.determine_tod_score(p0)
-    score1 = battle.determine_tod_score(p1)
+    score0 = battle.calc_tod_score(p0)
+    score1 = battle.calc_tod_score(p1)
     if abs(score0 - score1) < 1e-9:
         return 0.5
     return 1.0 if score0 > score1 else 0.0

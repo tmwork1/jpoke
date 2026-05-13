@@ -1,3 +1,5 @@
+# TODO : メソッドの定義順を整理する（例: 基本情報関連、状態関連、ステータス関連、技関連など）
+
 """ポケモンモデルを定義するモジュール。
 
 ポケモンの基本情報、ステータス、特性、持ち物、技、状態異常、
@@ -7,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
+    from jpoke.data.models import PokemonData
 
 from jpoke.utils.type_defs import Nature, Type, Stat, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
@@ -39,7 +42,7 @@ class Pokemon:
         moves: 覚えている技のリスト
         rank: 能力ランクの辞書
         volatiles: 揮発状態の辞書
-        is_terastallized: テラスタル済みかどうか
+        terastallized: テラスタル済みかどうか
     """
 
     def __init__(self,
@@ -47,10 +50,10 @@ class Pokemon:
                  gender: Gender = "",
                  nature: Nature = "まじめ",
                  level: int = 50,
-                 ability: str | Ability = "",
-                 item: str | Item = "",
-                 moves: list[str | Move] = ["はねる"],
-                 terastal: Type = "ステラ") -> None:
+                 ability: str = "",
+                 item: str = "",
+                 moves: list[str] = ["はねる"],
+                 tera_type: Type = "ステラ") -> None:
         """ポケモンを初期化する。
 
         Args:
@@ -58,26 +61,21 @@ class Pokemon:
             gender: 性別（"オス"/"メス"/""）
             nature: 性格
             level: レベル（デフォルト50）
-            ability: 特性（文字列またはAbilityインスタンス）
-            item: 持ち物（文字列またはItemインスタンス）
-            moves: 技のリスト（文字列またはMoveインスタンスのリスト）
-            terastal: テラスタルタイプ
+            ability: 特性（文字列）
+            item: 持ち物（文字列）
+            moves: 技のリスト（文字列のリスト）
+            tera_type: テラスタルタイプ
         """
-        self.data = pokedex[name]
+        self.data: PokemonData = pokedex[name]
         self.gender: Gender = gender
         self._nature: Nature = nature
         self._level: int = level
-        self._terastal: Type = terastal
+        self.tera_type: Type = tera_type
 
-        # 内部変数の初期化
-        self._ability: Ability = Ability()
-        self._item: Item = Item()
-        self._moves: list[Move] = []
+        self.ability = Ability(ability)
+        self.item = Item(item)
+        self.set_moves(moves)
 
-        # プロパティ経由で設定
-        self.ability = ability
-        self.item = item
-        self.moves = moves
         self.base_ability_name: str = self.ability.orig_name
 
         # ステータス計算マネージャー
@@ -94,8 +92,8 @@ class Pokemon:
 
         # バトル中に利用する属性はコンストラクタで明示的に定義する。
         self.revealed: bool = False
-        self.is_terastallized: bool = False
-        self._hp: int = self.max_hp
+        self.terastallized: bool = False
+        self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
         self.stellar_boosted_types: set = set()
         self.volatiles: dict[VolatileName, Volatile] = {}
@@ -112,8 +110,8 @@ class Pokemon:
         ポケモンのバトル状態を初期化する。
         """
         self.revealed = False
-        self.is_terastallized = False
-        self._hp = self.max_hp
+        self.terastallized = False
+        self.hp = self.max_hp
         self.ailment = Ailment()
         # ステラ テラスタル補正を消費したタイプの集合
         self.stellar_boosted_types = set()
@@ -129,26 +127,25 @@ class Pokemon:
         self.rank = {k: 0 for k in STATS}
         self.executed_move = None
         self.ability_override_type = None
-        if self.ability.orig_name != self.base_ability_name:
-            self.ability = self.base_ability_name
         self.ability.activated_since_switch_in = False
         self.paradox_boost_active = False
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
+
+        self.restore_ability()
+
+    def restore_ability(self) -> bool:
+        """特性をもとに戻す。"""
+        if self.ability.orig_name != self.base_ability_name:
+            self.ability = Ability(self.base_ability_name)
+            return True
+        return False
 
     def init_turn(self):
         """ターン初期化処理。"""
         self.hits_taken = 0
 
     def __deepcopy__(self, memo):
-        """ディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Pokemon: コピーされたインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -167,8 +164,8 @@ class Pokemon:
         s += f"{self._nature}{sep}"
         s += f"{self.ability.name}{sep}"
         s += f"{self.item.name or 'No item'}{sep}"
-        if self._terastal:
-            s += f"{self._terastal}T{sep}"
+        if self.tera_type:
+            s += f"{self.tera_type}T{sep}"
         else:
             s += f"No terastal{sep}"
         for st, ef in zip(self._stats_manager.stats, self._stats_manager.effort):
@@ -184,7 +181,7 @@ class Pokemon:
             ポケモンの全情報を含む辞書
         """
         return {
-            "name": self.orig_name,
+            "name": self.name,
             "gender": self.gender,
             "level": self._level,
             "nature": self._nature,
@@ -193,7 +190,7 @@ class Pokemon:
             "moves": [move.name for move in self.moves],
             "indiv": self._stats_manager.indiv,
             "effort": self._stats_manager.effort,
-            "terastal": self._terastal,
+            "tera_type": self.tera_type,
         }
 
     @property
@@ -223,21 +220,6 @@ class Pokemon:
         self.data = pokedex[alias]
         self.update_stats(keep_damage=keep_damage)
 
-    def has_item(self, name: str | None = None) -> bool:
-        """持ち物を持っているか判定する。
-
-        Args:
-            name: 持ち物名（Noneの場合は何らかの持ち物を持っているかを判定）
-
-        Returns:
-            nameが指定された場合はその持ち物を持っているか、
-            Noneの場合は何らかの持ち物を持っている場合True
-        """
-        item_name = self.item.orig_name
-        if name is None:
-            return bool(item_name) and not self.item.lost
-        return item_name == name and not self.item.lost
-
     @property
     def alive(self) -> bool:
         """ポケモンが生存しているかどうかを取得する。
@@ -256,91 +238,16 @@ class Pokemon:
         """
         return self.hp == 0
 
-    @property
-    def hp(self) -> int:
-        """ポケモンの現在HPを取得する。
-
-        Returns:
-            現在のHP
-        """
-        return self._hp
-
-    @hp.setter
-    def hp(self, value: int):
-        """HPの直接代入を防止する。
-
-        HPを変更する場合は、battle.modify_hp()を使用してください。
-        これにより、HP=0時の勝敗判定が漏れなくなります。
-
-        Raises:
-            AttributeError: 直接代入しようとした場合
-        """
-        raise AttributeError(
-            "HPを直接代入することはできません。"
-            "battle.modify_hp(pokemon, v)を使用してください。"
-        )
-
-    @property
-    def ability(self) -> Ability:
-        """特性を取得する。
-
-        Returns:
-            特性オブジェクト
-        """
-        return self._ability
-
-    @ability.setter
-    def ability(self, obj: str | Ability):
-        """特性を設定する。
-
-        Args:
-            obj: 特性名またはAbilityオブジェクト
-        """
-        if isinstance(obj, str):
-            obj = Ability(obj)
-        self._ability = obj
-
-    @property
-    def item(self) -> Item:
-        """持ち物を取得する。
-
-        Returns:
-            持ち物オブジェクト
-        """
-        return self._item
-
-    @item.setter
-    def item(self, obj: str | Item):
-        """持ち物を設定する。
-
-        Args:
-            obj: 持ち物名またはItemオブジェクト
-        """
-        if isinstance(obj, str):
-            obj = Item(obj)
-        self._item = obj
-
-    @property
-    def moves(self) -> list[Move]:
-        """技のリストを取得する。
-
-        Returns:
-            技オブジェクトのリスト
-        """
-        return self._moves
-
-    @moves.setter
-    def moves(self, objs: list[str | Move]):
+    def set_moves(self, moves: list[str]):
         """技のリストを設定する。
 
         Args:
-            objs: 技名またはMoveオブジェクトのリスト
+            moves: 技名のリスト
         """
-        self._moves = [Move(obj) if isinstance(obj, str) else obj
-                       for obj in objs]
+        self.moves = [Move(name) for name in moves]
 
     @property
-    def types(self) -> list[str]:
+    def types(self) -> list[Type]:
         """ポケモンの現在のタイプを取得する。
 
         Returns:
@@ -350,11 +257,11 @@ class Pokemon:
             テラスタル、タイプ追加/削除効果を考慮した現在のタイプを返す。
             アルセウスのタイプ変化は未実装（TODO）。
         """
-        if self.terastal:
-            if self.terastal == 'ステラ':
+        if self.active_tera_type:
+            if self.active_tera_type == 'ステラ':
                 return self.data.types
             else:
-                return [self.terastal]
+                return [self.active_tera_type]
         elif self.ability_override_type is not None:
             return [self.ability_override_type]
         else:
@@ -377,15 +284,6 @@ class Pokemon:
             HP割合（0.0～1.0）
         """
         return self.hp / self.max_hp
-
-    @hp_ratio.setter
-    def hp_ratio(self, v: float):
-        """現在のHPを割合で設定する。
-
-        Args:
-            v: HP割合（0.0～1.0）
-        """
-        self._hp = int(self.max_hp * v)
 
     @property
     def level(self) -> int:
@@ -420,6 +318,7 @@ class Pokemon:
             特性（ライトメタル、ヘヴィメタル）や
             持ち物（かるいし）の効果を考慮した体重を返す。
         """
+        # TODO : ON_MODIFY_WEIGHTイベントを作成してハンドラとして実装する
         w = self.data.weight
         match self.ability.name:
             case 'ライトメタル':
@@ -440,7 +339,7 @@ class Pokemon:
         return self._nature
 
     @nature.setter
-    def nature(self, nature: str):
+    def nature(self, nature: Nature):
         """ポケモンの性格を設定する。
 
         Args:
@@ -453,22 +352,13 @@ class Pokemon:
         self.update_stats()
 
     @property
-    def terastal(self) -> str | None:
+    def active_tera_type(self) -> Type:
         """テラスタルのタイプを取得する。
 
         Returns:
             テラスタル済みの場合はタイプ名、そうでなければNone
         """
-        return self._terastal if self.is_terastallized else None
-
-    @terastal.setter
-    def terastal(self, type: str):
-        """テラスタルのタイプを設定する。
-
-        Args:
-            type: テラスタルのタイプ
-        """
-        self._terastal = type
+        return self.tera_type if self.terastallized else ""
 
     def can_terastallize(self) -> bool:
         """テラスタル可能かどうかを判定する。
@@ -476,12 +366,24 @@ class Pokemon:
         Returns:
             テラスタル可能な場合True
         """
-        return not self.is_terastallized and self._terastal is not None
+        return not self.terastallized and self.tera_type != ""
 
     def terastallize(self):
         """テラスタルする"""
         if self.can_terastallize():
-            self.is_terastallized = True
+            self.terastallized = True
+
+    def has_item(self, name: str | None = None) -> bool:
+        """持ち物を持っているか判定する。
+
+        Args:
+            name: 持ち物名（Noneの場合は何らかの持ち物を持っているかを判定）
+
+        Returns:
+            nameが指定された場合はその持ち物を持っているか、
+            Noneの場合は何らかの持ち物を持っている場合True
+        """
+        return self.item.name == name
 
     @property
     def stats(self) -> dict[Stat, int]:
@@ -582,16 +484,16 @@ class Pokemon:
         """
         return type_ in self.types
 
-    def has_move(self, move: Move | str) -> bool:
+    def has_move(self, move: str) -> bool:
         """指定された技を持っているか判定する。
 
         Args:
-            move: 技名またはMoveオブジェクト
+            move: 技名
 
         Returns:
             指定技を持っていればTrue
         """
-        return self.find_move(move) is not None
+        return self.get_move(move) is not None
 
     @property
     def damage_taken(self) -> int:
@@ -622,7 +524,7 @@ class Pokemon:
 
         # 被ダメージ量を復元
         if keep_damage:
-            self._hp = self.max_hp - damage
+            self.hp = self.max_hp - damage
 
     def set_stats(self, idx: int, value: int) -> bool:
         """指定した実数値になるよう努力値を設定する。
@@ -667,9 +569,9 @@ class Pokemon:
             HPは0から最大HPの範囲に制限される。
             このメソッドは内部用です。外部からはbattle.modify_hp()を使用してください。
         """
-        old = self._hp
-        self._hp = max(0, min(self.max_hp, old + v))
-        return self._hp - old
+        old = self.hp
+        self.hp = max(0, min(self.max_hp, old + v))
+        return self.hp - old
 
     def modify_stat(self, stat: Stat, v: int) -> int:
         """ランク補正を変更する。
@@ -758,18 +660,19 @@ class Pokemon:
                 self.volatiles["みがわり"] = Volatile("みがわり", count=0)
             self.volatiles["みがわり"].hp = value
 
-    def find_move(self, move: Move | str) -> Move | None:
+    def get_move(self, move: str) -> Move | None:
         """技を検索する。
 
         Args:
-            move: 技名またはMoveオブジェクト
+            move: 技名
 
         Returns:
             見つかった場合はMoveオブジェクト、見つからなければNone
         """
-        for mv in self.moves:
-            if move in [mv, mv.name]:
-                return mv
+        for m in self.moves:
+            if m.name == move:
+                return m
+        return None
 
     def has_ailment(self, name: AilmentName) -> bool:
         """指定された状態異常を持っているか判定する。
@@ -792,3 +695,14 @@ class Pokemon:
             指定揮発性状態を持っていればTrue
         """
         return name in self.volatiles
+
+    def get_volatile(self, name: VolatileName) -> Volatile | None:
+        """揮発性状態を取得する。
+
+        Args:
+            name: 揮発性状態名
+
+        Returns:
+            指定された揮発性状態があればそのVolatileオブジェクト、なければNone
+        """
+        return self.volatiles.get(name, None)
