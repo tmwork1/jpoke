@@ -289,36 +289,6 @@ def resolve_field_count(battle: Battle,
         return HandlerReturn(value=value)
 
 
-def is_special_move(battle: Battle, ctx: BattleContext) -> bool:
-    """特殊技かどうかを判定する。
-
-    特殊技カテゴリ且つphysicalラベルなし。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-
-    Returns:
-        bool: 特殊技ならTrue
-    """
-    return "特殊" == battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-
-
-def is_physical_move(battle: Battle, ctx: BattleContext) -> bool:
-    """物理技かどうかを判定する。
-
-    物理技カテゴリまたはphysicalラベル持ち。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-
-    Returns:
-        bool: 物理技ならTrue
-    """
-    return "物理" == battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
-
-
 def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
     """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
 

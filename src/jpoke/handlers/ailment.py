@@ -4,6 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.utils.type_defs import RoleSpec
+from jpoke.utils.battle_math import apply_fixed_modifier
 from jpoke.enums import LogCode
 from jpoke.core import Handler, HandlerReturn
 
@@ -72,8 +73,8 @@ def やけど_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 
 def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
-    if ctx.move and ctx.move.category == "物理":
-        value = common.apply_modifier(value, 2048 // 4096)
+    if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
+        value = apply_fixed_modifier(value, 2048 // 4096)
     return HandlerReturn(value=value)
 
 

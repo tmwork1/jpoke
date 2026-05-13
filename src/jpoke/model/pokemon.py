@@ -674,16 +674,16 @@ class Pokemon:
                 return m
         return None
 
-    def has_ailment(self, name: AilmentName) -> bool:
+    def has_ailment(self, *ailments: AilmentName) -> bool:
         """指定された状態異常を持っているか判定する。
 
         Args:
-            name: 状態異常名
+            ailments: 状態異常名の可変長引数
 
         Returns:
             指定状態異常を持っていればTrue
         """
-        return self.ailment.is_active and self.ailment.name == name
+        return self.ailment.name in ailments
 
     def has_volatile(self, name: VolatileName) -> bool:
         """指定された揮発性状態を持っているか判定する。

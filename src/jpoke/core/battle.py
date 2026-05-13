@@ -12,7 +12,8 @@ import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, SideField, ItemLostCause, HPChangeReason
+from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, SideField, \
+    ItemLostCause, HPChangeReason, MoveCategory
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -273,11 +274,11 @@ class Battle:
                 "team": [mon.to_dict() for mon in player.team],
             })
 
-        # TODO : 実装 (後回し)
+        # TODO : export_log 実装 (後回し)
         # self.event_logger.export(file, self.seed, players_data)
 
     def masked_copy(self, perspective: Player) -> Self:
-        # TODO : 実装 (後回し)
+        # TODO : masked_copy 実装 (後回し)
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
             perspective: 情報を完全に保持するプレイヤー
@@ -470,7 +471,6 @@ class Battle:
 
     def consume_item(self, mon: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
-        # TODO : アイテム消費時のログ記入までItemManagerに任せるべきか検討
         return self.item_manager.consume_item(mon)
 
     def set_ability(self, mon: Pokemon, ability: str) -> None:
@@ -711,3 +711,15 @@ class Battle:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従い、そうでなければ引数のコマンドを使用。
         """
         self.turn_controller.advance_turn(commands)
+
+    def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
+        """実際の技カテゴリを判定する（MoveExecutorへの委譲）。
+
+        Args:
+            move: 技オブジェクト
+            attacker: 技を使用するポケモン
+
+        Returns:
+            有効な技のカテゴリ（"物理"、"特殊"、"変化"のいずれか）
+        """
+        return self.move_executor.resolve_move_category(attacker, move)

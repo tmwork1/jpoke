@@ -88,6 +88,7 @@ class ItemManager:
 
     def consume_item(self, target: Pokemon) -> bool:
         """対象の道具を消費状態にする。"""
+        # TODO : アイテム消費時のログ記入も行う
         return self.lose_item(target, cause="consume")
 
     def can_change_item(self,

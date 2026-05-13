@@ -377,8 +377,8 @@ class MoveExecutor:
             value=move.data.type,
         )
 
-    def get_effective_move_category(self, attacker: Pokemon, move: Move) -> str:
-        """技の有効分類を取得する。
+    def resolve_move_category(self, attacker: Pokemon, move: Move) -> str:
+        """技の有効なカテゴリを判定する。
 
         Args:
             attacker: 技を使用するポケモン
@@ -402,5 +402,5 @@ class MoveExecutor:
         Returns:
             技が物理ダメージを与える場合True
         """
-        category = self.get_effective_move_category(attacker, move)
+        category = self.resolve_move_category(attacker, move)
         return category == "物理" or move.has_label("physical_damage")

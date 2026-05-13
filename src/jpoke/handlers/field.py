@@ -283,7 +283,7 @@ def マジックルーム_on_field_deactivate(battle: Battle, ctx: BattleContext
 def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
     category_to_stat = {"物理": "D", "特殊": "B"}
-    move_category = battle.move_executor.get_effective_move_category(ctx.attacker, ctx.move)
+    move_category = battle.move_executor.resolve_move_category(ctx.attacker, ctx.move)
     swapped_stat = category_to_stat.get(move_category)
     rank = ctx.defender.rank[swapped_stat]
     value = rank_modifier(rank)

@@ -353,7 +353,7 @@ class DamageCalculator:
         defender = ctx.defender
         move = ctx.move
 
-        move_category = self.battle.move_executor.get_effective_move_category(attacker, move)
+        move_category = self.battle.move_executor.resolve_move_category(attacker, move)
 
         # ステータス
         if move.name == 'イカサマ':

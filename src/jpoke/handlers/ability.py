@@ -565,7 +565,7 @@ def サンパワー_modify_atk(battle: Battle, ctx: BattleContext, value: int) -
     """サンパワー特性: にほんばれ/おおひでり中に特殊技の特攻補正を1.5倍にする。"""
     if (
         battle.weather.sunny
-        and common.is_special_move(battle, ctx)
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -1180,24 +1180,20 @@ def すなのちから_modify_power(battle: Battle, ctx: BattleContext, value: i
 
 
 def どくぼうそう_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    """どくぼうそう特性: どく状態時のどく特殊技威力を1.5倍にする。"""
+    """どくぼうそう特性: どく状態時に特殊技の威力を1.5倍にする。"""
     if (
-        (ctx.attacker.has_ailment("どく") or ctx.attacker.has_ailment("もうどく"))
-        and ctx.move is not None
-        and ctx.move.type == "どく"
-        and common.is_special_move(battle, ctx)
+        (ctx.attacker.has_ailment("どく", "もうどく"))
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def ねつぼうそう_modify_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    """ねつぼうそう特性: やけど状態時のほのお特殊技威力を1.5倍にする。"""
+    """ねつぼうそう特性: やけど状態時の物理技の威力を1.5倍にする。"""
     if (
         ctx.attacker.has_ailment("やけど")
-        and ctx.move is not None
-        and ctx.move.type == "ほのお"
-        and common.is_special_move(battle, ctx)
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -1249,8 +1245,7 @@ def こんじょう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -
     """こんじょう特性: 状態異常時に物理技の攻撃補正を1.5倍にする。"""
     if (
         ctx.attacker.ailment.is_active
-        and common.is_physical_move(battle, ctx)
-        and ctx.move.name not in ["イカサマ", "ボディプレス"]
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -1258,7 +1253,10 @@ def こんじょう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -
 
 def こんじょう_ignore_burn_penalty(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """こんじょう特性: 状態異常時はやけどの物理半減を無効化する。"""
-    if ctx.attacker.ailment.is_active and common.is_physical_move(battle, ctx):
+    if (
+        ctx.attacker.ailment.is_active
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
+    ):
         value = 4096
     return HandlerReturn(value=value)
 
@@ -1279,7 +1277,7 @@ def はやあし_modify_speed(battle: Battle, ctx: BattleContext, value: int) ->
 
 def はりきり_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
-    if common.is_physical_move(battle, ctx):
+    if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -1287,7 +1285,7 @@ def はりきり_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> H
 def はりきり_modify_accuracy(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
     if (
-        common.is_physical_move(battle, ctx)
+        battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
         and not ctx.move.has_label("ohko")  # 一撃必殺技は命中率ペナルティなし
         and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
     ):
@@ -1366,7 +1364,7 @@ def りゅうのあぎと_modify_atk(battle: Battle, ctx: BattleContext, value: 
 
 def ごりむちゅう_modify_atk(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ごりむちゅう特性: 物理技の攻撃補正を1.5倍にする。"""
-    if common.is_physical_move(battle, ctx) and ctx.move.name not in ["イカサマ", "ボディプレス"]:
+    if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -1380,7 +1378,7 @@ def トランジスタ_modify_atk(battle: Battle, ctx: BattleContext, value: int
 
 def ひとでなし_modify_critical_rank(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ひとでなし特性: どく/もうどく状態の相手への攻撃を必ず急所にする。"""
-    if ctx.defender.has_ailment("どく") or ctx.defender.has_ailment("もうどく"):
+    if ctx.defender.has_ailment("どく", "もうどく"):
         value = 10
     return HandlerReturn(value=value)
 
@@ -1409,8 +1407,7 @@ def スロースタート_modify_atk(battle: Battle, ctx: BattleContext, value: 
     """スロースタート特性: 登場から5ターンの物理攻撃補正を0.5倍にする。"""
     if (
         battle.turn - ctx.attacker.ability.count < 5
-        and common.is_physical_move(battle, ctx)
-        and ctx.move.name not in ["イカサマ", "ボディプレス"]
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -1552,7 +1549,7 @@ def マルチスケイル_modify_damage(battle: Battle, ctx: BattleContext, valu
 
 def こおりのりんぷん_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """こおりのりんぷん特性: 特殊技で受けるダメージを0.5倍にする。"""
-    if common.is_special_move(battle, ctx):
+    if battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
@@ -1569,8 +1566,7 @@ def もふもふ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -
 def ちからもち_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。"""
     if (
-        common.is_physical_move(battle, ctx)
-        and ctx.move.name not in ["イカサマ", "ボディプレス"]
+        battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)

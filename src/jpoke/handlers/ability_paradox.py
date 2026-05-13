@@ -128,7 +128,7 @@ def パラドックスチャージ_on_calc_atk_modifier(battle: Battle, ctx: Bat
         boost_mon = attacker
         stat = "B"
     else:
-        move_category = battle.move_executor.get_effective_move_category(attacker, ctx.move)
+        move_category = battle.move_executor.resolve_move_category(attacker, ctx.move)
         boost_mon = attacker
         stat = "A" if move_category == "物理" else "C"
 
