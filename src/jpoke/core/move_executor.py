@@ -107,7 +107,7 @@ class MoveExecutor:
         Returns:
             処理を継続できる場合はTrue。無効化などで終了する場合はFalse。
         """
-        if self.events.emit(Event.ON_CHECK_IMMUNE, ctx, True):
+        if self.events.emit(Event.ON_CHECK_MOVE_IMMUNE, ctx, True):
             return False
 
         # 変化技はダメージ計算をせず、効果処理のみ行う

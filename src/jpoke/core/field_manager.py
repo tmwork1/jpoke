@@ -114,8 +114,8 @@ class BaseFieldManager(Generic[T]):
 
     def _deactivate_field(self, field: Field):
         """解除イベントを発火してからフィールドを無効化する。"""
-        self.events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
         field.count = 0
+        self.events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
         for player in field.owners:
             field.unregister_handlers(self.events, player)
 

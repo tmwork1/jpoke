@@ -1105,7 +1105,7 @@ def test_みがわり_無効化():
                             ally = [Pokemon("ピカチュウ", moves=["キノコのほうし"])],
                             foe_volatile = {"みがわり": 1},
                             )
-    assert t.check_event_result(battle, Event.ON_CHECK_IMMUNE)
+    assert t.check_event_result(battle, Event.ON_CHECK_MOVE_IMMUNE)
     assert t.log_contains(battle, LogCode.MOVE_IMMUNE)
 
 

@@ -444,3 +444,10 @@ def みがわり_can_use(battle: Battle, ctx: BattleContext, value: Any) -> Hand
         and mon.hp > mon.max_hp // 4
     )
     return HandlerReturn(value=can_use, stop_event=not can_use)
+
+
+def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """みがわりの効果を発動する。"""
+    mon = ctx.attacker
+    battle.volatile_manager.apply(mon, "みがわり", hp=mon.max_hp // 4)
+    return HandlerReturn(value=value)

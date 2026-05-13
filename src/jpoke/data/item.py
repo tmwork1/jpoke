@@ -127,11 +127,6 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=30,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.きゅうこん_cure_freeze,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "きれいなぬけがら": ItemData(
@@ -472,11 +467,6 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=30,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ひかりごけ_cure_burn,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "ひかりのこな": ItemData(
@@ -649,160 +639,60 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.オボンのみ_heal_hp,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.オボンのみ_heal_hp,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "ラムのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ラムのみ_cure_ailments,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.ラムのみ_cure_ailments,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "クラボのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.クラボのみ_cure_paralysis,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.クラボのみ_cure_paralysis,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "カゴのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.カゴのみ_cure_sleep,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.カゴのみ_cure_sleep,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "モモンのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.モモンのみ_cure_poison,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.モモンのみ_cure_poison,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "チーゴのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.チーゴのみ_cure_burn,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.チーゴのみ_cure_burn,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "ナナシのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ナナシのみ_cure_freeze,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.ナナシのみ_cure_freeze,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "キーのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.キーのみ_cure_confusion,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.キーのみ_cure_confusion,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "ヒメリのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.ヒメリのみ_cure_paralysis_hp,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.ヒメリのみ_cure_paralysis_hp,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "オレンのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_BEFORE_ACTION: h.ItemHandler(
-                h.オレンのみ_cure_confusion,
-                subject_spec="source:self",
-                priority=75,
-            ),
-            Event.ON_ITEM_RESTORED: h.ItemHandler(
-                h.オレンのみ_cure_confusion,
-                subject_spec="source:self",
-                priority=75,
-            )
         }
     ),
     "フィラのみ": ItemData(

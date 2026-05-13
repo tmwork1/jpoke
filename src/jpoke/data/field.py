@@ -162,7 +162,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_CHECK_MOVE: h.FieldHandler(
-                h.サイコフィールド_block_priority,
+                h.サイコフィールド_block_priority_move,
                 priority=100,
                 subject_spec="defender:self",
             ),
@@ -185,7 +185,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
             ),
             Event.ON_BEFORE_APPLY_VOLATILE: h.FieldHandler(
-                h.ミストフィールド_prevent_volatile,
+                h.ミストフィールド_prevent_confusion,
                 subject_spec="target:self",
             ),
             Event.ON_TURN_END_4: h.FieldHandler(
@@ -199,7 +199,7 @@ FIELDS: dict[str, FieldData] = {
     "じゅうりょく": FieldData(
         handlers={
             Event.ON_MODIFY_ACCURACY: h.FieldHandler(
-                h.じゅうりょく_accuracy,
+                h.じゅうりょく_modify_accuracy,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_FLOATING: h.FieldHandler(
@@ -311,7 +311,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
             ),
             Event.ON_BEFORE_APPLY_VOLATILE: h.FieldHandler(
-                h.しんぴのまもり_prevent_volatile,
+                h.しんぴのまもり_prevent_confusion,
                 subject_spec="target:self",
             ),
             Event.ON_TURN_END_4: h.FieldHandler(

@@ -415,7 +415,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "みがわり": VolatileData(
         handlers={
-            Event.ON_CHECK_IMMUNE: h.VolatileHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.VolatileHandler(
                 h.みがわり_immune,
                 subject_spec="defender:self",
                 priority=30,

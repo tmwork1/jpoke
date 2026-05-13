@@ -214,7 +214,7 @@ def サイコフィールド_power_modifier(battle: Battle, ctx: BattleContext, 
     return HandlerReturn(value=value)
 
 
-def サイコフィールド_block_priority(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def サイコフィールド_block_priority_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """サイコフィールドで先制技無効"""
     if (
         ctx.move.priority > 0
@@ -241,7 +241,7 @@ def ミストフィールド_prevent_ailment(battle: Battle, ctx: BattleContext,
     return HandlerReturn(value=value)
 
 
-def ミストフィールド_prevent_volatile(battle: Battle, ctx: BattleContext, value: VolatileName) -> HandlerReturn:
+def ミストフィールド_prevent_confusion(battle: Battle, ctx: BattleContext, value: VolatileName) -> HandlerReturn:
     """ミストフィールドで混乱無効"""
     if (
         value == "こんらん"
@@ -253,7 +253,7 @@ def ミストフィールド_prevent_volatile(battle: Battle, ctx: BattleContext
 
 # ===== グローバルフィールドハンドラ =====
 
-def じゅうりょく_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def じゅうりょく_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """重力時の命中率5/3倍"""
     return HandlerReturn(value=apply_fixed_modifier(value, 6840))  # 5/3倍
 
@@ -342,7 +342,7 @@ def しんぴのまもり_prevent_ailment(battle: Battle, ctx: BattleContext, va
     return HandlerReturn(value=value)
 
 
-def しんぴのまもり_prevent_volatile(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def しんぴのまもり_prevent_confusion(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しんぴのまもりで揮発状態無効"""
     if (
         not ctx.can_bypass_screen(battle)

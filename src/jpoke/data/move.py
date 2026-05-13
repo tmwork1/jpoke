@@ -1,3 +1,6 @@
+# TODO : partialによる情報の注入が多すぎる印象
+# handlers/ability.pyの実装を参考に、名前付き関数に置き換える。
+
 """技データ定義モジュール。
 
 Note:
@@ -40,9 +43,9 @@ MOVES: dict[str, MoveData] = {
     # 攻撃技
     # -------------------------
     "わるあがき": MoveData(
-        type="ステラ",
+        type="",
         category="物理",
-        pp=999,
+        pp=99999,
         power=40,
         labels=["contact", "non_encore"],
         handlers={
@@ -52,9 +55,9 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "こんらん": MoveData(
-        type="ステラ",
+        type="",
         category="物理",
-        pp=999,
+        pp=99999,
         power=40,
     ),
     "１０まんばりき": MoveData(
@@ -243,9 +246,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_MOVE_CHARGE: h.MoveHandler(
-                partial(v.charge_hidden_move, name="あなをほる"),
-            )
         }
     ),
     "あばれる": MoveData(
@@ -353,7 +353,6 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "うちおとす": MoveData(
@@ -369,7 +368,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "ウッドホーン": MoveData(
@@ -1028,7 +1026,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=15,
         accuracy=85,
-        labels=["bind", "contact"],
+        labels=["contact"],
     ),
     "ジャイロボール": MoveData(
         type="はがね",
@@ -1055,9 +1053,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_MOVE_CHARGE: h.MoveHandler(
-                partial(v.charge_hidden_move, name="シャドーダイブ"),
-            )
         }
     ),
     "シャドーパンチ": MoveData(
@@ -1085,7 +1080,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko"],
         handlers={
-            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
                 h.ohko_check_immune,
                 subject_spec="defender:self",
             ),
@@ -1144,7 +1139,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "ストーンエッジ": MoveData(
@@ -1161,7 +1155,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-        labels=["bind"],
+
     ),
     "スパーク": MoveData(
         labels=["secondary_effect"],
@@ -1228,9 +1222,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
         labels=["contact"],
         handlers={
-            Event.ON_MOVE_CHARGE: h.MoveHandler(
-                partial(v.charge_hidden_move, name="そらをとぶ"),
-            )
         }
     ),
     "たいあたり": MoveData(
@@ -1258,9 +1249,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_MOVE_CHARGE: h.MoveHandler(
-                partial(v.charge_hidden_move, name="ダイビング"),
-            )
         }
     ),
     "だいふんげき": MoveData(
@@ -1453,7 +1441,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko", "contact"],
         handlers={
-            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
                 h.ohko_check_immune,
                 subject_spec="defender:self",
             ),
@@ -1593,7 +1581,6 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=90,
         accuracy=85,
-        recoil_ratio=1/4,
         labels=["contact"],
     ),
     "とっておき": MoveData(
@@ -1997,7 +1984,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko", "contact"],
         handlers={
-            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
                 h.ohko_check_immune,
                 subject_spec="defender:self",
             ),
@@ -2245,7 +2232,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "ブレイククロー": MoveData(
@@ -2279,7 +2265,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "プレゼント": MoveData(
@@ -2423,7 +2408,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=120,
         accuracy=100,
-        recoil_ratio=1/3,
         labels=["contact"],
     ),
     "まきつく": MoveData(
@@ -2432,7 +2416,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=15,
         accuracy=90,
-        labels=["bind", "contact"],
+        labels=["contact"],
     ),
     "マッハパンチ": MoveData(
         type="かくとう",
@@ -2703,7 +2687,6 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        recoil_ratio=1/4,
         labels=["contact"],
     ),
     "１０まんボルト": MoveData(
@@ -2862,7 +2845,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-        labels=["bind"],
+
     ),
     "うたかたのアリア": MoveData(
         type="みず",
@@ -3290,9 +3273,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["non_negoto", "sound"],
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
-                v.さわぐ_on_apply,
-            )
         }
     ),
     "サンダープリズン": MoveData(
@@ -3301,7 +3281,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=90,
-        labels=["bind"],
+
     ),
     "シードフレア": MoveData(
         labels=["secondary_effect"],
@@ -3467,7 +3447,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko"],
         handlers={
-            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
                 h.ohko_check_immune,
                 subject_spec="defender:self",
             ),
@@ -4100,7 +4080,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-        labels=["bind"],
+
     ),
     "ほのおのちかい": MoveData(
         type="ほのお",
@@ -4131,7 +4111,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=75,
-        labels=["bind"],
+
     ),
     "マジカルシャイン": MoveData(
         type="フェアリー",
@@ -4181,7 +4161,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=20,
         accuracy=100,
-        labels=["bind", "contact"],
+        labels=["contact"],
     ),
     "みずあめボム": MoveData(
         type="くさ",
@@ -5847,7 +5827,7 @@ MOVES: dict[str, MoveData] = {
         priority=-6,
         labels=["wind"],
         handlers={
-            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
                 h.check_blow_immune,
                 priority=30,
             ),
@@ -6013,10 +5993,10 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         accuracy=0,
         handlers={
-            Event.ON_CHECK_IMMUNE: h.MoveHandler(
+            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
                 h.みがわり_can_use,
                 priority=100,
-            )
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 h.みがわり_apply,
             )
