@@ -583,15 +583,14 @@ def ちょうはつ_check_action(battle: Battle, ctx: BattleContext, value: Any)
     return HandlerReturn(value=True)
 
 
-def とくせいなし_on_volatile_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """とくせいなし付与時に特性有効状態を再計算する。"""
-    battle.refresh_effect_enabled_states()
+def とくせいなし_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    battle.add_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
 
 
-def とくせいなし_on_volatile_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def とくせいなし_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """とくせいなし終了時に特性有効状態を再計算する。"""
-    battle.refresh_effect_enabled_states()
+    battle.remove_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
 
 

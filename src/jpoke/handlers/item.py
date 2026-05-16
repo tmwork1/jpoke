@@ -104,6 +104,17 @@ def ちからのハチマキ_boost_physical(battle: Battle, ctx: BattleContext, 
     return HandlerReturn(value=value)
 
 
+def とくせいガード_block_ability_disable(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """とくせいガード: 特性無効化をブロックする。"""
+    ability = ctx.source.ability
+    was_self_disabled = ability.self_disabled
+    ability.reset_enabled()
+    # 自己無効化している特性はリセット後も無効状態を維持する
+    if was_self_disabled:
+        ability.set_disabled_reasons("self")
+    return HandlerReturn(value=value)
+
+
 def ものしりメガネ_boost_special(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """特殊技1.1倍"""
     if ctx.move.category == "特殊":

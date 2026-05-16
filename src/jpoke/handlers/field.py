@@ -268,15 +268,15 @@ def トリックルーム_reverse_speed(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=-value)
 
 
-def マジックルーム_check_item_enabled(battle: Battle, ctx: BattleContext, value: set[AbilityDisabledReason]) -> HandlerReturn:
-    """マジックルーム中は持ち物効果を無効化する。"""
-    value.add("マジックルーム")
+def マジックルーム_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """マジックルーム適用時に持ち物無効状態を再計算する。"""
+    battle.add_item_disabled_reason(ctx.source, "マジックルーム")
     return HandlerReturn(value=value)
 
 
-def マジックルーム_on_field_deactivate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def マジックルーム_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジックルーム解除時に持ち物有効状態を再計算する。"""
-    battle.refresh_effect_enabled_states()
+    battle.remove_item_disabled_reason(ctx.source, "マジックルーム")
     return HandlerReturn(value=value)
 
 

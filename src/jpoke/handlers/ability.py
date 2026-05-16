@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, Type, Stat, AbilityDisabledReason, ItemDisabledReason, Weather, Terrain, AilmentName
+from jpoke.utils.type_defs import RoleSpec, Type, Stat, AbilityDisabledReason, ItemDisabledReason, Weather, Terrain, AilmentName, Side
 from jpoke.utils.constants import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
@@ -172,13 +172,13 @@ def _modify_by_move_condition(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def activate_weather_with_log(battle: Battle,
-                              ctx: BattleContext,
-                              value: Any,
-                              *,
-                              weather: Weather,
-                              count: int,
-                              source: Pokemon | None = None) -> HandlerReturn:
+def activate_weather(battle: Battle,
+                     ctx: BattleContext,
+                     value: Any,
+                     *,
+                     weather: Weather,
+                     count: int,
+                     source: Pokemon | None = None) -> HandlerReturn:
     """天候を変更する"""
     if source is None:
         source = ctx.source
@@ -314,7 +314,7 @@ def いしあたま_ignore_recoil(battle: Battle, ctx: BattleContext, value: int
     return HandlerReturn(value=value)
 
 
-def いかく_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いかく_modify_stat(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いかく特性: 登場時に相手のこうげきを1段階下げる。"""
     return common.modify_stat(
         battle,
@@ -389,12 +389,28 @@ def かげふみ_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=result)
 
 
-def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, value: set[AbilityDisabledReason]) -> HandlerReturn:
-    """かがくへんかガス無効化判定"""
-    if ctx.source.ability.has_flag("gas_proof"):
-        value.discard("かがくへんかガス")
-    else:
-        value.add("かがくへんかガス")
+def _gas_add_disabled_reason(battle: Battle, mon: Pokemon) -> None:
+    if not mon.ability.has_flag("gas_proof"):
+        battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+
+
+def かがくへんかガス_activate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    mon = ctx.source
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    _gas_add_disabled_reason(battle.foe(mon))
+    return HandlerReturn(value=value)
+
+
+def かがくへんかガス_foe_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かがくへんかガス特性: 特性を無効化する。"""
+    _gas_add_disabled_reason(ctx.source)
+    return HandlerReturn(value=value)
+
+
+def かがくへんかガス_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かがくへんかガス特性: 特性無効化を解除する。"""
+    mon = battle.foe(ctx.source)
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
     return HandlerReturn(value=value)
 
 
@@ -796,12 +812,18 @@ def かちき_on_stat_down(battle: Battle, ctx: BattleContext, value: dict[Stat,
     return HandlerReturn(value=value)
 
 
-def かるわざ_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かるわざ_update_state(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かるわざ特性: 入場時に発動可否の初期状態を記録する。"""
     mon = ctx.source
     # "idle": 入場時に持ち物あり（消失で発動可能）
     # "inactive": 入場時に持ち物なし（この在場中は発動しない）
     mon.ability.state = "idle" if mon.has_item() else "inactive"
+    return HandlerReturn(value=value)
+
+
+def かるわざ_deactivate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """かるわざ特性: 交代で状態を初期化する。"""
+    ctx.source.ability.state = ""
     return HandlerReturn(value=value)
 
 
@@ -1583,11 +1605,6 @@ def トレース_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) ->
         return HandlerReturn(value=value)
 
     battle.set_ability(mon, copied_ability)
-    announce_ability_triggered(battle, ctx, value, mon=mon)
-
-    # コピー直後に入場時処理を再評価し、いかく等の登場時効果を即時反映する。
-    # TODO : Event.ON_SWITCH_INには他の処理も発生する懸念がある。即時発動特性を発火させる専用イベントを作成し、data/にハンドラを追加すべき。
-    battle.events.emit(Event.ON_SWITCH_IN, BattleContext(source=mon))
     return HandlerReturn(value=value)
 
 
@@ -1757,8 +1774,13 @@ def ムラっけ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def ぶきよう_check_item_enabled(battle: Battle, ctx: BattleContext, value: set[ItemDisabledReason]) -> HandlerReturn:
-    value.add("ぶきよう")
+def ぶきよう_apply(battle: Battle, ctx: BattleContext, value: set[ItemDisabledReason]) -> HandlerReturn:
+    battle.add_item_disabled_reason(ctx.source, "ぶきよう")
+    return HandlerReturn(value=value)
+
+
+def ぶきよう_remove(battle: Battle, ctx: BattleContext, value: set[ItemDisabledReason]) -> HandlerReturn:
+    battle.remove_item_disabled_reason(ctx.source, "ぶきよう")
     return HandlerReturn(value=value)
 
 
@@ -1858,21 +1880,20 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContex
 
 
 def かたやぶり_activate(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
-    ability = ctx.defender.ability
-    if ability.has_flag("mold_breaker_ignorable"):
-        ability.add_disable_reason("かたやぶり")
+    mon = ctx.defender
+    if mon.ability.has_flag("mold_breaker_ignorable"):
+        battle.add_ability_disabled_reason(mon, "かたやぶり")
     return HandlerReturn(value=value)
 
 
 def かたやぶり_deactivate(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
-    ability = ctx.defender.ability
-    ability.remove_disable_reason("かたやぶり")
+    battle.remove_ability_disabled_reason(ctx.defender, "かたやぶり")
     return HandlerReturn(value=value)
 
 
 def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。"""
-    ctx.defender.ability.add_disable_reason("self")
+    battle.add_ability_disabled_reason(ctx.defender, "self")
     battle.modify_hp(ctx.defender, r=-1/8)
     announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
     return HandlerReturn(value=0)

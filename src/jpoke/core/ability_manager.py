@@ -34,44 +34,60 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def refresh_ability_enabled_states(self) -> dict[str, set[AbilityDisabledReason]]:
-        """場の状況に応じて特性の有効/無効状態を再計算する。
-        Returns:
-            dict[str, set[DisabledReason]]: 特性の有効/無効状態の辞書
-        """
-        results = {}
-        for i, mon in enumerate(self.battle.actives):
-            if (
-                mon is None
-                or mon.ability.self_disabled
-            ):
-                continue
-
-            reasons = self.battle.events.emit(
-                Event.ON_CHECK_ABILITY_ENABLED,
-                BattleContext(source=mon),
-                set(),
-            )
-            mon.ability.set_disabled_reasons(reasons)
-            results[f"ability_{i+1}"] = reasons
-
-        # こだいかっせい・クォークチャージの発動状態を再判定する。
-        self.battle.events.emit(Event.ON_REFRESH_PARADOX_BOOST)
-
-        return results
-
     def set_ability(self, mon: Pokemon, ability: str) -> None:
-        """ポケモンの特性を更新し、ハンドラ登録状態を同期する。"""
+        """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。
+        Args:
+            mon: 特性を変更するポケモン
+            ability: 新しい特性の名前
+        """
         if mon.ability.orig_name == ability:
             return
 
         is_active = self.battle.is_active(mon)
+        ctx = BattleContext(source=mon)
 
         if is_active:
+            self.battle.events.emit(Event.ON_ABILITY_DISABLED, ctx)
             mon.ability.unregister_handlers(self.battle.events, mon)
 
         mon.ability = Ability(ability)
 
         if is_active:
             mon.ability.register_handlers(self.battle.events, mon)
-            self.refresh_ability_enabled_states()
+            self.battle.events.emit(Event.ON_ABILITY_ENABLED, ctx)
+
+    def add_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
+        """特性を無効にする理由を追加し、有効状態に変化があればイベントを発火する。
+        Args:
+            mon: 対象のポケモン
+            reason: 無効化の理由を示すキー
+        Returns:
+            特性の有効状態に変化があった場合はTrue、そうでない場合はFalse
+        """
+        was_enabled = mon.ability.enabled
+        mon.ability.add_disable_reason(reason)
+        is_enabled = mon.ability.enabled
+
+        if was_enabled and not is_enabled:
+            self.battle.events.emit(Event.ON_ABILITY_DISABLED,
+                                    BattleContext(source=mon))
+            return True
+        return False
+
+    def remove_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
+        """特性を無効にする理由を削除し、有効状態に変化があればイベントを発火する。
+        Args:
+            mon: 対象のポケモン
+            reason: 無効化の理由を示すキー
+        Returns:
+            特性の有効状態に変化があった場合はTrue、そうでない場合はFalse
+        """
+        was_enabled = mon.ability.enabled
+        mon.ability.remove_disable_reason(reason)
+        is_enabled = mon.ability.enabled
+
+        if not was_enabled and is_enabled:
+            self.battle.events.emit(Event.ON_ABILITY_ENABLED,
+                                    BattleContext(source=mon))
+            return True
+        return False

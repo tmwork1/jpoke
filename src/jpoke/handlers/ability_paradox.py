@@ -36,11 +36,6 @@ def _select_paradox_boost_stat(mon: Pokemon) -> Stat:
     return best_stat
 
 
-def _can_consume_boost_energy(mon: Pokemon) -> bool:
-    """ブーストエナジーを今消費できる状態かを判定する。"""
-    return mon.has_item("ブーストエナジー") and mon.item.enabled
-
-
 def _deactivate_paradox_boost(mon: Pokemon) -> None:
     """パラドックス補正状態を解除する。"""
     mon.paradox_boost_active = False
@@ -55,39 +50,39 @@ def _activate_paradox_boost(battle: Battle, mon: Pokemon, source: str) -> None:
     mon.paradox_boost_source = source
     announce_ability_triggered(battle, None, None, mon=mon)
 
-    if source == "item" and _can_consume_boost_energy(mon):
-        # ブーストエナジー起動時は消費する。
+    # ブーストエナジーを消費する
+    if source == "item" and mon.has_item("ブーストエナジー"):
         battle.consume_item(mon)
 
 
-def _refresh_paradox_boost(battle: Battle, mon: Pokemon) -> None:
-    """場状態と所持アイテムからパラドックス補正の状態を再計算する。"""
-    ability_name = mon.ability.orig_name
+def refresh_paradox_charge_state(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """こだいかっせい/クォークチャージの補正状態を更新する。"""
+    mon = ctx.source
 
     # 能力ごとに参照する場の状態が異なる。
-    if ability_name == "こだいかっせい":
+    if mon.ability.name == "こだいかっせい":
         field_source = "weather"
         field_active = battle.weather.sunny
     else:
         field_source = "terrain"
         field_active = battle.terrain.name == "エレキフィールド"
 
-    can_consume_item = _can_consume_boost_energy(mon)
+    can_consume_item = mon.has_item("ブーストエナジー")
 
     # すでにブーストが有効な場合は、場の状態とアイテム消費の両方を考慮して解除の要否を判定する。
     if mon.paradox_boost_active:
         # アイテム由来のブーストは場の変化で解除されない。
         if mon.paradox_boost_source == "item":
-            return
+            return HandlerReturn(value=value)
 
         # 場由来のブーストで場が継続しているなら解除されない。
         if mon.paradox_boost_source == field_source and field_active:
-            return
+            return HandlerReturn(value=value)
 
         _deactivate_paradox_boost(mon)
         if can_consume_item:
             _activate_paradox_boost(battle, mon, "item")
-        return
+        return HandlerReturn(value=value)
 
     # ブーストが有効でない場合は、場の状態とアイテム消費の両方を考慮して発動の要否を判定する。
     # 場条件が成立している場合は、アイテムより場由来を優先する。
@@ -96,14 +91,10 @@ def _refresh_paradox_boost(battle: Battle, mon: Pokemon) -> None:
     elif can_consume_item:
         _activate_paradox_boost(battle, mon, "item")
 
-
-def パラドックスチャージ_refresh(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """こだいかっせい/クォークチャージの補正状態を更新する。"""
-    _refresh_paradox_boost(battle, ctx.source)
     return HandlerReturn(value=value)
 
 
-def パラドックスチャージ_on_calc_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """素早さ補正時: S が強化対象なら 1.5 倍補正を適用する。"""
     mon = ctx.source
     if mon.paradox_boost_active and mon.paradox_boost_stat == "S":
@@ -111,7 +102,7 @@ def パラドックスチャージ_on_calc_speed(battle: Battle, ctx: BattleCont
     return HandlerReturn(value=value)
 
 
-def パラドックスチャージ_on_calc_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def apply_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """攻撃側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
     attacker = ctx.attacker
     defender = ctx.defender
@@ -132,7 +123,7 @@ def パラドックスチャージ_on_calc_atk_modifier(battle: Battle, ctx: Bat
     return HandlerReturn(value=value)
 
 
-def パラドックスチャージ_on_calc_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def apply_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
     stat = "B" if battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move) else "D"
     if (

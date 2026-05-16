@@ -13,7 +13,7 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, SideField, \
-    ItemLostCause, HPChangeReason, MoveCategory
+    HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason, ItemLostCause
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -408,19 +408,6 @@ class Battle:
         """
         return self.speed_calculator.calc_action_order()
 
-    def refresh_effect_enabled_states(self):
-        """場の状況に応じて特性・アイテム効果の有効/無効状態を再計算する。
-        特性とアイテムは相互に影響を与える可能性があるため、両方を再計算し、結果が安定するまで繰り返す。
-        """
-        prev_results = {}
-        while True:
-            results = {}
-            results |= self.ability_manager.refresh_ability_enabled_states()
-            results |= self.item_manager.refresh_item_enabled_states()
-            if results == prev_results:
-                break
-            prev_results = results
-
     def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """TODスコアを計算（TurnControllerへの委譲）。
 
@@ -640,7 +627,7 @@ class Battle:
         self.switch_manager.run_interrupt_switch(flag, emit_on_each_switch)
 
     def run_faint_switch(self):
-        """瀕死による交代を実行（SwitchManagerへの委議）。"""
+        """瀕死による交代を実行（SwitchManagerへの委譲）。"""
         self.switch_manager.run_faint_switch()
 
     def add_command_log(self, source: Player | Pokemon, command: Command):
@@ -722,3 +709,19 @@ class Battle:
             有効な技のカテゴリ（"物理"、"特殊"、"変化"のいずれか）
         """
         return self.move_executor.resolve_move_category(attacker, move)
+
+    def add_ability_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
+        """特性の無効化理由を追加する（AbilityManagerへの委譲）。"""
+        return self.ability_manager.add_disabled_reason(mon, reason)
+
+    def remove_ability_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
+        """特性の無効化理由を削除する（AbilityManagerへの委譲）。"""
+        return self.ability_manager.remove_disabled_reason(mon, reason)
+
+    def add_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
+        """道具の無効化理由を追加する（ItemManagerへの委譲）。"""
+        return self.item_manager.add_disabled_reason(mon, reason)
+
+    def remove_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
+        """道具の無効化理由を削除する（ItemManagerへの委譲）。"""
+        return self.item_manager.remove_disabled_reason(mon, reason)

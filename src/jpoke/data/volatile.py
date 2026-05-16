@@ -286,15 +286,11 @@ VOLATILES: dict[str, VolatileData] = {
     "とくせいなし": VolatileData(
         handlers={
             Event.ON_APPLY_VOLATILE: h.VolatileHandler(
-                h.とくせいなし_on_volatile_apply,
+                h.とくせいなし_apply,
                 subject_spec="source:self",
             ),
             Event.ON_VOLATILE_END: h.VolatileHandler(
-                h.とくせいなし_on_volatile_end,
-                subject_spec="source:self",
-            ),
-            Event.ON_CHECK_ABILITY_ENABLED: h.VolatileHandler(
-                h.とくせいなし_check_ability_enabled,
+                h.とくせいなし_remove,
                 subject_spec="source:self",
             ),
         }

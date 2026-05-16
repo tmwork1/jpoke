@@ -61,7 +61,6 @@ class SwitchManager:
         for volatile in mon.volatiles.values():
             volatile.register_handlers(self.events, mon)
 
-        self.battle.refresh_effect_enabled_states()
         self.battle.add_event_log(
             mon,
             LogCode.SWITCH_IN,
@@ -167,7 +166,6 @@ class SwitchManager:
             self.run_switch(player, new, emit_switch_in_event=False)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
-        self.battle.refresh_effect_enabled_states()
         self.events.emit(Event.ON_SWITCH_IN)
 
         # だっしゅつパックによる割り込みフラグを更新

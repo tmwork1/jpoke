@@ -6,6 +6,8 @@ AbilityDisabledReason = Literal[
 ItemDisabledReason = Literal[
     "self", "ぶきよう", "マジックルーム"
 ]
+ItemLostCause = Literal["", "consume", "remove", "swap", "steal", "burn", "gas"]  # TODO : ItemDisabledReasonに統合する
+
 
 HandlerSource = Literal["ability", "item", "move", "ailment", "volatile", "field"]
 
@@ -128,8 +130,6 @@ StatChangeReason = Literal[
     "いかく",
     "ミラーアーマー",        # ミラーアーマーによる反射
 ]
-
-ItemLostCause = Literal["", "consume", "remove", "swap", "steal", "burn", "gas"]
 
 MoveLabel = Literal[
     "bite",  # かみつく系。がんじょうあご等の対象判定に使う。

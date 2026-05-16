@@ -43,6 +43,9 @@ class Event(Enum):
     ON_DEACTIVATE_MOLD_BREAKER = auto()
     ON_QUEERY_BLOW_IMMUNE = auto()
     ON_ABILITY_ENABLED = auto()  # 特性が有効になったとき（即時発動系の特性のトリガー用）
+    ON_ABILITY_DISABLED = auto()  # 特性が無効になったとき（かがくへんかガスのトリガー用）
+    ON_ITEM_ENABLED = auto()  # 道具効果が有効になったとき（ぶきようのトリガー用）
+    ON_ITEM_DISABLED = auto()  # 道具効果が無効になったとき（ぶきようのトリガー用）
 
     # ------------------------------------------------------------------ #
     # アクション系イベント
@@ -55,6 +58,10 @@ class Event(Enum):
     # emit: core/field_manager.py（天候・地形が変化した直後）
     # handle: ability.py（こだいかっせい・クォークチャージの再判定）など
     ON_FIELD_CHANGE = auto()
+
+    # emit: core/field_manager.py（場効果が発動した直後）
+    # handle: data/field.py（マジックルーム適用時の持ち物再判定など）
+    ON_FIELD_ACTIVATE = auto()
 
     # emit: core/field_manager.py（場効果が解除される直前）
     # handle: data/field.py（マジックルーム終了時の持ち物再判定など）
@@ -269,15 +276,6 @@ class Event(Enum):
     # emit: core/pokemon_state.py（いかく等の割り込み処理で怯え確認）
     # handle: ability.py（マイペース・にげごし等で怯えを無効化）
     ON_CHECK_NERVOUS = auto()
-
-    # emit: core/battle.py（特性の有効/無効状態を判定）
-    # handle: ability.py（かがくへんかガス）/ item.py（とくせいガード）
-    # priority: 10(かがくへんかガス無効化) -> 30(とくせいガード保護)
-    ON_CHECK_ABILITY_ENABLED = auto()
-
-    # emit: core/item_manager.py（道具効果の有効/無効状態を判定）
-    # handle: ability.py（ぶきよう等、道具効果を抑制する特性）
-    ON_CHECK_ITEM_ENABLED = auto()
 
     # emit: core/battle.py（持ち物の交換・奪取・除去可否を判定）
     # handle: ability.py（ねんちゃく）

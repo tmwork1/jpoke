@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from .battle import Battle
     from .event_manager import EventManager
 
-from jpoke.utils.type_defs import AbilityDisabledReason, ItemLostCause
+from jpoke.utils.type_defs import AbilityDisabledReason, ItemDisabledReason, ItemLostCause
 from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Move, Item
 
@@ -37,29 +37,6 @@ class ItemManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def refresh_item_enabled_states(self) -> dict[str, set[AbilityDisabledReason]]:
-        """場の状況に応じて道具効果の有効/無効状態を再計算する。
-        Returns:
-            dict[str, set[DisabledReason]]: 道具効果の有効/無効状態の辞書
-        """
-        results = {}
-        for i, mon in enumerate(self.battle.actives):
-            if (
-                mon is None
-                or not mon.has_item()
-                or mon.item.self_disabled
-            ):
-                continue
-            reasons = self.events.emit(
-                Event.ON_CHECK_ITEM_ENABLED,
-                BattleContext(source=mon),
-                set(),
-            )
-            mon.item.set_disabled_reasons(reasons)
-            results[f"item_{i+1}"] = reasons
-
-        return results
-
     def set_item(self, mon: Pokemon, item: str) -> None:
         """ポケモンの持ち物を更新し、ハンドラ登録も同期する。
 
@@ -68,13 +45,52 @@ class ItemManager:
             item: 新しい持ち物
         """
         is_active = self.battle.is_active(mon)
+        ctx = BattleContext(source=mon)
+
         if mon.has_item():
             mon.item.unregister_handlers(self.events, mon)
+            self.battle.events.emit(Event.ON_ITEM_DISABLED, ctx)
 
         mon.item = Item(item)
         if is_active:
             mon.item.register_handlers(self.events, mon)
-            self.refresh_item_enabled_states()
+            self.battle.events.emit(Event.ON_ITEM_ENABLED, ctx)
+
+    def add_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
+        """アイテムを無効にする理由を追加し、有効状態に変化があればイベントを発火する。
+        Args:
+            mon: 対象のポケモン
+            reason: 無効化の理由を示すキー
+        Returns:
+            アイテムの有効状態に変化があった場合はTrue、そうでない場合はFalse
+        """
+        was_enabled = mon.item.enabled
+        mon.item.add_disable_reason(reason)
+        is_enabled = mon.item.enabled
+
+        if was_enabled and not is_enabled:
+            self.battle.events.emit(Event.ON_ITEM_DISABLED,
+                                    BattleContext(source=mon))
+            return True
+        return False
+
+    def remove_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
+        """アイテムを無効にする理由を削除し、有効状態に変化があればイベントを発火する。
+        Args:
+            mon: 対象のポケモン
+            reason: 無効化の理由を示すキー
+        Returns:
+            アイテムの有効状態に変化があった場合はTrue、そうでない場合はFalse
+        """
+        was_enabled = mon.item.enabled
+        mon.item.remove_disable_reason(reason)
+        is_enabled = mon.item.enabled
+
+        if not was_enabled and is_enabled:
+            self.battle.events.emit(Event.ON_ITEM_ENABLED,
+                                    BattleContext(source=mon))
+            return True
+        return False
 
     def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
         """対象の道具を喪失状態にする。"""

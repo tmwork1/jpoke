@@ -379,12 +379,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=False,
         fling_power=30,
         handlers={
-            Event.ON_CHECK_ABILITY_ENABLED: h.ItemHandler(
-                lambda *args: HandlerReturn(value=True, stop_event=True),
-                subject_spec="source:self",
-                priority=30,
-            ),
-            Event.ON_CHECK_ABILITY_ENABLED: h.ItemHandler(
+            Event.ON_ABILITY_DISABLED: h.ItemHandler(
                 lambda *args: HandlerReturn(value=True, stop_event=True),
                 subject_spec="target:self",
                 priority=200,

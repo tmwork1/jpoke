@@ -7,7 +7,7 @@ Note:
 from functools import partial
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.handlers import common, ability as h, ability_paradox as hp
+from jpoke.handlers import common, ability as h, ability_paradox as paradox
 from .models import AbilityData
 
 
@@ -78,9 +78,13 @@ ABILITIES: dict[str, AbilityData] = {
     "あめふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="あめ", count=5),
+                partial(h.activate_weather, weather="あめ", count=5),
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                partial(h.activate_weather, weather="あめ", count=5),
+                subject_spec="source:self",
+            ),
         }
     ),
     "ありじごく": AbilityData(
@@ -94,9 +98,13 @@ ABILITIES: dict[str, AbilityData] = {
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.いかく_on_switch_in,
+                h.いかく_modify_stat,
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.いかく_modify_stat,
+                subject_spec="source:self",
+            ),
         },
     ),
     "いかりのこうら": AbilityData(),
@@ -187,10 +195,18 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="おおひでり", count=1),
+                partial(h.activate_weather, weather="おおひでり", count=1),
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                partial(h.activate_weather, weather="おおひでり", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
+                partial(h.deactivate_strong_weather, weather="おおひでり"),
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 partial(h.deactivate_strong_weather, weather="おおひでり"),
                 subject_spec="source:self",
             ),
@@ -213,14 +229,27 @@ ABILITIES: dict[str, AbilityData] = {
             "gas_proof",
         ],
         handlers={
-            Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.announce_ability_triggered,
+            Event.ON_SWITCH_IN: [
+                h.AbilityHandler(
+                    h.かがくへんかガス_activate,
+                    subject_spec="source:self",
+                ),
+                h.AbilityHandler(
+                    h.かがくへんかガス_foe_switch_in,
+                    subject_spec="source:foe",
+                ),
+            ],
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.かがくへんかガス_activate,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_ABILITY_ENABLED: h.AbilityHandler(
-                h.かがくへんかガス_check_enabled,
-                subject_spec="source:foe",
-                priority=10,
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.かがくへんかガス_remove,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
+                h.かがくへんかガス_remove,
+                subject_spec="source:self",
             )
         }
     ),
@@ -259,6 +288,10 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
                 h.かたやぶり_activate,
                 subject_spec="attacker:self",
@@ -281,7 +314,15 @@ ABILITIES: dict[str, AbilityData] = {
     "かるわざ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.かるわざ_on_switch_in,
+                h.かるわざ_update_state,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.かるわざ_update_state,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
+                h.かるわざ_deactivate,
                 subject_spec="source:self",
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
@@ -452,30 +493,35 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                hp.パラドックスチャージ_refresh,
+                paradox.refresh_paradox_charge_state,
+                subject_spec="source:self",
+                priority=200,
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
-                hp.パラドックスチャージ_refresh,
+                paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
             ),
             Event.ON_REFRESH_PARADOX_BOOST: h.AbilityHandler(
-                hp.パラドックスチャージ_refresh,
+                paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
-                hp.パラドックスチャージ_on_calc_speed,
+                paradox.modify_speed,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                hp.パラドックスチャージ_on_calc_atk_modifier,
+                paradox.apply_atk_modifier,
                 subject_spec="attacker:self",
             ),
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                hp.パラドックスチャージ_on_calc_def_modifier,
+                paradox.apply_def_modifier,
                 subject_spec="defender:self",
             ),
         }
@@ -698,7 +744,7 @@ ABILITIES: dict[str, AbilityData] = {
     "すなおこし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="すなあらし", count=5),
+                partial(h.activate_weather, weather="すなあらし", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1115,7 +1161,7 @@ ABILITIES: dict[str, AbilityData] = {
     "はじまりのうみ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="おおあめ", count=1),
+                partial(h.activate_weather, weather="おおあめ", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -1215,7 +1261,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ひでり": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="はれ", count=5),
+                partial(h.activate_weather, weather="はれ", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1318,10 +1364,18 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ぶきよう": AbilityData(
         handlers={
-            Event.ON_CHECK_ITEM_ENABLED: h.AbilityHandler(
-                h.ぶきよう_check_item_enabled,
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ぶきよう_apply,
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ぶきよう_apply,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
+                h.ぶきよう_remove,
+                subject_spec="source:self",
+            ),
         }
     ),
     "へんげんじざい": AbilityData(
@@ -1523,7 +1577,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ゆきふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="ゆき", count=5),
+                partial(h.activate_weather, weather="ゆき", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1711,30 +1765,30 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                hp.パラドックスチャージ_refresh,
+                paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
-                hp.パラドックスチャージ_refresh,
+                paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
             ),
             Event.ON_REFRESH_PARADOX_BOOST: h.AbilityHandler(
-                hp.パラドックスチャージ_refresh,
+                paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
-                hp.パラドックスチャージ_on_calc_speed,
+                paradox.modify_speed,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                hp.パラドックスチャージ_on_calc_atk_modifier,
+                paradox.apply_atk_modifier,
                 subject_spec="attacker:self",
             ),
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                hp.パラドックスチャージ_on_calc_def_modifier,
+                paradox.apply_def_modifier,
                 subject_spec="defender:self",
             ),
         }
@@ -1938,7 +1992,7 @@ ABILITIES: dict[str, AbilityData] = {
     "デルタストリーム": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather_with_log, weather="らんきりゅう", count=1),
+                partial(h.activate_weather, weather="らんきりゅう", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(

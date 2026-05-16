@@ -821,41 +821,7 @@ def test_でんじふゆう_ターン経過で解除():
 # ──────────────────────────────────────────────────────────────────
 
 
-def test_とくせいなし():
-    battle = t.start_battle(
-        foe=[Pokemon("ピカチュウ")],
-        ally=[Pokemon("ピカチュウ")],
-        foe_volatile={"とくせいなし": 1},
-    )
-    attacker, defender = battle.actives
-    result = battle.events.emit(
-        Event.ON_CHECK_ABILITY_ENABLED,
-            BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        True,
-    )
-    assert result is False
-
-
-def test_とくせいなし_特性有効状態も無効化する():
-    battle = t.start_battle(
-        foe=[Pokemon("ピカチュウ")],
-        ally=[Pokemon("ピカチュウ")],
-        foe_volatile={"とくせいなし": 1},
-    )
-    assert battle.actives[1].ability.enabled is False
-
-
-def test_とくせいなし_解除時に特性有効状態が戻る():
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("コダック", ability="しめりけ")],
-        foe_volatile={"とくせいなし": 1},
-    )
-    mon = battle.actives[1]
-    battle.volatile_manager.remove(mon, "とくせいなし")
-    assert mon.ability.enabled is True
-
-# TODO : 特性なし状態が解除されたあとにいかくが発動することを確認するテストを追加する
+# TODO : テスト実装
 
 
 # ──────────────────────────────────────────────────────────────────

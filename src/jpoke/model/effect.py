@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, Any
 if TYPE_CHECKING:
     from jpoke.core import EventManager, Handler, Player
     from jpoke.data.models import Handlers
@@ -37,7 +37,7 @@ class GameEffect:
         """
         self.data: EffectData = data
         self.revealed: bool = False
-        self._disabled_reasons: set[AbilityDisabledReason] = set()
+        self._disabled_reasons: set[Any] = set()
 
     @property
     def name(self) -> str:
@@ -81,7 +81,7 @@ class GameEffect:
         """
         return "self" in self._disabled_reasons
 
-    def add_disable_reason(self, reason: AbilityDisabledReason) -> None:
+    def add_disable_reason(self, reason: Any) -> None:
         """
         効果を無効にする理由を追加する。
         Args:
@@ -89,7 +89,7 @@ class GameEffect:
         """
         self._disabled_reasons.add(reason)
 
-    def remove_disable_reason(self, reason: AbilityDisabledReason) -> None:
+    def remove_disable_reason(self, reason: Any) -> None:
         """効果を有効にする理由を削除する。
 
         Args:
@@ -97,7 +97,7 @@ class GameEffect:
         """
         self._disabled_reasons.discard(reason)
 
-    def set_disabled_reasons(self, reasons: set[AbilityDisabledReason]) -> None:
+    def set_disabled_reasons(self, reasons: set[Any]) -> None:
         """無効化の理由を置き換える。
 
         Args:

@@ -228,12 +228,16 @@ FIELDS: dict[str, FieldData] = {
     ),
     "マジックルーム": FieldData(
         handlers={
-            Event.ON_CHECK_ITEM_ENABLED: h.FieldHandler(
-                h.マジックルーム_check_item_enabled,
+            Event.ON_FIELD_ACTIVATE: h.FieldHandler(
+                h.マジックルーム_apply,
                 subject_spec="source:self",
             ),
             Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
-                h.マジックルーム_on_field_deactivate,
+                h.マジックルーム_remove,
+                subject_spec="source:self",
+            ),
+            Event.ON_SWITCH_IN: h.FieldHandler(
+                h.マジックルーム_apply,
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END_4: h.FieldHandler(
