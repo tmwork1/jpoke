@@ -15,7 +15,7 @@ class LogCode(Enum):
     MODIFY_STAT = auto()
     SWITCH_IN = auto()
     SWITCH_OUT = auto()
-    CONSUME_ITEM = auto()
+    LOSE_ITEM = auto()
     CURE_AILMENT = auto()
     APPLY_AILMENT = auto()
     ABILITY_TRIGGERED = auto()

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from .event_manager import EventManager
 
 from jpoke.utils.type_defs import AbilityDisabledReason, ItemLostCause
-from jpoke.enums import Event
+from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Move, Item
 
 from .context import BattleContext
@@ -84,11 +84,15 @@ class ItemManager:
         item = target.item
         item.unregister_handlers(self.events, target)
         item.lose(cause=cause)
+        self.battle.add_event_log(
+            target,
+            LogCode.LOSE_ITEM,
+            payload={"item": item.name, "reason": cause}
+        )
         return True
 
     def consume_item(self, target: Pokemon) -> bool:
         """対象の道具を消費状態にする。"""
-        # TODO : アイテム消費時のログ記入も行う
         return self.lose_item(target, cause="consume")
 
     def can_change_item(self,

@@ -34,8 +34,6 @@ class ItemHandler(Handler):
 def _consume_self_item(battle: Battle, target) -> bool:
     if not target.has_item():
         return False
-
-    battle.add_event_log(target, LogCode.CONSUME_ITEM, payload={"item": target.item.name})
     battle.consume_item(target)
     return True
 

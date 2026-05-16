@@ -533,10 +533,9 @@ class Battle:
                   v: int = 0,
                   r: float = 0,
                   source: Pokemon | None = None,
-                  reason: HPChangeReason = "",
-                  move: Move | None = None) -> int:
+                  move: Move | None = None,
+                  reason: HPChangeReason = "") -> int:
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
-        # TODO reason と move の役割の違いを明確にする。reasonのみで十分かどうか確認する
         return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source, move=move)
 
     def modify_stat(self,

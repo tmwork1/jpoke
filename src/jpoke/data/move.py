@@ -1,6 +1,3 @@
-# TODO : partialによる情報の注入が多すぎる印象
-# handlers/ability.pyの実装を参考に、名前付き関数に置き換える。
-
 """技データ定義モジュール。
 
 Note:

@@ -11,8 +11,11 @@ from jpoke.enums import LogCode
 from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
 from jpoke.utils.type_defs import Stat
 
+from .ability import announce_ability_triggered
 
 # TODO : Pokemonクラスのメソッドとして実装すべき
+
+
 def _effective_stat_with_rank(mon: Pokemon, stat: str) -> float:
     """指定能力の実効値（ランク補正込み）を返す。"""
     return mon.stats[stat] * rank_modifier(mon.rank[stat])
@@ -50,18 +53,10 @@ def _activate_paradox_boost(battle: Battle, mon: Pokemon, source: str) -> None:
     mon.paradox_boost_active = True
     mon.paradox_boost_stat = _select_paradox_boost_stat(mon)
     mon.paradox_boost_source = source
-
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.orig_name, "success": True}
-    )
+    announce_ability_triggered(battle, None, None, mon=mon)
 
     if source == "item" and _can_consume_boost_energy(mon):
         # ブーストエナジー起動時は消費する。
-        battle.add_event_log(mon, LogCode.CONSUME_ITEM, payload={"item": "ブーストエナジー"})
         battle.consume_item(mon)
 
 

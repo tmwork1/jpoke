@@ -42,6 +42,7 @@ class Event(Enum):
     ON_ACTIVATE_MOLD_BREAKER = auto()
     ON_DEACTIVATE_MOLD_BREAKER = auto()
     ON_QUEERY_BLOW_IMMUNE = auto()
+    ON_ABILITY_ENABLED = auto()  # 特性が有効になったとき（即時発動系の特性のトリガー用）
 
     # ------------------------------------------------------------------ #
     # アクション系イベント

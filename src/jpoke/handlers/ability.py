@@ -18,8 +18,6 @@ from jpoke.core import HandlerReturn, Handler
 from . import common
 
 
-# TODO : ability_triggered のログを記録する処理を共通関数化する
-
 AEGISLASH_NAME = "ギルガルド"
 AEGISLASH_SHIELD_ALIAS = "ギルガルド(シールド)"
 AEGISLASH_BLADE_ALIAS = "ギルガルド(ブレード)"
@@ -46,7 +44,7 @@ class AbilityHandler(Handler):
 
 
 def announce_ability_triggered(battle: Battle,
-                               ctx: BattleContext,
+                               ctx: BattleContext | None,
                                value: Any,
                                *,
                                mon: Pokemon | None = None,
@@ -62,7 +60,7 @@ def announce_ability_triggered(battle: Battle,
     Returns:
         HandlerReturn: 変更なし
     """
-    if mon is None:
+    if mon is None and ctx is not None:
         mon = ctx.source
 
     mon.ability.revealed = True
@@ -119,13 +117,7 @@ def _trigger_emergency_switch(battle: Battle, mon: Pokemon, ability_name: str) -
         return False
 
     player.interrupt = Interrupt.EMERGENCY
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": ability_name, "success": True},
-    )
+    announce_ability_triggered(battle, None, None, mon=mon)
     return True
 
 
@@ -134,11 +126,11 @@ def _handle_type_absorb(battle: Battle,
                         ctx: BattleContext,
                         immune: bool,
                         *,
-                        ability_name: str,
+                        ability: str,
                         move_type: Type,
                         heal_ratio: float = 0,
                         raise_stat: Stat | None = None) -> HandlerReturn:
-    """タイプ一致技を無効化し、副次効果（回復/能力上昇）を適用する。"""
+    """特定のタイプの技を無効化し、副次効果（回復/能力上昇）を適用する。"""
     if (
         immune
         or not ctx.move.target != "foe"
@@ -157,16 +149,10 @@ def _handle_type_absorb(battle: Battle,
             raise_stat,
             1,
             source=ctx.attacker,
-            reason=ability_name,
+            reason=ability,
         )
 
-    idx = battle.get_player_index(target)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": ability_name, "success": True},
-    )
+    announce_ability_triggered(battle, ctx, immune, mon=target)
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -193,7 +179,7 @@ def activate_weather_with_log(battle: Battle,
                               weather: Weather,
                               count: int,
                               source: Pokemon | None = None) -> HandlerReturn:
-    """天候を変更し、LogCode.ABILITY_TRIGGERED を記録する。"""
+    """天候を変更する"""
     if source is None:
         source = ctx.source
     if battle.weather_manager.activate(weather, count, source=source):
@@ -226,7 +212,7 @@ def activate_terrain_with_log(battle: Battle,
                               terrain: Terrain,
                               count: int,
                               source: Pokemon | None = None) -> HandlerReturn:
-    """地形を変更し、LogCode.ABILITY_TRIGGERED を記録する。"""
+    """地形を変更する"""
     if source is None:
         source = ctx.source
     if battle.terrain_manager.activate(terrain, count, source=source):
@@ -241,7 +227,7 @@ def _apply_ailment_with_log(battle: Battle,
                             ailment: AilmentName,
                             target: Pokemon | None = None,
                             source: Pokemon | None = None) -> HandlerReturn:
-    """自身に状態異常を付与し、LogCode.ABILITY_TRIGGERED を記録する。"""
+    """自身に状態異常を付与する"""
     if source is None:
         source = ctx.source
     if target is None:
@@ -277,13 +263,7 @@ def だっぴ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> Han
         chance=0.3,
     )
     if result.value:
-        idx = battle.get_player_index(mon)
-        battle.event_logger.add(
-            battle.turn,
-            idx,
-            LogCode.ABILITY_TRIGGERED,
-            payload={"ability": "だっぴ", "success": True},
-        )
+        announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
 
 
@@ -292,7 +272,7 @@ def ダウンロード_on_switch_in(battle: Battle, ctx: BattleContext, value: A
     mon = ctx.source
     foe = battle.foe(mon)
 
-    # TODO : Effective stats プロパティを Pokemon に実装する
+    # TODO : Effective stats プロパティを Pokemon クラスに実装する
     def _rank_eff(pokemon, stat: str) -> float:
         return pokemon.stats[stat] * rank_modifier(pokemon.rank[stat])
 
@@ -302,22 +282,9 @@ def ダウンロード_on_switch_in(battle: Battle, ctx: BattleContext, value: A
     # 防御 < 特防 なら攻撃+1、防御 >= 特防 なら特攻+1
     boost_stat = "A" if foe_def < foe_spd else "C"
 
-    changed = battle.modify_stat(
-        mon,
-        boost_stat,
-        +1,
-        source=mon,
-    )
-
+    changed = battle.modify_stat(mon, boost_stat, +1, source=mon)
     if changed:
-        mon.ability.revealed = True
-        idx = battle.get_player_index(mon)
-        battle.event_logger.add(
-            battle.turn,
-            idx,
-            LogCode.ABILITY_TRIGGERED,
-            payload={"ability": "ダウンロード", "success": True},
-        )
+        announce_ability_triggered(battle, ctx, value, mon=mon)
 
     return HandlerReturn(value=value)
 
@@ -332,13 +299,11 @@ def あめうけざら_on_turn_end(battle: Battle, ctx: BattleContext, value: An
     mon = ctx.source
     if not battle.weather.rainy:
         return HandlerReturn(value=value)
+
     result = battle.modify_hp(mon, r=1/16)
     if result:
-        idx = battle.get_player_index(mon)
-        battle.event_logger.add(
-            battle.turn, idx, LogCode.ABILITY_TRIGGERED,
-            payload={"ability": "あめうけざら", "success": True},
-        )
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+
     return HandlerReturn(value=value)
 
 
@@ -379,13 +344,7 @@ def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, 
     ):
         return HandlerReturn(value=value)
 
-    idx = battle.get_player_index(ctx.defender)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": "いたずらごころ", "success": True},
-    )
+    announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -428,20 +387,6 @@ def かげふみ_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -
     """
     result = ctx.source.ability.name != "かげふみ"
     return HandlerReturn(value=result)
-
-
-def かがくへんかガス_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """特性を開示する"""
-    mon = ctx.source
-    mon.ability.revealed = True
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
-        LogCode.ABILITY_TRIGGERED,
-        payload={"ability": "かがくへんかガス", "success": True}
-    )
-    return HandlerReturn(value=value)
 
 
 def かがくへんかガス_check_enabled(battle: Battle, ctx: BattleContext, value: set[AbilityDisabledReason]) -> HandlerReturn:
@@ -642,7 +587,7 @@ def ちょすい_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         battle,
         ctx,
         value,
-        ability_name="ちょすい",
+        ability="ちょすい",
         move_type="みず",
         heal_ratio=1 / 4,
     )
@@ -654,7 +599,7 @@ def どしょく_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         battle,
         ctx,
         value,
-        ability_name="どしょく",
+        ability="どしょく",
         move_type="じめん",
         heal_ratio=1 / 4,
     )
@@ -666,7 +611,7 @@ def ちくでん_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         battle,
         ctx,
         value,
-        ability_name="ちくでん",
+        ability="ちくでん",
         move_type="でんき",
         heal_ratio=1 / 4,
     )
@@ -678,7 +623,7 @@ def そうしょく_check_immune(battle: Battle, ctx: BattleContext, value: bool
         battle,
         ctx,
         value,
-        ability_name="そうしょく",
+        ability="そうしょく",
         move_type="くさ",
         raise_stat="A",
     )
@@ -690,7 +635,7 @@ def ひらいしん_check_immune(battle: Battle, ctx: BattleContext, value: bool
         battle,
         ctx,
         value,
-        ability_name="ひらいしん",
+        ability="ひらいしん",
         move_type="でんき",
         raise_stat="C",
     )
@@ -702,7 +647,7 @@ def でんきエンジン_check_immune(battle: Battle, ctx: BattleContext, value
         battle,
         ctx,
         value,
-        ability_name="でんきエンジン",
+        ability="でんきエンジン",
         move_type="でんき",
         raise_stat="S",
     )
@@ -714,7 +659,7 @@ def よびみず_check_immune(battle: Battle, ctx: BattleContext, value: bool) -
         battle,
         ctx,
         value,
-        ability_name="よびみず",
+        ability="よびみず",
         move_type="みず",
         raise_stat="C",
     )
@@ -1078,7 +1023,7 @@ def かんそうはだ_check_water_immune(battle: Battle, ctx: BattleContext, va
         battle,
         ctx,
         value,
-        ability_name="かんそうはだ",
+        ability="かんそうはだ",
         move_type="みず",
         heal_ratio=1 / 4,
     )

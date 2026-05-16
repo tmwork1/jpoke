@@ -94,7 +94,6 @@ class BattleContext:
 
     @move_damage.setter
     def move_damage(self, value: int):
-        # TODO : setterを使わずに def set_move_damage(self, value: int) のように明確にする
         """技によるダメージを設定。
 
         内部的に hp_change と hp_change_reason を設定する。

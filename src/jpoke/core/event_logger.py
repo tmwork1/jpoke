@@ -99,9 +99,10 @@ class EventLog:
             case LogCode.ABILITY_TRIGGERED:
                 return self.payload.get("ability", "特性")
 
-            case LogCode.CONSUME_ITEM:
+            case LogCode.LOSE_ITEM:
                 item = self.payload.get("item", "持ち物")
-                return item
+                cause = self.payload.get("reason", "")
+                return f"{item}を失った [{cause}]"
 
             case LogCode.VOLATILE_APPLIED:
                 volatile = self.payload["volatile"]

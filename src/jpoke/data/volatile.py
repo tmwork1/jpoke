@@ -1,5 +1,3 @@
-# TODO : lambda式は使わず、名前付き関数をhandlers/volatile.pyに定義する
-
 """揮発状態データ定義モジュール。
 
 Note:

@@ -61,6 +61,13 @@ class SwitchManager:
         for volatile in mon.volatiles.values():
             volatile.register_handlers(self.events, mon)
 
+        self.battle.refresh_effect_enabled_states()
+        self.battle.add_event_log(
+            mon,
+            LogCode.SWITCH_IN,
+            payload={"pokemon": mon.name}
+        )
+
     def switch_out(self, mon: Pokemon):
         """ポケモンの退場時ハンドラーを解除する。
 
@@ -72,6 +79,13 @@ class SwitchManager:
         mon.ailment.unregister_handlers(self.events, mon)
         for volatile in mon.volatiles.values():
             volatile.unregister_handlers(self.events, mon)
+
+        mon.bench_reset()
+        self.battle.add_event_log(
+            mon,
+            LogCode.SWITCH_OUT,
+            payload={"pokemon": mon.name}
+        )
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
@@ -125,19 +139,9 @@ class SwitchManager:
 
             self.switch_out(old)
 
-            # TODO : 以下の処理もswitch_out()メソッドに含める
-            old.bench_reset()
-            self.battle.add_event_log(player, LogCode.SWITCH_OUT,
-                                      payload={"pokemon": old.name})
-
         # 入場
         player.active_idx = player.team.index(new)
         self.switch_in(new)
-
-        # TODO : 以下の処理もswitch_in()メソッドに含める
-        self.battle.refresh_effect_enabled_states()
-        self.battle.add_event_log(player, LogCode.SWITCH_IN,
-                                  payload={"pokemon": new.name})
 
         # ポケモンが場に出た時の処理
         if emit_switch_in_event:
@@ -188,11 +192,6 @@ class SwitchManager:
 
             # 交代を引き起こしたアイテムを消費させる
             if flag.consume_item():
-                self.battle.add_event_log(
-                    player,
-                    LogCode.CONSUME_ITEM,
-                    payload={"item": player.active_mon.item.name}
-                )
                 self.battle.consume_item(player.active_mon)
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
