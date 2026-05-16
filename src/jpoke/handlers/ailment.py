@@ -74,7 +74,7 @@ def やけど_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
     if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
-        value = apply_fixed_modifier(value, 2048 // 4096)
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -114,11 +114,9 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     return HandlerReturn(value=False, stop_event=True)
 
 
-def こおり_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def こおり_cure_by_fire_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ほのお技でダメージを受けたら解凍する。"""
-    if (
-        ctx.move_damage > 0
-        and ctx.move.type == "ほのお"
-    ):
+    print(f"{ctx.move_damage=}, {ctx.move.type=}")
+    if ctx.move.type == "ほのお":
         battle.ailment_manager.remove(ctx.defender)
     return HandlerReturn(value=value)

@@ -9,7 +9,7 @@ from functools import partial
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
-from jpoke.utils.type_defs import RoleSpec, Type
+from jpoke.utils.type_defs import RoleSpec, Type, Weather, Terrain
 from jpoke.utils.battle_math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode
 from jpoke.core import HandlerReturn, Handler
@@ -29,6 +29,23 @@ class ItemHandler(Handler):
             priority=priority,
             once=once,
         )
+
+
+def announce_item_triggered(battle: Battle,
+                            ctx: BattleContext,
+                            value: Any,
+                            *,
+                            mon: Pokemon | None = None) -> HandlerReturn:
+    if mon is None:
+        mon = ctx.source
+
+    mon.item.revealed = True
+    battle.add_event_log(
+        mon,
+        LogCode.ITEM_TRIGGERED,
+        payload={"item": mon.item.name}
+    )
+    return HandlerReturn(value=value)
 
 
 def _consume_self_item(battle: Battle, target) -> bool:
@@ -60,10 +77,25 @@ def modify_super_effective_damage(battle: Battle,
     return HandlerReturn(value=value)
 
 
+def resolve_field_count(battle: Battle,
+                        ctx: BattleContext,
+                        value: list[Weather | Terrain | int],
+                        *,
+                        field: Weather | Terrain,
+                        additonal_count: int) -> HandlerReturn:
+    """指定場状態と一致するとき継続ターン数に加算する。"""
+    name, count = value
+    if field == name:
+        count += additonal_count
+    return HandlerReturn(value=[name, count])
+
+
 def いのちのたま_recoil(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    if ctx.move.category != "変化" and \
-            common.modify_hp(battle, ctx, value, target_spec="attacker:self", r=-1/8):
-        ctx.attacker.item.revealed = True
+    if (
+        ctx.move.category != "変化"
+        and common.modify_hp(battle, ctx, value, target_spec="attacker:self", r=-1/8)
+    ):
+        announce_item_triggered(battle, ctx, value, mon=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -75,25 +107,29 @@ def いかさまダイス_modify_hit_count(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=value)
 
 
-def だっしゅつボタン_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    player = battle.get_player(ctx.defender)
-    player.interrupt = Interrupt.EJECTBUTTON
-    return HandlerReturn(value=value)
-
-
-def だっしゅつパック_on_stat_down(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def だっしゅつパック_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # valueは{stat: change}の辞書
-    player = battle.get_player(ctx.target)
-    if any(v < 0 for v in value.values()) and \
-            bool(battle.get_available_switch_commands(player)):
+    mon = ctx.target
+    player = battle.get_player(mon)
+    if (
+        any(v < 0 for v in value.values())
+        and bool(battle.get_available_switch_commands(player))
+    ):
         player.interrupt = Interrupt.REQUESTED
     return HandlerReturn(value=value)
 
 
+def だっしゅつボタン_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    player = battle.get_player(ctx.defender)
+    player.interrupt = Interrupt.REQUESTED
+    return HandlerReturn(value=value)
+
+
 def たべのこし_heal_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # HPを1/16回復
-    if battle.modify_hp(ctx.source, r=1/16):
-        ctx.source.item.revealed = True
+    """たべのこし: ターン終了時HP回復"""
+    mon = ctx.source
+    if battle.modify_hp(mon, r=1/16):
+        announce_item_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
 
 
@@ -107,11 +143,11 @@ def ちからのハチマキ_boost_physical(battle: Battle, ctx: BattleContext, 
 def とくせいガード_block_ability_disable(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """とくせいガード: 特性無効化をブロックする。"""
     ability = ctx.source.ability
-    was_self_disabled = ability.self_disabled
-    ability.reset_enabled()
+    was_self_disabled = ability.consumed
+    ability.reset_enable_state()
     # 自己無効化している特性はリセット後も無効状態を維持する
     if was_self_disabled:
-        ability.set_disabled_reasons("self")
+        ability.set_disabled_reasons("consumed")
     return HandlerReturn(value=value)
 
 
@@ -119,19 +155,4 @@ def ものしりメガネ_boost_special(battle: Battle, ctx: BattleContext, valu
     """特殊技1.1倍"""
     if ctx.move.category == "特殊":
         value = apply_fixed_modifier(value, 4505)
-    return HandlerReturn(value=value)
-
-
-def ラムのみ_cure_ailments(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    # ON_BEFORE_ACTION: すべての状態異常を回復する（消費型）
-    target = ctx.resolve_role(battle, "source:self")
-
-    # 状態異常をチェック
-    if target.ailment:
-        result = common.cure_ailment(battle, ctx, value, "source:self")
-        if result.value:
-            _consume_self_item(battle, target)
-        return result
-
-    # volatiles（こんらん等）はここでは処理しない（状態異常のみ対応）
     return HandlerReturn(value=value)

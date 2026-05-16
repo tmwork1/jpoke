@@ -42,25 +42,29 @@ class AilmentManager:
         self.battle = battle
 
     @staticmethod
-    def blocked_by_type(ailment: AilmentName,
-                        target: Pokemon,
-                        source: Pokemon | None) -> bool:
-        """タイプによる状態異常付与の無効化を判定する。"""
+    def can_apply_by_type(ailment: AilmentName,
+                          target: Pokemon,
+                          source: Pokemon | None) -> bool:
+        """タイプによって状態異常を付与できるか判定する。"""
         match ailment:
-            case "どく", "もうどく":
+            case "どく" | "もうどく":
                 if not (target.has_type("どく") or target.has_type("はがね")):
-                    return False
-                return not (
+                    return True
+                return (
                     source is not None
                     and source.ability.name == "ふしょく"
                 )
+
             case "やけど":
-                return target.has_type("ほのお")
+                return not target.has_type("ほのお")
+
             case "まひ":
-                return target.has_type("でんき")
+                return not target.has_type("でんき")
+
             case "こおり":
-                return target.has_type("こおり")
-        return False
+                return not target.has_type("こおり")
+
+        return True
 
     def apply(self,
               mon: Pokemon,
@@ -77,7 +81,7 @@ class AilmentManager:
             count: 継続ターン数（必要な状態異常のみ）
             source: 状態異常の原因となったポケモン
             force: Trueの場合、既存の状態異常を上書き
-
+            ctx: ON_BEFORE_APPLY_AILMENT イベントの BattleContext
         Returns:
             付与に成功したTrue
 
@@ -94,7 +98,7 @@ class AilmentManager:
             return False
 
         # タイプによる無効化をチェック
-        if self.blocked_by_type(ailment, mon, source):
+        if not self.can_apply_by_type(ailment, mon, source):
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック

@@ -56,6 +56,24 @@ class ItemManager:
             mon.item.register_handlers(self.events, mon)
             self.battle.events.emit(Event.ON_ITEM_ENABLED, ctx)
 
+    def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
+        """対象の道具を喪失状態にする。"""
+        if not target.has_item():
+            return False
+
+        item = target.item
+        item.unregister_handlers(self.events, target)
+        item.revealed = True
+        item.lost_cause = cause
+        item.add_disable_reason("consumed")
+
+        self.battle.add_event_log(
+            target,
+            LogCode.LOSE_ITEM,
+            payload={"item": item.name, "reason": cause}
+        )
+        return True
+
     def add_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
         """アイテムを無効にする理由を追加し、有効状態に変化があればイベントを発火する。
         Args:
@@ -91,21 +109,6 @@ class ItemManager:
                                     BattleContext(source=mon))
             return True
         return False
-
-    def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
-        """対象の道具を喪失状態にする。"""
-        if not target.has_item():
-            return False
-
-        item = target.item
-        item.unregister_handlers(self.events, target)
-        item.lose(cause=cause)
-        self.battle.add_event_log(
-            target,
-            LogCode.LOSE_ITEM,
-            payload={"item": item.name, "reason": cause}
-        )
-        return True
 
     def consume_item(self, target: Pokemon) -> bool:
         """対象の道具を消費状態にする。"""

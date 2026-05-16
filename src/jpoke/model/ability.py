@@ -59,9 +59,9 @@ class Ability(GameEffect):
         self.state = ""
         self.is_hangry = False
         self.activated_since_switch_in = False
-        self.reset_enabled()
+        self.reset_enable_state()
 
-    def reset_enabled(self):
+    def reset_enable_state(self):
         """
         特性の有効/無効状態をリセットする。
 
@@ -69,8 +69,8 @@ class Ability(GameEffect):
         試合中一度しか発動しない特性は自己無効化フラグを維持する。
         """
         reasons = set()
-        if self.has_flag("per_battle_once") and self.self_disabled:
-            reasons.add("self")
+        if self.has_flag("per_battle_once") and self.consumed:
+            reasons.add("consumed")
         self.set_disabled_reasons(reasons)
 
     def has_flag(self, flag: str) -> bool:

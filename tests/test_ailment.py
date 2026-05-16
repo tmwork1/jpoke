@@ -78,7 +78,7 @@ def test_まひ_行動成功():
 def test_やけど_ダメージ補正あり():
     """やけど: 物理技ダメージ半減"""
     battle = t.start_battle(
-        ally=[Pokemon("カビゴン", moves=["たいあたり"])],
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe=[Pokemon("ピカチュウ")]
     )
     battle.ailment_manager.apply(battle.actives[0], "やけど")
@@ -153,16 +153,14 @@ def test_こおり_行動成功():
 
 def test_こおり_ほのお技被弾で解凍する():
     battle = t.start_battle(
-        ally=[Pokemon("リザードン", moves=["かえんほうしゃ"])],
+        ally=[Pokemon("ピカチュウ", moves=["ひのこ"])],
         foe=[Pokemon("ピカチュウ")],
     )
-    frozen = battle.actives[1]
-    battle.ailment_manager.apply(frozen, "こおり")
-
-    t.reserve_command(battle)
-    battle.advance_turn()
-
-    assert not frozen.ailment.is_active
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(defender, "こおり")
+    battle.run_move(attacker, attacker.moves[0])
+    battle.print_logs()
+    assert not defender.ailment.is_active
 
 # ──────────────────────────────────────────────────────────────────
 # タイプによる耐性テスト
@@ -171,9 +169,11 @@ def test_こおり_ほのお技被弾で解凍する():
 
 
 def test_どくタイプには通常どくが入らない():
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("フシギダネ")])
+    battle = t.start_battle(
+        ally=[Pokemon("フシギダネ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
     target = battle.actives[0]
-
     assert not battle.ailment_manager.apply(target, "どく")
     assert not target.ailment.is_active
 

@@ -132,15 +132,6 @@ class Pokemon:
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
 
-        self.restore_ability()
-
-    def restore_ability(self) -> bool:
-        """特性をもとに戻す。"""
-        if self.ability.orig_name != self.base_ability_name:
-            self.ability = Ability(self.base_ability_name)
-            return True
-        return False
-
     def init_turn(self):
         """ターン初期化処理。"""
         self.hits_taken = 0
@@ -383,6 +374,8 @@ class Pokemon:
             nameが指定された場合はその持ち物を持っているか、
             Noneの場合は何らかの持ち物を持っている場合True
         """
+        if name is None:
+            return not self.item.consumed
         return self.item.name == name
 
     @property

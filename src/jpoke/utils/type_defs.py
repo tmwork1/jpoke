@@ -1,10 +1,10 @@
 from typing import Literal
 
 AbilityDisabledReason = Literal[
-    "self", "かがくへんかガス", "かたやぶり", "とくせいなし",
+    "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",
 ]
 ItemDisabledReason = Literal[
-    "self", "ぶきよう", "マジックルーム"
+    "consumed", "ぶきよう", "マジックルーム"
 ]
 ItemLostCause = Literal["", "consume", "remove", "swap", "steal", "burn", "gas"]  # TODO : ItemDisabledReasonに統合する
 

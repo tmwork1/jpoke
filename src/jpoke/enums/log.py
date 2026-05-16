@@ -19,6 +19,7 @@ class LogCode(Enum):
     CURE_AILMENT = auto()
     APPLY_AILMENT = auto()
     ABILITY_TRIGGERED = auto()
+    ITEM_TRIGGERED = auto()
     VOLATILE_APPLIED = auto()
     VOLATILE_REMOVED = auto()
     VOLATILE_STATUS = auto()

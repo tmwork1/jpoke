@@ -9,11 +9,11 @@ class Interrupt(Enum):
     特殊な割り込み処理を管理する。
     """
     NONE = auto()
-    EJECTBUTTON = auto()
     PIVOT = auto()
     EMERGENCY = auto()
     FAINTED = auto()
     REQUESTED = auto()
+    EJECTBUTTON = auto()
     EJECTPACK_ON_AFTER_SWITCH = auto()
     EJECTPACK_ON_START = auto()
     EJECTPACK_ON_SWITCH_0 = auto()
@@ -22,9 +22,18 @@ class Interrupt(Enum):
     EJECTPACK_ON_AFTER_MOVE_1 = auto()
     EJECTPACK_ON_TURN_END = auto()
 
-    def consume_item(self) -> bool:
-        """このInterruptがアイテム消費を伴うかどうか"""
-        return "EJECT" in self.name
+    def requires_item_consumption(self) -> bool:
+        """この割り込みがアイテムの消費を伴うかどうかを返す。"""
+        return self in {
+            Interrupt.EJECTBUTTON,
+            Interrupt.EJECTPACK_ON_AFTER_SWITCH,
+            Interrupt.EJECTPACK_ON_START,
+            Interrupt.EJECTPACK_ON_SWITCH_0,
+            Interrupt.EJECTPACK_ON_SWITCH_1,
+            Interrupt.EJECTPACK_ON_AFTER_MOVE_0,
+            Interrupt.EJECTPACK_ON_AFTER_MOVE_1,
+            Interrupt.EJECTPACK_ON_TURN_END,
+        }
 
     @classmethod
     def ejectpack_on_switch(cls, idx: int):

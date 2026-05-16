@@ -72,7 +72,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
         critical_rank=1,
-        labels=["secondary_effect"],
+
     ),
     "ＤＤラリアット": MoveData(
         type="あく",
@@ -83,7 +83,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "Ｇのちから": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="物理",
         pp=10,
@@ -142,14 +142,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "アイスハンマー": MoveData(
-        labels=["secondary_effect"],
         type="こおり",
         category="物理",
         pp=10,
         power=100,
         accuracy=90,
-
-        labels=["contact", "punch"],
+        labels=["contact", "punch", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self")
@@ -175,7 +173,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "アクアステップ": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="物理",
         pp=10,
@@ -197,13 +195,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "アクアブレイク": MoveData(
-        labels=["secondary_effect"],
         type="みず",
         category="物理",
         pp=10,
         power=85,
         accuracy=100,
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.2)
@@ -286,7 +283,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "いじげんラッシュ": MoveData(
-        labels=["secondary_effect"],
+
         type="あく",
         category="物理",
         pp=5,
@@ -308,7 +305,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90
     ),
     "いわくだき": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=15,
@@ -322,7 +319,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "いわなだれ": MoveData(
-        labels=["secondary_effect"],
+
         type="いわ",
         category="物理",
         pp=10,
@@ -330,14 +327,12 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
     ),
     "インファイト": MoveData(
-        labels=["secondary_effect"],
         type="かくとう",
         category="物理",
         pp=5,
         power=120,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
@@ -393,7 +388,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "オーラぐるま": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="物理",
         pp=10,
@@ -407,14 +402,12 @@ MOVES: dict[str, MoveData] = {
         },
     ),
     "おどろかす": MoveData(
-        labels=["secondary_effect"],
         type="ゴースト",
         category="物理",
         pp=15,
         power=30,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "おはかまいり": MoveData(
         type="ゴースト",
@@ -441,34 +434,28 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "かえんぐるま": MoveData(
-        labels=["secondary_effect"],
         type="ほのお",
         category="物理",
         pp=25,
         power=60,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "かえんボール": MoveData(
-        labels=["secondary_effect"],
         type="ほのお",
         category="物理",
         pp=5,
         power=120,
         accuracy=90,
-
-        labels=["bullet"],
+        labels=["bullet", "secondary_effect"],
     ),
     "かかとおとし": MoveData(
-        labels=["secondary_effect"],
         type="かくとう",
         category="物理",
         pp=10,
         power=120,
         accuracy=90,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "かげうち": MoveData(
         type="ゴースト",
@@ -495,44 +482,36 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "かみくだく": MoveData(
-        labels=["secondary_effect"],
         type="あく",
         category="物理",
         pp=15,
         power=80,
         accuracy=100,
-
-        labels=["bite", "contact"],
+        labels=["bite", "contact", "secondary_effect"],
     ),
     "かみつく": MoveData(
-        labels=["secondary_effect"],
         type="あく",
         category="物理",
         pp=25,
         power=60,
         accuracy=100,
-
-        labels=["bite", "contact"],
+        labels=["bite", "contact", "secondary_effect"],
     ),
     "かみなりのキバ": MoveData(
-        labels=["secondary_effect"],
         type="でんき",
         category="物理",
         pp=15,
         power=65,
         accuracy=95,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "かみなりパンチ": MoveData(
-        labels=["secondary_effect"],
         type="でんき",
         category="物理",
         pp=15,
         power=75,
         accuracy=100,
-
-        labels=["contact", "punch"],
+        labels=["contact", "punch", "secondary_effect"],
     ),
     "がむしゃら": MoveData(
         type="ノーマル",
@@ -557,14 +536,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ガリョウテンセイ": MoveData(
-        labels=["secondary_effect"],
         type="ひこう",
         category="物理",
         pp=5,
         power=120,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
@@ -588,7 +565,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash"],
     ),
     "がんせきふうじ": MoveData(
-        labels=["secondary_effect"],
+
         type="いわ",
         category="物理",
         pp=15,
@@ -672,14 +649,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "キラースピン": MoveData(
-        labels=["secondary_effect"],
         type="どく",
         category="物理",
         pp=15,
         power=30,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "きりさく": MoveData(
         type="ノーマル",
@@ -699,14 +674,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "くさわけ": MoveData(
-        labels=["secondary_effect"],
         type="くさ",
         category="物理",
         pp=20,
         power=50,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "くちばしキャノン": MoveData(
         type="ひこう",
@@ -760,14 +733,13 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "クロスポイズン": MoveData(
-        labels=["secondary_effect"],
         type="どく",
         category="物理",
         pp=20,
         power=70,
         accuracy=100,
         critical_rank=1,
-        labels=["contact", "slash"],
+        labels=["contact", "slash", "secondary_effect"],
     ),
     "げきりん": MoveData(
         type="ドラゴン",
@@ -794,14 +766,12 @@ MOVES: dict[str, MoveData] = {
         critical_rank=1,
     ),
     "こうそくスピン": MoveData(
-        labels=["secondary_effect"],
         type="ノーマル",
         category="物理",
         pp=40,
         power=50,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "ゴーストダイブ": MoveData(
         type="ゴースト",
@@ -812,14 +782,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "こおりのキバ": MoveData(
-        labels=["secondary_effect"],
         type="こおり",
         category="物理",
         pp=15,
         power=65,
         accuracy=95,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "こおりのつぶて": MoveData(
         type="こおり",
@@ -830,7 +798,7 @@ MOVES: dict[str, MoveData] = {
         priority=1
     ),
     "ゴッドバード": MoveData(
-        labels=["secondary_effect"],
+
         type="ひこう",
         category="物理",
         pp=5,
@@ -846,13 +814,12 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "コメットパンチ": MoveData(
-        labels=["secondary_effect"],
         type="はがね",
         category="物理",
         pp=10,
         power=90,
         accuracy=90,
-        labels=["contact", "punch"],
+        labels=["contact", "punch", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.2)
@@ -910,13 +877,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
     ),
     "シェルブレード": MoveData(
-        labels=["secondary_effect"],
         type="みず",
         category="物理",
         pp=10,
         power=75,
         accuracy=95,
-        labels=["contact", "slash"],
+        labels=["contact", "slash", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
@@ -953,14 +919,12 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "したでなめる": MoveData(
-        labels=["secondary_effect"],
         type="ゴースト",
         category="物理",
         pp=30,
         power=30,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "じたばた": MoveData(
         type="ノーマル",
@@ -987,7 +951,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "じならし": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="物理",
         pp=20,
@@ -1000,14 +964,12 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "しねんのずつき": MoveData(
-        labels=["secondary_effect"],
         type="エスパー",
         category="物理",
         pp=15,
         power=80,
         accuracy=90,
-
-        labels=["contact"],
+        labels=["contact", "secondary_effect"],
     ),
     "じばく": MoveData(
         type="ノーマル",
@@ -1061,7 +1023,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
     ),
     "じゃれつく": MoveData(
-        labels=["secondary_effect"],
+
         type="フェアリー",
         category="物理",
         pp=10,
@@ -1121,7 +1083,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
     ),
     "ずつき": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="物理",
         pp=15,
@@ -1155,7 +1117,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "スパーク": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="物理",
         pp=20,
@@ -1181,7 +1143,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash"],
     ),
     "せいなるほのお": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=5,
@@ -1190,7 +1152,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "ソウルクラッシュ": MoveData(
-        labels=["secondary_effect"],
+
         type="フェアリー",
         category="物理",
         pp=15,
@@ -1256,7 +1218,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ダイヤストーム": MoveData(
-        labels=["secondary_effect"],
+
         type="いわ",
         category="物理",
         pp=5,
@@ -1264,7 +1226,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
     ),
     "たきのぼり": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="物理",
         pp=15,
@@ -1274,7 +1236,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ダストシュート": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=5,
@@ -1465,7 +1427,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash"],
     ),
     "つららおとし": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="物理",
         pp=10,
@@ -1521,7 +1483,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "どくづき": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=20,
@@ -1531,7 +1493,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "どくどくのキバ": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=15,
@@ -1541,7 +1503,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "どくばり": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=35,
@@ -1549,7 +1511,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "どくばりセンボン": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=10,
@@ -1597,7 +1559,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "とびかかる": MoveData(
-        labels=["secondary_effect"],
+
         type="むし",
         category="物理",
         pp=15,
@@ -1611,7 +1573,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "とびつく": MoveData(
-        labels=["secondary_effect"],
+
         type="むし",
         category="物理",
         pp=20,
@@ -1626,7 +1588,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "とびはねる": MoveData(
-        labels=["secondary_effect"],
+
         type="ひこう",
         category="物理",
         pp=5,
@@ -1669,7 +1631,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ドラゴンダイブ": MoveData(
-        labels=["secondary_effect"],
+
         type="ドラゴン",
         category="物理",
         pp=10,
@@ -1695,7 +1657,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ドラムアタック": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="物理",
         pp=10,
@@ -1785,7 +1747,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
     ),
     "トロピカルキック": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="物理",
         pp=15,
@@ -1853,7 +1815,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ニトロチャージ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=20,
@@ -1868,7 +1830,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ねこだまし": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="物理",
         pp=10,
@@ -1899,7 +1861,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "のしかかり": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="物理",
         pp=15,
@@ -1924,7 +1886,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "はいよるいちげき": MoveData(
-        labels=["secondary_effect"],
+
         type="むし",
         category="物理",
         pp=10,
@@ -1939,7 +1901,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ばかぢから": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=5,
@@ -1954,7 +1916,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "はがねのつばさ": MoveData(
-        labels=["secondary_effect"],
+
         type="はがね",
         category="物理",
         pp=25,
@@ -1964,7 +1926,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ばくれつパンチ": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=5,
@@ -2024,7 +1986,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "はっけい": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=10,
@@ -2051,7 +2013,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
     ),
     "はやてがえし": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=15,
@@ -2069,7 +2031,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "バリアーラッシュ": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="物理",
         pp=10,
@@ -2128,7 +2090,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ひょうざんおろし": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="物理",
         pp=10,
@@ -2136,7 +2098,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
     ),
     "びりびりちくちく": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="物理",
         pp=10,
@@ -2155,7 +2117,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "フェイタルクロー": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=15,
@@ -2180,7 +2142,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ぶちかまし": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="物理",
         pp=5,
@@ -2190,7 +2152,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
     ),
     "ふみつけ": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="物理",
         pp=20,
@@ -2207,7 +2169,7 @@ MOVES: dict[str, MoveData] = {
         labels=["minimize", "contact"],
     ),
     "フリーズボルト": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="物理",
         pp=5,
@@ -2223,7 +2185,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "フレアドライブ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=15,
@@ -2232,7 +2194,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ブレイククロー": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="物理",
         pp=10,
@@ -2247,7 +2209,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ブレイズキック": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=10,
@@ -2296,7 +2258,7 @@ MOVES: dict[str, MoveData] = {
         labels=["minimize", "contact"],
     ),
     "ホイールスピン": MoveData(
-        labels=["secondary_effect"],
+
         type="はがね",
         category="物理",
         pp=5,
@@ -2306,7 +2268,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ポイズンテール": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="物理",
         pp=25,
@@ -2344,7 +2306,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ほっぺすりすり": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="物理",
         pp=20,
@@ -2362,7 +2324,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ほのおのキバ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=15,
@@ -2372,7 +2334,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "ほのおのパンチ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=15,
@@ -2382,7 +2344,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch"],
     ),
     "ほのおのムチ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="物理",
         pp=15,
@@ -2399,7 +2361,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90
     ),
     "ボルテッカー": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="物理",
         pp=15,
@@ -2520,7 +2482,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "メタルクロー": MoveData(
-        labels=["secondary_effect"],
+
         type="はがね",
         category="物理",
         pp=35,
@@ -2575,7 +2537,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "らいげき": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="物理",
         pp=5,
@@ -2585,7 +2547,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "らいめいげり": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=10,
@@ -2617,7 +2579,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "れいとうパンチ": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="物理",
         pp=15,
@@ -2635,7 +2597,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash"],
     ),
     "ローキック": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="物理",
         pp=20,
@@ -2664,7 +2626,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ワイドブレイカー": MoveData(
-        labels=["secondary_effect"],
+
         type="ドラゴン",
         category="物理",
         pp=15,
@@ -2687,7 +2649,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "１０まんボルト": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=15,
@@ -2695,7 +2657,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "アーマーキャノン": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=5,
@@ -2724,7 +2686,7 @@ MOVES: dict[str, MoveData] = {
         critical_rank=1,
     ),
     "あくのはどう": MoveData(
-        labels=["secondary_effect"],
+
         type="あく",
         category="特殊",
         pp=15,
@@ -2741,7 +2703,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "アシッドボム": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=20,
@@ -2770,7 +2732,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "いてつくしせん": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=10,
@@ -2792,7 +2754,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "いにしえのうた": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="特殊",
         pp=10,
@@ -2819,7 +2781,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "いびき": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="特殊",
         pp=15,
@@ -2853,7 +2815,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "うらみつらみ": MoveData(
-        labels=["secondary_effect"],
+
         type="ゴースト",
         category="特殊",
         pp=10,
@@ -2870,7 +2832,7 @@ MOVES: dict[str, MoveData] = {
         labels=["slash", "wind"],
     ),
     "エアスラッシュ": MoveData(
-        labels=["secondary_effect"],
+
         type="ひこう",
         category="特殊",
         pp=15,
@@ -2897,7 +2859,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "エナジーボール": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="特殊",
         pp=10,
@@ -2912,7 +2874,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "エレキネット": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=15,
@@ -2949,7 +2911,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "オーバーヒート": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=5,
@@ -2963,7 +2925,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "オーラウイング": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=10,
@@ -2972,7 +2934,7 @@ MOVES: dict[str, MoveData] = {
         critical_rank=1,
     ),
     "オーロラビーム": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=20,
@@ -2980,7 +2942,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "かえんほうしゃ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=15,
@@ -3017,7 +2979,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
     ),
     "かみなり": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=10,
@@ -3032,7 +2994,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "かみなりあらし": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=10,
@@ -3042,7 +3004,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
     ),
     "きあいだま": MoveData(
-        labels=["secondary_effect"],
+
         type="かくとう",
         category="特殊",
         pp=5,
@@ -3110,7 +3072,7 @@ MOVES: dict[str, MoveData] = {
         labels=["non_negoto"],
     ),
     "げんしのちから": MoveData(
-        labels=["secondary_effect"],
+
         type="いわ",
         category="特殊",
         pp=5,
@@ -3126,7 +3088,7 @@ MOVES: dict[str, MoveData] = {
         critical_rank=3,
     ),
     "コールドフレア": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=5,
@@ -3135,7 +3097,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "ゴールドラッシュ": MoveData(
-        labels=["secondary_effect"],
+
         type="はがね",
         category="特殊",
         pp=5,
@@ -3143,7 +3105,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "こがらしあらし": MoveData(
-        labels=["secondary_effect"],
+
         type="ひこう",
         category="特殊",
         pp=10,
@@ -3153,7 +3115,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
     ),
     "こごえるかぜ": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=15,
@@ -3168,7 +3130,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "こごえるせかい": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=10,
@@ -3182,7 +3144,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "こなゆき": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=25,
@@ -3198,7 +3160,7 @@ MOVES: dict[str, MoveData] = {
         labels=["pulse"],
     ),
     "サイケこうせん": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=20,
@@ -3206,7 +3168,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "サイコキネシス": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=10,
@@ -3235,7 +3197,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "サイコブースト": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=5,
@@ -3281,7 +3243,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "シードフレア": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="特殊",
         pp=5,
@@ -3289,7 +3251,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
     ),
     "シェルアームズ": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=10,
@@ -3320,7 +3282,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "シャカシャカほう": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="特殊",
         pp=15,
@@ -3329,7 +3291,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "シャドーボール": MoveData(
-        labels=["secondary_effect"],
+
         type="ゴースト",
         category="特殊",
         pp=15,
@@ -3359,7 +3321,7 @@ MOVES: dict[str, MoveData] = {
         priority=1
     ),
     "じんつうりき": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=20,
@@ -3367,7 +3329,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "しんぴのちから": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=10,
@@ -3398,7 +3360,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "スケイルノイズ": MoveData(
-        labels=["secondary_effect"],
+
         type="ドラゴン",
         category="特殊",
         pp=5,
@@ -3413,7 +3375,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "スチームバースト": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="特殊",
         pp=5,
@@ -3429,7 +3391,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0
     ),
     "スモッグ": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=20,
@@ -3462,7 +3424,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "だいちのちから": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="特殊",
         pp=10,
@@ -3486,7 +3448,7 @@ MOVES: dict[str, MoveData] = {
         labels=["non_encore", "non_negoto"],
     ),
     "だいもんじ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=5,
@@ -3501,7 +3463,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "だくりゅう": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="特殊",
         pp=10,
@@ -3516,7 +3478,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "たつまき": MoveData(
-        labels=["secondary_effect"],
+
         type="ドラゴン",
         category="特殊",
         pp=20,
@@ -3526,7 +3488,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
     ),
     "チャージビーム": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=10,
@@ -3600,7 +3562,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "でんきショック": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=30,
@@ -3615,7 +3577,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0
     ),
     "でんじほう": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=5,
@@ -3636,7 +3598,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
     ),
     "トライアタック": MoveData(
-        labels=["secondary_effect"],
+
         type="ノーマル",
         category="特殊",
         pp=10,
@@ -3660,7 +3622,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "どろかけ": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="特殊",
         pp=10,
@@ -3668,7 +3630,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ナイトバースト": MoveData(
-        labels=["secondary_effect"],
+
         type="あく",
         category="特殊",
         pp=10,
@@ -3696,7 +3658,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ねっさのあらし": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="特殊",
         pp=10,
@@ -3706,7 +3668,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
     ),
     "ねっさのだいち": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="特殊",
         pp=10,
@@ -3715,7 +3677,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "ねっとう": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="特殊",
         pp=15,
@@ -3724,7 +3686,7 @@ MOVES: dict[str, MoveData] = {
 
     ),
     "ねっぷう": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=10,
@@ -3741,7 +3703,7 @@ MOVES: dict[str, MoveData] = {
         critical_rank=1,
     ),
     "ねんりき": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=25,
@@ -3749,7 +3711,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "バークアウト": MoveData(
-        labels=["secondary_effect"],
+
         type="あく",
         category="特殊",
         pp=15,
@@ -3838,7 +3800,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "dance"],
     ),
     "バブルこうせん": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="特殊",
         pp=20,
@@ -3860,7 +3822,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "はるのあらし": MoveData(
-        labels=["secondary_effect"],
+
         type="フェアリー",
         category="特殊",
         pp=5,
@@ -3877,7 +3839,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ひのこ": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=25,
@@ -3885,7 +3847,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ひゃっきやこう": MoveData(
-        labels=["secondary_effect"],
+
         type="ゴースト",
         category="特殊",
         pp=15,
@@ -3893,7 +3855,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ひやみず": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="特殊",
         pp=20,
@@ -3922,7 +3884,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "ふぶき": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=5,
@@ -3951,7 +3913,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "フリーズドライ": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=20,
@@ -3966,7 +3928,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "フルールカノン": MoveData(
-        labels=["secondary_effect"],
+
         type="フェアリー",
         category="特殊",
         pp=5,
@@ -3980,7 +3942,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "フレアソング": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=10,
@@ -3990,7 +3952,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "ふんえん": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=15,
@@ -4016,7 +3978,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ヘドロウェーブ": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=10,
@@ -4024,7 +3986,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ヘドロこうげき": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=20,
@@ -4032,7 +3994,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ヘドロばくだん": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=10,
@@ -4049,7 +4011,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ほうでん": MoveData(
-        labels=["secondary_effect"],
+
         type="でんき",
         category="特殊",
         pp=15,
@@ -4057,7 +4019,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ぼうふう": MoveData(
-        labels=["secondary_effect"],
+
         type="ひこう",
         category="特殊",
         pp=10,
@@ -4087,7 +4049,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ほのおのまい": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=10,
@@ -4118,7 +4080,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "マジカルフレイム": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=10,
@@ -4139,7 +4101,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0
     ),
     "マッドショット": MoveData(
-        labels=["secondary_effect"],
+
         type="じめん",
         category="特殊",
         pp=15,
@@ -4197,7 +4159,7 @@ MOVES: dict[str, MoveData] = {
         labels=["explosion"],
     ),
     "ミストボール": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=5,
@@ -4219,7 +4181,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "みずのはどう": MoveData(
-        labels=["secondary_effect"],
+
         type="みず",
         category="特殊",
         pp=20,
@@ -4252,7 +4214,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "ムーンフォース": MoveData(
-        labels=["secondary_effect"],
+
         type="フェアリー",
         category="特殊",
         pp=15,
@@ -4260,7 +4222,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "むしのさざめき": MoveData(
-        labels=["secondary_effect"],
+
         type="むし",
         category="特殊",
         pp=10,
@@ -4275,7 +4237,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "むしのていこう": MoveData(
-        labels=["secondary_effect"],
+
         type="むし",
         category="特殊",
         pp=20,
@@ -4311,7 +4273,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
     ),
     "もえあがるいかり": MoveData(
-        labels=["secondary_effect"],
+
         type="あく",
         category="特殊",
         pp=10,
@@ -4338,7 +4300,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "ようかいえき": MoveData(
-        labels=["secondary_effect"],
+
         type="どく",
         category="特殊",
         pp=30,
@@ -4361,7 +4323,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ラスターカノン": MoveData(
-        labels=["secondary_effect"],
+
         type="はがね",
         category="特殊",
         pp=10,
@@ -4375,7 +4337,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ラスターパージ": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=5,
@@ -4389,7 +4351,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "リーフストーム": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="特殊",
         pp=5,
@@ -4403,7 +4365,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "りゅうせいぐん": MoveData(
-        labels=["secondary_effect"],
+
         type="ドラゴン",
         category="特殊",
         pp=5,
@@ -4417,7 +4379,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "りゅうのいぶき": MoveData(
-        labels=["secondary_effect"],
+
         type="ドラゴン",
         category="特殊",
         pp=20,
@@ -4433,7 +4395,7 @@ MOVES: dict[str, MoveData] = {
         labels=["pulse"],
     ),
     "りんごさん": MoveData(
-        labels=["secondary_effect"],
+
         type="くさ",
         category="特殊",
         pp=10,
@@ -4449,7 +4411,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
     ),
     "ルミナコリジョン": MoveData(
-        labels=["secondary_effect"],
+
         type="エスパー",
         category="特殊",
         pp=10,
@@ -4463,7 +4425,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "れいとうビーム": MoveData(
-        labels=["secondary_effect"],
+
         type="こおり",
         category="特殊",
         pp=10,
@@ -4471,7 +4433,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "れんごく": MoveData(
-        labels=["secondary_effect"],
+
         type="ほのお",
         category="特殊",
         pp=5,
@@ -4486,7 +4448,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ワンダースチーム": MoveData(
-        labels=["secondary_effect"],
+
         type="フェアリー",
         category="特殊",
         pp=10,

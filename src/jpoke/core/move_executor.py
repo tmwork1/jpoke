@@ -87,6 +87,9 @@ class MoveExecutor:
         Returns:
             ヒットごとの威力。指定がなければ基礎威力を返す。
         """
+        if move.data.multi_hit is None:
+            return move.power
+
         power_sequence = move.data.multi_hit["power_sequence"]
         if power_sequence:
             idx = min(hit_index - 1, len(power_sequence) - 1)
@@ -102,7 +105,7 @@ class MoveExecutor:
         Returns:
             処理を継続できる場合はTrue。無効化などで終了する場合はFalse。
         """
-        if self.events.emit(Event.ON_CHECK_MOVE_IMMUNE, ctx, True):
+        if not self.events.emit(Event.ON_CHECK_MOVE_IMMUNE, ctx, True):
             return False
 
         # 変化技はダメージ計算をせず、効果処理のみ行う

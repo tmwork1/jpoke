@@ -6,9 +6,8 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.model import Move
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
-from jpoke.enums import Event, LogCode
+from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 
 
@@ -273,18 +272,6 @@ def activate_global_field(battle: Battle,
     return HandlerReturn(value=success)
 
 
-def resolve_field_count(battle: Battle,
-                        ctx: BattleContext,
-                        value: Any,
-                        field: Weather | Terrain,
-                        additonal_count: int) -> HandlerReturn:
-    """指定場状態と一致するとき継続ターン数に加算する。"""
-    if ctx.field.orig_name == field:
-        return HandlerReturn(value=value + additonal_count)
-    else:
-        return HandlerReturn(value=value)
-
-
 def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
     """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
 
@@ -297,6 +284,7 @@ def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
 def calc_def_type_modifier(battle: Battle, mon: Pokemon, move: Move | str) -> float:
     """防御側のタイプ相性補正を計算する。"""
     if isinstance(move, str):
+        from jpoke.model import Move
         move = Move(move)
     ctx = BattleContext(defender=mon, move=move)
     return battle.damage_calculator.calc_def_type_modifier(ctx)

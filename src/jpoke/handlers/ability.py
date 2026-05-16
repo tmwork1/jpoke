@@ -66,7 +66,9 @@ def announce_ability_triggered(battle: Battle,
     mon.ability.revealed = True
     idx = battle.get_player_index(mon)
     battle.event_logger.add(
-        battle.turn, idx, LogCode.ABILITY_TRIGGERED,
+        battle.turn,
+        idx,
+        LogCode.ABILITY_TRIGGERED,
         payload={"ability": mon.ability.name, "success": success}
     )
     return HandlerReturn(value=value)
@@ -1893,7 +1895,7 @@ def かたやぶり_deactivate(battle: Battle, ctx: BattleContext, value: bool) 
 
 def ばけのかわ_modify_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。"""
-    battle.add_ability_disabled_reason(ctx.defender, "self")
+    battle.add_ability_disabled_reason(ctx.defender, "consumed")
     battle.modify_hp(ctx.defender, r=-1/8)
     announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
     return HandlerReturn(value=0)

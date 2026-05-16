@@ -2,11 +2,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol, Any
 if TYPE_CHECKING:
     from jpoke.core import EventManager, Handler, Player
-    from jpoke.data.models import Handlers
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.utils.type_defs import AbilityDisabledReason
+from jpoke.utils.type_defs import AbilityDisabledReason, ItemDisabledReason
 
 
 class EffectData(Protocol):
@@ -16,7 +15,7 @@ class EffectData(Protocol):
     実装すべきインターフェースを定義する。
     """
     name: str
-    handlers: Handlers
+    handlers: dict[Event | DomainEvent, Handler | list[Handler]]
 
 
 class GameEffect:
@@ -37,7 +36,7 @@ class GameEffect:
         """
         self.data: EffectData = data
         self.revealed: bool = False
-        self._disabled_reasons: set[Any] = set()
+        self._disabled_reasons: set[AbilityDisabledReason | ItemDisabledReason] = set()
 
     @property
     def name(self) -> str:
@@ -73,15 +72,15 @@ class GameEffect:
         return not self._disabled_reasons
 
     @property
-    def self_disabled(self) -> bool:
+    def consumed(self) -> bool:
         """効果が自己無効化されているかを判定する。
 
         Returns:
             効果が自己無効化されている場合はTrue、そうでない場合はFalse
         """
-        return "self" in self._disabled_reasons
+        return "consumed" in self._disabled_reasons
 
-    def add_disable_reason(self, reason: Any) -> None:
+    def add_disable_reason(self, reason: AbilityDisabledReason | ItemDisabledReason) -> None:
         """
         効果を無効にする理由を追加する。
         Args:
@@ -89,7 +88,7 @@ class GameEffect:
         """
         self._disabled_reasons.add(reason)
 
-    def remove_disable_reason(self, reason: Any) -> None:
+    def remove_disable_reason(self, reason: AbilityDisabledReason | ItemDisabledReason) -> None:
         """効果を有効にする理由を削除する。
 
         Args:
@@ -97,7 +96,7 @@ class GameEffect:
         """
         self._disabled_reasons.discard(reason)
 
-    def set_disabled_reasons(self, reasons: set[Any]) -> None:
+    def set_disabled_reasons(self, reasons: set[AbilityDisabledReason | ItemDisabledReason]) -> None:
         """無効化の理由を置き換える。
 
         Args:

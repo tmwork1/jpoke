@@ -66,7 +66,6 @@ def start_battle(ally: list[Pokemon],
 
     # 0ターン目の開始処理
     battle.start()
-    battle.print_logs()
 
     # 天候・地形の有効化
     if weather:
@@ -107,7 +106,6 @@ def start_battle(ally: list[Pokemon],
     # ターン進行
     for _ in range(turn):
         battle.advance_turn()
-        battle.print_logs()
         if battle.judge_winner():
             break
 

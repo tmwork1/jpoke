@@ -225,7 +225,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_MODIFY_DURATION: h.ItemHandler(
-                partial(common.resolve_field_count, field="すなあらし", additonal_count=3),
+                partial(h.resolve_field_count, field="すなあらし", additonal_count=3),
                 subject_spec="source:self",
             )
         }
@@ -325,7 +325,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=50,
         handlers={
             Event.ON_MODIFY_STAT: h.ItemHandler(
-                h.だっしゅつパック_on_stat_down,
+                h.だっしゅつパック_trigger_switch,
                 subject_spec="target:self",
             )
         }

@@ -5,7 +5,8 @@
             "name": "Python デバッガー: 現在のファイル",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/random_1on1.py",
+            //"program": "${workspaceFolder}/scripts/random_1on1.py",
+            "program": "${workspaceFolder}/tests/test_ailment.py",
             "console": "integratedTerminal"
         }
     ]

@@ -1,6 +1,7 @@
 """ダメージ計算のタイプ補正テスト"""
 import pytest
 
+from jpoke.utils.type_defs import Type
 from jpoke import Pokemon
 from jpoke.core import BattleContext
 
@@ -10,57 +11,45 @@ import test_utils as t
 # ──────────────────────────────────────────────────────────────────
 # テラスタル基礎性能
 # ──────────────────────────────────────────────────────────────────
-# TODO : terastallizeフラグは削除
 @pytest.mark.parametrize(
-    ("attacker", "terastallize", "expected"),
+    ("tera_type", "move", "expected"),
     [
-        (Pokemon("ピカチュウ", tera_type="でんき", moves=["でんきショック"]), True, 2.0),
-        (Pokemon("ピカチュウ", tera_type="ほのお", moves=["ひのこ"]), True, 1.5),
-        (Pokemon("ピカチュウ", tera_type="ほのお", moves=["でんきショック"]), True, 1.5),
+        ("でんき", "でんきショック", 2.0),
+        ("ほのお", "ひのこ", 1.5),
+        ("ほのお", "でんきショック", 1.5),
     ]
 )
-def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, expected: int):
+def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: int):
     battle = t.start_battle(
-        ally=[attacker],
+        ally=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move])],
         foe=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-
-    if terastallize:
-        attacker.terastallize()
-
+    attacker, defender = battle.actives
+    attacker.terastallize()
     ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
 
     assert battle.damage_calculator.calc_atk_type_modifier(ctx) == expected
 
 
-# TODO : terastallizeフラグは削除
 @pytest.mark.parametrize(
-    ("move_name", "terastal", "terastallize", "expected"),
+    ("move_name", "tera_type", "expected"),
     [
-        ("でんきショック", "でんき", True, 60),
-        ("でんきショック", "ほのお", True, 40),
-        ("でんこうせっか", "ノーマル", True, 40),
-        ("にどげり", "かくとう", True, 30),
-        ("でんきショック", "でんき", False, 40),
+        ("でんきショック", "でんき", 60),
+        ("でんきショック", "ほのお", 40),
+        ("でんこうせっか", "ノーマル", 40),
+        ("にどげり", "かくとう", 30),
     ],
 )
-def test_テラスタル時の威力60底上げ補正(move_name: str,
-                          terastal: str,
-                          terastallize: bool,
-                          expected: int):
+def test_威力底上げ(move_name: str,
+               tera_type: Type,
+               expected: int):
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", tera_type=terastal, moves=[move_name])],
+        ally=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move_name])],
         foe=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    attacker, defender = battle.actives
+    attacker.terastallize()
     move = attacker.moves[0]
-
-    if terastallize:
-        attacker.terastallize()
-
     ctx = BattleContext(attacker=attacker, defender=defender, move=move)
     assert battle.damage_calculator.calc_final_power(ctx) == expected
 

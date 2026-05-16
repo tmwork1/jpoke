@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from .event_manager import EventManager
     from .player import Player
 
-from jpoke.model import Pokemon
+from jpoke.model import Pokemon, Ability
 from jpoke.enums import Interrupt, LogCode
 
 from .event_manager import Event
@@ -80,6 +80,12 @@ class SwitchManager:
             volatile.unregister_handlers(self.events, mon)
 
         mon.bench_reset()
+        if mon.ability.orig_name != mon.base_ability_name:
+            mon.ability = Ability(mon.base_ability_name)
+        else:
+            mon.ability.bench_reset()
+        mon.item.bench_reset()
+
         self.battle.add_event_log(
             mon,
             LogCode.SWITCH_OUT,
@@ -189,7 +195,7 @@ class SwitchManager:
                 continue
 
             # 交代を引き起こしたアイテムを消費させる
-            if flag.consume_item():
+            if flag.requires_item_consumption():
                 self.battle.consume_item(player.active_mon)
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
@@ -197,8 +203,11 @@ class SwitchManager:
             command = player.choose_switch_command(self.battle)
 
             self.battle.add_command_log(player, command)
-            self.run_switch(player, player.team[command.idx],
-                            emit_switch_in_event=emit_on_each_switch)
+            self.run_switch(
+                player,
+                player.team[command.idx],
+                emit_switch_in_event=emit_on_each_switch
+            )
             switched_players.append(player)
 
         # 全員の着地処理を同時に実行

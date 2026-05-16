@@ -40,27 +40,12 @@ class Item(GameEffect):
 
         持ち物の状態をリセットする。
         """
+        self.reset_enable_state()
         self.lost_cause = ""
 
-    @property
-    def lost(self) -> bool:
-        """アイテムが喪失状態かどうかを判定する。
-
-        Returns:
-            アイテムが喪失状態の場合はTrue、そうでない場合はFalse
-        """
-        return self.self_disabled
-
-    def lose(self, cause: ItemLostCause = "remove"):
-        """アイテムを喪失状態にする。"""
-        self.add_disable_reason("self")
-        self.revealed = True
-        self.lost_cause = cause
-
-    def consume(self):
-        """アイテムを消費する。
-
-        アイテムを公開状態にし、無効化する。
-        消費されたアイテムは効果を失い、二度と使用できなくなる。
-        """
-        self.lose(cause="consume")
+    def reset_enable_state(self):
+        """持ち物の有効状態をリセットする。"""
+        reasons = set()
+        if self.consumed:
+            reasons.add("consumed")
+        self.set_disabled_reasons(reasons)

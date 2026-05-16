@@ -13,21 +13,23 @@ import test_utils as t
 # ──────────────────────────────────────────────────────────────────
 
 def test_いのちのたま():
-    """いのちのたま: 攻撃技でダメージ"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
-                            ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["たいあたり"])],
-                            turn=1
-                            )
-    assert battle.actives[0].item.revealed
+    """いのちのたま: 攻撃技で反動ダメージ"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ")],
+        turn=1
+    )
     assert battle.actives[0].hp == math.ceil(battle.actives[0].max_hp * 7/8)
+    assert battle.actives[0].item.revealed
 
 
 def test_いのちのたま_変化技では発動しない():
     """いのちのたま: 変化技では発動しない"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
-                            ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["はねる"])],
-                            turn=1
-                            )
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", item="いのちのたま", moves=["はねる"])],
+        turn=1
+    )
     assert not battle.actives[0].item.revealed
 
 
@@ -50,9 +52,10 @@ def test_きれいなぬけがら():
 
 def test_さらさらいわ():
     """さらさらいわ: 天候延長"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
-                            ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
-                            )
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
     battle.weather_manager.activate("すなあらし", 5, source=battle.actives[0])
     assert battle.raw_weather.count == 8
 
@@ -66,17 +69,20 @@ def test_だっしゅつパック():
         ally=[Pokemon("ピカチュウ", item="だっしゅつパック"), Pokemon("ライチュウ")],
         foe=[Pokemon("ピカチュウ", ability="いかく")],
     )
-    assert battle.players[0].active_idx == 1
-    assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item.enabled
+    player = battle.players[0]
+    mon = player.team[0]
+    assert player.active_idx == 1
+    assert mon.item.revealed
+    assert mon.item.consumed
 
 
 def test_だっしゅつパック_能力上昇では発動しない():
     """だっしゅつパック: 能力上昇では発動しない"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
-                            ally=[Pokemon("ピカチュウ", item="だっしゅつパック", moves=["つるぎのまい"]), Pokemon("ライチュウ")],
-                            turn=1,
-                            )
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", item="だっしゅつパック", moves=["つるぎのまい"]), Pokemon("ライチュウ")],
+        turn=1,
+    )
     assert not battle.players[0].team[0].item.revealed
 
 # ──────────────────────────────────────────────────────────────────
@@ -101,15 +107,17 @@ def test_だっしゅつボタン():
 # ──────────────────────────────────────────────────────────────────
 def test_たべのこし():
     """たべのこし: ターン終了時回復"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")],
-                            ally=[Pokemon("ピカチュウ", item="たべのこし")],
-                            )
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", item="たべのこし")],
+    )
     mon = battle.actives[0]
     # HPが満タンのときは回復しない
     battle.events.emit(Event.ON_TURN_END_2)
     battle.print_logs()
     assert not mon.item.revealed
-    mon._hp = 1  # テスト用に内部変数を直接変更
+
+    mon.hp = 1  # テスト用に内部変数を直接変更
     battle.events.emit(Event.ON_TURN_END_2)
     assert mon.item.revealed
     assert mon.hp == 1 + mon.max_hp // 16
