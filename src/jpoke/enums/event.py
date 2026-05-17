@@ -115,11 +115,11 @@ class Event(Enum):
     # handle: volatile.py（アンコール・かいふくふうじ・ちょうはつ等による使用禁止）
     #          data/move.py（こだわりアイテムによるロック）
     #          data/field.py（サイコフィールドによる優先度技ブロック）
-    ON_CHECK_MOVE = auto()
+    ON_TRY_MOVE = auto()
 
     # emit: core/move_executor.py（技の無効化チェック）
     # handle: data/move.py（タイプ相性による無効）, volatile.py（まもる等による無効）
-    ON_CHECK_MOVE_IMMUNE = auto()
+    ON_APPLY_MOVE = auto()
 
     # emit: core/move_executor.py（みがわりへの干渉確認）
     # handle: volatile.py（みがわり状態への技ヒット可否）

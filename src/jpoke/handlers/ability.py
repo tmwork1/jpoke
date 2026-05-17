@@ -345,7 +345,6 @@ def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, 
         or not ctx.defender.has_type("あく")
     ):
         return HandlerReturn(value=value)
-
     announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
     return HandlerReturn(value=False, stop_event=True)
 
@@ -922,8 +921,8 @@ def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) ->
 
 def スキルリンク_modify_hit_count(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """スキルリンク特性: 連続技のヒット数を最大にする。"""
-    if ctx.move.data.max_hits > 1:
-        value = ctx.move.data.max_hits
+    if ctx.move.max_hits > 1:
+        value = ctx.move.max_hits
     return HandlerReturn(value=value)
 
 

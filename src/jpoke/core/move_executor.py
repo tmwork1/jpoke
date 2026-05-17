@@ -105,8 +105,12 @@ class MoveExecutor:
         Returns:
             処理を継続できる場合はTrue。無効化などで終了する場合はFalse。
         """
-        if not self.events.emit(Event.ON_CHECK_MOVE_IMMUNE, ctx, True):
+        print("Executing hit:", ctx.move.name, f"(Hit {ctx.hit_index}/{ctx.hit_count})")
+
+        if not self.events.emit(Event.ON_APPLY_MOVE, ctx, True):
             return False
+
+        print("Move applied successfully.")
 
         # 変化技はダメージ計算をせず、効果処理のみ行う
         if ctx.move.category == "変化":
@@ -277,12 +281,14 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
+        print("Exeuting move:", ctx.move.name)
+
         # 溜め技の準備
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
 
         # 発動成功判定
-        if not self.events.emit(Event.ON_CHECK_MOVE, ctx, True):
+        if not self.events.emit(Event.ON_TRY_MOVE, ctx, True):
             return
 
         # 反射判定

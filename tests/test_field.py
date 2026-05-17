@@ -139,14 +139,14 @@ def test_おおひでり_みず技を失敗させる():
         foe=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
-    assert not t.check_event_result(attack_battle, Event.ON_CHECK_MOVE)
+    assert not t.check_event_result(attack_battle, Event.ON_TRY_MOVE)
 
     status_battle = t.start_battle(
         ally=[Pokemon("ゼニガメ", moves=["みずびたし"])],
         foe=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
-    assert not t.check_event_result(status_battle, Event.ON_CHECK_MOVE)
+    assert not t.check_event_result(status_battle, Event.ON_TRY_MOVE)
 
 
 def test_おおひでり_ほのお技はブロックされない():
@@ -156,7 +156,7 @@ def test_おおひでり_ほのお技はブロックされない():
         foe=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
-    assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert t.check_event_result(battle, Event.ON_TRY_MOVE)
 
 
 def test_おおあめ_ほのお技を失敗させる():
@@ -166,14 +166,14 @@ def test_おおあめ_ほのお技を失敗させる():
         foe=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
-    assert not t.check_event_result(attack_battle, Event.ON_CHECK_MOVE)
+    assert not t.check_event_result(attack_battle, Event.ON_TRY_MOVE)
 
     status_battle = t.start_battle(
         ally=[Pokemon("ヒトカゲ", moves=["おにび"])],
         foe=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
-    assert not t.check_event_result(status_battle, Event.ON_CHECK_MOVE)
+    assert not t.check_event_result(status_battle, Event.ON_TRY_MOVE)
 
 
 def test_おおあめ_みず技はブロックされない():
@@ -183,7 +183,7 @@ def test_おおあめ_みず技はブロックされない():
         foe=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
-    assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert t.check_event_result(battle, Event.ON_TRY_MOVE)
 
 
 def test_おおあめ_みず強化():
@@ -403,7 +403,7 @@ def test_グラスフィールド_回復():
                             terrain=("グラスフィールド", 99),
                             )
     mon = battle.actives[0]
-    mon._hp = 1
+    mon.hp = 1
     battle.events.emit(Event.ON_TURN_END_2)
     assert mon.hp == 1 + mon.max_hp // 16, "グラスフィールドの回復量が不正"
 
@@ -412,7 +412,7 @@ def test_グラスフィールド_回復():
                                      terrain=("グラスフィールド", 99),
                                      )
     floating_mon = floating_battle.actives[0]
-    floating_mon._hp = 1
+    floating_mon.hp = 1
     floating_battle.events.emit(Event.ON_TURN_END_2)
     assert floating_mon.hp == 1
 
@@ -429,7 +429,7 @@ def test_サイコフィールド_先制技無効():
         foe=[Pokemon("ピカチュウ")],
         terrain=("サイコフィールド", 99),
     )
-    assert not t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
 
 
 def test_サイコフィールド_浮遊は先制技有効():
@@ -439,7 +439,7 @@ def test_サイコフィールド_浮遊は先制技有効():
         foe=[Pokemon("ピジョン")],
         terrain=("サイコフィールド", 99),
     )
-    assert t.check_event_result(battle, Event.ON_CHECK_MOVE)
+    assert t.check_event_result(battle, Event.ON_TRY_MOVE)
 
 # ──────────────────────────────────────────────────────────────────
 # ミストフィールド
@@ -779,7 +779,7 @@ def test_ねがいごと_回復と解除():
 
     # HPを減らして回復確認
     mon = battle.actives[0]
-    mon._hp = 1
+    mon.hp = 1
 
     heal = 20
     field.heal = heal

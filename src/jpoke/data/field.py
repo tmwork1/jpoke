@@ -85,7 +85,7 @@ FIELDS: dict[str, FieldData] = {
                 h.はれ_prevent_freeze,
                 subject_spec="target:self",
             ),
-            Event.ON_CHECK_MOVE: h.FieldHandler(
+            Event.ON_TRY_MOVE: h.FieldHandler(
                 h.おおひでり_block_move,
                 priority=10,
                 subject_spec="attacker:self",
@@ -98,7 +98,7 @@ FIELDS: dict[str, FieldData] = {
                 h.あめ_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHECK_MOVE: h.FieldHandler(
+            Event.ON_TRY_MOVE: h.FieldHandler(
                 h.おおあめ_block_move,
                 priority=10,
                 subject_spec="attacker:self",
@@ -161,7 +161,7 @@ FIELDS: dict[str, FieldData] = {
                 h.サイコフィールド_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHECK_MOVE: h.FieldHandler(
+            Event.ON_TRY_MOVE: h.FieldHandler(
                 h.サイコフィールド_block_priority_move,
                 priority=100,
                 subject_spec="defender:self",

@@ -594,7 +594,7 @@ MOVES: dict[str, MoveData] = {
         priority=-3,
         labels=["contact", "non_negoto", "punch"],
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 h.きあいパンチ_check_move,
                 subject_spec="attacker:self",
             ),
@@ -1039,13 +1039,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko"],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
+            Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
-                subject_spec="defender:self",
             ),
             Event.ON_MODIFY_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
-                subject_spec="attacker:self",
             ),
         }
     ),
@@ -1400,13 +1398,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko", "contact"],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
+            Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
-                subject_spec="defender:self",
             ),
             Event.ON_MODIFY_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
-                subject_spec="attacker:self",
             ),
         }
     ),
@@ -1943,13 +1939,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko", "contact"],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
+            Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
-                subject_spec="defender:self",
             ),
             Event.ON_MODIFY_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
-                subject_spec="attacker:self",
             ),
         }
     ),
@@ -2022,7 +2016,7 @@ MOVES: dict[str, MoveData] = {
         priority=3,
         labels=["contact"],
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 h.はやてがえし_check_move,
             ),
             Event.ON_HIT: h.MoveHandler(
@@ -3406,13 +3400,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko"],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
+            Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
-                subject_spec="defender:self",
             ),
             Event.ON_MODIFY_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
-                subject_spec="attacker:self",
             ),
         }
     ),
@@ -3544,11 +3536,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
-                h.テラバースト_check_move_type,
+                h.テラバースト_modify_move_type,
                 subject_spec="source:self",
             ),
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
-                h.テラバースト_check_move_category,
+                h.テラバースト_modify_move_category,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
@@ -4780,7 +4772,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
         target="self",
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="かえんのまもり", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5195,7 +5187,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="スレッドトラップ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5262,7 +5254,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ちいさくなる", target_spec="attacker:self", source_spec="attacker:self"),
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -5409,7 +5401,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="トーチカ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5756,7 +5748,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ふういん", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5786,7 +5778,7 @@ MOVES: dict[str, MoveData] = {
         priority=-6,
         labels=["wind"],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
+            Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.check_blow_immune,
                 priority=30,
             ),
@@ -5912,7 +5904,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5924,7 +5916,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まるくなる", target_spec="attacker:self", source_spec="attacker:self"),
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -5952,7 +5944,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         accuracy=0,
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.MoveHandler(
+            Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.みがわり_can_use,
                 priority=100,
             ),
@@ -5970,7 +5962,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5995,7 +5987,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=0,
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="みちづれ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -6171,7 +6163,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_CHECK_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE: h.MoveHandler(
                 partial(common.apply_volatile, volatile="キングシールド", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }

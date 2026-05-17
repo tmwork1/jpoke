@@ -157,6 +157,11 @@ class EventLog:
             case LogCode.PROTECT_SUCCESS:
                 return "攻撃を防いだ"
 
+            case LogCode.MOVE_IMMUNE:
+                move = self.payload.get("move", "技")
+                reason = self.payload.get("reason", "")
+                return f"{move} 無効化 [{reason}]"
+
             case _:
                 return self.log.name
 

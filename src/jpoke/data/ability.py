@@ -126,7 +126,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.いたずらごころ_modify_move_priority,
                 subject_spec="attacker:self",
             ),
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.いたずらごころ_block_dark_target,
                 subject_spec="attacker:self",
             ),
@@ -165,7 +165,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.おうごんのからだ_block_status_move,
                 subject_spec="defender:self",
             )
@@ -341,7 +341,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.かんそうはだ_check_water_immune,
                 subject_spec="target:self",
             ),
@@ -541,7 +541,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.がんじょう_block_ohko,
                 subject_spec="target:self",
             ),
@@ -606,7 +606,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE: [
+            Event.ON_TRY_MOVE: [
                 h.AbilityHandler(
                     h.しめりけ_block_explosion_self,
                     subject_spec="attacker:self",
@@ -859,7 +859,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.そうしょく_check_immune,
                 subject_spec="defender:self",
             )
@@ -923,7 +923,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.ちくでん_check_immune,
                 subject_spec="defender:self",
             )
@@ -939,7 +939,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.ちょすい_check_immune,
                 subject_spec="defender:self",
             )
@@ -1010,7 +1010,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.でんきエンジン_check_immune,
                 subject_spec="defender:self",
             )
@@ -1065,7 +1065,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.どしょく_check_immune,
                 subject_spec="defender:self",
             )
@@ -1287,7 +1287,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.ひらいしん_check_immune,
                 subject_spec="defender:self",
             )
@@ -1419,7 +1419,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうおん_check_immune,
                 subject_spec="defender:self",
             ),
@@ -1430,7 +1430,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうじん_check_immune,
                 subject_spec="defender:self",
             ),
@@ -1445,7 +1445,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうだん_check_immune,
                 subject_spec="defender:self",
             ),
@@ -1521,7 +1521,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.もらいび_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.もらいび_check_immune,
                 subject_spec="defender:self",
             ),
@@ -1596,7 +1596,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CHECK_MOVE_IMMUNE: h.AbilityHandler(
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.よびみず_check_immune,
                 subject_spec="defender:self",
             )

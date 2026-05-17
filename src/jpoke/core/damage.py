@@ -65,6 +65,13 @@ class DamageCalculator:
         """
         self.battle: Battle = battle
 
+        # ダメージ計算の結果を保存するための属性（デバッグ用）
+        self.final_power = 0
+        self.final_attack = 0
+        self.final_defense = 0
+        self.attack_type_modifier = 1
+        self.defense_type_modifier = 1
+
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。
 
@@ -119,12 +126,12 @@ class DamageCalculator:
         ctx.critical = dmg_ctx.critical
 
         # 最終威力・攻撃・防御
-        final_pow = self.calc_final_power(ctx, dmg_ctx)
-        final_atk = self.calc_final_attack(ctx, dmg_ctx)
-        final_def = self.calc_final_defense(ctx, dmg_ctx)
+        final_power = self.calc_final_power(ctx, dmg_ctx)
+        final_attack = self.calc_final_attack(ctx, dmg_ctx)
+        final_defence = self.calc_final_defense(ctx, dmg_ctx)
 
         # 最大乱数ダメージ
-        max_dmg = int(int(int(attacker.level*0.4+2)*final_pow*final_atk/final_def)/50+2)
+        max_dmg = int(int(int(attacker.level*0.4+2)*final_power*final_attack/final_defence)/50+2)
 
         # 急所
         if dmg_ctx.critical:
@@ -140,25 +147,13 @@ class DamageCalculator:
         r_def_type = self.calc_def_type_modifier(ctx)
 
         # やけど補正（タイプ相性の後、ダメージ補正の前）
-        r_burn = self.events.emit(
-            Event.ON_CALC_BURN_MODIFIER,
-            ctx,
-            4096
-        ) / 4096
+        r_burn = self.events.emit(Event.ON_CALC_BURN_MODIFIER, ctx, 4096) / 4096
 
         # ダメージ補正
-        r_dmg = self.events.emit(
-            Event.ON_CALC_DAMAGE_MODIFIER,
-            ctx,
-            4096
-        ) / 4096
+        r_dmg = self.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) / 4096
 
         # まもる貫通系補正（Z技、ダイマックス技等）
-        r_protect = self.events.emit(
-            Event.ON_CALC_PROTECT_MODIFIER,
-            ctx,
-            4096
-        ) / 4096
+        r_protect = self.events.emit(Event.ON_CALC_PROTECT_MODIFIER, ctx, 4096) / 4096
 
         dmgs = [0]*16
         for i in range(16):
@@ -201,12 +196,12 @@ class DamageCalculator:
         attacker = ctx.attacker
         move_type = ctx.move.type
 
-        base_modifier = 4096
+        base = 4096
         original_matches = move_type in attacker.data.types
 
         if not attacker.terastallized:
             if original_matches:
-                base_modifier = 6144
+                base = 6144
         else:
             tera_type = attacker.tera_type
 
@@ -216,25 +211,23 @@ class DamageCalculator:
 
                 if original_matches:
                     # 元タイプ一致技: 初回2.0倍、以降1.5倍
-                    base_modifier = 6144 if already_boosted else 8192
+                    base = 6144 if already_boosted else 8192
                 else:
                     # 不一致技: 初回1.2倍、以降1.0倍
-                    base_modifier = 4096 if already_boosted else 4915
+                    base = 4096 if already_boosted else 4915
             else:
                 tera_matches = tera_type == move_type
                 if tera_matches and original_matches:
                     # テラスタイプ・元タイプ両方が技タイプと一致 → 2.0倍
-                    base_modifier = 8192
+                    base = 8192
                 elif tera_matches or original_matches:
                     # テラスタイプ一致、または元タイプ一致 → 1.5倍
-                    base_modifier = 6144
+                    base = 6144
 
-        v = self.events.emit(
-            Event.ON_CALC_ATK_TYPE_MODIFIER,
-            ctx,
-            base_modifier
-        )
-        return v / 4096
+        v = self.events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
+
+        self.attack_type_modifier = v / 4096  # デバッグ用に保存
+        return self.attack_type_modifier
 
     def calc_def_type_modifier(self, ctx: BattleContext) -> float:
         """タイプ相性補正を計算する。
@@ -249,31 +242,29 @@ class DamageCalculator:
             float: タイプ相性倍率（1.0=等倍、2.0=効果ばつぐん等）
         """
         if (
-            ctx.move.type == 'ステラ'
+            ctx.move.type == "ステラ"
             and ctx.defender.terastallized
         ):
             # テラスタル状態の相手にステラ技が効果抜群になる
-            base_modifier = 8192
+            base = 8192
         elif (
             ctx.move.type == "じめん"
             and self.battle.query_manager.is_floating(ctx.defender)
         ):
             # 浮いている相手にはじめん技が無効
-            base_modifier = 0
+            base = 0
         else:
             # タイプ相性表に基づいて補正を計算
-            base_modifier = 4096
+            base = 4096
             for def_type in ctx.defender.types:
                 type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
                 rate = type_chart.get(def_type, 1.0)
-                base_modifier = int(base_modifier * rate)
+                base = int(base * rate)
 
-        v = self.events.emit(
-            Event.ON_CALC_DEF_TYPE_MODIFIER,
-            ctx,
-            base_modifier
-        )
-        return v / 4096
+        v = self.events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
+
+        self.defense_type_modifier = v / 4096  # デバッグ用に保存
+        return self.defense_type_modifier
 
     def calc_final_power(self,
                          ctx: BattleContext,
@@ -291,24 +282,21 @@ class DamageCalculator:
             dmg_ctx = DamageContext()
 
         # 技威力
-        final_pow = ctx.move.power * dmg_ctx.power_multiplier
+        final_power = ctx.move.power * dmg_ctx.power_multiplier
 
         # その他の補正
-        r_pow = self.events.emit(
-            Event.ON_CALC_POWER_MODIFIER,
-            ctx,
-            4096
-        )
-        final_pow = round_half_down(final_pow * r_pow/4096)
+        r_pow = self.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+        final_power = round_half_down(final_power * r_pow/4096)
 
         # テラスタル時の威力60底上げ補正
         # 対象: テラスタイプ一致かつ非連続技かつ優先度+1未満
         if self._can_apply_terastal_power_floor(ctx):
-            final_pow = max(final_pow, 60)
+            final_power = max(final_power, 60)
 
-        final_pow = max(1, final_pow)
+        final_power = max(1, final_power)
 
-        return final_pow
+        self.final_power = final_power  # デバッグ用に保存
+        return final_power
 
     def _can_apply_terastal_power_floor(self, ctx: BattleContext) -> bool:
         """テラスタル時の威力60底上げ補正が適用可能か判定する。"""
@@ -357,7 +345,7 @@ class DamageCalculator:
 
         # ステータス
         if move.name == 'イカサマ':
-            final_atk = defender.stats["A"]
+            final_attack = defender.stats["A"]
             r_rank = rank_modifier(defender.rank["A"])
         else:
             if move.name == 'ボディプレス':
@@ -366,7 +354,7 @@ class DamageCalculator:
                 stat = "A"
             else:
                 stat = "C"
-            final_atk = attacker.stats[stat]
+            final_attack = attacker.stats[stat]
             r_rank = rank_modifier(attacker.rank[stat])
 
         r_rank = self.events.emit(
@@ -380,7 +368,7 @@ class DamageCalculator:
             dmg_ctx.add_flag(DamageFlag.IGNORE_ATK_DOWN_DURING_CRITICAL)
 
         # ランク補正
-        final_atk = int(final_atk * r_rank)
+        final_attack = int(final_attack * r_rank)
 
         # その他の補正
         r_atk = self.events.emit(
@@ -388,10 +376,11 @@ class DamageCalculator:
             ctx,
             4096
         )
-        final_atk = round_half_down(final_atk * r_atk/4096)
-        final_atk = max(1, final_atk)
+        final_attack = round_half_down(final_attack * r_atk/4096)
+        final_attack = max(1, final_attack)
 
-        return final_atk
+        self.final_attack = final_attack  # デバッグ用に保存
+        return final_attack
 
     def calc_final_defense(self,
                            ctx: BattleContext,
@@ -420,30 +409,23 @@ class DamageCalculator:
         else:
             stat = "D"
 
-        final_def = defender.stats[stat]
+        final_defence = defender.stats[stat]
         r_rank = rank_modifier(defender.rank[stat])
 
         # ランク補正の修正
-        r_rank = self.events.emit(
-            Event.ON_CALC_DEF_RANK_MODIFIER,
-            ctx,
-            r_rank,
-        )
+        r_rank = self.events.emit(Event.ON_CALC_DEF_RANK_MODIFIER, ctx, r_rank)
 
         if dmg_ctx.critical and r_rank > 1:
             r_rank = 1
             dmg_ctx.add_flag(DamageFlag.IGNORE_DEF_UP_DURING_CRITICAL)
 
         # ランク補正
-        final_def = int(final_def * r_rank)
+        final_defence = int(final_defence * r_rank)
 
         # その他の補正
-        r_def = self.events.emit(
-            Event.ON_CALC_DEF_MODIFIER,
-            ctx,
-            4096
-        )
-        final_def = round_half_down(final_def * r_def/4096)
-        final_def = max(1, final_def)
+        r_def = self.events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, 4096)
+        final_defence = round_half_down(final_defence * r_def/4096)
+        final_defence = max(1, final_defence)
 
-        return final_def
+        self.final_defense = final_defence  # デバッグ用に保存
+        return final_defence

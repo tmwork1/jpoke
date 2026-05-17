@@ -135,31 +135,26 @@ def _check_type_immune(battle: Battle, ctx: BattleContext) -> bool:
             LogCode.MOVE_IMMUNE,
             payload={"move": ctx.move.name, "reason": "タイプ"},
         )
-        return False
-    return True
+        return True
+    return False
 
 
 def ohko_check_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """一撃必殺技のタイプ無効判定。"""
     if _check_type_immune(battle, ctx):
+        print(f"{ctx.defender.name}は{ctx.move.name}を無効化した！")
         return HandlerReturn(value=False, stop_event=True)
+    print(f"{ctx.move.name}は{ctx.defender.name}に効果抜群だ！")
     return HandlerReturn(value=value)
 
 
 def ohko_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
-    if _check_type_immune(battle, ctx):
-        value = ctx.defender.hp
-    else:
-        value = 0
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=ctx.defender.hp)
 
 
 def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
-    if _check_type_immune(battle, ctx):
-        return HandlerReturn(value=0)
-
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
@@ -205,9 +200,12 @@ def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handle
 def がむしゃら_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """がむしゃらの固定ダメージを計算する。"""
     if _check_type_immune(battle, ctx):
-        return HandlerReturn(value=0)
-
-    return HandlerReturn(value=max(0, ctx.defender.hp - ctx.attacker.hp))
+        print("がむしゃらは無効化されたためダメージは0になります。")
+        value = 0
+    else:
+        value = max(0, ctx.defender.hp - ctx.attacker.hp)
+        print(f"がむしゃらのダメージは{value}になります。")
+    return HandlerReturn(value=value)
 
 
 def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -362,13 +360,6 @@ def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def テラバースト_check_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """テラバーストのタイプを判定する。"""
-    if ctx.source and ctx.source.terastallized and ctx.source.active_tera_type:
-        return HandlerReturn(value=ctx.source.active_tera_type)
-    return HandlerReturn(value=value)
-
-
 def オーラぐるま_check_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """オーラぐるまのタイプを判定する。"""
     if ctx.source and ctx.source.ability.is_hangry:
@@ -376,34 +367,36 @@ def オーラぐるま_check_move_type(battle: Battle, ctx: BattleContext, value
     return HandlerReturn(value=value)
 
 
-def テラバースト_check_move_category(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """テラバーストの分類（物理/特殊）を判定する。"""
-    if not (ctx.source and ctx.source.terastallized):
-        return HandlerReturn(value=value)
+def テラバースト_modify_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """テラバーストのタイプを判定する。"""
+    mon = ctx.attacker
+    if mon.terastallized:
+        value = mon.active_tera_type
+    return HandlerReturn(value=value)
 
-    atk = ctx.source.stats["A"]
-    spa = ctx.source.stats["C"]
-    category = "物理" if atk > spa else "特殊"
-    return HandlerReturn(value=category)
+
+def テラバースト_modify_move_category(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """テラバーストの分類（物理/特殊）を判定する。"""
+    mon = ctx.attacker
+    if mon.terastallized:
+        atk = mon.ranked_stats["A"]
+        spa = mon.ranked_stats["C"]
+        value = "物理" if atk > spa else "特殊"
+    return HandlerReturn(value=value)
 
 
 def テラバースト_stellar_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ステラテラスタル時のテラバースト威力100補正。
-
-    ステラ テラスタル中はテラバーストの威力が80→100になる。
-    ON_CALC_POWER_MODIFIER のスケール（4096=1.0倍）で返す。
-    """
-    if ctx.attacker and ctx.attacker.terastallized and ctx.attacker.tera_type == 'ステラ':
-        # 4096 * 100 / 80 = 5120
-        return HandlerReturn(value=5120)
+    """ステラテラスタル状態ではテラバーストの威力が100になる補正。"""
+    if ctx.attacker.active_tera_type == 'ステラ':
+        value = 5120  # = 4096 * 100 / 80
     return HandlerReturn(value=value)
 
 
 def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ステラテラスタル時のテラバースト発動後の攻撃・特攻-1段階効果。"""
-    if ctx.attacker and ctx.attacker.terastallized and ctx.attacker.tera_type == 'ステラ':
-        battle.modify_stat(ctx.attacker, "A", -1, source=ctx.attacker)
-        battle.modify_stat(ctx.attacker, "C", -1, source=ctx.attacker)
+    mon = ctx.attacker
+    if mon and mon.active_tera_type == 'ステラ':
+        battle.modify_stats(mon, {"A": -1, "C": -1}, source=mon)
     return HandlerReturn(value=value)
 
 
