@@ -133,7 +133,7 @@ class ItemManager:
         """
         return self.events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
-            BattleContext(source=source, target=target, move=move),
+            BattleContext(source=source, target=target, move=move, item_change_reason=reason),
             True
         )
 

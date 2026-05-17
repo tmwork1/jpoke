@@ -1880,7 +1880,7 @@ def がんじょう_block_ohko(battle: Battle, ctx: BattleContext, value: Any) -
     """がんじょう特性: 一撃必殺技を無効化する。"""
     if ctx.move.has_label("ohko"):
         announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value=True, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1915,9 +1915,7 @@ def ちからずく_on_modify_secondary_chance(battle: Battle, ctx: BattleContex
 
 def てんのめぐみ_on_modify_secondary_chance(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """てんのめぐみ特性: 追加効果対象技の追加効果確率を2倍にする。"""
-    if ctx.move.has_label("secondary_effect"):
-        value = min(1.0, value * 2)
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=min(1.0, value * 2))
 
 
 def リーフガード_prevent_ailment(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:

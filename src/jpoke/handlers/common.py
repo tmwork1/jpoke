@@ -14,8 +14,7 @@ from jpoke.core import HandlerReturn
 
 def _calc_effective_chance(battle: Battle, ctx: BattleContext, chance: float) -> float:
     """追加効果補正後の実効確率を返す。"""
-    effective = battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
-    return min(1.0, max(0.0, effective))
+    return battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
 
 
 def modify_hp(battle: Battle,

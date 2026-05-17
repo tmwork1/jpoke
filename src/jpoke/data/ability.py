@@ -363,7 +363,17 @@ ABILITIES: dict[str, AbilityData] = {
     "がんじょう": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
+                h.がんじょう_block_ohko,
+                subject_spec="target:self",
+            ),
+            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+                h.がんじょう_survive_lethal,
+                subject_spec="target:self",
+            ),
+        }
     ),
     "がんじょうあご": AbilityData(
         handlers={
@@ -535,21 +545,6 @@ ABILITIES: dict[str, AbilityData] = {
         flags=[
             "mold_breaker_ignorable"
         ]
-    ),
-    "がんじょう": AbilityData(
-        flags=[
-            "mold_breaker_ignorable"
-        ],
-        handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.がんじょう_block_ohko,
-                subject_spec="target:self",
-            ),
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
-                h.がんじょう_survive_lethal,
-                subject_spec="target:self",
-            ),
-        }
     ),
     "こんじょう": AbilityData(
         handlers={
