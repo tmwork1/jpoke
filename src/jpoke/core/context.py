@@ -204,4 +204,4 @@ class BattleContext:
 
     def can_bypass_screen(self, battle: Battle) -> bool:
         """攻撃側が壁を貫通するかを返す。"""
-        return battle.events.emit(Event.ON_QUERY_BYPASS_SCREEN, self, False)
+        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, self, False)

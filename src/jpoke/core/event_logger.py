@@ -123,7 +123,7 @@ class EventLog:
                 ailment = self.payload.get("ailment", "状態異常")
                 return f"{ailment}が回復した"
 
-            case LogCode.MODIFY_STAT:
+            case LogCode.MODIFY_RANK:
                 stat = self.payload.get("stat", "能力値")
                 change = self.payload.get("value", 0)
                 direction = "上がった" if change > 0 else "下がった"

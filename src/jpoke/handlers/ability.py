@@ -159,8 +159,8 @@ def _modify_by_move_condition(battle: Battle,
                               move_label: MoveLabel | None = None) -> HandlerReturn:
     """技のタイプ/ラベル条件を満たすときのみ固定倍率補正を適用する。"""
     if (
-        (move_type is not None and ctx.move.type != move_type)
-        or (move_label is not None and not ctx.move.has_label(move_label))
+        (move_type is not None and ctx.move.type == move_type)
+        or (move_label is not None and ctx.move.has_label(move_label))
     ):
         value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
@@ -176,7 +176,7 @@ def activate_weather(battle: Battle,
     """天候を変更する"""
     if source is None:
         source = ctx.source
-    if battle.weather_manager.activate(weather, count, source=source):
+    if battle.weather_manager.apply(weather, count, source=source):
         announce_ability_triggered(battle, ctx, value, mon=source)
     return HandlerReturn(value=value)
 
@@ -195,7 +195,7 @@ def deactivate_strong_weather(battle: Battle,
     foe = battle.foe(source)
     # 相手の特性が同じ天候を発生させるものでない場合に解除する
     if foe.ability.name != source.ability.name:
-        battle.weather_manager.deactivate()
+        battle.weather_manager.remove()
     return HandlerReturn(value=value)
 
 
@@ -209,7 +209,7 @@ def activate_terrain_with_log(battle: Battle,
     """地形を変更する"""
     if source is None:
         source = ctx.source
-    if battle.terrain_manager.activate(terrain, count, source=source):
+    if battle.terrain_manager.apply(terrain, count, source=source):
         announce_ability_triggered(battle, ctx, value, mon=source)
     return HandlerReturn(value=value)
 
@@ -302,17 +302,11 @@ def いしあたま_ignore_recoil(battle: Battle, ctx: BattleContext, value: int
     return HandlerReturn(value=value)
 
 
-def いかく_modify_stat(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いかく_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いかく特性: 登場時に相手のこうげきを1段階下げる。"""
-    return common.modify_stat(
-        battle,
-        ctx,
-        value,
-        stat="A",
-        v=-1,
-        target_spec="source:foe",
-        source_spec="source:self",
-    )
+    target = battle.foe(ctx.source)
+    battle.modify_stat(target, "A", -1, source=ctx.source, reason="いかく")
+    return HandlerReturn(value=value)
 
 
 def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -322,17 +316,15 @@ def いたずらごころ_modify_move_priority(battle: Battle, ctx: BattleContex
     return HandlerReturn(value=value)
 
 
-def いたずらごころ_block_dark_target(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
+def いたずらごころ_blocked_by_dark(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """いたずらごころ特性: 優先度が上がった変化技はあくタイプ相手に無効化される。"""
     if (
-        ctx.move.category != "変化"
-        or ctx.move.priority <= 0
-        or not ctx.move.is_foe_target
-        or not ctx.defender.has_type("あく")
+        ctx.move.category == "変化"
+        and ctx.move.is_foe_target
+        and ctx.defender.has_type("あく")
     ):
-        return HandlerReturn(value=value)
-    announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
-    return HandlerReturn(value=False, stop_event=True)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def エアロック_check_weather_enabled(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
@@ -832,8 +824,12 @@ def かるわざ_modify_speed(battle: Battle, ctx: BattleContext, value: int) ->
 def かそく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かそく特性: 行動済みならターン終了時に素早さを1段階上げる。"""
     mon = ctx.source
-    if mon is not None and mon.executed_move is not None:
-        battle.modify_stat(mon, "S", +1, source=mon)
+    print(f"{battle.turn=}, {mon.executed_move=}")
+    if (
+        mon.executed_move is not None
+        and battle.modify_stat(mon, "S", +1, source=mon)
+    ):
+        announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
 
 
@@ -868,17 +864,17 @@ def すなかき_modify_speed(battle: Battle, ctx: BattleContext, value: int) ->
 
 def すなかき_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すなかき特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm_damage")
+    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
 
 
 def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すながくれ特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm_damage")
+    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
 
 
 def すなのちから_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """すなのちから特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm_damage")
+    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
 
 
 def すりぬけ_bypass_substitute(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
@@ -888,7 +884,7 @@ def すりぬけ_bypass_substitute(battle: Battle, ctx: BattleContext, value: bo
 
 def すりぬけ_bypass_screen(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """すりぬけ特性: 相手の壁を貫通して攻撃する。"""
-    return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
 
 
 def すいすい_modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
@@ -960,7 +956,7 @@ def せいしんりょく_prevent_flinch(battle: Battle, ctx: BattleContext, val
 def せいしんりょく_block_intimidate(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """せいしんりょく特性: いかくによる攻撃ランク低下を無効化する。"""
     if ctx.stat_change_reason == "いかく":
-        value = common.block_stat_drop_by_foe(value, ctx, "A")
+        value = {}
     return HandlerReturn(value=value)
 
 
@@ -1099,7 +1095,7 @@ def ぼうじん_on_apply(battle: Battle, ctx: BattleContext, value: bool) -> Ha
 
 def ぼうじん_ignore_sandstorm_damage(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ぼうじん特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm_damage")
+    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
 
 
 def ぼうだん_on_apply(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
@@ -1912,14 +1908,14 @@ def ちからずく_modify_power(battle: Battle, ctx: BattleContext, value: int)
 
 def ちからずく_on_modify_secondary_chance(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """ちからずく特性: 追加効果対象技の追加効果確率を 0 にする。"""
-    if ctx.move is not None and ctx.move.data.move_secondary:
+    if ctx.move.has_label("secondary_effect"):
         return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def てんのめぐみ_on_modify_secondary_chance(battle: Battle, ctx: BattleContext, value: float) -> HandlerReturn:
     """てんのめぐみ特性: 追加効果対象技の追加効果確率を2倍にする。"""
-    if ctx.move is not None and ctx.move.data.move_secondary:
+    if ctx.move.has_label("secondary_effect"):
         value = min(1.0, value * 2)
     return HandlerReturn(value=value)
 

@@ -173,13 +173,12 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
     ),
     "アクアステップ": MoveData(
-
         type="みず",
         category="物理",
         pp=10,
         power=80,
         accuracy=100,
-        labels=["contact", "dance"],
+        labels=["contact", "dance", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 partial(common.modify_stat, stat="S", v=1, target_spec="attacker:self", source_spec="attacker:self")

@@ -111,6 +111,7 @@ class BaseFieldManager(Generic[T]):
         field.count = count
         for player in field.owners:
             field.register_handlers(self.events, player)
+        self.events.emit(Event.ON_FIELD_ACTIVATE)
 
     def _deactivate_field(self, field: Field):
         """解除イベントを発火してからフィールドを無効化する。"""
@@ -144,7 +145,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         self._default = fields[names[0]]
         self.current = self._default
 
-    def activate(self, name: T, count: int, source: Pokemon | None = None) -> bool:
+    def apply(self, name: T, count: int, source: Pokemon | None = None) -> bool:
         """フィールド効果を発動する。
 
         既存の効果がある場合は解除してから新しい効果を発動します。
@@ -174,7 +175,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         self.events.emit(Event.ON_FIELD_CHANGE)
         return True
 
-    def deactivate(self) -> bool:
+    def remove(self) -> bool:
         """現在のフィールド効果を解除する。
 
         Returns:
@@ -258,14 +259,14 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
                 return Field("", self.owners)  # ダミーの天候オブジェクトを返す
         return self.current
 
-    def activate(self, name: Weather, count: int, source=None) -> bool:
+    def apply(self, name: Weather, count: int, source=None) -> bool:
         """天候を発動する。
         天候の上書きは、現在の天候と新しい天候の優先度を比較して決める。
         """
         current_priority = WEATHER_PRIORITY[self.current.name]
         new_priority = WEATHER_PRIORITY[name]
         if new_priority >= current_priority:
-            return super().activate(name, count, source=source)
+            return super().apply(name, count, source=source)
         return False
 
     def update_reference(self, new_battle: Battle):

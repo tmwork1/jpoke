@@ -56,7 +56,7 @@ def test_さらさらいわ():
         ally=[Pokemon("ピカチュウ", item="さらさらいわ")],
         foe=[Pokemon("ピカチュウ")],
     )
-    battle.weather_manager.activate("すなあらし", 5, source=battle.actives[0])
+    battle.weather_manager.apply("すなあらし", 5, source=battle.actives[0])
     assert battle.raw_weather.count == 8
 
 

@@ -98,11 +98,11 @@ ABILITIES: dict[str, AbilityData] = {
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.いかく_modify_stat,
+                h.いかく_apply,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                h.いかく_modify_stat,
+                h.いかく_apply,
                 subject_spec="source:self",
             ),
         },
@@ -127,7 +127,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.いたずらごころ_block_dark_target,
+                h.いたずらごころ_blocked_by_dark,
                 subject_spec="attacker:self",
             ),
         }
@@ -217,7 +217,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.かいりきバサミ_modify_stat,
                 subject_spec="target:self",
             )
@@ -305,7 +305,7 @@ ABILITIES: dict[str, AbilityData] = {
     "かちき": AbilityData(
         flags=[],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.かちき_on_stat_down,
                 subject_spec="target:self",
             )
@@ -641,7 +641,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.クリアボディ_modify_stat,
                 subject_spec="target:self",
             )
@@ -795,7 +795,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.すりぬけ_bypass_substitute,
                 subject_spec="attacker:self",
             ),
-            Event.ON_QUERY_BYPASS_SCREEN: h.AbilityHandler(
+            Event.ON_CHECK_BYPASS_SCREEN: h.AbilityHandler(
                 h.すりぬけ_bypass_screen,
                 subject_spec="attacker:self",
             )
@@ -806,7 +806,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.するどいめ_modify_stat,
                 subject_spec="target:self",
             )
@@ -1180,7 +1180,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.はとむね_modify_stat,
                 subject_spec="target:self",
             )
@@ -1798,7 +1798,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.クリアボディ_modify_stat,
                 subject_spec="target:self",
             )
@@ -2390,7 +2390,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "メタルプロテクト": AbilityData(
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_MODIFY_RANK: h.AbilityHandler(
                 h.クリアボディ_modify_stat,
                 subject_spec="target:self",
             )

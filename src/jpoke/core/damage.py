@@ -66,11 +66,13 @@ class DamageCalculator:
         self.battle: Battle = battle
 
         # ダメージ計算の結果を保存するための属性（デバッグ用）
-        self.final_power = 0
-        self.final_attack = 0
-        self.final_defense = 0
-        self.attack_type_modifier = 1
-        self.defense_type_modifier = 1
+        self.power_modifier: int = 4096
+        self.atk_type_modifier: int = 0
+        self.def_type_modifier: int = 0
+        self.damage_modifier: int = 0
+        self.final_power: int = 0
+        self.final_attack: int = 0
+        self.final_defense: int = 0
 
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。
@@ -150,7 +152,8 @@ class DamageCalculator:
         r_burn = self.events.emit(Event.ON_CALC_BURN_MODIFIER, ctx, 4096) / 4096
 
         # ダメージ補正
-        r_dmg = self.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) / 4096
+        self.damage_modifier = self.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096)
+        r_dmg = self.damage_modifier / 4096
 
         # まもる貫通系補正（Z技、ダイマックス技等）
         r_protect = self.events.emit(Event.ON_CALC_PROTECT_MODIFIER, ctx, 4096) / 4096
@@ -226,8 +229,8 @@ class DamageCalculator:
 
         v = self.events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
 
-        self.attack_type_modifier = v / 4096  # デバッグ用に保存
-        return self.attack_type_modifier
+        self.atk_type_modifier = v
+        return v / 4096
 
     def calc_def_type_modifier(self, ctx: BattleContext) -> float:
         """タイプ相性補正を計算する。
@@ -263,8 +266,8 @@ class DamageCalculator:
 
         v = self.events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
 
-        self.defense_type_modifier = v / 4096  # デバッグ用に保存
-        return self.defense_type_modifier
+        self.def_type_modifier = v  # デバッグ用に保存
+        return v / 4096
 
     def calc_final_power(self,
                          ctx: BattleContext,
@@ -282,21 +285,19 @@ class DamageCalculator:
             dmg_ctx = DamageContext()
 
         # 技威力
-        final_power = ctx.move.power * dmg_ctx.power_multiplier
+        power = ctx.move.power * dmg_ctx.power_multiplier
 
         # その他の補正
-        r_pow = self.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
-        final_power = round_half_down(final_power * r_pow/4096)
+        self.power_modifier = self.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+        power = round_half_down(power*self.power_modifier/4096)
 
         # テラスタル時の威力60底上げ補正
         # 対象: テラスタイプ一致かつ非連続技かつ優先度+1未満
         if self._can_apply_terastal_power_floor(ctx):
-            final_power = max(final_power, 60)
+            power = max(power, 60)
 
-        final_power = max(1, final_power)
-
-        self.final_power = final_power  # デバッグ用に保存
-        return final_power
+        self.final_power = max(1, power)
+        return self.final_power
 
     def _can_apply_terastal_power_floor(self, ctx: BattleContext) -> bool:
         """テラスタル時の威力60底上げ補正が適用可能か判定する。"""

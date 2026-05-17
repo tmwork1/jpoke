@@ -87,7 +87,7 @@ def test_あめまみれ():
     )
     battle.events.emit(Event.ON_TURN_END_3)
     assert battle.actives[0].rank["S"] == -1
-    assert t.log_contains(battle, LogCode.MODIFY_STAT)
+    assert t.log_contains(battle, LogCode.MODIFY_RANK)
 
 
 # ──────────────────────────────────────────────────────────────────

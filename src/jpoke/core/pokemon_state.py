@@ -519,7 +519,7 @@ class StatusManager:
 
         return v
 
-    def modify_stat(self,
+    def modify_rank(self,
                     target: Pokemon,
                     stat: Stat,
                     v: int,
@@ -539,9 +539,9 @@ class StatusManager:
         Returns:
             実際に変化した能力とランク量の辞書
         """
-        return self.modify_stats(target, {stat: v}, source, reason)
+        return self.modify_ranks(target, {stat: v}, source, reason)
 
-    def modify_stats(self,
+    def modify_ranks(self,
                      target: Pokemon,
                      stats: dict[Stat, int],
                      source: Pokemon | None = None,
@@ -549,7 +549,7 @@ class StatusManager:
         """ポケモンの複数の能力ランクを同時に変更する。
 
         しろいハーブなどのアイテムが正しく動作するよう、
-        複数の能力変化を一度に処理してから ON_MODIFY_STAT を1回発火する。
+        複数の能力変化を一度に処理してから ON_MODIFY_RANK を1回発火する。
 
         Args:
             target: 対象のポケモン
@@ -560,11 +560,8 @@ class StatusManager:
         Returns:
             実際に変化した能力とランク量の辞書
         """
-        stats = self.battle.events.emit(
-            Event.ON_BEFORE_MODIFY_STAT,
-            BattleContext(target=target, source=source, stat_change_reason=reason),
-            stats
-        )
+        ctx = BattleContext(target=target, source=source, stat_change_reason=reason)
+        stats = self.battle.events.emit(Event.ON_BEFORE_MODIFY_STAT, ctx, stats)
 
         any_success = False
         actual_changes = {}
@@ -576,7 +573,7 @@ class StatusManager:
             if actual_value != 0:
                 self.battle.add_event_log(
                     target,
-                    LogCode.MODIFY_STAT,
+                    LogCode.MODIFY_RANK,
                     payload={"stat": stat_key, "value": actual_value, "reason": reason},
                 )
                 actual_changes[stat_key] = actual_value
@@ -584,7 +581,7 @@ class StatusManager:
 
         if any_success:
             self.battle.events.emit(
-                Event.ON_MODIFY_STAT,
+                Event.ON_MODIFY_RANK,
                 BattleContext(target=target, source=source),
                 actual_changes
             )

@@ -254,7 +254,7 @@ class MoveExecutor:
         ctx.move.register_handlers(self.events, ctx.attacker)
 
         # 技タイプを評価する（テラバーストなどの可変タイプ技対応）
-        move_type = self.get_effective_move_type(ctx.attacker, ctx.move)
+        move_type = self.resolve_move_type(ctx.attacker, ctx.move)
         ctx.move.set_type(move_type)
 
         # 行動成功判定
@@ -369,7 +369,7 @@ class MoveExecutor:
             ctx.move.has_label("contact")
         )
 
-    def get_effective_move_type(self, attacker: Pokemon, move: Move) -> str:
+    def resolve_move_type(self, attacker: Pokemon, move: Move) -> str:
         """技の有効タイプを取得する。
 
         Args:

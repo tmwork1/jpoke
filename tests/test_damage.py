@@ -24,8 +24,7 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, e
         ally=[attacker],
         foe=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    attacker, defender = battle.actives
 
     if terastallize:
         attacker.terastallize()
@@ -39,26 +38,24 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, e
 # 防御側タイプ相性補正
 # ──────────────────────────────────────────────────────────────────
 
-
 @pytest.mark.parametrize(
-    ("move_name", "defender_name", "expected"),
+    ("defender_name", "move_name", "expected"),
     [
-        ("ひのこ", "フシギダネ", 2.0),
-        ("ひのこ", "ゼニガメ", 0.5),
-        ("でんきショック", "ピカチュウ", 0.5),
-        ("たいあたり", "ゴース", 0.0),
+        ("フシギダネ", "ひのこ", 4096*2),
+        ("コイル", "じしん", 4096*4),
+        ("ゼニガメ", "ひのこ", 4096*0.5),
+        ("ピカチュウ", "でんきショック", 4096*0.5),
+        ("ゴース", "たいあたり", 4096*0.0),
     ]
 )
-def test_防御側タイプ相性補正計算(move_name: str, defender_name: str, expected: float):
+def test_防御側タイプ相性補正計算(defender_name: str, move_name: str, expected: float):
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=[move_name])],
         foe=[Pokemon(defender_name)],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    assert battle.damage_calculator.calc_def_type_modifier(ctx) == pytest.approx(expected)
+    attacker, defender = battle.actives
+    battle.run_move(attacker, attacker.moves[0])
+    assert battle.damage_calculator.def_type_modifier == expected
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -67,7 +64,10 @@ def test_防御側タイプ相性補正計算(move_name: str, defender_name: str
 
 def test_急所_ダメージ倍率():
     """急所ダメージが1.5倍になることを確認"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ")],
+        foe=[Pokemon("ピカチュウ")],
+    )
     attacker, defender = battle.actives
     normal_damages = battle.calc_damage_range(attacker, defender, "たいあたり", critical=False)
     critical_damages = battle.calc_damage_range(attacker, defender, "たいあたり", critical=True)

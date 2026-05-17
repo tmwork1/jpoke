@@ -3,10 +3,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, Weather, Terrain, GlobalField
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
+    Weather, Terrain, GlobalField, HPChangeReason
 from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 
@@ -227,7 +228,7 @@ def activate_weather(battle: Battle,
                      count: int = 5) -> HandlerReturn:
     """天候を発動する。"""
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.weather_manager.activate(weather, count, source=source)
+    success = battle.weather_manager.apply(weather, count, source=source)
     return HandlerReturn(value=success)
 
 
@@ -237,7 +238,7 @@ def deactivate_weather(battle: Battle,
                        weather: Weather) -> HandlerReturn:
     """指定天候が現在有効な場合に解除する。"""
     if battle.raw_weather.name == weather:
-        battle.weather_manager.deactivate()
+        battle.weather_manager.remove()
     return HandlerReturn(value=value)
 
 
@@ -249,7 +250,7 @@ def activate_terrain(battle: Battle,
                      count: int = 5) -> HandlerReturn:
     """地形を発動する。"""
     source = ctx.resolve_role(battle, source_spec)
-    success = battle.terrain_manager.activate(terrain, count, source=source)
+    success = battle.terrain_manager.apply(terrain, count, source=source)
     return HandlerReturn(value=success)
 
 
@@ -279,15 +280,6 @@ def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
         技が物理ダメージを与える場合True
     """
     return battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move)
-
-
-def calc_def_type_modifier(battle: Battle, mon: Pokemon, move: Move | str) -> float:
-    """防御側のタイプ相性補正を計算する。"""
-    if isinstance(move, str):
-        from jpoke.model import Move
-        move = Move(move)
-    ctx = BattleContext(defender=mon, move=move)
-    return battle.damage_calculator.calc_def_type_modifier(ctx)
 
 
 def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:
@@ -340,7 +332,7 @@ def crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
     return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
 
 
-def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, reason: str) -> HandlerReturn:
+def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, reason: HPChangeReason) -> HandlerReturn:
     """指定された hp_change_reason のダメージを無効化する。
 
     Args:

@@ -532,7 +532,7 @@ class Battle:
                     source: Pokemon | None = None,
                     reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの能力ランクを変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_stat(target, stat, v, source=source, reason=reason)
+        return self.status_manager.modify_rank(target, stat, v, source=source, reason=reason)
 
     def modify_stats(self,
                      target: Pokemon,
@@ -540,7 +540,7 @@ class Battle:
                      source: Pokemon | None = None,
                      reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
+        return self.status_manager.modify_ranks(target, stats, source=source, reason=reason)
 
     def roll_damage(self,
                     attacker: Pokemon,
@@ -725,3 +725,10 @@ class Battle:
     def remove_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
         """道具の無効化理由を削除する（ItemManagerへの委譲）。"""
         return self.item_manager.remove_disabled_reason(mon, reason)
+
+    def calc_def_type_modifier(self, defender: Pokemon, move: str | Move) -> float:
+        """防御側のタイプ相性補正を計算する（DamageCalculatorへの委譲）。"""
+        if isinstance(move, str):
+            move = Move(move)
+        ctx = BattleContext(defender=defender, move=move)
+        return self.damage_calculator.calc_def_type_modifier(ctx)

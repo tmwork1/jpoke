@@ -232,12 +232,12 @@ FIELDS: dict[str, FieldData] = {
                 h.マジックルーム_apply,
                 subject_spec="source:self",
             ),
-            Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
-                h.マジックルーム_remove,
-                subject_spec="source:self",
-            ),
             Event.ON_SWITCH_IN: h.FieldHandler(
                 h.マジックルーム_apply,
+                subject_spec="source:self",
+            ),
+            Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
+                h.マジックルーム_remove,
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END_4: h.FieldHandler(

@@ -6,7 +6,7 @@
             "type": "debugpy",
             "request": "launch",
             //"program": "${workspaceFolder}/scripts/random_1on1.py",
-            "program": "${workspaceFolder}/tests/test_ability.py",
+            "program": "${workspaceFolder}/tests/test_field.py",
             "console": "integratedTerminal"
         }
     ]

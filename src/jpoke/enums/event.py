@@ -213,7 +213,7 @@ class Event(Enum):
 
     # emit: core/battle.py（ランク変化適用後）
     # handle: ability.py（まけんき・かちき等の反応）
-    ON_MODIFY_STAT = auto()
+    ON_MODIFY_RANK = auto()
 
     ON_END = auto()  # 未使用
 
@@ -363,7 +363,7 @@ class Event(Enum):
     ON_CALC_FINAL_DAMAGE_MODIFIER = auto()
 
     # emit: core/context.py（壁やしんぴのまもりを貫通するか問い合わせ）
-    ON_QUERY_BYPASS_SCREEN = auto()
+    ON_CHECK_BYPASS_SCREEN = auto()
 
     # emit: 未実装（吸収技のHP回収量計算用に予約）
     # handle: 未実装（おおきなねっこ等による回収量増加を想定）

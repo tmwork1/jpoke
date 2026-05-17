@@ -12,7 +12,7 @@ class LogCode(Enum):
     PROTECT_SUCCESS = auto()
     PROTECT_FAILED = auto()
     HP_CHANGED = auto()
-    MODIFY_STAT = auto()
+    MODIFY_RANK = auto()
     SWITCH_IN = auto()
     SWITCH_OUT = auto()
     LOSE_ITEM = auto()

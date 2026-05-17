@@ -3,9 +3,6 @@ from jpoke.model import Pokemon
 from jpoke.utils.type_defs import VolatileName, Weather, Terrain
 from jpoke.enums import Event, Command, LogCode
 
-# 定数定義
-DEFAULT_DURATION = 999  # フィールド効果のデフォルト継続ターン数
-
 
 class CustomPlayer(Player):
     """テスト用のカスタムプレイヤークラス。
@@ -78,10 +75,10 @@ def start_battle(ally: list[Pokemon],
     # 天候・地形の有効化
     if weather:
         name, weather_count = weather
-        battle.weather_manager.activate(name, weather_count)
+        battle.weather_manager.apply(name, weather_count)
     if terrain:
         name, terrain_count = terrain
-        battle.terrain_manager.activate(name, terrain_count)
+        battle.terrain_manager.apply(name, terrain_count)
 
     # 命中率の設定
     if accuracy is not None:
@@ -90,12 +87,10 @@ def start_battle(ally: list[Pokemon],
     # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
     if ally_side_field:
         for name, layers in ally_side_field.items():
-            battle.side_manager[0].get(name).activate(battle, DEFAULT_DURATION)
-            battle.side_manager[0].get(name).count = layers
+            battle.side_manager[0].activate(name, layers)
     if foe_side_field:
         for name, layers in foe_side_field.items():
-            battle.side_manager[1].get(name).activate(battle, DEFAULT_DURATION)
-            battle.side_manager[1].get(name).count = layers
+            battle.side_manager[1].activate(name, layers)
 
     # グローバルフィールドの有効化
     if global_field:
@@ -223,3 +218,12 @@ def can_switch(battle: Battle, idx: int) -> bool:
         raise IndexError(f"Invalid player index: {idx}. Must be between 0 and {len(battle.players) - 1}")
     commands = battle.get_available_action_commands(battle.players[idx])
     return any(c.is_switch() for c in commands)
+
+
+def emit_turn_end_events(battle: Battle):
+    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END_4)
+    battle.events.emit(Event.ON_TURN_END_5)
+    battle.events.emit(Event.ON_TURN_END_6)

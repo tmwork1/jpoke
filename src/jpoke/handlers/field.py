@@ -305,7 +305,7 @@ def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: 
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
-        and ctx.move.category == "物理"
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -316,7 +316,7 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: BattleContext, value: 
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
-        and ctx.move.category == "特殊"
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -411,9 +411,8 @@ def どくびし_poison(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 
 def ステルスロック_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ステルスロックのダメージ（岩タイプ相性依存）"""
-    ctx = BattleContext(defender=ctx.source)
-    def_type_modifier = common.calc_def_type_modifier(battle, ctx.source, "ステルスロック")
-    battle.modify_hp(ctx.source, r=-1/8*def_type_modifier)
+    r = battle.calc_def_type_modifier(ctx.source, "ステルスロック")
+    battle.modify_hp(ctx.source, r=-1/8*r)
     return HandlerReturn(value=value)
 
 
