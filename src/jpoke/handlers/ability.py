@@ -274,14 +274,8 @@ def ダウンロード_on_switch_in(battle: Battle, ctx: BattleContext, value: A
     mon = ctx.source
     foe = battle.foe(mon)
 
-    # TODO : Effective stats プロパティを Pokemon クラスに実装する
-    def _rank_eff(pokemon, stat: str) -> float:
-        return pokemon.stats[stat] * rank_modifier(pokemon.rank[stat])
-
-    foe_def = _rank_eff(foe, "B")
-    foe_spd = _rank_eff(foe, "D")
-
-    # 防御 < 特防 なら攻撃+1、防御 >= 特防 なら特攻+1
+    foe_def = foe.ranked_stats["B"]
+    foe_spd = foe.ranked_stats["D"]
     boost_stat = "A" if foe_def < foe_spd else "C"
 
     changed = battle.modify_stat(mon, boost_stat, +1, source=mon)

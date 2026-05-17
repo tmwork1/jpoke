@@ -13,13 +13,6 @@ from jpoke.utils.type_defs import Stat
 
 from .ability import announce_ability_triggered
 
-# TODO : Pokemonクラスのメソッドとして実装すべき
-
-
-def _effective_stat_with_rank(mon: Pokemon, stat: str) -> float:
-    """指定能力の実効値（ランク補正込み）を返す。"""
-    return mon.stats[stat] * rank_modifier(mon.rank[stat])
-
 
 def _select_paradox_boost_stat(mon: Pokemon) -> Stat:
     """パラドックス補正の対象能力を選ぶ。
@@ -27,9 +20,9 @@ def _select_paradox_boost_stat(mon: Pokemon) -> Stat:
     """
     stat_order: tuple[Stat, ...] = ("A", "B", "C", "D", "S")
     best_stat: Stat = stat_order[0]
-    best_value = _effective_stat_with_rank(mon, best_stat)
+    best_value = mon.ranked_stats[best_stat]
     for stat in stat_order[1:]:
-        value = _effective_stat_with_rank(mon, stat)
+        value = mon.ranked_stats[stat]
         if value > best_value:
             best_stat = stat
             best_value = value
