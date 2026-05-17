@@ -151,9 +151,9 @@ class BattleContext:
         """
         # attacker/defender を source/target にマッピング
         if role == "attacker":
-            return self.source
+            role = "source"
         elif role == "defender":
-            return self.target
+            role = "target"
         return getattr(self, role, None)
 
     def resolve_role(self,

@@ -33,6 +33,9 @@ class MoveExecutor:
         """
         self.battle = battle
 
+        # デバッグ用
+        self.accuracy: int | None = None
+
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
 
@@ -90,7 +93,7 @@ class MoveExecutor:
         if move.data.multi_hit is None:
             return move.power
 
-        power_sequence = move.data.multi_hit["power_sequence"]
+        power_sequence = move.data.multi_hit.get("power_sequence", ())
         if power_sequence:
             idx = min(hit_index - 1, len(power_sequence) - 1)
             return power_sequence[idx]
@@ -109,8 +112,6 @@ class MoveExecutor:
 
         if not self.events.emit(Event.ON_APPLY_MOVE, ctx, True):
             return False
-
-        print("Move applied successfully.")
 
         # 変化技はダメージ計算をせず、効果処理のみ行う
         if ctx.move.category == "変化":
@@ -161,30 +162,32 @@ class MoveExecutor:
         """
         # テストオプションによる命中率の上書き
         if self.battle.test_option.accuracy is not None:
-            accuracy = self.battle.test_option.accuracy
-            return 100 * self.battle.random.random() < accuracy
+            print(f"Test option override: accuracy set to {self.battle.test_option.accuracy}")
+            self.accuracy = self.battle.test_option.accuracy
+            return 100 * self.battle.random.random() < self.accuracy
 
         attacker = ctx.attacker
         defender = ctx.defender
         move = ctx.move
+        self.accuracy = move.accuracy
 
         # 命中率がNoneなら必中
-        if move.accuracy is None:
+        if self.accuracy is None:
             return True
 
         # 技の命中変更 + 命中補正
-        accuracy = self.events.emit(Event.ON_MODIFY_ACCURACY, ctx, move.accuracy)
+        self.accuracy = self.events.emit(Event.ON_MODIFY_ACCURACY, ctx, self.accuracy)
 
         # 必中処理：イベントハンドラがNoneを返した場合は必中
-        if accuracy is None:
+        if self.accuracy is None:
             return True
 
         # ランク補正
         rank_diff = attacker.rank["ACC"] - defender.rank["EVA"]
         rank_diff = max(-6, min(6, rank_diff))
-        accuracy = int(accuracy * HIT_RANK_MODIFIERS[rank_diff])
+        self.accuracy = int(self.accuracy * HIT_RANK_MODIFIERS[rank_diff])
 
-        return 100 * self.battle.random.random() < accuracy
+        return 100 * self.battle.random.random() < self.accuracy
 
     def check_critical(self, ctx: BattleContext) -> bool:
         """急所判定を行う。

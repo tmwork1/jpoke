@@ -1071,6 +1071,7 @@ MOVES: dict[str, MoveData] = {
         power=25,
         accuracy=100,
         critical_rank=3,
+        multi_hit={"min": 3, "max": 3},
         labels=["contact", "punch"],
     ),
     "スケイルショット": MoveData(

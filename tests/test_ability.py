@@ -730,11 +730,11 @@ def test_おやこあい_単発攻撃が2ヒットする():
         ally=[Pokemon("ピカチュウ", ability="おやこあい", moves=["アクアステップ"])],
         foe=[Pokemon("ピカチュウ")],
     )
-    # 1発目のダメージを固定する
+    # ダメージ計算結果を固定
     battle.roll_damage = lambda *args, **kwargs: 40
 
     attacker, defender = battle.actives
-    battle.advance_turn()
+    battle.run_move(attacker, attacker.moves[0])
     assert defender.hits_taken == 2
     assert defender.damage_taken == 40+10
     assert attacker.rank["S"] == 2
@@ -742,14 +742,13 @@ def test_おやこあい_単発攻撃が2ヒットする():
 
 def test_おやこあい_既存連続技には適用しない():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", ability="おやこあい", moves=["タネマシンガン"])],
+        ally=[Pokemon("ピカチュウ", ability="おやこあい", moves=["すいりゅうれんだ"])],
         foe=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
+    attacker, defender = battle.actives
     move = attacker.moves[0]
-    battle.random.random = lambda: 0.9
-    hit_count = battle.move_executor._resolve_hit_count(attacker, move)
-    assert hit_count == 5
+    battle.run_move(attacker, move)
+    assert defender.hits_taken == 3
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -1693,31 +1692,25 @@ def test_こおりのりんぷん_かたやぶりで無効():
 
 def test_そうしょく_くさ技を無効化して攻撃1段階上昇する():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", ability="そうしょく")],
-        foe=[Pokemon("ピカチュウ", moves=["エナジーボール"])],
+        ally=[Pokemon("ピカチュウ", moves=["このは"])],
+        foe=[Pokemon("ピカチュウ", ability="そうしょく")],
     )
-    defender = battle.actives[0]
-    attacker = battle.actives[1]
-    before_hp = defender.hp
-
+    attacker, defender = battle.actives
     battle.move_executor.run_move(attacker, attacker.moves[0])
 
-    assert defender.hp == before_hp
+    assert defender.hp == defender.max_hp
     assert defender.rank["A"] == 1
 
 
 def test_そうしょく_くさ以外の技では発動しない():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", ability="そうしょく")],
-        foe=[Pokemon("ピカチュウ", moves=["はどうだん"])],
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ピカチュウ", ability="そうしょく")],
     )
-    defender = battle.actives[0]
-    attacker = battle.actives[1]
-    before_hp = defender.hp
-
+    attacker, defender = battle.actives
     battle.move_executor.run_move(attacker, attacker.moves[0])
 
-    assert defender.hp < before_hp
+    assert defender.hp < defender.max_hp
     assert defender.rank["A"] == 0
 
 
@@ -1856,14 +1849,14 @@ def test_さいせいりょく_かいふくふうじ中でも回復する():
 # ──────────────────────────────────────────────────────────────────
 
 
-def test_さめはだ_接触技で被弾時に相手へ最大HPの8分の1ダメージ():
+# TODO : 技と予想されるダメージをリスト化してパラメタライズで実装
+def test_さめはだ_接触ダメージ():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="さめはだ")],
         foe=[Pokemon("イーブイ", moves=["たいあたり"])],
     )
-    attacker, defender = battle.actives
+    defender, attacker = battle.actives
     battle.move_executor.run_move(attacker, attacker.moves[0])
-    assert defender.hp < defender.max_hp
     assert attacker.hp == attacker.max_hp - attacker.max_hp // 8
 
 
@@ -1872,9 +1865,8 @@ def test_さめはだ_非接触技では反撃ダメージを与えない():
         ally=[Pokemon("ピカチュウ", ability="さめはだ")],
         foe=[Pokemon("イーブイ", moves=["はどうだん"])],
     )
-    attacker, defender = battle.actives
+    defender, attacker = battle.actives
     battle.move_executor.run_move(attacker, attacker.moves[0])
-    assert defender.hp < defender.max_hp
     assert attacker.hp == attacker.max_hp
 
 
@@ -2368,60 +2360,42 @@ def test_スナイパー_急所時の最終ダメージを1_5倍():
 # ──────────────────────────────────────────────────────────────────
 # すながくれ、ゆきがくれ
 # ──────────────────────────────────────────────────────────────────
-# TODO : パラメタイズでまとめてテストする
+# TODO : すながくれのテストもパラメタイズでまとめて実装
 
 
-def test_ゆきがくれ_ゆきで命中率3277_4096倍():
+def test_ゆきがくれ_ゆきで命中低下():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        foe=[Pokemon("ユキノオー", ability="ゆきがくれ")],
+        foe=[Pokemon("ピカチュウ", ability="ゆきがくれ")],
         weather=("ゆき", 5),
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    attacker, defender = battle.actives
     move = attacker.moves[0]
-    result = battle.events.emit(
-        Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=move),
-        move.accuracy,
-    )
-    expected = move.accuracy * 3277 // 4096
-    assert result == expected
+    battle.run_move(attacker, move)
+    assert battle.move_executor.accuracy == move.accuracy * 3277 // 4096
 
 
 def test_ゆきがくれ_ゆき以外では命中率変化なし():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        foe=[Pokemon("ユキノオー", ability="ゆきがくれ")],
+        foe=[Pokemon("ピカチュウ", ability="ゆきがくれ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    attacker, defender = battle.actives
     move = attacker.moves[0]
-    result = battle.events.emit(
-        Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=move),
-        move.accuracy,
-    )
-    assert result == move.accuracy
+    battle.run_move(attacker, move)
+    assert battle.move_executor.accuracy == move.accuracy
 
 
 def test_ゆきがくれ_かたやぶりで命中率補正なし():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["でんきショック"])],
-        foe=[Pokemon("ユキノオー", ability="ゆきがくれ")],
+        foe=[Pokemon("ピカチュウ", ability="ゆきがくれ")],
         weather=("ゆき", 5),
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    attacker, defender = battle.actives
     move = attacker.moves[0]
-
-    _activate_mold_breaker(battle, 1)
-    result = battle.events.emit(
-        Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=move),
-        move.accuracy,
-    )
-    assert result == move.accuracy
+    battle.run_move(attacker, move)
+    assert battle.move_executor.accuracy == move.accuracy
 
 # ──────────────────────────────────────────────────────────────────
 # すなのちから

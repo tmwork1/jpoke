@@ -860,7 +860,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.そうしょく_check_immune,
+                h.そうしょく_on_apply,
                 subject_spec="defender:self",
             )
         }
@@ -924,7 +924,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ちくでん_check_immune,
+                h.ちくでん_on_apply,
                 subject_spec="defender:self",
             )
         }
@@ -940,7 +940,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ちょすい_check_immune,
+                h.ちょすい_on_apply,
                 subject_spec="defender:self",
             )
         },
@@ -1011,7 +1011,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.でんきエンジン_check_immune,
+                h.でんきエンジン_on_apply,
                 subject_spec="defender:self",
             )
         }
@@ -1066,7 +1066,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.どしょく_check_immune,
+                h.どしょく_on_apply,
                 subject_spec="defender:self",
             )
         },
@@ -1288,7 +1288,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ひらいしん_check_immune,
+                h.ひらいしん_on_apply,
                 subject_spec="defender:self",
             )
         },
@@ -1420,7 +1420,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうおん_check_immune,
+                h.ぼうおん_on_apply,
                 subject_spec="defender:self",
             ),
         }
@@ -1431,7 +1431,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうじん_check_immune,
+                h.ぼうじん_on_apply,
                 subject_spec="defender:self",
             ),
             Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
@@ -1446,7 +1446,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうだん_check_immune,
+                h.ぼうだん_on_apply,
                 subject_spec="defender:self",
             ),
         }
@@ -1522,7 +1522,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.もらいび_check_immune,
+                h.もらいび_on_apply,
                 subject_spec="defender:self",
             ),
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
@@ -1597,7 +1597,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.よびみず_check_immune,
+                h.よびみず_on_apply,
                 subject_spec="defender:self",
             )
         },

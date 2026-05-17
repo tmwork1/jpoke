@@ -15,7 +15,7 @@ from jpoke.utils.type_defs import Stat
 from jpoke.enums import Event, DamageFlag
 from jpoke.utils import fast_copy
 from jpoke.utils.constants import TYPE_MODIFIER
-from jpoke.utils.battle_math import rank_modifier, round_half_down
+from jpoke.utils.battle_math import round_half_down
 
 from .context import BattleContext
 
@@ -346,7 +346,7 @@ class DamageCalculator:
         # ステータス
         if move.name == 'イカサマ':
             final_attack = defender.stats["A"]
-            r_rank = rank_modifier(defender.rank["A"])
+            r_rank = defender.rank_modifier("A")
         else:
             if move.name == 'ボディプレス':
                 stat = "B"
@@ -355,7 +355,7 @@ class DamageCalculator:
             else:
                 stat = "C"
             final_attack = attacker.stats[stat]
-            r_rank = rank_modifier(attacker.rank[stat])
+            r_rank = attacker.rank_modifier(stat)
 
         r_rank = self.events.emit(
             Event.ON_CALC_ATK_RANK_MODIFIER,
@@ -410,7 +410,7 @@ class DamageCalculator:
             stat = "D"
 
         final_defence = defender.stats[stat]
-        r_rank = rank_modifier(defender.rank[stat])
+        r_rank = defender.rank_modifier(stat)
 
         # ランク補正の修正
         r_rank = self.events.emit(Event.ON_CALC_DEF_RANK_MODIFIER, ctx, r_rank)

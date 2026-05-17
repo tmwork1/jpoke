@@ -4,9 +4,8 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
 
 from jpoke.enums import LogCode
-from jpoke.utils.battle_math import rank_modifier
 from jpoke.utils.type_defs import RoleSpec, GlobalField, SideField, VolatileName, AbilityDisabledReason
-from jpoke.utils.battle_math import rank_modifier, apply_fixed_modifier
+from jpoke.utils.battle_math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 from jpoke.handlers import common
 
@@ -285,8 +284,7 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: BattleContext, 
     category_to_stat = {"物理": "D", "特殊": "B"}
     move_category = battle.move_executor.resolve_move_category(ctx.attacker, ctx.move)
     swapped_stat = category_to_stat.get(move_category)
-    rank = ctx.defender.rank[swapped_stat]
-    value = rank_modifier(rank)
+    value = ctx.defender.rank_modifier(swapped_stat)
     return HandlerReturn(value=value)
 
 

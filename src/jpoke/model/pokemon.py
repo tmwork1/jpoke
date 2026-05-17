@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 from jpoke.utils.type_defs import Nature, Type, Stat, Gender, BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
-from jpoke.utils.battle_math import rank_modifier
 from jpoke.utils import fast_copy
 from jpoke.data import pokedex
 
@@ -401,6 +400,18 @@ class Pokemon:
         self._stats_manager.set_stats_from_dict(stats, self._level, self.data.base, self._nature)
         self.update_stats()
 
+    def rank_modifier(self, stat: Stat) -> float:
+        """指定したステータスのランク補正を取得する。
+
+        Args:
+            stat: ステータス名
+
+        Returns:
+            ランク補正値
+        """
+        v = self.rank[stat]
+        return (2 + v) / 2 if v >= 0 else 2 / (2 - v)
+
     @property
     def ranked_stats(self) -> dict[Stat, int]:
         """能力ランク補正を反映したステータスを辞書形式で取得する。
@@ -408,7 +419,7 @@ class Pokemon:
         Returns:
             ステータス名をキーとする能力ランク補正を反映した実数値の辞書
         """
-        return {s: int(v * rank_modifier(self.rank[s])) for (s, v) in self.stats.items()}
+        return {s: int(v * self.rank_modifier(s)) for (s, v) in self.stats.items()}
 
     @property
     def base(self) -> list[int]:

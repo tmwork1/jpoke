@@ -40,7 +40,7 @@ def start_battle(ally: list[Pokemon],
                  ally_side_field: dict[str, int] | None = None,
                  foe_side_field: dict[str, int] | None = None,
                  global_field: dict[str, int] | None = None,
-                 accuracy: int | None = 100) -> Battle:
+                 accuracy: int | None = None) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
@@ -54,7 +54,7 @@ def start_battle(ally: list[Pokemon],
         ally_side_field: 味方のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
         foe_side_field: 相手のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
         global_field: グローバルフィールドに設置する場の効果の辞書{名前: カウント}（Noneの場合は効果なし）
-        accuracy: 固定命中率（Noneの場合は通常計算、デフォルト: 100）
+        accuracy: 固定命中率（Noneの場合は通常計算、デフォルト: None）
 
     Returns:
         Battle: セットアップ済みのBattleインスタンス
@@ -100,7 +100,7 @@ def start_battle(ally: list[Pokemon],
     # グローバルフィールドの有効化
     if global_field:
         for name, count in global_field.items():
-            battle.field_manager.get(name).activate(battle, count)
+            battle.field_manager.activate(name, count)
 
     # 揮発効果の適用
     if ally_volatile or foe_volatile:
