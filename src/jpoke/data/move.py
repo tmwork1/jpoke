@@ -4837,6 +4837,8 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         accuracy=100,
         labels=["powder"],
+        handlers={
+        }
     ),
     "きりばらい": MoveData(
         type="ひこう",

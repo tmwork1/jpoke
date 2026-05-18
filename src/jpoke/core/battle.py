@@ -467,11 +467,10 @@ class Battle:
     def can_change_item(self,
                         source: Pokemon,
                         target: Pokemon,
-                        move: Move | None = None,
-                        reason: str = "") -> bool:
+                        move: Move | None = None) -> bool:
         """持ち物変更可否を判定する（ItemManagerへの委譲）。"""
         # TODO : reasonの型をItemLostCauseに統一できるか検討する
-        return self.item_manager.can_change_item(source, target, move=move, reason=reason)
+        return self.item_manager.can_change_item(source, target, move=move)
 
     def swap_items(self,
                    source: Pokemon,
@@ -483,10 +482,9 @@ class Battle:
     def take_item(self,
                   source: Pokemon,
                   target: Pokemon,
-                  move: Move | None = None,
-                  reason: ItemLostCause = "steal") -> bool:
+                  move: Move | None = None) -> bool:
         """対象の持ち物を source に移す（ItemManagerへの委譲）。"""
-        return self.item_manager.take_item(source, target, move=move, reason=reason)
+        return self.item_manager.take_item(source, target, move=move)
 
     def remove_item(self,
                     source: Pokemon,

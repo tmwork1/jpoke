@@ -28,7 +28,7 @@ def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: in
     attacker.terastallize()
     ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
 
-    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == expected
+    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == expected
 
 
 @pytest.mark.parametrize(
@@ -51,7 +51,7 @@ def test_威力底上げ(move_name: str,
     attacker.terastallize()
     move = attacker.moves[0]
     ctx = BattleContext(attacker=attacker, defender=defender, move=move)
-    assert battle.damage_calculator.calc_final_power(ctx) == expected
+    assert battle.damage_calculator._calc_final_power(ctx) == expected
 
 # ──────────────────────────────────────────────────────────────────
 # ステラ
@@ -71,11 +71,11 @@ def test_ステラSTAB_元タイプ一致_初回2倍_以降1倍5():
     ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
 
     # 初回: 元タイプ一致 → 2.0倍
-    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(2.0)
+    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(2.0)
 
     # 消費済みに設定してから再計算
     attacker.stellar_boosted_types.add("でんき")
-    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(1.5)
+    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(1.5)
 
 
 def test_ステラSTAB_不一致技_初回1倍2_以降1倍0():
@@ -91,11 +91,11 @@ def test_ステラSTAB_不一致技_初回1倍2_以降1倍0():
     ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
 
     # 初回: 不一致 → 1.2倍
-    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(4915 / 4096)
+    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(4915 / 4096)
 
     # 消費済みに設定してから再計算
     attacker.stellar_boosted_types.add("ほのお")
-    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == pytest.approx(1.0)
+    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(1.0)
 
 
 if __name__ == "__main__":

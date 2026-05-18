@@ -49,3 +49,8 @@ class Item(GameEffect):
         if self.consumed:
             reasons.add("consumed")
         self.set_disabled_reasons(reasons)
+
+    @property
+    def lost(self) -> bool:
+        """持ち物が失われているかどうかを示すプロパティ。"""
+        return self.lost_cause != ""

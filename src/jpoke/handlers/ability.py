@@ -304,8 +304,10 @@ def いしあたま_ignore_recoil(battle: Battle, ctx: BattleContext, value: int
 
 def いかく_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いかく特性: 登場時に相手のこうげきを1段階下げる。"""
-    target = battle.foe(ctx.source)
-    battle.modify_stat(target, "A", -1, source=ctx.source, reason="いかく")
+    source = ctx.source
+    target = battle.foe(source)
+    announce_ability_triggered(battle, ctx, value, mon=source)
+    battle.modify_stat(target, "A", -1, source=source, reason="いかく")
     return HandlerReturn(value=value)
 
 
@@ -368,25 +370,24 @@ def かげふみ_check_trapped(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=result)
 
 
-def _gas_add_disabled_reason(battle: Battle, mon: Pokemon) -> None:
-    if not mon.ability.has_flag("gas_proof"):
-        battle.add_ability_disabled_reason(mon, "かがくへんかガス")
-
-
-def かがくへんかガス_activate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かがくへんかガス_gas_activate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     mon = ctx.source
+    foe = battle.foe(mon)
     announce_ability_triggered(battle, ctx, value, mon=mon)
-    _gas_add_disabled_reason(battle.foe(mon))
+    if not foe.ability.has_flag("gas_proof"):
+        battle.add_ability_disabled_reason(foe, "かがくへんかガス")
     return HandlerReturn(value=value)
 
 
 def かがくへんかガス_foe_switch_in(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かがくへんかガス特性: 特性を無効化する。"""
-    _gas_add_disabled_reason(ctx.source)
+    mon = ctx.source
+    if not mon.ability.has_flag("gas_proof"):
+        battle.add_ability_disabled_reason(mon, "かがくへんかガス")
     return HandlerReturn(value=value)
 
 
-def かがくへんかガス_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かがくへんかガス_gas_deactivate(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かがくへんかガス特性: 特性無効化を解除する。"""
     mon = battle.foe(ctx.source)
     battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
@@ -705,21 +706,20 @@ def もらいび_on_move_end(battle: Battle, ctx: BattleContext, value: Any) -> 
 
 def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
-    # テラスタル中に交代した場合は現在のフォルムを維持する。
-    # ただし瀕死退場時はまんぷくへ戻す。
-    if ctx.source.terastallized and ctx.source.alive:
-        return HandlerReturn(value=value)
-
-    ctx.source.ability.is_hangry = False
+    # テラスタル状態でなければ
+    mon = ctx.source
+    if not mon.terastallized:
+        mon.ability.is_hangry = False
     return HandlerReturn(value=value)
 
 
 def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: ターン終了時にフォルムを切り替える。"""
-    if ctx.source.terastallized:
+    mon = ctx.source
+    if mon.terastallized:
         return HandlerReturn(value=value)
 
-    ctx.source.ability.is_hangry = not ctx.source.ability.is_hangry
+    mon.ability.is_hangry = not mon.ability.is_hangry
     return HandlerReturn(value=value)
 
 
@@ -903,10 +903,10 @@ def スキルリンク_modify_hit_count(battle: Battle, ctx: BattleContext, valu
 
 def ねんちゃく_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ねんちゃく特性: 相手から受ける持ち物交換・奪取・除去を防ぐ。"""
-    if not ctx.move.is_foe_target:
-        return HandlerReturn(value=value)
-    announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-    return HandlerReturn(value=False, stop_event=True)
+    if ctx.source != ctx.target:
+        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -1082,6 +1082,7 @@ def パンクロック_reduce_damage(battle: Battle, ctx: BattleContext, value: 
 def ぼうおん_on_apply(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ぼうおん特性: 音技を無効化する。"""
     if ctx.move.has_label("sound"):
+        announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1089,6 +1090,7 @@ def ぼうおん_on_apply(battle: Battle, ctx: BattleContext, value: bool) -> Ha
 def ぼうじん_on_apply(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ぼうじん特性: 粉・胞子系の技を無効化する。"""
     if ctx.move.has_label("powder"):
+        announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

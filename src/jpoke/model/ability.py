@@ -57,7 +57,6 @@ class Ability(GameEffect):
         """
         self.count = 0
         self.state = ""
-        self.is_hangry = False
         self.activated_since_switch_in = False
         self.reset_enable_state()
 

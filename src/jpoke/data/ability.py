@@ -231,24 +231,26 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_SWITCH_IN: [
                 h.AbilityHandler(
-                    h.かがくへんかガス_activate,
+                    h.かがくへんかガス_gas_activate,
                     subject_spec="source:self",
+                    priority=20,
                 ),
                 h.AbilityHandler(
                     h.かがくへんかガス_foe_switch_in,
                     subject_spec="source:foe",
+                    priority=20,
                 ),
             ],
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                h.かがくへんかガス_activate,
+                h.かがくへんかガス_gas_activate,
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
-                h.かがくへんかガス_remove,
+                h.かがくへんかガス_gas_deactivate,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
-                h.かがくへんかガス_remove,
+                h.かがくへんかガス_gas_deactivate,
                 subject_spec="source:self",
             )
         }

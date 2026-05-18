@@ -66,6 +66,7 @@ class DamageCalculator:
         self.battle: Battle = battle
 
         # ダメージ計算の結果を保存するための属性（デバッグ用）
+        self.damages: list[int] = []
         self.power_modifier: int = 4096
         self.atk_type_modifier: int = 0
         self.def_type_modifier: int = 0
@@ -128,9 +129,9 @@ class DamageCalculator:
         ctx.critical = dmg_ctx.critical
 
         # 最終威力・攻撃・防御
-        final_power = self.calc_final_power(ctx, dmg_ctx)
-        final_attack = self.calc_final_attack(ctx, dmg_ctx)
-        final_defence = self.calc_final_defense(ctx, dmg_ctx)
+        final_power = self._calc_final_power(ctx, dmg_ctx)
+        final_attack = self._calc_final_attack(ctx, dmg_ctx)
+        final_defence = self._calc_final_defense(ctx, dmg_ctx)
 
         # 最大乱数ダメージ
         max_dmg = int(int(int(attacker.level*0.4+2)*final_power*final_attack/final_defence)/50+2)
@@ -143,7 +144,7 @@ class DamageCalculator:
         # -- ここで乱数が適用される(計算はループ内で実行) --
 
         # タイプ一致補正
-        r_atk_type = self.calc_atk_type_modifier(ctx)
+        r_atk_type = self._calc_atk_type_modifier(ctx)
 
         # タイプ相性補正
         r_def_type = self.calc_def_type_modifier(ctx)
@@ -158,31 +159,31 @@ class DamageCalculator:
         # まもる貫通系補正（Z技、ダイマックス技等）
         r_protect = self.events.emit(Event.ON_CALC_PROTECT_MODIFIER, ctx, 4096) / 4096
 
-        dmgs = [0]*16
+        self.damages = [0]*16
         for i in range(16):
             # 乱数 85~100%
-            dmgs[i] = int(max_dmg * (0.85+0.01*i))
+            self.damages[i] = int(max_dmg * (0.85+0.01*i))
 
             # タイプ補正
-            dmgs[i] = round_half_down(dmgs[i] * r_atk_type)
-            dmgs[i] = round_half_down(dmgs[i] * r_def_type)
+            self.damages[i] = round_half_down(self.damages[i] * r_atk_type)
+            self.damages[i] = round_half_down(self.damages[i] * r_def_type)
 
             # やけど補正
-            dmgs[i] = round_half_down(dmgs[i] * r_burn)
+            self.damages[i] = round_half_down(self.damages[i] * r_burn)
 
             # ダメージ補正
-            dmgs[i] = round_half_down(dmgs[i] * r_dmg)
+            self.damages[i] = round_half_down(self.damages[i] * r_dmg)
 
             # まもる貫通系補正
-            dmgs[i] = round_half_down(dmgs[i] * r_protect)
+            self.damages[i] = round_half_down(self.damages[i] * r_protect)
 
             # 最低ダメージ補償
-            if dmgs[i] == 0 and r_def_type * r_dmg > 0:
-                dmgs[i] = 1
+            if self.damages[i] == 0 and r_def_type * r_dmg > 0:
+                self.damages[i] = 1
 
-        return dmgs, dmg_ctx
+        return self.damages, dmg_ctx
 
-    def calc_atk_type_modifier(self, ctx: BattleContext) -> float:
+    def _calc_atk_type_modifier(self, ctx: BattleContext) -> float:
         """タイプ一致補正（STAB）を計算する。
 
         テラスタルの有無を考慮してSTAB補正値を計算し、
@@ -269,9 +270,9 @@ class DamageCalculator:
         self.def_type_modifier = v  # デバッグ用に保存
         return v / 4096
 
-    def calc_final_power(self,
-                         ctx: BattleContext,
-                         dmg_ctx: DamageContext | None = None) -> int:
+    def _calc_final_power(self,
+                          ctx: BattleContext,
+                          dmg_ctx: DamageContext | None = None) -> int:
         """最終威力を計算する。
 
         Args:
@@ -321,9 +322,9 @@ class DamageCalculator:
 
         return True
 
-    def calc_final_attack(self,
-                          ctx: BattleContext,
-                          dmg_ctx: DamageContext | None = None) -> int:
+    def _calc_final_attack(self,
+                           ctx: BattleContext,
+                           dmg_ctx: DamageContext | None = None) -> int:
         """最終攻撃力を計算する。
 
         ランク補正、特性、持ち物などの補正を適用します。
@@ -383,9 +384,9 @@ class DamageCalculator:
         self.final_attack = final_attack  # デバッグ用に保存
         return final_attack
 
-    def calc_final_defense(self,
-                           ctx: BattleContext,
-                           dmg_ctx: DamageContext | None = None) -> int:
+    def _calc_final_defense(self,
+                            ctx: BattleContext,
+                            dmg_ctx: DamageContext | None = None) -> int:
         """最終防御力を計算する。
 
         ランク補正、特性、持ち物などの補正を適用します。

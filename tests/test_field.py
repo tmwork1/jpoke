@@ -575,7 +575,7 @@ def test_ワンダールーム_物理技は特防側を参照():
     normal_defender.rank["B"] = 6
     normal_defender.rank["D"] = -6
     normal_ctx = BattleContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
-    normal_def = normal.damage_calculator.calc_final_defense(normal_ctx)
+    normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
     wonder = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
@@ -586,7 +586,7 @@ def test_ワンダールーム_物理技は特防側を参照():
     wonder_defender.rank["B"] = 6
     wonder_defender.rank["D"] = -6
     wonder_ctx = BattleContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
-    wonder_def = wonder.damage_calculator.calc_final_defense(wonder_ctx)
+    wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
 
     assert wonder_def < normal_def
 
@@ -601,7 +601,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
     normal_defender.rank["B"] = -6
     normal_defender.rank["D"] = 6
     normal_ctx = BattleContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
-    normal_def = normal.damage_calculator.calc_final_defense(normal_ctx)
+    normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
     wonder = t.start_battle(
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
@@ -612,7 +612,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
     wonder_defender.rank["B"] = -6
     wonder_defender.rank["D"] = 6
     wonder_ctx = BattleContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
-    wonder_def = wonder.damage_calculator.calc_final_defense(wonder_ctx)
+    wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
 
     assert wonder_def < normal_def
 

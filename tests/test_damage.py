@@ -31,7 +31,7 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, terastallize: bool, e
 
     ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
 
-    assert battle.damage_calculator.calc_atk_type_modifier(ctx) == expected
+    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == expected
 
 
 # ──────────────────────────────────────────────────────────────────

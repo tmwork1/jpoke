@@ -117,8 +117,7 @@ class ItemManager:
     def can_change_item(self,
                         source: Pokemon,
                         target: Pokemon,
-                        move: Move | None = None,
-                        reason: str = "") -> bool:
+                        move: Move | None = None) -> bool:
         # TODO : 引数を target, source の順に変更し、影響範囲をすべて修正する
         """持ち物変更が許可されるかを共通イベントで判定する。
 
@@ -133,7 +132,7 @@ class ItemManager:
         """
         return self.events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
-            BattleContext(source=source, target=target, move=move, item_change_reason=reason),
+            BattleContext(source=source, target=target, move=move),
             True
         )
 
@@ -171,8 +170,7 @@ class ItemManager:
     def take_item(self,
                   to_mon: Pokemon,
                   from_mon: Pokemon,
-                  move: Move | None = None,
-                  reason: ItemLostCause = "steal") -> bool:
+                  move: Move | None = None) -> bool:
         # TODO : 引数を from_mon, to_mon の順に変更し、影響範囲をすべて修正する
         """対象の持ち物を to_mon に移す。
 
@@ -188,11 +186,11 @@ class ItemManager:
 
         if not from_mon.has_item():
             return False
-        if not self.can_change_item(to_mon, from_mon, move=move, reason=reason):
+        if not self.can_change_item(to_mon, from_mon, move=move):
             return False
 
         item_name = from_mon.item.name
-        self.lose_item(from_mon, cause=reason)
+        self.lose_item(from_mon, cause="steal")
         self.set_item(to_mon, item_name)
         self.set_item(from_mon, "")
         return True
