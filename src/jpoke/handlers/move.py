@@ -128,7 +128,7 @@ def _check_type_immune(battle: Battle, ctx: BattleContext) -> bool:
     Returns:
         bool: 無効化される場合はFalse、無効化されない場合はTrue
     """
-    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
+    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
     if type_modifier == 0:
         battle.add_event_log(
             ctx.defender,

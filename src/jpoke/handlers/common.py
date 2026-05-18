@@ -283,14 +283,14 @@ def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
 
 def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:
     """効果抜群かどうかを判定する。"""
-    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
-    return type_modifier > 1
+    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
+    return type_modifier/4096 > 1
 
 
 def is_not_very_effective(battle: Battle, ctx: BattleContext) -> bool:
     """今ひとつかどうかを判定する。"""
-    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
-    return 0 < type_modifier < 1
+    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
+    return 0 < type_modifier/4096 < 1
 
 
 def is_berry_item(item_name: str) -> bool:

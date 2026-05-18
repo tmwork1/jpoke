@@ -158,20 +158,6 @@ def check_event_result(battle: Battle,
     return battle.events.emit(event, ctx, value)
 
 
-def calc_damage_modifier(battle: Battle,
-                         event: Event,
-                         base: int = 4096,
-                         atk_idx: int = 0) -> int:
-    """ダメージ計算の補正値を検証するヘルパー関数。"""
-    attacker = battle.actives[atk_idx]
-    defender = battle.foe(attacker)
-    return battle.events.emit(
-        event,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        base
-    )
-
-
 def calc_accuracy(battle: Battle,
                   base: float = 100,
                   atk_idx: int = 0):

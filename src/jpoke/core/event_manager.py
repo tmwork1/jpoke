@@ -130,6 +130,7 @@ class EventManager:
 
             # コンテキストがハンドラに合致しない場合はスキップ
             if not self._match(context, rh):
+                print(f"ハンドラスキップ: {rh.handler.func.__name__} (コンテキスト不一致)")
                 continue
 
             # ハンドラの発生源が無効化されている場合はスキップ

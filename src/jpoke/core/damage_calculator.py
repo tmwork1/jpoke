@@ -67,13 +67,17 @@ class DamageCalculator:
 
         # ダメージ計算の結果を保存するための属性（デバッグ用）
         self.damages: list[int] = []
-        self.power_modifier: int = 4096
-        self.atk_type_modifier: int = 0
-        self.def_type_modifier: int = 0
-        self.damage_modifier: int = 0
         self.final_power: int = 0
         self.final_attack: int = 0
         self.final_defense: int = 0
+        self.power_modifier: int = 4096
+        self.atk_modifier: int = 4096
+        self.def_modifier: int = 4096
+        self.atk_type_modifier: int = 4096
+        self.def_type_modifier: int = 4096
+        self.damage_modifier: int = 4096
+        self.burn_modifier: int = 4096
+        self.protect_modifier: int = 4096
 
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。
@@ -144,20 +148,24 @@ class DamageCalculator:
         # -- ここで乱数が適用される(計算はループ内で実行) --
 
         # タイプ一致補正
-        r_atk_type = self._calc_atk_type_modifier(ctx)
+        self.atk_type_modifier = self._calc_atk_type_modifier(ctx)
+        r_atk_type = self.atk_type_modifier / 4096
 
         # タイプ相性補正
-        r_def_type = self.calc_def_type_modifier(ctx)
+        self.def_type_modifier = self._calc_def_type_modifier(ctx)
+        r_def_type = self.def_type_modifier / 4096
 
         # やけど補正（タイプ相性の後、ダメージ補正の前）
-        r_burn = self.events.emit(Event.ON_CALC_BURN_MODIFIER, ctx, 4096) / 4096
+        self.burn_modifier = self.events.emit(Event.ON_CALC_BURN_MODIFIER, ctx, 4096)
+        r_burn = self.burn_modifier / 4096
 
         # ダメージ補正
         self.damage_modifier = self.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096)
         r_dmg = self.damage_modifier / 4096
 
         # まもる貫通系補正（Z技、ダイマックス技等）
-        r_protect = self.events.emit(Event.ON_CALC_PROTECT_MODIFIER, ctx, 4096) / 4096
+        self.protect_modifier = self.events.emit(Event.ON_CALC_PROTECT_MODIFIER, ctx, 4096)
+        r_protect = self.protect_modifier / 4096
 
         self.damages = [0]*16
         for i in range(16):
@@ -183,7 +191,7 @@ class DamageCalculator:
 
         return self.damages, dmg_ctx
 
-    def _calc_atk_type_modifier(self, ctx: BattleContext) -> float:
+    def _calc_atk_type_modifier(self, ctx: BattleContext) -> int:
         """タイプ一致補正（STAB）を計算する。
 
         テラスタルの有無を考慮してSTAB補正値を計算し、
@@ -195,12 +203,12 @@ class DamageCalculator:
             ctx: 攻防・技の情報を持つバトルコンテキスト
 
         Returns:
-            float: タイプ一致補正
+            int: タイプ一致補正（4096が1.0倍、6144が1.5倍、8192が2.0倍など）
         """
+        base = 4096
+
         attacker = ctx.attacker
         move_type = ctx.move.type
-
-        base = 4096
         original_matches = move_type in attacker.data.types
 
         if not attacker.terastallized:
@@ -228,12 +236,9 @@ class DamageCalculator:
                     # テラスタイプ一致、または元タイプ一致 → 1.5倍
                     base = 6144
 
-        v = self.events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
+        return self.events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
 
-        self.atk_type_modifier = v
-        return v / 4096
-
-    def calc_def_type_modifier(self, ctx: BattleContext) -> float:
+    def _calc_def_type_modifier(self, ctx: BattleContext) -> int:
         """タイプ相性補正を計算する。
 
         攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
@@ -243,14 +248,16 @@ class DamageCalculator:
             ctx: 攻防・技の情報を持つバトルコンテキスト
 
         Returns:
-            float: タイプ相性倍率（1.0=等倍、2.0=効果ばつぐん等）
+            int: タイプ相性補正（4096が1.0倍、2048が0.5倍、8192が2.0倍など）
         """
+        base = 4096
+
         if (
             ctx.move.type == "ステラ"
             and ctx.defender.terastallized
         ):
             # テラスタル状態の相手にステラ技が効果抜群になる
-            base = 8192
+            base *= 2
         elif (
             ctx.move.type == "じめん"
             and self.battle.query_manager.is_floating(ctx.defender)
@@ -259,16 +266,12 @@ class DamageCalculator:
             base = 0
         else:
             # タイプ相性表に基づいて補正を計算
-            base = 4096
             for def_type in ctx.defender.types:
                 type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
                 rate = type_chart.get(def_type, 1.0)
                 base = int(base * rate)
 
-        v = self.events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
-
-        self.def_type_modifier = v  # デバッグ用に保存
-        return v / 4096
+        return self.events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
 
     def _calc_final_power(self,
                           ctx: BattleContext,
@@ -373,12 +376,8 @@ class DamageCalculator:
         final_attack = int(final_attack * r_rank)
 
         # その他の補正
-        r_atk = self.events.emit(
-            Event.ON_CALC_ATK_MODIFIER,
-            ctx,
-            4096
-        )
-        final_attack = round_half_down(final_attack * r_atk/4096)
+        self.atk_modifier = self.events.emit(Event.ON_CALC_ATK_MODIFIER, ctx, 4096)
+        final_attack = round_half_down(final_attack * self.atk_modifier/4096)
         final_attack = max(1, final_attack)
 
         self.final_attack = final_attack  # デバッグ用に保存
@@ -425,8 +424,8 @@ class DamageCalculator:
         final_defence = int(final_defence * r_rank)
 
         # その他の補正
-        r_def = self.events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, 4096)
-        final_defence = round_half_down(final_defence * r_def/4096)
+        self.def_modifier = self.events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, 4096)
+        final_defence = round_half_down(final_defence * self.def_modifier/4096)
         final_defence = max(1, final_defence)
 
         self.final_defense = final_defence  # デバッグ用に保存

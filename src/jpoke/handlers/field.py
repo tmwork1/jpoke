@@ -86,9 +86,10 @@ def あめ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> Han
 def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """すなあらしのターン終了時ダメージ"""
     tick_weather(battle, ctx, value)
-    if (
-        battle.weather.name == "すなあらし"
-        and not any(ctx.source.has_type(t) for t in ["いわ", "じめん", "はがね"])
+    if not (
+        ctx.source.has_type("いわ")
+        or ctx.source.has_type("じめん")
+        or ctx.source.has_type("はがね")
     ):
         battle.modify_hp(ctx.source, r=-1/16, reason="sandstorm")
     return HandlerReturn(value=value)
@@ -97,9 +98,8 @@ def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
 def すなあらし_spdef_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
     if (
-        battle.weather.name == "すなあらし"
-        and ctx.defender.has_type("いわ")
-        and ctx.move.category == "特殊"
+        ctx.defender.has_type("いわ")
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
     return HandlerReturn(value=value)
@@ -108,17 +108,14 @@ def すなあらし_spdef_boost(battle: Battle, ctx: BattleContext, value: Any) 
 def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
     if (
-        battle.weather.name == "ゆき"
-        and ctx.defender.has_type("こおり")
-        and ctx.move.category == "物理"
+        ctx.defender.has_type("こおり")
+        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
     return HandlerReturn(value=value)
 
 
 # ===== 強天候ハンドラ =====
-
-_FLYING_WEAK_TYPES = frozenset({"でんき", "いわ", "こおり"})
 
 
 def おおひでり_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -138,9 +135,8 @@ def おおあめ_block_move(battle: Battle, ctx: BattleContext, value: Any) -> H
 def らんきりゅう_type_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する"""
     if (
-        battle.weather.name == "らんきりゅう"
-        and ctx.defender.has_type("ひこう")
-        and ctx.move.type in _FLYING_WEAK_TYPES
+        ctx.defender.has_type("ひこう")
+        and ctx.move.type in {"でんき", "いわ", "こおり"}
     ):
         value = apply_fixed_modifier(value, 2048)  # ×0.5
     return HandlerReturn(value=value)

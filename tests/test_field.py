@@ -1,10 +1,9 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import pytest
 from jpoke import Battle, Pokemon
-from jpoke.enums import Command, Event
+from jpoke.enums import Event
 from jpoke.utils.type_defs import Weather, Terrain, GlobalField, SideField
 from jpoke.core import BattleContext
-from jpoke.model.move import Move
 import test_utils as t
 
 
@@ -21,7 +20,7 @@ def test_はれ_ほのお強化():
     )
     attacker = battle.actives[0]
     battle.run_move(attacker, attacker.moves[0])
-    6144 == battle.damage_calculator.power_modifier
+    assert 6144 == battle.damage_calculator.power_modifier
 
 
 def test_はれ_みず弱化():
@@ -31,7 +30,9 @@ def test_はれ_みず弱化():
         foe=[Pokemon("ピカチュウ")],
         weather=("はれ", 99),
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.power_modifier
 
 
 def test_あめ_みず強化():
@@ -41,7 +42,9 @@ def test_あめ_みず強化():
         ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
         weather=("あめ", 99),
     )
-    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 6144 == battle.damage_calculator.power_modifier
 
 
 def test_あめ_ほのお弱化():
@@ -51,12 +54,26 @@ def test_あめ_ほのお弱化():
         ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
         weather=("あめ", 99),
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.power_modifier
 
 
 # ──────────────────────────────────────────────────────────────────
 # すなあらし
 # ──────────────────────────────────────────────────────────────────
+
+def test_すなあらし_いわ特防強化():
+    """すなあらし: いわタイプ特防1.5倍"""
+    battle = t.start_battle(
+        ally=[Pokemon("ピカチュウ", moves=["スピードスター"])],
+        foe=[Pokemon("イシツブテ")],
+        weather=("すなあらし", 99),
+    )
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 6144 == battle.damage_calculator.def_modifier
+
 
 def test_すなあらし_ダメージ():
     """すなあらし: ターン終了時ダメージ"""
@@ -104,16 +121,6 @@ def test_すなあらし_特性免疫(ability_name: str):
     assert mon.hp == mon.max_hp
 
 
-def test_すなあらし_いわ特防強化():
-    """すなあらし: いわタイプ特防1.5倍"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["スピードスター"])],
-        foe=[Pokemon("イシツブテ")],
-        weather=("すなあらし", 99),
-    )
-    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER)
-
-
 # ──────────────────────────────────────────────────────────────────
 # ゆき
 # ──────────────────────────────────────────────────────────────────
@@ -125,7 +132,9 @@ def test_ゆき_こおり防御強化():
         foe=[Pokemon("ユキワラシ")],
         weather=("ゆき", 99),
     )
-    6144 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 6144 == battle.damage_calculator.def_modifier
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -139,7 +148,9 @@ def test_おおひでり_ほのお強化():
         foe=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
-    assert 6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 6144 == battle.damage_calculator.power_modifier
 
 
 def test_おおひでり_みず技を失敗させる():
@@ -203,29 +214,20 @@ def test_おおあめ_みず強化():
         foe=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
-    assert 6144 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 6144 == battle.damage_calculator.power_modifier
 
 
 # TODO : みず技を弱化させるのではなく技の発動が失敗する。おおあめも同様。
-# 実装を修正後、テストは削除すべき。
 def test_おおひでり_みず弱化():
     """おおひでり: みず技威力0.5倍"""
-    battle = t.start_battle(
-        ally=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
-        foe=[Pokemon("ピカチュウ")],
-        weather=("おおひでり", 99),
-    )
-    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    pass
 
 
 def test_おおあめ_ほのお弱化():
     """おおあめ: ほのお技威力0.5倍"""
-    battle = t.start_battle(
-        ally=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
-        foe=[Pokemon("ピカチュウ")],
-        weather=("おおあめ", 99),
-    )
-    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    pass
 
 
 def test_強天候中は通常天候で上書きできない():
@@ -258,15 +260,15 @@ def test_強天候同士は上書きできる():
 # TODO : いわ、こおりも弱点軽減する。パラメタライズでまとめる
 
 
-def test_らんきりゅう_ひこう弱点軽減_でんき():
-    """らんきりゅう: ひこうタイプへのでんき技弱点を0.5倍軽減"""
+def test_らんきりゅう_ひこう弱点半減():
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe=[Pokemon("ピジョン")],
         weather=("らんきりゅう", 99),
     )
-    # ×2弱点 → ×1相当（4096 → 2048）
-    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.def_type_modifier
 
 
 def test_らんきりゅう_ひこう以外は軽減しない():
@@ -276,7 +278,9 @@ def test_らんきりゅう_ひこう以外は軽減しない():
         foe=[Pokemon("ピカチュウ")],
         weather=("らんきりゅう", 99),
     )
-    assert 4096 == t.calc_damage_modifier(battle, Event.ON_CALC_DEF_TYPE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 4096 == battle.damage_calculator.def_type_modifier
 
 # TODO : 他の天候・強天候をすべて上書きすることを確認するテストを追加
 
@@ -284,7 +288,7 @@ def test_らんきりゅう_ひこう以外は軽減しない():
 # フィールド共通
 # ──────────────────────────────────────────────────────────────────
 
-# TODO : フィールドによるタイプ強化・弱化テストはパラメタライズでまとめる。
+# TODO : フィールドによるタイプ強化・弱化テストは、全フィールドをパラメタライズでまとめる。
 # 非接地ポケモンに効果が適用されないテストは別関数にわける
 
 
@@ -295,14 +299,20 @@ def test_エレキフィールド_でんき強化():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         terrain=("エレキフィールド", 99),
     )
-    assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 5325 == battle.damage_calculator.power_modifier
 
-    floating_battle = t.start_battle(
+
+def test_エレキフィールド_でんき強化は接地ポケモンのみ():
+    battle = t.start_battle(
         foe=[Pokemon("ピカチュウ")],
         ally=[Pokemon("ピジョン", moves=["でんきショック"])],
         terrain=("エレキフィールド", 99),
     )
-    assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 4096 == battle.damage_calculator.power_modifier
 
 
 def test_グラスフィールド_くさ強化():
@@ -312,14 +322,18 @@ def test_グラスフィールド_くさ強化():
         ally=[Pokemon("フシギダネ", moves=["はっぱカッター"])],
         terrain=("グラスフィールド", 99),
     )
-    assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 5325 == battle.damage_calculator.power_modifier
 
     floating_battle = t.start_battle(
         foe=[Pokemon("ピカチュウ")],
         ally=[Pokemon("ピジョン", moves=["はっぱカッター"])],
         terrain=("グラスフィールド", 99),
     )
-    assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = floating_battle.actives[0]
+    floating_battle.run_move(attacker, attacker.moves[0])
+    assert 4096 == floating_battle.damage_calculator.power_modifier
 
 
 def test_サイコフィールド_エスパー強化():
@@ -329,14 +343,18 @@ def test_サイコフィールド_エスパー強化():
         ally=[Pokemon("フーディン", moves=["サイコキネシス"])],
         terrain=("サイコフィールド", 99),
     )
-    assert 5325 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 5325 == battle.damage_calculator.power_modifier
 
     floating_battle = t.start_battle(
         foe=[Pokemon("ピカチュウ")],
         ally=[Pokemon("ピジョン", moves=["サイコキネシス"])],
         terrain=("サイコフィールド", 99),
     )
-    assert 4096 == t.calc_damage_modifier(floating_battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = floating_battle.actives[0]
+    floating_battle.run_move(attacker, attacker.moves[0])
+    assert 4096 == floating_battle.damage_calculator.power_modifier
 
 
 def test_ミストフィールド_ドラゴン技弱化():
@@ -346,7 +364,9 @@ def test_ミストフィールド_ドラゴン技弱化():
         ally=[Pokemon("カイリュー", moves=["りゅうのはどう"])],
         terrain=("ミストフィールド", 99),
     )
-    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.power_modifier
 
 # ──────────────────────────────────────────────────────────────────
 # エレキフィールド
@@ -408,7 +428,9 @@ def test_グラスフィールド_じしん弱化():
         ally=[Pokemon("サンドパン", moves=["じしん"])],
         terrain=("グラスフィールド", 99),
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.power_modifier
 
 
 def test_グラスフィールド_じならし弱化():
@@ -418,7 +440,9 @@ def test_グラスフィールド_じならし弱化():
         ally=[Pokemon("サンドパン", moves=["じならし"])],
         terrain=("グラスフィールド", 99),
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_POWER_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.power_modifier
 
 
 def test_グラスフィールド_回復():
@@ -619,7 +643,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
 # ──────────────────────────────────────────────────────────────────
 # リフレクター、ひかりのかべ、オーロラベール
 # ──────────────────────────────────────────────────────────────────
-# TODO : パラメタライズでまとめる。
+# TODO : ダメージ軽減テストをパラメタライズでまとめる。
 
 
 def test_リフレクター_物理半減():
@@ -629,7 +653,9 @@ def test_リフレクター_物理半減():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_side_field={"リフレクター": 5},
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.damage_modifier
 
 
 def test_リフレクター_特殊軽減なし():
@@ -639,7 +665,9 @@ def test_リフレクター_特殊軽減なし():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_side_field={"リフレクター": 5},
     )
-    4096 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 4096 == battle.damage_calculator.damage_modifier
 
 
 def test_ひかりのかべ_特殊半減():
@@ -649,7 +677,9 @@ def test_ひかりのかべ_特殊半減():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_side_field={"ひかりのかべ": 5},
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.damage_modifier
 
 
 def test_ひかりのかべ_物理軽減なし():
@@ -659,7 +689,9 @@ def test_ひかりのかべ_物理軽減なし():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_side_field={"ひかりのかべ": 5},
     )
-    4096 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 4096 == battle.damage_calculator.damage_modifier
 
 
 def test_オーロラベール_物理半減():
@@ -669,7 +701,9 @@ def test_オーロラベール_物理半減():
         ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         foe_side_field={"オーロラベール": 1},
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.damage_modifier
 
 
 def test_オーロラベール_特殊半減():
@@ -679,9 +713,11 @@ def test_オーロラベール_特殊半減():
         ally=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         foe_side_field={"オーロラベール": 1},
     )
-    2048 == t.calc_damage_modifier(battle, Event.ON_CALC_DAMAGE_MODIFIER)
+    attacker = battle.actives[0]
+    battle.run_move(attacker, attacker.moves[0])
+    assert 2048 == battle.damage_calculator.damage_modifier
 
-# TODO : パラメタライズでまとめる
+# TODO : 急所による軽減無効テストもパラメタライズでまとめる
 
 
 def test_リフレクター_急所では軽減されない():

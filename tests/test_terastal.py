@@ -58,44 +58,30 @@ def test_威力底上げ(move_name: str,
 # ──────────────────────────────────────────────────────────────────
 
 
-def test_ステラSTAB_元タイプ一致_初回2倍_以降1倍5():
+@pytest.mark.parametrize(
+    ("tera_type", "move", "expected"),
+    [
+        ("ステラ", "でんきショック", 8192, 6144),
+        ("ステラ", "ひのこ", 4915, 4096),
+    ]
+)
+def test_ステラタイプ補正(tera_type: Type, move: str, expected_initial: int, expected_after: int):
     """ステラ テラスタル中、元タイプ一致技は初回2.0倍、2回目以降1.5倍。"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", tera_type="ステラ", moves=["でんきショック"])],
+        ally=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move])],
         foe=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
+    attacker, defender = battle.actives
     attacker.terastallize()
 
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    # 初回: 元タイプ一致 → 2.0倍
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(2.0)
-
-    # 消費済みに設定してから再計算
-    attacker.stellar_boosted_types.add("でんき")
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(1.5)
-
-
-def test_ステラSTAB_不一致技_初回1倍2_以降1倍0():
-    """ステラ テラスタル中、不一致技は初回1.2倍、2回目以降1.0倍。"""
-    battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", tera_type="ステラ", moves=["ひのこ"])],
-        foe=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    attacker.terastallize()
-
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    # 初回: 不一致 → 1.2倍
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(4915 / 4096)
+    # 初回
+    battle.run_move(attacker, attacker.moves[0])
+    assert battle.damage_calculator.atk_type_modifier == expected_initial
 
     # 消費済みに設定してから再計算
-    attacker.stellar_boosted_types.add("ほのお")
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(1.0)
+    attacker.stellar_boosted_types.add(attacker.moves[0].type)
+    battle.run_move(attacker, attacker.moves[0])
+    assert battle.damage_calculator.atk_type_modifier == expected_after
 
 
 if __name__ == "__main__":

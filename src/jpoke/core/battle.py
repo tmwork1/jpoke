@@ -24,7 +24,7 @@ from .context import BattleContext
 from .player import Player
 from .event_logger import EventLogger, Payload
 from .command_logger import CommandLogger
-from .damage import DamageCalculator, DamageContext
+from .damage_calculator import DamageCalculator, DamageContext
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
 from .switch_manager import SwitchManager
@@ -729,4 +729,4 @@ class Battle:
         if isinstance(move, str):
             move = Move(move)
         ctx = BattleContext(defender=defender, move=move)
-        return self.damage_calculator.calc_def_type_modifier(ctx)
+        return self.damage_calculator._calc_def_type_modifier(ctx) / 4096

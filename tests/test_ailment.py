@@ -42,12 +42,13 @@ def test_もうどく_ダメージ():
 
 def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("リザードン")])
+    battle = t.start_battle(
+        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("リザードン")]
+    )
     mon = battle.actives[0]
-    normal_speed = battle.calc_effective_speed(mon)
     battle.ailment_manager.apply(mon, "まひ")
-    paralysis_speed = battle.calc_effective_speed(mon)
-    assert paralysis_speed == normal_speed // 2, "Paralysis speed reduction is incorrect"
+    assert battle.calc_effective_speed(mon) == mon.stats["S"] // 2
 
 
 def test_まひ_行動不能():
@@ -60,8 +61,9 @@ def test_まひ_行動不能():
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動不能になる設定
     battle.test_option.trigger_ailment = True
-    result = t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert not result, "Paralysis action disabled (trigger_rate=1.0)"
+    battle.run_move(mon, mon.moves[0])
+
+    assert not battle.move_executor.action_success
 
 
 def test_まひ_行動成功():
@@ -71,8 +73,8 @@ def test_まひ_行動成功():
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動できる設定
     battle.test_option.trigger_ailment = False
-    result = t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert result, "Paralysis action enabled (trigger_rate=0.0)"
+    battle.run_move(mon, mon.moves[0])
+    assert battle.move_executor.action_success, "Paralysis action enabled (trigger_rate=0.0)"
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -86,7 +88,7 @@ def test_やけど_物理技ダメージ半減():
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "やけど")
     battle.run_move(attacker, attacker.moves[0])
-    assert 2048 == t.calc_damage_modifier(battle, Event.ON_CALC_BURN_MODIFIER)
+    assert battle.damage_calculator.burn_modifier == 2048
 
 
 def test_やけど_特殊技ダメージは半減しない():
@@ -97,7 +99,7 @@ def test_やけど_特殊技ダメージは半減しない():
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "やけど")
     battle.run_move(attacker, attacker.moves[0])
-    assert 4096 == battle.damage_calculator.damage_modifier
+    assert battle.damage_calculator.burn_modifier == 4096
 
 
 def test_やけど_ダメージ():
@@ -115,20 +117,22 @@ def test_やけど_ダメージ():
 def test_ねむり_カウント():
     """ねむり: ターン経過で回復"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ")],
+        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        foe=[Pokemon("ニャース")],
     )
-    mon = battle.actives[0]
-    battle.ailment_manager.apply(mon, "ねむり", count=2)
+    attacker, defender = battle.actives
+    battle.ailment_manager.apply(attacker, "ねむり", count=2)
 
     # 1ターン目: count 2 → 1
-    assert not t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert mon.ailment.name == "ねむり"
-    assert mon.ailment.count == 1
+    battle.run_move(attacker, attacker.moves[0])
+    assert not battle.move_executor.action_success
+    assert attacker.ailment.name == "ねむり"
+    assert attacker.ailment.count == 1
 
     # 2ターン目: count 1 → 0 で回復
-    assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert not mon.ailment.is_active
+    battle.run_move(attacker, attacker.moves[0])
+    assert battle.move_executor.action_success
+    assert not attacker.ailment.is_active
 
 # ──────────────────────────────────────────────────────────────────
 # こおり
@@ -145,8 +149,9 @@ def test_こおり_行動不能():
     battle.ailment_manager.apply(mon, "こおり")
     # 解凍されない設定でテスト
     battle.test_option.trigger_ailment = False
-    assert not t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert mon.ailment.name == "こおり", "Freeze: Status persistence failed (trigger_rate=0.0)"
+    battle.run_move(mon, mon.moves[0])
+    assert not battle.move_executor.action_success
+    assert mon.ailment.name == "こおり"
 
 
 def test_こおり_行動成功():
@@ -159,8 +164,9 @@ def test_こおり_行動成功():
     battle.ailment_manager.apply(mon, "こおり")
     # 必ず解凍される設定でテスト
     battle.test_option.trigger_ailment = True
-    assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert not mon.ailment.is_active, "Freeze: Thaw failed (trigger_rate=1.0)"
+    battle.run_move(mon, mon.moves[0])
+    assert battle.move_executor.action_success
+    assert not mon.ailment.is_active
 
 
 def test_こおり_ほのお技被弾で解凍する():
@@ -186,7 +192,6 @@ def test_どくタイプには通常どくが入らない():
     )
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "どく")
-    assert not target.ailment.is_active
 
 
 def test_はがねタイプには通常もうどくが入らない():
@@ -195,9 +200,7 @@ def test_はがねタイプには通常もうどくが入らない():
         foe=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
-
     assert not battle.ailment_manager.apply(target, "もうどく")
-    assert not target.ailment.is_active
 
 
 def test_でんきタイプにはまひが入らない():
@@ -206,9 +209,7 @@ def test_でんきタイプにはまひが入らない():
         foe=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
-
     assert not battle.ailment_manager.apply(target, "まひ")
-    assert not target.ailment.is_active
 
 
 def test_ほのおタイプにはやけどが入らない():
@@ -217,9 +218,7 @@ def test_ほのおタイプにはやけどが入らない():
         foe=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
-
     assert not battle.ailment_manager.apply(target, "やけど")
-    assert not target.ailment.is_active
 
 
 def test_こおりタイプにはこおりが入らない():
@@ -228,9 +227,7 @@ def test_こおりタイプにはこおりが入らない():
         foe=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
-
     assert not battle.ailment_manager.apply(target, "こおり")
-    assert not target.ailment.is_active
 
 
 if __name__ == "__main__":

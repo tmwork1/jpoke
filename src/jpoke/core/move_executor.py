@@ -35,6 +35,9 @@ class MoveExecutor:
 
         # デバッグ用
         self.accuracy: int | None = None
+        self.action_success: bool = False
+        self.move_success: bool = False
+        self.move_applied: bool = False
 
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
@@ -98,58 +101,6 @@ class MoveExecutor:
             idx = min(hit_index - 1, len(power_sequence) - 1)
             return power_sequence[idx]
         return move.power
-
-    def _execute_hit(self, ctx: BattleContext) -> bool:
-        """1 ヒット分の処理を実行する。
-
-        Args:
-            ctx: 技実行中のバトルコンテキスト
-
-        Returns:
-            処理を継続できる場合はTrue。無効化などで終了する場合はFalse。
-        """
-        print("Executing hit:", ctx.move.name, f"(Hit {ctx.hit_index}/{ctx.hit_count})")
-
-        if not self.events.emit(Event.ON_APPLY_MOVE, ctx, True):
-            return False
-
-        # 変化技はダメージ計算をせず、効果処理のみ行う
-        if ctx.move.category == "変化":
-            self.events.emit(Event.ON_STATUS_HIT, ctx)
-            return True
-
-        critical = self.check_critical(ctx)
-        damage = self.battle.roll_damage(
-            ctx.attacker, ctx.defender, ctx.move, critical=critical
-        )
-
-        ctx.move_damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
-
-        if ctx.move_damage:
-            hp_delta = self.battle.modify_hp(
-                ctx.defender,
-                -ctx.move_damage,
-                reason="move_damage",
-                source=ctx.attacker,
-                move=ctx.move,
-            )
-            if hp_delta < 0:
-                ctx.defender.hits_taken += 1
-
-            if ctx.defender.fainted:
-                ctx.fainted = True
-
-        self.events.emit(Event.ON_HIT, ctx)
-
-        # ダメージを与えた後の処理
-        if ctx.move_damage:
-            self.events.emit(Event.ON_DAMAGE, ctx)
-
-            # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
-            if ctx.attacker.active_tera_type == 'ステラ':
-                ctx.attacker.stellar_boosted_types.add(ctx.move.type)
-
-        return True
 
     def check_hit(self, ctx: BattleContext) -> bool:
         """技の命中判定。
@@ -236,6 +187,11 @@ class MoveExecutor:
             attacker: 攻撃側のポケモン
             move: 使用する技
         """
+        self.accuracy = None
+        self.action_success = False
+        self.move_success = False
+        self.move_applied = False
+
         defender = self.battle.foe(attacker)
         ctx = BattleContext(attacker=attacker, defender=defender)
 
@@ -258,7 +214,8 @@ class MoveExecutor:
         ctx.move.set_type(move_type)
 
         # 行動成功判定
-        if not self.events.emit(Event.ON_CHECK_ACTION, ctx, True):
+        self.action_success = self.events.emit(Event.ON_CHECK_ACTION, ctx, True)
+        if not self.action_success:
             return
 
         # 技の宣言、PP消費
@@ -291,7 +248,8 @@ class MoveExecutor:
             return
 
         # 発動成功判定
-        if not self.events.emit(Event.ON_TRY_MOVE, ctx, True):
+        self.move_success = self.events.emit(Event.ON_TRY_MOVE, ctx, True)
+        if not self.move_success:
             return
 
         # 反射判定
@@ -326,8 +284,11 @@ class MoveExecutor:
                 break
 
             # 無効化されたら中断
-            if not self._execute_hit(ctx):
-                break
+            self.move_applied = self.events.emit(Event.ON_APPLY_MOVE, ctx, True)
+            if not self.move_applied:
+                return False
+
+            self._execute_hit(ctx)
 
             # ひんしになったら中断
             if ctx.fainted:
@@ -338,6 +299,48 @@ class MoveExecutor:
 
         # 技実行完了後の処理（状態管理・撤去など）
         self.events.emit(Event.ON_MOVE_END, ctx)
+
+    def _execute_hit(self, ctx: BattleContext) -> None:
+        """1 ヒット分の処理を実行する。
+
+        Args:
+            ctx: 技実行中のバトルコンテキスト
+        """
+        # 変化技はダメージ計算をせず、効果処理のみ行う
+        if ctx.move.category == "変化":
+            self.events.emit(Event.ON_STATUS_HIT, ctx)
+            return
+
+        critical = self.check_critical(ctx)
+        damage = self.battle.roll_damage(
+            ctx.attacker, ctx.defender, ctx.move, critical=critical
+        )
+
+        ctx.move_damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
+
+        if ctx.move_damage:
+            hp_delta = self.battle.modify_hp(
+                ctx.defender,
+                -ctx.move_damage,
+                reason="move_damage",
+                source=ctx.attacker,
+                move=ctx.move,
+            )
+            if hp_delta < 0:
+                ctx.defender.hits_taken += 1
+
+            if ctx.defender.fainted:
+                ctx.fainted = True
+
+        self.events.emit(Event.ON_HIT, ctx)
+
+        # ダメージを与えた後の処理
+        if ctx.move_damage:
+            self.events.emit(Event.ON_DAMAGE, ctx)
+
+            # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
+            if ctx.attacker.active_tera_type == 'ステラ':
+                ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
     def generate_context(self, attacker: Pokemon, move: Move) -> BattleContext:
         """BattleContextを生成する。

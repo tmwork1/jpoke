@@ -50,14 +50,14 @@ FIELDS: dict[str, FieldData] = {
     "すなあらし": FieldData(
         turn_extension_item="さらさらいわ",
         handlers={
+            Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
+                h.すなあらし_spdef_boost,
+                subject_spec="defender:self",
+            ),
             Event.ON_TURN_END_1: h.FieldHandler(
                 h.すなあらし_turn_end,
                 priority=10,
                 subject_spec="source:self",
-            ),
-            Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
-                h.すなあらし_spdef_boost,
-                subject_spec="defender:self",
             ),
         },
     ),
