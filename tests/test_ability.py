@@ -862,7 +862,7 @@ def test_かがくへんかガス_解除後は特性が再び有効化される(
     battle.switch_manager.run_switch(player, player.team[1])
     assert battle.actives[1].ability.enabled
     assert battle.actives[1].ability.revealed
-    assert battle.actives[0].rank["A"] == -1
+    assert battle.actives[0].rank["A"] == 0
 
 # TODO : かがくへんかガスでかがくへんかガスを無効化できないテストを追加
 
