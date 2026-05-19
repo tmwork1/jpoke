@@ -47,8 +47,7 @@ def announce_ability_triggered(battle: Battle,
                                ctx: BattleContext | None,
                                value: Any,
                                *,
-                               mon: Pokemon | None = None,
-                               success: bool = True) -> HandlerReturn:
+                               mon: Pokemon | None = None) -> HandlerReturn:
     """汎用: 特性発動ログを記録する
 
     Args:
@@ -64,10 +63,8 @@ def announce_ability_triggered(battle: Battle,
         mon = ctx.source
 
     mon.ability.revealed = True
-    idx = battle.get_player_index(mon)
-    battle.event_logger.add(
-        battle.turn,
-        idx,
+    battle.add_event_log(
+        mon,
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": mon.ability.name, "success": success}
     )

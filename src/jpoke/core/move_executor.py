@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
 from jpoke.model import Pokemon, Move
-from jpoke.enums import Command
+from jpoke.enums import LogCode
 from jpoke.utils.constants import HIT_RANK_MODIFIERS
 
 from .event_manager import Event
@@ -216,10 +216,11 @@ class MoveExecutor:
         # 行動成功判定
         self.action_success = self.events.emit(Event.ON_CHECK_ACTION, ctx, True)
         if not self.action_success:
+            self.battle.add_event_log(attacker, LogCode.ACTION_BLOCKED)
             return
 
-        # 技の宣言、PP消費
-        self.events.emit(Event.ON_CONSUME_PP, ctx)
+        # PP消費
+        self._consume_pp(ctx)
 
         # かやたぶりを有効にする
         self.events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
@@ -245,15 +246,18 @@ class MoveExecutor:
 
         # 溜め技の準備
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
+            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_CHARGED)
             return
 
         # 発動成功判定
         self.move_success = self.events.emit(Event.ON_TRY_MOVE, ctx, True)
         if not self.move_success:
+            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED)
             return
 
         # 反射判定
         if self.events.emit(Event.ON_QUERY_REFLECT, ctx, False):
+            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_REFLECTED)
             ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 発動した技の確定
@@ -269,7 +273,6 @@ class MoveExecutor:
         # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
         for hit_idx in range(1, hit_count + 1):
             ctx.hit_index = hit_idx
-            ctx.fainted = False
 
             # ヒットごとの技の威力を設定
             ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_idx))
@@ -281,17 +284,21 @@ class MoveExecutor:
             )
 
             if need_hit_check and not self.check_hit(ctx):
+                self.battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED,
+                                          payload={"move": ctx.move.name})
                 break
 
             # 無効化されたら中断
             self.move_applied = self.events.emit(Event.ON_APPLY_MOVE, ctx, True)
             if not self.move_applied:
+                self.battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
+                                          payload={"move": ctx.move.name})
                 return False
 
             self._execute_hit(ctx)
 
             # ひんしになったら中断
-            if ctx.fainted:
+            if ctx.defender.fainted or ctx.attacker.fainted:
                 break
 
         # 技の威力を元に戻す（トリプルアクセルなどのため）
@@ -312,51 +319,23 @@ class MoveExecutor:
             return
 
         critical = self.check_critical(ctx)
-        damage = self.battle.roll_damage(
-            ctx.attacker, ctx.defender, ctx.move, critical=critical
-        )
+        damage = self.battle.roll_damage(ctx.attacker, ctx.defender,
+                                         ctx.move, critical=critical)
 
-        ctx.move_damage = self.events.emit(Event.ON_MODIFY_DAMAGE, ctx, damage)
-
-        if ctx.move_damage:
-            hp_delta = self.battle.modify_hp(
-                ctx.defender,
-                -ctx.move_damage,
-                reason="move_damage",
-                source=ctx.attacker,
-                move=ctx.move,
-            )
-            if hp_delta < 0:
-                ctx.defender.hits_taken += 1
-
-            if ctx.defender.fainted:
-                ctx.fainted = True
+        hp_delta = self.battle.modify_hp(ctx.defender, -damage, source=ctx.attacker,
+                                         move=ctx.move, reason="move_damage")
+        if hp_delta < 0:
+            ctx.defender.hits_taken += 1
 
         self.events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えた後の処理
-        if ctx.move_damage:
-            self.events.emit(Event.ON_DAMAGE, ctx)
+        if hp_delta < 0:
+            self.events.emit(Event.ON_DAMAGE, ctx, hp_delta)
 
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
             if ctx.attacker.active_tera_type == 'ステラ':
                 ctx.attacker.stellar_boosted_types.add(ctx.move.type)
-
-    def generate_context(self, attacker: Pokemon, move: Move) -> BattleContext:
-        """BattleContextを生成する。
-
-        Args:
-            attacker: 技を使用するポケモン
-            move: 使用する技（技コマンドの場合は必須）
-
-        Returns:
-            BattleContext: 技の使用に関するコンテキスト情報
-        """
-        return BattleContext(
-            attacker=attacker,
-            defender=self.battle.foe(attacker),
-            move=move
-        )
 
     def is_contact(self, ctx: BattleContext) -> bool:
         """技が接触技かどうかを判定する。
@@ -419,3 +398,19 @@ class MoveExecutor:
         """
         category = self.resolve_move_category(attacker, move)
         return category == "物理" or move.has_label("physical_damage")
+
+    def _consume_pp(self, ctx: BattleContext):
+        """技のPPを消費する。
+
+        技を使用した際にPPを減らします。
+
+        Args:
+            ctx: BattleContextインスタンス
+        """
+        v = self.events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
+        ctx.move.pp = max(0, ctx.move.pp - v)
+        self.battle.add_event_log(
+            ctx.attacker,
+            LogCode.PP_CONSUMED,
+            payload={"move": ctx.move.name, "value": v}
+        )

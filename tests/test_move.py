@@ -197,7 +197,6 @@ def test_はやてがえし_先制攻撃技に成功():
     battle.advance_turn()
     assert battle.actives[1].hp < before_foe_hp
     assert battle.actives[0].hp == before_ally_hp
-    assert t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=1)
 
 
 def test_はやてがえし_通常攻撃技には失敗():
@@ -213,7 +212,6 @@ def test_はやてがえし_通常攻撃技には失敗():
 
     assert battle.actives[1].hp == before_foe_hp
     assert battle.actives[0].hp < before_ally_hp
-    assert not t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=1)
 
 
 def test_はやてがえし_先制変化技には失敗():
@@ -227,7 +225,6 @@ def test_はやてがえし_先制変化技には失敗():
     battle.advance_turn()
 
     assert battle.actives[1].hp == before_foe_hp
-    assert not t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=1)
 
 # ──────────────────────────────────────────────────────────────────
 # きあいパンチ
@@ -262,7 +259,6 @@ def test_きあいパンチ_攻撃ダメージを受けると失敗():
 
     assert battle.actives[1].hp == before_foe_hp
     assert battle.actives[0].hp < before_ally_hp
-    assert t.log_contains(battle, LogCode.ACTION_BLOCKED, player_idx=0)
 
 
 def test_きあいパンチ_みがわりへの被弾では中断しない():
@@ -325,7 +321,6 @@ def test_ちきゅうなげ_ゴーストには無効():
     )
     battle.advance_turn()
     assert battle.actives[1].hp == battle.actives[1].max_hp
-    assert t.log_contains(battle, LogCode.MOVE_IMMUNE, player_idx=1)
 
 
 # ──────────────────────────────────────────────────────────────────

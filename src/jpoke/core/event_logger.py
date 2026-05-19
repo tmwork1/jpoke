@@ -99,7 +99,7 @@ class EventLog:
             case LogCode.ABILITY_TRIGGERED:
                 return self.payload.get("ability", "特性")
 
-            case LogCode.LOSE_ITEM:
+            case LogCode.ITEM_LOST:
                 item = self.payload.get("item", "持ち物")
                 cause = self.payload.get("reason", "")
                 return f"{item}を失った [{cause}]"
@@ -112,18 +112,18 @@ class EventLog:
                 volatile = self.payload["volatile"]
                 return f"{volatile}が解除された"
 
-            case LogCode.VOLATILE_STATUS:
+            case LogCode.VOLATILE_DISPLAY:
                 return self.payload["volatile"]
 
-            case LogCode.APPLY_AILMENT:
+            case LogCode.AILMENT_APPLIED:
                 ailment = self.payload.get("ailment", "状態異常")
                 return f"{ailment}が付与された"
 
-            case LogCode.CURE_AILMENT:
+            case LogCode.AILMENT_REMOVED:
                 ailment = self.payload.get("ailment", "状態異常")
                 return f"{ailment}が回復した"
 
-            case LogCode.MODIFY_RANK:
+            case LogCode.STAT_CHANGED:
                 stat = self.payload.get("stat", "能力値")
                 change = self.payload.get("value", 0)
                 direction = "上がった" if change > 0 else "下がった"
@@ -142,22 +142,18 @@ class EventLog:
             case LogCode.ACTION_BLOCKED:
                 return "動けない"
 
-            case LogCode.ACTION_START:
-                action_order = self.payload.get("action_order", "行動")
-                return action_order
-
-            case LogCode.CONSUME_PP:
+            case LogCode.PP_CONSUMED:
                 move = self.payload.get("move", "技")
                 value = self.payload.get("value", "?")
                 return f"{move} PP -{value}"
 
-            case LogCode.HIT_SUBSTITUTE:
+            case LogCode.SUBSTITUTE_HIT:
                 return "みがわりにヒット"
 
-            case LogCode.PROTECT_SUCCESS:
+            case LogCode.PROTECT_SUCCEEDED:
                 return "攻撃を防いだ"
 
-            case LogCode.MOVE_IMMUNE:
+            case LogCode.MOVE_IMMUNED:
                 move = self.payload.get("move", "技")
                 reason = self.payload.get("reason", "")
                 return f"{move} 無効化 [{reason}]"

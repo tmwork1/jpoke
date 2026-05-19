@@ -48,12 +48,16 @@ class SwitchManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def switch_in(self, mon: Pokemon):
+    def switch_in(self, player: Player, mon: Pokemon):
+        # TODO : 関数内の処理はハンドラの登録に限定すべきか
         """ポケモンの入場時ハンドラーを登録する。
 
         Args:
+            player: 交代を行うプレイヤー
             mon: 場に出るポケモン
         """
+        player.active_idx = player.team.index(mon)
+
         mon.revealed = True
         mon.ability.register_handlers(self.events, mon)
         mon.item.register_handlers(self.events, mon)
@@ -61,18 +65,21 @@ class SwitchManager:
         for volatile in mon.volatiles.values():
             volatile.register_handlers(self.events, mon)
 
-        self.battle.add_event_log(
-            mon,
-            LogCode.SWITCH_IN,
-            payload={"pokemon": mon.name}
-        )
+        self.battle.add_event_log(mon, LogCode.SWITCHED_IN,
+                                  payload={"pokemon": mon.name})
 
     def switch_out(self, mon: Pokemon):
+        # TODO : ハンドラの解除とその他のリセットは関数を分けるべきか
         """ポケモンの退場時ハンドラーを解除する。
 
         Args:
             mon: 引っ込むポケモン
         """
+
+        # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
+        for name in list(mon.volatiles.keys()):
+            self.battle.volatile_manager.remove(mon, name)
+
         mon.ability.unregister_handlers(self.events, mon)
         mon.item.unregister_handlers(self.events, mon)
         mon.ailment.unregister_handlers(self.events, mon)
@@ -86,11 +93,8 @@ class SwitchManager:
             mon.ability.bench_reset()
         mon.item.bench_reset()
 
-        self.battle.add_event_log(
-            mon,
-            LogCode.SWITCH_OUT,
-            payload={"pokemon": mon.name}
-        )
+        self.battle.add_event_log(mon, LogCode.SWITCHED_OUT,
+                                  payload={"pokemon": mon.name})
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
@@ -137,16 +141,11 @@ class SwitchManager:
         old = player.active_mon
         if old is not None:
             self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
-
-            # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
-            for name in list(old.volatiles.keys()):
-                self.battle.volatile_manager.remove(old, name)
-
             self.switch_out(old)
 
         # 入場
-        player.active_idx = player.team.index(new)
-        self.switch_in(new)
+        self.switch_in(player, new)
+        player.has_switched = True
 
         # ポケモンが場に出た時の処理
         if emit_switch_in_event:
@@ -157,9 +156,6 @@ class SwitchManager:
                 flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
                 self.override_interrupt(flag)
                 self.run_interrupt_switch(flag)
-
-        # その他の処理
-        player.has_switched = True
 
     def run_initial_switch(self):
         """バトル開始時の初期交代。

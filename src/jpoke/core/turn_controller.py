@@ -90,8 +90,8 @@ class TurnController:
             loser_idx = TOD_scores.index(0)
             loser = self.battle.players[loser_idx]
             winner = self.battle.players[loser_idx - 1]
-            self.battle.add_event_log(winner, LogCode.WIN)
-            self.battle.add_event_log(loser, LogCode.LOSE)
+            self.battle.add_event_log(winner, LogCode.GAME_WON)
+            self.battle.add_event_log(loser, LogCode.GAME_LOST)
             self.battle.winner = winner
             return winner
 

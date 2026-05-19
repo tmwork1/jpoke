@@ -22,15 +22,6 @@ class AilmentHandler(Handler):
         )
 
 
-def _add_action_block_log(battle: Battle, ctx: BattleContext, reason: str):
-    battle.event_logger.add(
-        battle.turn,
-        battle.get_player_index(ctx.attacker),
-        LogCode.ACTION_BLOCKED,
-        payload={"reason": reason}
-    )
-
-
 def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):
     battle.ailment_manager.tick(ctx.source)
     mon = ctx.source
@@ -60,7 +51,6 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
         trigger = battle.random.random() < 0.25
 
     if trigger:
-        _add_action_block_log(battle, ctx, reason="まひ")
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -91,7 +81,6 @@ def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
         return HandlerReturn(value=True)
 
     # まだ眠っている
-    _add_action_block_log(battle, ctx, reason="ねむり")
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -110,7 +99,6 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         return HandlerReturn(value=True)
 
     # まだ凍っている
-    _add_action_block_log(battle, ctx, reason="こおり")
     return HandlerReturn(value=False, stop_event=True)
 
 

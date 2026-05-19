@@ -69,7 +69,7 @@ class ItemManager:
 
         self.battle.add_event_log(
             target,
-            LogCode.LOSE_ITEM,
+            LogCode.ITEM_LOST,
             payload={"item": item.name, "reason": cause}
         )
         return True

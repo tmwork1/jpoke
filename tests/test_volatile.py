@@ -85,7 +85,7 @@ def test_あめまみれ():
     )
     battle.events.emit(Event.ON_TURN_END_3)
     assert battle.actives[0].rank["S"] == -1
-    assert t.log_contains(battle, LogCode.MODIFY_RANK)
+    assert t.log_contains(battle, LogCode.STAT_CHANGED)
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -325,7 +325,6 @@ def test_かなしばり_実行ブロック():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "かなしばり", move="たいあたり")
     assert not t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert t.log_contains(battle, LogCode.ACTION_BLOCKED)
 
 
 def test_かなしばり_ターン経過で解除():
@@ -959,7 +958,6 @@ def test_ひるみ_行動不能():
     )
     assert not can_move
     assert not attacker.has_volatile("ひるみ")
-    assert t.log_contains(battle, LogCode.ACTION_BLOCKED)
 
 # ──────────────────────────────────────────────────────────────────
 # ふういん
@@ -1077,7 +1075,7 @@ def test_みがわり_攻撃によりみがわりのHPが減る():
     volatile = defender.volatiles["みがわり"]
     battle.advance_turn()
     assert 0 < volatile.hp < 100
-    assert t.log_contains(battle, LogCode.HIT_SUBSTITUTE)
+    assert t.log_contains(battle, LogCode.SUBSTITUTE_HIT)
 
 
 def test_みがわり_破壊():
@@ -1089,7 +1087,7 @@ def test_みがわり_破壊():
     battle.volatile_manager.apply(defender, "みがわり", hp=1)
     battle.advance_turn()
     assert not defender.has_volatile("みがわり")
-    assert t.log_contains(battle, LogCode.HIT_SUBSTITUTE)
+    assert t.log_contains(battle, LogCode.SUBSTITUTE_HIT)
 
 # ──────────────────────────────────────────────────────────────────
 # みちづれ
@@ -1136,7 +1134,6 @@ def test_メロメロ_行動不能():
     # 行動不能を強制
     battle.test_option.trigger_volatile = True
     assert not t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert t.log_contains(battle, LogCode.ACTION_BLOCKED)
 
 
 def test_メロメロ_行動可能():
@@ -1149,7 +1146,7 @@ def test_メロメロ_行動可能():
     # 行動を許可
     battle.test_option.trigger_volatile = False
     assert t.check_event_result(battle, Event.ON_CHECK_ACTION)
-    assert t.log_contains(battle, LogCode.VOLATILE_STATUS)
+    assert t.log_contains(battle, LogCode.VOLATILE_DISPLAY)
 
 # ──────────────────────────────────────────────────────────────────
 # やどりぎのタネ
@@ -1220,7 +1217,7 @@ def test_まもる_攻撃技を無効化():
     )
     battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
     assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
-    assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
+    assert t.log_contains(battle, LogCode.PROTECT_SUCCEEDED)
 
 
 def test_まもる_相手が対象の変化技を無効化():
@@ -1231,7 +1228,7 @@ def test_まもる_相手が対象の変化技を無効化():
     )
     battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
     assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
-    assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
+    assert t.log_contains(battle, LogCode.PROTECT_SUCCEEDED)
 
 
 def test_まもる_相手自身が対象の技は無効化しない():
@@ -1261,7 +1258,7 @@ def test_トーチカ():
     )
     battle.volatile_manager.apply(battle.actives[1], "トーチカ", count=1)
     assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
-    assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
+    assert t.log_contains(battle, LogCode.PROTECT_SUCCEEDED)
     assert battle.actives[0].has_ailment("どく")
 
 
@@ -1290,7 +1287,7 @@ def test_キングシールド():
     )
     battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
     assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
-    assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
+    assert t.log_contains(battle, LogCode.PROTECT_SUCCEEDED)
     assert battle.actives[0].rank["A"] == -1
 
 
@@ -1319,7 +1316,7 @@ def test_スレッドトラップ():
     )
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
     assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
-    assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
+    assert t.log_contains(battle, LogCode.PROTECT_SUCCEEDED)
     assert battle.actives[0].rank["S"] == -1
 
 
@@ -1348,7 +1345,7 @@ def test_かえんのまもり():
     )
     battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
     assert not t.check_event_result(battle, Event.ON_TRY_MOVE)
-    assert t.log_contains(battle, LogCode.PROTECT_SUCCESS)
+    assert t.log_contains(battle, LogCode.PROTECT_SUCCEEDED)
     assert battle.actives[0].has_ailment("やけど")
 
 

@@ -106,7 +106,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "かいふくふうじ": VolatileData(
         handlers={
-            Event.ON_BEFORE_HEAL: h.VolatileHandler(
+            Event.ON_MODIFY_HEAL: h.VolatileHandler(
                 h.かいふくふうじ,
                 subject_spec="target:self",
             ),
@@ -414,7 +414,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=30,
             ),
-            Event.ON_MODIFY_DAMAGE: h.VolatileHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.VolatileHandler(
                 h.みがわり_modify_damage,
                 subject_spec="defender:self",
                 priority=20,

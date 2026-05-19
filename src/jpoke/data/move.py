@@ -15,11 +15,6 @@ def common_setup() -> None:
     全ての技に共通ハンドラを追加する。
 
     この関数は、MOVESディクショナリ内の全てのMoveDataに対して、
-    PP消費のためのON_CONSUME_PPイベントハンドラを追加します。
-
-    追加されるハンドラ:
-        - ON_CONSUME_PP: 技使用時のPP消費処理
-
     呼び出しタイミング: モジュール初期化時（ファイル末尾）
 
     Note:
@@ -27,12 +22,6 @@ def common_setup() -> None:
     """
     for name, data in MOVES.items():
         data.name = name
-
-        # 共通ハンドラを追加
-        data.handlers[Event.ON_CONSUME_PP] = h.MoveHandler(
-            h.consume_pp,
-            subject_spec="attacker:self"
-        )
 
 
 MOVES: dict[str, MoveData] = {
@@ -275,7 +264,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         labels=["contact"],
         handlers={
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.HP_ratio_damage,
                 subject_spec="attacker:self",
             )
@@ -520,7 +509,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.がむしゃら_modify_damage,
                 subject_spec="attacker:self",
             )
@@ -1041,7 +1030,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
             ),
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
         }
@@ -1322,7 +1311,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.level_fixed_damage,
                 subject_spec="attacker:self",
             )
@@ -1401,7 +1390,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
             ),
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
         }
@@ -1942,7 +1931,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
             ),
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
         }
@@ -2768,7 +2757,7 @@ MOVES: dict[str, MoveData] = {
                 h.いのちがけ_pay_hp,
                 subject_spec="attacker:self",
             ),
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.いのちがけ_modify_damage,
                 subject_spec="attacker:self",
             ),
@@ -2958,7 +2947,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=90,
         handlers={
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.HP_ratio_damage,
                 subject_spec="attacker:self",
             )
@@ -3403,7 +3392,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_APPLY_MOVE: h.MoveHandler(
                 h.ohko_check_immune,
             ),
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
         }
@@ -3636,7 +3625,7 @@ MOVES: dict[str, MoveData] = {
         power=0,
         accuracy=100,
         handlers={
-            Event.ON_MODIFY_DAMAGE: h.MoveHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.level_fixed_damage,
                 subject_spec="attacker:self",
             )

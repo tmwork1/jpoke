@@ -114,7 +114,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "いしあたま": AbilityData(
         handlers={
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.いしあたま_ignore_recoil,
                 subject_spec="target:self",
             ),
@@ -184,7 +184,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.おやこあい_modify_hit_count,
                 subject_spec="attacker:self",
             ),
-            Event.ON_MODIFY_DAMAGE: h.AbilityHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.おやこあい_modify_damage,
                 subject_spec="attacker:self",
             )
@@ -371,7 +371,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.がんじょう_block_ohko,
                 subject_spec="target:self",
             ),
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.がんじょう_survive_lethal,
                 subject_spec="target:self",
             ),
@@ -752,7 +752,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.すなかき_modify_speed,
                 subject_spec="source:self",
             ),
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.すなかき_ignore_sandstorm_damage,
                 subject_spec="target:self",
             ),
@@ -763,7 +763,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.すながくれ_ignore_sandstorm_damage,
                 subject_spec="target:self",
             ),
@@ -775,7 +775,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.すなのちから_modify_power,
                 subject_spec="attacker:self",
             ),
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.すなのちから_ignore_sandstorm_damage,
                 subject_spec="target:self",
             ),
@@ -1243,7 +1243,7 @@ ABILITIES: dict[str, AbilityData] = {
             "gas_proof",
         ],
         handlers={
-            Event.ON_MODIFY_DAMAGE: h.AbilityHandler(
+            Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.ばけのかわ_modify_damage,
                 subject_spec="defender:self",
                 priority=10,
@@ -1431,7 +1431,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.ぼうじん_on_apply,
                 subject_spec="defender:self",
             ),
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.ぼうじん_ignore_sandstorm_damage,
                 subject_spec="target:self",
             ),
@@ -2294,7 +2294,7 @@ ABILITIES: dict[str, AbilityData] = {
 
         ],
         handlers={
-            Event.ON_BEFORE_DAMAGE_APPLY: h.AbilityHandler(
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.マジックガード_reduce_damage,
                 subject_spec="target:self",
             )

@@ -152,12 +152,12 @@ class Event(Enum):
     # emit: core/move_executor.py（計算済みダメージの上書き）
     # handle: data/move.py（固定ダメージ技・ふきとばし・0ダメ調整等）
     #          volatile.py（まもる状態によるダメージ無効化）
-    ON_MODIFY_DAMAGE = auto()
+    ON_MODIFY_MOVE_DAMAGE = auto()
 
     # emit: core/pokemon_state.py（HP減少適用直前）
     # handle: ability.py（マジックガード・いしあたま等、ダメージ適用前に値を調整する特性）
     #         hp_change_reason に基づいて砂嵐ダメージ・反動ダメージ等を識別
-    ON_BEFORE_DAMAGE_APPLY = auto()
+    ON_MODIFY_NON_MOVE_DAMAGE = auto()
 
     # emit: core/pokemon_state.py（reason="poison" のHP変化適用前）
     # handle: ability.py（ポイズンヒール等、どく/もうどく由来のHP変化量を補正）
@@ -223,7 +223,7 @@ class Event(Enum):
 
     # emit: core/battle.py（HP回復処理の直前）
     # handle: volatile.py（かいふくふうじ状態による回復ブロック）
-    ON_BEFORE_HEAL = auto()
+    ON_MODIFY_HEAL = auto()
 
     # emit: core/pokemon_state.py（状態異常を付与する直前）
     # handle: ability.py（シンクロ・みずのベール・かんそうはだ等）
@@ -253,7 +253,7 @@ class Event(Enum):
 
     # emit: handlers/move.py（PP消費量を問い合わせ）
     # handle: data/move.py（通常は1消費。プレッシャー等で2消費にする）
-    ON_CHECK_PP_CONSUMED = auto()
+    ON_MODIFY_PP_CONSUMED = auto()
 
     # emit: core/field_manager.py（フィールド・場の状態の残りターンを確認）
     # handle: 各フィールド・揮発性状態の持続ターン管理ハンドラ

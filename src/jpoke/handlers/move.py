@@ -44,29 +44,6 @@ class MoveHandler(Handler):
         )
 
 
-def consume_pp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """技のPPを消費する。
-
-    技を使用した際にPPを減らします。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値（未使用）
-
-    Returns:
-        HandlerReturn: 常にTrue（成功）を返す
-    """
-    v = battle.events.emit(Event.ON_CHECK_PP_CONSUMED, ctx, 1)
-    ctx.move.pp = max(0, ctx.move.pp - v)
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.CONSUME_PP,
-        payload={"move": ctx.move.name, "value": v}
-    )
-    return HandlerReturn(value=value)
-
-
 def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 
@@ -130,11 +107,6 @@ def _check_type_immune(battle: Battle, ctx: BattleContext) -> bool:
     """
     type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
     if type_modifier == 0:
-        battle.add_event_log(
-            ctx.defender,
-            LogCode.MOVE_IMMUNE,
-            payload={"move": ctx.move.name, "reason": "タイプ"},
-        )
         return True
     return False
 
@@ -236,11 +208,6 @@ def きあいパンチ_check_move(battle: Battle, ctx: BattleContext, value: Any
     行動前に実際の攻撃ダメージを受けていた場合は不発になる。
     """
     if ctx.attacker.hits_taken > 0:
-        battle.add_event_log(
-            ctx.attacker,
-            LogCode.ACTION_BLOCKED,
-            payload={"reason": "きあいパンチ"},
-        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -269,7 +236,7 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
 
 def _can_apply_item_hit_effect(ctx: BattleContext) -> bool:
     """命中後の持ち物操作効果が適用可能かを判定する。"""
-    return ctx.move_damage > 0 or ctx.fainted
+    return ctx.move_damage > 0
 
 
 def すりかえ_swap_items(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

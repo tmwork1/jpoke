@@ -235,13 +235,10 @@ def おんねん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     Returns:
         HandlerReturn: 常にTrue
     """
-    if not ctx.fainted:
-        return HandlerReturn(value=value)
-
     ctx.move.pp = 0
     battle.add_event_log(
         ctx.attacker,
-        LogCode.CONSUME_PP,
+        LogCode.PP_CONSUMED,
         payload={"move": ctx.move.name, "reason": "おんねん", "value": 0}
     )
     return HandlerReturn(value=value)
@@ -304,11 +301,6 @@ def かなしばり_check_action(battle: Battle, ctx: BattleContext, value: Any)
     """
     volatile = ctx.attacker.volatiles["かなしばり"]
     if ctx.move.name == volatile.move_name:
-        battle.add_event_log(
-            ctx.attacker,
-            LogCode.ACTION_BLOCKED,
-            payload={"reason": "かなしばり", "move": ctx.move.name}
-        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -350,12 +342,6 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 
     if not confused:
         return HandlerReturn(value=True)
-
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.ACTION_BLOCKED,
-        payload={"reason": "こんらん"}
-    )
 
     # 自傷ダメージの計算（通常のダメージ計算と同様の処理を行う）
     damage = battle.roll_damage(
@@ -574,11 +560,6 @@ def ちょうはつ_check_action(battle: Battle, ctx: BattleContext, value: Any)
         HandlerReturn: 変化技の場合はvalue=None（使用禁止）、攻撃技の場合はTrue
     """
     if ctx.move.category == "変化":
-        battle.add_event_log(
-            ctx.attacker,
-            LogCode.ACTION_BLOCKED,
-            payload={"reason": "ちょうはつ", "move": ctx.move.name}
-        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -682,11 +663,6 @@ def ひるみ_block_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     Returns:
         HandlerReturn: 行動不能の場合はFalse
     """
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.ACTION_BLOCKED,
-        payload={"reason": "ひるみ"}
-    )
     remove_volatile(battle, ctx, value, "ひるみ")
     return HandlerReturn(value=False, stop_event=True)
 
@@ -728,11 +704,6 @@ def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         and ctx.move.category == "変化"
     )
     if immune:
-        battle.add_event_log(
-            ctx.defender,
-            LogCode.MOVE_IMMUNE,
-            payload={"move": ctx.move.name, "reason": "みがわり"}
-        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -743,11 +714,8 @@ def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -
     if not battle.move_executor.check_hit_substitute(ctx):
         return HandlerReturn(value=damage)
 
-    battle.add_event_log(
-        ctx.defender,
-        LogCode.HIT_SUBSTITUTE,
-        payload={"move": ctx.move.name}
-    )
+    battle.add_event_log(ctx.defender, LogCode.SUBSTITUTE_HIT,
+                         payload={"move": ctx.move.name})
     volatile = ctx.defender.volatiles["みがわり"]
     damage = min(volatile.hp, damage)
     volatile.hp -= damage
@@ -782,11 +750,8 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         HandlerReturn: 行動不能の場合はFalse、行動可能の場合はTrue
     """
     # メロメロ状態の宣言
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.VOLATILE_STATUS,
-        payload={"volatile": "メロメロ"}
-    )
+    battle.add_event_log(ctx.attacker, LogCode.VOLATILE_DISPLAY,
+                         payload={"volatile": "メロメロ"})
 
     # テスト用に確率を固定できる
     if battle.test_option.trigger_volatile is not None:
@@ -795,11 +760,6 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         action_blocked = battle.random.random() < 0.5
 
     if action_blocked:
-        battle.add_event_log(
-            ctx.attacker,
-            LogCode.ACTION_BLOCKED,
-            payload={"reason": "メロメロ"}
-        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -819,8 +779,11 @@ def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     return HandlerReturn(value=None, stop_event=True)
 
 
-def _check_protect_success(battle: Battle, ctx: BattleContext) -> bool:
-    if not ctx.move.is_blocked_by_protect:
+def _check_protect_success(battle: Battle, ctx: BattleContext, protect_non_attack: bool) -> bool:
+    if (
+        (not protect_non_attack and not ctx.move.is_attack)
+        or not ctx.move.is_blocked_by_protect
+    ):
         return False
     return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
 
@@ -840,17 +803,12 @@ def _run_protect(battle: Battle,
         on_contact: 接触時の追加効果関数 (battle, ctx, value) -> None
         protect_non_attack: False の場合、変化技を保護しない
     """
-    if not protect_non_attack and not ctx.move.is_attack:
+    if not _check_protect_success(battle, ctx, protect_non_attack):
+        battle.add_event_log(ctx.defender, LogCode.PROTECT_FAILED)
         return HandlerReturn(value=value)
 
-    if not _check_protect_success(battle, ctx):
-        return HandlerReturn(value=value)
+    battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCEEDED)
 
-    battle.add_event_log(
-        ctx.defender,
-        LogCode.PROTECT_SUCCESS,
-        payload={"move": ctx.move.name}
-    )
     if battle.move_executor.is_contact(ctx):
         if stats_change_on_contact:
             battle.modify_stats(ctx.attacker, stats_change_on_contact, source=ctx.defender)
