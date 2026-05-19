@@ -14,9 +14,9 @@ import test_utils as t
 @pytest.mark.parametrize(
     ("tera_type", "move", "expected"),
     [
-        ("でんき", "でんきショック", 2.0),
-        ("ほのお", "ひのこ", 1.5),
-        ("ほのお", "でんきショック", 1.5),
+        ("でんき", "でんきショック", 8192),
+        ("ほのお", "ひのこ", 6144),
+        ("ほのお", "でんきショック", 6144),
     ]
 )
 def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: int):
@@ -26,9 +26,8 @@ def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: in
     )
     attacker, defender = battle.actives
     attacker.terastallize()
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == expected
+    battle.run_move(attacker, attacker.moves[0])
+    assert battle.damage_calculator.atk_type_modifier == expected
 
 
 @pytest.mark.parametrize(
@@ -40,18 +39,15 @@ def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: in
         ("にどげり", "かくとう", 30),
     ],
 )
-def test_威力底上げ(move_name: str,
-               tera_type: Type,
-               expected: int):
+def test_威力底上げ(move_name: str, tera_type: Type, expected: int):
     battle = t.start_battle(
         ally=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move_name])],
         foe=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
     attacker.terastallize()
-    move = attacker.moves[0]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=move)
-    assert battle.damage_calculator._calc_final_power(ctx) == expected
+    battle.run_move(attacker, attacker.moves[0])
+    assert battle.damage_calculator.final_power == expected
 
 # ──────────────────────────────────────────────────────────────────
 # ステラ
@@ -59,7 +55,7 @@ def test_威力底上げ(move_name: str,
 
 
 @pytest.mark.parametrize(
-    ("tera_type", "move", "expected"),
+    ("tera_type", "move", "expected_initial", "expected_after"),
     [
         ("ステラ", "でんきショック", 8192, 6144),
         ("ステラ", "ひのこ", 4915, 4096),
