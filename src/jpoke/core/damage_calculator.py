@@ -347,8 +347,6 @@ class DamageCalculator:
         defender = ctx.defender
         move = ctx.move
 
-        move_category = self.battle.move_executor.resolve_move_category(attacker, move)
-
         # ステータス
         if move.name == 'イカサマ':
             final_attack = defender.stats["A"]
@@ -356,7 +354,7 @@ class DamageCalculator:
         else:
             if move.name == 'ボディプレス':
                 stat = "B"
-            elif move_category == "物理":
+            elif move.category == "物理":
                 stat = "A"
             else:
                 stat = "C"

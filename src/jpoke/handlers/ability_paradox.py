@@ -107,9 +107,8 @@ def apply_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> Handle
         boost_mon = attacker
         stat = "B"
     else:
-        move_category = battle.move_executor.resolve_move_category(attacker, ctx.move)
         boost_mon = attacker
-        stat = "A" if move_category == "物理" else "C"
+        stat = "A" if ctx.move.category == "物理" else "C"
 
     if boost_mon.paradox_boost_active and boost_mon.paradox_boost_stat == stat:
         value = apply_fixed_modifier(value, 5325)

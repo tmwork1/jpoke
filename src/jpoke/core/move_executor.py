@@ -206,9 +206,15 @@ class MoveExecutor:
         # 技のハンドラを登録
         ctx.move.register_handlers(self.events, ctx.attacker)
 
-        # 技タイプを評価する（テラバーストなどの可変タイプ技対応）
-        move_type = self.resolve_move_type(ctx.attacker, ctx.move)
-        ctx.move.set_type(move_type)
+        # 技タイプを評価する（可変技対応）
+        ctx.move.set_type(
+            self.resolve_move_type(ctx.attacker, ctx.move)
+        )
+
+        # 技カテゴリを評価する（可変技対応）
+        ctx.move.set_category(
+            self.resolve_move_category(ctx.attacker, ctx.move)
+        )
 
         # 行動成功判定
         self.action_success = self.events.emit(Event.ON_TRY_ACTION, ctx, True)
@@ -388,8 +394,10 @@ class MoveExecutor:
         Returns:
             技が物理ダメージを与える場合True
         """
-        category = self.resolve_move_category(attacker, move)
-        return category == "物理" or move.has_label("physical_damage")
+        return (
+            move.has_label("physical_damage")
+            or self.resolve_move_category(attacker, move) == "物理"
+        )
 
     def _consume_pp(self, ctx: BattleContext):
         """技のPPを消費する。

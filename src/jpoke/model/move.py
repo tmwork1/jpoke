@@ -30,8 +30,10 @@ class Move(GameEffect):
         super().__init__(MOVES[name])
         self._initial_pp: int = pp if pp else self.data.pp
         self.pp: int = self._initial_pp
+
         self._type: Type = self.data.type
         self._power: int | None = self.data.power
+        self._category: MoveCategory = self.data.category
 
         self.data: MoveData  # type hint
 
@@ -81,51 +83,17 @@ class Move(GameEffect):
         return label in self.data.labels
 
     def modify_pp(self, v: int):
-        """技のPPを増減させる。
+        """技のPPを増減させる。PPは0から最大PPの範囲に制限される。
 
         Args:
             v: 増減量（正の値で増加、負の値で減少）
-
-        Note:
-            PPは0から最大PPの範囲に制限される。
         """
         self.pp = max(0, min(self.data.pp, self.pp + v))
 
     @property
     def type(self) -> Type:
-        """技の現在のタイプを取得する。
-
-        Returns:
-            技のタイプ（一部の効果で変更されている可能性がある）
-        """
+        """技の現在のタイプを取得する。"""
         return self._type
-
-    @property
-    def category(self) -> MoveCategory:
-        """技の分類を取得する。
-
-        Returns:
-            技の分類（物理、特殊、変化）
-        """
-        return self.data.category
-
-    @property
-    def priority(self) -> int:
-        """技の優先度を取得する。
-
-        Returns:
-            技の優先度
-        """
-        return self.data.priority
-
-    @property
-    def power(self) -> int | None:
-        """技の現在の威力を取得する。一部の効果で変更されている可能性がある。"""
-        return self._power
-
-    def set_power(self, power: int | None):
-        """技の威力を上書きする。data の元値は変更されない。"""
-        self._power = power
 
     def set_type(self, type_: Type):
         """技タイプを明示的に設定する。"""
@@ -136,21 +104,44 @@ class Move(GameEffect):
         self._type = self.data.type
 
     @property
-    def accuracy(self) -> int | None:
-        """技の命中率を取得する。
+    def power(self) -> int | None:
+        """技の現在の威力を取得する。一部の効果で変更されている可能性がある。"""
+        return self._power
 
-        Returns:
-            技の命中率（Noneの場合は必中）
-        """
+    def set_power(self, power: int | None):
+        """技の威力を上書きする。data の元値は変更されない。"""
+        self._power = power
+
+    def reset_power(self):
+        """技の威力をデータ定義の初期値へ戻す。"""
+        self._power = self.data.power
+
+    @property
+    def category(self) -> MoveCategory:
+        """技の分類（物理、特殊、変化）を取得する。"""
+        return self._category
+
+    def set_category(self, category: MoveCategory):
+        """技の分類を上書きする。data の元値は変更されない。"""
+        self._category = category
+
+    def reset_category(self):
+        """技の分類をデータ定義の初期値へ戻す。"""
+        self._category = self.data.category
+
+    @property
+    def priority(self) -> int:
+        """技の優先度を取得する。"""
+        return self.data.priority
+
+    @property
+    def accuracy(self) -> int | None:
+        """技の命中率を取得する。Noneの場合は必中。"""
         return self.data.accuracy
 
     @property
     def critical_rank(self) -> int:
-        """急所ランク補正値を取得する。
-
-        Returns:
-            技の急所ランク
-        """
+        """急所ランク補正値を取得する。"""
         return self.data.critical_rank
 
     @property
