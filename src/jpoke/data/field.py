@@ -5,6 +5,17 @@ from jpoke.core import Handler, HandlerReturn
 from jpoke.handlers import common, field as h
 from .models import FieldData
 
+WEATHER_PRIORITY = {
+    "": 0,
+    "はれ": 0,
+    "あめ": 0,
+    "ゆき": 0,
+    "すなあらし": 0,
+    "おおひでり": 1,
+    "おおあめ": 1,
+    "らんきりゅう": 2,
+}
+
 
 def common_setup():
     """共通のセットアップ処理"""

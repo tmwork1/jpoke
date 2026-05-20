@@ -9,10 +9,18 @@ if TYPE_CHECKING:
 
 from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
-from jpoke.utils.constants import HIT_RANK_MODIFIERS
 
 from .event_manager import Event
 from .context import BattleContext
+
+
+def hit_rank_modifier(rank_acc: int, rank_eva: int) -> float:
+    """命中ランク差に基づく命中率補正を計算する。"""
+    diff = max(-6, min(6, rank_acc - rank_eva))
+    if diff > 0:
+        return (3+diff)/3
+    else:
+        return 3/(3-abs(diff))
 
 
 class MoveExecutor:
@@ -135,10 +143,8 @@ class MoveExecutor:
             return True
 
         # ランク補正
-        rank_diff = attacker.rank["ACC"] - defender.rank["EVA"]
-        rank_diff = max(-6, min(6, rank_diff))
-        self.accuracy = int(self.accuracy * HIT_RANK_MODIFIERS[rank_diff])
-
+        rank_modifier = hit_rank_modifier(attacker.rank["ACC"], defender.rank["EVA"])
+        self.accuracy = int(self.accuracy * rank_modifier)
         return 100 * self.battle.random.random() < self.accuracy
 
     def _check_critical(self, ctx: BattleContext) -> bool:

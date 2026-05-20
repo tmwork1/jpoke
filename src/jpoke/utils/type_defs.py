@@ -3,6 +3,7 @@ from typing import Literal
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",
 ]
+
 ItemDisabledReason = Literal[
     "consumed", "ぶきよう", "マジックルーム"
 ]

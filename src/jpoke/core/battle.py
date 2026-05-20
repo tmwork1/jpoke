@@ -216,7 +216,7 @@ class Battle:
         Returns:
             list[Pokemon]: 各プレイヤーの場のポケモン
         """
-        return [player.active_mon for player in self.players if player.active_mon is not None]
+        return [player.active for player in self.players if player.active is not None]
 
     def is_active(self, mon: Pokemon) -> bool:
         """指定したポケモンが現在場に出ているか確認。"""

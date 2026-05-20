@@ -135,7 +135,7 @@ def _apply_type_absorb(battle: Battle,
     defender = ctx.defender
 
     battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
-                         payload={"reason": defender.ability.orig_name})
+                         payload={"reason": defender.ability.base_name})
 
     if heal_ratio > 0:
         battle.modify_hp(defender, r=heal_ratio)
@@ -440,7 +440,7 @@ def ききかいひ_on_hp_change(battle: Battle, ctx: BattleContext, value: int)
     hp_after = mon.hp
     hp_before = hp_after + value
     if common.crossed_half_hp(hp_before, hp_after, mon.max_hp):
-        _trigger_emergency_switch(battle, mon, mon.ability.orig_name)
+        _trigger_emergency_switch(battle, mon, mon.ability.base_name)
 
     return HandlerReturn(value=value)
 
@@ -554,7 +554,7 @@ def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
     """しゅうかく特性: ターン終了時に消費したきのみを復活させる。"""
     mon = ctx.source
 
-    berry_name = mon.item.orig_name
+    berry_name = mon.item.base_name
     if (
         mon.has_item()
         or not mon.item.lost
@@ -1584,7 +1584,7 @@ def トレース_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) ->
     mon = ctx.source
     foe = battle.foe(mon)
 
-    copied_ability = foe.ability.orig_name
+    copied_ability = foe.ability.base_name
     if (
         not copied_ability
         or foe.ability.has_flag("uncopyable")
@@ -1970,7 +1970,7 @@ def マルチタイプ_on_switch_in(battle: Battle, ctx: BattleContext, value: A
 def マルチタイプ_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """マルチタイプ特性: プレートの奪取・交換を防ぐ。(ON_CHECK_ITEM_CHANGE / subject_spec="target:self")"""
     # 持ち物がプレートの場合のみ保護
-    item_name = ctx.target.item.orig_name if ctx.target.has_item() else ""
+    item_name = ctx.target.item.base_name if ctx.target.has_item() else ""
     if not value or ctx.source == ctx.target or item_name not in PLATE_TO_TYPE:
         return HandlerReturn(value=value)
     return HandlerReturn(value=False, stop_event=True)
@@ -1984,7 +1984,7 @@ def ARシステム_on_switch_in(battle: Battle, ctx: BattleContext, value: Any) 
 
 def ARシステム_prevent_item_change(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """ARシステム特性: メモリの奪取・交換を防ぐ。(ON_CHECK_ITEM_CHANGE / subject_spec="target:self")"""
-    item_name = ctx.target.item.orig_name if ctx.target.has_item() else ""
+    item_name = ctx.target.item.base_name if ctx.target.has_item() else ""
     if not value or ctx.source == ctx.target or item_name not in MEMORY_TO_TYPE:
         return HandlerReturn(value=value)
     return HandlerReturn(value=False, stop_event=True)

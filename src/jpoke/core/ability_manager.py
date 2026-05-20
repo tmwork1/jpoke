@@ -40,7 +40,7 @@ class AbilityManager:
             mon: 特性を変更するポケモン
             ability: 新しい特性の名前
         """
-        if mon.ability.orig_name == ability:
+        if mon.ability.base_name == ability:
             return
 
         is_active = self.battle.is_active(mon)

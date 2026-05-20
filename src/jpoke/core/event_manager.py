@@ -192,7 +192,7 @@ class EventManager:
             subject = rh.subject
             # Playerの場合はactiveポケモンに変換
             if isinstance(subject, Player):
-                subject = subject.active_mon
+                subject = subject.active
                 if subject is None:
                     return (rh.handler.priority, 0)
 

@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, Player
     from jpoke.model import Pokemon
 
+from jpoke.core import BattleContext
 from jpoke.enums import Event, Command, Interrupt, LogCode
 
 
@@ -138,17 +139,31 @@ class TurnController:
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
     def _run_terastal(self):
-        """技発動前にテラスタルコマンドを実行する。"""
-        for attacker in self.battle.calc_action_order():
-            player = self.battle.get_player(attacker)
+        """テラスタルを実行する。"""
+        for mon in self.battle.calc_action_order():
+            player = self.battle.get_player(mon)
             if not player.reserved_commands:
                 continue
 
             command = player.reserved_commands[0]
-            if command.is_terastal_move() and player.can_use_terastal():
-                attacker.terastallize()
-                self.battle.add_event_log(attacker, LogCode.TERASALLIZED,
-                                          payload={"type": attacker.tera_type})
+            if command.is_terastal_move():
+                mon.terastallize()
+                self.battle.add_event_log(mon, LogCode.TERASALLIZED,
+                                          payload={"type": mon.tera_type})
+
+    def _run_mega_evolve(self):
+        """メガシンカを実行する。"""
+        for mon in self.battle.calc_action_order():
+            player = self.battle.get_player(mon)
+            if not player.reserved_commands:
+                continue
+
+            command = player.reserved_commands[0]
+            if command.is_megaevol_move():
+                mon.megaevolve()
+                self.events.emit(Event.ON_ABILITY_ENABLED, BattleContext(source=mon))
+                self.battle.add_event_log(mon, LogCode.MEGA_EVOLVED,
+                                          payload={"pokemon": mon.alias})
 
     def _process_turn_phases(self):
         """内部的なターン進行処理を実行。
@@ -192,8 +207,9 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-        # 技発動フェーズに移る直前の処理 (テラスタルなど)
+        # 技発動フェーズに移る直前の処理 (テラスタル、メガシンカなど)
         self._run_terastal()
+        self._run_mega_evolve()
         self.events.emit(Event.ON_BEFORE_MOVE)
 
         # 技の処理

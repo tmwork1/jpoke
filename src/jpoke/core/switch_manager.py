@@ -87,7 +87,7 @@ class SwitchManager:
             volatile.unregister_handlers(self.events, mon)
 
         mon.bench_reset()
-        if mon.ability.orig_name != mon.base_ability_name:
+        if mon.ability.base_name != mon.base_ability_name:
             mon.ability = Ability(mon.base_ability_name)
         else:
             mon.ability.bench_reset()
@@ -138,7 +138,7 @@ class SwitchManager:
         player.interrupt = Interrupt.NONE
 
         # 退場
-        old = player.active_mon
+        old = player.active
         if old is not None:
             self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
             self.switch_out(old)
@@ -192,7 +192,7 @@ class SwitchManager:
 
             # 交代を引き起こしたアイテムを消費させる
             if flag.requires_item_consumption():
-                self.battle.consume_item(player.active_mon)
+                self.battle.consume_item(player.active)
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
             player.clear_reserved_commands()
@@ -225,7 +225,7 @@ class SwitchManager:
         # 交代フラグを設定
         if not self.has_interrupt():
             for player in self.battle.players:
-                if player.active_mon.fainted:
+                if player.active.fainted:
                     player.interrupt = Interrupt.FAINTED
 
         # 交代を行うプレイヤー

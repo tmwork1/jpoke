@@ -11,10 +11,11 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.data.models import PokemonData
 
-from jpoke.utils.type_defs import Nature, Type, Stat, Gender, BoostSource, AilmentName, VolatileName
-from jpoke.utils.constants import RANK_MIN, RANK_MAX, STATS
+from jpoke.utils.type_defs import Nature, Type, Stat, Gender, \
+    BoostSource, AilmentName, VolatileName
+from jpoke.utils.constants import STATS
 from jpoke.utils import fast_copy
-from jpoke.data import pokedex
+from jpoke.data import pokedex, MEGA_STONES, MEGA_POKEMONS
 
 from .ability import Ability
 from .item import Item
@@ -72,11 +73,9 @@ class Pokemon:
         self._level: int = level
         self.tera_type: Type = tera_type
 
-        self.ability = Ability(ability)
+        self.init_ability(ability)
         self.item = Item(item)
         self.set_moves(moves)
-
-        self.base_ability_name: str = self.ability.orig_name
 
         # ステータス計算マネージャー
         self._stats_manager = PokemonStats()
@@ -104,6 +103,28 @@ class Pokemon:
         self.ability_override_type: Type | None = None
 
         self.init_game()
+
+    def init_ability(self, name: str | None = None):
+        """特性を初期化する。
+
+        Args:
+            name: 特性名（Noneの場合はデフォルトの特性を使用）
+        """
+        if name is None:
+            name = self.data.abilities[0]  # デフォルトは種族値の特性
+        self.ability = Ability(name)
+        self.base_ability_name: str = self.ability.base_name
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[
+            'ability', 'item', 'moves', 'ailment', 'volatiles',
+            'executed_move', 'pp_consumed_moves',
+            '_stats_manager',
+        ])
+        return new
 
     def init_game(self):
         """ゲーム初期化処理。
@@ -135,17 +156,6 @@ class Pokemon:
     def init_turn(self):
         """ターン初期化処理。"""
         self.hits_taken = 0
-
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        fast_copy(self, new, keys_to_deepcopy=[
-            'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'executed_move', 'pp_consumed_moves',
-            '_stats_manager',
-        ])
-        return new
 
     def show(self):
         """ポケモンの情報を文字列化して表示する。"""
@@ -198,18 +208,21 @@ class Pokemon:
         """ポケモンの図鑑エイリアスを取得する。"""
         return self.data.alias
 
-    def set_form(self, alias: str, keep_damage: bool = True) -> None:
+    def set_form(self, alias: str, keep_damage: bool = True, init_ability: bool = False) -> None:
         """ポケモンのフォルムをエイリアス指定で切り替える。
 
         Args:
             alias: 変更先フォルムの図鑑エイリアス
             keep_damage: Trueの場合、現在の被ダメージ量を維持する
+            init_ability: Trueの場合、特性を初期化する
         """
         if self.alias == alias:
             return
 
         self.data = pokedex[alias]
         self.update_stats(keep_damage=keep_damage)
+        if init_ability:
+            self.init_ability()
 
     @property
     def alive(self) -> bool:
@@ -359,10 +372,41 @@ class Pokemon:
         """
         return not self.terastallized and self.tera_type != ""
 
-    def terastallize(self):
-        """テラスタルする"""
+    def terastallize(self) -> bool:
+        """テラスタルする。
+
+        Returns:
+            テラスタルに成功した場合True、失敗した場合False
+        """
         if self.can_terastallize():
             self.terastallized = True
+            return True
+        return False
+
+    @property
+    def megaevolved(self) -> bool:
+        """メガシンカしているかどうかを判定する。"""
+        return self.name in MEGA_POKEMONS
+
+    def can_megaevolve(self) -> bool:
+        """メガシンカ可能かどうかを判定する。"""
+        forms = MEGA_STONES.get(self.item.name, None)
+        if forms is None:
+            return False
+
+        return self.name == forms[0]
+
+    def megaevolve(self) -> bool:
+        """メガシンカする。
+
+        Returns:
+            メガシンカに成功した場合True、失敗した場合False
+        """
+        if not self.can_megaevolve():
+            return False
+        mega_name = MEGA_STONES[self.item.name][1]
+        self.set_form(mega_name, init_ability=True)
+        return True
 
     def has_item(self, name: str | None = None) -> bool:
         """持ち物を持っているか判定する。
@@ -601,7 +645,7 @@ class Pokemon:
             ランクは-6から+6の範囲に制限される。
         """
         old = self.rank[stat]
-        self.rank[stat] = max(RANK_MIN, min(RANK_MAX, old + v))
+        self.rank[stat] = max(-6, min(6, old + v))
         return self.rank[stat] - old
 
     @property

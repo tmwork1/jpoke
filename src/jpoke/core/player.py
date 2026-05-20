@@ -91,8 +91,8 @@ class Player:
         交代フラグをクリアする。
         """
         self.has_switched = False
-        if self.active_mon is not None:
-            self.active_mon.init_turn()
+        if self.active is not None:
+            self.active.init_turn()
 
     def reserve_command(self, command: Command):
         """コマンドを予約する。
@@ -147,7 +147,7 @@ class Player:
         return battle.get_available_switch_commands(self)[0]
 
     @property
-    def active_mon(self) -> Pokemon | None:
+    def active(self) -> Pokemon | None:
         """現在場に出ているポケモンを取得する。
 
         Returns:
@@ -174,6 +174,19 @@ class Player:
             テラスタルが使用可能な場合True
         """
         return all(not mon.terastallized for mon in self.selection)
+
+    def can_use_mega_evolution(self) -> bool:
+        """メガシンカが使用可能かどうかを判定する。
+
+        選出したポケモンのうち、メガシンカ可能なポケモンがいる場合に使用可能。
+
+        Returns:
+            メガシンカが使用可能な場合True
+        """
+        return (
+            all(not mon.megaevolved for mon in self.selection)
+            and self.active.can_megaevolve()
+        )
 
     def has_interrupt(self) -> bool:
         """割り込み状態かどうかを判定する。

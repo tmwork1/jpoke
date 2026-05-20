@@ -27,14 +27,14 @@ class CommandManager:
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
         """交代可能なコマンドのリストを取得する。"""
-        if self.battle.query_manager.is_trapped(player.active_mon):
+        if self.battle.query_manager.is_trapped(player.active):
             return []
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
-                if mon in player.selection and mon is not player.active_mon]
+                if mon in player.selection and mon is not player.active]
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
-        n = len(player.active_mon.moves)
+        n = len(player.active.moves)
 
         # 通常技
         commands = Command.regular_move_commands()[:n]
@@ -46,7 +46,7 @@ class CommandManager:
         # コマンド修正
         commands = self.battle.events.emit(
             Event.ON_MODIFY_COMMAND_OPTIONS,
-            BattleContext(source=player.active_mon),
+            BattleContext(source=player.active),
             commands
         )
 
@@ -64,7 +64,7 @@ class CommandManager:
 
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得する。"""
-        attacker = player.active_mon
+        attacker = player.active
         if command == Command.STRUGGLE:
             return Move("わるあがき")
         if command == Command.FORCED:
@@ -72,6 +72,6 @@ class CommandManager:
             if move_name:
                 return Move(move_name)
             return Move("わるあがき")
-        if command.is_z_move():
+        if command.is_zmove():
             return Move("わるあがき")
         return attacker.moves[command.idx]

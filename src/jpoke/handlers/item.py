@@ -48,11 +48,12 @@ def announce_item_triggered(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def _consume_self_item(battle: Battle, target) -> bool:
-    if not target.has_item():
-        return False
-    battle.consume_item(target)
-    return True
+def mega_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """メガストーン: メガシンカコマンドを追加する。"""
+    base_form, mega_form = ctx.attacker.item.mega_evol
+    if ctx.attacker.name == base_form:
+        value["mega_evolve"] = mega_form
+    return HandlerReturn(value=value)
 
 
 def modify_power_by_type(battle: Battle,

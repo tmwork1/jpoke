@@ -98,7 +98,7 @@ def test_アンコール():
         team0=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
     player = battle.players[0]
-    mon = player.active_mon
+    mon = player.active
     battle.volatile_manager.apply(mon, "アンコール", move="なきごえ")
     commands = battle.get_available_action_commands(player)
     assert all(cmd.idx == 1 for cmd in commands)
@@ -138,7 +138,7 @@ def test_アンコール_対象技のPPが0だとわるあがきになる():
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
     )
-    mon = battle.players[0].active_mon
+    mon = battle.players[0].active
     battle.volatile_manager.apply(mon, "アンコール", move="たいあたり")
     mon.moves[0].pp = 0
     commands = battle.get_available_action_commands(battle.players[0])
@@ -350,7 +350,7 @@ def test_かなしばり_交代で解除():
     mon = battle.actives[0]
     mon.volatiles["かなしばり"].move_name = "たいあたり"
     battle.run_switch(battle.players[0], battle.players[0].team[1])
-    assert not battle.players[0].active_mon.has_volatile("かなしばり")
+    assert not battle.players[0].active.has_volatile("かなしばり")
 
 # ──────────────────────────────────────────────────────────────────
 # きゅうしょアップ
@@ -398,7 +398,7 @@ def test_こだわり_交代で解除():
     mon = battle.actives[0]
     mon.volatiles["こだわり"].move_name = "たいあたり"
     battle.run_switch(battle.players[0], battle.players[0].team[1])
-    assert not battle.players[0].active_mon.has_volatile("こだわり")
+    assert not battle.players[0].active.has_volatile("こだわり")
 
 
 def test_こだわり_固定技のPPが0だとわるあがきになる():

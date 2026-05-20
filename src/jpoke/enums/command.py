@@ -147,7 +147,7 @@ class Command(Enum):
         """ダイマックスコマンドかどうか"""
         return self.name[:-2] == "GIGAMAX"
 
-    def is_z_move(self) -> bool:
+    def is_zmove(self) -> bool:
         """Zワザコマンドかどうか"""
         return self.name[:-2] == "ZMOVE"
 
@@ -157,7 +157,7 @@ class Command(Enum):
             self.is_terastal_move() or \
             self.is_megaevol_move() or \
             self.is_gigamax_move() or \
-            self.is_z_move()
+            self.is_zmove()
 
     def is_move_execution(self) -> bool:
         """実際に技実行へ進むコマンドかどうか。"""
@@ -201,4 +201,4 @@ class Command(Enum):
     @classmethod
     def zmove_commands(cls):
         """全てのZワザコマンドを取得"""
-        return [x for x in cls if x.is_z_move()]
+        return [x for x in cls if x.is_zmove()]

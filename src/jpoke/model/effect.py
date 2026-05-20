@@ -51,7 +51,7 @@ class GameEffect:
         return self.data.name if self.enabled else ""
 
     @property
-    def orig_name(self) -> str:
+    def base_name(self) -> str:
         """効果の元の名前を取得する。
 
         効果の有効/無効状態に関わらず、常に元の名前を返す。

@@ -1,5 +1,6 @@
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
+from jpoke.data.models import ItemData
 from jpoke.utils.type_defs import ItemLostCause
 
 from .effect import GameEffect
@@ -20,6 +21,8 @@ class Item(GameEffect):
         """
         super().__init__(ITEMS[name])
         self.lost_cause: ItemLostCause = ""
+
+        self.data: ItemData  # type hint
 
     def __deepcopy__(self, memo):
         """持ち物オブジェクトのディープコピーを作成する。"""
@@ -54,3 +57,17 @@ class Item(GameEffect):
     def lost(self) -> bool:
         """持ち物が失われているかどうかを示すプロパティ。"""
         return self.lost_cause != ""
+
+    @property
+    def mega_evol_before(self) -> str | None:
+        """メガシンカ前のポケモンの名前を返すプロパティ。"""
+        if self.data.mega_evol is not None:
+            return self.data.mega_evol[0]
+        return None
+
+    @property
+    def mega_evol_after(self) -> str | None:
+        """メガシンカ後のポケモンの名前を返すプロパティ。"""
+        if self.data.mega_evol is not None:
+            return self.data.mega_evol[1]
+        return None

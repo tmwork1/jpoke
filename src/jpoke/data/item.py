@@ -9,12 +9,36 @@ from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 from jpoke.handlers import common, item as h
 from .models import ItemData
+from .signature_items import MEGA_STONES
 
 
 def common_setup():
     """共通のセットアップ処理"""
+    _add_mega_stones(ITEMS)
+
     for name, data in ITEMS.items():
         ITEMS[name].name = name
+
+
+def _add_mega_stones(items: dict[str, ItemData]):
+    """メガストーンをITEMS辞書に追加する。"""
+    for name, (base_form, mega_form) in MEGA_STONES.items():
+        items[name] = ItemData(
+            consumable=False,
+            removable=False,
+            fling_power=80,
+            mega_evol=(base_form, mega_form),
+            handlers={
+                Event.ON_MODIFY_COMMAND_OPTIONS: h.ItemHandler(
+                    h.mega_modify_command_options,
+                    subject_spec="source:self"
+                ),
+                Event.ON_BEFORE_MOVE: h.ItemHandler(
+                    h.mega_evolution,
+                    subject_spec="source:self",
+                )
+            }
+        )
 
 
 ITEMS: dict[str, ItemData] = {
@@ -43,10 +67,12 @@ ITEMS: dict[str, ItemData] = {
     ),
     "いしずえのめん": ItemData(
         consumable=False,
+        removable=False,
         fling_power=60
     ),
     "いどのめん": ItemData(
         consumable=False,
+        removable=False,
         fling_power=60
     ),
     "いのちのたま": ItemData(
@@ -95,6 +121,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "かまどのめん": ItemData(
         consumable=False,
+        removable=False,
         fling_power=60
     ),
     "からぶりほけん": ItemData(
@@ -482,6 +509,7 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ブーストエナジー": ItemData(
         consumable=True,
+        removable=False,
         fling_power=30
     ),
     "ふうせん": ItemData(
@@ -600,34 +628,42 @@ ITEMS: dict[str, ItemData] = {
     ),
     "くちたけん": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "くちたたて": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "こんごうだま": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "しらたま": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "だいこんごうだま": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "だいしらたま": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "だいはっきんだま": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "はっきんだま": ItemData(
         consumable=False,
+        removable=False,
         fling_power=0
     ),
     "オボンのみ": ItemData(
@@ -946,9 +982,7 @@ ITEMS: dict[str, ItemData] = {
     "ミクルのみ": ItemData(
         consumable=True,
         fling_power=10
-    )
-
-
+    ),
 }
 
 common_setup()
