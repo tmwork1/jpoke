@@ -4,7 +4,8 @@
 """
 
 from jpoke.utils.type_defs import Nature, Stat
-from jpoke.utils.constants import STATS, NATURE_MODIFIER
+from jpoke.utils.constants import STATS
+from jpoke.data import NATURE_MODIFIER
 
 
 def calc_hp(level: int, base: int, indiv: int, effort: int) -> int:

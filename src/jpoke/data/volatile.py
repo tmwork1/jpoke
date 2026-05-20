@@ -11,14 +11,6 @@ from jpoke.handlers import common, volatile as h
 from .models import VolatileData
 
 
-HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
-    "あなをほる": ["じしん", "マグニチュード"],
-    "そらをとぶ": ["かぜおこし", "たつまき", "かみなり"],
-    "ダイビング": ["なみのり", "うずしお"],
-    "シャドーダイブ": [],
-}
-
-
 def common_setup() -> None:
     """
     各VOLATILEのハンドラにログ用のテキスト（名前）を設定する。

@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 from jpoke.utils.type_defs import RoleSpec, VolatileName, AbilityDisabledReason, \
     Stat, AilmentName
-from jpoke.utils.constants import HIDDEN_MOVE_ALLOWED_MOVES
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
 
@@ -100,6 +99,14 @@ def charge_hidden_move(battle: Battle,
         battle.volatile_manager.apply(attacker, "かくれる", count=1, move=ctx.move)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
+
+HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
+    "あなをほる": ["じしん", "マグニチュード"],
+    "そらをとぶ": ["かぜおこし", "たつまき", "かみなり"],
+    "ダイビング": ["なみのり", "うずしお"],
+    "シャドーダイブ": [],
+}
 
 
 def check_hidden_move(battle: Battle,

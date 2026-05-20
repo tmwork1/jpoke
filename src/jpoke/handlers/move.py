@@ -341,6 +341,14 @@ def オーラぐるま_check_move_type(battle: Battle, ctx: BattleContext, value
     return HandlerReturn(value=value)
 
 
+def ちいさくなる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """ちいさくなるの効果を発動する。"""
+    mon = ctx.attacker
+    battle.modify_stats(mon, {"EVA": 2}, source=mon)
+    battle.volatile_manager.apply(mon, "ちいさくなる")
+    return HandlerReturn(value=value)
+
+
 def テラバースト_modify_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
     mon = ctx.attacker
@@ -412,6 +420,14 @@ def はやてがえし_try_move(battle: Battle, ctx: BattleContext, value: Any) 
         battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
                              payload={"reason": "はやてがえし"})
         return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def まるくなる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """まるくなるの効果を発動する。"""
+    mon = ctx.attacker
+    battle.modify_stats(mon, {"B": 1}, source=mon)
+    battle.volatile_manager.apply(mon, "まるくなる")
     return HandlerReturn(value=value)
 
 

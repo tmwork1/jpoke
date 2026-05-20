@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain
-from jpoke.utils.constants import WEATHER_PRIORITY
+from jpoke.data import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
 from jpoke.model import Field
 from jpoke.core import BattleContext

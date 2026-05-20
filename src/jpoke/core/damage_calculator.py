@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from jpoke.utils.type_defs import Stat
 from jpoke.enums import Event, DamageFlag
 from jpoke.utils import fast_copy
-from jpoke.utils.constants import TYPE_MODIFIER
+from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.battle_math import round_half_down
 
 from .context import BattleContext

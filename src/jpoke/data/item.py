@@ -9,7 +9,7 @@ from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 from jpoke.handlers import common, item as h
 from .models import ItemData
-from .signature_items import MEGA_STONES
+from .megaevol import MEGA_STONES
 
 
 def common_setup():
@@ -33,10 +33,6 @@ def _add_mega_stones(items: dict[str, ItemData]):
                     h.mega_modify_command_options,
                     subject_spec="source:self"
                 ),
-                Event.ON_BEFORE_MOVE: h.ItemHandler(
-                    h.mega_evolution,
-                    subject_spec="source:self",
-                )
             }
         )
 

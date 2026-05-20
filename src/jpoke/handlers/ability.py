@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils.type_defs import RoleSpec, Type, Stat, AbilityDisabledReason, ItemDisabledReason, Weather, Terrain, AilmentName, Side
-from jpoke.utils.constants import PLATE_TO_TYPE, MEMORY_TO_TYPE
+from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.utils.battle_math import apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
