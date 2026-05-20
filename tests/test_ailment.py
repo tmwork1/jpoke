@@ -13,7 +13,7 @@ import test_utils as t
 # ──────────────────────────────────────────────────────────────────
 def test_どく_ダメージ():
     """どく: ターン終了時ダメージ"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "どく")
     t.emit_turn_end_events(battle)
@@ -23,7 +23,7 @@ def test_どく_ダメージ():
 
 def test_もうどく_ダメージ():
     """もうどく: ターン経過でダメージ増加"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "もうどく")
     # nターン目: n/16ダメージ
@@ -43,8 +43,8 @@ def test_もうどく_ダメージ():
 def test_まひ_すばやさ低下():
     """まひ: 素早さ半減"""
     battle = t.start_battle(
-        foe=[Pokemon("ピカチュウ")],
-        ally=[Pokemon("リザードン")]
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("リザードン")]
     )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "まひ")
@@ -54,8 +54,8 @@ def test_まひ_すばやさ低下():
 def test_まひ_行動不能():
     """まひ: 行動不能"""
     battle = t.start_battle(
-        ally=[Pokemon("リザードン")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("リザードン")],
+        team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "まひ")
@@ -68,7 +68,7 @@ def test_まひ_行動不能():
 
 def test_まひ_行動成功():
     """まひ: 行動可能"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("リザードン")])
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("リザードン")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動できる設定
@@ -82,8 +82,8 @@ def test_まひ_行動成功():
 # ──────────────────────────────────────────────────────────────────
 def test_やけど_物理技ダメージ半減():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
-        foe=[Pokemon("ピカチュウ")]
+        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")]
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "やけど")
@@ -93,8 +93,8 @@ def test_やけど_物理技ダメージ半減():
 
 def test_やけど_特殊技ダメージは半減しない():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
-        foe=[Pokemon("ピカチュウ")]
+        team0=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+        team1=[Pokemon("ピカチュウ")]
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "やけど")
@@ -104,7 +104,7 @@ def test_やけど_特殊技ダメージは半減しない():
 
 def test_やけど_ダメージ():
     """やけど: ターン終了時ダメージ"""
-    battle = t.start_battle(foe=[Pokemon("ピカチュウ")], ally=[Pokemon("ピカチュウ")])
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "やけど")
     t.emit_turn_end_events(battle)
@@ -117,8 +117,8 @@ def test_やけど_ダメージ():
 def test_ねむり_カウント():
     """ねむり: ターン経過で回復"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["たいあたり"])],
-        foe=[Pokemon("ニャース")],
+        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team1=[Pokemon("ニャース")],
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "ねむり", count=2)
@@ -142,8 +142,8 @@ def test_ねむり_カウント():
 def test_こおり_行動不能():
     """こおり: 状態維持（確率テスト - trigger_rate=0.0）"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "こおり")
@@ -157,8 +157,8 @@ def test_こおり_行動不能():
 def test_こおり_行動成功():
     """こおり: 解凍（確率テスト - trigger_rate=1.0）"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "こおり")
@@ -171,8 +171,8 @@ def test_こおり_行動成功():
 
 def test_こおり_ほのお技被弾で解凍する():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=["ひのこ"])],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", moves=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(defender, "こおり")
@@ -187,8 +187,8 @@ def test_こおり_ほのお技被弾で解凍する():
 
 def test_どくタイプには通常どくが入らない():
     battle = t.start_battle(
-        ally=[Pokemon("フシギダネ")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("フシギダネ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "どく")
@@ -196,8 +196,8 @@ def test_どくタイプには通常どくが入らない():
 
 def test_はがねタイプには通常もうどくが入らない():
     battle = t.start_battle(
-        ally=[Pokemon("コイル")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("コイル")],
+        team1=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "もうどく")
@@ -205,8 +205,8 @@ def test_はがねタイプには通常もうどくが入らない():
 
 def test_でんきタイプにはまひが入らない():
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "まひ")
@@ -214,8 +214,8 @@ def test_でんきタイプにはまひが入らない():
 
 def test_ほのおタイプにはやけどが入らない():
     battle = t.start_battle(
-        ally=[Pokemon("ヒトカゲ")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ヒトカゲ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "やけど")
@@ -223,8 +223,8 @@ def test_ほのおタイプにはやけどが入らない():
 
 def test_こおりタイプにはこおりが入らない():
     battle = t.start_battle(
-        ally=[Pokemon("ラプラス")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ラプラス")],
+        team1=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
     assert not battle.ailment_manager.apply(target, "こおり")

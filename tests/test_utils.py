@@ -1,6 +1,6 @@
 from jpoke.core import Battle, Player, BattleContext
-from jpoke.model import Pokemon
-from jpoke.utils.type_defs import VolatileName, Weather, Terrain
+from jpoke.model import Pokemon, Move
+from jpoke.utils.type_defs import AilmentName, VolatileName, Weather, Terrain, GlobalField, SideField
 from jpoke.enums import Event, Command, LogCode
 
 
@@ -27,90 +27,107 @@ def build_context(battle: Battle, atk_idx: int = 0, move_idx: int = 0) -> Battle
     return BattleContext(attacker=attacker, defender=defender, move=move)
 
 
-def start_battle(ally: list[Pokemon],
-                 foe: list[Pokemon],
-                 turn: int = 0,
+def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
+    attacker = battle.actives[atk_idx]
+    move = attacker.moves[move_idx]
+    battle.run_move(attacker, move)
+    return move
+
+
+def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
+    player = battle.players[player_idx]
+    battle.run_switch(player, player.team[new_idx])
+    return player.team[new_idx]
+
+
+def start_battle(team0: list[Pokemon],
+                 team1: list[Pokemon],
+                 ailment0: dict[AilmentName, int] | None = None,
+                 ailment1: dict[AilmentName, int] | None = None,
+                 volatile0: dict[VolatileName, int] | None = None,
+                 volatile1: dict[VolatileName, int] | None = None,
                  weather: tuple[Weather, int] | None = None,
                  terrain: tuple[Terrain, int] | None = None,
-                 ally_volatile: dict[VolatileName, int] | None = None,
-                 foe_volatile: dict[VolatileName, int] | None = None,
-                 ally_side_field: dict[str, int] | None = None,
-                 foe_side_field: dict[str, int] | None = None,
-                 global_field: dict[str, int] | None = None,
+                 field: dict[GlobalField, int] | None = None,
+                 side0: dict[SideField, int] | None = None,
+                 side1: dict[SideField, int] | None = None,
                  accuracy: int | None = None) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
-        ally: 味方のポケモンリスト
-        foe: 相手のポケモンリスト
-        turn: 開始前に進めるターン数（デフォルト: 0）
+        team0: 味方のポケモンリスト
+        team1: 相手のポケモンリスト
+        ailment0: 味方の状態異常の辞書{名前: カウント}（Noneの場合は状態異常なし）
+        ailment1: 相手の状態異常の辞書{名前: カウント}（Noneの場合は状態異常なし）
+        volatile0: 味方の揮発効果の辞書{名前: カウント}（Noneの場合は効果なし）
+        volatile1: 相手の揮発効果の辞書{名前: カウント}（Noneの場合は効果なし）
         weather: 初期天候のタプル(天候名, カウント)（Noneの場合は天候なし）
         terrain: 初期地形のタプル(地形名, カウント)（Noneの場合は地形なし）
-        ally_volatile: 味方の場に付与する揮発効果の辞書{名前: カウント}（Noneの場合は効果なし）
-        foe_volatile: 相手の場に付与する揮発効果の辞書{名前: カウント}（Noneの場合は効果なし）
-        ally_side_field: 味方のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
-        foe_side_field: 相手のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
-        global_field: グローバルフィールドに設置する場の効果の辞書{名前: カウント}（Noneの場合は効果なし）
+        side0: 味方のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
+        side1: 相手のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
+        field: グローバルフィールドに設置する場の効果の辞書{名前: カウント}（Noneの場合は効果なし）
         accuracy: 固定命中率（Noneの場合は通常計算、デフォルト: None）
 
     Returns:
         Battle: セットアップ済みのBattleインスタンス
     """
     # プレイヤーとバトルのセットアップ
-    if not ally:
+    if not team0:
         raise ValueError("ally must contain at least one Pokemon")
-    if not foe:
+    if not team1:
         raise ValueError("foe must contain at least one Pokemon")
 
-    players = [CustomPlayer() for _ in range(2)]
-    for player, mons in zip(players, [ally, foe]):
+    players = [CustomPlayer(f"Player {i+1}") for i in range(2)]
+    for player, mons in zip(players, [team0, team1]):
         for mon in mons:
             player.team.append(mon)
 
     battle = Battle(players)
-
-    # 0ターン目の開始処理
     battle.start()
 
-    # 天候・地形の有効化
-    if weather:
-        name, weather_count = weather
-        battle.weather_manager.apply(name, weather_count)
-    if terrain:
-        name, terrain_count = terrain
-        battle.terrain_manager.apply(name, terrain_count)
-
-    # 命中率の設定
-    if accuracy is not None:
-        battle.test_option.accuracy = accuracy
-
-    # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
-    if ally_side_field:
-        for name, layers in ally_side_field.items():
-            battle.side_manager[0].activate(name, layers)
-    if foe_side_field:
-        for name, layers in foe_side_field.items():
-            battle.side_manager[1].activate(name, layers)
-
-    # グローバルフィールドの有効化
-    if global_field:
-        for name, count in global_field.items():
-            battle.field_manager.activate(name, count)
+    if ailment0 or ailment1:
+        ailments = [ailment0, ailment1]
+        for idx, mon in enumerate(battle.actives):
+            if not ailments[idx]:
+                continue
+            for name, count in ailments[idx].items():
+                battle.ailment_manager.apply(mon, name, count=count)
 
     # 揮発効果の適用
-    if ally_volatile or foe_volatile:
-        volatiles = [ally_volatile, foe_volatile]
+    if volatile0 or volatile1:
+        volatiles = [volatile0, volatile1]
         for idx, mon in enumerate(battle.actives):
             if not volatiles[idx]:
                 continue
             for name, count in volatiles[idx].items():
                 battle.volatile_manager.apply(mon, name, count=count)
 
-    # ターン進行
-    for _ in range(turn):
-        battle.advance_turn()
-        if battle.judge_winner():
-            break
+    # 天候の有効化
+    if weather:
+        name, weather_count = weather
+        battle.weather_manager.apply(name, weather_count)
+
+    # 地形の有効化
+    if terrain:
+        name, terrain_count = terrain
+        battle.terrain_manager.apply(name, terrain_count)
+
+    # グローバルフィールドの有効化
+    if field:
+        for name, count in field.items():
+            battle.field_manager.activate(name, count)
+
+    # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
+    if side0:
+        for name, layers in side0.items():
+            battle.side_manager[0].activate(name, layers)
+    if side1:
+        for name, layers in side1.items():
+            battle.side_manager[1].activate(name, layers)
+
+    # 命中率の設定
+    if accuracy is not None:
+        battle.test_option.accuracy = accuracy
 
     return battle
 
@@ -148,38 +165,15 @@ def log_contains(battle: Battle,
         return any(log.log == log_code for log in all_logs)
 
 
-def check_event_result(battle: Battle,
-                       event: Event,
-                       value: bool = True,
-                       atk_idx: int = 0) -> bool:
-    attacker = battle.actives[atk_idx]
-    defender = battle.foe(attacker)
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-    return battle.events.emit(event, ctx, value)
-
-
-def calc_accuracy(battle: Battle,
-                  base: float = 100,
-                  atk_idx: int = 0):
-    """命中率補正値を検証するヘルパー関数。"""
-    attacker = battle.actives[atk_idx]
-    defender = battle.actives[1 - atk_idx]
-    return battle.events.emit(
-        Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        base
-    )
-
-
 def reserve_command(battle: Battle,
-                    ally_command: Command | None = None,
-                    foe_command: Command | None = None):
+                    command0: Command | None = None,
+                    command1: Command | None = None):
     """各プレイヤーがコマンドを予約した状態にする
 
     Args:
         battle: Battleインスタンス
     """
-    commands = [ally_command, foe_command]
+    commands = [command0, command1]
     for player, cmd in zip(battle.players, commands):
         player.init_turn()
         if cmd is None:

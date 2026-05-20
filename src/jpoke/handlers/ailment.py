@@ -51,6 +51,8 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
         trigger = battle.random.random() < 0.25
 
     if trigger:
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "まひ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -81,6 +83,9 @@ def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
         return HandlerReturn(value=True)
 
     # まだ眠っている
+    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                         payload={"reason": "ねむり"})
+
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -99,6 +104,8 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
         return HandlerReturn(value=True)
 
     # まだ凍っている
+    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                         payload={"reason": "こおり"})
     return HandlerReturn(value=False, stop_event=True)
 
 

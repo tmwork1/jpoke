@@ -6,13 +6,12 @@ class LogCode(Enum):
     GAME_STARTED = auto()  # ゲーム開始
     GAME_WON = auto()  # 勝利
     GAME_LOST = auto()  # 敗北
-    GAME_DRAWN = auto()  # 引き分け
 
     # 交代関連
     SWITCHED_IN = auto()  # 交代出場
     SWITCHED_OUT = auto()  # 交代退場
 
-    # 技実行関連
+    # 技関連
     ACTION_BLOCKED = auto()  # 行動不能（まひ・ねむり等）
     PP_CONSUMED = auto()  # PP消費
     MOVE_CHARGED = auto()  # 溜め技
@@ -32,12 +31,6 @@ class LogCode(Enum):
     # 特性関連
     ABILITY_TRIGGERED = auto()  # 特性発動
 
-    # 場関連
-    GLOBAL_FIELD_STARTED = auto()  # 共通場の状態開始
-    GLOBAL_FIELD_ENDED = auto()  # 共通場の状態終了
-    SIDE_FIELD_STARTED = auto()  # サイド場の状態開始
-    SIDE_FIELD_ENDED = auto()  # サイド場の状態終了
-
     # アイテム関連
     ITEM_TRIGGERED = auto()  # アイテム発動
     ITEM_LOST = auto()  # アイテム喪失
@@ -54,6 +47,10 @@ class LogCode(Enum):
     PROTECT_SUCCEEDED = auto()  # まもる成功
     PROTECT_FAILED = auto()  # まもる失敗
     SUBSTITUTE_HIT = auto()  # みがわりにヒット
+
+    # 場関連
+    FIELD_STARTED = auto()  # 場の状態開始
+    FIELD_ENDED = auto()  # 場の状態終了
 
     # その他
     FORM_CHANGED = auto()  # フォルムチェンジ

@@ -117,6 +117,7 @@ class EventManager:
         Returns:
             Any: 全ハンドラ実行後の最終値
         """
+        initial_value = value
 
         # ドメインイベントはソートしない
         # ソート処理にイベント発火が含まれるため、無限ループになる可能性がある
@@ -130,7 +131,6 @@ class EventManager:
 
             # コンテキストがハンドラに合致しない場合はスキップ
             if not self._match(context, rh):
-                print(f"ハンドラスキップ - イベント: {event}, ハンドラ: {rh.handler}, 対象: {rh.subject}")
                 continue
 
             # ハンドラの発生源が無効化されている場合はスキップ
@@ -157,6 +157,7 @@ class EventManager:
             if result.stop_event:
                 return value
 
+        print(f"\t{event} {initial_value} -> {value}")
         return value
 
     def _build_context(self, rh: RegisteredHandler) -> BattleContext:

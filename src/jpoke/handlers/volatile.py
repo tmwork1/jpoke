@@ -301,6 +301,8 @@ def かなしばり_check_action(battle: Battle, ctx: BattleContext, value: Any)
     """
     volatile = ctx.attacker.volatiles["かなしばり"]
     if ctx.move.name == volatile.move_name:
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "かなしばり"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -352,6 +354,8 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
 
     # ダメージ適用
     battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
+    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                         payload={"reason": "こんらん"})
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -432,6 +436,8 @@ def さわぐ_prevent_nemuke(battle: Battle, ctx: BattleContext, value: Any) -> 
 def ふういん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふういん状態の相手が共有技を使えないようにする。"""
     if ctx.defender.has_move(ctx.move.name):
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "ふういん"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -479,6 +485,8 @@ def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value:
 def じごくづき_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じごくづき状態による技の不発"""
     if ctx.move.has_label("sound"):
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "じごくづき"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -560,6 +568,8 @@ def ちょうはつ_check_action(battle: Battle, ctx: BattleContext, value: Any)
         HandlerReturn: 変化技の場合はvalue=None（使用禁止）、攻撃技の場合はTrue
     """
     if ctx.move.category == "変化":
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "ちょうはつ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -663,6 +673,8 @@ def ひるみ_block_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     Returns:
         HandlerReturn: 行動不能の場合はFalse
     """
+    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                         payload={"reason": "ひるみ"})
     remove_volatile(battle, ctx, value, "ひるみ")
     return HandlerReturn(value=False, stop_event=True)
 
@@ -760,6 +772,8 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
         action_blocked = battle.random.random() < 0.5
 
     if action_blocked:
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "メロメロ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 

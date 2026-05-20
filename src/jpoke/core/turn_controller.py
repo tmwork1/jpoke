@@ -126,6 +126,7 @@ class TurnController:
         if self.battle.turn >= 0:
             raise RuntimeError("Battle already started.")
 
+        self.battle.add_event_log(0, LogCode.GAME_STARTED)
         self.battle.turn = 0
 
         # ポケモンを選出
@@ -142,9 +143,12 @@ class TurnController:
             player = self.battle.get_player(attacker)
             if not player.reserved_commands:
                 continue
+
             command = player.reserved_commands[0]
             if command.is_terastal_move() and player.can_use_terastal():
                 attacker.terastallize()
+                self.battle.add_event_log(attacker, LogCode.TERASALLIZED,
+                                          payload={"type": attacker.tera_type})
 
     def _process_turn_phases(self):
         """内部的なターン進行処理を実行。

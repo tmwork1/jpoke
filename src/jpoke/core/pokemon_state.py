@@ -454,10 +454,7 @@ class StatusManager:
             ctx = BattleContext(target=target, hp_change=v, hp_change_reason=reason)
             v = self.events.emit(Event.ON_MODIFY_HEAL, ctx, v)
 
-        if reason == "move_damage":
-            ctx = BattleContext(attacker=source, defender=target, move=move)
-            v = self.events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, v)
-        elif v < 0:
+        if v < 0:
             ctx = BattleContext(attacker=source, defender=target, move=move, hp_change_reason=reason)
             v = self.events.emit(Event.ON_MODIFY_NON_MOVE_DAMAGE, ctx, v)
 
@@ -485,7 +482,7 @@ class StatusManager:
 
         return v
 
-    def modify_rank(self,
+    def modify_stat(self,
                     target: Pokemon,
                     stat: Stat,
                     v: int,
@@ -505,9 +502,9 @@ class StatusManager:
         Returns:
             実際に変化した能力とランク量の辞書
         """
-        return self.modify_ranks(target, {stat: v}, source, reason)
+        return self.modify_stats(target, {stat: v}, source, reason)
 
-    def modify_ranks(self,
+    def modify_stats(self,
                      target: Pokemon,
                      stats: dict[Stat, int],
                      source: Pokemon | None = None,
@@ -529,7 +526,6 @@ class StatusManager:
         ctx = BattleContext(target=target, source=source, stat_change_reason=reason)
         stats = self.events.emit(Event.ON_BEFORE_MODIFY_STAT, ctx, stats)
 
-        any_success = False
         actual_changes = {}
 
         for stat, value in stats.items():
@@ -540,14 +536,15 @@ class StatusManager:
             if actual_value == 0:
                 continue
 
+            actual_changes[stat] = actual_value
+
+        if actual_changes:
             self.battle.add_event_log(
                 target, LogCode.STAT_CHANGED,
-                payload={"stat": stat, "value": actual_value, "reason": reason},
+                payload={"stats": actual_changes, "reason": reason},
             )
-            actual_changes[stat] = actual_value
-            any_success = True
-
-        if any_success:
-            self.events.emit(Event.ON_MODIFY_RANK, ctx, actual_changes)
+            self.events.emit(Event.ON_MODIFY_STAT, ctx, actual_changes)
+        else:
+            self.battle.add_event_log(target, LogCode.STAT_CHANGE_BLOCKED)
 
         return actual_changes

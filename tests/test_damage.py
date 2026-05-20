@@ -20,8 +20,8 @@ import test_utils as t
 )
 def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
     battle = t.start_battle(
-        ally=[attacker],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[attacker],
+        team1=[Pokemon("ピカチュウ")],
     )
     t.build_context(battle, 0)
     battle.run_move(attacker, attacker.moves[0])
@@ -44,8 +44,8 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
 )
 def test_防御側タイプ相性補正計算(defender_name: str, move_name: str, expected: float):
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ", moves=[move_name])],
-        foe=[Pokemon(defender_name)],
+        team0=[Pokemon("ピカチュウ", moves=[move_name])],
+        team1=[Pokemon(defender_name)],
     )
     attacker, defender = battle.actives
     battle.run_move(attacker, attacker.moves[0])
@@ -59,8 +59,8 @@ def test_防御側タイプ相性補正計算(defender_name: str, move_name: str
 def test_急所_ダメージ倍率():
     """急所ダメージが1.5倍になることを確認"""
     battle = t.start_battle(
-        ally=[Pokemon("ピカチュウ")],
-        foe=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
     normal_damages = battle.calc_damage_range(attacker, defender, "たいあたり", critical=False)

@@ -217,7 +217,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.かいりきバサミ_modify_stat,
                 subject_spec="target:self",
             )
@@ -307,7 +307,7 @@ ABILITIES: dict[str, AbilityData] = {
     "かちき": AbilityData(
         flags=[],
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.かちき_on_stat_down,
                 subject_spec="target:self",
             )
@@ -367,13 +367,13 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
+            Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
+                h.がんじょう_survive_lethal,
+                subject_spec="defender:self",
+            ),
             Event.ON_APPLY_MOVE: h.AbilityHandler(
                 h.がんじょう_block_ohko,
-                subject_spec="target:self",
-            ),
-            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
-                h.がんじょう_survive_lethal,
-                subject_spec="target:self",
+                subject_spec="defender:self",
             ),
         }
     ),
@@ -638,8 +638,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
-                h.クリアボディ_modify_stat,
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.クリアボディ_block_stat_drop,
                 subject_spec="target:self",
             )
         }
@@ -803,7 +803,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.するどいめ_modify_stat,
                 subject_spec="target:self",
             )
@@ -1177,7 +1177,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.はとむね_modify_stat,
                 subject_spec="target:self",
             )
@@ -1795,8 +1795,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
-                h.クリアボディ_modify_stat,
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.クリアボディ_block_stat_drop,
                 subject_spec="target:self",
             )
         }
@@ -2086,7 +2086,7 @@ ABILITIES: dict[str, AbilityData] = {
             "gas_proof",
         ],
         handlers={
-            Event.ON_CHECK_ACTION: h.AbilityHandler(
+            Event.ON_TRY_ACTION: h.AbilityHandler(
                 h.バトルスイッチ_check_action,
                 subject_spec="attacker:self",
                 priority=200,
@@ -2387,8 +2387,8 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "メタルプロテクト": AbilityData(
         handlers={
-            Event.ON_MODIFY_RANK: h.AbilityHandler(
-                h.クリアボディ_modify_stat,
+            Event.ON_MODIFY_STAT: h.AbilityHandler(
+                h.クリアボディ_block_stat_drop,
                 subject_spec="target:self",
             )
         }

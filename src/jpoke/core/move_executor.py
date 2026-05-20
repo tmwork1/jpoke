@@ -38,6 +38,7 @@ class MoveExecutor:
         self.action_success: bool = False
         self.move_success: bool = False
         self.move_applied: bool = False
+        self.critical_rank: int = 0
 
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
@@ -102,7 +103,7 @@ class MoveExecutor:
             return power_sequence[idx]
         return move.power
 
-    def check_hit(self, ctx: BattleContext) -> bool:
+    def _check_hit(self, ctx: BattleContext) -> bool:
         """技の命中判定。
 
         Args:
@@ -140,7 +141,7 @@ class MoveExecutor:
 
         return 100 * self.battle.random.random() < self.accuracy
 
-    def check_critical(self, ctx: BattleContext) -> bool:
+    def _check_critical(self, ctx: BattleContext) -> bool:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
@@ -155,14 +156,10 @@ class MoveExecutor:
         Returns:
             bool: 急所に当たるかどうか
         """
-        rank = self.events.emit(
-            Event.ON_CALC_CRITICAL_RANK,
-            ctx,
-            ctx.move.critical_rank
-        )
-        rank = max(0, min(3, rank))
+        self.rank = self.events.emit(Event.ON_CALC_CRITICAL_RANK, ctx, ctx.move.critical_rank)
+        self.rank = max(0, min(3, self.rank))
         critical_rates = [1/24, 1/8, 1/2, 1]
-        return self.battle.random.random() < critical_rates[rank]
+        return self.battle.random.random() < critical_rates[self.rank]
 
     def check_hit_substitute(self, ctx: BattleContext) -> bool:
         """みがわりに技が当たるかどうかを判定する。
@@ -214,9 +211,8 @@ class MoveExecutor:
         ctx.move.set_type(move_type)
 
         # 行動成功判定
-        self.action_success = self.events.emit(Event.ON_CHECK_ACTION, ctx, True)
+        self.action_success = self.events.emit(Event.ON_TRY_ACTION, ctx, True)
         if not self.action_success:
-            self.battle.add_event_log(attacker, LogCode.ACTION_BLOCKED)
             return
 
         # PP消費
@@ -242,7 +238,7 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
-        print("Exeuting move:", ctx.move.name)
+        print("Executing move:", ctx.move.name)
 
         # 溜め技の準備
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
@@ -271,21 +267,20 @@ class MoveExecutor:
         ctx.hit_count = hit_count
 
         # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
-        for hit_idx in range(1, hit_count + 1):
-            ctx.hit_index = hit_idx
+        for hit_index in range(1, hit_count + 1):
+            ctx.hit_index = hit_index
 
             # ヒットごとの技の威力を設定
-            ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_idx))
+            ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_index))
 
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (
                 ctx.move.accuracy is not None
-                and (ctx.move.has_label("check_hit_each_time") or hit_idx == 1)
+                and (ctx.move.has_label("check_hit_each_time") or hit_index == 1)
             )
 
-            if need_hit_check and not self.check_hit(ctx):
-                self.battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED,
-                                          payload={"move": ctx.move.name})
+            if need_hit_check and not self._check_hit(ctx):
+                self.battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
                 break
 
             # 無効化されたら中断
@@ -318,9 +313,11 @@ class MoveExecutor:
             self.events.emit(Event.ON_STATUS_HIT, ctx)
             return
 
-        critical = self.check_critical(ctx)
+        critical = self._check_critical(ctx)
         damage = self.battle.roll_damage(ctx.attacker, ctx.defender,
                                          ctx.move, critical=critical)
+
+        damage = self.events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
         hp_delta = self.battle.modify_hp(ctx.defender, -damage, source=ctx.attacker,
                                          move=ctx.move, reason="move_damage")

@@ -92,7 +92,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "おんねん": VolatileData(
         handlers={
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="おんねん"),
                 subject_spec="attacker:self",
                 priority=10
@@ -123,7 +123,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.かなしばり_modify_command_options,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.かなしばり_check_action,
                 subject_spec="attacker:self",
                 priority=100
@@ -153,7 +153,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "こんらん": VolatileData(
         handlers={
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.こんらん_action,
                 subject_spec="attacker:self",
                 priority=110
@@ -215,7 +215,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.じごくづき_restrict_commands,
                 subject_spec="source:self",
             ),
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.じごくづき_check_action,
                 subject_spec="attacker:self",
             ),
@@ -259,7 +259,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ちょうはつ": VolatileData(
         handlers={
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ちょうはつ_check_action,
                 subject_spec="attacker:self",
                 priority=200
@@ -361,7 +361,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ひるみ": VolatileData(
         handlers={
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ひるみ_block_action,
                 subject_spec="attacker:self",
                 priority=40,
@@ -370,7 +370,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ふういん": VolatileData(
         handlers={
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ふういん,
                 subject_spec="defender:self",
                 priority=100,
@@ -432,7 +432,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "メロメロ": VolatileData(
         handlers={
-            Event.ON_CHECK_ACTION: h.VolatileHandler(
+            Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.メロメロ_action,
                 subject_spec="attacker:self",
                 priority=130

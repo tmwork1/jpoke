@@ -530,7 +530,7 @@ class Battle:
                     source: Pokemon | None = None,
                     reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの能力ランクを変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_rank(target, stat, v, source=source, reason=reason)
+        return self.status_manager.modify_stat(target, stat, v, source=source, reason=reason)
 
     def modify_stats(self,
                      target: Pokemon,
@@ -538,7 +538,7 @@ class Battle:
                      source: Pokemon | None = None,
                      reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_ranks(target, stats, source=source, reason=reason)
+        return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
 
     def roll_damage(self,
                     attacker: Pokemon,

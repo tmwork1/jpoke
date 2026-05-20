@@ -101,7 +101,7 @@ class Event(Enum):
 
     # emit: core/move_executor.py（行動実行可否の判定）
     # handle: ailment.py（まひ・ねむり・こおり）, volatile.py（こんらん・ひるみ・どろぼう状態等）
-    ON_CHECK_ACTION = auto()
+    ON_TRY_ACTION = auto()
 
     # emit: core/move_executor.py（PP消費処理）
     # handle: data/move.py（通常のPP1消費）
@@ -213,7 +213,7 @@ class Event(Enum):
 
     # emit: core/battle.py（ランク変化適用後）
     # handle: ability.py（まけんき・かちき等の反応）
-    ON_MODIFY_RANK = auto()
+    ON_MODIFY_STAT = auto()
 
     ON_END = auto()  # 未使用
 

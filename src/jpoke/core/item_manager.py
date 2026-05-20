@@ -67,11 +67,8 @@ class ItemManager:
         item.lost_cause = cause
         item.add_disable_reason("consumed")
 
-        self.battle.add_event_log(
-            target,
-            LogCode.ITEM_LOST,
-            payload={"item": item.name, "reason": cause}
-        )
+        self.battle.add_event_log(target, LogCode.ITEM_LOST,
+                                  payload={"item": item.name, "reason": cause})
         return True
 
     def add_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:

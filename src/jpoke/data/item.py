@@ -324,7 +324,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=50,
         handlers={
-            Event.ON_MODIFY_RANK: h.ItemHandler(
+            Event.ON_MODIFY_STAT: h.ItemHandler(
                 h.だっしゅつパック_trigger_switch,
                 subject_spec="target:self",
             )

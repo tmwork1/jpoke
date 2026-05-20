@@ -6,7 +6,7 @@
 from typing import TypedDict
 from dataclasses import dataclass
 
-from jpoke.utils.type_defs import Stat
+from jpoke.utils.type_defs import Stat, Type
 from jpoke.enums import LogCode
 from jpoke.utils import fast_copy
 
@@ -17,23 +17,20 @@ class Payload(TypedDict, total=False):
     イベントログに付随する追加情報を格納するための辞書構造。
     例えば、技の名前、ダメージ量、状態異常の種類などが含まれる。
     """
-    # 汎用フィールド
-    reason: str | None = None
-
-    # 特定のソース
-    pokemon: str | None = None
-    ability: str | None = None
-    item: str | None = None
-    move: str | None = None
-    action_order: str | None = None
-    ailment: str | None = None
-    volatile: str | None = None
-    text: str | None = None
-
-    # その他
-    stat: Stat | None = None
-    value: int | None = None
-    percent: int | None = None
+    reason: str | None
+    pokemon: str | None
+    ability: str | None
+    item: str | None
+    move: str | None
+    action_order: str | None
+    ailment: str | None
+    volatile: str | None
+    stats: dict[Stat, int] | None
+    type: Type | None
+    value: int | float | None
+    hp: int | None
+    max_hp: int | None
+    text: str | None
 
 
 @dataclass(frozen=True)
@@ -76,13 +73,13 @@ class EventLog:
 
         # reasonを統一フォーマットで付与
         reason = self.payload.get("reason")
-        base_text = self._get_base_text()
-
+        text = self._get_base_text()
         if reason:
-            return f"{base_text} [{reason}]"
-        return base_text
+            text += f" [{reason}]"
+        return text
 
     def _get_base_text(self) -> str:
+        # TODO : LogCodeを網羅する
         """LogCodeに対応する基本的なテキストを生成。
 
         Returns:
@@ -94,26 +91,30 @@ class EventLog:
         # LogCode に応じた適切なテキスト変換
         match self.log:
             case LogCode.TEXT_LOG:
-                return self.payload.get("text", "")
+                return self.payload.get("text") or ""
+
+            case LogCode.MOVE_MISSED:
+                return "技が外れた"
 
             case LogCode.ABILITY_TRIGGERED:
-                return self.payload.get("ability", "特性")
+                ability = self.payload.get("ability", "特性")
+                return f"{ability}が発動した"
 
             case LogCode.ITEM_LOST:
-                item = self.payload.get("item", "持ち物")
-                cause = self.payload.get("reason", "")
-                return f"{item}を失った [{cause}]"
+                item = self.payload.get("item", "アイテム")
+                return f"{item}を失った"
 
             case LogCode.VOLATILE_APPLIED:
-                volatile = self.payload["volatile"]
+                volatile = self.payload.get("volatile", "揮発状態")
                 return f"{volatile}が付与された"
 
             case LogCode.VOLATILE_REMOVED:
-                volatile = self.payload["volatile"]
+                volatile = self.payload.get("volatile", "揮発状態")
                 return f"{volatile}が解除された"
 
             case LogCode.VOLATILE_DISPLAY:
-                return self.payload["volatile"]
+                volatile = self.payload.get("volatile", "揮発状態")
+                return f"{volatile}の状態"
 
             case LogCode.AILMENT_APPLIED:
                 ailment = self.payload.get("ailment", "状態異常")
@@ -124,20 +125,17 @@ class EventLog:
                 return f"{ailment}が回復した"
 
             case LogCode.STAT_CHANGED:
-                stat = self.payload.get("stat", "能力値")
-                change = self.payload.get("value", 0)
-                direction = "上がった" if change > 0 else "下がった"
-                return f"{stat}が{direction}"
+                stats = self.payload.get("stats", {})
+                texts = []
+                for stat, value in stats.items():
+                    texts.append(f"{stat}{'+' if value > 0 else ''}{value}")
+                return " ".join(texts)
 
             case LogCode.HP_CHANGED:
                 value = self.payload.get("value", 0)
                 hp = self.payload.get("hp", "?")
                 max_hp = self.payload.get("max_hp", "?")
-                s = "HP "
-                if value > 0:
-                    s += "+"
-                s += f"{value} ({hp}/{max_hp})"
-                return s
+                return f"HP {'+' if value > 0 else ''}{value} ({hp}/{max_hp})"
 
             case LogCode.ACTION_BLOCKED:
                 return "動けない"
@@ -155,8 +153,7 @@ class EventLog:
 
             case LogCode.MOVE_IMMUNED:
                 move = self.payload.get("move", "技")
-                reason = self.payload.get("reason", "")
-                return f"{move} 無効化 [{reason}]"
+                return f"{move} を無効化した"
 
             case _:
                 return self.log.name
