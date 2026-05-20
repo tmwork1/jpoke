@@ -743,7 +743,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 partial(h.activate_weather, weather="すなあらし", count=5),
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                partial(h.activate_weather, weather="すなあらし", count=5),
+                subject_spec="source:self",
+            ),
         }
     ),
     "すなかき": AbilityData(

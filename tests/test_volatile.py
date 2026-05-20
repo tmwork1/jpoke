@@ -101,7 +101,7 @@ def test_アンコール():
     mon = player.active
     battle.volatile_manager.apply(mon, "アンコール", move="なきごえ")
     commands = battle.get_available_action_commands(player)
-    assert all(cmd.idx == 1 for cmd in commands)
+    assert all(cmd.index == 1 for cmd in commands)
 
 
 def test_アンコール_実行時も技固定():
@@ -170,7 +170,7 @@ def test_いちゃもん_コマンド制限():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "いちゃもん", move="たいあたり")
     commands = battle.get_available_action_commands(player)
-    assert all(cmd.idx == 1 for cmd in commands), "いちゃもんでlast_move_name以外の技が使用可能"
+    assert all(cmd.index == 1 for cmd in commands), "いちゃもんでlast_move_name以外の技が使用可能"
 
 
 def test_いちゃもん_別の技は選択できる():
@@ -181,7 +181,7 @@ def test_いちゃもん_別の技は選択できる():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "いちゃもん", move="たいあたり")
     commands = battle.get_available_action_commands(battle.players[0])
-    move_indices = {cmd.idx for cmd in commands if cmd.is_move_family()}
+    move_indices = {cmd.index for cmd in commands if cmd.is_move_family}
     assert move_indices == {1, 2}
 
 
@@ -311,7 +311,7 @@ def test_かなしばり_コマンド制限():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "かなしばり", move="たいあたり")
     commands = battle.get_available_action_commands(player)
-    assert all(cmd.idx != 0 for cmd in commands)
+    assert all(cmd.index != 0 for cmd in commands)
 
 
 def test_かなしばり_実行ブロック():
@@ -386,7 +386,7 @@ def test_こだわり():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "こだわり", move="なきごえ")
     commands = battle.get_available_action_commands(player)
-    assert all(cmd.idx == 1 for cmd in commands)
+    assert all(cmd.index == 1 for cmd in commands)
 
 
 def test_こだわり_交代で解除():
@@ -591,7 +591,7 @@ def test_じごくづき_コマンド制限():
     )
     player = battle.players[0]
     commands = battle.get_available_action_commands(player)
-    assert all(cmd.idx != 0 for cmd in commands)
+    assert all(cmd.index != 0 for cmd in commands)
 
 
 def test_じごくづき_実行ブロック():

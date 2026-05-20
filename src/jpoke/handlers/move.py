@@ -92,7 +92,7 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     success = bool(commands)
     if success:
         command = battle.random.choice(commands)
-        battle.run_switch(player, player.team[command.idx])
+        battle.run_switch(player, player.team[command.index])
     return HandlerReturn(value=success)
 
 

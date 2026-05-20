@@ -197,7 +197,7 @@ def can_switch(battle: Battle, idx: int) -> bool:
     if not (0 <= idx < len(battle.players)):
         raise IndexError(f"Invalid player index: {idx}. Must be between 0 and {len(battle.players) - 1}")
     commands = battle.get_available_action_commands(battle.players[idx])
-    return any(c.is_switch() for c in commands)
+    return any(c.is_switch for c in commands)
 
 
 def emit_turn_end_events(battle: Battle):

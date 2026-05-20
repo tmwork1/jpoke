@@ -740,9 +740,9 @@ def バトルスイッチ_check_action(battle: Battle, ctx: BattleContext, value
         return HandlerReturn(value=value)
 
     next_alias = ""
-    if mon.alias == AEGISLASH_SHIELD_ALIAS and ctx.move.is_attack:
+    if mon.name == AEGISLASH_SHIELD_ALIAS and ctx.move.is_attack:
         next_alias = AEGISLASH_BLADE_ALIAS
-    elif mon.alias == AEGISLASH_BLADE_ALIAS and ctx.move.name == "キングシールド":
+    elif mon.name == AEGISLASH_BLADE_ALIAS and ctx.move.name == "キングシールド":
         next_alias = AEGISLASH_SHIELD_ALIAS
 
     if not next_alias:
@@ -929,7 +929,7 @@ def マイティチェンジ_on_switch_out(battle: Battle, ctx: BattleContext, v
     if (
         mon is not None
         and mon.name == PALAFIN_NAME
-        and mon.alias == PALAFIN_ZERO_ALIAS
+        and mon.name == PALAFIN_ZERO_ALIAS
         and mon.alive
     ):
         mon.set_form(PALAFIN_HERO_ALIAS)

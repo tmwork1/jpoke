@@ -157,7 +157,7 @@ class EventManager:
             if result.stop_event:
                 return value
 
-        print(f"\t{event} {initial_value} -> {value}")
+        # print(f"\t{event} {initial_value} -> {value}")
         return value
 
     def _build_context(self, rh: RegisteredHandler) -> BattleContext:

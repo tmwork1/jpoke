@@ -8,7 +8,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle
     from jpoke.data.models import PokemonData
 
 from jpoke.utils.type_defs import Nature, Type, Stat, Gender, \
@@ -203,26 +203,22 @@ class Pokemon:
         """
         return self.data.name
 
-    @property
-    def alias(self) -> str:
-        """ポケモンの図鑑エイリアスを取得する。"""
-        return self.data.alias
-
-    def set_form(self, alias: str, keep_damage: bool = True, init_ability: bool = False) -> None:
+    def set_form(self, name: str, keep_damage: bool = True, init_ability: bool = False) -> bool:
         """ポケモンのフォルムをエイリアス指定で切り替える。
 
         Args:
-            alias: 変更先フォルムの図鑑エイリアス
+            name: 変更先フォルムの図鑑エイリアス
             keep_damage: Trueの場合、現在の被ダメージ量を維持する
             init_ability: Trueの場合、特性を初期化する
         """
-        if self.alias == alias:
-            return
+        if self.name == name:
+            return False
 
-        self.data = pokedex[alias]
+        self.data = pokedex[name]
         self.update_stats(keep_damage=keep_damage)
         if init_ability:
             self.init_ability()
+        return True
 
     @property
     def alive(self) -> bool:
@@ -372,16 +368,13 @@ class Pokemon:
         """
         return not self.terastallized and self.tera_type != ""
 
-    def terastallize(self) -> bool:
+    def terastallize(self):
         """テラスタルする。
 
         Returns:
             テラスタルに成功した場合True、失敗した場合False
         """
-        if self.can_terastallize():
-            self.terastallized = True
-            return True
-        return False
+        self.terastallized = True
 
     @property
     def megaevolved(self) -> bool:
@@ -396,17 +389,14 @@ class Pokemon:
 
         return self.name == forms[0]
 
-    def megaevolve(self) -> bool:
+    def megaevolve(self):
         """メガシンカする。
 
         Returns:
             メガシンカに成功した場合True、失敗した場合False
         """
-        if not self.can_megaevolve():
-            return False
         mega_name = MEGA_STONES[self.item.name][1]
         self.set_form(mega_name, init_ability=True)
-        return True
 
     def has_item(self, name: str | None = None) -> bool:
         """持ち物を持っているか判定する。

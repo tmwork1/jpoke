@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils.type_defs import RoleSpec, Type, Weather, Terrain
 from jpoke.utils.battle_math import apply_fixed_modifier
-from jpoke.enums import Interrupt, LogCode
+from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
 from . import common
 
@@ -48,11 +48,16 @@ def announce_item_triggered(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def mega_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def mega_modify_command_options(battle: Battle, ctx: BattleContext, value: list[Command]) -> HandlerReturn:
     """メガストーン: メガシンカコマンドを追加する。"""
-    base_form, mega_form = ctx.attacker.item.mega_evol
-    if ctx.attacker.name == base_form:
-        value["mega_evolve"] = mega_form
+    mon = ctx.attacker
+    if not mon.can_megaevolve():
+        return HandlerReturn(value=value)
+
+    for cmd in value:
+        if cmd.is_regular_move:
+            value.append(Command.get_megaevol_command(cmd.index))
+
     return HandlerReturn(value=value)
 
 

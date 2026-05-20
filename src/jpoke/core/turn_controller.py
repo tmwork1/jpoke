@@ -57,7 +57,7 @@ class TurnController:
         for player in self.battle.players:
             if not player.selection_idxes:
                 commands = player.choose_selection_commands(self.battle)
-                player.selection_idxes = [c.idx for c in commands]
+                player.selection_idxes = [c.index for c in commands]
 
     def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
@@ -145,25 +145,32 @@ class TurnController:
             if not player.reserved_commands:
                 continue
 
+            # コマンドがテラスタルで、かつテラスタル可能な場合にテラスタルを実行
             command = player.reserved_commands[0]
-            if command.is_terastal_move():
+            if command.is_terastal and mon.can_terastallize():
                 mon.terastallize()
                 self.battle.add_event_log(mon, LogCode.TERASALLIZED,
                                           payload={"type": mon.tera_type})
 
-    def _run_mega_evolve(self):
+    def _run_megaevolve(self):
         """メガシンカを実行する。"""
         for mon in self.battle.calc_action_order():
             player = self.battle.get_player(mon)
             if not player.reserved_commands:
                 continue
 
+            # コマンドがメガシンカで、かつメガシンカ可能な場合にメガシンカを実行
             command = player.reserved_commands[0]
-            if command.is_megaevol_move():
+            if command.is_megaevol and mon.can_megaevolve():
+                # メガシンカ前の特性を無効化し、メガシンカ後に特性を有効化する
+                mon.ability.unregister_handlers(self.events, mon)
                 mon.megaevolve()
-                self.events.emit(Event.ON_ABILITY_ENABLED, BattleContext(source=mon))
+                mon.ability.register_handlers(self.events, mon)
                 self.battle.add_event_log(mon, LogCode.MEGA_EVOLVED,
-                                          payload={"pokemon": mon.alias})
+                                          payload={"pokemon": mon.name})
+
+                # メガシンカ後の特性が発動するイベントを追加
+                self.events.emit(Event.ON_ABILITY_ENABLED, BattleContext(source=mon))
 
     def _process_turn_phases(self):
         """内部的なターン進行処理を実行。
@@ -194,11 +201,11 @@ class TurnController:
             # 交代
             if not self.battle.has_interrupt():
                 player = self.battle.players[idx]
-                if player.reserved_commands[0].is_switch():
+                if player.reserved_commands[0].is_switch:
                     # 予約されている交代コマンドを取得
                     command = player.reserved_commands.pop(0)
                     # 交代を実行
-                    new = player.team[command.idx]
+                    new = player.team[command.index]
                     self.battle.run_switch(player, new)
 
                 # だっしゅつパックによる割り込みフラグを更新
@@ -209,7 +216,7 @@ class TurnController:
 
         # 技発動フェーズに移る直前の処理 (テラスタル、メガシンカなど)
         self._run_terastal()
-        self._run_mega_evolve()
+        self._run_megaevolve()
         self.events.emit(Event.ON_BEFORE_MOVE)
 
         # 技の処理

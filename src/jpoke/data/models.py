@@ -12,10 +12,7 @@ from jpoke.utils.type_defs import AbilityFlag, Type, MoveCategory, MoveTarget, M
 
 class PokemonData:
     def __init__(self, data) -> None:
-        self.name: str = data["name"]
-        self.id: int = data["id"]
-        self.form_id: int = data["form-id"]
-        self.alias: str = data["alias"]
+        self.name: str = data["alias"]
         self.weight: float = data["weight"]
         self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]

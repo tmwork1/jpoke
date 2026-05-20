@@ -72,6 +72,6 @@ class CommandManager:
             if move_name:
                 return Move(move_name)
             return Move("わるあがき")
-        if command.is_zmove():
+        if command.is_zmove:
             return Move("わるあがき")
-        return attacker.moves[command.idx]
+        return attacker.moves[command.index]

@@ -1,4 +1,5 @@
 """コマンド関連のEnum定義"""
+from __future__ import annotations
 from enum import Enum, auto
 
 
@@ -119,86 +120,134 @@ class Command(Enum):
         return self.value is None
 
     @property
-    def idx(self) -> int:
+    def index(self) -> int | None:
         """コマンドのインデックス (0-9)"""
-        return int(self.name[-1])
+        if "_" in self.name:
+            return int(self.name.split("_")[-1])
+        return None
 
+    @property
     def is_selection(self) -> bool:
         """選出コマンドかどうか"""
         return self.name[:-2] == "SELECT"
 
+    @property
     def is_switch(self) -> bool:
         """交代コマンドかどうか"""
         return self.name[:-2] == "SWITCH"
 
+    @property
     def is_regular_move(self) -> bool:
         """技コマンドかどうか"""
         return self.name[:-2] == "MOVE"
 
-    def is_terastal_move(self) -> bool:
+    @property
+    def is_terastal(self) -> bool:
         """テラスタルコマンドかどうか"""
         return self.name[:-2] == "TERASTAL"
 
-    def is_megaevol_move(self) -> bool:
+    @property
+    def is_megaevol(self) -> bool:
         """メガシンカコマンドかどうか"""
         return self.name[:-2] == "MEGAEVOL"
 
-    def is_gigamax_move(self) -> bool:
+    @property
+    def is_gigamax(self) -> bool:
         """ダイマックスコマンドかどうか"""
         return self.name[:-2] == "GIGAMAX"
 
+    @property
     def is_zmove(self) -> bool:
         """Zワザコマンドかどうか"""
         return self.name[:-2] == "ZMOVE"
 
+    @property
     def is_move_family(self) -> bool:
         """技系全般かどうか（）"""
-        return self.is_regular_move() or \
-            self.is_terastal_move() or \
-            self.is_megaevol_move() or \
-            self.is_gigamax_move() or \
-            self.is_zmove()
+        return (
+            self.is_regular_move
+            or self.is_terastal
+            or self.is_megaevol
+            or self.is_gigamax
+            or self.is_zmove
+        )
 
+    @property
     def is_move_execution(self) -> bool:
         """実際に技実行へ進むコマンドかどうか。"""
-        return self.is_move_family() or self in {Command.FORCED, Command.STRUGGLE}
+        return self.is_move_family or self in {Command.FORCED, Command.STRUGGLE}
 
     @classmethod
-    def selection_commands(cls):
+    def get_selection_command(cls, index: int) -> Command:
+        """対応する選出コマンドを取得"""
+        return cls[f"SELECT_{index}"]
+
+    @classmethod
+    def get_switch_command(cls, index: int) -> Command:
+        """対応する交代コマンドを取得"""
+        return cls[f"SWITCH_{index}"]
+
+    @classmethod
+    def get_move_command(cls, index: int) -> Command:
+        """対応する技コマンドを取得"""
+        return cls[f"MOVE_{index}"]
+
+    @classmethod
+    def get_terastal_command(cls, index: int) -> Command:
+        """対応するテラスタルコマンドを取得"""
+        return cls[f"TERASTAL_{index}"]
+
+    @classmethod
+    def get_megaevol_command(cls, index: int) -> Command:
+        """指定インデックスのメガシンカコマンドを取得"""
+        return cls[f"MEGAEVOL_{index}"]
+
+    @classmethod
+    def get_gigamax_command(cls, index: int) -> Command:
+        """指定インデックスのダイマックスコマンドを取得"""
+        return cls[f"GIGAMAX_{index}"]
+
+    @classmethod
+    def get_zmove_command(cls, index: int) -> Command:
+        """指定インデックスのZワザコマンドを取得"""
+        return cls[f"ZMOVE_{index}"]
+
+    @classmethod
+    def selection_commands(cls) -> list[Command]:
         """全ての選出コマンドを取得"""
-        return [x for x in cls if x.is_selection()]
+        return [x for x in cls if x.is_selection]
 
     @classmethod
-    def switch_commands(cls):
+    def switch_commands(cls) -> list[Command]:
         """全ての交代コマンドを取得"""
-        return [x for x in cls if x.is_switch()]
+        return [x for x in cls if x.is_switch]
 
     @classmethod
-    def all_move_commands(cls):
+    def all_move_commands(cls) -> list[Command]:
         """全ての技系コマンドを取得"""
-        return [x for x in cls if x.is_move_family()]
+        return [x for x in cls if x.is_move_family]
 
     @classmethod
-    def regular_move_commands(cls):
+    def regular_move_commands(cls) -> list[Command]:
         """全ての技コマンドを取得"""
-        return [x for x in cls if x.is_regular_move()]
+        return [x for x in cls if x.is_regular_move]
 
     @classmethod
-    def terastal_commands(cls):
+    def terastal_commands(cls) -> list[Command]:
         """全てのテラスタルコマンドを取得"""
-        return [x for x in cls if x.is_terastal_move()]
+        return [x for x in cls if x.is_terastal]
 
     @classmethod
-    def megaevol_commands(cls):
+    def megaevol_commands(cls) -> list[Command]:
         """全てのメガシンカコマンドを取得"""
-        return [x for x in cls if x.is_megaevol_move()]
+        return [x for x in cls if x.is_megaevol]
 
     @classmethod
-    def gigamax_commands(cls):
+    def gigamax_commands(cls) -> list[Command]:
         """全てのダイマックスコマンドを取得"""
-        return [x for x in cls if x.is_gigamax_move()]
+        return [x for x in cls if x.is_gigamax]
 
     @classmethod
-    def zmove_commands(cls):
+    def zmove_commands(cls) -> list[Command]:
         """全てのZワザコマンドを取得"""
-        return [x for x in cls if x.is_zmove()]
+        return [x for x in cls if x.is_zmove]

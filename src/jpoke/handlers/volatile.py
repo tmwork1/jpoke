@@ -140,8 +140,8 @@ def restrict_commands(battle: Battle,
     fixed_move_name = mon.volatiles[name].move_name
     new_options = []
     for cmd in value:
-        if mon.moves[cmd.idx].name == fixed_move_name or \
-                (can_switch and cmd.is_switch()):
+        if mon.moves[cmd.index].name == fixed_move_name or \
+                (can_switch and cmd.is_switch):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
 
@@ -223,8 +223,8 @@ def いちゃもん_modify_command_options(battle: Battle, ctx: BattleContext, v
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family()
-            or mon.moves[cmd.idx].name != last_move_name
+            not cmd.is_move_family
+            or mon.moves[cmd.index].name != last_move_name
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
@@ -287,8 +287,8 @@ def かなしばり_modify_command_options(battle: Battle, ctx: BattleContext, v
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family()
-            or ctx.attacker.moves[cmd.idx].name != forbidden_name
+            not cmd.is_move_family
+            or ctx.attacker.moves[cmd.index].name != forbidden_name
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
@@ -481,8 +481,8 @@ def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value:
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family()
-            or not ctx.attacker.moves[cmd.idx].has_label("sound")
+            not cmd.is_move_family
+            or not ctx.attacker.moves[cmd.index].has_label("sound")
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)

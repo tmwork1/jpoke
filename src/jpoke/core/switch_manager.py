@@ -201,7 +201,7 @@ class SwitchManager:
             self.battle.add_command_log(player, command)
             self.run_switch(
                 player,
-                player.team[command.idx],
+                player.team[command.index],
                 emit_switch_in_event=emit_on_each_switch
             )
             switched_players.append(player)
