@@ -242,18 +242,15 @@ class MoveExecutor:
 
         # 溜め技の準備
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
-            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_CHARGED)
             return
 
         # 発動成功判定
         self.move_success = self.events.emit(Event.ON_TRY_MOVE, ctx, True)
         if not self.move_success:
-            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED)
             return
 
         # 反射判定
-        if self.events.emit(Event.ON_QUERY_REFLECT, ctx, False):
-            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_REFLECTED)
+        if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
             ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 発動した技の確定
@@ -286,8 +283,6 @@ class MoveExecutor:
             # 無効化されたら中断
             self.move_applied = self.events.emit(Event.ON_APPLY_MOVE, ctx, True)
             if not self.move_applied:
-                self.battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
-                                          payload={"move": ctx.move.name})
                 return False
 
             self._execute_hit(ctx)
@@ -406,8 +401,5 @@ class MoveExecutor:
         """
         v = self.events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
         ctx.move.pp = max(0, ctx.move.pp - v)
-        self.battle.add_event_log(
-            ctx.attacker,
-            LogCode.PP_CONSUMED,
-            payload={"move": ctx.move.name, "value": v}
-        )
+        self.battle.add_event_log(ctx.attacker, LogCode.PP_CONSUMED,
+                                  payload={"move": ctx.move.name, "value": v})

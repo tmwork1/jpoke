@@ -64,10 +64,14 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=success)
 
 
-def check_blow_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def on_blow_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
-    immune = battle.events.emit(Event.ON_QUEERY_BLOW_IMMUNE, ctx, False)
-    return HandlerReturn(value=immune)
+    value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
+    if not value:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
+                             payload={"reason": "強制交代無効"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -114,7 +118,8 @@ def _check_type_immune(battle: Battle, ctx: BattleContext) -> bool:
 def ohko_check_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """一撃必殺技のタイプ無効判定。"""
     if _check_type_immune(battle, ctx):
-        print(f"{ctx.defender.name}は{ctx.move.name}を無効化した！")
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
+                             payload={"reason": "タイプ無効"})
         return HandlerReturn(value=False, stop_event=True)
     print(f"{ctx.move.name}は{ctx.defender.name}に効果抜群だ！")
     return HandlerReturn(value=value)
@@ -208,6 +213,8 @@ def きあいパンチ_check_move(battle: Battle, ctx: BattleContext, value: Any
     行動前に実際の攻撃ダメージを受けていた場合は不発になる。
     """
     if ctx.attacker.hits_taken > 0:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "きあいパンチ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -367,7 +374,7 @@ def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, val
     return HandlerReturn(value=value)
 
 
-def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def _check_はやてがえし_condition(battle: Battle, ctx: BattleContext) -> bool:
     """はやてがえしの発動条件を判定する。
 
     相手が未行動かつ優先攻撃技を選択している時のみ成功する。
@@ -376,34 +383,49 @@ def はやてがえし_check_move(battle: Battle, ctx: BattleContext, value: Any
 
     # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
     if not defender_player.reserved_commands:
-        return HandlerReturn(value=False, stop_event=True)
+        return False
 
     defender_command = defender_player.reserved_commands[0]
     is_move_command = defender_command.is_move_execution()
     if not is_move_command:
-        return HandlerReturn(value=False, stop_event=True)
+        return False
 
     defender_move = battle.command_to_move(defender_player, defender_command)
 
     # 優先度が上がっていても変化技には失敗する。
     if not defender_move.is_attack:
-        return HandlerReturn(value=False, stop_event=True)
+        return False
 
     priority = battle.speed_calculator.calc_move_priority(ctx.defender, defender_move)
     if priority <= 0:
-        return HandlerReturn(value=False, stop_event=True)
+        return False
 
+    return True
+
+
+def はやてがえし_try_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """はやてがえしの発動条件を判定する。
+
+    相手が未行動かつ優先攻撃技を選択している時のみ成功する。
+    """
+    if not _check_はやてがえし_condition(battle, ctx):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "はやてがえし"})
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
-def みがわり_can_use(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def みがわり_check(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりが使用可能かを判定する。"""
     mon = ctx.attacker
-    can_use = (
-        not mon.has_volatile("みがわり")
-        and mon.hp > mon.max_hp // 4
-    )
-    return HandlerReturn(value=can_use, stop_event=not can_use)
+    if (
+        mon.has_volatile("みがわり")
+        or mon.hp <= mon.max_hp // 4
+    ):
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "みがわり"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

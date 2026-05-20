@@ -404,8 +404,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_QUEERY_BLOW_IMMUNE: h.AbilityHandler(
-                h.きゅうばん_check_blow_immune,
+            Event.ON_TRY_BLOW: h.AbilityHandler(
+                h.きゅうばん_block_blow,
                 subject_spec="defender:self",
             ),
         },
@@ -1378,7 +1378,7 @@ ABILITIES: dict[str, AbilityData] = {
     "へんげんじざい": AbilityData(
         handlers={
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
-                h.へんげんじざいリベロ_on_move_charge,
+                h.へんげんじざい_change_type,
                 subject_spec="source:self",
                 priority=100,
             )
@@ -1417,7 +1417,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうおん_on_apply,
+                h.ぼうおん_block_sound_move,
                 subject_spec="defender:self",
             ),
         }
@@ -1428,7 +1428,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうじん_on_apply,
+                h.ぼうじん_block_powder_move,
                 subject_spec="defender:self",
             ),
             Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
@@ -1443,7 +1443,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうだん_on_apply,
+                h.ぼうだん_block_bullet_move,
                 subject_spec="defender:self",
             ),
         }
@@ -1519,11 +1519,11 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.もらいび_on_apply,
+                h.もらいび_block_fire_move,
                 subject_spec="defender:self",
             ),
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
-                h.もらいび_on_move_charge,
+                h.もらいび_charge_fire,
                 subject_spec="source:self",
             ),
             Event.ON_MOVE_END: h.AbilityHandler(
@@ -2305,7 +2305,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_QUERY_REFLECT: h.AbilityHandler(
+            Event.ON_CHECK_REFLECT: h.AbilityHandler(
                 h.マジックミラー_reflect,
                 subject_spec="defender:self",
                 priority=200,
@@ -2414,7 +2414,7 @@ ABILITIES: dict[str, AbilityData] = {
     "リベロ": AbilityData(
         handlers={
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
-                h.へんげんじざいリベロ_on_move_charge,
+                h.へんげんじざい_change_type,
                 subject_spec="source:self",
                 priority=100,
             )

@@ -41,7 +41,7 @@ class Event(Enum):
     # TODO : 以下の追加イベントを適切に配置する
     ON_ACTIVATE_MOLD_BREAKER = auto()
     ON_DEACTIVATE_MOLD_BREAKER = auto()
-    ON_QUEERY_BLOW_IMMUNE = auto()
+    ON_TRY_BLOW = auto()
     ON_ABILITY_ENABLED = auto()  # 特性が有効になったとき（即時発動系の特性のトリガー用）
     ON_ABILITY_DISABLED = auto()  # 特性が無効になったとき（かがくへんかガスのトリガー用）
     ON_ITEM_ENABLED = auto()  # 道具効果が有効になったとき（ぶきようのトリガー用）
@@ -135,7 +135,7 @@ class Event(Enum):
 
     # emit: core/move_executor.py（反射確認）
     # handle: volatile.py（マジックコート）, ability.py（マジックミラー）
-    ON_QUERY_REFLECT = auto()
+    ON_CHECK_REFLECT = auto()
 
     # emit: core/move_executor.py（変化技命中時）
     # handle: data/move.py（状態異常・ランク変化などの変化技効果適用）

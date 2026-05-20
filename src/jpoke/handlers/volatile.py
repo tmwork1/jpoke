@@ -115,11 +115,10 @@ def check_hidden_move(battle: Battle,
         HandlerReturn: 命中可ならTrue、回避するならFalse
     """
     defender = ctx.defender
-    if defender.has_volatile("かくれる"):
-        hidden_move = defender.volatiles["かくれる"].move_name
-        allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(hidden_move, [])
-        if ctx.move.name in allowed_moves:
-            return HandlerReturn(value=True)
+    hidden_move = defender.volatiles["かくれる"].move_name
+    allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(hidden_move, [])
+    if ctx.move.name not in allowed_moves:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -688,8 +687,10 @@ def ほろびのうた_faint(battle: Battle, ctx: BattleContext, value: Any) -> 
 
 def マジックコート_reflect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
-    reflected = ctx.move.has_label("reflectable")
-    return HandlerReturn(value=reflected)
+    value = ctx.move.has_label("reflectable")
+    if value:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_REFLECTED)
+    return HandlerReturn(value=value)
 
 
 def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -711,11 +712,12 @@ def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: An
 def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりによる技の無効化判定"""
     hit_substitute = battle.move_executor.check_hit_substitute(ctx)
-    immune = (
+    if (
         hit_substitute
         and ctx.move.category == "変化"
-    )
-    if immune:
+    ):
+        battle.add_event_log(ctx.defender, LogCode.MOVE_IMMUNED,
+                             payload={"reason": "みがわり"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 

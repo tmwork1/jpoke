@@ -121,6 +121,8 @@ def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 def おおひでり_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """おおひでり中にみずタイプ技を失敗させる（攻撃技・変化技を問わない）"""
     if ctx.move.type == "みず":
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "おおひでり"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -128,6 +130,8 @@ def おおひでり_block_move(battle: Battle, ctx: BattleContext, value: Any) -
 def おおあめ_block_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """おおあめ中にほのおタイプ技を失敗させる（攻撃技・変化技を問わない）"""
     if ctx.move.type == "ほのお":
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "おおあめ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -215,6 +219,8 @@ def サイコフィールド_block_priority_move(battle: Battle, ctx: BattleCont
         ctx.move.priority > 0
         and not battle.query_manager.is_floating(ctx.defender)
     ):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "サイコフィールド"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 

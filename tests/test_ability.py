@@ -3990,7 +3990,7 @@ def test_マジックミラー_変化技を跳ね返す():
     move = attacker.moves[0]
 
     reflect = battle.events.emit(
-        Event.ON_QUERY_REFLECT,
+        Event.ON_CHECK_REFLECT,
         BattleContext(attacker=attacker, defender=defender, move=move),
         False,
     )
@@ -4070,7 +4070,8 @@ def test_ミラーアーマー_自己能力低下は反射しない():
         team0=[Pokemon("ピカチュウ", ability="ミラーアーマー")],
         team1=[Pokemon("ピカチュウ", moves=["なきごえ"])],
     )
-    t.run_move(battle, 1)
+    target, source = battle.actives
+    battle.modify_stats(target, {"A": -1}, source=target)
     assert battle.actives[0].rank["A"] == -1
     assert battle.actives[1].rank["A"] == 0
 

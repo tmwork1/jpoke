@@ -2006,7 +2006,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_TRY_MOVE: h.MoveHandler(
-                h.はやてがえし_check_move,
+                h.はやてがえし_try_move,
             ),
             Event.ON_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ひるみ", target_spec="defender:self", source_spec="attacker:self"),
@@ -4761,7 +4761,7 @@ MOVES: dict[str, MoveData] = {
         priority=4,
         target="self",
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="かえんのまもり", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5178,7 +5178,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="スレッドトラップ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5242,14 +5242,9 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-
-
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
-                partial(common.apply_volatile, volatile="ちいさくなる", target_spec="attacker:self", source_spec="attacker:self"),
-            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="EVA", v=2, target_spec="attacker:self", source_spec="attacker:self"),
+                h.ちいさくなる_apply,
             )
         }
     ),
@@ -5392,7 +5387,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="トーチカ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5736,10 +5731,8 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-
-
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="ふういん", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5770,7 +5763,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
         handlers={
             Event.ON_APPLY_MOVE: h.MoveHandler(
-                h.check_blow_immune,
+                h.on_blow_apply,
                 priority=30,
             ),
             Event.ON_HIT: h.MoveHandler(h.blow),
@@ -5895,7 +5888,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5904,14 +5897,9 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=40,
-
-
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
-                partial(common.apply_volatile, volatile="まるくなる", target_spec="attacker:self", source_spec="attacker:self"),
-            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
+                h.まるくなる_apply,
             )
         }
     ),
@@ -5936,7 +5924,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_APPLY_MOVE: h.MoveHandler(
-                h.みがわり_can_use,
+                h.みがわり_check,
                 priority=100,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -5953,7 +5941,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -5978,7 +5966,7 @@ MOVES: dict[str, MoveData] = {
 
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="みちづれ", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
@@ -6154,7 +6142,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
 
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_STATUS_HIT: h.MoveHandler(
                 partial(common.apply_volatile, volatile="キングシールド", target_spec="attacker:self", source_spec="attacker:self"),
             )
         }
