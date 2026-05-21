@@ -15,7 +15,7 @@ from jpoke.utils.type_defs import Nature, Type, Stat, Gender, \
     BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import STATS
 from jpoke.utils import fast_copy
-from jpoke.data import pokedex, MEGA_STONES, MEGA_POKEMONS
+from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS
 
 from .ability import Ability
 from .item import Item
@@ -67,7 +67,7 @@ class Pokemon:
             moves: 技のリスト（文字列のリスト）
             tera_type: テラスタルタイプ
         """
-        self.data: PokemonData = pokedex[name]
+        self.data: PokemonData = POKEDEX[name]
         self.gender: Gender = gender
         self._nature: Nature = nature
         self._level: int = level
@@ -214,7 +214,7 @@ class Pokemon:
         if self.name == name:
             return False
 
-        self.data = pokedex[name]
+        self.data = POKEDEX[name]
         self.update_stats(keep_damage=keep_damage)
         if init_ability:
             self.init_ability()

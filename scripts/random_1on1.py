@@ -9,7 +9,7 @@ import random
 from typing import Optional
 
 from jpoke import Battle, Player, Pokemon
-from jpoke.data.pokedex import pokedex
+from jpoke.data.pokedex import POKEDEX
 from jpoke.data.ability import ABILITIES
 from jpoke.data.item import ITEMS
 from jpoke.data.move import MOVES
@@ -40,7 +40,7 @@ def build_random_pokemon(name: str | None = None,
     """
     # ランダムなポケモンを選択
     if name is None:
-        pokemon_names = list(pokedex.keys())
+        pokemon_names = list(POKEDEX.keys())
         name = random.choice(pokemon_names)
 
     # ランダムな特性を選択

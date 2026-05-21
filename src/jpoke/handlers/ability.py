@@ -18,12 +18,12 @@ from jpoke.core import HandlerReturn, Handler
 from . import common
 
 
-AEGISLASH_NAME = "ギルガルド"
-AEGISLASH_SHIELD_ALIAS = "ギルガルド(シールド)"
-AEGISLASH_BLADE_ALIAS = "ギルガルド(ブレード)"
-PALAFIN_NAME = "イルカマン"
-PALAFIN_ZERO_ALIAS = "イルカマン(ナイーブ)"
-PALAFIN_HERO_ALIAS = "イルカマン(マイティ)"
+AEGISLASH = "ギルガルド"
+AEGISLASH_SHIELD = "ギルガルド(シールド)"
+AEGISLASH_BLADE = "ギルガルド(ブレード)"
+PALAFIN = "イルカマン"
+PALAFIN_ZERO = "イルカマン(ナイーブ)"
+PALAFIN_HERO = "イルカマン(マイティ)"
 
 
 class AbilityHandler(Handler):
@@ -736,28 +736,23 @@ def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: BattleContext
 def バトルスイッチ_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """バトルスイッチ特性: 行動前に必要なフォルムへ切り替える。"""
     mon = ctx.source
-    if mon is None or mon.name != AEGISLASH_NAME or ctx.move is None:
-        return HandlerReturn(value=value)
+    next_name = ""
+    if mon.name == AEGISLASH_SHIELD and ctx.move.is_attack:
+        next_name = AEGISLASH_BLADE
+    elif mon.name == AEGISLASH_BLADE and ctx.move.name == "キングシールド":
+        next_name = AEGISLASH_SHIELD
 
-    next_alias = ""
-    if mon.name == AEGISLASH_SHIELD_ALIAS and ctx.move.is_attack:
-        next_alias = AEGISLASH_BLADE_ALIAS
-    elif mon.name == AEGISLASH_BLADE_ALIAS and ctx.move.name == "キングシールド":
-        next_alias = AEGISLASH_SHIELD_ALIAS
-
-    if not next_alias:
-        return HandlerReturn(value=value)
-
-    mon.set_form(next_alias)
-    announce_ability_triggered(battle, ctx, value, mon=mon)
+    if next_name:
+        mon.set_form(next_name)
+        announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
 
 
 def バトルスイッチ_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """バトルスイッチ特性: 交代時にシールドフォルムへ戻す。"""
     mon = ctx.source
-    if mon is not None and mon.name == AEGISLASH_NAME:
-        mon.set_form(AEGISLASH_SHIELD_ALIAS)
+    if mon.name == AEGISLASH:
+        mon.set_form(AEGISLASH_SHIELD)
     return HandlerReturn(value=value)
 
 
@@ -928,11 +923,11 @@ def マイティチェンジ_on_switch_out(battle: Battle, ctx: BattleContext, v
     mon = ctx.source
     if (
         mon is not None
-        and mon.name == PALAFIN_NAME
-        and mon.name == PALAFIN_ZERO_ALIAS
+        and mon.name == PALAFIN
+        and mon.name == PALAFIN_ZERO
         and mon.alive
     ):
-        mon.set_form(PALAFIN_HERO_ALIAS)
+        mon.set_form(PALAFIN_HERO)
     return HandlerReturn(value=value)
 
 

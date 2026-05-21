@@ -11,20 +11,20 @@ def resource_path(*path_parts: str) -> str:
     return str(resources.files("jpoke").joinpath(*path_parts))
 
 
-pokedex: dict[str, PokemonData] = {}
+POKEDEX: dict[str, PokemonData] = {}
 
 
 def init():
     """ポケモン図鑑データを初期化する関数。
-    zukan.jsonからデータを読み込み、pokedex辞書にPokemonDataオブジェクトとして格納します。
+    pokedex.jsonからデータを読み込み、POKEDEX辞書にPokemonDataオブジェクトとして格納します。
     """
-    file = resource_path('data', "zukan.json")
+    file = resource_path('data', "pokedex.json")
     with open(file, encoding='utf-8') as f:
         data = json.load(f)
 
-    global pokedex
+    global POKEDEX
     for d in data.values():
-        pokedex[d["alias"]] = PokemonData(d)
+        POKEDEX[d["name"]] = PokemonData(d)
 
 
 init()
