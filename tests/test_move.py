@@ -199,7 +199,7 @@ def test_はやてがえし_通常攻撃技には失敗():
     """はやてがえし: 優先度0の攻撃技を選んだ相手には失敗する。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", moves=["はやてがえし"])],
-        team1=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+        team1=[Pokemon("ピカチュウ", moves=["10まんボルト"])],
     )
     before_foe_hp = battle.actives[1].hp
     before_ally_hp = battle.actives[0].hp

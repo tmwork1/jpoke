@@ -93,7 +93,7 @@ def test_やけど_物理技ダメージ半減():
 
 def test_やけど_特殊技ダメージは半減しない():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["１０まんボルト"])],
+        team0=[Pokemon("ピカチュウ", moves=["10まんボルト"])],
         team1=[Pokemon("ピカチュウ")]
     )
     attacker, defender = battle.actives

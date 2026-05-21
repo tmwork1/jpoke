@@ -46,7 +46,7 @@ MOVES: dict[str, MoveData] = {
         pp=99999,
         power=40,
     ),
-    "１０まんばりき": MoveData(
+    "10まんばりき": MoveData(
         type="じめん",
         category="物理",
         pp=10,
@@ -54,7 +54,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
         labels=["contact"],
     ),
-    "３ぼんのや": MoveData(
+    "3ぼんのや": MoveData(
         type="かくとう",
         category="物理",
         pp=10,
@@ -63,7 +63,7 @@ MOVES: dict[str, MoveData] = {
         critical_rank=1,
 
     ),
-    "ＤＤラリアット": MoveData(
+    "DDラリアット": MoveData(
         type="あく",
         category="物理",
         pp=10,
@@ -71,8 +71,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
     ),
-    "Ｇのちから": MoveData(
-
+    "Gのちから": MoveData(
         type="くさ",
         category="物理",
         pp=10,
@@ -2631,7 +2630,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
     ),
-    "１０まんボルト": MoveData(
+    "10まんボルト": MoveData(
 
         type="でんき",
         category="特殊",
