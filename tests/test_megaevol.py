@@ -11,19 +11,19 @@ import test_utils as t
 
 
 stones = list(MEGA_STONES.keys())
-forms_before = [x[0] for x in MEGA_STONES.values()]
-forms_after = [x[1] for x in MEGA_STONES.values()]
+normal_names = [x[0] for x in MEGA_STONES.values()]
+mega_names = [x[-1] for x in MEGA_STONES.values()]
 
-stone_before_after = list(zip(stones, forms_before, forms_after))
+stone_normal_mega = list(zip(stones, normal_names, mega_names))
 
 
 @pytest.mark.parametrize(
-    ("stone", "name_before", "name_after"),
-    stone_before_after[:1]
+    ("stone", "normal_name", "mega_name"),
+    stone_normal_mega[:1]
 )
-def test_メガシンカ_コマンドが追加される(stone: str, name_before: str, name_after: str):
+def test_メガシンカ_コマンドが追加される(stone: str, normal_name: str, mega_name: str):
     battle = t.start_battle(
-        team0=[Pokemon(name_before, item=stone)],
+        team0=[Pokemon(normal_name, item=stone)],
         team1=[Pokemon("ピカチュウ")],
     )
     player = battle.players[0]
@@ -32,19 +32,19 @@ def test_メガシンカ_コマンドが追加される(stone: str, name_before:
 
 
 @pytest.mark.parametrize(
-    ("stone", "name_before", "name_after"),
-    stone_before_after
+    ("stone", "normal_name", "mega_name"),
+    stone_normal_mega
 )
-def test_メガシンカ_直接起動(stone: str, name_before: str, name_after: str):
+def test_メガシンカ_直接起動(stone: str, normal_name: str, mega_name: str):
     battle = t.start_battle(
-        team0=[Pokemon(name_before, item=stone)],
+        team0=[Pokemon(normal_name, item=stone)],
         team1=[Pokemon("ピカチュウ")],
     )
     t.reserve_command(battle, Command.MEGAEVOL_0)
     battle.turn_controller._run_megaevolve()
 
     mon = battle.actives[0]
-    assert mon.name == name_after
+    assert mon.name == mega_name
     assert mon.ability.name == mon.data.abilities[0]
 
 
