@@ -545,7 +545,7 @@ class Pokemon:
 
     @property
     def damage_taken(self) -> int:
-        """現在までに受けたダメージ量を取得する。"""
+        """被ダメージ量を取得する。"""
         return max(0, -self.hp_delta)
 
     def update_stats(self, keep_damage: bool = False):
@@ -574,7 +574,7 @@ class Pokemon:
         """指定した実数値になるよう努力値を設定する。
 
         Args:
-            idx: ステータスのインデックス (0=HP, 1=攻撃, 2=防御, ...)
+            idx: ステータスのインデックス(0=HP, 1=攻撃, 2=防御, ...)
             value: 目標の実数値
 
         Returns:

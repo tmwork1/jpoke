@@ -284,13 +284,13 @@ def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
 
 def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:
     """効果抜群かどうかを判定する。"""
-    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return type_modifier/4096 > 1
 
 
 def is_not_very_effective(battle: Battle, ctx: BattleContext) -> bool:
     """今ひとつかどうかを判定する。"""
-    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return 0 < type_modifier/4096 < 1
 
 
@@ -299,7 +299,7 @@ def is_berry_item(item_name: str) -> bool:
     return item_name.endswith("のみ")
 
 
-def block_stat_drop_by_foe(value: dict, ctx: BattleContext, stat: str | None = None) -> dict:
+def block_stat_drop_by_foe(value: dict[Stat, int], ctx: BattleContext, stat: Stat | None = None) -> dict[Stat, int]:
     """相手由来のランク低下を除去する共通処理。
 
     Args:

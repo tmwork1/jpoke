@@ -140,8 +140,10 @@ def restrict_commands(battle: Battle,
     fixed_move_name = mon.volatiles[name].move_name
     new_options = []
     for cmd in value:
-        if mon.moves[cmd.index].name == fixed_move_name or \
-                (can_switch and cmd.is_switch):
+        if (
+            mon.moves[cmd.index].name == fixed_move_name
+            or (can_switch and cmd.is_switch)
+        ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
 
@@ -230,6 +232,20 @@ def いちゃもん_modify_command_options(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=new_options)
 
 
+def うちおとす_check_floating(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """うちおとすによる浮遊状態の無効化
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 浮遊状態の有無を表すブール値
+
+    Returns:
+        HandlerReturn: False（浮遊状態を無効化）
+    """
+    return HandlerReturn(value=False, stop_event=True)
+
+
 def おんねん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """おんねん状態のひんし時処理（相手の技PPを0にする）
 
@@ -241,12 +257,10 @@ def おんねん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     Returns:
         HandlerReturn: 常にTrue
     """
-    ctx.move.pp = 0
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.PP_CONSUMED,
-        payload={"move": ctx.move.name, "reason": "おんねん", "value": 0}
-    )
+    if ctx.hp_change_reason == "move_damage":
+        ctx.move.pp = 0
+        battle.add_event_log(ctx.attacker, LogCode.TEXT_LOG,
+                             payload={"text": f"おんねんで{ctx.move.name}のPPを0にした"})
     return HandlerReturn(value=value)
 
 
@@ -752,10 +766,12 @@ def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=0)
 
 
-def みちづれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def みちづれ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みちづれ状態のひんし時処理（相手もひんしにする）"""
-    mon = ctx.attacker
-    battle.modify_hp(mon, v=-mon.hp)
+    if ctx.hp_change_reason == "move_damage":
+        mon = ctx.attacker
+        battle.modify_hp(mon, v=-mon.hp)
+        battle.add_event_log(mon, LogCode.VOLATILE_DISPLAY, payload={"volatile": "みちづれ"})
     return HandlerReturn(value=value)
 
 
@@ -798,7 +814,6 @@ def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: A
     Returns:
         HandlerReturn: 補正後の命中率
     """
-    battle.volatile_manager.remove(ctx.attacker, "ロックオン")
     return HandlerReturn(value=None, stop_event=True)
 
 

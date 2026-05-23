@@ -175,7 +175,7 @@ class Player:
         """
         return all(not mon.terastallized for mon in self.selection)
 
-    def can_use_mega_evolution(self) -> bool:
+    def can_use_megaevol(self) -> bool:
         """メガシンカが使用可能かどうかを判定する。
 
         選出したポケモンのうち、メガシンカ可能なポケモンがいる場合に使用可能。

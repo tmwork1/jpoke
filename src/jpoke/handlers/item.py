@@ -78,7 +78,7 @@ def modify_super_effective_damage(battle: Battle,
                                   type_: Type,
                                   modifier: float) -> HandlerReturn:
     # ON_CALC_DAMAGE_MODIFIER
-    if ctx.move.type == type_ and battle.damage_calculator._calc_def_type_modifier(ctx) > 1:
+    if ctx.move.type == type_ and battle.damage_calculator.calc_def_type_modifier(ctx) > 1:
         value = int(value * modifier)
     return HandlerReturn(value=value)
 

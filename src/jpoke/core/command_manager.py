@@ -34,26 +34,29 @@ class CommandManager:
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
-        n = len(player.active.moves)
+        mon = player.active
+        available_move_indexes = [i for i, move in enumerate(mon.moves) if move.pp > 0]
 
         # 通常技
-        commands = Command.regular_move_commands()[:n]
+        commands = [Command.get_move_command(i) for i in available_move_indexes]
+
+        # メガシンカ
+        if player.can_use_megaevol() and mon.can_megaevolve():
+            commands += [Command.get_megaevol_command(i) for i in available_move_indexes]
 
         # テラスタル
-        if player.can_use_terastal():
-            commands += Command.terastal_commands()[:n]
+        if player.can_use_terastal() and mon.can_terastallize():
+            commands += [Command.get_terastal_command(i) for i in available_move_indexes]
 
         # コマンド修正
-        commands = self.battle.events.emit(
-            Event.ON_MODIFY_COMMAND_OPTIONS,
-            BattleContext(source=player.active),
-            commands
-        )
+        ctx = BattleContext(source=player.active)
+        commands = self.battle.events.emit(Event.ON_MODIFY_COMMAND_OPTIONS, ctx, commands)
 
         if Command.FORCED in commands:
             return [Command.FORCED]
 
         # 技がない場合はわるあがきを追加
+        print(f"{commands=}")
         if not commands:
             commands = [Command.STRUGGLE]
 

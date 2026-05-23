@@ -14,6 +14,9 @@ from .event_manager import Event
 from .context import BattleContext
 
 
+CRIT_RATES = [1/24, 1/8, 1/2, 1]
+
+
 def hit_rank_modifier(rank_acc: int, rank_eva: int) -> float:
     """命中ランク差に基づく命中率補正を計算する。"""
     diff = max(-6, min(6, rank_acc - rank_eva))
@@ -43,10 +46,11 @@ class MoveExecutor:
 
         # デバッグ用
         self.accuracy: int | None = None
-        self.action_success: bool = False
-        self.move_success: bool = False
-        self.move_applied: bool = False
-        self.critical_rank: int = 0
+        self.action_success: bool | None = None
+        self.move_success: bool | None = None
+        self.move_applied: bool | None = None
+        self.crit_rank: int | None = None
+        self.critical: bool | None = None
 
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
@@ -162,10 +166,17 @@ class MoveExecutor:
         Returns:
             bool: 急所に当たるかどうか
         """
-        self.rank = self.events.emit(Event.ON_CALC_CRITICAL_RANK, ctx, ctx.move.critical_rank)
-        self.rank = max(0, min(3, self.rank))
-        critical_rates = [1/24, 1/8, 1/2, 1]
-        return self.battle.random.random() < critical_rates[self.rank]
+        # 急所ランクの計算
+        self.crit_rank = self.events.emit(
+            Event.ON_CALC_CRITICAL_RANK, ctx, ctx.move.critical_rank
+        )
+        self.crit_rank = max(0, min(3, self.crit_rank))
+
+        # 急所確率の計算
+        crit_rate = self.events.emit(
+            Event.ON_MODIFY_CRITICAL_RATE, ctx, CRIT_RATES[self.crit_rank]
+        )
+        return self.battle.random.random() < crit_rate
 
     def check_hit_substitute(self, ctx: BattleContext) -> bool:
         """みがわりに技が当たるかどうかを判定する。
@@ -242,9 +253,9 @@ class MoveExecutor:
         # 技のハンドラを解除
         ctx.move.unregister_handlers(self.events, ctx.attacker)
 
-    def _can_hit_by_type(self, ctx: BattleContext) -> bool:
+    def _check_hit_by_type(self, ctx: BattleContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
-        type_modifier = self.battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
+        type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
 
         if type_modifier == 0:
             self.battle.add_event_log(
@@ -263,8 +274,6 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
-        print("Executing move:", ctx.move.name)
-
         # 溜め技の準備
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
@@ -275,7 +284,7 @@ class MoveExecutor:
             return
 
         # 攻撃技のタイプ相性判定
-        if ctx.move.is_attack and not self._can_hit_by_type(ctx):
+        if ctx.move.is_attack and not self._check_hit_by_type(ctx):
             return
 
         # 発動成功判定(2)
@@ -342,9 +351,10 @@ class MoveExecutor:
             self.events.emit(Event.ON_STATUS_HIT, ctx)
             return
 
-        critical = self._check_critical(ctx)
-        damage = self.battle.roll_damage(ctx.attacker, ctx.defender,
-                                         ctx.move, critical=critical)
+        self.critical = self._check_critical(ctx)
+        damage = self.battle.roll_damage(
+            ctx.attacker, ctx.defender, ctx.move, critical=self.critical
+        )
 
         damage = self.events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
@@ -357,7 +367,7 @@ class MoveExecutor:
 
         # ダメージを与えた後の処理
         if hp_delta < 0:
-            self.events.emit(Event.ON_DAMAGE, ctx, hp_delta)
+            self.events.emit(Event.ON_MOVE_DAMAGE, ctx, abs(hp_delta))
 
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
             if ctx.attacker.active_tera_type == 'ステラ':

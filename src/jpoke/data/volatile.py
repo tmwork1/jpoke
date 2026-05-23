@@ -42,7 +42,7 @@ VOLATILES: dict[str, VolatileData] = {
                 lambda *args: HandlerReturn(value=[Command.FORCED], stop_event=True),
                 subject_spec="source:self",
             ),
-            Event.ON_DAMAGE: h.VolatileHandler(
+            Event.ON_MOVE_DAMAGE: h.VolatileHandler(
                 h.あばれる_tick,
                 subject_spec="attacker:self",
                 priority=180
@@ -85,7 +85,7 @@ VOLATILES: dict[str, VolatileData] = {
     "うちおとす": VolatileData(
         handlers={
             Event.ON_CHECK_FLOATING: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False, stop_event=True),
+                h.うちおとす_check_floating,
                 subject_spec="source:self",
             ),
         }
@@ -424,8 +424,8 @@ VOLATILES: dict[str, VolatileData] = {
     "みちづれ": VolatileData(
         handlers={
             Event.ON_FAINTED: h.VolatileHandler(
-                h.みちづれ,
-                subject_spec="target:self",
+                h.みちづれ_apply,
+                subject_spec="defender:self",
                 priority=30
             ),
         }
@@ -453,6 +453,10 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
                 h.ロックオン_modify_accuracy,
                 subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END_1: h.VolatileHandler(
+                partial(h.tick_volatile, volatile="ロックオン"),
+                subject_spec="source:self",
             ),
         }
     ),

@@ -445,17 +445,14 @@ class StatusManager:
         if r:
             v = int(target.max_hp * r)
 
+        ctx = BattleContext(source=source, target=target, move=move, hp_change_reason=reason)
+
         if reason == "poison":
             # NOTE: ON_MODIFY_POISON_DAMAGE はポイズンヒール特性で毒ダメージを回復に変換するため必須。
-            ctx = BattleContext(target=target, hp_change=v)
             v = self.events.emit(Event.ON_MODIFY_POISON_DAMAGE, ctx, v)
-
         if v > 0:
-            ctx = BattleContext(target=target, hp_change=v, hp_change_reason=reason)
             v = self.events.emit(Event.ON_MODIFY_HEAL, ctx, v)
-
         if v < 0:
-            ctx = BattleContext(attacker=source, defender=target, move=move, hp_change_reason=reason)
             v = self.events.emit(Event.ON_MODIFY_NON_MOVE_DAMAGE, ctx, v)
 
         v = target.modify_hp(v)
@@ -473,7 +470,6 @@ class StatusManager:
             )
 
         if v < 0:
-            ctx = BattleContext(attacker=source, defender=target, move=move, hp_change_reason=reason)
             if target.fainted:
                 self.battle.judge_winner()
                 self.events.emit(Event.ON_FAINTED, ctx, -v)

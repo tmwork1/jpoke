@@ -27,7 +27,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.ARシステム_on_switch_in,
+                h.ARシステム_apply_type,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
@@ -43,7 +43,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.あついしぼう_modify_atk,
+                h.あついしぼう_reduce_fire_ice,
                 subject_spec="defender:self",
             )
         }
@@ -62,7 +62,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
-                h.あまのじゃく_modify_stat,
+                h.あまのじゃく_reverse_stat,
                 subject_spec="target:self",
             )
         }
@@ -70,7 +70,7 @@ ABILITIES: dict[str, AbilityData] = {
     "あめうけざら": AbilityData(
         handlers={
             Event.ON_TURN_END_3: h.AbilityHandler(
-                h.あめうけざら_on_turn_end,
+                h.あめうけざら_heal,
                 subject_spec="source:self",
             ),
         }
@@ -136,7 +136,7 @@ ABILITIES: dict[str, AbilityData] = {
     "いろめがね": AbilityData(
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.いろめがね_modify_damage,
+                h.いろめがね_boost_ineffective,
                 subject_spec="attacker:self",
             )
         }
@@ -185,7 +185,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
-                h.おやこあい_modify_damage,
+                h.おやこあい_reduce_second_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -217,8 +217,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
-                h.かいりきバサミ_modify_stat,
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.かいりきバサミ_block_A_drop,
                 subject_spec="target:self",
             )
         }
@@ -295,11 +295,11 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
-                h.かたやぶり_activate,
+                h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
             Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
-                h.かたやぶり_deactivate,
+                h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
         }
@@ -344,7 +344,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.かんそうはだ_check_water_immune,
+                h.かんそうはだ_absorb_water,
                 subject_spec="target:self",
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
@@ -428,7 +428,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.きよめのしお_modify_atk,
+                h.きよめのしお_reduce_ghost,
                 subject_spec="defender:self",
             )
         }
@@ -458,7 +458,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ぎゃくじょう": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.ぎゃくじょう_on_damage,
                 subject_spec="defender:self",
             )
@@ -473,7 +473,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.くさのけがわ_modify_def,
+                h.くさのけがわ_boost_B,
                 subject_spec="defender:self",
             )
         }
@@ -498,7 +498,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.こおりのりんぷん_modify_damage,
+                h.こおりのりんぷん_reduce_special_damage,
                 subject_spec="defender:self",
             )
         }
@@ -542,15 +542,17 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
-    "こぼれダネ": AbilityData(
-        flags=[
-
-        ]
-    ),
+    "こぼれダネ": AbilityData(),
     "こんがりボディ": AbilityData(
         flags=[
             "mold_breaker_ignorable"
-        ]
+        ],
+        handlers={
+            Event.ON_APPLY_MOVE: h.AbilityHandler(
+                h.こんがりボディ_absorb_fire,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "こんじょう": AbilityData(
         handlers={
@@ -588,7 +590,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "さめはだ": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.さめはだ_on_damage,
                 subject_spec="defender:self",
             )
@@ -642,7 +644,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.クリアボディ_block_stat_drop,
                 subject_spec="target:self",
             )
@@ -669,7 +671,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "じしんかじょう": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.じしんかじょう_on_damage,
                 subject_spec="attacker:self",
             )
@@ -730,11 +732,11 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_CALC_ATK_MODIFIER: [
                 h.AbilityHandler(
-                    h.modify_water_attack,
+                    h.すいほう_modify_boost_water,
                     subject_spec="attacker:self",
                 ),
                 h.AbilityHandler(
-                    h.modify_fire_attack,
+                    h.すいほう_reduce_fire,
                     subject_spec="defender:self",
                 ),
             ]
@@ -812,8 +814,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
-                h.するどいめ_modify_stat,
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.するどいめ_block_ACC_drop,
                 subject_spec="target:self",
             )
         }
@@ -840,7 +842,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "せいでんき": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.せいでんき_on_damage,
                 subject_spec="defender:self",
             )
@@ -866,7 +868,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.そうしょく_on_apply,
+                h.そうしょく_absorb_grass,
                 subject_spec="defender:self",
             )
         }
@@ -878,7 +880,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.たいねつ_modify_atk,
+                h.たいねつ_reduce_fire,
                 subject_spec="defender:self",
             )
         }
@@ -891,7 +893,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
-                h.たんじゅん_modify_stat,
+                h.たんじゅん_double_stat,
                 subject_spec="target:self",
             )
         }
@@ -899,7 +901,7 @@ ABILITIES: dict[str, AbilityData] = {
     "だっぴ": AbilityData(
         handlers={
             Event.ON_TURN_END_2: h.AbilityHandler(
-                h.だっぴ_on_turn_end,
+                h.だっぴ_cure_ailment,
                 subject_spec="source:self",
                 priority=90,
             ),
@@ -908,11 +910,11 @@ ABILITIES: dict[str, AbilityData] = {
     "ちからずく": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
-                h.ちからずく_modify_power,
+                h.ちからずく_boost,
                 subject_spec="attacker:self",
             ),
             Event.ON_MODIFY_SECONDARY_CHANCE: h.AbilityHandler(
-                h.ちからずく_on_modify_secondary_chance,
+                h.ちからずく_disable_secondary_effect,
                 subject_spec="attacker:self",
             ),
         }
@@ -920,7 +922,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ちからもち": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.ちからもち_on_calc_atk_modifier,
+                h.ちからもち_boost_physical,
                 subject_spec="attacker:self",
             )
         }
@@ -931,7 +933,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ちくでん_on_apply,
+                h.ちくでん_absorb_electric,
                 subject_spec="defender:self",
             )
         }
@@ -947,7 +949,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ちょすい_on_apply,
+                h.ちょすい_absorb_water,
                 subject_spec="defender:self",
             )
         },
@@ -973,7 +975,7 @@ ABILITIES: dict[str, AbilityData] = {
 
         ],
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.さめはだ_on_damage,
                 subject_spec="defender:self",
             )
@@ -1002,7 +1004,7 @@ ABILITIES: dict[str, AbilityData] = {
     "てんのめぐみ": AbilityData(
         handlers={
             Event.ON_MODIFY_SECONDARY_CHANCE: h.AbilityHandler(
-                h.てんのめぐみ_on_modify_secondary_chance,
+                h.てんのめぐみ_boost_secondary_chance,
                 subject_spec="attacker:self",
             ),
         }
@@ -1018,7 +1020,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.でんきエンジン_on_apply,
+                h.でんきエンジン_absorb_electric,
                 subject_spec="defender:self",
             )
         }
@@ -1043,7 +1045,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "どくしゅ": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.どくしゅ_on_damage,
                 subject_spec="attacker:self",
             )
@@ -1052,7 +1054,7 @@ ABILITIES: dict[str, AbilityData] = {
     "どくのくさり": AbilityData(),
     "どくのトゲ": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.どくのトゲ_on_damage,
                 subject_spec="defender:self",
             )
@@ -1072,7 +1074,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.どしょく_on_apply,
+                h.どしょく_absorb_ground,
                 subject_spec="defender:self",
             )
         },
@@ -1084,7 +1086,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                h.どんかん_prevent_volatile,
+                h.どんかん_prevent_volatiles,
                 subject_spec="target:self",
             )
         }
@@ -1113,7 +1115,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.ねつこうかん_prevent_burn,
                 subject_spec="target:self",
             ),
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.ねつこうかん_on_damage,
                 subject_spec="defender:self",
             ),
@@ -1184,8 +1186,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
-                h.はとむね_modify_stat,
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.はとむね_block_B_drop,
                 subject_spec="target:self",
             )
         }
@@ -1251,7 +1253,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
-                h.ばけのかわ_modify_damage,
+                h.ばけのかわ_block_damage,
                 subject_spec="defender:self",
                 priority=10,
             )
@@ -1292,7 +1294,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ひらいしん_on_apply,
+                h.ひらいしん_absorb_electric,
                 subject_spec="defender:self",
             )
         },
@@ -1316,7 +1318,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ふくがん": AbilityData(
         handlers={
             Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
-                h.ふくがん_modify_accuracy,
+                h.ふくがん_boost_accuracy,
                 subject_spec="attacker:self",
             ),
         }
@@ -1333,7 +1335,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.ふしぎなうろこ_modify_def,
+                h.ふしぎなうろこ_boost_B,
                 subject_spec="defender:self",
             )
         }
@@ -1362,7 +1364,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CHECK_FLOATING: h.AbilityHandler(
-                h.ふゆう_check_floating,
+                h.ふゆう_float,
                 subject_spec="source:self",
             )
         }
@@ -1370,15 +1372,15 @@ ABILITIES: dict[str, AbilityData] = {
     "ぶきよう": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.ぶきよう_apply,
+                h.ぶきよう_disable_item,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                h.ぶきよう_apply,
+                h.ぶきよう_disable_item,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
-                h.ぶきよう_remove,
+                h.ぶきよう_enable_item,
                 subject_spec="source:self",
             ),
         }
@@ -1408,7 +1410,7 @@ ABILITIES: dict[str, AbilityData] = {
 
         ],
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.ほのおのからだ_on_damage,
                 subject_spec="defender:self",
             )
@@ -1425,7 +1427,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうおん_block_sound_move,
+                h.ぼうおん_block_sound,
                 subject_spec="defender:self",
             ),
         }
@@ -1436,11 +1438,11 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうじん_block_powder_move,
+                h.ぼうじん_block_powder,
                 subject_spec="defender:self",
             ),
             Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
-                h.ぼうじん_ignore_sandstorm_damage,
+                h.ぼうじん_block_sandstorm_damage,
                 subject_spec="target:self",
             ),
         }
@@ -1451,7 +1453,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.ぼうだん_block_bullet_move,
+                h.ぼうだん_block_bullet,
                 subject_spec="defender:self",
             ),
         }
@@ -1528,7 +1530,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.もらいび_block_fire_move,
+                h.もらいび_block_fire,
                 subject_spec="defender:self",
             ),
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
@@ -1564,7 +1566,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ゆきかき": AbilityData(
         handlers={
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
-                h.ゆきかき_modify_speed,
+                h.ゆきかき_boost_speed,
                 subject_spec="source:self",
             ),
         }
@@ -1575,7 +1577,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
-                h.ゆきがくれ_modify_accuracy,
+                h.ゆきがくれ_reduce_accuracy,
                 subject_spec="defender:self",
             ),
         }
@@ -1591,7 +1593,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ようりょくそ": AbilityData(
         handlers={
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
-                h.ようりょくそ_modify_speed,
+                h.ようりょくそ_boost_speed,
                 subject_spec="source:self",
             )
         }
@@ -1603,7 +1605,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_APPLY_MOVE: h.AbilityHandler(
-                h.よびみず_on_apply,
+                h.よびみず_absorb_water,
                 subject_spec="defender:self",
             )
         },
@@ -1630,7 +1632,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_MODIFY_SECONDARY_CHANCE: h.AbilityHandler(
-                h.りんぷん_modify_secondary_chance,
+                h.りんぷん_block_secondary_chance,
                 subject_spec="defender:self",
             ),
         }
@@ -1641,7 +1643,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.わざわいのうつわ_modify_atk,
+                h.わざわいのうつわ_reduce_C,
                 subject_spec="defender:self",
             )
         }
@@ -1652,7 +1654,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.わざわいのおふだ_modify_atk,
+                h.わざわいのおふだ_reduce_A,
                 subject_spec="defender:self",
             )
         }
@@ -1663,7 +1665,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.わざわいのたま_modify_def,
+                h.わざわいのたま_reduce_D,
                 subject_spec="attacker:self",
             )
         }
@@ -1671,7 +1673,7 @@ ABILITIES: dict[str, AbilityData] = {
     "わざわいのつるぎ": AbilityData(
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.わざわいのつるぎ_modify_def,
+                h.わざわいのつるぎ_reduce_B,
                 subject_spec="attacker:self",
             )
         }
@@ -1686,7 +1688,7 @@ ABILITIES: dict[str, AbilityData] = {
 
         ],
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.わるいてぐせ_steal_item,
                 subject_spec="defender:self",
                 priority=180,
@@ -1753,8 +1755,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CALC_CRITICAL_RANK: h.AbilityHandler(
-                h.カブトアーマー_on_calc_critical_rank,
+            Event.ON_MODIFY_CRITICAL_RATE: h.AbilityHandler(
+                h.カブトアーマー_block_crit,
                 subject_spec="defender:self",
             )
         }
@@ -1804,7 +1806,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.クリアボディ_block_stat_drop,
                 subject_spec="target:self",
             )
@@ -1844,8 +1846,8 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_CALC_CRITICAL_RANK: h.AbilityHandler(
-                h.カブトアーマー_on_calc_critical_rank,
+            Event.ON_MODIFY_CRITICAL_RATE: h.AbilityHandler(
+                h.カブトアーマー_block_crit,
                 subject_spec="defender:self",
             )
         }
@@ -1883,7 +1885,7 @@ ABILITIES: dict[str, AbilityData] = {
     "スナイパー": AbilityData(
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.スナイパー_modify_damage,
+                h.スナイパー_boost_critical,
                 subject_spec="attacker:self",
             )
         }
@@ -1920,11 +1922,11 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
-                h.かたやぶり_activate,
+                h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
             Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
-                h.かたやぶり_deactivate,
+                h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
         }
@@ -1932,7 +1934,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ダウンロード": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.ダウンロード_on_switch_in,
+                h.ダウンロード_raise_stat,
                 subject_spec="source:self",
             ),
         }
@@ -1950,7 +1952,7 @@ ABILITIES: dict[str, AbilityData] = {
     "テクニシャン": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
-                h.テクニシャン_on_calc_power_modifier,
+                h.テクニシャン_boost_power,
                 subject_spec="attacker:self",
             )
         }
@@ -1962,7 +1964,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.AbilityHandler(
-                h.テラスシェル_modify_def_type_modifier,
+                h.テラスシェル_overwrite_type_modifier,
                 subject_spec="defender:self",
             )
         }
@@ -1981,11 +1983,11 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
-                h.かたやぶり_activate,
+                h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
             Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
-                h.かたやぶり_deactivate,
+                h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
         }
@@ -2021,7 +2023,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.トレース_on_switch_in,
+                h.トレース_copy_ability,
                 subject_spec="source:self",
             ),
         },
@@ -2042,11 +2044,11 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: [
                 h.AbilityHandler(
-                    h.ノーガード_modify_accuracy,
+                    h.ノーガード_guarantee_hit,
                     subject_spec="attacker:self",
                 ),
                 h.AbilityHandler(
-                    h.ノーガード_modify_accuracy,
+                    h.ノーガード_guarantee_hit,
                     subject_spec="defender:self",
                 ),
             ]
@@ -2059,7 +2061,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
             ),
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
-                h.ノーマルスキン_modify_power,
+                h.ノーマルスキン_boost_power,
                 subject_spec="attacker:self",
             ),
         }
@@ -2078,7 +2080,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.ハードロック_modify_damage,
+                h.ハードロック_reduce_effective,
                 subject_spec="defender:self",
             )
         }
@@ -2096,12 +2098,12 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_TRY_ACTION: h.AbilityHandler(
-                h.バトルスイッチ_check_action,
+                h.バトルスイッチ_change_form,
                 subject_spec="attacker:self",
                 priority=200,
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
-                h.バトルスイッチ_on_switch_out,
+                h.バトルスイッチ_revert_form,
                 subject_spec="source:self",
             ),
         },
@@ -2142,7 +2144,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ファントムガード": AbilityData(
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.マルチスケイル_modify_damage,
+                h.マルチスケイル_reduce_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2153,7 +2155,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.ファーコート_modify_def,
+                h.ファーコート_boost_B,
                 subject_spec="defender:self",
             )
         }
@@ -2164,7 +2166,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.ハードロック_modify_damage,
+                h.ハードロック_reduce_effective,
                 subject_spec="defender:self",
             )
         }
@@ -2217,7 +2219,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ブレインフォース": AbilityData(
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.ブレインフォース_modify_damage,
+                h.ブレインフォース_boost_effective,
                 subject_spec="attacker:self",
             )
         }
@@ -2226,7 +2228,7 @@ ABILITIES: dict[str, AbilityData] = {
     "プリズムアーマー": AbilityData(
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.ハードロック_modify_damage,
+                h.ハードロック_reduce_effective,
                 subject_spec="defender:self",
             )
         }
@@ -2292,7 +2294,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "マジシャン": AbilityData(
         handlers={
-            Event.ON_DAMAGE: h.AbilityHandler(
+            Event.ON_MOVE_DAMAGE: h.AbilityHandler(
                 h.マジシャン_steal_item,
                 subject_spec="attacker:self",
             )
@@ -2304,7 +2306,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
-                h.マジックガード_reduce_damage,
+                h.マジックガード_ignore_damage,
                 subject_spec="target:self",
             )
         }
@@ -2327,7 +2329,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
-                h.マルチスケイル_modify_damage,
+                h.マルチスケイル_reduce_damage,
                 subject_spec="defender:self",
             )
         }
@@ -2340,11 +2342,11 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.マルチタイプ_on_switch_in,
+                h.マルチタイプ_apply_type,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
-                h.マルチタイプ_prevent_item_change,
+                h.マルチタイプ_block_item_change,
                 subject_spec="target:self",
             ),
         }
@@ -2381,7 +2383,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ムラっけ": AbilityData(
         handlers={
             Event.ON_TURN_END_3: h.AbilityHandler(
-                h.ムラっけ_on_turn_end,
+                h.ムラっけ_boost_stats,
                 subject_spec="source:self",
             )
         }
@@ -2396,7 +2398,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "メタルプロテクト": AbilityData(
         handlers={
-            Event.ON_MODIFY_STAT: h.AbilityHandler(
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.クリアボディ_block_stat_drop,
                 subject_spec="target:self",
             )
@@ -2410,7 +2412,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ヨガパワー": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.ちからもち_on_calc_atk_modifier,
+                h.ちからもち_boost_physical,
                 subject_spec="attacker:self",
             )
         }

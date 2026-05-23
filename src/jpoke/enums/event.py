@@ -170,7 +170,7 @@ class Event(Enum):
 
     # emit: core/move_executor.py（ダメージ適用後）
     # handle: volatile.py（いのちがけ・カウンター等、被ダメージトリガー処理）
-    ON_DAMAGE = auto()
+    ON_MOVE_DAMAGE = auto()
 
     # emit: core/move_executor.py（技実行完了直後）
     # handle: ability.py（もらいび等、技実行終了後の状態管理・撤去処理）
@@ -315,6 +315,10 @@ class Event(Enum):
     # emit: core/move_executor.py（急所ランクを計算）
     # handle: volatile.py（きあいだめ・スコープレンズ等による急所ランク加算）
     ON_CALC_CRITICAL_RANK = auto()
+
+    # emit: core/move_executor.py（急所確率を計算）
+    # handle: volatile.py（きあいだめ・スコープレンズ等による急所確率加算）
+    ON_MODIFY_CRITICAL_RATE = auto()
 
     # emit: core/damage.py（技の威力倍率を計算）
     # handle: ability.py（てきおうりょく・ちからづく等）

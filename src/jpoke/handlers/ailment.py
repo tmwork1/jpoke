@@ -111,7 +111,6 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
 
 def こおり_cure_by_fire_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ほのお技でダメージを受けたら解凍する。"""
-    print(f"{ctx.move_damage=}, {ctx.move.type=}")
     if ctx.move.type == "ほのお":
         battle.ailment_manager.remove(ctx.defender)
     return HandlerReturn(value=value)

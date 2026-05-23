@@ -29,9 +29,7 @@ class BattleContext:
         target: イベントの対象となるポケモン（defender のエイリアス）
         move: 使用された技
         field: 場の状態
-        hp_change: HP変動量（負=減少、正=回復）
         hp_change_reason: HP変動の原因（"move_damage", "burn", "poison" など）
-        move_damage: 技によるダメージ値（hp_change_reason が "move_damage" かつ hp_change < 0 のときのみ -hp_change、それ以外は 0）
         stat_change_reason: 能力ランク変化の理由（"" は通常、"ミラーアーマー" は反射）
     """
 
@@ -41,7 +39,6 @@ class BattleContext:
                  attacker: Pokemon | None = None,
                  defender: Pokemon | None = None,
                  move: Move | None = None,
-                 hp_change: int = 0,
                  hp_change_reason: HPChangeReason = "",
                  stat_change_reason: StatChangeReason = "",
                  hit_index: int = 1,
@@ -56,7 +53,6 @@ class BattleContext:
             attacker: 攻撃側のポケモン（source のエイリアス）
             defender: 防御側のポケモン（target のエイリアス）
             move: 使用された技
-            hp_change: HP変動量（負=減少、正=回復）
             hp_change_reason: HP変動の原因
             stat_change_reason: 能力ランク変化の理由
             hit_index: マルチヒット時の現在ヒット番号（1始まり）
@@ -70,7 +66,6 @@ class BattleContext:
         self.source = attacker if attacker is not None else source
         self.target = defender if defender is not None else target
         self.move = move
-        self.hp_change = hp_change
         self.hp_change_reason: HPChangeReason = hp_change_reason
         self.stat_change_reason: StatChangeReason = stat_change_reason
         self.hit_index = hit_index
@@ -79,30 +74,6 @@ class BattleContext:
         self.critical: bool = critical  # 急所に当たったかどうかのフラグ
         self.fainted: bool = fainted  # 攻撃によりひんしになったかどうかのフラグ
         self.substitute_damage: int = 0  # みがわりに与えたダメージ（みがわり貫通技用）
-
-    @property
-    def move_damage(self) -> int:
-        """技によるダメージを返す。
-
-        hp_change_reason が "move_damage" かつ hp_change が負の場合のみダメージを返す。
-        それ以外（状態異常ダメージなど）は 0 を返す。
-        """
-        if self.hp_change_reason == "move_damage" and self.hp_change < 0:
-            return -self.hp_change
-        else:
-            return 0
-
-    @move_damage.setter
-    def move_damage(self, value: int):
-        """技によるダメージを設定。
-
-        内部的に hp_change と hp_change_reason を設定する。
-        """
-        if value > 0:
-            self.hp_change = -value
-            self.hp_change_reason = "move_damage"
-        else:
-            self.hp_change = 0
 
     @property
     def attacker(self) -> Pokemon | None:
@@ -183,7 +154,7 @@ class BattleContext:
         kwargs で指定したフィールドを上書きする。
 
         Args:
-            **kwargs: 上書きするフィールド（source, target, move, field, hp_change,
+            **kwargs: 上書きするフィールド（source, target, move, field,
                       hp_change_reason, stat_change_reason, hit_index, hit_count）
 
         Returns:
@@ -193,7 +164,6 @@ class BattleContext:
             source=kwargs.get("source", self.source),
             target=kwargs.get("target", self.target),
             move=kwargs.get("move", self.move),
-            hp_change=kwargs.get("hp_change", self.hp_change),
             hp_change_reason=kwargs.get("hp_change_reason", self.hp_change_reason),
             stat_change_reason=kwargs.get("stat_change_reason", self.stat_change_reason),
             hit_index=kwargs.get("hit_index", self.hit_index),

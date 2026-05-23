@@ -99,7 +99,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=75,
         labels=["contact", "secondary_effect"],
         handlers={
-            Event.ON_DAMAGE: h.MoveHandler(
+            Event.ON_MOVE_DAMAGE: h.MoveHandler(
                 partial(common.modify_stat, stat="B", v=-1, chance=0.3,
                         target_spec="defender:self", source_spec="attacker:self")
             )
@@ -1653,7 +1653,6 @@ MOVES: dict[str, MoveData] = {
         category="物理",
         pp=10,
         power=70,
-
         critical_rank=3,
     ),
     "トリプルアクセル": MoveData(
@@ -1808,7 +1807,6 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ねこだまし": MoveData(
-
         type="ノーマル",
         category="物理",
         pp=10,
@@ -3807,7 +3805,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ひのこ": MoveData(
-
         type="ほのお",
         category="特殊",
         pp=25,
@@ -6053,11 +6050,9 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-
-
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="ロックオン", target_spec="defender:self", source_spec="attacker:self", count=2),
+                partial(common.apply_volatile, volatile="ロックオン", count=2, target_spec="defender:self", source_spec="attacker:self"),
             )
         }
     ),

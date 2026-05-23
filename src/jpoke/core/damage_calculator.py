@@ -153,7 +153,7 @@ class DamageCalculator:
         r_atk_type = self.atk_type_modifier / 4096
 
         # タイプ相性補正
-        self.def_type_modifier = self._calc_def_type_modifier(ctx)
+        self.def_type_modifier = self.calc_def_type_modifier(ctx)
         r_def_type = self.def_type_modifier / 4096
 
         # やけど補正（タイプ相性の後、ダメージ補正の前）
@@ -239,7 +239,7 @@ class DamageCalculator:
 
         return self.events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
 
-    def _calc_def_type_modifier(self, ctx: BattleContext) -> int:
+    def calc_def_type_modifier(self, ctx: BattleContext) -> int:
         """タイプ相性補正を計算する。
 
         攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
@@ -251,26 +251,31 @@ class DamageCalculator:
         Returns:
             int: タイプ相性補正（4096が1.0倍、2048が0.5倍、8192が2.0倍など）
         """
-        base = 4096
+        move_type = ctx.move.type
 
+        # テラスタル状態の相手にステラ技が効果抜群になる
         if (
-            ctx.move.type == "ステラ"
+            move_type == "ステラ"
             and ctx.defender.terastallized
         ):
-            # テラスタル状態の相手にステラ技が効果抜群になる
-            base *= 2
-        elif (
-            ctx.move.type == "じめん"
-            and self.battle.query_manager.is_floating(ctx.defender)
-        ):
-            # 浮いている相手にはじめん技が無効
-            base = 0
-        else:
-            # タイプ相性表に基づいて補正を計算
-            for def_type in ctx.defender.types:
-                type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
-                rate = type_chart.get(def_type, 1.0)
-                base = int(base * rate)
+            return self.events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, 8192)
+
+        # 浮いている相手にはじめん技が無効
+        foe_is_floating = self.battle.query_manager.is_floating(ctx.defender)
+        if move_type == "じめん" and foe_is_floating:
+            return 0
+
+        # 浮いていないひこうタイプにじめん技は等倍
+        type_chart = TYPE_MODIFIER.get(move_type, {})
+        if move_type == "じめん" and not foe_is_floating:
+            type_chart = type_chart.copy()
+            type_chart["ひこう"] = 1.0
+
+        # タイプ相性表に基づいて補正を計算
+        base = 4096
+        for def_type in ctx.defender.types:
+            rate = type_chart.get(def_type, 1.0)
+            base = int(base * rate)
 
         return self.events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
 

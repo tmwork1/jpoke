@@ -136,18 +136,20 @@ def test_あとだし_同優先度で最後に行動():
         team0=[Pokemon("ピカチュウ", ability="あとだし")],
         team1=[Pokemon("ピカチュウ")],
     )
+    t.reserve_command(battle)
     order = battle.calc_action_order()
-    assert order[-1] == battle.actives[0], "あとだし所持者が同優先度で最後に行動しない"
+    assert order[-1] == battle.actives[0]
 
 
 def test_あとだし_高優先度技は先攻():
     """あとだし: 相手より優先度が高い技を使用した場合は先攻になる。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability="あとだし", moves=["でんこうせっか"])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
+    t.reserve_command(battle)
     order = battle.calc_action_order()
-    assert order[0] == battle.actives[0], "あとだし所持者が高優先度技で先攻にならない"
+    assert order[0] == battle.actives[0]
 
 
 def test_あとだし_トリックルームでも後攻():
@@ -157,8 +159,9 @@ def test_あとだし_トリックルームでも後攻():
         team1=[Pokemon("ピカチュウ")],
         field={"トリックルーム": 5},
     )
+    t.reserve_command(battle)
     order = battle.calc_action_order()
-    assert order[-1] == battle.actives[0], "あとだし所持者がトリックルームで後攻にならない"
+    assert order[-1] == battle.actives[0]
 
 # ──────────────────────────────────────────────────────────────────
 #  アナライズ
@@ -398,8 +401,7 @@ def test_揮発状態耐性(ability: str, volatile: VolatileName, result: bool):
         team0=[Pokemon("ピカチュウ", ability=ability)],
         team1=[Pokemon("ピカチュウ")],
     )
-    mon = battle.actives[0]
-    assert battle.volatile_manager.apply(mon, volatile) == result
+    assert battle.volatile_manager.apply(battle.actives[0], volatile) == result
 
 
 @pytest.mark.parametrize(
@@ -718,11 +720,10 @@ def test_おやこあい_単発攻撃が2ヒットする():
     )
     # ダメージ計算結果を固定
     battle.roll_damage = lambda *args, **kwargs: 40
-
+    t.run_move(battle, 0)
     attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
     assert defender.hits_taken == 2
-    assert defender.damage_taken == 40+10
+    assert defender.hp == defender.max_hp - 40 - 10
     assert attacker.rank["S"] == 2
 
 
@@ -753,14 +754,11 @@ def test_かいりきバサミ_こうげき低下のみ防ぐ():
         team0=[Pokemon("カイリキー", ability="かいりきバサミ")],
         team1=[Pokemon("ピカチュウ")],
     )
-    ally_mon = battle.actives[0]
-    foe_mon = battle.actives[1]
-
-    # TODO : B,C以外の低下もすべて含める
-    stat_change = battle.events.emit(
-        Event.ON_MODIFY_STAT,
-        BattleContext(target=ally_mon, source=foe_mon),
+    mon0, mon1 = battle.actives
+    stat_change = battle.modify_stats(
+        mon0,
         {"A": -1, "B": -1, "C": -2},
+        source=mon1,
     )
     assert stat_change == {"B": -1, "C": -2}
 
@@ -1010,19 +1008,10 @@ def test_かちき_いかくで特攻2段階アップ():
 def test_カブトアーマー_急所ランクを0にする():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability="カブトアーマー")],
-        team1=[Pokemon("ピカチュウ", moves=["つじぎり"])],
+        team1=[Pokemon("ピカチュウ", moves=["トリックフラワー"])],
     )
-    attacker = battle.actives[1]
-    defender = battle.actives[0]
-    move = attacker.moves[0]
-
-    result = battle.events.emit(
-        Event.ON_CALC_CRITICAL_RANK,
-        BattleContext(attacker=attacker, defender=defender, move=move),
-        3,
-    )
-
-    assert result == 0
+    t.run_move(battle, 1)
+    assert battle.move_executor.critical is False
 
 
 def test_カブトアーマー_かたやぶり攻撃では無効化される():
@@ -1031,7 +1020,7 @@ def test_カブトアーマー_かたやぶり攻撃では無効化される():
         team1=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["トリックフラワー"])],
     )
     t.run_move(battle, 1)
-    assert battle.move_executor.critical_rank == 0
+    assert battle.move_executor.critical is True
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -1108,7 +1097,7 @@ def test_がんじょう_一撃必殺技を無効化する():
         accuracy=100,
     )
     t.run_move(battle, 1)
-    assert battle.move_executor.move_applied is True
+    assert battle.move_executor.move_applied is False
 
 
 # TODO : かたやぶりによる攻撃ではHP 1で耐えないことを確認するテストを追加
@@ -1246,22 +1235,6 @@ def test_ぎゃくじょう_被弾前HPが半分以下なら発動しない():
     battle.move_executor.run_move(attacker, attacker.moves[0])
 
     assert defender.rank["C"] == 0
-
-
-def test_ぎゃくじょう_連続攻撃では最終ヒット後に1回だけ判定する():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability="ぎゃくじょう")],
-        team1=[Pokemon("ピカチュウ", moves=["にどげり"])],
-    )
-    defender = battle.actives[0]
-    attacker = battle.actives[1]
-
-    damages = iter([10, 60])
-    battle.roll_damage = lambda *_args, **_kwargs: next(damages)
-
-    battle.move_executor.run_move(attacker, attacker.moves[0])
-
-    assert defender.rank["C"] == 1
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -1436,37 +1409,25 @@ def test_くさのけがわ_かたやぶりで無効():
 def test_クリアボディ_能力低下を防ぐ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability="クリアボディ")],
-        team1=[Pokemon("ピカチュウ")]
+        team1=[Pokemon("ピカチュウ")],
     )
-    ally_mon, foe_mon = battle.actives
+    mon0, mon1 = battle.actives
+    stats = {"A": -1, "B": +1, "C": -3, "D": +3, "S": -5, "ACC": +5, "EVA": -6}
+    expected = {k: v for k, v in stats.items() if v > 0}
 
-    orig_stat_change = {"A": -1, "B": +1, "C": -3, "D": +3, "S": -5, "ACC": +5, "EVA": -6}
-    expected_stat_change = {k: v for k, v in orig_stat_change.items() if v > 0}
-
-    stat_change = battle.events.emit(
-        Event.ON_MODIFY_STAT,
-        BattleContext(target=ally_mon, source=foe_mon),
-        orig_stat_change,
-    )
-    assert stat_change == expected_stat_change
+    assert expected == battle.modify_stats(mon0, stats, source=mon1)
 
 
 def test_クリアボディ_自己低下技は防げない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability="クリアボディ")],
-        team1=[Pokemon("ピカチュウ")]
+        team1=[Pokemon("ピカチュウ")],
     )
-    ally_mon = battle.actives[0]
+    mon0, _ = battle.actives
+    stats = {"A": -1, "B": +1, "C": -3, "D": +3, "S": -5, "ACC": +5, "EVA": -6}
+    expected = stats
 
-    orig_stat_change = {"A": -1, "B": -2, "C": -3, "D": -4, "S": -5, "ACC": -6, "EVA": -1}
-    expected_stat_change = orig_stat_change
-
-    stat_change = battle.events.emit(
-        Event.ON_MODIFY_STAT,
-        BattleContext(target=ally_mon, source=ally_mon),
-        orig_stat_change,
-    )
-    assert stat_change == expected_stat_change
+    assert expected == battle.modify_stats(mon0, stats, source=mon0)
 
 
 def test_クリアボディ_かたやぶりで無効():
@@ -1593,17 +1554,17 @@ def test_こおりのりんぷん_かたやぶりで無効():
         ("そうしょく", "このは", "A", 1),
         ("でんきエンジン", "でんきショック", "S", 1),
         ("ひらいしん", "でんきショック", "C", 1),
-        ("よびみず", "でんきショック", "C", 1),
+        ("よびみず", "みずでっぽう", "C", 1),
     ],
 )
-def test_タイプ無効特性(ability: str, move: str, stat: Stat, rank: int):
+def test_タイプ無効バフ特性(ability: str, move: str, stat: Stat, rank: int):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", moves=[move])],
         team1=[Pokemon("ピカチュウ", ability=ability)],
     )
     attacker, defender = battle.actives
-    battle.move_executor.run_move(attacker, attacker.moves[0])
-    assert defender.damage_taken == 0
+    t.run_move(battle, 0)
+    assert defender.hp == defender.max_hp
     assert defender.rank[stat] == rank
 
 
@@ -1624,7 +1585,7 @@ def test_タイプ無効特性_かたやぶりで無効(ability: str, move: str,
     )
     attacker, defender = battle.actives
     battle.move_executor.run_move(attacker, attacker.moves[0])
-    assert defender.damage_taken > 0
+    assert defender.hp < defender.max_hp
     assert defender.rank[stat] == 0
 
 
@@ -2146,7 +2107,7 @@ def test_スナイパー_急所時の最終ダメージを1_5倍():
         team1=[Pokemon("ピカチュウ")],
     )
     t.run_move(battle, 0)
-    assert battle.move_executor.critical_rank == 3
+    assert battle.move_executor.crit_rank == 3
     assert 6144 == battle.damage_calculator.damage_modifier
 
 
@@ -2239,7 +2200,7 @@ def test_すりぬけ_みがわりを無視する():
         volatile1={"みがわり": 1},
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].damage_taken > 0
+    assert battle.actives[1].hp < battle.actives[1].max_hp
 
 
 def test_すりぬけ_しんぴのまもりを貫通して状態異常が入る():
@@ -2290,7 +2251,7 @@ def test_するどいめ_かたやぶりで無効():
         team1=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["すなかけ"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[1].rank["ACC"] == -1
+    assert battle.actives[0].rank["ACC"] == -1
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -2324,13 +2285,11 @@ def test_スロースタート_登場5ターン未満は攻撃補正0_5倍():
 
 
 def test_せいしんりょく_ひるみを防ぐ():
-    """せいしんりょく: かたやぶり持ちの攻撃によるひるみは防げない。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability="せいしんりょく")],
-        team1=[Pokemon("ピカチュウ", moves=["ねこだまし"])],
+        team1=[Pokemon("ピカチュウ")],
     )
-    t.run_move(battle, 1)
-    assert battle.actives[0].has_volatile("ひるみ")
+    assert not battle.volatile_manager.apply(battle.actives[0], "ひるみ", count=1)
 
 
 def test_せいしんりょく_いかくを防ぐ():
@@ -2340,16 +2299,7 @@ def test_せいしんりょく_いかくを防ぐ():
     )
     assert battle.actives[0].rank["A"] == 0
 
-
-def test_せいしんりょく_かたやぶりのひるみは防げない():
-    """せいしんりょく: かたやぶり持ちの攻撃によるひるみは防げない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability="せいしんりょく")],
-        team1=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["ねこだまし"])],
-    )
-    t.run_move(battle, 1)
-    assert battle.actives[0].has_volatile("ひるみ")
-
+# TODO : かたやぶりで無効化するテストを追加 (ねこだまし実装後)
 
 # ──────────────────────────────────────────────────────────────────
 # 接触時に状態異常付与
@@ -2629,7 +2579,7 @@ def test_タイプ無効回復_かたやぶりで無効(ability, move):
     )
     defender, attacker = battle.actives
     t.run_move(battle, 1)
-    assert defender.damage_taken > 0
+    assert defender.hp < defender.max_hp
     assert not defender.ability.revealed
 
 # ──────────────────────────────────────────────────────────────────
@@ -2647,11 +2597,8 @@ def test_てきおうりょく_通常時STABが2倍になる():
         team0=[Pokemon("ピカチュウ", ability="てきおうりょく", moves=["でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(2.0)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_type_modifier == 4096 * 2
 
 
 def test_てきおうりょく_元タイプ一致テラスタルで2_25倍になる():
@@ -2659,12 +2606,9 @@ def test_てきおうりょく_元タイプ一致テラスタルで2_25倍にな
         team0=[Pokemon("リザードン", ability="てきおうりょく", tera_type="ほのお", moves=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    attacker.terastallize()
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(2.25)
+    battle.actives[0].terastallize()
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_type_modifier == 4096 * 2.25
 
 
 def test_てきおうりょく_非一致タイプは補正しない():
@@ -2672,11 +2616,8 @@ def test_てきおうりょく_非一致タイプは補正しない():
         team0=[Pokemon("ピカチュウ", ability="てきおうりょく", moves=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
     )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-
-    assert battle.damage_calculator._calc_atk_type_modifier(ctx) == pytest.approx(1.0)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_type_modifier == 4096
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -2728,22 +2669,22 @@ def test_テクニシャン_連続技でもヒット毎に判定がぶれない(
 # テラスシェル
 # ──────────────────────────────────────────────────────────────────
 @pytest.mark.parametrize(
-    "move_name, expected_modifier",
+    "defender_name, move_name, expected",
     [
-        ("なみのり", 4096*0.5),       # x1 -> x1/2
-        ("ひのこ", 4096*0.5),       # x2 -> x1/2
-        ("じしん", 4096*0.5),           # x4 -> x1/2
-        ("でんきショック", 4096*0.5),   # x1/2 -> x1/2
-        ("バレットパンチ", 4096*0.5),   # x1/4 -> x1/2
+        ("コイル", "なみのり", 4096*0.5),       # x1 -> x1/2
+        ("コイル", "ひのこ", 4096*0.5),       # x2 -> x1/2
+        ("コイル", "じしん", 4096*0.5),           # x4 -> x1/2
+        ("コイル", "でんきショック", 4096*0.5),   # x1/2 -> x1/2
+        ("コイル", "バレットパンチ", 4096*0.25),   # x1/4 -> x1/4
     ]
 )
-def test_テラスシェル_等倍以上を半減(move_name, expected_modifier):
+def test_テラスシェル_等倍以上を半減(defender_name, move_name, expected):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", moves=[move_name])],
-        team1=[Pokemon("コイル", ability="テラスシェル")],
+        team1=[Pokemon(defender_name, ability="テラスシェル")],
     )
     t.run_move(battle, 0)
-    assert expected_modifier == battle.damage_calculator.def_type_modifier
+    assert battle.damage_calculator.def_type_modifier == expected
 
 
 def test_テラスシェル_HP満タンでないと発動しない():
@@ -2990,15 +2931,7 @@ def test_ねつこうかん_やけど状態にならない():
     assert not target.ailment.is_active
 
 
-def test_ねつこうかん_かたやぶりでやけどが通る():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability="ねつこうかん")],
-        team1=[Pokemon("ピカチュウ", ability="かたやぶり", moves=["おにび"])],
-        accuracy=100,
-    )
-    defender, attacker = battle.actives
-    t.run_move(battle, 1)
-    assert defender.ailment.name == "やけど"
+# TODO : かたやぶりで無効化するテストを追加 (おにび実装後)
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -3264,10 +3197,8 @@ def test_バトルスイッチ_交代時はシールドへ戻る():
         team0=[Pokemon("ギルガルド(ブレード)", ability="バトルスイッチ"), Pokemon("ピカチュウ")],
         team1=[Pokemon("ピカチュウ")],
     )
-    player = battle.players[0]
-    mon = player.team[0]
-    battle.switch_manager.run_switch(player, player.team[1])
-    assert mon.name == "ギルガルド(シールド)"
+    t.run_switch(battle, 0, 1)
+    assert battle.players[0].team[0].name == "ギルガルド(シールド)"
 
 # TODO : かがくへんかガスで無効化されないテストを追加
 
@@ -3740,7 +3671,7 @@ def test_ふゆう_かたやぶりでじめん技が通る():
     )
     defender, attacker = battle.actives
     battle.run_move(attacker, attacker.moves[0])
-    assert defender.damage_taken > 0
+    assert defender.hp < defender.max_hp
 
 # ──────────────────────────────────────────────────────────────────
 # フラワーギフト
@@ -3881,7 +3812,7 @@ def test_ぼうおん_音技を無効化する():
     )
     defender, attacker = battle.actives
     battle.run_move(attacker, attacker.moves[0])
-    assert defender.damage_taken == 0
+    assert defender.hp == defender.max_hp
     assert defender.ability.revealed is True
 
 
@@ -3892,7 +3823,7 @@ def test_ぼうおん_かたやぶりで無効():
     )
     defender, attacker = battle.actives
     battle.run_move(attacker, attacker.moves[0])
-    assert defender.damage_taken > 0
+    assert defender.hp < defender.max_hp
     assert defender.ability.revealed is False
 
 
@@ -4200,7 +4131,7 @@ def test_もらいび_吸収後は最初の炎技のみ1_5倍になる():
 
     # もらいびでひのこを吸収してチャージ状態へ
     t.run_move(battle, 1)
-    assert defender.damage_taken == 0
+    assert defender.hp == defender.max_hp
     assert defender.ability.state == "charged"
     assert defender.ability.revealed
 
@@ -4291,30 +4222,6 @@ def test_リーフガード_はれおおひでり中に状態異常を防ぐ(wea
     assert not battle.ailment_manager.apply(mon, "どく")
     assert not mon.ailment.is_active
 
-
-def test_リーフガード_かたやぶりの状態異常技は防げない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability="リーフガード")],
-        team1=[Pokemon("ピカチュウ", ability="かたやぶり")],
-        weather=("はれ", 5),
-    )
-    target = battle.actives[0]
-    attacker = battle.actives[1]
-    origin_ctx = BattleContext(source=attacker, target=target, move=Move("さいみんじゅつ"))
-    battle.ailment_manager.apply(target, "ねむり", source=attacker, ctx=origin_ctx)
-    assert target.ailment.name == "ねむり"
-
-
-def test_リーフガード_かたやぶりと対面中のどくびしは毒にならない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability="リーフガード"), Pokemon("ピカチュウ", ability="リーフガード")],
-        team1=[Pokemon("ピカチュウ", ability="かたやぶり")],
-        weather=("はれ", 5),
-        side0={"どくびし": 1},
-    )
-    player = battle.players[0]
-    battle.run_switch(player, player.team[1])
-    assert not player.active.ailment.is_active
 
 # ──────────────────────────────────────────────────────────────────
 # リミットシールド

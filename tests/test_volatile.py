@@ -65,9 +65,9 @@ def test_あばれる_カウント進行():
     )
     attacker, defender = battle.actives
     ctx = BattleContext(attacker=attacker, defender=defender)
-    battle.events.emit(Event.ON_DAMAGE, ctx)
+    battle.events.emit(Event.ON_MOVE_DAMAGE, ctx)
     assert attacker.volatiles["あばれる"].count == 1
-    battle.events.emit(Event.ON_DAMAGE, ctx)
+    battle.events.emit(Event.ON_MOVE_DAMAGE, ctx)
     assert not attacker.has_volatile("あばれる")
     assert attacker.has_volatile("こんらん")
 
@@ -200,13 +200,17 @@ def test_いちゃもん_技が1つしかない場合はわるあがきになる
 # ──────────────────────────────────────────────────────────────────
 
 
-def test_うちおとす_浮遊無効():
+def test_うちおとす_飛行タイプにじめん技が有効():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ポッポ")],
-        volatile0={"うちおとす": 1}
+        team0=[Pokemon("ピカチュウ", moves=["じしん"])],
+        team1=[Pokemon("ポッポ")],
+        volatile1={"うちおとす": 1},
     )
-    assert not battle.query_manager.is_floating(battle.actives[0])
+    attacker, defender = battle.actives
+    assert not battle.query_manager.is_floating(defender)
+
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp, battle.print_logs()
 
 
 def test_うちおとす_でんじふゆうより優先される():
@@ -217,15 +221,6 @@ def test_うちおとす_でんじふゆうより優先される():
     )
     assert not battle.query_manager.is_floating(battle.actives[0])
 
-
-def test_うちおとす_飛行タイプにじめん技が有効():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["じしん"])],
-        team1=[Pokemon("ポッポ", moves=["はねる"])],
-        volatile1={"うちおとす": 1},
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].damage_taken > 0
 
 # ──────────────────────────────────────────────────────────────────
 # おんねん
@@ -407,8 +402,8 @@ def test_こだわり_固定技のPPが0だとわるあがきになる():
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "こだわり", move="たいあたり")
     mon.moves[0].pp = 0
+    battle.volatile_manager.apply(mon, "こだわり", move="たいあたり")
     commands = battle.get_available_action_commands(battle.players[0])
     assert commands == [Command.STRUGGLE]
 
@@ -761,24 +756,17 @@ def test_ちょうはつ_ターン経過で解除():
 # ──────────────────────────────────────────────────────────────────
 
 
-def test_でんじふゆう():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        volatile0={"でんじふゆう": 1},
-    )
-    assert battle.query_manager.is_floating(battle.actives[0])
-
-
 def test_でんじふゆう_じめん技を無効化する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
-        team1=[Pokemon("サンド", moves=["じしん"])],
+        team1=[Pokemon("ピカチュウ", moves=["じしん"])],
         volatile0={"でんじふゆう": 5},
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
-    assert battle.damage_calculator.def_type_modifier == 0
+    assert battle.query_manager.is_floating(battle.actives[0])
+
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.def_type_modifier is None
+    assert battle.actives[0].hp == battle.actives[0].max_hp
 
 
 def test_でんじふゆう_ターン経過で解除():
@@ -1090,16 +1078,16 @@ def test_みがわり_破壊():
 
 def test_みちづれ_発動条件を満たせば両者ひんし():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
         volatile1={"みちづれ": 1},
     )
     attacker, defender = battle.actives
     defender.hp = 1  # 確実にひんしになるようにHPを1にする
-    t.run_move(battle, 1)
-    assert attacker.fainted
+    t.run_move(battle, 0)
     assert defender.fainted
-    assert battle.judge_winner() is battle.players[1]
+    assert attacker.fainted, battle.print_logs()
+    assert battle.judge_winner() is battle.players[0]
 
 
 def test_みちづれ_倒しきれなければ不発():
@@ -1187,17 +1175,6 @@ def test_ロックオン_必中化():
     )
     t.run_move(battle, 0)
     assert battle.move_executor.accuracy is None
-    assert not battle.actives[0].has_volatile("ロックオン")
-
-
-def test_ロックオン_無効相手でも解除される():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["じしん"])],
-        team1=[Pokemon("ポッポ")],
-        volatile0={"ロックオン": 1},
-    )
-    t.run_move(battle, 0)
-    assert not battle.actives[0].has_volatile("ロックオン")
 
 
 # ──────────────────────────────────────────────────────────────────

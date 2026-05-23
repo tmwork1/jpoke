@@ -729,4 +729,4 @@ class Battle:
         if isinstance(move, str):
             move = Move(move)
         ctx = BattleContext(defender=defender, move=move)
-        return self.damage_calculator._calc_def_type_modifier(ctx) / 4096
+        return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
