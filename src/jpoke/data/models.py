@@ -33,7 +33,7 @@ class ItemData:
     fling_power: int = 0
     power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
-    mega_evol: tuple[str, str] | None = None
+    mega_evol: tuple[str, ...] | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     name: str = ""
 

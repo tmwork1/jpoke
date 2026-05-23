@@ -386,8 +386,7 @@ class Pokemon:
         forms = MEGA_STONES.get(self.item.name, None)
         if forms is None:
             return False
-
-        return self.name == forms[0]
+        return self.name in forms[:-1]  # 最後の要素はメガシンカ後のフォーム名
 
     def megaevolve(self):
         """メガシンカする。
@@ -395,7 +394,7 @@ class Pokemon:
         Returns:
             メガシンカに成功した場合True、失敗した場合False
         """
-        mega_name = MEGA_STONES[self.item.name][1]
+        mega_name = MEGA_STONES[self.item.name][-1]
         self.set_form(mega_name, init_ability=True)
 
     def has_item(self, name: str | None = None) -> bool:

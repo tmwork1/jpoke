@@ -22,12 +22,12 @@ def common_setup():
 
 def _add_mega_stones(items: dict[str, ItemData]):
     """メガストーンをITEMS辞書に追加する。"""
-    for name, (base_form, mega_form) in MEGA_STONES.items():
+    for name, forms in MEGA_STONES.items():
         items[name] = ItemData(
             consumable=False,
             removable=False,
             fling_power=80,
-            mega_evol=(base_form, mega_form),
+            mega_evol=forms,
             handlers={
                 Event.ON_MODIFY_COMMAND_OPTIONS: h.ItemHandler(
                     h.mega_modify_command_options,
