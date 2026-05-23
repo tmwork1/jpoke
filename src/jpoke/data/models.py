@@ -18,6 +18,9 @@ class PokemonData:
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
         self.base: list[int] = [data[s] for s in STATS[:6]]
 
+        if not self.abilities:
+            self.abilities = [""]
+
 
 @dataclass
 class AbilityData:

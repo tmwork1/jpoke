@@ -385,6 +385,8 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
+    "かんつうドリル": AbilityData(
+    ),
     "ききかいひ": AbilityData(
         flags=[
 
@@ -461,6 +463,8 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="defender:self",
             )
         }
+    ),
+    "ぎょぐん": AbilityData(
     ),
     "くいしんぼう": AbilityData(),
     "くさのけがわ": AbilityData(
@@ -736,6 +740,7 @@ ABILITIES: dict[str, AbilityData] = {
             ]
         }
     ),
+    "スクリューおびれ": AbilityData(),
     "すじがねいり": AbilityData(),
     "すてみ": AbilityData(),
     "すなおこし": AbilityData(
@@ -879,6 +884,7 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "たまひろい": AbilityData(),
+    "ダルマモード": AbilityData(),
     "たんじゅん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -1018,6 +1024,8 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "とうそうしん": AbilityData(),
+    "とびだすなかみ": AbilityData(),
+    "とびだすハバネロ": AbilityData(),
     "とれないにおい": AbilityData(
         flags=[
 
@@ -1043,9 +1051,6 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "どくのくさり": AbilityData(),
     "どくのトゲ": AbilityData(
-        flags=[
-
-        ],
         handlers={
             Event.ON_DAMAGE: h.AbilityHandler(
                 h.どくのトゲ_on_damage,
@@ -1072,6 +1077,7 @@ ABILITIES: dict[str, AbilityData] = {
             )
         },
     ),
+    "ドラゴンスキン": AbilityData(),
     "どんかん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -1097,9 +1103,6 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぬめぬめ": AbilityData(
-        flags=[
-
-        ]
     ),
     "ねつこうかん": AbilityData(
         flags=[
@@ -1335,6 +1338,7 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
+    "ふしぎなまもり": AbilityData(),
     "ふしょく": AbilityData(),
     "ふとうのけん": AbilityData(
         flags=[
@@ -1482,6 +1486,7 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
+    "メガソーラー": AbilityData(),
     "めんえき": AbilityData(
         flags=[
             "mold_breaker_ignorable"

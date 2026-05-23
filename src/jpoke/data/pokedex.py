@@ -11,20 +11,10 @@ def resource_path(*path_parts: str) -> str:
     return str(resources.files("jpoke").joinpath(*path_parts))
 
 
-POKEDEX: dict[str, PokemonData] = {}
+file = resource_path('data', "pokedex.json")
+with open(file, encoding='utf-8') as f:
+    data = json.load(f)
 
-
-def init():
-    """ポケモン図鑑データを初期化する関数。
-    pokedex.jsonからデータを読み込み、POKEDEX辞書にPokemonDataオブジェクトとして格納します。
-    """
-    file = resource_path('data', "pokedex.json")
-    with open(file, encoding='utf-8') as f:
-        data = json.load(f)
-
-    global POKEDEX
-    for d in data.values():
-        POKEDEX[d["name"]] = PokemonData(d)
-
-
-init()
+POKEDEX: dict[str, PokemonData] = {
+    d["name"]: PokemonData(d) for d in data.values()
+}
