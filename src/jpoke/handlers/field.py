@@ -83,6 +83,16 @@ def あめ_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
+def すなあらし_D_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """砂嵐時のいわタイプ特防1.5倍"""
+    if (
+        ctx.defender.has_type("いわ")
+        and ctx.move.category == "特殊"
+    ):
+        value = apply_fixed_modifier(value, 6144)  # 1.5倍
+    return HandlerReturn(value=value)
+
+
 def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """すなあらしのターン終了時ダメージ"""
     tick_weather(battle, ctx, value)
@@ -95,21 +105,11 @@ def すなあらし_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def すなあらし_spdef_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """砂嵐時のいわタイプ特防1.5倍"""
-    if (
-        ctx.defender.has_type("いわ")
-        and battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊"
-    ):
-        value = apply_fixed_modifier(value, 6144)  # 1.5倍
-    return HandlerReturn(value=value)
-
-
-def ゆき_def_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ゆき_B_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
     if (
         ctx.defender.has_type("こおり")
-        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
+        and ctx.move.category == "物理"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
     return HandlerReturn(value=value)
@@ -306,7 +306,7 @@ def リフレクター_reduce_damage(battle: Battle, ctx: BattleContext, value: 
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
-        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
+        and ctx.move.category == "物理"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -317,7 +317,7 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: BattleContext, value: 
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
-        and battle.resolve_move_category(ctx.attacker, ctx.move) == "特殊"
+        and ctx.move.category == "特殊"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)

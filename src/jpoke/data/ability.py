@@ -607,7 +607,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_TRY_MOVE: [
+            Event.ON_TRY_MOVE_1: [
                 h.AbilityHandler(
                     h.しめりけ_block_explosion_self,
                     subject_spec="attacker:self",

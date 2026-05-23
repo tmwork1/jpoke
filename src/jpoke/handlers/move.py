@@ -99,32 +99,6 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
 # ===== 技個別のハンドラ =====
 
 
-def _check_type_immune(battle: Battle, ctx: BattleContext) -> bool:
-    """タイプ相性で無効化されるかどうかを判定する。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-
-    Returns:
-        bool: 無効化される場合はFalse、無効化されない場合はTrue
-    """
-    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
-    if type_modifier == 0:
-        return True
-    return False
-
-
-def ohko_check_immune(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """一撃必殺技のタイプ無効判定。"""
-    if _check_type_immune(battle, ctx):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
-                             payload={"reason": "タイプ無効"})
-        return HandlerReturn(value=False, stop_event=True)
-    print(f"{ctx.move.name}は{ctx.defender.name}に効果抜群だ！")
-    return HandlerReturn(value=value)
-
-
 def ohko_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
     return HandlerReturn(value=ctx.defender.hp)
@@ -161,27 +135,17 @@ def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> Ha
 
 def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
-    if _check_type_immune(battle, ctx):
-        return HandlerReturn(value=0)
     return HandlerReturn(value=getattr(ctx, "hp_cost", 0))
 
 
 def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """使用者レベルと同値の固定ダメージを計算する。"""
-    if _check_type_immune(battle, ctx):
-        return HandlerReturn(value=0)
-
     return HandlerReturn(value=ctx.attacker.level)
 
 
 def がむしゃら_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """がむしゃらの固定ダメージを計算する。"""
-    if _check_type_immune(battle, ctx):
-        print("がむしゃらは無効化されたためダメージは0になります。")
-        value = 0
-    else:
-        value = max(0, ctx.defender.hp - ctx.attacker.hp)
-        print(f"がむしゃらのダメージは{value}になります。")
+    """がむしゃらのダメージを計算する。"""
+    value = max(0, ctx.defender.hp - ctx.attacker.hp)
     return HandlerReturn(value=value)
 
 
@@ -394,10 +358,6 @@ def _check_はやてがえし_condition(battle: Battle, ctx: BattleContext) -> b
         return False
 
     defender_command = defender_player.reserved_commands[0]
-    is_move_command = defender_command.is_move_execution()
-    if not is_move_command:
-        return False
-
     defender_move = battle.command_to_move(defender_player, defender_command)
 
     # 優先度が上がっていても変化技には失敗する。

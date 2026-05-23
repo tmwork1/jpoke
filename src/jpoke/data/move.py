@@ -581,7 +581,7 @@ MOVES: dict[str, MoveData] = {
         priority=-3,
         labels=["contact", "non_negoto", "punch"],
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.きあいパンチ_check_move,
                 subject_spec="attacker:self",
             ),
@@ -1026,9 +1026,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko"],
         handlers={
-            Event.ON_APPLY_MOVE: h.MoveHandler(
-                h.ohko_check_immune,
-            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
@@ -1386,9 +1383,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko", "contact"],
         handlers={
-            Event.ON_APPLY_MOVE: h.MoveHandler(
-                h.ohko_check_immune,
-            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
@@ -1927,9 +1921,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko", "contact"],
         handlers={
-            Event.ON_APPLY_MOVE: h.MoveHandler(
-                h.ohko_check_immune,
-            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
@@ -2004,7 +1995,7 @@ MOVES: dict[str, MoveData] = {
         priority=3,
         labels=["contact"],
         handlers={
-            Event.ON_TRY_MOVE: h.MoveHandler(
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.はやてがえし_try_move,
             ),
             Event.ON_HIT: h.MoveHandler(
@@ -3029,7 +3020,7 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=15,
         power=50,
-        accuracy=0
+        accuracy=None
     ),
     "クロスフレイム": MoveData(
         type="ほのお",
@@ -3370,7 +3361,7 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=20,
         power=60,
-        accuracy=0
+        accuracy=None
     ),
     "スモッグ": MoveData(
 
@@ -3388,9 +3379,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=30,
         labels=["ohko"],
         handlers={
-            Event.ON_APPLY_MOVE: h.MoveHandler(
-                h.ohko_check_immune,
-            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 h.ohko_modify_damage,
             ),
@@ -3554,7 +3542,7 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=20,
         power=60,
-        accuracy=0
+        accuracy=None
     ),
     "でんじほう": MoveData(
 
@@ -4078,7 +4066,7 @@ MOVES: dict[str, MoveData] = {
         category="特殊",
         pp=20,
         power=60,
-        accuracy=0
+        accuracy=None
     ),
     "マッドショット": MoveData(
 

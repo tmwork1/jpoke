@@ -458,7 +458,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "まもる": VolatileData(
         handlers={
-            Event.ON_TRY_MOVE: h.VolatileHandler(
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.まもる_protect,
                 subject_spec="defender:self",
                 priority=100,
@@ -471,7 +471,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "かえんのまもり": VolatileData(
         handlers={
-            Event.ON_TRY_MOVE: h.VolatileHandler(
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.かえんのまもり_protect,
                 subject_spec="defender:self",
                 priority=100,
@@ -484,7 +484,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "キングシールド": VolatileData(
         handlers={
-            Event.ON_TRY_MOVE: h.VolatileHandler(
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.キングシールド_protect,
                 subject_spec="defender:self",
                 priority=100,
@@ -497,7 +497,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "スレッドトラップ": VolatileData(
         handlers={
-            Event.ON_TRY_MOVE: h.VolatileHandler(
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.スレッドトラップ_protect,
                 subject_spec="defender:self",
                 priority=100,
@@ -510,7 +510,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "トーチカ": VolatileData(
         handlers={
-            Event.ON_TRY_MOVE: h.VolatileHandler(
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.トーチカ_protect,
                 subject_spec="defender:self",
                 priority=100,
@@ -532,7 +532,7 @@ VOLATILES: dict[str, VolatileData] = {
                 lambda *args: HandlerReturn(value=[Command.FORCED], stop_event=True),
                 subject_spec="source:self",
             ),
-            Event.ON_TRY_MOVE: h.VolatileHandler(
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.check_hidden_move,
                 subject_spec="defender:self",
                 priority=50

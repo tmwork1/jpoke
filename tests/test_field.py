@@ -265,14 +265,14 @@ def test_らんきりゅう_ひこう弱点半減():
         weather=("らんきりゅう", 99),
     )
     t.run_move(battle, 0)
-    assert 2048 == battle.damage_calculator.def_type_modifier
+    assert 4096 == battle.damage_calculator.def_type_modifier
 
 
 def test_らんきりゅう_ひこう以外は軽減しない():
     """らんきりゅう: ひこうタイプでなければ軽減しない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
         weather=("らんきりゅう", 99),
     )
     t.run_move(battle, 0)
@@ -285,7 +285,7 @@ def test_らんきりゅう_ひこう以外は軽減しない():
 # ──────────────────────────────────────────────────────────────────
 
 # TODO : フィールドによるタイプ強化・弱化テストは、全フィールドをパラメタライズでまとめる。
-# 非接地ポケモンに効果が適用されないテストは別関数にわける
+# 浮いているポケモンに効果が適用されないテストは別関数にわける
 
 
 def test_エレキフィールド_でんき強化():
@@ -313,7 +313,7 @@ def test_グラスフィールド_くさ強化():
     """グラスフィールド: くさ技威力1.3倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("フシギダネ", moves=["はっぱカッター"])],
+        team0=[Pokemon("フシギダネ", moves=["このは"])],
         terrain=("グラスフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -321,7 +321,7 @@ def test_グラスフィールド_くさ強化():
 
     floating_battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン", moves=["はっぱカッター"])],
+        team0=[Pokemon("ピジョン", moves=["このは"])],
         terrain=("グラスフィールド", 99),
     )
     t.run_move(floating_battle, 0)
@@ -538,20 +538,22 @@ def test_じゅうりょく_浮遊無効():
 
 def test_トリックルーム_素早さ逆順():
     battle = t.start_battle(
-        team0=[Pokemon("ヤドン")],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ヤドン", moves=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         field={"トリックルーム": 5},
     )
-    func = battle.speed_calculator.calc_speed_order_key
-    assert func(battle.actives[0]) > func(battle.actives[1]), "トリックルームで行動順が反転しない"
+    t.reserve_command(battle)
+    action_order = battle.calc_action_order()
+    assert action_order[0] == battle.actives[0]
 
 
 def test_トリックルーム_技優先度が優先():
     battle = t.start_battle(
-        team0=[Pokemon("ヤドン")],
+        team0=[Pokemon("ヤドン", moves=["たいあたり"])],
         team1=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
         field={"トリックルーム": 5},
     )
+    t.reserve_command(battle)
     action_order = battle.calc_action_order()
     assert action_order[0] == battle.actives[1]
 

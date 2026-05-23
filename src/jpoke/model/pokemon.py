@@ -93,6 +93,7 @@ class Pokemon:
         self.revealed: bool = False
         self.terastallized: bool = False
         self.hp: int = self.max_hp
+        self.hp_delta: int = 0
         self.ailment: Ailment = Ailment()
         self.stellar_boosted_types: set = set()
         self.volatiles: dict[VolatileName, Volatile] = {}
@@ -544,12 +545,8 @@ class Pokemon:
 
     @property
     def damage_taken(self) -> int:
-        """現在までに受けたダメージ量を取得する。
-
-        Returns:
-            受けたダメージ量
-        """
-        return self.max_hp - self.hp
+        """現在までに受けたダメージ量を取得する。"""
+        return max(0, -self.hp_delta)
 
     def update_stats(self, keep_damage: bool = False):
         """ステータスを再計算する。
@@ -616,9 +613,10 @@ class Pokemon:
             HPは0から最大HPの範囲に制限される。
             このメソッドは内部用です。外部からはbattle.modify_hp()を使用してください。
         """
-        old = self.hp
-        self.hp = max(0, min(self.max_hp, old + v))
-        return self.hp - old
+        hp_before = self.hp
+        self.hp = max(0, min(self.max_hp, hp_before + v))
+        self.hp_delta = self.hp - hp_before  # 変化量を記録
+        return self.hp_delta
 
     def modify_stat(self, stat: Stat, v: int) -> int:
         """ランク補正を変更する。

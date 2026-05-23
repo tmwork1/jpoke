@@ -33,23 +33,23 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
 # ──────────────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize(
-    ("defender_name", "move_name", "expected"),
+    ("defender_name", "move", "expected"),
     [
         ("フシギダネ", "ひのこ", 4096*2),
         ("コイル", "じしん", 4096*4),
         ("ゼニガメ", "ひのこ", 4096*0.5),
         ("ピカチュウ", "でんきショック", 4096*0.5),
-        ("ゴース", "たいあたり", 4096*0.0),
+        ("ゴース", "たいあたり", None),
     ]
 )
-def test_防御側タイプ相性補正計算(defender_name: str, move_name: str, expected: float):
+def test_防御側タイプ相性補正計算(defender_name: str, move: str, expected: float | None):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=[move_name])],
+        team0=[Pokemon("ピカチュウ", moves=[move])],
         team1=[Pokemon(defender_name)],
     )
     attacker, defender = battle.actives
     battle.run_move(attacker, attacker.moves[0])
-    assert battle.damage_calculator.def_type_modifier == expected
+    assert battle.damage_calculator.def_type_modifier == expected, f"Expected {expected} but got {battle.damage_calculator.def_type_modifier} for defender {defender_name} and move {move}"
 
 
 # ──────────────────────────────────────────────────────────────────

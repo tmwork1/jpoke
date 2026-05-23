@@ -242,6 +242,19 @@ class MoveExecutor:
         # 技のハンドラを解除
         ctx.move.unregister_handlers(self.events, ctx.attacker)
 
+    def _can_hit_by_type(self, ctx: BattleContext) -> bool:
+        """タイプ相性によって技が有効かを判定する。"""
+        type_modifier = self.battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
+
+        if type_modifier == 0:
+            self.battle.add_event_log(
+                ctx.attacker,
+                LogCode.MOVE_IMMUNED,
+                payload={"reason": "タイプ無効"},
+            )
+            return False
+        return True
+
     def _execute_move(self, ctx: BattleContext):
         """技実行の内部フローを処理する。
 
@@ -256,8 +269,17 @@ class MoveExecutor:
         if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
 
-        # 発動成功判定
-        self.move_success = self.events.emit(Event.ON_TRY_MOVE, ctx, True)
+        # 発動成功判定(1)
+        self.move_success = self.events.emit(Event.ON_TRY_MOVE_1, ctx, True)
+        if not self.move_success:
+            return
+
+        # 攻撃技のタイプ相性判定
+        if ctx.move.is_attack and not self._can_hit_by_type(ctx):
+            return
+
+        # 発動成功判定(2)
+        self.move_success = self.events.emit(Event.ON_TRY_MOVE_2, ctx, True)
         if not self.move_success:
             return
 

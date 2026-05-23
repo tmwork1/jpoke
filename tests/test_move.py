@@ -187,12 +187,9 @@ def test_はやてがえし_先制攻撃技に成功():
         team0=[Pokemon("ピカチュウ", moves=["はやてがえし"])],
         team1=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
     )
-    before_foe_hp = battle.actives[1].hp
-    before_ally_hp = battle.actives[0].hp
-
     battle.advance_turn()
-    assert battle.actives[1].hp < before_foe_hp
-    assert battle.actives[0].hp == before_ally_hp
+    assert battle.actives[0].hp == battle.actives[0].max_hp
+    assert battle.actives[1].hp < battle.actives[1].max_hp
 
 
 def test_はやてがえし_通常攻撃技には失敗():

@@ -67,17 +67,17 @@ class DamageCalculator:
 
         # ダメージ計算の結果を保存するための属性（デバッグ用）
         self.damages: list[int] = []
-        self.final_power: int = 0
-        self.final_attack: int = 0
-        self.final_defense: int = 0
-        self.power_modifier: int = 4096
-        self.atk_modifier: int = 4096
-        self.def_modifier: int = 4096
-        self.atk_type_modifier: int = 4096
-        self.def_type_modifier: int = 4096
-        self.damage_modifier: int = 4096
-        self.burn_modifier: int = 4096
-        self.protect_modifier: int = 4096
+        self.final_power: int | None = None
+        self.final_attack: int | None = None
+        self.final_defense: int | None = None
+        self.power_modifier: int | None = None
+        self.atk_modifier: int | None = None
+        self.def_modifier: int | None = None
+        self.atk_type_modifier: int | None = None
+        self.def_type_modifier: int | None = None
+        self.damage_modifier: int | None = None
+        self.burn_modifier: int | None = None
+        self.protect_modifier: int | None = None
 
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。

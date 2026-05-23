@@ -80,11 +80,14 @@ def test_だっしゅつパック():
 def test_だっしゅつパック_能力上昇では発動しない():
     """だっしゅつパック: 能力上昇では発動しない"""
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", item="だっしゅつパック", moves=["つるぎのまい"]), Pokemon("ライチュウ")],
-        turn=1,
+        team1=[Pokemon("ピカチュウ")],
     )
-    assert not battle.players[0].team[0].item.revealed
+    t.run_move(battle, 0)
+    player = battle.players[0]
+    mon = player.team[0]
+    assert player.active_idx == 0
+    assert not mon.item.revealed
 
 # ──────────────────────────────────────────────────────────────────
 # だっしゅつボタン
@@ -96,11 +99,13 @@ def test_だっしゅつボタン():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item="だっしゅつボタン"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
-        turn=1,
     )
-    assert battle.players[0].active_idx != 0
-    assert battle.players[0].team[0].item.revealed
-    assert not battle.players[0].team[0].item.enabled
+    battle.advance_turn()
+    player = battle.players[0]
+    mon = player.team[0]
+    assert player.active_idx == 1
+    assert mon.item.revealed
+    assert mon.item.consumed
 
 
 # ──────────────────────────────────────────────────────────────────
