@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
@@ -21,10 +21,11 @@ def modify_hp(battle: Battle,
               ctx: BattleContext,
               value: Any,
               target_spec: RoleSpec,
+              source_spec: RoleSpec | None = None,
               v: int = 0,
               r: float = 0,
               chance: float = 1,
-              reason: str = "") -> HandlerReturn:
+              reason: HPChangeReason = "") -> HandlerReturn:
     """対象のHPを固定値または割合で増減させる。
 
     Args:
@@ -40,11 +41,11 @@ def modify_hp(battle: Battle,
     Returns:
         実際に変化したHP量を value に持つ HandlerReturn
     """
-    effective_chance = resolve_chance(battle, ctx, chance)
-    if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn(value=value)
-    target = ctx.resolve_role(battle, target_spec)
-    v = battle.modify_hp(target, v, r, reason=reason)
+    chance = resolve_chance(battle, ctx, chance)
+    if not (chance < 1 and battle.random.random() >= chance):
+        target = ctx.resolve_role(battle, target_spec)
+        source = ctx.resolve_role(battle, source_spec)
+        v = battle.modify_hp(target, v, r, reason=reason, source=source)
     return HandlerReturn(value=v)
 
 
@@ -57,7 +58,7 @@ def drain_hp(battle: Battle,
              r: float = 0,
              heal_rate: float = 1,
              chance: float = 1,
-             reason: str = "") -> HandlerReturn:
+             reason: HPChangeReason = "") -> HandlerReturn:
     """HPを奪い、奪った量に応じて回復させる。
 
     Args:

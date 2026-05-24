@@ -7,7 +7,6 @@ from jpoke.enums import LogCode
 from jpoke.utils.type_defs import RoleSpec, GlobalField, SideField, VolatileName, AbilityDisabledReason
 from jpoke.utils.battle_math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
-from jpoke.handlers import common
 
 
 class FieldHandler(Handler):
