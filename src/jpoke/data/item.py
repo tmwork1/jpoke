@@ -7,7 +7,7 @@ from functools import partial
 
 from jpoke.enums import Event
 from jpoke.core import HandlerReturn
-from jpoke.handlers import common, item as h
+from jpoke.handlers import item as h
 from .models import ItemData
 from .megaevol import MEGA_STONES
 

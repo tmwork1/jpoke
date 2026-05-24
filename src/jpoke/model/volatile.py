@@ -33,7 +33,7 @@ class Volatile(GameEffect):
 
     def __init__(self,
                  name: VolatileName,
-                 count: int = 0,
+                 count: int | None = None,
                  move_name: str = "",
                  hp: int = 0,
                  bind_damage_ratio: float = 1/8):
@@ -43,7 +43,7 @@ class Volatile(GameEffect):
             name: 揮発性状態名。空文字列の場合は状態なしとして扱う
         """
         super().__init__(VOLATILES[name])
-        self.count: int = count
+        self.count: int | None = count
         self.move_name: str = move_name
         self.hp: int = hp
         self.bind_damage_ratio: float = bind_damage_ratio  # バインドのダメージ比率
@@ -56,11 +56,7 @@ class Volatile(GameEffect):
         memo[id(self)] = new
         return fast_copy(self, new)
 
-    @property
-    def is_active(self) -> bool:
-        """揮発性状態が実在するかどうか"""
-        return self.count > 0
-
     def tick(self):
         """揮発性状態のターン経過処理を行う"""
-        self.count = max(0, self.count - 1)
+        if self.count is not None:
+            self.count = max(0, self.count - 1)

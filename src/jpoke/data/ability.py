@@ -7,7 +7,7 @@ Note:
 from functools import partial
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.handlers import ability as h, ability_paradox as paradox
+from jpoke.handlers import common, ability as h, ability_paradox as paradox
 from .models import AbilityData
 
 
@@ -102,11 +102,11 @@ ABILITIES: dict[str, AbilityData] = {
     "あめふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="あめ", count=5),
+                partial(common.activate_weather, weather="あめ", count=5),
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                partial(h.activate_weather, weather="あめ", count=5),
+                partial(common.activate_weather, weather="あめ", count=5),
                 subject_spec="source:self",
             ),
         }
@@ -152,7 +152,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.いたずらごころ_modify_move_priority,
                 subject_spec="attacker:self",
             ),
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.いたずらごころ_blocked_by_dark,
                 subject_spec="attacker:self",
             ),
@@ -212,7 +212,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.おうごんのからだ_block_status_move,
                 subject_spec="defender:self",
             )
@@ -247,11 +247,11 @@ ABILITIES: dict[str, AbilityData] = {
     "おわりのだいち": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="おおひでり", count=1),
+                partial(common.activate_weather, weather="おおひでり", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                partial(h.activate_weather, weather="おおひでり", count=1),
+                partial(common.activate_weather, weather="おおひでり", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -411,7 +411,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.がんじょう_survive_lethal,
                 subject_spec="defender:self",
             ),
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.がんじょう_block_ohko,
                 subject_spec="defender:self",
             ),
@@ -430,7 +430,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.かんそうはだ_absorb_water,
                 subject_spec="target:self",
             ),
@@ -667,7 +667,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.こんがりボディ_absorb_fire,
                 subject_spec="defender:self",
             )
@@ -908,11 +908,11 @@ ABILITIES: dict[str, AbilityData] = {
     "すなおこし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="すなあらし", count=5),
+                partial(common.activate_weather, weather="すなあらし", count=5),
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                partial(h.activate_weather, weather="すなあらし", count=5),
+                partial(common.activate_weather, weather="すなあらし", count=5),
                 subject_spec="source:self",
             ),
         }
@@ -1036,7 +1036,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.そうしょく_absorb_grass,
                 subject_spec="defender:self",
             )
@@ -1131,7 +1131,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ちくでん_absorb_electric,
                 subject_spec="defender:self",
             )
@@ -1147,7 +1147,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ちょすい_absorb_water,
                 subject_spec="defender:self",
             )
@@ -1228,7 +1228,7 @@ ABILITIES: dict[str, AbilityData] = {
     "デルタストリーム": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="らんきりゅう", count=1),
+                partial(common.activate_weather, weather="らんきりゅう", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -1247,7 +1247,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.でんきエンジン_absorb_electric,
                 subject_spec="defender:self",
             )
@@ -1321,7 +1321,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.どしょく_absorb_ground,
                 subject_spec="defender:self",
             )
@@ -1496,7 +1496,7 @@ ABILITIES: dict[str, AbilityData] = {
     "はじまりのうみ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="おおあめ", count=1),
+                partial(common.activate_weather, weather="おおあめ", count=1),
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -1627,7 +1627,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ひでり": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="はれ", count=5),
+                partial(common.activate_weather, weather="はれ", count=5),
                 subject_spec="source:self",
             )
         }
@@ -1660,7 +1660,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ひらいしん_absorb_electric,
                 subject_spec="defender:self",
             )
@@ -1865,7 +1865,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうおん_block_sound,
                 subject_spec="defender:self",
             ),
@@ -1878,7 +1878,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうじん_block_powder,
                 subject_spec="defender:self",
             ),
@@ -1893,7 +1893,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうだん_block_bullet,
                 subject_spec="defender:self",
             ),
@@ -2119,7 +2119,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.もらいび_on_switch_in,
                 subject_spec="source:self",
             ),
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.もらいび_block_fire,
                 subject_spec="defender:self",
             ),
@@ -2172,7 +2172,7 @@ ABILITIES: dict[str, AbilityData] = {
     "ゆきふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="ゆき", count=5),
+                partial(common.activate_weather, weather="ゆき", count=5),
                 subject_spec="source:self",
             )
         }
@@ -2199,7 +2199,7 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_APPLY_MOVE: h.AbilityHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.よびみず_absorb_water,
                 subject_spec="defender:self",
             )

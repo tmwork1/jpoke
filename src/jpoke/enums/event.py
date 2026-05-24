@@ -120,7 +120,7 @@ class Event(Enum):
 
     # emit: core/move_executor.py（技の無効化チェック）
     # handle: data/move.py（タイプ相性による無効）, volatile.py（まもる等による無効）
-    ON_APPLY_MOVE = auto()
+    ON_BEFORE_APPLY_MOVE = auto()
 
     # emit: core/move_executor.py（みがわりへの干渉確認）
     # handle: volatile.py（みがわり状態への技ヒット可否）

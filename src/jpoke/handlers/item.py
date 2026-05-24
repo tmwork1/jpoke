@@ -99,7 +99,7 @@ def resolve_field_count(battle: Battle,
 def いのちのたま_recoil(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     if (
         ctx.move.category != "変化"
-        and common.modify_hp(battle, ctx, value, target_spec="attacker:self", r=-1/8)
+        and common.self_damage(battle, ctx, value, r=1/8)
     ):
         announce_item_triggered(battle, ctx, value, mon=ctx.attacker)
     return HandlerReturn(value=value)

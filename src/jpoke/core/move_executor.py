@@ -324,7 +324,7 @@ class MoveExecutor:
                 break
 
             # 無効化されたら中断
-            self.move_applied = self.events.emit(Event.ON_APPLY_MOVE, ctx, True)
+            self.move_applied = self.events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
             if not self.move_applied:
                 return False
 

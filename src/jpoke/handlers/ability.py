@@ -173,34 +173,12 @@ def _modify_by_move_condition(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def activate_weather(battle: Battle,
-                     ctx: BattleContext,
-                     value: Any,
-                     *,
-                     weather: Weather,
-                     count: int,
-                     source: Pokemon | None = None) -> HandlerReturn:
-    """天候を変更する"""
-    if source is None:
-        source = ctx.source
-    if battle.weather_manager.apply(weather, count, source=source):
-        announce_ability_triggered(battle, ctx, value, mon=source)
-    return HandlerReturn(value=value)
-
-
-def deactivate_strong_weather(battle: Battle,
-                              ctx: BattleContext,
-                              value: Any,
-                              *,
-                              weather: Weather,
-                              source: Pokemon | None = None) -> HandlerReturn:
+def deactivate_strong_weather(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """強天候を解除する
     相手の特性が同じ天候を発生させるものなら解除しない。
     """
-    if source is None:
-        source = ctx.source
+    source = ctx.source
     foe = battle.foe(source)
-    # 相手の特性が同じ天候を発生させるものでない場合に解除する
     if foe.ability.name != source.ability.name:
         battle.weather_manager.remove()
     return HandlerReturn(value=value)

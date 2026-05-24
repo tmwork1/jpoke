@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
-    from jpoke.utils.type_defs import RoleSpec, AilmentName, Stat
+    from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
 
 from functools import partial
 
@@ -44,12 +44,66 @@ class MoveHandler(Handler):
         )
 
 
-def apply_ailment_to_defender(battle: Battle, ctx: BattleContext, value: Any,
-                              ailment: AilmentName, chance: float = 1) -> HandlerReturn:
-    chance = common.resolve_chance(battle, ctx, chance)
-    if not (chance < 1 and battle.random.random() >= chance):
-        battle.ailment_manager.apply(ctx.defender, ailment, source=ctx.attacker)
-    return HandlerReturn(value=value)
+def modify_attacker_stats(battle: Battle,
+                          ctx: BattleContext,
+                          value: Any,
+                          stats: dict[Stat, int],
+                          chance: float = 1) -> HandlerReturn:
+    """攻撃側の能力ランクを変化させる。"""
+    return common.modify_stats(
+        battle, ctx, value, stats,
+        target_spec="attacker:self", source_spec="attacker:self", chance=chance
+    )
+
+
+def modify_defender_stats(battle: Battle,
+                          ctx: BattleContext,
+                          value: Any,
+                          stats: dict[Stat, int],
+                          chance: float = 1) -> HandlerReturn:
+    """防御側の能力ランクを変化させる。"""
+    return common.modify_stats(
+        battle, ctx, value, stats,
+        target_spec="defender:self", source_spec="attacker:self", chance=chance
+    )
+
+
+def apply_ailment_to_defender(battle: Battle,
+                              ctx: BattleContext,
+                              value: Any,
+                              ailment: AilmentName,
+                              count: int | None = None,
+                              chance: float = 1) -> HandlerReturn:
+    return common.apply_ailment(
+        battle, ctx, value, target_spec="defender:self", ailment=ailment,
+        count=count, source_spec="attacker:self", chance=chance
+    )
+
+
+def apply_volatile_to_attacker(battle: Battle,
+                               ctx: BattleContext,
+                               value: Any,
+                               volatile: VolatileName,
+                               count: int | None = None,
+                               chance: float = 1,
+                               **kwargs) -> HandlerReturn:
+    return common.apply_volatile(
+        battle, ctx, value, target_spec="attacker:self", volatile=volatile,
+        count=count, source_spec="attacker:self", chance=chance, **kwargs
+    )
+
+
+def apply_volatile_to_defender(battle: Battle,
+                               ctx: BattleContext,
+                               value: Any,
+                               volatile: VolatileName,
+                               count: int | None = None,
+                               chance: float = 1,
+                               **kwargs) -> HandlerReturn:
+    return common.apply_volatile(
+        battle, ctx, value, target_spec="defender:self", volatile=volatile,
+        count=count, source_spec="attacker:self", chance=chance, **kwargs
+    )
 
 
 def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -115,6 +169,22 @@ def ohko_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handle
 def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
+
+
+def アンコール_can_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    move = ctx.defender.executed_move
+    if not move:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "アンコール"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def アンコール_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+    """アンコールの効果を発動する。"""
+    move = ctx.defender.executed_move
+    return apply_volatile_to_defender(battle, ctx, value, volatile="アンコール",
+                                      count=3, move_name=move.name)
 
 
 def いたみわけ_equalize_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

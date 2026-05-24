@@ -36,7 +36,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "non_encore"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_hp, target_spec="attacker:self", r=-1/4, reason="self_cost"),
+                partial(common.self_damage, r=1/4, reason="recoil"),
             )
         }
     ),
@@ -87,7 +87,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch", "secondary_effect"],
         handlers={
              Event.ON_HIT: h.MoveHandler(
-                 partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self"),
+                 partial(h.modify_attacker_stats, stats={"S": -1}),
              )
         }
     ),
@@ -100,8 +100,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_MOVE_DAMAGE: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, chance=0.3,
-                        target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"B": -1}, chance=0.3)
             )
         }
     ),
@@ -138,7 +137,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"S": -1})
             )
         }
     ),
@@ -169,7 +168,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "dance", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=1, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"S": 1})
             )
         }
     ),
@@ -190,7 +189,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.2)
+                partial(h.modify_defender_stats, stats={"B": -1}, chance=0.2)
             )
         }
     ),
@@ -301,7 +300,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
+                partial(h.modify_defender_stats, stats={"B": -1}, chance=0.5)
             )
         }
     ),
@@ -322,7 +321,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"B": -1, "D": -1})
             )
         }
     ),
@@ -531,7 +530,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"B": -1, "D": -1})
             )
         }
     ),
@@ -560,7 +559,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -809,7 +808,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.2)
+                partial(h.modify_attacker_stats, stats={"A": 1}, chance=0.2)
             )
         }
     ),
@@ -872,7 +871,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
+                partial(h.modify_defender_stats, stats={"B": -1}, chance=0.5)
             )
         }
     ),
@@ -946,7 +945,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -1144,7 +1143,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"C": -1})
             )
         }
     ),
@@ -1546,7 +1545,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"A": -1})
             )
         }
     ),
@@ -1561,7 +1560,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"A": -1})
             )
         }
     ),
@@ -1644,7 +1643,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -1734,7 +1733,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"A": -1})
             )
         }
     ),
@@ -1802,7 +1801,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=1, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"S": 1})
             )
         }
     ),
@@ -1872,7 +1871,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"B": -1})
             )
         }
     ),
@@ -1887,7 +1886,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stats, stats={"A": -1, "B": -1}, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"A": -1, "B": -1})
             )
         }
     ),
@@ -1997,7 +1996,7 @@ MOVES: dict[str, MoveData] = {
                 h.はやてがえし_try_move,
             ),
             Event.ON_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="ひるみ", target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_defender, volatile="ひるみ"),
             )
         }
     ),
@@ -2175,7 +2174,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
+                partial(h.modify_defender_stats, stats={"B": -1}, chance=0.5)
             )
         }
     ),
@@ -2463,7 +2462,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.1)
+                partial(h.modify_attacker_stats, stats={"A": 1}, chance=0.1)
             )
         }
     ),
@@ -2528,7 +2527,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"B": -1})
             )
         }
     ),
@@ -2578,7 +2577,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -2607,7 +2606,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"A": -1})
             )
         }
     ),
@@ -2637,7 +2636,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stats, stats={"B": -1, "D": -1}, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"B": -1, "D": -1})
             )
         }
     ),
@@ -2684,7 +2683,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"D": -2})
             )
         }
     ),
@@ -2712,7 +2711,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
+                partial(h.modify_defender_stats, stats={"S": -1}, chance=0.1)
             )
         }
     ),
@@ -2840,7 +2839,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
+                partial(h.modify_defender_stats, stats={"D": -1}, chance=0.1)
             )
         }
     ),
@@ -2854,7 +2853,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -2891,7 +2890,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-2, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"C": -2})
             )
         }
     ),
@@ -3096,7 +3095,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -3110,7 +3109,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -3148,7 +3147,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
+                partial(h.modify_defender_stats, stats={"D": -1}, chance=0.1)
             )
         }
     ),
@@ -3177,7 +3176,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-2, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"C": -2})
             )
         }
     ),
@@ -3272,7 +3271,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.2)
+                partial(h.modify_defender_stats, stats={"D": -1}, chance=0.2)
             )
         }
     ),
@@ -3341,7 +3340,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"B": -1})
             )
         }
     ),
@@ -3463,7 +3462,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=1, target_spec="attacker:self", source_spec="attacker:self", chance=0.7)
+                partial(h.modify_attacker_stats, stats={"C": 1}, chance=0.7)
             )
         }
     ),
@@ -3686,7 +3685,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"C": -1})
             )
         }
     ),
@@ -3828,7 +3827,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"A": -1})
             )
         }
     ),
@@ -3901,7 +3900,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-2, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"C": -2})
             )
         }
     ),
@@ -4053,7 +4052,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"C": -1})
             )
         }
     ),
@@ -4074,7 +4073,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"S": -1})
             )
         }
     ),
@@ -4133,7 +4132,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
+                partial(h.modify_defender_stats, stats={"C": -1}, chance=0.5)
             )
         }
     ),
@@ -4196,7 +4195,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
+                partial(h.modify_defender_stats, stats={"D": -1}, chance=0.1)
             )
         }
     ),
@@ -4210,7 +4209,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"C": -1})
             )
         }
     ),
@@ -4296,7 +4295,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.1)
+                partial(h.modify_defender_stats, stats={"D": -1}, chance=0.1)
             )
         }
     ),
@@ -4310,7 +4309,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self", chance=0.5)
+                partial(h.modify_defender_stats, stats={"D": -1}, chance=0.5)
             )
         }
     ),
@@ -4324,7 +4323,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-2, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"C": -2})
             )
         }
     ),
@@ -4338,7 +4337,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-2, target_spec="attacker:self", source_spec="attacker:self")
+                partial(h.modify_attacker_stats, stats={"C": -2})
             )
         }
     ),
@@ -4384,7 +4383,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-1, target_spec="defender:self", source_spec="attacker:self")
+                partial(h.modify_defender_stats, stats={"D": -2})
             )
         }
     ),
@@ -4455,7 +4454,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="EVA", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"EVA": -2})
             )
         }
     ),
@@ -4467,7 +4466,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"A": -2})
             )
         }
     ),
@@ -4503,8 +4502,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["non_encore"],
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                h.アンコール_can_apply,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="アンコール", target_spec="defender:self", source_spec="attacker:self", count=3),
+                h.アンコール_apply,
             )
         }
     ),
@@ -4541,7 +4543,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="いちゃもん", target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_defender, volatile="いちゃもん"),
             )
         }
     ),
@@ -4593,7 +4595,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"B": -2})
             )
         }
     ),
@@ -4605,7 +4607,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"D": -2}),
             )
         }
     ),
@@ -4643,7 +4645,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="ACC", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"ACC": -1}),
             )
         }
     ),
@@ -4750,7 +4752,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="かえんのまもり", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="かえんのまもり"),
             )
         }
     ),
@@ -4768,7 +4770,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"B": 1}),
             )
         }
     ),
@@ -4786,7 +4788,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=1, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"B": 1}),
             )
         }
     ),
@@ -4828,7 +4830,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="EVA", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"EVA": -1}),
             )
         }
     ),
@@ -4840,7 +4842,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"D": -2}),
             )
         }
     ),
@@ -4885,7 +4887,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"S": 2}),
             )
         }
     ),
@@ -4915,7 +4917,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=3, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"B": 3}),
             )
         }
     ),
@@ -4941,7 +4943,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"S": -2}),
             )
         }
     ),
@@ -5017,7 +5019,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"B": -1}),
             )
         }
     ),
@@ -5139,7 +5141,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="ACC", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"ACC": -1}),
             )
         }
     ),
@@ -5170,7 +5172,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="スレッドトラップ", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="スレッドトラップ"),
             )
         }
     ),
@@ -5201,10 +5203,10 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="タールショット", target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_defender, volatile="タールショット"),
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"S": -1}),
             )
         }
     ),
@@ -5330,11 +5332,9 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=15,
-
-
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=2, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"B": 2}),
             )
         }
     ),
@@ -5379,7 +5379,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="トーチカ", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="トーチカ"),
             )
         }
     ),
@@ -5482,7 +5482,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="D", v=2, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"D": 2}),
             )
         }
     ),
@@ -5513,7 +5513,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"A": -1}),
             )
         }
     ),
@@ -5532,7 +5532,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"C": -1}),
             )
         }
     ),
@@ -5570,7 +5570,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="B", v=-1, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"B": -1}),
             )
         }
     ),
@@ -5728,7 +5728,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="ふういん", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="ふういん"),
             )
         }
     ),
@@ -5746,7 +5746,7 @@ MOVES: dict[str, MoveData] = {
         labels=["dance"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="A", v=-2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.modify_defender_stats, stats={"A": -2}),
             )
         }
     ),
@@ -5836,7 +5836,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=3, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"C": 3}),
             )
         }
     ),
@@ -5889,7 +5889,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="まもる"),
             )
         }
     ),
@@ -5942,7 +5942,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="まもる", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="まもる"),
             )
         }
     ),
@@ -5967,7 +5967,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="みちづれ", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="みちづれ"),
             )
         }
     ),
@@ -6068,7 +6068,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="ロックオン", count=2, target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_defender, volatile="ロックオン", count=2),
             )
         }
     ),
@@ -6079,7 +6079,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="S", v=2, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"S": 2}),
             )
         }
     ),
@@ -6105,7 +6105,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.modify_stat, stat="C", v=2, target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.modify_attacker_stats, stats={"C": 2}),
             )
         }
     ),
@@ -6135,13 +6135,11 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=10,
-
         priority=4,
         target="self",
-
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_volatile, volatile="キングシールド", target_spec="attacker:self", source_spec="attacker:self"),
+                partial(h.apply_volatile_to_attacker, volatile="キングシールド"),
             )
         }
     ),

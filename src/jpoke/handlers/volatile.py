@@ -5,15 +5,23 @@ Note:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
-from functools import partial
 if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, VolatileName, AbilityDisabledReason, \
-    Stat, AilmentName
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
+    AbilityDisabledReason
+
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
+
+
+HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
+    "あなをほる": ["じしん", "マグニチュード"],
+    "そらをとぶ": ["かぜおこし", "たつまき", "かみなり"],
+    "ダイビング": ["なみのり", "うずしお"],
+    "シャドーダイブ": [],
+}
 
 
 class VolatileHandler(Handler):
@@ -34,8 +42,7 @@ class VolatileHandler(Handler):
 def tick_volatile(battle: Battle,
                   ctx: BattleContext,
                   value: Any,
-                  volatile: VolatileName,
-                  mon: Pokemon | None = None) -> HandlerReturn:
+                  volatile: VolatileName) -> HandlerReturn:
     """揮発状態のターン経過処理
 
     Args:
@@ -43,11 +50,8 @@ def tick_volatile(battle: Battle,
         ctx: コンテキスト
         value: イベント値（未使用）
         volatile: 対象の揮発状態名
-        mon: 対象のポケモン（Noneの場合はctx.source）
     """
-    if mon is None:
-        mon = ctx.source
-    battle.volatile_manager.tick(mon, volatile)
+    battle.volatile_manager.tick(ctx.source, volatile)
     return HandlerReturn(value=value)
 
 
@@ -55,7 +59,6 @@ def remove_volatile(battle: Battle,
                     ctx: BattleContext,
                     value: Any,
                     volatile: VolatileName,
-                    mon: Pokemon | None = None,
                     reason: str = "") -> HandlerReturn:
     """揮発状態の解除処理
 
@@ -64,12 +67,9 @@ def remove_volatile(battle: Battle,
         ctx: コンテキスト
         value: イベント値（未使用）
         volatile: 対象の揮発状態名
-        mon: 対象のポケモン（Noneの場合はctx.source）
         reason: 解除理由
     """
-    if mon is None:
-        mon = ctx.source
-
+    mon = ctx.source
     if battle.volatile_manager.remove(mon, volatile):
         battle.add_event_log(
             mon,
@@ -101,17 +101,9 @@ def charge_hidden_move(battle: Battle,
     return HandlerReturn(value=value)
 
 
-HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
-    "あなをほる": ["じしん", "マグニチュード"],
-    "そらをとぶ": ["かぜおこし", "たつまき", "かみなり"],
-    "ダイビング": ["なみのり", "うずしお"],
-    "シャドーダイブ": [],
-}
-
-
-def check_hidden_move(battle: Battle,
-                      ctx: BattleContext,
-                      value: Any) -> HandlerReturn:
+def can_hit_hidden_target(battle: Battle,
+                          ctx: BattleContext,
+                          value: Any) -> HandlerReturn:
     """潜伏中の回避判定を行う。
 
     Args:
@@ -174,7 +166,7 @@ def あばれる_tick(battle: Battle, ctx: BattleContext, value: Any) -> Handler
     return HandlerReturn(value=value)
 
 
-def あめまみれ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def あめまみれ_turn_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """あめまみれのターン経過処理
 
     Args:
@@ -209,7 +201,7 @@ def アンコール_modify_move(battle: Battle, ctx: BattleContext, value: Any) 
     return HandlerReturn(value=move)
 
 
-def いちゃもん_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いちゃもん_modify_command_options(battle: Battle, ctx: BattleContext, value: list[Command]) -> HandlerReturn:
     """いちゃもんによるコマンドオプション変更
 
     Args:
@@ -264,7 +256,7 @@ def おんねん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
-def かいふくふうじ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かいふくふうじ_block_heal(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """
     かいふくふうじ状態による回復無効化
 
@@ -279,10 +271,8 @@ def かいふくふうじ(battle: Battle, ctx: BattleContext, value: Any) -> Han
     if ctx.hp_change_reason in ("pain_split", "bench_heal"):
         return HandlerReturn(value=value)
 
-    battle.add_event_log(
-        ctx.target,
-        LogCode.HEAL_BLOCKED,
-        payload={"reason": "かいふくふうじ"})
+    battle.add_event_log(ctx.target, LogCode.HEAL_BLOCKED,
+                         payload={"reason": "かいふくふうじ"})
     return HandlerReturn(value=0)
 
 
@@ -308,7 +298,7 @@ def かなしばり_modify_command_options(battle: Battle, ctx: BattleContext, v
     return HandlerReturn(value=new_options)
 
 
-def かなしばり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かなしばり_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """かなしばりによる技の使用禁止
 
     Args:
@@ -327,7 +317,7 @@ def かなしばり_check_action(battle: Battle, ctx: BattleContext, value: Any)
     return HandlerReturn(value=True)
 
 
-def きゅうしょアップ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def きゅうしょアップ_boost_critic_rank(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """急所ランク状態による急所補正
 
     Args:
@@ -338,11 +328,11 @@ def きゅうしょアップ(battle: Battle, ctx: BattleContext, value: Any) -> 
     Returns:
         HandlerReturn: 補正後の急所ランク
     """
-    volatile = ctx.attacker.volatiles["きゅうしょアップ"]
-    return HandlerReturn(value=value+volatile.count)
+    value += ctx.attacker.volatiles["きゅうしょアップ"].count
+    return HandlerReturn(value=value)
 
 
-def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def こんらん_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 
     Args:
@@ -379,7 +369,7 @@ def こんらん_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     return HandlerReturn(value=False, stop_event=True)
 
 
-def さわぐ_on_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def さわぐ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ状態を付与し、場のねむり関連状態を解除する。"""
     # 相手にさわがしい状態を付与
     foe = battle.foe(ctx.source)
@@ -397,7 +387,7 @@ def さわぐ_on_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=True)
 
 
-def さわぐ_on_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def さわぐ_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ状態が解除されたときの処理（相手のさわがしいも解除する）"""
     foe = battle.foe(ctx.source)
     battle.volatile_manager.remove(foe, "さわがしい")
@@ -453,16 +443,16 @@ def さわぐ_prevent_nemuke(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def ふういん(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ふういん_try_block(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふういん状態の相手が共有技を使えないようにする。"""
     if ctx.defender.has_move(ctx.move.name):
         battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
                              payload={"reason": "ふういん"})
         return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return HandlerReturn(value=value)
 
 
-def しおづけ(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def しおづけ_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しおづけ状態のターン終了時ダメージ
 
     Args:
@@ -502,7 +492,7 @@ def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value:
     return HandlerReturn(value=new_options)
 
 
-def じごくづき_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def じごくづき_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じごくづき状態による技の不発"""
     if ctx.move.has_label("sound"):
         battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
@@ -511,7 +501,7 @@ def じごくづき_check_action(battle: Battle, ctx: BattleContext, value: Any)
     return HandlerReturn(value=True)
 
 
-def じゅうでん_boost(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def じゅうでん_boost_electric(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """じゅうでん状態による威力補正
 
     Args:
@@ -528,7 +518,7 @@ def じゅうでん_boost(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def タールショット_damage_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def タールショット_boost_fire(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """タールショット状態でほのお技のダメージ補正
 
     Args:
@@ -560,7 +550,7 @@ def ちいさくなる_guaranteed_hit(battle: Battle, ctx: BattleContext, value:
     return HandlerReturn(value=value)
 
 
-def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ちいさくなる_boost_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちいさくなる状態への威力補正
 
     Args:
@@ -576,7 +566,7 @@ def ちいさくなる_power_modifier(battle: Battle, ctx: BattleContext, value:
     return HandlerReturn(value=value)
 
 
-def ちょうはつ_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ちょうはつ_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ちょうはつによる変化技の使用禁止
 
     Args:
@@ -594,24 +584,18 @@ def ちょうはつ_check_action(battle: Battle, ctx: BattleContext, value: Any)
     return HandlerReturn(value=True)
 
 
-def とくせいなし_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def とくせいなし_disable_ability(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     battle.add_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
 
 
-def とくせいなし_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def とくせいなし_enable_ability(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """とくせいなし終了時に特性有効状態を再計算する。"""
     battle.remove_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
 
 
-def とくせいなし_check_ability_enabled(battle: Battle, ctx: BattleContext, value: set[AbilityDisabledReason]) -> HandlerReturn:
-    """とくせいなし状態で特性が無効になるようにする。"""
-    value.add("とくせいなし")
-    return HandlerReturn(value=value)
-
-
-def ねむけ_on_volatile_end(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ねむけを解除してねむりを付与する
 
     Args:
@@ -666,7 +650,7 @@ def バインド_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     return HandlerReturn(value=value)
 
 
-def バインド_swith_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def バインド_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """バインド状態のスイッチアウト処理（スイッチアウト時にバインドを解除する）
 
     Args:
@@ -695,7 +679,6 @@ def ひるみ_block_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     """
     battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
                          payload={"reason": "ひるみ"})
-    remove_volatile(battle, ctx, value, "ひるみ")
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -714,7 +697,7 @@ def マジックコート_reflect(battle: Battle, ctx: BattleContext, value: Any
     return HandlerReturn(value=value)
 
 
-def まるくなる_power_modifier(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def まるくなる_boost_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """まるくなる状態で特定技の威力補正
 
     Args:
@@ -743,7 +726,7 @@ def みがわり_immune(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     return HandlerReturn(value=True)
 
 
-def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def みがわり_block_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みがわりがダメージを肩代わりする"""
     damage = value
     if not battle.move_executor.check_hit_substitute(ctx):
@@ -766,7 +749,7 @@ def みがわり_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=0)
 
 
-def みちづれ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def みちづれ_faint(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """みちづれ状態のひんし時処理（相手もひんしにする）"""
     if ctx.hp_change_reason == "move_damage":
         mon = ctx.attacker
@@ -775,7 +758,7 @@ def みちづれ_apply(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def メロメロ_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """メロメロ状態による行動不能判定（50%確率）
 
     Args:
@@ -803,7 +786,7 @@ def メロメロ_action(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     return HandlerReturn(value=True)
 
 
-def ロックオン_modify_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ロックオン_guarantee_hit(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ロックオン状態による命中補正
 
     Args:

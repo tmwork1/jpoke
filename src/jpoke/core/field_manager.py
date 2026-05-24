@@ -263,7 +263,7 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
                 return Field("", self.owners)  # ダミーの天候オブジェクトを返す
         return self.current
 
-    def apply(self, name: Weather, count: int, source=None) -> bool:
+    def apply(self, name: Weather, count: int, source: Pokemon | None = None) -> bool:
         """天候を発動する。
         天候の上書きは、現在の天候と新しい天候の優先度を比較して決める。
         """
