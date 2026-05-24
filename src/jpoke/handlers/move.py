@@ -44,6 +44,14 @@ class MoveHandler(Handler):
         )
 
 
+def apply_ailment_to_defender(battle: Battle, ctx: BattleContext, value: Any,
+                              ailment: AilmentName, chance: float = 1) -> HandlerReturn:
+    chance = common.resolve_chance(battle, ctx, chance)
+    if not (chance < 1 and battle.random.random() >= chance):
+        battle.ailment_manager.apply(ctx.defender, ailment, source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 

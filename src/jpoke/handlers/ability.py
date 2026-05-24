@@ -65,6 +65,23 @@ def announce_ability_triggered(battle: Battle,
     return HandlerReturn(value=value)
 
 
+def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
+    """HPが最大HPの50%を跨いだかどうかを判定する。
+
+    HPが 50% 超から 50% 以下へ移行したかを判定する。
+    特性やアイテムの効果発動判定に使用。
+
+    Args:
+        hp_before: ダメージ前のHP
+        hp_after: ダメージ後のHP
+        max_hp: 最大HP
+
+    Returns:
+        bool: 50%を跨いだら True
+    """
+    return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
+
+
 def _apply_contact_counter_ailment(battle: Battle,
                                    ctx: BattleContext,
                                    *,
@@ -238,14 +255,7 @@ def だっぴ_cure_ailment(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
 
-    result = common.cure_ailment(
-        battle,
-        ctx,
-        value,
-        target_spec="source:self",
-        source_spec="source:self",
-        chance=0.3,
-    )
+    result = common.cure_self_ailment(battle, ctx, value, chance=0.3)
     if result.value:
         announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
@@ -393,7 +403,7 @@ def ぎゃくじょう_on_damage(battle: Battle, ctx: BattleContext, value: Any)
     hp_before = hp_after + value
 
     if (
-        common.crossed_half_hp(hp_before, hp_after, mon.max_hp)
+        _crossed_half_hp(hp_before, hp_after, mon.max_hp)
         and battle.modify_stat(mon, "C", +1, source=ctx.attacker, reason="ぎゃくじょう")
     ):
         announce_ability_triggered(battle, ctx, value, mon=mon)
@@ -413,7 +423,7 @@ def ききかいひ_on_hp_change(battle: Battle, ctx: BattleContext, value: int)
 
     hp_after = mon.hp
     hp_before = hp_after + value
-    if common.crossed_half_hp(hp_before, hp_after, mon.max_hp):
+    if _crossed_half_hp(hp_before, hp_after, mon.max_hp):
         _trigger_emergency_switch(battle, mon, mon.ability.base_name)
 
     return HandlerReturn(value=value)
@@ -504,7 +514,7 @@ def サンパワー_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
 def しぜんかいふく_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しぜんかいふく特性: 交代で引っ込んだとき状態異常を回復する。"""
     mon = ctx.source
-    result = common.cure_ailment(battle, ctx, value, "source:self")
+    result = common.cure_self_ailment(battle, ctx, value)
     if result.value:
         announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
@@ -534,9 +544,7 @@ def しゅうかく_on_turn_end(battle: Battle, ctx: BattleContext, value: Any) 
 
     berry_name = mon.item.base_name
     if (
-        mon.has_item()
-        or not mon.item.lost
-        or mon.item.lost_cause != "consume"
+        mon.item.lost_cause != "consume"
         or not common.is_berry_item(berry_name)
     ):
         return HandlerReturn(value=value)

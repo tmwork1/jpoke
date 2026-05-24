@@ -3543,7 +3543,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=None
     ),
     "でんじほう": MoveData(
-
         type="でんき",
         category="特殊",
         pp=5,
@@ -3552,7 +3551,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                partial(common.apply_ailment, ailment="まひ", target_spec="defender:self"),
+                partial(h.apply_ailment_to_defender, ailment="まひ", chance=0.3),
             ),
         }
     ),
@@ -4712,6 +4711,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=15,
         accuracy=85,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(h.apply_ailment_to_defender, ailment="やけど"),
+            )
+        }
     ),
     "ガードシェア": MoveData(
         type="エスパー",
@@ -4811,6 +4815,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["powder"],
         handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(h.apply_ailment_to_defender, ailment="まひ"),
+            )
         }
     ),
     "きりばらい": MoveData(
@@ -5394,10 +5401,9 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=10,
         accuracy=90,
-
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                partial(common.apply_ailment, ailment="もうどく", target_spec="defender:self", source_spec="attacker:self"),
+                partial(h.apply_ailment_to_defender, ailment="もうどく"),
             )
         }
     ),
@@ -5413,6 +5419,11 @@ MOVES: dict[str, MoveData] = {
         pp=35,
         accuracy=75,
         labels=["powder"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(h.apply_ailment_to_defender, ailment="どく"),
+            )
+        }
     ),
     "どくびし": MoveData(
         type="どく",
@@ -5784,6 +5795,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=30,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                partial(h.apply_ailment_to_defender, ailment="まひ")
+            )
+        }
     ),
     "へんしん": MoveData(
         type="ノーマル",

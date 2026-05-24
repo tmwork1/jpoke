@@ -12,7 +12,7 @@ from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 
 
-def _resolve_chance(battle: Battle, ctx: BattleContext, chance: float) -> float:
+def resolve_chance(battle: Battle, ctx: BattleContext, chance: float) -> float:
     """追加効果補正後の実効確率を返す。"""
     return battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
 
@@ -40,7 +40,7 @@ def modify_hp(battle: Battle,
     Returns:
         実際に変化したHP量を value に持つ HandlerReturn
     """
-    effective_chance = _resolve_chance(battle, ctx, chance)
+    effective_chance = resolve_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn(value=value)
     target = ctx.resolve_role(battle, target_spec)
@@ -75,7 +75,7 @@ def drain_hp(battle: Battle,
     Returns:
         実際に吸収したHP量を value に持つ HandlerReturn
     """
-    effective_chance = _resolve_chance(battle, ctx, chance)
+    effective_chance = resolve_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn(value=value)
 
@@ -116,7 +116,7 @@ def modify_stat(battle: Battle,
     Returns:
         変化が成功したかを value に持つ HandlerReturn
     """
-    effective_chance = _resolve_chance(battle, ctx, chance)
+    effective_chance = resolve_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn(value=value)
     target = ctx.resolve_role(battle, target_spec)
@@ -149,7 +149,7 @@ def modify_stats(battle: Battle,
     Returns:
         HandlerReturn: いずれかの能力が変化した場合True
     """
-    effective_chance = _resolve_chance(battle, ctx, chance)
+    effective_chance = resolve_chance(battle, ctx, chance)
     if effective_chance < 1 and battle.random.random() >= effective_chance:
         return HandlerReturn(value=value)
 
@@ -162,24 +162,6 @@ def modify_stats(battle: Battle,
     return HandlerReturn(value=success)
 
 
-def apply_ailment(battle: Battle,
-                  ctx: BattleContext,
-                  value: Any,
-                  ailment: AilmentName,
-                  target_spec: RoleSpec,
-                  source_spec: RoleSpec | None = None,
-                  chance: float = 1,
-                  reason: str = "") -> HandlerReturn:
-    """状態異常を付与する。"""
-    effective_chance = _resolve_chance(battle, ctx, chance)
-    if effective_chance < 1 and battle.random.random() >= effective_chance:
-        return HandlerReturn(value=value)
-    target = ctx.resolve_role(battle, target_spec)
-    source = ctx.resolve_role(battle, source_spec)
-    success = battle.ailment_manager.apply(target, ailment, source=source, ctx=ctx)
-    return HandlerReturn(value=success)
-
-
 def apply_volatile(battle: Battle,
                    ctx: BattleContext,
                    value: Any,
@@ -189,7 +171,7 @@ def apply_volatile(battle: Battle,
                    count: int | None = None,
                    chance: float = 1) -> HandlerReturn:
     """揮発状態を付与する。"""
-    chance = _resolve_chance(battle, ctx, chance)
+    chance = resolve_chance(battle, ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
@@ -212,12 +194,18 @@ def cure_ailment(battle: Battle,
                  source_spec: RoleSpec | None = None,
                  chance: float = 1) -> HandlerReturn:
     """状態異常を回復する。"""
-    if chance < 1 and battle.random.random() >= chance:
-        return HandlerReturn(value=value)
-    target = ctx.resolve_role(battle, target_spec)
-    source = ctx.resolve_role(battle, source_spec)
-    success = battle.ailment_manager.remove(target, source=source)
+    success = False
+    chance = resolve_chance(battle, ctx, chance)
+    if not (chance < 1 and battle.random.random() >= chance):
+        target = ctx.resolve_role(battle, target_spec)
+        source = ctx.resolve_role(battle, source_spec)
+        success = battle.ailment_manager.remove(target, source=source)
     return HandlerReturn(value=success)
+
+
+def cure_self_ailment(battle: Battle, ctx: BattleContext, value: Any, chance: float = 1) -> HandlerReturn:
+    """自分の状態異常を回復する。"""
+    return cure_ailment(battle, ctx, value, target_spec="source:self", source_spec="source:self", chance=chance)
 
 
 def activate_weather(battle: Battle,
@@ -313,23 +301,6 @@ def block_stat_drop_by_foe(value: dict[Stat, int], ctx: BattleContext, stat: Sta
         else:
             value = {s: v for s, v in value.items() if s != stat or v >= 0}
     return value
-
-
-def crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
-    """HPが最大HPの50%を跨いだかどうかを判定する。
-
-    HPが 50% 超から 50% 以下へ移行したかを判定する。
-    特性やアイテムの効果発動判定に使用。
-
-    Args:
-        hp_before: ダメージ前のHP
-        hp_after: ダメージ後のHP
-        max_hp: 最大HP
-
-    Returns:
-        bool: 50%を跨いだら True
-    """
-    return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
 
 
 def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, reason: HPChangeReason) -> HandlerReturn:

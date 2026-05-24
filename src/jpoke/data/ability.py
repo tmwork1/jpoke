@@ -7,7 +7,7 @@ Note:
 from functools import partial
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.handlers import common, ability as h, ability_paradox as paradox
+from jpoke.handlers import ability as h, ability_paradox as paradox
 from .models import AbilityData
 
 
@@ -1025,12 +1025,6 @@ ABILITIES: dict[str, AbilityData] = {
             "protected",
             "gas_proof",
         ],
-        handlers={
-            Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h._apply_ailment_with_log, ailment="ねむり"),
-                subject_spec="source:self",
-            )
-        }
     ),
     "ゼロフォーミング": AbilityData(
         flags=[
