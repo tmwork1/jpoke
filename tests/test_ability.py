@@ -20,10 +20,9 @@ import test_utils as t
 # ARシステム
 # ──────────────────────────────────────────────────────────────────
 
-# TODO : パラメタライズで全アイテムをテストする
-
 
 def test_ARシステム_フェアリーメモリでフェアリータイプになる():
+    # TODO : パラメタライズで全アイテムをテストする
     battle = t.start_battle(
         team0=[Pokemon("シルヴァディ", ability="ARシステム", item="フェアリーメモリ")],
         team1=[Pokemon("ピカチュウ")],
@@ -42,7 +41,6 @@ def test_ARシステム_メモリなしでタイプ変更なし():
     assert mon.ability_override_type is None
     assert mon.ability.revealed is False  # メモリなしは不発なので False
 
-# TODO : かがくへんかガスで無効化されないことを確認するテストを追加
 
 # ──────────────────────────────────────────────────────────────────
 # アイスフェイス
@@ -53,7 +51,6 @@ def test_ARシステム_メモリなしでタイプ変更なし():
 # ──────────────────────────────────────────────────────────────────
 
 # TODO アイスボディもパラメタライズでまとめてテストする
-
 
 @pytest.mark.parametrize(
     "weather_name,weather_count",
