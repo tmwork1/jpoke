@@ -5757,7 +5757,7 @@ MOVES: dict[str, MoveData] = {
         priority=-6,
         labels=["wind"],
         handlers={
-            Event.ON_APPLY_MOVE: h.MoveHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 h.on_blow_apply,
                 priority=30,
             ),
@@ -5923,7 +5923,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
 
         handlers={
-            Event.ON_APPLY_MOVE: h.MoveHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 h.みがわり_check,
                 priority=100,
             ),
