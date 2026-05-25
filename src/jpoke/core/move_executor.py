@@ -301,7 +301,7 @@ class MoveExecutor:
         # 反射判定
         if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
             self.battle.add_event_log(ctx.defender, LogCode.MOVE_REFLECTED)
-            ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
+            ctx.move_reflected = True
 
         # 連続技のヒット回数を決定
         hit_count = self._resolve_hit_count(ctx)
@@ -371,7 +371,7 @@ class MoveExecutor:
 
         # ダメージを与えた後の処理
         if hp_delta < 0:
-            self.events.emit(Event.ON_MOVE_DAMAGE, ctx, abs(hp_delta))
+            self.events.emit(Event.ON_DAMAGE_HIT, ctx, abs(hp_delta))
 
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
             if ctx.attacker.active_tera_type == 'ステラ':

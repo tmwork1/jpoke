@@ -42,7 +42,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
-            Event.ON_MOVE_DAMAGE: h.VolatileHandler(
+            Event.ON_DAMAGE_HIT: h.VolatileHandler(
                 h.あばれる_tick,
                 subject_spec="attacker:self",
                 priority=180

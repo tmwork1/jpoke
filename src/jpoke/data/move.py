@@ -99,7 +99,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=75,
         labels=["contact", "secondary_effect"],
         handlers={
-            Event.ON_MOVE_DAMAGE: h.MoveHandler(
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 partial(h.modify_defender_stats, stats={"B": -1}, chance=0.3)
             )
         }
@@ -2276,14 +2276,17 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ほっぺすりすり": MoveData(
-
         type="でんき",
         category="物理",
         pp=20,
         power=20,
         accuracy=100,
-
         labels=["contact"],
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                partial(h.apply_ailment_to_defender, ailment="まひ")
+            )
+        }
     ),
     "ボディプレス": MoveData(
         type="かくとう",

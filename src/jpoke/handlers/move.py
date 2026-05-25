@@ -40,7 +40,8 @@ class MoveHandler(Handler):
             func=func,
             source="move",
             subject_spec=subject_spec,
-            priority=priority
+            priority=priority,
+            skip_subject_check=True,  # 技ハンドラはコンテキストの攻守を直接参照するため、主体の照合をスキップする
         )
 
 

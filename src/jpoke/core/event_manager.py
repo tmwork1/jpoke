@@ -129,19 +129,9 @@ class EventManager:
         for rh in handlers:
             context = ctx if ctx else self._build_context(rh)
 
-            # コンテキストがハンドラに合致しない場合はスキップ
-            if not self._match(context, rh):
-                print(f"Handler {rh.handler.func} skipped due to context mismatch")
+            # ハンドラが現在のコンテキストで有効かどうかをチェックする
+            if not self._check_handler_validity(rh, context):
                 continue
-
-            # ハンドラの発生源が無効化されている場合はスキップ
-            match rh.handler.source:
-                case "ability":
-                    if not rh.subject.ability.enabled:
-                        continue
-                case "item":
-                    if not rh.subject.item.enabled:
-                        continue
 
             result = rh.handler.func(self.battle, context, value)
 
@@ -169,21 +159,6 @@ class EventManager:
             mon = self.battle.foe(rh.subject)
         return BattleContext(**{rh.handler.role: mon})
 
-    def _match(self, ctx: BattleContext, rh: RegisteredHandler) -> bool:
-        """コンテキストがハンドラにマッチするか判定"""
-        # コンテキストの対象の判定
-        ctx_mon = ctx.get_by_role(rh.handler.role)
-        if ctx_mon is None:
-            return False
-
-        # ハンドラの対象の判定
-        if rh.handler.side == "self":
-            return ctx_mon == rh.subject
-        elif rh.handler.side == "foe":
-            return ctx_mon == self.battle.foe(rh.subject)
-        else:
-            return False
-
     def _sort_handlers(self, rhs: list[RegisteredHandler]) -> list[RegisteredHandler]:
         if len(rhs) <= 1:
             return rhs
@@ -202,3 +177,23 @@ class EventManager:
             return (rh.handler.priority, -speed)
 
         return sorted(rhs, key=key)
+
+    def _check_handler_validity(self, rh: RegisteredHandler, ctx: BattleContext) -> bool:
+        """ハンドラが現在のコンテキストで有効かどうかをチェックする。"""
+        if (
+            not rh.handler.skip_subject_check
+            and rh.subject != ctx.resolve_role(self.battle, rh.handler.subject_spec)
+        ):
+            print(f"Context mismatch: Handler {rh.handler.func} skipped")
+            return False
+
+        # ハンドラの発生源が無効化されている場合はスキップ
+        match rh.handler.source:
+            case "ability":
+                if not rh.subject.ability.enabled:
+                    return False
+            case "item":
+                if not rh.subject.item.enabled:
+                    return False
+
+        return True

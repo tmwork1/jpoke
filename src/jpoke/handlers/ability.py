@@ -10,7 +10,8 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, BattleContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, Type, Stat, AbilityDisabledReason, ItemDisabledReason, Weather, Terrain, AilmentName, Side
+from jpoke.utils.type_defs import Side, RoleSpec, Type, Stat, Weather, Terrain, \
+    AilmentName, VolatileName, AbilityDisabledReason, ItemDisabledReason
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.utils.battle_math import apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
@@ -171,47 +172,92 @@ def _modify_by_move_condition(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def deactivate_strong_weather(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def activate_weather(battle: Battle,
+                     ctx: BattleContext,
+                     value: Any,
+                     *,
+                     weather: Weather,
+                     count: int,
+                     source_spec: RoleSpec = "source:self") -> HandlerReturn:
+    """天候を変更する"""
+
+    source = ctx.resolve_role(battle, source_spec)
+    if battle.weather_manager.apply(weather, count, source=source):
+        announce_ability_triggered(battle, ctx, value, mon=source)
+    return HandlerReturn(value=value)
+
+
+def deactivate_strong_weather(battle: Battle,
+                              ctx: BattleContext,
+                              value: Any,
+                              *,
+                              weather: Weather) -> HandlerReturn:
     """強天候を解除する
     相手の特性が同じ天候を発生させるものなら解除しない。
     """
     source = ctx.source
     foe = battle.foe(source)
-    if foe.ability.name != source.ability.name:
+    if (
+        battle.weather.name == weather
+        and foe.ability.name != source.ability.name
+    ):
         battle.weather_manager.remove()
     return HandlerReturn(value=value)
 
 
-def activate_terrain_with_log(battle: Battle,
-                              ctx: BattleContext,
-                              value: Any,
-                              *,
-                              terrain: Terrain,
-                              count: int,
-                              source: Pokemon | None = None) -> HandlerReturn:
+def activate_terrain(battle: Battle,
+                     ctx: BattleContext,
+                     value: Any,
+                     *,
+                     terrain: Terrain,
+                     count: int,
+                     source_spec: RoleSpec = "source:self") -> HandlerReturn:
     """地形を変更する"""
-    if source is None:
-        source = ctx.source
+    source = ctx.resolve_role(battle, source_spec)
     if battle.terrain_manager.apply(terrain, count, source=source):
         announce_ability_triggered(battle, ctx, value, mon=source)
     return HandlerReturn(value=value)
 
 
-def _apply_ailment_with_log(battle: Battle,
-                            ctx: BattleContext,
-                            value: Any,
-                            *,
-                            ailment: AilmentName,
-                            target: Pokemon | None = None,
-                            source: Pokemon | None = None) -> HandlerReturn:
-    """自身に状態異常を付与する"""
-    if source is None:
-        source = ctx.source
-    if target is None:
-        target = ctx.target
+def prevent_ailment(battle: Battle,
+                    ctx: BattleContext,
+                    value: AilmentName,
+                    *,
+                    blocked_ailments: list[AilmentName] | None = None) -> HandlerReturn:
+    """状態異常の付与を防ぐ
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_BEFORE_APPLY_AILMENT)
+            - target: 状態異常を付与されそうなポケモン
+        value: 付与されそうな状態異常の名前
+        blocked_ailments: 防げる状態異常のリスト（Noneならすべて防ぐ）
+    """
+    if blocked_ailments is None or value in blocked_ailments:
+        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
+        battle.add_event_log(ctx.target, LogCode.AILMENT_PREVENTED,
+                             payload={"ailment": value, "reason": ctx.target.ability.name})
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
-    if battle.ailment_manager.apply(target, ailment, source=source):
-        announce_ability_triggered(battle, ctx, value, mon=source)
+
+def prevent_volatile(battle: Battle,
+                     ctx: BattleContext,
+                     value: VolatileName,
+                     *,
+                     blocked_volatiles: list[VolatileName] | None = None) -> HandlerReturn:
+    """揮発状態の付与を防ぐ
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_BEFORE_APPLY_VOLATILE)
+            - target: 揮発状態を付与されそうなポケモン
+        value: 付与されそうな揮発状態の名前
+        blocked_volatiles: 防げる揮発状態のリスト（Noneならすべて防ぐ）
+    """
+    if blocked_volatiles is None or value in blocked_volatiles:
+        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
+        battle.add_event_log(ctx.target, LogCode.VOLATILE_PREVENTED,
+                             payload={"volatile": value, "reason": ctx.target.ability.name})
+        return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -859,13 +905,6 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: BattleContext, value: Any
     return HandlerReturn(value=value)
 
 
-def せいしんりょく_prevent_flinch(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """せいしんりょく特性: ひるみ状態を防ぐ。"""
-    if value == "ひるみ":
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def せいしんりょく_block_intimidate(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """せいしんりょく特性: いかくによる攻撃ランク低下を無効化する。"""
     if ctx.stat_change_reason == "いかく":
@@ -1054,14 +1093,6 @@ def ねつぼうそう_modify_power(battle: Battle, ctx: BattleContext, value: i
         and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
-def ねつこうかん_prevent_burn(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """ねつこうかん特性: やけど状態を防ぐ。"""
-    if value == "やけど":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1532,14 +1563,6 @@ def てきおうりょく_modify_stab(battle: Battle, ctx: BattleContext, value:
     return HandlerReturn(value=value)
 
 
-def めんえき_prevent_poison(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """めんえき特性: どく・もうどく状態を防ぐ。"""
-    if value in {"どく", "もうどく"}:
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def クリアボディ_block_stat_drop(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """クリアボディ特性: 相手による能力ランク低下を無効化する。
 
@@ -1588,14 +1611,6 @@ def ノーガード_guarantee_hit(battle: Battle, ctx: BattleContext, value: Any
         defender_no_guard = ctx.defender.ability.name == "ノーガード"
         if attacker_no_guard or defender_no_guard:
             value = None
-    return HandlerReturn(value=value)
-
-
-def ふみん_prevent_sleep(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """ふみん特性: ねむり状態を防ぐ。"""
-    if value == "ねむり":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1694,14 +1709,6 @@ def へんげんじざい_change_type(battle: Battle, ctx: BattleContext, value:
     return HandlerReturn(value=value)
 
 
-def やるき_prevent_sleep(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """やるき特性: ねむり状態を防ぐ。"""
-    if value == "ねむり":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def ようりょくそ_boost_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
     """ようりょくそ特性: はれ中に素早さが2倍になる。"""
     if battle.weather.sunny:
@@ -1720,46 +1727,6 @@ def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: BattleContext, value: A
     """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技は除く）。"""
     if battle.weather.name == "ゆき":
         value = apply_fixed_modifier(value, 3277)
-    return HandlerReturn(value=value)
-
-
-def マイペース_prevent_confusion(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """マイペース特性: こんらん状態を防ぐ（揮発状態の実装が必要）。"""
-    if value == "こんらん":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def じゅうなん_prevent_paralysis(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """じゅうなん特性: まひ状態を防ぐ。"""
-    if value == "まひ":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def みずのベール_prevent_burn(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """みずのベール特性: やけど状態を防ぐ。"""
-    if value == "やけど":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def マグマのよろい_prevent_freeze(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """マグマのよろい特性: こおり状態を防ぐ。"""
-    if value == "こおり":
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def どんかん_prevent_volatiles(battle: Battle, ctx: BattleContext, value: str) -> HandlerReturn:
-    """どんかん特性: メロメロ・ちょうはつを防ぐ。"""
-    if value in {"メロメロ", "ちょうはつ"}:
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
 

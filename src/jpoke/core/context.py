@@ -44,6 +44,7 @@ class BattleContext:
                  hit_index: int = 1,
                  hit_count: int = 1,
                  critical: bool = False,
+                 move_reflected: bool = False,
                  fainted: bool = False) -> None:
         """BattleContext を初期化する。
 
@@ -57,7 +58,9 @@ class BattleContext:
             stat_change_reason: 能力ランク変化の理由
             hit_index: マルチヒット時の現在ヒット番号（1始まり）
             hit_count: マルチヒット時の総ヒット回数
-
+            critical: 急所に当たったかどうかのフラグ
+            move_reflected: 技が反射されたかどうかのフラグ
+            fainted: 攻撃によりひんしになったかどうかのフラグ
         Note:
             attacker が指定された場合は source に、
             defender が指定された場合は target にマッピングされます。
@@ -72,13 +75,14 @@ class BattleContext:
         self.hit_count = hit_count
 
         self.critical: bool = critical  # 急所に当たったかどうかのフラグ
+        self.move_reflected: bool = move_reflected  # 技が反射されたかどうかのフラグ
         self.fainted: bool = fainted  # 攻撃によりひんしになったかどうかのフラグ
         self.substitute_damage: int = 0  # みがわりに与えたダメージ（みがわり貫通技用）
 
     @property
     def attacker(self) -> Pokemon | None:
         """攻撃側のポケモン（source のエイリアス）。"""
-        return self.source
+        return self.source if not self.move_reflected else self.target
 
     @attacker.setter
     def attacker(self, value: Pokemon | None):
@@ -87,7 +91,7 @@ class BattleContext:
     @property
     def defender(self) -> Pokemon | None:
         """防御側のポケモン（target のエイリアス）。"""
-        return self.target
+        return self.target if not self.move_reflected else self.source
 
     @defender.setter
     def defender(self, value: Pokemon | None):
@@ -111,25 +115,7 @@ class BattleContext:
         """
         return self.source != self.target
 
-    def get_by_role(self, role: ContextRole) -> Pokemon | None:
-        """指定されたロールのポケモンを取得する。
-
-        Args:
-            role: 取得するロール（"source", "target", "attacker", "defender"）
-
-        Returns:
-            Pokemon | None: 該当するポケモン。存在しない場合はNone
-        """
-        # attacker/defender を source/target にマッピング
-        if role == "attacker":
-            role = "source"
-        elif role == "defender":
-            role = "target"
-        return getattr(self, role, None)
-
-    def resolve_role(self,
-                     battle: Battle,
-                     spec: RoleSpec | None) -> Pokemon | None:
+    def resolve_role(self, battle: Battle, spec: RoleSpec) -> Pokemon | None:
         """ロール指定からポケモンを解決する。
         Args:
             battle: バトルインスタンス
@@ -142,8 +128,8 @@ class BattleContext:
             return None
 
         role, side = spec.split(":")
-        mon = self.get_by_role(role)
-        if mon and side == "foe":
+        mon = getattr(self, role, None)
+        if mon is not None and side == "foe":
             mon = battle.foe(mon)
         return mon
 
@@ -155,7 +141,8 @@ class BattleContext:
 
         Args:
             **kwargs: 上書きするフィールド（source, target, move, field,
-                      hp_change_reason, stat_change_reason, hit_index, hit_count）
+                      hp_change_reason, stat_change_reason, hit_index, hit_count,
+                      critical, move_reflected, fainted）
 
         Returns:
             派生した BattleContext
@@ -169,6 +156,7 @@ class BattleContext:
             hit_index=kwargs.get("hit_index", self.hit_index),
             hit_count=kwargs.get("hit_count", self.hit_count),
             critical=kwargs.get("critical", self.critical),
+            move_reflected=kwargs.get("move_reflected", self.move_reflected),
             fainted=kwargs.get("fainted", self.fainted),
         )
 

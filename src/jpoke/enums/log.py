@@ -38,12 +38,15 @@ class LogCode(Enum):
     # 状態異常関連
     AILMENT_APPLIED = auto()  # 状態異常付与
     AILMENT_REMOVED = auto()  # 状態異常回復
+    AILMENT_PREVENTED = auto()  # 状態異常付与ブロック
 
     # 揮発状態関連
     VOLATILE_IMMUNE = auto()  # 揮発状態無効化
     VOLATILE_APPLIED = auto()  # 揮発状態付与
     VOLATILE_REMOVED = auto()  # 揮発状態解除
     VOLATILE_DISPLAY = auto()  # 揮発状態の宣言 (こんらんなど)
+    VOLATILE_PREVENTED = auto()  # 揮発状態の付与ブロック
+
     PROTECT_SUCCEEDED = auto()  # まもる成功
     PROTECT_FAILED = auto()  # まもる失敗
     SUBSTITUTE_HIT = auto()  # みがわりにヒット

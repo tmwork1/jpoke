@@ -45,6 +45,7 @@ class Handler:
     subject_spec: RoleSpec
     priority: int = 100
     once: bool = False
+    skip_subject_check: bool = False  # ハンドラの主体の照合をスキップするか
 
     def __lt__(self, other):
         """priorityが小さいほど先に実行される"""

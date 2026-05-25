@@ -65,9 +65,9 @@ def test_あばれる_カウント進行():
     )
     attacker, defender = battle.actives
     ctx = BattleContext(attacker=attacker, defender=defender)
-    battle.events.emit(Event.ON_MOVE_DAMAGE, ctx)
+    battle.events.emit(Event.ON_DAMAGE_HIT, ctx)
     assert attacker.volatiles["あばれる"].count == 1
-    battle.events.emit(Event.ON_MOVE_DAMAGE, ctx)
+    battle.events.emit(Event.ON_DAMAGE_HIT, ctx)
     assert not attacker.has_volatile("あばれる")
     assert attacker.has_volatile("こんらん")
 

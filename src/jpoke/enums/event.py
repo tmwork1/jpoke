@@ -170,7 +170,7 @@ class Event(Enum):
 
     # emit: core/move_executor.py（ダメージ適用後）
     # handle: volatile.py（いのちがけ・カウンター等、被ダメージトリガー処理）
-    ON_MOVE_DAMAGE = auto()
+    ON_DAMAGE_HIT = auto()
 
     # emit: core/move_executor.py（技実行完了直後）
     # handle: ability.py（もらいび等、技実行終了後の状態管理・撤去処理）

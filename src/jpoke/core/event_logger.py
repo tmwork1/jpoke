@@ -104,6 +104,18 @@ class EventLog:
                 item = self.payload.get("item", "アイテム")
                 return f"{item}を失った"
 
+            case LogCode.AILMENT_APPLIED:
+                ailment = self.payload.get("ailment", "状態異常")
+                return f"{ailment}が付与された"
+
+            case LogCode.AILMENT_REMOVED:
+                ailment = self.payload.get("ailment", "状態異常")
+                return f"{ailment}が回復した"
+
+            case LogCode.AILMENT_PREVENTED:
+                ailment = self.payload.get("ailment", "状態異常")
+                return f"{ailment}の付与が無効化された"
+
             case LogCode.VOLATILE_APPLIED:
                 volatile = self.payload.get("volatile", "揮発状態")
                 return f"{volatile}が付与された"
@@ -116,13 +128,9 @@ class EventLog:
                 volatile = self.payload.get("volatile", "揮発状態")
                 return f"{volatile}の状態"
 
-            case LogCode.AILMENT_APPLIED:
-                ailment = self.payload.get("ailment", "状態異常")
-                return f"{ailment}が付与された"
-
-            case LogCode.AILMENT_REMOVED:
-                ailment = self.payload.get("ailment", "状態異常")
-                return f"{ailment}が回復した"
+            case LogCode.VOLATILE_PREVENTED:
+                volatile = self.payload.get("volatile", "揮発状態")
+                return f"{volatile}の付与が無効化された"
 
             case LogCode.STAT_CHANGED:
                 stats = self.payload.get("stats", {})
