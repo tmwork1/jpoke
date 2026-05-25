@@ -164,15 +164,6 @@ class Move(GameEffect):
         return self.data.multi_hit["max"]
 
     @property
-    def is_foe_target(self) -> bool:
-        """技が相手を対象にするかどうかを判定する。
-
-        Returns:
-            技が相手を対象にする場合True
-        """
-        return self.data.target == "foe"
-
-    @property
     def is_attack(self) -> bool:
         """技が攻撃技かどうかを判定する。
 
@@ -182,15 +173,6 @@ class Move(GameEffect):
         return self.category in ["物理", "特殊"]
 
     @property
-    def is_contact(self) -> bool:
-        """技が接触技かどうかを判定する。
-
-        Returns:
-            技が接触技の場合True
-        """
-        return self.has_label("contact")
-
-    @property
     def is_blocked_by_protect(self) -> bool:
         """技がまもるで防がれるかどうかを判定する。
 
@@ -198,6 +180,6 @@ class Move(GameEffect):
             技がまもるで防がれる場合True
         """
         return (
-            self.is_foe_target
+            self.target == "foe"
             and not self.has_label("unprotectable")
         )

@@ -301,7 +301,7 @@ class MoveExecutor:
         # 反射判定
         if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
             self.battle.add_event_log(ctx.defender, LogCode.MOVE_REFLECTED)
-            ctx.move_reflected = True
+            ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 連続技のヒット回数を決定
         hit_count = self._resolve_hit_count(ctx)

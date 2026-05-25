@@ -730,3 +730,7 @@ class Battle:
             move = Move(move)
         ctx = BattleContext(defender=defender, move=move)
         return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
+
+    def resolve_secondary_chance(self, ctx: BattleContext, chance: float) -> float:
+        """追加効果補正後の実効確率を返す。"""
+        return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)

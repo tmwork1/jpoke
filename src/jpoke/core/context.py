@@ -44,7 +44,6 @@ class BattleContext:
                  hit_index: int = 1,
                  hit_count: int = 1,
                  critical: bool = False,
-                 move_reflected: bool = False,
                  fainted: bool = False) -> None:
         """BattleContext を初期化する。
 
@@ -59,7 +58,6 @@ class BattleContext:
             hit_index: マルチヒット時の現在ヒット番号（1始まり）
             hit_count: マルチヒット時の総ヒット回数
             critical: 急所に当たったかどうかのフラグ
-            move_reflected: 技が反射されたかどうかのフラグ
             fainted: 攻撃によりひんしになったかどうかのフラグ
         Note:
             attacker が指定された場合は source に、
@@ -75,7 +73,6 @@ class BattleContext:
         self.hit_count = hit_count
 
         self.critical: bool = critical  # 急所に当たったかどうかのフラグ
-        self.move_reflected: bool = move_reflected  # 技が反射されたかどうかのフラグ
         self.fainted: bool = fainted  # 攻撃によりひんしになったかどうかのフラグ
         self.substitute_damage: int = 0  # みがわりに与えたダメージ（みがわり貫通技用）
 
@@ -96,15 +93,6 @@ class BattleContext:
     @defender.setter
     def defender(self, value: Pokemon | None):
         self.target = value
-
-    @property
-    def is_move_context(self) -> bool:
-        """move と attacker/defender が揃った文脈かどうか。"""
-        return (
-            self.move is not None
-            and self.attacker is not None
-            and self.defender is not None
-        )
 
     @property
     def is_foe_target(self) -> bool:
@@ -156,7 +144,6 @@ class BattleContext:
             hit_index=kwargs.get("hit_index", self.hit_index),
             hit_count=kwargs.get("hit_count", self.hit_count),
             critical=kwargs.get("critical", self.critical),
-            move_reflected=kwargs.get("move_reflected", self.move_reflected),
             fainted=kwargs.get("fainted", self.fainted),
         )
 

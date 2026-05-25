@@ -137,7 +137,7 @@ def _apply_type_absorb(battle: Battle,
                        stats: dict[Stat, int] | None = None) -> HandlerReturn:
     """特定のタイプの技を無効化し、副次効果（回復/能力上昇）を適用する。"""
     if (
-        not ctx.move.is_foe_target
+        not ctx.move.target == "foe"
         or ctx.move.type != move_type
     ):
         return HandlerReturn(value=value)
@@ -344,7 +344,7 @@ def いたずらごころ_blocked_by_dark(battle: Battle, ctx: BattleContext, va
     """いたずらごころ特性: 優先度が上がった変化技はあくタイプ相手に無効化される。"""
     if (
         ctx.move.category == "変化"
-        and ctx.move.is_foe_target
+        and ctx.move.target == "foe"
         and ctx.defender.has_type("あく")
     ):
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
@@ -627,7 +627,7 @@ def よびみず_absorb_water(battle: Battle, ctx: BattleContext, value: bool) -
 def もらいび_block_fire(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """もらいび特性: ほのお技を無効化し、炎技強化状態を有効化する。"""
     if (
-        not ctx.move.is_foe_target
+        not ctx.move.target == "foe"
         or ctx.move.type != "ほのお"
     ):
         return HandlerReturn(value=value)
@@ -921,9 +921,8 @@ def せいでんき_on_damage(battle: Battle, ctx: BattleContext, value: Any) ->
 def どくしゅ_on_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """どくしゅ特性: 直接攻撃でダメージを与えた相手を30%でどくにする。"""
     if (
-        not ctx.is_move_context
-        or not battle.move_executor.is_contact(ctx)
-        or battle.random.random() >= 0.3
+        battle.move_executor.is_contact(ctx)
+        and battle.random.random() < battle.resolve_secondary_chance(ctx, 0.3)
     ):
         return HandlerReturn(value=value)
 
@@ -1732,10 +1731,9 @@ def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: BattleContext, value: A
 
 def おうごんのからだ_block_status_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """おうごんのからだ特性: 他のポケモンからの変化技を無効化する。"""
-    print(f"{ctx.move.name} {ctx.move.is_foe_target=}")
     if (
         ctx.move.category == "変化"
-        and ctx.move.is_foe_target
+        and ctx.move.target == "foe"
     ):
         announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,

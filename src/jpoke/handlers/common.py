@@ -12,11 +12,6 @@ from jpoke.enums import Event
 from jpoke.core import HandlerReturn
 
 
-def resolve_chance(battle: Battle, ctx: BattleContext, chance: float) -> float:
-    """追加効果補正後の実効確率を返す。"""
-    return battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
-
-
 def modify_hp(battle: Battle,
               ctx: BattleContext,
               value: Any,
@@ -41,7 +36,7 @@ def modify_hp(battle: Battle,
     Returns:
         実際に変化したHP量を value に持つ HandlerReturn
     """
-    chance = resolve_chance(battle, ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance)
     if not (chance < 1 and battle.random.random() >= chance):
         target = ctx.resolve_role(battle, target_spec)
         source = ctx.resolve_role(battle, source_spec)
@@ -103,7 +98,7 @@ def drain_hp(battle: Battle,
     Returns:
         実際に吸収したHP量を value に持つ HandlerReturn
     """
-    chance = resolve_chance(battle, ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
@@ -141,7 +136,7 @@ def modify_stats(battle: Battle,
     Returns:
         HandlerReturn: いずれかの能力が変化した場合True
     """
-    chance = resolve_chance(battle, ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
@@ -162,7 +157,7 @@ def apply_ailment(battle: Battle,
                   count: int | None = None,
                   source_spec: RoleSpec | None = None,
                   chance: float = 1) -> HandlerReturn:
-    chance = resolve_chance(battle, ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=success)
 
@@ -182,7 +177,7 @@ def apply_volatile(battle: Battle,
                    chance: float = 1,
                    **kwargs) -> HandlerReturn:
     """揮発状態を付与する。"""
-    chance = resolve_chance(battle, ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
@@ -200,7 +195,7 @@ def cure_ailment(battle: Battle,
                  chance: float = 1) -> HandlerReturn:
     """状態異常を回復する。"""
     success = False
-    chance = resolve_chance(battle, ctx, chance)
+    chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
