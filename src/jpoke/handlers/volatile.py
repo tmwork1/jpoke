@@ -79,6 +79,20 @@ def remove_volatile(battle: Battle,
     return HandlerReturn(value=value)
 
 
+def force_command(battle: Battle, ctx: BattleContext, value: list[Command]) -> HandlerReturn:
+    """強制コマンドを返すハンドラーの共通処理
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: 常にCommand.FORCEDを返す
+    """
+    return HandlerReturn(value=[Command.FORCED], stop_event=True)
+
+
 def charge_hidden_move(battle: Battle,
                        ctx: BattleContext,
                        value: Any,
@@ -138,13 +152,6 @@ def restrict_commands(battle: Battle,
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
-
-
-def あばれる_modify_command_options(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """あばれる状態では強制コマンドのみ選択可能にする。"""
-    return HandlerReturn(value=[Command.FORCED], stop_event=True)
-
-# TODO : 解除後の処理は Event.ON_VOLATILE_END に分ける。残りの処理はtick_volatileを呼び出すだけにする。
 
 
 def あばれる_tick(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
@@ -387,7 +394,7 @@ def さわぐ_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRe
     return HandlerReturn(value=True)
 
 
-def さわぐ_remove(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def さわぐ_remove_さわがしい(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """さわぐ状態が解除されたときの処理（相手のさわがしいも解除する）"""
     foe = battle.foe(ctx.source)
     battle.volatile_manager.remove(foe, "さわがしい")
@@ -443,7 +450,7 @@ def さわぐ_prevent_nemuke(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def ふういん_try_block(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ふういん_try_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """ふういん状態の相手が共有技を使えないようにする。"""
     if ctx.defender.has_move(ctx.move.name):
         battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
@@ -471,7 +478,7 @@ def しおづけ_damage(battle: Battle, ctx: BattleContext, value: Any) -> Handl
     return HandlerReturn(value=value)
 
 
-def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def じごくづき_restrict_commands(battle: Battle, ctx: BattleContext, value: list[Command]) -> HandlerReturn:
     """じごくづき状態によるコマンドオプション変更
 
     Args:
@@ -691,9 +698,11 @@ def ほろびのうた_faint(battle: Battle, ctx: BattleContext, value: Any) -> 
 
 def マジックコート_reflect(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
-    value = ctx.move.has_label("reflectable")
-    if value:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_REFLECTED)
+    value = (
+        ctx.move.category == "変化"
+        and ctx.move.target == "foe"
+    )
+
     return HandlerReturn(value=value)
 
 

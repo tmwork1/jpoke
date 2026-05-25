@@ -1918,7 +1918,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_OUT: h.AbilityHandler(
-                h.マイティチェンジ_on_switch_out,
+                h.マイティチェンジ_change_form,
                 subject_spec="source:self",
             ),
         },

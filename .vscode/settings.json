@@ -3,7 +3,8 @@
         "PYTHONPATH": "${workspaceFolder}/src"
     },
     "terminal.integrated.env.windows": {
-        "PYTHONPATH": "${workspaceFolder}/src"
+        "PYTHONPATH": "${workspaceFolder}/src",
+        "PYTHONIOENCODING": "utf-8"
     },
     "python.defaultInterpreterPath": ".venv/Scripts/python.exe",
     "python.languageServer": "Pylance",
@@ -24,8 +25,9 @@
     ],
     // Testing
     "python.testing.pytestArgs": [
-        "tests"
+        "tests",
+        "-vv"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
 }

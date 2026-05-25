@@ -18,10 +18,8 @@ from jpoke.core import HandlerReturn, Handler
 from . import common
 
 
-AEGISLASH = "ギルガルド"
 AEGISLASH_SHIELD = "ギルガルド(シールド)"
 AEGISLASH_BLADE = "ギルガルド(ブレード)"
-PALAFIN = "イルカマン"
 PALAFIN_ZERO = "イルカマン(ナイーブ)"
 PALAFIN_HERO = "イルカマン(マイティ)"
 
@@ -840,15 +838,10 @@ def マジシャン_steal_item(battle: Battle, ctx: BattleContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def マイティチェンジ_on_switch_out(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def マイティチェンジ_change_form(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """マイティチェンジ特性: ナイーブフォルムで引っ込むとマイティフォルムへ変化する。"""
     mon = ctx.source
-    if (
-        mon is not None
-        and mon.name == PALAFIN
-        and mon.name == PALAFIN_ZERO
-        and mon.alive
-    ):
+    if mon.name == PALAFIN_ZERO and mon.alive:
         mon.set_form(PALAFIN_HERO)
     return HandlerReturn(value=value)
 
@@ -1628,10 +1621,12 @@ def マジックガード_ignore_damage(battle: Battle, ctx: BattleContext, valu
 
 def マジックミラー_reflect(battle: Battle, ctx: BattleContext, value: bool) -> HandlerReturn:
     """マジックミラー特性: 反射対象の変化技を跳ね返す。"""
-    value = ctx.move.has_label("reflectable")
+    value = (
+        ctx.move.category == "変化"
+        and ctx.move.target == "foe"
+    )
     if value:
-        announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_REFLECTED)
+        announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
     return HandlerReturn(value=value)
 
 

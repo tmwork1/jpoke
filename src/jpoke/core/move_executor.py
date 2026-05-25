@@ -292,15 +292,16 @@ class MoveExecutor:
         if not self.move_success:
             return
 
-        # 反射判定
-        if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
-            ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
-
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
 
         # HPコストの支払い
         self.events.emit(Event.ON_PAY_HP, ctx)
+
+        # 反射判定
+        if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
+            self.battle.add_event_log(ctx.defender, LogCode.MOVE_REFLECTED)
+            ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 連続技のヒット回数を決定
         hit_count = self._resolve_hit_count(ctx)
@@ -311,12 +312,13 @@ class MoveExecutor:
             ctx.hit_index = hit_index
 
             # ヒットごとの技の威力を設定
-            ctx.move.set_power(self._resolve_hit_power(ctx.move, hit_index))
+            power = self._resolve_hit_power(ctx.move, hit_index)
+            ctx.move.set_power(power)
 
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (
                 ctx.move.accuracy is not None
-                and (ctx.move.has_label("check_hit_each_time") or hit_index == 1)
+                and (hit_index == 1 or ctx.move.has_label("check_hit_each_time"))
             )
 
             if need_hit_check and not self._check_hit(ctx):
@@ -328,6 +330,7 @@ class MoveExecutor:
             if not self.move_applied:
                 return False
 
+            # 技が当たったときの処理を実行
             self._execute_hit(ctx)
 
             # ひんしになったら中断
@@ -347,6 +350,7 @@ class MoveExecutor:
             ctx: 技実行中のバトルコンテキスト
         """
         # 変化技はダメージ計算をせず、効果処理のみ行う
+        print(f"Executing hit : {ctx.move.name} {ctx.hit_index}/{ctx.hit_count}")
         if ctx.move.category == "変化":
             self.events.emit(Event.ON_STATUS_HIT, ctx)
             return

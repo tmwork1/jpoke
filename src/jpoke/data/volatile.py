@@ -39,7 +39,7 @@ VOLATILES: dict[str, VolatileData] = {
         forced=True,
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=[Command.FORCED], stop_event=True),  # TODO : Command.FORCEDを返すだけの専用関数を作る
+                h.force_command,
                 subject_spec="source:self",
             ),
             Event.ON_MOVE_DAMAGE: h.VolatileHandler(
@@ -167,16 +167,16 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_VOLATILE_END: h.VolatileHandler(
-                h.さわぐ_remove,
+                h.さわぐ_remove_さわがしい,
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END_3: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="さわぐ"),
                 subject_spec="source:self",
             ),
-            Event.ON_MODIFY_MOVE: h.VolatileHandler(
-                h.さわぐ_modify_move,
-                subject_spec="attacker:self",
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
             ),
             Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
                 h.さわぐ_prevent_sleep,
@@ -374,7 +374,7 @@ VOLATILES: dict[str, VolatileData] = {
     "ふういん": VolatileData(
         handlers={
             Event.ON_TRY_ACTION: h.VolatileHandler(
-                h.ふういん,
+                h.ふういん_try_action,
                 subject_spec="defender:self",
                 priority=100,
             ),
@@ -540,7 +540,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=[Command.FORCED], stop_event=True),  # TODO : Command.FORCEDを返すだけの専用関数を作る
+                h.force_command,
                 subject_spec="source:self",
             ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(

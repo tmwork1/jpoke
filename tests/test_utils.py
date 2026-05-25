@@ -31,6 +31,7 @@ def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
     attacker = battle.actives[atk_idx]
     move = attacker.moves[move_idx]
     battle.run_move(attacker, move)
+    battle.print_logs()
     return move
 
 
