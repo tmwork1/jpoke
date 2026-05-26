@@ -1091,9 +1091,7 @@ def test_サイドフィールドカウント減少(field: SideField):
         side0={field: initial_duration},
         side1={field: initial_duration},
     )
-    fields = [
-        battle.get_side(player).get(field) for player in battle.players
-    ]
+    fields = [battle.get_side(ply).get(field) for ply in battle.players]
     # 初期カウント確認
     assert all(f.count == initial_duration for f in fields)
     # カウントダウン確認

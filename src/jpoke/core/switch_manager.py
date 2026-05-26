@@ -48,7 +48,7 @@ class SwitchManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def switch_in(self, player: Player, mon: Pokemon):
+    def _switch_in(self, player: Player, mon: Pokemon):
         # TODO : 関数内の処理はハンドラの登録に限定すべきか
         """ポケモンの入場時ハンドラーを登録する。
 
@@ -68,13 +68,15 @@ class SwitchManager:
         self.battle.add_event_log(mon, LogCode.SWITCHED_IN,
                                   payload={"pokemon": mon.name})
 
-    def switch_out(self, mon: Pokemon):
+    def _switch_out(self, mon: Pokemon):
         # TODO : ハンドラの解除とその他のリセットは関数を分けるべきか
         """ポケモンの退場時ハンドラーを解除する。
 
         Args:
             mon: 引っ込むポケモン
         """
+
+        self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
 
         # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
         for name in list(mon.volatiles.keys()):
@@ -95,14 +97,6 @@ class SwitchManager:
 
         self.battle.add_event_log(mon, LogCode.SWITCHED_OUT,
                                   payload={"pokemon": mon.name})
-
-    def has_interrupt(self) -> bool:
-        """割り込みフラグが設定されているか確認。
-
-        Returns:
-            いずれかのプレイヤーに割り込みフラグがある場合True
-        """
-        return any(pl.interrupt != Interrupt.NONE for pl in self.battle.players)
 
     def override_interrupt(self, flag: Interrupt, only_first: bool = True):
         """割り込みフラグを上書き。
@@ -140,11 +134,12 @@ class SwitchManager:
         # 退場
         old = player.active
         if old is not None:
-            self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
-            self.switch_out(old)
+            self._switch_out(old)
 
         # 入場
-        self.switch_in(player, new)
+        self._switch_in(player, new)
+
+        # 交代したプレイヤーにフラグを設定
         player.has_switched = True
 
         # ポケモンが場に出た時の処理
@@ -152,7 +147,7 @@ class SwitchManager:
             self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=new))
 
             # リクエストがなくなるまで再帰的に交代する
-            while self.has_interrupt():
+            while self.battle.has_interrupt():
                 flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
                 self.override_interrupt(flag)
                 self.run_interrupt_switch(flag)
@@ -196,9 +191,9 @@ class SwitchManager:
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
             player.clear_reserved_commands()
-            command = player.choose_switch_command(self.battle)
+            sim = self.battle.copy(player)
+            command = player.choose_switch_command(sim)
 
-            self.battle.add_command_log(player, command)
             self.run_switch(
                 player,
                 player.team[command.index],
@@ -222,8 +217,8 @@ class SwitchManager:
         if self.battle.judge_winner():
             return
 
-        # 交代フラグを設定
-        if not self.has_interrupt():
+        # 瀕死による交代フラグを設定
+        if not self.battle.has_interrupt():
             for player in self.battle.players:
                 if player.active.fainted:
                     player.interrupt = Interrupt.FAINTED

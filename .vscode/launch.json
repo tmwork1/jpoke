@@ -5,8 +5,9 @@
             "name": "Python デバッガー: 現在のファイル",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/generate_test_list.py",
+            //"program": "${workspaceFolder}/scripts/generate_test_list.py",
             //"program": "${workspaceFolder}/scripts/random_1on1.py",
+            "program": "${workspaceFolder}/scripts/search_depth.py",
             //"program": "${workspaceFolder}/tests/test_megaevol.py",
             "console": "integratedTerminal"
         }

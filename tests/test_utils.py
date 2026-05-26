@@ -195,9 +195,8 @@ def can_switch(battle: Battle, idx: int) -> bool:
     Raises:
         IndexError: 無効なプレイヤーインデックスが指定された場合
     """
-    if not (0 <= idx < len(battle.players)):
-        raise IndexError(f"Invalid player index: {idx}. Must be between 0 and {len(battle.players) - 1}")
-    commands = battle.get_available_action_commands(battle.players[idx])
+    player = battle.players[idx]
+    commands = battle.get_available_action_commands(player)
     return any(c.is_switch for c in commands)
 
 

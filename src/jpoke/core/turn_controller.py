@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.core import BattleContext
 from jpoke.enums import Event, Command, Interrupt, LogCode
+from jpoke.utils import fast_copy
 
 
 class TurnController:
@@ -23,7 +24,7 @@ class TurnController:
     - 勝敗判定とスコア計算
     """
 
-    def __init__(self, battle: "Battle"):
+    def __init__(self, battle: Battle):
         """TurnControllerを初期化。
 
         Args:
@@ -31,7 +32,22 @@ class TurnController:
         """
         self.battle = battle
 
-    def update_reference(self, battle: "Battle"):
+    def __deepcopy__(self, memo):
+        """Battleインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Battle: コピーされたBattleインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
+
+    def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
 
         Args:
@@ -49,17 +65,7 @@ class TurnController:
         for player in self.battle.players:
             player.init_turn()
 
-    def run_selection(self):
-        """ポケモン選出処理を実行。
-
-        各プレイヤーが選出していない場合、方策関数に従って選出を行う。
-        """
-        for player in self.battle.players:
-            if not player.selection_idxes:
-                commands = player.choose_selection_commands(self.battle)
-                player.selection_idxes = [c.index for c in commands]
-
-    def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
+    def _calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
 
         Args:
@@ -86,7 +92,7 @@ class TurnController:
         if self.battle.winner is not None:
             return self.battle.winner
 
-        TOD_scores = [self.calc_tod_score(pl) for pl in self.battle.players]
+        TOD_scores = [self._calc_tod_score(pl) for pl in self.battle.players]
         if 0 in TOD_scores:
             loser_idx = TOD_scores.index(0)
             loser = self.battle.players[loser_idx]
@@ -98,47 +104,91 @@ class TurnController:
 
         return None
 
-    def advance_turn(self, commands: dict["Player", Command] | None = None):
-        """ターンを1つ進める。
-
-        Args:
-            commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
-        """
-        if self.battle.turn < 0:
-            raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
-
-        # 割り込み中でなければ、ターン開始時にカウントを進める
-        if not self.battle.has_interrupt():
-            self.battle.turn += 1
-
-        # 引数のコマンドをスケジュールに追加する
-        if commands:
-            for player, command in commands.items():
-                player.reserve_command(command)
-                self.battle.add_command_log(player, command)
-
-        self._process_turn_phases()
-
-    def start_battle(self):
+    def start_battle(self, commands: dict[Player, list[Command]]):
         """バトル開始処理を実行する。
 
         選出と初期繰り出しを行い、バトルを0ターン目の開始状態にする。
         """
-        if self.battle.turn >= 0:
+        if self.battle.turn > 0:
             raise RuntimeError("Battle already started.")
 
         self.battle.add_event_log(0, LogCode.GAME_STARTED)
-        self.battle.turn = 0
 
         # ポケモンを選出
-        self.run_selection()
+        for player, cmds in commands.items():
+            player.selection_indexes = [c.index for c in cmds]
+
         # ポケモンを場に出す
         self.battle.run_initial_switch()
 
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
-    def _run_terastal(self):
+        # ターンを1つ進める
+        self.battle.turn += 1
+
+    def advance_turn(self, commands: dict["Player", Command]):
+        """ターンを1つ進める。
+
+        Args:
+            commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
+        """
+        if self.battle.turn == 0:
+            raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
+
+        # 引数のコマンドをスケジュールに追加する
+        for player, cmd in commands.items():
+            player.reserve_command(cmd)
+
+        # ターン開始処理
+        self._begin_turn(commands)
+
+        # 交代フェーズ
+        self._run_switch_phase()
+
+        # テラスタル
+        self._run_terastal_phase()
+
+        # メガシンカ
+        self._run_megaevolve_phase()
+
+        # 技の処理
+        self._run_move_phase()
+
+        # ターン終了時の処理
+        self._run_end_phase()
+
+    def _begin_turn(self, commands: dict[Player, Command]):
+        """ターン開始処理を実行する。"""
+        if self.battle.is_new_turn():
+            self.init_turn()
+
+    def _run_switch_phase(self):
+        """交代フェーズを実行する。"""
+        for attacker in self.battle.calc_speed_order():
+            idx = self.battle.actives.index(attacker)
+            player = self.battle.players[idx]
+
+            # だっしゅつパックによる交代フラグを用意
+            interrupt = Interrupt.ejectpack_on_switch(idx)
+
+            # 交代
+            if self.battle.is_new_turn():
+                if player.reserved_commands[0].is_switch:
+                    # 予約されている交代コマンドを取得
+                    command = player.reserved_commands.pop(0)
+
+                    # 交代を実行
+                    new = player.team[command.index]
+                    self.battle.run_switch(player, new)
+
+                # だっしゅつパックによる割り込みフラグを更新
+                self.battle.override_interrupt(interrupt)
+
+            # だっしゅつパックによる交代
+            self.battle.run_interrupt_switch(interrupt)
+
+    def _run_terastal_phase(self):
         """テラスタルを実行する。"""
         for mon in self.battle.calc_action_order():
             player = self.battle.get_player(mon)
@@ -152,7 +202,7 @@ class TurnController:
                 self.battle.add_event_log(mon, LogCode.TERASALLIZED,
                                           payload={"type": mon.tera_type})
 
-    def _run_megaevolve(self):
+    def _run_megaevolve_phase(self):
         """メガシンカを実行する。"""
         for mon in self.battle.calc_action_order():
             player = self.battle.get_player(mon)
@@ -172,62 +222,17 @@ class TurnController:
                 # メガシンカ後の特性が発動するイベントを追加
                 self.events.emit(Event.ON_ABILITY_ENABLED, BattleContext(source=mon))
 
-    def _process_turn_phases(self):
-        """内部的なターン進行処理を実行。
-
-        割り込みの有無に応じて、ターンの各フェーズを順番に処理する。
-        """
-        # 通常ターンの処理
-        if not self.battle.has_interrupt():
-            # ターン初期化
-            self.init_turn()
-
-            for player in self.battle.players:
-                # コマンドが予約されていなければ、方策関数に従ってコマンドを予約する
-                if not player.reserved_commands:
-                    command = player.choose_action_command(self.battle)
-                    player.reserve_command(command)
-                    self.battle.add_command_log(player, command)
-
-            # 行動前の処理
-            self.events.emit(Event.ON_BEFORE_ACTION)
-
-        # 交代処理
-        for attacker in self.battle.calc_speed_order():
-            # 交代フラグ
-            idx = self.battle.actives.index(attacker)
-            interrupt = Interrupt.ejectpack_on_switch(idx)
-
-            # 交代
-            if not self.battle.has_interrupt():
-                player = self.battle.players[idx]
-                if player.reserved_commands[0].is_switch:
-                    # 予約されている交代コマンドを取得
-                    command = player.reserved_commands.pop(0)
-                    # 交代を実行
-                    new = player.team[command.index]
-                    self.battle.run_switch(player, new)
-
-                # だっしゅつパックによる割り込みフラグを更新
-                self.battle.override_interrupt(interrupt)
-
-            # だっしゅつパックによる交代
-            self.battle.run_interrupt_switch(interrupt)
-
-        # 技発動フェーズに移る直前の処理 (テラスタル、メガシンカなど)
-        self._run_terastal()
-        self._run_megaevolve()
+    def _run_move_phase(self):
+        """技発動フェーズを実行する。"""
         self.events.emit(Event.ON_BEFORE_MOVE)
 
-        # 技の処理
-        action_orders = ["先攻", "後攻"]
-        for attacker, action_order in zip(self.battle.calc_action_order(), action_orders):
+        for attacker in self.battle.calc_action_order():
             player = self.battle.get_player(attacker)
 
             if player.has_switched:
                 continue
 
-            if not self.battle.has_interrupt():
+            if self.battle.is_new_turn():
                 # コマンドを取得
                 command = player.reserved_commands.pop(0)
 
@@ -253,36 +258,24 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-        # ターン終了時の処理 (1)
-        if not self.battle.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_1)
+    def _run_end_phase(self):
+        """ターン終了時の処理を実行する。"""
+        # ターン終了時の処理 (1~4)
+        turn_end_events = [
+            Event.ON_TURN_END_1,
+            Event.ON_TURN_END_2,
+            Event.ON_TURN_END_3,
+            Event.ON_TURN_END_4,
+        ]
+        for event in turn_end_events:
+            if self.battle.is_new_turn():
+                self.events.emit(event)
 
-        # ききかいひによる交代 (1)
-        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (2)
-        if not self.battle.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_2)
-
-        # ききかいひによる交代 (2)
-        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (3)
-        if not self.battle.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_3)
-
-        # ききかいひによる交代 (3)
-        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (4)
-        if not self.battle.has_interrupt():
-            self.events.emit(Event.ON_TURN_END_4)
-
-        # ききかいひによる交代 (4)
-        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+                # ききかいひによる交代
+                self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # ターン終了時の処理 (5)
-        if not self.battle.has_interrupt():
+        if self.battle.is_new_turn():
             self.events.emit(Event.ON_TURN_END_5)
 
             # だっしゅつパックによる割り込みフラグを更新
@@ -295,5 +288,6 @@ class TurnController:
         self.battle.run_faint_switch()
 
         # ターン終了時の処理 (6)
-        if not self.battle.has_interrupt():
+        if self.battle.is_new_turn():
             self.battle.events.emit(Event.ON_TURN_END_6)
+            self.battle.turn += 1

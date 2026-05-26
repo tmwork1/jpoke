@@ -120,11 +120,13 @@ class Command(Enum):
         return self.value is None
 
     @property
-    def index(self) -> int | None:
-        """コマンドのインデックス (0-9)"""
+    def index(self) -> int:
+        """コマンドのインデックス (0-9)
+        特殊コマンドは0を返す。
+        """
         if "_" in self.name:
             return int(self.name.split("_")[-1])
-        return None
+        return 0
 
     @property
     def is_selection(self) -> bool:

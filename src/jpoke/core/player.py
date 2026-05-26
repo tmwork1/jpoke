@@ -47,7 +47,7 @@ class Player:
         self.rating: float = 1500
 
         # ゲーム状態
-        self.selection_idxes: list[int] = []
+        self.selection_indexes: list[int] = []
         self.active_idx: int | None = None
         self.interrupt: Interrupt = Interrupt.NONE
         self.reserved_commands: list[Command] = []
@@ -75,7 +75,7 @@ class Player:
         選出、場のポケモン、割り込み状態、予約コマンドをクリアし、
         ターン状態もリセットする。
         """
-        self.selection_idxes = []
+        self.selection_indexes = []
         self.active_idx = None
         self.interrupt = Interrupt.NONE
         self.reserved_commands = []
@@ -163,7 +163,7 @@ class Player:
         Returns:
             選出されたポケモンのリスト
         """
-        return [self.team[i] for i in self.selection_idxes]
+        return [self.team[i] for i in self.selection_indexes]
 
     def can_use_terastal(self) -> bool:
         """テラスタルが使用可能かどうかを判定する。

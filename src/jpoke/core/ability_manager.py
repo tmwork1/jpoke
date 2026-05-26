@@ -18,7 +18,7 @@ class AbilityManager:
         battle: 親となるBattleインスタンス
     """
 
-    def __init__(self, battle: "Battle"):
+    def __init__(self, battle: Battle):
         """AbilityManagerを初期化する。
 
         Args:
@@ -26,7 +26,7 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def update_reference(self, battle: "Battle"):
+    def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新する。
 
         Args:

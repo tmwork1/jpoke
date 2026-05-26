@@ -53,6 +53,6 @@ def main(target: str):
 
 
 if __name__ == "__main__":
-    # main("abilities")
+    main("abilities")
     # main("items")
-    main("status_moves")
+    # main("status_moves")

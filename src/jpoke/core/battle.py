@@ -88,13 +88,13 @@ class Battle:
             seed: 乱数シード値（Noneの場合は現在時刻を使用）
         """
 
-        if seed is None:
-            seed = int(time.time())
-
         self.players: list[Player] = players
-        self.seed: int = seed
+        self.seed: int = seed or int(time.time())
 
-        self.turn: int = -1
+        self.depth: int = 0
+        self.perspective: Player | None = None  # 視点となるプレイヤー
+
+        self.turn: int = 0
         self.winner: Player | None = None
 
         self.random = Random(self.seed)
@@ -119,7 +119,7 @@ class Battle:
         self.terrain_manager: TerrainManager = TerrainManager(self)
         self.field_manager: GlobalFieldManager = GlobalFieldManager(self)
         self.side_manager: list[SideFieldManager] = [
-            SideFieldManager(self, player) for player in self.players
+            SideFieldManager(self, ply) for ply in self.players
         ]
 
         self.test_option: TestOption = TestOption()
@@ -136,18 +136,36 @@ class Battle:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
+
         fast_copy(self, new, keys_to_deepcopy=[
-            "players", "events", "event_logger", "command_logger", "random",
-            "turn_controller", "speed_calculator", "switch_manager",
-            "move_executor", "damage_calculator",
-            "ailment_manager", "volatile_manager", "query_manager",
-            "status_manager", "item_manager",
-            "command_manager", "ability_manager",
-            "weather_manager", "terrain_manager", "field_manager", "side_manager",
+            "random",
+            # "players",
+            # "events",
+            # "event_logger",
+            # "command_logger",
+            "turn_controller",
+            # "speed_calculator",
+            # "switch_manager",
+            # "move_executor",
+            # "damage_calculator",
+            # "ailment_manager",
+            # "volatile_manager",
+            # "query_manager",
+            # "status_manager",
+            # "item_manager",
+            # "command_manager",
+            # "ability_manager",
+            # "weather_manager",
+            # "terrain_manager",
+            # "field_manager",
+            # "side_manager",
         ])
 
         # 複製したBattleインスタンスへの参照を各マネージャークラスに更新
         new._update_reference()
+
+        # 深さを更新
+        new.depth += 1
 
         return new
 
@@ -199,7 +217,7 @@ class Battle:
         self.weather_manager = WeatherManager(self)
         self.terrain_manager = TerrainManager(self)
         self.field_manager = GlobalFieldManager(self)
-        self.side_manager = [SideFieldManager(self, player) for player in self.players]
+        self.side_manager = [SideFieldManager(self, ply) for ply in self.players]
 
         # 各プレイヤーとポケモンの初期化
         for player in self.players:
@@ -209,6 +227,31 @@ class Battle:
         """ターン初期化（TurnControllerへの委譲）。"""
         self.turn_controller.init_turn()
 
+    def copy(self, perspective: Player | None = None) -> Self:
+        """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
+        Args:
+            perspective: 視点となるプレイヤー
+
+        Returns:
+            Battle インスタンスのコピー
+        """
+        new = deepcopy(self)
+        new.perspective = perspective
+
+        if perspective is None:
+            return new
+
+        # 相手の選出の隠蔽
+        rival = new.rival(perspective)
+
+        # TODO : 隠蔽すべき情報
+        # 乱数シード
+        # 相手の選出インデックス
+        # 公開されていない相手ポケモンのステータス、特性、アイテム、技
+        # 相手が予約したコマンド
+
+        return new
+
     @property
     def actives(self) -> list[Pokemon]:
         """現在場に出ているポケモンのリストを取得。
@@ -216,7 +259,7 @@ class Battle:
         Returns:
             list[Pokemon]: 各プレイヤーの場のポケモン
         """
-        return [player.active for player in self.players if player.active is not None]
+        return [ply.active for ply in self.players if ply.active is not None]
 
     def is_active(self, mon: Pokemon) -> bool:
         """指定したポケモンが現在場に出ているか確認。"""
@@ -270,28 +313,12 @@ class Battle:
         for player in self.players:
             players_data.append({
                 "name": player.name,
-                "selection_indexes": player.selection_idxes,
+                "selection_indexes": player.selection_indexes,
                 "team": [mon.to_dict() for mon in player.team],
             })
 
         # TODO : export_log 実装 (後回し)
         # self.event_logger.export(file, self.seed, players_data)
-
-    def masked_copy(self, perspective: Player) -> Self:
-        # TODO : masked_copy 実装 (後回し)
-        """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
-        Args:
-            perspective: 情報を完全に保持するプレイヤー
-
-        Returns:
-            Battle インスタンスのコピー
-        """
-        new = deepcopy(self)
-
-        # 乱数の隠蔽
-        new.random.seed(int(time.time()))
-
-        return new
 
     def get_player(self, mon: Pokemon) -> Player:
         """ポケモンが所属するプレイヤーを検索する。
@@ -418,7 +445,7 @@ class Battle:
         Returns:
             TODスコア
         """
-        return self.turn_controller.calc_tod_score(player, alpha)
+        return self.turn_controller._calc_tod_score(player, alpha)
 
     def judge_winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
@@ -428,16 +455,31 @@ class Battle:
         """
         return self.turn_controller.judge_winner()
 
-    def run_selection(self):
-        """ポケモン選出処理（TurnControllerへの委譲）。"""
-        self.turn_controller.run_selection()
-
     def start(self):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
 
         選出と初期繰り出しを完了し、以降の `advance_turn` を可能にする。
         """
-        self.turn_controller.start_battle()
+        print(f"Before selection {self is self.turn_controller.battle=}")
+        commands = {
+            ply: ply.choose_selection_commands(self.copy(ply))
+            for ply in self.players
+        }
+        print(f"After selection {self is self.turn_controller.battle=}")
+        self.turn_controller.start_battle(commands)
+
+    def advance_turn(self, commands: dict[Player, Command] | None = None):
+        """ターンを進める（TurnControllerへの委譲）。
+
+        Args:
+            commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
+        """
+        if not commands:
+            commands = {
+                ply: ply.choose_action_command(self.copy(ply))
+                for ply in self.players
+            }
+        self.turn_controller.advance_turn(commands)
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。
@@ -585,12 +627,20 @@ class Battle:
         return damages
 
     def has_interrupt(self) -> bool:
-        """割り込みフラグが設定されているか確認（SwitchManagerへの委譲）。
+        """割り込みフラグが設定されているか確認。
 
         Returns:
             いずれかのプレイヤーに割り込みフラグがある場合True
         """
-        return self.switch_manager.has_interrupt()
+        return any(ply.interrupt != Interrupt.NONE for ply in self.players)
+
+    def is_new_turn(self) -> bool:
+        """新しいターンの開始かどうかを判定する。
+
+        Returns:
+            現在のターンが開始されたばかりで、まだ行動が実行されていない場合True
+        """
+        return not self.has_interrupt()
 
     def override_interrupt(self, flag: Interrupt, only_first: bool = True):
         """割り込みフラグを上書き（SwitchManagerへの委譲）。
@@ -627,16 +677,6 @@ class Battle:
     def run_faint_switch(self):
         """瀕死による交代を実行（SwitchManagerへの委譲）。"""
         self.switch_manager.run_faint_switch()
-
-    def add_command_log(self, source: Player | Pokemon, command: Command):
-        """コマンドログを追加。
-
-        Args:
-            source: Player または Pokemon インスタンス
-            command: 選択されたコマンド
-        """
-        idx = self.get_player_index(source)
-        self.command_logger.add(self.turn, idx, command)
 
     def add_event_log(self,
                       source: Player | Pokemon | int,
@@ -687,14 +727,6 @@ class Battle:
             player = self.players[log.idx]
             pokemon = log.payload.get("pokemon", "") if log.payload else ""
             print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
-
-    def advance_turn(self, commands: dict[Player, Command] | None = None):
-        """ターンを進める（TurnControllerへの委譲）。
-
-        Args:
-            commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従い、そうでなければ引数のコマンドを使用。
-        """
-        self.turn_controller.advance_turn(commands)
 
     def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
         """実際の技カテゴリを判定する（MoveExecutorへの委譲）。

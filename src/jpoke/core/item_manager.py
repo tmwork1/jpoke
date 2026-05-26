@@ -16,7 +16,7 @@ from .context import BattleContext
 class ItemManager:
     """持ち物の変更処理と関連ハンドラ同期を管理する。"""
 
-    def __init__(self, battle: "Battle"):
+    def __init__(self, battle: Battle):
         """ItemManagerを初期化する。
 
         Args:
@@ -24,7 +24,7 @@ class ItemManager:
         """
         self.battle = battle
 
-    def update_reference(self, battle: "Battle"):
+    def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新する。
 
         Args:

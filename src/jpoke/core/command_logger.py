@@ -22,7 +22,7 @@ class CommandLog:
         command: 選択されたコマンド (技選択、交代など)
     """
     turn: int
-    idx: int
+    index: int
     command: Command
 
     def to_dict(self) -> dict:
@@ -57,15 +57,15 @@ class CommandLogger:
         """すべてのログをクリアする。"""
         self.logs.clear()
 
-    def add(self, turn: int, idx: int, command: Command):
+    def add(self, turn: int, index: int, command: Command):
         """コマンドログを追加。
 
         Args:
             turn: ターン番号
-            idx: プレイヤーインデックス (0 or 1)
+            index: プレイヤーインデックス (0 or 1)
             command: 選択されたコマンド
         """
-        self.logs.append(CommandLog(turn, idx, command))
+        self.logs.append(CommandLog(turn, index, command))
 
     def get(self, turn: int, idx: int) -> list[Command]:
         """指定したターンとプレイヤーのコマンドログを取得。
@@ -78,7 +78,7 @@ class CommandLogger:
             コマンドのリスト
         """
         return [log.command for log in self.logs if
-                log.turn == turn and log.idx == idx]
+                log.turn == turn and log.index == idx]
 
     def export(self, file: str, seed: int, players_data: list[dict]):
         """バトルログをJSON形式でエクスポート。
@@ -104,7 +104,7 @@ class CommandLogger:
 
         # コマンドログを追加
         for log in self.logs:
-            data["players"][log.idx]["commands"].setdefault(
+            data["players"][log.index]["commands"].setdefault(
                 str(log.turn), []).append(log.command.name)
 
         # ファイルに書き込み

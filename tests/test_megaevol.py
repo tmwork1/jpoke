@@ -41,7 +41,7 @@ def test_メガシンカ_直接起動(stone: str, normal_name: str, mega_name: s
         team1=[Pokemon("ピカチュウ")],
     )
     t.reserve_command(battle, Command.MEGAEVOL_0)
-    battle.turn_controller._run_megaevolve()
+    battle.turn_controller._run_megaevolve_phase()
 
     mon = battle.actives[0]
     assert mon.name == mega_name
