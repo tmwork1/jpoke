@@ -94,7 +94,7 @@ class Battle:
         self.depth: int = 0
         self.perspective: Player | None = None  # 視点となるプレイヤー
 
-        self.turn: int = 0
+        self.turn: int = -1
         self.winner: Player | None = None
 
         self.random = Random(self.seed)
@@ -137,29 +137,32 @@ class Battle:
         new = cls.__new__(cls)
         memo[id(self)] = new
 
-        fast_copy(self, new, keys_to_deepcopy=[
-            "random",
-            # "players",
-            # "events",
-            # "event_logger",
-            # "command_logger",
-            "turn_controller",
-            # "speed_calculator",
-            # "switch_manager",
-            # "move_executor",
-            # "damage_calculator",
-            # "ailment_manager",
-            # "volatile_manager",
-            # "query_manager",
-            # "status_manager",
-            # "item_manager",
-            # "command_manager",
-            # "ability_manager",
-            # "weather_manager",
-            # "terrain_manager",
-            # "field_manager",
-            # "side_manager",
-        ])
+        fast_copy(
+            self, new,
+            keys_to_deepcopy=[
+                "random",
+                "players",
+                "events",
+                "event_logger",
+                "command_logger",
+                "turn_controller",
+                "speed_calculator",
+                "switch_manager",
+                "move_executor",
+                "damage_calculator",
+                "ailment_manager",
+                "volatile_manager",
+                "query_manager",
+                "status_manager",
+                "item_manager",
+                "command_manager",
+                "ability_manager",
+                "weather_manager",
+                "terrain_manager",
+                "field_manager",
+                "side_manager",
+            ]
+        )
 
         # 複製したBattleインスタンスへの参照を各マネージャークラスに更新
         new._update_reference()
@@ -236,19 +239,18 @@ class Battle:
             Battle インスタンスのコピー
         """
         new = deepcopy(self)
-        new.perspective = perspective
 
         if perspective is None:
             return new
 
         # 相手の選出の隠蔽
-        rival = new.rival(perspective)
+        i = self.players.index(perspective)
+        rival = new.rival(new.players[i])
 
         # TODO : 隠蔽すべき情報
         # 乱数シード
-        # 相手の選出インデックス
-        # 公開されていない相手ポケモンのステータス、特性、アイテム、技
-        # 相手が予約したコマンド
+        # 相手プレイヤーの情報 (選出、予約コマンド、方策関数)
+        # 公開されていない相手ポケモンの情報 (ステータス、特性、アイテム、技)
 
         return new
 
@@ -455,17 +457,38 @@ class Battle:
         """
         return self.turn_controller.judge_winner()
 
-    def start(self):
+    def resolve_selection_commands(self) -> dict[Player, list[Command]]:
+        """プレイヤーの選出コマンドを解決する。"""
+        commands = {}
+        for i, ply in enumerate(self.players):
+            sim = self.copy(ply)
+            sim_player = sim.players[i]
+            commands[ply] = sim_player.choose_selection_commands(sim)
+        return commands
+
+    def resolve_action_commands(self) -> dict[Player, Command]:
+        """プレイヤーの行動コマンドを解決する。"""
+        commands = {}
+        for i, ply in enumerate(self.players):
+            sim = self.copy(ply)
+            sim_player = sim.players[i]
+            commands[ply] = sim_player.choose_action_command(sim)
+        return commands
+
+    def resolve_switch_command(self, player: Player) -> Command:
+        """プレイヤーの交代コマンドを解決する。"""
+        i = self.players.index(player)
+        sim = self.copy(player)
+        sim_player = sim.players[i]
+        return sim_player.choose_switch_command(sim)
+
+    def start(self, commands: dict[Player, list[Command]] | None = None):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
 
         選出と初期繰り出しを完了し、以降の `advance_turn` を可能にする。
         """
-        print(f"Before selection {self is self.turn_controller.battle=}")
-        commands = {
-            ply: ply.choose_selection_commands(self.copy(ply))
-            for ply in self.players
-        }
-        print(f"After selection {self is self.turn_controller.battle=}")
+        if commands is None:
+            commands = self.resolve_selection_commands()
         self.turn_controller.start_battle(commands)
 
     def advance_turn(self, commands: dict[Player, Command] | None = None):
@@ -474,11 +497,8 @@ class Battle:
         Args:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
         """
-        if not commands:
-            commands = {
-                ply: ply.choose_action_command(self.copy(ply))
-                for ply in self.players
-            }
+        if commands is None:
+            commands = self.resolve_action_commands()
         self.turn_controller.advance_turn(commands)
 
     def run_move(self, attacker: Pokemon, move: Move):

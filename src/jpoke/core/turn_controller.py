@@ -60,11 +60,6 @@ class TurnController:
         """BattleのEventManagerへの参照を返す。"""
         return self.battle.events
 
-    def init_turn(self):
-        """ターンを初期化し、各プレイヤーの状態をリセット。"""
-        for player in self.battle.players:
-            player.init_turn()
-
     def _calc_tod_score(self, player: Player, alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
 
@@ -109,9 +104,10 @@ class TurnController:
 
         選出と初期繰り出しを行い、バトルを0ターン目の開始状態にする。
         """
-        if self.battle.turn > 0:
+        if self.battle.turn >= 0:
             raise RuntimeError("Battle already started.")
 
+        self.battle.turn = 0
         self.battle.add_event_log(0, LogCode.GAME_STARTED)
 
         # ポケモンを選出
@@ -124,24 +120,21 @@ class TurnController:
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
-        # ターンを1つ進める
-        self.battle.turn += 1
-
     def advance_turn(self, commands: dict["Player", Command]):
         """ターンを1つ進める。
 
         Args:
             commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
         """
-        if self.battle.turn == 0:
+        if self.battle.turn < 0:
             raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
+
+        # ターン開始処理
+        self._init_turn(commands)
 
         # 引数のコマンドをスケジュールに追加する
         for player, cmd in commands.items():
             player.reserve_command(cmd)
-
-        # ターン開始処理
-        self._begin_turn(commands)
 
         # 交代フェーズ
         self._run_switch_phase()
@@ -158,10 +151,12 @@ class TurnController:
         # ターン終了時の処理
         self._run_end_phase()
 
-    def _begin_turn(self, commands: dict[Player, Command]):
+    def _init_turn(self, commands: dict[Player, Command]):
         """ターン開始処理を実行する。"""
+        self.battle.turn += 1
         if self.battle.is_new_turn():
-            self.init_turn()
+            for player in self.battle.players:
+                player.init_turn()
 
     def _run_switch_phase(self):
         """交代フェーズを実行する。"""
@@ -290,4 +285,3 @@ class TurnController:
         # ターン終了時の処理 (6)
         if self.battle.is_new_turn():
             self.battle.events.emit(Event.ON_TURN_END_6)
-            self.battle.turn += 1

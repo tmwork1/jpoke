@@ -658,6 +658,9 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(h.pivot)
+        }
     ),
     "くさわけ": MoveData(
         type="くさ",
@@ -4029,6 +4032,9 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
+        handlers={
+            Event.ON_HIT: h.MoveHandler(h.pivot)
+        }
     ),
     "マグマストーム": MoveData(
         type="ほのお",

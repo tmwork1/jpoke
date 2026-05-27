@@ -47,7 +47,7 @@ class EventManager:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        return fast_copy(self, new)
+        return fast_copy(self, new, keys_to_deepcopy=["handlers"])
 
     def update_reference(self, new: Battle):
         """ディープコピー後のBattleインスタンスへの参照を更新する。

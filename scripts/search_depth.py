@@ -20,21 +20,28 @@ class SearchPlayer(Player):
 
     def choose_action_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
-        print(f"{self.name}: Action command {battle.depth=}")
-        rival = battle.rival(self)
+        print(f"[depth={battle.depth}] Choosing action command for {self.name}")
         my_commands = battle.get_available_action_commands(self)
-        rival_commands = battle.get_available_action_commands(rival)
+        # return my_commands[0]
 
-        return my_commands[0]
+        rival = battle.rival(self)
+        rival_commands = battle.get_available_action_commands(rival)
 
         # コマンドの組み合わせを総当たりで評価する
         for my_cmd, rival_cmd in product(my_commands, rival_commands):
+            print(f"\t{my_cmd} vs {rival_cmd}")
             # コマンドの組み合わせごとにBattleのコピーを作成してシミュレーション
             sim = battle.copy()
             commands = {self: my_cmd, rival: rival_cmd}
             sim.advance_turn(commands)
+            break
 
         return my_commands[0]
+
+    def choose_switch_command(self, battle: Battle) -> Command:
+        """交代コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
+        print(f"[depth={battle.depth}] Choosing switch command for {self.name}")
+        return battle.get_available_switch_commands(self)[0]
 
 
 def play_game(seed: int | None = None,
@@ -60,9 +67,9 @@ def play_game(seed: int | None = None,
 
     players.append(SearchPlayer(name="Player2"))
     players[-1].team = [
-        Pokemon("ゼニガメ", item="", moves=["とんぼがえり"]),
-        Pokemon("カメール", item="", moves=["とんぼがえり"]),
-        Pokemon("カメックス", item="", moves=["とんぼがえり"]),
+        Pokemon("ゼニガメ", item="", moves=["たいあたり"]),
+        Pokemon("カメール", item="", moves=["たいあたり"]),
+        Pokemon("カメックス", item="", moves=["たいあたり"]),
     ]
 
     # バトルを作成・実行
@@ -70,9 +77,8 @@ def play_game(seed: int | None = None,
 
     battle.start()
 
-    return battle.judge_winner(), battle.turn
-
     while True:
+        print(f"--- ターン {battle.turn} ---")
         battle.advance_turn()
         battle.print_logs()
         winner = battle.judge_winner()

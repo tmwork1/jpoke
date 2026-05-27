@@ -67,7 +67,9 @@ class Player:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        return fast_copy(self, new, keys_to_deepcopy=["team"])
+        new = fast_copy(self, new, keys_to_deepcopy=["team"])
+        new.name += "_copy"  # DEBUG: コピーされたPlayerを識別しやすくするために名前に"_copy"を追加
+        return new
 
     def init_game(self):
         """ゲーム状態をリセットする。

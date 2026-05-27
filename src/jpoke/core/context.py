@@ -79,7 +79,7 @@ class BattleContext:
     @property
     def attacker(self) -> Pokemon | None:
         """攻撃側のポケモン（source のエイリアス）。"""
-        return self.source if not self.move_reflected else self.target
+        return self.source
 
     @attacker.setter
     def attacker(self, value: Pokemon | None):
@@ -88,7 +88,7 @@ class BattleContext:
     @property
     def defender(self) -> Pokemon | None:
         """防御側のポケモン（target のエイリアス）。"""
-        return self.target if not self.move_reflected else self.source
+        return self.target
 
     @defender.setter
     def defender(self, value: Pokemon | None):

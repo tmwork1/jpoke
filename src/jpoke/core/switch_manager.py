@@ -15,6 +15,7 @@ from jpoke.enums import Interrupt, LogCode
 
 from .event_manager import Event
 from .context import BattleContext
+from jpoke.utils import fast_copy
 
 
 class SwitchManager:
@@ -42,6 +43,21 @@ class SwitchManager:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
+
+    def __deepcopy__(self, memo):
+        """Battleインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Battle: コピーされたBattleインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
 
     @property
     def events(self) -> EventManager:
@@ -75,8 +91,7 @@ class SwitchManager:
         Args:
             mon: 引っ込むポケモン
         """
-
-        self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=old))
+        self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=mon))
 
         # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
         for name in list(mon.volatiles.keys()):
@@ -181,7 +196,7 @@ class SwitchManager:
         """
         switched_players = []
 
-        for player in self.battle.players:
+        for i, player in enumerate(self.battle.players):
             if player.interrupt != flag:
                 continue
 
@@ -190,9 +205,7 @@ class SwitchManager:
                 self.battle.consume_item(player.active)
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
-            player.clear_reserved_commands()
-            sim = self.battle.copy(player)
-            command = player.choose_switch_command(sim)
+            command = self.battle.resolve_switch_command(player)
 
             self.run_switch(
                 player,

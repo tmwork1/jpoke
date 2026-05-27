@@ -12,7 +12,7 @@ from jpoke.enums import LogCode
 
 from .event_manager import Event
 from .context import BattleContext
-
+from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
 
@@ -51,6 +51,21 @@ class MoveExecutor:
         self.move_applied: bool | None = None
         self.crit_rank: int | None = None
         self.critical: bool | None = None
+
+    def __deepcopy__(self, memo):
+        """Battleインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Battle: コピーされたBattleインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
 
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。

@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from .battle import Battle
     from .player import Player
 
+from jpoke.utils import fast_copy
 from jpoke.enums import Event, Command
 from jpoke.model import Move
 
@@ -20,6 +21,21 @@ class CommandManager:
 
     def update_reference(self, battle: Battle):
         self.battle = battle
+
+    def __deepcopy__(self, memo):
+        """Battleインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Battle: コピーされたBattleインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
 
     def get_available_selection_commands(self, player: Player) -> list[Command]:
         """ポケモン選出時に使用可能なコマンドを取得する。"""

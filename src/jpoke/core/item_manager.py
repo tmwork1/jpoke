@@ -6,7 +6,8 @@ if TYPE_CHECKING:
     from .battle import Battle
     from .event_manager import EventManager
 
-from jpoke.utils.type_defs import AbilityDisabledReason, ItemDisabledReason, ItemLostCause
+from jpoke.utils import fast_copy
+from jpoke.utils.type_defs import ItemDisabledReason, ItemLostCause
 from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Move, Item
 
@@ -31,6 +32,21 @@ class ItemManager:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
+
+    def __deepcopy__(self, memo):
+        """Battleインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            Battle: コピーされたBattleインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
 
     @property
     def events(self) -> EventManager:
