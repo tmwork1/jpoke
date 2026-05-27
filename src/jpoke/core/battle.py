@@ -497,7 +497,7 @@ class Battle:
         Args:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
         """
-        if commands is None:
+        if not commands:
             commands = self.resolve_action_commands()
         self.turn_controller.advance_turn(commands)
 

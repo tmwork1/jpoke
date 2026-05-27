@@ -365,7 +365,6 @@ class MoveExecutor:
             ctx: 技実行中のバトルコンテキスト
         """
         # 変化技はダメージ計算をせず、効果処理のみ行う
-        print(f"Executing hit : {ctx.move.name} {ctx.hit_index}/{ctx.hit_count}")
         if ctx.move.category == "変化":
             self.events.emit(Event.ON_STATUS_HIT, ctx)
             return

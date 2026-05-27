@@ -21,6 +21,7 @@ class SearchPlayer(Player):
     def choose_action_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
         print(f"[depth={battle.depth}] Choosing action command for {self.name}")
+        player_index = battle.players.index(self)
         my_commands = battle.get_available_action_commands(self)
         # return my_commands[0]
 
@@ -29,10 +30,12 @@ class SearchPlayer(Player):
 
         # コマンドの組み合わせを総当たりで評価する
         for my_cmd, rival_cmd in product(my_commands, rival_commands):
-            print(f"\t{my_cmd} vs {rival_cmd}")
+            print(f"\tSimulation {my_cmd} vs {rival_cmd}")
             # コマンドの組み合わせごとにBattleのコピーを作成してシミュレーション
             sim = battle.copy()
-            commands = {self: my_cmd, rival: rival_cmd}
+            sim_player = sim.players[player_index]
+            sim_rival = sim.rival(sim_player)
+            commands = {sim_player: my_cmd, sim_rival: rival_cmd}
             sim.advance_turn(commands)
             break
 
@@ -60,9 +63,9 @@ def play_game(seed: int | None = None,
     # Player 1
     players.append(SearchPlayer(name="Player1"))
     players[-1].team = [
-        Pokemon("ヒトカゲ", item="", moves=["クイックターン"]),
-        Pokemon("リザード", item="", moves=["クイックターン"]),
-        Pokemon("リザードン", item="", moves=["クイックターン"]),
+        Pokemon("ヒトカゲ", item="", moves=["たいあたり"]),
+        Pokemon("リザード", item="", moves=["たいあたり"]),
+        Pokemon("リザードン", item="", moves=["たいあたり"]),
     ]
 
     players.append(SearchPlayer(name="Player2"))

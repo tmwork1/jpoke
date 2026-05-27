@@ -120,7 +120,7 @@ class TurnController:
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
-    def advance_turn(self, commands: dict["Player", Command]):
+    def advance_turn(self, commands: dict[Player, Command]):
         """ターンを1つ進める。
 
         Args:

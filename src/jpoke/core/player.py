@@ -104,6 +104,16 @@ class Player:
         """
         self.reserved_commands.append(command)
 
+    @property
+    def next_command(self) -> Command | None:
+        """次に実行するコマンドを取得する。
+
+        Returns:
+            予約されたコマンドのうち、最初の1つ。予約がない場合はNone
+        """
+        if self.reserved_commands:
+            return self.reserved_commands[0]
+
     def clear_reserved_commands(self):
         """予約されたコマンドをすべてクリアする。"""
         self.reserved_commands = []
