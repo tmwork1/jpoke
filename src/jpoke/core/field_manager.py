@@ -56,22 +56,13 @@ class BaseFieldManager(Generic[T]):
         fast_copy(self, new, keys_to_deepcopy=["fields"])
         return new
 
-    def update_reference(self, new_battle: Battle, new_owners: list[Player]):
+    def update_reference(self, new_battle: Battle):
         """ディープコピー後の参照を更新する。
 
         Args:
             new_battle: 新しいBattleインスタンス
-            new_owners: 新しい所有者リスト
         """
         self.battle = new_battle
-        self.owners = new_owners
-        for field in self.fields.values():
-            field.update_reference(new_owners)
-            if not field.is_active:
-                continue
-            # アクティブなフィールドのハンドラーを再登録
-            for owner in new_owners:
-                field.register_handlers(self.events, owner)
 
     @property
     def events(self) -> EventManager:
@@ -273,14 +264,6 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
             return super().apply(name, count, source=source)
         return False
 
-    def update_reference(self, new_battle: Battle):
-        """ディープコピー後の参照を更新する。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        return super().update_reference(new_battle, new_battle.players)
-
 
 class TerrainManager(ExclusiveFieldManager[Terrain]):
     """フィールド（地形）を管理するクラス。
@@ -295,14 +278,6 @@ class TerrainManager(ExclusiveFieldManager[Terrain]):
             battle: Battleインスタンス
         """
         super().__init__(battle, battle.players, Terrain)
-
-    def update_reference(self, new_battle: Battle):
-        """ディープコピー後の参照を更新する。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        return super().update_reference(new_battle, new_battle.players)
 
 
 class GlobalFieldManager(StackableFieldManager[GlobalField]):
@@ -327,14 +302,6 @@ class GlobalFieldManager(StackableFieldManager[GlobalField]):
                 "ワンダールーム": Field("ワンダールーム", battle.players),
             }
         )
-
-    def update_reference(self, new_battle: Battle):
-        """ディープコピー後の参照を更新する。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        return super().update_reference(new_battle, new_battle.players)
 
 
 class SideFieldManager(StackableFieldManager[SideField]):
@@ -368,12 +335,3 @@ class SideFieldManager(StackableFieldManager[SideField]):
                 "ねばねばネット": Field("ねばねばネット", [player]),
             }
         )
-
-    def update_reference(self, new_battle: Battle, new_owner: Player):
-        """ディープコピー後の参照を更新する。
-
-        Args:
-            battle: 新しいBattleインスタンス
-            player: 新しいプレイヤー
-        """
-        super().update_reference(new_battle, [new_owner])

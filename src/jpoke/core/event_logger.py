@@ -30,6 +30,8 @@ class Payload(TypedDict, total=False):
     value: int | float | None
     hp: int | None
     max_hp: int | None
+    field: str | None
+    count: int | None
     text: str | None
 
 
@@ -180,13 +182,6 @@ class EventLogger:
     def __init__(self):
         """EventLoggerを初期化する。"""
         self.logs: list[EventLog] = []
-
-    def __deepcopy__(self, memo):
-        """EventLoggerのディープコピーを作成する。"""
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        return fast_copy(self, new)
 
     def clear(self):
         """すべてのログをクリアする。"""

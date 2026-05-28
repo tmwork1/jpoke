@@ -1647,7 +1647,7 @@ def マジックミラー_reflect(battle: Battle, ctx: BattleContext, value: boo
 def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: BattleContext, value: dict) -> HandlerReturn:
     """ミラーアーマー特性: 相手由来の能力ランク低下を反射する。"""
     can_reflect = (
-        ctx.is_foe_target
+        ctx.is_foe_target()
         and ctx.stat_change_reason != "ミラーアーマー"
     )
     if can_reflect:

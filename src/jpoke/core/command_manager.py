@@ -19,9 +19,6 @@ class CommandManager:
     def __init__(self, battle: Battle):
         self.battle = battle
 
-    def update_reference(self, battle: Battle):
-        self.battle = battle
-
     def __deepcopy__(self, memo):
         """Battleインスタンスのディープコピーを作成する。
 
@@ -37,14 +34,19 @@ class CommandManager:
         fast_copy(self, new, keys_to_deepcopy=[])
         return new
 
+    def update_reference(self, battle: Battle):
+        self.battle = battle
+
     def get_available_selection_commands(self, player: Player) -> list[Command]:
         """ポケモン選出時に使用可能なコマンドを取得する。"""
         return Command.selection_commands()[:len(player.team)]
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
         """交代可能なコマンドのリストを取得する。"""
-        if self.battle.query_manager.is_trapped(player.active):
+        active = self.battle.get_active(player)
+        if self.battle.query_manager.is_trapped(active):
             return []
+        selection = self.battle.player_states[player.index].selection
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
                 if mon in player.selection and mon is not player.active]
 

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
+from jpoke.utils.type_defs import Type, MoveCategory
 from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
 
@@ -53,13 +54,13 @@ class MoveExecutor:
         self.critical: bool | None = None
 
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
+        """MoveExecutorインスタンスのディープコピーを作成する。
 
         Args:
             memo: コピー済みオブジェクトのメモ辞書
 
         Returns:
-            Battle: コピーされたBattleインスタンス
+            MoveExecutor: コピーされたMoveExecutorインスタンス
         """
         cls = self.__class__
         new = cls.__new__(cls)
@@ -273,11 +274,8 @@ class MoveExecutor:
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
 
         if type_modifier == 0:
-            self.battle.add_event_log(
-                ctx.attacker,
-                LogCode.MOVE_IMMUNED,
-                payload={"reason": "タイプ無効"},
-            )
+            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
+                                      payload={"reason": "タイプ無効"})
             return False
         return True
 
@@ -376,8 +374,9 @@ class MoveExecutor:
 
         damage = self.events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
-        hp_delta = self.battle.modify_hp(ctx.defender, -damage, source=ctx.attacker,
-                                         move=ctx.move, reason="move_damage")
+        hp_delta = self.battle.modify_hp(
+            ctx.defender, -damage, source=ctx.attacker, move=ctx.move, reason="move_damage"
+        )
         if hp_delta < 0:
             ctx.defender.hits_taken += 1
 
@@ -405,7 +404,7 @@ class MoveExecutor:
             ctx.move.has_label("contact")
         )
 
-    def resolve_move_type(self, attacker: Pokemon, move: Move) -> str:
+    def resolve_move_type(self, attacker: Pokemon, move: Move) -> Type:
         """技の有効タイプを取得する。
 
         Args:
@@ -425,7 +424,7 @@ class MoveExecutor:
             value=move.data.type,
         )
 
-    def resolve_move_category(self, attacker: Pokemon, move: Move) -> str:
+    def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
         """技の有効なカテゴリを判定する。
 
         Args:

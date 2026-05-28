@@ -25,14 +25,6 @@ class ItemManager:
         """
         self.battle = battle
 
-    def update_reference(self, battle: Battle):
-        """Battleインスタンスの参照を更新する。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        self.battle = battle
-
     def __deepcopy__(self, memo):
         """Battleインスタンスのディープコピーを作成する。
 
@@ -40,13 +32,21 @@ class ItemManager:
             memo: コピー済みオブジェクトのメモ辞書
 
         Returns:
-            Battle: コピーされたBattleインスタンス
+            ItemManager: コピーされたItemManagerインスタンス
         """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[])
         return new
+
+    def update_reference(self, battle: Battle):
+        """Battleインスタンスの参照を更新する。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
 
     @property
     def events(self) -> EventManager:
@@ -57,7 +57,7 @@ class ItemManager:
         """ポケモンの持ち物を更新し、ハンドラ登録も同期する。
 
         Args:
-            target: 持ち物を変更するポケモン
+            mon: 持ち物を変更するポケモン
             item: 新しい持ち物
         """
         is_active = self.battle.is_active(mon)
@@ -72,18 +72,18 @@ class ItemManager:
             mon.item.register_handlers(self.events, mon)
             self.battle.events.emit(Event.ON_ITEM_ENABLED, ctx)
 
-    def lose_item(self, target: Pokemon, cause: ItemLostCause = "remove") -> bool:
+    def lose_item(self, mon: Pokemon, cause: ItemLostCause = "remove") -> bool:
         """対象の道具を喪失状態にする。"""
-        if not target.has_item():
+        if not mon.has_item():
             return False
 
-        item = target.item
-        item.unregister_handlers(self.events, target)
+        item = mon.item
+        item.unregister_handlers(self.events, mon)
         item.revealed = True
         item.lost_cause = cause
         item.add_disable_reason("consumed")
 
-        self.battle.add_event_log(target, LogCode.ITEM_LOST,
+        self.battle.add_event_log(mon, LogCode.ITEM_LOST,
                                   payload={"item": item.name, "reason": cause})
         return True
 
@@ -165,19 +165,14 @@ class ItemManager:
         """
         if not mon1.has_item() and not mon2.has_item():
             return False
-        if not self.can_change_item(mon1, mon1, move=move, reason="swap"):
-            return False
-        if not self.can_change_item(mon1, mon2, move=move, reason="swap"):
+        if not self.can_change_item(mon1, mon1, move=move):
             return False
 
-        source_item = mon1.item.name
-        target_item = mon2.item.name
-        if mon1.has_item():
-            self.lose_item(mon1, cause="swap")
-        if mon2.has_item():
-            self.lose_item(mon2, cause="swap")
-        self.set_item(mon1, target_item)
-        self.set_item(mon2, source_item)
+        mons = [mon1, mon2]
+        item_names = [mon.item.name for mon in mons]
+        for i, mon in enumerate(mons):
+            self.lose_item(mon, cause="swap")
+            self.set_item(mon, item_names[1 - i])
         return True
 
     def take_item(self,
@@ -229,9 +224,7 @@ class ItemManager:
         """
         if not check_on_empty and not target.has_item():
             return False
-        if not self.can_change_item(source, target, move=move, reason=reason):
-            return False
-        if not target.has_item():
+        if not self.can_change_item(source, target, move=move):
             return False
 
         self.lose_item(target, cause=reason)

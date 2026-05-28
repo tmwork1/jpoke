@@ -31,14 +31,7 @@ class Item(GameEffect):
         memo[id(self)] = new
         return fast_copy(self, new)
 
-    def init_game(self):
-        """ゲーム初期化処理。
-
-        持ち物の状態をリセットし、ゲーム開始時の状態にする。
-        """
-        self.bench_reset()
-
-    def bench_reset(self):
+    def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理。
 
         持ち物の状態をリセットする。

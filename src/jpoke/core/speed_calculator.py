@@ -25,7 +25,7 @@ class SpeedCalculator:
         battle: 親となるBattleインスタンス
     """
 
-    def __init__(self, battle: 'Battle'):
+    def __init__(self, battle: Battle):
         """SpeedCalculatorを初期化。
 
         Args:
@@ -33,28 +33,28 @@ class SpeedCalculator:
         """
         self.battle = battle
 
-    def update_reference(self, battle: 'Battle'):
-        """Battleインスタンスの参照を更新。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        self.battle = battle
-
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
+        """SpeedCalculatorインスタンスのディープコピーを作成する。
 
         Args:
             memo: コピー済みオブジェクトのメモ辞書
 
         Returns:
-            Battle: コピーされたBattleインスタンス
+            SpeedCalculator: コピーされたSpeedCalculatorインスタンス
         """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[])
         return new
+
+    def update_reference(self, battle: Battle):
+        """Battleインスタンスの参照を更新。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
 
     @property
     def events(self) -> EventManager:
@@ -165,18 +165,18 @@ class SpeedCalculator:
             行動順にソートされたポケモンのリスト
         """
         actives, speeds = [], []
-        for i, player in enumerate(self.battle.players):
-            if player.has_switched:
+        for player, state in self.battle.player_states.items():
+            if state.has_switched:
                 continue
 
-            mon = player.active
+            mon = state.active
 
             # 行動速度を計算
             speed_key = self.calc_speed_order_key(mon)
 
             # 技の優先度を取得
-            command = player.reserved_commands[-1]
-            move = self.battle.command_to_move(self.battle.players[i], command)
+            command = state.next_command
+            move = self.battle.command_to_move(player, command)
             move_priority = self.calc_move_priority(mon, move)
 
             # 後攻ティアを計算（0=通常, -1=あとだし等）

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 from typing import Callable
 from dataclasses import dataclass
 
+from jpoke.utils import fast_copy
 from jpoke.utils.type_defs import HandlerSource, ContextRole, RoleSpec, Side
 from jpoke.core.player import Player
 
@@ -54,12 +55,12 @@ class Handler:
     @property
     def role(self) -> ContextRole:
         """subject_spec から role を抽出"""
-        return self.subject_spec.split(":")[0]
+        return self.subject_spec.split(":")[0]  # type: ignore
 
     @property
     def side(self) -> Side:
         """subject_spec から side を抽出"""
-        return self.subject_spec.split(":")[1]
+        return self.subject_spec.split(":")[1]  # type: ignore
 
 
 @dataclass
@@ -75,6 +76,23 @@ class RegisteredHandler:
     handler: Handler
     _subject: Pokemon | Player
 
+    def __deepcopy__(self, memo):
+        """EventManagerインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            RegisteredHandler: コピーされたRegisteredHandlerインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        keys = ["handler"]
+        if isinstance(self._subject, Pokemon):
+            keys.append("_subject")
+        return fast_copy(self, new, keys_to_deepcopy=keys)
+
     def update_reference(self, old: Battle, new: Battle):
         """Battleの複製後に、対応する新しい主体ポケモンを見つける。
 
@@ -82,18 +100,14 @@ class RegisteredHandler:
             old: 複製前のBattle
             new: 複製後のBattle
         """
-        if isinstance(self._subject, Player):
-            player_idx = old.players.index(self._subject)
-            self._subject = new.players[player_idx]
-        else:
+        if isinstance(self._subject, Pokemon):
             player = old.get_player(self._subject)
             player_idx = old.players.index(player)
             team_idx = player.team.index(self._subject)
             self._subject = new.players[player_idx].team[team_idx]
 
-    @property
-    def subject(self) -> Pokemon | None:
-        """ハンドラの主体ポケモンを取得する。
+    def resolve_subject(self, battle: Battle) -> Pokemon:
+        """ハンドラの主体となるポケモンを取得する。
 
         Playerの場合は現在場に出ているポケモンを返す。
 
@@ -101,6 +115,6 @@ class RegisteredHandler:
             Pokemon | None: 主体のポケモン
         """
         if isinstance(self._subject, Player):
-            return self._subject.active
+            return battle.get_active(self._subject)
         else:
             return self._subject

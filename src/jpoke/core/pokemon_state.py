@@ -34,6 +34,21 @@ class AilmentManager:
         """
         self.battle = battle
 
+    def __deepcopy__(self, memo):
+        """AilmentManagerインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            AilmentManager: コピーされたAilmentManagerインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
+
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
 
@@ -41,21 +56,6 @@ class AilmentManager:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
-
-    def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Battle: コピーされたBattleインスタンス
-        """
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        fast_copy(self, new, keys_to_deepcopy=[])
-        return new
 
     @property
     def events(self) -> EventManager:
@@ -189,12 +189,27 @@ class VolatileManager:
     """
 
     def __init__(self, battle: Battle):
-        """PokemonVolatileManagerを初期化。
+        """VolatileManagerを初期化。
 
         Args:
             battle: 親となるBattleインスタンス
         """
         self.battle = battle
+
+    def __deepcopy__(self, memo):
+        """VolatileManagerインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            VolatileManager: コピーされたVolatileManagerインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
 
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
@@ -203,21 +218,6 @@ class VolatileManager:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
-
-    def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Battle: コピーされたBattleインスタンス
-        """
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        fast_copy(self, new, keys_to_deepcopy=[])
-        return new
 
     @property
     def events(self) -> EventManager:
@@ -341,6 +341,21 @@ class PokemonQuery:
         """
         self.battle = battle
 
+    def __deepcopy__(self, memo):
+        """PokemonQueryインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            PokemonQuery: コピーされたPokemonQueryインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
+
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
 
@@ -348,21 +363,6 @@ class PokemonQuery:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
-
-    def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Battle: コピーされたBattleインスタンス
-        """
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        fast_copy(self, new, keys_to_deepcopy=[])
-        return new
 
     @property
     def events(self) -> EventManager:
@@ -446,6 +446,21 @@ class StatusManager:
         """
         self.battle = battle
 
+    def __deepcopy__(self, memo):
+        """StatusManagerインスタンスのディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            StatusManager: コピーされたStatusManagerインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
+
     def update_reference(self, battle: Battle):
         """Battleインスタンスの参照を更新。
 
@@ -453,21 +468,6 @@ class StatusManager:
             battle: 新しいBattleインスタンス
         """
         self.battle = battle
-
-    def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Battle: コピーされたBattleインスタンス
-        """
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        fast_copy(self, new, keys_to_deepcopy=[])
-        return new
 
     @property
     def events(self) -> EventManager:

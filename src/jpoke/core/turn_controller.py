@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player
-    from jpoke.model import Pokemon
 
 from jpoke.core import BattleContext
 from jpoke.enums import Event, Command, Interrupt, LogCode
@@ -60,24 +59,6 @@ class TurnController:
         """BattleのEventManagerへの参照を返す。"""
         return self.battle.events
 
-    def _calc_tod_score(self, player: Player, alpha: float = 1) -> float:
-        """プレイヤーのTime Over Death（TOD）スコアを計算。
-
-        Args:
-            player: スコアを計算するプレイヤー
-            alpha: HP割合の重み係数
-
-        Returns:
-            TODスコア（生存ポケモン数 + HP割合）
-        """
-        n_alive, total_max_hp, total_hp = 0, 0, 0
-        for mon in player.selection:
-            total_max_hp += mon.max_hp
-            total_hp += mon.hp
-            if mon.hp:
-                n_alive += 1
-        return n_alive + alpha * total_hp / total_max_hp
-
     def judge_winner(self) -> Player | None:
         """勝者を判定して返す。
 
@@ -87,7 +68,7 @@ class TurnController:
         if self.battle.winner is not None:
             return self.battle.winner
 
-        TOD_scores = [self._calc_tod_score(pl) for pl in self.battle.players]
+        TOD_scores = [state.tod_score() for state in self.battle.player_states.values()]
         if 0 in TOD_scores:
             loser_idx = TOD_scores.index(0)
             loser = self.battle.players[loser_idx]
@@ -112,7 +93,7 @@ class TurnController:
 
         # ポケモンを選出
         for player, cmds in commands.items():
-            player.selection_indexes = [c.index for c in cmds]
+            self.battle.player_states[player].selection_indexes = [c.index for c in cmds]
 
         # ポケモンを場に出す
         self.battle.run_initial_switch()
@@ -130,11 +111,11 @@ class TurnController:
             raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
 
         # ターン開始処理
-        self._init_turn(commands)
+        self._begin_turn(commands)
 
         # 引数のコマンドをスケジュールに追加する
         for player, cmd in commands.items():
-            player.reserve_command(cmd)
+            self.battle.player_states[player].reserve_command(cmd)
 
         # 交代フェーズ
         self._run_switch_phase()
@@ -151,27 +132,28 @@ class TurnController:
         # ターン終了時の処理
         self._run_end_phase()
 
-    def _init_turn(self, commands: dict[Player, Command]):
+    def _begin_turn(self, commands: dict[Player, Command]):
         """ターン開始処理を実行する。"""
         self.battle.turn += 1
         if self.battle.is_new_turn():
-            for player in self.battle.players:
-                player.init_turn()
+            for state in self.battle.player_states.values():
+                state.reset_turn_state()
 
     def _run_switch_phase(self):
         """交代フェーズを実行する。"""
         for attacker in self.battle.calc_speed_order():
             idx = self.battle.actives.index(attacker)
             player = self.battle.players[idx]
+            state = self.battle.player_states[player]
 
             # だっしゅつパックによる交代フラグを用意
             interrupt = Interrupt.ejectpack_on_switch(idx)
 
             # 交代
             if self.battle.is_new_turn():
-                if player.reserved_commands[0].is_switch:
+                if state.next_command.is_switch:
                     # 予約されている交代コマンドを取得
-                    command = player.reserved_commands.pop(0)
+                    command = state.pop_command()
 
                     # 交代を実行
                     new = player.team[command.index]
@@ -187,11 +169,12 @@ class TurnController:
         """テラスタルを実行する。"""
         for mon in self.battle.calc_action_order():
             player = self.battle.get_player(mon)
-            if not player.reserved_commands:
+            state = self.battle.player_states[player]
+            if not state.reserved_commands:
                 continue
 
             # コマンドがテラスタルで、かつテラスタル可能な場合にテラスタルを実行
-            command = player.reserved_commands[0]
+            command = state.next_command
             if command.is_terastal and mon.can_terastallize():
                 mon.terastallize()
                 self.battle.add_event_log(mon, LogCode.TERASALLIZED,
@@ -201,11 +184,12 @@ class TurnController:
         """メガシンカを実行する。"""
         for mon in self.battle.calc_action_order():
             player = self.battle.get_player(mon)
-            if not player.reserved_commands:
+            state = self.battle.player_states[player]
+            if not state.reserved_commands:
                 continue
 
             # コマンドがメガシンカで、かつメガシンカ可能な場合にメガシンカを実行
-            command = player.reserved_commands[0]
+            command = state.next_command
             if command.is_megaevol and mon.can_megaevolve():
                 # メガシンカ前の特性を無効化し、メガシンカ後に特性を有効化する
                 mon.ability.unregister_handlers(self.events, mon)
@@ -223,13 +207,14 @@ class TurnController:
 
         for attacker in self.battle.calc_action_order():
             player = self.battle.get_player(attacker)
+            state = self.battle.player_states[player]
 
-            if player.has_switched:
+            if state.has_switched:
                 continue
 
             if self.battle.is_new_turn():
                 # コマンドを取得
-                command = player.reserved_commands.pop(0)
+                command = state.pop_command()
 
                 # 技を実行
                 move = self.battle.command_to_move(player, command)

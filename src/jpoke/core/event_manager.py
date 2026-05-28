@@ -52,7 +52,7 @@ class EventManager:
     def update_reference(self, new: Battle):
         """ディープコピー後のBattleインスタンスへの参照を更新する。
 
-        ハンドラが参照するポケモンやプレイヤーを新しいBattleインスタンスのものに置き換えます。
+        ハンドラが参照するポケモンやプレイヤーを新しいBattleインスタンスのものに置き換える。
 
         Args:
             new: 新しいBattleインスタンス
@@ -66,6 +66,9 @@ class EventManager:
 
         # Battle への参照を更新する
         self.battle = new
+
+    def subject(self, rh: RegisteredHandler) -> Pokemon:
+        return rh.resolve_subject(self.battle)
 
     def on(self,
            event: Event | DomainEvent,
@@ -154,9 +157,9 @@ class EventManager:
     def _build_context(self, rh: RegisteredHandler) -> BattleContext:
         """ハンドラに対応するコンテキストを構築"""
         if rh.handler.side == "self":
-            mon = rh.subject
+            mon = self.subject(rh)
         else:
-            mon = self.battle.foe(rh.subject)
+            mon = self.battle.foe(self.subject(rh))
         return BattleContext(**{rh.handler.role: mon})
 
     def _sort_handlers(self, rhs: list[RegisteredHandler]) -> list[RegisteredHandler]:
@@ -165,12 +168,7 @@ class EventManager:
 
         def key(rh: RegisteredHandler):
             from jpoke.core import Player
-            subject = rh.subject
-            # Playerの場合はactiveポケモンに変換
-            if isinstance(subject, Player):
-                subject = subject.active
-                if subject is None:
-                    return (rh.handler.priority, 0)
+            subject = self.subject(rh)
 
             # battle -> speed_calculator 内部でON_CALC_SPEEDイベント発火で無限ループになっている
             speed = self.battle.calc_effective_speed(subject)
@@ -182,7 +180,7 @@ class EventManager:
         """ハンドラが現在のコンテキストで有効かどうかをチェックする。"""
         if (
             not rh.handler.skip_subject_check
-            and rh.subject != ctx.resolve_role(self.battle, rh.handler.subject_spec)
+            and self.subject(rh) != ctx.resolve_role(self.battle, rh.handler.subject_spec)
         ):
             print(f"Context mismatch: Handler {rh.handler.func} skipped")
             return False
@@ -190,10 +188,10 @@ class EventManager:
         # ハンドラの発生源が無効化されている場合はスキップ
         match rh.handler.source:
             case "ability":
-                if not rh.subject.ability.enabled:
+                if not self.subject(rh).ability.enabled:
                     return False
             case "item":
-                if not rh.subject.item.enabled:
+                if not self.subject(rh).item.enabled:
                     return False
 
         return True

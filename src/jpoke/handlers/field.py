@@ -352,7 +352,7 @@ def しんぴのまもり_prevent_confusion(battle: Battle, ctx: BattleContext, 
 def しろいきり_prevent_stat_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     """しろいきりで能力低下を防ぐ"""
     if (
-        ctx.is_foe_target
+        ctx.is_foe_target()
         and not ctx.can_bypass_screen(battle)
     ):
         value = {stat: v for stat, v in value.items() if v > 0}

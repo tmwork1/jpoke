@@ -91,7 +91,7 @@ class DamageCalculator:
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        fast_copy(self, new)
+        fast_copy(self, new, keys_to_deepcopy=[])
         return new
 
     def update_reference(self, new_battle: Battle):

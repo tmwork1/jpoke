@@ -27,14 +27,6 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def update_reference(self, battle: Battle):
-        """Battleインスタンスの参照を更新する。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        self.battle = battle
-
     def __deepcopy__(self, memo):
         """Battleインスタンスのディープコピーを作成する。
 
@@ -49,6 +41,14 @@ class AbilityManager:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[])
         return new
+
+    def update_reference(self, battle: Battle):
+        """Battleインスタンスの参照を更新する。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
 
     def set_ability(self, mon: Pokemon, ability: str) -> None:
         """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。

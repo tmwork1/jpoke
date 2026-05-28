@@ -83,7 +83,6 @@ class Pokemon:
         # 初期ステータス計算
         self.update_stats()
 
-        # パラドックス特性の状態はコンストラクタで属性を明示し、bench_resetで値を初期化する。
         # TODO : paradox_boost_active は paradox_boost_stat が None でないことと同値なので、paradox_boost_stat を主属性にして整理する。
         self.paradox_boost_active: bool = False
         self.paradox_boost_stat: Stat | None = None
@@ -139,9 +138,9 @@ class Pokemon:
         self.stellar_boosted_types = set()
 
         # 場に出ているときの状態をリセット
-        self.bench_reset()
+        self.reset_on_switch_out()
 
-    def bench_reset(self):
+    def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理"""
         self.volatiles = {}
         self.active_turn = 0
@@ -154,7 +153,7 @@ class Pokemon:
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
 
-    def init_turn(self):
+    def reset_turn_state(self):
         """ターン初期化処理。"""
         self.hits_taken = 0
 

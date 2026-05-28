@@ -36,7 +36,7 @@ class Ailment(GameEffect):
         self.elapsed_turns: int = 0
         self.revealed = True
 
-    def bench_reset(self):
+    def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理
         経過ターンはリセットされるが、カウントはリセットされない。
         """

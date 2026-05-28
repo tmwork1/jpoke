@@ -1,0 +1,104 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Player
+    from jpoke.model import Pokemon
+
+from copy import deepcopy
+
+from jpoke.enums import Command, Interrupt
+
+
+class PlayerState:
+    """対戦中のプレイヤー状態。"""
+
+    def __init__(self, player: Player):
+        self.team: list[Pokemon] = deepcopy(player.team)
+        self.selection_indexes: list[int] = []
+        self.active_index: int | None = None
+        self.reserved_commands: list[Command] = []
+        self.interrupt: Interrupt = Interrupt.NONE
+        self.has_switched: bool = False
+
+    def reset_turn_state(self):
+        """ターン状態を初期化する。"""
+        self.has_switched = False
+        for mon in self.team:
+            mon.reset_turn_state()
+
+    @property
+    def active(self) -> Pokemon:
+        """現在場に出ているポケモンを取得する。"""
+        if self.active_index is not None:
+            return self.team[self.active_index]
+        raise ValueError("No active Pokemon found.")
+
+    @property
+    def selection(self) -> list[Pokemon]:
+        """選出されているポケモンのリストを取得する。"""
+        return [self.team[i] for i in self.selection_indexes]
+
+    def reserve_command(self, command: Command):
+        """コマンドを予約する。"""
+        self.reserved_commands.append(command)
+
+    @property
+    def next_command(self) -> Command:
+        """次に実行するコマンドを取得する。"""
+        if self.reserved_commands:
+            return self.reserved_commands[0]
+        raise ValueError("No reserved commands found.")
+
+    def pop_command(self) -> Command:
+        """次に実行するコマンドを取得し、予約リストから削除する。"""
+        if self.reserved_commands:
+            return self.reserved_commands.pop(0)
+        raise ValueError("No reserved commands found.")
+
+    def clear_reserved_commands(self):
+        """予約済みコマンドをクリアする。"""
+        self.reserved_commands.clear()
+
+    def has_interrupt(self) -> bool:
+        """割り込み状態かどうかを判定する。"""
+        return self.interrupt != Interrupt.NONE
+
+    def can_use_terastal(self) -> bool:
+        """テラスタルが使用可能かどうかを判定する。
+
+        選出したポケモン全てがテラスタルしていない場合に使用可能。
+
+        Returns:
+            テラスタルが使用可能な場合True
+        """
+        return all(not mon.terastallized for mon in self.selection)
+
+    def can_use_megaevol(self) -> bool:
+        """メガシンカが使用可能かどうかを判定する。
+
+        選出したポケモンのうち、メガシンカ可能なポケモンがいる場合に使用可能。
+
+        Returns:
+            メガシンカが使用可能な場合True
+        """
+        return (
+            all(not mon.megaevolved for mon in self.selection)
+            and self.active.can_megaevolve()
+        )
+
+    def tod_score(self, alpha: float = 1) -> float:
+        """プレイヤーのTime Over Death（TOD）スコアを計算。
+
+        Args:
+            alpha: HP割合の重み係数
+
+        Returns:
+            TODスコア（生存ポケモン数 + HP割合）
+        """
+        n_alive, total_max_hp, total_hp = 0, 0, 0
+        for mon in self.selection:
+            total_max_hp += mon.max_hp
+            total_hp += mon.hp
+            if mon.hp:
+                n_alive += 1
+        return n_alive + alpha * total_hp / total_max_hp

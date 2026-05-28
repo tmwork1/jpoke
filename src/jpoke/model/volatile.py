@@ -27,8 +27,7 @@ class Volatile(GameEffect):
         source_pokemon: バインド等で使用者を記録（使用者が交代すると解除される）
 
     Notes:
-        Pokemonクラスのbench_reset()で新しくインスタンスが作られるため、
-        bench_reset()の実装は不要。
+        交代時に再生成されるため reset_on_switch_out() は実装不要
     """
 
     def __init__(self,

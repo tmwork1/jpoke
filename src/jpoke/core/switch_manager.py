@@ -28,7 +28,7 @@ class SwitchManager:
         battle: 親となるBattleインスタンス
     """
 
-    def __init__(self, battle: 'Battle'):
+    def __init__(self, battle: Battle):
         """SwitchManagerを初期化。
 
         Args:
@@ -36,28 +36,28 @@ class SwitchManager:
         """
         self.battle = battle
 
-    def update_reference(self, battle: 'Battle'):
-        """Battleインスタンスの参照を更新。
-
-        Args:
-            battle: 新しいBattleインスタンス
-        """
-        self.battle = battle
-
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
+        """SwitchManagerインスタンスのディープコピーを作成する。
 
         Args:
             memo: コピー済みオブジェクトのメモ辞書
 
         Returns:
-            Battle: コピーされたBattleインスタンス
+            SwitchManager: コピーされたSwitchManagerインスタンス
         """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[])
         return new
+
+    def update_reference(self, battle: Battle):
+        """Battleインスタンスの参照を更新。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
 
     @property
     def events(self) -> EventManager:
@@ -72,7 +72,8 @@ class SwitchManager:
             player: 交代を行うプレイヤー
             mon: 場に出るポケモン
         """
-        player.active_idx = player.team.index(mon)
+        state = self.battle.player_states[player]
+        state.active_index = state.team.index(mon)
 
         mon.revealed = True
         mon.ability.register_handlers(self.events, mon)
@@ -103,12 +104,12 @@ class SwitchManager:
         for volatile in mon.volatiles.values():
             volatile.unregister_handlers(self.events, mon)
 
-        mon.bench_reset()
+        mon.reset_on_switch_out()
         if mon.ability.base_name != mon.base_ability_name:
             mon.ability = Ability(mon.base_ability_name)
         else:
-            mon.ability.bench_reset()
-        mon.item.bench_reset()
+            mon.ability.reset_on_switch_out()
+        mon.item.reset_on_switch_out()
 
         self.battle.add_event_log(mon, LogCode.SWITCHED_OUT,
                                   payload={"pokemon": mon.name})
@@ -125,8 +126,9 @@ class SwitchManager:
         """
         for mon in self.battle.calc_speed_order():
             player = self.battle.get_player(mon)
-            if player.interrupt == Interrupt.REQUESTED:
-                player.interrupt = flag
+            state = self.battle.player_states[player]
+            if state.interrupt == Interrupt.REQUESTED:
+                state.interrupt = flag
                 if only_first:
                     return
 
@@ -143,11 +145,13 @@ class SwitchManager:
             new: 場に出す新しいポケモン
             emit_switch_in_event: ON_SWITCH_INイベントを発火する場合True
         """
+        state = self.battle.player_states[player]
+
         # 割り込みフラグを破棄
-        player.interrupt = Interrupt.NONE
+        state.interrupt = Interrupt.NONE
 
         # 退場
-        old = player.active
+        old = state.active
         if old is not None:
             self._switch_out(old)
 
@@ -155,7 +159,7 @@ class SwitchManager:
         self._switch_in(player, new)
 
         # 交代したプレイヤーにフラグを設定
-        player.has_switched = True
+        state.has_switched = True
 
         # ポケモンが場に出た時の処理
         if emit_switch_in_event:
@@ -173,8 +177,8 @@ class SwitchManager:
         選出されたポケモンを場に出し、着地処理を実行する。
         """
         # ポケモンを場に出す
-        for player in self.battle.players:
-            new = player.selection[0]
+        for player, state in self.battle.player_states.items():
+            new = state.selection[0]
             self.run_switch(player, new, emit_switch_in_event=False)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
@@ -196,13 +200,13 @@ class SwitchManager:
         """
         switched_players = []
 
-        for i, player in enumerate(self.battle.players):
-            if player.interrupt != flag:
+        for player, state in self.battle.player_states.items():
+            if state.interrupt != flag:
                 continue
 
             # 交代を引き起こしたアイテムを消費させる
             if flag.requires_item_consumption():
-                self.battle.consume_item(player.active)
+                self.battle.consume_item(state.active)
 
             # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
             command = self.battle.resolve_switch_command(player)
@@ -232,12 +236,13 @@ class SwitchManager:
 
         # 瀕死による交代フラグを設定
         if not self.battle.has_interrupt():
-            for player in self.battle.players:
-                if player.active.fainted:
-                    player.interrupt = Interrupt.FAINTED
+            for state in self.battle.player_states.values():
+                if state.active.fainted:
+                    state.interrupt = Interrupt.FAINTED
 
         # 交代を行うプレイヤー
-        switch_players = [pl for pl in self.battle.players if pl.interrupt == Interrupt.FAINTED]
+        switch_players = [pl for pl, state in self.battle.player_states.items()
+                          if state.interrupt == Interrupt.FAINTED]
 
         # 対象プレイヤーがいなければ終了
         if not switch_players:

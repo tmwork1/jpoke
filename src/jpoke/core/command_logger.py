@@ -47,12 +47,6 @@ class CommandLogger:
     def __init__(self):
         self.logs: list[CommandLog] = []
 
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        return fast_copy(self, new)
-
     def clear(self):
         """すべてのログをクリアする。"""
         self.logs.clear()

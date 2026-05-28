@@ -94,12 +94,12 @@ class BattleContext:
     def defender(self, value: Pokemon | None):
         self.target = value
 
-    @property
     def is_foe_target(self) -> bool:
-        """技が相手を対象にするかどうかを判定する。
+        """相手を対象にした処理かどうかを判定する。
+        ctx.source と ctx.target が異なるポケモンであれば、相手を対象にする処理とみなす。
 
         Returns:
-            技が相手を対象にする場合True
+            相手を対象にする場合True
         """
         return self.source != self.target
 

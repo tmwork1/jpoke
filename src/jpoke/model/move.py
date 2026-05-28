@@ -46,7 +46,7 @@ class Move(GameEffect):
         self._type = self.data.type
         self._power = self.data.power
 
-    def bench_reset(self):
+    def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理。
 
         技のタイプを元の状態にリセットする。

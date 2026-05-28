@@ -16,8 +16,6 @@ from jpoke.enums import Command
 
 
 class SearchPlayer(Player):
-    """毎ターン、利用可能なコマンドからランダムに選ぶプレイヤー。"""
-
     def choose_action_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
         print(f"[depth={battle.depth}] Choosing action command for {self.name}")

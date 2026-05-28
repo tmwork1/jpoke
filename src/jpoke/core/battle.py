@@ -19,6 +19,7 @@ from jpoke.utils import fast_copy
 
 from jpoke.model import Pokemon, Move, Field, Item
 
+from .player_state import PlayerState
 from .event_manager import EventManager
 from .context import BattleContext
 from .player import Player
@@ -91,17 +92,19 @@ class Battle:
         self.players: list[Player] = players
         self.seed: int = seed or int(time.time())
 
+        self.random = Random(self.seed)
+
         self.depth: int = 0
         self.perspective: Player | None = None  # 視点となるプレイヤー
 
         self.turn: int = -1
         self.winner: Player | None = None
 
-        self.random = Random(self.seed)
+        self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
+
         self.events = EventManager(self)
         self.event_logger = EventLogger()
         self.command_logger = CommandLogger()
-
         self.turn_controller: TurnController = TurnController(self)
         self.speed_calculator: SpeedCalculator = SpeedCalculator(self)
         self.switch_manager: SwitchManager = SwitchManager(self)
@@ -114,7 +117,6 @@ class Battle:
         self.command_manager: CommandManager = CommandManager(self)
         self.ability_manager: AbilityManager = AbilityManager(self)
         self.item_manager: ItemManager = ItemManager(self)
-
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
         self.field_manager: GlobalFieldManager = GlobalFieldManager(self)
@@ -141,7 +143,6 @@ class Battle:
             self, new,
             keys_to_deepcopy=[
                 "random",
-                "players",
                 "events",
                 "event_logger",
                 "command_logger",
@@ -175,7 +176,6 @@ class Battle:
     def _update_reference(self):
         """ディープコピー後のBattleインスタンスへの参照を各マネージャークラスに更新する。"""
         self.events.update_reference(self)
-
         self.turn_controller.update_reference(self)
         self.speed_calculator.update_reference(self)
         self.switch_manager.update_reference(self)
@@ -188,47 +188,11 @@ class Battle:
         self.command_manager.update_reference(self)
         self.ability_manager.update_reference(self)
         self.item_manager.update_reference(self)
-
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
         self.field_manager.update_reference(self)
-        for i, side in enumerate(self.side_manager):
-            side.update_reference(self, self.players[i])
-
-    def init_game(self):
-        """ゲーム初期化。
-        """
-        # 管理クラスの初期化
-        self.events = EventManager(self)
-        self.event_logger = EventLogger()
-        self.command_logger = CommandLogger()
-        self.random = Random(self.seed)
-
-        self.turn_controller = TurnController(self)
-        self.speed_calculator = SpeedCalculator(self)
-        self.switch_manager = SwitchManager(self)
-        self.move_executor = MoveExecutor(self)
-        self.damage_calculator = DamageCalculator(self)
-        self.ailment_manager = AilmentManager(self)
-        self.volatile_manager = VolatileManager(self)
-        self.query_manager = PokemonQuery(self)
-        self.status_manager = StatusManager(self)
-        self.item_manager = ItemManager(self)
-        self.command_manager = CommandManager(self)
-        self.ability_manager = AbilityManager(self)
-
-        self.weather_manager = WeatherManager(self)
-        self.terrain_manager = TerrainManager(self)
-        self.field_manager = GlobalFieldManager(self)
-        self.side_manager = [SideFieldManager(self, ply) for ply in self.players]
-
-        # 各プレイヤーとポケモンの初期化
-        for player in self.players:
-            player.init_game()
-
-    def init_turn(self):
-        """ターン初期化（TurnControllerへの委譲）。"""
-        self.turn_controller.init_turn()
+        for side in self.side_manager:
+            side.update_reference(self)
 
     def copy(self, perspective: Player | None = None) -> Self:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
@@ -255,13 +219,31 @@ class Battle:
         return new
 
     @property
+    def player_states(self) -> dict[Player, PlayerState]:
+        """プレイヤーごとの状態を管理する辞書を返す。"""
+        return {ply: state for ply, state in zip(self.players, self._player_states)}
+
+    @property
     def actives(self) -> list[Pokemon]:
         """現在場に出ているポケモンのリストを取得。
 
         Returns:
             list[Pokemon]: 各プレイヤーの場のポケモン
         """
-        return [ply.active for ply in self.players if ply.active is not None]
+        return [state.active for state in self.player_states.values() if state.active is not None]
+
+    def get_active(self, player: Player) -> Pokemon:
+        """指定したプレイヤーの現在場に出ているポケモンを取得。
+
+        Args:
+            player: プレイヤー
+
+        Returns:
+            Pokemon: 指定したプレイヤーの場のポケモン
+        """
+        if player in self.player_states:
+            return self.player_states[player].active
+        raise ValueError(f"Player {player} not found in battle.")
 
     def is_active(self, mon: Pokemon) -> bool:
         """指定したポケモンが現在場に出ているか確認。"""
@@ -304,23 +286,6 @@ class Battle:
             SideFieldManager: 対応するサイドフィールドマネージャー
         """
         return self.side_manager[self.get_player_index(source)]
-
-    def export_log(self, file):
-        """バトルログをJSON形式でエクスポート。
-
-        Args:
-            file: 出力先ファイルパス
-        """
-        players_data = []
-        for player in self.players:
-            players_data.append({
-                "name": player.name,
-                "selection_indexes": player.selection_indexes,
-                "team": [mon.to_dict() for mon in player.team],
-            })
-
-        # TODO : export_log 実装 (後回し)
-        # self.event_logger.export(file, self.seed, players_data)
 
     def get_player(self, mon: Pokemon) -> Player:
         """ポケモンが所属するプレイヤーを検索する。
@@ -436,18 +401,6 @@ class Battle:
             行動順にソートされたポケモンのリスト
         """
         return self.speed_calculator.calc_action_order()
-
-    def calc_tod_score(self, player: Player, alpha: float = 1) -> float:
-        """TODスコアを計算（TurnControllerへの委譲）。
-
-        Args:
-            player: スコアを計算するプレイヤー
-            alpha: HP割合の重み係数
-
-        Returns:
-            TODスコア
-        """
-        return self.turn_controller._calc_tod_score(player, alpha)
 
     def judge_winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
@@ -652,7 +605,7 @@ class Battle:
         Returns:
             いずれかのプレイヤーに割り込みフラグがある場合True
         """
-        return any(ply.interrupt != Interrupt.NONE for ply in self.players)
+        return any(state.has_interrupt() for state in self.player_states.values())
 
     def is_new_turn(self) -> bool:
         """新しいターンの開始かどうかを判定する。
@@ -706,7 +659,7 @@ class Battle:
 
         Args:
             source: Player または Pokemon インスタンス、またはプレイヤーインデックス
-            log: イベントの内容を表すLogCode列挙値 
+            log: イベントの内容を表すLogCode列挙値
             payload: イベントの詳細情報（必要に応じて）
         """
         if isinstance(source, int):
@@ -732,21 +685,6 @@ class Battle:
             turn = self.turn
         return {player: self.event_logger.get(turn, i)
                 for i, player in enumerate(self.players)}
-
-    def print_logs(self, turn: int | None = None):
-        """指定したターンのログを整形して出力。
-
-        Args:
-            turn: ターン番号（Noneの場合は現在のターン）
-        """
-        if turn is None:
-            turn = self.turn
-
-        event_logs = [log for log in self.event_logger.logs if log.turn == turn]
-        for log in event_logs:
-            player = self.players[log.idx]
-            pokemon = log.payload.get("pokemon", "") if log.payload else ""
-            print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
 
     def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
         """実際の技カテゴリを判定する（MoveExecutorへの委譲）。
@@ -786,3 +724,18 @@ class Battle:
     def resolve_secondary_chance(self, ctx: BattleContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
         return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
+
+    def print_logs(self, turn: int | None = None):
+        """指定したターンのログを整形して出力。
+
+        Args:
+            turn: ターン番号（Noneの場合は現在のターン）
+        """
+        if turn is None:
+            turn = self.turn
+
+        event_logs = [log for log in self.event_logger.logs if log.turn == turn]
+        for log in event_logs:
+            player = self.players[log.idx]
+            pokemon = log.payload.get("pokemon", "") if log.payload else ""
+            print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
