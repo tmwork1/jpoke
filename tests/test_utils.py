@@ -37,8 +37,9 @@ def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
 
 def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
     player = battle.players[player_idx]
-    battle.run_switch(player, player.team[new_idx])
-    return player.team[new_idx]
+    mon = battle.player_states[player].team[new_idx]
+    battle.run_switch(player, mon)
+    return mon
 
 
 def start_battle(team0: list[Pokemon],

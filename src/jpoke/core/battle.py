@@ -143,6 +143,7 @@ class Battle:
             self, new,
             keys_to_deepcopy=[
                 "random",
+                "_player_states",
                 "events",
                 "event_logger",
                 "command_logger",

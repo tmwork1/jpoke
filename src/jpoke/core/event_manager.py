@@ -102,6 +102,8 @@ class EventManager:
             rh for rh in self.handlers[event]
             if not (rh.handler == handler and rh._subject == subject)
         ]
+        if not self.handlers[event]:
+            del self.handlers[event]
 
     def emit(self,
              event: Event | DomainEvent,

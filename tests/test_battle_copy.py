@@ -9,10 +9,10 @@ import test_utils as t
 
 
 def test_copy():
-    """どく: ターン終了時ダメージ"""
+    """BattleContextのコピーが正しく行われることを確認する。"""
     old = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="たべのこし")],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", item="たべのこし"), Pokemon("ヒトカゲ")],
+        team1=[Pokemon("フシギダネ")],
     )
     new = old.copy()
 
@@ -20,10 +20,17 @@ def test_copy():
     assert new.actives[0] is not old.actives[0]
     assert new.actives[0].item.name == "たべのこし"
     assert new.actives[0].item is not old.actives[0].item
+    assert new._player_states[0].team[0] is not old._player_states[0].team[0]
 
     old_handler = old.events.handlers[Event.ON_TURN_END_2][0]
     new_handler = new.events.handlers[Event.ON_TURN_END_2][0]
     assert old_handler is not new_handler
+    assert new_handler._subject is new.actives[0]
+
+    # コピー後のBattleContextでハンドラが正しく除去されることを確認する
+    t.run_switch(new, 0, 1)
+    assert new.actives[0].name == "ヒトカゲ"
+    assert new.events.handlers == {}
 
 
 if __name__ == "__main__":

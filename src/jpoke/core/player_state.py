@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 
+from jpoke.utils import fast_copy
 from jpoke.enums import Command, Interrupt
 
 
@@ -19,6 +20,21 @@ class PlayerState:
         self.reserved_commands: list[Command] = []
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
+
+    def __deepcopy__(self, memo):
+        """ディープコピーを作成する。
+
+        Args:
+            memo: コピー済みオブジェクトのメモ辞書
+
+        Returns:
+            DamageCalculator: コピーされたインスタンス
+        """
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=["team"])
+        return new
 
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
