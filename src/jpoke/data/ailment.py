@@ -18,7 +18,7 @@ AILMENTS: dict[str, AilmentData] = {
             Event.ON_TURN_END_3: h.AilmentHandler(
                 h.どく_damage,
                 subject_spec="source:self",
-                priority=30,
+                priority=90,
             )
         }
     ),
@@ -27,7 +27,7 @@ AILMENTS: dict[str, AilmentData] = {
             Event.ON_TURN_END_3: h.AilmentHandler(
                 h.もうどく_damage,
                 subject_spec="source:self",
-                priority=30,
+                priority=90,
             )
         }
     ),
@@ -53,7 +53,7 @@ AILMENTS: dict[str, AilmentData] = {
             Event.ON_TURN_END_3: h.AilmentHandler(
                 h.やけど_damage,
                 subject_spec="source:self",
-                priority=40,
+                priority=100,
             )
         }
     ),

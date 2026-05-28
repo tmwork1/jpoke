@@ -373,6 +373,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_TURN_END_2: h.ItemHandler(
                 h.たべのこし_heal_hp,
                 subject_spec="source:self",
+                priority=60,
             )
         }
     ),

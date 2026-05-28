@@ -39,8 +39,8 @@ FIELDS: dict[str, FieldData] = {
             ),
             Event.ON_TURN_END_1: h.FieldHandler(
                 h.tick_weather,
-                priority=10,
                 subject_spec="source:self",
+                priority=10,
             ),
         },
     ),
@@ -53,8 +53,8 @@ FIELDS: dict[str, FieldData] = {
             ),
             Event.ON_TURN_END_1: h.FieldHandler(
                 h.tick_weather,
-                priority=10,
                 subject_spec="source:self",
+                priority=10,
             ),
         },
     ),
@@ -67,8 +67,8 @@ FIELDS: dict[str, FieldData] = {
             ),
             Event.ON_TURN_END_1: h.FieldHandler(
                 h.すなあらし_turn_end,
-                priority=10,
                 subject_spec="source:self",
+                priority=10,
             ),
         },
     ),
@@ -81,9 +81,10 @@ FIELDS: dict[str, FieldData] = {
             ),
             Event.ON_TURN_END_1: h.FieldHandler(
                 h.tick_weather,
-                priority=10,
                 subject_spec="source:self",
-            ), },
+                priority=10,
+            ),
+        },
     ),
     # ===== 強天候 (Strong Weather) =====
     "おおひでり": FieldData(
@@ -157,6 +158,7 @@ FIELDS: dict[str, FieldData] = {
             Event.ON_TURN_END_2: h.FieldHandler(
                 h.グラスフィールド_heal,
                 subject_spec="source:self",
+                priority=60,
             ),
             Event.ON_TURN_END_4: h.FieldHandler(
                 h.tick_terrain,
@@ -366,8 +368,8 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_TURN_END_2: h.FieldHandler(
                 partial(h.tick_side_field, name="ねがいごと"),
-                priority=20,
                 subject_spec="source:self",
+                priority=50,
             ),
             Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
                 h.ねがいごと_heal,
