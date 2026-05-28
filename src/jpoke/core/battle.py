@@ -312,11 +312,11 @@ class Battle:
         """
         if isinstance(source, Player):
             return self.players.index(source)
-        elif isinstance(source, Pokemon):
-            for i, player in enumerate(self.players):
-                if source in player.team:
-                    return i
-        raise ValueError(f"Invalid source type: {type(source)}")
+        else:
+            for player, state in self.player_states.items():
+                if source in state.team:
+                    return self.players.index(player)
+        raise ValueError(f"Source {source} not found in battle.")
 
     def foe(self, active: Pokemon) -> Pokemon:
         """指定したポケモンの対戦相手を取得する。

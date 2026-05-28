@@ -89,22 +89,22 @@ class RegisteredHandler:
         new = cls.__new__(cls)
         memo[id(self)] = new
         keys = ["handler"]
-        if isinstance(self._subject, Pokemon):
-            keys.append("_subject")
-        return fast_copy(self, new, keys_to_deepcopy=keys)
+        return fast_copy(self, new, keys_to_deepcopy=["handler"])
 
     def update_reference(self, old: Battle, new: Battle):
-        """Battleの複製後に、対応する新しい主体ポケモンを見つける。
+        """Battleの複製後に、対応する新しい主体ポケモンを参照するように更新する。
 
         Args:
             old: 複製前のBattle
             new: 複製後のBattle
         """
-        if isinstance(self._subject, Pokemon):
-            player = old.get_player(self._subject)
-            player_idx = old.players.index(player)
-            team_idx = player.team.index(self._subject)
-            self._subject = new.players[player_idx].team[team_idx]
+        if isinstance(self._subject, Player):
+            return
+
+        player = old.get_player(self._subject)  # プレイヤーは同一なので old から特定
+        old_state = old.player_states[player]
+        team_index = old_state.team.index(self._subject)
+        self._subject = new.player_states[player].team[team_index]
 
     def resolve_subject(self, battle: Battle) -> Pokemon:
         """ハンドラの主体となるポケモンを取得する。

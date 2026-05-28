@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
     Weather, Terrain, GlobalField, HPChangeReason
 from jpoke.enums import Event
-from jpoke.core import HandlerReturn
+from jpoke.core.handler import HandlerReturn
 
 
 def modify_hp(battle: Battle,

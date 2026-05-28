@@ -6,9 +6,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .battle import Battle
-    from .event_manager import EventManager
-    from .player import Player
+    from . import Battle, EventManager, Player, PlayerState
 
 from jpoke.model import Pokemon, Ability
 from jpoke.enums import Interrupt, LogCode
@@ -64,16 +62,16 @@ class SwitchManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def _switch_in(self, player: Player, mon: Pokemon):
+    def _switch_in(self, state: PlayerState, mon: Pokemon):
         # TODO : 関数内の処理はハンドラの登録に限定すべきか
         """ポケモンの入場時ハンドラーを登録する。
 
         Args:
-            player: 交代を行うプレイヤー
+            state: 交代を行うプレイヤーの状態
             mon: 場に出るポケモン
         """
-        state = self.battle.player_states[player]
         state.active_index = state.team.index(mon)
+        state.has_switched = True
 
         mon.revealed = True
         mon.ability.register_handlers(self.events, mon)
@@ -156,10 +154,7 @@ class SwitchManager:
             self._switch_out(old)
 
         # 入場
-        self._switch_in(player, new)
-
-        # 交代したプレイヤーにフラグを設定
-        state.has_switched = True
+        self._switch_in(state, new)
 
         # ポケモンが場に出た時の処理
         if emit_switch_in_event:
@@ -177,9 +172,9 @@ class SwitchManager:
         選出されたポケモンを場に出し、着地処理を実行する。
         """
         # ポケモンを場に出す
-        for player, state in self.battle.player_states.items():
+        for state in self.battle.player_states.values():
             new = state.selection[0]
-            self.run_switch(player, new, emit_switch_in_event=False)
+            self._switch_in(state, new)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
         self.events.emit(Event.ON_SWITCH_IN)
