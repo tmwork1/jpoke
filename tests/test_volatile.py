@@ -20,7 +20,7 @@ def test_アクアリング_回復():
         volatile0={"アクアリング": 1}
     )
     battle.actives[0].hp = 1
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     actual_heal = battle.actives[0].hp - 1
     assert actual_heal == battle.actives[0].max_hp // 16
 
@@ -33,7 +33,7 @@ def test_アクアリング_かいふくふうじ中は回復しない():
     )
     mon = battle.actives[0]
     mon.hp = 1
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     assert mon.hp == 1
 
 # ──────────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ def test_あめまみれ():
         team0=[Pokemon("ピカチュウ")],
         volatile0={"あめまみれ": 2}
     )
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     assert battle.actives[0].rank["S"] == -1
 
 
@@ -328,7 +328,7 @@ def test_かなしばり_ターン経過で解除():
     mon.volatiles["かなしばり"].move_name = "たいあたり"
     for _ in range(n_turn):
         assert mon.has_volatile("かなしばり")
-        battle.events.emit(Event.ON_TURN_END_3)
+        battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("かなしばり")
 
 
@@ -511,7 +511,7 @@ def test_さわぐ終了時_さわがしいを解除する():
         volatile0={"さわぐ": 1},
         volatile1={"さわがしい": 2},
     )
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     assert not battle.actives[0].has_volatile("さわぐ")
     assert not battle.actives[1].has_volatile("さわがしい")
 
@@ -812,7 +812,7 @@ def test_ねむけ_ターン経過でねむりになる():
     for _ in range(n_turn):
         assert mon.has_volatile("ねむけ")
         assert not mon.has_ailment("ねむり")
-        battle.events.emit(Event.ON_TURN_END_3)
+        battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("ねむけ")
     assert mon.has_ailment("ねむり")
 
@@ -830,7 +830,7 @@ def test_ねをはる_回復():
     )
     mon = battle.actives[0]
     mon.hp = 1
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     assert mon.hp == 1 + mon.max_hp // 16
 
 
@@ -865,7 +865,7 @@ def test_のろい_ダメージ():
         volatile0={"のろい": 1}
     )
     mon = battle.actives[0]
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     damage = mon.max_hp - mon.hp
     assert damage == mon.max_hp // 4
 
@@ -1120,7 +1120,7 @@ def test_やどりぎのタネ():
     )
     from_mon, to_mon = battle.actives
     to_mon.hp = 1
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     damage = from_mon.max_hp - from_mon.hp
     assert damage == from_mon.max_hp // 8
     assert to_mon.hp == 1 + damage
@@ -1134,7 +1134,7 @@ def test_やどりぎのタネ_回復先満タンでも対象のHPは減る():
     )
     target_mon, heal_mon = battle.actives
     heal_hp = heal_mon.hp
-    battle.events.emit(Event.ON_TURN_END_3)
+    battle.events.emit(Event.ON_TURN_END)
     assert target_mon.hp == target_mon.max_hp - target_mon.max_hp // 8
     assert heal_mon.hp == heal_hp
 
@@ -1195,7 +1195,7 @@ def test_まもる_ターン終了で解除():
     )
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "まもる", count=1)
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("まもる")
 
 
@@ -1224,7 +1224,7 @@ def test_トーチカ_ターン終了で解除():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "トーチカ", count=1)
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("トーチカ")
 
 
@@ -1253,7 +1253,7 @@ def test_キングシールド_ターン終了で解除():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "キングシールド", count=1)
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("キングシールド")
 
 
@@ -1282,7 +1282,7 @@ def test_スレッドトラップ_ターン終了で解除():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "スレッドトラップ", count=1)
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("スレッドトラップ")
 
 
@@ -1321,7 +1321,7 @@ def test_かえんのまもり_ターン終了で解除():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "かえんのまもり", count=1)
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     assert not mon.has_volatile("かえんのまもり")
 
 # ──────────────────────────────────────────────────────────────────

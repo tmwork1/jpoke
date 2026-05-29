@@ -77,7 +77,7 @@ def test_すなあらし_ダメージ():
         team0=[Pokemon("ピカチュウ")],
         weather=("すなあらし", 99)
     )
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
     expected_damages = [mon.max_hp // 16 for mon in battle.actives]
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
@@ -94,7 +94,7 @@ def test_すなあらし_タイプ免疫():
         team0=[Pokemon("イシツブテ")],
         weather=("すなあらし", 99),
     )
-    battle.events.emit(Event.ON_TURN_END_1)
+    battle.events.emit(Event.ON_TURN_END)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
     expected_damages = [0, battle.actives[1].max_hp // 16]
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
@@ -441,7 +441,7 @@ def test_グラスフィールド_回復():
     )
     mon = battle.actives[0]
     mon.hp = 1
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END)
     assert mon.hp == 1 + mon.max_hp // 16, "グラスフィールドの回復量が不正"
 
     floating_battle = t.start_battle(
@@ -451,7 +451,7 @@ def test_グラスフィールド_回復():
     )
     floating_mon = floating_battle.actives[0]
     floating_mon.hp = 1
-    floating_battle.events.emit(Event.ON_TURN_END_2)
+    floating_battle.events.emit(Event.ON_TURN_END)
     assert floating_mon.hp == 1
 
 # ──────────────────────────────────────────────────────────────────
@@ -831,11 +831,11 @@ def test_ねがいごと_回復と解除():
     heal = 20
     field.heal = heal
 
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END)
     assert mon.hp == 1, "No wish heal occurred"
     assert field.count == 1, "Wish field count did not decrease"
 
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END)
     assert mon.hp == 1 + heal, "Wish heal amount is incorrect"
     assert not field.is_active, "Wish field did not deactivate"
 
@@ -1008,7 +1008,7 @@ def test_ねばねばネット_浮いているポケモンには効かない():
 )
 def test_天候カウント減少(field: Weather):
     """カウントダウンテスト"""
-    event = Event.ON_TURN_END_1
+    event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -1033,7 +1033,7 @@ def test_天候カウント減少(field: Weather):
 )
 def test_地形カウント減少(field: Terrain):
     """カウントダウンテスト"""
-    event = Event.ON_TURN_END_4
+    event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -1058,7 +1058,7 @@ def test_地形カウント減少(field: Terrain):
 )
 def test_全体フィールドカウント減少(field: GlobalField):
     """カウントダウンテスト"""
-    event = Event.ON_TURN_END_4
+    event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -1083,7 +1083,7 @@ def test_全体フィールドカウント減少(field: GlobalField):
 )
 def test_サイドフィールドカウント減少(field: SideField):
     """カウントダウンテスト"""
-    event = Event.ON_TURN_END_4
+    event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],

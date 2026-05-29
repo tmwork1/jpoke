@@ -112,23 +112,21 @@ class SwitchManager:
         self.battle.add_event_log(mon, LogCode.SWITCHED_OUT,
                                   payload={"pokemon": mon.name})
 
-    def override_interrupt(self, flag: Interrupt, only_first: bool = True):
+    def override_ejectpack_interrupt(self, flag: Interrupt):
         """割り込みフラグを上書き。
 
-        REQUESTED状態のプレイヤーに対して、指定したフラグを設定する。
-        素早さ順に処理され、デフォルトでは最初の1体のみ設定。
+        EJECTPACK_REQUESTED状態のプレイヤーに対して、指定したフラグを設定する。
+        素早さ順に処理され、最初に見つかったプレイヤーのフラグが更新される。
 
         Args:
             flag: 設定する割り込みフラグ
-            only_first: 最初の1体のみに設定する場合True
         """
         for mon in self.battle.calc_speed_order():
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
-            if state.interrupt == Interrupt.REQUESTED:
+            if state.interrupt == Interrupt.EJECTPACK_REQUESTED:
                 state.interrupt = flag
-                if only_first:
-                    return
+                return
 
     def run_switch(self,
                    player: Player,
@@ -163,7 +161,7 @@ class SwitchManager:
             # リクエストがなくなるまで再帰的に交代する
             while self.battle.has_interrupt():
                 flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
-                self.override_interrupt(flag)
+                self.override_ejectpack_interrupt(flag)
                 self.run_interrupt_switch(flag)
 
     def run_initial_switch(self):
@@ -179,8 +177,8 @@ class SwitchManager:
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
         self.events.emit(Event.ON_SWITCH_IN)
 
-        # だっしゅつパックによる割り込みフラグを更新
-        self.override_interrupt(Interrupt.EJECTPACK_ON_START)
+        # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
+        self.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
 
     def run_interrupt_switch(self, flag: Interrupt, emit_on_each_switch: bool = True):
         """割り込み交代を実行。

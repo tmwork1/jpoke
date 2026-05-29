@@ -28,7 +28,7 @@ VOLATILES: dict[str, VolatileData] = {
     "": VolatileData(),
     "アクアリング": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(common.self_heal, r=1/16),
                 subject_spec="source:self",
                 priority=70,
@@ -51,7 +51,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "あめまみれ": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 h.あめまみれ_turn_end,
                 subject_spec="source:self",
             ),
@@ -68,7 +68,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
                 priority=200
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="アンコール"),
                 subject_spec="source:self",
                 priority=110
@@ -111,7 +111,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.かいふくふうじ_block_heal,
                 subject_spec="target:self",
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="かいふくふうじ"),
                 subject_spec="source:self",
                 priority=110
@@ -129,7 +129,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
                 priority=100
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="かなしばり"),
                 subject_spec="source:self",
                 priority=110
@@ -171,10 +171,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.さわぐ_remove_さわがしい,
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="さわぐ"),
                 subject_spec="source:self",
-                priority=110
+                priority=150
             ),
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
                 h.force_command,
@@ -204,7 +204,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "しおづけ": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 h.しおづけ_damage,
                 subject_spec="source:self",
                 priority=100,
@@ -221,7 +221,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.じごくづき_try_action,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="じごくづき"),
                 subject_spec="source:self",
                 priority=110
@@ -267,7 +267,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
                 priority=200
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="ちょうはつ"),
                 subject_spec="source:self",
                 priority=110
@@ -280,7 +280,7 @@ VOLATILES: dict[str, VolatileData] = {
                 lambda *args: HandlerReturn(value=True),  # TODO : でんじふゆう専用の関数を作る
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="でんじふゆう"),
                 subject_spec="source:self",
                 priority=110
@@ -309,7 +309,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ねむけ": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="ねむけ"),
                 subject_spec="source:self",
                 priority=110,
@@ -322,7 +322,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ねをはる": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(common.self_heal, r=1/16),
                 subject_spec="source:self",
                 priority=70
@@ -339,7 +339,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "のろい": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 h.のろい_damage,
                 subject_spec="source:self",
                 priority=100,
@@ -348,7 +348,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "バインド": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 h.バインド_damage,
                 subject_spec="source:self",
                 priority=100
@@ -370,7 +370,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
                 priority=40,
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="ひるみ"),
             ),
         }
@@ -386,7 +386,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "ほろびのうた": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="ほろびのうた"),
                 subject_spec="source:self",
                 priority=120
@@ -448,7 +448,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "やどりぎのタネ": VolatileData(
         handlers={
-            Event.ON_TURN_END_3: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(common.drain_hp, from_="source:self", r=1/8),
                 subject_spec="source:self",
                 priority=80,
@@ -461,7 +461,7 @@ VOLATILES: dict[str, VolatileData] = {
                 h.ロックオン_guarantee_hit,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.tick_volatile, volatile="ロックオン"),
                 subject_spec="source:self",
             ),
@@ -478,7 +478,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=100,
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="まもる"),
                 subject_spec="source:self",
             ),
@@ -491,7 +491,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=100,
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="かえんのまもり"),
                 subject_spec="source:self",
             ),
@@ -504,7 +504,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=100,
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="キングシールド"),
                 subject_spec="source:self",
             ),
@@ -517,7 +517,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=100,
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="スレッドトラップ"),
                 subject_spec="source:self",
             ),
@@ -530,7 +530,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=100,
             ),
-            Event.ON_TURN_END_1: h.VolatileHandler(
+            Event.ON_TURN_END: h.VolatileHandler(
                 partial(h.remove_volatile, volatile="トーチカ"),
                 subject_spec="source:self",
             ),

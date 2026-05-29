@@ -370,7 +370,7 @@ ITEMS: dict[str, ItemData] = {
     "たべのこし": ItemData(
         fling_power=10,
         handlers={
-            Event.ON_TURN_END_2: h.ItemHandler(
+            Event.ON_TURN_END: h.ItemHandler(
                 h.たべのこし_heal_hp,
                 subject_spec="source:self",
                 priority=60,

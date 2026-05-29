@@ -4,7 +4,7 @@
 バトル中の場の状態を管理します。排他的な効果とスタック可能な効果を適切に処理します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, get_args, Generic, TypeVar
+from typing import TYPE_CHECKING, get_args, Generic, TypeVar, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player, EventManager
     from jpoke.model import Pokemon
@@ -29,7 +29,7 @@ class BaseFieldManager(Generic[T]):
         init_game()実装不要。ゲームの初期化ではインスタンスを再生成するため。
     """
 
-    def __init__(self, battle: Battle, owners: list[Player], fields: dict[T, Field]):
+    def __init__(self, battle: Battle, owners: tuple[Player, ...], fields: dict[T, Field]):
         """BaseFieldManagerを初期化する。
 
         Args:
@@ -37,9 +37,9 @@ class BaseFieldManager(Generic[T]):
             owners: フィールド効果の所有者リスト
             fields: フィールド名とFieldオブジェクトの辞書
         """
-        self.battle = battle
-        self.owners = owners
-        self.fields = fields
+        self.battle: Battle = battle
+        self.owners: tuple[Player, ...] = owners
+        self.fields: dict[T, Field] = fields
 
     def __deepcopy__(self, memo):
         """ディープコピーを作成する。
@@ -87,24 +87,26 @@ class BaseFieldManager(Generic[T]):
 
         Args:
             name: フィールド名
-
-        Returns:
-            bool: カウントダウンが実行された場合True
         """
         field = self.get(name)
+        if not field.is_active:
+            return
+
         field.count -= 1
         if not field.count:
             self._deactivate_field(field)
 
     def _activate_field(self, name: T, count: int):
         """フィールドを有効化する。"""
+        if count <= 0:
+            raise ValueError("フィールドの持続ターン数は1以上でなければなりません。")
         field = self.get(name)
         field.count = count
         for player in field.owners:
             field.register_handlers(self.events, player)
         self.battle.add_event_log(0, LogCode.FIELD_STARTED,
                                   payload={"field": field.name, "count": count})
-        self.events.emit(Event.ON_FIELD_ACTIVATE)
+        self.events.emit(Event.ON_FIELD_ACTIVATE, value=field)
 
     def _deactivate_field(self, field: Field):
         """解除イベントを発火してからフィールドを無効化する。"""
@@ -126,7 +128,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         current: 現在有効なフィールド
     """
 
-    def __init__(self, battle: Battle, owners: list[Player], kind: type[T]):
+    def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: type[T]):
         """ExclusiveFieldManagerを初期化する。
 
         Args:
@@ -135,10 +137,24 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             kind: フィールドタイプ（Weather, Terrainなど）
         """
         names = get_args(kind)
+        if "" not in names:
+            raise ValueError("ExclusiveFieldManagerのフィールドタイプには空文字が含まれている必要があります。")
+
         fields = {name: Field(name, owners) for name in names}
         super().__init__(battle, owners, fields)
-        self._default = fields[names[0]]
-        self.current = self._default
+
+        self.inactive_name: T = cast(T, "")  # 非アクティブ状態を表すフィールド名
+        self.current_name: T = self.inactive_name
+
+    @property
+    def current(self) -> Field:
+        """現在有効なフィールドオブジェクトを返す。"""
+        return self.fields[self.current_name]
+
+    @property
+    def inactive(self) -> Field:
+        """非発動状態のフィールドオブジェクトを返す。"""
+        return self.fields[self.inactive_name]
 
     def apply(self, name: T, count: int, source: Pokemon | None = None) -> bool:
         """フィールド効果を発動する。
@@ -153,20 +169,24 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         Returns:
             bool: 効果が発動された場合True（既に同じ効果が有効な場合はFalse）
         """
-        field = self.fields[name]
-        if self.current is field:
+        if self.current_name == name:
             return False
 
         if self.current.is_active:
             self._deactivate_field(self.current)
 
-        _, count = self.events.emit(
+        # ON_MODIFY_DURATIONイベントを発火して、ターン数の変更を可能にする
+        value = self.events.emit(
             Event.ON_MODIFY_DURATION,
             BattleContext(source=source),
             [name, count]
         )
-        self._activate_field(name, count)
-        self.current = field
+        _, modified_count = value
+        if modified_count <= 0:
+            raise ValueError("フィールドの持続ターン数は1以上でなければなりません。")
+
+        self._activate_field(name, modified_count)
+        self.current_name = name
         self.events.emit(Event.ON_FIELD_CHANGE)
         return True
 
@@ -179,17 +199,13 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         if not self.current.is_active:
             return False
         self._deactivate_field(self.current)
-        self.current = self._default
+        self.current_name = self.inactive_name
         self.events.emit(Event.ON_FIELD_CHANGE)
         return True
 
     def tick_down(self) -> None:
-        """現在のフィールド効果のカウントを1減らす。
-
-        Returns:
-            bool: カウントダウンが実行された場合True
-        """
-        super().tick_down(self.current.name)
+        """現在のフィールド効果のカウントを1減らす。"""
+        super().tick_down(self.current_name)
 
 
 class StackableFieldManager(BaseFieldManager[T]):
@@ -197,6 +213,19 @@ class StackableFieldManager(BaseFieldManager[T]):
 
     複数の効果が同時に有効になれます（例：リフレクター、ひかりのかべ、まきびしなど）。
     """
+
+    def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: type[T]):
+        """
+        StackableFieldManagerを初期化する。
+
+        Args:
+            battle: Battleインスタンス
+            owners: フィールド効果の所有者リスト
+            kind: フィールドタイプ（GlobalField, SideFieldなど）
+        """
+        names = get_args(kind)
+        fields = {name: Field(name, owners) for name in names}
+        super().__init__(battle, owners, fields)
 
     def activate(self, name: T, count: int) -> bool:
         """フィールド効果を発動する。
@@ -248,17 +277,17 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
     @property
     def active(self) -> Field:
         """現在有効な天候オブジェクトを返す。"""
-        if self.current.name:
+        if self.current_name != self.inactive_name:
             enabled = self.events.emit(Event.ON_CHECK_WEATHER_ENABLED, value=True)
             if not enabled:
-                return Field("", self.owners)  # ダミーの天候オブジェクトを返す
+                return self.inactive
         return self.current
 
     def apply(self, name: Weather, count: int, source: Pokemon | None = None) -> bool:
         """天候を発動する。
         天候の上書きは、現在の天候と新しい天候の優先度を比較して決める。
         """
-        current_priority = WEATHER_PRIORITY[self.current.name]
+        current_priority = WEATHER_PRIORITY[self.current_name]
         new_priority = WEATHER_PRIORITY[name]
         if new_priority >= current_priority:
             return super().apply(name, count, source=source)
@@ -292,16 +321,7 @@ class GlobalFieldManager(StackableFieldManager[GlobalField]):
         Args:
             battle: Battleインスタンス
         """
-        super().__init__(
-            battle,
-            battle.players,
-            {
-                "じゅうりょく": Field("じゅうりょく", battle.players),
-                "トリックルーム": Field("トリックルーム", battle.players),
-                "マジックルーム": Field("マジックルーム", battle.players),
-                "ワンダールーム": Field("ワンダールーム", battle.players),
-            }
-        )
+        super().__init__(battle, battle.players, GlobalField)
 
 
 class SideFieldManager(StackableFieldManager[SideField]):
@@ -318,20 +338,4 @@ class SideFieldManager(StackableFieldManager[SideField]):
             battle: Battleインスタンス
             player: 効果を管理するプレイヤー
         """
-        super().__init__(
-            battle,
-            [player],
-            {
-                "リフレクター": Field("リフレクター", [player]),
-                "ひかりのかべ": Field("ひかりのかべ", [player]),
-                "オーロラベール": Field("オーロラベール", [player]),
-                "しんぴのまもり": Field("しんぴのまもり", [player]),
-                "しろいきり": Field("しろいきり", [player]),
-                "おいかぜ": Field("おいかぜ", [player]),
-                "ねがいごと": Field("ねがいごと", [player]),
-                "まきびし": Field("まきびし", [player]),
-                "どくびし": Field("どくびし", [player]),
-                "ステルスロック": Field("ステルスロック", [player]),
-                "ねばねばネット": Field("ねばねばネット", [player]),
-            }
-        )
+        super().__init__(battle, (player,), SideField)

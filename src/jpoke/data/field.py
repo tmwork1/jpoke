@@ -37,7 +37,7 @@ FIELDS: dict[str, FieldData] = {
                 h.はれ_prevent_freeze,
                 subject_spec="target:self",
             ),
-            Event.ON_TURN_END_1: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_weather,
                 subject_spec="source:self",
                 priority=10,
@@ -51,7 +51,7 @@ FIELDS: dict[str, FieldData] = {
                 h.あめ_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END_1: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_weather,
                 subject_spec="source:self",
                 priority=10,
@@ -65,7 +65,7 @@ FIELDS: dict[str, FieldData] = {
                 h.すなあらし_D_boost,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_1: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.すなあらし_turn_end,
                 subject_spec="source:self",
                 priority=10,
@@ -79,7 +79,7 @@ FIELDS: dict[str, FieldData] = {
                 h.ゆき_B_boost,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_1: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_weather,
                 subject_spec="source:self",
                 priority=10,
@@ -141,10 +141,10 @@ FIELDS: dict[str, FieldData] = {
                 h.エレキフィールド_prevent_nemuke,
                 subject_spec="target:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_terrain,
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -155,15 +155,15 @@ FIELDS: dict[str, FieldData] = {
                 h.グラスフィールド_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END_2: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.グラスフィールド_heal,
                 subject_spec="source:self",
                 priority=60,
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_terrain,
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -179,10 +179,10 @@ FIELDS: dict[str, FieldData] = {
                 priority=100,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_terrain,
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -201,10 +201,10 @@ FIELDS: dict[str, FieldData] = {
                 h.ミストフィールド_prevent_confusion,
                 subject_spec="target:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 h.tick_terrain,
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -219,10 +219,10 @@ FIELDS: dict[str, FieldData] = {
                 h.じゅうりょく_grounded,
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_global_field, name="じゅうりょく"),
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -232,10 +232,10 @@ FIELDS: dict[str, FieldData] = {
                 h.トリックルーム_reverse_speed,
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_global_field, name="トリックルーム"),
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -253,10 +253,10 @@ FIELDS: dict[str, FieldData] = {
                 h.マジックルーム_remove,
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_global_field, name="マジックルーム"),
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -270,10 +270,10 @@ FIELDS: dict[str, FieldData] = {
                 h.ワンダールーム_def_modifier,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_global_field, name="ワンダールーム"),
-                priority=20,
                 subject_spec="source:self",
+                priority=140,
             ),
         },
     ),
@@ -286,10 +286,10 @@ FIELDS: dict[str, FieldData] = {
                 h.リフレクター_reduce_damage,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="リフレクター"),
-                priority=10,
                 subject_spec="source:self",
+                priority=130,
             ),
         },
     ),
@@ -300,10 +300,10 @@ FIELDS: dict[str, FieldData] = {
                 h.ひかりのかべ_reduce_damage,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="ひかりのかべ"),
-                priority=10,
                 subject_spec="source:self",
+                priority=130,
             ),
         },
     ),
@@ -314,10 +314,10 @@ FIELDS: dict[str, FieldData] = {
                 h.オーロラベール_reduce_damage,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="オーロラベール"),
-                priority=10,
                 subject_spec="source:self",
+                priority=130,
             ),
         },
     ),
@@ -331,10 +331,10 @@ FIELDS: dict[str, FieldData] = {
                 h.しんぴのまもり_prevent_confusion,
                 subject_spec="target:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="しんぴのまもり"),
-                priority=10,
                 subject_spec="source:self",
+                priority=10,
             ),
         },
     ),
@@ -344,10 +344,10 @@ FIELDS: dict[str, FieldData] = {
                 h.しろいきり_prevent_stat_drop,
                 subject_spec="target:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="しろいきり"),
-                priority=10,
                 subject_spec="source:self",
+                priority=130,
             ),
         },
     ),
@@ -357,16 +357,16 @@ FIELDS: dict[str, FieldData] = {
                 h.おいかぜ_speed_boost,
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_4: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="おいかぜ"),
-                priority=10,
                 subject_spec="source:self",
+                priority=130,
             ),
         },
     ),
     "ねがいごと": FieldData(
         handlers={
-            Event.ON_TURN_END_2: h.FieldHandler(
+            Event.ON_TURN_END: h.FieldHandler(
                 partial(h.tick_side_field, name="ねがいごと"),
                 subject_spec="source:self",
                 priority=50,

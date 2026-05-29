@@ -121,10 +121,9 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
         HandlerReturn: 交代が可能な場合はTrue、不可能な場合はFalse
     """
     player = battle.get_player(ctx.attacker)
-    success = bool(battle.get_available_switch_commands(player))
-    if success:
-        player.interrupt = Interrupt.PIVOT
-    return HandlerReturn(value=success)
+    if battle.get_available_switch_commands(player):
+        battle.player_states[player].interrupt = Interrupt.PIVOT
+    return HandlerReturn(value=value)
 
 
 def on_blow_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:

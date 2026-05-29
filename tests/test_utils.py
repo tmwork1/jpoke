@@ -202,9 +202,9 @@ def can_switch(battle: Battle, idx: int) -> bool:
 
 
 def emit_turn_end_events(battle: Battle):
-    battle.events.emit(Event.ON_TURN_END_1)
-    battle.events.emit(Event.ON_TURN_END_2)
-    battle.events.emit(Event.ON_TURN_END_3)
-    battle.events.emit(Event.ON_TURN_END_4)
-    battle.events.emit(Event.ON_TURN_END_5)
-    battle.events.emit(Event.ON_TURN_END_6)
+    battle.events.emit(Event.ON_TURN_END)
+    battle.events.emit(Event.ON_TURN_END)
+    battle.events.emit(Event.ON_TURN_END)
+    battle.events.emit(Event.ON_TURN_END)
+    battle.events.emit(Event.ON_TURN_END)
+    battle.events.emit(Event.ON_TURN_END)

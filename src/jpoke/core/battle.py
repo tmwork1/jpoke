@@ -80,16 +80,16 @@ class Battle:
     """
 
     def __init__(self,
-                 players: list[Player],
+                 players: tuple[Player],
                  seed: int | None = None) -> None:
         """Battleインスタンスを初期化する。
 
         Args:
-            players: 参加プレイヤーのリスト（通常2人）
+            players: 参加プレイヤーのタプル（通常2人）
             seed: 乱数シード値（Noneの場合は現在時刻を使用）
         """
 
-        self.players: list[Player] = players
+        self.players: tuple[Player] = players
         self.seed: int = seed or int(time.time())
 
         self.random = Random(self.seed)
@@ -251,6 +251,11 @@ class Battle:
         return mon in self.actives
 
     @property
+    def weather(self) -> Field:
+        """有効な天候オブジェクトを返す。判定ロジックは WeatherManager に委譲する。"""
+        return self.weather_manager.active
+
+    @property
     def raw_weather(self) -> Field:
         """現在セットされている天候を取得。
 
@@ -258,11 +263,6 @@ class Battle:
             Field: 現在セットされている天候フィールド
         """
         return self.weather_manager.current
-
-    @property
-    def weather(self) -> Field:
-        """有効な天候オブジェクトを返す。判定ロジックは WeatherManager に委譲する。"""
-        return self.weather_manager.active
 
     @property
     def terrain(self) -> Field:
@@ -616,14 +616,13 @@ class Battle:
         """
         return not self.has_interrupt()
 
-    def override_interrupt(self, flag: Interrupt, only_first: bool = True):
+    def override_ejectpack_interrupt(self, flag: Interrupt):
         """割り込みフラグを上書き（SwitchManagerへの委譲）。
 
         Args:
             flag: 設定する割り込みフラグ
-            only_first: 最初の1体のみに設定する場合True
         """
-        self.switch_manager.override_interrupt(flag, only_first)
+        self.switch_manager.override_ejectpack_interrupt(flag)
 
     def run_switch(self, player: Player, new: Pokemon, emit: bool = True):
         """ポケモンを交代（SwitchManagerへの委譲）。

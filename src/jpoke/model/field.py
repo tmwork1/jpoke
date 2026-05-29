@@ -26,17 +26,17 @@ class Field(GameEffect):
 
     def __init__(self,
                  name: str,
-                 owners: list[Player],
+                 owners: tuple[Player, ...],
                  count: int = 0) -> None:
         """フィールド効果を初期化する。
 
         Args:
             name: フィールド名
-            owners: フィールドの所有者となるプレイヤーのリスト
+            owners: フィールドの所有者となるプレイヤーのタプル
             count: 初期ターン数（0の場合は非アクティブ）
         """
         super().__init__(FIELDS[name])
-        self.owners: list[Player] = owners
+        self.owners: tuple[Player, ...] = owners
         self.count: int = count
         self.heal: int = 0  # ねがいごと用
         self.revealed = True
@@ -48,14 +48,6 @@ class Field(GameEffect):
         new = cls.__new__(cls)
         memo[id(self)] = new
         return fast_copy(self, new, keys_to_deepcopy=[])
-
-    def update_reference(self, owners: list[Player]):
-        """フィールドの所有者参照を更新する。
-
-        Args:
-            owners: 新しい所有者（プレイヤー）のリスト
-        """
-        self.owners = owners
 
     @property
     def name(self) -> str:

@@ -115,19 +115,18 @@ def いかさまダイス_modify_hit_count(battle: Battle, ctx: BattleContext, v
 
 def だっしゅつパック_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     # valueは{stat: change}の辞書
-    mon = ctx.target
-    player = battle.get_player(mon)
+    player = battle.get_player(ctx.target)
     if (
         any(v < 0 for v in value.values())
-        and bool(battle.get_available_switch_commands(player))
+        and battle.get_available_switch_commands(player)
     ):
-        player.interrupt = Interrupt.REQUESTED
+        battle.player_states[player].interrupt = Interrupt.EJECTPACK_REQUESTED
     return HandlerReturn(value=value)
 
 
 def だっしゅつボタン_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     player = battle.get_player(ctx.defender)
-    player.interrupt = Interrupt.REQUESTED
+    battle.player_states[player].interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn(value=value)
 
 

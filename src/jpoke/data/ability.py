@@ -46,7 +46,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "アイスボディ": AbilityData(
         handlers={
-            Event.ON_TURN_END_1: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.アイスボディ_on_turn_end,
                 subject_spec="source:self",
                 priority=30,
@@ -94,7 +94,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "あめうけざら": AbilityData(
         handlers={
-            Event.ON_TURN_END_1: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.あめうけざら_heal,
                 subject_spec="source:self",
                 priority=30,
@@ -330,7 +330,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "かそく": AbilityData(
         handlers={
-            Event.ON_TURN_END_5: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.かそく_on_turn_end,
                 subject_spec="source:self",
             ),
@@ -445,7 +445,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.かんそうはだ_modify_fire_damage,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END_3: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.かんそうはだ_on_turn_end,
                 subject_spec="source:self",
                 priority=30,
@@ -730,7 +730,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.サンパワー_modify_atk,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END_3: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.サンパワー_on_turn_end,
                 subject_spec="source:self",
                 priority=30,
@@ -784,7 +784,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "しゅうかく": AbilityData(
         handlers={
-            Event.ON_TURN_END_5: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.しゅうかく_on_turn_end,
                 subject_spec="source:self",
             ),
@@ -1106,7 +1106,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "だっぴ": AbilityData(
         handlers={
-            Event.ON_TURN_END_2: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.だっぴ_cure_ailment,
                 subject_spec="source:self",
                 priority=60,
@@ -1590,7 +1590,7 @@ ABILITIES: dict[str, AbilityData] = {
                 h.はらぺこスイッチ_on_switch_out,
                 subject_spec="source:self",
             ),
-            Event.ON_TURN_END_5: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.はらぺこスイッチ_on_turn_end,
                 subject_spec="source:self",
             ),
@@ -2065,7 +2065,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ムラっけ": AbilityData(
         handlers={
-            Event.ON_TURN_END_3: h.AbilityHandler(
+            Event.ON_TURN_END: h.AbilityHandler(
                 h.ムラっけ_boost_stats,
                 subject_spec="source:self",
                 priority=150,

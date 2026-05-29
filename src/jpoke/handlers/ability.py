@@ -113,18 +113,12 @@ def _apply_contact_counter_chip(battle: Battle,
     return False
 
 
-def _trigger_emergency_switch(battle: Battle, mon: Pokemon, ability_name: str) -> bool:
+def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
     """緊急交代を発動する。"""
     player = battle.get_player(mon)
-    if (
-        player.has_interrupt()
-        or not battle.get_available_switch_commands(player)
-    ):
-        return False
-
-    player.interrupt = Interrupt.EMERGENCY
-    announce_ability_triggered(battle, None, None, mon=mon)
-    return True
+    if battle.get_available_switch_commands(player):
+        battle.player_states[player].interrupt = Interrupt.EMERGENCY
+        announce_ability_triggered(battle, None, None, mon=mon)
 
 
 # TODO : raise_stat は {Stat: value} の辞書で渡して汎用化する
@@ -446,7 +440,7 @@ def ききかいひ_on_hp_change(battle: Battle, ctx: BattleContext, value: int)
     hp_after = mon.hp
     hp_before = hp_after + value
     if _crossed_half_hp(hp_before, hp_after, mon.max_hp):
-        _trigger_emergency_switch(battle, mon, mon.ability.base_name)
+        _trigger_emergency_switch(battle, mon)
 
     return HandlerReturn(value=value)
 

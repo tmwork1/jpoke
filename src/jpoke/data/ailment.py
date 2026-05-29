@@ -15,7 +15,7 @@ AILMENTS: dict[str, AilmentData] = {
     "": AilmentData(),
     "どく": AilmentData(
         handlers={
-            Event.ON_TURN_END_3: h.AilmentHandler(
+            Event.ON_TURN_END: h.AilmentHandler(
                 h.どく_damage,
                 subject_spec="source:self",
                 priority=90,
@@ -24,7 +24,7 @@ AILMENTS: dict[str, AilmentData] = {
     ),
     "もうどく": AilmentData(
         handlers={
-            Event.ON_TURN_END_3: h.AilmentHandler(
+            Event.ON_TURN_END: h.AilmentHandler(
                 h.もうどく_damage,
                 subject_spec="source:self",
                 priority=90,
@@ -50,7 +50,7 @@ AILMENTS: dict[str, AilmentData] = {
                 h.やけど_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END_3: h.AilmentHandler(
+            Event.ON_TURN_END: h.AilmentHandler(
                 h.やけど_damage,
                 subject_spec="source:self",
                 priority=100,

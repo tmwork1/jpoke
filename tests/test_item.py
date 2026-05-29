@@ -119,12 +119,12 @@ def test_たべのこし():
     )
     mon = battle.actives[0]
     # HPが満タンのときは回復しない
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END)
     battle.print_logs()
     assert not mon.item.revealed
 
     mon.hp = 1  # テスト用に内部変数を直接変更
-    battle.events.emit(Event.ON_TURN_END_2)
+    battle.events.emit(Event.ON_TURN_END)
     assert mon.item.revealed
     assert mon.hp == 1 + mon.max_hp // 16
 

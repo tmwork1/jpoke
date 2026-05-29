@@ -12,8 +12,9 @@ class Interrupt(Enum):
     PIVOT = auto()
     EMERGENCY = auto()
     FAINTED = auto()
-    REQUESTED = auto()
     EJECTBUTTON = auto()
+
+    EJECTPACK_REQUESTED = auto()
     EJECTPACK_ON_AFTER_SWITCH = auto()
     EJECTPACK_ON_START = auto()
     EJECTPACK_ON_SWITCH_0 = auto()

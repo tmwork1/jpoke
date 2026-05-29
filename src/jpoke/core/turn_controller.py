@@ -159,8 +159,8 @@ class TurnController:
                     new = player.team[command.index]
                     self.battle.run_switch(player, new)
 
-                # だっしゅつパックによる割り込みフラグを更新
-                self.battle.override_interrupt(interrupt)
+                # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
+                self.battle.override_ejectpack_interrupt(interrupt)
 
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
@@ -229,44 +229,28 @@ class TurnController:
             # 交代技による交代
             self.battle.run_interrupt_switch(Interrupt.PIVOT)
 
-            # だっしゅつパックによる割り込みフラグを更新
+            # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
             interrupt = Interrupt.ejectpack_on_after_move(
                 self.battle.players.index(player)
             )
-            self.battle.override_interrupt(interrupt)
+            self.battle.override_ejectpack_interrupt(interrupt)
 
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
     def _run_end_phase(self):
         """ターン終了時の処理を実行する。"""
-        # ターン終了時の処理 (1~4)
-        turn_end_events = [
-            Event.ON_TURN_END_1,
-            Event.ON_TURN_END_2,
-            Event.ON_TURN_END_3,
-            Event.ON_TURN_END_4,
-        ]
-        for event in turn_end_events:
-            if self.battle.is_new_turn():
-                self.events.emit(event)
-
-                # ききかいひによる交代
-                self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
-
-        # ターン終了時の処理 (5)
         if self.battle.is_new_turn():
-            self.events.emit(Event.ON_TURN_END_5)
+            self.events.emit(Event.ON_TURN_END)
 
-            # だっしゅつパックによる割り込みフラグを更新
-            self.battle.override_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
+            # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
+            self.battle.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
+
+        # ききかいひによる交代
+        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
 
         # 瀕死による交代
         self.battle.run_faint_switch()
-
-        # ターン終了時の処理 (6)
-        if self.battle.is_new_turn():
-            self.battle.events.emit(Event.ON_TURN_END_6)
