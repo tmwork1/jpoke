@@ -77,7 +77,7 @@ def test_すなあらし_ダメージ():
         team0=[Pokemon("ピカチュウ")],
         weather=("すなあらし", 99)
     )
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
     expected_damages = [mon.max_hp // 16 for mon in battle.actives]
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
@@ -94,7 +94,7 @@ def test_すなあらし_タイプ免疫():
         team0=[Pokemon("イシツブテ")],
         weather=("すなあらし", 99),
     )
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
     expected_damages = [0, battle.actives[1].max_hp // 16]
     assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
@@ -112,7 +112,7 @@ def test_すなあらし_特性免疫(ability_name: str):
         weather=("すなあらし", 999),
     )
     mon = battle.actives[0]
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.hp == mon.max_hp
 
 
@@ -435,24 +435,24 @@ def test_グラスフィールド_じならし弱化():
 def test_グラスフィールド_回復():
     """グラスフィールド: ターン終了時1/16回復"""
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
         terrain=("グラスフィールド", 99),
     )
     mon = battle.actives[0]
     mon.hp = 1
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     assert mon.hp == 1 + mon.max_hp // 16, "グラスフィールドの回復量が不正"
 
-    floating_battle = t.start_battle(
+    battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピジョン")],
         terrain=("グラスフィールド", 99),
     )
-    floating_mon = floating_battle.actives[0]
-    floating_mon.hp = 1
-    floating_battle.events.emit(Event.ON_TURN_END)
-    assert floating_mon.hp == 1
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
 
 # ──────────────────────────────────────────────────────────────────
 # サイコフィールド
@@ -571,7 +571,7 @@ def test_マジックルーム_道具効果無効化():
     )
     mon = battle.actives[0]
     mon.hp = 1
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.hp == 1
 
 # ──────────────────────────────────────────────────────────────────
@@ -831,11 +831,11 @@ def test_ねがいごと_回復と解除():
     heal = 20
     field.heal = heal
 
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     assert mon.hp == 1, "No wish heal occurred"
     assert field.count == 1, "Wish field count did not decrease"
 
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     assert mon.hp == 1 + heal, "Wish heal amount is incorrect"
     assert not field.is_active, "Wish field did not deactivate"
 

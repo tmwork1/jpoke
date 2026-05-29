@@ -46,31 +46,32 @@ class CommandManager:
         active = self.battle.get_active(player)
         if self.battle.query_manager.is_trapped(active):
             return []
-        selection = self.battle.player_states[player.index].selection
+        selection = self.battle.player_states[player].selection
         return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
-                if mon in player.selection and mon is not player.active]
+                if mon in selection and mon is not active]
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
-        mon = player.active
-        move_indexes = [i for i, move in enumerate(mon.moves) if move.pp > 0]
+        state = self.battle.player_states[player]
+        active = self.battle.get_active(player)
+        move_indexes = [i for i, move in enumerate(active.moves) if move.pp > 0]
 
         # 通常技
         commands = [Command.get_move_command(i) for i in move_indexes]
 
         # メガシンカ
-        if player.can_use_megaevol() and mon.can_megaevolve():
+        if state.can_use_megaevol() and active.can_megaevolve():
             commands += [Command.get_megaevol_command(i) for i in move_indexes]
 
         # テラスタル
-        if player.can_use_terastal() and mon.can_terastallize():
+        if state.can_use_terastal() and active.can_terastallize():
             commands += [Command.get_terastal_command(i) for i in move_indexes]
 
         # 交代コマンドを追加
         commands += self.get_available_switch_commands(player)
 
         # コマンド修正
-        ctx = BattleContext(source=player.active)
+        ctx = BattleContext(source=active)
         commands = self.battle.events.emit(Event.ON_MODIFY_COMMAND_OPTIONS, ctx, commands)
 
         # 強制行動コマンドがある場合はそれを優先
@@ -85,7 +86,7 @@ class CommandManager:
 
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得する。"""
-        attacker = player.active
+        attacker = self.battle.get_active(player)
         if command == Command.STRUGGLE:
             return Move("わるあがき")
         if command == Command.FORCED:

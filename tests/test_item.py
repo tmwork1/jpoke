@@ -64,17 +64,17 @@ def test_さらさらいわ():
 # ──────────────────────────────────────────────────────────────────
 # だっしゅつパック
 # ──────────────────────────────────────────────────────────────────
-def test_だっしゅつパック():
+def test_だっしゅつパック_0ターン目にいかくで交代():
     """だっしゅつパック: 能力ダウンで交代"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item="だっしゅつパック"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ", ability="いかく")],
     )
-    player = battle.players[0]
-    mon = player.team[0]
-    assert player.active_idx == 1
-    assert mon.item.revealed
-    assert mon.item.consumed
+    state = battle._player_states[0]
+    ejected_mon = state.team[0]
+    assert state.active_index == 1
+    assert ejected_mon.item.revealed
+    assert ejected_mon.item.consumed
 
 
 def test_だっしゅつパック_能力上昇では発動しない():
@@ -84,9 +84,9 @@ def test_だっしゅつパック_能力上昇では発動しない():
         team1=[Pokemon("ピカチュウ")],
     )
     t.run_move(battle, 0)
-    player = battle.players[0]
-    mon = player.team[0]
-    assert player.active_idx == 0
+    state = battle._player_states[0]
+    mon = state.team[0]
+    assert state.active_index == 0
     assert not mon.item.revealed
 
 # ──────────────────────────────────────────────────────────────────
@@ -101,9 +101,9 @@ def test_だっしゅつボタン():
         team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     battle.advance_turn()
-    player = battle.players[0]
-    mon = player.team[0]
-    assert player.active_idx == 1
+    state = battle._player_states[0]
+    mon = state.team[0]
+    assert state.active_index == 1
     assert mon.item.revealed
     assert mon.item.consumed
 

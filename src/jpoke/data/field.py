@@ -155,16 +155,18 @@ FIELDS: dict[str, FieldData] = {
                 h.グラスフィールド_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TURN_END: h.FieldHandler(
-                h.グラスフィールド_heal,
-                subject_spec="source:self",
-                priority=60,
-            ),
-            Event.ON_TURN_END: h.FieldHandler(
-                h.tick_terrain,
-                subject_spec="source:self",
-                priority=140,
-            ),
+            Event.ON_TURN_END: [
+                h.FieldHandler(
+                    h.グラスフィールド_heal,
+                    subject_spec="source:self",
+                    priority=60,
+                ),
+                h.FieldHandler(
+                    h.tick_terrain,
+                    subject_spec="source:self",
+                    priority=140,
+                ),
+            ]
         },
     ),
     "サイコフィールド": FieldData(

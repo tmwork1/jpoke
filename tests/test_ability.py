@@ -67,7 +67,7 @@ def test_あめうけざら_あめ中に回復(weather_name: str, weather_count:
     )
     mon = battle.actives[0]
     mon.hp = 1
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.hp == 1 + mon.max_hp // 16
 
 
@@ -80,7 +80,7 @@ def test_あめうけざら_あめ以外では発動しない():
     mon = battle.actives[0]
     battle.modify_hp(mon, v=-50, reason="")
     before = mon.hp
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.hp == before
 
 
@@ -1686,7 +1686,7 @@ def test_サンパワー_はれ中にターン終了時1_8ダメージ():
         team1=[Pokemon("ピカチュウ")],
         weather=("はれ", 5),
     )
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     mon = battle.actives[0]
     assert mon.hp == mon.max_hp - mon.max_hp // 8
 
@@ -1696,7 +1696,7 @@ def test_サンパワー_はれ以外ではターン終了時ダメージなし(
         team0=[Pokemon("ピカチュウ", ability="サンパワー")],
         team1=[Pokemon("ピカチュウ")],
     )
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     mon = battle.actives[0]
     assert mon.hp == mon.max_hp
 

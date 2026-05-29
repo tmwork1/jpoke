@@ -134,39 +134,6 @@ def start_battle(team0: list[Pokemon],
     return battle
 
 
-def log_contains(battle: Battle,
-                 log_code: LogCode,
-                 player_idx: int | None = None,
-                 turn: int | None = None) -> bool:
-    """指定したLogCodeがログに含まれているか検査する。
-
-    Args:
-        battle: Battleインスタンス
-        log_code: ログに含まれるべきLogCode
-        player_idx: プレイヤーのインデックス（Noneの場合は全プレイヤー）
-        turn: ターン番号（Noneの場合は現在のターン）
-
-    Returns:
-        bool: ログにLogCodeが含まれている場合True、そうでない場合False
-    """
-    if turn is None:
-        turn = battle.turn
-
-    event_logs = battle.get_event_logs(turn)
-
-    if player_idx is not None:
-        # 特定プレイヤーのログをチェック
-        player = battle.players[player_idx]
-        logs = event_logs.get(player, [])
-        return any(log.log == log_code for log in logs)
-    else:
-        # 全プレイヤーのログをチェック
-        all_logs = []
-        for logs in event_logs.values():
-            all_logs.extend(logs)
-        return any(log.log == log_code for log in all_logs)
-
-
 def reserve_command(battle: Battle,
                     command0: Command | None = None,
                     command1: Command | None = None):
@@ -176,11 +143,12 @@ def reserve_command(battle: Battle,
         battle: Battleインスタンス
     """
     commands = [command0, command1]
-    for player, cmd in zip(battle.players, commands):
-        player.init_turn()
-        if cmd is None:
-            cmd = player.choose_action_command(battle)
-        player.reserve_command(cmd)
+    for i, (player, state) in enumerate(battle.player_states.items()):
+        state.reset_turn_state()
+        command = commands[i]
+        if command is None:
+            command = player.choose_action_command(battle)
+        state.reserve_command(command)
 
 
 def can_switch(battle: Battle, idx: int) -> bool:
@@ -201,10 +169,5 @@ def can_switch(battle: Battle, idx: int) -> bool:
     return any(c.is_switch for c in commands)
 
 
-def emit_turn_end_events(battle: Battle):
-    battle.events.emit(Event.ON_TURN_END)
-    battle.events.emit(Event.ON_TURN_END)
-    battle.events.emit(Event.ON_TURN_END)
-    battle.events.emit(Event.ON_TURN_END)
-    battle.events.emit(Event.ON_TURN_END)
+def end_turn(battle: Battle):
     battle.events.emit(Event.ON_TURN_END)

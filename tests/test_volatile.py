@@ -94,11 +94,11 @@ def test_あめまみれ():
 
 def test_アンコール():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
+        team1=[Pokemon("ピカチュウ")],
     )
     player = battle.players[0]
-    mon = player.active
+    mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "アンコール", move_name="なきごえ")
     commands = battle.get_available_action_commands(player)
     assert all(cmd.index == 1 for cmd in commands)
@@ -125,7 +125,7 @@ def test_アンコール_ターン経過で解除():
     mon = battle.actives[0]
     for _ in range(n_turn):
         assert mon.has_volatile("アンコール")
-        t.emit_turn_end_events(battle)
+        t.end_turn(battle)
     assert not mon.has_volatile("アンコール")
 
 
@@ -272,7 +272,7 @@ def test_かいふくふうじ_カウント進行():
     mon = battle.actives[0]
     for _ in range(n_turn):
         assert mon.has_volatile("かいふくふうじ")
-        t.emit_turn_end_events(battle)
+        t.end_turn(battle)
     assert not mon.has_volatile("かいふくふうじ")
 
 
@@ -560,7 +560,7 @@ def test_しおづけ(pokemon, expected_frac):
         volatile0={"しおづけ": 1}
     )
     mon = battle.actives[0]
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.max_hp - mon.hp == mon.max_hp // expected_frac
 
 
@@ -602,7 +602,7 @@ def test_じごくづき_ターン経過で解除():
     mon = battle.actives[0]
     for _ in range(n_turn):
         assert mon.has_volatile("じごくづき")
-        t.emit_turn_end_events(battle)
+        t.end_turn(battle)
     assert not mon.has_volatile("じごくづき")
 
 
@@ -739,7 +739,7 @@ def test_ちょうはつ_ターン経過で解除():
     mon = battle.actives[0]
     for _ in range(n_turn):
         assert mon.has_volatile("ちょうはつ")
-        t.emit_turn_end_events(battle)
+        t.end_turn(battle)
     assert not mon.has_volatile("ちょうはつ")
 
 # ──────────────────────────────────────────────────────────────────
@@ -770,7 +770,7 @@ def test_でんじふゆう_ターン経過で解除():
     mon = battle.actives[0]
     for _ in range(n_turn):
         assert mon.has_volatile("でんじふゆう")
-        t.emit_turn_end_events(battle)
+        t.end_turn(battle)
     assert not mon.has_volatile("でんじふゆう")
 
 
@@ -886,12 +886,12 @@ def test_バインド_ターン経過でダメージ():
     expected_damage = mon.max_hp // 8
 
     # 1ターン目の終了時にダメージ
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.has_volatile("バインド")
     assert mon.hp == mon.max_hp - expected_damage
 
     # 解除されるターンにはダメージを受けない
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert not mon.has_volatile("バインド")
     assert mon.hp == mon.max_hp - expected_damage
 
@@ -966,11 +966,11 @@ def test_ほろびのうた_ターン経過で瀕死():
     )
     mon = battle.actives[0]
 
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.volatiles["ほろびのうた"].count == 1
     assert mon.alive
 
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert not mon.has_volatile("ほろびのうた")
     assert mon.fainted
 

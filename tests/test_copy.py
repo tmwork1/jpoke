@@ -9,7 +9,7 @@ import test_utils as t
 
 
 def test_mon():
-    """BattleContextのコピーが正しく行われることを確認する。"""
+    """pokemonのコピーが正しく行われることを確認する。"""
     old = t.start_battle(
         team0=[Pokemon("ピカチュウ", item="たべのこし"), Pokemon("ヒトカゲ")],
         team1=[Pokemon("フシギダネ")],
@@ -33,17 +33,42 @@ def test_mon():
     assert new.events.handlers == {}
 
 
-def test_terrain():
-    """BattleContextのコピーが正しく行われることを確認する。"""
+def test_weather():
+    """天候のコピーが正しく行われることを確認する。"""
     old = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
         team1=[Pokemon("フシギダネ")],
-        terrain=("グラスフィールド", 1),
+        weather=("すなあらし", 2),
     )
+    new = old.copy()
+    assert new.weather is not old.weather
+
+    # newの天候が正しく機能することを確認する
+    t.end_turn(new)
+    assert new.weather.count == 1
+    assert old.weather.count == 2
+    assert new.actives[0].hp < new.actives[0].max_hp
+    assert old.actives[0].hp == old.actives[0].max_hp
+
+
+def test_terrain():
+    """地形のコピーが正しく行われることを確認する。"""
+    old = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("フシギダネ")],
+        terrain=("グラスフィールド", 2),
+    )
+    old.actives[0].hp = 1
     assert Event.ON_TURN_END in old.events.handlers
 
     new = old.copy()
-    assert old.terrain is not new.terrain
+    assert new.terrain is not old.terrain
+
+    t.end_turn(new)
+    assert new.terrain.count == 1
+    assert old.terrain.count == 2
+    assert old.actives[0].hp == 1
+    assert new.actives[0].hp > 1
 
 
 if __name__ == "__main__":

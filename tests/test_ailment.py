@@ -16,7 +16,7 @@ def test_どく_ダメージ():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "どく")
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     damage = mon.max_hp - mon.hp
     assert damage == mon.max_hp // 8, "Poison damage is incorrect"
 
@@ -29,7 +29,7 @@ def test_もうどく_ダメージ():
     # nターン目: n/16ダメージ
     for i in range(3):
         hp_before = mon.hp
-        t.emit_turn_end_events(battle)
+        t.end_turn(battle)
         damage = hp_before - mon.hp
         assert mon.ailment.elapsed_turns == i + 1
         assert damage == mon.max_hp * (i + 1) // 16
@@ -107,7 +107,7 @@ def test_やけど_ダメージ():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "やけど")
-    t.emit_turn_end_events(battle)
+    t.end_turn(battle)
     assert mon.hp == mon.max_hp - mon.max_hp // 16
 
 
