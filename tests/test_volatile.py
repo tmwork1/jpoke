@@ -131,10 +131,10 @@ def test_アンコール_ターン経過で解除():
 
 def test_アンコール_対象技のPPが0だとわるあがきになる():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
+        team1=[Pokemon("ピカチュウ")],
     )
-    mon = battle.players[0].active
+    mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "アンコール", move_name="たいあたり")
     mon.moves[0].pp = 0
     commands = battle.get_available_action_commands(battle.players[0])
@@ -231,7 +231,7 @@ def test_おんねん_PP枯渇():
     )
     attacker, defender = battle.actives
     defender.hp = 1
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert attacker.moves[0].pp == 0
     assert defender.fainted
 
@@ -284,7 +284,7 @@ def test_かいふくふうじ_いたみわけは防がない():
     )
     attacker, defender = battle.actives
     attacker.hp = 1
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert attacker.hp > 1
     assert defender.hp < defender.max_hp
 
@@ -313,7 +313,7 @@ def test_かなしばり_実行ブロック():
     )
     attacker, defender = battle.actives
     battle.volatile_manager.apply(attacker, "かなしばり", move_name="たいあたり")
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.action_success
 
 
@@ -334,14 +334,14 @@ def test_かなしばり_ターン経過で解除():
 
 def test_かなしばり_交代で解除():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
         volatile0={"かなしばり": 99},
     )
     mon = battle.actives[0]
     mon.volatiles["かなしばり"].move_name = "たいあたり"
-    battle.run_switch(battle.players[0], battle.players[0].team[1])
-    assert not battle.players[0].active.has_volatile("かなしばり")
+    t.run_switch(battle, 0, 1)
+    assert not battle.actives[0].has_volatile("かなしばり")
 
 # ──────────────────────────────────────────────────────────────────
 # きゅうしょアップ
@@ -388,8 +388,8 @@ def test_こだわり_交代で解除():
     )
     mon = battle.actives[0]
     mon.volatiles["こだわり"].move_name = "たいあたり"
-    battle.run_switch(battle.players[0], battle.players[0].team[1])
-    assert not battle.players[0].active.has_volatile("こだわり")
+    t.run_switch(battle, 0, 1)
+    assert not battle.actives[0].has_volatile("こだわり")
 
 
 def test_こだわり_固定技のPPが0だとわるあがきになる():
@@ -430,7 +430,7 @@ def test_こんらん_自傷ダメージ():
     attacker, defender = battle.actives
     # 自傷を強制
     battle.test_option.trigger_volatile = True
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.action_success
     assert attacker.hp < attacker.max_hp
     assert defender.hp == defender.max_hp
@@ -446,7 +446,7 @@ def test_こんらん_通常行動():
     attacker, defender = battle.actives
     # 行動を許可
     battle.test_option.trigger_volatile = False
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.move_executor.action_success
     assert attacker.hp == attacker.max_hp
 
@@ -459,7 +459,7 @@ def test_こんらん_カウント満了で解除():
     )
     attacker, defender = battle.actives
     assert attacker.has_volatile("こんらん")
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not attacker.has_volatile("こんらん")
 
 # ──────────────────────────────────────────────────────────────────
@@ -524,7 +524,7 @@ def test_さわぐ交代時_さわがしいを解除する():
         volatile1={"さわがしい": 2},
     )
     player = battle.players[0]
-    battle.run_switch(player, player.team[1])
+    t.run_switch(battle, 0, 1)
     assert not battle.actives[1].has_volatile("さわがしい")
 
 
@@ -588,7 +588,7 @@ def test_じごくづき_実行ブロック():
         volatile0={"じごくづき": 2}
     )
     attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.action_success
 
 
@@ -627,7 +627,7 @@ def test_じゅうでん_でんき技強化():
         volatile0={"じゅうでん": 1}
     )
     attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert 8192 == battle.damage_calculator.power_modifier
     assert not battle.actives[0].has_volatile("じゅうでん")
 
@@ -639,7 +639,7 @@ def test_じゅうでん_非でんき技では残る():
         volatile0={"じゅうでん": 1}
     )
     attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.power_modifier
     assert battle.actives[0].has_volatile("じゅうでん")
 
@@ -654,8 +654,7 @@ def test_タールショット_ほのお弱点付与():
         team0=[Pokemon("ピカチュウ", moves=["ひのこ"])],
         volatile1={"タールショット": 1}
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert 8192 == battle.damage_calculator.def_type_modifier
 
 
@@ -664,8 +663,7 @@ def test_タールショット_ほのお以外は変化しない():
                             team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
                             volatile1={"タールショット": 1}
                             )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.def_type_modifier
 
 # ──────────────────────────────────────────────────────────────────
@@ -713,8 +711,7 @@ def test_ちょうはつ_変化技は使えない():
         team0=[Pokemon("ピカチュウ", moves=["ひかりのかべ"])],
         volatile0={"ちょうはつ": 3},
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.action_success
 
 
@@ -724,8 +721,7 @@ def test_ちょうはつ_攻撃技は使える():
         team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         volatile0={"ちょうはつ": 3},
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.move_executor.action_success
 
 
@@ -911,8 +907,7 @@ def test_バインド_発生源が交代すると解除():
         team1=[Pokemon("ピカチュウ")],
         volatile1={"バインド": 99},
     )
-    player = battle.players[0]
-    battle.run_switch(player, player.team[1])
+    t.run_switch(battle, 0, 1)
     assert not battle.actives[1].has_volatile("バインド")
 
 # ──────────────────────────────────────────────────────────────────
@@ -991,8 +986,7 @@ def test_まるくなる():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"まるくなる": 1}
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert 8192 == battle.damage_calculator.power_modifier
 
 
@@ -1003,8 +997,7 @@ def test_まるくなる_他技は倍にならない():
         team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         volatile0={"まるくなる": 1}
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.power_modifier
 
 
@@ -1019,8 +1012,7 @@ def test_みがわり_無効化():
         team1=[Pokemon("ピカチュウ")],
         volatile1={"みがわり": 1},
     )
-    attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.move_applied
 
 
