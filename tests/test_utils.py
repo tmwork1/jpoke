@@ -131,6 +131,8 @@ def start_battle(team0: list[Pokemon],
     if accuracy is not None:
         battle.test_option.accuracy = accuracy
 
+    battle.print_logs()
+
     return battle
 
 

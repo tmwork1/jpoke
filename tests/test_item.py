@@ -40,7 +40,7 @@ def test_いのちのたま_変化技では発動しない():
 def test_きれいなぬけがら():
     """きれいなぬけがら: 交代防止無効"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="きれいなぬけがら") for _ in range(2)],
+        team0=[Pokemon("ピカチュウ", item="きれいなぬけがら"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ", ability="かげふみ")],
     )
     assert t.can_switch(battle, 0)
