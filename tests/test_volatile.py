@@ -131,8 +131,8 @@ def test_アンコール_ターン経過で解除():
 
 def test_アンコール_対象技のPPが0だとわるあがきになる():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", moves=["たいあたり", "なきごえ"])],
+        team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "アンコール", move_name="たいあたり")
@@ -523,7 +523,8 @@ def test_さわぐ交代時_さわがしいを解除する():
         volatile0={"さわぐ": 2},
         volatile1={"さわがしい": 2},
     )
-    t.run_switch(battle, 0, 1)
+    player = battle.players[0]
+    battle.run_switch(player, player.team[1])
     assert not battle.actives[1].has_volatile("さわがしい")
 
 
@@ -586,7 +587,8 @@ def test_じごくづき_実行ブロック():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"じごくづき": 2}
     )
-    t.run_move(battle, 0)
+    attacker, defender = battle.actives
+    battle.run_move(attacker, attacker.moves[0])
     assert not battle.move_executor.action_success
 
 
@@ -624,7 +626,8 @@ def test_じゅうでん_でんき技強化():
         team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
         volatile0={"じゅうでん": 1}
     )
-    t.run_move(battle, 0)
+    attacker, defender = battle.actives
+    battle.run_move(attacker, attacker.moves[0])
     assert 8192 == battle.damage_calculator.power_modifier
     assert not battle.actives[0].has_volatile("じゅうでん")
 
@@ -635,7 +638,8 @@ def test_じゅうでん_非でんき技では残る():
         team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
         volatile0={"じゅうでん": 1}
     )
-    t.run_move(battle, 0)
+    attacker, defender = battle.actives
+    battle.run_move(attacker, attacker.moves[0])
     assert 4096 == battle.damage_calculator.power_modifier
     assert battle.actives[0].has_volatile("じゅうでん")
 

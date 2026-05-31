@@ -429,21 +429,24 @@ def _check_はやてがえし_condition(battle: Battle, ctx: BattleContext) -> b
 
     相手が未行動かつ優先攻撃技を選択している時のみ成功する。
     """
-    defender_player = battle.get_player(ctx.defender)
+    def_player = battle.get_player(ctx.defender)
+    def_state = battle.player_states[def_player]
 
     # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
-    if not defender_player.reserved_commands:
+    if def_state.next_command is None:
         return False
 
-    defender_command = defender_player.reserved_commands[0]
-    defender_move = battle.command_to_move(defender_player, defender_command)
+    defender_command = def_state.next_command
+    defender_move = battle.command_to_move(def_player, defender_command)
 
     # 優先度が上がっていても変化技には失敗する。
     if not defender_move.is_attack:
         return False
 
     priority = battle.speed_calculator.calc_move_priority(ctx.defender, defender_move)
-    if priority <= 0:
+
+    # 先制技でないまたはより優先度が高い技には失敗する。
+    if priority <= 0 or priority > ctx.move.priority:
         return False
 
     return True
