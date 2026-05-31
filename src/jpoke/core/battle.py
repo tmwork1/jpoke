@@ -80,7 +80,7 @@ class Battle:
     """
 
     def __init__(self,
-                 players: tuple[Player],
+                 players: tuple[Player, ...],
                  seed: int | None = None) -> None:
         """Battleインスタンスを初期化する。
 

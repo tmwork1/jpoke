@@ -79,7 +79,7 @@ def start_battle(team0: list[Pokemon],
     if not team1:
         raise ValueError("foe must contain at least one Pokemon")
 
-    players = [CustomPlayer(f"Player {i+1}") for i in range(2)]
+    players = (CustomPlayer("Player 1"), CustomPlayer("Player 2"))
     for player, mons in zip(players, [team0, team1]):
         for mon in mons:
             player.team.append(mon)
