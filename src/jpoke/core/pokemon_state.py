@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.model import Pokemon, Move, Ailment, Volatile
 from jpoke.utils.type_defs import AilmentName, VolatileName, Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.utils import fast_copy
 
 
@@ -58,7 +58,7 @@ class AilmentManager:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -93,7 +93,7 @@ class AilmentManager:
               count: int | None = None,
               source: Pokemon | None = None,
               force: bool = False,
-              ctx: BattleContext | None = None) -> bool:
+              ctx: EventContext | None = None) -> bool:
         """状態異常を付与する。
 
         Args:
@@ -102,7 +102,7 @@ class AilmentManager:
             count: 継続ターン数（必要な状態異常のみ）
             source: 状態異常の原因となったポケモン
             force: Trueの場合、既存の状態異常を上書き
-            ctx: ON_BEFORE_APPLY_AILMENT イベントの BattleContext
+            ctx: ON_BEFORE_APPLY_AILMENT イベントの EventContext
         Returns:
             付与に成功したTrue
 
@@ -127,19 +127,19 @@ class AilmentManager:
         if ctx is not None:
             new_ctx = ctx.derive(target=target, source=source)
         else:
-            new_ctx = BattleContext(target=target, source=source)
+            new_ctx = EventContext(target=target, source=source)
 
-        if not self.events.emit(Event.ON_BEFORE_APPLY_AILMENT, new_ctx, name):
+        if not self._events.emit(Event.ON_BEFORE_APPLY_AILMENT, new_ctx, name):
             return False
 
         # 既存のハンドラを削除
-        target.ailment.unregister_handlers(self.events, target)
+        target.ailment.unregister_handlers(self._events, target)
 
         # 新しい状態異常を設定してハンドラ登録
         self.battle.add_event_log(target, LogCode.AILMENT_APPLIED,
                                   payload={"ailment": name})
         target.ailment = Ailment(name, count=count)
-        target.ailment.register_handlers(self.events, target)
+        target.ailment.register_handlers(self._events, target)
         return True
 
     def remove(self, target: Pokemon, source: Pokemon | None = None) -> bool:
@@ -157,7 +157,7 @@ class AilmentManager:
 
         self.battle.add_event_log(target, LogCode.AILMENT_REMOVED,
                                   payload={"ailment": target.ailment.name})
-        target.ailment.unregister_handlers(self.events, target)
+        target.ailment.unregister_handlers(self._events, target)
         target.ailment = Ailment()
         return True
 
@@ -220,7 +220,7 @@ class VolatileManager:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -229,7 +229,7 @@ class VolatileManager:
               name: VolatileName,
               count: int | None = None,
               source: Pokemon | None = None,
-              ctx: BattleContext | None = None,
+              ctx: EventContext | None = None,
               **kwargs) -> bool:
         """揮発性状態を付与する。
 
@@ -238,7 +238,7 @@ class VolatileManager:
             name: 揮発性状態名
             count: 継続ターン数
             source: 揮発性状態の原因となったポケモン
-            ctx: ON_BEFORE_APPLY_VOLATILE イベントの BattleContext
+            ctx: ON_BEFORE_APPLY_VOLATILE イベントの EventContext
             **kwargs: Volatile クラスの追加引数（例: move_name, hp)
         Returns:
             付与に成功したTrue
@@ -255,10 +255,10 @@ class VolatileManager:
         if ctx is not None:
             new_ctx = ctx.derive(target=target, source=source)
         else:
-            new_ctx = BattleContext(target=target, source=source)
+            new_ctx = EventContext(target=target, source=source)
 
         orig_volatile = name
-        name = self.events.emit(Event.ON_BEFORE_APPLY_VOLATILE, new_ctx, name)
+        name = self._events.emit(Event.ON_BEFORE_APPLY_VOLATILE, new_ctx, name)
         if not name:
             self.battle.add_event_log(target, LogCode.VOLATILE_IMMUNE,
                                       payload={"volatile": orig_volatile})
@@ -267,12 +267,12 @@ class VolatileManager:
         self.battle.add_event_log(target, LogCode.VOLATILE_APPLIED,
                                   payload={"volatile": name})
         target.volatiles[name] = Volatile(name, count=count, **kwargs)
-        target.volatiles[name].register_handlers(self.events, target)
+        target.volatiles[name].register_handlers(self._events, target)
 
         # 付与後フック
         # TODO : ON_APPLY_VOLATILE では source=mon だが ON_BEFORE_APPLY_VOLATILE では target=mon である点がややこしい。イベント名を変えるなど対策を考える。
-        ctx = BattleContext(source=target)
-        self.events.emit(Event.ON_APPLY_VOLATILE, ctx, name)
+        ctx = EventContext(source=target)
+        self._events.emit(Event.ON_APPLY_VOLATILE, ctx, name)
         return True
 
     def remove(self, target: Pokemon, name: VolatileName) -> bool:
@@ -295,10 +295,10 @@ class VolatileManager:
         volatile = target.volatiles.pop(name)
 
         # 終了時ハンドラ内では、現在の保持状態に基づく再計算が行えるよう先に辞書から外す。
-        ctx = BattleContext(source=target)
-        self.events.emit(Event.ON_VOLATILE_END, ctx, name)
+        ctx = EventContext(source=target)
+        self._events.emit(Event.ON_VOLATILE_END, ctx, name)
 
-        volatile.unregister_handlers(self.events, target)
+        volatile.unregister_handlers(self._events, target)
         self.battle.add_event_log(target, LogCode.VOLATILE_REMOVED,
                                   payload={"volatile": name})
 
@@ -365,7 +365,7 @@ class PokemonQuery:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -381,9 +381,9 @@ class PokemonQuery:
         Note:
             タイプや特性、技の効果を考慮して判定する。
         """
-        return self.events.emit(
+        return self._events.emit(
             Event.ON_CHECK_FLOATING,
-            BattleContext(source=pokemon),
+            EventContext(source=pokemon),
             pokemon.has_type("ひこう")
         )
 
@@ -399,9 +399,9 @@ class PokemonQuery:
         Note:
             ゴーストタイプは逃げられる。
         """
-        trapped = self.events.emit(
+        trapped = self._events.emit(
             Event.ON_CHECK_TRAPPED,
-            BattleContext(source=pokemon),
+            EventContext(source=pokemon),
             False
         )
         trapped &= not pokemon.has_type("ゴースト")
@@ -416,9 +416,9 @@ class PokemonQuery:
         Returns:
             きんちょうかん状態の場合True
         """
-        return self.events.emit(
+        return self._events.emit(
             Event.ON_CHECK_NERVOUS,
-            BattleContext(source=pokemon),
+            EventContext(source=pokemon),
             False
         )
 
@@ -470,7 +470,7 @@ class StatusManager:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -500,15 +500,15 @@ class StatusManager:
         if r:
             v = int(target.max_hp * r)
 
-        ctx = BattleContext(source=source, target=target, move=move, hp_change_reason=reason)
+        ctx = EventContext(source=source, target=target, move=move, hp_change_reason=reason)
 
         if reason == "poison":
             # NOTE: ON_MODIFY_POISON_DAMAGE はポイズンヒール特性で毒ダメージを回復に変換するため必須。
-            v = self.events.emit(Event.ON_MODIFY_POISON_DAMAGE, ctx, v)
+            v = self._events.emit(Event.ON_MODIFY_POISON_DAMAGE, ctx, v)
         if v > 0:
-            v = self.events.emit(Event.ON_MODIFY_HEAL, ctx, v)
+            v = self._events.emit(Event.ON_MODIFY_HEAL, ctx, v)
         if v < 0:
-            v = self.events.emit(Event.ON_MODIFY_NON_MOVE_DAMAGE, ctx, v)
+            v = self._events.emit(Event.ON_MODIFY_NON_MOVE_DAMAGE, ctx, v)
 
         v = target.modify_hp(v)
 
@@ -527,9 +527,9 @@ class StatusManager:
         if v < 0:
             if target.fainted:
                 self.battle.judge_winner()
-                self.events.emit(Event.ON_FAINTED, ctx, -v)
+                self._events.emit(Event.ON_FAINTED, ctx, -v)
             else:
-                self.events.emit(Event.ON_HP_CHANGED, ctx, -v)
+                self._events.emit(Event.ON_HP_CHANGED, ctx, -v)
 
         return v
 
@@ -574,8 +574,8 @@ class StatusManager:
         Returns:
             実際に変化した能力とランク量の辞書
         """
-        ctx = BattleContext(target=target, source=source, stat_change_reason=reason)
-        stats = self.events.emit(Event.ON_BEFORE_MODIFY_STAT, ctx, stats)
+        ctx = EventContext(target=target, source=source, stat_change_reason=reason)
+        stats = self._events.emit(Event.ON_BEFORE_MODIFY_STAT, ctx, stats)
 
         actual_changes = {}
 
@@ -594,7 +594,7 @@ class StatusManager:
                 target, LogCode.STAT_CHANGED,
                 payload={"stats": actual_changes, "reason": reason},
             )
-            self.events.emit(Event.ON_MODIFY_STAT, ctx, actual_changes)
+            self._events.emit(Event.ON_MODIFY_STAT, ctx, actual_changes)
         else:
             self.battle.add_event_log(target, LogCode.STAT_CHANGE_BLOCKED)
 

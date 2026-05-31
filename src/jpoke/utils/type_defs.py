@@ -5,9 +5,8 @@ AbilityDisabledReason = Literal[
 ]
 
 ItemDisabledReason = Literal[
-    "consumed", "ぶきよう", "マジックルーム"
+    "ぶきよう", "マジックルーム",
 ]
-ItemLostCause = Literal["", "consume", "remove", "swap", "steal", "burn", "gas"]  # TODO : ItemDisabledReasonに統合する
 
 
 HandlerSource = Literal["ability", "item", "move", "ailment", "volatile", "field"]

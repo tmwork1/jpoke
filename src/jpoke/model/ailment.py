@@ -21,7 +21,6 @@ class Ailment(GameEffect):
         count: 状態異常の継続ターン数などを記録するカウンター
 
     Notes:
-        init_game()実装不要; Pokemonクラスで新しくインスタンスが作られるため。
         状態異常は相手に常に公開されるため、初期化時に revealed=True とする。
     """
 

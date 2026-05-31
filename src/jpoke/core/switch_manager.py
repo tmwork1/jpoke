@@ -12,7 +12,7 @@ from jpoke.model import Pokemon, Ability
 from jpoke.enums import Interrupt, LogCode
 
 from .event_manager import Event
-from .context import BattleContext
+from .context import EventContext
 from jpoke.utils import fast_copy
 
 
@@ -58,7 +58,7 @@ class SwitchManager:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -93,11 +93,11 @@ class SwitchManager:
         state.has_switched = True
 
         mon.revealed = True
-        mon.ability.register_handlers(self.events, mon)
-        mon.item.register_handlers(self.events, mon)
-        mon.ailment.register_handlers(self.events, mon)
+        mon.ability.register_handlers(self._events, mon)
+        mon.item.register_handlers(self._events, mon)
+        mon.ailment.register_handlers(self._events, mon)
         for volatile in mon.volatiles.values():
-            volatile.register_handlers(self.events, mon)
+            volatile.register_handlers(self._events, mon)
 
         self.battle.add_event_log(mon, LogCode.SWITCHED_IN,
                                   payload={"pokemon": mon.name})
@@ -109,17 +109,17 @@ class SwitchManager:
         Args:
             mon: 引っ込むポケモン
         """
-        self.events.emit(Event.ON_SWITCH_OUT, BattleContext(source=mon))
+        self._events.emit(Event.ON_SWITCH_OUT, EventContext(source=mon))
 
         # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
         for name in list(mon.volatiles.keys()):
             self.battle.volatile_manager.remove(mon, name)
 
-        mon.ability.unregister_handlers(self.events, mon)
-        mon.item.unregister_handlers(self.events, mon)
-        mon.ailment.unregister_handlers(self.events, mon)
+        mon.ability.unregister_handlers(self._events, mon)
+        mon.item.unregister_handlers(self._events, mon)
+        mon.ailment.unregister_handlers(self._events, mon)
         for volatile in mon.volatiles.values():
-            volatile.unregister_handlers(self.events, mon)
+            volatile.unregister_handlers(self._events, mon)
 
         mon.reset_on_switch_out()
         if mon.ability.base_name != mon.base_ability_name:
@@ -175,7 +175,7 @@ class SwitchManager:
 
         # ポケモンが場に出た時の処理
         if emit_switch_in_event:
-            self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=new))
+            self._events.emit(Event.ON_SWITCH_IN, EventContext(source=new))
 
             # リクエストがなくなるまで再帰的に交代する
             while self.battle.has_interrupt():
@@ -194,7 +194,7 @@ class SwitchManager:
             self._switch_in(state, new)
 
         # ポケモンが場に出たときの処理は、両者の交代が完了した後に行う
-        self.events.emit(Event.ON_SWITCH_IN)
+        self._events.emit(Event.ON_SWITCH_IN)
 
         # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
         self.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
@@ -235,7 +235,7 @@ class SwitchManager:
             for mon in self.battle.calc_speed_order():
                 player = self.battle.get_player(mon)
                 if player in switched_players:
-                    self.events.emit(Event.ON_SWITCH_IN, BattleContext(source=mon))
+                    self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
 
     def run_faint_switch(self):
         """瀕死による交代を実行。

@@ -28,7 +28,7 @@
 - **Pokemon** ([model/pokemon.py](src/jpoke/model/pokemon.py)) - ポケモンのデータ構造
 - **Move** ([model/move.py](src/jpoke/model/move.py)) - 技のデータ構造
 - **Ability** ([model/ability.py](src/jpoke/model/ability.py)) - 特性のデータ構造
-- **Item** ([model/item.py](src/jpoke/model/item.py)) - 持ち物のデータ構造
+- **Item** ([model/item.py](src/jpoke/model/item.py)) - アイテムのデータ構造
 - **Stats** ([model/stats.py](src/jpoke/model/stats.py)) - ステータス管理
 
 ### データ定義
@@ -52,7 +52,7 @@
 
 ### 集計基準
 
-- 特性・持ち物・技の進捗は、`src/jpoke/data/*.py` の `*Data(..., handlers={...})` 明示定義を実装済みとして集計する。
+- 特性・アイテム・技の進捗は、`src/jpoke/data/*.py` の `*Data(..., handlers={...})` 明示定義を実装済みとして集計する。
 - 仕様書・テスト件数は進捗管理の補助指標として扱う。
 
 ### サマリー（コード基準）
@@ -60,7 +60,7 @@
 | カテゴリ | 実装済み | 総数 | 進捗率 |
 | --- | ---: | ---: | ---: |
 | **特性** | 220 | 300 | 73.3% |
-| **持ち物** | 59 | 154 | 38.3% |
+| **アイテム** | 59 | 154 | 38.3% |
 | **技** | 130 | 693 | 18.8% |
 
 ### 仕様書・テストの補助指標
@@ -68,7 +68,7 @@
 | カテゴリ | 仕様書ファイル数 | 専用テスト関数数 |
 | --- | ---: | ---: |
 | **特性** | 291 | 325 |
-| **持ち物** | 38 | 10 |
+| **アイテム** | 38 | 10 |
 | **技** | 64 | 12 |
 
 最新の詳細一覧は以下を参照:

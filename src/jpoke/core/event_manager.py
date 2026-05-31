@@ -1,7 +1,7 @@
 """イベント駆動システムの中核を担うモジュール。
 
 バトル中に発生する様々なイベントを管理し、登録されたハンドラを適切なタイミングで実行します。
-特性、技、持ち物などの効果発動を統一的に処理するイベントシステムを提供します。
+特性、技、アイテムなどの効果発動を統一的に処理するイベントシステムを提供します。
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.enums import DomainEvent, Event
 from jpoke.utils import fast_copy
 
-from .context import BattleContext
+from .context import EventContext
 from .handler import HandlerReturn, RegisteredHandler
 
 
@@ -57,18 +57,17 @@ class EventManager:
         Args:
             new: 新しいBattleインスタンス
         """
-        old = self.battle
-
         # ハンドラの対象に指定されているポケモンまたはプレイヤーへの参照を更新する
-        for event, data in self.handlers.items():
-            for i, _ in enumerate(data):
-                self.handlers[event][i].update_reference(old, new)
+        old = self.battle
+        for handlers in self.handlers.values():
+            for rh in handlers:
+                rh.update_reference(old, new)
 
         # Battle への参照を更新する
         self.battle = new
 
-    def subject(self, rh: RegisteredHandler) -> Pokemon:
-        return rh.resolve_subject(self.battle)
+    def _resolve_subject(self, rh: RegisteredHandler) -> Pokemon:
+        return rh.get_subject(self.battle)
 
     def on(self,
            event: Event | DomainEvent,
@@ -100,14 +99,14 @@ class EventManager:
             return
         self.handlers[event] = [
             rh for rh in self.handlers[event]
-            if not (rh.handler == handler and rh._subject == subject)
+            if not (rh.handler == handler and rh.registered_subject == subject)
         ]
         if not self.handlers[event]:
             del self.handlers[event]
 
     def emit(self,
              event: Event | DomainEvent,
-             ctx: BattleContext | None = None,
+             ctx: EventContext | None = None,
              value: Any = None) -> Any:
         """イベントを発火し、登録されたハンドラを実行する。
 
@@ -124,8 +123,8 @@ class EventManager:
         """
         initial_value = value
 
-        # ドメインイベントはソートしない
-        # ソート処理にイベント発火が含まれるため、無限ループになる可能性がある
+        # ソート時にドメインイベントを発火して素早さ計算を行うため、
+        # ドメインイベントはソートせずに発火して再帰を防ぐ
         if isinstance(event, DomainEvent):
             handlers = self.handlers.get(event, [])
         else:
@@ -145,7 +144,7 @@ class EventManager:
 
             # 一度きりのハンドラを解除
             if rh.handler.once:
-                self.off(event, rh.handler, rh._subject)
+                self.off(event, rh.handler, rh.registered_subject)
 
             value = result.value
 
@@ -156,44 +155,49 @@ class EventManager:
         # print(f"\t{event} {initial_value} -> {value}")
         return value
 
-    def _build_context(self, rh: RegisteredHandler) -> BattleContext:
+    def _build_context(self, rh: RegisteredHandler) -> EventContext:
         """ハンドラに対応するコンテキストを構築"""
-        if rh.handler.side == "self":
-            mon = self.subject(rh)
-        else:
-            mon = self.battle.foe(self.subject(rh))
-        return BattleContext(**{rh.handler.role: mon})
+        mon = self._resolve_subject(rh)
+        if rh.handler.side == "foe":
+            mon = self.battle.foe(mon)
+        return EventContext(**{rh.handler.role: mon})
 
     def _sort_handlers(self, rhs: list[RegisteredHandler]) -> list[RegisteredHandler]:
+        """ハンドラを優先度と素早さに基づいてソートする。
+
+        Args:
+            rhs: ソート対象のRegisteredHandlerリスト
+
+        Returns:
+            list[RegisteredHandler]: ソート後のリスト
+        """
         if len(rhs) <= 1:
             return rhs
 
         def key(rh: RegisteredHandler):
-            from jpoke.core import Player
-            subject = self.subject(rh)
-
-            # battle -> speed_calculator 内部でON_CALC_SPEEDイベント発火で無限ループになっている
+            subject = self._resolve_subject(rh)
             speed = self.battle.calc_effective_speed(subject)
             return (rh.handler.priority, -speed)
 
         return sorted(rhs, key=key)
 
-    def _check_handler_validity(self, rh: RegisteredHandler, ctx: BattleContext) -> bool:
+    def _check_handler_validity(self, rh: RegisteredHandler, ctx: EventContext) -> bool:
         """ハンドラが現在のコンテキストで有効かどうかをチェックする。"""
+        subject = self._resolve_subject(rh)
         if (
             not rh.handler.skip_subject_check
-            and self.subject(rh) != ctx.resolve_role(self.battle, rh.handler.subject_spec)
+            and subject != ctx.resolve_role(self.battle, rh.handler.subject_spec)
         ):
-            print(f"Context mismatch: Handler {rh.handler.func} skipped")
+            # print(f"Context mismatch: Handler {rh.handler.func} skipped")
             return False
 
         # ハンドラの発生源が無効化されている場合はスキップ
         match rh.handler.source:
             case "ability":
-                if not self.subject(rh).ability.enabled:
+                if not subject.ability.enabled:
                     return False
             case "item":
-                if not self.subject(rh).item.enabled:
+                if not subject.item.enabled:
                     return False
 
         return True

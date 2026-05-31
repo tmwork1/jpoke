@@ -12,7 +12,7 @@ from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
 
 from .event_manager import Event
-from .context import BattleContext
+from .context import EventContext
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
@@ -77,11 +77,11 @@ class MoveExecutor:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
-    def _resolve_hit_count(self, ctx: BattleContext) -> int:
+    def _resolve_hit_count(self, ctx: EventContext) -> int:
         """連続技の実ヒット回数を決定する。
 
         Args:
@@ -110,7 +110,7 @@ class MoveExecutor:
         else:
             base_hit_count = self.battle.random.randint(min_hits, max_hits)
 
-        return self.events.emit(Event.ON_MODIFY_HIT_COUNT, ctx, base_hit_count)
+        return self._events.emit(Event.ON_MODIFY_HIT_COUNT, ctx, base_hit_count)
 
     def _resolve_hit_power(self, move: Move, hit_index: int) -> int | None:
         """現在ヒットの威力を取得する。
@@ -131,7 +131,7 @@ class MoveExecutor:
             return power_sequence[idx]
         return move.power
 
-    def _check_hit(self, ctx: BattleContext) -> bool:
+    def _check_hit(self, ctx: EventContext) -> bool:
         """技の命中判定。
 
         Args:
@@ -156,7 +156,7 @@ class MoveExecutor:
             return True
 
         # 技の命中変更 + 命中補正
-        self.accuracy = self.events.emit(Event.ON_MODIFY_ACCURACY, ctx, self.accuracy)
+        self.accuracy = self._events.emit(Event.ON_MODIFY_ACCURACY, ctx, self.accuracy)
 
         # 必中処理：イベントハンドラがNoneを返した場合は必中
         if self.accuracy is None:
@@ -167,7 +167,7 @@ class MoveExecutor:
         self.accuracy = int(self.accuracy * rank_modifier)
         return 100 * self.battle.random.random() < self.accuracy
 
-    def _check_critical(self, ctx: BattleContext) -> bool:
+    def _check_critical(self, ctx: EventContext) -> bool:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
@@ -183,18 +183,18 @@ class MoveExecutor:
             bool: 急所に当たるかどうか
         """
         # 急所ランクの計算
-        self.crit_rank = self.events.emit(
+        self.crit_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK, ctx, ctx.move.critical_rank
         )
         self.crit_rank = max(0, min(3, self.crit_rank))
 
         # 急所確率の計算
-        crit_rate = self.events.emit(
+        crit_rate = self._events.emit(
             Event.ON_MODIFY_CRITICAL_RATE, ctx, CRIT_RATES[self.crit_rank]
         )
         return self.battle.random.random() < crit_rate
 
-    def check_hit_substitute(self, ctx: BattleContext) -> bool:
+    def check_hit_substitute(self, ctx: EventContext) -> bool:
         """みがわりに技が当たるかどうかを判定する。
 
         Args:
@@ -223,10 +223,10 @@ class MoveExecutor:
         self.move_applied = False
 
         defender = self.battle.foe(attacker)
-        ctx = BattleContext(attacker=attacker, defender=defender)
+        ctx = EventContext(attacker=attacker, defender=defender)
 
         # 技の変更 (アンコールなど)
-        move = self.events.emit(Event.ON_MODIFY_MOVE, ctx, move)
+        move = self._events.emit(Event.ON_MODIFY_MOVE, ctx, move)
         if move is None:
             return
 
@@ -237,7 +237,7 @@ class MoveExecutor:
         ctx.move = move
 
         # 技のハンドラを登録
-        ctx.move.register_handlers(self.events, ctx.attacker)
+        ctx.move.register_handlers(self._events, ctx.attacker)
 
         # 技タイプを評価する（可変技対応）
         ctx.move.set_type(
@@ -250,7 +250,7 @@ class MoveExecutor:
         )
 
         # 行動成功判定
-        self.action_success = self.events.emit(Event.ON_TRY_ACTION, ctx, True)
+        self.action_success = self._events.emit(Event.ON_TRY_ACTION, ctx, True)
         if not self.action_success:
             return
 
@@ -258,20 +258,20 @@ class MoveExecutor:
         self._consume_pp(ctx)
 
         # かやたぶりを有効にする
-        self.events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
+        self._events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
 
         # 技の実行
         self._execute_move(ctx)
 
         # かやたぶりを無効にする
-        self.events.emit(Event.ON_DEACTIVATE_MOLD_BREAKER, ctx)
+        self._events.emit(Event.ON_DEACTIVATE_MOLD_BREAKER, ctx)
 
         # 技のハンドラを解除
-        ctx.move.unregister_handlers(self.events, ctx.attacker)
+        ctx.move.unregister_handlers(self._events, ctx.attacker)
 
-    def _check_hit_by_type(self, ctx: BattleContext) -> bool:
+    def _check_hit_by_type(self, ctx: EventContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
-        type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx=ctx)
+        type_modifier = self.battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
 
         if type_modifier == 0:
             self.battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
@@ -279,7 +279,7 @@ class MoveExecutor:
             return False
         return True
 
-    def _execute_move(self, ctx: BattleContext):
+    def _execute_move(self, ctx: EventContext):
         """技実行の内部フローを処理する。
 
         行動可否チェックから PP 消費、命中判定、連続ヒット処理までを担当する。
@@ -288,11 +288,11 @@ class MoveExecutor:
             ctx: 技実行中のバトルコンテキスト
         """
         # 溜め技の準備
-        if not self.events.emit(Event.ON_MOVE_CHARGE, ctx, True):
+        if not self._events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
 
         # 発動成功判定(1)
-        self.move_success = self.events.emit(Event.ON_TRY_MOVE_1, ctx, True)
+        self.move_success = self._events.emit(Event.ON_TRY_MOVE_1, ctx, True)
         if not self.move_success:
             return
 
@@ -301,7 +301,7 @@ class MoveExecutor:
             return
 
         # 発動成功判定(2)
-        self.move_success = self.events.emit(Event.ON_TRY_MOVE_2, ctx, True)
+        self.move_success = self._events.emit(Event.ON_TRY_MOVE_2, ctx, True)
         if not self.move_success:
             return
 
@@ -309,10 +309,10 @@ class MoveExecutor:
         ctx.attacker.executed_move = ctx.move
 
         # HPコストの支払い
-        self.events.emit(Event.ON_PAY_HP, ctx)
+        self._events.emit(Event.ON_PAY_HP, ctx)
 
         # 反射判定
-        if self.events.emit(Event.ON_CHECK_REFLECT, ctx, False):
+        if self._events.emit(Event.ON_CHECK_REFLECT, ctx, False):
             self.battle.add_event_log(ctx.defender, LogCode.MOVE_REFLECTED)
             ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
@@ -339,7 +339,7 @@ class MoveExecutor:
                 break
 
             # 無効化されたら中断
-            self.move_applied = self.events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
+            self.move_applied = self._events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
             if not self.move_applied:
                 return False
 
@@ -354,17 +354,17 @@ class MoveExecutor:
         ctx.move.set_power(ctx.move.data.power)
 
         # 技実行完了後の処理（状態管理・撤去など）
-        self.events.emit(Event.ON_MOVE_END, ctx)
+        self._events.emit(Event.ON_MOVE_END, ctx)
 
-    def _execute_hit(self, ctx: BattleContext) -> None:
+    def _execute_hit(self, ctx: EventContext) -> None:
         """1 ヒット分の処理を実行する。
 
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
-        # 変化技はダメージ計算をせず、効果処理のみ行う
+        # 変化技の処理はダメージ処理とは別に行う
         if ctx.move.category == "変化":
-            self.events.emit(Event.ON_STATUS_HIT, ctx)
+            self._execute_status_hit(ctx)
             return
 
         self.critical = self._check_critical(ctx)
@@ -372,7 +372,7 @@ class MoveExecutor:
             ctx.attacker, ctx.defender, ctx.move, critical=self.critical
         )
 
-        damage = self.events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
+        damage = self._events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
         hp_delta = self.battle.modify_hp(
             ctx.defender, -damage, source=ctx.attacker, move=ctx.move, reason="move_damage"
@@ -380,25 +380,41 @@ class MoveExecutor:
         if hp_delta < 0:
             ctx.defender.hits_taken += 1
 
-        self.events.emit(Event.ON_HIT, ctx)
+        self._events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えた後の処理
         if hp_delta < 0:
-            self.events.emit(Event.ON_DAMAGE_HIT, ctx, abs(hp_delta))
+            self._events.emit(Event.ON_DAMAGE_HIT, ctx, abs(hp_delta))
 
             # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
             if ctx.attacker.active_tera_type == 'ステラ':
                 ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
-    def is_contact(self, ctx: BattleContext) -> bool:
+    def _execute_status_hit(self, ctx: EventContext) -> None:
+        """状態変化技の命中処理を実行する。
+
+        Args:
+            ctx: 技実行中のバトルコンテキスト
+        """
+        # 状態変化技の命中処理は、通常のダメージ処理とは別にON_STATUS_HITイベントで行う。
+        # これにより、ダメージを与えない状態変化技（でんじはなど）も同様のフローで処理できる。
+        result = self._events.emit(Event.ON_STATUS_HIT, ctx, True)
+        if not result:
+            self.battle.add_event_log(
+                ctx.attacker,
+                LogCode.MOVE_FAILED,
+                payload={"move": ctx.move.name}
+            )
+
+    def is_contact(self, ctx: EventContext) -> bool:
         """技が接触技かどうかを判定する。
         Args:
-            ctx: BattleContextインスタンス
+            ctx: EventContextインスタンス
 
          Returns:
             技が接触技の場合True
         """
-        return self.events.emit(
+        return self._events.emit(
             Event.ON_CHECK_CONTACT,
             ctx,
             ctx.move.has_label("contact")
@@ -418,9 +434,9 @@ class MoveExecutor:
             特性や効果によるタイプ変化を考慮する。
         """
         # move自身は変更せず、イベント結果の有効タイプを返す。
-        return self.events.emit(
+        return self._events.emit(
             Event.ON_MODIFY_MOVE_TYPE,
-            BattleContext(source=attacker, move=move),
+            EventContext(source=attacker, move=move),
             value=move.data.type,
         )
 
@@ -437,9 +453,9 @@ class MoveExecutor:
         Note:
             特性や効果による分類変化を考慮する。
         """
-        return self.events.emit(
+        return self._events.emit(
             Event.ON_MODIFY_MOVE_CATEGORY,
-            BattleContext(source=attacker, move=move),
+            EventContext(source=attacker, move=move),
             value=move.category
         )
 
@@ -454,15 +470,15 @@ class MoveExecutor:
             or self.resolve_move_category(attacker, move) == "物理"
         )
 
-    def _consume_pp(self, ctx: BattleContext):
+    def _consume_pp(self, ctx: EventContext):
         """技のPPを消費する。
 
         技を使用した際にPPを減らします。
 
         Args:
-            ctx: BattleContextインスタンス
+            ctx: EventContextインスタンス
         """
-        v = self.events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
+        v = self._events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
         ctx.move.pp = max(0, ctx.move.pp - v)
         self.battle.add_event_log(ctx.attacker, LogCode.PP_CONSUMED,
                                   payload={"move": ctx.move.name, "value": v})

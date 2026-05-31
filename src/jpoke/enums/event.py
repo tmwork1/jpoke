@@ -1,3 +1,6 @@
+# TODO : 配置とコメントを整理する。
+# 同種イベントは固めて配置し、emit/handle のコメントも統一的に記載する。
+
 """
 イベントのEnum定義
 イベントの処理順の詳細は docs/spec/turn_flow.md を参照
@@ -46,6 +49,8 @@ class Event(Enum):
     ON_ABILITY_DISABLED = auto()  # 特性が無効になったとき（かがくへんかガスのトリガー用）
     ON_ITEM_ENABLED = auto()  # 道具効果が有効になったとき（ぶきようのトリガー用）
     ON_ITEM_DISABLED = auto()  # 道具効果が無効になったとき（ぶきようのトリガー用）
+    ON_ITEM_GAINED = auto()
+    ON_ITEM_LOST = auto()
 
     # ------------------------------------------------------------------ #
     # アクション系イベント
@@ -60,11 +65,11 @@ class Event(Enum):
     ON_FIELD_CHANGE = auto()
 
     # emit: core/field_manager.py（場効果が発動した直後）
-    # handle: data/field.py（マジックルーム適用時の持ち物再判定など）
+    # handle: data/field.py（マジックルーム適用時のアイテム再判定など）
     ON_FIELD_ACTIVATE = auto()
 
     # emit: core/field_manager.py（場効果が解除される直前）
-    # handle: data/field.py（マジックルーム終了時の持ち物再判定など）
+    # handle: data/field.py（マジックルーム終了時のアイテム再判定など）
     ON_FIELD_DEACTIVATE = auto()
 
     # emit: core/battle.py（特性有効状態変化後の再判定要求）
@@ -82,10 +87,6 @@ class Event(Enum):
     # emit: core/turn.py（各アクション実行直前）
     # handle: volatile.py（強制アクション許可チェック）
     ON_BEFORE_ACTION = auto()
-
-    # emit: handlers/ability.py（しゅうかく等で持ち物が復活した直後）
-    # handle: data/item.py（復活したきのみの即時使用判定）
-    ON_ITEM_RESTORED = auto()
 
     # emit: core/turn.py（技を使用しようとする直前）
     # handle: 現時点でハンドラ登録なし（将来の拡張用スロット）
@@ -258,7 +259,7 @@ class Event(Enum):
     # handle: ability.py（マイペース・にげごし等で怯えを無効化）
     ON_CHECK_NERVOUS = auto()
 
-    # emit: core/battle.py（持ち物の交換・奪取・除去可否を判定）
+    # emit: core/battle.py（アイテムの交換・奪取・除去可否を判定）
     # handle: ability.py（ねんちゃく）
     ON_CHECK_ITEM_CHANGE = auto()
 

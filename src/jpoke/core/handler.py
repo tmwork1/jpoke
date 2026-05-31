@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from typing import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from jpoke.utils import fast_copy
 from jpoke.utils.type_defs import HandlerSource, ContextRole, RoleSpec, Side
@@ -27,7 +27,7 @@ class HandlerReturn(NamedTuple):
     stop_event: bool = False
 
 
-@dataclass
+@dataclass(frozen=True)
 class Handler:
     """ドメイン/イベントハンドラの定義。
 
@@ -47,20 +47,13 @@ class Handler:
     priority: int = 100
     once: bool = False
     skip_subject_check: bool = False  # ハンドラの主体の照合をスキップするか
+    role: ContextRole = field(init=False)
+    side: Side = field(init=False)
 
-    def __lt__(self, other):
-        """priorityが小さいほど先に実行される"""
-        return self.priority < other.priority
-
-    @property
-    def role(self) -> ContextRole:
-        """subject_spec から role を抽出"""
-        return self.subject_spec.split(":")[0]  # type: ignore
-
-    @property
-    def side(self) -> Side:
-        """subject_spec から side を抽出"""
-        return self.subject_spec.split(":")[1]  # type: ignore
+    def __post_init__(self):
+        role, side = self.subject_spec.split(":")
+        object.__setattr__(self, "role", role)
+        object.__setattr__(self, "side", side)
 
 
 @dataclass
@@ -71,24 +64,15 @@ class RegisteredHandler:
 
     Attributes:
         handler: ハンドラ定義
-        _subject: ハンドラの主体（ポケモンまたはプレイヤー）
+        registered_subject: ハンドラの主体（ポケモンまたはプレイヤー）
     """
     handler: Handler
-    _subject: Pokemon | Player
+    registered_subject: Pokemon | Player
 
     def __deepcopy__(self, memo):
-        """EventManagerインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            RegisteredHandler: コピーされたRegisteredHandlerインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
-        keys = ["handler"]
         return fast_copy(self, new, keys_to_deepcopy=["handler"])
 
     def update_reference(self, old: Battle, new: Battle):
@@ -98,23 +82,23 @@ class RegisteredHandler:
             old: 複製前のBattle
             new: 複製後のBattle
         """
-        if isinstance(self._subject, Player):
+        if isinstance(self.registered_subject, Player):
             return
 
-        player = old.get_player(self._subject)  # プレイヤーは同一なので old から特定
+        player = old.get_player(self.registered_subject)  # 元のBattleからプレイヤーを特定
         old_state = old.player_states[player]
-        team_index = old_state.team.index(self._subject)
-        self._subject = new.player_states[player].team[team_index]
+        team_index = old_state.team.index(self.registered_subject)
+        self.registered_subject = new.player_states[player].team[team_index]
 
-    def resolve_subject(self, battle: Battle) -> Pokemon:
+    def get_subject(self, battle: Battle) -> Pokemon:
         """ハンドラの主体となるポケモンを取得する。
 
         Playerの場合は現在場に出ているポケモンを返す。
 
         Returns:
-            Pokemon | None: 主体のポケモン
+            Pokemon: ハンドラの主体となるポケモン
         """
-        if isinstance(self._subject, Player):
-            return battle.get_active(self._subject)
+        if isinstance(self.registered_subject, Player):
+            return battle.get_active(self.registered_subject)
         else:
-            return self._subject
+            return self.registered_subject

@@ -10,7 +10,7 @@ from jpoke.utils import fast_copy
 from jpoke.enums import Event, Command
 from jpoke.model import Move
 
-from .context import BattleContext
+from .context import EventContext
 
 
 class CommandManager:
@@ -20,14 +20,6 @@ class CommandManager:
         self.battle = battle
 
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Battle: コピーされたBattleインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -47,7 +39,11 @@ class CommandManager:
         if not self.battle.can_switch(player):
             return []
         state = self.battle.player_states[player]
-        return [Command.get_switch_command(state.team.index(mon)) for mon in state.bench]
+        return [
+            Command.get_switch_command(i)
+            for i, mon in enumerate(state.team)
+            if mon is not state.active and mon.alive
+        ]
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
@@ -70,12 +66,14 @@ class CommandManager:
         commands += self.get_available_switch_commands(player)
 
         # コマンド修正
-        ctx = BattleContext(source=active)
-        commands = self.battle.events.emit(Event.ON_MODIFY_COMMAND_OPTIONS, ctx, commands)
+        ctx = EventContext(source=active)
+        commands = self.battle.events.emit(
+            Event.ON_MODIFY_COMMAND_OPTIONS, ctx, commands
+        )
 
         # 強制行動コマンドがある場合はそれを優先
-        if commands == [Command.FORCED]:
-            return commands
+        if Command.FORCED in commands:
+            return [Command.FORCED]
 
         # 技コマンドがない場合はわるあがきを追加
         if not any(cmd.is_move_family for cmd in commands):
@@ -83,16 +81,33 @@ class CommandManager:
 
         return commands
 
-    def command_to_move(self, player: Player, command: Command) -> Move:
-        """コマンドから技オブジェクトを取得する。"""
+    def resolve_move_from_command(self, player: Player, command: Command) -> Move:
+        """コマンドから技を解決する。わるあがきや強制行動コマンドもここで処理する。
+
+        Args:
+            player: コマンドを出したプレイヤー
+            command: 解決するコマンド
+
+        Returns:
+            Move: コマンドに対応する技。わるあがきや強制行動も含む
+        """
         attacker = self.battle.get_active(player)
         if command == Command.STRUGGLE:
             return Move("わるあがき")
+
+        # 強制行動ではPPを消費させないように新しくMoveインスタンスを作成する
         if command == Command.FORCED:
             move_name = self.battle.query_manager.get_forced_move_name(attacker)
             if move_name:
                 return Move(move_name)
             return Move("わるあがき")
+
+        # TODO: ダイマックス技実装
+        if command.is_gigamax:
+            return Move("わるあがき")
+
+        # TODO: Zワザ実装
         if command.is_zmove:
             return Move("わるあがき")
+
         return attacker.moves[command.index]

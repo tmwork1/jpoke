@@ -1,31 +1,29 @@
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
 from jpoke.data.models import ItemData
-from jpoke.utils.type_defs import ItemLostCause
 
 from .effect import GameEffect
 
 
 class Item(GameEffect):
-    """ポケモンの持ち物を表すクラス。
+    """ポケモンのアイテムを表すクラス。
 
-    持ち物は戦闘中に自動的に効果を発揮したり、
+    アイテムは戦闘中に自動的に効果を発揮したり、
     特定の条件下で消費されたりする。
     """
 
     def __init__(self, name: str = "") -> None:
-        """持ち物を初期化する。
+        """アイテムを初期化する。
 
         Args:
-            name: 持ち物名。空文字列の場合は持ち物なしとして扱う
+            name: アイテム名。空文字列の場合はアイテムなしとして扱う
         """
         super().__init__(ITEMS[name])
-        self.lost_cause: ItemLostCause = ""
 
         self.data: ItemData  # type hint
 
     def __deepcopy__(self, memo):
-        """持ち物オブジェクトのディープコピーを作成する。"""
+        """アイテムオブジェクトのディープコピーを作成する。"""
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -34,22 +32,16 @@ class Item(GameEffect):
     def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理。
 
-        持ち物の状態をリセットする。
+        アイテムの状態をリセットする。
         """
         self.reset_enable_state()
-        self.lost_cause = ""
 
     def reset_enable_state(self):
-        """持ち物の有効状態をリセットする。"""
+        """アイテムの有効状態をリセットする。"""
         reasons = set()
         if self.consumed:
             reasons.add("consumed")
-        self.set_disabled_reasons(reasons)
-
-    @property
-    def lost(self) -> bool:
-        """持ち物が失われているかどうかを示すプロパティ。"""
-        return self.lost_cause != ""
+        self.replace_disabled_reasons(reasons)
 
     @property
     def mega_evol_before(self) -> str | None:

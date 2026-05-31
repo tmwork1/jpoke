@@ -12,8 +12,8 @@ import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, SideField, \
-    HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason, ItemLostCause
+from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, \
+    HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -21,11 +21,11 @@ from jpoke.model import Pokemon, Move, Field, Item
 
 from .player_state import PlayerState
 from .event_manager import EventManager
-from .context import BattleContext
+from .context import EventContext
 from .player import Player
 from .event_logger import EventLogger, Payload
 from .command_logger import CommandLogger
-from .damage_calculator import DamageCalculator, DamageContext
+from .damage_calculator import DamageCalculator
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
 from .switch_manager import SwitchManager
@@ -89,7 +89,7 @@ class Battle:
             seed: 乱数シード値（Noneの場合は現在時刻を使用）
         """
 
-        self.players: tuple[Player] = players
+        self.players: tuple[Player, ...] = players
         self.seed: int = seed or int(time.time())
 
         self.random = Random(self.seed)
@@ -463,58 +463,41 @@ class Battle:
         """
         self.move_executor.run_move(attacker, move)
 
-    def set_item(self, mon: Pokemon, item: str) -> None:
-        """ポケモンの持ち物を更新する（ItemManagerへの委譲）。"""
-        self.item_manager.set_item(mon, item)
+    def change_ability(self, mon: Pokemon, ability: str) -> None:
+        """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
+        self.ability_manager.change_ability(mon, ability)
 
-    def lose_item(self, mon: Pokemon, cause: ItemLostCause = "remove") -> bool:
+    def can_change_item(self,
+                        target: Pokemon,
+                        source: Pokemon | None = None,
+                        move: Move | None = None) -> bool:
+        """アイテム変更可否を判定する（ItemManagerへの委譲）。"""
+        return self.item_manager.can_change_item(target, source=source, move=move)
+
+    def gain_item(self, target: Pokemon, item_name: str) -> bool:
+        """ポケモンがアイテムを得る（ItemManagerへの委譲）。"""
+        return self.item_manager.gain_item(target, item_name)
+
+    def remove_item(self,
+                    target: Pokemon,
+                    source: Pokemon | None = None,
+                    move: Move | None = None) -> bool:
         """ポケモンの道具を喪失状態にする（ItemManagerへの委譲）。"""
-        return self.item_manager.lose_item(mon, cause=cause)
+        return self.item_manager.remove_item(target, source=source, move=move)
 
     def consume_item(self, mon: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
-        return self.item_manager.consume_item(mon)
+        return self.item_manager.remove_item(mon, source=mon)
 
-    def set_ability(self, mon: Pokemon, ability: str) -> None:
-        """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
-        self.ability_manager.set_ability(mon, ability)
-
-    def can_change_item(self,
-                        source: Pokemon,
-                        target: Pokemon,
-                        move: Move | None = None) -> bool:
-        """持ち物変更可否を判定する（ItemManagerへの委譲）。"""
-        # TODO : reasonの型をItemLostCauseに統一できるか検討する
-        return self.item_manager.can_change_item(source, target, move=move)
-
-    def swap_items(self,
-                   source: Pokemon,
-                   target: Pokemon,
-                   move: Move | None = None) -> bool:
-        """2体の持ち物を入れ替える（ItemManagerへの委譲）。"""
-        return self.item_manager.swap_items(source, target, move=move)
+    def swap_items(self, move: Move | None = None) -> bool:
+        """2体のアイテムを入れ替える（ItemManagerへの委譲）。"""
+        return self.item_manager.swap_items(move=move)
 
     def take_item(self,
-                  source: Pokemon,
                   target: Pokemon,
                   move: Move | None = None) -> bool:
-        """対象の持ち物を source に移す（ItemManagerへの委譲）。"""
-        return self.item_manager.take_item(source, target, move=move)
-
-    def remove_item(self,
-                    source: Pokemon,
-                    target: Pokemon,
-                    move: Move | None = None,
-                    reason: ItemLostCause = "remove",
-                    check_on_empty: bool = False) -> bool:
-        """対象の持ち物を失わせる（ItemManagerへの委譲）。"""
-        return self.item_manager.remove_item(
-            source,
-            target,
-            move=move,
-            reason=reason,
-            check_on_empty=check_on_empty,
-        )
+        """対象のアイテムを source に移す（ItemManagerへの委譲）。"""
+        return self.item_manager.take_item(target, move=move)
 
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
@@ -526,7 +509,7 @@ class Battle:
         Returns:
             技オブジェクト
         """
-        return self.command_manager.command_to_move(player, command)
+        return self.command_manager.resolve_move_from_command(player, command)
 
     def modify_hp(self,
                   target: Pokemon,
@@ -594,10 +577,8 @@ class Battle:
         """
         if isinstance(move, str):
             move = Move(move)
-        dmg_ctx = DamageContext(critical=critical)
-        damages, dmg_ctx = self.damage_calculator.calc_damage_range(
-            attacker, defender, move, dmg_ctx)
-        return damages
+        return self.damage_calculator.calc_damage_range(
+            attacker, defender, move, critical=critical)
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
@@ -717,10 +698,10 @@ class Battle:
         """防御側のタイプ相性補正を計算する（DamageCalculatorへの委譲）。"""
         if isinstance(move, str):
             move = Move(move)
-        ctx = BattleContext(defender=defender, move=move)
-        return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
+        ctx = EventContext(defender=defender, move=move)
+        return self.damage_calculator._calc_def_type_modifier(ctx) / 4096
 
-    def resolve_secondary_chance(self, ctx: BattleContext, chance: float) -> float:
+    def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
         return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
 

@@ -1,4 +1,4 @@
-"""持ち物操作ロジックを扱うマネージャー。"""
+"""アイテム操作ロジックを扱うマネージャー。"""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
@@ -7,33 +7,20 @@ if TYPE_CHECKING:
     from .event_manager import EventManager
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import ItemDisabledReason, ItemLostCause
+from jpoke.utils.type_defs import ItemDisabledReason
 from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Move, Item
 
-from .context import BattleContext
+from .context import EventContext
 
 
 class ItemManager:
-    """持ち物の変更処理と関連ハンドラ同期を管理する。"""
+    """アイテムの変更処理と関連ハンドラ同期を管理する。"""
 
     def __init__(self, battle: Battle):
-        """ItemManagerを初期化する。
-
-        Args:
-            battle: 親となるBattleインスタンス
-        """
         self.battle = battle
 
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            ItemManager: コピーされたItemManagerインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -49,43 +36,9 @@ class ItemManager:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
-
-    def set_item(self, mon: Pokemon, item: str) -> None:
-        """ポケモンの持ち物を更新し、ハンドラ登録も同期する。
-
-        Args:
-            mon: 持ち物を変更するポケモン
-            item: 新しい持ち物
-        """
-        is_active = self.battle.is_active(mon)
-        ctx = BattleContext(source=mon)
-
-        if mon.has_item():
-            mon.item.unregister_handlers(self.events, mon)
-            self.battle.events.emit(Event.ON_ITEM_DISABLED, ctx)
-
-        mon.item = Item(item)
-        if is_active:
-            mon.item.register_handlers(self.events, mon)
-            self.battle.events.emit(Event.ON_ITEM_ENABLED, ctx)
-
-    def lose_item(self, mon: Pokemon, cause: ItemLostCause = "remove") -> bool:
-        """対象の道具を喪失状態にする。"""
-        if not mon.has_item():
-            return False
-
-        item = mon.item
-        item.unregister_handlers(self.events, mon)
-        item.revealed = True
-        item.lost_cause = cause
-        item.add_disable_reason("consumed")
-
-        self.battle.add_event_log(mon, LogCode.ITEM_LOST,
-                                  payload={"item": item.name, "reason": cause})
-        return True
 
     def add_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
         """アイテムを無効にする理由を追加し、有効状態に変化があればイベントを発火する。
@@ -100,8 +53,10 @@ class ItemManager:
         is_enabled = mon.item.enabled
 
         if was_enabled and not is_enabled:
-            self.battle.events.emit(Event.ON_ITEM_DISABLED,
-                                    BattleContext(source=mon))
+            self.battle.events.emit(
+                Event.ON_ITEM_DISABLED,
+                EventContext(source=mon)
+            )
             return True
         return False
 
@@ -118,115 +73,153 @@ class ItemManager:
         is_enabled = mon.item.enabled
 
         if not was_enabled and is_enabled:
-            self.battle.events.emit(Event.ON_ITEM_ENABLED,
-                                    BattleContext(source=mon))
+            self.battle.events.emit(
+                Event.ON_ITEM_ENABLED,
+                EventContext(source=mon)
+            )
             return True
         return False
 
-    def consume_item(self, target: Pokemon) -> bool:
-        """対象の道具を消費状態にする。"""
-        return self.lose_item(target, cause="consume")
-
     def can_change_item(self,
-                        source: Pokemon,
                         target: Pokemon,
+                        source: Pokemon | None = None,
                         move: Move | None = None) -> bool:
-        # TODO : 引数を target, source の順に変更し、影響範囲をすべて修正する
-        """持ち物変更が許可されるかを共通イベントで判定する。
+        """アイテム変更が許可されるかを共通イベントで判定する。
 
         Args:
+            target: アイテムを変更するポケモン
             source: 変更の発生源となるポケモン
-            target: 持ち物変更の対象ポケモン
             move: 関連する技
-            reason: 変更理由
 
         Returns:
             変更可能な場合はTrue
         """
-        return self.events.emit(
+        return self._events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
-            BattleContext(source=source, target=target, move=move),
+            EventContext(target=target, source=source, move=move),
             True
         )
 
-    def swap_items(self,
-                   mon1: Pokemon,
-                   mon2: Pokemon,
-                   move: Move | None = None) -> bool:
-        """2体の持ち物を入れ替える。
+    def _change_item(self, mon: Pokemon, item_name: str) -> None:
+        """ポケモンのアイテムを更新し、ハンドラ登録も同期する。
 
         Args:
-            mon1: 入れ替え元のポケモン
-            mon2: 入れ替え先のポケモン
+            mon: アイテムを変更するポケモン
+            item_name: 新しいアイテムの名前
+        """
+        is_active = self.battle.is_active(mon)
+        ctx = EventContext(source=mon)
+
+        # アイテムを変更する前に、現在のアイテムのハンドラを解除してイベントを発火する
+        if mon.has_item():
+            if not item_name:
+                mon.last_lost_item_name = mon.item.base_name
+            self.battle.events.emit(Event.ON_ITEM_LOST, ctx)
+            mon.item.unregister_handlers(self._events, mon)
+
+        # アイテムを変更してハンドラを登録し、イベントを発火する
+        mon.item = Item(item_name)
+        mon.item.revealed = True
+
+        if mon.item.name:
+            self.battle.add_event_log(mon, LogCode.ITEM_GAINED,
+                                      payload={"item": mon.item.name})
+        else:
+            self.battle.add_event_log(mon, LogCode.ITEM_LOST,
+                                      payload={"item": mon.last_lost_item_name})
+
+        if is_active and item_name:
+            mon.item.register_handlers(self._events, mon)
+            self.battle.events.emit(Event.ON_ITEM_GAINED, ctx)
+
+    def gain_item(self, target: Pokemon, item_name: str) -> bool:
+        """対象のポケモンがアイテムを得る。
+
+        Args:
+            target: アイテムを得るポケモン
+            item_name: 得るアイテムの名前
+
+        Returns:
+            アイテムを得ることに成功した場合はTrue
+        """
+        # 対象がすでにアイテムを持っている場合は失敗
+        if target.has_item():
+            return False
+        self._change_item(target, item_name)
+        return True
+
+    def remove_item(self,
+                    target: Pokemon,
+                    source: Pokemon | None = None,
+                    move: Move | None = None) -> bool:
+        """対象のアイテムを失わせる。
+
+        Args:
+            target: アイテムを失うポケモン
+            source: 変更の発生源となるポケモン
+            move: 関連する技
+
+        Returns:
+            取り外しに成功した場合はTrue
+        """
+        # 対象がアイテムを持っていない場合は失敗
+        if not target.has_item():
+            return False
+
+        # アイテムの変更が禁止されている場合は失敗
+        if not self.can_change_item(target, source=source, move=move):
+            return False
+
+        self._change_item(target, "")
+        return True
+
+    def swap_items(self, move: Move | None = None) -> bool:
+        """2体のアイテムを入れ替える。
+
+        Args:
+            target: 入れ替え元のポケモン
+            source: 入れ替え先のポケモン
             move: 関連する技
 
         Returns:
             入れ替えに成功した場合はTrue
         """
-        if not mon1.has_item() and not mon2.has_item():
-            return False
-        if not self.can_change_item(mon1, mon1, move=move):
+        mons = self.battle.actives
+        item_names = [mon.item.name for mon in mons]
+
+        # 両方ともアイテムを持っていない場合は失敗
+        if not any(item_names):
             return False
 
-        mons = [mon1, mon2]
-        item_names = [mon.item.name for mon in mons]
+        # アイテムの変更が禁止されている場合は失敗
+        if not all(
+            self.can_change_item(target=mon, move=move) for mon in mons
+        ):
+            return False
+
         for i, mon in enumerate(mons):
-            self.lose_item(mon, cause="swap")
-            self.set_item(mon, item_names[1 - i])
+            new_item_name = item_names[1 - i]  # 入れ替え先のアイテム名
+            self._change_item(mon, new_item_name)
         return True
 
     def take_item(self,
-                  to_mon: Pokemon,
-                  from_mon: Pokemon,
+                  target: Pokemon,
                   move: Move | None = None) -> bool:
-        # TODO : 引数を from_mon, to_mon の順に変更し、影響範囲をすべて修正する
-        """対象の持ち物を to_mon に移す。
+        """対象のアイテムを奪う。
 
         Args:
-            to_mon: 持ち物を受け取るポケモン
-            from_mon: 持ち物を失うポケモン
+            target: アイテムを奪われるポケモン
             move: 関連する技
-            reason: 変更理由
 
         Returns:
             奪取に成功した場合はTrue
         """
+        source = self.battle.foe(target)
 
-        if not from_mon.has_item():
+        # 対象がアイテムを持っていないか、奪う側がアイテムを持っている場合は失敗
+        if (
+            not target.has_item()
+            or source.has_item()
+        ):
             return False
-        if not self.can_change_item(to_mon, from_mon, move=move):
-            return False
-
-        item_name = from_mon.item.name
-        self.lose_item(from_mon, cause="steal")
-        self.set_item(to_mon, item_name)
-        self.set_item(from_mon, "")
-        return True
-
-    def remove_item(self,
-                    source: Pokemon,
-                    target: Pokemon,
-                    move: Move | None = None,
-                    reason: ItemLostCause = "remove",
-                    check_on_empty: bool = False) -> bool:
-        # TODO : 引数を target, source の順に変更し、影響範囲をすべて修正する
-        """対象の持ち物を失わせる。
-
-        Args:
-            source: 変更の発生源となるポケモン
-            target: 持ち物を失うポケモン
-            move: 関連する技
-            reason: 変更理由
-            check_on_empty: 空持ち物に対してもイベント判定を行うか
-
-        Returns:
-            取り外しに成功した場合はTrue
-        """
-        if not check_on_empty and not target.has_item():
-            return False
-        if not self.can_change_item(source, target, move=move):
-            return False
-
-        self.lose_item(target, cause=reason)
-        self.set_item(target, "")
-        return True
+        return self.swap_items(move=move)

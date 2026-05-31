@@ -96,7 +96,7 @@ class GameEffect:
         """
         self._disabled_reasons.discard(reason)
 
-    def set_disabled_reasons(self, reasons: set[AbilityDisabledReason | ItemDisabledReason]) -> None:
+    def replace_disabled_reasons(self, reasons: set[AbilityDisabledReason | ItemDisabledReason]) -> None:
         """無効化の理由を置き換える。
 
         Args:

@@ -37,15 +37,6 @@ class Move(GameEffect):
 
         self.data: MoveData  # type hint
 
-    def init_game(self):
-        """ゲーム初期化処理。
-
-        PPとタイプをゲーム開始時の状態にリセットする。
-        """
-        self.pp = self._initial_pp
-        self._type = self.data.type
-        self._power = self.data.power
-
     def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理。
 

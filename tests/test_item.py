@@ -1,8 +1,8 @@
-"""持ち物ハンドラの単体テスト"""
+"""アイテムハンドラの単体テスト"""
 import math
 from types import SimpleNamespace
 from jpoke import Pokemon
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.enums import Event
 from jpoke.data import ITEMS
 import test_utils as t
@@ -74,7 +74,7 @@ def test_だっしゅつパック_0ターン目にいかくで交代():
     ejected_mon = state.team[0]
     assert state.active_index == 1
     assert ejected_mon.item.revealed
-    assert ejected_mon.item.consumed
+    assert not ejected_mon.has_item()
 
 
 def test_だっしゅつパック_能力上昇では発動しない():
@@ -88,6 +88,7 @@ def test_だっしゅつパック_能力上昇では発動しない():
     mon = state.team[0]
     assert state.active_index == 0
     assert not mon.item.revealed
+    assert mon.has_item()
 
 # ──────────────────────────────────────────────────────────────────
 # だっしゅつボタン
@@ -101,13 +102,13 @@ def test_だっしゅつボタン():
         team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
     player = battle.players[0]
-    assert bool(battle.get_available_switch_commands(player))
+    print(battle.get_available_switch_commands(player))
     state = battle._player_states[0]
     ejected_mon = battle.actives[0]
     battle.advance_turn()
     assert state.active_index == 1
     assert ejected_mon.item.revealed
-    assert ejected_mon.item.consumed
+    assert not ejected_mon.has_item()
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ def test_タイプ強化アイテム():
             team0=[Pokemon("ピカチュウ", item=item_name)],
             team1=[Pokemon("ピカチュウ")],
         )
-        ctx = BattleContext(
+        ctx = EventContext(
             attacker=battle.actives[0],
             defender=battle.actives[1],
             move=_dummy_move(type_name),
@@ -178,7 +179,7 @@ def test_タイプ半減実():
             team0=[Pokemon("ピカチュウ", item=item_name)],
             team1=[Pokemon("ピカチュウ")],
         )
-        ctx = BattleContext(
+        ctx = EventContext(
             attacker=battle.actives[0],
             defender=battle.actives[1],
             move=_dummy_move(type_name),

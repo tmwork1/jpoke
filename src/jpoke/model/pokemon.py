@@ -2,7 +2,7 @@
 
 """ポケモンモデルを定義するモジュール。
 
-ポケモンの基本情報、ステータス、特性、持ち物、技、状態異常、
+ポケモンの基本情報、ステータス、特性、アイテム、技、状態異常、
 ランク変化など、バトル中のポケモンの全状態を管理します。
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ class Pokemon:
 
     ポケモンの全状態と機能を管理するメインクラスです。
     種族値、個体値、努力値、性格からステータスを計算し、
-    特性、持ち物、技、状態異常、ランク変化などを管理します。
+    特性、アイテム、技、状態異常、ランク変化などを管理します。
 
     Attributes:
         data: ポケモン図鑑データ
@@ -39,7 +39,7 @@ class Pokemon:
         max_hp: 最大HP
         ailment: 状態異常
         ability: 特性
-        item: 持ち物
+        item: アイテム
         moves: 覚えている技のリスト
         rank: 能力ランクの辞書
         volatiles: 揮発状態の辞書
@@ -63,7 +63,7 @@ class Pokemon:
             nature: 性格
             level: レベル（デフォルト50）
             ability: 特性（文字列）
-            item: 持ち物（文字列）
+            item: アイテム（文字列）
             moves: 技のリスト（文字列のリスト）
             tera_type: テラスタルタイプ
         """
@@ -73,8 +73,13 @@ class Pokemon:
         self._level: int = level
         self.tera_type: Type = tera_type
 
-        self.init_ability(ability)
+        self.ability: Ability  # type hint
+        self.base_ability_name: str  # type hint
+        self.set_ability(ability)
+
         self.item = Item(item)
+        self.last_lost_item_name: str = ""
+
         self.set_moves(moves)
 
         # ステータス計算マネージャー
@@ -94,7 +99,7 @@ class Pokemon:
         self.hp: int = self.max_hp
         self.hp_delta: int = 0
         self.ailment: Ailment = Ailment()
-        self.stellar_boosted_types: set = set()
+        self.stellar_boosted_types: set[Type] = set()
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
@@ -102,17 +107,15 @@ class Pokemon:
         self.executed_move: Move | None = None
         self.ability_override_type: Type | None = None
 
-        self.init_game()
-
-    def init_ability(self, name: str | None = None):
+    def set_ability(self, ability_name: str | None = None):
         """特性を初期化する。
 
         Args:
-            name: 特性名（Noneの場合はデフォルトの特性を使用）
+            ability_name: 特性名（Noneの場合はデフォルトの特性を使用）
         """
-        if name is None:
-            name = self.data.abilities[0]  # デフォルトは種族値の特性
-        self.ability = Ability(name)
+        if ability_name is None:
+            ability_name = self.data.abilities[0]  # デフォルトは種族値の特性
+        self.ability = Ability(ability_name)
         self.base_ability_name: str = self.ability.base_name
 
     def __deepcopy__(self, memo):
@@ -126,20 +129,6 @@ class Pokemon:
         ])
         return new
 
-    def init_game(self):
-        """ゲーム初期化処理。
-        ポケモンのバトル状態を初期化する。
-        """
-        self.revealed = False
-        self.terastallized = False
-        self.hp = self.max_hp
-        self.ailment = Ailment()
-        # ステラ テラスタル補正を消費したタイプの集合
-        self.stellar_boosted_types = set()
-
-        # 場に出ているときの状態をリセット
-        self.reset_on_switch_out()
-
     def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理"""
         self.volatiles = {}
@@ -149,6 +138,7 @@ class Pokemon:
         self.executed_move = None
         self.ability_override_type = None
         self.ability.activated_since_switch_in = False
+        self.last_lost_item_name = ""
         self.paradox_boost_active = False
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
@@ -217,7 +207,7 @@ class Pokemon:
         self.data = POKEDEX[name]
         self.update_stats(keep_damage=keep_damage)
         if init_ability:
-            self.init_ability()
+            self.set_ability()
         return True
 
     @property
@@ -316,7 +306,7 @@ class Pokemon:
 
         Note:
             特性（ライトメタル、ヘヴィメタル）や
-            持ち物（かるいし）の効果を考慮した体重を返す。
+            アイテム（かるいし）の効果を考慮した体重を返す。
         """
         # TODO : ON_MODIFY_WEIGHTイベントを作成してハンドラとして実装する
         w = self.data.weight
@@ -398,18 +388,18 @@ class Pokemon:
         self.set_form(mega_name, init_ability=True)
 
     def has_item(self, name: str | None = None) -> bool:
-        """持ち物を持っているか判定する。
+        """アイテムを持っているか判定する。
 
         Args:
-            name: 持ち物名（Noneの場合は何らかの持ち物を持っているかを判定）
+            name: アイテム名（Noneの場合は何らかのアイテムを持っているかを判定）
 
         Returns:
-            nameが指定された場合はその持ち物を持っているか、
-            Noneの場合は何らかの持ち物を持っている場合True
+            nameが指定された場合はそのアイテムを持っているか、
+            Noneの場合は何らかのアイテムを持っている場合True
         """
         if name is None:
-            return not self.item.consumed
-        return self.item.name == name
+            return bool(self.item.base_name)
+        return self.item.base_name == name
 
     @property
     def stats(self) -> dict[Stat, int]:

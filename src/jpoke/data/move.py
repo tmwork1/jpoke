@@ -1323,9 +1323,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
-                h.ついばむ_berry_steal,
-            )
         }
     ),
     "つけあがる": MoveData(
@@ -2419,9 +2416,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(
-                h.ついばむ_berry_steal,
-            )
         }
     ),
     "むねんのつるぎ": MoveData(

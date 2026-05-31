@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player
 
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -55,7 +55,7 @@ class TurnController:
         self.battle = battle
 
     @property
-    def events(self):
+    def _events(self):
         """BattleのEventManagerへの参照を返す。"""
         return self.battle.events
 
@@ -192,18 +192,18 @@ class TurnController:
             command = state.next_command
             if command.is_megaevol and mon.can_megaevolve():
                 # メガシンカ前の特性を無効化し、メガシンカ後に特性を有効化する
-                mon.ability.unregister_handlers(self.events, mon)
+                mon.ability.unregister_handlers(self._events, mon)
                 mon.megaevolve()
-                mon.ability.register_handlers(self.events, mon)
+                mon.ability.register_handlers(self._events, mon)
                 self.battle.add_event_log(mon, LogCode.MEGA_EVOLVED,
                                           payload={"pokemon": mon.name})
 
                 # メガシンカ後の特性が発動するイベントを追加
-                self.events.emit(Event.ON_ABILITY_ENABLED, BattleContext(source=mon))
+                self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))
 
     def _run_move_phase(self):
         """技発動フェーズを実行する。"""
-        self.events.emit(Event.ON_BEFORE_MOVE)
+        self._events.emit(Event.ON_BEFORE_MOVE)
 
         for attacker in self.battle.calc_action_order():
             player = self.battle.get_player(attacker)
@@ -241,7 +241,7 @@ class TurnController:
     def _run_end_phase(self):
         """ターン終了時の処理を実行する。"""
         if self.battle.is_new_turn():
-            self.events.emit(Event.ON_TURN_END)
+            self._events.emit(Event.ON_TURN_END)
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
             self.battle.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)

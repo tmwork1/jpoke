@@ -9,7 +9,7 @@ from jpoke.utils import fast_copy
 from jpoke.utils.type_defs import AbilityDisabledReason
 from jpoke.enums import Event
 from jpoke.model import Ability
-from .context import BattleContext
+from .context import EventContext
 
 
 class AbilityManager:
@@ -20,22 +20,9 @@ class AbilityManager:
     """
 
     def __init__(self, battle: Battle):
-        """AbilityManagerを初期化する。
-
-        Args:
-            battle: 親となるBattleインスタンス
-        """
         self.battle = battle
 
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            AbilityManager: コピーされたAbilityManagerインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -50,7 +37,7 @@ class AbilityManager:
         """
         self.battle = battle
 
-    def set_ability(self, mon: Pokemon, ability: str) -> None:
+    def change_ability(self, mon: Pokemon, ability: str) -> None:
         """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。
         Args:
             mon: 特性を変更するポケモン
@@ -60,7 +47,7 @@ class AbilityManager:
             return
 
         is_active = self.battle.is_active(mon)
-        ctx = BattleContext(source=mon)
+        ctx = EventContext(source=mon)
 
         if is_active:
             self.battle.events.emit(Event.ON_ABILITY_DISABLED, ctx)
@@ -85,8 +72,10 @@ class AbilityManager:
         is_enabled = mon.ability.enabled
 
         if was_enabled and not is_enabled:
-            self.battle.events.emit(Event.ON_ABILITY_DISABLED,
-                                    BattleContext(source=mon))
+            self.battle.events.emit(
+                Event.ON_ABILITY_DISABLED,
+                EventContext(source=mon)
+            )
             return True
         return False
 
@@ -103,7 +92,9 @@ class AbilityManager:
         is_enabled = mon.ability.enabled
 
         if not was_enabled and is_enabled:
-            self.battle.events.emit(Event.ON_ABILITY_ENABLED,
-                                    BattleContext(source=mon))
+            self.battle.events.emit(
+                Event.ON_ABILITY_ENABLED,
+                EventContext(source=mon)
+            )
             return True
         return False

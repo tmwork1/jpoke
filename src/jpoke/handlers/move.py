@@ -9,7 +9,7 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle, EventContext
     from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
 
 from functools import partial
@@ -46,7 +46,7 @@ class MoveHandler(Handler):
 
 
 def modify_attacker_stats(battle: Battle,
-                          ctx: BattleContext,
+                          ctx: EventContext,
                           value: Any,
                           stats: dict[Stat, int],
                           chance: float = 1) -> HandlerReturn:
@@ -58,7 +58,7 @@ def modify_attacker_stats(battle: Battle,
 
 
 def modify_defender_stats(battle: Battle,
-                          ctx: BattleContext,
+                          ctx: EventContext,
                           value: Any,
                           stats: dict[Stat, int],
                           chance: float = 1) -> HandlerReturn:
@@ -70,7 +70,7 @@ def modify_defender_stats(battle: Battle,
 
 
 def apply_ailment_to_defender(battle: Battle,
-                              ctx: BattleContext,
+                              ctx: EventContext,
                               value: Any,
                               ailment: AilmentName,
                               count: int | None = None,
@@ -82,7 +82,7 @@ def apply_ailment_to_defender(battle: Battle,
 
 
 def apply_volatile_to_attacker(battle: Battle,
-                               ctx: BattleContext,
+                               ctx: EventContext,
                                value: Any,
                                volatile: VolatileName,
                                count: int | None = None,
@@ -95,7 +95,7 @@ def apply_volatile_to_attacker(battle: Battle,
 
 
 def apply_volatile_to_defender(battle: Battle,
-                               ctx: BattleContext,
+                               ctx: EventContext,
                                value: Any,
                                volatile: VolatileName,
                                count: int | None = None,
@@ -107,7 +107,7 @@ def apply_volatile_to_defender(battle: Battle,
     )
 
 
-def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def pivot(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 
     とんぼがえり、ボルトチェンジなどの交代技で、攻撃後に交代を行います。
@@ -126,7 +126,7 @@ def pivot(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=value)
 
 
-def on_blow_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def on_blow_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
     if not value:
@@ -136,7 +136,7 @@ def on_blow_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
     return HandlerReturn(value=value)
 
 
-def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def blow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
 
     ほえる、ふきとばしなどで、相手を強制的に交代させます。
@@ -162,17 +162,17 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
 # ===== 技個別のハンドラ =====
 
 
-def ohko_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ohko_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
     return HandlerReturn(value=ctx.defender.hp)
 
 
-def HP_ratio_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def HP_ratio_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
-def アンコール_can_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def アンコール_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     move = ctx.defender.executed_move
     if not move:
         battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
@@ -181,14 +181,14 @@ def アンコール_can_apply(battle: Battle, ctx: BattleContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def アンコール_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def アンコール_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アンコールの効果を発動する。"""
     move = ctx.defender.executed_move
     return apply_volatile_to_defender(battle, ctx, value, volatile="アンコール",
                                       count=3, move_name=move.name)
 
 
-def いたみわけ_equalize_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いたみわけ_equalize_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """両者の現在HPを平均化する。"""
     shared_hp = (ctx.attacker.hp + ctx.defender.hp) // 2
 
@@ -205,30 +205,30 @@ def いたみわけ_equalize_hp(battle: Battle, ctx: BattleContext, value: Any) 
     return HandlerReturn(value=value)
 
 
-def いのちがけ_pay_hp(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いのちがけ_pay_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
     ctx.hp_cost = ctx.attacker.hp
     battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost")
     return HandlerReturn(value=value)
 
 
-def いのちがけ_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def いのちがけ_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
     return HandlerReturn(value=getattr(ctx, "hp_cost", 0))
 
 
-def level_fixed_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def level_fixed_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """使用者レベルと同値の固定ダメージを計算する。"""
     return HandlerReturn(value=ctx.attacker.level)
 
 
-def がむしゃら_modify_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def がむしゃら_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """がむしゃらのダメージを計算する。"""
     value = max(0, ctx.defender.hp - ctx.attacker.hp)
     return HandlerReturn(value=value)
 
 
-def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """かみなりの天候による命中率補正。
 
     雨: 必中
@@ -250,7 +250,7 @@ def かみなり_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def きあいパンチ_check_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def きあいパンチ_check_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """きあいパンチの発動可否を判定する。
 
     行動前に実際の攻撃ダメージを受けていた場合は不発になる。
@@ -262,7 +262,7 @@ def きあいパンチ_check_move(battle: Battle, ctx: BattleContext, value: Any
     return HandlerReturn(value=value)
 
 
-def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ぼうふうの天候による命中率補正。
 
     雨: 必中
@@ -284,81 +284,45 @@ def ぼうふう_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def _can_apply_item_hit_effect(ctx: BattleContext) -> bool:
-    """命中後の持ち物操作効果が適用可能かを判定する。"""
-    return ctx.move_damage > 0
-
-
-def すりかえ_swap_items(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """すりかえ・トリックの持ち物交換効果。"""
-    success = battle.swap_items(ctx.attacker, ctx.defender, move=ctx.move)
+def すりかえ_swap_items(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """すりかえ・トリックのアイテム交換効果。"""
+    success = battle.swap_items(move=ctx.move)
     return HandlerReturn(value=success)
 
 
-def ついばむ_berry_steal(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ついばむ・むしくいのきのみ奪取効果。"""
-    if not _can_apply_item_hit_effect(ctx):
-        return HandlerReturn(value=False)
-    if ctx.attacker.has_item():
-        return HandlerReturn(value=False)
-    if not common.is_berry_item(ctx.defender.item.name):
-        return HandlerReturn(value=False)
-
-    success = battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
-    return HandlerReturn(value=success)
+def どろぼう_steal_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """どろぼう・ほしがるのアイテム奪取効果。"""
+    battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=value)
 
 
-def どろぼう_steal_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """どろぼう・ほしがるの持ち物奪取効果。"""
-    if not _can_apply_item_hit_effect(ctx):
-        return HandlerReturn(value=False)
-    if ctx.attacker.has_item():
-        return HandlerReturn(value=False)
-
-    success = battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
-    return HandlerReturn(value=success)
-
-
-def はたきおとす_power(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
-    """はたきおとすの持ち物所持時1.5倍補正。"""
+def はたきおとす_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """はたきおとすのアイテム所持時1.5倍補正。"""
     if ctx.defender.has_item():
         value = value * 6144 // 4096
     return HandlerReturn(value=value)
 
 
-def はたきおとす_remove_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """はたきおとすの持ち物除去効果。"""
-    if not _can_apply_item_hit_effect(ctx):
-        return HandlerReturn(value=False)
-
-    success = battle.remove_item(ctx.attacker, ctx.defender, move=ctx.move)
-    return HandlerReturn(value=success)
+def はたきおとす_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はたきおとすのアイテム除去効果。"""
+    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
 
 
-def やきつくす_remove_berry(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def やきつくす_remove_berry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """やきつくすのきのみ焼却効果。"""
-    if ctx.move_damage <= 0:
-        return HandlerReturn(value=False)
-    if not common.is_berry_item(ctx.defender.item.name):
-        return HandlerReturn(value=False)
-
-    success = battle.remove_item(ctx.attacker, ctx.defender, move=ctx.move, reason="burn")
-    return HandlerReturn(value=success)
+    if common.is_berry_item(ctx.defender.item.name):
+        battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
 
 
-def ふしょくガス_remove_item(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
-    """ふしょくガスの持ち物除去効果。"""
-    success = battle.remove_item(
-        ctx.attacker,
-        ctx.defender,
-        move=ctx.move,
-        reason="gas",
-        check_on_empty=True,
-    )
-    return HandlerReturn(value=success)
+def ふしょくガス_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふしょくガスのアイテム除去効果。"""
+    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
 
 
-def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ふぶき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふぶきの天候による命中率補正。
 
     雪: 必中
@@ -377,14 +341,14 @@ def ふぶき_accuracy(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def オーラぐるま_check_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def オーラぐるま_check_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """オーラぐるまのタイプを判定する。"""
     if ctx.source and ctx.source.ability.is_hangry:
         return HandlerReturn(value="あく")
     return HandlerReturn(value=value)
 
 
-def ちいさくなる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ちいさくなる_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ちいさくなるの効果を発動する。"""
     mon = ctx.attacker
     battle.modify_stats(mon, {"EVA": 2}, source=mon)
@@ -392,7 +356,7 @@ def ちいさくなる_apply(battle: Battle, ctx: BattleContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def テラバースト_modify_move_type(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def テラバースト_modify_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
     mon = ctx.attacker
     if mon.terastallized:
@@ -400,7 +364,7 @@ def テラバースト_modify_move_type(battle: Battle, ctx: BattleContext, valu
     return HandlerReturn(value=value)
 
 
-def テラバースト_modify_move_category(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def テラバースト_modify_move_category(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
     mon = ctx.attacker
     if mon.terastallized:
@@ -410,14 +374,14 @@ def テラバースト_modify_move_category(battle: Battle, ctx: BattleContext, 
     return HandlerReturn(value=value)
 
 
-def テラバースト_stellar_power(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def テラバースト_stellar_power(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ステラテラスタル状態ではテラバーストの威力が100になる補正。"""
     if ctx.attacker.active_tera_type == 'ステラ':
         value = 5120  # = 4096 * 100 / 80
     return HandlerReturn(value=value)
 
 
-def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def テラバースト_stellar_stat_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ステラテラスタル時のテラバースト発動後の攻撃・特攻-1段階効果。"""
     mon = ctx.attacker
     if mon and mon.active_tera_type == 'ステラ':
@@ -425,7 +389,7 @@ def テラバースト_stellar_stat_drop(battle: Battle, ctx: BattleContext, val
     return HandlerReturn(value=value)
 
 
-def _check_はやてがえし_condition(battle: Battle, ctx: BattleContext) -> bool:
+def _check_はやてがえし_condition(battle: Battle, ctx: EventContext) -> bool:
     """はやてがえしの発動条件を判定する。
 
     相手が未行動かつ優先攻撃技を選択している時のみ成功する。
@@ -453,7 +417,7 @@ def _check_はやてがえし_condition(battle: Battle, ctx: BattleContext) -> b
     return True
 
 
-def はやてがえし_try_move(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def はやてがえし_try_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はやてがえしの発動条件を判定する。
 
     相手が未行動かつ優先攻撃技を選択している時のみ成功する。
@@ -465,7 +429,7 @@ def はやてがえし_try_move(battle: Battle, ctx: BattleContext, value: Any) 
     return HandlerReturn(value=value)
 
 
-def まるくなる_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def まるくなる_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """まるくなるの効果を発動する。"""
     mon = ctx.attacker
     battle.modify_stats(mon, {"B": 1}, source=mon)
@@ -473,7 +437,7 @@ def まるくなる_apply(battle: Battle, ctx: BattleContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def みがわり_check(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def みがわり_check(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """みがわりが使用可能かを判定する。"""
     mon = ctx.attacker
     if (
@@ -486,7 +450,7 @@ def みがわり_check(battle: Battle, ctx: BattleContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def みがわり_apply(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def みがわり_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """みがわりの効果を発動する。"""
     mon = ctx.attacker
     battle.volatile_manager.apply(mon, "みがわり", hp=mon.max_hp // 4)

@@ -102,6 +102,14 @@ class EventLog:
                 ability = self.payload.get("ability", "特性")
                 return f"{ability}が発動した"
 
+            case LogCode.ITEM_TRIGGERED:
+                item = self.payload.get("item", "道具")
+                return f"{item}が発動した"
+
+            case LogCode.ITEM_GAINED:
+                item = self.payload.get("item", "アイテム")
+                return f"{item}を得た"
+
             case LogCode.ITEM_LOST:
                 item = self.payload.get("item", "アイテム")
                 return f"{item}を失った"

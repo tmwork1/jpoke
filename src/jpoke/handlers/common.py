@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle, EventContext
     from jpoke.model import Pokemon
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
@@ -13,7 +13,7 @@ from jpoke.core.handler import HandlerReturn
 
 
 def modify_hp(battle: Battle,
-              ctx: BattleContext,
+              ctx: EventContext,
               value: Any,
               target_spec: RoleSpec,
               source_spec: RoleSpec | None = None,
@@ -45,7 +45,7 @@ def modify_hp(battle: Battle,
 
 
 def self_heal(battle: Battle,
-              ctx: BattleContext,
+              ctx: EventContext,
               value: Any,
               v: int = 0,
               r: float = 0,
@@ -59,7 +59,7 @@ def self_heal(battle: Battle,
 
 
 def self_damage(battle: Battle,
-                ctx: BattleContext,
+                ctx: EventContext,
                 value: Any,
                 v: int = 0,
                 r: float = 0,
@@ -73,7 +73,7 @@ def self_damage(battle: Battle,
 
 
 def drain_hp(battle: Battle,
-             ctx: BattleContext,
+             ctx: EventContext,
              value: Any,
              from_: RoleSpec,
              damage: int = 0,
@@ -113,7 +113,7 @@ def drain_hp(battle: Battle,
 
 
 def modify_stats(battle: Battle,
-                 ctx: BattleContext,
+                 ctx: EventContext,
                  value: Any,
                  stats: dict[Stat, int],
                  target_spec: RoleSpec,
@@ -150,7 +150,7 @@ def modify_stats(battle: Battle,
 
 
 def apply_ailment(battle: Battle,
-                  ctx: BattleContext,
+                  ctx: EventContext,
                   success: Any,
                   target_spec: RoleSpec,
                   ailment: AilmentName,
@@ -168,7 +168,7 @@ def apply_ailment(battle: Battle,
 
 
 def apply_volatile(battle: Battle,
-                   ctx: BattleContext,
+                   ctx: EventContext,
                    value: Any,
                    target_spec: RoleSpec,
                    volatile: VolatileName,
@@ -188,7 +188,7 @@ def apply_volatile(battle: Battle,
 
 
 def cure_ailment(battle: Battle,
-                 ctx: BattleContext,
+                 ctx: EventContext,
                  value: Any,
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
@@ -205,13 +205,13 @@ def cure_ailment(battle: Battle,
     return HandlerReturn(value=success)
 
 
-def cure_self_ailment(battle: Battle, ctx: BattleContext, value: Any, chance: float = 1) -> HandlerReturn:
+def cure_self_ailment(battle: Battle, ctx: EventContext, value: Any, chance: float = 1) -> HandlerReturn:
     """自分の状態異常を回復する。"""
     return cure_ailment(battle, ctx, value, target_spec="source:self", source_spec="source:self", chance=chance)
 
 
 def activate_weather(battle: Battle,
-                     ctx: BattleContext,
+                     ctx: EventContext,
                      value: Any,
                      weather: Weather,
                      count: int = 5,
@@ -223,7 +223,7 @@ def activate_weather(battle: Battle,
 
 
 def deactivate_weather(battle: Battle,
-                       ctx: BattleContext,
+                       ctx: EventContext,
                        value: Any,
                        weather: Weather) -> HandlerReturn:
     """指定天候が現在有効な場合に解除する。"""
@@ -233,7 +233,7 @@ def deactivate_weather(battle: Battle,
 
 
 def activate_terrain(battle: Battle,
-                     ctx: BattleContext,
+                     ctx: EventContext,
                      value: Any,
                      terrain: Terrain,
                      count: int = 5,
@@ -245,7 +245,7 @@ def activate_terrain(battle: Battle,
 
 
 def activate_global_field(battle: Battle,
-                          ctx: BattleContext,
+                          ctx: EventContext,
                           value: Any,
                           source_spec: RoleSpec,
                           global_field: GlobalField,
@@ -263,7 +263,7 @@ def activate_global_field(battle: Battle,
     return HandlerReturn(value=success)
 
 
-def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
+def deals_physical_damage(battle: Battle, ctx: EventContext) -> bool:
     """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
 
     Returns:
@@ -272,15 +272,15 @@ def deals_physical_damage(battle: Battle, ctx: BattleContext) -> bool:
     return battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move)
 
 
-def is_super_effective(battle: Battle, ctx: BattleContext) -> bool:
+def is_super_effective(battle: Battle, ctx: EventContext) -> bool:
     """効果抜群かどうかを判定する。"""
-    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
+    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
     return type_modifier/4096 > 1
 
 
-def is_not_very_effective(battle: Battle, ctx: BattleContext) -> bool:
+def is_not_very_effective(battle: Battle, ctx: EventContext) -> bool:
     """今ひとつかどうかを判定する。"""
-    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
+    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
     return 0 < type_modifier/4096 < 1
 
 
@@ -289,7 +289,7 @@ def is_berry_item(item_name: str) -> bool:
     return item_name.endswith("のみ")
 
 
-def block_stat_drop_by_foe(value: dict[Stat, int], ctx: BattleContext, stat: Stat | None = None) -> dict[Stat, int]:
+def block_stat_drop_by_foe(value: dict[Stat, int], ctx: EventContext, stat: Stat | None = None) -> dict[Stat, int]:
     """相手由来のランク低下を除去する共通処理。
 
     Args:
@@ -305,7 +305,7 @@ def block_stat_drop_by_foe(value: dict[Stat, int], ctx: BattleContext, stat: Sta
     return value
 
 
-def ignore_damage_by_reason(battle: Battle, ctx: BattleContext, value: int, *, reason: HPChangeReason) -> HandlerReturn:
+def ignore_damage_by_reason(battle: Battle, ctx: EventContext, value: int, *, reason: HPChangeReason) -> HandlerReturn:
     """指定された hp_change_reason のダメージを無効化する。
 
     Args:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle, EventContext
 
 from jpoke.utils.type_defs import RoleSpec
 from jpoke.utils.battle_math import apply_fixed_modifier
@@ -22,7 +22,7 @@ class AilmentHandler(Handler):
         )
 
 
-def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):
+def もうどく_damage(battle: Battle, ctx: EventContext, value: Any):
     battle.ailment_manager.tick(ctx.source)
     mon = ctx.source
     damage = -(mon.max_hp * mon.ailment.elapsed_turns // 16)
@@ -30,19 +30,19 @@ def もうどく_damage(battle: Battle, ctx: BattleContext, value: Any):
     return HandlerReturn(value=value)
 
 
-def どく_damage(battle: Battle, ctx: BattleContext, value: Any):
+def どく_damage(battle: Battle, ctx: EventContext, value: Any):
     """どく状態によるターン終了時ダメージ（1/8）。"""
     mon = ctx.source
     battle.modify_hp(mon, v=-(mon.max_hp // 8), reason="poison")
     return HandlerReturn(value=value)
 
 
-def まひ_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def まひ_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """まひ状態による素早さ半減"""
     return HandlerReturn(value=value // 2)
 
 
-def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def まひ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """まひ状態による行動不能チェック（25%確率）"""
     # テスト用に確率を固定できる
     if battle.test_option.trigger_ailment is not None:
@@ -57,20 +57,20 @@ def まひ_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerRetu
     return HandlerReturn(value=True)
 
 
-def やけど_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """やけど状態によるターン終了時ダメージ（1/16）"""
     battle.modify_hp(ctx.source, r=-1/16)
     return HandlerReturn(value=value)
 
 
-def やけど_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def やけど_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
     if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
-def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def ねむり_check_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねむり状態による行動不能チェック"""
     mon = ctx.attacker
     battle.ailment_manager.tick(mon)
@@ -89,7 +89,7 @@ def ねむり_check_action(battle: Battle, ctx: BattleContext, value: Any) -> Ha
     return HandlerReturn(value=False, stop_event=True)
 
 
-def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def こおり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """こおり状態による行動不能チェック（20%確率で解凍）"""
     # テスト用に確率を固定できる
     if battle.test_option.trigger_ailment is not None:
@@ -109,7 +109,7 @@ def こおり_action(battle: Battle, ctx: BattleContext, value: Any) -> HandlerR
     return HandlerReturn(value=False, stop_event=True)
 
 
-def こおり_cure_by_fire_damage(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def こおり_cure_by_fire_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ほのお技でダメージを受けたら解凍する。"""
     if ctx.move.type == "ほのお":
         battle.ailment_manager.remove(ctx.defender)

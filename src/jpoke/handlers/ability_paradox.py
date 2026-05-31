@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, BattleContext
+    from jpoke.core import Battle, EventContext
     from jpoke.model import Pokemon
 
 from jpoke.core import HandlerReturn
@@ -48,7 +48,7 @@ def _activate_paradox_boost(battle: Battle, mon: Pokemon, source: str) -> None:
         battle.consume_item(mon)
 
 
-def refresh_paradox_charge_state(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def refresh_paradox_charge_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """こだいかっせい/クォークチャージの補正状態を更新する。"""
     mon = ctx.source
 
@@ -60,7 +60,7 @@ def refresh_paradox_charge_state(battle: Battle, ctx: BattleContext, value: Any)
         field_source = "terrain"
         field_active = battle.terrain.name == "エレキフィールド"
 
-    can_consume_item = mon.has_item("ブーストエナジー")
+    can_consume_item = mon.item.name == "ブーストエナジー"
 
     # すでにブーストが有効な場合は、場の状態とアイテム消費の両方を考慮して解除の要否を判定する。
     if mon.paradox_boost_active:
@@ -87,7 +87,7 @@ def refresh_paradox_charge_state(battle: Battle, ctx: BattleContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """素早さ補正時: S が強化対象なら 1.5 倍補正を適用する。"""
     mon = ctx.source
     if mon.paradox_boost_active and mon.paradox_boost_stat == "S":
@@ -95,7 +95,7 @@ def modify_speed(battle: Battle, ctx: BattleContext, value: int) -> HandlerRetur
     return HandlerReturn(value=value)
 
 
-def apply_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def apply_atk_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """攻撃側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
     attacker = ctx.attacker
     defender = ctx.defender
@@ -115,7 +115,7 @@ def apply_atk_modifier(battle: Battle, ctx: BattleContext, value: int) -> Handle
     return HandlerReturn(value=value)
 
 
-def apply_def_modifier(battle: Battle, ctx: BattleContext, value: int) -> HandlerReturn:
+def apply_def_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
     stat = "B" if battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move) else "D"
     if (

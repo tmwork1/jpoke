@@ -2,7 +2,7 @@
 import pytest
 
 from jpoke.enums import Event
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.model import Pokemon
 
 import test_utils as t
@@ -25,9 +25,9 @@ def test_mon():
     old_handler = old.events.handlers[Event.ON_TURN_END][0]
     new_handler = new.events.handlers[Event.ON_TURN_END][0]
     assert old_handler is not new_handler
-    assert new_handler._subject is new.actives[0]
+    assert new_handler.registered_subject is new.actives[0]
 
-    # コピー後のBattleContextでハンドラが正しく除去されることを確認する
+    # コピー後のEventContextでハンドラが正しく除去されることを確認する
     t.run_switch(new, 0, 1)
     assert new.actives[0].name == "ヒトカゲ"
     assert new.events.handlers == {}

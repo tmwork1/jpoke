@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import DomainEvent
 from jpoke.model import Pokemon
-from .context import BattleContext
+from .context import EventContext
 from jpoke.utils import fast_copy
 
 
@@ -57,7 +57,7 @@ class SpeedCalculator:
         self.battle = battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -66,7 +66,7 @@ class SpeedCalculator:
 
         含まれる要素
         - 特性による補正
-        - 持ち物による補正
+        - アイテムによる補正
 
         含まれない要素
         - トリックルームなどの行動順序補正
@@ -80,7 +80,7 @@ class SpeedCalculator:
         """
         return self.battle.events.emit(
             DomainEvent.ON_CALC_SPEED,
-            BattleContext(source=mon),
+            EventContext(source=mon),
             mon.stats["S"]
         )
 
@@ -89,7 +89,7 @@ class SpeedCalculator:
 
         含まれる要素
         - 特性による補正
-        - 持ち物による補正
+        - アイテムによる補正
         - トリックルームなどの行動順序補正
 
         含まれない要素
@@ -107,7 +107,7 @@ class SpeedCalculator:
         # 素早さ反転の適用
         return self.battle.events.emit(
             DomainEvent.ON_CHECK_SPEED_REVERSE,
-            BattleContext(source=mon),
+            EventContext(source=mon),
             base_speed
         )
 
@@ -127,7 +127,7 @@ class SpeedCalculator:
         # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
         return self.battle.events.emit(
             DomainEvent.ON_MODIFY_MOVE_PRIORITY,
-            BattleContext(attacker=attacker, move=move),
+            EventContext(attacker=attacker, move=move),
             base_priority
         )
 
@@ -182,7 +182,7 @@ class SpeedCalculator:
             # 後攻ティアを計算（0=通常, -1=あとだし等）
             back_tier = self.battle.events.emit(
                 DomainEvent.ON_CALC_BACK_TIER,
-                BattleContext(attacker=mon, move=move),
+                EventContext(attacker=mon, move=move),
                 0
             )
 

@@ -14,7 +14,7 @@ from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain
 from jpoke.data import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
 from jpoke.model import Field
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 
 T = TypeVar("T")
 
@@ -26,7 +26,6 @@ class BaseFieldManager(Generic[T]):
 
     Notes:
         このクラスは直接インスタンス化せず、専用の管理クラスを使用すること。
-        init_game()実装不要。ゲームの初期化ではインスタンスを再生成するため。
     """
 
     def __init__(self, battle: Battle, owners: tuple[Player, ...], fields: dict[T, Field]):
@@ -42,14 +41,6 @@ class BaseFieldManager(Generic[T]):
         self.fields: dict[T, Field] = fields
 
     def __deepcopy__(self, memo):
-        """ディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            BaseFieldManager: コピーされたインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -65,7 +56,7 @@ class BaseFieldManager(Generic[T]):
         self.battle = new_battle
 
     @property
-    def events(self) -> EventManager:
+    def _events(self) -> EventManager:
         """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
@@ -103,19 +94,19 @@ class BaseFieldManager(Generic[T]):
         field = self.get(name)
         field.count = count
         for player in field.owners:
-            field.register_handlers(self.events, player)
+            field.register_handlers(self._events, player)
         self.battle.add_event_log(0, LogCode.FIELD_STARTED,
                                   payload={"field": field.name, "count": count})
-        self.events.emit(Event.ON_FIELD_ACTIVATE, value=field)
+        self._events.emit(Event.ON_FIELD_ACTIVATE, value=field)
 
     def _deactivate_field(self, field: Field):
         """解除イベントを発火してからフィールドを無効化する。"""
         field.count = 0
         self.battle.add_event_log(0, LogCode.FIELD_ENDED,
                                   payload={"field": field.name})
-        self.events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
+        self._events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
         for player in field.owners:
-            field.unregister_handlers(self.events, player)
+            field.unregister_handlers(self._events, player)
 
 
 class ExclusiveFieldManager(BaseFieldManager[T]):
@@ -176,9 +167,9 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             self._deactivate_field(self.current)
 
         # ON_MODIFY_DURATIONイベントを発火して、ターン数の変更を可能にする
-        value = self.events.emit(
+        value = self._events.emit(
             Event.ON_MODIFY_DURATION,
-            BattleContext(source=source),
+            EventContext(source=source),
             [name, count]
         )
         _, modified_count = value
@@ -187,7 +178,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
 
         self._activate_field(name, modified_count)
         self.current_name = name
-        self.events.emit(Event.ON_FIELD_CHANGE)
+        self._events.emit(Event.ON_FIELD_CHANGE)
         return True
 
     def remove(self) -> bool:
@@ -200,7 +191,7 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
             return False
         self._deactivate_field(self.current)
         self.current_name = self.inactive_name
-        self.events.emit(Event.ON_FIELD_CHANGE)
+        self._events.emit(Event.ON_FIELD_CHANGE)
         return True
 
     def tick_down(self) -> None:
@@ -215,8 +206,7 @@ class StackableFieldManager(BaseFieldManager[T]):
     """
 
     def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: type[T]):
-        """
-        StackableFieldManagerを初期化する。
+        """StackableFieldManagerを初期化する。
 
         Args:
             battle: Battleインスタンス
@@ -267,18 +257,13 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
     """
 
     def __init__(self, battle: Battle):
-        """WeatherManagerを初期化する。
-
-        Args:
-            battle: Battleインスタンス
-        """
         super().__init__(battle, battle.players, Weather)
 
     @property
     def active(self) -> Field:
         """現在有効な天候オブジェクトを返す。"""
         if self.current_name != self.inactive_name:
-            enabled = self.events.emit(Event.ON_CHECK_WEATHER_ENABLED, value=True)
+            enabled = self._events.emit(Event.ON_CHECK_WEATHER_ENABLED, value=True)
             if not enabled:
                 return self.inactive
         return self.current
@@ -301,11 +286,6 @@ class TerrainManager(ExclusiveFieldManager[Terrain]):
     """
 
     def __init__(self, battle: Battle):
-        """TerrainManagerを初期化する。
-
-        Args:
-            battle: Battleインスタンス
-        """
         super().__init__(battle, battle.players, Terrain)
 
 
@@ -316,11 +296,6 @@ class GlobalFieldManager(StackableFieldManager[GlobalField]):
     """
 
     def __init__(self, battle: Battle):
-        """GlobalFieldManagerを初期化する。
-
-        Args:
-            battle: Battleインスタンス
-        """
         super().__init__(battle, battle.players, GlobalField)
 
 
@@ -331,11 +306,11 @@ class SideFieldManager(StackableFieldManager[SideField]):
     片方のプレイヤー側の場にのみ影響する効果を管理します。
     """
 
-    def __init__(self, battle: Battle, player: Player):
+    def __init__(self, battle: Battle, owner: Player):
         """SideFieldManagerを初期化する。
 
         Args:
             battle: Battleインスタンス
-            player: 効果を管理するプレイヤー
+            owner: 効果を管理するプレイヤー
         """
-        super().__init__(battle, (player,), SideField)
+        super().__init__(battle, (owner,), SideField)

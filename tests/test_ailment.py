@@ -2,7 +2,7 @@
 import pytest
 
 from jpoke.enums import Event
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.model import Pokemon
 
 import test_utils as t

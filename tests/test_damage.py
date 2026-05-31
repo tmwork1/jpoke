@@ -2,7 +2,7 @@
 import pytest
 
 from jpoke import Pokemon
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 
 import test_utils as t
 

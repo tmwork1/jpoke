@@ -1,7 +1,7 @@
-"""持ち物データ定義モジュール。
+"""アイテムデータ定義モジュール。
 
 Note:
-    このモジュール内の持ち物定義はITEMS辞書内で五十音順に配置されています。
+    このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
 """
 from functools import partial
 
@@ -348,7 +348,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=50,
         handlers={
             Event.ON_MODIFY_STAT: h.ItemHandler(
-                h.だっしゅつパック_trigger_switch,
+                h.だっしゅつパック_reserve_switch,
                 subject_spec="target:self",
             )
         }
@@ -358,7 +358,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_DAMAGE_HIT: h.ItemHandler(
-                h.だっしゅつボタン_set_interrupt,
+                h.だっしゅつボタン_reserve_switch,
                 subject_spec="defender:self",
             )
         }

@@ -8,7 +8,7 @@ import pytest
 
 
 from jpoke import Pokemon
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.enums import Event, Interrupt, Command
 from jpoke.utils.type_defs import Stat, AilmentName, VolatileName
 from jpoke.model import Move
@@ -752,7 +752,7 @@ def test_かいりきバサミ_自己低下は防げない():
 
     stat_change = battle.events.emit(
         Event.ON_MODIFY_STAT,
-        BattleContext(target=ally_mon, source=ally_mon),
+        EventContext(target=ally_mon, source=ally_mon),
         {"A": -1},
     )
     assert stat_change == {"A": -1}
@@ -1027,7 +1027,7 @@ def test_かるわざ_アイテムを再取得すると発動しない():
     )
     mon = battle.actives[0]
     battle.consume_item(mon)
-    battle.set_item(mon, "オボンのみ")
+    battle.change_item(mon, "オボンのみ")
     assert battle.calc_effective_speed(mon) == mon.stats["S"]
 
 
@@ -1153,7 +1153,7 @@ def test_ききかいひ_やけどダメージでも発動する():
 
     mon.hp = mon.max_hp // 2 + 1
     battle.ailment_manager.apply(mon, "やけど")
-    battle.events.emit(Event.ON_TURN_END, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END, EventContext(source=mon))
 
     assert battle.players[0].interrupt == Interrupt.EMERGENCY
 
@@ -1238,7 +1238,7 @@ def test_きょううん_急所ランクが1上がる():
 
     result = battle.events.emit(
         Event.ON_CALC_CRITICAL_RANK,
-        BattleContext(attacker=attacker, defender=defender, move=move),
+        EventContext(attacker=attacker, defender=defender, move=move),
         0,
     )
     assert result == 1
@@ -1984,7 +1984,7 @@ def test_スカイスキン_変換した技の威力が4915倍になる():
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4915
 
@@ -1996,7 +1996,7 @@ def test_スカイスキン_元からひこうタイプの技は威力補正な�
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4096
 
@@ -2019,7 +2019,7 @@ def test_フェアリースキン_変換した技の威力が4915倍になる():
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4915
 
@@ -2031,7 +2031,7 @@ def test_フェアリースキン_元からフェアリータイプの技は威�
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4096
 
@@ -2056,7 +2056,7 @@ def test_フリーズスキン_変換した技の威力が4915倍になる():
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4915
 
@@ -2068,7 +2068,7 @@ def test_フリーズスキン_元からこおりタイプの技は威力補正�
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4096
 
@@ -2632,12 +2632,12 @@ def test_テクニシャン_連続技でもヒット毎に判定がぶれない(
 
     v1 = battle.events.emit(
         Event.ON_CALC_POWER_MODIFIER,
-        BattleContext(attacker=attacker, defender=defender, move=move, hit_index=1, hit_count=5),
+        EventContext(attacker=attacker, defender=defender, move=move, hit_index=1, hit_count=5),
         4096,
     )
     v2 = battle.events.emit(
         Event.ON_CALC_POWER_MODIFIER,
-        BattleContext(attacker=attacker, defender=defender, move=move, hit_index=5, hit_count=5),
+        EventContext(attacker=attacker, defender=defender, move=move, hit_index=5, hit_count=5),
         4096,
     )
 
@@ -2721,7 +2721,7 @@ def test_てんねん_防御側はACランク無視(move_name, stat):
     )
     attacker, defender = battle.actives
     attacker.rank[stat] = 2
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_ATK_RANK_MODIFIER, ctx, 2)
     assert result == 1
 
@@ -2740,7 +2740,7 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
     )
     attacker, defender = battle.actives
     defender.rank[stat] = 2
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_DEF_RANK_MODIFIER, ctx, 2.0)
     assert result == 1.0
 
@@ -2763,7 +2763,7 @@ def test_てんのめぐみ_追加効果確率が2倍になる(chance_before, ch
         team1=[Pokemon("ピカチュウ")],
     )
     attacker = battle.actives[0]
-    ctx = BattleContext(attacker=attacker, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, move=attacker.moves[0])
     assert chance_after == battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance_before)
 
 
@@ -2958,7 +2958,7 @@ def test_ノーガード_攻撃側で必中化():
     move = attacker.moves[0]
     accuracy = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=move),
+        EventContext(attacker=attacker, defender=defender, move=move),
         0,
     )
     assert accuracy is None
@@ -2973,7 +2973,7 @@ def test_ノーガード_防御側で必中化():
     move = attacker.moves[0]
     accuracy = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=move),
+        EventContext(attacker=attacker, defender=defender, move=move),
         0,
     )
     assert accuracy is None
@@ -2993,7 +2993,7 @@ def test_ノーマルスキン_ノーマルタイプに変えた技は強化さ�
     result = battle.move_executor.resolve_move_type(attacker, move)
     assert result == "ノーマル"
 
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4915
 
@@ -3004,7 +3004,7 @@ def test_ノーマルスキン_元からノーマルタイプの技は威力補�
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
-    ctx = BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0])
+    ctx = EventContext(attacker=attacker, defender=defender, move=attacker.moves[0])
     result = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
     assert result == 4096
 
@@ -3307,14 +3307,14 @@ def test_はりきり_物理技の攻撃補正が1_5倍になる():
     move = attacker.moves[0]
     atk_modifier = battle.events.emit(
         Event.ON_CALC_ATK_MODIFIER,
-        BattleContext(attacker=attacker, defender=defender, move=move),
+        EventContext(attacker=attacker, defender=defender, move=move),
         4096,
     )
     assert atk_modifier == 6144
 
     accuracy = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, move=move),
+        EventContext(attacker=attacker, move=move),
         100,
     )
     assert accuracy == 100 * 3277 // 4096
@@ -3331,14 +3331,14 @@ def test_はりきり_特殊技には補正がかからない():
     move = attacker.moves[0]
     atk_modifier = battle.events.emit(
         Event.ON_CALC_ATK_MODIFIER,
-        BattleContext(attacker=attacker, defender=defender, move=move),
+        EventContext(attacker=attacker, defender=defender, move=move),
         4096,
     )
     assert atk_modifier == 4096
 
     accuracy = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, move=move),
+        EventContext(attacker=attacker, move=move),
         100,
     )
     assert accuracy == 100
@@ -3354,7 +3354,7 @@ def test_はりきり_一撃必殺技の命中率は下がらない():
     move = attacker.moves[0]
     accuracy = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, move=move),
+        EventContext(attacker=attacker, move=move),
         30,
     )
     # 命中率ペナルティがかからない
@@ -3401,7 +3401,7 @@ def test_ひとでなし_どく状態の相手には急所ランク最大にな�
 
     rank = battle.events.emit(
         Event.ON_CALC_CRITICAL_RANK,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        EventContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
         0,
     )
     assert rank >= 3
@@ -3416,7 +3416,7 @@ def test_ひとでなし_非どく状態の相手には急所ランクを変更�
 
     rank = battle.events.emit(
         Event.ON_CALC_CRITICAL_RANK,
-        BattleContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        EventContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
         0,
     )
     assert rank == 0
@@ -3535,7 +3535,7 @@ def test_ふくがん_命中率を1_3倍にする():
     move = attacker.moves[0]
     result = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=defender, move=move),
+        EventContext(attacker=attacker, defender=defender, move=move),
         30,
     )
     assert result == 30 * 5325 // 4096
@@ -3551,7 +3551,7 @@ def test_ふくがん_一撃必殺技には適用されない():
 
     result = battle.events.emit(
         Event.ON_MODIFY_ACCURACY,
-        BattleContext(attacker=attacker, defender=battle.actives[1], move=move),
+        EventContext(attacker=attacker, defender=battle.actives[1], move=move),
         30,
     )
     assert result == 30
@@ -3619,7 +3619,7 @@ def test_ふゆう_floating():
     mon = battle.actives[0]
     floating = battle.events.emit(
         Event.ON_CHECK_FLOATING,
-        BattleContext(source=mon),
+        EventContext(source=mon),
         False
     )
     assert floating is True
@@ -3775,7 +3775,7 @@ def test_ポイズンヒール_かいふくふうじ中は回復もダメージ�
     battle.volatile_manager.apply(mon, "かいふくふうじ")
     battle.modify_hp(mon, v=-50, reason="")
     before = mon.hp
-    battle.events.emit(Event.ON_TURN_END, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END, EventContext(source=mon))
     assert mon.hp == before
 
 
@@ -3937,8 +3937,8 @@ def test_マルチタイプ_プレートの奪取を阻止する():
     mon = battle.actives[0]
     attacker = battle.actives[1]
     # ON_CHECK_ITEM_CHANGE: target=アルセウス, source=ピカチュウ → 奪取を阻止
-    ctx = BattleContext(attacker=attacker, defender=mon, move=attacker.moves[0],
-                        source=attacker, target=mon)
+    ctx = EventContext(attacker=attacker, defender=mon, move=attacker.moves[0],
+                       source=attacker, target=mon)
     result = battle.events.emit(Event.ON_CHECK_ITEM_CHANGE, ctx, True)
     assert result is False
 
@@ -4013,7 +4013,7 @@ def test_ムラっけ_ターン終了時に別々の能力が上昇と下降す�
     choices = iter(["A", "B"])
     battle.random.choice = lambda seq: next(choices)
 
-    battle.events.emit(Event.ON_TURN_END, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END, EventContext(source=mon))
 
     assert mon.rank["A"] == 2
     assert mon.rank["B"] == -1
@@ -4029,7 +4029,7 @@ def test_ムラっけ_全能力が最大なら下降のみ発動する():
         mon.rank[stat] = 6
     battle.random.choice = lambda seq: seq[0]
 
-    battle.events.emit(Event.ON_TURN_END, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END, EventContext(source=mon))
 
     assert mon.rank["A"] == 5
     assert mon.rank["B"] == 6
@@ -4045,7 +4045,7 @@ def test_ムラっけ_全能力が最小なら上昇のみ発動する():
         mon.rank[stat] = -6
     battle.random.choice = lambda seq: seq[0]
 
-    battle.events.emit(Event.ON_TURN_END, BattleContext(source=mon))
+    battle.events.emit(Event.ON_TURN_END, EventContext(source=mon))
 
     assert mon.rank["A"] == -4
     assert mon.rank["B"] == -6

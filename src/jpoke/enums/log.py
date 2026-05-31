@@ -33,6 +33,7 @@ class LogCode(Enum):
 
     # アイテム関連
     ITEM_TRIGGERED = auto()  # アイテム発動
+    ITEM_GAINED = auto()  # アイテム獲得
     ITEM_LOST = auto()  # アイテム喪失
 
     # 状態異常関連

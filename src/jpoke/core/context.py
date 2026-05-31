@@ -1,7 +1,7 @@
 """バトル中のイベント文脈を扱うモジュール。
 
 ハンドラ実行で参照する source/target、技、ダメージ値などを保持する
-`BattleContext` を提供する。
+`EventContext` を提供する。
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import ContextRole, RoleSpec, HPChangeReason, StatChangeReason
 
 
-class BattleContext:
+class EventContext:
     """ドメイン/イベント発火時のコンテキスト情報。
 
     ドメイン/イベントに関連するポケモン、技、場の状態などを保持します。
@@ -45,7 +45,7 @@ class BattleContext:
                  hit_count: int = 1,
                  critical: bool = False,
                  fainted: bool = False) -> None:
-        """BattleContext を初期化する。
+        """EventContext を初期化する。
 
         Args:
             source: イベントの発生源となるポケモン
@@ -121,8 +121,8 @@ class BattleContext:
             mon = battle.foe(mon)
         return mon
 
-    def derive(self, **kwargs) -> "BattleContext":
-        """このコンテキストを基に新しい BattleContext を派生する。
+    def derive(self, **kwargs) -> "EventContext":
+        """このコンテキストを基に新しい EventContext を派生する。
 
         source/target/move/field/hit_index/hit_count を引き継ぎ、
         kwargs で指定したフィールドを上書きする。
@@ -133,9 +133,9 @@ class BattleContext:
                       critical, move_reflected, fainted）
 
         Returns:
-            派生した BattleContext
+            派生した EventContext
         """
-        return BattleContext(
+        return EventContext(
             source=kwargs.get("source", self.source),
             target=kwargs.get("target", self.target),
             move=kwargs.get("move", self.move),

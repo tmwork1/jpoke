@@ -19,9 +19,6 @@ class Field(GameEffect):
         data: フィールド効果のデータ
         owners: フィールドの所有者（プレイヤー）リスト
         count: フィールド効果の残りターン数
-
-    Notes:
-        init_game()実装不要; ゲームの初期化は管理クラス側で行うため。
     """
 
     def __init__(self,

@@ -1,16 +1,16 @@
-﻿# 持ち物実装進捗
+﻿# アイテム実装進捗
 
 ## 実装状況サマリ（コード基準）
 
 | 項目 | 件数 | 根拠 |
 | --- | ---: | --- |
-| 持ち物総数 | 154 | `src/jpoke/data/item.py` の `ITEMS` |
-| `handlers` 登録あり | 56 | `ItemData(..., handlers={...})` を持つ持ち物 |
+| アイテム総数 | 154 | `src/jpoke/data/item.py` の `ITEMS` |
+| `handlers` 登録あり | 56 | `ItemData(..., handlers={...})` を持つアイテム |
 | `handlers` 未登録 | 98 | 154 - 56 |
 | 仕様書ファイル数 | 38 | `spec/item/*.md` |
 | 専用テスト関数数 | 10 | `tests/test_item.py` の `def test_*` |
 
-## 持ち物実装チェックリスト（統合）
+## アイテム実装チェックリスト（統合）
 
 ### 実装済み（56/154）
 

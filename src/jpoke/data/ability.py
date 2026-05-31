@@ -785,7 +785,7 @@ ABILITIES: dict[str, AbilityData] = {
     "しゅうかく": AbilityData(
         handlers={
             Event.ON_TURN_END: h.AbilityHandler(
-                h.しゅうかく_on_turn_end,
+                h.しゅうかく_apply,
                 subject_spec="source:self",
             ),
         }

@@ -63,7 +63,7 @@ class Ability(GameEffect):
         reasons = set()
         if self.has_flag("per_battle_once") and self.consumed:
             reasons.add("consumed")
-        self.set_disabled_reasons(reasons)
+        self.replace_disabled_reasons(reasons)
 
     def has_flag(self, flag: str) -> bool:
         """特性の状態フラグを判定する。

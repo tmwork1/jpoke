@@ -1,7 +1,7 @@
 """揮発性状態ハンドラの単体テスト"""
 import pytest
 from jpoke import Pokemon
-from jpoke.core import BattleContext
+from jpoke.core import EventContext
 from jpoke.enums import Event, Command, LogCode
 import test_utils as t
 
@@ -64,7 +64,7 @@ def test_あばれる_カウント進行():
         volatile0={"あばれる": 2}
     )
     attacker, defender = battle.actives
-    ctx = BattleContext(attacker=attacker, defender=defender)
+    ctx = EventContext(attacker=attacker, defender=defender)
     battle.events.emit(Event.ON_DAMAGE_HIT, ctx)
     assert attacker.volatiles["あばれる"].count == 1
     battle.events.emit(Event.ON_DAMAGE_HIT, ctx)
@@ -363,7 +363,7 @@ def test_きゅうしょアップ():
     attacker, defender = battle.actives
     rank = battle.events.emit(
         Event.ON_CALC_CRITICAL_RANK,
-        BattleContext(attacker=attacker, defender=defender),
+        EventContext(attacker=attacker, defender=defender),
         2
     )
     assert rank == 3
@@ -796,12 +796,12 @@ def test_でんじふゆう_ターン経過で解除():
 
 def test_にげられない_交代不可():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
         volatile0={"にげられない": 1},
     )
     # 交代コマンドが利用不可
-    assert not t.can_switch(battle, 0)
+    assert not battle.can_switch(battle.players[0])
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -843,11 +843,11 @@ def test_ねをはる_回復():
 
 def test_ねをはる_交代不可():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
         volatile0={"ねをはる": 1},
     )
-    assert not t.can_switch(battle, 0)
+    assert not battle.can_switch(battle.players[0])
 
 
 def test_ねをはる_浮遊無効():
@@ -905,11 +905,11 @@ def test_バインド_ターン経過でダメージ():
 
 def test_バインド_交代不可():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
         volatile0={"バインド": 99},
     )
-    assert not t.can_switch(battle, 0)
+    assert not battle.can_switch(battle.players[0])
 
 
 def test_バインド_発生源が交代すると解除():
@@ -1364,11 +1364,11 @@ def test_あなをほる_命中():
 
 def test_あなをほる_潜伏中は交代できない():
     battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", moves=["あなをほる"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
     )
     battle.volatile_manager.apply(battle.actives[0], "かくれる", count=1, move_name="あなをほる")
-    assert not t.can_switch(battle, 0)
+    assert not battle.can_switch(battle.players[0])
 
 
 def test_あなをほる_潜伏中はコマンドが固定される():
