@@ -88,7 +88,7 @@ def _apply_contact_counter_ailment(battle: Battle,
                                    chance: float) -> bool:
     """接触被弾時カウンターの状態異常付与を試行する。"""
     if (
-        battle.move_executor.is_contact(ctx)
+        battle.query.is_contact(ctx)
         and battle.random.random() < chance
     ):
         battle.ailment_manager.apply(
@@ -107,7 +107,7 @@ def _apply_contact_counter_chip(battle: Battle,
     Returns:
         bool: ダメージが適用された場合True
     """
-    if battle.move_executor.is_contact(ctx):
+    if battle.query.is_contact(ctx):
         v = battle.modify_hp(ctx.attacker, r=-ratio, reason="ability")
         return bool(v)
     return False
@@ -881,7 +881,7 @@ def マイティチェンジ_change_form(battle: Battle, ctx: EventContext, valu
 def わるいてぐせ_steal_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """わるいてぐせ特性: 直接攻撃を受けた後に相手のアイテムを奪う。"""
     if (
-        battle.move_executor.is_contact(ctx)
+        battle.query.is_contact(ctx)
         and not ctx.defender.fainted
     ):
         battle.take_item(ctx.attacker, move=ctx.move)
@@ -904,7 +904,7 @@ def せいでんき_on_damage(battle: Battle, ctx: EventContext, value: Any) -> 
 def どくしゅ_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """どくしゅ特性: 直接攻撃でダメージを与えた相手を30%でどくにする。"""
     if (
-        battle.move_executor.is_contact(ctx)
+        battle.query.is_contact(ctx)
         and battle.random.random() < battle.resolve_secondary_chance(ctx, 0.3)
     ):
         return HandlerReturn(value=value)
@@ -944,7 +944,7 @@ def がんじょうあご_modify_power(battle: Battle, ctx: EventContext, value:
 
 def かたいツメ_modify_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """かたいツメ特性: 直接攻撃の威力を1.3倍にする。"""
-    if ctx.move is not None and battle.move_executor.is_contact(ctx):
+    if ctx.move is not None and battle.query.is_contact(ctx):
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
@@ -1427,7 +1427,7 @@ def こおりのりんぷん_reduce_special_damage(battle: Battle, ctx: EventCon
 
 def もふもふ_modify_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """もふもふ特性: 接触技被ダメ0.5倍・炎技被ダメ2倍を適用する。"""
-    if battle.move_executor.is_contact(ctx):
+    if battle.query.is_contact(ctx):
         value = apply_fixed_modifier(value, 2048)
     if ctx.move.type == "ほのお":
         value = apply_fixed_modifier(value, 8192)

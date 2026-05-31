@@ -1,5 +1,3 @@
-# TODO : Managerクラスごとにモジュールをわける
-
 """ポケモンの状態管理（状態異常・揮発状態）を行うモジュール。
 
 Pokemonクラスから状態管理ロジックを分離し、Battleクラスに集約する。
@@ -8,6 +6,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
+    from jpoke.model import Move
 
 from jpoke.model import Pokemon
 from jpoke.enums import Event
@@ -44,8 +43,14 @@ class PokemonQuery:
 
     @property
     def _events(self) -> EventManager:
-        """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
+
+    def get_forced_move_name(self, pokemon: Pokemon) -> str | None:
+        """強制行動中のポケモンが実行すべき技名を返す。"""
+        for volatile in pokemon.volatiles.values():
+            if volatile.data.forced:
+                return volatile.move_name
+        return None
 
     def is_floating(self, pokemon: Pokemon) -> bool:
         """浮いている状態か判定する。
@@ -99,9 +104,28 @@ class PokemonQuery:
             False
         )
 
-    def get_forced_move_name(self, pokemon: Pokemon) -> str | None:
-        """強制行動中のポケモンが実行すべき技名を返す。"""
-        for volatile in pokemon.volatiles.values():
-            if volatile.data.forced:
-                return volatile.move_name
-        return None
+    def is_contact(self, ctx: EventContext) -> bool:
+        """技が接触技かどうかを判定する。
+        Args:
+            ctx: EventContextインスタンス
+
+         Returns:
+            技が接触技の場合True
+        """
+        return self._events.emit(
+            Event.ON_CHECK_CONTACT,
+            ctx,
+            ctx.move.has_label("contact")
+        )
+
+    def deals_physical_damage(self, attacker: Pokemon, move: Move) -> bool:
+        """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
+
+        Returns:
+            技が物理ダメージを与える場合True
+        """
+        move_category = self.battle.resolve_move_category(attacker, move)
+        return (
+            move_category == "物理"
+            or move.has_label("physical_damage")
+        )

@@ -839,7 +839,7 @@ def _run_protect(battle: Battle,
 
     battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCEEDED)
 
-    if battle.move_executor.is_contact(ctx):
+    if battle.query.is_contact(ctx):
         if stats_change_on_contact:
             battle.modify_stats(ctx.attacker, stats_change_on_contact, source=ctx.defender)
         if ailment_on_contact:

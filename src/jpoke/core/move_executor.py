@@ -45,11 +45,6 @@ class MoveExecutor:
     """
 
     def __init__(self, battle: Battle):
-        """MoveExecutorを初期化。
-
-        Args:
-            battle: 親となるBattleインスタンス
-        """
         self.battle = battle
 
         # デバッグ用
@@ -70,14 +65,6 @@ class MoveExecutor:
         self.critical = None
 
     def __deepcopy__(self, memo):
-        """MoveExecutorインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            MoveExecutor: コピーされたMoveExecutorインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -94,7 +81,6 @@ class MoveExecutor:
 
     @property
     def _events(self) -> EventManager:
-        """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
     def _resolve_hit_count(self, ctx: EventContext) -> int:
@@ -197,13 +183,17 @@ class MoveExecutor:
         """
         # 急所ランクの計算
         self.crit_rank = self._events.emit(
-            Event.ON_CALC_CRITICAL_RANK, ctx, ctx.move.critical_rank
+            Event.ON_CALC_CRITICAL_RANK,
+            ctx,
+            ctx.move.critical_rank
         )
         self.crit_rank = clamp_critic(self.crit_rank)
 
         # 急所確率の計算
         crit_rate = self._events.emit(
-            Event.ON_MODIFY_CRITICAL_RATE, ctx, CRIT_RATES[self.crit_rank]
+            Event.ON_MODIFY_CRITICAL_RATE,
+            ctx,
+            CRIT_RATES[self.crit_rank]
         )
         return self.battle.random.random() < crit_rate
 
@@ -419,20 +409,6 @@ class MoveExecutor:
                 payload={"move": ctx.move.name}
             )
 
-    def is_contact(self, ctx: EventContext) -> bool:
-        """技が接触技かどうかを判定する。
-        Args:
-            ctx: EventContextインスタンス
-
-         Returns:
-            技が接触技の場合True
-        """
-        return self._events.emit(
-            Event.ON_CHECK_CONTACT,
-            ctx,
-            ctx.move.has_label("contact")
-        )
-
     def resolve_move_type(self, attacker: Pokemon, move: Move) -> Type:
         """技の有効タイプを取得する。
 
@@ -470,17 +446,6 @@ class MoveExecutor:
             Event.ON_MODIFY_MOVE_CATEGORY,
             EventContext(source=attacker, move=move),
             value=move.category
-        )
-
-    def deals_physical_damage(self, attacker: Pokemon, move: Move) -> bool:
-        """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
-
-        Returns:
-            技が物理ダメージを与える場合True
-        """
-        return (
-            move.has_label("physical_damage")
-            or self.resolve_move_category(attacker, move) == "物理"
         )
 
     def _consume_pp(self, ctx: EventContext):

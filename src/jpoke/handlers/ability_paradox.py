@@ -117,7 +117,7 @@ def apply_atk_modifier(battle: Battle, ctx: EventContext, value: int) -> Handler
 
 def apply_def_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
-    stat = "B" if battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move) else "D"
+    stat = "B" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "D"
     if (
         ctx.defender.paradox_boost_active
         and ctx.defender.paradox_boost_stat == stat

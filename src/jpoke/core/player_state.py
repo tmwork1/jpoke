@@ -77,31 +77,6 @@ class PlayerState:
         """割り込み状態かどうかを判定する。"""
         return self.interrupt != Interrupt.NONE
 
-    def can_use_terastal(self) -> bool:
-        """テラスタルが使用可能かどうかを判定する。
-
-        選出したポケモン全てがテラスタルしていない場合に使用可能。
-
-        Returns:
-            テラスタルが使用可能な場合True
-        """
-        selection = self.selection
-        return all(not mon.terastallized for mon in selection)
-
-    def can_use_megaevol(self) -> bool:
-        """メガシンカが使用可能かどうかを判定する。
-
-        選出したポケモンのうち、メガシンカ可能なポケモンがいる場合に使用可能。
-
-        Returns:
-            メガシンカが使用可能な場合True
-        """
-        selection = self.selection
-        return (
-            all(not mon.megaevolved for mon in selection)
-            and self.active.can_megaevolve()
-        )
-
     def tod_score(self, alpha: float = 1) -> float:
         """プレイヤーのTime Over Death（TOD）スコアを計算。
 

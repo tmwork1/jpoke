@@ -39,7 +39,6 @@ class AbilityManager:
 
     @property
     def _events(self):
-        """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
 
     def change_ability(self, mon: Pokemon, ability: str) -> None:

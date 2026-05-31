@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .battle import Battle
     from .player import Player
+    from .player_state import PlayerState
 
 from jpoke.utils import fast_copy
 from jpoke.enums import Event, Command
@@ -55,11 +56,11 @@ class CommandManager:
         commands = [Command.get_move_command(i) for i in move_indexes]
 
         # メガシンカ
-        if state.can_use_megaevol() and active.can_megaevolve():
+        if self._can_use_megaevol(state):
             commands += [Command.get_megaevol_command(i) for i in move_indexes]
 
         # テラスタル
-        if state.can_use_terastal() and active.can_terastallize():
+        if self._can_use_terastal(state):
             commands += [Command.get_terastal_command(i) for i in move_indexes]
 
         # 交代コマンドを追加
@@ -111,3 +112,31 @@ class CommandManager:
             return Move("わるあがき")
 
         return attacker.moves[command.index]
+
+    def _can_use_megaevol(self, state: PlayerState) -> bool:
+        """メガシンカが使用可能かどうかを判定する。
+
+        選出したポケモンのうち、メガシンカ可能なポケモンがいる場合に使用可能。
+
+        Returns:
+            メガシンカが使用可能な場合True
+        """
+        selection = state.selection
+        return (
+            all(not mon.megaevolved for mon in selection)
+            and state.active.can_megaevolve()
+        )
+
+    def _can_use_terastal(self, state: PlayerState) -> bool:
+        """テラスタルが使用可能かどうかを判定する。
+
+        選出したポケモン全てがテラスタルしていない場合に使用可能。
+
+        Returns:
+            テラスタルが使用可能な場合True
+        """
+        selection = state.selection
+        return (
+            all(not mon.terastallized for mon in selection)
+            and state.active.can_terastallize()
+        )

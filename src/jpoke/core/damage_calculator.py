@@ -67,7 +67,6 @@ class DamageCalculator:
 
     @property
     def _events(self) -> EventManager:
-        """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
     def calc_damage_range(self,
@@ -356,7 +355,7 @@ class DamageCalculator:
         move = ctx.move
 
         # ステータス
-        if self.battle.move_executor.deals_physical_damage(attacker, move):
+        if self.battle.query.deals_physical_damage(attacker, move):
             stat = "B"
         else:
             stat = "D"

@@ -46,7 +46,6 @@ class SwitchManager:
 
     @property
     def _events(self) -> EventManager:
-        """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
     def can_switch(self, state: PlayerState) -> bool:

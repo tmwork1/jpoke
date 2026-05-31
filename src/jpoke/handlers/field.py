@@ -291,7 +291,7 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: EventContext, v
 def ワンダールーム_def_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """ワンダールーム中は防御実数値参照を入れ替える。"""
     catergory_to_stat = {"物理": "D", "特殊": "B"}
-    base_stat = "B" if battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move) else "D"
+    base_stat = "B" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "D"
     swapped_stat = catergory_to_stat.get(base_stat, base_stat)
     base_value = max(1, ctx.defender.stats[base_stat])
     swap_value = max(1, ctx.defender.stats[swapped_stat])

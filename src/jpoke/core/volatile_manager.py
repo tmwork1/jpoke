@@ -44,7 +44,6 @@ class VolatileManager:
 
     @property
     def _events(self) -> EventManager:
-        """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
 
     def apply(self,

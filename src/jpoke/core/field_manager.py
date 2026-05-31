@@ -57,7 +57,6 @@ class BaseFieldManager(Generic[T]):
 
     @property
     def _events(self) -> EventManager:
-        """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
     def get(self, name: T) -> Field:

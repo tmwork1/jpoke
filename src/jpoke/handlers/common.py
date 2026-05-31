@@ -269,7 +269,7 @@ def deals_physical_damage(battle: Battle, ctx: EventContext) -> bool:
     Returns:
         技が物理ダメージを与える場合True
     """
-    return battle.move_executor.deals_physical_damage(ctx.attacker, ctx.move)
+    return battle.query.deals_physical_damage(ctx.attacker, ctx.move)
 
 
 def is_super_effective(battle: Battle, ctx: EventContext) -> bool:

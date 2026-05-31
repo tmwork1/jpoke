@@ -100,44 +100,50 @@ class ItemManager:
             True
         )
 
-    def _change_item(self, mon: Pokemon, item_name: str) -> None:
+    def _change_item(self, mon: Pokemon, name: str) -> None:
         """ポケモンのアイテムを更新し、ハンドラ登録も同期する。
 
         Args:
             mon: アイテムを変更するポケモン
-            item_name: 新しいアイテムの名前
+            name: 新しいアイテムの名前
         """
         is_active = self.battle.is_active(mon)
         ctx = EventContext(source=mon)
 
         # アイテムを変更する前に、現在のアイテムのハンドラを解除してイベントを発火する
         if mon.has_item():
-            if not item_name:
+            if not name:
                 mon.last_lost_item_name = mon.item.base_name
             self._events.emit(Event.ON_ITEM_LOST, ctx)
             mon.item.unregister_handlers(self._events, mon)
 
         # アイテムを変更してハンドラを登録し、イベントを発火する
-        mon.item = Item(item_name)
+        mon.item = Item(name)
         mon.item.revealed = True
 
         if mon.item.name:
-            self.battle.add_event_log(mon, LogCode.ITEM_GAINED,
-                                      payload={"item": mon.item.name})
+            self.battle.add_event_log(
+                mon,
+                LogCode.ITEM_GAINED,
+                payload={"item": mon.item.name}
+            )
         else:
-            self.battle.add_event_log(mon, LogCode.ITEM_LOST,
-                                      payload={"item": mon.last_lost_item_name})
+            self.battle.add_event_log(
+                mon,
+                LogCode.ITEM_LOST,
+                payload={"item": mon.last_lost_item_name}
+            )
 
-        if is_active and item_name:
+        if is_active and name:
             mon.item.register_handlers(self._events, mon)
             self._events.emit(Event.ON_ITEM_GAINED, ctx)
 
-    def gain_item(self, target: Pokemon, item_name: str) -> bool:
+    def gain_item(self, target: Pokemon, name: str) -> bool:
         """対象のポケモンがアイテムを得る。
 
         Args:
             target: アイテムを得るポケモン
-            item_name: 得るアイテムの名前
+            name: 得るアイテムの名前
 
         Returns:
             アイテムを得ることに成功した場合はTrue
@@ -145,7 +151,7 @@ class ItemManager:
         # 対象がすでにアイテムを持っている場合は失敗
         if target.has_item():
             return False
-        self._change_item(target, item_name)
+        self._change_item(target, name)
         return True
 
     def remove_item(self,
@@ -185,10 +191,10 @@ class ItemManager:
             入れ替えに成功した場合はTrue
         """
         mons = self.battle.actives
-        item_names = [mon.item.name for mon in mons]
+        names = [mon.item.name for mon in mons]
 
         # 両方ともアイテムを持っていない場合は失敗
-        if not any(item_names):
+        if not any(names):
             return False
 
         # アイテムの変更が禁止されている場合は失敗
@@ -198,8 +204,8 @@ class ItemManager:
             return False
 
         for i, mon in enumerate(mons):
-            new_item_name = item_names[1 - i]  # 入れ替え先のアイテム名
-            self._change_item(mon, new_item_name)
+            new_name = names[1 - i]  # 入れ替え先のアイテム名
+            self._change_item(mon, new_name)
         return True
 
     def take_item(self,

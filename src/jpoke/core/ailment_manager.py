@@ -46,33 +46,11 @@ class AilmentManager:
 
     @property
     def _events(self) -> EventManager:
-        """Battleのイベントマネージャーへのショートカットプロパティ。"""
         return self.battle.events
-
-    @staticmethod
-    def can_apply_by_type(ailment: AilmentName,
-                          target: Pokemon,
-                          source: Pokemon | None) -> bool:
-        """タイプによって状態異常を付与できるか判定する。"""
-        match ailment:
-            case "どく" | "もうどく":
-                if source is not None and source.ability.name == "ふしょく":
-                    return True
-                return not (target.has_type("どく") or target.has_type("はがね"))
-            case "やけど":
-                return not target.has_type("ほのお")
-
-            case "まひ":
-                return not target.has_type("でんき")
-
-            case "こおり":
-                return not target.has_type("こおり")
-
-        return True
 
     def apply(self,
               target: Pokemon,
-              ailment_name: AilmentName,
+              name: AilmentName,
               count: int | None = None,
               source: Pokemon | None = None,
               overwrite: bool = False,
@@ -81,7 +59,7 @@ class AilmentManager:
 
         Args:
             target: 対象のポケモン
-            ailment_name: 状態異常名
+            name: 状態異常名
             count: 継続ターン数（必要な状態異常のみ）
             source: 状態異常の原因となったポケモン
             overwrite: Trueの場合、既存の状態異常を上書き
@@ -98,11 +76,11 @@ class AilmentManager:
             return False
 
         # 重ねがけ不可
-        if ailment_name == target.ailment.name:
+        if name == target.ailment.name:
             return False
 
         # タイプによる無効化をチェック
-        if not self.can_apply_by_type(ailment_name, target, source):
+        if not self._can_apply_by_type(name, target, source):
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
@@ -112,7 +90,7 @@ class AilmentManager:
             apply_ctx = EventContext(target=target, source=source)
 
         # ハンドラーが空値を返した場合は状態異常を付与しない
-        resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_AILMENT, apply_ctx, ailment_name)
+        resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_AILMENT, apply_ctx, name)
         if not resolved_name:
             return False
 
@@ -124,6 +102,27 @@ class AilmentManager:
                                   payload={"ailment": resolved_name})
         target.ailment = Ailment(resolved_name, count=count)
         target.ailment.register_handlers(self._events, target)
+        return True
+
+    def _can_apply_by_type(self,
+                           ailment: AilmentName,
+                           target: Pokemon,
+                           source: Pokemon | None) -> bool:
+        """タイプによって状態異常を付与できるか判定する。"""
+        match ailment:
+            case "どく" | "もうどく":
+                if source is not None and source.ability.name == "ふしょく":
+                    return True
+                return not (target.has_type("どく") or target.has_type("はがね"))
+            case "やけど":
+                return not target.has_type("ほのお")
+
+            case "まひ":
+                return not target.has_type("でんき")
+
+            case "こおり":
+                return not target.has_type("こおり")
+
         return True
 
     def remove(self, target: Pokemon) -> bool:

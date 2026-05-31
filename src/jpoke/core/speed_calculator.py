@@ -26,22 +26,9 @@ class SpeedCalculator:
     """
 
     def __init__(self, battle: Battle):
-        """SpeedCalculatorを初期化。
-
-        Args:
-            battle: 親となるBattleインスタンス
-        """
         self.battle = battle
 
     def __deepcopy__(self, memo):
-        """SpeedCalculatorインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            SpeedCalculator: コピーされたSpeedCalculatorインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -58,7 +45,6 @@ class SpeedCalculator:
 
     @property
     def _events(self) -> EventManager:
-        """イベント管理システムへのショートカットプロパティ。"""
         return self.battle.events
 
     def calc_effective_speed(self, mon: Pokemon) -> int:
@@ -131,7 +117,7 @@ class SpeedCalculator:
             base_priority
         )
 
-    def calc_speed_order(self) -> list[Pokemon]:
+    def resolve_speed_order(self) -> list[Pokemon]:
         """現在場に出ているポケモンの素早さ順序を計算。
 
         実効素早さが同じ場合はランダムに決定。
@@ -154,7 +140,7 @@ class SpeedCalculator:
             _, actives = zip(*paired)
         return actives
 
-    def calc_action_order(self) -> list[Pokemon]:
+    def resolve_action_order(self) -> list[Pokemon]:
         """技の行動順序を計算。
 
         優先度と実効素早さを考慮して行動順を決定。

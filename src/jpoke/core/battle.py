@@ -396,7 +396,7 @@ class Battle:
         Returns:
             素早さの速い順にソートされたポケモンのリスト
         """
-        return self.speed_calculator.calc_speed_order()
+        return self.speed_calculator.resolve_speed_order()
 
     def calc_action_order(self) -> list[Pokemon]:
         """行動順序を計算（SpeedCalculatorへの委譲）。
@@ -404,7 +404,7 @@ class Battle:
         Returns:
             行動順にソートされたポケモンのリスト
         """
-        return self.speed_calculator.calc_action_order()
+        return self.speed_calculator.resolve_action_order()
 
     def judge_winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。

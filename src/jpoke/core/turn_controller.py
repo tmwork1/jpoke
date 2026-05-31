@@ -97,7 +97,7 @@ class TurnController:
             raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
 
         # ターン開始処理
-        self._begin_turn(commands)
+        self._begin_turn()
 
         # 引数のコマンドをスケジュールに追加する
         for player, cmd in commands.items():
@@ -118,7 +118,7 @@ class TurnController:
         # ターン終了時の処理
         self._run_end_phase()
 
-    def _begin_turn(self, commands: dict[Player, Command]):
+    def _begin_turn(self):
         """ターン開始処理を実行する。"""
         self.battle.turn += 1
         if self.battle.is_new_turn():
