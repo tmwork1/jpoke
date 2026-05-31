@@ -62,6 +62,25 @@ class SwitchManager:
         """Battleのイベントシステムへのショートカットプロパティ。"""
         return self.battle.events
 
+    def can_switch(self, state: PlayerState) -> bool:
+        """プレイヤーが交代可能かどうかを判定する。
+
+        Args:
+            state: 交代可能かを判定するプレイヤーの状態
+
+        Returns:
+            bool: 交代可能な場合True、そうでない場合False
+        """
+        # 控えのポケモンがすべて瀕死の場合は交代不可
+        if all(mon.fainted for mon in state.bench):
+            return False
+
+        # 場のポケモンがとらわれ状態にある場合は交代不可
+        if self.battle.query_manager.is_trapped(state.active):
+            return False
+
+        return True
+
     def _switch_in(self, state: PlayerState, mon: Pokemon):
         # TODO : 関数内の処理はハンドラの登録に限定すべきか
         """ポケモンの入場時ハンドラーを登録する。
@@ -206,7 +225,7 @@ class SwitchManager:
 
             self.run_switch(
                 player,
-                player.team[command.index],
+                state.team[command.index],
                 emit_switch_in_event=emit_on_each_switch
             )
             switched_players.append(player)

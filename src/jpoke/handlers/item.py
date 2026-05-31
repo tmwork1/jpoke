@@ -124,7 +124,7 @@ def だっしゅつパック_trigger_switch(battle: Battle, ctx: BattleContext, 
     return HandlerReturn(value=value)
 
 
-def だっしゅつボタン_trigger_switch(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
+def だっしゅつボタン_set_interrupt(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
     player = battle.get_player(ctx.defender)
     battle.player_states[player].interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn(value=value)

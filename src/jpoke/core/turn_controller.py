@@ -156,7 +156,7 @@ class TurnController:
                     command = state.pop_command()
 
                     # 交代を実行
-                    new = player.team[command.index]
+                    new = state.team[command.index]
                     self.battle.run_switch(player, new)
 
                 # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定

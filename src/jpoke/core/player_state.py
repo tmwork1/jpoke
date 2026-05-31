@@ -54,6 +54,11 @@ class PlayerState:
         """選出されているポケモンのリストを取得する。"""
         return [self.team[i] for i in self.selection_indexes]
 
+    @property
+    def bench(self) -> list[Pokemon]:
+        """控えのポケモンのリストを取得する。"""
+        return [mon for mon in self.team if mon is not self.active]
+
     def reserve_command(self, command: Command):
         """コマンドを予約する。"""
         self.reserved_commands.append(command)

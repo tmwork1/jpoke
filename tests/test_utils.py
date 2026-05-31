@@ -153,23 +153,5 @@ def reserve_command(battle: Battle,
         state.reserve_command(command)
 
 
-def can_switch(battle: Battle, idx: int) -> bool:
-    """指定されたプレイヤーが交代可能かチェックする。
-
-    Args:
-        battle: Battleインスタンス
-        idx: プレイヤーのインデックス（0または1）
-
-    Returns:
-        bool: 交代可能な場合True、そうでない場合False
-
-    Raises:
-        IndexError: 無効なプレイヤーインデックスが指定された場合
-    """
-    player = battle.players[idx]
-    commands = battle.get_available_action_commands(player)
-    return any(c.is_switch for c in commands)
-
-
 def end_turn(battle: Battle):
     battle.events.emit(Event.ON_TURN_END)

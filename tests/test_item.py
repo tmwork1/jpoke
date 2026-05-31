@@ -43,7 +43,7 @@ def test_きれいなぬけがら():
         team0=[Pokemon("ピカチュウ", item="きれいなぬけがら"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ", ability="かげふみ")],
     )
-    assert t.can_switch(battle, 0)
+    assert battle.can_switch(battle.players[0])
 
 # ──────────────────────────────────────────────────────────────────
 # 天候石
@@ -100,12 +100,14 @@ def test_だっしゅつボタン():
         team0=[Pokemon("ピカチュウ", item="だっしゅつボタン"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
     )
-    battle.advance_turn()
+    player = battle.players[0]
+    assert bool(battle.get_available_switch_commands(player))
     state = battle._player_states[0]
-    mon = state.team[0]
+    ejected_mon = battle.actives[0]
+    battle.advance_turn()
     assert state.active_index == 1
-    assert mon.item.revealed
-    assert mon.item.consumed
+    assert ejected_mon.item.revealed
+    assert ejected_mon.item.consumed
 
 
 # ──────────────────────────────────────────────────────────────────

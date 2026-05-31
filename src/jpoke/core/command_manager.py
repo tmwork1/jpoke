@@ -39,21 +39,20 @@ class CommandManager:
 
     def get_available_selection_commands(self, player: Player) -> list[Command]:
         """ポケモン選出時に使用可能なコマンドを取得する。"""
-        return Command.selection_commands()[:len(player.team)]
+        state = self.battle.player_states[player]
+        return Command.selection_commands()[:len(state.team)]
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
         """交代可能なコマンドのリストを取得する。"""
-        active = self.battle.get_active(player)
-        if self.battle.query_manager.is_trapped(active):
+        if not self.battle.can_switch(player):
             return []
-        selection = self.battle.player_states[player].selection
-        return [cmd for mon, cmd in zip(player.team, Command.switch_commands())
-                if mon in selection and mon is not active]
+        state = self.battle.player_states[player]
+        return [Command.get_switch_command(state.team.index(mon)) for mon in state.bench]
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         """行動時に使用可能なコマンドを取得する。"""
         state = self.battle.player_states[player]
-        active = self.battle.get_active(player)
+        active = state.active
         move_indexes = [i for i, move in enumerate(active.moves) if move.pp > 0]
 
         # 通常技

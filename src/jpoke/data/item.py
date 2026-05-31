@@ -358,7 +358,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_DAMAGE_HIT: h.ItemHandler(
-                h.だっしゅつボタン_trigger_switch,
+                h.だっしゅつボタン_set_interrupt,
                 subject_spec="defender:self",
             )
         }

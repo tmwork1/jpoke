@@ -150,11 +150,12 @@ def blow(battle: Battle, ctx: BattleContext, value: Any) -> HandlerReturn:
         HandlerReturn: 吹き飛ばしが成功した場合はTrue、失敗した場合はFalse
     """
     player = battle.get_player(ctx.defender)
+    state = battle.player_states[player]
     commands = battle.get_available_switch_commands(player)
     success = bool(commands)
     if success:
         command = battle.random.choice(commands)
-        battle.run_switch(player, player.team[command.index])
+        battle.run_switch(player, state.team[command.index])
     return HandlerReturn(value=success)
 
 

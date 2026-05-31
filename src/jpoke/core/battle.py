@@ -433,8 +433,7 @@ class Battle:
         """プレイヤーの交代コマンドを解決する。"""
         i = self.players.index(player)
         sim = self.copy(player)
-        sim_player = sim.players[i]
-        return sim_player.choose_switch_command(sim)
+        return player.choose_switch_command(sim)
 
     def start(self, commands: dict[Player, list[Command]] | None = None):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
@@ -724,6 +723,11 @@ class Battle:
     def resolve_secondary_chance(self, ctx: BattleContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
         return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
+
+    def can_switch(self, player: Player) -> bool:
+        """プレイヤーが交代可能かどうかを判定する（SwitchManagerへの委譲）。"""
+        state = self.player_states[player]
+        return self.switch_manager.can_switch(state)
 
     def print_logs(self, turn: int | None = None):
         """指定したターンのログを整形して出力。
