@@ -53,7 +53,7 @@ class ItemManager:
         is_enabled = mon.item.enabled
 
         if was_enabled and not is_enabled:
-            self.battle.events.emit(
+            self._events.emit(
                 Event.ON_ITEM_DISABLED,
                 EventContext(source=mon)
             )
@@ -73,7 +73,7 @@ class ItemManager:
         is_enabled = mon.item.enabled
 
         if not was_enabled and is_enabled:
-            self.battle.events.emit(
+            self._events.emit(
                 Event.ON_ITEM_ENABLED,
                 EventContext(source=mon)
             )
@@ -114,7 +114,7 @@ class ItemManager:
         if mon.has_item():
             if not item_name:
                 mon.last_lost_item_name = mon.item.base_name
-            self.battle.events.emit(Event.ON_ITEM_LOST, ctx)
+            self._events.emit(Event.ON_ITEM_LOST, ctx)
             mon.item.unregister_handlers(self._events, mon)
 
         # アイテムを変更してハンドラを登録し、イベントを発火する
@@ -130,7 +130,7 @@ class ItemManager:
 
         if is_active and item_name:
             mon.item.register_handlers(self._events, mon)
-            self.battle.events.emit(Event.ON_ITEM_GAINED, ctx)
+            self._events.emit(Event.ON_ITEM_GAINED, ctx)
 
     def gain_item(self, target: Pokemon, item_name: str) -> bool:
         """対象のポケモンがアイテムを得る。

@@ -14,7 +14,7 @@ import test_utils as t
 def test_はれ_ほのお強化():
     """はれ: ほのお技威力1.5倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("はれ", 99),
     )
@@ -25,7 +25,7 @@ def test_はれ_ほのお強化():
 def test_はれ_みず弱化():
     """はれ: みず技威力0.5倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("はれ", 99),
     )
@@ -37,7 +37,7 @@ def test_あめ_みず強化():
     """あめ: みず技威力1.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         weather=("あめ", 99),
     )
     t.run_move(battle, 0)
@@ -48,7 +48,7 @@ def test_あめ_ほのお弱化():
     """あめ: ほのお技威力0.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
         weather=("あめ", 99),
     )
     t.run_move(battle, 0)
@@ -62,7 +62,7 @@ def test_あめ_ほのお弱化():
 def test_すなあらし_いわ特防強化():
     """すなあらし: いわタイプ特防1.5倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["スピードスター"])],
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスター"])],
         team1=[Pokemon("イシツブテ")],
         weather=("すなあらし", 99),
     )
@@ -107,7 +107,7 @@ def test_すなあらし_タイプ免疫():
 def test_すなあらし_特性免疫(ability_name: str):
     """特定の特性を持つポケモンはすなあらしのダメージを受けない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability=ability_name)],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
         team1=[Pokemon("ピカチュウ")],
         weather=("すなあらし", 999),
     )
@@ -123,7 +123,7 @@ def test_すなあらし_特性免疫(ability_name: str):
 def test_ゆき_こおり防御強化():
     """ゆき: こおりタイプ防御1.5倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ユキワラシ")],
         weather=("ゆき", 99),
     )
@@ -138,7 +138,7 @@ def test_ゆき_こおり防御強化():
 def test_おおひでり_ほのお強化():
     """おおひでり: ほのお技威力1.5倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
@@ -149,7 +149,7 @@ def test_おおひでり_ほのお強化():
 def test_おおひでり_みず技を失敗させる():
     """おおひでり: みずタイプ技は攻撃・変化を問わず失敗する"""
     attack_battle = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
@@ -157,7 +157,7 @@ def test_おおひでり_みず技を失敗させる():
     assert attack_battle.move_executor.move_success is False
 
     status_battle = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずびたし"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずびたし"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
@@ -168,7 +168,7 @@ def test_おおひでり_みず技を失敗させる():
 def test_おおひでり_ほのお技はブロックされない():
     """おおひでり: ほのお技はブロックされない"""
     battle = t.start_battle(
-        team0=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおひでり", 99),
     )
@@ -179,7 +179,7 @@ def test_おおひでり_ほのお技はブロックされない():
 def test_おおあめ_ほのお技を失敗させる():
     """おおあめ: ほのおタイプ技は攻撃・変化を問わず失敗する"""
     attack_battle = t.start_battle(
-        team0=[Pokemon("ヒトカゲ", moves=["ひのこ"])],
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
@@ -187,7 +187,7 @@ def test_おおあめ_ほのお技を失敗させる():
     assert attack_battle.move_executor.move_success is False
 
     status_battle = t.start_battle(
-        team0=[Pokemon("ヒトカゲ", moves=["おにび"])],
+        team0=[Pokemon("ヒトカゲ", move_names=["おにび"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
@@ -198,7 +198,7 @@ def test_おおあめ_ほのお技を失敗させる():
 def test_おおあめ_みず技はブロックされない():
     """おおあめ: みず技はブロックされない"""
     battle = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
@@ -209,7 +209,7 @@ def test_おおあめ_みず技はブロックされない():
 def test_おおあめ_みず強化():
     """おおあめ: みず技威力1.5倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
         weather=("おおあめ", 99),
     )
@@ -260,7 +260,7 @@ def test_強天候同士は上書きできる():
 
 def test_らんきりゅう_ひこう弱点半減():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         team1=[Pokemon("ピジョン")],
         weather=("らんきりゅう", 99),
     )
@@ -271,7 +271,7 @@ def test_らんきりゅう_ひこう弱点半減():
 def test_らんきりゅう_ひこう以外は軽減しない():
     """らんきりゅう: ひこうタイプでなければ軽減しない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         team1=[Pokemon("カビゴン")],
         weather=("らんきりゅう", 99),
     )
@@ -292,7 +292,7 @@ def test_エレキフィールド_でんき強化():
     """エレキフィールド: でんき技威力1.3倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         terrain=("エレキフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -302,7 +302,7 @@ def test_エレキフィールド_でんき強化():
 def test_エレキフィールド_でんき強化は接地ポケモンのみ():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン", moves=["でんきショック"])],
+        team0=[Pokemon("ピジョン", move_names=["でんきショック"])],
         terrain=("エレキフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -313,7 +313,7 @@ def test_グラスフィールド_くさ強化():
     """グラスフィールド: くさ技威力1.3倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("フシギダネ", moves=["このは"])],
+        team0=[Pokemon("フシギダネ", move_names=["このは"])],
         terrain=("グラスフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -321,7 +321,7 @@ def test_グラスフィールド_くさ強化():
 
     floating_battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン", moves=["このは"])],
+        team0=[Pokemon("ピジョン", move_names=["このは"])],
         terrain=("グラスフィールド", 99),
     )
     t.run_move(floating_battle, 0)
@@ -332,7 +332,7 @@ def test_サイコフィールド_エスパー強化():
     """サイコフィールド: エスパー技威力1.3倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("フーディン", moves=["サイコキネシス"])],
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"])],
         terrain=("サイコフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -340,7 +340,7 @@ def test_サイコフィールド_エスパー強化():
 
     floating_battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン", moves=["サイコキネシス"])],
+        team0=[Pokemon("ピジョン", move_names=["サイコキネシス"])],
         terrain=("サイコフィールド", 99),
     )
     t.run_move(floating_battle, 0)
@@ -351,7 +351,7 @@ def test_ミストフィールド_ドラゴン技弱化():
     """ミストフィールド: ドラゴン技威力0.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("カイリュー", moves=["りゅうのはどう"])],
+        team0=[Pokemon("カイリュー", move_names=["りゅうのはどう"])],
         terrain=("ミストフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -414,7 +414,7 @@ def test_グラスフィールド_じしん弱化():
     """グラスフィールド: じしん威力0.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("サンドパン", moves=["じしん"])],
+        team0=[Pokemon("サンドパン", move_names=["じしん"])],
         terrain=("グラスフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -425,7 +425,7 @@ def test_グラスフィールド_じならし弱化():
     """グラスフィールド: じならし威力0.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("サンドパン", moves=["じならし"])],
+        team0=[Pokemon("サンドパン", move_names=["じならし"])],
         terrain=("グラスフィールド", 99),
     )
     t.run_move(battle, 0)
@@ -463,7 +463,7 @@ def test_グラスフィールド_回復():
 def test_サイコフィールド_先制技無効():
     """サイコフィールド: 先制技無効"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
         team1=[Pokemon("ピカチュウ")],
         terrain=("サイコフィールド", 99),
     )
@@ -474,7 +474,7 @@ def test_サイコフィールド_先制技無効():
 def test_サイコフィールド_浮遊は先制技有効():
     """サイコフィールド: 浮遊相手には先制技が有効"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
         team1=[Pokemon("ピジョン")],
         terrain=("サイコフィールド", 99),
     )
@@ -514,7 +514,7 @@ def test_ミストフィールド_混乱防止():
 def test_じゅうりょく_命中補正():
     """じゅうりょく: 命中率5/3倍"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["でんじほう"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんじほう"])],
         team1=[Pokemon("ピカチュウ")],
         field={"じゅうりょく": 99}
     )
@@ -529,7 +529,7 @@ def test_じゅうりょく_浮遊無効():
         team0=[Pokemon("ピジョン")],
         field={"じゅうりょく": 99},
     )
-    assert not battle.query_manager.is_floating(battle.actives[0])
+    assert not battle.query.is_floating(battle.actives[0])
 
 # ──────────────────────────────────────────────────────────────────
 # トリックルーム
@@ -538,8 +538,8 @@ def test_じゅうりょく_浮遊無効():
 
 def test_トリックルーム_素早さ逆順():
     battle = t.start_battle(
-        team0=[Pokemon("ヤドン", moves=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ヤドン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         field={"トリックルーム": 5},
     )
     t.reserve_command(battle)
@@ -549,8 +549,8 @@ def test_トリックルーム_素早さ逆順():
 
 def test_トリックルーム_技優先度が優先():
     battle = t.start_battle(
-        team0=[Pokemon("ヤドン", moves=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ", moves=["でんこうせっか"])],
+        team0=[Pokemon("ヤドン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
         field={"トリックルーム": 5},
     )
     t.reserve_command(battle)
@@ -565,7 +565,7 @@ def test_トリックルーム_技優先度が優先():
 def test_マジックルーム_道具効果無効化():
     """マジックルーム: アイテム効果が無効化される"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="たべのこし")],
+        team0=[Pokemon("ピカチュウ", item_name="たべのこし")],
         team1=[Pokemon("ピカチュウ")],
         field={"マジックルーム": 99},
     )
@@ -582,7 +582,7 @@ def test_マジックルーム_道具効果無効化():
 def test_ワンダールーム_物理技は特防側を参照():
     """ワンダールーム: 物理技の防御参照が特防側に入れ替わる"""
     normal = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
     )
     normal_defender = normal.actives[1]
@@ -592,7 +592,7 @@ def test_ワンダールーム_物理技は特防側を参照():
     normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
     wonder = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
         field={"ワンダールーム": 99},
     )
@@ -608,7 +608,7 @@ def test_ワンダールーム_物理技は特防側を参照():
 def test_ワンダールーム_特殊技は防御側を参照():
     """ワンダールーム: 特殊技の防御参照が防御側に入れ替わる"""
     normal = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
     )
     normal_defender = normal.actives[1]
@@ -618,7 +618,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
     normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
     wonder = t.start_battle(
-        team0=[Pokemon("ゼニガメ", moves=["みずでっぽう"])],
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
         field={"ワンダールーム": 99},
     )
@@ -640,7 +640,7 @@ def test_リフレクター_物理半減():
     """リフレクター: 物理技ダメージ軽減"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         side1={"リフレクター": 5},
     )
     t.run_move(battle, 0)
@@ -651,7 +651,7 @@ def test_リフレクター_特殊軽減なし():
     """リフレクター: 特殊技が軽減されないことを確認"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         side1={"リフレクター": 5},
     )
     t.run_move(battle, 0)
@@ -662,7 +662,7 @@ def test_ひかりのかべ_特殊半減():
     """ひかりのかべ: 特殊技ダメージ軽減"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         side1={"ひかりのかべ": 5},
     )
     t.run_move(battle, 0)
@@ -673,7 +673,7 @@ def test_ひかりのかべ_物理軽減なし():
     """ひかりのかべ: 物理技が軽減されないことを確認"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         side1={"ひかりのかべ": 5},
     )
     t.run_move(battle, 0)
@@ -684,7 +684,7 @@ def test_オーロラベール_物理半減():
     """オーロラベール: ダメージ0.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         side1={"オーロラベール": 1},
     )
     t.run_move(battle, 0)
@@ -695,7 +695,7 @@ def test_オーロラベール_特殊半減():
     """オーロラベール: ダメージ0.5倍"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         side1={"オーロラベール": 1},
     )
     t.run_move(battle, 0)
@@ -707,7 +707,7 @@ def test_オーロラベール_特殊半減():
 def test_リフレクター_急所では軽減されない():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         side1={"リフレクター": 5},
     )
     ctx = EventContext(
@@ -722,7 +722,7 @@ def test_リフレクター_急所では軽減されない():
 def test_ひかりのかべ_急所では軽減されない():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         side1={"ひかりのかべ": 5},
     )
     ctx = EventContext(
@@ -737,7 +737,7 @@ def test_ひかりのかべ_急所では軽減されない():
 def test_オーロラベール_急所では軽減されない():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         side1={"オーロラベール": 1},
     )
     ctx = EventContext(

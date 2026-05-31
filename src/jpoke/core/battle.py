@@ -17,7 +17,7 @@ from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, \
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
-from jpoke.model import Pokemon, Move, Field, Item
+from jpoke.model import Pokemon, Move, Field
 
 from .player_state import PlayerState
 from .event_manager import EventManager
@@ -34,7 +34,10 @@ from .speed_calculator import SpeedCalculator
 from .item_manager import ItemManager
 from .command_manager import CommandManager
 from .ability_manager import AbilityManager
-from .pokemon_state import AilmentManager, VolatileManager, PokemonQuery, StatusManager
+from .ailment_manager import AilmentManager
+from .volatile_manager import VolatileManager
+from .status_manager import StatusManager
+from .pokemon_query import PokemonQuery
 
 
 @dataclass
@@ -73,9 +76,9 @@ class Battle:
         turn_controller: ターン進行制御
         speed_calculator: 素早さ計算機
         weather_manager: 天候管理
-        terrain_manager: フィールド管理
-        field_manager: グローバル場の状態管理
-        side_manager: 各プレイヤー側の場の状態管理
+        terrain_manager: 地形管理
+        global_manager: グローバル場の状態管理
+        side_managers: 各プレイヤー側の場の状態管理
         test_option: テスト用オプション設定
     """
 
@@ -112,15 +115,15 @@ class Battle:
         self.damage_calculator: DamageCalculator = DamageCalculator(self)
         self.ailment_manager: AilmentManager = AilmentManager(self)
         self.volatile_manager: VolatileManager = VolatileManager(self)
-        self.query_manager: PokemonQuery = PokemonQuery(self)
+        self.query: PokemonQuery = PokemonQuery(self)
         self.status_manager: StatusManager = StatusManager(self)
         self.command_manager: CommandManager = CommandManager(self)
         self.ability_manager: AbilityManager = AbilityManager(self)
         self.item_manager: ItemManager = ItemManager(self)
         self.weather_manager: WeatherManager = WeatherManager(self)
         self.terrain_manager: TerrainManager = TerrainManager(self)
-        self.field_manager: GlobalFieldManager = GlobalFieldManager(self)
-        self.side_manager: list[SideFieldManager] = [
+        self.global_manager: GlobalFieldManager = GlobalFieldManager(self)
+        self.side_managers: list[SideFieldManager] = [
             SideFieldManager(self, ply) for ply in self.players
         ]
 
@@ -154,15 +157,15 @@ class Battle:
                 "damage_calculator",
                 "ailment_manager",
                 "volatile_manager",
-                "query_manager",
+                "query",
                 "status_manager",
                 "item_manager",
                 "command_manager",
                 "ability_manager",
                 "weather_manager",
                 "terrain_manager",
-                "field_manager",
-                "side_manager",
+                "global_manager",
+                "side_managers",
             ]
         )
 
@@ -184,15 +187,15 @@ class Battle:
         self.damage_calculator.update_reference(self)
         self.ailment_manager.update_reference(self)
         self.volatile_manager.update_reference(self)
-        self.query_manager.update_reference(self)
+        self.query.update_reference(self)
         self.status_manager.update_reference(self)
         self.command_manager.update_reference(self)
         self.ability_manager.update_reference(self)
         self.item_manager.update_reference(self)
         self.weather_manager.update_reference(self)
         self.terrain_manager.update_reference(self)
-        self.field_manager.update_reference(self)
-        for side in self.side_manager:
+        self.global_manager.update_reference(self)
+        for side in self.side_managers:
             side.update_reference(self)
 
     def copy(self, perspective: Player | None = None) -> Self:
@@ -275,7 +278,7 @@ class Battle:
 
     def get_global_field(self, name: GlobalField) -> Field:
         """グローバルフィールド効果を取得。"""
-        return self.field_manager.fields[name]
+        return self.global_manager.fields[name]
 
     def get_side(self, source: Player | Pokemon) -> SideFieldManager:
         """プレイヤーまたはポケモンからサイドフィールドマネージャーを取得。
@@ -286,7 +289,7 @@ class Battle:
         Returns:
             SideFieldManager: 対応するサイドフィールドマネージャー
         """
-        return self.side_manager[self.get_player_index(source)]
+        return self.side_managers[self.get_player_index(source)]
 
     def get_player(self, mon: Pokemon) -> Player:
         """ポケモンが所属するプレイヤーを検索する。
@@ -602,7 +605,7 @@ class Battle:
         Args:
             flag: 設定する割り込みフラグ
         """
-        self.switch_manager.override_ejectpack_interrupt(flag)
+        self.switch_manager._override_ejectpack_interrupt(flag)
 
     def run_switch(self, player: Player, new: Pokemon, emit: bool = True):
         """ポケモンを交代（SwitchManagerへの委譲）。
@@ -699,7 +702,7 @@ class Battle:
         if isinstance(move, str):
             move = Move(move)
         ctx = EventContext(defender=defender, move=move)
-        return self.damage_calculator._calc_def_type_modifier(ctx) / 4096
+        return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
@@ -724,3 +727,7 @@ class Battle:
             player = self.players[log.idx]
             pokemon = log.payload.get("pokemon", "") if log.payload else ""
             print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
+
+    def remove_all_volatiles(self, mon: Pokemon):
+        """対象のポケモンからすべての揮発性状態を解除する（VolatileManagerへの委譲）。"""
+        self.volatile_manager.remove_all(mon)

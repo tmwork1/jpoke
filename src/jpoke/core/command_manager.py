@@ -97,7 +97,7 @@ class CommandManager:
 
         # 強制行動ではPPを消費させないように新しくMoveインスタンスを作成する
         if command == Command.FORCED:
-            move_name = self.battle.query_manager.get_forced_move_name(attacker)
+            move_name = self.battle.query.get_forced_move_name(attacker)
             if move_name:
                 return Move(move_name)
             return Move("わるあがき")

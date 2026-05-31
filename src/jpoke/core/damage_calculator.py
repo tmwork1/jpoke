@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event
 from jpoke.utils import fast_copy
 from jpoke.data import TYPE_MODIFIER
-from jpoke.utils.battle_math import round_half_down
+from jpoke.utils.math import round_half_down
 
 from .context import EventContext
 
@@ -36,13 +36,6 @@ class DamageCalculator:
         self.burn_modifier: int | None = None
         self.protect_modifier: int | None = None
 
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        new = cls.__new__(cls)
-        memo[id(self)] = new
-        fast_copy(self, new, keys_to_deepcopy=[])
-        return new
-
     def reset_monitor_attributes(self):
         """ダメージ計算のモニタリング用属性をリセットする。"""
         self.final_power = None
@@ -56,6 +49,13 @@ class DamageCalculator:
         self.damage_modifier = None
         self.burn_modifier = None
         self.protect_modifier = None
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
 
     def update_reference(self, new_battle: Battle):
         """ディープコピー後の参照を更新する。
@@ -124,7 +124,7 @@ class DamageCalculator:
         r_atk_type = self.atk_type_modifier / 4096
 
         # タイプ相性補正
-        self.def_type_modifier = self._calc_def_type_modifier(ctx)
+        self.def_type_modifier = self.calc_def_type_modifier(ctx)
         r_def_type = self.def_type_modifier / 4096
 
         # やけど補正（タイプ相性の後、ダメージ補正の前）
@@ -209,7 +209,7 @@ class DamageCalculator:
 
         return self._events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
 
-    def _calc_def_type_modifier(self, ctx: EventContext) -> int:
+    def calc_def_type_modifier(self, ctx: EventContext) -> int:
         """タイプ相性補正を計算する。
 
         攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
@@ -234,7 +234,7 @@ class DamageCalculator:
         type_chart = TYPE_MODIFIER.get(move_type, {})
 
         if move_type == "じめん":
-            foe_is_floating = self.battle.query_manager.is_floating(ctx.defender)
+            foe_is_floating = self.battle.query.is_floating(ctx.defender)
 
             if foe_is_floating:
                 # 浮いている相手にはじめん技が無効

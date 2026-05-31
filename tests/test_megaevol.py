@@ -23,7 +23,7 @@ stone_normal_mega = list(zip(stones, normal_names, mega_names))
 )
 def test_メガシンカ_コマンドが追加される(stone: str, normal_name: str, mega_name: str):
     battle = t.start_battle(
-        team0=[Pokemon(normal_name, item=stone)],
+        team0=[Pokemon(normal_name, item_name=stone)],
         team1=[Pokemon("ピカチュウ")],
     )
     player = battle.players[0]
@@ -37,7 +37,7 @@ def test_メガシンカ_コマンドが追加される(stone: str, normal_name:
 )
 def test_メガシンカ_直接起動(stone: str, normal_name: str, mega_name: str):
     battle = t.start_battle(
-        team0=[Pokemon(normal_name, item=stone)],
+        team0=[Pokemon(normal_name, item_name=stone)],
         team1=[Pokemon("ピカチュウ")],
     )
     t.reserve_command(battle, Command.MEGAEVOL_0)
@@ -50,7 +50,7 @@ def test_メガシンカ_直接起動(stone: str, normal_name: str, mega_name: s
 
 def test_メガシンカ_直後に特性が起動する():
     battle = t.start_battle(
-        team0=[Pokemon("バンギラス", item="バンギラスナイト")],
+        team0=[Pokemon("バンギラス", item_name="バンギラスナイト")],
         team1=[Pokemon("ピカチュウ")],
     )
     assert battle.weather.name == ""

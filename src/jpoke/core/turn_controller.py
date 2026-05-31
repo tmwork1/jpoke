@@ -24,22 +24,9 @@ class TurnController:
     """
 
     def __init__(self, battle: Battle):
-        """TurnControllerを初期化。
-
-        Args:
-            battle: Battleインスタンスへの参照
-        """
         self.battle = battle
 
     def __deepcopy__(self, memo):
-        """Battleインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            Battle: コピーされたBattleインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -56,7 +43,6 @@ class TurnController:
 
     @property
     def _events(self):
-        """BattleのEventManagerへの参照を返す。"""
         return self.battle.events
 
     def judge_winner(self) -> Player | None:

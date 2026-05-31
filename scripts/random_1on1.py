@@ -59,7 +59,7 @@ def build_random_pokemon(name: str | None = None,
         moves = random.sample(move_names, n_moves)
 
     # ポケモンを構築
-    mon = Pokemon(name, ability=ability, item=item, moves=moves)
+    mon = Pokemon(name, ability_name=ability, item_name=item, move_names=moves)
     return mon
 
 

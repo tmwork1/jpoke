@@ -14,8 +14,8 @@ import test_utils as t
 @pytest.mark.parametrize(
     ("attacker", "expected"),
     [
-        (Pokemon("ピカチュウ", moves=["でんきショック"]), 4096*1.5),
-        (Pokemon("ピカチュウ", moves=["ひのこ"]), 4096*1.0),
+        (Pokemon("ピカチュウ", move_names=["でんきショック"]), 4096*1.5),
+        (Pokemon("ピカチュウ", move_names=["ひのこ"]), 4096*1.0),
     ]
 )
 def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
@@ -44,7 +44,7 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
 )
 def test_防御側タイプ相性補正計算(defender_name: str, move: str, expected: float | None):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=[move])],
+        team0=[Pokemon("ピカチュウ", move_names=[move])],
         team1=[Pokemon(defender_name)],
     )
     t.run_move(battle, 0)

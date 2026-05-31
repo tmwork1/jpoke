@@ -37,6 +37,11 @@ class AbilityManager:
         """
         self.battle = battle
 
+    @property
+    def _events(self):
+        """Battleのイベントマネージャーへのショートカットプロパティ。"""
+        return self.battle.events
+
     def change_ability(self, mon: Pokemon, ability: str) -> None:
         """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。
         Args:
@@ -50,14 +55,14 @@ class AbilityManager:
         ctx = EventContext(source=mon)
 
         if is_active:
-            self.battle.events.emit(Event.ON_ABILITY_DISABLED, ctx)
-            mon.ability.unregister_handlers(self.battle.events, mon)
+            self._events.emit(Event.ON_ABILITY_DISABLED, ctx)
+            mon.ability.unregister_handlers(self._events, mon)
 
         mon.ability = Ability(ability)
 
         if is_active:
-            mon.ability.register_handlers(self.battle.events, mon)
-            self.battle.events.emit(Event.ON_ABILITY_ENABLED, ctx)
+            mon.ability.register_handlers(self._events, mon)
+            self._events.emit(Event.ON_ABILITY_ENABLED, ctx)
 
     def add_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
         """特性を無効にする理由を追加し、有効状態に変化があればイベントを発火する。
@@ -72,7 +77,7 @@ class AbilityManager:
         is_enabled = mon.ability.enabled
 
         if was_enabled and not is_enabled:
-            self.battle.events.emit(
+            self._events.emit(
                 Event.ON_ABILITY_DISABLED,
                 EventContext(source=mon)
             )
@@ -92,7 +97,7 @@ class AbilityManager:
         is_enabled = mon.ability.enabled
 
         if not was_enabled and is_enabled:
-            self.battle.events.emit(
+            self._events.emit(
                 Event.ON_ABILITY_ENABLED,
                 EventContext(source=mon)
             )

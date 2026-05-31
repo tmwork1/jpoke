@@ -27,22 +27,9 @@ class SwitchManager:
     """
 
     def __init__(self, battle: Battle):
-        """SwitchManagerを初期化。
-
-        Args:
-            battle: 親となるBattleインスタンス
-        """
         self.battle = battle
 
     def __deepcopy__(self, memo):
-        """SwitchManagerインスタンスのディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            SwitchManager: コピーされたSwitchManagerインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -76,81 +63,15 @@ class SwitchManager:
             return False
 
         # 場のポケモンがとらわれ状態にある場合は交代不可
-        if self.battle.query_manager.is_trapped(state.active):
+        if self.battle.query.is_trapped(state.active):
             return False
 
         return True
 
-    def _switch_in(self, state: PlayerState, mon: Pokemon):
-        # TODO : 関数内の処理はハンドラの登録に限定すべきか
-        """ポケモンの入場時ハンドラーを登録する。
-
-        Args:
-            state: 交代を行うプレイヤーの状態
-            mon: 場に出るポケモン
-        """
-        state.active_index = state.team.index(mon)
-        state.has_switched = True
-
-        mon.revealed = True
-        mon.ability.register_handlers(self._events, mon)
-        mon.item.register_handlers(self._events, mon)
-        mon.ailment.register_handlers(self._events, mon)
-        for volatile in mon.volatiles.values():
-            volatile.register_handlers(self._events, mon)
-
-        self.battle.add_event_log(mon, LogCode.SWITCHED_IN,
-                                  payload={"pokemon": mon.name})
-
-    def _switch_out(self, mon: Pokemon):
-        # TODO : ハンドラの解除とその他のリセットは関数を分けるべきか
-        """ポケモンの退場時ハンドラーを解除する。
-
-        Args:
-            mon: 引っ込むポケモン
-        """
-        self._events.emit(Event.ON_SWITCH_OUT, EventContext(source=mon))
-
-        # 交代時に消える揮発状態は manager 経由で解除し、終了イベントを発火する。
-        for name in list(mon.volatiles.keys()):
-            self.battle.volatile_manager.remove(mon, name)
-
-        mon.ability.unregister_handlers(self._events, mon)
-        mon.item.unregister_handlers(self._events, mon)
-        mon.ailment.unregister_handlers(self._events, mon)
-        for volatile in mon.volatiles.values():
-            volatile.unregister_handlers(self._events, mon)
-
-        mon.reset_on_switch_out()
-        if mon.ability.base_name != mon.base_ability_name:
-            mon.ability = Ability(mon.base_ability_name)
-        else:
-            mon.ability.reset_on_switch_out()
-        mon.item.reset_on_switch_out()
-
-        self.battle.add_event_log(mon, LogCode.SWITCHED_OUT,
-                                  payload={"pokemon": mon.name})
-
-    def override_ejectpack_interrupt(self, flag: Interrupt):
-        """割り込みフラグを上書き。
-
-        EJECTPACK_REQUESTED状態のプレイヤーに対して、指定したフラグを設定する。
-        素早さ順に処理され、最初に見つかったプレイヤーのフラグが更新される。
-
-        Args:
-            flag: 設定する割り込みフラグ
-        """
-        for mon in self.battle.calc_speed_order():
-            player = self.battle.get_player(mon)
-            state = self.battle.player_states[player]
-            if state.interrupt == Interrupt.EJECTPACK_REQUESTED:
-                state.interrupt = flag
-                return
-
     def run_switch(self,
                    player: Player,
                    new: Pokemon,
-                   emit_switch_in_event: bool = True):
+                   process_events_after_switch: bool = True):
         """ポケモンを交代。
 
         退場処理、入場処理、イベント発火を行う。
@@ -158,7 +79,7 @@ class SwitchManager:
         Args:
             player: 交代を行うプレイヤー
             new: 場に出す新しいポケモン
-            emit_switch_in_event: ON_SWITCH_INイベントを発火する場合True
+            process_switch_in_events: ON_SWITCH_INイベントを発火する場合True
         """
         state = self.battle.player_states[player]
 
@@ -174,14 +95,28 @@ class SwitchManager:
         self._switch_in(state, new)
 
         # ポケモンが場に出た時の処理
-        if emit_switch_in_event:
-            self._events.emit(Event.ON_SWITCH_IN, EventContext(source=new))
+        if process_events_after_switch:
+            self._process_events_after_switch(new)
 
-            # リクエストがなくなるまで再帰的に交代する
-            while self.battle.has_interrupt():
-                flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
-                self.override_ejectpack_interrupt(flag)
-                self.run_interrupt_switch(flag)
+    def _process_events_after_switch(self, mon: Pokemon):
+        """ON_SWITCH_INイベントの処理。
+
+        交代で場に出たポケモンに対して、ON_SWITCH_INイベントを発火する。
+        だっしゅつパックなどの割り込み交代が発生した場合は、再帰的に処理する。
+
+        Args:
+            mon: 場に出たポケモン
+        """
+        self._events.emit(
+            Event.ON_SWITCH_IN,
+            EventContext(source=mon)
+        )
+
+        # リクエストがなくなるまで再帰的に交代する
+        while self.battle.has_interrupt():
+            flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
+            self._override_ejectpack_interrupt(flag)
+            self.run_interrupt_switch(flag)
 
     def run_initial_switch(self):
         """バトル開始時の初期交代。
@@ -197,9 +132,11 @@ class SwitchManager:
         self._events.emit(Event.ON_SWITCH_IN)
 
         # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
-        self.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
+        self._override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
 
-    def run_interrupt_switch(self, flag: Interrupt, emit_on_each_switch: bool = True):
+    def run_interrupt_switch(self,
+                             flag: Interrupt,
+                             process_event_on_each_switch: bool = True):
         """割り込み交代を実行。
 
         指定したフラグを持つプレイヤーの交代を処理する。
@@ -208,9 +145,9 @@ class SwitchManager:
 
         Args:
             flag: 対象とする割り込みフラグ
-            emit_on_each_switch: 各交代ごとにON_SWITCH_INを発火する場合True
+            process_event_on_each_switch: 各交代ごとにON_SWITCH_INを発火する場合True
         """
-        switched_players = []
+        switched_players = set()
 
         for player, state in self.battle.player_states.items():
             if state.interrupt != flag:
@@ -226,16 +163,18 @@ class SwitchManager:
             self.run_switch(
                 player,
                 state.team[command.index],
-                emit_switch_in_event=emit_on_each_switch
+                process_events_after_switch=process_event_on_each_switch
             )
-            switched_players.append(player)
+            switched_players.add(player)
 
-        # 全員の着地処理を同時に実行
-        if not emit_on_each_switch:
-            for mon in self.battle.calc_speed_order():
-                player = self.battle.get_player(mon)
-                if player in switched_players:
-                    self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
+        if process_event_on_each_switch:
+            return
+
+        # 交代したプレイヤー全員の着地処理を同時に実行
+        for mon in self.battle.calc_speed_order():
+            player = self.battle.get_player(mon)
+            if player in switched_players:
+                self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
 
     def run_faint_switch(self):
         """瀕死による交代を実行。
@@ -265,3 +204,81 @@ class SwitchManager:
 
         # すべての死に出しが完了するまで再帰的に実行
         self.run_faint_switch()
+
+    def _switch_in(self, state: PlayerState, mon: Pokemon):
+        """ポケモンの入場処理。
+
+        Args:
+            state: 交代を行うプレイヤーの状態
+            mon: 入場するポケモン
+        """
+        state.active_index = state.team.index(mon)
+        state.has_switched = True
+
+        mon.reset_on_switch_in()
+        self._register_handlers_on_switch_in(mon)
+
+        self.battle.add_event_log(
+            mon,
+            LogCode.SWITCHED_IN,
+            payload={"pokemon": mon.name}
+        )
+
+    def _switch_out(self, mon: Pokemon):
+        """ポケモンの退場処理。
+
+        Args:
+            mon: 退場するポケモン
+        """
+        self._events.emit(
+            Event.ON_SWITCH_OUT,
+            EventContext(source=mon)
+        )
+
+        # 揮発状態をすべて解除
+        self.battle.remove_all_volatiles(mon)
+
+        mon.reset_on_switch_out()
+        self._unregister_handlers_on_switch_out(mon)
+
+        self.battle.add_event_log(
+            mon,
+            LogCode.SWITCHED_OUT,
+            payload={"pokemon": mon.name}
+        )
+
+    def _override_ejectpack_interrupt(self, flag: Interrupt):
+        """割り込みフラグを上書き。
+
+        EJECTPACK_REQUESTED状態のプレイヤーに対して、指定したフラグを設定する。
+        素早さ順に処理され、最初に見つかったプレイヤーのフラグが更新される。
+
+        Args:
+            flag: 設定する割り込みフラグ
+        """
+        for mon in self.battle.calc_speed_order():
+            player = self.battle.get_player(mon)
+            state = self.battle.player_states[player]
+            if state.interrupt == Interrupt.EJECTPACK_REQUESTED:
+                state.interrupt = flag
+                return
+
+    def _register_handlers_on_switch_in(self, mon: Pokemon):
+        """特性とアイテムのハンドラをバトルに登録する。
+
+        Args:
+            events: イベントマネージャー
+        """
+        mon.ability.register_handlers(self._events, mon)
+        mon.item.register_handlers(self._events, mon)
+        mon.ailment.register_handlers(self._events, mon)
+
+    def _unregister_handlers_on_switch_out(self, mon: Pokemon):
+        """特性とアイテムのハンドラをバトルから解除する。
+
+        Args:
+            events: イベントマネージャー
+        """
+        mon.ability.unregister_handlers(self._events, mon)
+        mon.item.unregister_handlers(self._events, mon)
+        mon.ailment.unregister_handlers(self._events, mon)

@@ -82,7 +82,7 @@ def test_まひ_行動成功():
 # ──────────────────────────────────────────────────────────────────
 def test_やけど_物理技ダメージ半減():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")]
     )
     attacker, defender = battle.actives
@@ -93,7 +93,7 @@ def test_やけど_物理技ダメージ半減():
 
 def test_やけど_特殊技ダメージは半減しない():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["10まんボルト"])],
+        team0=[Pokemon("ピカチュウ", move_names=["10まんボルト"])],
         team1=[Pokemon("ピカチュウ")]
     )
     attacker, defender = battle.actives
@@ -117,7 +117,7 @@ def test_やけど_ダメージ():
 def test_ねむり_カウント():
     """ねむり: ターン経過で回復"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ニャース")],
     )
     attacker, defender = battle.actives
@@ -171,7 +171,7 @@ def test_こおり_行動成功():
 
 def test_こおり_ほのお技被弾で解凍する():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", moves=["ひのこ"])],
+        team0=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives

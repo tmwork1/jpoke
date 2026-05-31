@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.utils.type_defs import RoleSpec
-from jpoke.utils.battle_math import apply_fixed_modifier
+from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode
 from jpoke.core import Handler, HandlerReturn
 

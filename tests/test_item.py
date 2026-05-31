@@ -15,7 +15,7 @@ import test_utils as t
 def test_いのちのたま():
     """いのちのたま: 攻撃技で反動ダメージ"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="いのちのたま", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", item_name="いのちのたま", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
     )
     t.run_move(battle, 0)
@@ -28,7 +28,7 @@ def test_いのちのたま_変化技では発動しない():
     """いのちのたま: 変化技では発動しない"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", item="いのちのたま", moves=["はねる"])],
+        team0=[Pokemon("ピカチュウ", item_name="いのちのたま", move_names=["はねる"])],
     )
     t.run_move(battle, 0)
     assert not battle.actives[0].item.revealed
@@ -40,8 +40,8 @@ def test_いのちのたま_変化技では発動しない():
 def test_きれいなぬけがら():
     """きれいなぬけがら: 交代防止無効"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="きれいなぬけがら"), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ", ability="かげふみ")],
+        team0=[Pokemon("ピカチュウ", item_name="きれいなぬけがら"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="かげふみ")],
     )
     assert battle.can_switch(battle.players[0])
 
@@ -54,7 +54,7 @@ def test_きれいなぬけがら():
 def test_さらさらいわ():
     """さらさらいわ: 天候延長"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="さらさらいわ")],
+        team0=[Pokemon("ピカチュウ", item_name="さらさらいわ")],
         team1=[Pokemon("ピカチュウ")],
     )
     battle.weather_manager.apply("すなあらし", 5, source=battle.actives[0])
@@ -67,8 +67,8 @@ def test_さらさらいわ():
 def test_だっしゅつパック_0ターン目にいかくで交代():
     """だっしゅつパック: 能力ダウンで交代"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="だっしゅつパック"), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ", ability="いかく")],
+        team0=[Pokemon("ピカチュウ", item_name="だっしゅつパック"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
     )
     state = battle._player_states[0]
     ejected_mon = state.team[0]
@@ -80,7 +80,7 @@ def test_だっしゅつパック_0ターン目にいかくで交代():
 def test_だっしゅつパック_能力上昇では発動しない():
     """だっしゅつパック: 能力上昇では発動しない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="だっしゅつパック", moves=["つるぎのまい"]), Pokemon("ライチュウ")],
+        team0=[Pokemon("ピカチュウ", item_name="だっしゅつパック", move_names=["つるぎのまい"]), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ")],
     )
     t.run_move(battle, 0)
@@ -98,8 +98,8 @@ def test_だっしゅつパック_能力上昇では発動しない():
 def test_だっしゅつボタン():
     """だっしゅつボタン: ダメージを受けて交代"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="だっしゅつボタン"), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ", moves=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", item_name="だっしゅつボタン"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     player = battle.players[0]
     print(battle.get_available_switch_commands(player))
@@ -118,7 +118,7 @@ def test_たべのこし():
     """たべのこし: ターン終了時回復"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", item="たべのこし")],
+        team0=[Pokemon("ピカチュウ", item_name="たべのこし")],
     )
     mon = battle.actives[0]
     # HPが満タンのときは回復しない
@@ -150,7 +150,7 @@ def test_タイプ強化アイテム():
 
         type_name, modifier = next(iter(data.power_modifier_by_type.items()))
         battle = t.start_battle(
-            team0=[Pokemon("ピカチュウ", item=item_name)],
+            team0=[Pokemon("ピカチュウ", item_name=item_name)],
             team1=[Pokemon("ピカチュウ")],
         )
         ctx = EventContext(
@@ -176,7 +176,7 @@ def test_タイプ半減実():
 
         type_name, modifier = next(iter(data.damage_modifier_by_type.items()))
         battle = t.start_battle(
-            team0=[Pokemon("ピカチュウ", item=item_name)],
+            team0=[Pokemon("ピカチュウ", item_name=item_name)],
             team1=[Pokemon("ピカチュウ")],
         )
         ctx = EventContext(

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 from jpoke.core import HandlerReturn
 from jpoke.enums import LogCode
-from jpoke.utils.battle_math import apply_fixed_modifier
+from jpoke.utils.math import apply_fixed_modifier
 from jpoke.utils.type_defs import Stat
 
 from .ability import announce_ability_triggered

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from jpoke.utils.type_defs import Side, RoleSpec, Type, Stat, Weather, Terrain, \
     AilmentName, VolatileName, AbilityDisabledReason, ItemDisabledReason
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
-from jpoke.utils.battle_math import apply_fixed_modifier
+from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
 from . import common
@@ -367,7 +367,7 @@ def ありじごく_check_trapped(battle: Battle, ctx: EventContext, value: Any)
     """
     # ポケモンが浮いているかどうかを判定
     # 浮いている = ふゆう、でんじふゆう、テレキネシス等
-    result = not battle.query_manager.is_floating(ctx.source)
+    result = not battle.query.is_floating(ctx.source)
     return HandlerReturn(value=result)
 
 

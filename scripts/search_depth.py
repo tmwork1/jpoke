@@ -61,16 +61,16 @@ def play_game(seed: int | None = None,
     # Player 1
     players.append(SearchPlayer(name="Player1"))
     players[-1].team = [
-        Pokemon("ヒトカゲ", item="", moves=["たいあたり"]),
-        Pokemon("リザード", item="", moves=["たいあたり"]),
-        Pokemon("リザードン", item="", moves=["たいあたり"]),
+        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
+        Pokemon("リザード", item_name="", move_names=["たいあたり"]),
+        Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
     ]
 
     players.append(SearchPlayer(name="Player2"))
     players[-1].team = [
-        Pokemon("ゼニガメ", item="", moves=["たいあたり"]),
-        Pokemon("カメール", item="", moves=["たいあたり"]),
-        Pokemon("カメックス", item="", moves=["たいあたり"]),
+        Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
+        Pokemon("カメール", item_name="", move_names=["たいあたり"]),
+        Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
     ]
 
     # バトルを作成・実行

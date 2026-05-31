@@ -11,7 +11,7 @@ import test_utils as t
 def test_mon():
     """pokemonのコピーが正しく行われることを確認する。"""
     old = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item="たべのこし"), Pokemon("ヒトカゲ")],
+        team0=[Pokemon("ピカチュウ", item_name="たべのこし"), Pokemon("ヒトカゲ")],
         team1=[Pokemon("フシギダネ")],
     )
     new = old.copy()

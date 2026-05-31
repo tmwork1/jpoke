@@ -252,7 +252,7 @@ def activate_global_field(battle: Battle,
                           count: int = 5,
                           toggle: bool = False) -> HandlerReturn:
     """グローバルフィールドを発動・解除する。"""
-    manager = battle.field_manager
+    manager = battle.global_manager
     was_active = manager.fields[global_field].is_active
 
     if toggle and was_active:
@@ -274,13 +274,13 @@ def deals_physical_damage(battle: Battle, ctx: EventContext) -> bool:
 
 def is_super_effective(battle: Battle, ctx: EventContext) -> bool:
     """効果抜群かどうかを判定する。"""
-    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return type_modifier/4096 > 1
 
 
 def is_not_very_effective(battle: Battle, ctx: EventContext) -> bool:
     """今ひとつかどうかを判定する。"""
-    type_modifier = battle.damage_calculator._calc_def_type_modifier(ctx)
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return 0 < type_modifier/4096 < 1
 
 

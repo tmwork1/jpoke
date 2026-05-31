@@ -22,14 +22,6 @@ class PlayerState:
         self.has_switched: bool = False
 
     def __deepcopy__(self, memo):
-        """ディープコピーを作成する。
-
-        Args:
-            memo: コピー済みオブジェクトのメモ辞書
-
-        Returns:
-            DamageCalculator: コピーされたインスタンス
-        """
         cls = self.__class__
         new = cls.__new__(cls)
         memo[id(self)] = new
@@ -39,8 +31,7 @@ class PlayerState:
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
         self.has_switched = False
-        for mon in self.team:
-            mon.reset_turn_state()
+        self.active.reset_turn_state()
 
     @property
     def active(self) -> Pokemon:
@@ -56,8 +47,10 @@ class PlayerState:
 
     @property
     def bench(self) -> list[Pokemon]:
-        """控えのポケモンのリストを取得する。"""
-        return [mon for mon in self.team if mon is not self.active]
+        """控えの選出ポケモンのリストを取得する。"""
+        active = self.active
+        selection = self.selection
+        return [mon for mon in selection if mon is not active]
 
     def reserve_command(self, command: Command):
         """コマンドを予約する。"""
@@ -92,7 +85,8 @@ class PlayerState:
         Returns:
             テラスタルが使用可能な場合True
         """
-        return all(not mon.terastallized for mon in self.selection)
+        selection = self.selection
+        return all(not mon.terastallized for mon in selection)
 
     def can_use_megaevol(self) -> bool:
         """メガシンカが使用可能かどうかを判定する。
@@ -102,8 +96,9 @@ class PlayerState:
         Returns:
             メガシンカが使用可能な場合True
         """
+        selection = self.selection
         return (
-            all(not mon.megaevolved for mon in self.selection)
+            all(not mon.megaevolved for mon in selection)
             and self.active.can_megaevolve()
         )
 
@@ -116,8 +111,9 @@ class PlayerState:
         Returns:
             TODスコア（生存ポケモン数 + HP割合）
         """
+        selection = self.selection
         n_alive, total_max_hp, total_hp = 0, 0, 0
-        for mon in self.selection:
+        for mon in selection:
             total_max_hp += mon.max_hp
             total_hp += mon.hp
             if mon.hp:

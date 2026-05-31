@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.utils.type_defs import RoleSpec, Type, Weather, Terrain
-from jpoke.utils.battle_math import apply_fixed_modifier
+from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
 from . import common
@@ -78,7 +78,7 @@ def modify_super_effective_damage(battle: Battle,
                                   type_: Type,
                                   modifier: float) -> HandlerReturn:
     # ON_CALC_DAMAGE_MODIFIER
-    if ctx.move.type == type_ and battle.damage_calculator._calc_def_type_modifier(ctx) > 1:
+    if ctx.move.type == type_ and battle.damage_calculator.calc_def_type_modifier(ctx) > 1:
         value = int(value * modifier)
     return HandlerReturn(value=value)
 

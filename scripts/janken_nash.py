@@ -48,9 +48,9 @@ def make_hitmonchan() -> Pokemon:
     """仕様書条件のエビワラーを構築する。"""
     mon = Pokemon(
         "エビワラー",
-        ability="てつのこぶし",
+        ability_name="てつのこぶし",
         nature="いじっぱり",
-        moves=MOVES,
+        move_names=MOVES,
     )
     mon.effort = [0, 0, 0, 0, 0, 0]
     mon.indiv = [31, 31, 31, 31, 31, 31]

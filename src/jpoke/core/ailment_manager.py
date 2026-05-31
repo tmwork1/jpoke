@@ -1,0 +1,161 @@
+# TODO : Managerクラスごとにモジュールをわける
+
+"""ポケモンの状態管理（状態異常・揮発状態）を行うモジュール。
+
+Pokemonクラスから状態管理ロジックを分離し、Battleクラスに集約する。
+"""
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Battle, EventManager
+
+from jpoke.model import Pokemon, Ailment
+from jpoke.utils.type_defs import AilmentName
+from jpoke.enums import Event, LogCode
+from jpoke.core import EventContext
+from jpoke.utils import fast_copy
+
+
+class AilmentManager:
+    """ポケモンの状態異常を管理するクラス。
+
+    状態異常の付与、治療、ターン経過処理を担当。
+    Pokemonクラスから状態異常管理を分離し、単一責任原則を実現。
+
+    Attributes:
+        battle: 親となるBattleインスタンス
+    """
+
+    def __init__(self, battle: Battle):
+        self.battle = battle
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        new = cls.__new__(cls)
+        memo[id(self)] = new
+        fast_copy(self, new, keys_to_deepcopy=[])
+        return new
+
+    def update_reference(self, battle: Battle):
+        """Battleインスタンスの参照を更新。
+
+        Args:
+            battle: 新しいBattleインスタンス
+        """
+        self.battle = battle
+
+    @property
+    def _events(self) -> EventManager:
+        """Battleのイベントマネージャーへのショートカットプロパティ。"""
+        return self.battle.events
+
+    @staticmethod
+    def can_apply_by_type(ailment: AilmentName,
+                          target: Pokemon,
+                          source: Pokemon | None) -> bool:
+        """タイプによって状態異常を付与できるか判定する。"""
+        match ailment:
+            case "どく" | "もうどく":
+                if source is not None and source.ability.name == "ふしょく":
+                    return True
+                return not (target.has_type("どく") or target.has_type("はがね"))
+            case "やけど":
+                return not target.has_type("ほのお")
+
+            case "まひ":
+                return not target.has_type("でんき")
+
+            case "こおり":
+                return not target.has_type("こおり")
+
+        return True
+
+    def apply(self,
+              target: Pokemon,
+              ailment_name: AilmentName,
+              count: int | None = None,
+              source: Pokemon | None = None,
+              overwrite: bool = False,
+              ctx: EventContext | None = None) -> bool:
+        """状態異常を付与する。
+
+        Args:
+            target: 対象のポケモン
+            ailment_name: 状態異常名
+            count: 継続ターン数（必要な状態異常のみ）
+            source: 状態異常の原因となったポケモン
+            overwrite: Trueの場合、既存の状態異常を上書き
+            ctx: ON_BEFORE_APPLY_AILMENT イベントの EventContext
+        Returns:
+            付与に成功したTrue
+
+        Note:
+            - overwrite=Falseの場合、既に状態異常があれば失敗
+            - 同じ状態異常の重ね掛けは不可
+        """
+        # overwrite=True でない限り上書き不可
+        if target.ailment.is_active and not overwrite:
+            return False
+
+        # 重ねがけ不可
+        if ailment_name == target.ailment.name:
+            return False
+
+        # タイプによる無効化をチェック
+        if not self.can_apply_by_type(ailment_name, target, source):
+            return False
+
+        # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
+        if ctx is not None:
+            apply_ctx = ctx.derive(target=target, source=source)
+        else:
+            apply_ctx = EventContext(target=target, source=source)
+
+        # ハンドラーが空値を返した場合は状態異常を付与しない
+        resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_AILMENT, apply_ctx, ailment_name)
+        if not resolved_name:
+            return False
+
+        # 既存のハンドラを削除
+        target.ailment.unregister_handlers(self._events, target)
+
+        # 新しい状態異常を設定してハンドラ登録
+        self.battle.add_event_log(target, LogCode.AILMENT_APPLIED,
+                                  payload={"ailment": resolved_name})
+        target.ailment = Ailment(resolved_name, count=count)
+        target.ailment.register_handlers(self._events, target)
+        return True
+
+    def remove(self, target: Pokemon) -> bool:
+        """状態異常を解除する。
+
+        Args:
+            target: 対象のポケモン
+
+        Returns:
+            解除に成功したらTrue
+        """
+        if not target.ailment.is_active:
+            return False
+
+        self.battle.add_event_log(target, LogCode.AILMENT_REMOVED,
+                                  payload={"ailment": target.ailment.name})
+        target.ailment.unregister_handlers(self._events, target)
+        target.ailment = Ailment()
+        return True
+
+    def tick(self, target: Pokemon) -> bool:
+        """状態異常のターン経過処理を行う。
+
+        Args:
+            target: 対象のポケモン
+
+        Returns:
+            ターン経過処理を行った場合True、状態異常がない場合False
+        """
+        if not target.ailment.is_active:
+            return False
+        target.ailment.tick()
+        if target.ailment.count == 0:
+            self.remove(target)
+        return True

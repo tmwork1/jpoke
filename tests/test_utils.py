@@ -117,15 +117,15 @@ def start_battle(team0: list[Pokemon],
     # グローバルフィールドの有効化
     if field:
         for name, count in field.items():
-            battle.field_manager.activate(name, count)
+            battle.global_manager.activate(name, count)
 
     # サイドフィールドの有効化（初期ターン後に実行してポケモンへのダメージを回避）
     if side0:
         for name, layers in side0.items():
-            battle.side_manager[0].activate(name, layers)
+            battle.side_managers[0].activate(name, layers)
     if side1:
         for name, layers in side1.items():
-            battle.side_manager[1].activate(name, layers)
+            battle.side_managers[1].activate(name, layers)
 
     # 命中率の設定
     if accuracy is not None:

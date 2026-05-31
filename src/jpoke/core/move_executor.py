@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
 from jpoke.utils.type_defs import Type, MoveCategory
+from jpoke.utils.math import clamp_stats, clamp_critic
 from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
 
@@ -16,11 +17,17 @@ from .context import EventContext
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
+MULTI_HIT_DISTRIBUTION_2_TO_5 = (
+    (0.375, 2),
+    (0.75, 3),
+    (0.875, 4),
+    (1.0, 5),
+)
 
 
 def hit_rank_modifier(rank_acc: int, rank_eva: int) -> float:
     """命中ランク差に基づく命中率補正を計算する。"""
-    diff = max(-6, min(6, rank_acc - rank_eva))
+    diff = clamp_stats(rank_acc - rank_eva)
     if diff > 0:
         return (3+diff)/3
     else:
@@ -52,6 +59,15 @@ class MoveExecutor:
         self.move_applied: bool | None = None
         self.crit_rank: int | None = None
         self.critical: bool | None = None
+
+    def reset_monitoring_flags(self):
+        """技実行のモニタリング用フラグをリセットする。"""
+        self.accuracy = None
+        self.action_success = None
+        self.move_success = None
+        self.move_applied = None
+        self.crit_rank = None
+        self.critical = None
 
     def __deepcopy__(self, memo):
         """MoveExecutorインスタンスのディープコピーを作成する。
@@ -98,15 +114,12 @@ class MoveExecutor:
         elif min_hits == max_hits:
             base_hit_count = max_hits
         elif (min_hits, max_hits) == (2, 5):
+            base_hit_count = 5
             roll = self.battle.random.random()
-            if roll < 0.375:
-                base_hit_count = 2
-            elif roll < 0.75:
-                base_hit_count = 3
-            elif roll < 0.875:
-                base_hit_count = 4
-            else:
-                base_hit_count = 5
+            for threshold, hits in MULTI_HIT_DISTRIBUTION_2_TO_5:
+                if roll < threshold:
+                    base_hit_count = hits
+                    break
         else:
             base_hit_count = self.battle.random.randint(min_hits, max_hits)
 
@@ -186,7 +199,7 @@ class MoveExecutor:
         self.crit_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK, ctx, ctx.move.critical_rank
         )
-        self.crit_rank = max(0, min(3, self.crit_rank))
+        self.crit_rank = clamp_critic(self.crit_rank)
 
         # 急所確率の計算
         crit_rate = self._events.emit(
@@ -205,7 +218,7 @@ class MoveExecutor:
         """
         if ctx.move.target != "foe":
             return False
-        return self.battle.events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
+        return self._events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行。
@@ -217,10 +230,7 @@ class MoveExecutor:
             attacker: 攻撃側のポケモン
             move: 使用する技
         """
-        self.accuracy = None
-        self.action_success = False
-        self.move_success = False
-        self.move_applied = False
+        self.reset_monitoring_flags()
 
         defender = self.battle.foe(attacker)
         ctx = EventContext(attacker=attacker, defender=defender)
@@ -239,47 +249,53 @@ class MoveExecutor:
         # 技のハンドラを登録
         ctx.move.register_handlers(self._events, ctx.attacker)
 
-        # 技タイプを評価する（可変技対応）
-        ctx.move.set_type(
-            self.resolve_move_type(ctx.attacker, ctx.move)
-        )
+        try:
+            # 技タイプを評価する（可変技対応）
+            ctx.move.set_type(
+                self.resolve_move_type(ctx.attacker, ctx.move)
+            )
 
-        # 技カテゴリを評価する（可変技対応）
-        ctx.move.set_category(
-            self.resolve_move_category(ctx.attacker, ctx.move)
-        )
+            # 技カテゴリを評価する（可変技対応）
+            ctx.move.set_category(
+                self.resolve_move_category(ctx.attacker, ctx.move)
+            )
 
-        # 行動成功判定
-        self.action_success = self._events.emit(Event.ON_TRY_ACTION, ctx, True)
-        if not self.action_success:
-            return
+            # 行動成功判定
+            self.action_success = self._events.emit(Event.ON_TRY_ACTION, ctx, True)
+            if self.action_success:
+                # PP消費
+                self._consume_pp(ctx)
 
-        # PP消費
-        self._consume_pp(ctx)
+                # かやたぶりを適用する
+                self._events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
 
-        # かやたぶりを有効にする
-        self._events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
+                # 技の実行
+                self._execute_move(ctx)
 
-        # 技の実行
-        self._execute_move(ctx)
+        finally:
+            # 技の威力を元に戻す（トリプルアクセルなどのため）
+            ctx.move.set_power(ctx.move.data.power)
 
-        # かやたぶりを無効にする
-        self._events.emit(Event.ON_DEACTIVATE_MOLD_BREAKER, ctx)
+            # かやたぶりを解除する
+            self._events.emit(Event.ON_DEACTIVATE_MOLD_BREAKER, ctx)
 
-        # 技のハンドラを解除
-        ctx.move.unregister_handlers(self._events, ctx.attacker)
+            # 技のハンドラを解除
+            ctx.move.unregister_handlers(self._events, ctx.attacker)
 
     def _check_hit_by_type(self, ctx: EventContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
-        type_modifier = self.battle.damage_calculator._calc_def_type_modifier(ctx=ctx)
+        type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
 
         if type_modifier == 0:
-            self.battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
-                                      payload={"reason": "タイプ無効"})
+            self.battle.add_event_log(
+                ctx.attacker,
+                LogCode.MOVE_IMMUNED,
+                payload={"reason": "タイプ無効"}
+            )
             return False
         return True
 
-    def _execute_move(self, ctx: EventContext):
+    def _execute_move(self, ctx: EventContext) -> None:
         """技実行の内部フローを処理する。
 
         行動可否チェックから PP 消費、命中判定、連続ヒット処理までを担当する。
@@ -341,7 +357,7 @@ class MoveExecutor:
             # 無効化されたら中断
             self.move_applied = self._events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
             if not self.move_applied:
-                return False
+                return
 
             # 技が当たったときの処理を実行
             self._execute_hit(ctx)
@@ -349,9 +365,6 @@ class MoveExecutor:
             # ひんしになったら中断
             if ctx.defender.fainted or ctx.attacker.fainted:
                 break
-
-        # 技の威力を元に戻す（トリプルアクセルなどのため）
-        ctx.move.set_power(ctx.move.data.power)
 
         # 技実行完了後の処理（状態管理・撤去など）
         self._events.emit(Event.ON_MOVE_END, ctx)

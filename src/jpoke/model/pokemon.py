@@ -8,12 +8,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import EventManager
     from jpoke.data.models import PokemonData
 
 from jpoke.utils.type_defs import Nature, Type, Stat, Gender, \
     BoostSource, AilmentName, VolatileName
 from jpoke.utils.constants import STATS
+from jpoke.utils.math import clamp_stats
 from jpoke.utils import fast_copy
 from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS
 
@@ -51,9 +52,9 @@ class Pokemon:
                  gender: Gender = "",
                  nature: Nature = "まじめ",
                  level: int = 50,
-                 ability: str = "",
-                 item: str = "",
-                 moves: list[str] = ["はねる"],
+                 ability_name: str = "",
+                 item_name: str = "",
+                 move_names: list[str] = ["はねる"],
                  tera_type: Type = "ステラ") -> None:
         """ポケモンを初期化する。
 
@@ -62,9 +63,9 @@ class Pokemon:
             gender: 性別（"オス"/"メス"/""）
             nature: 性格
             level: レベル（デフォルト50）
-            ability: 特性（文字列）
-            item: アイテム（文字列）
-            moves: 技のリスト（文字列のリスト）
+            ability_name: 特性（文字列）
+            item_name: アイテム（文字列）
+            move_names: 技のリスト（文字列のリスト）
             tera_type: テラスタルタイプ
         """
         self.data: PokemonData = POKEDEX[name]
@@ -73,14 +74,13 @@ class Pokemon:
         self._level: int = level
         self.tera_type: Type = tera_type
 
-        self.ability: Ability  # type hint
-        self.base_ability_name: str  # type hint
-        self.set_ability(ability)
+        self.ability: Ability = Ability(ability_name)
+        self.base_ability_name: str = ability_name
 
-        self.item = Item(item)
+        self.item = Item(item_name)
         self.last_lost_item_name: str = ""
 
-        self.set_moves(moves)
+        self.set_moves(move_names)
 
         # ステータス計算マネージャー
         self._stats_manager = PokemonStats()
@@ -107,17 +107,6 @@ class Pokemon:
         self.executed_move: Move | None = None
         self.ability_override_type: Type | None = None
 
-    def set_ability(self, ability_name: str | None = None):
-        """特性を初期化する。
-
-        Args:
-            ability_name: 特性名（Noneの場合はデフォルトの特性を使用）
-        """
-        if ability_name is None:
-            ability_name = self.data.abilities[0]  # デフォルトは種族値の特性
-        self.ability = Ability(ability_name)
-        self.base_ability_name: str = self.ability.base_name
-
     def __deepcopy__(self, memo):
         cls = self.__class__
         new = cls.__new__(cls)
@@ -129,9 +118,10 @@ class Pokemon:
         ])
         return new
 
+    def reset_on_switch_in(self):
+        self.revealed = True
+
     def reset_on_switch_out(self):
-        """ベンチに戻ったときのリセット処理"""
-        self.volatiles = {}
         self.active_turn = 0
         self.hits_taken = 0
         self.rank = {k: 0 for k in STATS}
@@ -142,6 +132,16 @@ class Pokemon:
         self.paradox_boost_active = False
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
+
+        # 特性の状態をリセット
+        # 特性が変わっている場合は特性自体をリセットする
+        if self.ability.base_name != self.base_ability_name:
+            self.ability = Ability(self.base_ability_name)
+        else:
+            self.ability.reset_on_switch_out()
+
+        # アイテムの状態をリセット
+        self.item.reset_on_switch_out()
 
     def reset_turn_state(self):
         """ターン初期化処理。"""
@@ -193,21 +193,28 @@ class Pokemon:
         """
         return self.data.name
 
-    def set_form(self, name: str, keep_damage: bool = True, init_ability: bool = False) -> bool:
+    def set_form(self,
+                 name: str,
+                 keep_damage: bool = True,
+                 set_default_ability: bool = False) -> bool:
         """ポケモンのフォルムをエイリアス指定で切り替える。
 
         Args:
             name: 変更先フォルムの図鑑エイリアス
             keep_damage: Trueの場合、現在の被ダメージ量を維持する
-            init_ability: Trueの場合、特性を初期化する
+            set_default_ability: Trueの場合、特性を変更先のデフォルト特性にリセットする
         """
         if self.name == name:
             return False
 
         self.data = POKEDEX[name]
         self.update_stats(keep_damage=keep_damage)
-        if init_ability:
-            self.set_ability()
+
+        if set_default_ability:
+            ability_name = self.data.abilities[0]
+            self.ability = Ability(ability_name)
+            self.base_ability_name = self.ability.base_name
+
         return True
 
     @property
@@ -385,7 +392,7 @@ class Pokemon:
             メガシンカに成功した場合True、失敗した場合False
         """
         mega_name = MEGA_STONES[self.item.name][-1]
-        self.set_form(mega_name, init_ability=True)
+        self.set_form(mega_name, set_default_ability=True)
 
     def has_item(self, name: str | None = None) -> bool:
         """アイテムを持っているか判定する。
@@ -621,7 +628,7 @@ class Pokemon:
             ランクは-6から+6の範囲に制限される。
         """
         old = self.rank[stat]
-        self.rank[stat] = max(-6, min(6, old + v))
+        self.rank[stat] = clamp_stats(old + v)
         return self.rank[stat] - old
 
     @property
@@ -694,21 +701,21 @@ class Pokemon:
                 self.volatiles["みがわり"] = Volatile("みがわり", count=0)
             self.volatiles["みがわり"].hp = value
 
-    def get_move(self, move: str) -> Move | None:
+    def get_move(self, move_name: str) -> Move | None:
         """技を検索する。
 
         Args:
-            move: 技名
+            move_name: 技名
 
         Returns:
             見つかった場合はMoveオブジェクト、見つからなければNone
         """
         for m in self.moves:
-            if m.name == move:
+            if m.name == move_name:
                 return m
         return None
 
-    def has_ailment(self, *ailments: AilmentName) -> bool:
+    def has_ailment(self, *ailment_names: AilmentName) -> bool:
         """指定された状態異常を持っているか判定する。
 
         Args:
@@ -717,26 +724,26 @@ class Pokemon:
         Returns:
             指定状態異常を持っていればTrue
         """
-        return self.ailment.name in ailments
+        return self.ailment.name in ailment_names
 
-    def has_volatile(self, name: VolatileName) -> bool:
+    def has_volatile(self, volatile_name: VolatileName) -> bool:
         """指定された揮発性状態を持っているか判定する。
 
         Args:
-            name: 揮発性状態名
+            volatile_name: 揮発性状態名
 
         Returns:
             指定揮発性状態を持っていればTrue
         """
-        return name in self.volatiles
+        return volatile_name in self.volatiles
 
-    def get_volatile(self, name: VolatileName) -> Volatile | None:
+    def get_volatile(self, volatile_name: VolatileName) -> Volatile | None:
         """揮発性状態を取得する。
 
         Args:
-            name: 揮発性状態名
+            volatile_name: 揮発性状態名
 
         Returns:
             指定された揮発性状態があればそのVolatileオブジェクト、なければNone
         """
-        return self.volatiles.get(name, None)
+        return self.volatiles.get(volatile_name, None)

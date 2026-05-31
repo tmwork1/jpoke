@@ -21,7 +21,7 @@ import test_utils as t
 )
 def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: int):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move])],
+        team0=[Pokemon("ピカチュウ", tera_type=tera_type, move_names=[move])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
@@ -41,7 +41,7 @@ def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: in
 )
 def test_威力底上げ(move_name: str, tera_type: Type, expected: int):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move_name])],
+        team0=[Pokemon("ピカチュウ", tera_type=tera_type, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
@@ -64,7 +64,7 @@ def test_威力底上げ(move_name: str, tera_type: Type, expected: int):
 def test_ステラタイプ補正(tera_type: Type, move: str, expected_initial: int, expected_after: int):
     """ステラ テラスタル中、元タイプ一致技は初回2.0倍、2回目以降1.5倍。"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", tera_type=tera_type, moves=[move])],
+        team0=[Pokemon("ピカチュウ", tera_type=tera_type, move_names=[move])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
