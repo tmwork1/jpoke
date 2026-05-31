@@ -376,11 +376,10 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=False, stop_event=True)
 
 
-def さわぐ_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def さわぐ_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """さわぐ状態を付与し、場のねむり関連状態を解除する。"""
     # 相手にさわがしい状態を付与
     foe = battle.foe(ctx.source)
-
     count = ctx.source.volatiles["さわぐ"].count
     battle.volatile_manager.apply(foe, "さわがしい", count=count)
 

@@ -1,4 +1,4 @@
-# TODO : 配置とコメントを整理する。
+# TODO : iイベント定義の配置とコメントを整理する。
 # 同種イベントは固めて配置し、emit/handle のコメントも統一的に記載する。
 
 """
@@ -41,7 +41,6 @@ class Event(Enum):
     各イベントの emit 箇所と代表的な handle 箇所は以下のコメントを参照。
     """
 
-    # TODO : 以下の追加イベントを適切に配置する
     ON_ACTIVATE_MOLD_BREAKER = auto()
     ON_DEACTIVATE_MOLD_BREAKER = auto()
     ON_TRY_BLOW = auto()
@@ -219,7 +218,7 @@ class Event(Enum):
 
     # emit: core/pokemon_state.py（揮発性状態を付与した直後）
     # handle: volatile.py（とくせいなし等、付与直後に同期が必要な後処理）
-    ON_APPLY_VOLATILE = auto()
+    ON_VOLATILE_START = auto()
 
     # emit: core/pokemon_state.py（揮発性状態が終了したとき）
     # handle: volatile.py（状態終了時の後処理・ハンドラ解除を呼び出す内部イベント）

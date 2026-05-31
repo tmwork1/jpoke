@@ -1563,7 +1563,7 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ハドロンエンジン": AbilityData(
         handlers={
-            # TODO : エレキメイカーと同じ効果処理も追加
+            # TODO : エレキメイカーと同じ展開効果処理も追加
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.ハドロンエンジン_modify_atk,
                 subject_spec="attacker:self",

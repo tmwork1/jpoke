@@ -103,11 +103,9 @@ class CommandManager:
                 return Move(move_name)
             return Move("わるあがき")
 
-        # TODO: ダイマックス技実装
         if command.is_gigamax:
             return Move("わるあがき")
 
-        # TODO: Zワザ実装
         if command.is_zmove:
             return Move("わるあがき")
 

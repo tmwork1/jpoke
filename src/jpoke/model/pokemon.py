@@ -252,7 +252,6 @@ class Pokemon:
 
         Note:
             テラスタル、タイプ追加/削除効果を考慮した現在のタイプを返す。
-            アルセウスのタイプ変化は未実装（TODO）。
         """
         if self.active_tera_type:
             if self.active_tera_type == 'ステラ':

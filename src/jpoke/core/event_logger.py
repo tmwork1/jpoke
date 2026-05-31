@@ -81,7 +81,6 @@ class EventLog:
         return text
 
     def _get_base_text(self) -> str:
-        # TODO : LogCodeを網羅する
         """LogCodeに対応する基本的なテキストを生成。
 
         Returns:

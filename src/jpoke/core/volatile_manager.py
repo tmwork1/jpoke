@@ -48,7 +48,7 @@ class VolatileManager:
 
     def apply(self,
               target: Pokemon,
-              volatile_name: VolatileName,
+              name: VolatileName,
               count: int | None = None,
               source: Pokemon | None = None,
               ctx: EventContext | None = None,
@@ -57,7 +57,7 @@ class VolatileManager:
 
         Args:
             target: 対象のポケモン
-            volatile_name: 揮発性状態名
+            name: 揮発性状態名
             count: 継続ターン数
             source: 揮発性状態の原因となったポケモン
             ctx: ON_BEFORE_APPLY_VOLATILE イベントの EventContext
@@ -69,7 +69,7 @@ class VolatileManager:
             - 既に同じ揮発性状態があれば失敗
         """
         # 既に同じ揮発性状態がある場合は失敗
-        if target.has_volatile(volatile_name):
+        if target.has_volatile(name):
             return False
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
@@ -79,12 +79,12 @@ class VolatileManager:
             apply_ctx = EventContext(target=target, source=source)
 
         # ハンドラーが空値を返した場合は無効化させる
-        resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_VOLATILE, apply_ctx, volatile_name)
+        resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_VOLATILE, apply_ctx, name)
         if not resolved_name:
             self.battle.add_event_log(
                 target,
                 LogCode.VOLATILE_IMMUNE,
-                payload={"volatile": volatile_name}
+                payload={"volatile": name}
             )
             return False
 
@@ -97,17 +97,19 @@ class VolatileManager:
         target.volatiles[resolved_name].register_handlers(self._events, target)
 
         # 付与後フック
-        # TODO : ON_APPLY_VOLATILE では source=mon だが ON_BEFORE_APPLY_VOLATILE では target=mon である点がややこしい。
-        hook_ctx = EventContext(source=target)
-        self._events.emit(Event.ON_APPLY_VOLATILE, hook_ctx, resolved_name)
+        self._events.emit(
+            Event.ON_VOLATILE_START,
+            EventContext(source=target),
+            resolved_name
+        )
         return True
 
-    def remove(self, target: Pokemon, volatile_name: VolatileName) -> bool:
+    def remove(self, target: Pokemon, name: VolatileName) -> bool:
         """揮発性状態を解除する。
 
         Args:
             target: 対象のポケモン
-            volatile_name: 揮発性状態名
+            name: 揮発性状態名
 
         Returns:
             解除に成功したTrue
@@ -115,23 +117,23 @@ class VolatileManager:
         Note:
             指定された揮発性状態がない場合は失敗する。
         """
-        if not target.has_volatile(volatile_name):
+        if not target.has_volatile(name):
             return False
 
-        volatile = target.volatiles.pop(volatile_name)
+        volatile = target.volatiles.pop(name)
 
         # 終了時ハンドラ内では、現在の保持状態に基づく再計算が行えるよう先に辞書から外す。
         self._events.emit(
             Event.ON_VOLATILE_END,
             EventContext(source=target),
-            volatile_name
+            name
         )
 
         volatile.unregister_handlers(self._events, target)
         self.battle.add_event_log(
             target,
             LogCode.VOLATILE_REMOVED,
-            payload={"volatile": volatile_name}
+            payload={"volatile": name}
         )
 
         return True

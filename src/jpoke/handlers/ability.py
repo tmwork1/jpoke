@@ -121,7 +121,6 @@ def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
         announce_ability_triggered(battle, None, None, mon=mon)
 
 
-# TODO : raise_stat は {Stat: value} の辞書で渡して汎用化する
 def _apply_type_absorb(battle: Battle,
                        ctx: EventContext,
                        value: bool,
@@ -1105,7 +1104,7 @@ def アイスボディ_on_turn_end(battle: Battle, ctx: EventContext, value: Any
 def アナライズ_modify_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。"""
     defender_player = battle.get_player(ctx.defender)
-    # TODO : 行動順を取得する関数を Battle か TurnManager に実装すべき
+    # TODO : 行動順が確定したときにどこかに保存しておき、それを参照するようにする。現状は「相手がすでに技を出したか、交代しているか」で代用している。
     acted_before = ctx.defender.executed_move is not None or defender_player.has_switched
     if acted_before:
         value = apply_fixed_modifier(value, 5325)
