@@ -12,7 +12,7 @@ from jpoke.core import EventContext
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import MEMORY_TO_TYPE
 from jpoke.enums import Event, Interrupt, Command
-from jpoke.utils.type_defs import Stat, AilmentName, VolatileName
+from jpoke.utils.type_defs import Type, Stat, AilmentName, VolatileName
 from jpoke.model import Move
 
 import test_utils as t
@@ -2319,51 +2319,46 @@ def test_せいしんりょく_いかくを防ぐ():
 
 # TODO : かたやぶりで無効化するテストを追加 (ねこだまし実装後)
 
+
 # ──────────────────────────────────────────────────────────────────
 # 接触時に状態異常付与
 # せいでんき、どくのトゲ、ほのおのからだ
 # ──────────────────────────────────────────────────────────────────
+CONTACT_AILMENT_CASES = [
+    ("せいでんき", "まひ"),
+    ("どくのトゲ", "どく"),
+    ("ほのおのからだ", "やけど"),
+]
 
-# TODO : パラメタライズでまとめてテストする
 
-
-def test_どくのトゲ_接触技でどく付与():
+@pytest.mark.parametrize(
+    "ability_name, ailment_name",
+    CONTACT_AILMENT_CASES
+)
+def test_接触時に状態異常付与_接触技で状態異常を付与する(ability_name: str, ailment_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="どくのトゲ")],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
         team1=[Pokemon("イーブイ", move_names=["たいあたり"])],
     )
     attacker = battle.actives[1]
     battle.random.random = lambda: 0.0
     battle.move_executor.run_move(attacker, attacker.moves[0])
-    assert attacker.has_ailment("どく")
+    assert attacker.has_ailment(ailment_name)
 
 
-def test_どくのトゲ_非接触技では発動しない():
+@pytest.mark.parametrize(
+    "ability_name, ailment_name",
+    CONTACT_AILMENT_CASES
+)
+def test_接触時に状態異常付与_非接触技では発動しない(ability_name: str, ailment_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="どくのトゲ")],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
         team1=[Pokemon("イーブイ", move_names=["はどうだん"])],
     )
     attacker = battle.actives[1]
     battle.random.random = lambda: 0.0
     battle.move_executor.run_move(attacker, attacker.moves[0])
-    assert not attacker.has_ailment("どく")
-
-
-def test_ほのおのからだ_接触技で被弾時に30パーセントで相手をやけど():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ほのおのからだ")],
-        team1=[Pokemon("イーブイ", move_names=["たいあたり"])],
-    )
-    attacker = battle.actives[1]
-
-    orig_random = battle.random.random
-    battle.random.random = lambda: 0.0
-    try:
-        battle.move_executor.run_move(attacker, attacker.moves[0])
-    finally:
-        battle.random.random = orig_random
-
-    assert attacker.has_ailment("やけど")
+    assert not attacker.has_ailment(ailment_name)
 
 # ──────────────────────────────────────────────────────────────────
 # ぜったいねむり
@@ -2564,8 +2559,6 @@ def test_ちからもち_イカサマを受けるときは補正なし():
 # タイプ無効で回復
 # ちくでん、ちょすい、どしょく
 # ──────────────────────────────────────────────────────────────────
-# TODO : パラメタライズでまとめてテストする
-
 @pytest.mark.parametrize(
     "ability, move",
     [
@@ -2608,38 +2601,32 @@ def test_タイプ無効回復_かたやぶりで無効(ability, move):
 # ちどりあし
 # ──────────────────────────────────────────────────────────────────
 
+
 # ──────────────────────────────────────────────────────────────────
 # てきおうりょく
 # ──────────────────────────────────────────────────────────────────
-# TODO : 条件と補正量をリスト化し、パラメタライズでまとめてテストする
-
-
-def test_てきおうりょく_通常時STABが2倍になる():
+@pytest.mark.parametrize(
+    "name, tera_type, move_name, expected_modifier",
+    [
+        ("ピカチュウ", "", "でんきショック", 4096 * 2),
+        ("ピカチュウ", "でんき", "でんきショック", 4096 * 2.25),
+        ("ピカチュウ", "", "ひのこ", 4096),
+    ]
+)
+def test_てきおうりょく_STAB補正(
+    name: str,
+    tera_type: Type,
+    move_name: str,
+    expected_modifier: float,
+):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="てきおうりょく", move_names=["でんきショック"])],
+        team0=[Pokemon(name, ability_name="てきおうりょく", tera_type=tera_type, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
     )
+    if tera_type:
+        battle.actives[0].terastallize()
     t.run_move(battle, 0)
-    assert battle.damage_calculator.atk_type_modifier == 4096 * 2
-
-
-def test_てきおうりょく_元タイプ一致テラスタルで2_25倍になる():
-    battle = t.start_battle(
-        team0=[Pokemon("リザードン", ability_name="てきおうりょく", tera_type="ほのお", move_names=["ひのこ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    battle.actives[0].terastallize()
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.atk_type_modifier == 4096 * 2.25
-
-
-def test_てきおうりょく_非一致タイプは補正しない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="てきおうりょく", move_names=["ひのこ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.atk_type_modifier == 4096
+    assert battle.damage_calculator.atk_type_modifier == expected_modifier
 
 
 # ──────────────────────────────────────────────────────────────────
