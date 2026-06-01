@@ -19,29 +19,6 @@ class CustomPlayer(Player):
         return battle.get_available_action_commands(self)[0]
 
 
-def build_context(battle: Battle, atk_idx: int = 0, move_idx: int = 0) -> EventContext:
-    """EventContextを構築するヘルパー関数。"""
-    attacker = battle.actives[atk_idx]
-    defender = battle.foe(attacker)
-    move = attacker.moves[move_idx]
-    return EventContext(attacker=attacker, defender=defender, move=move)
-
-
-def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
-    attacker = battle.actives[atk_idx]
-    move = attacker.moves[move_idx]
-    battle.run_move(attacker, move)
-    battle.print_logs()
-    return move
-
-
-def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
-    player = battle.players[player_idx]
-    mon = battle.player_states[player].team[new_idx]
-    battle.run_switch(player, mon)
-    return mon
-
-
 def start_battle(team0: list[Pokemon],
                  team1: list[Pokemon],
                  ailment0: dict[AilmentName, int] | None = None,
@@ -151,6 +128,29 @@ def reserve_command(battle: Battle,
         if command is None:
             command = player.choose_action_command(battle)
         state.reserve_command(command)
+
+
+def build_context(battle: Battle, atk_idx: int, move_idx: int = 0) -> EventContext:
+    """EventContextを構築するヘルパー関数。"""
+    attacker = battle.actives[atk_idx]
+    defender = battle.foe(attacker)
+    move = attacker.moves[move_idx]
+    return EventContext(attacker=attacker, defender=defender, move=move)
+
+
+def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
+    attacker = battle.actives[atk_idx]
+    move = attacker.moves[move_idx]
+    battle.run_move(attacker, move)
+    battle.print_logs()
+    return move
+
+
+def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
+    player = battle.players[player_idx]
+    mon = battle.player_states[player].team[new_idx]
+    battle.run_switch(player, mon)
+    return mon
 
 
 def end_turn(battle: Battle):

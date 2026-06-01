@@ -23,7 +23,7 @@ def test_攻撃側タイプ補正計算(attacker: Pokemon, expected: int):
         team0=[attacker],
         team1=[Pokemon("ピカチュウ")],
     )
-    t.build_context(battle, 0)
+    t.build_context(battle, atk_idx=0)
     t.run_move(battle, 0)
     assert battle.damage_calculator.atk_type_modifier == expected
 
