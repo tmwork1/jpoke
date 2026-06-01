@@ -67,8 +67,41 @@ def test_急所_ダメージ倍率():
     ratio = critical_damages[0] / normal_damages[0]
     assert 1.4 < ratio < 1.6
 
-# TODO : 急所時に攻撃側の能力ランク低下を無視するテストを追加
-# TODO : 急所時に防御側の能力ランク上昇を無視するテストを追加
+
+def test_急所_攻撃側の能力ランク低下を無視する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+
+    attacker.rank["A"] = -6
+    normal_with_drop = battle.calc_damage_range(attacker, defender, "たいあたり", critical=False)
+    critical_with_drop = battle.calc_damage_range(attacker, defender, "たいあたり", critical=True)
+
+    attacker.rank["A"] = 0
+    critical_without_drop = battle.calc_damage_range(attacker, defender, "たいあたり", critical=True)
+
+    assert normal_with_drop[0] < critical_with_drop[0]
+    assert critical_with_drop == critical_without_drop
+
+
+def test_急所_防御側の能力ランク上昇を無視する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+
+    defender.rank["B"] = 6
+    normal_with_boost = battle.calc_damage_range(attacker, defender, "たいあたり", critical=False)
+    critical_with_boost = battle.calc_damage_range(attacker, defender, "たいあたり", critical=True)
+
+    defender.rank["B"] = 0
+    critical_without_boost = battle.calc_damage_range(attacker, defender, "たいあたり", critical=True)
+
+    assert normal_with_boost[0] < critical_with_boost[0]
+    assert critical_with_boost == critical_without_boost
 
 
 if __name__ == "__main__":

@@ -110,7 +110,7 @@ def test_にどげり_命中判定1回で2回ヒットする():
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert defender.hits_taken == 2
 
 # ──────────────────────────────────────────────────────────────────
@@ -323,7 +323,7 @@ def test_いかりのまえば_最低1ダメージ():
     )
     attacker, defender = battle.actives
     defender.hp = 1
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert defender.hp == 0
 
 # ──────────────────────────────────────────────────────────────────

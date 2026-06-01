@@ -1,11 +1,11 @@
 # test_ability
 
-テスト数: 335
+テスト数: 351
 
-- [x] ARシステム_フェアリーメモリでフェアリータイプになる
 - [x] ARシステム_メモリなしでタイプ変更なし
-- [x] あめうけざら_あめ中に回復(weather_name=あめ, weather_count=5)
-- [x] あめうけざら_あめ中に回復(weather_name=おおあめ, weather_count=999)
+- [x] 天候回復特性_対応天候中に回復(ability_name=あめうけざら, weather_name=あめ, weather_count=5)
+- [x] 天候回復特性_対応天候中に回復(ability_name=あめうけざら, weather_name=おおあめ, weather_count=999)
+- [x] 天候回復特性_対応天候中に回復(ability_name=アイスボディ, weather_name=ゆき, weather_count=5)
 - [x] あめうけざら_あめ以外では発動しない
 - [x] タイプ半減系(ability_name=あついしぼう, move_name=ひのこ)
 - [x] タイプ半減系(ability_name=あついしぼう, move_name=れいとうビーム)
@@ -15,6 +15,13 @@
 - [x] あとだし_同優先度で最後に行動
 - [x] あとだし_高優先度技は先攻
 - [x] あとだし_トリックルームでも後攻
+- [x] アナライズ_確定行動順で後攻なら威力上昇
+- [x] アナライズ_確定行動順で先攻なら威力据え置き
+- [x] アナライズ_行動順未記録時は従来フォールバックで判定
+- [x] query_先攻後攻を問い合わせできる
+- [x] query_行動順未確定ならNoneを返す
+- [x] あまのじゃく_能力変化量の符号を反転する
+- [x] あまのじゃく_かたやぶりで無効
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
 - [x] あめふらし_通常天候を上書きする(initial_weather=すなあらし)
 - [x] あめふらし_通常天候を上書きする(initial_weather=ゆき)
@@ -25,28 +32,22 @@
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=おわりのだいち, weather_name=おおひでり)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=はじまりのうみ, weather_name=おおあめ)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=デルタストリーム, weather_name=らんきりゅう)
-- [x] ありじごく_交代不可
-- [x] ありじごく_飛行タイプは交代可能
-- [x] ありじごく_ふゆうは交代可能
-- [x] かげふみ_かげふみ持ち以外は交代不可
-- [x] かげふみ_かげふみ持ちは交代可能
-- [x] じりょく_はがねタイプは交代不可
-- [x] じりょく_はがねタイプ以外は交代可能
-- [x] ゴーストタイプは交代可能
-- [x] 揮発状態耐性(ability=アロマベール, volatile=メロメロ, result=False)
+- [x] 交代抑制特性_param(ability_name=ありじごく, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=False)
+- [x] 交代抑制特性_param(ability_name=ありじごく, attacker_name=ピジョン, attacker_ability=, expected_can_switch=True)
+- [x] 交代抑制特性_param(ability_name=かげふみ, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=False)
+- [x] 交代抑制特性_param(ability_name=かげふみ, attacker_name=ピカチュウ, attacker_ability=かげふみ, expected_can_switch=True)
+- [x] 交代抑制特性_param(ability_name=じりょく, attacker_name=コイル, attacker_ability=, expected_can_switch=False)
+- [x] 交代抑制特性_param(ability_name=じりょく, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=True)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=アンコール, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=いちゃもん, result=False)
+- [x] 揮発状態耐性(ability=アロマベール, volatile=かいふくふうじ, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=かなしばり, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=ちょうはつ, result=False)
-- [x] 揮発状態耐性(ability=アロマベール, volatile=かいふくふうじ, result=False)
+- [x] 揮発状態耐性(ability=アロマベール, volatile=メロメロ, result=False)
 - [x] 揮発状態耐性(ability=スイートベール, volatile=ねむけ, result=False)
-- [x] 揮発状態耐性(ability=どんかん, volatile=メロメロ, result=False)
 - [x] 揮発状態耐性(ability=どんかん, volatile=ちょうはつ, result=False)
+- [x] 揮発状態耐性(ability=どんかん, volatile=メロメロ, result=False)
 - [x] 揮発状態耐性(ability=マイペース, volatile=こんらん, result=False)
-- [x] 揮発状態耐性_かたやぶりで無効(ability=アロマベール, volatile=ちょうはつ, move=ちょうはつ)
-- [x] 揮発状態耐性_かたやぶりで無効(ability=スイートベール, volatile=ねむけ, move=あくび)
-- [x] 揮発状態耐性_かたやぶりで無効(ability=どんかん, volatile=ちょうはつ, move=ちょうはつ)
-- [x] 揮発状態耐性_かたやぶりで無効(ability=マイペース, volatile=こんらん, move=あやしいひかり)
 - [x] いかく_登場時に相手攻撃1段階ダウン
 - [x] いしあたま_反動技を使っても反動ダメージを受けない
 - [x] いたずらごころ_変化技の優先度が1上がる
@@ -57,7 +58,6 @@
 - [x] タイプ依存攻撃補正特性(ability_name=はがねつかい, move_name=アイアンヘッド, expected=6144)
 - [x] タイプ依存攻撃補正特性(ability_name=りゅうのあぎと, move_name=りゅうのはどう, expected=6144)
 - [x] タイプ依存攻撃補正特性(ability_name=トランジスタ, move_name=でんきショック, expected=5325)
-- [x] エアロック
 - [x] エアロック_すなあらしのターン終了ダメージが無効化される
 - [x] エレキメイカー_別フィールドを上書きする(initial_terrain=グラスフィールド)
 - [x] エレキメイカー_別フィールドを上書きする(initial_terrain=サイコフィールド)
@@ -69,11 +69,12 @@
 - [x] おうごんのからだ_かたやぶりで無効
 - [x] おやこあい_単発攻撃が2ヒットする
 - [x] おやこあい_既存連続技には適用しない
-- [x] かいりきバサミ_こうげき低下のみ防ぐ
-- [x] かいりきバサミ_自己低下は防げない
-- [x] かいりきバサミ_かたやぶりで無効
+- [x] 能力低下防止特性_param(ability_name=かいりきバサミ, stats={'A': -1, 'B': -1, 'C': -2}, source_is_self=False, expected={'B': -1, 'C': -2})
+- [x] 能力低下防止特性_param(ability_name=かいりきバサミ, stats={'A': -1}, source_is_self=True, expected={'A': -1})
+- [x] 能力低下防止特性_param(ability_name=はとむね, stats={'A': -1, 'B': -1, 'C': -2}, source_is_self=False, expected={'A': -1, 'C': -2})
 - [x] かがくへんかガス_登場時に相手の特性を無効化
 - [x] かがくへんかガス_解除後は特性が再び有効化される
+- [x] かがくへんかガス_互いのかがくへんかガスは無効化されない
 - [x] かそく_行動後のターン終了時に素早さが上がる
 - [x] かそく_交代直後のターンは発動しない
 - [x] かたいツメ_接触技のみ威力補正1_3倍
@@ -84,6 +85,18 @@
 - [x] てつのこぶし_パンチ技威力補正
 - [x] パンクロック_音技で威力1_3倍かつ被ダメ0_5倍
 - [x] パンクロック_かたやぶりで音技軽減が無効化される
+- [x] 技カテゴリによる威力補正_param(ability_name=かたいツメ, move_name=たいあたり, expected_power=5325, check=power)
+- [x] 技カテゴリによる威力補正_param(ability_name=かたいツメ, move_name=でんきショック, expected_power=4096, check=power)
+- [x] 技カテゴリによる威力補正_param(ability_name=がんじょうあご, move_name=かみつく, expected_power=6144, check=power)
+- [x] 技カテゴリによる威力補正_param(ability_name=きれあじ, move_name=きりさく, expected_power=6144, check=power)
+- [x] 技カテゴリによる威力補正_param(ability_name=てつのこぶし, move_name=かみなりパンチ, expected_power=4915, check=power)
+- [x] 技カテゴリによる威力補正_param(ability_name=パンクロック, move_name=バークアウト, expected_power=5325, check=power)
+- [x] 防御系特性_stat_block_param(ability=かいりきバサミ, stats={'A': -1, 'B': -1, 'C': -2}, expected={'B': -1, 'C': -2})
+- [x] 防御系特性_stat_block_param(ability=はとむね, stats={'A': -1, 'B': -1, 'C': -2}, expected={'A': -1, 'C': -2})
+- [x] 音技無効系_param(defender_ability=ぼうおん, attacker_ability=, move_name=バークアウト, should_block=True)
+- [x] 音技無効系_param(defender_ability=ぼうおん, attacker_ability=かたやぶり, move_name=バークアウト, should_block=False)
+- [x] 音技無効系_param(defender_ability=ぼうだん, attacker_ability=, move_name=かえんボール, should_block=True)
+- [x] 音技無効系_param(defender_ability=ぼうだん, attacker_ability=かたやぶり, move_name=かえんボール, should_block=False)
 - [x] かたやぶり_場に出たときに特性開示
 - [x] かちき_相手由来の能力低下で発動する
 - [x] かちき_自分由来の能力低下では発動しない
@@ -96,6 +109,7 @@
 - [x] かるわざ_入場時にアイテムなしなら発動しない
 - [x] がんじょう_HP満タン時の致死ダメージでHP1残る
 - [x] がんじょう_一撃必殺技を無効化する
+- [x] がんじょう_かたやぶりによる致死ダメージは耐えない
 - [x] がんじょう_かたやぶりにで一撃技が通る
 - [x] ききかいひ_HP半分超から半分以下で割り込み交代する
 - [x] ききかいひ_被弾前HPが半分以下なら発動しない
@@ -103,16 +117,18 @@
 - [x] ききかいひ_こんらん自傷では発動しない
 - [x] ぎゃくじょう_HP半分超から半分以下で特攻1段階アップ
 - [x] ぎゃくじょう_被弾前HPが半分以下なら発動しない
+- [x] きゅうばん_吹き飛ばしを防ぐ
+- [x] きゅうばん_かたやぶりで無効化される
 - [x] きょううん_急所ランクが1上がる
 - [x] きんちょうかん_相手をきんちょうかん状態にする
-- [x] クォークチャージ_場条件なしならブーストエナジーを消費する
-- [x] クォークチャージ_最大ステータスがバフされる(name=スピアー, stat=A, modifier=5325)
-- [x] クォークチャージ_最大ステータスがバフされる(name=ゼニガメ, stat=B, modifier=5325)
-- [x] クォークチャージ_最大ステータスがバフされる(name=フシギダネ, stat=C, modifier=5325)
-- [x] クォークチャージ_最大ステータスがバフされる(name=カメックス, stat=D, modifier=5325)
-- [x] クォークチャージ_最大ステータスがバフされる(name=ピカチュウ, stat=S, modifier=6144)
-- [x] こだいかっせい_はれ中はブーストエナジー未消費_解除後に消費発動
-- [x] クォークチャージ_エレキフィールド下ではブーストエナジー未消費_解除後に消費発動
+- [x] パラドックス特性_ブーストエナジーと場条件の優先関係(ability_name=クォークチャージ, setup_kwargs={}, expected_source=item, keep_item_before_release=False)
+- [x] パラドックス特性_ブーストエナジーと場条件の優先関係(ability_name=こだいかっせい, setup_kwargs={'weather': ('はれ', 5)}, expected_source=field, keep_item_before_release=True)
+- [x] パラドックス特性_ブーストエナジーと場条件の優先関係(ability_name=クォークチャージ, setup_kwargs={'terrain': ('エレキフィールド', 5)}, expected_source=field, keep_item_before_release=True)
+- [x] クォークチャージ_最大ステータスがバフされる(name=スピアー, stat=A)
+- [x] クォークチャージ_最大ステータスがバフされる(name=ゼニガメ, stat=B)
+- [x] クォークチャージ_最大ステータスがバフされる(name=フシギダネ, stat=C)
+- [x] クォークチャージ_最大ステータスがバフされる(name=カメックス, stat=D)
+- [x] クォークチャージ_最大ステータスがバフされる(name=ピカチュウ, stat=S)
 - [x] くさのけがわ_
 - [x] くさのけがわ_かたやぶりで無効
 - [x] クリアボディ_能力低下を防ぐ
@@ -138,11 +154,17 @@
 - [x] タイプ無効特性_かたやぶりで無効(ability=でんきエンジン, move=でんきショック, stat=S, rank=1)
 - [x] タイプ無効特性_かたやぶりで無効(ability=ひらいしん, move=でんきショック, stat=C, rank=1)
 - [x] タイプ無効特性_かたやぶりで無効(ability=よびみず, move=でんきショック, stat=C, rank=1)
-- [x] こんじょう_状態異常で攻撃1_5倍かつやけど半減を無効化
+- [x] こんじょう_全ての状態異常で攻撃1_5倍(ailment_name=どく)
+- [x] こんじょう_全ての状態異常で攻撃1_5倍(ailment_name=もうどく)
+- [x] こんじょう_全ての状態異常で攻撃1_5倍(ailment_name=やけど)
+- [x] こんじょう_全ての状態異常で攻撃1_5倍(ailment_name=まひ)
+- [x] こんじょう_全ての状態異常で攻撃1_5倍(ailment_name=ねむり)
+- [x] こんじょう_全ての状態異常で攻撃1_5倍(ailment_name=こおり)
+- [x] こんじょう_やけど時はやけど半減を無効化する
 - [x] さいせいりょく_交代で控えに戻ると回復する
 - [x] さいせいりょく_かいふくふうじ中でも回復する
-- [x] さめはだ_接触ダメージ
-- [x] さめはだ_非接触技では反撃ダメージを与えない
+- [x] さめはだ_接触ダメージ(ability_name=さめはだ, move_name=みずでっぽう, damage_ratio=0)
+- [x] さめはだ_接触ダメージ(ability_name=てつのトゲ, move_name=みずでっぽう, damage_ratio=0)
 - [x] サンパワー_はれ中に特殊技の特攻1_5倍(weather_name=はれ, weather_count=5)
 - [x] サンパワー_はれ中に特殊技の特攻1_5倍(weather_name=おおひでり, weather_count=5)
 - [x] サンパワー_物理技は補正なし
@@ -172,22 +194,16 @@
 - [x] 状態異常無効_かたやぶりで無効(ability=やるき, ailment=ねむり, move=ねむりごな)
 - [x] 状態異常無効_かたやぶりで無効(ability=スイートベール, ailment=ねむり, move=ねむりごな)
 - [x] 状態異常無効_かたやぶりで無効(ability=みずのベール, ailment=やけど, move=おにび)
-- [x] すなかき_すなあらしで素早さ2倍
-- [x] すなかき_すなあらし以外では素早さ据え置き
-- [x] すいすい_あめで素早さ2倍
-- [x] すいすい_あめ以外では素早さ据え置き
-- [x] ようりょくそ_はれで素早さ2倍
-- [x] ようりょくそ_はれ以外では素早さ据え置き
-- [x] ゆきかき_ゆきで素早さ2倍
-- [x] ゆきかき_ゆき以外では素早さ据え置き
+- [x] 天候依存素早さ上昇(ability=すなかき, weather=すなあらし, expected_mult=2)
+- [x] 天候依存素早さ上昇(ability=すいすい, weather=あめ, expected_mult=2)
+- [x] 天候依存素早さ上昇(ability=ようりょくそ, weather=はれ, expected_mult=2)
+- [x] 天候依存素早さ上昇(ability=ゆきかき, weather=ゆき, expected_mult=2)
+- [x] 天候依存素早さ上昇_非対応天候は据え置き(ability=すなかき)
+- [x] 天候依存素早さ上昇_非対応天候は据え置き(ability=すいすい)
+- [x] 天候依存素早さ上昇_非対応天候は据え置き(ability=ようりょくそ)
+- [x] 天候依存素早さ上昇_非対応天候は据え置き(ability=ゆきかき)
 - [x] すいほう_みず技強化
 - [x] すいほう_ほのお技弱化
-- [x] スカイスキン_ノーマル技をひこうタイプに変換する
-- [x] スカイスキン_変換した技の威力が4915倍になる
-- [x] スカイスキン_元からひこうタイプの技は威力補正なし
-- [x] フェアリースキン_ノーマル技をフェアリータイプに変換する
-- [x] フェアリースキン_変換した技の威力が4915倍になる
-- [x] フェアリースキン_元からフェアリータイプの技は威力補正なし
 - [x] フリーズスキン_ノーマル技をこおりタイプに変換する
 - [x] フリーズスキン_変換した技の威力が4915倍になる
 - [x] フリーズスキン_元からこおりタイプの技は威力補正なし
@@ -304,11 +320,11 @@
 - [x] ぼうじん_粉技を無効化する
 - [x] ぼうじん_かたやぶりで無効
 - [x] マイティチェンジ_ナイーブで交代するとマイティへ変化する
-- [x] マジックガード_HPChangeReasonごとの挙動(reason=move_damage, should_block=False)
-- [x] マジックガード_HPChangeReasonごとの挙動(reason=self_attack, should_block=False)
-- [x] マジックガード_HPChangeReasonごとの挙動(reason=pain_split, should_block=False)
-- [x] マジックガード_HPChangeReasonごとの挙動(reason=self_cost, should_block=False)
-- [x] マジックガード_HPChangeReasonごとの挙動(reason=, should_block=True)
+- [x] マジックガード_HPChangeReasonごとの挙動(reason=move_damage, result=True)
+- [x] マジックガード_HPChangeReasonごとの挙動(reason=self_attack, result=True)
+- [x] マジックガード_HPChangeReasonごとの挙動(reason=pain_split, result=True)
+- [x] マジックガード_HPChangeReasonごとの挙動(reason=self_cost, result=True)
+- [x] マジックガード_HPChangeReasonごとの挙動(reason=, result=False)
 - [x] マジックミラー_変化技を跳ね返す
 - [x] マルチタイプ_せいれいプレートでフェアリータイプになる
 - [x] マルチタイプ_プレートなしでタイプ変更なし

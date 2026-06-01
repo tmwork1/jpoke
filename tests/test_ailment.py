@@ -61,7 +61,7 @@ def test_まひ_行動不能():
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動不能になる設定
     battle.test_option.trigger_ailment = True
-    battle.run_move(mon, mon.moves[0])
+    t.run_move(battle, 0)
 
     assert not battle.move_executor.action_success
 
@@ -73,7 +73,7 @@ def test_まひ_行動成功():
     battle.ailment_manager.apply(mon, "まひ")
     # 必ず行動できる設定
     battle.test_option.trigger_ailment = False
-    battle.run_move(mon, mon.moves[0])
+    t.run_move(battle, 0)
     assert battle.move_executor.action_success, "Paralysis action enabled (trigger_rate=0.0)"
 
 
@@ -87,7 +87,7 @@ def test_やけど_物理技ダメージ半減():
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "やけど")
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.damage_calculator.burn_modifier == 2048
 
 
@@ -98,7 +98,7 @@ def test_やけど_特殊技ダメージは半減しない():
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(attacker, "やけど")
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.damage_calculator.burn_modifier == 4096
 
 
@@ -124,13 +124,13 @@ def test_ねむり_カウント():
     battle.ailment_manager.apply(attacker, "ねむり", count=2)
 
     # 1ターン目: count 2 → 1
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.action_success
     assert attacker.ailment.name == "ねむり"
     assert attacker.ailment.count == 1
 
     # 2ターン目: count 1 → 0 で回復
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.move_executor.action_success
     assert not attacker.ailment.is_active
 
@@ -149,7 +149,7 @@ def test_こおり_行動不能():
     battle.ailment_manager.apply(mon, "こおり")
     # 解凍されない設定でテスト
     battle.test_option.trigger_ailment = False
-    battle.run_move(mon, mon.moves[0])
+    t.run_move(battle, 0)
     assert not battle.move_executor.action_success
     assert mon.ailment.name == "こおり"
 
@@ -164,7 +164,7 @@ def test_こおり_行動成功():
     battle.ailment_manager.apply(mon, "こおり")
     # 必ず解凍される設定でテスト
     battle.test_option.trigger_ailment = True
-    battle.run_move(mon, mon.moves[0])
+    t.run_move(battle, 0)
     assert battle.move_executor.action_success
     assert not mon.ailment.is_active
 
@@ -176,58 +176,31 @@ def test_こおり_ほのお技被弾で解凍する():
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(defender, "こおり")
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert not defender.ailment.is_active
 
 # ──────────────────────────────────────────────────────────────────
 # タイプによる耐性テスト
 # ──────────────────────────────────────────────────────────────────
-# TODO : パラメタライズでまとめる
 
 
-def test_どくタイプには通常どくが入らない():
+@pytest.mark.parametrize(
+    "target_name, ailment_name",
+    [
+        ("フシギダネ", "どく"),
+        ("コイル", "もうどく"),
+        ("ピカチュウ", "まひ"),
+        ("ヒトカゲ", "やけど"),
+        ("ラプラス", "こおり"),
+    ],
+)
+def test_タイプ一致の状態異常は入らない(target_name: str, ailment_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("フシギダネ")],
+        team0=[Pokemon(target_name)],
         team1=[Pokemon("ピカチュウ")],
     )
     target = battle.actives[0]
-    assert not battle.ailment_manager.apply(target, "どく")
-
-
-def test_はがねタイプには通常もうどくが入らない():
-    battle = t.start_battle(
-        team0=[Pokemon("コイル")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    target = battle.actives[0]
-    assert not battle.ailment_manager.apply(target, "もうどく")
-
-
-def test_でんきタイプにはまひが入らない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    target = battle.actives[0]
-    assert not battle.ailment_manager.apply(target, "まひ")
-
-
-def test_ほのおタイプにはやけどが入らない():
-    battle = t.start_battle(
-        team0=[Pokemon("ヒトカゲ")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    target = battle.actives[0]
-    assert not battle.ailment_manager.apply(target, "やけど")
-
-
-def test_こおりタイプにはこおりが入らない():
-    battle = t.start_battle(
-        team0=[Pokemon("ラプラス")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    target = battle.actives[0]
-    assert not battle.ailment_manager.apply(target, "こおり")
+    assert not battle.ailment_manager.apply(target, ailment_name)
 
 
 if __name__ == "__main__":

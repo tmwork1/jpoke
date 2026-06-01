@@ -26,7 +26,7 @@ def test_攻撃側タイプ補正計算(tera_type: Type, move: str, expected: in
     )
     attacker, defender = battle.actives
     attacker.terastallize()
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.damage_calculator.atk_type_modifier == expected
 
 
@@ -46,7 +46,7 @@ def test_威力底上げ(move_name: str, tera_type: Type, expected: int):
     )
     attacker, defender = battle.actives
     attacker.terastallize()
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == expected
 
 # ──────────────────────────────────────────────────────────────────
@@ -71,12 +71,12 @@ def test_ステラタイプ補正(tera_type: Type, move: str, expected_initial: 
     attacker.terastallize()
 
     # 初回
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.damage_calculator.atk_type_modifier == expected_initial
 
     # 消費済みに設定してから再計算
     attacker.stellar_boosted_types.add(attacker.moves[0].type)
-    battle.run_move(attacker, attacker.moves[0])
+    t.run_move(battle, 0)
     assert battle.damage_calculator.atk_type_modifier == expected_after
 
 

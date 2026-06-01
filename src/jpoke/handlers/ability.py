@@ -1406,7 +1406,10 @@ def はりきり_modify_accuracy(battle: Battle, ctx: EventContext, value: int) 
 
 def はりこみ_modify_atk(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。"""
-    if ctx.defender is not None and battle.get_player(ctx.defender).has_switched:
+    if (
+        ctx.defender is not None
+        and battle.player_states[battle.get_player(ctx.defender)].has_switched
+    ):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
