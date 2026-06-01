@@ -200,8 +200,7 @@ def cure_ailment(battle: Battle,
         return HandlerReturn(value=value)
 
     target = ctx.resolve_role(battle, target_spec)
-    source = ctx.resolve_role(battle, source_spec)
-    success = battle.ailment_manager.remove(target, source=source)
+    success = battle.ailment_manager.remove(target)
     return HandlerReturn(value=success)
 
 

@@ -153,5 +153,32 @@ def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
     return mon
 
 
+def can_switch(battle: Battle, player_idx: int) -> bool:
+    player = battle.players[player_idx]
+    return battle.can_switch(player)
+
+
+def change_item(battle: Battle,
+                mon: Pokemon,
+                item_name: str,
+                source: Pokemon | None = None,
+                move: Move | None = None) -> bool:
+    """テスト専用: アイテムを任意の名前に変更する。"""
+    if mon.has_item(item_name):
+        return True
+
+    if not mon.has_item():
+        return battle.gain_item(mon, item_name)
+
+    if not item_name:
+        return battle.remove_item(mon, source=source, move=move)
+
+    if not battle.can_change_item(mon, source=source, move=move):
+        return False
+
+    battle.item_manager._change_item(mon, item_name)
+    return True
+
+
 def end_turn(battle: Battle):
     battle.events.emit(Event.ON_TURN_END)

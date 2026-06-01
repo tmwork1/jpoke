@@ -95,6 +95,8 @@ def すなあらし_D_boost(battle: Battle, ctx: EventContext, value: Any) -> Ha
 def すなあらし_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """すなあらしのターン終了時ダメージ"""
     tick_weather(battle, ctx, value)
+    if battle.weather.name != "すなあらし":
+        return HandlerReturn(value=value)
     if not (
         ctx.source.has_type("いわ")
         or ctx.source.has_type("じめん")
@@ -425,3 +427,35 @@ def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: A
     # 素早さランクを1段階下げる (相手由来と判定される)
     battle.modify_stat(ctx.source, "S", -1, source=battle.foe(ctx.source))
     return HandlerReturn(value=value)
+def じゅうりょく_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_global_field(battle, ctx, value, name="じゅうりょく")
+
+def トリックルーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_global_field(battle, ctx, value, name="トリックルーム")
+
+def マジックルーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_global_field(battle, ctx, value, name="マジックルーム")
+
+def ワンダールーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_global_field(battle, ctx, value, name="ワンダールーム")
+
+def リフレクター_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="リフレクター")
+
+def ひかりのかべ_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="ひかりのかべ")
+
+def オーロラベール_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="オーロラベール")
+
+def しんぴのまもり_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="しんぴのまもり")
+
+def しろいきり_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="しろいきり")
+
+def おいかぜ_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="おいかぜ")
+
+def ねがいごと_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_side_field(battle, ctx, value, name="ねがいごと")

@@ -70,12 +70,12 @@ class EventLog:
         Returns:
             ログのテキスト表現
         """
-        if not self.payload:
-            return self.log.name
-
         # reasonを統一フォーマットで付与
-        reason = self.payload.get("reason")
         text = self._get_base_text()
+        if not self.payload:
+            return text
+
+        reason = self.payload.get("reason")
         if reason:
             text += f" [{reason}]"
         return text
@@ -86,80 +86,112 @@ class EventLog:
         Returns:
             基本的なテキスト表現
         """
-        if not self.payload:
-            return self.log.name
+        payload = self.payload or {}
 
         # LogCode に応じた適切なテキスト変換
         match self.log:
+            case LogCode.GAME_STARTED:
+                return "バトル開始"
+
+            case LogCode.GAME_WON:
+                return "勝利"
+
+            case LogCode.GAME_LOST:
+                return "敗北"
+
+            case LogCode.SWITCHED_IN:
+                pokemon = payload.get("pokemon", "ポケモン")
+                return f"{pokemon} が場に出た"
+
+            case LogCode.SWITCHED_OUT:
+                pokemon = payload.get("pokemon", "ポケモン")
+                return f"{pokemon} は戻った"
+
             case LogCode.TEXT_LOG:
-                return self.payload.get("text") or ""
+                return payload.get("text") or ""
+
+            case LogCode.MOVE_FAILED:
+                return "技は失敗した"
+
+            case LogCode.MOVE_REFLECTED:
+                return "技ははね返された"
 
             case LogCode.MOVE_MISSED:
                 return "技が外れた"
 
             case LogCode.ABILITY_TRIGGERED:
-                ability = self.payload.get("ability", "特性")
+                ability = payload.get("ability", "特性")
                 return f"{ability}が発動した"
 
             case LogCode.ITEM_TRIGGERED:
-                item = self.payload.get("item", "道具")
+                item = payload.get("item", "道具")
                 return f"{item}が発動した"
 
             case LogCode.ITEM_GAINED:
-                item = self.payload.get("item", "アイテム")
+                item = payload.get("item", "アイテム")
                 return f"{item}を得た"
 
             case LogCode.ITEM_LOST:
-                item = self.payload.get("item", "アイテム")
+                item = payload.get("item", "アイテム")
                 return f"{item}を失った"
 
             case LogCode.AILMENT_APPLIED:
-                ailment = self.payload.get("ailment", "状態異常")
+                ailment = payload.get("ailment", "状態異常")
                 return f"{ailment}が付与された"
 
             case LogCode.AILMENT_REMOVED:
-                ailment = self.payload.get("ailment", "状態異常")
+                ailment = payload.get("ailment", "状態異常")
                 return f"{ailment}が回復した"
 
             case LogCode.AILMENT_PREVENTED:
-                ailment = self.payload.get("ailment", "状態異常")
+                ailment = payload.get("ailment", "状態異常")
                 return f"{ailment}の付与が無効化された"
 
+            case LogCode.VOLATILE_IMMUNE:
+                volatile = payload.get("volatile", "揮発状態")
+                return f"{volatile}は効かなかった"
+
             case LogCode.VOLATILE_APPLIED:
-                volatile = self.payload.get("volatile", "揮発状態")
+                volatile = payload.get("volatile", "揮発状態")
                 return f"{volatile}が付与された"
 
             case LogCode.VOLATILE_REMOVED:
-                volatile = self.payload.get("volatile", "揮発状態")
+                volatile = payload.get("volatile", "揮発状態")
                 return f"{volatile}が解除された"
 
             case LogCode.VOLATILE_DISPLAY:
-                volatile = self.payload.get("volatile", "揮発状態")
+                volatile = payload.get("volatile", "揮発状態")
                 return f"{volatile}の状態"
 
             case LogCode.VOLATILE_PREVENTED:
-                volatile = self.payload.get("volatile", "揮発状態")
+                volatile = payload.get("volatile", "揮発状態")
                 return f"{volatile}の付与が無効化された"
 
             case LogCode.STAT_CHANGED:
-                stats = self.payload.get("stats", {})
+                stats = payload.get("stats", {})
                 texts = []
                 for stat, value in stats.items():
                     texts.append(f"{stat}{'+' if value > 0 else ''}{value}")
-                return " ".join(texts)
+                return " ".join(texts) if texts else "能力値が変化した"
+
+            case LogCode.STAT_CHANGE_BLOCKED:
+                return "能力値は変化しなかった"
 
             case LogCode.HP_CHANGED:
-                value = self.payload.get("value", 0)
-                hp = self.payload.get("hp", "?")
-                max_hp = self.payload.get("max_hp", "?")
+                value = payload.get("value", 0)
+                hp = payload.get("hp", "?")
+                max_hp = payload.get("max_hp", "?")
                 return f"HP {'+' if value > 0 else ''}{value} ({hp}/{max_hp})"
+
+            case LogCode.HEAL_BLOCKED:
+                return "回復できない"
 
             case LogCode.ACTION_BLOCKED:
                 return "動けない"
 
             case LogCode.PP_CONSUMED:
-                move = self.payload.get("move", "技")
-                value = self.payload.get("value", "?")
+                move = payload.get("move", "技")
+                value = payload.get("value", "?")
                 return f"{move} PP -{value}"
 
             case LogCode.SUBSTITUTE_HIT:
@@ -168,12 +200,32 @@ class EventLog:
             case LogCode.PROTECT_SUCCEEDED:
                 return "攻撃を防いだ"
 
+            case LogCode.PROTECT_FAILED:
+                return "まもるは失敗した"
+
             case LogCode.MOVE_IMMUNED:
-                move = self.payload.get("move", "技")
+                move = payload.get("move", "技")
                 return f"{move} を無効化した"
 
+            case LogCode.FIELD_STARTED:
+                field = payload.get("field", "場の状態")
+                return f"{field} が始まった"
+
+            case LogCode.FIELD_ENDED:
+                field = payload.get("field", "場の状態")
+                return f"{field} が終わった"
+
+            case LogCode.TERASALLIZED:
+                type_ = payload.get("type")
+                if type_:
+                    return f"テラスタルした ({type_})"
+                return "テラスタルした"
+
+            case LogCode.MEGA_EVOLVED:
+                return "メガシンカした"
+
             case _:
-                return self.log.name
+                raise ValueError(f"Unsupported LogCode in EventLog._get_base_text: {self.log}")
 
 
 class EventLogger:

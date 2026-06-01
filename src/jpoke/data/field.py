@@ -1,5 +1,3 @@
-from functools import partial
-
 from jpoke.enums import DomainEvent, Event
 from jpoke.core import Handler, HandlerReturn
 from jpoke.handlers import common, field as h
@@ -222,7 +220,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_global_field, name="じゅうりょく"),
+                h.じゅうりょく_tick_global_field,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -235,7 +233,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_global_field, name="トリックルーム"),
+                h.トリックルーム_tick_global_field,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -256,7 +254,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_global_field, name="マジックルーム"),
+                h.マジックルーム_tick_global_field,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -273,7 +271,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_global_field, name="ワンダールーム"),
+                h.ワンダールーム_tick_global_field,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -289,7 +287,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="リフレクター"),
+                h.リフレクター_tick_side_field,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -303,7 +301,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="ひかりのかべ"),
+                h.ひかりのかべ_tick_side_field,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -317,7 +315,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="オーロラベール"),
+                h.オーロラベール_tick_side_field,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -334,7 +332,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="しんぴのまもり"),
+                h.しんぴのまもり_tick_side_field,
                 subject_spec="source:self",
                 priority=10,
             ),
@@ -347,7 +345,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="target:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="しろいきり"),
+                h.しろいきり_tick_side_field,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -360,7 +358,7 @@ FIELDS: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="おいかぜ"),
+                h.おいかぜ_tick_side_field,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -369,7 +367,7 @@ FIELDS: dict[str, FieldData] = {
     "ねがいごと": FieldData(
         handlers={
             Event.ON_TURN_END: h.FieldHandler(
-                partial(h.tick_side_field, name="ねがいごと"),
+                h.ねがいごと_tick_side_field,
                 subject_spec="source:self",
                 priority=50,
             ),

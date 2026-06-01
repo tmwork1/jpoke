@@ -15,6 +15,8 @@ from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
 
+from . import common
+
 
 HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
     "あなをほる": ["じしん", "マグニチュード"],
@@ -449,15 +451,6 @@ def さわぐ_prevent_nemuke(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
-def ふういん_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ふういん状態の相手が共有技を使えないようにする。"""
-    if ctx.defender.has_move(ctx.move.name):
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "ふういん"})
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def しおづけ_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しおづけ状態のターン終了時ダメージ
 
@@ -688,6 +681,15 @@ def ひるみ_block_action(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(value=False, stop_event=True)
 
 
+def ふういん_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふういん状態の相手が共有技を使えないようにする。"""
+    if ctx.defender.has_move(ctx.move.name):
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload={"reason": "ふういん"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ほろびのうたでひんしになる処理"""
     mon = ctx.source
@@ -870,3 +872,74 @@ def スレッドトラップ_protect(battle: Battle, ctx: EventContext, value: A
 def トーチカ_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """トーチカの保護判定。接触した相手をどく状態にする"""
     return _run_protect(battle, ctx, value, ailment_on_contact="どく")
+def アクアリング_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.self_heal(battle, ctx, value, r=1/16)
+
+def アンコール_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return restrict_commands(battle, ctx, value, name="アンコール")
+
+def アンコール_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="アンコール")
+
+def おんねん_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="おんねん")
+
+def かいふくふうじ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="かいふくふうじ")
+
+def かなしばり_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="かなしばり")
+
+def こだわり_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return restrict_commands(battle, ctx, value, name="こだわり")
+
+def さわぐ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="さわぐ")
+
+def じごくづき_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="じごくづき")
+
+def ちょうはつ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="ちょうはつ")
+
+def でんじふゆう_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="でんじふゆう")
+
+def ねむけ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="ねむけ")
+
+def ねをはる_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.self_heal(battle, ctx, value, r=1/16)
+
+def ひるみ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="ひるみ")
+
+def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="ほろびのうた")
+
+def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.drain_hp(battle, ctx, value, from_="source:self", r=1/8)
+
+def ロックオン_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_volatile(battle, ctx, value, volatile="ロックオン")
+
+def ロックオン_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="ロックオン")
+
+def まもる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="まもる")
+
+def かえんのまもり_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="かえんのまもり")
+
+def キングシールド_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="キングシールド")
+
+def スレッドトラップ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="スレッドトラップ")
+
+def トーチカ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="トーチカ")
+
+def かくれる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="かくれる")

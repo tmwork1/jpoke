@@ -199,5 +199,8 @@ class EventManager:
             case "item":
                 if not subject.item.enabled:
                     return False
+            case "ailment":
+                if not subject.ailment.is_active:
+                    return False
 
         return True

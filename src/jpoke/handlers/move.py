@@ -12,8 +12,6 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
     from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
 
-from functools import partial
-
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import Handler, HandlerReturn
 from . import common
@@ -172,36 +170,64 @@ def HP_ratio_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
-def アンコール_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    move = ctx.defender.executed_move
-    if not move:
+def オーラぐるま_check_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """オーラぐるまのタイプを判定する。"""
+    if ctx.source and ctx.source.ability.is_hangry:
+        return HandlerReturn(value="あく")
+    return HandlerReturn(value=value)
+
+
+def がむしゃら_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """がむしゃらのダメージを計算する。"""
+    value = max(0, ctx.defender.hp - ctx.attacker.hp)
+    return HandlerReturn(value=value)
+
+
+def きあいパンチ_check_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """きあいパンチの発動可否を判定する。
+
+    行動前に実際の攻撃ダメージを受けていた場合は不発になる。
+    """
+    if ctx.attacker.hits_taken > 0:
         battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "アンコール"})
+                             payload={"reason": "きあいパンチ"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
-def アンコール_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """アンコールの効果を発動する。"""
-    move = ctx.defender.executed_move
-    return apply_volatile_to_defender(battle, ctx, value, volatile="アンコール",
-                                      count=3, move_name=move.name)
+def どろぼう_steal_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """どろぼう・ほしがるのアイテム奪取効果。"""
+    battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    return HandlerReturn(value=value)
 
 
-def いたみわけ_equalize_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """両者の現在HPを平均化する。"""
-    shared_hp = (ctx.attacker.hp + ctx.defender.hp) // 2
+def はたきおとす_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """はたきおとすのアイテム所持時1.5倍補正。"""
+    if ctx.defender.has_item():
+        value = value * 6144 // 4096
+    return HandlerReturn(value=value)
 
-    battle.modify_hp(
-        ctx.attacker,
-        v=shared_hp - ctx.attacker.hp,
-        reason="pain_split",
-    )
-    battle.modify_hp(
-        ctx.defender,
-        v=shared_hp - ctx.defender.hp,
-        reason="pain_split",
-    )
+
+def level_fixed_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """使用者レベルと同値の固定ダメージを計算する。"""
+    return HandlerReturn(value=ctx.attacker.level)
+
+
+def はたきおとす_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はたきおとすのアイテム除去効果。"""
+    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def はやてがえし_try_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はやてがえしの発動条件を判定する。
+
+    相手が未行動かつ優先攻撃技を選択している時のみ成功する。
+    """
+    if not _check_はやてがえし_condition(battle, ctx):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "はやてがえし"})
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -215,17 +241,6 @@ def いのちがけ_pay_hp(battle: Battle, ctx: EventContext, value: Any) -> Han
 def いのちがけ_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
     return HandlerReturn(value=getattr(ctx, "hp_cost", 0))
-
-
-def level_fixed_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """使用者レベルと同値の固定ダメージを計算する。"""
-    return HandlerReturn(value=ctx.attacker.level)
-
-
-def がむしゃら_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """がむしゃらのダメージを計算する。"""
-    value = max(0, ctx.defender.hp - ctx.attacker.hp)
-    return HandlerReturn(value=value)
 
 
 def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -247,112 +262,6 @@ def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
         return HandlerReturn(value=None)  # 必中
     elif weather is not None and weather.sunny:
         return HandlerReturn(value=50)
-    return HandlerReturn(value=value)
-
-
-def きあいパンチ_check_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """きあいパンチの発動可否を判定する。
-
-    行動前に実際の攻撃ダメージを受けていた場合は不発になる。
-    """
-    if ctx.attacker.hits_taken > 0:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "きあいパンチ"})
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ぼうふうの天候による命中率補正。
-
-    雨: 必中
-    晴れ: 50%
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在の命中率
-
-    Returns:
-        HandlerReturn: 補正があればTrue、なければFalse
-    """
-    weather = battle.weather
-    if weather is not None and weather.rainy:
-        return HandlerReturn(value=None)  # 必中
-    elif weather is not None and weather.sunny:
-        return HandlerReturn(value=50)
-    return HandlerReturn(value=value)
-
-
-def すりかえ_swap_items(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """すりかえ・トリックのアイテム交換効果。"""
-    success = battle.swap_items(move=ctx.move)
-    return HandlerReturn(value=success)
-
-
-def どろぼう_steal_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """どろぼう・ほしがるのアイテム奪取効果。"""
-    battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
-    return HandlerReturn(value=value)
-
-
-def はたきおとす_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """はたきおとすのアイテム所持時1.5倍補正。"""
-    if ctx.defender.has_item():
-        value = value * 6144 // 4096
-    return HandlerReturn(value=value)
-
-
-def はたきおとす_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """はたきおとすのアイテム除去効果。"""
-    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
-    return HandlerReturn(value=value)
-
-
-def やきつくす_remove_berry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """やきつくすのきのみ焼却効果。"""
-    if common.is_berry_item(ctx.defender.item.name):
-        battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
-    return HandlerReturn(value=value)
-
-
-def ふしょくガス_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ふしょくガスのアイテム除去効果。"""
-    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
-    return HandlerReturn(value=value)
-
-
-def ふぶき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ふぶきの天候による命中率補正。
-
-    雪: 必中
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在の命中率
-
-    Returns:
-        HandlerReturn: 補正があればTrue、なければFalse
-    """
-    weather = battle.weather_manager.current.name
-    if weather == "ゆき":
-        return HandlerReturn(value=None)  # 必中
-    return HandlerReturn(value=value)
-
-
-def オーラぐるま_check_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """オーラぐるまのタイプを判定する。"""
-    if ctx.source and ctx.source.ability.is_hangry:
-        return HandlerReturn(value="あく")
-    return HandlerReturn(value=value)
-
-
-def ちいさくなる_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ちいさくなるの効果を発動する。"""
-    mon = ctx.attacker
-    battle.modify_stats(mon, {"EVA": 2}, source=mon)
-    battle.volatile_manager.apply(mon, "ちいさくなる")
     return HandlerReturn(value=value)
 
 
@@ -389,6 +298,99 @@ def テラバースト_stellar_stat_drop(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
+def ふぶき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふぶきの天候による命中率補正。
+
+    雪: 必中
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: 補正があればTrue、なければFalse
+    """
+    weather = battle.weather_manager.current.name
+    if weather == "ゆき":
+        return HandlerReturn(value=None)  # 必中
+    return HandlerReturn(value=value)
+
+
+def ふしょくガス_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふしょくガスのアイテム除去効果。"""
+    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぼうふうの天候による命中率補正。
+
+    雨: 必中
+    晴れ: 50%
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 現在の命中率
+
+    Returns:
+        HandlerReturn: 補正があればTrue、なければFalse
+    """
+    weather = battle.weather
+    if weather is not None and weather.rainy:
+        return HandlerReturn(value=None)  # 必中
+    elif weather is not None and weather.sunny:
+        return HandlerReturn(value=50)
+    return HandlerReturn(value=value)
+
+
+def やきつくす_remove_berry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """やきつくすのきのみ焼却効果。"""
+    if common.is_berry_item(ctx.defender.item.name):
+        battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    return HandlerReturn(value=value)
+
+
+def アンコール_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    move = ctx.defender.executed_move
+    if not move:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "アンコール"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def アンコール_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """アンコールの効果を発動する。"""
+    move = ctx.defender.executed_move
+    return apply_volatile_to_defender(battle, ctx, value, volatile="アンコール",
+                                      count=3, move_name=move.name)
+
+
+def いたみわけ_equalize_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """両者の現在HPを平均化する。"""
+    shared_hp = (ctx.attacker.hp + ctx.defender.hp) // 2
+
+    battle.modify_hp(
+        ctx.attacker,
+        v=shared_hp - ctx.attacker.hp,
+        reason="pain_split",
+    )
+    battle.modify_hp(
+        ctx.defender,
+        v=shared_hp - ctx.defender.hp,
+        reason="pain_split",
+    )
+    return HandlerReturn(value=value)
+
+
+def すりかえ_swap_items(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """すりかえ・トリックのアイテム交換効果。"""
+    success = battle.swap_items(move=ctx.move)
+    return HandlerReturn(value=success)
+
+
 def _check_はやてがえし_condition(battle: Battle, ctx: EventContext) -> bool:
     """はやてがえしの発動条件を判定する。
 
@@ -417,15 +419,11 @@ def _check_はやてがえし_condition(battle: Battle, ctx: EventContext) -> bo
     return True
 
 
-def はやてがえし_try_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """はやてがえしの発動条件を判定する。
-
-    相手が未行動かつ優先攻撃技を選択している時のみ成功する。
-    """
-    if not _check_はやてがえし_condition(battle, ctx):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "はやてがえし"})
-        return HandlerReturn(value=False, stop_event=True)
+def ちいさくなる_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ちいさくなるの効果を発動する。"""
+    mon = ctx.attacker
+    battle.modify_stats(mon, {"EVA": 2}, source=mon)
+    battle.volatile_manager.apply(mon, "ちいさくなる")
     return HandlerReturn(value=value)
 
 
@@ -455,3 +453,403 @@ def みがわり_apply(battle: Battle, ctx: EventContext, value: Any) -> Handler
     mon = ctx.attacker
     battle.volatile_manager.apply(mon, "みがわり", hp=mon.max_hp // 4)
     return HandlerReturn(value=value)
+
+
+def わるあがき_self_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.self_damage(battle, ctx, value, r=1/4, reason="recoil")
+
+
+def アームハンマー_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"S": -1})
+
+
+def アイアンテール_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1}, chance=0.3)
+
+
+def アイスハンマー_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"S": -1})
+
+
+def アクアステップ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"S": 1})
+
+
+def アクアブレイク_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1}, chance=0.2)
+
+
+def いわくだき_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1}, chance=0.5)
+
+
+def インファイト_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": -1, "D": -1})
+
+
+def ガリョウテンセイ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": -1, "D": -1})
+
+
+def がんせきふうじ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def コメットパンチ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"A": 1}, chance=0.2)
+
+
+def シェルブレード_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1}, chance=0.5)
+
+
+def じならし_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def ソウルクラッシュ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"C": -1})
+
+
+def とびかかる_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def とびつく_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def ドラムアタック_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def トロピカルキック_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def ニトロチャージ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"S": 1})
+
+
+def はいよるいちげき_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1})
+
+
+def ばかぢから_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"A": -1, "B": -1})
+
+
+def はやてがえし_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ")
+
+
+def ブレイククロー_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1}, chance=0.5)
+
+
+def ほっぺすりすり_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
+
+
+def メタルクロー_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"A": 1}, chance=0.1)
+
+
+def らいめいげり_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1})
+
+
+def ローキック_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def ワイドブレイカー_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def アーマーキャノン_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": -1, "D": -1})
+
+
+def アシッドボム_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -2})
+
+
+def いてつくしせん_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1}, chance=0.1)
+
+
+def エナジーボール_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
+
+
+def エレキネット_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def オーバーヒート_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": -2})
+
+
+def こごえるかぜ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def こごえるせかい_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def サイコキネシス_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
+
+
+def サイコブースト_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": -2})
+
+
+def シャドーボール_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.2)
+
+
+def スケイルノイズ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": -1})
+
+
+def チャージビーム_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": 1}, chance=0.7)
+
+
+def でんじほう_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
+
+
+def バークアウト_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"C": -1})
+
+
+def ひやみず_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def フルールカノン_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": -2})
+
+
+def マジカルフレイム_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"C": -1})
+
+
+def マッドショット_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def ミストボール_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"C": -1}, chance=0.5)
+
+
+def むしのさざめき_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
+
+
+def むしのていこう_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"C": -1})
+
+
+def ラスターカノン_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
+
+
+def ラスターパージ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.5)
+
+
+def リーフストーム_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": -2})
+
+
+def りゅうせいぐん_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": -2})
+
+
+def ルミナコリジョン_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -2})
+
+
+def あまいかおり_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"EVA": -2})
+
+
+def あまえる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"A": -2})
+
+
+def いちゃもん_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_defender(battle, ctx, value, volatile="いちゃもん")
+
+
+def いやなおと_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -2})
+
+
+def うそなき_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -2})
+
+
+def えんまく_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"ACC": -1})
+
+
+def おにび_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
+
+
+def かえんのまもり_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="かえんのまもり")
+
+
+def かたくなる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": 1})
+
+
+def からにこもる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": 1})
+
+
+def キノコのほうし_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
+
+
+def きりばらい_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"EVA": -1})
+
+
+def きんぞくおん_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"D": -2})
+
+
+def こうそくいどう_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"S": 2})
+
+
+def コットンガード_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": 3})
+
+
+def こわいかお_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -2})
+
+
+def しっぽをふる_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1})
+
+
+def じゅうりょく_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.activate_global_field(battle, ctx, value, global_field="じゅうりょく", source_spec="attacker:self")
+
+
+def すなあらし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.activate_weather(battle, ctx, value, weather="すなあらし", source_spec="attacker:self")
+
+
+def すなかけ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"ACC": -1})
+
+
+def スレッドトラップ_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="スレッドトラップ")
+
+
+def タールショット_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_defender(battle, ctx, value, volatile="タールショット")
+
+
+def タールショット_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+
+
+def てっぺき_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"B": 2})
+
+
+def トーチカ_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="トーチカ")
+
+
+def どくどく_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="もうどく")
+
+
+def どくのこな_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
+
+
+def トリックルーム_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.activate_global_field(battle, ctx, value, global_field="トリックルーム", source_spec="attacker:self", toggle=True)
+
+
+def ドわすれ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"D": 2})
+
+
+def なきごえ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def なみだめ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"C": -1})
+
+
+def にらみつける_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"B": -1})
+
+
+def ふういん_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="ふういん")
+
+
+def フェザーダンス_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"A": -2})
+
+
+def へびにらみ_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
+
+
+def ほたるび_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": 3})
+
+
+def マジックルーム_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.activate_global_field(battle, ctx, value, global_field="マジックルーム", source_spec="attacker:self", toggle=True)
+
+
+def まもる_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="まもる")
+
+
+def みきり_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="まもる")
+
+
+def みちづれ_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="みちづれ")
+
+
+def ロックオン_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_defender(battle, ctx, value, volatile="ロックオン", count=2)
+
+
+def ロックカット_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"S": 2})
+
+
+def わるだくみ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"C": 2})
+
+
+def ワンダールーム_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return common.activate_global_field(battle, ctx, value, global_field="ワンダールーム", source_spec="attacker:self", toggle=True)
+
+
+def キングシールド_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="キングシールド")

@@ -4,8 +4,6 @@ Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
 """
 
-from functools import partial
-
 from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import common, ability as h, ability_paradox as paradox
 from .models import AbilityData
@@ -104,12 +102,12 @@ ABILITIES: dict[str, AbilityData] = {
     "あめふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="あめ", count=5),
-                subject_spec="source:self",
+                h.あめふらし_activate_weather,
+                "source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                partial(h.activate_weather, weather="あめ", count=5),
-                subject_spec="source:self",
+                h.あめふらし_activate_weather,
+                "source:self",
             ),
         }
     ),
@@ -127,8 +125,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["アンコール", "いちゃもん", "かいふくふうじ", "かなしばり", "ちょうはつ", "メロメロ"]),
-                subject_spec="target:self",
+                h.アロマベール_prevent_volatile,
+                "target:self",
             )
         }
     ),
@@ -208,8 +206,8 @@ ABILITIES: dict[str, AbilityData] = {
     "エレキメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain, terrain="エレキフィールド", count=5),
-                subject_spec="source:self",
+                h.エレキメイカー_activate_terrain,
+                "source:self",
             )
         }
     ),
@@ -254,20 +252,20 @@ ABILITIES: dict[str, AbilityData] = {
     "おわりのだいち": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="おおひでり", count=1),
-                subject_spec="source:self",
+                h.おわりのだいち_activate_weather,
+                "source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                partial(h.activate_weather, weather="おおひでり", count=1),
-                subject_spec="source:self",
+                h.おわりのだいち_activate_weather,
+                "source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
-                partial(h.deactivate_strong_weather, weather="おおひでり"),
-                subject_spec="source:self",
+                h.おわりのだいち_deactivate_strong_weather,
+                "source:self",
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
-                partial(h.deactivate_strong_weather, weather="おおひでり"),
-                subject_spec="source:self",
+                h.おわりのだいち_deactivate_strong_weather,
+                "source:self",
             ),
         },
     ),
@@ -509,7 +507,7 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment),
+                h.きよめのしお_prevent_ailment,
                 subject_spec="target:self",
             ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -590,8 +588,8 @@ ABILITIES: dict[str, AbilityData] = {
     "グラスメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain, terrain="グラスフィールド", count=5),
-                subject_spec="source:self",
+                h.グラスメイカー_activate_terrain,
+                "source:self",
             )
         }
     ),
@@ -702,8 +700,8 @@ ABILITIES: dict[str, AbilityData] = {
     "サイコメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain, terrain="サイコフィールド", count=5),
-                subject_spec="source:self",
+                h.サイコメイカー_activate_terrain,
+                "source:self",
             )
         }
     ),
@@ -796,8 +794,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["まひ"]),
-                subject_spec="target:self",
+                h.prevent_paralysis_ailment,
+                "target:self",
             )
         }
     ),
@@ -860,12 +858,12 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["ねむり"]),
-                subject_spec="target:self",
+                h.prevent_sleep_ailment,
+                "target:self",
             ),
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["ねむけ"]),
-                subject_spec="target:self",
+                h.スイートベール_prevent_volatile,
+                "target:self",
             )
         }
     ),
@@ -928,12 +926,12 @@ ABILITIES: dict[str, AbilityData] = {
     "すなおこし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="すなあらし", count=5),
-                subject_spec="source:self",
+                h.すなおこし_activate_weather,
+                "source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                partial(h.activate_weather, weather="すなあらし", count=5),
-                subject_spec="source:self",
+                h.すなおこし_activate_weather,
+                "source:self",
             ),
         }
     ),
@@ -1022,8 +1020,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["ひるみ"]),
-                subject_spec="target:self",
+                h.せいしんりょく_prevent_volatile,
+                "target:self",
             ),
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.せいしんりょく_block_intimidate,
@@ -1248,12 +1246,12 @@ ABILITIES: dict[str, AbilityData] = {
     "デルタストリーム": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="らんきりゅう", count=1),
-                subject_spec="source:self",
+                h.デルタストリーム_activate_weather,
+                "source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
-                partial(h.deactivate_strong_weather, weather="らんきりゅう"),
-                subject_spec="source:self",
+                h.デルタストリーム_deactivate_strong_weather,
+                "source:self",
             ),
         },
     ),
@@ -1373,9 +1371,9 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
-            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["ちょうはつ", "メロメロ"]),
-                subject_spec="target:self",
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
+                h.どんかん_prevent_volatile,
+                "target:self",
             )
         }
     ),
@@ -1397,8 +1395,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["やけど"]),
-                subject_spec="target:self",
+                h.prevent_burn_ailment,
+                "target:self",
             ),
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ねつこうかん_on_damage,
@@ -1506,12 +1504,12 @@ ABILITIES: dict[str, AbilityData] = {
     "はじまりのうみ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="おおあめ", count=1),
-                subject_spec="source:self",
+                h.はじまりのうみ_activate_weather,
+                "source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
-                partial(h.deactivate_strong_weather, weather="おおあめ"),
-                subject_spec="source:self",
+                h.はじまりのうみ_deactivate_strong_weather,
+                "source:self",
             ),
         },
     ),
@@ -1521,8 +1519,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["どく", "もうどく"]),
-                subject_spec="target:self",
+                h.prevent_poison_ailment,
+                "target:self",
             )
         }
     ),
@@ -1644,8 +1642,8 @@ ABILITIES: dict[str, AbilityData] = {
     "ひでり": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="はれ", count=5),
-                subject_spec="source:self",
+                h.ひでり_activate_weather,
+                "source:self",
             )
         }
     ),
@@ -1786,12 +1784,12 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["ねむり"]),
-                subject_spec="target:self",
+                h.prevent_sleep_ailment,
+                "target:self",
             ),
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["ねむけ"]),
-                subject_spec="target:self",
+                h.ふみん_prevent_volatile,
+                "target:self",
             ),
         }
     ),
@@ -1944,8 +1942,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["こんらん"]),
-                subject_spec="target:self",
+                h.マイペース_prevent_volatile,
+                "target:self",
             )
         }
     ),
@@ -1955,8 +1953,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["こおり"]),
-                subject_spec="target:self",
+                h.prevent_freeze_ailment,
+                "target:self",
             )
         }
     ),
@@ -2022,8 +2020,8 @@ ABILITIES: dict[str, AbilityData] = {
     "ミストメイカー": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_terrain, terrain="ミストフィールド", count=5),
-                subject_spec="source:self",
+                h.ミストメイカー_activate_terrain,
+                "source:self",
             )
         }
     ),
@@ -2033,8 +2031,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["やけど"]),
-                subject_spec="target:self",
+                h.prevent_burn_ailment,
+                "target:self",
             )
         }
     ),
@@ -2096,8 +2094,8 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["どく", "もうどく"]),
-                subject_spec="target:self",
+                h.prevent_poison_ailment,
+                "target:self",
             )
         }
     ),
@@ -2154,12 +2152,12 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
-                partial(h.prevent_ailment, blocked_ailments=["ねむり"]),
-                subject_spec="target:self",
+                h.prevent_sleep_ailment,
+                "target:self",
             ),
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
-                partial(h.prevent_volatile, blocked_volatiles=["ねむけ"]),
-                subject_spec="target:self",
+                h.やるき_prevent_volatile,
+                "target:self",
             )
         }
     ),
@@ -2186,8 +2184,8 @@ ABILITIES: dict[str, AbilityData] = {
     "ゆきふらし": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                partial(h.activate_weather, weather="ゆき", count=5),
-                subject_spec="source:self",
+                h.ゆきふらし_activate_weather,
+                "source:self",
             )
         }
     ),

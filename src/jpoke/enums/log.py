@@ -14,7 +14,6 @@ class LogCode(Enum):
     # 技関連
     ACTION_BLOCKED = auto()  # 行動不能（まひ・ねむり等）
     PP_CONSUMED = auto()  # PP消費
-    MOVE_CHARGED = auto()  # 溜め技
     MOVE_FAILED = auto()  # 発動失敗
     MOVE_REFLECTED = auto()  # 反射（マジックコート・リフレクター等）
     MOVE_MISSED = auto()  # 技が外れた
@@ -57,7 +56,6 @@ class LogCode(Enum):
     FIELD_ENDED = auto()  # 場の状態終了
 
     # その他
-    FORM_CHANGED = auto()  # フォルムチェンジ
     TERASALLIZED = auto()  # テラスタル化
     MEGA_EVOLVED = auto()  # メガシンカ
 

@@ -1,4 +1,3 @@
-from functools import partial
 from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import common, ailment as h
 from .models import AilmentData
