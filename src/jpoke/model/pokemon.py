@@ -88,8 +88,6 @@ class Pokemon:
         # 初期ステータス計算
         self.update_stats()
 
-        # TODO : paradox_boost_active は paradox_boost_stat が None でないことと同値なので、paradox_boost_stat を主属性にして整理する。
-        self.paradox_boost_active: bool = False
         self.paradox_boost_stat: Stat | None = None
         self.paradox_boost_source: BoostSource = ""
 
@@ -129,7 +127,6 @@ class Pokemon:
         self.ability_override_type = None
         self.ability.activated_since_switch_in = False
         self.last_lost_item_name = ""
-        self.paradox_boost_active = False
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
 
@@ -314,14 +311,13 @@ class Pokemon:
             特性（ライトメタル、ヘヴィメタル）や
             アイテム（かるいし）の効果を考慮した体重を返す。
         """
-        # TODO : ON_MODIFY_WEIGHTイベントを作成してハンドラとして実装する
         w = self.data.weight
         match self.ability.name:
             case 'ライトメタル':
                 w = int(w*0.5*10)/10
             case 'ヘヴィメタル':
                 w *= 2
-        if self.has_item('かるいし'):
+        if self.has_item('かるいし', consider_enabled=True):
             w = int(w*0.5*10)/10
         return w
 
@@ -393,19 +389,21 @@ class Pokemon:
         mega_name = MEGA_STONES[self.item.name][-1]
         self.set_form(mega_name, set_default_ability=True)
 
-    def has_item(self, name: str | None = None) -> bool:
+    def has_item(self, name: str | None = None, consider_enabled: bool = False) -> bool:
         """アイテムを持っているか判定する。
 
         Args:
             name: アイテム名（Noneの場合は何らかのアイテムを持っているかを判定）
+            consider_enabled: True の場合はアイテムが有効なときのみ所持とみなす
 
         Returns:
             nameが指定された場合はそのアイテムを持っているか、
             Noneの場合は何らかのアイテムを持っている場合True
         """
+        item_name = self.item.name if consider_enabled else self.item.base_name
         if name is None:
-            return bool(self.item.base_name)
-        return self.item.base_name == name
+            return bool(item_name)
+        return item_name == name
 
     @property
     def stats(self) -> dict[Stat, int]:
@@ -542,6 +540,11 @@ class Pokemon:
     def damage_taken(self) -> int:
         """被ダメージ量を取得する。"""
         return max(0, -self.hp_delta)
+
+    @property
+    def paradox_boost_active(self) -> bool:
+        """パラドックス補正が有効かどうかを取得する。"""
+        return self.paradox_boost_stat is not None
 
     def update_stats(self, keep_damage: bool = False):
         """ステータスを再計算する。

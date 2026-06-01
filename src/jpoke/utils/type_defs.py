@@ -111,7 +111,7 @@ SideField = Literal["リフレクター", "ひかりのかべ", "しんぴのま
 Weather = Literal["", "はれ", "あめ", "ゆき", "すなあらし", "おおひでり", "おおあめ", "らんきりゅう"]
 Terrain = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 
-BoostSource = Literal["", "ability", "item", "weather", "terrain"]  # TODO : weather, terrain はまとめて field とする
+BoostSource = Literal["", "item", "field"]
 
 HPChangeReason = Literal[
     "",                     # その他のダメージ

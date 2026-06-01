@@ -20,6 +20,7 @@ class PlayerState:
         self.reserved_commands: list[Command] = []
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
+        self.action_order_index: int | None = None
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -31,6 +32,7 @@ class PlayerState:
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
         self.has_switched = False
+        self.action_order_index = None
         self.active.reset_turn_state()
 
     @property

@@ -1,6 +1,3 @@
-# TODO : iイベント定義の配置とコメントを整理する。
-# 同種イベントは固めて配置し、emit/handle のコメントも統一的に記載する。
-
 """
 イベントのEnum定義
 イベントの処理順の詳細は docs/spec/turn_flow.md を参照
@@ -41,14 +38,44 @@ class Event(Enum):
     各イベントの emit 箇所と代表的な handle 箇所は以下のコメントを参照。
     """
 
+    # ------------------------------------------------------------------ #
+    # 制御系イベント（能力/道具の有効化、特定状態フラグ）
+    # ------------------------------------------------------------------ #
+
+    # emit: core/context.py（かたやぶり状態を有効化）
+    # handle: ability.py（かたやぶり系の能力無効化判定に使用）
     ON_ACTIVATE_MOLD_BREAKER = auto()
+
+    # emit: core/context.py（かたやぶり状態を無効化）
+    # handle: ability.py（かたやぶり系の能力無効化判定を終了）
     ON_DEACTIVATE_MOLD_BREAKER = auto()
+
+    # emit: core/move_executor.py（ふきとばし・ほえる等の強制交代を試行）
+    # handle: ability.py / volatile.py（きゅうばん・ねをはる等で無効化）
     ON_TRY_BLOW = auto()
-    ON_ABILITY_ENABLED = auto()  # 特性が有効になったとき（即時発動系の特性のトリガー用）
-    ON_ABILITY_DISABLED = auto()  # 特性が無効になったとき（かがくへんかガスのトリガー用）
-    ON_ITEM_ENABLED = auto()  # 道具効果が有効になったとき（ぶきようのトリガー用）
-    ON_ITEM_DISABLED = auto()  # 道具効果が無効になったとき（ぶきようのトリガー用）
+
+    # emit: core/battle.py（特性効果が有効化された直後）
+    # handle: ability.py（即時発動系特性の起動トリガー）
+    ON_ABILITY_ENABLED = auto()
+
+    # emit: core/battle.py（特性効果が無効化された直後）
+    # handle: ability.py（かがくへんかガス等の解除トリガー）
+    ON_ABILITY_DISABLED = auto()
+
+    # emit: core/battle.py（道具効果が有効化された直後）
+    # handle: item.py / ability.py（ぶきよう解除後などの再判定トリガー）
+    ON_ITEM_ENABLED = auto()
+
+    # emit: core/battle.py（道具効果が無効化された直後）
+    # handle: item.py / ability.py（ぶきよう発動時などの無効化トリガー）
+    ON_ITEM_DISABLED = auto()
+
+    # emit: core/battle.py（道具を新たに保持したとき）
+    # handle: item.py（保持時即時効果・状態同期）
     ON_ITEM_GAINED = auto()
+
+    # emit: core/battle.py（道具を失ったとき）
+    # handle: item.py（喪失時の後処理・状態同期）
     ON_ITEM_LOST = auto()
 
     # ------------------------------------------------------------------ #
@@ -116,6 +143,9 @@ class Event(Enum):
     #          data/move.py（こだわりアイテムによるロック）
     #          data/field.py（サイコフィールドによる優先度技ブロック）
     ON_TRY_MOVE_1 = auto()
+
+    # emit: core/move_executor.py（技選択後の実行直前チェック）
+    # handle: volatile.py（成功可否の最終確認。まもる連打失敗等の判定を追加する拡張スロット）
     ON_TRY_MOVE_2 = auto()
 
     # emit: core/move_executor.py（技の無効化チェック）
@@ -188,15 +218,17 @@ class Event(Enum):
     # ターン終了イベント（core/turn.py から順番に emit される）
     # ------------------------------------------------------------------ #
 
-    # ターン終了時の処理
-    # volatile.py（ほろびのうた・わるあがき強制カウント等）
+    # emit: core/turn.py（ターン終了フェーズ開始時）
+    # handle: volatile.py（ほろびのうた・わるあがき強制カウント等）
     ON_TURN_END = auto()
 
     # emit: core/battle.py（ランク変化適用後）
     # handle: ability.py（まけんき・かちき等の反応）
     ON_MODIFY_STAT = auto()
 
-    ON_END = auto()  # 未使用
+    # emit: 未実装（最終終端イベント用に予約）
+    # handle: 未実装（全体後処理フックを想定）
+    ON_END = auto()
 
     # ------------------------------------------------------------------ #
     # 状態異常・能力変化前イベント
@@ -348,6 +380,7 @@ class Event(Enum):
     ON_CALC_FINAL_DAMAGE_MODIFIER = auto()
 
     # emit: core/context.py（壁やしんぴのまもりを貫通するか問い合わせ）
+    # handle: move.py / ability.py（すりぬけ等のスクリーン貫通可否を返す）
     ON_CHECK_BYPASS_SCREEN = auto()
 
     # emit: 未実装（吸収技のHP回収量計算用に予約）

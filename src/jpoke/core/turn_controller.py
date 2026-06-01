@@ -106,14 +106,18 @@ class TurnController:
         # 交代フェーズ
         self._run_switch_phase()
 
+        # 行動順を確定し、ターン中に参照できるよう記録
+        action_order = self.battle.calc_action_order()
+        self._record_action_order(action_order)
+
         # テラスタル
-        self._run_terastal_phase()
+        self._run_terastal_phase(action_order)
 
         # メガシンカ
-        self._run_megaevolve_phase()
+        self._run_megaevolve_phase(action_order)
 
         # 技の処理
-        self._run_move_phase()
+        self._run_move_phase(action_order)
 
         # ターン終了時の処理
         self._run_end_phase()
@@ -151,9 +155,15 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-    def _run_terastal_phase(self):
+    def _record_action_order(self, action_order: list):
+        """確定した行動順をプレイヤー状態へ記録する。"""
+        for index, mon in enumerate(action_order):
+            player = self.battle.get_player(mon)
+            self.battle.player_states[player].action_order_index = index
+
+    def _run_terastal_phase(self, action_order: list):
         """テラスタルを実行する。"""
-        for mon in self.battle.calc_action_order():
+        for mon in action_order:
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
             if not state.reserved_commands:
@@ -166,9 +176,9 @@ class TurnController:
                 self.battle.add_event_log(mon, LogCode.TERASALLIZED,
                                           payload={"type": mon.tera_type})
 
-    def _run_megaevolve_phase(self):
+    def _run_megaevolve_phase(self, action_order: list):
         """メガシンカを実行する。"""
-        for mon in self.battle.calc_action_order():
+        for mon in action_order:
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
             if not state.reserved_commands:
@@ -187,11 +197,11 @@ class TurnController:
                 # メガシンカ後の特性が発動するイベントを追加
                 self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))
 
-    def _run_move_phase(self):
+    def _run_move_phase(self, action_order: list):
         """技発動フェーズを実行する。"""
         self._events.emit(Event.ON_BEFORE_MOVE)
 
-        for attacker in self.battle.calc_action_order():
+        for attacker in action_order:
             player = self.battle.get_player(attacker)
             state = self.battle.player_states[player]
 

@@ -289,10 +289,17 @@ def あとだし_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int
 
 def アナライズ_modify_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。"""
-    defender_player = battle.get_player(ctx.defender)
-    # TODO : 行動順が確定したときにどこかに保存しておき、それを参照するようにする。現状は「相手がすでに技を出したか、交代しているか」で代用している。
-    acted_before = ctx.defender.executed_move is not None or defender_player.has_switched
-    if acted_before:
+    attacker_player = battle.get_player(ctx.attacker)
+    is_second_actor = battle.query.is_second_actor(attacker_player)
+    if is_second_actor is None:
+        defender_player = battle.get_player(ctx.defender)
+        defender_state = battle.player_states[defender_player]
+        is_second_actor = (
+            ctx.defender.executed_move is not None
+            or defender_state.has_switched
+        )
+
+    if is_second_actor:
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
