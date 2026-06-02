@@ -31,7 +31,7 @@ def hit_rank_modifier(rank_acc: int, rank_eva: int) -> float:
     if diff > 0:
         return (3+diff)/3
     else:
-        return 3/(3-abs(diff))
+        return 3/(3-diff)
 
 
 class MoveExecutor:
@@ -162,7 +162,12 @@ class MoveExecutor:
             return True
 
         # ランク補正
-        rank_modifier = hit_rank_modifier(attacker.rank["ACC"], defender.rank["EVA"])
+        ranks = {
+            "ACC": attacker.rank["ACC"],
+            "EVA": defender.rank["EVA"]
+        }
+        modified_rank = self._events.emit(Event.ON_GET_STAT_RANK, ctx, ranks)
+        rank_modifier = hit_rank_modifier(modified_rank["ACC"], modified_rank["EVA"])
         self.accuracy = int(self.accuracy * rank_modifier)
         return 100 * self.battle.random.random() < self.accuracy
 

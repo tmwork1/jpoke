@@ -969,7 +969,13 @@ def するどいめ_block_ACC_drop(battle: Battle, ctx: EventContext, value: dic
     return HandlerReturn(value=value)
 
 
-def スロースタート_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def するどいめ_ignore_evasion(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
+    """するどいめ特性: 相手の回避率ランク上昇を無効化する。"""
+    value["EVA"] = 0
+    return HandlerReturn(value=value)
+
+
+def スロースタート_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """スロースタート特性: 登場ターンを記録する。"""
     ctx.source.ability.count = battle.turn
     return HandlerReturn(value=value)
@@ -1349,6 +1355,10 @@ def バトルスイッチ_revert_form(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
+def ハドロンエンジン_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return activate_terrain(battle, ctx, value, terrain="エレキフィールド", count=5)
+
+
 def ハドロンエンジン_modify_atk(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """ハドロンエンジン特性: エレキフィールド中の攻撃補正を1.33倍にする。"""
     if battle.terrain.name == "エレキフィールド":
@@ -1443,6 +1453,10 @@ def ひとでなし_modify_critical_rank(battle: Battle, ctx: EventContext, valu
     if ctx.defender.has_ailment("どく", "もうどく"):
         value = 10
     return HandlerReturn(value=value)
+
+
+def ひひいろのこどう_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return activate_weather(battle, ctx, value, weather="はれ", count=5)
 
 
 def ひひいろのこどう_modify_atk(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:

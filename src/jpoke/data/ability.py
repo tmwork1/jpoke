@@ -1009,13 +1009,17 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.するどいめ_block_ACC_drop,
                 subject_spec="target:self",
+            ),
+            Event.ON_GET_STAT_RANK: h.AbilityHandler(
+                h.するどいめ_ignore_evasion,
+                subject_spec="attacker:self",
             )
         }
     ),
     "スロースタート": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.スロースタート_on_switch_in,
+                h.スロースタート_start,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
@@ -1267,7 +1271,15 @@ ABILITIES: dict[str, AbilityData] = {
                 h.デルタストリーム_activate_weather,
                 "source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.デルタストリーム_activate_weather,
+                "source:self",
+            ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.デルタストリーム_deactivate_strong_weather,
+                "source:self",
+            ),
+            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.デルタストリーム_deactivate_strong_weather,
                 "source:self",
             ),
@@ -1525,7 +1537,15 @@ ABILITIES: dict[str, AbilityData] = {
                 h.はじまりのうみ_activate_weather,
                 "source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.はじまりのうみ_activate_weather,
+                "source:self",
+            ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.はじまりのうみ_deactivate_strong_weather,
+                "source:self",
+            ),
+            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.はじまりのうみ_deactivate_strong_weather,
                 "source:self",
             ),
@@ -1579,11 +1599,18 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ハドロンエンジン": AbilityData(
         handlers={
-            # TODO : エレキメイカーと同じ展開効果処理も追加
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ハドロンエンジン_activate_terrain,
+                "source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ハドロンエンジン_activate_terrain,
+                "source:self",
+            ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.ハドロンエンジン_modify_atk,
                 subject_spec="attacker:self",
-            )
+            ),
         }
     ),
     "はやあし": AbilityData(
@@ -1662,7 +1689,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ひでり_activate_weather,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ひでり_activate_weather,
+                "source:self",
+            ),
         }
     ),
     "ひとでなし": AbilityData(
@@ -1675,10 +1706,18 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ひひいろのこどう": AbilityData(
         handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ひひいろのこどう_activate_weather,
+                "source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ひひいろのこどう_activate_weather,
+                "source:self",
+            ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.ひひいろのこどう_modify_atk,
                 subject_spec="attacker:self",
-            )
+            ),
         }
     ),
     "ビビッドボディ": AbilityData(
@@ -2204,7 +2243,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ゆきふらし_activate_weather,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ゆきふらし_activate_weather,
+                "source:self",
+            ),
         }
     ),
     "ようりょくそ": AbilityData(
