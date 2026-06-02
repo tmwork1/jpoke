@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player
+    from jpoke.model import Pokemon
 
 from jpoke.core import EventContext
 from jpoke.enums import Event, Command, Interrupt, LogCode
@@ -107,7 +108,7 @@ class TurnController:
         self._run_switch_phase()
 
         # 行動順を確定し、ターン中に参照できるよう記録
-        action_order = self.battle.calc_action_order()
+        action_order = self.battle.resolve_action_order()
         self._record_action_order(action_order)
 
         # テラスタル
@@ -131,7 +132,7 @@ class TurnController:
 
     def _run_switch_phase(self):
         """交代フェーズを実行する。"""
-        for attacker in self.battle.calc_speed_order():
+        for attacker in self.battle.resolve_speed_order():
             idx = self.battle.actives.index(attacker)
             player = self.battle.players[idx]
             state = self.battle.player_states[player]
@@ -155,13 +156,13 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-    def _record_action_order(self, action_order: list):
+    def _record_action_order(self, action_order: list[Pokemon]):
         """確定した行動順をプレイヤー状態へ記録する。"""
         for index, mon in enumerate(action_order):
             player = self.battle.get_player(mon)
             self.battle.player_states[player].action_order_index = index
 
-    def _run_terastal_phase(self, action_order: list):
+    def _run_terastal_phase(self, action_order: list[Pokemon]):
         """テラスタルを実行する。"""
         for mon in action_order:
             player = self.battle.get_player(mon)
@@ -173,10 +174,13 @@ class TurnController:
             command = state.next_command
             if command.is_terastal and mon.can_terastallize():
                 mon.terastallize()
-                self.battle.add_event_log(mon, LogCode.TERASALLIZED,
-                                          payload={"type": mon.tera_type})
+                self.battle.add_event_log(
+                    mon,
+                    LogCode.TERASALLIZED,
+                    payload={"type": mon.tera_type}
+                )
 
-    def _run_megaevolve_phase(self, action_order: list):
+    def _run_megaevolve_phase(self, action_order: list[Pokemon]):
         """メガシンカを実行する。"""
         for mon in action_order:
             player = self.battle.get_player(mon)
@@ -191,13 +195,16 @@ class TurnController:
                 mon.ability.unregister_handlers(self._events, mon)
                 mon.megaevolve()
                 mon.ability.register_handlers(self._events, mon)
-                self.battle.add_event_log(mon, LogCode.MEGA_EVOLVED,
-                                          payload={"pokemon": mon.name})
+                self.battle.add_event_log(
+                    mon,
+                    LogCode.MEGA_EVOLVED,
+                    payload={"pokemon": mon.name}
+                )
 
                 # メガシンカ後の特性が発動するイベントを追加
                 self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))
 
-    def _run_move_phase(self, action_order: list):
+    def _run_move_phase(self, action_order: list[Pokemon]):
         """技発動フェーズを実行する。"""
         self._events.emit(Event.ON_BEFORE_MOVE)
 

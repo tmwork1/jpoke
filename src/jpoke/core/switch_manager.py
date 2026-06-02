@@ -170,7 +170,7 @@ class SwitchManager:
             return
 
         # 交代したプレイヤー全員の着地処理を同時に実行
-        for mon in self.battle.calc_speed_order():
+        for mon in self.battle.resolve_speed_order():
             player = self.battle.get_player(mon)
             if player in switched_players:
                 self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
@@ -255,7 +255,7 @@ class SwitchManager:
         Args:
             flag: 設定する割り込みフラグ
         """
-        for mon in self.battle.calc_speed_order():
+        for mon in self.battle.resolve_speed_order():
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
             if state.interrupt == Interrupt.EJECTPACK_REQUESTED:

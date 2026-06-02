@@ -543,7 +543,7 @@ def test_トリックルーム_素早さ逆順():
         field={"トリックルーム": 5},
     )
     t.reserve_command(battle)
-    action_order = battle.calc_action_order()
+    action_order = battle.resolve_action_order()
     assert action_order[0] == battle.actives[0]
 
 
@@ -554,7 +554,7 @@ def test_トリックルーム_技優先度が優先():
         field={"トリックルーム": 5},
     )
     t.reserve_command(battle)
-    action_order = battle.calc_action_order()
+    action_order = battle.resolve_action_order()
     assert action_order[0] == battle.actives[1]
 
 # ──────────────────────────────────────────────────────────────────
@@ -782,7 +782,7 @@ def test_しろいきり_能力低下防止():
         side0={"しろいきり": 1},
     )
     target, source = battle.actives
-    assert not battle.modify_stat(target, "A", -1, source=source)
+    assert not battle.modify_stats(target, {"A": -1}, source=source)
 
 
 def test_しろいきり_自発的な能力低下は防げない():
@@ -792,7 +792,7 @@ def test_しろいきり_自発的な能力低下は防げない():
         side0={"しろいきり": 1},
     )
     target = battle.actives[0]
-    assert battle.modify_stat(target, "A", -1, source=target)
+    assert battle.modify_stats(target, {"A": -1}, source=target)
     assert target.rank["A"] == -1
 
 # ──────────────────────────────────────────────────────────────────

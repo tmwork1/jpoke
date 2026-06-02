@@ -35,13 +35,13 @@ def test_メガシンカ_コマンドが追加される(stone: str, normal_name:
     ("stone", "normal_name", "mega_name"),
     stone_normal_mega
 )
-def test_メガシンカ_直接起動(stone: str, normal_name: str, mega_name: str):
+def test_メガシンカ_フォルムが変わる(stone: str, normal_name: str, mega_name: str):
     battle = t.start_battle(
         team0=[Pokemon(normal_name, item_name=stone)],
         team1=[Pokemon("ピカチュウ")],
     )
     t.reserve_command(battle, Command.MEGAEVOL_0)
-    battle.turn_controller._run_megaevolve_phase()
+    battle.advance_turn()
 
     mon = battle.actives[0]
     assert mon.name == mega_name

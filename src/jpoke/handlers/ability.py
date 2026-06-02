@@ -346,7 +346,7 @@ def いかく_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     source = ctx.source
     target = battle.foe(source)
     announce_ability_triggered(battle, ctx, value, mon=source)
-    battle.modify_stat(target, "A", -1, source=source, reason="いかく")
+    battle.modify_stats(target, {"A": -1}, source=source, reason="いかく")
     return HandlerReturn(value=value)
 
 
@@ -481,7 +481,7 @@ def かそく_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> Hand
     print(f"{battle.turn=}, {mon.executed_move=}")
     if (
         mon.executed_move is not None
-        and battle.modify_stat(mon, "S", +1, source=mon)
+        and battle.modify_stats(mon, {"S": +1}, source=mon)
     ):
         announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
@@ -526,7 +526,7 @@ def かちき_on_stat_down(battle: Battle, ctx: EventContext, value: dict[Stat, 
     if (
         has_negative
         and ctx.source != ctx.target
-        and battle.modify_stat(ctx.target, "C", +2, source=ctx.source)
+        and battle.modify_stats(ctx.target, {"C": +2}, source=ctx.source)
     ):
         announce_ability_triggered(battle, ctx, value, mon=ctx.target)
     return HandlerReturn(value=value)
@@ -665,7 +665,7 @@ def ぎゃくじょう_on_damage(battle: Battle, ctx: EventContext, value: Any) 
 
     if (
         _crossed_half_hp(hp_before, hp_after, mon.max_hp)
-        and battle.modify_stat(mon, "C", +1, source=ctx.attacker, reason="ぎゃくじょう")
+        and battle.modify_stats(mon, {"C": +1}, source=ctx.attacker, reason="ぎゃくじょう")
     ):
         announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
@@ -795,22 +795,20 @@ def サンパワー_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def じしんかじょう_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
-    if (
-        ctx.defender.fainted
-        and battle.modify_stat(ctx.attacker, "A", +1, source=ctx.attacker)
-    ):
+def _boost_on_move_ko(battle: Battle, ctx: EventContext, value: Any, stats: dict[Stat, int]) -> HandlerReturn:
+    if battle.modify_stats(ctx.attacker, stats, source=ctx.attacker):
         announce_ability_triggered(battle, ctx, value, mon=ctx.attacker)
     return HandlerReturn(value=value)
 
 
-def くろのいななき_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def くろのいななき_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """くろのいななき特性: 攻撃技で相手を倒すと特攻が1段階上がる。"""
-    if ctx.hp_change_reason == "move_damage":
-        attacker =
-        announce_ability_triggered(battle, ctx, value, mon=ctx.attacker)
-    return HandlerReturn(value=value)
+    return _boost_on_move_ko(battle, ctx, value, stats={"C": +1})
+
+
+def しろのいななき_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
+    return _boost_on_move_ko(battle, ctx, value, stats={"A": +1})
 
 
 def しぜんかいふく_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -933,6 +931,13 @@ def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, v
     return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
 
 
+def すながくれ_reduce_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """すながくれ特性: すなあらし中に受ける技の命中率を3277/4096倍にする（必中技は除く）。"""
+    if battle.weather.name == "すなあらし":
+        value = apply_fixed_modifier(value, 3277)
+    return HandlerReturn(value=value)
+
+
 def すなのちから_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すなのちから特性: すなあらしのダメージを受けない。"""
     return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
@@ -1014,7 +1019,7 @@ def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any)
     foe_spd = foe.ranked_stats["D"]
     boost_stat = "A" if foe_def < foe_spd else "C"
 
-    changed = battle.modify_stat(mon, boost_stat, +1, source=mon)
+    changed = battle.modify_stats(mon, {boost_stat: +1}, source=mon)
     if changed:
         announce_ability_triggered(battle, ctx, value, mon=mon)
 
@@ -1210,7 +1215,7 @@ def ねつこうかん_on_damage(battle: Battle, ctx: EventContext, value: Any) 
     if ctx.move.type != "ほのお":
         return HandlerReturn(value=value)
 
-    changed = battle.modify_stat(ctx.defender, "A", +1, source=ctx.attacker)
+    changed = battle.modify_stats(ctx.defender, {"A": +1}, source=ctx.attacker)
     if not changed:
         return HandlerReturn(value=value)
 
@@ -1638,12 +1643,12 @@ def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> H
     up_candidates = [stat for stat in stats if mon.rank[stat] < 6]
     if up_candidates:
         raised_stat = battle.random.choice(up_candidates)
-        changed = battle.modify_stat(mon, raised_stat, +2, source=mon, reason="ムラっけ") or changed
+        changed = battle.modify_stats(mon, {raised_stat: +2}, source=mon, reason="ムラっけ") or changed
 
     down_candidates = [stat for stat in stats if mon.rank[stat] > -6 and stat != raised_stat]
     if down_candidates:
         lowered_stat = battle.random.choice(down_candidates)
-        changed = battle.modify_stat(mon, lowered_stat, -1, source=mon, reason="ムラっけ") or changed
+        changed = battle.modify_stats(mon, {lowered_stat: -1}, source=mon, reason="ムラっけ") or changed
 
     if changed:
         announce_ability_triggered(battle, ctx, value, mon=mon)

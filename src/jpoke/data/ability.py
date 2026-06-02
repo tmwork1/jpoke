@@ -606,9 +606,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "くろのいななき": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
-                h.くろのいななき_on_damage,
-                subject_spec="defender:self",
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.くろのいななき_boost,
+                subject_spec="attacker:self",
             )
         }
     ),
@@ -756,8 +756,8 @@ ABILITIES: dict[str, AbilityData] = {
     "じきゅうりょく": AbilityData(),
     "じしんかじょう": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
-                h.じしんかじょう_on_damage,
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.しろのいななき_boost,
                 subject_spec="attacker:self",
             )
         }
@@ -838,7 +838,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "しろのいななき": AbilityData(),
+    "しろのいななき": AbilityData(
+        handlers={
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.しろのいななき_boost,
+                subject_spec="attacker:self",
+            )
+        }
+    ),
     "しんがん": AbilityData(
         flags=[
             "mold_breaker_ignorable"
@@ -959,6 +966,10 @@ ABILITIES: dict[str, AbilityData] = {
             "mold_breaker_ignorable"
         ],
         handlers={
+            Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
+                h.すながくれ_reduce_accuracy,
+                subject_spec="defender:self",
+            ),
             Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
                 h.すながくれ_ignore_sandstorm_damage,
                 subject_spec="target:self",

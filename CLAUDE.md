@@ -1,0 +1,121 @@
+# jpoke — Claude Code ガイド
+
+## プロジェクト概要
+
+ポケモンバトルシミュレーション／ボット開発用 Python ライブラリ。
+SVシリーズ（スカーレット・バイオレット）のシングルバトルをターゲットにしている。
+テスト・仕様書・コード内コメントは **日本語** で書く。
+
+## テストの実行
+
+```powershell
+# 全テスト
+python -m pytest tests/ -v
+
+# 特定ファイル
+python -m pytest tests/test_ability.py -v
+
+# 特定テスト関数（日本語関数名も可）
+python -m pytest tests/test_ability.py -k "ARシステム" -v
+
+# tests/run.py 経由（従来の実行方法）
+python tests/run.py
+```
+
+テストは `tests/` 直下にあり、`tests/test_utils.py` はテストヘルパー（テスト対象外）。
+
+## アーキテクチャ
+
+### 主要コンポーネント
+
+| クラス／モジュール | 役割 |
+|---|---|
+| `core/battle.py` `Battle` | バトル全体の状態管理・ターン進行 |
+| `core/turn_controller.py` | ターン順・行動順の制御 |
+| `core/event_manager.py` | イベント発火・ハンドラ呼び出し |
+| `core/handler.py` `Handler` | ハンドラ定義（subject, subject_spec, 関数） |
+| `core/context.py` `EventContext` | ハンドラに渡すイベントコンテキスト |
+| `model/` | `Pokemon`, `Move`, `Field` などのモデル |
+| `data/` | `ability.py`, `move.py`, `item.py` — 各エンティティのデータ定義とハンドラ登録 |
+| `handlers/` | `ability.py`, `move.py`, `item.py` など — ハンドラ実装 |
+| `enums/` | `Event`, `Command`, `Interrupt`, `LogCode` |
+| `utils/type_defs.py` | `Stat`, `Type`, `AilmentName`, `VolatileName` など Literal 型の定義 |
+
+### イベント駆動モデル
+
+1. バトルロジックが `Event` を発火
+2. `EventManager` が登録済み `Handler` を順に呼び出す
+3. 各 `Handler` は `HandlerReturn(value, stop_event)` を返す
+4. ハンドラ登録は `data/ability.py`, `data/item.py` などで行う
+
+### ハンドラ追加の流れ
+
+```
+data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登録
+```
+
+### テストユーティリティ
+
+`tests/test_utils.py` の `start_battle()` でバトルを即座にセットアップできる。
+
+```python
+battle = t.start_battle(
+    team0=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+    team1=[Pokemon("カビゴン")],
+    weather=("はれ", 5),
+    accuracy=100,   # 命中率を固定
+)
+```
+
+## 実装時の参照順
+
+新しい特性・技・アイテムを実装する前に以下の順で読む：
+
+1. `src/jpoke/core/handler.py`
+2. `src/jpoke/core/context.py`
+3. `src/jpoke/core/event.py`
+4. `src/jpoke/core/battle.py`
+5. `src/jpoke/data/models.py`
+6. 対象の `src/jpoke/data/<category>.py` と `src/jpoke/handlers/<category>.py`
+7. `tests/test_utils.py` と最寄りの既存テスト
+
+## Handler の約束事
+
+- `HandlerReturn` は `value` と `stop_event` のみを持つ
+- `subject_spec` は必須。使う context role と一致させる（`source:self` / `target:self` など）
+- 固有効果のロジックは `handlers/*` に名前付き関数で実装し、`data/*.py` からその関数を登録する
+- `handlers/*` の並びは `data/*.py` の定義順（五十音順）に合わせる
+- イベント発火側で前提が保証されている場合、ハンドラ側の重複ガード（`if not mon.alive` など）は不要
+
+## 状態変更ルール
+
+- `Pokemon.hp` へ直接代入禁止 → 必ず `battle.modify_hp(...)` を使う
+- ランク変化は `battle.modify_stat(...)` または `battle.modify_stats(...)`
+- 状態異常・揮発性状態・天候・地形・場の状態は各 manager を通して更新する
+
+
+## 仕様書・ドキュメント
+
+| ディレクトリ | 役割 |
+|---|---|
+| `docs/spec/` | 技・アイテム・特性・場の効果の挙動仕様（実装前に読む） |
+| `docs/plan/` | 現在の実行計画と優先順位 |
+| `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md`） |
+| `docs/test/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
+
+実装数が変わるときは `docs/progress/*.md` の該当行を更新し、`README.md` の集計と整合させる。
+
+## 開発ルール
+
+- **対象はSVシリーズシングルバトルのみ**。既存コードが対応していない限りダブルバトル前提の設計はしない
+- コメント・docstring・テスト関数名は **日本語** で書く
+- テスト関数名は `test_<特性名/技名>_<確認内容>` の形式
+- ハンドラの実装は `handlers/`、登録は `data/` で行う
+- 新しい `Literal` 型は `utils/type_defs.py` に追加する
+- 型アノテーションは Python 3.10+ の構文（`X | Y`, `list[X]`）を使う
+- 長い `if` 文（80文字以上）は括弧で囲んで複数行に展開し、`and` で条件ごとに改行する
+
+## テストの追加ルール
+
+- `test_utils.py` の `start_battle`、`run_move`、`run_switch` などを再利用する
+- テスト項目を変更したら `python scripts/generate_test_list.py` を実行して `docs/test/` を更新する

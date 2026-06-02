@@ -59,8 +59,8 @@ class StatusManager:
             v: 変更する固定HP量
             r: 最大HPに対する割合（-1.0～1.0）。v と同時指定時は r が優先される
             reason: 変更の理由
-            source: ダメージ源のポケモン（技によるひんし時に ON_FAINTED へ渡す）
-            move: 使用された技（技によるひんし時に ON_FAINTED へ渡す）
+            source: ダメージ源のポケモン
+            move: 使用された技
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）
@@ -98,33 +98,10 @@ class StatusManager:
         if v < 0:
             if target.fainted:
                 self.battle.judge_winner()
-                self._events.emit(Event.ON_FAINTED, ctx, -v)
-            else:
-                self._events.emit(Event.ON_HP_CHANGED, ctx, -v)
+
+            self._events.emit(Event.ON_HP_CHANGED, ctx, -v)
 
         return v
-
-    def modify_stat(self,
-                    target: Pokemon,
-                    stat: Stat,
-                    v: int,
-                    source: Pokemon | None = None,
-                    reason: StatChangeReason = "") -> dict[Stat, int]:
-        """ポケモンの能力ランクを1つ変更する。
-
-        内部的には modify_stats() を呼び出して処理する。
-
-        Args:
-            target: 対象のポケモン
-            stat: 変更する能力値（"A", "B", "C", "D", "S" 等）
-            v: 変更するランク数（正=上昇、負=下降）
-            source: 変更の原因となったポケモン
-            reason: 変更の理由（ログ記録用）
-
-        Returns:
-            実際に変化した能力とランク量の辞書
-        """
-        return self.modify_stats(target, {stat: v}, source, reason)
 
     def modify_stats(self,
                      target: Pokemon,

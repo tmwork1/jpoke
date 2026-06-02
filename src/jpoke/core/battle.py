@@ -388,16 +388,16 @@ class Battle:
         """
         return self.speed_calculator.calc_effective_speed(mon)
 
-    def calc_speed_order(self) -> list[Pokemon]:
-        """素早さ順序を計算（SpeedCalculatorへの委譲）。
+    def resolve_speed_order(self) -> list[Pokemon]:
+        """素早さ順序を解決（SpeedCalculatorへの委譲）。
 
         Returns:
             素早さの速い順にソートされたポケモンのリスト
         """
         return self.speed_calculator.resolve_speed_order()
 
-    def calc_action_order(self) -> list[Pokemon]:
-        """行動順序を計算（SpeedCalculatorへの委譲）。
+    def resolve_action_order(self) -> list[Pokemon]:
+        """行動順序を解決（SpeedCalculatorへの委譲）。
 
         Returns:
             行動順にソートされたポケモンのリスト
@@ -521,15 +521,6 @@ class Battle:
                   reason: HPChangeReason = "") -> int:
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source, move=move)
-
-    def modify_stat(self,
-                    target: Pokemon,
-                    stat: Stat,
-                    v: int,
-                    source: Pokemon | None = None,
-                    reason: StatChangeReason = "") -> dict[Stat, int]:
-        """ポケモンの能力ランクを変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_stat(target, stat, v, source=source, reason=reason)
 
     def modify_stats(self,
                      target: Pokemon,

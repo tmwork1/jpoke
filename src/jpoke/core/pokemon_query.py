@@ -130,32 +130,16 @@ class PokemonQuery:
             or move.has_label("physical_damage")
         )
 
-    def acted_before(self, player: Player) -> bool | None:
-        """このターンで player が相手より先に行動したかを返す。
-
-        Returns:
-            bool | None:
-                - True: player が先に行動
-                - False: player が後に行動
-                - None: まだ行動順が確定していない
-        """
-        other = self.battle.rival(player)
-        player_state = self.battle.player_states[player]
-        other_state = self.battle.player_states[other]
-        player_order = player_state.action_order_index
-        other_order = other_state.action_order_index
-
-        if player_order is None or other_order is None:
-            return None
-        return player_order < other_order
-
     def is_first_actor(self, player: Player) -> bool | None:
         """このターンで player が先攻かどうかを返す（1vs1想定）。"""
-        return self.acted_before(player)
+        state = self.battle.player_states[player]
+        if state.action_order_index is None:
+            return None
+        return state.action_order_index == 0
 
     def is_second_actor(self, player: Player) -> bool | None:
         """このターンで player が後攻かどうかを返す（1vs1想定）。"""
-        is_first = self.is_first_actor(player)
-        if is_first is None:
+        state = self.battle.player_states[player]
+        if state.action_order_index is None:
             return None
-        return not is_first
+        return state.action_order_index == 1

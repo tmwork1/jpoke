@@ -210,9 +210,9 @@ class Event(Enum):
     # handle: ability.py（にげごし等、ダメージ要因をまたいでHP閾値を監視する特性）
     ON_HP_CHANGED = auto()
 
-    # emit: core/pokemon_state.py（HP が 0 になった直後、ハンドラ解除前）
+    # emit: core/move_executor.py（技によるひんし時）
     # handle: volatile.py（おんねん・みちづれ等のひんし時効果）
-    ON_FAINTED = auto()
+    ON_MOVE_KO = auto()
 
     # ------------------------------------------------------------------ #
     # ターン終了イベント（core/turn.py から順番に emit される）

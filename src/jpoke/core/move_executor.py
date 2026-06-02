@@ -380,18 +380,23 @@ class MoveExecutor:
         hp_delta = self.battle.modify_hp(
             ctx.defender, -damage, source=ctx.attacker, move=ctx.move, reason="move_damage"
         )
-        if hp_delta < 0:
-            ctx.defender.hits_taken += 1
 
         self._events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えた後の処理
-        if hp_delta < 0:
-            self._events.emit(Event.ON_DAMAGE_HIT, ctx, abs(hp_delta))
+        if hp_delta >= 0:
+            return
 
-            # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
-            if ctx.attacker.active_tera_type == 'ステラ':
-                ctx.attacker.stellar_boosted_types.add(ctx.move.type)
+        ctx.defender.hits_taken += 1
+
+        if ctx.defender.fainted:
+            self._events.emit(Event.ON_MOVE_KO, ctx, hp_delta)
+
+        self._events.emit(Event.ON_DAMAGE_HIT, ctx, abs(hp_delta))
+
+        # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
+        if ctx.attacker.active_tera_type == 'ステラ':
+            ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
     def _execute_status_hit(self, ctx: EventContext) -> None:
         """状態変化技の命中処理を実行する。

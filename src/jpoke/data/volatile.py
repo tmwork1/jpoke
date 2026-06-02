@@ -96,9 +96,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="attacker:self",
                 priority=10
             ),
-            Event.ON_FAINTED: h.VolatileHandler(
-                h.おんねん,
-                subject_spec="target:self",
+            Event.ON_MOVE_KO: h.VolatileHandler(
+                h.おんねん_deplete_attacking_move_pp,
+                subject_spec="defender:self",
                 priority=10
             ),
         }
@@ -369,7 +369,7 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=40,
             ),
             Event.ON_TURN_END: h.VolatileHandler(
-                h.ひるみ_remove_volatile        ),
+                h.ひるみ_remove_volatile),
         }
     ),
     "ふういん": VolatileData(
@@ -427,7 +427,7 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "みちづれ": VolatileData(
         handlers={
-            Event.ON_FAINTED: h.VolatileHandler(
+            Event.ON_MOVE_KO: h.VolatileHandler(
                 h.みちづれ_faint,
                 subject_spec="defender:self",
                 priority=30

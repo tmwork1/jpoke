@@ -189,7 +189,7 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     mon = ctx.source
     battle.volatile_manager.tick(mon, "あめまみれ")
     if mon.has_volatile("あめまみれ"):
-        battle.modify_stat(mon, "S", -1, reason="あめまみれ")
+        battle.modify_stats(mon, {"S": -1}, reason="あめまみれ")
     return HandlerReturn(value=value)
 
 
@@ -247,7 +247,7 @@ def うちおとす_check_floating(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(value=False, stop_event=True)
 
 
-def おんねん(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def おんねん_deplete_attacking_move_pp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おんねん状態のひんし時処理（相手の技PPを0にする）
 
     Args:
@@ -258,10 +258,12 @@ def おんねん(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn
     Returns:
         HandlerReturn: 常にTrue
     """
-    if ctx.hp_change_reason == "move_damage":
-        ctx.move.pp = 0
-        battle.add_event_log(ctx.attacker, LogCode.TEXT_LOG,
-                             payload={"text": f"おんねんで{ctx.move.name}のPPを0にした"})
+    ctx.move.pp = 0
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.TEXT_LOG,
+        payload={"text": f"おんねんで{ctx.move.name}のPPを0にした"}
+    )
     return HandlerReturn(value=value)
 
 
@@ -742,8 +744,11 @@ def みがわり_block_damage(battle: Battle, ctx: EventContext, value: Any) -> 
     if not battle.move_executor.check_hit_substitute(ctx):
         return HandlerReturn(value=damage)
 
-    battle.add_event_log(ctx.defender, LogCode.SUBSTITUTE_HIT,
-                         payload={"move": ctx.move.name})
+    battle.add_event_log(
+        ctx.defender,
+        LogCode.SUBSTITUTE_HIT,
+        payload={"move": ctx.move.name}
+    )
     volatile = ctx.defender.volatiles["みがわり"]
     damage = min(volatile.hp, damage)
     volatile.hp -= damage
@@ -761,10 +766,13 @@ def みがわり_block_damage(battle: Battle, ctx: EventContext, value: Any) -> 
 
 def みちづれ_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """みちづれ状態のひんし時処理（相手もひんしにする）"""
-    if ctx.hp_change_reason == "move_damage":
-        mon = ctx.attacker
-        battle.modify_hp(mon, v=-mon.hp)
-        battle.add_event_log(mon, LogCode.VOLATILE_DISPLAY, payload={"volatile": "みちづれ"})
+    mon = ctx.attacker
+    battle.modify_hp(mon, v=-mon.hp)
+    battle.add_event_log(
+        mon,
+        LogCode.VOLATILE_DISPLAY,
+        payload={"volatile": "みちづれ"}
+    )
     return HandlerReturn(value=value)
 
 
@@ -872,74 +880,99 @@ def スレッドトラップ_protect(battle: Battle, ctx: EventContext, value: A
 def トーチカ_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """トーチカの保護判定。接触した相手をどく状態にする"""
     return _run_protect(battle, ctx, value, ailment_on_contact="どく")
+
+
 def アクアリング_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return common.self_heal(battle, ctx, value, r=1/16)
+
 
 def アンコール_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return restrict_commands(battle, ctx, value, name="アンコール")
 
+
 def アンコール_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="アンコール")
+
 
 def おんねん_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="おんねん")
 
+
 def かいふくふうじ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="かいふくふうじ")
+
 
 def かなしばり_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="かなしばり")
 
+
 def こだわり_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return restrict_commands(battle, ctx, value, name="こだわり")
+
 
 def さわぐ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="さわぐ")
 
+
 def じごくづき_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="じごくづき")
+
 
 def ちょうはつ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="ちょうはつ")
 
+
 def でんじふゆう_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="でんじふゆう")
+
 
 def ねむけ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="ねむけ")
 
+
 def ねをはる_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return common.self_heal(battle, ctx, value, r=1/16)
+
 
 def ひるみ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="ひるみ")
 
+
 def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="ほろびのうた")
+
 
 def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return common.drain_hp(battle, ctx, value, from_="source:self", r=1/8)
 
+
 def ロックオン_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_volatile(battle, ctx, value, volatile="ロックオン")
+
 
 def ロックオン_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="ロックオン")
 
+
 def まもる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="まもる")
+
 
 def かえんのまもり_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="かえんのまもり")
 
+
 def キングシールド_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="キングシールド")
+
 
 def スレッドトラップ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="スレッドトラップ")
 
+
 def トーチカ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="トーチカ")
+
 
 def かくれる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="かくれる")

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash(python -m pytest*)",
+      "Bash(python tests/run.py*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git status*)",
+      "Bash(git show*)",
+      "Bash(mkdir*)",
+      "Bash(rm*)",
+      "Bash(mv*)",
+      "Bash(cp*)",
+      "Bash(touch*)",
+      "Bash(cd*)",
+      "Bash(python*)"
+    ],
+    "deny": []
+  }
+}
