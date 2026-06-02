@@ -182,3 +182,16 @@ def change_item(battle: Battle,
 
 def end_turn(battle: Battle):
     battle.events.emit(Event.ON_TURN_END)
+
+
+def apply_ailment(battle: Battle,
+                  active_index: int,
+                  ailment_name: AilmentName,
+                  count: int = 1,
+                  by_foe: bool = False,
+                  overwrite: bool = False) -> bool:
+    mon = battle.actives[active_index]
+    source = battle.foe(mon) if by_foe else None
+    return battle.ailment_manager.apply(
+        mon, ailment_name, count=count, source=source, overwrite=overwrite
+    )

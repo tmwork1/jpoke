@@ -604,7 +604,14 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "くろのいななき": AbilityData(),
+    "くろのいななき": AbilityData(
+        handlers={
+            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+                h.くろのいななき_on_damage,
+                subject_spec="defender:self",
+            )
+        }
+    ),
     "げきりゅう": AbilityData(
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(

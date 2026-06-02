@@ -797,14 +797,19 @@ def サンパワー_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -
 
 def じしんかじょう_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
-    if not ctx.defender.fainted:
-        return HandlerReturn(value=value)
+    if (
+        ctx.defender.fainted
+        and battle.modify_stat(ctx.attacker, "A", +1, source=ctx.attacker)
+    ):
+        announce_ability_triggered(battle, ctx, value, mon=ctx.attacker)
+    return HandlerReturn(value=value)
 
-    changed = battle.modify_stat(ctx.attacker, "A", +1, source=ctx.attacker)
-    if not changed:
-        return HandlerReturn(value=value)
 
-    announce_ability_triggered(battle, ctx, value, mon=ctx.attacker)
+def くろのいななき_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くろのいななき特性: 攻撃技で相手を倒すと特攻が1段階上がる。"""
+    if ctx.hp_change_reason == "move_damage":
+        attacker =
+        announce_ability_triggered(battle, ctx, value, mon=ctx.attacker)
     return HandlerReturn(value=value)
 
 
