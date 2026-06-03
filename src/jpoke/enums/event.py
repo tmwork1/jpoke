@@ -130,10 +130,6 @@ class Event(Enum):
     # handle: ailment.py（まひ・ねむり・こおり）, volatile.py（こんらん・ひるみ・どろぼう状態等）
     ON_TRY_ACTION = auto()
 
-    # emit: core/move_executor.py（PP消費処理）
-    # handle: data/move.py（通常のPP1消費）
-    ON_CONSUME_PP = auto()
-
     # emit: core/move_executor.py（溜め技の1ターン目検知）
     # handle: data/move.py（ソーラービーム・スカイアタック・かくれる等の溜め処理）
     ON_MOVE_CHARGE = auto()

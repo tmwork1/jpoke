@@ -468,5 +468,8 @@ class MoveExecutor:
         """
         v = self._events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
         ctx.move.pp = max(0, ctx.move.pp - v)
-        self.battle.add_event_log(ctx.attacker, LogCode.PP_CONSUMED,
-                                  payload={"move": ctx.move.name, "value": v})
+        self.battle.add_event_log(
+            ctx.attacker,
+            LogCode.PP_CONSUMED,
+            payload={"move": ctx.move.name, "value": v}
+        )
