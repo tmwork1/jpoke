@@ -78,6 +78,7 @@ battle = t.start_battle(
 5. `src/jpoke/data/models.py`
 6. 対象の `src/jpoke/data/<category>.py` と `src/jpoke/handlers/<category>.py`
 7. `tests/test_utils.py` と最寄りの既存テスト
+8. **`docs/spec/turn.md`** — 実装するイベントの priority を確認し、計画書に明記する
 
 ## Handler の約束事
 
@@ -86,6 +87,7 @@ battle = t.start_battle(
 - 固有効果のロジックは `handlers/*` に名前付き関数で実装し、`data/*.py` からその関数を登録する
 - `handlers/*` の並びは `data/*.py` の定義順（五十音順）に合わせる
 - イベント発火側で前提が保証されている場合、ハンドラ側の重複ガード（`if not mon.alive` など）は不要
+- **priority は `docs/spec/turn.md` で対象イベントの行を必ず確認する。未掲載のイベント（ダメージ計算内部等）は既存の同種ハンドラを参照して決定し、計画書に根拠を明記する**
 
 ## 状態変更ルール
 

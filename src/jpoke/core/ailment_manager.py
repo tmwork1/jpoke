@@ -73,6 +73,10 @@ class AilmentManager:
         if target.ailment.is_active and not overwrite:
             return False
 
+        # overwrite=True でも uncurable は上書き不可
+        if target.ailment.is_active and target.ailment.uncurable:
+            return False
+
         # 重ねがけ不可
         if name == target.ailment.name:
             return False
@@ -96,10 +100,16 @@ class AilmentManager:
         target.ailment.unregister_handlers(self._events, target)
 
         # 新しい状態異常を設定してハンドラ登録
-        self.battle.add_event_log(target, LogCode.AILMENT_APPLIED,
-                                  payload={"ailment": resolved_name})
+        self.battle.add_event_log(
+            target,
+            LogCode.AILMENT_APPLIED,
+            payload={"ailment": resolved_name}
+        )
         target.ailment = Ailment(resolved_name, count=count)
         target.ailment.register_handlers(self._events, target)
+
+        # 付与後イベントを発火（シンクロ等のリアクション用）
+        self._events.emit(Event.ON_APPLY_AILMENT, apply_ctx, resolved_name)
         return True
 
     def _can_apply_by_type(self,
@@ -135,8 +145,15 @@ class AilmentManager:
         if not target.ailment.is_active:
             return False
 
-        self.battle.add_event_log(target, LogCode.AILMENT_REMOVED,
-                                  payload={"ailment": target.ailment.name})
+        # 回復不能な状態異常は解除しない
+        if target.ailment.uncurable:
+            return False
+
+        self.battle.add_event_log(
+            target,
+            LogCode.AILMENT_REMOVED,
+            payload={"ailment": target.ailment.name}
+        )
         target.ailment.unregister_handlers(self._events, target)
         target.ailment = Ailment()
         return True

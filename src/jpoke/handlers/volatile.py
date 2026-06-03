@@ -943,7 +943,7 @@ def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: A
 
 
 def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.drain_hp(battle, ctx, value, from_="source:self", r=1/8)
+    return common.drain_hp(battle, ctx, value, from_="source:self", r=1/8, reason="drain")
 
 
 def ロックオン_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

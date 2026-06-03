@@ -52,6 +52,16 @@ class Ailment(GameEffect):
         """状態異常が実在するかどうか（空でない状態異常が存在する）"""
         return self.name != ""
 
+    @property
+    def is_sleep(self) -> bool:
+        """ねむり状態扱いかどうか"""
+        return self.data.is_sleep  # type: ignore[attr-defined]
+
+    @property
+    def uncurable(self) -> bool:
+        """回復不能な状態異常かどうか"""
+        return self.data.uncurable  # type: ignore[attr-defined]
+
     def tick(self):
         """状態異常のターン経過処理を行う"""
         self.elapsed_turns += 1

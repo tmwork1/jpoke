@@ -42,13 +42,13 @@ class Event(Enum):
     # 制御系イベント（能力/道具の有効化、特定状態フラグ）
     # ------------------------------------------------------------------ #
 
-    # emit: core/context.py（かたやぶり状態を有効化）
-    # handle: ability.py（かたやぶり系の能力無効化判定に使用）
-    ON_ACTIVATE_MOLD_BREAKER = auto()
+    # emit: core/move_executor.py（技実行前・action_success=True のとき）
+    # handle: ability.py（かたやぶり系の能力無効化・メガソーラー等の攻撃開始時フック）
+    ON_BEGIN_MOVE = auto()
 
-    # emit: core/context.py（かたやぶり状態を無効化）
-    # handle: ability.py（かたやぶり系の能力無効化判定を終了）
-    ON_DEACTIVATE_MOLD_BREAKER = auto()
+    # emit: core/move_executor.py（技実行後・finally ブロックで常に発火）
+    # handle: ability.py（かたやぶり系の能力復元・メガソーラー等の攻撃終了時フック）
+    ON_END_MOVE = auto()
 
     # emit: core/move_executor.py（ふきとばし・ほえる等の強制交代を試行）
     # handle: ability.py / volatile.py（きゅうばん・ねをはる等で無効化）
@@ -238,6 +238,10 @@ class Event(Enum):
     # handle: ability.py（シンクロ・みずのベール・かんそうはだ等）
     #          data/field.py（ミストフィールド・エレキフィールドによる無効化）
     ON_BEFORE_APPLY_AILMENT = auto()
+
+    # emit: core/ailment_manager.py（状態異常を付与した直後）
+    # handle: ability.py（シンクロ: 状態異常反射）
+    ON_APPLY_AILMENT = auto()
 
     # emit: core/pokemon_state.py（揮発性状態を付与する直前）
     # handle: data/field.py（サイコフィールド・ミストフィールド等 volatile 無効化）

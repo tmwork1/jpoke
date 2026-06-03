@@ -78,6 +78,10 @@ AILMENTS: dict[str, AilmentData] = {
             )
         }
     ),
+    "ゆめうつつ": AilmentData(
+        is_sleep=True,
+        uncurable=True,
+    ),
 }
 
 

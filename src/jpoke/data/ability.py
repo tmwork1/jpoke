@@ -45,10 +45,12 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.アイスフェイス_block_physical,
                 subject_spec="defender:self",
+                priority=40,
             ),
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.アイスフェイス_restore_on_switch_in,
                 subject_spec="source:self",
+                priority=140,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
                 h.アイスフェイス_restore_on_snow,
@@ -411,11 +413,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
-            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_END_MOVE: h.AbilityHandler(
                 h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -598,11 +600,12 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ぎょぐん_on_switch_in,
                 subject_spec="source:self",
+                priority=120,
             ),
             Event.ON_TURN_END: h.AbilityHandler(
                 h.ぎょぐん_on_turn_end,
                 subject_spec="source:self",
-                priority=80,
+                priority=160,
             ),
         }
     ),
@@ -635,11 +638,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.きんしのちから_on_calc_back_tier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.きんしのちから_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_END_MOVE: h.AbilityHandler(
                 h.きんしのちから_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -1165,7 +1168,7 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.スワームチェンジ_on_turn_end,
                 subject_spec="source:self",
-                priority=80,
+                priority=160,
             ),
         }
     ),
@@ -1199,6 +1202,16 @@ ABILITIES: dict[str, AbilityData] = {
             "protected",
             "gas_proof",
         ],
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ぜったいねむり_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.ぜったいねむり_boost_sleep_moves,
+                subject_spec="defender:self",
+            ),
+        },
     ),
     "ゼロフォーミング": AbilityData(
         flags=[
@@ -1241,11 +1254,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
-            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_END_MOVE: h.AbilityHandler(
                 h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -1290,7 +1303,7 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.ダルマモード_on_turn_end,
                 subject_spec="source:self",
-                priority=80,
+                priority=160,
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.ダルマモード_on_switch_out,
@@ -1415,7 +1428,7 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.テラスチェンジ_on_switch_in,
                 subject_spec="source:self",
-                priority=1,
+                priority=10,
             ),
         }
     ),
@@ -1425,11 +1438,11 @@ ABILITIES: dict[str, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
-            Event.ON_ACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
             ),
-            Event.ON_DEACTIVATE_MOLD_BREAKER: h.AbilityHandler(
+            Event.ON_END_MOVE: h.AbilityHandler(
                 h.かたやぶり_restore_foe_ability,
                 subject_spec="attacker:self",
             ),
@@ -1480,6 +1493,7 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.てんきや_sync_form,
                 subject_spec="source:self",
+                priority=140,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
                 h.てんきや_sync_form,
@@ -2330,7 +2344,23 @@ ABILITIES: dict[str, AbilityData] = {
             )
         }
     ),
-    "メガソーラー": AbilityData(),
+    "メガソーラー": AbilityData(
+        handlers={
+            Event.ON_BEGIN_MOVE: h.AbilityHandler(
+                h.メガソーラー_activate,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_END_MOVE: h.AbilityHandler(
+                h.メガソーラー_deactivate,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CHECK_WEATHER_ENABLED: h.AbilityHandler(
+                h.メガソーラー_force_weather_enabled,
+                subject_spec="source:self",
+                priority=1,
+            ),
+        }
+    ),
     "メガランチャー": AbilityData(
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
@@ -2524,11 +2554,12 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.リミットシールド_on_switch_in,
                 subject_spec="source:self",
+                priority=120,
             ),
             Event.ON_TURN_END: h.AbilityHandler(
                 h.リミットシールド_on_turn_end,
                 subject_spec="source:self",
-                priority=80,
+                priority=160,
             ),
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.リミットシールド_prevent_ailment,

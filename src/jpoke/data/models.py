@@ -73,6 +73,8 @@ class FieldData:
 
 @dataclass
 class AilmentData:
+    is_sleep: bool = False
+    uncurable: bool = False
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     name: str = ""
 

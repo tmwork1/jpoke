@@ -50,7 +50,7 @@ MoveCategory = Literal["物理", "特殊", "変化"]
 
 MoveTarget = Literal["foe", "self", "field"]
 
-AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"]
+AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]
 
 VolatileName = Literal[
     "アクアリング",
@@ -123,6 +123,7 @@ HPChangeReason = Literal[
     "pain_split",           # いたみわけ（ききかいひ不発）
     "self_cost",            # 自己HP消費（みがわり等）
     "bench_heal",           # 控え回復（さいせいりょく等、かいふくふうじ無効）
+    "drain",                # 吸収技・やどりぎのタネによる回復 (ヘドロえきのダメージ変換用)
 ]
 
 StatChangeReason = Literal[

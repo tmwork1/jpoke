@@ -262,7 +262,7 @@ class MoveExecutor:
                 self._consume_pp(ctx)
 
                 # かやたぶりを適用する
-                self._events.emit(Event.ON_ACTIVATE_MOLD_BREAKER, ctx)
+                self._events.emit(Event.ON_BEGIN_MOVE, ctx)
 
                 # 技の実行
                 self._execute_move(ctx)
@@ -272,7 +272,7 @@ class MoveExecutor:
             ctx.move.set_power(ctx.move.data.power)
 
             # かやたぶりを解除する
-            self._events.emit(Event.ON_DEACTIVATE_MOLD_BREAKER, ctx)
+            self._events.emit(Event.ON_END_MOVE, ctx)
 
             # 技のハンドラを解除
             ctx.move.unregister_handlers(self._events, ctx.attacker)
