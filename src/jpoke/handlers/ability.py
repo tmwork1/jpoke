@@ -22,6 +22,11 @@ AEGISLASH_SHIELD = "ギルガルド(シールド)"
 AEGISLASH_BLADE = "ギルガルド(ブレード)"
 PALAFIN_ZERO = "イルカマン(ナイーブ)"
 PALAFIN_HERO = "イルカマン(マイティ)"
+EISCUE_ICE = "コオリッポ(アイス)"
+EISCUE_NICE = "コオリッポ(ナイス)"
+CRAMORANT_NORMAL = "ウッウ"
+CRAMORANT_GULPING = "ウッウ(うのみのすがた)"
+CRAMORANT_GORGING = "ウッウ(まるのみのすがた)"
 
 
 class AbilityHandler(Handler):
@@ -264,6 +269,43 @@ def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value:
     return _block_item_change(ctx.target, list(MEMORY_TO_TYPE.keys()))
 
 
+def アイスフェイス_block_physical(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """アイスフェイス特性: 物理技のダメージを0にしてナイスフェイスにフォルムチェンジする。"""
+    if battle.resolve_move_category(ctx.attacker, ctx.move) != "物理":
+        return HandlerReturn(value=value)
+    if ctx.defender.name != EISCUE_ICE:
+        return HandlerReturn(value=value)
+    ctx.defender.set_form(EISCUE_NICE)
+    announce_ability_triggered(battle, ctx, value, mon=ctx.defender)
+    return HandlerReturn(value=0)
+
+
+def アイスフェイス_restore_on_snow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """アイスフェイス特性: ゆきが発生したときナイスフェイスからアイスフェイスに戻る。"""
+    mon = ctx.source
+    if not battle.is_active(mon):
+        return HandlerReturn(value=value)
+    if mon.name != EISCUE_NICE:
+        return HandlerReturn(value=value)
+    if battle.weather.name != "ゆき":
+        return HandlerReturn(value=value)
+    mon.set_form(EISCUE_ICE)
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def アイスフェイス_restore_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """アイスフェイス特性: ゆき状態の場に登場したときアイスフェイスに戻る。"""
+    mon = ctx.source
+    if mon.name != EISCUE_NICE:
+        return HandlerReturn(value=value)
+    if battle.weather.name != "ゆき":
+        return HandlerReturn(value=value)
+    mon.set_form(EISCUE_ICE)
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
 def アイスボディ_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アイスボディ特性: ゆき中にターン終了時に最大HPの1/16を回復する。"""
     mon = ctx.source
@@ -341,7 +383,7 @@ def ありじごく_check_trapped(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(value=result)
 
 
-def いかく_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def いかく_lower_foe_atk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いかく特性: 登場時に相手のこうげきを1段階下げる。"""
     source = ctx.source
     target = battle.foe(source)
@@ -395,6 +437,55 @@ def いわはこび_modify_atk(battle: Battle, ctx: EventContext, value: int) ->
     )
 
 
+def うのミサイル_on_move_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """うのミサイル特性: なみのり/ダイビング成功後に HP に応じてフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.name != CRAMORANT_NORMAL:
+        return HandlerReturn(value=value)
+    if ctx.move is None or ctx.move.name not in ("なみのり", "ダイビング"):
+        return HandlerReturn(value=value)
+    if not battle.move_executor.move_applied:
+        return HandlerReturn(value=value)
+
+    next_form = CRAMORANT_GULPING if mon.hp * 2 > mon.max_hp else CRAMORANT_GORGING
+    mon.set_form(next_form)
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def うのミサイル_on_damage_hit(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """うのミサイル特性: 咥えたすがたのときダメージを受けると獲物を吐き出して反撃する。"""
+    mon = ctx.defender
+    form = mon.name
+    if form not in (CRAMORANT_GULPING, CRAMORANT_GORGING):
+        return HandlerReturn(value=value)
+    if mon.has_volatile("かくれる"):
+        return HandlerReturn(value=value)
+    if ctx.attacker.fainted:
+        return HandlerReturn(value=value)
+
+    mon.set_form(CRAMORANT_NORMAL)
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+
+    damage = max(1, ctx.attacker.max_hp // 4)
+    battle.modify_hp(ctx.attacker, -damage, source=mon, reason="ability")
+
+    if form == CRAMORANT_GULPING:
+        battle.modify_stats(ctx.attacker, {"B": -1}, source=mon)
+    else:
+        battle.ailment_manager.apply(ctx.attacker, "まひ", source=mon, ctx=ctx)
+
+    return HandlerReturn(value=value)
+
+
+def うのミサイル_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """うのミサイル特性: 交代時に通常のすがたに戻す。"""
+    mon = ctx.source
+    if mon.name in (CRAMORANT_GULPING, CRAMORANT_GORGING):
+        mon.set_form(CRAMORANT_NORMAL)
+    return HandlerReturn(value=value)
+
+
 def エアロック_check_weather_enabled(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """エアロック特性: 天候効果を無効化する。"""
     return HandlerReturn(value=False, stop_event=True)
@@ -434,7 +525,7 @@ def かいりきバサミ_block_A_drop(battle: Battle, ctx: EventContext, value:
     return HandlerReturn(value=value)
 
 
-def かがくへんかガス_gas_activate(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かがくへんかガス_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     mon = ctx.source
     foe = battle.foe(mon)
     announce_ability_triggered(battle, ctx, value, mon=mon)
@@ -537,7 +628,7 @@ def カブトアーマー_block_crit(battle: Battle, ctx: EventContext, value: i
     return HandlerReturn(value=0, stop_event=True)
 
 
-def かるわざ_update_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かるわざ_init_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """かるわざ特性: 入場時に発動可否の初期状態を記録する。"""
     mon = ctx.source
     # "idle": 入場時にアイテムあり（消失で発動可能）
@@ -546,7 +637,7 @@ def かるわざ_update_state(battle: Battle, ctx: EventContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def かるわざ_deactivate(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def かるわざ_reset_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """かるわざ特性: 交代で状態を初期化する。"""
     ctx.source.ability.state = ""
     return HandlerReturn(value=value)
@@ -838,7 +929,7 @@ def しめりけ_block_explosion_foe(battle: Battle, ctx: EventContext, value: A
     return HandlerReturn(value=value)
 
 
-def しゅうかく_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しゅうかく特性: ターン終了時に消費したきのみを復活させる。"""
     mon = ctx.source
     item_name = mon.last_lost_item_name
@@ -1711,7 +1802,7 @@ def もらいび_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def もらいび_charge_fire(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+def もらいび_arm_fire_boost(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """もらいび特性: ほのお技使用時に強化適用予約。"""
     if (
         ctx.move.type == "ほのお"

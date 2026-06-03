@@ -21,8 +21,8 @@ class CustomPlayer(Player):
 
 def start_battle(team0: list[Pokemon],
                  team1: list[Pokemon],
-                 ailment0: dict[AilmentName, int] | None = None,
-                 ailment1: dict[AilmentName, int] | None = None,
+                 ailment0: dict[AilmentName, int | None] | None = None,
+                 ailment1: dict[AilmentName, int | None] | None = None,
                  volatile0: dict[VolatileName, int] | None = None,
                  volatile1: dict[VolatileName, int] | None = None,
                  weather: tuple[Weather, int] | None = None,

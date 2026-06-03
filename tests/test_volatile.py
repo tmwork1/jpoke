@@ -2,10 +2,8 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.core import EventContext
-from jpoke.enums import Event, Command, LogCode
+from jpoke.enums import Event, Command
 import test_utils as t
-
-# TODO : 崩れたインデントの修正
 
 # ──────────────────────────────────────────────────────────────────
 # アクアリング
@@ -477,43 +475,24 @@ def test_こんらん_カウント満了で解除():
 # さわぐ / さわがしい
 # ──────────────────────────────────────────────────────────────────
 
-# TODO : さわぐ・さわがしいで共通化できるテストはパラメタライズする
-
-
-def test_さわぐ_ねむりを防ぐ():
+@pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
+def test_さわぐさわがしい_ねむりを防ぐ(volatile_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
-        volatile0={"さわぐ": 2}
+        volatile0={volatile_name: 2}
     )
     assert not battle.ailment_manager.apply(battle.actives[0], "ねむり")
 
 
-def test_さわぐ_ねむけを防ぐ():
+@pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
+def test_さわぐさわがしい_ねむけを防ぐ(volatile_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
-        volatile0={"さわぐ": 2}
+        volatile0={volatile_name: 2}
     )
     assert not battle.volatile_manager.apply(battle.actives[0], "ねむけ", count=2)
-
-
-def test_さわがしい_ねむりを防ぐ():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        volatile1={"さわがしい": 2}
-    )
-    assert not battle.ailment_manager.apply(battle.actives[1], "ねむり")
-
-
-def test_さわがしい_ねむけを防ぐ():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        volatile1={"さわがしい": 2}
-    )
-    assert not battle.volatile_manager.apply(battle.actives[1], "ねむけ", count=2)
 
 
 def test_さわぐ終了時_さわがしいを解除する():
@@ -552,7 +531,6 @@ def test_さわぐ_技固定():
 # ──────────────────────────────────────────────────────────────────
 
 
-# TODO : 1倍、2倍条件をすべてパラメタライズでまとめる
 @pytest.mark.parametrize(
     "pokemon, expected_frac",
     [
@@ -685,13 +663,11 @@ minimize_enhance_moves = [
     "フライングプレス", "サンダーダイブ"
 ]
 
-# TODO : パラメタライズしてminimize_enhance_movesの技すべてでテストする
-
-
-def test_ちいさくなる_minimize技が必中化して威力2倍():
+@pytest.mark.parametrize("move_name", minimize_enhance_moves)
+def test_ちいさくなる_minimize技が必中化して威力2倍(move_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", move_names=["のしかかり"])],
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         volatile1={"ちいさくなる": 1}
     )
     t.run_move(battle, 0)
@@ -786,7 +762,29 @@ def test_でんじふゆう_ターン経過で解除():
 # ──────────────────────────────────────────────────────────────────
 
 
-# TODO : テスト実装
+def test_とくせいなし_特性が無効になる():
+    """とくせいなし: 特性が無効になり技が効く"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ちくでん")],
+        volatile1={"とくせいなし": 5},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
+
+
+def test_とくせいなし_解除後は特性が有効になる():
+    """とくせいなし: 解除後は特性が有効に戻る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ちくでん")],
+        volatile1={"とくせいなし": 5},
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.remove(defender, "とくせいなし")
+    t.run_move(battle, 0)
+    assert defender.hp == defender.max_hp
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -990,7 +988,6 @@ def test_ほろびのうた_ターン経過で瀕死():
 # まるくなる
 # ──────────────────────────────────────────────────────────────────
 
-# TODO : アイスボールもパラメタライズでテスト
 def test_まるくなる():
     """まるくなる: ころがる・アイスボールの威力が2倍になる"""
     battle = t.start_battle(
@@ -1031,17 +1028,20 @@ def test_みがわり_無効化():
     assert not battle.move_executor.move_applied
 
 
-# TODO : 技の威力を固定して、みがわりのHP減少量が正しいか確認するように修正
 def test_みがわり_攻撃によりみがわりのHPが減る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     defender = battle.actives[0]
-    battle.volatile_manager.apply(defender, "みがわり", hp=100)
+    initial_hp = 100
+    fixed_damage = 30
+    battle.volatile_manager.apply(defender, "みがわり", hp=initial_hp)
     volatile = defender.volatiles["みがわり"]
-    battle.advance_turn()
-    assert 0 < volatile.hp < 100
+    battle.roll_damage = lambda *args, **kwargs: fixed_damage
+    t.run_move(battle, 1)
+    assert volatile.hp == initial_hp - fixed_damage
+    assert defender.hp == defender.max_hp
 
 
 def test_みがわり_破壊():
@@ -1163,26 +1163,36 @@ def test_ロックオン_必中化():
 # ──────────────────────────────────────────────────────────────────
 # まもる、トーチカ、キングシールド、スレッドトラップ、かえんのまもり
 # ──────────────────────────────────────────────────────────────────
-# TODO : これらの効果は似ているので、パラメタライズしてまとめる
-def test_まもる_攻撃技を無効化():
+
+
+@pytest.mark.parametrize("volatile_name", [
+    "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり"
+])
+def test_まもる系_攻撃技を無効化(volatile_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
-    battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
+    battle.volatile_manager.apply(battle.actives[1], volatile_name, count=1)
     t.run_move(battle, 0)
     assert not battle.move_executor.move_success
 
 
-def test_まもる_相手が対象の変化技を無効化():
-    # TODO : かえんのまもりは変化技を防げないので、結果もパラメタライズで切り替える
+@pytest.mark.parametrize("volatile_name,blocks_status", [
+    ("まもる", True),
+    ("トーチカ", True),
+    ("キングシールド", True),
+    ("スレッドトラップ", True),
+    ("かえんのまもり", False),
+])
+def test_まもる系_相手対象変化技への反応(volatile_name, blocks_status):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
     )
-    battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
+    battle.volatile_manager.apply(battle.actives[1], volatile_name, count=1)
     t.run_move(battle, 0)
-    assert not battle.move_executor.move_success
+    assert battle.move_executor.move_success == (not blocks_status)
 
 
 def test_まもる_相手自身が対象の技は無効化しない():
@@ -1195,25 +1205,24 @@ def test_まもる_相手自身が対象の技は無効化しない():
     assert battle.move_executor.move_success
 
 
-def test_まもる_ターン終了で解除():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")]
-    )
+@pytest.mark.parametrize("volatile_name", [
+    "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり"
+])
+def test_まもる系_ターン終了で解除(volatile_name):
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
     mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "まもる", count=1)
+    battle.volatile_manager.apply(mon, volatile_name, count=1)
     battle.events.emit(Event.ON_TURN_END)
-    assert not mon.has_volatile("まもる")
+    assert not mon.has_volatile(volatile_name)
 
 
-def test_トーチカ():
+def test_トーチカ_接触技で毒を付与():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "トーチカ", count=1)
     t.run_move(battle, 0)
-    assert not battle.move_executor.move_success
     assert battle.actives[0].has_ailment("どく")
 
 
@@ -1227,22 +1236,13 @@ def test_トーチカ_非接触では毒にならない():
     assert not battle.actives[0].ailment.is_active
 
 
-def test_トーチカ_ターン終了で解除():
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
-    mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "トーチカ", count=1)
-    battle.events.emit(Event.ON_TURN_END)
-    assert not mon.has_volatile("トーチカ")
-
-
-def test_キングシールド():
+def test_キングシールド_接触技で攻撃を下げる():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
     t.run_move(battle, 0)
-    assert not battle.move_executor.move_success
     assert battle.actives[0].rank["A"] == -1
 
 
@@ -1256,22 +1256,13 @@ def test_キングシールド_非接触では攻撃が下がらない():
     assert battle.actives[0].rank["A"] == 0
 
 
-def test_キングシールド_ターン終了で解除():
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
-    mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "キングシールド", count=1)
-    battle.events.emit(Event.ON_TURN_END)
-    assert not mon.has_volatile("キングシールド")
-
-
-def test_スレッドトラップ():
+def test_スレッドトラップ_接触技で素早さを下げる():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
     t.run_move(battle, 0)
-    assert not battle.move_executor.move_success
     assert battle.actives[0].rank["S"] == -1
 
 
@@ -1285,22 +1276,13 @@ def test_スレッドトラップ_非接触では素早さが下がらない():
     assert battle.actives[0].rank["S"] == 0
 
 
-def test_スレッドトラップ_ターン終了で解除():
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
-    mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "スレッドトラップ", count=1)
-    battle.events.emit(Event.ON_TURN_END)
-    assert not mon.has_volatile("スレッドトラップ")
-
-
-def test_かえんのまもり():
+def test_かえんのまもり_接触技でやけどを付与():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
     t.run_move(battle, 0)
-    assert not battle.move_executor.move_success
     assert battle.actives[0].has_ailment("やけど")
 
 
@@ -1313,82 +1295,71 @@ def test_かえんのまもり_非接触ではやけどにならない():
     t.run_move(battle, 0)
     assert not battle.actives[0].ailment.is_active
 
-
-def test_かえんのまもり_変化技は防げない():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
-    )
-    battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
-    t.run_move(battle, 0)
-    assert battle.move_executor.move_success
-
-
-def test_かえんのまもり_ターン終了で解除():
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")])
-    mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "かえんのまもり", count=1)
-    battle.events.emit(Event.ON_TURN_END)
-    assert not mon.has_volatile("かえんのまもり")
-
 # ──────────────────────────────────────────────────────────────────
 # あなをほる、そらをとぶ、ダイビング、シャドーダイブ
 # ──────────────────────────────────────────────────────────────────
 
-# TODO : 類似効果のテストはパラメタライズしてまとめる
 
-
-def test_あなをほる_回避():
-    """技を回避する"""
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_通常技は回避する(hidden_move_name):
+    """潜伏中は通常技を回避する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
-    battle.volatile_manager.apply(defender, "かくれる", count=1, move_name="あなをほる")
+    battle.volatile_manager.apply(defender, "かくれる", count=1, move_name=hidden_move_name)
     t.run_move(battle, 0)
     assert not battle.move_executor.move_success
 
 
-def test_あなをほる_命中():
-    """技が命中する"""
+@pytest.mark.parametrize("hidden_move_name,hit_move_name", [
+    ("あなをほる", "じしん"),
+    ("そらをとぶ", "かみなり"),
+    ("ダイビング", "なみのり"),
+])
+def test_かくれる_特定技は命中する(hidden_move_name, hit_move_name):
+    """潜伏中でも特定技には命中する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        team0=[Pokemon("ピカチュウ", move_names=[hit_move_name])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
-    battle.volatile_manager.apply(defender, "かくれる", count=1, move_name="あなをほる")
+    battle.volatile_manager.apply(defender, "かくれる", count=1, move_name=hidden_move_name)
     t.run_move(battle, 0)
     assert battle.move_executor.move_success
 
 
-def test_あなをほる_潜伏中は交代できない():
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_潜伏中は交代できない(hidden_move_name):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["あなをほる"]), Pokemon("ライチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name]), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ")],
     )
-    battle.volatile_manager.apply(battle.actives[0], "かくれる", count=1, move_name="あなをほる")
+    battle.volatile_manager.apply(battle.actives[0], "かくれる", count=1, move_name=hidden_move_name)
     assert not battle.can_switch(battle.players[0])
 
 
-def test_あなをほる_潜伏中はコマンドが固定される():
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_潜伏中はコマンドが固定される(hidden_move_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", move_names=["あなをほる", "なきごえ"])],
+        team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name, "なきごえ"])],
     )
     mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "かくれる", count=1, move_name="あなをほる")
+    battle.volatile_manager.apply(mon, "かくれる", count=1, move_name=hidden_move_name)
     commands = battle.get_available_action_commands(battle.players[0])
     assert commands == [Command.FORCED]
 
 
-def test_あなをほる_強制行動ターンはPPを消費しない():
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_強制行動ターンはPPを消費しない(hidden_move_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", move_names=["あなをほる"])],
+        team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name])],
     )
     attacker = battle.actives[0]
-    battle.volatile_manager.apply(attacker, "かくれる", count=1, move_name="あなをほる")
+    battle.volatile_manager.apply(attacker, "かくれる", count=1, move_name=hidden_move_name)
     initial_pp = attacker.moves[0].pp
     battle.advance_turn()
     assert attacker.moves[0].pp == initial_pp

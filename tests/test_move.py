@@ -314,7 +314,23 @@ def test_ちきゅうなげ_ゴーストには無効():
 # いかりのまえば
 # ──────────────────────────────────────────────────────────────────
 
-# TODO : 相手のHPを半分にする効果もテストする
+@pytest.mark.parametrize(
+    ("defender_hp", "expected_damage"),
+    [
+        (100, 50),
+        (101, 50),
+    ],
+)
+def test_いかりのまえば_相手HP半分のダメージ(defender_hp: int, expected_damage: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = defender_hp
+    t.run_move(battle, 0)
+    assert defender.damage_taken == expected_damage
+
 
 def test_いかりのまえば_最低1ダメージ():
     battle = t.start_battle(

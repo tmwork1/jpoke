@@ -40,7 +40,21 @@ ABILITIES: dict[str, AbilityData] = {
             "protected",
             "mold_breaker_ignorable",
             "gas_proof",
-        ]
+        ],
+        handlers={
+            Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
+                h.アイスフェイス_block_physical,
+                subject_spec="defender:self",
+            ),
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.アイスフェイス_restore_on_switch_in,
+                subject_spec="source:self",
+            ),
+            Event.ON_FIELD_CHANGE: h.AbilityHandler(
+                h.アイスフェイス_restore_on_snow,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "アイスボディ": AbilityData(
         handlers={
@@ -133,11 +147,11 @@ ABILITIES: dict[str, AbilityData] = {
     "いかく": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.いかく_apply,
+                h.いかく_lower_foe_atk,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                h.いかく_apply,
+                h.いかく_lower_foe_atk,
                 subject_spec="source:self",
             ),
         },
@@ -191,7 +205,21 @@ ABILITIES: dict[str, AbilityData] = {
             "uncopyable",
             "protected",
             "gas_proof",
-        ]
+        ],
+        handlers={
+            Event.ON_MOVE_END: h.AbilityHandler(
+                h.うのミサイル_on_move_end,
+                subject_spec="source:self",
+            ),
+            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+                h.うのミサイル_on_damage_hit,
+                subject_spec="defender:self",
+            ),
+            Event.ON_SWITCH_OUT: h.AbilityHandler(
+                h.うのミサイル_on_switch_out,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "うるおいボイス": AbilityData(),
     "うるおいボディ": AbilityData(),
@@ -289,7 +317,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_SWITCH_IN: [
                 h.AbilityHandler(
-                    h.かがくへんかガス_gas_activate,
+                    h.かがくへんかガス_on_switch_in,
                     subject_spec="source:self",
                     priority=20,
                 ),
@@ -300,7 +328,7 @@ ABILITIES: dict[str, AbilityData] = {
                 ),
             ],
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                h.かがくへんかガス_gas_activate,
+                h.かがくへんかガス_on_switch_in,
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.AbilityHandler(
@@ -385,15 +413,15 @@ ABILITIES: dict[str, AbilityData] = {
     "かるわざ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.かるわざ_update_state,
+                h.かるわざ_init_state,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
-                h.かるわざ_update_state,
+                h.かるわざ_init_state,
                 subject_spec="source:self",
             ),
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
-                h.かるわざ_deactivate,
+                h.かるわざ_reset_state,
                 subject_spec="source:self",
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
@@ -790,7 +818,7 @@ ABILITIES: dict[str, AbilityData] = {
     "しゅうかく": AbilityData(
         handlers={
             Event.ON_TURN_END: h.AbilityHandler(
-                h.しゅうかく_apply,
+                h.しゅうかく_restore_berry,
                 subject_spec="source:self",
             ),
         }
@@ -2190,7 +2218,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
-                h.もらいび_charge_fire,
+                h.もらいび_arm_fire_boost,
                 subject_spec="source:self",
             ),
             Event.ON_MOVE_END: h.AbilityHandler(
