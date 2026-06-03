@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 from jpoke.utils.type_defs import Side, RoleSpec, Type, Stat, Weather, Terrain, \
     AilmentName, VolatileName, AbilityDisabledReason, ItemDisabledReason
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
+from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Event, LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
@@ -27,6 +28,28 @@ EISCUE_NICE = "コオリッポ(ナイス)"
 CRAMORANT_NORMAL = "ウッウ"
 CRAMORANT_GULPING = "ウッウ(うのみのすがた)"
 CRAMORANT_GORGING = "ウッウ(まるのみのすがた)"
+WISHIWASHI_SOLO = "ヨワシ(たんどく)"
+WISHIWASHI_SCHOOL = "ヨワシ(むれ)"
+ZYGARDE_PERFECT = "ジガルデ(パーフェクト)"
+METEONO_METEOR = "メテノ(りゅうせい)"
+METEONO_CORE = "メテノ(コア)"
+CASTFORM_NORMAL = "ポワルン"
+CASTFORM_SUNNY = "ポワルン(たいよう)"
+CASTFORM_RAINY = "ポワルン(あまみず)"
+CASTFORM_SNOWY = "ポワルン(ゆきぐも)"
+DARMANITAN_NORMAL = "ヒヒダルマ(ノーマル)"
+DARMANITAN_ZEN = "ヒヒダルマ(ダルマ)"
+TERAPAGOS_NORMAL = "テラパゴス(ノーマル)"
+TERAPAGOS_TERASTAL = "テラパゴス(テラスタル)"
+
+WEATHER_TO_CASTFORM: dict[str, str] = {
+    "はれ": CASTFORM_SUNNY,
+    "おおひでり": CASTFORM_SUNNY,
+    "あめ": CASTFORM_RAINY,
+    "おおあめ": CASTFORM_RAINY,
+    "ゆき": CASTFORM_SNOWY,
+    "あられ": CASTFORM_SNOWY,
+}
 
 
 class AbilityHandler(Handler):
@@ -326,7 +349,7 @@ def あついしぼう_reduce_fire_ice(battle: Battle, ctx: EventContext, value:
 
 def あとだし_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """あとだし特性: 同一優先度の行動の中で最後に行動する（後攻ティア -1）。"""
-    return HandlerReturn(value=-1)
+    return HandlerReturn(value=value - 1)
 
 
 def アナライズ_modify_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
@@ -491,6 +514,11 @@ def エアロック_check_weather_enabled(battle: Battle, ctx: EventContext, val
     return HandlerReturn(value=False, stop_event=True)
 
 
+def えんかく_nullify_contact(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """えんかく特性: 自分が使う技の接触判定を無効化する。"""
+    return HandlerReturn(value=False, stop_event=True)
+
+
 def おうごんのからだ_block_status_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おうごんのからだ特性: 他のポケモンからの変化技を無効化する。"""
     if (
@@ -564,6 +592,47 @@ def かげふみ_check_trapped(battle: Battle, ctx: EventContext, value: Any) ->
     """
     result = ctx.source.ability.name != "かげふみ"
     return HandlerReturn(value=result)
+
+
+def かぜのり_absorb_wind(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """かぜのり特性: 風の技を無効化しこうげきを1段階上げる。"""
+    if (
+        not ctx.move.target == "foe"
+        or not ctx.move.has_label("wind")
+    ):
+        return HandlerReturn(value=value)
+    defender = ctx.defender
+    announce_ability_triggered(battle, ctx, value, mon=defender)
+    battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
+                         payload={"reason": defender.ability.base_name})
+    battle.modify_stats(defender, {"A": 1}, source=ctx.attacker)
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def かぜのり_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かぜのり特性: おいかぜ状態の場に出たときこうげきを1段階上げる。"""
+    mon = ctx.source
+    if not battle.get_side(mon).get("おいかぜ").is_active:
+        return HandlerReturn(value=value)
+    changed = battle.modify_stats(mon, {"A": 1}, source=mon)
+    if changed:
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def かぜのり_on_field_activate(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かぜのり特性: 味方の場においかぜが発生したときこうげきを1段階上げる。"""
+    mon = ctx.source
+    if not battle.is_active(mon):
+        return HandlerReturn(value=value)
+    if value.name != "おいかぜ":
+        return HandlerReturn(value=value)
+    if not battle.get_side(mon).get("おいかぜ").is_active:
+        return HandlerReturn(value=value)
+    changed = battle.modify_stats(mon, {"A": 1}, source=mon)
+    if changed:
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
 
 
 def かそく_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -748,6 +817,49 @@ def ききかいひ_on_hp_change(battle: Battle, ctx: EventContext, value: int) 
     return HandlerReturn(value=value)
 
 
+def きけんよち_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """きけんよち特性: 登場時に相手がバツグン攻撃技か一撃必殺技を持つ場合にメッセージを出す。"""
+    source = ctx.source
+    foe = battle.foe(source)
+    for move in foe.moves:
+        if not move.is_attack:
+            continue
+        if move.has_label("ohko"):
+            announce_ability_triggered(battle, ctx, value, mon=source)
+            return HandlerReturn(value=value)
+        type_chart = TYPE_MODIFIER.get(move.type, {})
+        modifier = 1.0
+        for def_type in source.types:
+            modifier *= type_chart.get(def_type, 1.0)
+        if modifier > 1.0:
+            announce_ability_triggered(battle, ctx, value, mon=source)
+            return HandlerReturn(value=value)
+    return HandlerReturn(value=value)
+
+
+def きもったま_ghost_immune_bypass(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """きもったま特性: ノーマル/かくとう技がゴーストタイプに当たるよう相性補正を書き換える。"""
+    if ctx.move.type not in ("ノーマル", "かくとう"):
+        return HandlerReturn(value=value)
+    if not ctx.defender.has_type("ゴースト"):
+        return HandlerReturn(value=value)
+    type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
+    base = 4096
+    for def_type in ctx.defender.types:
+        if def_type == "ゴースト":
+            continue
+        rate = type_chart.get(def_type, 1.0)
+        base = int(base * rate)
+    return HandlerReturn(value=base)
+
+
+def きもったま_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """きもったま特性: いかくによるこうげきランク低下を無効化する。"""
+    if ctx.stat_change_reason == "いかく":
+        value = {}
+    return HandlerReturn(value=value)
+
+
 def ぎゃくじょう_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
     mon = ctx.defender
@@ -775,6 +887,31 @@ def きょううん_modify_critical_rank(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
+def ぎょぐん_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぎょぐん特性: 登場時にレベル20以上かつHP1/4超ならむれたすがたへフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.level < 20:
+        return HandlerReturn(value=value)
+    if mon.hp * 4 > mon.max_hp:
+        mon.set_form(WISHIWASHI_SCHOOL)
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def ぎょぐん_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぎょぐん特性: ターン終了時にHPに応じてフォルムを切り替える。"""
+    mon = ctx.source
+    if mon.level < 20:
+        return HandlerReturn(value=value)
+    if mon.hp * 4 > mon.max_hp:
+        if mon.set_form(WISHIWASHI_SCHOOL):
+            announce_ability_triggered(battle, ctx, value, mon=mon)
+    else:
+        if mon.set_form(WISHIWASHI_SOLO):
+            announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
 def きよめのしお_reduce_ghost(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """きよめのしお特性: ゴースト技を受けるとき攻撃補正を0.5倍にする。"""
     if ctx.move.type == "ゴースト":
@@ -789,9 +926,44 @@ def きれあじ_modify_power(battle: Battle, ctx: EventContext, value: int) -> 
     return HandlerReturn(value=value)
 
 
+def きんしのちから_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """きんしのちから特性: 変化技選択時に行動を後攻化する（後攻ティア -1）。"""
+    if ctx.move is None or ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=value - 1)
+
+
+def きんしのちから_disable_foe_ability(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """きんしのちから特性: 変化技使用直前に相手の特性を無効化する。"""
+    if ctx.move is None or ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    mon = ctx.defender
+    if mon.ability.has_flag("mold_breaker_ignorable"):
+        battle.add_ability_disabled_reason(mon, "かたやぶり")
+    return HandlerReturn(value=value)
+
+
+def きんしのちから_restore_foe_ability(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """きんしのちから特性: 変化技使用後に相手の特性の無効化を解除する。"""
+    if ctx.move is None or ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    battle.remove_ability_disabled_reason(ctx.defender, "かたやぶり")
+    return HandlerReturn(value=value)
+
+
 def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """きんちょうかん特性: 相手のきのみ使用を禁止する。"""
     return HandlerReturn(value=True)
+
+
+def クイックドロウ_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """クイックドロウ特性: 攻撃技選択時に 30% の確率で先攻化する（後攻ティア +1）。"""
+    if ctx.move is None or not ctx.move.is_attack:
+        return HandlerReturn(value=value)
+    if not battle.random.random() < 0.3:
+        return HandlerReturn(value=value)
+    announce_ability_triggered(battle, ctx, value, mon=ctx.attacker)
+    return HandlerReturn(value=value + 1)
 
 
 def くさのけがわ_boost_B(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
@@ -1082,6 +1254,17 @@ def スロースタート_modify_atk(battle: Battle, ctx: EventContext, value: i
     return HandlerReturn(value=value)
 
 
+def スワームチェンジ_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """スワームチェンジ特性: ターン終了時にHP1/2以下ならパーフェクトフォルムへフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.name == ZYGARDE_PERFECT:
+        return HandlerReturn(value=value)
+    if mon.hp * 2 <= mon.max_hp:
+        mon.set_form(ZYGARDE_PERFECT)
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
 def せいしんりょく_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """せいしんりょく特性: いかくによる攻撃ランク低下を無効化する。"""
     if ctx.stat_change_reason == "いかく":
@@ -1123,6 +1306,18 @@ def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(value=value)
 
 
+def ダークオーラ_boost_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """ダークオーラ特性: あく技の威力を1.33倍にする。オーラブレイクがいる場合は0.75倍にする。"""
+    if ctx.move.type != "あく":
+        return HandlerReturn(value=value)
+    aura_break = (
+        ctx.attacker.ability.name == "オーラブレイク"
+        or ctx.defender.ability.name == "オーラブレイク"
+    )
+    modifier = 3072 if aura_break else 5448
+    return HandlerReturn(value=apply_fixed_modifier(value, modifier))
+
+
 def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """だっぴ特性: ターン終了時に30%で状態異常を回復する。"""
     mon = ctx.source
@@ -1138,6 +1333,28 @@ def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> Han
 def たんじゅん_double_stat(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
     """たんじゅん特性: 能力変化量を2倍にする。"""
     return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
+
+
+def ダルマモード_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ダルマモード特性: ターン終了時にHPが1/2以下ならダルマのすがたへ、1/2超なら元のすがたへフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.hp * 2 <= mon.max_hp:
+        if mon.name == DARMANITAN_NORMAL:
+            mon.set_form(DARMANITAN_ZEN)
+            announce_ability_triggered(battle, ctx, value, mon=mon)
+    else:
+        if mon.name == DARMANITAN_ZEN:
+            mon.set_form(DARMANITAN_NORMAL)
+            announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def ダルマモード_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ダルマモード特性: 交代時にダルマのすがたから元のすがたへ戻す。"""
+    mon = ctx.source
+    if mon.name == DARMANITAN_ZEN:
+        mon.set_form(DARMANITAN_NORMAL)
+    return HandlerReturn(value=value)
 
 
 def ちからずく_boost(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
@@ -1213,9 +1430,31 @@ def テラスシェル_overwrite_type_modifier(battle: Battle, ctx: EventContext
     return HandlerReturn(value=value)
 
 
+def テラスチェンジ_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """テラスチェンジ特性: 登場時に他の特性より先にテラスタルフォルムへフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.name != TERAPAGOS_NORMAL:
+        return HandlerReturn(value=value)
+    mon.set_form(TERAPAGOS_TERASTAL)
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
 def でんきエンジン_absorb_electric(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """でんきエンジン特性: でんき技を無効化し素早さを1段階上げる。"""
     return _apply_type_absorb(battle, ctx, value, move_type="でんき", stats={"S": 1})
+
+
+def てんきや_sync_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """てんきや特性: 現在の天気に合わせたフォルムへフォルムチェンジする。ノーてんき/エアロック中は通常フォルムに戻す。"""
+    mon = ctx.source
+    if not battle.is_active(mon):
+        return HandlerReturn(value=value)
+    weather_name = battle.weather.name
+    form = WEATHER_TO_CASTFORM.get(weather_name, CASTFORM_NORMAL)
+    if mon.set_form(form):
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
 
 
 def てんねん_ignore_rank(battle: Battle, ctx: EventContext, value: float) -> HandlerReturn:
@@ -1569,6 +1808,18 @@ def ファーコート_boost_B(battle: Battle, ctx: EventContext, value: int) ->
     return HandlerReturn(value=value)
 
 
+def フェアリーオーラ_boost_power(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """フェアリーオーラ特性: フェアリー技の威力を1.33倍にする。オーラブレイクがいる場合は0.75倍にする。"""
+    if ctx.move.type != "フェアリー":
+        return HandlerReturn(value=value)
+    aura_break = (
+        ctx.attacker.ability.name == "オーラブレイク"
+        or ctx.defender.ability.name == "オーラブレイク"
+    )
+    modifier = 3072 if aura_break else 5448
+    return HandlerReturn(value=apply_fixed_modifier(value, modifier))
+
+
 def ぶきよう_disable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
     battle.add_item_disabled_reason(ctx.source, "ぶきよう")
     return HandlerReturn(value=value)
@@ -1577,6 +1828,29 @@ def ぶきよう_disable_item(battle: Battle, ctx: EventContext, value: set[Item
 def ぶきよう_enable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
     battle.remove_item_disabled_reason(ctx.source, "ぶきよう")
     return HandlerReturn(value=value)
+
+
+_PROTECT_VOLATILES: frozenset[str] = frozenset([
+    "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり",
+])
+
+
+def ふかしのこぶし_bypass_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """接触技使用時にまもる系の防護を貫通する"""
+    if not battle.query.is_contact(ctx):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=False)
+
+
+def ふかしのこぶし_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """まもる系揮発性状態を持つ相手への接触技ダメージを1/4にする"""
+    if (
+        not battle.query.is_contact(ctx)
+        or not ctx.move.is_blocked_by_protect
+        or not any(ctx.defender.has_volatile(v) for v in _PROTECT_VOLATILES)
+    ):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=1024)
 
 
 def ふくがん_boost_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1868,6 +2142,44 @@ def リーフガード_prevent_ailment(battle: Battle, ctx: EventContext, value:
     if battle.weather.sunny:
         announce_ability_triggered(battle, ctx, value, mon=ctx.target)
         return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def リミットシールド_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: 登場時にHP1/2超ならりゅうせいのすがたへフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.name != METEONO_CORE:
+        return HandlerReturn(value=value)
+    if mon.hp * 2 > mon.max_hp:
+        mon.set_form(METEONO_METEOR)
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def リミットシールド_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: ターン終了時にHPに応じてフォルムを切り替える。"""
+    mon = ctx.source
+    if mon.hp * 2 > mon.max_hp:
+        if mon.set_form(METEONO_METEOR):
+            announce_ability_triggered(battle, ctx, value, mon=mon)
+    else:
+        if mon.set_form(METEONO_CORE):
+            announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
+def リミットシールド_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: りゅうせいのすがた時に全状態異常を無効化する。"""
+    if ctx.target.name != METEONO_METEOR:
+        return HandlerReturn(value=value)
+    return prevent_ailment(battle, ctx, value)
+
+
+def リミットシールド_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: 交代時にりゅうせいのすがたからコアの姿へ戻す。"""
+    mon = ctx.source
+    if mon.name == METEONO_METEOR:
+        mon.set_form(METEONO_CORE)
     return HandlerReturn(value=value)
 
 
