@@ -1,0 +1,64 @@
+# 実装計画: さまようたましい
+
+作成日: 2026-06-04
+
+## 効果
+直接攻撃でダメージを受けたとき、攻撃者と自分の特性を入れ替える。
+
+入れ替え不可の特性（ARシステム・アイスフェイス・ふしぎなまもり等）は全て `protected` フラグを持つため、`has_flag("protected")` でチェックできる。
+
+## イベント／ハンドラ
+
+| イベント | priority | subject_spec | 関数名 |
+|---------|---------|-------------|--------|
+| `ON_DAMAGE_HIT` | 100 | `defender:self` | `さまようたましい_on_damage` |
+
+## 実装
+
+ON_DAMAGE_HIT 発火時点では damage > 0 が担保されているため、move_damage のガード不要。
+
+```python
+def さまようたましい_on_damage(battle, ctx, value):
+    """さまようたましい特性: 直接攻撃を受けたとき攻撃者と特性を入れ替える。"""
+    if not battle.query.is_contact(ctx):
+        return HandlerReturn(value=value)
+    attacker = ctx.attacker
+    defender = ctx.defender
+    if attacker is None or attacker.fainted:
+        return HandlerReturn(value=value)
+    attacker_ability = attacker.ability.base_name
+    if not attacker_ability:
+        return HandlerReturn(value=value)
+    if attacker.ability.has_flag("protected"):
+        return HandlerReturn(value=value)
+    defender_ability = defender.ability.base_name
+    battle.change_ability(defender, attacker_ability)
+    battle.change_ability(attacker, defender_ability)
+    return HandlerReturn(value=value)
+```
+
+**補足**:
+- KO されたときも発動する仕様 → `ctx.fainted` チェック不要（ON_DAMAGE_HIT は KO 後にも発火）
+- `battle.change_ability` は `ON_ABILITY_ENABLED` を内部発火するため、入れ替えた特性（いかく等）が即時発動する
+- 攻撃者が fainted の場合（じばくなど）は発動しない
+
+## data/ability.py 登録
+
+```python
+"さまようたましい": AbilityData(
+    handlers={
+        Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            h.さまようたましい_on_damage,
+            subject_spec="defender:self",
+        ),
+    }
+),
+```
+
+## テストケース
+- 直接攻撃を受ける → 攻撃者と特性が入れ替わる
+- 直接攻撃でない技 → 発動しない
+- 攻撃者の特性が `protected`（ふしぎなまもり等）→ 発動しない
+- KO されても発動する（特性交換後にひんし処理）
+- 同士うちでさまようたましい同士 → 同特性を交換する
+- みがわりに当たった → ON_DAMAGE_HIT 不発火のため自動的に不発動

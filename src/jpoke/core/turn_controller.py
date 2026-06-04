@@ -179,6 +179,7 @@ class TurnController:
                     LogCode.TERASALLIZED,
                     payload={"type": mon.tera_type}
                 )
+                self._events.emit(Event.ON_TERASTALLIZE, EventContext(source=mon))
 
     def _run_megaevolve_phase(self, action_order: list[Pokemon]):
         """メガシンカを実行する。"""

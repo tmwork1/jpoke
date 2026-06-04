@@ -29,10 +29,13 @@ class DomainEvent(Enum):
 class Event(Enum):
     """バトルイベントの種類。
 
-    イベントは大きく3つのカテゴリに分類される：
+    イベントは大きく5つのカテゴリに分類される：
+    - 制御系: ON_BEGIN_MOVE, ON_ABILITY_ENABLED など
     - アクション系: ON_BEFORE_ACTION, ON_SWITCH_IN など
-    - チェック系: ON_CHECK_PP_CONSUMED, ON_CHECK_FLOATING など
-    - 計算系: ON_CALC_ACCURACY など
+    - ターン終了系: ON_TURN_END など
+    - 状態変化系: ON_BEFORE_APPLY_AILMENT, ON_BEFORE_MODIFY_STAT など
+    - チェック系: ON_MODIFY_PP_CONSUMED, ON_CHECK_FLOATING など
+    - 計算系: ON_MODIFY_ACCURACY など
 
     行動順に関与するものは DomainEvent に分離されている。
     各イベントの emit 箇所と代表的な handle 箇所は以下のコメントを参照。
@@ -110,11 +113,15 @@ class Event(Enum):
     # handle: volatile.py（強制技・交代禁止・こだわりロックなど選択肢を制限）
     ON_MODIFY_COMMAND_OPTIONS = auto()
 
-    # emit: core/turn.py（各アクション実行直前）
-    # handle: volatile.py（強制アクション許可チェック）
+    # emit: 未実装（各アクション実行直前に発火する予定）
+    # handle: 未実装（強制アクション許可チェック等を想定）
     ON_BEFORE_ACTION = auto()
 
-    # emit: core/turn.py（技を使用しようとする直前）
+    # emit: core/turn_controller.py（テラスタル実行直後）
+    # handle: ability.py（ゼロフォーミング: テラスタル時に天候・フィールドを消去）
+    ON_TERASTALLIZE = auto()
+
+    # emit: core/turn_controller.py（技フェーズ開始直前・ターン内に1回）
     # handle: 現時点でハンドラ登録なし（将来の拡張用スロット）
     ON_BEFORE_MOVE = auto()
 
@@ -211,23 +218,19 @@ class Event(Enum):
     ON_MOVE_KO = auto()
 
     # ------------------------------------------------------------------ #
-    # ターン終了イベント（core/turn.py から順番に emit される）
+    # ターン終了イベント
     # ------------------------------------------------------------------ #
 
-    # emit: core/turn.py（ターン終了フェーズ開始時）
+    # emit: core/turn_controller.py（ターン終了フェーズ開始時）
     # handle: volatile.py（ほろびのうた・わるあがき強制カウント等）
     ON_TURN_END = auto()
-
-    # emit: core/battle.py（ランク変化適用後）
-    # handle: ability.py（まけんき・かちき等の反応）
-    ON_MODIFY_STAT = auto()
 
     # emit: 未実装（最終終端イベント用に予約）
     # handle: 未実装（全体後処理フックを想定）
     ON_END = auto()
 
     # ------------------------------------------------------------------ #
-    # 状態異常・能力変化前イベント
+    # 状態変化系イベント
     # ------------------------------------------------------------------ #
 
     # emit: core/battle.py（HP回復処理の直前）
@@ -260,9 +263,9 @@ class Event(Enum):
     # handle: data/field.py（ミストフィールドのランク低下防止）
     ON_BEFORE_MODIFY_STAT = auto()
 
-    # emit:
-    # handle:
-    ON_GET_STAT_RANK = auto()
+    # emit: core/status_manager.py（ランク変化適用後）
+    # handle: ability.py（まけんき・かちき等の反応）
+    ON_MODIFY_STAT = auto()
 
     # ------------------------------------------------------------------ #
     # チェック系イベント
@@ -311,7 +314,7 @@ class Event(Enum):
     # handle: 音技・パンチ系など代替物を貫通する技のハンドラ
     ON_CHECK_HIT_SUBSTITUTE = auto()
 
-    # emit: core/move_executor.py（接触判定確認）
+    # emit: core/pokemon_state.py（接触判定確認）
     # handle: ability.py（ほのおのからだ・さめはだ等、接触技に反応する能力）
     ON_CHECK_CONTACT = auto()
 
@@ -323,6 +326,10 @@ class Event(Enum):
     # handle: volatile.py（にらみつける・かたくなる等の命中修正）
     #          data/field.py（ゆき・すなあらし等の天候命中補正）
     ON_MODIFY_ACCURACY = auto()
+
+    # emit: core/move_executor.py（命中チェック中のACC/EVAランク補正値を問い合わせ）
+    # handle: data/ability.py（するどいめ等による回避ランク無視）
+    ON_GET_STAT_RANK = auto()
 
     # emit: 未実装（バインドダメージの倍率調整用に予約）
     # handle: 未実装（しめつけバンド等によるダメージ増加を想定）
@@ -379,8 +386,8 @@ class Event(Enum):
     # handle: まもる形態ごとの防御倍率ハンドラ（0倍・0.25倍等）
     ON_CALC_PROTECT_MODIFIER = auto()
 
-    # emit: core/damage.py（最終ダメージ倍率を計算）
-    # handle: いのちのたま・たつじんのおび等の最終倍率アイテム
+    # emit: 未実装（最終ダメージ倍率を計算用に予約）
+    # handle: 未実装（いのちのたま・たつじんのおび等の最終倍率アイテム）
     ON_CALC_FINAL_DAMAGE_MODIFIER = auto()
 
     # emit: core/context.py（壁やしんぴのまもりを貫通するか問い合わせ）

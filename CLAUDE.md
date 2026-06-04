@@ -120,4 +120,6 @@ battle = t.start_battle(
 ## テストの追加ルール
 
 - `test_utils.py` の `start_battle`、`run_move`、`run_switch` などを再利用する
-- テスト項目を変更したら `python scripts/generate_test_list.py` を実行して `docs/test/` を更新する
+- テスト項目を追加・修正したら、以下の順で実行する：
+  1. `python scripts/sort_tests.py <対象ファイル>` — テスト関数を五十音順に並び替える（複数指定可、例: `tests/test_ability.py tests/test_move.py`）
+  2. `python scripts/generate_test_list.py` — `docs/test/` のテスト一覧を更新する

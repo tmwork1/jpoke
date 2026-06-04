@@ -2987,6 +2987,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                h.ギガドレイン_heal_attacker,
+            )
+        }
     ),
     "きまぐレーザー": MoveData(
         type="ドラゴン",

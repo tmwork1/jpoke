@@ -7,115 +7,109 @@ from jpoke.enums import Event, LogCode, Command
 import test_utils as t
 
 
-# ──────────────────────────────────────────────────────────────────
-# テラバースト
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_テラバースト_テラスタル時にタイプがテラスタイプへ変化():
+def test_いかりのまえば_最低1ダメージ():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", tera_type="ほのお", move_names=["テラバースト"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    move = attacker.moves[0]
-
-    move.register_handlers(battle.events, attacker)
-
-    assert battle.move_executor.resolve_move_type(attacker, move) == "ノーマル"
-
-    attacker.terastallize()
-    assert battle.move_executor.resolve_move_type(attacker, move) == "ほのお"
-
-    move.unregister_handlers(battle.events, attacker)
-
-
-@pytest.mark.parametrize(
-    ("attacker_name", "expected"),
-    [
-        ("カイリキー", "物理"),
-        ("フーディン", "特殊"),
-    ],
-)
-def test_テラバースト_テラスタル時に高い攻撃値の分類になる(attacker_name: str, expected: str):
-    battle = t.start_battle(
-        team0=[Pokemon(attacker_name, tera_type="でんき", move_names=["テラバースト"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    move = attacker.moves[0]
-    move.register_handlers(battle.events, attacker)
-
-    assert battle.move_executor.resolve_move_category(attacker, move) == "特殊"
-    attacker.terastallize()
-    assert battle.move_executor.resolve_move_category(attacker, move) == expected
-
-
-# ──────────────────────────────────────────────────────────────────
-# 一撃必殺技
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_一撃必殺技_命中時は相手を一撃で倒す():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つのドリル"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].hp == 0
-
-
-def test_一撃必殺技_外した時はダメージを与えない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つのドリル"])],
-        team1=[Pokemon("ピカチュウ", move_names=["はねる"])],
-        accuracy=0,
-    )
-    before_foe_hp = battle.actives[1].hp
-
-    t.reserve_command(battle,
-                      command0=Command.MOVE_0,
-                      command1=Command.MOVE_0)
-    battle.advance_turn()
-
-    assert battle.actives[1].hp == before_foe_hp
-
-
-@pytest.mark.parametrize(
-    ("move_name", "foe_name"),
-    [
-        ("つのドリル", "ゴース"),
-        # ("じわれ", "ピジョン"),
-    ],
-)
-def test_一撃必殺技_タイプ相性で無効化される(move_name: str, foe_name: str):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
-        team1=[Pokemon(foe_name)],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].hp == battle.actives[1].max_hp
-
-# ──────────────────────────────────────────────────────────────────
-# にどげり
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_にどげり_命中判定1回で2回ヒットする():
-    """にどげり: 命中判定は1回だけで、2ヒットする。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["にどげり"])],
+        team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
+    defender.hp = 1
     t.run_move(battle, 0)
-    assert defender.hits_taken == 2
+    assert defender.hp == 0
 
-# ──────────────────────────────────────────────────────────────────
-# タネマシンガン
-# ──────────────────────────────────────────────────────────────────
+
+@pytest.mark.parametrize(
+    ("defender_hp", "expected_damage"),
+    [
+        (100, 50),
+        (101, 50),
+    ],
+)
+def test_いかりのまえば_相手HP半分のダメージ(defender_hp: int, expected_damage: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = defender_hp
+    t.run_move(battle, 0)
+    assert defender.hp == defender.max_hp - expected_damage
+
+
+def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 40
+    t.run_move(battle, 0)
+    assert defender.hp == defender.max_hp - 40
+    assert attacker.hp == 0
+
+
+@pytest.mark.parametrize(
+    ("attacker_hp", "defender_hp", "expected_damage"),
+    [
+        (30, 100, 70),
+        (80, 60, 0),
+    ],
+)
+def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defender_hp: int, expected_damage: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["がむしゃら"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    attacker.hp = attacker_hp
+    defender.hp = defender_hp
+    t.run_move(battle, 0)
+    battle.print_logs()
+    assert defender.hp == defender.max_hp - expected_damage
+
+
+def test_きあいパンチ_みがわりへの被弾では中断しない():
+    """きあいパンチ: みがわりが被弾しても使用者は中断されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+    )
+    battle.volatile_manager.apply(battle.actives[0], "みがわり", hp=999)
+    before_foe_hp = battle.actives[1].hp
+    before_ally_hp = battle.actives[0].hp
+
+    battle.advance_turn()
+
+    assert battle.actives[1].hp < before_foe_hp
+    assert battle.actives[0].hp == before_ally_hp
+
+
+def test_きあいパンチ_攻撃ダメージを受けると失敗():
+    """きあいパンチ: 行動前に攻撃ダメージを受けた場合は不発。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+    )
+    before_foe_hp = battle.actives[1].hp
+    before_ally_hp = battle.actives[0].hp
+
+    battle.advance_turn()
+
+    assert battle.actives[1].hp == before_foe_hp
+    assert battle.actives[0].hp < before_ally_hp
+
+
+def test_きあいパンチ_行動前にダメージを受けず成功():
+    """きあいパンチ: 行動前に被弾していなければ成功する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["はねる"])],
+    )
+    before_foe_hp = battle.actives[1].hp
+
+    battle.advance_turn()
+
+    assert battle.actives[1].hp < before_foe_hp
 
 
 @pytest.mark.parametrize(
@@ -171,14 +165,102 @@ def test_タネマシンガン_相手HP1で最初の1発で処理中断():
     assert damage_call_count == 1
     assert defender.hp == 0
 
-# ──────────────────────────────────────────────────────────────────
-# トリプルアクセル
-# ──────────────────────────────────────────────────────────────────
+
+def test_ちきゅうなげ_ゴーストには無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちきゅうなげ"])],
+        team1=[Pokemon("ゴース", move_names=["はねる"])],
+    )
+    battle.advance_turn()
+    assert battle.actives[1].hp == battle.actives[1].max_hp
 
 
-# ──────────────────────────────────────────────────────────────────
-# はやてがえし
-# ──────────────────────────────────────────────────────────────────
+def test_テラバースト_ステラ():
+    """ステラタイプ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ステラ", move_names=["テラバースト"])],
+        team1=[Pokemon("ピカチュウ", tera_type="でんき")],
+    )
+    attacker = battle.actives[0]
+    attacker.terastallize()
+    move = t.run_move(battle, 0)
+
+    assert move.type == "ステラ"
+    assert battle.damage_calculator.final_power == 100
+    assert attacker.rank["A"] == -1
+    assert attacker.rank["C"] == -1
+
+
+def test_テラバースト_テラスタル時にタイプがテラスタイプへ変化():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ほのお", move_names=["テラバースト"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+
+    move.register_handlers(battle.events, attacker)
+
+    assert battle.move_executor.resolve_move_type(attacker, move) == "ノーマル"
+
+    attacker.terastallize()
+    assert battle.move_executor.resolve_move_type(attacker, move) == "ほのお"
+
+    move.unregister_handlers(battle.events, attacker)
+
+
+@pytest.mark.parametrize(
+    ("attacker_name", "expected"),
+    [
+        ("カイリキー", "物理"),
+        ("フーディン", "特殊"),
+    ],
+)
+def test_テラバースト_テラスタル時に高い攻撃値の分類になる(attacker_name: str, expected: str):
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, tera_type="でんき", move_names=["テラバースト"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+
+    assert battle.move_executor.resolve_move_category(attacker, move) == "特殊"
+    attacker.terastallize()
+    assert battle.move_executor.resolve_move_category(attacker, move) == expected
+
+
+def test_ナイトヘッド_与ダメージは使用者レベル固定():
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")],
+                            team0=[Pokemon("ピカチュウ", level=50, move_names=["ナイトヘッド"])],
+                            )
+    before_hp = battle.actives[1].hp
+    battle.advance_turn()
+    assert before_hp - battle.actives[1].hp == 50
+
+
+def test_にどげり_命中判定1回で2回ヒットする():
+    """にどげり: 命中判定は1回だけで、2ヒットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["にどげり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 2
+
+
+def test_はやてがえし_先制変化技には失敗():
+    """はやてがえし: 先制変化技（まもる）には失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はやてがえし"])],
+        team1=[Pokemon("ピカチュウ", move_names=["まもる"])],
+    )
+    before_foe_hp = battle.actives[1].hp
+
+    battle.advance_turn()
+
+    assert battle.actives[1].hp == before_foe_hp
 
 
 def test_はやてがえし_先制攻撃技に成功():
@@ -207,180 +289,47 @@ def test_はやてがえし_通常攻撃技には失敗():
     assert battle.actives[0].hp < before_ally_hp
 
 
-def test_はやてがえし_先制変化技には失敗():
-    """はやてがえし: 先制変化技（まもる）には失敗する。"""
+@pytest.mark.parametrize(
+    ("move_name", "foe_name"),
+    [
+        ("つのドリル", "ゴース"),
+        # ("じわれ", "ピジョン"),
+    ],
+)
+def test_一撃必殺技_タイプ相性で無効化される(move_name: str, foe_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はやてがえし"])],
-        team1=[Pokemon("ピカチュウ", move_names=["まもる"])],
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon(foe_name)],
+        accuracy=100,
     )
-    before_foe_hp = battle.actives[1].hp
-
-    battle.advance_turn()
-
-    assert battle.actives[1].hp == before_foe_hp
-
-# ──────────────────────────────────────────────────────────────────
-# きあいパンチ
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_きあいパンチ_行動前にダメージを受けず成功():
-    """きあいパンチ: 行動前に被弾していなければ成功する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
-        team1=[Pokemon("ピカチュウ", move_names=["はねる"])],
-    )
-    before_foe_hp = battle.actives[1].hp
-
-    battle.advance_turn()
-
-    assert battle.actives[1].hp < before_foe_hp
-
-
-def test_きあいパンチ_攻撃ダメージを受けると失敗():
-    """きあいパンチ: 行動前に攻撃ダメージを受けた場合は不発。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
-        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
-    )
-    before_foe_hp = battle.actives[1].hp
-    before_ally_hp = battle.actives[0].hp
-
-    battle.advance_turn()
-
-    assert battle.actives[1].hp == before_foe_hp
-    assert battle.actives[0].hp < before_ally_hp
-
-
-def test_きあいパンチ_みがわりへの被弾では中断しない():
-    """きあいパンチ: みがわりが被弾しても使用者は中断されない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
-        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
-    )
-    battle.volatile_manager.apply(battle.actives[0], "みがわり", hp=999)
-    before_foe_hp = battle.actives[1].hp
-    before_ally_hp = battle.actives[0].hp
-
-    battle.advance_turn()
-
-    assert battle.actives[1].hp < before_foe_hp
-    assert battle.actives[0].hp == before_ally_hp
-
-
-# ──────────────────────────────────────────────────────────────────
-# テラバースト
-# ──────────────────────────────────────────────────────────────────
-
-def test_テラバースト_ステラ():
-    """ステラタイプ"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", tera_type="ステラ", move_names=["テラバースト"])],
-        team1=[Pokemon("ピカチュウ", tera_type="でんき")],
-    )
-    attacker = battle.actives[0]
-    attacker.terastallize()
-    move = t.run_move(battle, 0)
-
-    assert move.type == "ステラ"
-    assert battle.damage_calculator.final_power == 100
-    assert attacker.rank["A"] == -1
-    assert attacker.rank["C"] == -1
-
-
-# ──────────────────────────────────────────────────────────────────
-# ナイトヘッド、ちきゅうなげ
-# ──────────────────────────────────────────────────────────────────
-
-def test_ナイトヘッド_与ダメージは使用者レベル固定():
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")],
-                            team0=[Pokemon("ピカチュウ", level=50, move_names=["ナイトヘッド"])],
-                            )
-    before_hp = battle.actives[1].hp
-    battle.advance_turn()
-    assert before_hp - battle.actives[1].hp == 50
-
-
-def test_ちきゅうなげ_ゴーストには無効():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ちきゅうなげ"])],
-        team1=[Pokemon("ゴース", move_names=["はねる"])],
-    )
-    battle.advance_turn()
+    t.run_move(battle, 0)
     assert battle.actives[1].hp == battle.actives[1].max_hp
 
 
-# ──────────────────────────────────────────────────────────────────
-# いかりのまえば
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize(
-    ("defender_hp", "expected_damage"),
-    [
-        (100, 50),
-        (101, 50),
-    ],
-)
-def test_いかりのまえば_相手HP半分のダメージ(defender_hp: int, expected_damage: int):
+def test_一撃必殺技_命中時は相手を一撃で倒す():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
+        team0=[Pokemon("ピカチュウ", move_names=["つのドリル"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
-    attacker, defender = battle.actives
-    defender.hp = defender_hp
     t.run_move(battle, 0)
-    assert defender.damage_taken == expected_damage
+    assert battle.actives[1].hp == 0
 
 
-def test_いかりのまえば_最低1ダメージ():
+def test_一撃必殺技_外した時はダメージを与えない():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=["つのドリル"])],
+        team1=[Pokemon("ピカチュウ", move_names=["はねる"])],
+        accuracy=0,
     )
-    attacker, defender = battle.actives
-    defender.hp = 1
-    t.run_move(battle, 0)
-    assert defender.hp == 0
+    before_foe_hp = battle.actives[1].hp
 
-# ──────────────────────────────────────────────────────────────────
-# がむしゃら
-# ──────────────────────────────────────────────────────────────────
+    t.reserve_command(battle,
+                      command0=Command.MOVE_0,
+                      command1=Command.MOVE_0)
+    battle.advance_turn()
 
-
-@pytest.mark.parametrize(
-    ("attacker_hp", "defender_hp", "expected_damage"),
-    [
-        (30, 100, 70),
-        (80, 60, 0),
-    ],
-)
-def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defender_hp: int, expected_damage: int):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["がむしゃら"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker, defender = battle.actives
-    attacker.hp = attacker_hp
-    defender.hp = defender_hp
-    t.run_move(battle, 0)
-    battle.print_logs()
-    assert defender.damage_taken == expected_damage
-
-# ──────────────────────────────────────────────────────────────────
-# いのちがけ
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker, defender = battle.actives
-    attacker.hp = 40
-    t.run_move(battle, 0)
-    assert defender.damage_taken == 40
-    assert attacker.hp == 0
+    assert battle.actives[1].hp == before_foe_hp
 
 
 if __name__ == "__main__":

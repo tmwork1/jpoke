@@ -39,6 +39,18 @@ class GameEffect:
         self._disabled_reasons: set[AbilityDisabledReason | ItemDisabledReason] = set()
 
     @property
+    def base_name(self) -> str:
+        """効果の元の名前を取得する。
+
+        効果の有効/無効状態に関わらず、常に元の名前を返す。
+        ログ記録やデバッグ時に使用する。
+
+        Returns:
+            効果の名前
+        """
+        return self.data.name
+
+    @property
     def name(self) -> str:
         """効果の名前を取得する。
 
@@ -51,16 +63,16 @@ class GameEffect:
         return self.data.name if self.enabled else ""
 
     @property
-    def base_name(self) -> str:
-        """効果の元の名前を取得する。
+    def revealed_name(self) -> str:
+        """効果の公開された名前を取得する。
 
-        効果の有効/無効状態に関わらず、常に元の名前を返す。
-        ログ記録やデバッグ時に使用する。
+        効果が公開されている場合は名前を返し、そうでない場合は空文字を返す。
+        プレイヤーに見せる名前が必要な場合に使用する。
 
         Returns:
-            効果の名前
+            公開されている場合は効果名、そうでない場合は空文字
         """
-        return self.data.name
+        return self.data.name if self.revealed else ""
 
     @property
     def enabled(self) -> bool:

@@ -74,7 +74,7 @@ class EventContext:
 
         self.critical: bool = critical  # 急所に当たったかどうかのフラグ
         self.fainted: bool = fainted  # 攻撃によりひんしになったかどうかのフラグ
-        self.substitute_damage: int = 0  # みがわりに与えたダメージ（みがわり貫通技用）
+        self.substitute_damage: int = 0  # みがわりに与えたダメージ
 
     @property
     def attacker(self) -> Pokemon | None:

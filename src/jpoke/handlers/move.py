@@ -265,6 +265,21 @@ def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(value=value)
 
 
+def _drain_hp(battle: Battle, ctx: EventContext, damage: int, heal_ratio: float) -> None:
+    """ドレイン回収(drain)で回復するHP量を計算する。"""
+    # ダメージ計算後のHP減少量を回復する
+    damage = damage or ctx.substitute_damage
+    heal_amount = int(damage * heal_ratio)
+    battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
+
+
+def ギガドレイン_heal_attacker(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """ギガドレインの回復量を計算する。"""
+    # ダメージ計算後のHP減少量を回復する
+    _drain_hp(battle, ctx, value, heal_ratio=0.5)
+    return HandlerReturn(value=value)
+
+
 def テラバースト_modify_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
     mon = ctx.attacker

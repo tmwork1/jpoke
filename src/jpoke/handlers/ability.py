@@ -1135,6 +1135,22 @@ def じりょく_check_trapped(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=ctx.source.has_type("はがね"))
 
 
+def しんがん_ghost_immune_bypass(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """しんがん特性: ノーマル/かくとう技がゴーストタイプに等倍で当たるよう相性補正を書き換える。"""
+    if ctx.move.type not in ("ノーマル", "かくとう"):
+        return HandlerReturn(value=value)
+    if not ctx.defender.has_type("ゴースト"):
+        return HandlerReturn(value=value)
+    type_chart = TYPE_MODIFIER.get(ctx.move.type, {})
+    base = 4096
+    for def_type in ctx.defender.types:
+        if def_type == "ゴースト":
+            continue
+        rate = type_chart.get(def_type, 1.0)
+        base = int(base * rate)
+    return HandlerReturn(value=base)
+
+
 _SYNC_AILMENTS: frozenset[AilmentName] = frozenset(["どく", "もうどく", "まひ", "やけど"])
 
 
@@ -1322,6 +1338,22 @@ def ぜったいねむり_boost_sleep_moves(battle: Battle, ctx: EventContext, v
     """ぜったいねむり特性: めざましビンタ・たたりめ・ひゃっきやこうの威力を2倍にする。"""
     if ctx.move.name in ["めざましビンタ", "たたりめ", "ひゃっきやこう"]:
         return HandlerReturn(value=value * 2)
+    return HandlerReturn(value=value)
+
+
+def ゼロフォーミング_on_terastallize(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ゼロフォーミング特性: テラスタル時に場の天候とフィールドを消去する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_TERASTALLIZE)
+            - source: テラスタルしたポケモン
+        value: イベント値（未使用）
+    """
+    mon = ctx.source
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    battle.weather_manager.remove()
+    battle.terrain_manager.remove()
     return HandlerReturn(value=value)
 
 
@@ -1600,6 +1632,33 @@ def とれないにおい_on_damage(battle: Battle, ctx: EventContext, value: An
     return HandlerReturn(value=value)
 
 
+def なまけ_init(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """なまけ特性: 登場/有効化時になまけカウンタを「行動可」で初期化する。"""
+    ctx.source.ability.state = "can_act"  # TODO: AbilityState に追加
+    return HandlerReturn(value=value)
+
+
+def なまけ_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """なまけ特性: X=1のターンは行動をスキップし、Xを反転する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_TRY_ACTION)
+            - attacker: 行動しようとするポケモン
+        value: 行動可否フラグ（True=行動可）
+    """
+    mon = ctx.attacker
+    state = mon.ability.state
+    if state == "skip_next":  # TODO : AbilityState に追加
+        # このターンはなまける
+        mon.ability.state = "can_act"
+        battle.add_event_log(mon, LogCode.ACTION_BLOCKED, payload={"reason": "なまけ"})
+        return HandlerReturn(value=False, stop_event=True)
+    # state == "can_act"
+    mon.ability.state = "skip_next"
+    return HandlerReturn(value=value)
+
+
 def ねつこうかん_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねつこうかん特性: ほのおタイプの攻撃技でダメージを受けたとき、こうげきが1段階上がる。"""
     if ctx.move.type != "ほのお":
@@ -1620,37 +1679,6 @@ def ねつぼうそう_modify_power(battle: Battle, ctx: EventContext, value: in
         and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
     ):
         value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
-def なまけ_init(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """なまけ特性: 登場/有効化時になまけカウンタを「行動可」で初期化する。"""
-    ctx.source.ability.state = "can_act"
-    return HandlerReturn(value=value)
-
-
-def なまけ_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """なまけ特性: X=1のターンは行動をスキップし、Xを反転する。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト (ON_TRY_ACTION)
-            - attacker: 行動しようとするポケモン
-        value: 行動可否フラグ（True=行動可）
-    """
-    mon = ctx.attacker
-    state = mon.ability.state
-    if state == "":
-        # stateが未初期化の場合は行動可（初ターン相当）
-        mon.ability.state = "skip_next"
-        return HandlerReturn(value=value)
-    if state == "skip_next":
-        # このターンはなまける
-        mon.ability.state = "can_act"
-        battle.add_event_log(mon, LogCode.ACTION_BLOCKED, payload={"reason": "なまけ"})
-        return HandlerReturn(value=False, stop_event=True)
-    # state == "can_act"
-    mon.ability.state = "skip_next"
     return HandlerReturn(value=value)
 
 
@@ -1906,19 +1934,6 @@ def ひとでなし_modify_critical_rank(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
-_HEALING_SHIFT_MOVES: frozenset[str] = frozenset([
-    "あさのひざし", "かいふくしれい", "こうごうせい", "じこさいせい",
-    "すなあつめ", "タマゴうみ", "つきのひかり", "なまける", "はねやすめ",
-    "ミルクのみ", "いやしのはどう", "フラワーヒール", "いのちのしずく",
-    "ジャングルヒール", "みかづきのいのり", "ウッドホーン", "ギガドレイン",
-    "きゅうけつ", "シャカシャカほう", "すいとる", "デスウイング",
-    "ドレインキッス", "ドレインパンチ", "パラボラチャージ", "むねんのつるぎ",
-    "メガドレイン", "ゆめくい", "いやしのねがい", "さいきのいのり",
-    "じょうか", "ちからをすいとる", "ねがいごと", "ねむる", "のみこむ",
-    "みかづきのまい",
-])
-
-
 def ヒーリングシフト_modify_priority(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """ヒーリングシフト特性: 回復技・吸収技の優先度を+3する。
 
@@ -1928,8 +1943,8 @@ def ヒーリングシフト_modify_priority(battle: Battle, ctx: EventContext, 
             - attacker: 技を使用するポケモン
         value: 現在の優先度
     """
-    if ctx.move is not None and ctx.move.name in _HEALING_SHIFT_MOVES:
-        return HandlerReturn(value=value + 3)
+    if ctx.move is not None and ctx.move.has_label("heal"):
+        value += 3
     return HandlerReturn(value=value)
 
 
@@ -1955,21 +1970,18 @@ def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dic
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト (ON_MODIFY_STAT)
-            - target: ランクが変化したポケモン
+            - target: ランクが変化したポケモン（相手）
             - source: 変化の原因
         value: 実際に変化した能力ランクの辞書
+
+    subject_spec="target:foe" で登録するため、ctx.target が相手（ランクが上がった側）。
+    びんじょう所持者は battle.foe(ctx.target) で取得する。
     """
-    # 相手のランク上昇にのみ反応する
-    if not ctx.is_foe_target():
-        return HandlerReturn(value=value)
     rises = {stat: v for stat, v in value.items() if v > 0}
     if not rises:
         return HandlerReturn(value=value)
-    # びんじょう所持者を特定する（target の相手 = source:foe = びんじょう側）
-    # ON_MODIFY_STAT の ctx.target = ランクが上がったポケモン（相手）
-    # びんじょう所持者 = ctx.source（subject_spec="source:foe" のとき source は発動者）
-    # ここでは subject_spec="target:foe" で登録するため ctx.target が相手となる
-    self_mon = ctx.source  # びんじょう所持者（subject_spec="source:self"のsource）
+    # びんじょう所持者は相手（ctx.target）の敵側
+    self_mon = battle.foe(ctx.target)
     if self_mon is None:
         return HandlerReturn(value=value)
     changed = battle.modify_stats(self_mon, rises, source=ctx.target)
@@ -2090,13 +2102,9 @@ def ヘドロえき_reverse_drain(battle: Battle, ctx: EventContext, value: int)
     """
     if ctx.hp_change_reason != "drain":
         return HandlerReturn(value=value)
-    # 回復をキャンセルして攻撃者にダメージを与える
-    healer = ctx.source  # 吸収技の使用者（回復予定のポケモン）
-    if healer is None:
-        return HandlerReturn(value=0)
-    announce_ability_triggered(battle, ctx, value, mon=ctx.target)
-    battle.modify_hp(healer, -value, reason="ability")
-    return HandlerReturn(value=0)
+    hedoro = battle.foe(ctx.target)
+    announce_ability_triggered(battle, ctx, value, mon=hedoro)
+    return HandlerReturn(value=-value)
 
 
 def へんげんじざい_change_type(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
@@ -2341,6 +2349,29 @@ def メガランチャー_modify_power(battle: Battle, ctx: EventContext, value:
     )
 
 
+def ものひろい_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ものひろい特性: ターン終了時に自分がアイテムを持っていなければ相手が消費したアイテムを拾う。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_TURN_END)
+            - source: ものひろい所持者
+        value: イベント値（未使用）
+    """
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=value)
+    if mon.has_item():
+        return HandlerReturn(value=value)
+    foe = battle.foe(mon)
+    item_name = foe.last_lost_item_name
+    if not item_name:
+        return HandlerReturn(value=value)
+    if battle.gain_item(mon, item_name):
+        announce_ability_triggered(battle, ctx, value, mon=mon)
+    return HandlerReturn(value=value)
+
+
 def もふもふ_modify_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """もふもふ特性: 接触技被ダメ0.5倍・炎技被ダメ2倍を適用する。"""
     if battle.query.is_contact(ctx):
@@ -2423,6 +2454,41 @@ def ようりょくそ_boost_speed(battle: Battle, ctx: EventContext, value: int
 def よびみず_absorb_water(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """よびみず特性: みず技を無効化し特攻を1段階上げる。"""
     return _apply_type_absorb(battle, ctx, value, move_type="みず", stats={"C": 1})
+
+
+def よちむ_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """よちむ特性: 登場時に相手が覚えている技のうち最高威力の技を1つ公開する。
+
+    変化技など威力がない技は威力0として扱う。
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_SWITCH_IN)
+            - source: よちむ所持者
+        value: イベント値（未使用）
+    """
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=value)
+    foe = battle.foe(mon)
+    if not foe.moves:
+        return HandlerReturn(value=value)
+
+    # よちむ仕様: 変化技=0、その他は data.power を使用
+    def _move_power(move) -> int:
+        if move.data.power is None:
+            return 0
+        return move.data.power
+
+    max_power = max(_move_power(m) for m in foe.moves)
+    candidates = [m for m in foe.moves if _move_power(m) == max_power]
+    chosen = battle.random.choice(candidates)
+    chosen.revealed = True
+    announce_ability_triggered(battle, ctx, value, mon=mon)
+    battle.add_event_log(
+        mon, LogCode.TEXT_LOG,
+        payload={"text": f"{foe.name}の{chosen.name}を読み取った！"}
+    )
+    return HandlerReturn(value=value)
 
 
 def よわき_modify_atk(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:

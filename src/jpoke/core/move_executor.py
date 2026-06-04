@@ -382,22 +382,22 @@ class MoveExecutor:
 
         damage = self._events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
-        hp_delta = self.battle.modify_hp(
+        actual_damage = -self.battle.modify_hp(
             ctx.defender, -damage, source=ctx.attacker, move=ctx.move, reason="move_damage"
         )
 
         self._events.emit(Event.ON_HIT, ctx)
 
         # ダメージを与えた後の処理
-        if hp_delta >= 0:
+        if actual_damage >= 0:
             return
 
         ctx.defender.hits_taken += 1
 
-        if ctx.defender.fainted:
-            self._events.emit(Event.ON_MOVE_KO, ctx, hp_delta)
+        self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)
 
-        self._events.emit(Event.ON_DAMAGE_HIT, ctx, abs(hp_delta))
+        if ctx.defender.fainted:
+            self._events.emit(Event.ON_MOVE_KO, ctx, actual_damage)
 
         # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
         if ctx.attacker.active_tera_type == 'ステラ':
