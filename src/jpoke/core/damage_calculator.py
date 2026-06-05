@@ -14,7 +14,7 @@ from jpoke.utils import fast_copy
 from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import round_half_down
 
-from .context import EventContext
+from .context import BaseContext, EventContext, AttackContext
 
 
 class DamageCalculator:
@@ -90,7 +90,7 @@ class DamageCalculator:
         if not move.power:
             return [0]
 
-        ctx = EventContext(
+        ctx = AttackContext(
             attacker=attacker,
             defender=defender,
             move=move,
@@ -162,7 +162,7 @@ class DamageCalculator:
 
         return damages
 
-    def _calc_atk_type_modifier(self, ctx: EventContext) -> int:
+    def _calc_atk_type_modifier(self, ctx: BaseContext) -> int:
         """タイプ一致補正（STAB）を計算する。
 
         テラスタルの有無を考慮してSTAB補正値を計算し、
@@ -208,7 +208,7 @@ class DamageCalculator:
 
         return self._events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
 
-    def calc_def_type_modifier(self, ctx: EventContext) -> int:
+    def calc_def_type_modifier(self, ctx: BaseContext) -> int:
         """タイプ相性補正を計算する。
 
         攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
@@ -250,7 +250,7 @@ class DamageCalculator:
 
         return self._events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
 
-    def _calc_final_power(self, ctx: EventContext) -> int:
+    def _calc_final_power(self, ctx: BaseContext) -> int:
         """最終威力を計算する。
 
         Args:
@@ -274,7 +274,7 @@ class DamageCalculator:
         self.final_power = max(1, power)
         return self.final_power
 
-    def _can_apply_terastal_power_floor(self, ctx: EventContext) -> bool:
+    def _can_apply_terastal_power_floor(self, ctx: BaseContext) -> bool:
         """テラスタル時の威力60底上げ補正が適用可能か判定する。"""
         attacker = ctx.attacker
         move = ctx.move
@@ -294,7 +294,7 @@ class DamageCalculator:
 
         return True
 
-    def _calc_final_attack(self, ctx: EventContext) -> int:
+    def _calc_final_attack(self, ctx: BaseContext) -> int:
         """最終攻撃力を計算する。
 
         ランク補正、特性、アイテムなどの補正を適用します。
@@ -339,7 +339,7 @@ class DamageCalculator:
         self.final_attack = final_attack  # デバッグ用に保存
         return final_attack
 
-    def _calc_final_defense(self, ctx: EventContext) -> int:
+    def _calc_final_defense(self, ctx: BaseContext) -> int:
         """最終防御力を計算する。
 
         ランク補正、特性、アイテムなどの補正を適用します。

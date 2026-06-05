@@ -19,7 +19,7 @@ from jpoke.model import Pokemon, Move, Field
 
 from .player_state import PlayerState
 from .event_manager import EventManager
-from .context import EventContext
+from .context import EventContext, AttackContext
 from .player import Player
 from .event_logger import EventLogger, Payload
 from .command_logger import CommandLogger
@@ -690,7 +690,7 @@ class Battle:
         """防御側のタイプ相性補正を計算する（DamageCalculatorへの委譲）。"""
         if isinstance(move, str):
             move = Move(move)
-        ctx = EventContext(defender=defender, move=move)
+        ctx = AttackContext(defender=defender, move=move)
         return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:

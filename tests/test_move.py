@@ -33,7 +33,7 @@ def test_いかりのまえば_相手HP半分のダメージ(defender_hp: int, e
     attacker, defender = battle.actives
     defender.hp = defender_hp
     t.run_move(battle, 0)
-    assert defender.hp == defender.max_hp - expected_damage
+    assert defender.hp == defender_hp - expected_damage
 
 
 def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
@@ -65,7 +65,7 @@ def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defe
     defender.hp = defender_hp
     t.run_move(battle, 0)
     battle.print_logs()
-    assert defender.hp == defender.max_hp - expected_damage
+    assert defender.hp == defender_hp - expected_damage
 
 
 def test_きあいパンチ_みがわりへの被弾では中断しない():

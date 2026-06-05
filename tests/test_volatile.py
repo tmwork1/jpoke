@@ -1,7 +1,7 @@
 """揮発性状態ハンドラの単体テスト"""
 import pytest
 from jpoke import Pokemon
-from jpoke.core import EventContext
+from jpoke.core import AttackContext, EventContext
 from jpoke.enums import Event, Command
 import test_utils as t
 
@@ -62,7 +62,7 @@ def test_あばれる_カウント進行():
         volatile0={"あばれる": 2}
     )
     attacker, defender = battle.actives
-    ctx = EventContext(attacker=attacker, defender=defender)
+    ctx = AttackContext(attacker=attacker, defender=defender)
     battle.events.emit(Event.ON_DAMAGE_HIT, ctx)
     assert attacker.volatiles["あばれる"].count == 1
     battle.events.emit(Event.ON_DAMAGE_HIT, ctx)
@@ -361,7 +361,7 @@ def test_きゅうしょアップ():
     attacker, defender = battle.actives
     rank = battle.events.emit(
         Event.ON_CALC_CRITICAL_RANK,
-        EventContext(attacker=attacker, defender=defender),
+        AttackContext(attacker=attacker, defender=defender),
         2
     )
     assert rank == 3

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.enums import DomainEvent, Event
 from jpoke.utils import fast_copy
 
-from .context import EventContext
+from .context import BaseContext, EventContext, AttackContext
 from .handler import HandlerReturn, RegisteredHandler
 
 
@@ -106,7 +106,7 @@ class EventManager:
 
     def emit(self,
              event: Event | DomainEvent,
-             ctx: EventContext | None = None,
+             ctx: BaseContext | None = None,
              value: Any = None) -> Any:
         """イベントを発火し、登録されたハンドラを実行する。
 
@@ -155,12 +155,19 @@ class EventManager:
         # print(f"\t{event} {initial_value} -> {value}")
         return value
 
-    def _build_context(self, rh: RegisteredHandler) -> EventContext:
+    def _build_context(self, rh: RegisteredHandler) -> BaseContext:
         """ハンドラに対応するコンテキストを構築"""
         mon = self._resolve_subject(rh)
         if rh.handler.side == "foe":
             mon = self.battle.foe(mon)
-        return EventContext(**{rh.handler.role: mon})
+        role = rh.handler.role
+        if role == "attacker":
+            return AttackContext(attacker=mon)
+        if role == "defender":
+            return AttackContext(defender=mon)
+        if role == "target":
+            return EventContext(target=mon)
+        return EventContext(source=mon)
 
     def _sort_handlers(self, rhs: list[RegisteredHandler]) -> list[RegisteredHandler]:
         """ハンドラを優先度と素早さに基づいてソートする。
@@ -181,7 +188,7 @@ class EventManager:
 
         return sorted(rhs, key=key)
 
-    def _check_handler_validity(self, rh: RegisteredHandler, ctx: EventContext) -> bool:
+    def _check_handler_validity(self, rh: RegisteredHandler, ctx: BaseContext) -> bool:
         """ハンドラが現在のコンテキストで有効かどうかをチェックする。"""
         subject = self._resolve_subject(rh)
         if (

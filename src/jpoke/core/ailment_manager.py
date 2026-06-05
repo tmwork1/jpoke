@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from jpoke.model import Pokemon, Ailment
 from jpoke.utils.type_defs import AilmentName
 from jpoke.enums import Event, LogCode
-from jpoke.core import EventContext
+from jpoke.core import EventContext, BaseContext
 from jpoke.utils import fast_copy
 
 
@@ -52,7 +52,7 @@ class AilmentManager:
               count: int | None = None,
               source: Pokemon | None = None,
               overwrite: bool = False,
-              ctx: EventContext | None = None) -> bool:
+              ctx: BaseContext | None = None) -> bool:
         """状態異常を付与する。
 
         Args:
@@ -87,7 +87,7 @@ class AilmentManager:
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         if ctx is not None:
-            apply_ctx = ctx.derive(target=target, source=source)
+            apply_ctx = EventContext(source=source, target=target, move=ctx.move)
         else:
             apply_ctx = EventContext(target=target, source=source)
 

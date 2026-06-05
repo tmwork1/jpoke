@@ -53,7 +53,8 @@ def tick_volatile(battle: Battle,
         value: イベント値（未使用）
         volatile: 対象の揮発状態名
     """
-    battle.volatile_manager.tick(ctx.source, volatile)
+    mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
+    battle.volatile_manager.tick(mon, volatile)
     return HandlerReturn(value=value)
 
 
@@ -71,7 +72,7 @@ def remove_volatile(battle: Battle,
         volatile: 対象の揮発状態名
         reason: 解除理由
     """
-    mon = ctx.source
+    mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
     if battle.volatile_manager.remove(mon, volatile):
         battle.add_event_log(
             mon,
@@ -221,7 +222,7 @@ def いちゃもん_modify_command_options(battle: Battle, ctx: EventContext, va
     Returns:
         HandlerReturn: 新しいコマンドオプションのリスト
     """
-    mon = ctx.attacker
+    mon = ctx.source
     last_move_name = mon.volatiles["いちゃもん"].move_name
     new_options = []
     for cmd in value:
@@ -298,12 +299,12 @@ def かなしばり_modify_command_options(battle: Battle, ctx: EventContext, va
     Returns:
         HandlerReturn: 新しいコマンドオプションのリスト
     """
-    forbidden_name = ctx.attacker.volatiles["かなしばり"].move_name
+    forbidden_name = ctx.source.volatiles["かなしばり"].move_name
     new_options = []
     for cmd in value:
         if (
             not cmd.is_move_family
-            or ctx.attacker.moves[cmd.index].name != forbidden_name
+            or ctx.source.moves[cmd.index].name != forbidden_name
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
@@ -487,7 +488,7 @@ def じごくづき_restrict_commands(battle: Battle, ctx: EventContext, value: 
     for cmd in value:
         if (
             not cmd.is_move_family
-            or not ctx.attacker.moves[cmd.index].has_label("sound")
+            or not ctx.source.moves[cmd.index].has_label("sound")
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)

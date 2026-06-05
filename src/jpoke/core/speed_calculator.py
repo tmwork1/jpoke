@@ -113,7 +113,7 @@ class SpeedCalculator:
         # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
         return self.battle.events.emit(
             DomainEvent.ON_MODIFY_MOVE_PRIORITY,
-            EventContext(attacker=attacker, move=move),
+            EventContext(source=attacker, move=move),
             base_priority
         )
 
@@ -168,7 +168,7 @@ class SpeedCalculator:
             # 後攻ティアを計算（0=通常, -1=あとだし等）
             back_tier = self.battle.events.emit(
                 DomainEvent.ON_CALC_BACK_TIER,
-                EventContext(attacker=mon, move=move),
+                EventContext(source=mon, move=move),
                 0
             )
 

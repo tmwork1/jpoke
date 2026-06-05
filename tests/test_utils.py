@@ -1,4 +1,4 @@
-from jpoke.core import Battle, Player, EventContext
+from jpoke.core import Battle, Player, EventContext, AttackContext
 from jpoke.model import Pokemon, Move
 from jpoke.utils.type_defs import AilmentName, VolatileName, Weather, Terrain, GlobalField, SideField
 from jpoke.enums import Event, Command, LogCode
@@ -130,12 +130,12 @@ def reserve_command(battle: Battle,
         state.reserve_command(command)
 
 
-def build_context(battle: Battle, atk_idx: int, move_idx: int = 0) -> EventContext:
-    """EventContextを構築するヘルパー関数。"""
+def build_context(battle: Battle, atk_idx: int, move_idx: int = 0) -> AttackContext:
+    """AttackContextを構築するヘルパー関数。"""
     attacker = battle.actives[atk_idx]
     defender = battle.foe(attacker)
     move = attacker.moves[move_idx]
-    return EventContext(attacker=attacker, defender=defender, move=move)
+    return AttackContext(attacker=attacker, defender=defender, move=move)
 
 
 def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:

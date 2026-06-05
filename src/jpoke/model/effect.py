@@ -63,18 +63,6 @@ class GameEffect:
         return self.data.name if self.enabled else ""
 
     @property
-    def revealed_name(self) -> str:
-        """効果の公開された名前を取得する。
-
-        効果が公開されている場合は名前を返し、そうでない場合は空文字を返す。
-        プレイヤーに見せる名前が必要な場合に使用する。
-
-        Returns:
-            公開されている場合は効果名、そうでない場合は空文字
-        """
-        return self.data.name if self.revealed else ""
-
-    @property
     def enabled(self) -> bool:
         """効果が有効かどうかを判定する。
 

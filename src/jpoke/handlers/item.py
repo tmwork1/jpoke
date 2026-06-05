@@ -49,7 +49,7 @@ def announce_item_triggered(battle: Battle,
 
 def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """メガストーン: メガシンカコマンドを追加する。"""
-    mon = ctx.attacker
+    mon = ctx.source
     if not mon.can_megaevolve():
         return HandlerReturn(value=value)
 

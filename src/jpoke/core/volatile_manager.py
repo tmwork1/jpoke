@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from jpoke.model import Pokemon, Volatile
 from jpoke.utils.type_defs import VolatileName
 from jpoke.enums import Event, LogCode
-from jpoke.core import EventContext
+from jpoke.core import EventContext, BaseContext
 from jpoke.utils import fast_copy
 
 
@@ -51,7 +51,7 @@ class VolatileManager:
               name: VolatileName,
               count: int | None = None,
               source: Pokemon | None = None,
-              ctx: EventContext | None = None,
+              ctx: BaseContext | None = None,
               **kwargs) -> bool:
         """揮発性状態を付与する。
 
@@ -74,7 +74,7 @@ class VolatileManager:
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         if ctx is not None:
-            apply_ctx = ctx.derive(target=target, source=source)
+            apply_ctx = EventContext(source=source, target=target, move=ctx.move)
         else:
             apply_ctx = EventContext(target=target, source=source)
 

@@ -44,6 +44,17 @@ def modify_hp(battle: Battle,
     return HandlerReturn(value=v)
 
 
+def _self_role_spec(ctx: EventContext) -> RoleSpec:
+    """コンテキストに応じた「自分自身」のRoleSpecを返す。
+
+    AttackContext では attacker:self、それ以外では source:self を返す。
+    """
+    from jpoke.core.context import AttackContext
+    if isinstance(ctx, AttackContext):
+        return "attacker:self"
+    return "source:self"
+
+
 def self_heal(battle: Battle,
               ctx: EventContext,
               value: Any,
@@ -52,8 +63,9 @@ def self_heal(battle: Battle,
               chance: float = 1,
               reason: HPChangeReason = "") -> HandlerReturn:
     """自分のHPを固定値または割合で回復させる。"""
+    spec = _self_role_spec(ctx)
     return modify_hp(
-        battle, ctx, value, target_spec="source:self", source_spec="source:self",
+        battle, ctx, value, target_spec=spec, source_spec=spec,
         v=v, r=r, chance=chance, reason=reason
     )
 
@@ -66,8 +78,9 @@ def self_damage(battle: Battle,
                 chance: float = 1,
                 reason: HPChangeReason = "") -> HandlerReturn:
     """自分のHPを固定値または割合で減少させる。"""
+    spec = _self_role_spec(ctx)
     return modify_hp(
-        battle, ctx, value, target_spec="source:self", source_spec="source:self",
+        battle, ctx, value, target_spec=spec, source_spec=spec,
         v=-v, r=-r, chance=chance, reason=reason
     )
 
@@ -206,7 +219,8 @@ def cure_ailment(battle: Battle,
 
 def cure_self_ailment(battle: Battle, ctx: EventContext, value: Any, chance: float = 1) -> HandlerReturn:
     """自分の状態異常を回復する。"""
-    return cure_ailment(battle, ctx, value, target_spec="source:self", source_spec="source:self", chance=chance)
+    spec = _self_role_spec(ctx)
+    return cure_ailment(battle, ctx, value, target_spec=spec, source_spec=spec, chance=chance)
 
 
 def activate_weather(battle: Battle,

@@ -13,7 +13,7 @@ from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
 
 from .event_manager import Event
-from .context import EventContext
+from .context import BaseContext, EventContext, AttackContext
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
@@ -83,7 +83,7 @@ class MoveExecutor:
     def _events(self) -> EventManager:
         return self.battle.events
 
-    def _resolve_hit_count(self, ctx: EventContext) -> int:
+    def _resolve_hit_count(self, ctx: BaseContext) -> int:
         """連続技の実ヒット回数を決定する。
 
         Args:
@@ -130,7 +130,7 @@ class MoveExecutor:
             return power_sequence[idx]
         return move.power
 
-    def _check_hit(self, ctx: EventContext) -> bool:
+    def _check_hit(self, ctx: BaseContext) -> bool:
         """技の命中判定。
 
         Args:
@@ -171,7 +171,7 @@ class MoveExecutor:
         self.accuracy = int(self.accuracy * rank_modifier)
         return 100 * self.battle.random.random() < self.accuracy
 
-    def _check_critical(self, ctx: EventContext) -> bool:
+    def _check_critical(self, ctx: BaseContext) -> bool:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
@@ -202,7 +202,7 @@ class MoveExecutor:
         )
         return self.battle.random.random() < crit_rate
 
-    def check_hit_substitute(self, ctx: EventContext) -> bool:
+    def check_hit_substitute(self, ctx: BaseContext) -> bool:
         """みがわりに技が当たるかどうかを判定する。
 
         Args:
@@ -228,7 +228,7 @@ class MoveExecutor:
         self.reset_monitoring_flags()
 
         defender = self.battle.foe(attacker)
-        ctx = EventContext(attacker=attacker, defender=defender)
+        ctx = AttackContext(attacker=attacker, defender=defender)
 
         # 技の変更 (アンコールなど)
         move = self._events.emit(Event.ON_MODIFY_MOVE, ctx, move)
@@ -277,7 +277,7 @@ class MoveExecutor:
             # 技のハンドラを解除
             ctx.move.unregister_handlers(self._events, ctx.attacker)
 
-    def _check_hit_by_type(self, ctx: EventContext) -> bool:
+    def _check_hit_by_type(self, ctx: BaseContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
 
@@ -290,7 +290,7 @@ class MoveExecutor:
             return False
         return True
 
-    def _execute_move(self, ctx: EventContext) -> None:
+    def _execute_move(self, ctx: BaseContext) -> None:
         """技実行の内部フローを処理する。
 
         行動可否チェックから PP 消費、命中判定、連続ヒット処理までを担当する。
@@ -364,7 +364,7 @@ class MoveExecutor:
         # 技実行完了後の処理（状態管理・撤去など）
         self._events.emit(Event.ON_MOVE_END, ctx)
 
-    def _execute_hit(self, ctx: EventContext) -> None:
+    def _execute_hit(self, ctx: BaseContext) -> None:
         """1 ヒット分の処理を実行する。
 
         Args:
@@ -386,10 +386,10 @@ class MoveExecutor:
             ctx.defender, -damage, source=ctx.attacker, move=ctx.move, reason="move_damage"
         )
 
-        self._events.emit(Event.ON_HIT, ctx)
+        self._events.emit(Event.ON_HIT, ctx, actual_damage)
 
-        # ダメージを与えた後の処理
-        if actual_damage >= 0:
+        # ダメージを与えた後の処理（actual_damage は正値=ダメージ量）
+        if actual_damage <= 0:
             return
 
         ctx.defender.hits_taken += 1
@@ -403,7 +403,7 @@ class MoveExecutor:
         if ctx.attacker.active_tera_type == 'ステラ':
             ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
-    def _execute_status_hit(self, ctx: EventContext) -> None:
+    def _execute_status_hit(self, ctx: BaseContext) -> None:
         """状態変化技の命中処理を実行する。
 
         Args:
@@ -458,7 +458,7 @@ class MoveExecutor:
             value=move.category
         )
 
-    def _consume_pp(self, ctx: EventContext):
+    def _consume_pp(self, ctx: BaseContext):
         """技のPPを消費する。
 
         技を使用した際にPPを減らします。

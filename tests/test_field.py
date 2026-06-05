@@ -3,7 +3,7 @@ import pytest
 from jpoke import Battle, Pokemon
 from jpoke.enums import Event
 from jpoke.utils.type_defs import Weather, Terrain, GlobalField, SideField
-from jpoke.core import EventContext
+from jpoke.core import AttackContext, EventContext
 import test_utils as t
 
 
@@ -518,7 +518,7 @@ def test_ワンダールーム_物理技は特防側を参照():
     normal_defender = normal.actives[1]
     normal_defender.rank["B"] = 6
     normal_defender.rank["D"] = -6
-    normal_ctx = EventContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
+    normal_ctx = AttackContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
     normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
     wonder = t.start_battle(
@@ -529,7 +529,7 @@ def test_ワンダールーム_物理技は特防側を参照():
     wonder_defender = wonder.actives[1]
     wonder_defender.rank["B"] = 6
     wonder_defender.rank["D"] = -6
-    wonder_ctx = EventContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
+    wonder_ctx = AttackContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
     wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
 
     assert wonder_def < normal_def
@@ -544,7 +544,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
     normal_defender = normal.actives[1]
     normal_defender.rank["B"] = -6
     normal_defender.rank["D"] = 6
-    normal_ctx = EventContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
+    normal_ctx = AttackContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
     normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
     wonder = t.start_battle(
@@ -555,7 +555,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
     wonder_defender = wonder.actives[1]
     wonder_defender.rank["B"] = -6
     wonder_defender.rank["D"] = 6
-    wonder_ctx = EventContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
+    wonder_ctx = AttackContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
     wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
 
     assert wonder_def < normal_def
@@ -595,12 +595,12 @@ def test_サイドフィールド_急所では軽減されない(side_field: Sid
         team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         side1={side_field: 5},
     )
-    ctx = EventContext(
+    ctx = AttackContext(
         attacker=battle.actives[0],
         defender=battle.actives[1],
         move=battle.actives[0].moves[0],
+        critical=True,
     )
-    ctx.critical = True
     assert battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) == 4096
 
 # ──────────────────────────────────────────────────────────────────

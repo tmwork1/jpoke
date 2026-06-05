@@ -282,7 +282,7 @@ def ギガドレイン_heal_attacker(battle: Battle, ctx: EventContext, value: i
 
 def テラバースト_modify_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
-    mon = ctx.attacker
+    mon = ctx.source
     if mon.terastallized:
         value = mon.active_tera_type
     return HandlerReturn(value=value)
@@ -290,7 +290,7 @@ def テラバースト_modify_move_type(battle: Battle, ctx: EventContext, value
 
 def テラバースト_modify_move_category(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
-    mon = ctx.attacker
+    mon = ctx.source
     if mon.terastallized:
         atk = mon.ranked_stats["A"]
         spa = mon.ranked_stats["C"]

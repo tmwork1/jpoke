@@ -41,6 +41,22 @@ class AbilityManager:
     def _events(self):
         return self.battle.events
 
+    def _register_ability_handlers(self, mon: Pokemon):
+        """ポケモンの特性のハンドラをイベントマネージャに登録する。
+
+        Args:
+            mon: 対象のポケモン
+        """
+        mon.ability.register_handlers(self._events, mon)
+
+    def _unregister_ability_handlers(self, mon: Pokemon):
+        """ポケモンの特性のハンドラをイベントマネージャから解除する。
+
+        Args:
+            mon: 対象のポケモン
+        """
+        mon.ability.unregister_handlers(self._events, mon)
+
     def change_ability(self, mon: Pokemon, ability: str) -> None:
         """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。
         Args:
@@ -50,18 +66,43 @@ class AbilityManager:
         if mon.ability.base_name == ability:
             return
 
-        is_active = self.battle.is_active(mon)
         ctx = EventContext(source=mon)
+        is_active = self.battle.is_active(mon)
 
+        # 対象のポケモンが場に出ている場合は、古い特性のハンドラを解除し、イベントを発火する
         if is_active:
+            self._unregister_ability_handlers(mon)
             self._events.emit(Event.ON_ABILITY_DISABLED, ctx)
-            mon.ability.unregister_handlers(self._events, mon)
 
+        # 新しい特性に更新して公開する
         mon.ability = Ability(ability)
+        mon.ability.revealed = True
 
+        # 対象のポケモンが場に出ている場合は、新しい特性のハンドラを登録し、イベントを発火する
         if is_active:
-            mon.ability.register_handlers(self._events, mon)
+            self._register_ability_handlers(mon)
             self._events.emit(Event.ON_ABILITY_ENABLED, ctx)
+
+    def swap_ability(self, mon1: Pokemon, mon2: Pokemon) -> None:
+        """2体のポケモンの特性を入れ替える。
+
+        Args:
+            mon1: 1体目のポケモン
+            mon2: 2体目のポケモン
+        """
+        ability1 = mon1.ability.base_name
+        ability2 = mon2.ability.base_name
+
+        # 両者の特性の無効化イベントをまとめて発火する
+        self._events.emit(Event.ON_ABILITY_DISABLED)
+
+        for mon, ability in ((mon1, ability2), (mon2, ability1)):
+            self._unregister_ability_handlers(mon)
+            mon.ability = Ability(ability)
+            self._register_ability_handlers(mon)
+
+        # 両者の特性の有効化イベントをまとめて発火する
+        self._events.emit(Event.ON_ABILITY_ENABLED)
 
     def add_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
         """特性を無効にする理由を追加し、有効状態に変化があればイベントを発火する。
