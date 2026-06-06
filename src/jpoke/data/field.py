@@ -213,7 +213,7 @@ FIELDS: dict[str, FieldData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: h.FieldHandler(
                 h.じゅうりょく_modify_accuracy,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
             ),
             Event.ON_CHECK_FLOATING: h.FieldHandler(
                 h.じゅうりょく_grounded,

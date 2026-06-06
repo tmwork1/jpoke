@@ -292,7 +292,8 @@ def ARシステム_apply_type(battle: Battle, ctx: EventContext, value: Any) -> 
 
 def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """ARシステム特性: メモリの奪取・交換を防ぐ。"""
-    return _block_item_change(ctx.target, list(MEMORY_TO_TYPE.keys()))
+    mon = getattr(ctx, "target", None) or getattr(ctx, "defender", None)
+    return _block_item_change(mon, list(MEMORY_TO_TYPE.keys()))
 
 
 def アイスフェイス_block_physical(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
@@ -2247,10 +2248,10 @@ def はやてのつばさ_modify_priority(battle: Battle, ctx: EventContext, val
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト (ON_MODIFY_MOVE_PRIORITY)
-            - attacker: 技を使用するポケモン
+            - source: 技を使用するポケモン
         value: 現在の優先度
     """
-    mon = ctx.attacker
+    mon = ctx.source
     if ctx.move is None:
         return HandlerReturn(value=value)
     if ctx.move.type != "ひこう":
@@ -2825,7 +2826,8 @@ def マルチタイプ_apply_type(battle: Battle, ctx: EventContext, value: Any)
 
 def マルチタイプ_block_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """マルチタイプ特性: プレートの奪取・交換を防ぐ。"""
-    return _block_item_change(ctx.target, list(PLATE_TO_TYPE.keys()))
+    mon = getattr(ctx, "target", None) or getattr(ctx, "defender", None)
+    return _block_item_change(mon, list(PLATE_TO_TYPE.keys()))
 
 
 def みずがため_on_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

@@ -5362,6 +5362,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
         accuracy=90,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                h.でんじは_apply_ailment_to_defender,
+            ),
+        }
     ),
     "でんじふゆう": MoveData(
         type="でんき",
@@ -5608,6 +5613,11 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         accuracy=75,
         labels=["powder"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                h.ねむりごな_apply_ailment_to_defender,
+            ),
+        }
     ),
     "ねむる": MoveData(
         type="エスパー",

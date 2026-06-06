@@ -34,7 +34,7 @@ python tests/run.py
 | `core/turn_controller.py` | ターン順・行動順の制御 |
 | `core/event_manager.py` | イベント発火・ハンドラ呼び出し |
 | `core/handler.py` `Handler` | ハンドラ定義（subject, subject_spec, 関数） |
-| `core/context.py` `EventContext` | ハンドラに渡すイベントコンテキスト |
+| `core/context.py` `BaseContext` / `EventContext` / `AttackContext` | ハンドラに渡すイベントコンテキスト（攻撃フローは `AttackContext`、それ以外は `EventContext`） |
 | `model/` | `Pokemon`, `Move`, `Field` などのモデル |
 | `data/` | `ability.py`, `move.py`, `item.py` — 各エンティティのデータ定義とハンドラ登録 |
 | `handlers/` | `ability.py`, `move.py`, `item.py` など — ハンドラ実装 |
@@ -83,7 +83,11 @@ battle = t.start_battle(
 ## Handler の約束事
 
 - `HandlerReturn` は `value` と `stop_event` のみを持つ
-- `subject_spec` は必須。使う context role と一致させる（`source:self` / `target:self` など）
+- `subject_spec` は必須。イベントが渡すコンテキスト型のロールと一致させる
+  - 攻撃フェーズ（`AttackContext`）: `attacker:self` / `defender:self`
+  - 非攻撃フェーズ（`EventContext`）: `source:self` / `target:self`
+  - 例外: `ON_CHECK_BYPASS_SCREEN` は `can_bypass_screen()` が `EventContext` に正規化するため常に `source:self`
+  - 例外: `ON_MODIFY_MOVE_PRIORITY` は `speed_calculator` が `EventContext(source=attacker)` で発火するため `source:self`
 - 固有効果のロジックは `handlers/*` に名前付き関数で実装し、`data/*.py` からその関数を登録する
 - `handlers/*` の並びは `data/*.py` の定義順（五十音順）に合わせる
 - イベント発火側で前提が保証されている場合、ハンドラ側の重複ガード（`if not mon.alive` など）は不要

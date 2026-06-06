@@ -634,6 +634,10 @@ def チャージビーム_modify_attacker_stats(battle: Battle, ctx: EventContex
     return modify_attacker_stats(battle, ctx, value, stats={"C": 1}, chance=0.7)
 
 
+def でんじは_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
+
+
 def でんじほう_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
@@ -808,6 +812,10 @@ def ドわすれ_modify_attacker_stats(battle: Battle, ctx: EventContext, value:
 
 def なきごえ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def ねむりごな_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
 
 def なみだめ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

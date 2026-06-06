@@ -1,6 +1,6 @@
 # test_ability
 
-テスト数: 694
+テスト数: 692
 
 - [x] ARシステム_メモリなしでタイプ変更なし
 - [x] アイスフェイス_エアロック中はゆき変化でフォルムチェンジしない
@@ -238,47 +238,45 @@
 - [x] スワームチェンジ_ターン終了時にHP1_2以下ならパーフェクトフォルムになる
 - [x] スワームチェンジ_ターン終了時にHP1_2超ならフォルムチェンジしない
 - [x] スワームチェンジ_パーフェクトフォルムでは発動しない
-- [x] スワームチェンジ_フォルムチェンジ後にHPが増加する
 - [x] せいぎのこころ_あく以外では発動しない
 - [x] せいぎのこころ_あく技でAが1段階上がる
 - [x] せいしんりょく_いかくを防ぐ
 - [x] せいしんりょく_ひるみを防ぐ
-- [x] ゼロフォーミング_テラスタル時にフィールドを消去する
-- [x] ゼロフォーミング_テラスタル時に天候を消去する
+- [x] ゼロフォーミング_テラスタル時に天候とフィールドが消える
 - [x] そうだいしょう_ひんし味方なしでは補正なし
 - [x] そうだいしょう_味方1体ひんしで補正率0_1
 - [x] そうだいしょう_味方5体ひんしで補正率上限0_5
 - [x] ソウルハート_KO時にCが1段階上がる
-- [x] タイプ依存攻撃補正特性(ability_name=いわはこび, move_name=いわなだれ, expected=6144)
-- [x] タイプ依存攻撃補正特性(ability_name=はがねつかい, move_name=アイアンヘッド, expected=6144)
-- [x] タイプ依存攻撃補正特性(ability_name=りゅうのあぎと, move_name=りゅうのはどう, expected=6144)
-- [x] タイプ依存攻撃補正特性(ability_name=トランジスタ, move_name=でんきショック, expected=5325)
 - [x] タイプ半減系(ability_name=あついしぼう, move_name=ひのこ)
 - [x] タイプ半減系(ability_name=あついしぼう, move_name=れいとうビーム)
 - [x] タイプ半減系(ability_name=たいねつ, move_name=ひのこ)
 - [x] タイプ半減系_かたやぶりで無効(ability_name=あついしぼう, move_name=ひのこ)
 - [x] タイプ半減系_かたやぶりで無効(ability_name=たいねつ, move_name=ひのこ)
-- [x] タイプ無効バフ特性(ability=こんがりボディ, move=ひのこ, stat=B, rank=2)
-- [x] タイプ無効バフ特性(ability=そうしょく, move=このは, stat=A, rank=1)
-- [x] タイプ無効バフ特性(ability=でんきエンジン, move=でんきショック, stat=S, rank=1)
-- [x] タイプ無効バフ特性(ability=ひらいしん, move=でんきショック, stat=C, rank=1)
-- [x] タイプ無効バフ特性(ability=よびみず, move=みずでっぽう, stat=C, rank=1)
+- [x] タイプ強化系(ability_name=いわはこび, move_name=いわなだれ, expected=6144)
+- [x] タイプ強化系(ability_name=はがねつかい, move_name=アイアンヘッド, expected=6144)
+- [x] タイプ強化系(ability_name=りゅうのあぎと, move_name=りゅうのはどう, expected=6144)
+- [x] タイプ強化系(ability_name=トランジスタ, move_name=でんきショック, expected=5325)
+- [x] タイプ無効バフ系(ability=こんがりボディ, move=ひのこ, stat=B, rank=2)
+- [x] タイプ無効バフ系(ability=そうしょく, move=このは, stat=A, rank=1)
+- [x] タイプ無効バフ系(ability=でんきエンジン, move=でんきショック, stat=S, rank=1)
+- [x] タイプ無効バフ系(ability=ひらいしん, move=でんきショック, stat=C, rank=1)
+- [x] タイプ無効バフ系(ability=よびみず, move=みずでっぽう, stat=C, rank=1)
+- [x] タイプ無効バフ系_かたやぶりで無効(ability=こんがりボディ, move=ひのこ, stat=B, rank=2)
+- [x] タイプ無効バフ系_かたやぶりで無効(ability=そうしょく, move=このは, stat=A, rank=1)
+- [x] タイプ無効バフ系_かたやぶりで無効(ability=でんきエンジン, move=でんきショック, stat=S, rank=1)
+- [x] タイプ無効バフ系_かたやぶりで無効(ability=ひらいしん, move=でんきショック, stat=C, rank=1)
+- [x] タイプ無効バフ系_かたやぶりで無効(ability=よびみず, move=でんきショック, stat=C, rank=1)
 - [x] タイプ無効回復(ability=ちくでん, move=スパーク)
 - [x] タイプ無効回復(ability=ちょすい, move=なみのり)
 - [x] タイプ無効回復(ability=どしょく, move=じしん)
 - [x] タイプ無効回復_かたやぶりで無効(ability=ちくでん, move=スパーク)
 - [x] タイプ無効回復_かたやぶりで無効(ability=ちょすい, move=なみのり)
 - [x] タイプ無効回復_かたやぶりで無効(ability=どしょく, move=じしん)
-- [x] タイプ無効特性_かたやぶりで無効(ability=こんがりボディ, move=ひのこ, stat=B, rank=2)
-- [x] タイプ無効特性_かたやぶりで無効(ability=そうしょく, move=このは, stat=A, rank=1)
-- [x] タイプ無効特性_かたやぶりで無効(ability=でんきエンジン, move=でんきショック, stat=S, rank=1)
-- [x] タイプ無効特性_かたやぶりで無効(ability=ひらいしん, move=でんきショック, stat=C, rank=1)
-- [x] タイプ無効特性_かたやぶりで無効(ability=よびみず, move=でんきショック, stat=C, rank=1)
 - [x] たんじゅん_かたやぶりで無効
 - [x] たんじゅん_能力上昇量が2倍になる
-- [x] ダウンロード_BD等しいときCアップ
 - [x] ダウンロード_能力アップ(foe_name=フシギダネ, stat=A)
 - [x] ダウンロード_能力アップ(foe_name=ゼニガメ, stat=C)
+- [x] ダウンロード_能力アップ(foe_name=ウインディ, stat=C)
 - [x] だっぴ_ターン終了時に状態異常を回復する(ailment_name=どく)
 - [x] だっぴ_ターン終了時に状態異常を回復する(ailment_name=もうどく)
 - [x] だっぴ_ターン終了時に状態異常を回復する(ailment_name=まひ)
@@ -292,7 +290,7 @@
 - [x] ダルマモード_交代するとノーマルのすがたに戻る
 - [x] ダルマモード_登場時には発動しない
 - [x] ダークオーラ_オーラブレイクがいるとあく技の威力が0_75倍になる
-- [x] ちからずく_追加効果あり技の威力が1_3倍
+- [x] ちからずく_追加効果技の威力が1_3倍
 - [x] ちからもち_イカサマで攻撃するときも2倍
 - [x] ちからもち_イカサマを受けるときは補正なし
 - [x] ちからもち_物理技で攻撃補正2倍
@@ -313,14 +311,14 @@
 - [x] テラスシェル_かたやぶりで無効
 - [x] テラスチェンジ_かがくへんかガス中でも発動する
 - [x] テラスチェンジ_登場時にテラスタルフォルムになる
-- [x] てんきや_エアロック中は天気変化でもフォルムチェンジしない
-- [x] てんきや_天気なしでは通常フォルムのまま
-- [x] てんきや_天気に対応したフォルムになる(weather=はれ, form=ポワルン(たいよう))
-- [x] てんきや_天気に対応したフォルムになる(weather=おおひでり, form=ポワルン(たいよう))
-- [x] てんきや_天気に対応したフォルムになる(weather=あめ, form=ポワルン(あまみず))
-- [x] てんきや_天気に対応したフォルムになる(weather=おおあめ, form=ポワルン(あまみず))
-- [x] てんきや_天気に対応したフォルムになる(weather=ゆき, form=ポワルン(ゆきぐも))
-- [x] てんきや_天気変化で即座にフォルムが変わる
+- [x] てんきや_エアロック中はフォルムチェンジしない
+- [x] てんきや_フォルムチェンジ(weather=はれ, form=ポワルン(たいよう))
+- [x] てんきや_フォルムチェンジ(weather=おおひでり, form=ポワルン(たいよう))
+- [x] てんきや_フォルムチェンジ(weather=あめ, form=ポワルン(あまみず))
+- [x] てんきや_フォルムチェンジ(weather=おおあめ, form=ポワルン(あまみず))
+- [x] てんきや_フォルムチェンジ(weather=ゆき, form=ポワルン(ゆきぐも))
+- [x] てんきや_天候なしで通常フォルム
+- [x] てんきや_天候変化で即座にフォルムチェンジ
 - [x] てんねん_攻撃側は防御ランク補正を無視する(move_name=たいあたり, stat=B)
 - [x] てんねん_攻撃側は防御ランク補正を無視する(move_name=ひのこ, stat=D)
 - [x] てんねん_防御側はACランク無視(move_name=たいあたり, stat=A)
@@ -631,6 +629,12 @@
 - [x] 倒すと能力上昇系_相手を倒せないと発動しない(ability_name=じしんかじょう, stat=A)
 - [x] 倒すと能力上昇系_相手を倒せないと発動しない(ability_name=しろのいななき, stat=A)
 - [x] 倒すと能力上昇系_相手を倒せないと発動しない(ability_name=くろのいななき, stat=C)
+- [x] 天候がくれ系_かたやぶりで命中率補正なし(ability_name=ゆきがくれ, weather=ゆき)
+- [x] 天候がくれ系_かたやぶりで命中率補正なし(ability_name=すながくれ, weather=すなあらし)
+- [x] 天候がくれ系_対応天候で命中低下(ability_name=ゆきがくれ, weather=ゆき)
+- [x] 天候がくれ系_対応天候で命中低下(ability_name=すながくれ, weather=すなあらし)
+- [x] 天候がくれ系_対応天候以外では命中率変化なし(ability_name=ゆきがくれ)
+- [x] 天候がくれ系_対応天候以外では命中率変化なし(ability_name=すながくれ)
 - [x] 天候依存素早さ上昇(ability=すなかき, weather=すなあらし, expected_mult=2)
 - [x] 天候依存素早さ上昇(ability=すいすい, weather=あめ, expected_mult=2)
 - [x] 天候依存素早さ上昇(ability=ようりょくそ, weather=はれ, expected_mult=2)
@@ -642,24 +646,18 @@
 - [x] 天候回復特性_対応天候中に回復(ability_name=あめうけざら, weather_name=あめ, weather_count=5)
 - [x] 天候回復特性_対応天候中に回復(ability_name=あめうけざら, weather_name=おおあめ, weather_count=999)
 - [x] 天候回復特性_対応天候中に回復(ability_name=アイスボディ, weather_name=ゆき, weather_count=5)
-- [x] 天気がくれ系_かたやぶりで命中率補正なし(ability_name=ゆきがくれ, weather=ゆき)
-- [x] 天気がくれ系_かたやぶりで命中率補正なし(ability_name=すながくれ, weather=すなあらし)
-- [x] 天気がくれ系_対応天気で命中低下(ability_name=ゆきがくれ, weather=ゆき)
-- [x] 天気がくれ系_対応天気で命中低下(ability_name=すながくれ, weather=すなあらし)
-- [x] 天気がくれ系_対応天気以外では命中率変化なし(ability_name=ゆきがくれ)
-- [x] 天気がくれ系_対応天気以外では命中率変化なし(ability_name=すながくれ)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=おわりのだいち, weather_name=おおひでり)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=はじまりのうみ, weather_name=おおあめ)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=デルタストリーム, weather_name=らんきりゅう)
 - [x] 強天候始動特性_退場時に解除される(ability_name=おわりのだいち, weather_name=おおひでり)
 - [x] 強天候始動特性_退場時に解除される(ability_name=はじまりのうみ, weather_name=おおあめ)
 - [x] 強天候始動特性_退場時に解除される(ability_name=デルタストリーム, weather_name=らんきりゅう)
-- [x] 技カテゴリによる威力補正_param(ability_name=かたいツメ, move_name=たいあたり, expected_power=5325, check=power)
-- [x] 技カテゴリによる威力補正_param(ability_name=かたいツメ, move_name=でんきショック, expected_power=4096, check=power)
-- [x] 技カテゴリによる威力補正_param(ability_name=がんじょうあご, move_name=かみつく, expected_power=6144, check=power)
-- [x] 技カテゴリによる威力補正_param(ability_name=きれあじ, move_name=きりさく, expected_power=6144, check=power)
-- [x] 技カテゴリによる威力補正_param(ability_name=てつのこぶし, move_name=かみなりパンチ, expected_power=4915, check=power)
-- [x] 技カテゴリによる威力補正_param(ability_name=パンクロック, move_name=バークアウト, expected_power=5325, check=power)
+- [x] 技カテゴリによる威力補正_param(ability_name=かたいツメ, move_name=たいあたり, expected_power=5325)
+- [x] 技カテゴリによる威力補正_param(ability_name=かたいツメ, move_name=でんきショック, expected_power=4096)
+- [x] 技カテゴリによる威力補正_param(ability_name=がんじょうあご, move_name=かみつく, expected_power=6144)
+- [x] 技カテゴリによる威力補正_param(ability_name=きれあじ, move_name=きりさく, expected_power=6144)
+- [x] 技カテゴリによる威力補正_param(ability_name=てつのこぶし, move_name=かみなりパンチ, expected_power=4915)
+- [x] 技カテゴリによる威力補正_param(ability_name=パンクロック, move_name=バークアウト, expected_power=5325)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=アンコール, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=いちゃもん, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=かいふくふうじ, result=False)

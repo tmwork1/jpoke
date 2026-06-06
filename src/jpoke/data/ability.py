@@ -567,7 +567,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.かんそうはだ_absorb_water,
-                subject_spec="target:self",
+                subject_spec="defender:self",
             ),
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.かんそうはだ_modify_fire_damage,
@@ -2590,7 +2590,7 @@ ABILITIES: dict[str, AbilityData] = {
             ),
             Event.ON_MODIFY_PP_CONSUMED: h.AbilityHandler(
                 h.プレッシャー_extra_pp,
-                subject_spec="target:self",
+                subject_spec="defender:self",
             ),
         }
     ),
@@ -2616,7 +2616,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
                 h.へんげんじざい_change_type,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
                 priority=100,
             )
         }
@@ -2796,7 +2796,7 @@ ABILITIES: dict[str, AbilityData] = {
             ),
             Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
                 h.マルチタイプ_block_item_change,
-                subject_spec="target:self",
+                subject_spec="defender:self",
             ),
         }
     ),
@@ -2971,11 +2971,11 @@ ABILITIES: dict[str, AbilityData] = {
             ),
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
                 h.もらいび_arm_fire_boost,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
             ),
             Event.ON_MOVE_END: h.AbilityHandler(
                 h.もらいび_on_move_end,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
             ),
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
                 h.もらいび_modify_power,
@@ -3100,7 +3100,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             Event.ON_MOVE_CHARGE: h.AbilityHandler(
                 h.へんげんじざい_change_type,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
                 priority=100,
             )
         }

@@ -60,8 +60,13 @@ class BaseContext:
         return mon
 
     def can_bypass_screen(self, battle: Battle) -> bool:
-        """攻撃側が壁を貫通するかを返す。"""
-        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, self, False)
+        """攻撃側が壁を貫通するかを返す。
+
+        コンテキスト種別に依らず source=attacker の EventContext に正規化して発火する。
+        """
+        attacker = getattr(self, "attacker", None) or getattr(self, "source", None)
+        check_ctx = EventContext(source=attacker, move=self.move)
+        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, check_ctx, False)
 
 
 @dataclass(eq=False)
@@ -90,22 +95,3 @@ class AttackContext(BaseContext):
         """attacker と defender が異なるポケモンかを返す。"""
         return self.attacker != self.defender
 
-    def resolve_role(self, battle: Battle, spec: RoleSpec) -> Pokemon | None:
-        """AttackContext 用のロール解決。
-
-        source → attacker、target → defender にフォールバックする。
-        これにより EventContext と AttackContext の両方から
-        source:self / target:self 指定のハンドラが正しく動作する。
-        """
-        if spec is None:
-            return None
-        role, side = spec.split(":")
-        # source/target は attacker/defender へのエイリアスとして扱う
-        if role == "source":
-            role = "attacker"
-        elif role == "target":
-            role = "defender"
-        mon = getattr(self, role, None)
-        if mon is not None and side == "foe":
-            mon = battle.foe(mon)
-        return mon
