@@ -13,7 +13,7 @@ from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
 
 from .event_manager import Event
-from .context import BaseContext, EventContext, AttackContext
+from .context import AttackContext, EventContext, AttackContext
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
@@ -52,6 +52,7 @@ class MoveExecutor:
         self.action_success: bool | None = None
         self.move_success: bool | None = None
         self.move_applied: bool | None = None
+        self.move_type: Type | None = None
         self.crit_rank: int | None = None
         self.critical: bool | None = None
 
@@ -61,6 +62,7 @@ class MoveExecutor:
         self.action_success = None
         self.move_success = None
         self.move_applied = None
+        self.move_type = None
         self.crit_rank = None
         self.critical = None
 
@@ -83,7 +85,7 @@ class MoveExecutor:
     def _events(self) -> EventManager:
         return self.battle.events
 
-    def _resolve_hit_count(self, ctx: BaseContext) -> int:
+    def _resolve_hit_count(self, ctx: AttackContext) -> int:
         """連続技の実ヒット回数を決定する。
 
         Args:
@@ -130,7 +132,7 @@ class MoveExecutor:
             return power_sequence[idx]
         return move.power
 
-    def _check_hit(self, ctx: BaseContext) -> bool:
+    def _check_hit(self, ctx: AttackContext) -> bool:
         """技の命中判定。
 
         Args:
@@ -171,7 +173,7 @@ class MoveExecutor:
         self.accuracy = int(self.accuracy * rank_modifier)
         return 100 * self.battle.random.random() < self.accuracy
 
-    def _check_critical(self, ctx: BaseContext) -> bool:
+    def _check_critical(self, ctx: AttackContext) -> bool:
         """急所判定を行う。
 
         急所ランクに基づいて急所確率を計算します：
@@ -202,7 +204,7 @@ class MoveExecutor:
         )
         return self.battle.random.random() < crit_rate
 
-    def check_hit_substitute(self, ctx: BaseContext) -> bool:
+    def check_hit_substitute(self, ctx: AttackContext) -> bool:
         """みがわりに技が当たるかどうかを判定する。
 
         Args:
@@ -246,14 +248,12 @@ class MoveExecutor:
 
         try:
             # 技タイプを評価する（可変技対応）
-            ctx.move.set_type(
-                self.resolve_move_type(ctx.attacker, ctx.move)
-            )
+            ctx.move.type = self.resolve_move_type(ctx.attacker, ctx.move)
+            self.move_type = ctx.move.type
 
             # 技カテゴリを評価する（可変技対応）
-            ctx.move.set_category(
-                self.resolve_move_category(ctx.attacker, ctx.move)
-            )
+            ctx.move.category = self.resolve_move_category(ctx.attacker, ctx.move)
+            self.move_category = ctx.move.category
 
             # 行動成功判定
             self.action_success = self._events.emit(Event.ON_TRY_ACTION, ctx, True)
@@ -268,8 +268,8 @@ class MoveExecutor:
                 self._execute_move(ctx)
 
         finally:
-            # 技の威力を元に戻す（トリプルアクセルなどのため）
-            ctx.move.set_power(ctx.move.data.power)
+            # 技の状態をリセットする（タイプや威力の変更を元に戻す）
+            ctx.move.reset()
 
             # かやたぶりを解除する
             self._events.emit(Event.ON_END_MOVE, ctx)
@@ -277,7 +277,7 @@ class MoveExecutor:
             # 技のハンドラを解除
             ctx.move.unregister_handlers(self._events, ctx.attacker)
 
-    def _check_hit_by_type(self, ctx: BaseContext) -> bool:
+    def _check_hit_by_type(self, ctx: AttackContext) -> bool:
         """タイプ相性によって技が有効かを判定する。"""
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
 
@@ -290,7 +290,7 @@ class MoveExecutor:
             return False
         return True
 
-    def _execute_move(self, ctx: BaseContext) -> None:
+    def _execute_move(self, ctx: AttackContext) -> None:
         """技実行の内部フローを処理する。
 
         行動可否チェックから PP 消費、命中判定、連続ヒット処理までを担当する。
@@ -336,8 +336,8 @@ class MoveExecutor:
             ctx.hit_index = hit_index
 
             # ヒットごとの技の威力を設定
-            power = self._resolve_hit_power(ctx.move, hit_index)
-            ctx.move.set_power(power)
+            ctx.move.power = self._resolve_hit_power(ctx.move, hit_index)
+            self.move_power = ctx.move.power
 
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (
@@ -364,7 +364,7 @@ class MoveExecutor:
         # 技実行完了後の処理（状態管理・撤去など）
         self._events.emit(Event.ON_MOVE_END, ctx)
 
-    def _execute_hit(self, ctx: BaseContext) -> None:
+    def _execute_hit(self, ctx: AttackContext) -> None:
         """1 ヒット分の処理を実行する。
 
         Args:
@@ -403,7 +403,7 @@ class MoveExecutor:
         if ctx.attacker.active_tera_type == 'ステラ':
             ctx.attacker.stellar_boosted_types.add(ctx.move.type)
 
-    def _execute_status_hit(self, ctx: BaseContext) -> None:
+    def _execute_status_hit(self, ctx: AttackContext) -> None:
         """状態変化技の命中処理を実行する。
 
         Args:
@@ -458,7 +458,7 @@ class MoveExecutor:
             value=move.category
         )
 
-    def _consume_pp(self, ctx: BaseContext):
+    def _consume_pp(self, ctx: AttackContext):
         """技のPPを消費する。
 
         技を使用した際にPPを減らします。

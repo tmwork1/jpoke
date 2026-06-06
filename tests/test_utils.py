@@ -195,3 +195,15 @@ def apply_ailment(battle: Battle,
     return battle.ailment_manager.apply(
         mon, ailment_name, count=count, source=source, overwrite=overwrite
     )
+
+
+def get_action_order(battle: Battle,
+                     command0: Command | None = None,
+                     command1: Command | None = None) -> list[Pokemon]:
+    reserve_command(battle, command0, command1)
+    return battle.resolve_action_order()
+
+
+def fix_damage(battle: Battle, damage: int):
+    """テスト専用: ダメージ計算のダイスロールを固定値にする。"""
+    battle.roll_damage = lambda *args, **kwargs: damage

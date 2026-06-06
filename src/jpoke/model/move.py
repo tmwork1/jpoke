@@ -20,30 +20,28 @@ class Move(GameEffect):
         _type: 技のタイプ（一部の効果で変更される可能性がある）
     """
 
-    def __init__(self, name: str, pp: int | None = None):
+    def __init__(self, name: str):
         """技を初期化する。
 
         Args:
             name: 技名
-            pp: 初期PP。Noneの場合はデータから取得した最大PPを使用
         """
         super().__init__(MOVES[name])
-        self._initial_pp: int = pp if pp else self.data.pp
-        self.pp: int = self._initial_pp
+        self.pp: int = self.data.pp
 
-        self._type: Type = self.data.type
-        self._power: int | None = self.data.power
-        self._category: MoveCategory = self.data.category
+        self.type: Type = self.data.type
+        self.power: int | None = self.data.power
+        self.category: MoveCategory = self.data.category
 
         self.data: MoveData  # type hint
 
-    def reset_on_switch_out(self):
-        """ベンチに戻ったときのリセット処理。
-
-        技のタイプを元の状態にリセットする。
-        """
-        self._type = self.data.type
-        self._power = self.data.power
+    def reset(self, reset_pp: bool = False):
+        """技の状態をリセットする。"""
+        self.type = self.data.type
+        self.power = self.data.power
+        self.category = self.data.category
+        if reset_pp:
+            self.pp = self.data.pp
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -80,45 +78,6 @@ class Move(GameEffect):
             v: 増減量（正の値で増加、負の値で減少）
         """
         self.pp = max(0, min(self.data.pp, self.pp + v))
-
-    @property
-    def type(self) -> Type:
-        """技の現在のタイプを取得する。"""
-        return self._type
-
-    def set_type(self, type_: Type):
-        """技タイプを明示的に設定する。"""
-        self._type = type_
-
-    def reset_type(self):
-        """技タイプをデータ定義の初期値へ戻す。"""
-        self._type = self.data.type
-
-    @property
-    def power(self) -> int | None:
-        """技の現在の威力を取得する。一部の効果で変更されている可能性がある。"""
-        return self._power
-
-    def set_power(self, power: int | None):
-        """技の威力を上書きする。data の元値は変更されない。"""
-        self._power = power
-
-    def reset_power(self):
-        """技の威力をデータ定義の初期値へ戻す。"""
-        self._power = self.data.power
-
-    @property
-    def category(self) -> MoveCategory:
-        """技の分類（物理、特殊、変化）を取得する。"""
-        return self._category
-
-    def set_category(self, category: MoveCategory):
-        """技の分類を上書きする。data の元値は変更されない。"""
-        self._category = category
-
-    def reset_category(self):
-        """技の分類をデータ定義の初期値へ戻す。"""
-        self._category = self.data.category
 
     @property
     def priority(self) -> int:
