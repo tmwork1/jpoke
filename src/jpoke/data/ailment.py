@@ -1,5 +1,5 @@
 from jpoke.enums import DomainEvent, Event
-from jpoke.handlers import common, ailment as h
+from jpoke.handlers import ailment as h
 from .models import AilmentData
 
 

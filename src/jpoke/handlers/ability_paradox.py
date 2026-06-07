@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon
 
 from jpoke.core import HandlerReturn
@@ -95,7 +95,7 @@ def modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn
     return HandlerReturn(value=value)
 
 
-def apply_atk_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def apply_atk_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """攻撃側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
     attacker = ctx.attacker
     defender = ctx.defender
@@ -115,7 +115,7 @@ def apply_atk_modifier(battle: Battle, ctx: EventContext, value: int) -> Handler
     return HandlerReturn(value=value)
 
 
-def apply_def_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
     if ctx.attacker is None or ctx.move is None or ctx.defender is None:
         return HandlerReturn(value=value)

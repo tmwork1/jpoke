@@ -3,9 +3,9 @@
 Note:
     このモジュール内の揮発状態定義はVOLATILES辞書内で五十音順に配置されています。
 """
-from jpoke.enums import Event, Command
+from jpoke.enums import Event
 from jpoke.core import HandlerReturn
-from jpoke.handlers import common, volatile as h
+from jpoke.handlers import volatile as h
 from .models import VolatileData
 
 

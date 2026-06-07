@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import DomainEvent
 from jpoke.model import Pokemon
-from .context import EventContext
+from .context import EventContext, AttackContext
 from jpoke.utils import fast_copy
 
 
@@ -113,7 +113,7 @@ class SpeedCalculator:
         # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
         return self.battle.events.emit(
             DomainEvent.ON_MODIFY_MOVE_PRIORITY,
-            EventContext(source=attacker, move=move),
+            AttackContext(attacker=attacker, move=move),
             base_priority
         )
 

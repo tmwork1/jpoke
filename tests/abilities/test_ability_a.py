@@ -241,33 +241,6 @@ def test_あめうけざら_あめ以外では発動しない():
     assert mon.hp == before
 
 
-# TODO : weather ability test スクリプトに移動
-@pytest.mark.parametrize(
-    "initial_weather", strong_weathers
-)
-def test_あめふらし_強天候は上書き不可(initial_weather: str):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="あめふらし")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(initial_weather, 99),
-    )
-    t.run_switch(battle, 0, 1)
-    assert battle.weather.name == initial_weather
-
-
-@pytest.mark.parametrize(
-    "initial_weather", ["はれ", "すなあらし", "ゆき"]
-)
-def test_あめふらし_通常天候を上書きする(initial_weather: str):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="あめふらし")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(initial_weather, 99),
-    )
-    t.run_switch(battle, 0, 1)
-    assert battle.weather.name == "あめ"
-
-
 def test_いかく_登場時に相手攻撃1段階ダウン():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -783,38 +756,6 @@ def test_おやこあい_既存連続技には適用しない():
     attacker, defender = battle.actives
     t.run_move(battle, 0)
     assert defender.hits_taken == 3
-
-
-def test_おわりのだいち_らんきりゅうは上書きできない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="おわりのだいち")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=("らんきりゅう", 1),
-    )
-    t.run_switch(battle, 0, 1)
-    assert battle.weather.name == "らんきりゅう"
-
-
-@pytest.mark.parametrize(
-    "weather_name",
-    normal_weathers + ["おおあめ"]
-)
-def test_おわりのだいち_らんきりゅう以外上書きする(weather_name: str):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="おわりのだいち")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(weather_name, 99)
-    )
-    t.run_switch(battle, 0, 1)
-    assert battle.weather.name == "おおひでり"
-
-
-def test_オーラブレイク_登場時に特性開示():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    assert battle.actives[0].ability.revealed is True
 
 
 if __name__ == "__main__":

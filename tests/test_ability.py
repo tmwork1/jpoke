@@ -15,6 +15,7 @@ from jpoke.utils.type_defs import Type, Stat, AilmentName, VolatileName, Weather
 
 import test_utils as t
 
+
 ability_weather_defaultcount = [
     ("あめふらし", "あめ", 5),
     ("ひでり", "はれ", 5),

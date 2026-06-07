@@ -1,0 +1,927 @@
+"""特性ハンドラの単体テスト"""
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from jpoke.core import Battle
+
+import pytest
+
+from jpoke import Pokemon
+from jpoke.core import AttackContext, EventContext
+from jpoke.data.item import ITEMS
+from jpoke.data.signature_items import PLATE_TO_TYPE
+from jpoke.enums import Event, Command
+from jpoke.utils.type_defs import Type, Stat, AilmentName, VolatileName, Weather
+
+from .. import test_utils as t
+
+ability_weather_defaultcount = [
+    ("あめふらし", "あめ", 5),
+    ("ひでり", "はれ", 5),
+    ("すなおこし", "すなあらし", 5),
+    ("ゆきふらし", "ゆき", 5),
+    ("おわりのだいち", "おおひでり", 1),
+    ("はじまりのうみ", "おおあめ", 1),
+    ("デルタストリーム", "らんきりゅう", 1),
+]
+abilities = [x[0] for x in ability_weather_defaultcount]
+weathers = [x[1] for x in ability_weather_defaultcount]
+normal_weathers = weathers[:4]
+strong_weathers = weathers[4:]
+
+ability_terrain_pairs = [
+    ("エレキメイカー", "エレキフィールド"),
+    ("グラスメイカー", "グラスフィールド"),
+    ("サイコメイカー", "サイコフィールド"),
+    ("ミストメイカー", "ミストフィールド"),
+]
+
+SKIN_CASES = [
+    ("スカイスキン", "ひこう"),
+    ("フェアリースキン", "フェアリー"),
+    ("フリーズスキン", "こおり"),
+]
+
+CONTACT_AILMENT_CASES = [
+    ("せいでんき", "まひ"),
+    ("どくのトゲ", "どく"),
+    ("ほのおのからだ", "やけど"),
+]
+
+MULTI_TYPE_PLATE_CASES = [
+    (plate_item_name, expected_type)
+    for plate_item_name, expected_type in PLATE_TO_TYPE.items()
+    if plate_item_name in ITEMS
+]
+
+
+# TODO : weather ability test スクリプトに移動
+@pytest.mark.parametrize(
+    "initial_weather", strong_weathers
+)
+def test_あめふらし_強天候は上書き不可(initial_weather: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="あめふらし")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(initial_weather, 99),
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == initial_weather
+
+
+@pytest.mark.parametrize(
+    "initial_weather", ["はれ", "すなあらし", "ゆき"]
+)
+def test_あめふらし_通常天候を上書きする(initial_weather: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="あめふらし")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(initial_weather, 99),
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == "あめ"
+
+
+def test_おわりのだいち_らんきりゅうは上書きできない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="おわりのだいち")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("らんきりゅう", 1),
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == "らんきりゅう"
+
+
+@pytest.mark.parametrize(
+    "weather_name",
+    normal_weathers + ["おおあめ"]
+)
+def test_おわりのだいち_らんきりゅう以外上書きする(weather_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="おわりのだいち")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather_name, 99)
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == "おおひでり"
+
+
+@pytest.mark.parametrize(
+    "ability_name, expected_type",
+    SKIN_CASES
+)
+def test_スキン系_ノーマル技を対応タイプに変換する(
+    ability_name: str,
+    expected_type: str,
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    move = t.run_move(battle, 0)
+    assert move.type == expected_type
+
+
+@pytest.mark.parametrize(
+    "ability_name, expected_type",
+    SKIN_CASES
+)
+def test_スキン系_変換した技の威力が4915倍になる(
+    ability_name: str,
+    expected_type: str,
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4915
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("あついしぼう", "ひのこ"),
+        ("あついしぼう", "れいとうビーム"),
+        ("たいねつ", "ひのこ"),
+    ],
+)
+def test_タイプ半減系(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+    )
+    t.run_move(battle, 0)
+    assert 2048 == battle.damage_calculator.atk_modifier
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("あついしぼう", "ひのこ"),
+        ("たいねつ", "ひのこ"),
+    ],
+)
+def test_タイプ半減系_かたやぶりで無効(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.atk_modifier
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name, expected",
+    [
+        ("いわはこび", "いわなだれ", 6144),
+        ("はがねつかい", "アイアンヘッド", 6144),
+        ("りゅうのあぎと", "りゅうのはどう", 6144),
+        ("トランジスタ", "でんきショック", 5325),
+    ],
+)
+def test_タイプ強化系(ability_name: str, move_name: str, expected: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert expected == battle.damage_calculator.atk_modifier
+
+
+@pytest.mark.parametrize(
+    "ability, move, stat, rank",
+    [
+        ("こんがりボディ", "ひのこ", "B", 2),
+        ("そうしょく", "このは", "A", 1),
+        ("でんきエンジン", "でんきショック", "S", 1),
+        ("ひらいしん", "でんきショック", "C", 1),
+        ("よびみず", "みずでっぽう", "C", 1),
+    ],
+)
+def test_タイプ無効バフ系(ability: str, move: str, stat: Stat, rank: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability)],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert defender.hp == defender.max_hp
+    assert defender.rank[stat] == rank
+
+
+@pytest.mark.parametrize(
+    "ability, move, stat, rank",
+    [
+        ("こんがりボディ", "ひのこ", "B", 2),
+        ("そうしょく", "このは", "A", 1),
+        ("でんきエンジン", "でんきショック", "S", 1),
+        ("ひらいしん", "でんきショック", "C", 1),
+        ("よびみず", "でんきショック", "C", 1),
+    ],
+)
+def test_タイプ無効バフ系_かたやぶりで無効(ability: str, move: str, stat: Stat, rank: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=[move])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability)],
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
+    assert defender.rank[stat] == 0
+
+
+@pytest.mark.parametrize(
+    "ability, move",
+    [
+        ("ちくでん", "スパーク"),
+        ("ちょすい", "なみのり"),
+        ("どしょく", "じしん"),
+    ],
+)
+def test_タイプ無効回復(ability, move):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ", move_names=[move])],
+    )
+    defender, attacker = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 1)
+    assert defender.hp == 1 + defender.max_hp // 4
+    assert defender.ability.revealed
+
+
+@pytest.mark.parametrize(
+    "ability, move",
+    [
+        ("ちくでん", "スパーク"),
+        ("ちょすい", "なみのり"),
+        ("どしょく", "じしん"),
+    ],
+)
+def test_タイプ無効回復_かたやぶりで無効(ability, move):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=[move])],
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert defender.hp < defender.max_hp
+    assert not defender.ability.revealed
+
+
+# TODO : じょおうのいげんとパラメタライズでまとめてテストする
+PRIORITY_BLOCKING_ABILITIES = ["じょおうのいげん", "テイルアーマー"]
+
+
+@pytest.mark.parametrize(
+    "ability_name",
+    PRIORITY_BLOCKING_ABILITIES,
+)
+def test_先制技無効系_かたやぶりで無効化される(ability_name):
+    """テイルアーマー: かたやぶり持ちには先制技が通る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["でんこうせっか"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
+
+
+@pytest.mark.parametrize(
+    "ability_name",
+    PRIORITY_BLOCKING_ABILITIES,
+)
+def test_先制技無効系_優先度ゼロの技は通る(ability_name):
+    """テイルアーマー: 優先度0の技は通常通り当たる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
+
+
+@pytest.mark.parametrize(
+    "ability_name",
+    PRIORITY_BLOCKING_ABILITIES,
+)
+def test_先制技無効系_優先度プラスの技を無効化する(ability_name):
+    """テイルアーマー: 優先度+1の技を無効化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+
+
+@pytest.mark.parametrize(
+    "ability_name, setup_kwargs, expected_source, keep_item_before_release",
+    [
+        ("クォークチャージ", {}, "item", False),
+        ("こだいかっせい", {"weather": ("はれ", 5)}, "field", True),
+        ("クォークチャージ", {"terrain": ("エレキフィールド", 5)}, "field", True),
+    ],
+)
+def test_パラドックス特性_ブーストエナジーと場条件の優先関係(
+    ability_name: str,
+    setup_kwargs: dict,
+    expected_source: str,
+    keep_item_before_release: bool,
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, item_name="ブーストエナジー")],
+        team1=[Pokemon("ピカチュウ", ability_name="ひでり" if setup_kwargs.get("weather") else "エレキメイカー" if setup_kwargs.get("terrain") else "")],
+        **setup_kwargs,
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_source == expected_source
+    assert mon.paradox_boost_active
+    assert mon.has_item("ブーストエナジー") is keep_item_before_release
+
+    if expected_source == "field":
+        if setup_kwargs.get("weather"):
+            battle.weather_manager.remove()
+        else:
+            battle.terrain_manager.remove()
+        assert mon.paradox_boost_active
+        assert mon.paradox_boost_source == "item"
+        assert not mon.has_item("ブーストエナジー")
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("しんりょく", "エナジーボール"),
+        ("もうか", "ひのこ"),
+        ("げきりゅう", "なみのり"),
+        ("むしのしらせ", "むしのていこう"),
+    ],
+)
+def test_ピンチ系特性_HP1_3以下で攻撃補正1_5倍(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.atk_modifier
+
+
+# TODO : ダークオーラとまとめてテストする
+def test_オーラ系_オーラブレイクがいるとフェアリー技の威力が0_75倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["じゃれつく"])],
+        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
+    )
+    attacker, defender = battle.actives
+    result = battle.events.emit(
+        Event.ON_CALC_POWER_MODIFIER,
+        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        4096,
+    )
+    assert result == 3072
+
+
+def test_オーラ系_フェアリー技の威力が1_33倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["じゃれつく"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    result = battle.events.emit(
+        Event.ON_CALC_POWER_MODIFIER,
+        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        4096,
+    )
+    assert result == 5448
+
+
+def test_オーラ系_相手のフェアリー技にも0_75倍が適用される():
+    """オーラ系: 防御時にもオーラブレイクによる反転が適用される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク", move_names=["じゃれつく"])],
+    )
+    attacker, defender = battle.actives[1], battle.actives[0]
+    result = battle.events.emit(
+        Event.ON_CALC_POWER_MODIFIER,
+        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
+        4096,
+    )
+    assert result == 3072
+
+
+def test_オーラブレイク_登場時に特性開示():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.actives[0].ability.revealed is True
+
+# TODO : かんつうドリルとまとめてテストする
+
+
+def test_かんつうドリル_接触技でまもる状態を貫通してHPを減らす():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かんつうドリル", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
+
+
+def test_かんつうドリル_非接触技はまもるに防がれる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かんつうドリル", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+
+
+@pytest.mark.parametrize(
+    "name, stat",
+    [
+        ("スピアー", "A"),
+        ("ゼニガメ", "B"),
+        ("フシギダネ", "C"),
+        ("カメックス", "D"),
+        ("ピカチュウ", "S"),
+    ]
+)
+def test_クォークチャージ_最大ステータスがバフされる(name, stat):
+    battle = t.start_battle(
+        team0=[Pokemon(name, ability_name="クォークチャージ", item_name="ブーストエナジー")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_stat == stat
+
+
+def test_ふかしのこぶし_まもる貫通後も揮発性状態が残る():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    t.run_move(battle, 0)
+    assert defender.has_volatile("まもる")
+
+
+def test_ふかしのこぶし_まもる貫通時のダメージが4分の1():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.protect_modifier == 1024
+
+
+@pytest.mark.parametrize("volatile_name", [
+    "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり"
+])
+def test_ふかしのこぶし_接触技でまもる系揮発性状態を貫通してHPを減らす(volatile_name):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, volatile_name, count=1)
+    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
+
+
+def test_ふかしのこぶし_非接触技はまもるに防がれる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+
+
+@pytest.mark.parametrize(
+    "ability_name, attacker_name, attacker_ability, expected_can_switch",
+    [
+        ("ありじごく", "ピカチュウ", "", False),
+        ("ありじごく", "ピジョン", "", True),
+        ("かげふみ", "ピカチュウ", "", False),
+        ("かげふみ", "ピカチュウ", "かげふみ", True),
+        ("じりょく", "コイル", "", False),
+        ("じりょく", "ピカチュウ", "", True),
+    ],
+)
+def test_交代抑制特性_param(ability_name: str, attacker_name: str, attacker_ability: str, expected_can_switch: bool):
+    team0 = [Pokemon(attacker_name, ability_name=attacker_ability), Pokemon("ピカチュウ")]
+    battle = t.start_battle(
+        team0=team0,
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+    )
+    assert t.can_switch(battle, 0) is expected_can_switch
+
+
+@pytest.mark.parametrize(
+    "ability_name, stat",
+    [
+        ("じしんかじょう", "A"),
+        ("しろのいななき", "A"),
+        ("くろのいななき", "C"),
+    ],
+)
+def test_倒すと能力上昇系_相手を倒すと指定ステータスが1段階上昇する(ability_name: str, stat: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank[stat] == 1
+
+
+@pytest.mark.parametrize(
+    "ability_name, stat",
+    [
+        ("じしんかじょう", "A"),
+        ("しろのいななき", "A"),
+        ("くろのいななき", "C"),
+    ],
+)
+def test_倒すと能力上昇系_相手を倒せないと発動しない(ability_name: str, stat: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not defender.fainted
+    assert attacker.rank[stat] == 0
+
+
+@pytest.mark.parametrize(
+    "ability_name, terrain_name",
+    ability_terrain_pairs
+)
+def test_地形始動特性_同一地形が有効時は継続ターンを更新しない(ability_name: str, terrain_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=(terrain_name, 2)
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.terrain.name == terrain_name
+    assert battle.terrain.count == 2
+    assert not battle.actives[0].ability.revealed
+
+
+@pytest.mark.parametrize(
+    "ability_name, terrain_name",
+    ability_terrain_pairs
+)
+def test_地形始動特性_登場時に対応地形を展開する(ability_name: str, terrain_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.terrain.name == terrain_name
+    assert battle.terrain.count == 5
+    assert battle.actives[0].ability.revealed
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather",
+    [
+        ("ゆきがくれ", "ゆき"),
+        ("すながくれ", "すなあらし"),
+    ],
+)
+def test_天候がくれ系_かたやぶりで命中率補正なし(ability_name: str, weather: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        weather=(weather, 5),  # type: ignore[arg-type]
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather",
+    [
+        ("ゆきがくれ", "ゆき"),
+        ("すながくれ", "すなあらし"),
+    ],
+)
+def test_天候がくれ系_対応天候で命中低下(ability_name: str, weather: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        weather=(weather, 5),  # type: ignore[arg-type]
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy * 3277 // 4096
+
+
+@pytest.mark.parametrize(
+    "ability_name",
+    ["ゆきがくれ", "すながくれ"],
+)
+def test_天候がくれ系_対応天候以外では命中率変化なし(ability_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+@pytest.mark.parametrize(
+    "ability, weather, expected_mult",
+    [
+        ("すなかき", "すなあらし", 2),
+        ("すいすい", "あめ", 2),
+        ("ようりょくそ", "はれ", 2),
+        ("ゆきかき", "ゆき", 2),
+    ],
+)
+def test_天候依存素早さ上昇(ability: str, weather: str, expected_mult: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather, 999),
+    )
+    mon = battle.actives[0]
+    assert battle.calc_effective_speed(mon) == mon.stats["S"] * expected_mult
+
+
+@pytest.mark.parametrize(
+    "ability",
+    ["すなかき", "すいすい", "ようりょくそ", "ゆきかき"],
+)
+def test_天候依存素早さ上昇_非対応天候は据え置き(ability: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert battle.calc_effective_speed(mon) == mon.stats["S"]
+
+
+@pytest.mark.parametrize(
+    "ability_name,weather_name,weather_count",
+    [
+        ("あめうけざら", "あめ", 5),
+        ("あめうけざら", "おおあめ", 999),
+        ("アイスボディ", "ゆき", 5),
+    ]
+)
+def test_天候回復特性_対応天候中に回復(ability_name: str, weather_name: str, weather_count: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather_name, weather_count),
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1 + mon.max_hp // 16
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name, default_count",
+    ability_weather_defaultcount
+)
+def test_天候始動特性_登場時に発動(ability_name: str, weather_name: str, default_count: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.weather.name == weather_name
+    assert battle.weather.count == default_count
+    assert battle.actives[0].ability.revealed is True
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name",
+    [
+        ("おわりのだいち", "おおひでり"),
+        ("はじまりのうみ", "おおあめ"),
+        ("デルタストリーム", "らんきりゅう"),
+    ],
+)
+def test_強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name: str, weather_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == weather_name
+
+
+@pytest.mark.parametrize(
+    "ability_name, weather_name",
+    [
+        ("おわりのだいち", "おおひでり"),
+        ("はじまりのうみ", "おおあめ"),
+        ("デルタストリーム", "らんきりゅう"),
+    ],
+)
+def test_強天候始動特性_退場時に解除される(ability_name: str, weather_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_switch(battle, 0, 1)
+    assert not battle.weather.is_active
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name, expected_power",
+    [
+        ("かたいツメ", "たいあたり", 5325),
+        ("かたいツメ", "でんきショック", 4096),
+        ("がんじょうあご", "かみつく", 6144),
+        ("きれあじ", "きりさく", 6144),
+        ("てつのこぶし", "かみなりパンチ", 4915),
+        ("パンクロック", "バークアウト", 5325),
+    ],
+)
+def test_技カテゴリによる威力補正_param(ability_name: str, move_name: str, expected_power: int):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert expected_power == battle.damage_calculator.power_modifier
+
+
+@pytest.mark.parametrize(
+    "ability_name, ailment_name",
+    CONTACT_AILMENT_CASES
+)
+def test_接触時に状態異常付与_接触技で状態異常を付与する(ability_name: str, ailment_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("イーブイ", move_names=["たいあたり"])],
+    )
+    attacker = battle.actives[1]
+    battle.random.random = lambda: 0.0  # 確率操作
+    t.run_move(battle, 1)
+    assert attacker.has_ailment(ailment_name)
+
+
+@pytest.mark.parametrize(
+    "ability_name, ailment_name",
+    CONTACT_AILMENT_CASES
+)
+def test_接触時に状態異常付与_非接触技では発動しない(ability_name: str, ailment_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("イーブイ", move_names=["はどうだん"])],
+    )
+    attacker = battle.actives[1]
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    assert not attacker.has_ailment(ailment_name)
+
+
+@pytest.mark.parametrize(
+    "ability, volatile, result",
+    [
+        ("アロマベール", "アンコール", False),
+        ("アロマベール", "いちゃもん", False),
+        ("アロマベール", "かいふくふうじ", False),
+        ("アロマベール", "かなしばり", False),
+        ("アロマベール", "ちょうはつ", False),
+        ("アロマベール", "メロメロ", False),
+        ("スイートベール", "ねむけ", False),
+        ("どんかん", "ちょうはつ", False),
+        ("どんかん", "メロメロ", False),
+        ("マイペース", "こんらん", False),
+    ]
+)
+def test_揮発状態耐性(ability: str, volatile: VolatileName, result: bool):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.volatile_manager.apply(battle.actives[0], volatile) == result
+
+
+@pytest.mark.parametrize(
+    "ability, ailment",
+    [
+        ("めんえき", "どく"),
+        ("めんえき", "もうどく"),
+        ("パステルベール", "どく"),
+        ("パステルベール", "もうどく"),
+        ("じゅうなん", "まひ"),
+        ("ふみん", "ねむり"),
+        ("やるき", "ねむり"),
+        ("スイートベール", "ねむり"),
+        ("みずのベール", "やけど"),
+        ("マグマのよろい", "こおり"),
+    ],
+)
+def test_状態異常無効(ability: str, ailment: AilmentName):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert not battle.ailment_manager.apply(mon, ailment)
+    assert not mon.ailment.is_active
+
+
+@pytest.mark.parametrize(
+    "ability, ailment, move",
+    [
+        ("めんえき", "どく", "どくのこな"),
+        ("めんえき", "もうどく", "どくどく"),
+        ("パステルベール", "どく", "どくのこな"),
+        ("パステルベール", "もうどく", "どくどく"),
+        ("じゅうなん", "まひ", "でんじは"),
+        ("ふみん", "ねむり", "ねむりごな"),
+        ("やるき", "ねむり", "ねむりごな"),
+        ("スイートベール", "ねむり", "ねむりごな"),
+        ("みずのベール", "やけど", "おにび"),
+        # ("マグマのよろい", "こおり", ""),
+    ],
+)
+def test_状態異常無効_かたやぶりで無効(ability: str, ailment: AilmentName, move: str):
+    # カビゴン（ノーマル）はまひ・ねむり・やけど・どく全てのタイプ耐性を持たないため使用
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=[move])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].ailment.is_active
+
+
+@pytest.mark.parametrize(
+    "ability_name, stats, source_is_self, expected",
+    [
+        ("かいりきバサミ", {"A": -1, "B": -1, "C": -2}, False, {"B": -1, "C": -2}),
+        ("かいりきバサミ", {"A": -1}, True, {"A": -1}),
+        ("はとむね", {"A": -1, "B": -1, "C": -2}, False, {"A": -1, "C": -2}),
+    ],
+)
+def test_能力低下防止特性_param(ability_name: str, stats: dict, source_is_self: bool, expected: dict):
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    target, foe = battle.actives
+    source = target if source_is_self else foe
+    result = battle.modify_stats(target, stats, source=source)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "defender_ability, attacker_ability, move_name, should_block",
+    [
+        ("ぼうおん", "", "バークアウト", True),
+        ("ぼうおん", "かたやぶり", "バークアウト", False),
+        ("ぼうだん", "", "かえんボール", True),
+        ("ぼうだん", "かたやぶり", "かえんボール", False),
+    ],
+)
+def test_音ラベル無効系_param(defender_ability: str, attacker_ability: str, move_name: str, should_block: bool):
+    # attacker_ability may be empty string for no ability
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=attacker_ability, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ", ability_name=defender_ability)],
+    )
+    # attacker is index 0 or 1 depending on order
+    # attacker chosen is battle.actives[0] when team0 provided
+    t.run_move(battle, 0)
+    defender = battle.actives[1]
+    if should_block:
+        # damage should be unchanged (no hit)
+        assert defender.hp == defender.max_hp
+        assert defender.ability.revealed is True
+    else:
+        assert defender.hp < defender.max_hp
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

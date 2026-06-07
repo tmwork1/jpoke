@@ -11,7 +11,7 @@ ItemDisabledReason = Literal[
 
 HandlerSource = Literal["ability", "item", "move", "ailment", "volatile", "field"]
 
-AbilityState = Literal["", "idle", "charged", "active"]
+AbilityState = Literal["", "idle", "charged", "active", "inactive"]
 
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
@@ -147,6 +147,7 @@ MoveLabel = Literal[
     "pulse",  # はどう技。メガランチャー等の対象判定に使う。
     "punch",  # パンチ技。てつのこぶし等の対象判定に使う。
     "physical_damage",  # 物理判定の特殊技。ダメージ計算に使う
+    "recoil",  # 反動技。すてみ等の対象判定に使う。
     "slash",  # きる・つるぎ系。きれあじ等の対象判定に使う。
     "sound",  # 音技。ぼうおん等の対象判定に使う。
     "wind",  # 風技。かぜのり等の対象判定に使う。

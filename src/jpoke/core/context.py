@@ -20,6 +20,7 @@ from jpoke.utils.type_defs import RoleSpec, HPChangeReason, StatChangeReason
 
 @dataclass(eq=False)
 class BaseContext:
+    # TODO : move はAttckContextのみに持たせるべきか議論する。
     """全イベントコンテキストの基底クラス。技・HP変化理由・ランク変化理由を保持する。"""
     move: Move | None = None
     hp_change_reason: HPChangeReason = ""
@@ -82,6 +83,7 @@ class EventContext(BaseContext):
 
 @dataclass(eq=False)
 class AttackContext(BaseContext):
+    # TODO : attacker, defender はNoneを許さないほうが望ましい
     """攻撃フロー専用コンテキスト。ダメージ計算・命中処理で使用する。"""
     attacker: Pokemon | None = None
     defender: Pokemon | None = None
@@ -94,4 +96,3 @@ class AttackContext(BaseContext):
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""
         return self.attacker != self.defender
-

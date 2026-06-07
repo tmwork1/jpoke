@@ -13,7 +13,7 @@ from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
 
 from .event_manager import Event
-from .context import AttackContext, EventContext, AttackContext
+from .context import AttackContext
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
@@ -189,19 +189,22 @@ class MoveExecutor:
             bool: 急所に当たるかどうか
         """
         # 急所ランクの計算
-        self.critical_rank = self._events.emit(
+        critical_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK,
             ctx,
             ctx.move.critical_rank
         )
-        self.critical_rank = clamp_critic(self.critical_rank)
+        critical_rank = clamp_critic(critical_rank)
 
         # 急所確率の計算
         crit_rate = self._events.emit(
             Event.ON_MODIFY_CRITICAL_RATE,
             ctx,
-            CRIT_RATES[self.critical_rank]
+            CRIT_RATES[critical_rank]
         )
+
+        self.critical_rank = critical_rank  # デバッグ用に保存
+
         return self.battle.random.random() < crit_rate
 
     def check_hit_substitute(self, ctx: AttackContext) -> bool:
@@ -435,7 +438,7 @@ class MoveExecutor:
         # move自身は変更せず、イベント結果の有効タイプを返す。
         return self._events.emit(
             Event.ON_MODIFY_MOVE_TYPE,
-            EventContext(source=attacker, move=move),
+            AttackContext(attacker=attacker, move=move),
             value=move.data.type,
         )
 
@@ -454,7 +457,7 @@ class MoveExecutor:
         """
         return self._events.emit(
             Event.ON_MODIFY_MOVE_CATEGORY,
-            EventContext(source=attacker, move=move),
+            AttackContext(attacker=attacker, move=move),
             value=move.category
         )
 

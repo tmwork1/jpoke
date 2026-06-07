@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 from jpoke.model import Pokemon
 from jpoke.enums import Event
-from jpoke.core import EventContext, BaseContext
+from jpoke.core import EventContext, AttackContext
 from jpoke.utils import fast_copy
 
 
@@ -104,10 +104,10 @@ class PokemonQuery:
             False
         )
 
-    def is_contact(self, ctx: BaseContext) -> bool:
+    def is_contact(self, ctx: AttackContext) -> bool:
         """技が接触技かどうかを判定する。
         Args:
-            ctx: EventContextインスタンス
+            ctx: AttackContextインスタンス
 
          Returns:
             技が接触技の場合True

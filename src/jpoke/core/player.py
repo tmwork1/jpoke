@@ -9,8 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model import Pokemon
 
-from jpoke.enums import Command, Interrupt
-from jpoke.utils import fast_copy
+from jpoke.enums import Command
 
 
 class Player:

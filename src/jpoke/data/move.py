@@ -4,7 +4,7 @@ Note:
     このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
 """
 from jpoke.enums import Event
-from jpoke.handlers import common, move as h
+from jpoke.handlers import move as h
 from .models import MoveData
 
 
@@ -381,7 +381,6 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
                 h.オーラぐるま_check_move_type,
-                subject_spec="source:self",
             ),
         },
     ),
@@ -1055,7 +1054,12 @@ MOVES: dict[str, MoveData] = {
         power=25,
         accuracy=100,
         critical_rank=3,
-        multi_hit={"min": 3, "max": 3},
+        multi_hit={
+            "min": 3,
+            "max": 3,
+            "check_hit_each_time": False,
+            "power_sequence": (),
+        },
         labels=["contact", "punch"],
     ),
     "スケイルショット": MoveData(
@@ -3513,19 +3517,15 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
                 h.テラバースト_modify_move_type,
-                subject_spec="source:self",
             ),
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 h.テラバースト_modify_move_category,
-                subject_spec="source:self",
             ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 h.テラバースト_stellar_power,
-                subject_spec="attacker:self",
             ),
             Event.ON_HIT: h.MoveHandler(
                 h.テラバースト_stellar_stat_drop,
-                subject_spec="attacker:self",
             ),
         }
     ),

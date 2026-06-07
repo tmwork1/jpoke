@@ -14,7 +14,7 @@ from jpoke.utils import fast_copy
 from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import round_half_down
 
-from .context import BaseContext, EventContext, AttackContext
+from .context import AttackContext
 
 
 class DamageCalculator:
@@ -162,7 +162,7 @@ class DamageCalculator:
 
         return damages
 
-    def _calc_atk_type_modifier(self, ctx: BaseContext) -> int:
+    def _calc_atk_type_modifier(self, ctx: AttackContext) -> int:
         """タイプ一致補正（STAB）を計算する。
 
         テラスタルの有無を考慮してSTAB補正値を計算し、
@@ -208,7 +208,7 @@ class DamageCalculator:
 
         return self._events.emit(Event.ON_CALC_ATK_TYPE_MODIFIER, ctx, base)
 
-    def calc_def_type_modifier(self, ctx: BaseContext) -> int:
+    def calc_def_type_modifier(self, ctx: AttackContext) -> int:
         """タイプ相性補正を計算する。
 
         攻撃技タイプと防御側タイプの相性を固定小数点で計算し、
@@ -250,7 +250,7 @@ class DamageCalculator:
 
         return self._events.emit(Event.ON_CALC_DEF_TYPE_MODIFIER, ctx, base)
 
-    def _calc_final_power(self, ctx: BaseContext) -> int:
+    def _calc_final_power(self, ctx: AttackContext) -> int:
         """最終威力を計算する。
 
         Args:
@@ -263,8 +263,8 @@ class DamageCalculator:
         power = ctx.move.power
 
         # その他の補正
-        self.power_modifier = self._events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
-        power = round_half_down(power*self.power_modifier/4096)
+        power_modifier = self._events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, 4096)
+        power = round_half_down(power*power_modifier/4096)
 
         # テラスタル時の威力60底上げ補正
         # 対象: テラスタイプ一致かつ非連続技かつ優先度+1未満
@@ -272,9 +272,12 @@ class DamageCalculator:
             power = max(power, 60)
 
         self.final_power = max(1, power)
+
+        self.power_modifier = power_modifier  # デバッグ用に保存
+
         return self.final_power
 
-    def _can_apply_terastal_power_floor(self, ctx: BaseContext) -> bool:
+    def _can_apply_terastal_power_floor(self, ctx: AttackContext) -> bool:
         """テラスタル時の威力60底上げ補正が適用可能か判定する。"""
         attacker = ctx.attacker
         move = ctx.move
@@ -294,7 +297,7 @@ class DamageCalculator:
 
         return True
 
-    def _calc_final_attack(self, ctx: BaseContext) -> int:
+    def _calc_final_attack(self, ctx: AttackContext) -> int:
         """最終攻撃力を計算する。
 
         ランク補正、特性、アイテムなどの補正を適用します。
@@ -332,14 +335,17 @@ class DamageCalculator:
         final_attack = int(final_attack * r_rank)
 
         # その他の補正
-        self.atk_modifier = self._events.emit(Event.ON_CALC_ATK_MODIFIER, ctx, 4096)
-        final_attack = round_half_down(final_attack * self.atk_modifier/4096)
+        atk_modifier = self._events.emit(Event.ON_CALC_ATK_MODIFIER, ctx, 4096)
+
+        final_attack = round_half_down(final_attack * atk_modifier/4096)
         final_attack = max(1, final_attack)
 
+        self.atk_modifier = atk_modifier  # デバッグ用に保存
         self.final_attack = final_attack  # デバッグ用に保存
+
         return final_attack
 
-    def _calc_final_defense(self, ctx: BaseContext) -> int:
+    def _calc_final_defense(self, ctx: AttackContext) -> int:
         """最終防御力を計算する。
 
         ランク補正、特性、アイテムなどの補正を適用します。
@@ -373,9 +379,11 @@ class DamageCalculator:
         final_defense = int(final_defense * r_rank)
 
         # その他の補正
-        self.def_modifier = self._events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, 4096)
-        final_defense = round_half_down(final_defense * self.def_modifier/4096)
+        def_modifier = self._events.emit(Event.ON_CALC_DEF_MODIFIER, ctx, 4096)
+        final_defense = round_half_down(final_defense * def_modifier/4096)
         final_defense = max(1, final_defense)
 
+        self.def_modifier = def_modifier  # デバッグ用に保存
         self.final_defense = final_defense  # デバッグ用に保存
+
         return final_defense
