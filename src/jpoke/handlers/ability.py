@@ -2536,7 +2536,7 @@ def ふくつのこころ_on_flinch(battle: Battle, ctx: EventContext, value: An
     return HandlerReturn(value=value)
 
 
-def ふくつのたて_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ふくつのたて_boost_B(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふくつのたて特性: 初登場時にぼうぎょが1段階上がる（バトル中1回）。"""
     mon = ctx.source
     if mon is None:
@@ -2566,14 +2566,14 @@ def ふしぎなまもり_block_non_effective(battle: Battle, ctx: EventContext,
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ふとうのけん_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ふとうのけん_boost_A(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふとうのけん特性: 初登場時にこうげきが1段階上がる（バトル中1回）。"""
     mon = ctx.source
     if mon is None:
         return HandlerReturn(value=value)
-    battle.add_ability_disabled_reason(mon, "consumed")
     if battle.modify_stats(mon, {"A": +1}, source=mon):
         announce_ability_triggered(battle, ctx, value, mon=mon)
+        battle.add_ability_disabled_reason(mon, "consumed")
     return HandlerReturn(value=value)
 
 

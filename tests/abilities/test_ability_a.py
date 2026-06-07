@@ -9,7 +9,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.core import EventContext
 from jpoke.data.item import ITEMS
-from jpoke.data.signature_items import MEMORY_TO_TYPE, PLATE_TO_TYPE
+from jpoke.data.signature_items import MEMORY_TO_TYPE
 from jpoke.enums import Event
 from jpoke.utils.type_defs import Stat
 
@@ -35,31 +35,6 @@ abilities = [x[0] for x in ability_weather_defaultcount]
 weathers = [x[1] for x in ability_weather_defaultcount]
 normal_weathers = weathers[:4]
 strong_weathers = weathers[4:]
-
-ability_terrain_pairs = [
-    ("エレキメイカー", "エレキフィールド"),
-    ("グラスメイカー", "グラスフィールド"),
-    ("サイコメイカー", "サイコフィールド"),
-    ("ミストメイカー", "ミストフィールド"),
-]
-
-SKIN_CASES = [
-    ("スカイスキン", "ひこう"),
-    ("フェアリースキン", "フェアリー"),
-    ("フリーズスキン", "こおり"),
-]
-
-CONTACT_AILMENT_CASES = [
-    ("せいでんき", "まひ"),
-    ("どくのトゲ", "どく"),
-    ("ほのおのからだ", "やけど"),
-]
-
-MULTI_TYPE_PLATE_CASES = [
-    (plate_item_name, expected_type)
-    for plate_item_name, expected_type in PLATE_TO_TYPE.items()
-    if plate_item_name in ITEMS
-]
 
 
 @pytest.mark.parametrize(

@@ -329,7 +329,7 @@ def かなしばり_try_action(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=True)
 
 
-def きゅうしょアップ_boost_critic_rank(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def きゅうしょアップ_boost_critical_rank(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """急所ランク状態による急所補正
 
     Args:

@@ -137,7 +137,7 @@ VOLATILES: dict[str, VolatileData] = {
     "きゅうしょアップ": VolatileData(
         handlers={
             Event.ON_CALC_CRITICAL_RANK: h.VolatileHandler(
-                h.きゅうしょアップ_boost_critic_rank,
+                h.きゅうしょアップ_boost_critical_rank,
                 subject_spec="attacker:self",
             ),
         }

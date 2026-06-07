@@ -2458,9 +2458,13 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.ふくつのたて_on_switch_in,
+                h.ふくつのたて_boost_B,
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ふくつのたて_boost_B,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ふしぎなうろこ": AbilityData(
@@ -2491,9 +2495,13 @@ ABILITIES: dict[str, AbilityData] = {
         ],
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.ふとうのけん_on_switch_in,
+                h.ふとうのけん_boost_A,
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ふとうのけん_boost_A,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ふみん": AbilityData(

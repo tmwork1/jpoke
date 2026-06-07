@@ -472,7 +472,7 @@ def test_トリックルーム_素早さ逆順():
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         field={"トリックルーム": 5},
     )
-    t.reserve_command(battle)
+
     action_order = battle.resolve_action_order()
     assert action_order[0] == battle.actives[0]
 
@@ -483,7 +483,7 @@ def test_トリックルーム_技優先度が優先():
         team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
         field={"トリックルーム": 5},
     )
-    t.reserve_command(battle)
+
     action_order = battle.resolve_action_order()
     assert action_order[0] == battle.actives[1]
 
@@ -563,6 +563,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
 # ──────────────────────────────────────────────────────────────────
 # リフレクター、ひかりのかべ、オーロラベール
 # ──────────────────────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize("side_field,move_name,expected", [
     ("リフレクター", "たいあたり", 2048),

@@ -53,7 +53,7 @@ class MoveExecutor:
         self.move_success: bool | None = None
         self.move_applied: bool | None = None
         self.move_type: Type | None = None
-        self.crit_rank: int | None = None
+        self.critical_rank: int | None = None
         self.critical: bool | None = None
 
     def reset_monitoring_flags(self):
@@ -63,7 +63,7 @@ class MoveExecutor:
         self.move_success = None
         self.move_applied = None
         self.move_type = None
-        self.crit_rank = None
+        self.critical_rank = None
         self.critical = None
 
     def __deepcopy__(self, memo):
@@ -189,18 +189,18 @@ class MoveExecutor:
             bool: 急所に当たるかどうか
         """
         # 急所ランクの計算
-        self.crit_rank = self._events.emit(
+        self.critical_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK,
             ctx,
             ctx.move.critical_rank
         )
-        self.crit_rank = clamp_critic(self.crit_rank)
+        self.critical_rank = clamp_critic(self.critical_rank)
 
         # 急所確率の計算
         crit_rate = self._events.emit(
             Event.ON_MODIFY_CRITICAL_RATE,
             ctx,
-            CRIT_RATES[self.crit_rank]
+            CRIT_RATES[self.critical_rank]
         )
         return self.battle.random.random() < crit_rate
 
