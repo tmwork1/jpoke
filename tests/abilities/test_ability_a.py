@@ -487,17 +487,6 @@ def test_うるおいボイス_非音技には適用されない():
     assert battle.move_executor.move_type == "ノーマル"
 
 
-def test_うるおいボイス_音技の威力が1_2倍になる():
-    # TODO : うるおいボイスに威力上昇効果はない
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="うるおいボイス", move_names=["ハイパーボイス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
 def test_うるおいボディ_あめ中に状態異常を回復する():
     # TODO : はれ状態のテストとパラメタライズで統合
     battle = t.start_battle(

@@ -2,7 +2,7 @@
 
 作成日: 2026-06-05
 
-対象: うるおいボディ / ナイトメア / すてみ / とうそうしん / でんきにかえる / じょうきっかん / サーフテール / ふくつのこころ
+対象: うるおいボディ / ナイトメア / すてみ / とうそうしん / でんきにかえる / じょうききかん / サーフテール / ふくつのこころ
 
 ---
 
@@ -245,7 +245,7 @@ def でんきにかえる_on_damage(battle, ctx, value):
 
 ---
 
-## じょうきっかん
+## じょうききかん
 
 ### 効果
 みずタイプかほのおタイプの攻撃技でダメージを受けたとき、すばやさが6段階上がる。
@@ -254,13 +254,13 @@ def でんきにかえる_on_damage(battle, ctx, value):
 
 | イベント | priority | subject_spec | 関数名 |
 |---------|---------|-------------|--------|
-| `ON_DAMAGE_HIT` | 100 | `defender:self` | `じょうきっかん_on_damage` |
+| `ON_DAMAGE_HIT` | 100 | `defender:self` | `じょうききかん_on_damage` |
 
 ### 実装
 
 ```python
-def じょうきっかん_on_damage(battle, ctx, value):
-    """じょうきっかん: みず/ほのお技受けてS↑6。"""
+def じょうききかん_on_damage(battle, ctx, value):
+    """じょうききかん: みず/ほのお技受けてS↑6。"""
     if ctx.move.type not in ("みず", "ほのお"):
         return HandlerReturn(value=value)
     mon = ctx.defender
@@ -272,10 +272,10 @@ def じょうきっかん_on_damage(battle, ctx, value):
 ### data/ability.py 登録
 
 ```python
-"じょうきっかん": AbilityData(
+"じょうききかん": AbilityData(
     handlers={
         Event.ON_DAMAGE_HIT: h.AbilityHandler(
-            h.じょうきっかん_on_damage,
+            h.じょうききかん_on_damage,
             subject_spec="defender:self",
         ),
     }

@@ -1,7 +1,7 @@
 """揮発性状態ハンドラの単体テスト"""
 import pytest
 from jpoke import Pokemon
-from jpoke.core import AttackContext, EventContext
+from jpoke.core import AttackContext
 from jpoke.enums import Event, Command
 import test_utils as t
 
@@ -475,6 +475,7 @@ def test_こんらん_カウント満了で解除():
 # さわぐ / さわがしい
 # ──────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
 def test_さわぐさわがしい_ねむりを防ぐ(volatile_name):
     battle = t.start_battle(
@@ -662,6 +663,7 @@ minimize_enhance_moves = [
     "ふみつけ", "のしかかり", "ドラゴンダイブ", "ヒートスタンプ", "ヘビーボンバー",
     "フライングプレス", "サンダーダイブ"
 ]
+
 
 @pytest.mark.parametrize("move_name", minimize_enhance_moves)
 def test_ちいさくなる_minimize技が必中化して威力2倍(move_name):

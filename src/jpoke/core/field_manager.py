@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import GlobalField, SideField, Weather, Terrain
+from jpoke.utils.type_defs import GlobalFieldName, SideFieldName, WeatherName, TerrainName
 from jpoke.data import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
 from jpoke.model import Field
@@ -248,7 +248,7 @@ class StackableFieldManager(BaseFieldManager[T]):
         return True
 
 
-class WeatherManager(ExclusiveFieldManager[Weather]):
+class WeatherManager(ExclusiveFieldManager[WeatherName]):
     """天候を管理するクラス。
 
     晴れ、雨、砂嵐、霰などの天候状態を管理します。
@@ -256,7 +256,7 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
     """
 
     def __init__(self, battle: Battle):
-        super().__init__(battle, battle.players, Weather)
+        super().__init__(battle, battle.players, WeatherName)
 
     @property
     def active(self) -> Field:
@@ -267,7 +267,7 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
                 return self.inactive
         return self.current
 
-    def apply(self, name: Weather, count: int, source: Pokemon | None = None) -> bool:
+    def apply(self, name: WeatherName, count: int, source: Pokemon | None = None) -> bool:
         """天候を発動する。
         天候の上書きは、現在の天候と新しい天候の優先度を比較して決める。
         """
@@ -278,27 +278,27 @@ class WeatherManager(ExclusiveFieldManager[Weather]):
         return False
 
 
-class TerrainManager(ExclusiveFieldManager[Terrain]):
+class TerrainManager(ExclusiveFieldManager[TerrainName]):
     """フィールド（地形）を管理するクラス。
 
     エレキフィールド、グラスフィールド、ミストフィールド、サイコフィールドなどを管理します。
     """
 
     def __init__(self, battle: Battle):
-        super().__init__(battle, battle.players, Terrain)
+        super().__init__(battle, battle.players, TerrainName)
 
 
-class GlobalFieldManager(StackableFieldManager[GlobalField]):
+class GlobalFieldManager(StackableFieldManager[GlobalFieldName]):
     """グローバルフィールド効果を管理するクラス。
 
     じゅうりょく、トリックルームなど、場全体に影響する効果を管理します。
     """
 
     def __init__(self, battle: Battle):
-        super().__init__(battle, battle.players, GlobalField)
+        super().__init__(battle, battle.players, GlobalFieldName)
 
 
-class SideFieldManager(StackableFieldManager[SideField]):
+class SideFieldManager(StackableFieldManager[SideFieldName]):
     """サイドフィールド効果を管理するクラス。
 
     リフレクター、ひかりのかべ、まきびし、ステルスロックなど、
@@ -312,4 +312,4 @@ class SideFieldManager(StackableFieldManager[SideField]):
             battle: Battleインスタンス
             owner: 効果を管理するプレイヤー
         """
-        super().__init__(battle, (owner,), SideField)
+        super().__init__(battle, (owner,), SideFieldName)

@@ -2,7 +2,7 @@
 import pytest
 from jpoke import Battle, Pokemon
 from jpoke.enums import Event
-from jpoke.utils.type_defs import Weather, Terrain, GlobalField, SideField
+from jpoke.utils.type_defs import WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.core import AttackContext, EventContext
 import test_utils as t
 
@@ -17,7 +17,7 @@ import test_utils as t
     ("あめ", "ゼニガメ", "みずでっぽう", 6144),
     ("あめ", "ヒトカゲ", "ひのこ", 2048),
 ])
-def test_はれあめ_タイプ威力補正(weather: Weather, pokemon_name: str, move_name: str, expected: int):
+def test_はれあめ_タイプ威力補正(weather: WeatherName, pokemon_name: str, move_name: str, expected: int):
     """はれ/あめ: ほのお・みず技威力補正"""
     battle = t.start_battle(
         team0=[Pokemon(pokemon_name, move_names=[move_name])],
@@ -108,7 +108,7 @@ def test_ゆき_こおり防御強化():
     ("おおひでり", "ヒトカゲ", "ひのこ"),
     ("おおあめ", "ゼニガメ", "みずでっぽう"),
 ])
-def test_強天候_同タイプ技は威力強化(weather: Weather, pokemon_name: str, move_name: str):
+def test_強天候_同タイプ技は威力強化(weather: WeatherName, pokemon_name: str, move_name: str):
     """おおひでり/おおあめ: 対応タイプ技威力1.5倍"""
     battle = t.start_battle(
         team0=[Pokemon(pokemon_name, move_names=[move_name])],
@@ -125,7 +125,7 @@ def test_強天候_同タイプ技は威力強化(weather: Weather, pokemon_name
     ("おおあめ", "ヒトカゲ", "ひのこ"),
     ("おおあめ", "ヒトカゲ", "おにび"),
 ])
-def test_強天候_反対タイプ技は失敗(weather: Weather, pokemon_name: str, move_name: str):
+def test_強天候_反対タイプ技は失敗(weather: WeatherName, pokemon_name: str, move_name: str):
     """おおひでり/おおあめ: 反対タイプ技は攻撃・変化を問わず失敗する"""
     battle = t.start_battle(
         team0=[Pokemon(pokemon_name, move_names=[move_name])],
@@ -140,7 +140,7 @@ def test_強天候_反対タイプ技は失敗(weather: Weather, pokemon_name: s
     ("おおひでり", "ヒトカゲ", "ひのこ"),
     ("おおあめ", "ゼニガメ", "みずでっぽう"),
 ])
-def test_強天候_同タイプ技はブロックされない(weather: Weather, pokemon_name: str, move_name: str):
+def test_強天候_同タイプ技はブロックされない(weather: WeatherName, pokemon_name: str, move_name: str):
     """おおひでり/おおあめ: 対応タイプ技はブロックされない"""
     battle = t.start_battle(
         team0=[Pokemon(pokemon_name, move_names=[move_name])],
@@ -203,7 +203,7 @@ def test_らんきりゅう_ひこう以外は軽減しない():
 
 
 @pytest.mark.parametrize("weather", ["はれ", "あめ", "すなあらし", "ゆき", "おおひでり", "おおあめ"])
-def test_らんきりゅう_全天候を上書き(weather: Weather):
+def test_らんきりゅう_全天候を上書き(weather: WeatherName):
     """らんきりゅう: 通常天候・強天候を問わず上書きできる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -226,7 +226,7 @@ def test_らんきりゅう_全天候を上書き(weather: Weather):
     ("ミストフィールド", "カイリュー", "ピカチュウ", "りゅうのはどう", 2048),
 ])
 def test_フィールド_タイプ威力補正(
-    terrain: Terrain, attacker_name: str, defender_name: str, move_name: str, expected: int
+    terrain: TerrainName, attacker_name: str, defender_name: str, move_name: str, expected: int
 ):
     """各フィールド: 接地ポケモンへのタイプ威力補正"""
     battle = t.start_battle(
@@ -245,7 +245,7 @@ def test_フィールド_タイプ威力補正(
     ("ミストフィールド", "カイリュー", "ピジョン", "りゅうのはどう"),
 ])
 def test_フィールド_浮遊ポケモンは補正を受けない(
-    terrain: Terrain, attacker_name: str, defender_name: str, move_name: str
+    terrain: TerrainName, attacker_name: str, defender_name: str, move_name: str
 ):
     """各フィールド: 浮遊ポケモンにはタイプ威力補正が適用されない"""
     battle = t.start_battle(
@@ -573,7 +573,7 @@ def test_ワンダールーム_特殊技は防御側を参照():
     ("オーロラベール", "たいあたり", 2048),
     ("オーロラベール", "でんきショック", 2048),
 ])
-def test_サイドフィールド_ダメージ軽減(side_field: SideField, move_name: str, expected: int):
+def test_サイドフィールド_ダメージ軽減(side_field: SideFieldName, move_name: str, expected: int):
     """リフレクター/ひかりのかべ/オーロラベール: ダメージ軽減"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -589,7 +589,7 @@ def test_サイドフィールド_ダメージ軽減(side_field: SideField, move
     ("ひかりのかべ", "でんきショック"),
     ("オーロラベール", "たいあたり"),
 ])
-def test_サイドフィールド_急所では軽減されない(side_field: SideField, move_name: str):
+def test_サイドフィールド_急所では軽減されない(side_field: SideFieldName, move_name: str):
     """リフレクター/ひかりのかべ/オーロラベール: 急所では軽減されない"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -842,7 +842,7 @@ def test_ねばねばネット_浮いているポケモンには効かない():
     "field",
     ["はれ", "あめ", "すなあらし", "ゆき"]
 )
-def test_天候カウント減少(field: Weather):
+def test_天候カウント減少(field: WeatherName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2
@@ -867,7 +867,7 @@ def test_天候カウント減少(field: Weather):
     "field",
     ["エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 )
-def test_地形カウント減少(field: Terrain):
+def test_地形カウント減少(field: TerrainName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2
@@ -892,7 +892,7 @@ def test_地形カウント減少(field: Terrain):
     "field",
     ["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム"]
 )
-def test_全体フィールドカウント減少(field: GlobalField):
+def test_全体フィールドカウント減少(field: GlobalFieldName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2
@@ -917,7 +917,7 @@ def test_全体フィールドカウント減少(field: GlobalField):
     "field",
     ["リフレクター", "ひかりのかべ", "オーロラベール", "しんぴのまもり", "しろいきり", "おいかぜ"]
 )
-def test_サイドフィールドカウント減少(field: SideField):
+def test_サイドフィールドカウント減少(field: SideFieldName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2

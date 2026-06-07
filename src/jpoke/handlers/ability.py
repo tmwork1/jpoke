@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, Type, Stat, Weather, Terrain, \
+from jpoke.utils.type_defs import RoleSpec, Type, Stat, WeatherName, TerrainName, \
     AilmentName, VolatileName, ItemDisabledReason
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.data import TYPE_MODIFIER
@@ -202,7 +202,7 @@ def activate_weather(battle: Battle,
                      ctx: EventContext,
                      value: Any,
                      *,
-                     weather: Weather,
+                     weather: WeatherName,
                      count: int,
                      source_spec: RoleSpec = "source:self") -> HandlerReturn:
     """天候を変更する"""
@@ -217,7 +217,7 @@ def deactivate_strong_weather(battle: Battle,
                               ctx: EventContext,
                               value: Any,
                               *,
-                              weather: Weather) -> HandlerReturn:
+                              weather: WeatherName) -> HandlerReturn:
     """強天候を解除する
     相手の特性が同じ天候を発生させるものなら解除しない。
     """
@@ -235,7 +235,7 @@ def activate_terrain(battle: Battle,
                      ctx: EventContext,
                      value: Any,
                      *,
-                     terrain: Terrain,
+                     terrain: TerrainName,
                      count: int,
                      source_spec: RoleSpec = "source:self") -> HandlerReturn:
     """地形を変更する"""
@@ -1197,8 +1197,6 @@ def さまようたましい_on_damage(battle: Battle, ctx: AttackContext, value
     attacker = ctx.attacker
     if attacker is None or attacker.fainted:
         return HandlerReturn(value=value)
-    if not attacker.ability.base_name:
-        return HandlerReturn(value=value)
     if attacker.ability.has_flag("protected"):
         return HandlerReturn(value=value)
     defender = ctx.defender
@@ -1286,8 +1284,8 @@ def しめりけ_block_explosion_foe(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-def じょうきっかん_on_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じょうきっかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。"""
+def じょうききかん_on_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じょうききかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。"""
     if ctx.move.type not in ("みず", "ほのお"):
         return HandlerReturn(value=value)
     mon = ctx.defender
@@ -1514,15 +1512,25 @@ def するどいめ_ignore_evasion(battle: Battle, ctx: AttackContext, value: di
 
 def スロースタート_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """スロースタート特性: 登場ターンを記録する。"""
-    ctx.source.ability.count = battle.turn
+    ctx.source.ability.count = 0
+    announce_ability_triggered(battle, ctx, value, mon=ctx.source)
+    return HandlerReturn(value=value)
+
+
+def スロースタート_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """スロースタート特性: 登場からのターン数をカウントする。"""
+    mon = ctx.source
+    mon.ability.count += 1
+    if mon.ability.count == 5:
+        announce_ability_triggered(battle, ctx, value, mon=mon)
     return HandlerReturn(value=value)
 
 
 def スロースタート_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """スロースタート特性: 登場から5ターンの物理攻撃補正を0.5倍にする。"""
     if (
-        battle.turn - ctx.attacker.ability.count < 5
-        and battle.resolve_move_category(ctx.attacker, ctx.move) == "物理"
+        ctx.attacker.ability.count < 5
+        and ctx.move.category == "物理"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -1608,7 +1616,7 @@ def そうだいしょう_modify_power(battle: Battle, ctx: AttackContext, value
     player = battle.get_player(ctx.attacker)
     state = battle.player_states[player]
     fainted_count = sum(1 for p in state.bench if p.fainted)
-    modifier = int(4096 * (1 + 0.1 * fainted_count))
+    modifier = 4096 * (10 + fainted_count) // 10
     return HandlerReturn(value=apply_fixed_modifier(value, modifier))
 
 
@@ -2016,7 +2024,7 @@ def ナイトメア_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -
 
 def なまけ_init(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """なまけ特性: 登場/有効化時になまけカウンタを「行動可」で初期化する。"""
-    ctx.source.ability.state = "can_act"  # TODO: AbilityState に追加
+    ctx.source.ability.state = "can_act"
     return HandlerReturn(value=value)
 
 
@@ -2029,17 +2037,10 @@ def ぬめぬめ_on_damage(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def なまけ_try_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なまけ特性: X=1のターンは行動をスキップし、Xを反転する。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト (ON_TRY_ACTION)
-            - attacker: 行動しようとするポケモン
-        value: 行動可否フラグ（True=行動可）
-    """
+    """なまけ特性: X=1のターンは行動をスキップし、Xを反転する。"""
     mon = ctx.attacker
     state = mon.ability.state
-    if state == "skip_next":  # TODO : AbilityState に追加
+    if state == "skip_next":
         # このターンはなまける
         mon.ability.state = "can_act"
         battle.add_event_log(mon, LogCode.ACTION_BLOCKED, payload={"reason": "なまけ"})

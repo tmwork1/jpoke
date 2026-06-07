@@ -11,7 +11,7 @@ from jpoke.core import AttackContext, EventContext
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from jpoke.enums import Event, Command
-from jpoke.utils.type_defs import Type, Stat, AilmentName, VolatileName, Weather
+from jpoke.utils.type_defs import Type, Stat, AilmentName, VolatileName, WeatherName
 
 from .. import test_utils as t
 
@@ -119,7 +119,7 @@ def test_スキン系_ノーマル技を対応タイプに変換する(
         team1=[Pokemon("ピカチュウ")],
     )
     move = t.run_move(battle, 0)
-    assert move.type == expected_type
+    assert battle.move_executor.move_type == expected_type
 
 
 @pytest.mark.parametrize(

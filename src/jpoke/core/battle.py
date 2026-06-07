@@ -10,7 +10,7 @@ import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalField, \
+from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
@@ -274,7 +274,7 @@ class Battle:
         """
         return self.terrain_manager.current
 
-    def get_global_field(self, name: GlobalField) -> Field:
+    def get_global_field(self, name: GlobalFieldName) -> Field:
         """グローバルフィールド効果を取得。"""
         return self.global_manager.fields[name]
 

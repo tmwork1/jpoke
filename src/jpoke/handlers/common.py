@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
-    Weather, Terrain, GlobalField, HPChangeReason
+    WeatherName, TerrainName, GlobalFieldName, HPChangeReason
 from jpoke.enums import Event
 from jpoke.core.handler import HandlerReturn
 
@@ -226,7 +226,7 @@ def cure_self_ailment(battle: Battle, ctx: EventContext, value: Any, chance: flo
 def activate_weather(battle: Battle,
                      ctx: EventContext,
                      value: Any,
-                     weather: Weather,
+                     weather: WeatherName,
                      count: int = 5,
                      source_spec: RoleSpec = "source:self") -> HandlerReturn:
     """天候を発動する。"""
@@ -238,7 +238,7 @@ def activate_weather(battle: Battle,
 def deactivate_weather(battle: Battle,
                        ctx: EventContext,
                        value: Any,
-                       weather: Weather) -> HandlerReturn:
+                       weather: WeatherName) -> HandlerReturn:
     """指定天候が現在有効な場合に解除する。"""
     if battle.raw_weather.name == weather:
         battle.weather_manager.remove()
@@ -248,7 +248,7 @@ def deactivate_weather(battle: Battle,
 def activate_terrain(battle: Battle,
                      ctx: EventContext,
                      value: Any,
-                     terrain: Terrain,
+                     terrain: TerrainName,
                      count: int = 5,
                      source_spec: RoleSpec = "source:self") -> HandlerReturn:
     """地形を発動する。"""
@@ -261,7 +261,7 @@ def activate_global_field(battle: Battle,
                           ctx: EventContext,
                           value: Any,
                           source_spec: RoleSpec,
-                          global_field: GlobalField,
+                          global_field: GlobalFieldName,
                           count: int = 5,
                           toggle: bool = False) -> HandlerReturn:
     """グローバルフィールドを発動・解除する。"""

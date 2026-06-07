@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
-from jpoke.utils.type_defs import RoleSpec, Type, Weather, Terrain
+from jpoke.utils.type_defs import RoleSpec, Type, WeatherName, TerrainName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
@@ -84,9 +84,9 @@ def modify_super_effective_damage(battle: Battle,
 
 def resolve_field_count(battle: Battle,
                         ctx: EventContext,
-                        value: list[Weather | Terrain | int],
+                        value: list[WeatherName | TerrainName | int],
                         *,
-                        field: Weather | Terrain,
+                        field: WeatherName | TerrainName,
                         additonal_count: int) -> HandlerReturn:
     """指定場状態と一致するとき継続ターン数に加算する。"""
     name, count = value

@@ -1044,10 +1044,10 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "じゅくせい": AbilityData(),
-    "じょうきっかん": AbilityData(
+    "じょうききかん": AbilityData(
         handlers={
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
-                h.じょうきっかん_on_damage,
+                h.じょうききかん_on_damage,
                 subject_spec="defender:self",
             )
         }
@@ -1328,6 +1328,11 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.スロースタート_modify_atk,
                 subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END: h.AbilityHandler(
+                h.スロースタート_tick,
+                subject_spec="source:self",
+                priority=150,
             ),
         }
     ),

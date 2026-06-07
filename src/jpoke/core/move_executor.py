@@ -150,17 +150,18 @@ class MoveExecutor:
         attacker = ctx.attacker
         defender = ctx.defender
         move = ctx.move
-        self.accuracy = move.accuracy
+        accuracy = move.accuracy
 
         # 命中率がNoneなら必中
-        if self.accuracy is None:
+        if accuracy is None:
             return True
 
         # 技の命中変更 + 命中補正
-        self.accuracy = self._events.emit(Event.ON_MODIFY_ACCURACY, ctx, self.accuracy)
+        accuracy = self._events.emit(Event.ON_MODIFY_ACCURACY, ctx, accuracy)
 
         # 必中処理：イベントハンドラがNoneを返した場合は必中
-        if self.accuracy is None:
+        if accuracy is None:
+            self.accuracy = accuracy
             return True
 
         # ランク補正
@@ -170,8 +171,11 @@ class MoveExecutor:
         }
         modified_rank = self._events.emit(Event.ON_GET_STAT_RANK, ctx, ranks)
         rank_modifier = hit_rank_modifier(modified_rank["ACC"], modified_rank["EVA"])
-        self.accuracy = int(self.accuracy * rank_modifier)
-        return 100 * self.battle.random.random() < self.accuracy
+        accuracy = int(accuracy * rank_modifier)
+
+        self.accuracy = accuracy  # デバッグ用に保存
+
+        return 100 * self.battle.random.random() < accuracy
 
     def _check_critical(self, ctx: AttackContext) -> bool:
         """急所判定を行う。

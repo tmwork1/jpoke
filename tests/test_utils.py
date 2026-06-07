@@ -1,6 +1,6 @@
 from jpoke.core import Battle, Player, EventContext, AttackContext
 from jpoke.model import Pokemon, Move
-from jpoke.utils.type_defs import AilmentName, VolatileName, Weather, Terrain, GlobalField, SideField
+from jpoke.utils.type_defs import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.enums import Event, Command, LogCode
 
 
@@ -25,11 +25,11 @@ def start_battle(team0: list[Pokemon],
                  ailment1: dict[AilmentName, int | None] | None = None,
                  volatile0: dict[VolatileName, int] | None = None,
                  volatile1: dict[VolatileName, int] | None = None,
-                 weather: tuple[Weather, int] | None = None,
-                 terrain: tuple[Terrain, int] | None = None,
-                 field: dict[GlobalField, int] | None = None,
-                 side0: dict[SideField, int] | None = None,
-                 side1: dict[SideField, int] | None = None,
+                 weather: tuple[WeatherName, int] | None = None,
+                 terrain: tuple[TerrainName, int] | None = None,
+                 field: dict[GlobalFieldName, int] | None = None,
+                 side0: dict[SideFieldName, int] | None = None,
+                 side1: dict[SideFieldName, int] | None = None,
                  accuracy: int | None = None) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 

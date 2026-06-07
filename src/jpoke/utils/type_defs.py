@@ -11,7 +11,7 @@ ItemDisabledReason = Literal[
 
 HandlerSource = Literal["ability", "item", "move", "ailment", "volatile", "field"]
 
-AbilityState = Literal["", "idle", "charged", "active", "inactive"]
+AbilityState = Literal["", "idle", "charged", "active", "inactive", "can_act", "skip_next"]
 
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
@@ -103,13 +103,13 @@ VolatileName = Literal[
     "スレッドトラップ",
 ]
 
-GlobalField = Literal["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム"]
+GlobalFieldName = Literal["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム"]
 
-SideField = Literal["リフレクター", "ひかりのかべ", "しんぴのまもり", "しろいきり", "おいかぜ", "ねがいごと",
-                    "まきびし", "どくびし", "ステルスロック", "ねばねばネット", "オーロラベール"]
+SideFieldName = Literal["リフレクター", "ひかりのかべ", "しんぴのまもり", "しろいきり", "おいかぜ", "ねがいごと",
+                        "まきびし", "どくびし", "ステルスロック", "ねばねばネット", "オーロラベール"]
 
-Weather = Literal["", "はれ", "あめ", "ゆき", "すなあらし", "おおひでり", "おおあめ", "らんきりゅう"]
-Terrain = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
+WeatherName = Literal["", "はれ", "あめ", "ゆき", "すなあらし", "おおひでり", "おおあめ", "らんきりゅう"]
+TerrainName = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 
 BoostSource = Literal["", "item", "field"]
 

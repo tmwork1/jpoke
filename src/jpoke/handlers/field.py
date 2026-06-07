@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.enums import LogCode
-from jpoke.utils.type_defs import RoleSpec, GlobalField, SideField, VolatileName, AbilityDisabledReason
+from jpoke.utils.type_defs import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 
@@ -38,14 +38,14 @@ def tick_terrain(battle: Battle, ctx: EventContext, value: Any):
     return HandlerReturn(value=value)
 
 
-def tick_global_field(battle: Battle, ctx: EventContext, value: Any, name: GlobalField) -> HandlerReturn:
+def tick_global_field(battle: Battle, ctx: EventContext, value: Any, name: GlobalFieldName) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
         battle.global_manager.tick_down(name)
     return HandlerReturn(value=value)
 
 
-def tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideField) -> HandlerReturn:
+def tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFieldName) -> HandlerReturn:
     player = battle.get_player(ctx.source)
     side = battle.get_side(player)
     side.tick_down(name)
