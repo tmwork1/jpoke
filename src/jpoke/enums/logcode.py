@@ -18,6 +18,7 @@ class LogCode(Enum):
     MOVE_REFLECTED = auto()  # 反射（マジックコート・リフレクター等）
     MOVE_MISSED = auto()  # 技が外れた
     MOVE_IMMUNED = auto()  # 技が無効化された
+    CRITICAL_HIT = auto()  # 急所に当たった # TODO : ログ書き込みとレンダー処理を実装
 
     # HP関連
     HP_CHANGED = auto()  # HP変化

@@ -2854,8 +2854,6 @@ def _overwrite_ability_on_contact(battle: Battle,
         書き換えに成功した場合True
     """
     attacker = ctx.attacker
-    if attacker is None:
-        return False
     if not battle.query.is_contact(ctx):
         return False
     if attacker.ability.has_flag("uncopyable"):

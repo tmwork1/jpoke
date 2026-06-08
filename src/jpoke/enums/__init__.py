@@ -7,7 +7,7 @@
 from .event import DomainEvent, Event
 from .interrupt import Interrupt
 from .command import Command
-from .log import LogCode
+from .logcode import LogCode
 
 __all__ = [
     "DomainEvent",

@@ -205,5 +205,10 @@ def get_action_order(battle: Battle,
 
 
 def fix_damage(battle: Battle, damage: int):
-    """テスト専用: ダメージ計算のダイスロールを固定値にする。"""
+    """ダメージ計算のダイスロールを固定値にする。"""
     battle.roll_damage = lambda *args, **kwargs: damage
+
+
+def fix_random(battle: Battle, value: float):
+    """乱数を固定する"""
+    battle.random.random = lambda: value

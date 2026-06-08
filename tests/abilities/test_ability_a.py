@@ -580,6 +580,63 @@ def test_えんかく_直接攻撃でわるいてぐせが発動しない():
     assert attacker.has_item()
 
 
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("フェアリーオーラ", "ムーンフォース"),
+        ("ダークオーラ", "あくのはどう"),
+    ]
+)
+def test_オーラブレイク_自分の攻撃を0_75倍(ability_name: str, move_name: str):
+    """オーラブレイク: 防御時にもオーラブレイクによる反転が適用される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク", move_names=[move_name])],
+    )
+    t.run_move(battle, 1)
+    assert 3072 == battle.damage_calculator.power_modifier
+
+
+def test_オーラブレイク_登場時に特性開示():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.actives[0].ability.revealed is True
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("フェアリーオーラ", "ムーンフォース"),
+        ("ダークオーラ", "あくのはどう"),
+    ]
+)
+def test_オーラブレイク_相手の攻撃を0_75倍(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.power_modifier
+
+
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("フェアリーオーラ", "ムーンフォース"),
+        ("ダークオーラ", "あくのはどう"),
+    ]
+)
+def test_オーラブレイク_自分の攻撃を0_75倍(ability_name: str, move_name: str):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク", move_names=[move_name])],
+    )
+    t.run_move(battle, 1)
+    assert 3072 == battle.damage_calculator.power_modifier
+
+
 def test_おうごんのからだ_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],

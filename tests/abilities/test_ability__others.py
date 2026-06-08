@@ -38,6 +38,7 @@ ability_terrain_pairs = [
 
 SKIN_CASES = [
     ("スカイスキン", "ひこう"),
+    ("ドラゴンスキン", "ドラゴン"),
     ("フェアリースキン", "フェアリー"),
     ("フリーズスキン", "こおり"),
 ]
@@ -272,13 +273,9 @@ def test_タイプ無効回復_かたやぶりで無効(ability, move):
     assert not defender.ability.revealed
 
 
-# TODO : じょおうのいげんとパラメタライズでまとめてテストする
-PRIORITY_BLOCKING_ABILITIES = ["じょおうのいげん", "テイルアーマー"]
-
-
 @pytest.mark.parametrize(
     "ability_name",
-    PRIORITY_BLOCKING_ABILITIES,
+    ["じょおうのいげん", "テイルアーマー"],
 )
 def test_先制技無効系_かたやぶりで無効化される(ability_name):
     """テイルアーマー: かたやぶり持ちには先制技が通る。"""
@@ -294,7 +291,7 @@ def test_先制技無効系_かたやぶりで無効化される(ability_name):
 
 @pytest.mark.parametrize(
     "ability_name",
-    PRIORITY_BLOCKING_ABILITIES,
+    ["じょおうのいげん", "テイルアーマー"],
 )
 def test_先制技無効系_優先度ゼロの技は通る(ability_name):
     """テイルアーマー: 優先度0の技は通常通り当たる。"""
@@ -310,7 +307,7 @@ def test_先制技無効系_優先度ゼロの技は通る(ability_name):
 
 @pytest.mark.parametrize(
     "ability_name",
-    PRIORITY_BLOCKING_ABILITIES,
+    ["じょおうのいげん", "テイルアーマー"],
 )
 def test_先制技無効系_優先度プラスの技を無効化する(ability_name):
     """テイルアーマー: 優先度+1の技を無効化する。"""
@@ -377,56 +374,37 @@ def test_ピンチ系特性_HP1_3以下で攻撃補正1_5倍(ability_name: str, 
     assert 6144 == battle.damage_calculator.atk_modifier
 
 
-# TODO : ダークオーラとまとめてテストする
-def test_オーラ系_オーラブレイクがいるとフェアリー技の威力が0_75倍になる():
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("フェアリーオーラ", "ムーンフォース"),
+        ("ダークオーラ", "あくのはどう"),
+    ]
+)
+def test_オーラ系_自分の技の威力が1_33倍になる(ability_name: str, move_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["じゃれつく"])],
-        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
-    )
-    attacker, defender = battle.actives
-    result = battle.events.emit(
-        Event.ON_CALC_POWER_MODIFIER,
-        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        4096,
-    )
-    assert result == 3072
-
-
-def test_オーラ系_フェアリー技の威力が1_33倍になる():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["じゃれつく"])],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
     )
-    attacker, defender = battle.actives
-    result = battle.events.emit(
-        Event.ON_CALC_POWER_MODIFIER,
-        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        4096,
-    )
-    assert result == 5448
+    t.run_move(battle, 0)
+    assert 5448 == battle.damage_calculator.power_modifier
 
 
-def test_オーラ系_相手のフェアリー技にも0_75倍が適用される():
-    """オーラ系: 防御時にもオーラブレイクによる反転が適用される。"""
+@pytest.mark.parametrize(
+    "ability_name, move_name",
+    [
+        ("フェアリーオーラ", "ムーンフォース"),
+        ("ダークオーラ", "あくのはどう"),
+    ]
+)
+def test_オーラ系_相手の技の威力が1_33倍になる(ability_name: str, move_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
-        team1=[Pokemon("ピカチュウ", ability_name="オーラブレイク", move_names=["じゃれつく"])],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ", move_names=[move_name])],
     )
-    attacker, defender = battle.actives[1], battle.actives[0]
-    result = battle.events.emit(
-        Event.ON_CALC_POWER_MODIFIER,
-        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        4096,
-    )
-    assert result == 3072
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
 
-
-def test_オーラブレイク_登場時に特性開示():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="オーラブレイク")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    assert battle.actives[0].ability.revealed is True
 
 # TODO : かんつうドリルとまとめてテストする
 
