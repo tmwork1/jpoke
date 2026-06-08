@@ -57,6 +57,7 @@ AILMENTS: dict[str, AilmentData] = {
         }
     ),
     "ねむり": AilmentData(
+        is_sleep=True,
         handlers={
             Event.ON_TRY_ACTION: h.AilmentHandler(
                 h.ねむり_check_action,

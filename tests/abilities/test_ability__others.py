@@ -275,7 +275,7 @@ def test_タイプ無効回復_かたやぶりで無効(ability, move):
 
 @pytest.mark.parametrize(
     "ability_name",
-    ["じょおうのいげん", "テイルアーマー"],
+    ["じょおうのいげん", "テイルアーマー", "ビビッドボディ"],
 )
 def test_先制技無効系_かたやぶりで無効化される(ability_name):
     """テイルアーマー: かたやぶり持ちには先制技が通る。"""
@@ -406,31 +406,6 @@ def test_オーラ系_相手の技の威力が1_33倍になる(ability_name: str
     assert 5448 == battle.damage_calculator.power_modifier
 
 
-# TODO : かんつうドリルとまとめてテストする
-
-
-def test_かんつうドリル_接触技でまもる状態を貫通してHPを減らす():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="かんつうドリル", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-        volatile1={"まもる": 1},
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-    assert defender.hp < defender.max_hp
-
-
-def test_かんつうドリル_非接触技はまもるに防がれる():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="かんつうドリル", move_names=["でんきショック"])],
-        team1=[Pokemon("ピカチュウ")],
-        volatile1={"まもる": 1},
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-    assert not battle.move_executor.move_success
-
-
 @pytest.mark.parametrize(
     "name, stat",
     [
@@ -450,47 +425,35 @@ def test_クォークチャージ_最大ステータスがバフされる(name, 
     assert mon.paradox_boost_stat == stat
 
 
-def test_ふかしのこぶし_まもる貫通後も揮発性状態が残る():
+@pytest.mark.parametrize(
+    "ability_name, volatile_name",
+    [
+        ("ふかしのこぶし", "まもる"),
+        ("ふかしのこぶし", "トーチカ"),
+        ("ふかしのこぶし", "キングシールド"),
+        ("ふかしのこぶし", "スレッドトラップ"),
+        ("ふかしのこぶし", "かえんのまもり"),
+        ("かんつうドリル", "まもる"),
+    ]
+)
+def test_ふかしのこぶし_接触技でまもるを貫通(ability_name: str, volatile_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
+        volatile1={volatile_name: 1},
     )
-    defender = battle.actives[1]
-    battle.volatile_manager.apply(defender, "まもる", count=1)
+    _, defender = battle.actives
     t.run_move(battle, 0)
-    assert defender.has_volatile("まもる")
-
-
-def test_ふかしのこぶし_まもる貫通時のダメージが4分の1():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
-    t.run_move(battle, 0)
+    assert defender.hp < defender.max_hp
     assert battle.damage_calculator.protect_modifier == 1024
 
 
-@pytest.mark.parametrize("volatile_name", [
-    "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり"
-])
-def test_ふかしのこぶし_接触技でまもる系揮発性状態を貫通してHPを減らす(volatile_name):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    defender = battle.actives[1]
-    battle.volatile_manager.apply(defender, volatile_name, count=1)
-    t.run_move(battle, 0)
-    assert defender.hp < defender.max_hp
-
-
-def test_ふかしのこぶし_非接触技はまもるに防がれる():
+def test_ふかしのこぶし_非接触技はまもるを貫通しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
     )
-    battle.volatile_manager.apply(battle.actives[1], "まもる", count=1)
     t.run_move(battle, 0)
     assert not battle.move_executor.move_success
 
@@ -899,6 +862,58 @@ def test_音ラベル無効系_param(defender_ability: str, attacker_ability: st
         assert defender.ability.revealed is True
     else:
         assert defender.hp < defender.max_hp
+
+
+@pytest.mark.parametrize(
+    "ability_name, setup_kwargs, expected_source, keep_item_before_release",
+    [
+        ("クォークチャージ", {}, "item", False),
+        ("こだいかっせい", {"weather": ("はれ", 5)}, "field", True),
+        ("クォークチャージ", {"terrain": ("エレキフィールド", 5)}, "field", True),
+    ],
+)
+def test_パラドックス特性_ブーストエナジーと場条件の優先関係(
+    ability_name: str,
+    setup_kwargs: dict,
+    expected_source: str,
+    keep_item_before_release: bool,
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, item_name="ブーストエナジー")],
+        team1=[Pokemon("ピカチュウ", ability_name="ひでり" if setup_kwargs.get("weather") else "エレキメイカー" if setup_kwargs.get("terrain") else "")],
+        **setup_kwargs,
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_source == expected_source
+    assert mon.paradox_boost_active
+    assert mon.has_item("ブーストエナジー") is keep_item_before_release
+
+    if expected_source == "field":
+        if setup_kwargs.get("weather"):
+            battle.weather_manager.remove()
+        else:
+            battle.terrain_manager.remove()
+        assert mon.paradox_boost_active
+        assert mon.paradox_boost_source == "item"
+        assert not mon.has_item("ブーストエナジー")
+
+
+@pytest.mark.parametrize(
+    "ability_name, stat",
+    [
+        ("ふとうのけん", "A"),
+        ("ふくつのたて", "B"),
+    ],
+)
+def test_一度きりの能力上昇特性(ability_name: str, stat: Stat):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name), Pokemon("イーブイ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    assert battle.actives[0].rank[stat] == 1
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+    assert battle.actives[0].rank[stat] == 0
 
 
 if __name__ == "__main__":

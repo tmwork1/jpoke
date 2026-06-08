@@ -21,8 +21,8 @@ class CustomPlayer(Player):
 
 def start_battle(team0: list[Pokemon],
                  team1: list[Pokemon],
-                 ailment0: dict[AilmentName, int | None] | None = None,
-                 ailment1: dict[AilmentName, int | None] | None = None,
+                 ailment0: dict[AilmentName, int | None] | None = None,  # TODO: tuple(AilmentName, count)に変更
+                 ailment1: dict[AilmentName, int | None] | None = None,  # TODO: tuple(AilmentName, count)に変更
                  volatile0: dict[VolatileName, int] | None = None,
                  volatile1: dict[VolatileName, int] | None = None,
                  weather: tuple[WeatherName, int] | None = None,
@@ -139,6 +139,16 @@ def build_context(battle: Battle, atk_idx: int, move_idx: int = 0) -> AttackCont
 
 
 def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
+    """技を実行するヘルパー関数。
+
+    Args:
+        battle: Battleインスタンス
+        atk_idx: 技を使用するポケモンのインデックス
+        move_idx: 使用する技のインデックス（デフォルト: 0）
+
+    Returns:
+        使用した技のインスタンス
+    """
     attacker = battle.actives[atk_idx]
     move = attacker.moves[move_idx]
     battle.run_move(attacker, move)
@@ -147,6 +157,16 @@ def run_move(battle: Battle, atk_idx: int, move_idx: int = 0) -> Move:
 
 
 def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
+    """ポケモンを入れ替えるヘルパー関数。
+
+    Args:
+        battle: Battleインスタンス
+        player_idx: 入れ替えるプレイヤーのインデックス
+        new_idx: 入れ替えるポケモンのインデックス
+
+    Returns:
+        入れ替えたポケモンのインスタンス
+    """
     player = battle.players[player_idx]
     mon = battle.player_states[player].team[new_idx]
     battle.run_switch(player, mon)
@@ -154,6 +174,15 @@ def run_switch(battle: Battle, player_idx: int, new_idx: int) -> Pokemon:
 
 
 def can_switch(battle: Battle, player_idx: int) -> bool:
+    """ポケモンを入れ替え可能か判定するヘルパー関数。
+
+    Args:
+        battle: Battleインスタンス
+        player_idx: 判定するプレイヤーのインデックス
+
+    Returns:
+        入れ替え可能かどうか
+    """
     player = battle.players[player_idx]
     return battle.can_switch(player)
 
@@ -163,7 +192,18 @@ def change_item(battle: Battle,
                 item_name: str,
                 source: Pokemon | None = None,
                 move: Move | None = None) -> bool:
-    """テスト専用: アイテムを任意の名前に変更する。"""
+    """アイテムを変更する。
+
+    Args:
+        battle: Battleインスタンス
+        mon: アイテムを変更するポケモン
+        item_name: 変更後のアイテム名（空文字列の場合はアイテムを外す）
+        source: アイテムを変更する原因となったポケモン（例: 交換元のポケモン、技の使用者など）
+        move: アイテムを変更する原因となった技（例: 交換元の技、使用した技など）
+
+    Returns:
+        アイテムの変更が成功したかどうか
+    """
     if mon.has_item(item_name):
         return True
 
@@ -181,6 +221,7 @@ def change_item(battle: Battle,
 
 
 def end_turn(battle: Battle):
+    """ターンを終了するヘルパー関数。"""
     battle.events.emit(Event.ON_TURN_END)
 
 
@@ -190,6 +231,19 @@ def apply_ailment(battle: Battle,
                   count: int = 1,
                   by_foe: bool = False,
                   overwrite: bool = False) -> bool:
+    """状態異常を適用するヘルパー関数。
+
+    Args:
+        battle: Battleインスタンス
+        active_index: 状態異常を適用するポケモンのインデックス
+        ailment_name: 適用する状態異常の名前
+        count: 状態異常のカウント（デフォルト: 1）
+        by_foe: 相手によって状態異常が適用されたかどうか（デフォルト: False）
+        overwrite: 既存の状態異常を上書きするかどうか（デフォルト: False）
+
+    Returns:
+        状態異常の適用が成功したかどうか
+    """
     mon = battle.actives[active_index]
     source = battle.foe(mon) if by_foe else None
     return battle.ailment_manager.apply(
@@ -200,15 +254,51 @@ def apply_ailment(battle: Battle,
 def get_action_order(battle: Battle,
                      command0: Command | None = None,
                      command1: Command | None = None) -> list[Pokemon]:
+    """行動順を取得するヘルパー関数。
+
+    Args:
+        battle: Battleインスタンス
+        command0: プレイヤー0のコマンド（Noneの場合はプレイヤーが選択）
+        command1: プレイヤー1のコマンド（Noneの場合はプレイヤーが選択）
+
+    Returns:
+        行動順のポケモンのリスト
+    """
     reserve_command(battle, command0, command1)
     return battle.resolve_action_order()
 
 
 def fix_damage(battle: Battle, damage: int):
-    """ダメージ計算のダイスロールを固定値にする。"""
+    """ダメージ計算のダイスロールを固定値にする。
+
+    Args:
+        battle: Battleインスタンス
+        damage: 固定するダメージ値
+    """
     battle.roll_damage = lambda *args, **kwargs: damage
 
 
 def fix_random(battle: Battle, value: float):
-    """乱数を固定する"""
+    """乱数を固定する
+
+    Args:
+        battle: Battleインスタンス
+        value: 固定する乱数の値（0.0以上1.0未満）
+    """
     battle.random.random = lambda: value
+
+
+def calc_move_priority(battle: Battle, player_index: int, move_index: int = 0) -> int:
+    """技を発動したときの優先度を返す
+
+    Args:
+        battle: Battleインスタンス
+        player_index: 技を使用するポケモンのインデックス
+        move_index: 使用する技のインデックス（デフォルト: 0）
+
+    Returns:
+        技の優先度
+    """
+    mon = battle.actives[player_index]
+    move = mon.moves[move_index]
+    return battle.speed_calculator.calc_move_priority(mon, move)

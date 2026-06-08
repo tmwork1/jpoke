@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model.pokemon import Pokemon
+    from jpoke.data.models import AilmentData
 
 from jpoke.utils.type_defs import AilmentName
 from jpoke.utils import fast_copy
@@ -35,6 +36,8 @@ class Ailment(GameEffect):
         self.elapsed_turns: int = 0
         self.revealed = True
 
+        self.data: AilmentData  # type hint
+
     def reset_on_switch_out(self):
         """ベンチに戻ったときのリセット処理
         経過ターンはリセットされるが、カウントはリセットされない。
@@ -55,12 +58,12 @@ class Ailment(GameEffect):
     @property
     def is_sleep(self) -> bool:
         """ねむり状態扱いかどうか"""
-        return self.data.is_sleep  # type: ignore[attr-defined]
+        return self.data.is_sleep
 
     @property
     def uncurable(self) -> bool:
         """回復不能な状態異常かどうか"""
-        return self.data.uncurable  # type: ignore[attr-defined]
+        return self.data.uncurable
 
     def tick(self):
         """状態異常のターン経過処理を行う"""

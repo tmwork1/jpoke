@@ -1721,17 +1721,14 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
-
-        labels=["contact", "punch"],
+        labels=["contact", "punch", "heal"],
     ),
     "トロピカルキック": MoveData(
-
         type="くさ",
         category="物理",
         pp=15,
         power=70,
         accuracy=100,
-
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
@@ -2991,6 +2988,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=75,
         accuracy=100,
+        labels=["heal"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 h.ギガドレイン_heal_attacker,
@@ -3585,8 +3583,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-
-        labels=["contact"],
+        labels=["contact", "heal"],
     ),
     "どろかけ": MoveData(
 
@@ -4225,6 +4222,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=40,
         accuracy=100,
+        labels=["heal"],
     ),
     "めざめるダンス": MoveData(
         type="ノーマル",
@@ -5532,15 +5530,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-
         labels=["heal"],
     ),
     "なみだめ": MoveData(
         type="ノーマル",
         category="変化",
         pp=20,
-
-
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 h.なみだめ_modify_defender_stats,
