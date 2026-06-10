@@ -96,7 +96,7 @@ class ItemManager:
         """
         return self._events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
-            EventContext(target=target, source=source, move=move),
+            EventContext(target=target, source=source),
             True
         )
 

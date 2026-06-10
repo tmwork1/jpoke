@@ -11,7 +11,7 @@ from jpoke.enums import LogCode
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.utils.type_defs import BoostSource, Stat
 
-from .ability import announce_ability_triggered
+from .ability import _announce_ability_triggered
 
 
 def _select_paradox_boost_stat(mon: Pokemon) -> Stat:
@@ -41,7 +41,7 @@ def _activate_paradox_boost(battle: Battle,
     """パラドックス補正を有効化し、必要なら消費ログを記録する。"""
     mon.paradox_boost_stat = _select_paradox_boost_stat(mon)
     mon.paradox_boost_source = source
-    announce_ability_triggered(battle, None, None, mon=mon)
+    _announce_ability_triggered(battle, mon)
 
     # ブーストエナジーを消費する
     if source == "item" and mon.has_item("ブーストエナジー", consider_enabled=True):

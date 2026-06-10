@@ -74,7 +74,7 @@ class VolatileManager:
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
         if ctx is not None:
-            apply_ctx = EventContext(source=source, target=target, move=ctx.move)
+            apply_ctx = EventContext(source=source, target=target)
         else:
             apply_ctx = EventContext(target=target, source=source)
 

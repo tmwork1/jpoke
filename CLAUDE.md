@@ -86,7 +86,8 @@ battle = t.start_battle(
 - `subject_spec` は必須。イベントが渡すコンテキスト型のロールと一致させる
   - 攻撃フェーズ（`AttackContext`）: `attacker:self` / `defender:self`
   - 非攻撃フェーズ（`EventContext`）: `source:self` / `target:self`
-  - 例外: `ON_CHECK_BYPASS_SCREEN` は `can_bypass_screen()` が `EventContext` に正規化するため常に `source:self`
+  - 例外: `ON_CHECK_BYPASS_SCREEN` は `AttackContext` で発火するため `attacker:self`
+  - 例外: `ON_CHECK_BYPASS_STATUS_GUARD` は `EventContext` で発火するため `source:self`
   - 例外: `ON_MODIFY_MOVE_PRIORITY` は `speed_calculator` が `EventContext(source=attacker)` で発火するため `source:self`
 - 固有効果のロジックは `handlers/*` に名前付き関数で実装し、`data/*.py` からその関数を登録する
 - `handlers/*` の並びは `data/*.py` の定義順（五十音順）に合わせる

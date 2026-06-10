@@ -3,7 +3,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.core import AttackContext
 from jpoke.enums import Event, Command
-import test_utils as t
+from . import test_utils as t
 
 # ──────────────────────────────────────────────────────────────────
 # アクアリング

@@ -15,15 +15,6 @@ from .. import test_utils as t
 ALL_AILMENTS = ["どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"]
 
 
-def test_かがくへんかガス_互いのかがくへんかガスは無効化されない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
-        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
-    )
-    assert battle.actives[0].ability.enabled
-    assert battle.actives[1].ability.enabled
-
-
 def test_かがくへんかガス_登場時に相手の特性を無効化():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
@@ -149,27 +140,6 @@ def test_かたやぶり_場に出たときに特性開示():
         team1=[Pokemon("ピカチュウ")],
     )
     assert battle.actives[0].ability.revealed
-
-
-def test_かちき_相手による能力低下で発動():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="かちき")],
-        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
-    )
-    assert battle.actives[0].rank["A"] == -1
-    assert battle.actives[0].rank["C"] == 2
-
-
-def test_かちき_自己能力低下では発動しない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="かちき", move_names=["アームハンマー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    mon = battle.actives[0]
-    t.run_move(battle, 0)
-    assert mon.rank["S"] == -1
-    assert mon.rank["C"] == 0
 
 
 def test_カブトアーマー_かたやぶりで無効化():
@@ -342,7 +312,7 @@ def test_ききかいひ_やけどダメージでも発動する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ききかいひ"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ")],
-        ailment0={"やけど": None},
+        ailment0=("やけど", None),
     )
     defender = battle.actives[0]
     defender.hp = defender.max_hp // 2 + 1

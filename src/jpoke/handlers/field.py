@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, EventContext, AttackContext
 
 from jpoke.enums import LogCode
 from jpoke.utils.type_defs import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
@@ -302,7 +302,7 @@ def ワンダールーム_def_modifier(battle: Battle, ctx: EventContext, value:
 
 # ===== サイドフィールドハンドラ =====
 
-def リフレクター_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """リフレクターで物理技ダメージ軽減"""
     if (
         not ctx.critical
@@ -313,7 +313,7 @@ def リフレクター_reduce_damage(battle: Battle, ctx: EventContext, value: A
     return HandlerReturn(value=value)
 
 
-def ひかりのかべ_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ひかりのかべ_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """光の壁で特殊技ダメージ軽減"""
     if (
         not ctx.critical
@@ -324,7 +324,7 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: EventContext, value: A
     return HandlerReturn(value=value)
 
 
-def オーロラベール_reduce_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベールで物理・特殊技ダメージ軽減"""
     if (
         not ctx.critical
@@ -336,7 +336,7 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: EventContext, value
 
 def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しんぴのまもりで状態異常無効"""
-    if not ctx.can_bypass_screen(battle):
+    if not ctx.can_bypass_status_guard(battle):
         value = ""  # 状態異常名を空にして無効化
     return HandlerReturn(value=value)
 
@@ -344,7 +344,7 @@ def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, val
 def しんぴのまもり_prevent_confusion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しんぴのまもりで揮発状態無効"""
     if (
-        not ctx.can_bypass_screen(battle)
+        not ctx.can_bypass_status_guard(battle)
         and value in ["こんらん", "ねむけ"]
     ):
         value = ""  # 揮発状態名を空にして無効化
@@ -355,7 +355,7 @@ def しろいきり_prevent_stat_drop(battle: Battle, ctx: EventContext, value: 
     """しろいきりで能力低下を防ぐ"""
     if (
         ctx.is_foe_target()
-        and not ctx.can_bypass_screen(battle)
+        and not ctx.can_bypass_status_guard(battle)
     ):
         value = {stat: v for stat, v in value.items() if v > 0}
     return HandlerReturn(value=value)

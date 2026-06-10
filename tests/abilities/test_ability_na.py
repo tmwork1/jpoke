@@ -26,7 +26,7 @@ def test_ナイトメア_ねむり中相手のHPを削る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
         team1=[Pokemon("カビゴン")],
-        ailment1={"ねむり": 3}
+        ailment1=("ねむり", 3)
     )
     mon, foe = battle.actives
     t.end_turn(battle)
@@ -120,7 +120,7 @@ def test_ねつぼうそう_やけど状態で物理技の威力が1_5倍(move_n
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねつぼうそう", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
-        ailment0={"やけど": None},
+        ailment0=("やけど", None),
     )
     t.run_move(battle, 0)
     assert expected_modifier == battle.damage_calculator.power_modifier

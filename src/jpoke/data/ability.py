@@ -90,7 +90,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             DomainEvent.ON_CALC_BACK_TIER: h.AbilityHandler(
                 h.あとだし_on_calc_back_tier,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
             ),
         }
     ),
@@ -707,7 +707,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             DomainEvent.ON_CALC_BACK_TIER: h.AbilityHandler(
                 h.きんしのちから_on_calc_back_tier,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
             ),
             Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.きんしのちから_disable_foe_ability,
@@ -736,7 +736,7 @@ ABILITIES: dict[str, AbilityData] = {
         handlers={
             DomainEvent.ON_CALC_BACK_TIER: h.AbilityHandler(
                 h.クイックドロウ_on_calc_back_tier,
-                subject_spec="source:self",
+                subject_spec="attacker:self",
             ),
         }
     ),
@@ -1300,6 +1300,10 @@ ABILITIES: dict[str, AbilityData] = {
             ),
             Event.ON_CHECK_BYPASS_SCREEN: h.AbilityHandler(
                 h.すりぬけ_bypass_screen,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CHECK_BYPASS_STATUS_GUARD: h.AbilityHandler(
+                h.すりぬけ_bypass_status_guard,
                 subject_spec="source:self",
             )
         }

@@ -704,7 +704,7 @@ def マジックコート_reflect(battle: Battle, ctx: EventContext, value: Any)
     """マジックコートによる変化技の跳ね返し"""
     value = (
         ctx.move.category == "変化"
-        and ctx.move.target == "foe"
+        and ctx.move.target in {"foe", "foe_side"}
     )
 
     return HandlerReturn(value=value)

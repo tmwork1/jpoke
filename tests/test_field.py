@@ -4,7 +4,7 @@ from jpoke import Battle, Pokemon
 from jpoke.enums import Event
 from jpoke.utils.type_defs import WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.core import AttackContext, EventContext
-import test_utils as t
+from . import test_utils as t
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -473,7 +473,7 @@ def test_トリックルーム_素早さ逆順():
         field={"トリックルーム": 5},
     )
 
-    action_order = battle.resolve_action_order()
+    action_order = t.get_action_order(battle)
     assert action_order[0] == battle.actives[0]
 
 
@@ -484,7 +484,7 @@ def test_トリックルーム_技優先度が優先():
         field={"トリックルーム": 5},
     )
 
-    action_order = battle.resolve_action_order()
+    action_order = t.get_action_order(battle)
     assert action_order[0] == battle.actives[1]
 
 # ──────────────────────────────────────────────────────────────────
@@ -839,17 +839,17 @@ def test_ねばねばネット_浮いているポケモンには効かない():
 
 
 @pytest.mark.parametrize(
-    "field",
+    "weather_name",
     ["はれ", "あめ", "すなあらし", "ゆき"]
 )
-def test_天候カウント減少(field: WeatherName):
+def test_天候カウント減少(weather_name: WeatherName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
-        weather=(field, initial_duration)
+        weather=(weather_name, initial_duration)
     )
     field = battle.raw_weather
     # 初期カウント確認
@@ -864,17 +864,17 @@ def test_天候カウント減少(field: WeatherName):
 
 
 @pytest.mark.parametrize(
-    "field",
+    "terrain_name",
     ["エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 )
-def test_地形カウント減少(field: TerrainName):
+def test_地形カウント減少(terrain_name: TerrainName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
-        terrain=(field, initial_duration)
+        terrain=(terrain_name, initial_duration)
     )
     field = battle.terrain
     # 初期カウント確認
@@ -889,19 +889,19 @@ def test_地形カウント減少(field: TerrainName):
 
 
 @pytest.mark.parametrize(
-    "field",
+    "field_name",
     ["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム"]
 )
-def test_全体フィールドカウント減少(field: GlobalFieldName):
+def test_全体フィールドカウント減少(field_name: GlobalFieldName):
     """カウントダウンテスト"""
     event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
-        field={field: initial_duration}
+        field={field_name: initial_duration}
     )
-    field = battle.get_global_field(field)
+    field = battle.get_global_field(field_name)
     # 初期カウント確認
     assert field.count == initial_duration
     # カウントダウン確認

@@ -87,7 +87,7 @@ class AilmentManager:
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
         if ctx is not None:
-            apply_ctx = EventContext(source=source, target=target, move=ctx.move)
+            apply_ctx = EventContext(source=source, target=target)
         else:
             apply_ctx = EventContext(target=target, source=source)
 

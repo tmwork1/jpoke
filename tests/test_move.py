@@ -4,7 +4,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.core import Handler, HandlerReturn
 from jpoke.enums import Event, LogCode, Command
-import test_utils as t
+from . import test_utils as t
 
 
 def test_いかりのまえば_最低1ダメージ():
@@ -185,7 +185,7 @@ def test_テラバースト_ステラ():
     attacker.terastallize()
     move = t.run_move(battle, 0)
 
-    assert move.type == "ステラ"
+    assert battle.move_executor.move_type == "ステラ"
     assert battle.damage_calculator.final_power == 100
     assert attacker.rank["A"] == -1
     assert attacker.rank["C"] == -1

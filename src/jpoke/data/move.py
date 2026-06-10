@@ -5117,7 +5117,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
 
-        target="field",
+        target="foe_side",
     ),
     "すなあつめ": MoveData(
         type="じめん",
@@ -5439,7 +5439,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
 
-        target="field",
+        target="foe_side",
     ),
     "とぐろをまく": MoveData(
         type="どく",
@@ -5600,7 +5600,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
 
-        target="field",
+        target="foe_side",
     ),
     "ねむりごな": MoveData(
         type="くさ",
@@ -5863,7 +5863,7 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
 
-        target="field",
+        target="foe_side",
     ),
     "マジックルーム": MoveData(
         type="エスパー",

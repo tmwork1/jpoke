@@ -21,8 +21,8 @@ class CustomPlayer(Player):
 
 def start_battle(team0: list[Pokemon],
                  team1: list[Pokemon],
-                 ailment0: dict[AilmentName, int | None] | None = None,  # TODO: tuple(AilmentName, count)に変更
-                 ailment1: dict[AilmentName, int | None] | None = None,  # TODO: tuple(AilmentName, count)に変更
+                 ailment0: tuple[AilmentName, int | None] | None = None,
+                 ailment1: tuple[AilmentName, int | None] | None = None,
                  volatile0: dict[VolatileName, int] | None = None,
                  volatile1: dict[VolatileName, int] | None = None,
                  weather: tuple[WeatherName, int] | None = None,
@@ -36,8 +36,8 @@ def start_battle(team0: list[Pokemon],
     Args:
         team0: 味方のポケモンリスト
         team1: 相手のポケモンリスト
-        ailment0: 味方の状態異常の辞書{名前: カウント}（Noneの場合は状態異常なし）
-        ailment1: 相手の状態異常の辞書{名前: カウント}（Noneの場合は状態異常なし）
+        ailment0: 味方の状態異常のタプル(名前, カウント)（Noneの場合は状態異常なし）
+        ailment1: 相手の状態異常のタプル(名前, カウント)（Noneの場合は状態異常なし）
         volatile0: 味方の揮発効果の辞書{名前: カウント}（Noneの場合は効果なし）
         volatile1: 相手の揮発効果の辞書{名前: カウント}（Noneの場合は効果なし）
         weather: 初期天候のタプル(天候名, カウント)（Noneの場合は天候なし）
@@ -69,8 +69,8 @@ def start_battle(team0: list[Pokemon],
         for idx, mon in enumerate(battle.actives):
             if not ailments[idx]:
                 continue
-            for name, count in ailments[idx].items():
-                battle.ailment_manager.apply(mon, name, count=count)
+            name, count = ailments[idx]
+            battle.ailment_manager.apply(mon, name, count=count)
 
     # 揮発効果の適用
     if volatile0 or volatile1:

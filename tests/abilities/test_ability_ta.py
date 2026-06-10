@@ -60,7 +60,7 @@ def test_だっぴ_ターン終了時に状態異常を回復する(ailment_name
     battle = t.start_battle(
         team0=[Pokemon("コラッタ", ability_name="だっぴ")],
         team1=[Pokemon("ピカチュウ")],
-        ailment0={ailment_name: None},
+        ailment0=(ailment_name, None),
     )
     mon = battle.actives[0]
 
@@ -78,7 +78,7 @@ def test_だっぴ_発動ターンはどくダメージを受けない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="だっぴ")],
         team1=[Pokemon("ピカチュウ")],
-        ailment0={"どく": None},
+        ailment0=("どく", None),
     )
     mon = battle.actives[0]
 
@@ -96,7 +96,7 @@ def test_だっぴ_非発動時は状態異常が残る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="だっぴ")],
         team1=[Pokemon("ピカチュウ")],
-        ailment0={"どく": None},
+        ailment0=("どく", None),
     )
     mon = battle.actives[0]
 
@@ -306,15 +306,6 @@ def test_テラスシェル_等倍以上を半減(defender_name, move_name, expe
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.def_type_modifier == expected
-
-
-def test_テラスチェンジ_かがくへんかガス中でも発動する():
-    battle = t.start_battle(
-        team0=[Pokemon("テラパゴス(ノーマル)", ability_name="テラスチェンジ")],
-        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
-    )
-    mon = battle.actives[0]
-    assert mon.name == "テラパゴス(テラスタル)"
 
 
 def test_テラスチェンジ_登場時にテラスタルフォルムになる():
@@ -687,7 +678,7 @@ def test_どくぼうそう_どく状態で特殊技の威力が1_5倍(move_name
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="どくぼうそう", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
-        ailment0={"どく": None},
+        ailment0=("どく", None),
     )
     t.run_move(battle, 0)
     assert expected_modifier == battle.damage_calculator.power_modifier

@@ -4,7 +4,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.core import EventContext
 
-import test_utils as t
+from . import test_utils as t
 
 
 # ──────────────────────────────────────────────────────────────────

@@ -75,6 +75,8 @@ def announce_ability_triggered(battle: Battle,
                                value: Any) -> HandlerReturn:
     """汎用: 特性発動ログを記録する
 
+    ctx.source または ctx.attacker を発動ポケモンとみなす。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト (ON_SWITCH_IN)
@@ -90,6 +92,7 @@ def announce_ability_triggered(battle: Battle,
 
 
 def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
+    """特性発動ログを記録する。"""
     mon.ability.revealed = True
     battle.add_event_log(
         mon,
@@ -371,7 +374,7 @@ def あついしぼう_reduce_fire_ice(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def あとだし_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def あとだし_on_calc_back_tier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """あとだし特性: 同一優先度の行動の中で最後に行動する（後攻ティア -1）。"""
     return HandlerReturn(value=value - 1)
 
@@ -442,6 +445,8 @@ def いかく_lower_foe_atk(battle: Battle, ctx: EventContext, value: Any) -> Ha
 def いかりのこうら_on_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いかりのこうら特性: HPが半分以下になったときA・C・S↑1、B・D↓1。"""
     mon = ctx.defender
+    if not mon.alive:
+        return HandlerReturn(value=value)
     hp_after = mon.hp
     hp_before = hp_after + value
     if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
@@ -1057,7 +1062,7 @@ def きれあじ_modify_power(battle: Battle, ctx: AttackContext, value: int) ->
     return HandlerReturn(value=value)
 
 
-def きんしのちから_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def きんしのちから_on_calc_back_tier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """きんしのちから特性: 変化技選択時に行動を後攻化する（後攻ティア -1）。"""
     if ctx.move is None or ctx.move.is_attack:
         return HandlerReturn(value=value)
@@ -1087,13 +1092,13 @@ def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=True)
 
 
-def クイックドロウ_on_calc_back_tier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def クイックドロウ_on_calc_back_tier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """クイックドロウ特性: 攻撃技選択時に 30% の確率で先攻化する（後攻ティア +1）。"""
     if ctx.move is None or not ctx.move.is_attack:
         return HandlerReturn(value=value)
     if not battle.random.random() < 0.3:
         return HandlerReturn(value=value)
-    _announce_ability_triggered(battle, ctx.source)
+    _announce_ability_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value + 1)
 
 
@@ -1497,8 +1502,13 @@ def すりぬけ_bypass_substitute(battle: Battle, ctx: AttackContext, value: bo
     return HandlerReturn(value=False, stop_event=True)
 
 
-def すりぬけ_bypass_screen(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """すりぬけ特性: 相手の壁を貫通する (EventContextを使う)"""
+def すりぬけ_bypass_screen(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """すりぬけ特性: リフレクター・ひかりのかべ等の壁を貫通する"""
+    return HandlerReturn(value=True)
+
+
+def すりぬけ_bypass_status_guard(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """すりぬけ特性: しんぴのまもり・しろいきり等の耐性を貫通する"""
     return HandlerReturn(value=True)
 
 
@@ -1565,6 +1575,7 @@ def せいしんりょく_block_intimidate(battle: Battle, ctx: EventContext, va
     """せいしんりょく特性: いかくによる攻撃ランク低下を無効化する。"""
     if ctx.stat_change_reason == "いかく":
         value = {}
+        _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
 
 
@@ -2793,7 +2804,7 @@ def マジックミラー_reflect(battle: Battle, ctx: AttackContext, value: boo
     """マジックミラー特性: 反射対象の変化技を跳ね返す。"""
     value = (
         ctx.move.category == "変化"
-        and ctx.move.target == "foe"
+        and ctx.move.target in {"foe", "foe_side"}
     )
     if value:
         _announce_ability_triggered(battle, ctx.defender)

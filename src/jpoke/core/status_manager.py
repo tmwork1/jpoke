@@ -49,8 +49,8 @@ class StatusManager:
                   target: Pokemon,
                   v: int = 0,
                   r: float = 0,
-                  reason: HPChangeReason = "",
                   source: Pokemon | None = None,
+                  reason: HPChangeReason = "",
                   move: Move | None = None) -> int:
         """ポケモンのHPを変更する。
 
@@ -71,7 +71,7 @@ class StatusManager:
         if r:
             v = int(target.max_hp * r)
 
-        ctx = EventContext(source=source, target=target, move=move, hp_change_reason=reason)
+        ctx = EventContext(source=source, target=target, hp_change_reason=reason)
 
         if reason == "poison":
             # NOTE: ON_MODIFY_POISON_DAMAGE はポイズンヒール特性で毒ダメージを回復に変換するため必須。

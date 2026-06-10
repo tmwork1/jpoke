@@ -1,11 +1,10 @@
 """状態異常ハンドラの単体テスト"""
 import pytest
 
-from jpoke.enums import Event
-from jpoke.core import EventContext
 from jpoke.model import Pokemon
+from jpoke.utils.type_defs import AilmentName
 
-import test_utils as t
+from . import test_utils as t
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -194,7 +193,7 @@ def test_こおり_ほのお技被弾で解凍する():
         ("ラプラス", "こおり"),
     ],
 )
-def test_タイプ一致の状態異常は入らない(target_name: str, ailment_name: str):
+def test_タイプ一致の状態異常は入らない(target_name: str, ailment_name: AilmentName):
     battle = t.start_battle(
         team0=[Pokemon(target_name)],
         team1=[Pokemon("ピカチュウ")],

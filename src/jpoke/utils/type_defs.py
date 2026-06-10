@@ -48,7 +48,7 @@ Gender = Literal["", "オス", "メス"]
 
 MoveCategory = Literal["物理", "特殊", "変化"]
 
-MoveTarget = Literal["foe", "self", "field"]
+MoveTarget = Literal["foe", "foe_side", "self", "field"]
 
 AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]
 

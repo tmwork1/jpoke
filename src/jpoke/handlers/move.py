@@ -9,7 +9,7 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.enums import Event, Interrupt, LogCode
@@ -280,17 +280,17 @@ def ギガドレイン_heal_attacker(battle: Battle, ctx: EventContext, value: i
     return HandlerReturn(value=value)
 
 
-def テラバースト_modify_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def テラバースト_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
-    mon = ctx.source
+    mon = ctx.attacker
     if mon.terastallized:
         value = mon.active_tera_type
     return HandlerReturn(value=value)
 
 
-def テラバースト_modify_move_category(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def テラバースト_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
-    mon = ctx.source
+    mon = ctx.attacker
     if mon.terastallized:
         atk = mon.ranked_stats["A"]
         spa = mon.ranked_stats["C"]

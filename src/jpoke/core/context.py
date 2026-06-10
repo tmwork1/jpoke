@@ -20,9 +20,7 @@ from jpoke.utils.type_defs import RoleSpec, HPChangeReason, StatChangeReason
 
 @dataclass(eq=False)
 class BaseContext:
-    # TODO : move はAttckContextのみに持たせるべきか議論する。
-    """全イベントコンテキストの基底クラス。技・HP変化理由・ランク変化理由を保持する。"""
-    move: Move | None = None
+    """全イベントコンテキストの基底クラス。HP変化理由・ランク変化理由を保持する。"""
     hp_change_reason: HPChangeReason = ""
     stat_change_reason: StatChangeReason = ""
 
@@ -60,15 +58,6 @@ class BaseContext:
             mon = battle.foe(mon)
         return mon
 
-    def can_bypass_screen(self, battle: Battle) -> bool:
-        """攻撃側が壁を貫通するかを返す。
-
-        コンテキスト種別に依らず source=attacker の EventContext に正規化して発火する。
-        """
-        attacker = getattr(self, "attacker", None) or getattr(self, "source", None)
-        check_ctx = EventContext(source=attacker, move=self.move)
-        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, check_ctx, False)
-
 
 @dataclass(eq=False)
 class EventContext(BaseContext):
@@ -80,13 +69,18 @@ class EventContext(BaseContext):
         """source と target が異なるポケモンかを返す。"""
         return self.source != self.target
 
+    def can_bypass_status_guard(self, battle: Battle) -> bool:
+        """発動元がしんぴのまもり・しろいきり等の耐性を貫通するかを返す。"""
+        return battle.events.emit(Event.ON_CHECK_BYPASS_STATUS_GUARD, self, False)
+
 
 @dataclass(eq=False)
 class AttackContext(BaseContext):
-    # TODO : attacker, defender はNoneを許さないほうが望ましい
+    # TODO : attacker, defender, move はNoneを許さないほうが望ましい
     """攻撃フロー専用コンテキスト。ダメージ計算・命中処理で使用する。"""
     attacker: Pokemon | None = None
     defender: Pokemon | None = None
+    move: Move | None = None
     hit_index: int = 1
     hit_count: int = 1
     critical: bool = False
@@ -96,3 +90,7 @@ class AttackContext(BaseContext):
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""
         return self.attacker != self.defender
+
+    def can_bypass_screen(self, battle: Battle) -> bool:
+        """攻撃側がリフレクター・ひかりのかべ等の壁を貫通するかを返す。"""
+        return battle.events.emit(Event.ON_CHECK_BYPASS_SCREEN, self, False)

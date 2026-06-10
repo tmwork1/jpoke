@@ -168,7 +168,7 @@ class SpeedCalculator:
             # 後攻ティアを計算（0=通常, -1=あとだし等）
             back_tier = self.battle.events.emit(
                 DomainEvent.ON_CALC_BACK_TIER,
-                EventContext(source=mon, move=move),
+                AttackContext(attacker=mon, move=move),
                 0
             )
 

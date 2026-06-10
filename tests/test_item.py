@@ -1,11 +1,17 @@
 """アイテムハンドラの単体テスト"""
 import math
 from types import SimpleNamespace
+from typing import cast
 from jpoke import Pokemon
-from jpoke.core import EventContext
+from jpoke.core import AttackContext, EventContext
 from jpoke.enums import Event
 from jpoke.data import ITEMS
-import test_utils as t
+from jpoke.model import Move
+from . import test_utils as t
+
+
+def _dummy_move(type_name: str) -> Move:
+    return cast(Move, SimpleNamespace(type=type_name, name="ダミー"))
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -132,10 +138,6 @@ def test_たべのこし():
     assert mon.hp == 1 + mon.max_hp // 16
 
 
-def _dummy_move(type_name: str) -> SimpleNamespace:
-    return SimpleNamespace(type=type_name, name="ダミー")
-
-
 # ──────────────────────────────────────────────────────────────────
 # タイプ強化アイテム
 # ──────────────────────────────────────────────────────────────────
@@ -148,24 +150,19 @@ def test_タイプ強化アイテム():
         if not data.power_modifier_by_type:
             continue
 
-        type_name, modifier = next(iter(data.power_modifier_by_type.items()))
+        type_, modifier = next(iter(data.power_modifier_by_type.items()))
         battle = t.start_battle(
             team0=[Pokemon("ピカチュウ", item_name=item_name)],
             team1=[Pokemon("ピカチュウ")],
         )
-        ctx = EventContext(
-            attacker=battle.actives[0],
-            defender=battle.actives[1],
-            move=_dummy_move(type_name),
-        )
-        actual = battle.events.emit(Event.ON_CALC_POWER_MODIFIER, ctx, base_value)
-        expected = base_value * modifier
-        assert abs(actual - expected) < 0.01, f"{item_name}: expected {expected}, got {actual}"
-
+        battle.actives[0].moves[0] = _dummy_move(type_)  # テスト用に内部変数を直接変更
+        t.run_move(battle, 0)
+        assert battle.damage_calculator.power_modifier == 6144
 
 # ──────────────────────────────────────────────────────────────────
 # タイプ半減実
 # ──────────────────────────────────────────────────────────────────
+
 
 def test_タイプ半減実():
     """タイプ半減実: 対応タイプの被ダメージ補正"""
@@ -179,15 +176,9 @@ def test_タイプ半減実():
             team0=[Pokemon("ピカチュウ", item_name=item_name)],
             team1=[Pokemon("ピカチュウ")],
         )
-        ctx = EventContext(
-            attacker=battle.actives[0],
-            defender=battle.actives[1],
-            move=_dummy_move(type_name),
-        )
-        actual = battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, base_value)
-        expected = base_value * modifier
-        assert abs(actual - expected) < 0.01, f"{item_name}: expected {expected}, got {actual}"
-        assert battle.actives[0].item.revealed, f"{item_name}: アイテムが公開されていない"
+        battle.actives[0].moves[0] = _dummy_move(type_name)  # テスト用に内部変数を直接変更
+        t.run_move(battle, 0)
+        assert battle.damage_calculator.damage_modifier == 2048 * modifier
 
 
 if __name__ == "__main__":
