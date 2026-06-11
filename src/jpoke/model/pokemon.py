@@ -103,6 +103,8 @@ class Pokemon:
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
         self.ability_override_type: Type | None = None
+        self.metronome_count: int = 0
+        self.metronome_move_name: str = ""
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -126,6 +128,8 @@ class Pokemon:
         self.rank = {k: 0 for k in STATS}
         self.executed_move = None
         self.ability_override_type = None
+        self.metronome_count = 0
+        self.metronome_move_name = ""
         self.ability.activated_since_switch_in = False
         self.last_lost_item_name = ""
         self.paradox_boost_stat = None

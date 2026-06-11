@@ -3,7 +3,7 @@
 Note:
     このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
 """
-from jpoke.enums import Event
+from jpoke.enums import Event, DomainEvent
 from jpoke.core import HandlerReturn
 from jpoke.handlers import item as h
 from .models import ItemData
@@ -62,12 +62,24 @@ ITEMS: dict[str, ItemData] = {
     "いしずえのめん": ItemData(
         consumable=False,
         removable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
+                h.いしずえのめん_boost_atk,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "いどのめん": ItemData(
         consumable=False,
         removable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
+                h.いどのめん_boost_atk,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "いのちのたま": ItemData(
         fling_power=30,
@@ -116,7 +128,13 @@ ITEMS: dict[str, ItemData] = {
     "かまどのめん": ItemData(
         consumable=False,
         removable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
+                h.かまどのめん_boost_atk,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "からぶりほけん": ItemData(
         consumable=True,
@@ -223,15 +241,45 @@ ITEMS: dict[str, ItemData] = {
     ),
     "こだわりスカーフ": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            DomainEvent.ON_CALC_SPEED: h.ItemHandler(
+                h.こだわりスカーフ_boost_speed,
+                subject_spec="source:self",
+            ),
+            Event.ON_MOVE_END: h.ItemHandler(
+                h._apply_こだわりロック,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "こだわりハチマキ": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
+                h.こだわりハチマキ_boost_physical,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MOVE_END: h.ItemHandler(
+                h._apply_こだわりロック,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "こだわりメガネ": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
+                h.こだわりメガネ_boost_special,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MOVE_END: h.ItemHandler(
+                h._apply_こだわりロック,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "ゴツゴツメット": ItemData(
         consumable=False,
@@ -549,7 +597,17 @@ ITEMS: dict[str, ItemData] = {
     ),
     "メトロノーム": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.メトロノーム_boost_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MOVE_END: h.ItemHandler(
+                h.メトロノーム_update_count,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "メンタルハーブ": ItemData(
         consumable=True,
