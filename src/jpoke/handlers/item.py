@@ -271,6 +271,10 @@ def ぎんのこな_modify_power_by_type(battle: Battle, ctx: AttackContext, val
     return _modify_power_by_type(ctx.move, value, type_="むし", modifier=4915/4096)
 
 
+def くろいメガネ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="あく", modifier=4915/4096)
+
+
 def くろおび_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="あく", modifier=4915/4096)
 
@@ -629,7 +633,7 @@ def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackConte
 
 
 def つめたいいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
-    return _resolve_field_count(value, field="あられ", additonal_count=3)
+    return _resolve_field_count(value, field="ゆき", additonal_count=3)
 
 
 def ナナシのみ_cure_freeze(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -965,3 +969,253 @@ def ブーストエナジー_refresh_on_item_enabled(battle: Battle, ctx: EventC
     """ブーストエナジー: アイテム有効化・取得時にパラドックスブーストを再判定する。"""
     from . import ability_paradox as paradox
     return paradox.refresh_paradox_charge_state(battle, ctx, value)
+
+
+def あつぞこブーツ_check_hazard_immune(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
+    """あつぞこブーツ: エントリーハザードを無効化する。"""
+    return HandlerReturn(value=True, stop_event=True)
+
+
+def おうじゃのしるし_flinch_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """おうじゃのしるし: ダメージ技命中時10%の確率で相手をひるませる。"""
+    defender = ctx.defender
+    if (
+        ctx.move.category != "変化"
+        and defender is not None
+        and battle.random.random() < 0.1
+    ):
+        battle.volatile_manager.apply(defender, "ひるみ", source=ctx.attacker, ctx=ctx)
+    return HandlerReturn(value=value)
+
+
+def おおきなねっこ_boost_drain(_battle: Battle, _ctx: Any, value: int) -> HandlerReturn:
+    """おおきなねっこ: 吸収技のHP回収量を1.3倍にする。"""
+    return HandlerReturn(value=int(value * 1.3))
+
+
+def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
+    """おんみつマント: 技の追加効果の確率を0にする。"""
+    return HandlerReturn(value=0)
+
+
+def かいがらのすず_heal_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かいがらのすず: ダメージ技命中時最大HPの1/8を回復する。"""
+    if ctx.move.category != "変化":
+        battle.modify_hp(ctx.attacker, r=1/8)
+        _announce_item_triggered(battle, ctx.attacker)
+    return HandlerReturn(value=value)
+
+
+def こうこうのしっぽ_back_tier(_battle: Battle, _ctx: AttackContext, value: int) -> HandlerReturn:
+    """こうこうのしっぽ: 行動順を1段階後ろにする。"""
+    return HandlerReturn(value=value - 1)
+
+
+def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じゃくてんほけん: 効果抜群のダメージを受けたときA・Cを+2。"""
+    mon = ctx.defender
+    if battle.damage_calculator.calc_def_type_modifier(ctx) > 1:
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+        battle.modify_stats(mon, {"A": +2, "C": +2})
+    return HandlerReturn(value=value)
+
+
+def じゅうでんち_boost_atk_on_electric_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じゅうでんち: でんき技でダメージを受けたときこうげき+1。"""
+    mon = ctx.defender
+    if ctx.move.type == "でんき":
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+        battle.modify_stats(mon, {"A": +1})
+    return HandlerReturn(value=value)
+
+
+def しめつけバンド_boost_bind_damage(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
+    """しめつけバンド: バインドのダメージを最大HPの1/6に増加する。"""
+    return HandlerReturn(value=1/6)
+
+
+def せんせいのツメ_priority_boost(battle: Battle, _ctx: AttackContext, value: int) -> HandlerReturn:
+    """せんせいのツメ: 23.4%の確率で先制ティアを+1する。"""
+    if battle.random.random() < 0.234:
+        return HandlerReturn(value=value + 1)
+    return HandlerReturn(value=value)
+
+
+def とつげきチョッキ_block_status_move(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とつげきチョッキ: 変化技の使用を禁止する。"""
+    if ctx.move.category == "変化":
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def とつげきチョッキ_boost_spdef(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とつげきチョッキ: 特殊技に対してとくぼうを1.5倍にする。"""
+    if ctx.move.category == "特殊":
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def ねらいのまと_negate_immunity(_battle: Battle, _ctx: AttackContext, value: int) -> HandlerReturn:
+    """ねらいのまと: タイプ相性による無効（0倍）を1倍に戻す。"""
+    if value == 0:
+        value = 4096
+    return HandlerReturn(value=value)
+
+
+def のどスプレー_boost_spatk_on_sound(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """のどスプレー: 音技使用後にとくこう+1。"""
+    mon = ctx.attacker
+    if ctx.move.has_label("sound"):
+        battle.modify_stats(mon, {"C": +1})
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+    return HandlerReturn(value=value)
+
+
+def パワフルハーブ_skip_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """パワフルハーブ: 溜め技の溜めターンをスキップする。"""
+    mon = ctx.attacker
+    _announce_item_triggered(battle, mon)
+    battle.consume_item(mon)
+    return HandlerReturn(value=True, stop_event=True)
+
+
+def パンチグローブ_boost_punch_power(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """パンチグローブ: パンチ技の威力を1.1倍にする。"""
+    if ctx.move.has_label("punch"):
+        value = apply_fixed_modifier(value, 4506)
+    return HandlerReturn(value=value)
+
+
+def パンチグローブ_negate_punch_contact(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """パンチグローブ: パンチ技の接触判定を無効化する。"""
+    if ctx.move.has_label("punch"):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ひかりごけ_boost_spdef_on_water_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ひかりごけ: みず技でダメージを受けたときとくぼう+1。"""
+    mon = ctx.defender
+    if ctx.move.type == "みず":
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+        battle.modify_stats(mon, {"D": +1})
+    return HandlerReturn(value=value)
+
+
+def ひかりのこな_reduce_accuracy(_battle: Battle, _ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ひかりのこな: 命中率を0.9倍にする。"""
+    return HandlerReturn(value=apply_fixed_modifier(value, 3686))
+
+
+_MENTAL_HERB_TARGETS = frozenset({
+    "いちゃもん", "アンコール", "なりきり", "かなしばり", "ちょうはつ", "さしおさえ"
+})
+
+
+def メンタルハーブ_cure_mental_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """メンタルハーブ: 特定の揮発性状態が付与されたとき即解除する。"""
+    mon = ctx.source
+    if value in _MENTAL_HERB_TARGETS:
+        battle.volatile_manager.remove(mon, value)
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+    return HandlerReturn(value=value)
+
+
+def ビビリだま_boost_speed_on_intimidate(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ビビリだま: いかくによってこうげきが下がったときすばやさ+1。"""
+    mon = ctx.target
+    if (
+        value.get("A", 0) < 0
+        and ctx.stat_change_reason == "いかく"
+    ):
+        battle.modify_stats(mon, {"S": +1})
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+    return HandlerReturn(value=value)
+
+
+def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """フォーカスレンズ: 後攻のとき命中率を1.2倍にする。"""
+    attacker_player = battle.get_player(ctx.attacker)
+    if battle.query.is_second_actor(attacker_player):
+        value = apply_fixed_modifier(value, 4915)
+    return HandlerReturn(value=value)
+
+
+def ぼうごパット_negate_contact(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
+    """ぼうごパット: 攻撃技の接触判定を無効にする。"""
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def ぼうじんゴーグル_block_powder_move(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぼうじんゴーグル: 粉技を無効化する。"""
+    if ctx.move.has_label("powder"):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ぼうじんゴーグル_block_weather_damage(_battle: Battle, ctx: Any, value: Any) -> HandlerReturn:
+    """ぼうじんゴーグル: 天候によるターン終了ダメージを無効化する。"""
+    if ctx.hp_change_reason == "weather":
+        return HandlerReturn(value=0, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ものまねハーブ_copy_stat_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ものまねハーブ: 相手のランク上昇を+1でコピーする。"""
+    mon = battle.foe(ctx.target)
+    boosts = {s: 1 for s, v in value.items() if v > 0}
+    if boosts:
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+        battle.modify_stats(mon, boosts)
+    return HandlerReturn(value=value)
+
+
+def ゆきだま_boost_defense_on_ice_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ゆきだま: こおり技でダメージを受けたときぼうぎょ+1。"""
+    mon = ctx.defender
+    if ctx.move.type == "こおり":
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+        battle.modify_stats(mon, {"B": +1})
+    return HandlerReturn(value=value)
+
+
+def ルームサービス_drop_speed_on_trick_room(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ルームサービス: トリックルーム発動時にすばやさ-1。"""
+    mon = ctx.source
+    if value.name == "トリックルーム":
+        battle.modify_stats(mon, {"S": -1})
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+    return HandlerReturn(value=value)
+
+
+def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """レッドカード: ダメージを受けたとき攻撃者を強制交代させる。"""
+    mon = ctx.defender
+    foe = ctx.attacker
+    foe_player = battle.get_player(foe)
+    commands = battle.get_available_switch_commands(foe_player)
+    if commands:
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+        command = battle.random.choice(commands)
+        battle.run_switch(foe_player, battle.player_states[foe_player].team[command.index])
+    return HandlerReturn(value=value)
+
+
+def レンブのみ_retaliate_special(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """レンブのみ: 特殊技でダメージを受けたとき攻撃者に最大HPの1/8ダメージ。"""
+    mon = ctx.defender
+    if ctx.move.category == "特殊":
+        battle.modify_hp(ctx.attacker, r=-1/8)
+        _announce_item_triggered(battle, mon)
+        battle.consume_item(mon)
+    return HandlerReturn(value=value)

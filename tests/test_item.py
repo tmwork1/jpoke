@@ -1,16 +1,22 @@
 """アイテムハンドラの単体テスト"""
+import copy
 import math
-from types import SimpleNamespace
 from typing import cast
+import pytest
 from jpoke import Pokemon
-from jpoke.core import AttackContext, EventContext
 from jpoke.enums import Event
-from jpoke.data import ITEMS
 from jpoke.model import Move
+from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
 def _dummy_move(type_name: str) -> Move:
-    return cast(Move, SimpleNamespace(type=type_name, name="ダミー"))
+    """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
+    t_name = cast(Type, type_name)
+    move = Move("たいあたり")
+    move.data = copy.copy(move.data)
+    move.data.type = t_name
+    move.type = t_name
+    return move
 
 
 def test_あかいいと_アイテム消費されない():
@@ -140,40 +146,25 @@ def test_きれいなぬけがら():
     assert battle.can_switch(battle.players[0])
 
 
-def test_くちたけん_フォルムチェンジ():
-    """くちたけん: ザシアン(れきせん)がザシアン(けんのおう)にフォルムチェンジする"""
+@pytest.mark.parametrize("item_name, mon_name, expected_name", [
+    ("くちたけん", "ザシアン(れきせん)", "ザシアン(けんのおう)"),
+    ("くちたたて", "ザマゼンタ(れきせん)", "ザマゼンタ(たてのおう)"),
+])
+def test_くちたけん_くちたたて_フォルムチェンジ(item_name, mon_name, expected_name):
+    """くちたけん・くちたたて: 対応ポケモンをフォルムチェンジさせる"""
     battle = t.start_battle(
-        team0=[Pokemon("ザシアン(れきせん)", item_name="くちたけん")],
+        team0=[Pokemon(mon_name, item_name=item_name)],
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    assert mon.name == "ザシアン(けんのおう)"
+    assert mon.name == expected_name
 
 
-def test_くちたけん_他ポケモンは変化しない():
-    """くちたけん: ザシアン以外が持っても変化しない"""
+@pytest.mark.parametrize("item_name", ["くちたけん", "くちたたて"])
+def test_くちたけん_くちたたて_他ポケモンは変化しない(item_name):
+    """くちたけん・くちたたて: 対応ポケモン以外は変化しない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="くちたけん")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    assert mon.name == "ピカチュウ"
-
-
-def test_くちたたて_フォルムチェンジ():
-    """くちたたて: ザマゼンタ(れきせん)がザマゼンタ(たてのおう)にフォルムチェンジする"""
-    battle = t.start_battle(
-        team0=[Pokemon("ザマゼンタ(れきせん)", item_name="くちたたて")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    assert mon.name == "ザマゼンタ(たてのおう)"
-
-
-def test_くちたたて_他ポケモンは変化しない():
-    """くちたたて: ザマゼンタ以外が持っても変化しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="くちたたて")],
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
@@ -202,26 +193,15 @@ def test_クリアチャーム_自分の技の低下は防げない():
     assert mon.rank["C"] == -2
 
 
-def test_こころのしずく_エスパー技補正():
-    """こころのしずく: ラティオスのエスパー技1.2倍"""
+def test_くろいメガネ_他タイプは補正なし():
+    """くろいメガネ: あく以外のタイプは補正なし"""
     battle = t.start_battle(
-        team0=[Pokemon("ラティオス", item_name="こころのしずく", move_names=["サイコキネシス"])],
+        team0=[Pokemon("ピカチュウ", item_name="くろいメガネ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
-def test_こころのしずく_ドラゴン技補正():
-    """こころのしずく: ラティアスのドラゴン技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ラティアス", item_name="こころのしずく", move_names=["ドラゴンクロー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
+    assert battle.damage_calculator.power_modifier == 4096
 
 
 def test_こころのしずく_他タイプは補正なし():
@@ -260,19 +240,6 @@ def test_こだわりスカーフ_交代でロック解除():
     assert not mon.has_volatile("こだわり")
 
 
-def test_こだわりスカーフ_技ロック():
-    """こだわりスカーフ: 技使用後にこだわりロック"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="こだわりスカーフ", move_names=["たいあたり", "でんきショック"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    mon = battle.actives[0]
-    assert mon.has_volatile("こだわり")
-    assert mon.volatiles["こだわり"].move_name == "たいあたり"
-
-
 def test_こだわりスカーフ_素早さ強化():
     """こだわりスカーフ: 素早さ1.5倍"""
     battle = t.start_battle(
@@ -282,19 +249,6 @@ def test_こだわりスカーフ_素早さ強化():
     mon = battle.actives[0]
     base_speed = mon.stats["S"]
     assert battle.calc_effective_speed(mon) == base_speed * 6144 // 4096
-
-
-def test_こだわりハチマキ_技ロック():
-    """こだわりハチマキ: 技使用後にこだわりロック"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="こだわりハチマキ", move_names=["たいあたり", "でんきショック"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    mon = battle.actives[0]
-    assert mon.has_volatile("こだわり")
-    assert mon.volatiles["こだわり"].move_name == "たいあたり"
 
 
 def test_こだわりハチマキ_物理技強化():
@@ -319,19 +273,6 @@ def test_こだわりハチマキ_特殊技は補正なし():
     assert battle.damage_calculator.atk_modifier == 4096
 
 
-def test_こだわりメガネ_技ロック():
-    """こだわりメガネ: 技使用後にこだわりロック"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="こだわりメガネ", move_names=["でんきショック", "たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    mon = battle.actives[0]
-    assert mon.has_volatile("こだわり")
-    assert mon.volatiles["こだわり"].move_name == "でんきショック"
-
-
 def test_こだわりメガネ_物理技は補正なし():
     """こだわりメガネ: 物理技には攻撃補正がない"""
     battle = t.start_battle(
@@ -354,26 +295,18 @@ def test_こだわりメガネ_特殊技強化():
     assert battle.damage_calculator.atk_modifier == 6144
 
 
-def test_こんごうだま_ドラゴン技補正():
-    """こんごうだま: ディアルガのドラゴン技1.2倍"""
+@pytest.mark.parametrize("item_name", ["こだわりスカーフ", "こだわりハチマキ", "こだわりメガネ"])
+def test_こだわり系_技ロック(item_name):
+    """こだわり系アイテム: 技使用後にこだわりロック"""
     battle = t.start_battle(
-        team0=[Pokemon("ディアルガ", item_name="こんごうだま", move_names=["ドラゴンクロー"])],
+        team0=[Pokemon("ピカチュウ", item_name=item_name, move_names=["たいあたり", "でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
-def test_こんごうだま_はがね技補正():
-    """こんごうだま: ディアルガのはがね技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ディアルガ", item_name="こんごうだま", move_names=["アイアンヘッド"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
+    mon = battle.actives[0]
+    assert mon.has_volatile("こだわり")
+    assert mon.volatiles["こだわり"].move_name == "たいあたり"
 
 
 def test_こんごうだま_他種族は補正なし():
@@ -387,70 +320,67 @@ def test_こんごうだま_他種族は補正なし():
     assert battle.damage_calculator.power_modifier == 4096
 
 
-def test_さらさらいわ():
-    """さらさらいわ: 天候延長"""
+@pytest.mark.parametrize("item_name, type_name, defender_name", [
+    ("リンドのみ", "くさ", "ゼニガメ"),
+    ("オッカのみ", "ほのお", "フシギダネ"),
+    ("イトケのみ", "みず", "ヒトカゲ"),
+    ("ソクノのみ", "でんき", "ゼニガメ"),
+    ("カシブのみ", "ゴースト", "エーフィ"),
+    ("ヨロギのみ", "いわ", "ヒトカゲ"),
+    ("タンガのみ", "むし", "エーフィ"),
+    ("ウタンのみ", "エスパー", "コジョフー"),
+    ("バコウのみ", "ひこう", "コジョフー"),
+    ("シュカのみ", "じめん", "ピカチュウ"),
+    ("ビアーのみ", "どく", "プリン"),
+    ("ヨプのみ", "かくとう", "カビゴン"),
+    ("ヤチェのみ", "こおり", "ミニリュウ"),
+    ("リリバのみ", "はがね", "マリル"),
+    ("ナモのみ", "あく", "エーフィ"),
+    ("ハバンのみ", "ドラゴン", "ミニリュウ"),
+    ("ロゼルのみ", "フェアリー", "ミニリュウ"),
+])
+def test_タイプ半減実(item_name, type_name, defender_name):
+    """タイプ半減実: 対応タイプの弱点ダメージを半減する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="さらさらいわ")],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon(defender_name, item_name=item_name)],
     )
-    battle.weather_manager.apply("すなあらし", 5, source=battle.actives[0])
-    assert battle.raw_weather.count == 8
-
-
-def test_しらたま_ドラゴン技補正():
-    """しらたま: パルキアのドラゴン技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("パルキア", item_name="しらたま", move_names=["ドラゴンクロー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
+    battle.actives[0].moves[0] = _dummy_move(type_name)  # テスト用に内部変数を直接変更
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
+    assert battle.damage_calculator.damage_modifier == 2048
 
 
-def test_しらたま_みず技補正():
-    """しらたま: パルキアのみず技1.2倍"""
+@pytest.mark.parametrize("item_name, type_name, expected_modifier", [
+    ("かたいいし", "いわ", 4915),
+    ("きせきのたね", "くさ", 4915),
+    ("ぎんのこな", "むし", 4915),
+    ("くろいメガネ", "あく", 4915),
+    ("くろおび", "あく", 4915),
+    ("じしゃく", "でんき", 4915),
+    ("シルクのスカーフ", "ノーマル", 4915),
+    ("しんぴのしずく", "みず", 4915),
+    ("するどいくちばし", "ひこう", 4915),
+    ("せいれいプレート", "フェアリー", 4915),
+    ("どくバリ", "どく", 4915),
+    ("とけないこおり", "こおり", 4915),
+    ("ノーマルジュエル", "ノーマル", 6144),
+    ("のろいのおふだ", "ゴースト", 4915),
+    ("まがったスプーン", "エスパー", 4915),
+    ("メタルコート", "はがね", 4915),
+    ("もくたん", "ほのお", 4915),
+    ("やわらかいすな", "じめん", 4915),
+    ("ようせいのハネ", "フェアリー", 4915),
+    ("りゅうのキバ", "ドラゴン", 4915),
+])
+def test_タイプ強化アイテム(item_name, type_name, expected_modifier):
+    """タイプ強化アイテム: 対応タイプの威力補正"""
     battle = t.start_battle(
-        team0=[Pokemon("パルキア", item_name="しらたま", move_names=["なみのり"])],
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
         team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
     )
+    battle.actives[0].moves[0] = _dummy_move(type_name)  # テスト用に内部変数を直接変更
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
-def test_タイプ半減実():
-    """タイプ半減実: 対応タイプの被ダメージ補正"""
-    base_value = 4096
-    for item_name, data in ITEMS.items():
-        if not data.damage_modifier_by_type:
-            continue
-
-        type_name, modifier = next(iter(data.damage_modifier_by_type.items()))
-        battle = t.start_battle(
-            team0=[Pokemon("ピカチュウ", item_name=item_name)],
-            team1=[Pokemon("ピカチュウ")],
-        )
-        battle.actives[0].moves[0] = _dummy_move(type_name)  # テスト用に内部変数を直接変更
-        t.run_move(battle, 0)
-        assert battle.damage_calculator.damage_modifier == 2048 * modifier
-
-
-def test_タイプ強化アイテム():
-    """タイプ強化アイテム: 対応タイプ威力補正"""
-    base_value = 4096
-    for item_name, data in ITEMS.items():
-        if not data.power_modifier_by_type:
-            continue
-
-        type_, modifier = next(iter(data.power_modifier_by_type.items()))
-        battle = t.start_battle(
-            team0=[Pokemon("ピカチュウ", item_name=item_name)],
-            team1=[Pokemon("ピカチュウ")],
-        )
-        battle.actives[0].moves[0] = _dummy_move(type_)  # テスト用に内部変数を直接変更
-        t.run_move(battle, 0)
-        assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.power_modifier == expected_modifier
 
 
 def test_たべのこし():
@@ -471,17 +401,6 @@ def test_たべのこし():
     assert mon.hp == 1 + mon.max_hp // 16
 
 
-def test_だいこんごうだま_ドラゴン技補正():
-    """だいこんごうだま: ディアルガ(オリジン)のドラゴン技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ディアルガ", item_name="だいこんごうだま", move_names=["ドラゴンクロー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
 def test_だいこんごうだま_フォルムチェンジ():
     """だいこんごうだま: ディアルガをオリジンフォルムにフォルムチェンジする"""
     battle = t.start_battle(
@@ -492,17 +411,6 @@ def test_だいこんごうだま_フォルムチェンジ():
     assert mon.name == "ディアルガ(オリジン)"
 
 
-def test_だいしらたま_ドラゴン技補正():
-    """だいしらたま: パルキア(オリジン)のドラゴン技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("パルキア", item_name="だいしらたま", move_names=["ドラゴンクロー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
 def test_だいしらたま_フォルムチェンジ():
     """だいしらたま: パルキアをオリジンフォルムにフォルムチェンジする"""
     battle = t.start_battle(
@@ -511,17 +419,6 @@ def test_だいしらたま_フォルムチェンジ():
     )
     mon = battle.actives[0]
     assert mon.name == "パルキア(オリジン)"
-
-
-def test_だいはっきんだま_ゴースト技補正():
-    """だいはっきんだま: ギラティナ(オリジン)のゴースト技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ギラティナ(アナザー)", item_name="だいはっきんだま", move_names=["シャドーボール"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
 
 
 def test_だいはっきんだま_フォルムチェンジ():
@@ -634,28 +531,6 @@ def test_とくせいガード_なしの場合は特性が無効化される():
     assert not defender.ability.enabled
 
 
-def test_はっきんだま_ゴースト技補正():
-    """はっきんだま: ギラティナのゴースト技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ギラティナ(アナザー)", item_name="はっきんだま", move_names=["シャドーボール"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
-def test_はっきんだま_ドラゴン技補正():
-    """はっきんだま: ギラティナのドラゴン技1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ギラティナ(アナザー)", item_name="はっきんだま", move_names=["ドラゴンクロー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
-
-
 def test_はっきんだま_他種族は補正なし():
     """はっきんだま: ギラティナ以外は補正なし"""
     battle = t.start_battle(
@@ -745,6 +620,46 @@ def test_メトロノーム_連続使用で威力増加():
     mon = battle.actives[0]
     mon.item.count = 1
     mon.item.move_name = "たいあたり"
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4915
+
+
+@pytest.mark.parametrize("item_name, weather", [
+    ("さらさらいわ", "すなあらし"),
+    ("あついいわ", "はれ"),
+    ("しめったいわ", "あめ"),
+    ("つめたいいわ", "ゆき"),
+])
+def test_天候延長アイテム(item_name, weather):
+    """天候延長アイテム: 対応天候の継続ターンを8に延長する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.weather_manager.apply(weather, 5, source=battle.actives[0])
+    assert battle.raw_weather.count == 8
+
+
+@pytest.mark.parametrize("item_name, mon_name, move_name", [
+    ("こころのしずく", "ラティオス", "サイコキネシス"),
+    ("こころのしずく", "ラティアス", "ドラゴンクロー"),
+    ("こんごうだま", "ディアルガ", "ドラゴンクロー"),
+    ("こんごうだま", "ディアルガ", "アイアンヘッド"),
+    ("しらたま", "パルキア", "ドラゴンクロー"),
+    ("しらたま", "パルキア", "なみのり"),
+    ("だいこんごうだま", "ディアルガ", "ドラゴンクロー"),
+    ("だいしらたま", "パルキア", "ドラゴンクロー"),
+    ("だいはっきんだま", "ギラティナ(アナザー)", "シャドーボール"),
+    ("はっきんだま", "ギラティナ(アナザー)", "シャドーボール"),
+    ("はっきんだま", "ギラティナ(アナザー)", "ドラゴンクロー"),
+])
+def test_専用アイテム_タイプ補正(item_name, mon_name, move_name):
+    """専用アイテム: 対応ポケモンの対応タイプ技を1.2倍にする"""
+    battle = t.start_battle(
+        team0=[Pokemon(mon_name, item_name=item_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 4915
 

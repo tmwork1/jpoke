@@ -1,6 +1,6 @@
 # test_item
 
-テスト数: 62
+テスト数: 101
 
 - [x] あかいいと_アイテム消費されない
 - [x] あかいいと_どんかん持ちには付与されない
@@ -13,39 +13,65 @@
 - [x] いのちのたま_変化技では発動しない
 - [x] かまどのめん_物理技強化
 - [x] きれいなぬけがら
-- [x] くちたけん_フォルムチェンジ
-- [x] くちたけん_他ポケモンは変化しない
-- [x] くちたたて_フォルムチェンジ
-- [x] くちたたて_他ポケモンは変化しない
+- [x] くちたけん_くちたたて_フォルムチェンジ(item_name=くちたけん, mon_name=ザシアン(れきせん), expected_name=ザシアン(けんのおう))
+- [x] くちたけん_くちたたて_フォルムチェンジ(item_name=くちたたて, mon_name=ザマゼンタ(れきせん), expected_name=ザマゼンタ(たてのおう))
+- [x] くちたけん_くちたたて_他ポケモンは変化しない(item_name=くちたけん)
+- [x] くちたけん_くちたたて_他ポケモンは変化しない(item_name=くちたたて)
 - [x] クリアチャーム_いかくを防ぐ
 - [x] クリアチャーム_自分の技の低下は防げない
-- [x] こころのしずく_エスパー技補正
-- [x] こころのしずく_ドラゴン技補正
+- [x] くろいメガネ_他タイプは補正なし
 - [x] こころのしずく_他タイプは補正なし
 - [x] こころのしずく_他種族は補正なし
 - [x] こだわりスカーフ_交代でロック解除
-- [x] こだわりスカーフ_技ロック
 - [x] こだわりスカーフ_素早さ強化
-- [x] こだわりハチマキ_技ロック
 - [x] こだわりハチマキ_物理技強化
 - [x] こだわりハチマキ_特殊技は補正なし
-- [x] こだわりメガネ_技ロック
 - [x] こだわりメガネ_物理技は補正なし
 - [x] こだわりメガネ_特殊技強化
-- [x] こんごうだま_ドラゴン技補正
-- [x] こんごうだま_はがね技補正
+- [x] こだわり系_技ロック(item_name=こだわりスカーフ)
+- [x] こだわり系_技ロック(item_name=こだわりハチマキ)
+- [x] こだわり系_技ロック(item_name=こだわりメガネ)
 - [x] こんごうだま_他種族は補正なし
-- [x] さらさらいわ
-- [x] しらたま_ドラゴン技補正
-- [x] しらたま_みず技補正
-- [x] タイプ半減実
-- [x] タイプ強化アイテム
+- [x] タイプ半減実(item_name=リンドのみ, type_name=くさ, defender_name=ゼニガメ)
+- [x] タイプ半減実(item_name=オッカのみ, type_name=ほのお, defender_name=フシギダネ)
+- [x] タイプ半減実(item_name=イトケのみ, type_name=みず, defender_name=ヒトカゲ)
+- [x] タイプ半減実(item_name=ソクノのみ, type_name=でんき, defender_name=ゼニガメ)
+- [x] タイプ半減実(item_name=カシブのみ, type_name=ゴースト, defender_name=エーフィ)
+- [x] タイプ半減実(item_name=ヨロギのみ, type_name=いわ, defender_name=ヒトカゲ)
+- [x] タイプ半減実(item_name=タンガのみ, type_name=むし, defender_name=エーフィ)
+- [x] タイプ半減実(item_name=ウタンのみ, type_name=エスパー, defender_name=コジョフー)
+- [x] タイプ半減実(item_name=バコウのみ, type_name=ひこう, defender_name=コジョフー)
+- [x] タイプ半減実(item_name=シュカのみ, type_name=じめん, defender_name=ピカチュウ)
+- [x] タイプ半減実(item_name=ビアーのみ, type_name=どく, defender_name=プリン)
+- [x] タイプ半減実(item_name=ヨプのみ, type_name=かくとう, defender_name=カビゴン)
+- [x] タイプ半減実(item_name=ヤチェのみ, type_name=こおり, defender_name=ミニリュウ)
+- [x] タイプ半減実(item_name=リリバのみ, type_name=はがね, defender_name=マリル)
+- [x] タイプ半減実(item_name=ナモのみ, type_name=あく, defender_name=エーフィ)
+- [x] タイプ半減実(item_name=ハバンのみ, type_name=ドラゴン, defender_name=ミニリュウ)
+- [x] タイプ半減実(item_name=ロゼルのみ, type_name=フェアリー, defender_name=ミニリュウ)
+- [x] タイプ強化アイテム(item_name=かたいいし, type_name=いわ, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=きせきのたね, type_name=くさ, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=ぎんのこな, type_name=むし, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=くろいメガネ, type_name=あく, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=くろおび, type_name=あく, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=じしゃく, type_name=でんき, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=シルクのスカーフ, type_name=ノーマル, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=しんぴのしずく, type_name=みず, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=するどいくちばし, type_name=ひこう, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=せいれいプレート, type_name=フェアリー, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=どくバリ, type_name=どく, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=とけないこおり, type_name=こおり, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=ノーマルジュエル, type_name=ノーマル, expected_modifier=6144)
+- [x] タイプ強化アイテム(item_name=のろいのおふだ, type_name=ゴースト, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=まがったスプーン, type_name=エスパー, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=メタルコート, type_name=はがね, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=もくたん, type_name=ほのお, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=やわらかいすな, type_name=じめん, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=ようせいのハネ, type_name=フェアリー, expected_modifier=4915)
+- [x] タイプ強化アイテム(item_name=りゅうのキバ, type_name=ドラゴン, expected_modifier=4915)
 - [x] たべのこし
-- [x] だいこんごうだま_ドラゴン技補正
 - [x] だいこんごうだま_フォルムチェンジ
-- [x] だいしらたま_ドラゴン技補正
 - [x] だいしらたま_フォルムチェンジ
-- [x] だいはっきんだま_ゴースト技補正
 - [x] だいはっきんだま_フォルムチェンジ
 - [x] だっしゅつパック_0ターン目にいかくで交代
 - [x] だっしゅつパック_能力上昇では発動しない
@@ -55,8 +81,6 @@
 - [x] でんきだま_特殊技とくこう2倍
 - [x] とくせいガード_かたやぶりによる特性無効化をブロック
 - [x] とくせいガード_なしの場合は特性が無効化される
-- [x] はっきんだま_ゴースト技補正
-- [x] はっきんだま_ドラゴン技補正
 - [x] はっきんだま_他種族は補正なし
 - [x] ブーストエナジー_こだいかっせいマジックルーム解除後に発動
 - [x] ブーストエナジー_こだいかっせい登場時に発動
@@ -64,3 +88,18 @@
 - [x] メトロノーム_別技でリセット
 - [x] メトロノーム_最大2倍
 - [x] メトロノーム_連続使用で威力増加
+- [x] 天候延長アイテム(item_name=さらさらいわ, weather=すなあらし)
+- [x] 天候延長アイテム(item_name=あついいわ, weather=はれ)
+- [x] 天候延長アイテム(item_name=しめったいわ, weather=あめ)
+- [x] 天候延長アイテム(item_name=つめたいいわ, weather=ゆき)
+- [x] 専用アイテム_タイプ補正(item_name=こころのしずく, mon_name=ラティオス, move_name=サイコキネシス)
+- [x] 専用アイテム_タイプ補正(item_name=こころのしずく, mon_name=ラティアス, move_name=ドラゴンクロー)
+- [x] 専用アイテム_タイプ補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー)
+- [x] 専用アイテム_タイプ補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=アイアンヘッド)
+- [x] 専用アイテム_タイプ補正(item_name=しらたま, mon_name=パルキア, move_name=ドラゴンクロー)
+- [x] 専用アイテム_タイプ補正(item_name=しらたま, mon_name=パルキア, move_name=なみのり)
+- [x] 専用アイテム_タイプ補正(item_name=だいこんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー)
+- [x] 専用アイテム_タイプ補正(item_name=だいしらたま, mon_name=パルキア, move_name=ドラゴンクロー)
+- [x] 専用アイテム_タイプ補正(item_name=だいはっきんだま, mon_name=ギラティナ(アナザー), move_name=シャドーボール)
+- [x] 専用アイテム_タイプ補正(item_name=はっきんだま, mon_name=ギラティナ(アナザー), move_name=シャドーボール)
+- [x] 専用アイテム_タイプ補正(item_name=はっきんだま, mon_name=ギラティナ(アナザー), move_name=ドラゴンクロー)
