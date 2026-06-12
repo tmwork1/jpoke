@@ -39,11 +39,23 @@ ITEMS: dict[str, ItemData] = {
     "": ItemData(name=""),
     "あかいいと": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_VOLATILE_START: h.ItemHandler(
+                h.あかいいと_infatuate_foe,
+                subject_spec="source:self",
+            )
+        }
     ),
     "あついいわ": ItemData(
         consumable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
+                h.あついいわ_resolve_field_count,
+                subject_spec="source:self",
+            )
+        }
     ),
     "あつぞこブーツ": ItemData(
         consumable=False,
@@ -65,7 +77,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=60,
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
-                h.いしずえのめん_boost_atk,
+                h.オーガポンのめん_boost_atk,
                 subject_spec="attacker:self",
             )
         }
@@ -76,7 +88,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=60,
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
-                h.いどのめん_boost_atk,
+                h.オーガポンのめん_boost_atk,
                 subject_spec="attacker:self",
             )
         }
@@ -93,7 +105,19 @@ ITEMS: dict[str, ItemData] = {
     ),
     "エレキシード": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.エレキシード_on_switch_in,
+                subject_spec="source:self",
+                once=True,
+            ),
+            Event.ON_FIELD_CHANGE: h.ItemHandler(
+                h.エレキシード_on_field_change,
+                subject_spec="source:self",
+                once=True,
+            ),
+        }
     ),
     "おうじゃのしるし": ItemData(
         consumable=False,
@@ -113,7 +137,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "かえんだま": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.かえんだま_apply_burn,
+                subject_spec="source:self",
+                priority=90,
+            )
+        }
     ),
     "かたいいし": ItemData(
         consumable=False,
@@ -131,7 +162,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=60,
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
-                h.かまどのめん_boost_atk,
+                h.オーガポンのめん_boost_atk,
                 subject_spec="attacker:self",
             )
         }
@@ -142,15 +173,34 @@ ITEMS: dict[str, ItemData] = {
     ),
     "かるいし": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            DomainEvent.ON_CALC_SPEED: h.ItemHandler(
+                h.かるいし_boost_speed,
+                subject_spec="source:self",
+            )
+        }
     ),
     "きあいのタスキ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_MODIFY_MOVE_DAMAGE: h.ItemHandler(
+                h.きあいのタスキ_survive_ohko,
+                subject_spec="defender:self",
+                once=True,
+            )
+        }
     ),
     "きあいのハチマキ": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_MODIFY_MOVE_DAMAGE: h.ItemHandler(
+                h.きあいのハチマキ_survive_by_chance,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "きせきのたね": ItemData(
         consumable=False,
@@ -195,7 +245,19 @@ ITEMS: dict[str, ItemData] = {
     ),
     "グラスシード": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.グラスシード_on_switch_in,
+                subject_spec="source:self",
+                once=True,
+            ),
+            Event.ON_FIELD_CHANGE: h.ItemHandler(
+                h.グラスシード_on_field_change,
+                subject_spec="source:self",
+                once=True,
+            ),
+        }
     ),
     "グランドコート": ItemData(
         consumable=False,
@@ -203,15 +265,38 @@ ITEMS: dict[str, ItemData] = {
     ),
     "クリアチャーム": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_BEFORE_MODIFY_STAT: h.ItemHandler(
+                h.クリアチャーム_block_stat_drop,
+                subject_spec="target:self",
+            )
+        }
     ),
     "くろいてっきゅう": ItemData(
         consumable=False,
-        fling_power=130
+        fling_power=130,
+        handlers={
+            DomainEvent.ON_CALC_SPEED: h.ItemHandler(
+                h.くろいてっきゅう_halve_speed,
+                subject_spec="source:self",
+            ),
+            Event.ON_CHECK_FLOATING: h.ItemHandler(
+                h.くろいてっきゅう_negate_floating,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "くろいヘドロ": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.くろいヘドロ_heal_or_damage,
+                subject_spec="source:self",
+                priority=50,
+            )
+        }
     ),
     "くろいメガネ": ItemData(
         consumable=False,
@@ -229,7 +314,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "こうかくレンズ": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_MODIFY_ACCURACY: h.ItemHandler(
+                h.こうかくレンズ_modify_accuracy,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "こうこうのしっぽ": ItemData(
         consumable=False,
@@ -237,7 +328,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "こころのしずく": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こころのしずく_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "こだわりスカーフ": ItemData(
         consumable=False,
@@ -248,7 +345,7 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
-                h._apply_こだわりロック,
+                h.apply_こだわりロック,
                 subject_spec="attacker:self",
             ),
         }
@@ -262,7 +359,7 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
-                h._apply_こだわりロック,
+                h.apply_こだわりロック,
                 subject_spec="attacker:self",
             ),
         }
@@ -276,18 +373,36 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
-                h._apply_こだわりロック,
+                h.apply_こだわりロック,
                 subject_spec="attacker:self",
             ),
         }
     ),
     "ゴツゴツメット": ItemData(
         consumable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_DAMAGE_HIT: h.ItemHandler(
+                h.ゴツゴツメット_chip_contact_attacker,
+                subject_spec="defender:self",
+            )
+        }
     ),
     "サイコシード": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.サイコシード_on_switch_in,
+                subject_spec="source:self",
+                once=True,
+            ),
+            Event.ON_FIELD_CHANGE: h.ItemHandler(
+                h.サイコシード_on_field_change,
+                subject_spec="source:self",
+                once=True,
+            ),
+        }
     ),
     "さらさらいわ": ItemData(
         consumable=False,
@@ -315,7 +430,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "しめったいわ": ItemData(
         consumable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
+                h.しめったいわ_resolve_field_count,
+                subject_spec="source:self",
+            )
+        }
     ),
     "じゃくてんほけん": ItemData(
         consumable=True,
@@ -337,7 +458,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "しろいハーブ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_MODIFY_STAT: h.ItemHandler(
+                h.しろいハーブ_cancel_stat_drop,
+                subject_spec="target:self",
+                once=True,
+            ),
+        }
     ),
     "しんかのきせき": ItemData(
         consumable=False,
@@ -355,7 +483,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "するどいキバ": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_HIT: h.ItemHandler(
+                h.するどいキバ_flinch_on_hit,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "するどいくちばし": ItemData(
         consumable=False,
@@ -369,7 +503,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "するどいツメ": ItemData(
         consumable=False,
-        fling_power=80
+        fling_power=80,
+        handlers={
+            Event.ON_CALC_CRITICAL_RANK: h.ItemHandler(
+                h.するどいツメ_boost_critical_rank,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "せいれいプレート": ItemData(
         consumable=False,
@@ -411,7 +551,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "たつじんのおび": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
+                h.たつじんのおび_boost_super_effective,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "たべのこし": ItemData(
         fling_power=10,
@@ -436,6 +582,12 @@ ITEMS: dict[str, ItemData] = {
     "つめたいいわ": ItemData(
         consumable=False,
         fling_power=40,
+        handlers={
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
+                h.つめたいいわ_resolve_field_count,
+                subject_spec="source:self",
+            )
+        }
     ),
     "でかいきんのたま": ItemData(
         consumable=False,
@@ -443,22 +595,35 @@ ITEMS: dict[str, ItemData] = {
     ),
     "でんきだま": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
+                h.でんきだま_boost_atk,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "とくせいガード": ItemData(
         consumable=False,
         fling_power=30,
         handlers={
-            Event.ON_ABILITY_DISABLED: h.ItemHandler(
+            Event.ON_CHECK_ABILITY_DISABLE: h.ItemHandler(
                 lambda *args: HandlerReturn(value=True, stop_event=True),
-                subject_spec="target:self",
+                subject_spec="source:self",
                 priority=200,
             ),
         }
     ),
     "どくどくだま": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.どくどくだま_apply_poison,
+                subject_spec="source:self",
+                priority=90,
+            )
+        }
     ),
     "どくバリ": ItemData(
         consumable=False,
@@ -540,7 +705,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ひかりのねんど": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
+                h.ひかりのねんど_resolve_field_count,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "ビビリだま": ItemData(
         consumable=True,
@@ -548,16 +719,42 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ピントレンズ": ItemData(
         consumable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_CALC_CRITICAL_RANK: h.ItemHandler(
+                h.ピントレンズ_boost_critical_rank,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "ブーストエナジー": ItemData(
         consumable=True,
         removable=False,
-        fling_power=30
+        fling_power=30,
+        handlers={
+            Event.ON_ITEM_ENABLED: h.ItemHandler(
+                h.ブーストエナジー_refresh_on_item_enabled,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.ブーストエナジー_refresh_on_item_enabled,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "ふうせん": ItemData(
         consumable=False,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_CHECK_FLOATING: h.ItemHandler(
+                h.ふうせん_check_floating,
+                subject_spec="source:self",
+            ),
+            Event.ON_DAMAGE_HIT: h.ItemHandler(
+                h.ふうせん_pop_on_hit,
+                subject_spec="defender:self",
+            ),
+        }
     ),
     "フォーカスレンズ": ItemData(
         consumable=False,
@@ -583,7 +780,19 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ミストシード": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.ミストシード_on_switch_in,
+                subject_spec="source:self",
+                once=True,
+            ),
+            Event.ON_FIELD_CHANGE: h.ItemHandler(
+                h.ミストシード_on_field_change,
+                subject_spec="source:self",
+                once=True,
+            ),
+        }
     ),
     "メタルコート": ItemData(
         consumable=False,
@@ -682,150 +891,372 @@ ITEMS: dict[str, ItemData] = {
     "くちたけん": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.くちたけん_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.くちたけん_form_change,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "くちたたて": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.くちたたて_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.くちたたて_form_change,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "こんごうだま": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.こんごうだま_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "しらたま": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.しらたま_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "だいこんごうだま": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.だいこんごうだま_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.だいこんごうだま_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.だいこんごうだま_modify_power,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "だいしらたま": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.だいしらたま_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.だいしらたま_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.だいしらたま_modify_power,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "だいはっきんだま": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.だいはっきんだま_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.だいはっきんだま_form_change,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.だいはっきんだま_modify_power,
+                subject_spec="attacker:self",
+            ),
+        }
     ),
     "はっきんだま": ItemData(
         consumable=False,
         removable=False,
-        fling_power=0
+        fling_power=0,
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
+                h.はっきんだま_modify_power,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "オボンのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.オボンのみ_heal_on_half_hp,
+                subject_spec="target:self",
+                once=True,
+            ),
         }
     ),
     "ラムのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.ラムのみ_cure_ailment,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "クラボのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.クラボのみ_cure_paralysis,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "カゴのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.カゴのみ_cure_sleep,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "モモンのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.モモンのみ_cure_poison,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "チーゴのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.チーゴのみ_cure_burn,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "ナナシのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.ナナシのみ_cure_freeze,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "キーのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.キーのみ_cure_confusion,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "ヒメリのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_TURN_END: h.ItemHandler(
+                h.ヒメリのみ_cure_disable,
+                subject_spec="source:self",
+                priority=50,
+                once=True,
+            )
         }
     ),
     "オレンのみ": ItemData(
         consumable=True,
         fling_power=10,
         handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.オレンのみ_heal_on_half_hp,
+                subject_spec="target:self",
+                once=True,
+            ),
         }
     ),
     "フィラのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.フィラのみ_heal_on_quarter_hp,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "ウイのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.ウイのみ_heal_on_quarter_hp,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "マゴのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.マゴのみ_heal_on_quarter_hp,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "バンジのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.バンジのみ_heal_on_quarter_hp,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "イアのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.イアのみ_heal_on_quarter_hp,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "チイラのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.チイラのみ_boost_attack,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "リュガのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.リュガのみ_heal_on_quarter_hp,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "ヤタピのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.ヤタピのみ_boost_spatk,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "ズアのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.ズアのみ_boost_spdef,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "カムラのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.カムラのみ_boost_speed,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "スターのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.スターのみ_random_boost,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "サンのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.サンのみ_boost_spatk,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "ホズのみ": ItemData(
         consumable=True,
@@ -1010,11 +1441,25 @@ ITEMS: dict[str, ItemData] = {
     ),
     "アッキのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_DAMAGE_HIT: h.ItemHandler(
+                h.アッキのみ_boost_defense_on_physical_super_effective,
+                subject_spec="defender:self",
+                once=True,
+            )
+        }
     ),
     "タラプのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_HP_CHANGED: h.ItemHandler(
+                h.タラプのみ_boost_spdef,
+                subject_spec="target:self",
+                once=True,
+            )
+        }
     ),
     "イバンのみ": ItemData(
         consumable=True,
@@ -1022,7 +1467,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ジャポのみ": ItemData(
         consumable=True,
-        fling_power=10
+        fling_power=10,
+        handlers={
+            Event.ON_DAMAGE_HIT: h.ItemHandler(
+                h.ジャポのみ_retaliate_physical,
+                subject_spec="defender:self",
+                once=True,
+            )
+        }
     ),
     "レンブのみ": ItemData(
         consumable=True,
