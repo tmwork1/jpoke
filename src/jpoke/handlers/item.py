@@ -406,7 +406,11 @@ def とけないこおり_modify_power_by_type(battle: Battle, ctx: AttackContex
 
 
 def ノーマルジュエル_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="ノーマル", modifier=6144/4096)
+    if ctx.move.type == "ノーマル":
+        value = apply_fixed_modifier(value, 6144)
+        _announce_item_triggered(battle, ctx.attacker)
+        battle.consume_item(ctx.attacker)
+    return HandlerReturn(value=value)
 
 
 def のろいのおふだ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -640,7 +644,7 @@ def チーゴのみ_cure_burn(battle: Battle, ctx: EventContext, value: Any) -> 
 
 
 def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    if battle.damage_calculator.calc_def_type_modifier(ctx) > 1:
+    if battle.damage_calculator.calc_def_type_modifier(ctx) > 4096:
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
@@ -1027,7 +1031,7 @@ def こうこうのしっぽ_back_tier(_battle: Battle, _ctx: AttackContext, val
 def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゃくてんほけん: 効果抜群のダメージを受けたときA・Cを+2。"""
     mon = ctx.defender
-    if battle.damage_calculator.calc_def_type_modifier(ctx) > 1:
+    if battle.damage_calculator.calc_def_type_modifier(ctx) > 4096:
         _announce_item_triggered(battle, mon)
         battle.consume_item(mon)
         battle.modify_stats(mon, {"A": +2, "C": +2})
@@ -1174,7 +1178,7 @@ def ぼうじんゴーグル_block_powder_move(_battle: Battle, ctx: AttackConte
 
 def ぼうじんゴーグル_block_weather_damage(_battle: Battle, ctx: Any, value: Any) -> HandlerReturn:
     """ぼうじんゴーグル: 天候によるターン終了ダメージを無効化する。"""
-    if ctx.hp_change_reason == "weather":
+    if ctx.hp_change_reason == "sandstorm":
         return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 

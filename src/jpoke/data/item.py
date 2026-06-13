@@ -522,7 +522,7 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_MODIFY_STAT: h.ItemHandler(
+            Event.ON_BEFORE_MODIFY_STAT: h.ItemHandler(
                 h.しろいハーブ_cancel_stat_drop,
                 subject_spec="target:self",
                 once=True,
@@ -919,7 +919,7 @@ ITEMS: dict[str, ItemData] = {
             ),
             Event.ON_MODIFY_NON_MOVE_DAMAGE: h.ItemHandler(
                 h.ぼうじんゴーグル_block_weather_damage,
-                subject_spec="source:self",
+                subject_spec="target:self",
             ),
         }
     ),

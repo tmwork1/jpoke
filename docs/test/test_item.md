@@ -1,26 +1,69 @@
 # test_item
 
-テスト数: 93
+テスト数: 197
 
+- [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=A, amount=2)
+- [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=S, amount=2)
+- [x] HP25以下でランク上昇するきのみ(item_name=ヤタピのみ, stat=C, amount=2)
+- [x] HP25以下でランク上昇するきのみ(item_name=サンのみ, stat=C, amount=2)
+- [x] HP25以下でランク上昇するきのみ(item_name=ズアのみ, stat=D, amount=1)
+- [x] HP25以下でランク上昇するきのみ(item_name=タラプのみ, stat=D, amount=2)
+- [x] HP25以下で回復するきのみ(item_name=ウイのみ)
+- [x] HP25以下で回復するきのみ(item_name=イアのみ)
+- [x] HP25以下で回復するきのみ(item_name=フィラのみ)
+- [x] HP25以下で回復するきのみ(item_name=マゴのみ)
+- [x] HP25以下で回復するきのみ(item_name=バンジのみ)
+- [x] HP25以下で回復するきのみ(item_name=リュガのみ)
 - [x] あかいいと_アイテム消費されない
 - [x] あかいいと_どんかん持ちには付与されない
 - [x] あかいいと_メロメロ被弾で相手もメロメロ
 - [x] あかいいと_他の揮発状態では発動しない
+- [x] アッキのみ_物理の弱点でB上昇
+- [x] アッキのみ_特殊の弱点では発動しない
+- [x] あつぞこブーツ_ステルスロック無効
+- [x] いかさまダイス_ヒット数4
+- [x] いかさまダイス_ヒット数5
 - [x] いのちのたま
 - [x] いのちのたま_変化技では発動しない
-- [x] オーガポンのめん_物理技強化(item_name=いしずえのめん, mon_name=オーガポン(いしずえ))
-- [x] オーガポンのめん_物理技強化(item_name=いどのめん, mon_name=オーガポン(いど))
-- [x] オーガポンのめん_物理技強化(item_name=かまどのめん, mon_name=オーガポン(かまど))
-- [x] オーガポンのめん_特殊技は補正なし
+- [x] ウイのみ_HP25超では発動しない
+- [x] エレキシード_エレキフィールドで防御上昇
+- [x] エレキシード_フィールドなしでは発動しない
+- [x] おうじゃのしるし_ひるまない確率
+- [x] おうじゃのしるし_ひるみ付与
+- [x] おおきなねっこ_吸収技の回復量増加
+- [x] オボンのみ_HP50以下で回復
+- [x] オボンのみ_HP50超では発動しない
+- [x] オレンのみ_HP50以下で10回復
+- [x] おんみつマント_追加効果を無効化
+- [x] オーガポンのめん_特殊技には補正なし
+- [x] かいがらのすず_攻撃後HP回復
+- [x] かえんだま_ターン終了でやけど
+- [x] カゴのみ_ターン終了でねむり回復
+- [x] カゴのみ_ねむり以外では発動しない
+- [x] かるいし_素早さ2倍
+- [x] きあいのタスキ_満タンからひんしにならない
+- [x] きあいのタスキ_満タンでなければ無効
+- [x] きあいのハチマキ_確率でひんしにならない
+- [x] きあいのハチマキ_確率外は耐えない
 - [x] きれいなぬけがら
-- [x] くちたけん_くちたたて_フォルムチェンジ(item_name=くちたけん, mon_name=ザシアン(れきせん), expected_name=ザシアン(けんのおう))
-- [x] くちたけん_くちたたて_フォルムチェンジ(item_name=くちたたて, mon_name=ザマゼンタ(れきせん), expected_name=ザマゼンタ(たてのおう))
-- [x] くちたけん_くちたたて_他ポケモンは変化しない(item_name=くちたけん)
-- [x] くちたけん_くちたたて_他ポケモンは変化しない(item_name=くちたたて)
+- [x] キーのみ_ターン終了でこんらん回復
+- [x] くちた系_フォルムチェンジ(item_name=くちたけん, mon_name=ザシアン(れきせん), expected_name=ザシアン(けんのおう))
+- [x] くちた系_フォルムチェンジ(item_name=くちたたて, mon_name=ザマゼンタ(れきせん), expected_name=ザマゼンタ(たてのおう))
+- [x] くちた系_他ポケモンは変化しない(item_name=くちたけん)
+- [x] くちた系_他ポケモンは変化しない(item_name=くちたたて)
+- [x] クラボのみ_ターン終了でまひ回復
 - [x] クリアチャーム_いかくを防ぐ
 - [x] クリアチャーム_自分の技の低下は防げない
-- [x] こだわりスカーフ_交代でロック解除
+- [x] くろいてっきゅう_浮遊を無効化
+- [x] くろいてっきゅう_素早さ半分
+- [x] くろいヘドロ_どくタイプは回復
+- [x] くろいヘドロ_非どくタイプはダメージ
+- [x] グラスシード_グラスフィールドで防御上昇
+- [x] こうこうのしっぽ_行動が後になる
 - [x] こだわりスカーフ_素早さ強化
+- [x] こだわり系_交代でロック解除(item_name=こだわりスカーフ)
+- [x] こだわり系_交代でロック解除(item_name=こだわりハチマキ)
+- [x] こだわり系_交代でロック解除(item_name=こだわりメガネ)
 - [x] こだわり系_技ロック(item_name=こだわりスカーフ)
 - [x] こだわり系_技ロック(item_name=こだわりハチマキ)
 - [x] こだわり系_技ロック(item_name=こだわりメガネ)
@@ -28,70 +71,131 @@
 - [x] こだわり系_火力補正(item_name=こだわりハチマキ, move_name=でんきショック, expected=4096)
 - [x] こだわり系_火力補正(item_name=こだわりメガネ, move_name=たいあたり, expected=4096)
 - [x] こだわり系_火力補正(item_name=こだわりメガネ, move_name=でんきショック, expected=6144)
-- [x] タイプ半減実(item_name=リンドのみ, type_name=くさ, defender_name=ゼニガメ, expected=2048)
-- [x] タイプ半減実(item_name=オッカのみ, type_name=ほのお, defender_name=フシギダネ, expected=2048)
-- [x] タイプ半減実(item_name=イトケのみ, type_name=みず, defender_name=ヒトカゲ, expected=2048)
-- [x] タイプ半減実(item_name=ソクノのみ, type_name=でんき, defender_name=ゼニガメ, expected=2048)
-- [x] タイプ半減実(item_name=カシブのみ, type_name=ゴースト, defender_name=エーフィ, expected=2048)
-- [x] タイプ半減実(item_name=ヨロギのみ, type_name=いわ, defender_name=ヒトカゲ, expected=2048)
-- [x] タイプ半減実(item_name=タンガのみ, type_name=むし, defender_name=エーフィ, expected=2048)
-- [x] タイプ半減実(item_name=ウタンのみ, type_name=エスパー, defender_name=コジョフー, expected=2048)
-- [x] タイプ半減実(item_name=バコウのみ, type_name=ひこう, defender_name=コジョフー, expected=2048)
-- [x] タイプ半減実(item_name=シュカのみ, type_name=じめん, defender_name=ピカチュウ, expected=2048)
-- [x] タイプ半減実(item_name=ビアーのみ, type_name=どく, defender_name=プリン, expected=2048)
-- [x] タイプ半減実(item_name=ヨプのみ, type_name=かくとう, defender_name=カビゴン, expected=2048)
-- [x] タイプ半減実(item_name=ヤチェのみ, type_name=こおり, defender_name=ミニリュウ, expected=2048)
-- [x] タイプ半減実(item_name=リリバのみ, type_name=はがね, defender_name=マリル, expected=2048)
-- [x] タイプ半減実(item_name=ナモのみ, type_name=あく, defender_name=エーフィ, expected=2048)
-- [x] タイプ半減実(item_name=ハバンのみ, type_name=ドラゴン, defender_name=ミニリュウ, expected=2048)
-- [x] タイプ半減実(item_name=ロゼルのみ, type_name=フェアリー, defender_name=ミニリュウ, expected=2048)
-- [x] タイプ強化アイテム(item_name=かたいいし, type_name=いわ, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=きせきのたね, type_name=くさ, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=ぎんのこな, type_name=むし, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=くろいメガネ, type_name=あく, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=くろおび, type_name=あく, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=じしゃく, type_name=でんき, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=シルクのスカーフ, type_name=ノーマル, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=しんぴのしずく, type_name=みず, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=するどいくちばし, type_name=ひこう, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=せいれいプレート, type_name=フェアリー, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=どくバリ, type_name=どく, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=とけないこおり, type_name=こおり, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=ノーマルジュエル, type_name=ノーマル, expected_modifier=6144)
-- [x] タイプ強化アイテム(item_name=のろいのおふだ, type_name=ゴースト, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=まがったスプーン, type_name=エスパー, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=メタルコート, type_name=はがね, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=もくたん, type_name=ほのお, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=やわらかいすな, type_name=じめん, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=ようせいのハネ, type_name=フェアリー, expected_modifier=4915)
-- [x] タイプ強化アイテム(item_name=りゅうのキバ, type_name=ドラゴン, expected_modifier=4915)
+- [x] ゴツゴツメット_接触攻撃で反撃ダメージ
+- [x] ゴツゴツメット_非接触技では発動しない
+- [x] サイコシード_サイコフィールドでとくぼう上昇
+- [x] しめつけバンド_バインドダメージ増加
+- [x] しろいハーブ_2回目の能力低下はキャンセルされない
+- [x] しろいハーブ_能力低下を1度だけキャンセル
+- [x] しんかのきせき_未進化ポケモンの防御1_5倍
+- [x] じゃくてんほけん_効果抜群でAC上昇
+- [x] じゃくてんほけん_等倍では発動しない
+- [x] ジャポのみ_物理被弾で攻撃者にダメージ
+- [x] ジャポのみ_特殊技では発動しない
+- [x] じゅうでんち_でんき以外では発動しない
+- [x] じゅうでんち_でんき被弾でA上昇
+- [x] スターのみ_HP25以下でランダム能力上昇
+- [x] するどいキバ_ひるみ付与
+- [x] するどいツメ_急所ランク加算
+- [x] せんせいのツメ_先制確率で先攻
+- [x] せんせいのツメ_非発動時は通常の順番
+- [x] タイプ半減実(item_name=リンドのみ, type_name=くさ, defender_name=ゼニガメ)
+- [x] タイプ半減実(item_name=オッカのみ, type_name=ほのお, defender_name=フシギダネ)
+- [x] タイプ半減実(item_name=イトケのみ, type_name=みず, defender_name=ヒトカゲ)
+- [x] タイプ半減実(item_name=ソクノのみ, type_name=でんき, defender_name=ゼニガメ)
+- [x] タイプ半減実(item_name=カシブのみ, type_name=ゴースト, defender_name=エーフィ)
+- [x] タイプ半減実(item_name=ヨロギのみ, type_name=いわ, defender_name=ヒトカゲ)
+- [x] タイプ半減実(item_name=タンガのみ, type_name=むし, defender_name=エーフィ)
+- [x] タイプ半減実(item_name=ウタンのみ, type_name=エスパー, defender_name=コジョフー)
+- [x] タイプ半減実(item_name=バコウのみ, type_name=ひこう, defender_name=コジョフー)
+- [x] タイプ半減実(item_name=シュカのみ, type_name=じめん, defender_name=ピカチュウ)
+- [x] タイプ半減実(item_name=ビアーのみ, type_name=どく, defender_name=プリン)
+- [x] タイプ半減実(item_name=ヨプのみ, type_name=かくとう, defender_name=カビゴン)
+- [x] タイプ半減実(item_name=ヤチェのみ, type_name=こおり, defender_name=ミニリュウ)
+- [x] タイプ半減実(item_name=リリバのみ, type_name=はがね, defender_name=マリル)
+- [x] タイプ半減実(item_name=ナモのみ, type_name=あく, defender_name=エーフィ)
+- [x] タイプ半減実(item_name=ハバンのみ, type_name=ドラゴン, defender_name=ミニリュウ)
+- [x] タイプ半減実(item_name=ロゼルのみ, type_name=フェアリー, defender_name=ミニリュウ)
+- [x] タイプ強化アイテム(item_name=かたいいし, type_name=いわ)
+- [x] タイプ強化アイテム(item_name=きせきのたね, type_name=くさ)
+- [x] タイプ強化アイテム(item_name=ぎんのこな, type_name=むし)
+- [x] タイプ強化アイテム(item_name=くろいメガネ, type_name=あく)
+- [x] タイプ強化アイテム(item_name=くろおび, type_name=あく)
+- [x] タイプ強化アイテム(item_name=じしゃく, type_name=でんき)
+- [x] タイプ強化アイテム(item_name=シルクのスカーフ, type_name=ノーマル)
+- [x] タイプ強化アイテム(item_name=しんぴのしずく, type_name=みず)
+- [x] タイプ強化アイテム(item_name=するどいくちばし, type_name=ひこう)
+- [x] タイプ強化アイテム(item_name=せいれいプレート, type_name=フェアリー)
+- [x] タイプ強化アイテム(item_name=どくバリ, type_name=どく)
+- [x] タイプ強化アイテム(item_name=とけないこおり, type_name=こおり)
+- [x] タイプ強化アイテム(item_name=のろいのおふだ, type_name=ゴースト)
+- [x] タイプ強化アイテム(item_name=まがったスプーン, type_name=エスパー)
+- [x] タイプ強化アイテム(item_name=メタルコート, type_name=はがね)
+- [x] タイプ強化アイテム(item_name=もくたん, type_name=ほのお)
+- [x] タイプ強化アイテム(item_name=やわらかいすな, type_name=じめん)
+- [x] タイプ強化アイテム(item_name=ようせいのハネ, type_name=フェアリー)
+- [x] タイプ強化アイテム(item_name=りゅうのキバ, type_name=ドラゴン)
+- [x] たつじんのおび_効果抜群で1_2倍
+- [x] たつじんのおび_等倍では補正なし
 - [x] たべのこし
 - [x] だっしゅつパック_0ターン目にいかくで交代
 - [x] だっしゅつパック_能力上昇では発動しない
 - [x] だっしゅつボタン
-- [x] でんきだま_他種族は補正なし
-- [x] でんきだま_物理技こうげき2倍
-- [x] でんきだま_特殊技とくこう2倍
+- [x] ちからのハチマキ_物理技1_1倍
+- [x] ちからのハチマキ_特殊技には補正なし
+- [x] チーゴのみ_ターン終了でやけど回復
 - [x] とくせいガード_かたやぶりによる特性無効化をブロック
 - [x] とくせいガード_なしの場合は特性が無効化される
+- [x] とつげきチョッキ_物理技には防御補正なし
+- [x] とつげきチョッキ_特殊技にとくぼう1_5倍
+- [x] どくどくだま_ターン終了でもうどく
+- [x] ナナシのみ_ターン終了でこおり回復
+- [x] ねらいのまと_タイプ免疫を無効化
+- [x] のどスプレー_非音技では発動しない
+- [x] のどスプレー_音技使用後にC上昇
+- [x] ノーマルジュエル_ノーマル技威力1_5倍
+- [x] パワフルハーブ_溜め技をスキップ
+- [x] パンチグローブ_パンチ技の威力1_1倍
+- [x] パンチグローブ_パンチ技の接触判定を無効化
+- [x] ひかりごけ_みず以外では発動しない
+- [x] ひかりごけ_みず被弾でD上昇
+- [x] ひかりのねんど_スクリーン8ターンに延長
+- [x] ヒメリのみ_ターン終了でかなしばり回復
+- [x] ビビリだま_いかくでS上昇
+- [x] ピントレンズ_急所ランク加算
+- [x] ふうせん_じめん技を無効化
+- [x] ふうせん_ダメージを受けると割れる
 - [x] ブーストエナジー_こだいかっせいマジックルーム解除後に発動
 - [x] ブーストエナジー_こだいかっせい登場時に発動
+- [x] ぼうごパット_接触判定を無効化
+- [x] ぼうじんゴーグル_天候ダメージを無効化
+- [x] ぼうじんゴーグル_粉技を無効化
+- [x] ミストシード_ミストフィールドでとくぼう上昇
 - [x] メトロノーム_初回は補正なし
 - [x] メトロノーム_別技でリセット
 - [x] メトロノーム_最大2倍
 - [x] メトロノーム_連続使用で威力増加
+- [x] メンタルハーブ_いちゃもんを即解除
+- [x] メンタルハーブ_対象外の揮発状態には反応しない
+- [x] ものしりメガネ_物理技には補正なし
+- [x] ものしりメガネ_特殊技1_1倍
+- [x] ものまねハーブ_相手のランク上昇をコピー
+- [x] モモンのみ_ターン終了でどく回復
+- [x] ゆきだま_こおり以外では発動しない
+- [x] ゆきだま_こおり被弾でB上昇
+- [x] ラムのみ_ターン終了で状態異常回復
+- [x] ルームサービス_トリックルームでS低下
+- [x] レッドカード_交代先がいなければ発動しない
+- [x] レッドカード_攻撃側を強制交代
+- [x] レンブのみ_物理技では発動しない
+- [x] レンブのみ_特殊被弾で攻撃者にダメージ
 - [x] 天候延長アイテム(item_name=さらさらいわ, weather=すなあらし)
 - [x] 天候延長アイテム(item_name=あついいわ, weather=はれ)
 - [x] 天候延長アイテム(item_name=しめったいわ, weather=あめ)
 - [x] 天候延長アイテム(item_name=つめたいいわ, weather=ゆき)
-- [x] 専用アイテム_タイプ補正(item_name=こころのしずく, mon_name=ラティオス, move_name=サイコキネシス)
-- [x] 専用アイテム_タイプ補正(item_name=こころのしずく, mon_name=ラティアス, move_name=ドラゴンクロー)
-- [x] 専用アイテム_タイプ補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー)
-- [x] 専用アイテム_タイプ補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=アイアンヘッド)
-- [x] 専用アイテム_タイプ補正(item_name=しらたま, mon_name=パルキア, move_name=ドラゴンクロー)
-- [x] 専用アイテム_タイプ補正(item_name=しらたま, mon_name=パルキア, move_name=なみのり)
-- [x] 専用アイテム_タイプ補正(item_name=だいこんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー)
-- [x] 専用アイテム_タイプ補正(item_name=だいしらたま, mon_name=パルキア, move_name=ドラゴンクロー)
-- [x] 専用アイテム_タイプ補正(item_name=だいはっきんだま, mon_name=ギラティナ(アナザー), move_name=シャドーボール)
-- [x] 専用アイテム_タイプ補正(item_name=はっきんだま, mon_name=ギラティナ(アナザー), move_name=シャドーボール)
-- [x] 専用アイテム_タイプ補正(item_name=はっきんだま, mon_name=ギラティナ(アナザー), move_name=ドラゴンクロー)
+- [x] 専用アイテム攻撃補正(item_name=いしずえのめん, mon_name=オーガポン(いしずえ), move_name=たいあたり, expected_modifier=4915)
+- [x] 専用アイテム攻撃補正(item_name=いどのめん, mon_name=オーガポン(いど), move_name=たいあたり, expected_modifier=4915)
+- [x] 専用アイテム攻撃補正(item_name=かまどのめん, mon_name=オーガポン(かまど), move_name=たいあたり, expected_modifier=4915)
+- [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ, move_name=たいあたり, expected_modifier=8192)
+- [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ, move_name=でんきショック, expected_modifier=8192)
+- [x] 専用アイテム補正(item_name=こころのしずく, mon_name=ラティオス, move_name=サイコキネシス, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=こころのしずく, mon_name=ラティアス, move_name=ドラゴンクロー, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=アイアンヘッド, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=しらたま, mon_name=パルキア, move_name=ドラゴンクロー, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=しらたま, mon_name=パルキア, move_name=なみのり, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=だいこんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=だいしらたま, mon_name=パルキア, move_name=ドラゴンクロー, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=だいはっきんだま, mon_name=ギラティナ(アナザー), move_name=シャドーボール, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=はっきんだま, mon_name=ギラティナ(アナザー), move_name=シャドーボール, expected_modifier=4915)
+- [x] 専用アイテム補正(item_name=はっきんだま, mon_name=ギラティナ(アナザー), move_name=ドラゴンクロー, expected_modifier=4915)
