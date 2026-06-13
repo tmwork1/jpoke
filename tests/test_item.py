@@ -26,12 +26,11 @@ def _dummy_move(type_name: str) -> Move:
 
 
 @pytest.mark.parametrize("item_name, stat, amount", [
-    ("チイラのみ", "A", 2),
-    ("カムラのみ", "S", 2),
-    ("ヤタピのみ", "C", 2),
-    ("サンのみ", "C", 2),
+    ("チイラのみ", "A", 1),
+    ("カムラのみ", "S", 1),
+    ("ヤタピのみ", "C", 1),
+    ("リュガのみ", "B", 1),
     ("ズアのみ", "D", 1),
-    ("タラプのみ", "D", 2),
 ])
 def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
     """HP1/4以下になった瞬間に能力ランクを上昇させる"""
@@ -46,7 +45,7 @@ def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
     assert not mon.has_item()
 
 
-@pytest.mark.parametrize("item_name", ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ", "リュガのみ"])
+@pytest.mark.parametrize("item_name", ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"])
 def test_HP25以下で回復するきのみ(item_name):
     """HP1/4以下になった瞬間に最大HPの1/3を回復する"""
     battle = t.start_battle(
@@ -112,22 +111,21 @@ def test_あかいいと_他の揮発状態では発動しない():
     assert not foe.has_volatile("メロメロ")
 
 
-def test_アッキのみ_物理の弱点でB上昇():
-    """アッキのみ: 物理の弱点ダメージを受けたときぼうぎょ+2"""
+def test_アッキのみ_物理技でB上昇():
+    """アッキのみ: 物理技ダメージを受けたときぼうぎょ+1"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
         team1=[Pokemon("ゼニガメ", item_name="アッキのみ")],
         accuracy=100,
     )
-    battle.actives[0].moves[0] = _dummy_move("くさ")  # ゼニガメはくさ弱点
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["B"] == 2
+    assert foe.rank["B"] == 1
     assert not foe.has_item()
 
 
-def test_アッキのみ_特殊の弱点では発動しない():
-    """アッキのみ: 特殊技の弱点では発動しない"""
+def test_アッキのみ_特殊技では発動しない():
+    """アッキのみ: 特殊技では発動しない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         team1=[Pokemon("ゼニガメ", item_name="アッキのみ")],
@@ -713,6 +711,19 @@ def test_サイコシード_サイコフィールドでとくぼう上昇():
     assert not mon.has_item()
 
 
+def test_サンのみ_HP25以下できゅうしょアップ状態():
+    """サンのみ: HP1/4以下になった瞬間にきゅうしょアップ状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="サンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.has_volatile("きゅうしょアップ")
+    assert not mon.has_item()
+
+
 def test_しめつけバンド_バインドダメージ増加():
     """しめつけバンド: バインドダメージを最大HPの1/6に増加する"""
     battle = t.start_battle(
@@ -1004,6 +1015,31 @@ def test_たべのこし():
     assert mon.hp == 1 + mon.max_hp // 16
 
 
+def test_タラプのみ_物理技では発動しない():
+    """タラプのみ: 物理技では発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", item_name="タラプのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["D"] == 0
+
+
+def test_タラプのみ_特殊技被弾でD上昇():
+    """タラプのみ: 特殊技でダメージを受けたときとくぼう+1"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", item_name="タラプのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["D"] == 1
+    assert not foe.has_item()
+
+
 def test_だっしゅつパック_0ターン目にいかくで交代():
     """だっしゅつパック: 能力ダウンで交代"""
     battle = t.start_battle(
@@ -1281,19 +1317,6 @@ def test_ひかりのねんど_スクリーン8ターンに延長():
     assert result == ["リフレクター", 8]
 
 
-def test_ヒメリのみ_ターン終了でかなしばり回復():
-    """ヒメリのみ: ターン終了時にかなしばりを回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="ヒメリのみ")],
-        team1=[Pokemon("ピカチュウ")],
-        volatile0={"かなしばり": 3},
-    )
-    mon = battle.actives[0]
-    t.end_turn(battle)
-    assert not mon.has_volatile("かなしばり")
-    assert not mon.has_item()
-
-
 def test_ビビリだま_いかくでS上昇():
     """ビビリだま: いかくによってこうげきが下がったときすばやさ+1"""
     battle = t.start_battle(
@@ -1519,7 +1542,7 @@ def test_ものしりメガネ_特殊技1_1倍():
 
 
 def test_ものまねハーブ_相手のランク上昇をコピー():
-    """ものまねハーブ: 相手のランク上昇を+1でコピーする"""
+    """ものまねハーブ: 相手のランク上昇をそのままコピーする"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="ものまねハーブ")],
         team1=[Pokemon("ピカチュウ")],
@@ -1527,7 +1550,7 @@ def test_ものまねハーブ_相手のランク上昇をコピー():
     mon = battle.actives[0]
     foe = battle.actives[1]
     battle.modify_stats(foe, {"A": +2})
-    assert mon.rank["A"] == 1
+    assert mon.rank["A"] == 2
     assert not mon.has_item()
 
 

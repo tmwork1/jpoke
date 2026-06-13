@@ -1,4 +1,4 @@
-"""アイテムデータ定義モジュール。
+﻿"""アイテムデータ定義モジュール。
 
 Note:
     このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
@@ -114,12 +114,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_SWITCH_IN: h.ItemHandler(
-                h.エレキシード_on_switch_in,
+                h.エレキシード_boost_defense,
                 subject_spec="source:self",
                 once=True,
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
-                h.エレキシード_on_field_change,
+                h.エレキシード_boost_defense,
                 subject_spec="source:self",
                 once=True,
             ),
@@ -130,7 +130,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_HIT: h.ItemHandler(
-                h.おうじゃのしるし_flinch_on_hit,
+                h.flinch_on_hit_10pct,
                 subject_spec="attacker:self",
             )
         }
@@ -278,12 +278,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_SWITCH_IN: h.ItemHandler(
-                h.グラスシード_on_switch_in,
+                h.グラスシード_boost_defense,
                 subject_spec="source:self",
                 once=True,
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
-                h.グラスシード_on_field_change,
+                h.グラスシード_boost_defense,
                 subject_spec="source:self",
                 once=True,
             ),
@@ -387,7 +387,7 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
-                h.apply_こだわりロック,
+                h.こだわり_lock_move,
                 subject_spec="attacker:self",
             ),
         }
@@ -401,7 +401,7 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
-                h.apply_こだわりロック,
+                h.こだわり_lock_move,
                 subject_spec="attacker:self",
             ),
         }
@@ -415,7 +415,7 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_MOVE_END: h.ItemHandler(
-                h.apply_こだわりロック,
+                h.こだわり_lock_move,
                 subject_spec="attacker:self",
             ),
         }
@@ -435,12 +435,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_SWITCH_IN: h.ItemHandler(
-                h.サイコシード_on_switch_in,
+                h.サイコシード_boost_spdef,
                 subject_spec="source:self",
                 once=True,
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
-                h.サイコシード_on_field_change,
+                h.サイコシード_boost_spdef,
                 subject_spec="source:self",
                 once=True,
             ),
@@ -554,7 +554,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_HIT: h.ItemHandler(
-                h.するどいキバ_flinch_on_hit,
+                h.flinch_on_hit_10pct,
                 subject_spec="attacker:self",
             )
         }
@@ -866,11 +866,11 @@ ITEMS: dict[str, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_ITEM_ENABLED: h.ItemHandler(
-                h.ブーストエナジー_refresh_on_item_enabled,
+                h.ブーストエナジー_refresh_paradox_charge,
                 subject_spec="source:self",
             ),
             Event.ON_ITEM_GAINED: h.ItemHandler(
-                h.ブーストエナジー_refresh_on_item_enabled,
+                h.ブーストエナジー_refresh_paradox_charge,
                 subject_spec="source:self",
             ),
         }
@@ -938,12 +938,12 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_SWITCH_IN: h.ItemHandler(
-                h.ミストシード_on_switch_in,
+                h.ミストシード_boost_spdef,
                 subject_spec="source:self",
                 once=True,
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
-                h.ミストシード_on_field_change,
+                h.ミストシード_boost_spdef,
                 subject_spec="source:self",
                 once=True,
             ),
@@ -1297,11 +1297,9 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_TURN_END: h.ItemHandler(
-                h.ヒメリのみ_cure_disable,
-                subject_spec="source:self",
-                priority=50,
-                once=True,
+            Event.ON_PP_CONSUMED: h.ItemHandler(
+                h.ヒメリのみ_restore_pp,
+                subject_spec="attacker:self",
             )
         }
     ),
@@ -1321,7 +1319,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.フィラのみ_heal_on_quarter_hp,
+                h.heal_on_quarter_hp,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1332,7 +1330,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.ウイのみ_heal_on_quarter_hp,
+                h.heal_on_quarter_hp,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1343,7 +1341,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.マゴのみ_heal_on_quarter_hp,
+                h.heal_on_quarter_hp,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1354,7 +1352,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.バンジのみ_heal_on_quarter_hp,
+                h.heal_on_quarter_hp,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1365,7 +1363,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.イアのみ_heal_on_quarter_hp,
+                h.heal_on_quarter_hp,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1387,7 +1385,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.リュガのみ_heal_on_quarter_hp,
+                h.リュガのみ_boost_defense,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1442,7 +1440,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.サンのみ_boost_spatk,
+                h.サンのみ_apply_focus_energy,
                 subject_spec="target:self",
                 once=True,
             )
@@ -1634,7 +1632,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_DAMAGE_HIT: h.ItemHandler(
-                h.アッキのみ_boost_defense_on_physical_super_effective,
+                h.アッキのみ_boost_defense_on_physical_hit,
                 subject_spec="defender:self",
                 once=True,
             )
@@ -1644,9 +1642,9 @@ ITEMS: dict[str, ItemData] = {
         consumable=True,
         fling_power=10,
         handlers={
-            Event.ON_HP_CHANGED: h.ItemHandler(
+            Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.タラプのみ_boost_spdef,
-                subject_spec="target:self",
+                subject_spec="defender:self",
                 once=True,
             )
         }

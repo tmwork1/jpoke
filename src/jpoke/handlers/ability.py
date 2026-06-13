@@ -2819,7 +2819,7 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
 
 def ミラクルスキン_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ミラクルスキン特性: 相手の変化技の命中率を50%に固定する。"""
-    if ctx.move.category != "変化" or value is None:
+    if ctx.move.is_attack or value is None:
         return HandlerReturn(value=value)
     return HandlerReturn(value=min(value, 50))
 

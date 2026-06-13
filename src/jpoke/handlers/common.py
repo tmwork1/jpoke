@@ -1,9 +1,10 @@
+# TODO : このモジュールは必要性が少ないため廃止
 """複数の効果実装で使い回す共通ハンドラ群。"""
 
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
@@ -21,6 +22,7 @@ def modify_hp(battle: Battle,
               r: float = 0,
               chance: float = 1,
               reason: HPChangeReason = "") -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """対象のHPを固定値または割合で増減させる。
 
     Args:
@@ -63,6 +65,7 @@ def self_heal(battle: Battle,
               chance: float = 1,
               reason: HPChangeReason = "") -> HandlerReturn:
     """自分のHPを固定値または割合で回復させる。"""
+    # TODO : 共通関数化するほどの処理ではないため削除。
     spec = _self_role_spec(ctx)
     return modify_hp(
         battle, ctx, value, target_spec=spec, source_spec=spec,
@@ -78,6 +81,7 @@ def self_damage(battle: Battle,
                 chance: float = 1,
                 reason: HPChangeReason = "") -> HandlerReturn:
     """自分のHPを固定値または割合で減少させる。"""
+    # TODO : 共通関数化するほどの処理ではないため削除。
     spec = _self_role_spec(ctx)
     return modify_hp(
         battle, ctx, value, target_spec=spec, source_spec=spec,
@@ -94,6 +98,7 @@ def drain_hp(battle: Battle,
              heal_rate: float = 1,
              chance: float = 1,
              reason: HPChangeReason = "") -> HandlerReturn:
+    # TODO : 必要ならBattle以下の管理クラスか個別のハンドラモジュールに実装
     """HPを奪い、奪った量に応じて回復させる。
 
     Args:
@@ -132,6 +137,7 @@ def modify_stats(battle: Battle,
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
                  chance: float = 1) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """複数の能力ランクを同時に変化させる
 
     しろいハーブなどのアイテムが正しく動作するよう、
@@ -170,6 +176,7 @@ def apply_ailment(battle: Battle,
                   count: int | None = None,
                   source_spec: RoleSpec | None = None,
                   chance: float = 1) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=success)
@@ -189,6 +196,7 @@ def apply_volatile(battle: Battle,
                    source_spec: RoleSpec | None = None,
                    chance: float = 1,
                    **kwargs) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """揮発状態を付与する。"""
     chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
@@ -206,6 +214,7 @@ def cure_ailment(battle: Battle,
                  target_spec: RoleSpec,
                  source_spec: RoleSpec | None = None,
                  chance: float = 1) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """状態異常を回復する。"""
     success = False
     chance = battle.resolve_secondary_chance(ctx, chance)
@@ -218,6 +227,7 @@ def cure_ailment(battle: Battle,
 
 
 def cure_self_ailment(battle: Battle, ctx: EventContext, value: Any, chance: float = 1) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """自分の状態異常を回復する。"""
     spec = _self_role_spec(ctx)
     return cure_ailment(battle, ctx, value, target_spec=spec, source_spec=spec, chance=chance)
@@ -229,6 +239,7 @@ def activate_weather(battle: Battle,
                      weather: WeatherName,
                      count: int = 5,
                      source_spec: RoleSpec = "source:self") -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """天候を発動する。"""
     source = ctx.resolve_role(battle, source_spec)
     success = battle.weather_manager.apply(weather, count, source=source)
@@ -239,6 +250,7 @@ def deactivate_weather(battle: Battle,
                        ctx: EventContext,
                        value: Any,
                        weather: WeatherName) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """指定天候が現在有効な場合に解除する。"""
     if battle.raw_weather.name == weather:
         battle.weather_manager.remove()
@@ -251,6 +263,7 @@ def activate_terrain(battle: Battle,
                      terrain: TerrainName,
                      count: int = 5,
                      source_spec: RoleSpec = "source:self") -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """地形を発動する。"""
     source = ctx.resolve_role(battle, source_spec)
     success = battle.terrain_manager.apply(terrain, count, source=source)
@@ -264,6 +277,7 @@ def activate_global_field(battle: Battle,
                           global_field: GlobalFieldName,
                           count: int = 5,
                           toggle: bool = False) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """グローバルフィールドを発動・解除する。"""
     manager = battle.global_manager
     was_active = manager.fields[global_field].is_active
@@ -276,7 +290,8 @@ def activate_global_field(battle: Battle,
     return HandlerReturn(value=success)
 
 
-def deals_physical_damage(battle: Battle, ctx: EventContext) -> bool:
+def deals_physical_damage(battle: Battle, ctx: AttackContext) -> bool:
+    # TODO : Battle.queryの関数を直接呼び出す
     """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
 
     Returns:
@@ -285,24 +300,28 @@ def deals_physical_damage(battle: Battle, ctx: EventContext) -> bool:
     return battle.query.deals_physical_damage(ctx.attacker, ctx.move)
 
 
-def is_super_effective(battle: Battle, ctx: EventContext) -> bool:
+def is_super_effective(battle: Battle, ctx: AttackContext) -> bool:
+    # TODO : Battle.queryに実装を移す
     """効果抜群かどうかを判定する。"""
     type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return type_modifier/4096 > 1
 
 
-def is_not_very_effective(battle: Battle, ctx: EventContext) -> bool:
+def is_not_very_effective(battle: Battle, ctx: AttackContext) -> bool:
+    # TODO : Battle.queryに実装を移す
     """今ひとつかどうかを判定する。"""
     type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     return 0 < type_modifier/4096 < 1
 
 
 def is_berry_item(item_name: str) -> bool:
+    # TODO : Item.is_berry() を実装して移譲
     """アイテムがきのみかどうかを判定する。"""
     return item_name.endswith("のみ")
 
 
 def block_stat_drop_by_foe(value: dict[Stat, int], ctx: EventContext, stat: Stat | None = None) -> dict[Stat, int]:
+    # TODO : 個別のハンドラモジュールに実装
     """相手由来のランク低下を除去する共通処理。
 
     Args:
@@ -319,6 +338,7 @@ def block_stat_drop_by_foe(value: dict[Stat, int], ctx: EventContext, stat: Stat
 
 
 def ignore_damage_by_reason(battle: Battle, ctx: EventContext, value: int, *, reason: HPChangeReason) -> HandlerReturn:
+    # TODO : 必要なら個別のハンドラモジュールに実装
     """指定された hp_change_reason のダメージを無効化する。
 
     Args:
