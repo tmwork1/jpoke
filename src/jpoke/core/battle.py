@@ -690,7 +690,8 @@ class Battle:
         """防御側のタイプ相性補正を計算する（DamageCalculatorへの委譲）。"""
         if isinstance(move, str):
             move = Move(move)
-        ctx = AttackContext(defender=defender, move=move)
+        # attacker はタイプ相性計算で未参照だが必須フィールドのため対面ポケモンをセット
+        ctx = AttackContext(attacker=self.foe(defender), defender=defender, move=move)
         return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:

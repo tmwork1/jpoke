@@ -113,7 +113,7 @@ class SpeedCalculator:
         # ON_CALC_ACTION_SPEEDイベントで優先度を拡張可能にする
         return self.battle.events.emit(
             DomainEvent.ON_MODIFY_MOVE_PRIORITY,
-            AttackContext(attacker=attacker, move=move),
+            AttackContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
             base_priority
         )
 
@@ -166,11 +166,8 @@ class SpeedCalculator:
             move_priority = self.calc_move_priority(mon, move)
 
             # 後攻ティアを計算（0=通常, -1=あとだし等）
-            back_tier = self.battle.events.emit(
-                DomainEvent.ON_CALC_BACK_TIER,
-                AttackContext(attacker=mon, move=move),
-                0
-            )
+            ctx = AttackContext(attacker=mon, move=move)
+            back_tier = self.battle.events.emit(DomainEvent.ON_CALC_BACK_TIER, ctx, 0)
 
             # 優先度・後攻ティア・素早さの3要素タプルで行動順を決定
             # タプル降順ソートで (高優先度, 高ティア, 高速) が先攻

@@ -102,8 +102,15 @@ def test_マジックガード_技ダメージを受ける():
 
 
 def test_マジックミラー_ステルスロックを跳ね返す():
-    # TODO : 実装
-    pass
+    """マジックミラー: ステルスロックを跳ね返し、使用者側に設置する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ステルスロック"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert battle.get_side(attacker).get("ステルスロック").is_active
+    assert not battle.get_side(defender).get("ステルスロック").is_active
 
 
 def test_マジックミラー_変化技を跳ね返す():

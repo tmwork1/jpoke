@@ -224,6 +224,9 @@ class EventLog:
             case LogCode.MEGA_EVOLVED:
                 return "メガシンカした"
 
+            case LogCode.CRITICAL_HIT:
+                return "急所に当たった！"
+
             case _:
                 raise ValueError(f"Unsupported LogCode in EventLog._get_base_text: {self.log}")
 

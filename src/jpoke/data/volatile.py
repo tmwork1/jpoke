@@ -300,7 +300,7 @@ VOLATILES: dict[str, VolatileData] = {
     "にげられない": VolatileData(
         handlers={
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.check_trapped_not_ghost,
                 subject_spec="source:self",
             ),
         }
@@ -326,7 +326,7 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=70
             ),
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.check_trapped_not_ghost,
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_FLOATING: h.VolatileHandler(
@@ -352,7 +352,7 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=100
             ),
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.check_trapped_not_ghost,
                 subject_spec="source:self",
             ),
             Event.ON_SWITCH_OUT: h.VolatileHandler(
@@ -537,7 +537,7 @@ VOLATILES: dict[str, VolatileData] = {
         forced=True,
         handlers={
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.check_trapped_not_ghost,
                 subject_spec="source:self",
             ),
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(

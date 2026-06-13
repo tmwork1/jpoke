@@ -288,6 +288,10 @@ class Event(Enum):
     #          data/field.py（じゅうりょく発動中は全ポケモンを接地扱いにする）
     ON_CHECK_FLOATING = auto()
 
+    # emit: core/pokemon_query.py（エントリーハザード免疫チェック）
+    # handle: item.py（あつぞこブーツ等）subject_spec="source:self"
+    ON_CHECK_HAZARD_IMMUNE = auto()
+
     # emit: core/pokemon_state.py（逃げ・交代可否）
     # handle: ability.py（かげふみ・ありじごく等のトラップ能力）
     #          volatile.py（まきつく・くさむすび等バインド状態）
@@ -296,6 +300,10 @@ class Event(Enum):
     # emit: core/pokemon_state.py（いかく等の割り込み処理で怯え確認）
     # handle: ability.py（マイペース・にげごし等で怯えを無効化）
     ON_CHECK_NERVOUS = auto()
+
+    # emit: core/ability_manager.py（特性を無効化する直前）
+    # handle: item.py（とくせいガード: True を返して無効化をブロック）subject_spec="source:self"
+    ON_CHECK_ABILITY_DISABLE = auto()
 
     # emit: core/battle.py（アイテムの交換・奪取・除去可否を判定）
     # handle: ability.py（ねんちゃく）

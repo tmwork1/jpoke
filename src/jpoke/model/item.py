@@ -21,6 +21,8 @@ class Item(GameEffect):
         super().__init__(ITEMS[name])
 
         self.data: ItemData  # type hint
+        self.count: int = 0
+        self.move_name: str = ""
 
     def __deepcopy__(self, memo):
         """アイテムオブジェクトのディープコピーを作成する。"""
@@ -35,6 +37,8 @@ class Item(GameEffect):
         アイテムの状態をリセットする。
         """
         self.reset_enable_state()
+        self.count = 0
+        self.move_name = ""
 
     def reset_enable_state(self):
         """アイテムの有効状態をリセットする。"""

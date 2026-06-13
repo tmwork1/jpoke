@@ -15,7 +15,8 @@
       "Bash(cp*)",
       "Bash(touch*)",
       "Bash(cd*)",
-      "Bash(python*)"
+      "Bash(python*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

@@ -161,10 +161,6 @@ class EventManager:
         if rh.handler.side == "foe":
             mon = self.battle.foe(mon)
         role = rh.handler.role
-        if role == "attacker":
-            return AttackContext(attacker=mon)
-        if role == "defender":
-            return AttackContext(defender=mon)
         if role == "target":
             return EventContext(target=mon)
         return EventContext(source=mon)

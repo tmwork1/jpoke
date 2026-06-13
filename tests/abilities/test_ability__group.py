@@ -54,8 +54,6 @@ MULTI_TYPE_PLATE_CASES = [
     if plate_item_name in ITEMS
 ]
 
-# TODO : weather ability test スクリプトに移動
-
 
 @pytest.mark.parametrize(
     "initial_weather", strong_weathers

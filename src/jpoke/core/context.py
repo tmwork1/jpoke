@@ -74,13 +74,12 @@ class EventContext(BaseContext):
         return battle.events.emit(Event.ON_CHECK_BYPASS_STATUS_GUARD, self, False)
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, kw_only=True)
 class AttackContext(BaseContext):
-    # TODO : attacker, defender, move はNoneを許さないほうが望ましい
     """攻撃フロー専用コンテキスト。ダメージ計算・命中処理で使用する。"""
-    attacker: Pokemon | None = None
+    attacker: Pokemon
     defender: Pokemon | None = None
-    move: Move | None = None
+    move: Move
     hit_index: int = 1
     hit_count: int = 1
     critical: bool = False

@@ -5,6 +5,8 @@ Note:
 """
 from jpoke.enums import Event
 from jpoke.handlers import move as h
+from jpoke.handlers import move_attack as ha
+from jpoke.handlers import move_status as hs
 from .models import MoveData
 
 
@@ -34,7 +36,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "non_encore"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.わるあがき_self_damage,
+                ha.わるあがき_self_damage,
             )
         }
     ),
@@ -85,7 +87,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch", "secondary_effect"],
         handlers={
              Event.ON_HIT: h.MoveHandler(
-                 h.アームハンマー_modify_attacker_stats,
+                 ha.アームハンマー_modify_attacker_stats,
              )
         }
     ),
@@ -98,7 +100,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                h.アイアンテール_modify_defender_stats,
+                ha.アイアンテール_modify_defender_stats,
             )
         }
     ),
@@ -135,7 +137,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.アイスハンマー_modify_attacker_stats,
+                ha.アイスハンマー_modify_attacker_stats,
             )
         }
     ),
@@ -166,7 +168,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "dance", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.アクアステップ_modify_attacker_stats,
+                ha.アクアステップ_modify_attacker_stats,
             )
         }
     ),
@@ -187,7 +189,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.アクアブレイク_modify_defender_stats,
+                ha.アクアブレイク_modify_defender_stats,
             )
         }
     ),
@@ -261,7 +263,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.HP_ratio_damage,
+                ha.HP_ratio_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -298,7 +300,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.いわくだき_modify_defender_stats,
+                ha.いわくだき_modify_defender_stats,
             )
         }
     ),
@@ -319,7 +321,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.インファイト_modify_attacker_stats,
+                ha.インファイト_modify_attacker_stats,
             )
         }
     ),
@@ -380,7 +382,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
-                h.オーラぐるま_check_move_type,
+                ha.オーラぐるま_check_move_type,
             ),
         },
     ),
@@ -505,7 +507,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.がむしゃら_modify_damage,
+                ha.がむしゃら_modify_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -527,7 +529,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ガリョウテンセイ_modify_attacker_stats,
+                ha.ガリョウテンセイ_modify_attacker_stats,
             )
         }
     ),
@@ -556,7 +558,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.がんせきふうじ_modify_defender_stats,
+                ha.がんせきふうじ_modify_defender_stats,
             )
         }
     ),
@@ -578,7 +580,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "non_negoto", "punch"],
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
-                h.きあいパンチ_check_move,
+                ha.きあいパンチ_check_move,
                 subject_spec="attacker:self",
             ),
         },
@@ -656,7 +658,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(h.pivot)
+            Event.ON_HIT: h.MoveHandler(ha.pivot)
         }
     ),
     "くさわけ": MoveData(
@@ -808,7 +810,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "punch", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.コメットパンチ_modify_attacker_stats,
+                ha.コメットパンチ_modify_attacker_stats,
             )
         }
     ),
@@ -871,7 +873,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "slash", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.シェルブレード_modify_defender_stats,
+                ha.シェルブレード_modify_defender_stats,
             )
         }
     ),
@@ -945,7 +947,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.じならし_modify_defender_stats,
+                ha.じならし_modify_defender_stats,
             )
         }
     ),
@@ -1026,7 +1028,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.ohko_modify_damage,
+                ha.ohko_modify_damage,
             ),
         }
     ),
@@ -1148,7 +1150,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ソウルクラッシュ_modify_defender_stats,
+                ha.ソウルクラッシュ_modify_defender_stats,
             )
         }
     ),
@@ -1312,7 +1314,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.level_fixed_damage,
+                ha.level_fixed_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -1385,7 +1387,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko", "contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.ohko_modify_damage,
+                ha.ohko_modify_damage,
             ),
         }
     ),
@@ -1547,7 +1549,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.とびかかる_modify_defender_stats,
+                ha.とびかかる_modify_defender_stats,
             )
         }
     ),
@@ -1562,7 +1564,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.とびつく_modify_defender_stats,
+                ha.とびつく_modify_defender_stats,
             )
         }
     ),
@@ -1645,7 +1647,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ドラムアタック_modify_defender_stats,
+                ha.ドラムアタック_modify_defender_stats,
             )
         }
     ),
@@ -1732,7 +1734,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.トロピカルキック_modify_defender_stats,
+                ha.トロピカルキック_modify_defender_stats,
             )
         }
     ),
@@ -1745,7 +1747,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.どろぼう_steal_item,
+                ha.どろぼう_steal_item,
             )
         }
     ),
@@ -1757,7 +1759,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(h.pivot)
+            Event.ON_HIT: h.MoveHandler(ha.pivot)
         }
     ),
     "なげつける": MoveData(
@@ -1800,7 +1802,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ニトロチャージ_modify_attacker_stats,
+                ha.ニトロチャージ_modify_attacker_stats,
             )
         }
     ),
@@ -1870,7 +1872,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.はいよるいちげき_modify_defender_stats,
+                ha.はいよるいちげき_modify_defender_stats,
             )
         }
     ),
@@ -1885,7 +1887,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ばかぢから_modify_attacker_stats,
+                ha.ばかぢから_modify_attacker_stats,
             )
         }
     ),
@@ -1918,7 +1920,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko", "contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.ohko_modify_damage,
+                ha.ohko_modify_damage,
             ),
         }
     ),
@@ -1939,10 +1941,10 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
-                h.はたきおとす_power,
+                ha.はたきおとす_power,
             ),
             Event.ON_HIT: h.MoveHandler(
-                h.はたきおとす_remove_item,
+                ha.はたきおとす_remove_item,
             )
         }
     ),
@@ -1992,10 +1994,10 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
-                h.はやてがえし_try_move,
+                ha.はやてがえし_try_move,
             ),
             Event.ON_HIT: h.MoveHandler(
-                h.はやてがえし_apply_volatile_to_defender,
+                ha.はやてがえし_apply_volatile_to_defender,
             ),
         }
     ),
@@ -2173,7 +2175,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ブレイククロー_modify_defender_stats,
+                ha.ブレイククロー_modify_defender_stats,
             )
         }
     ),
@@ -2270,7 +2272,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.どろぼう_steal_item,
+                ha.どろぼう_steal_item,
             )
         }
     ),
@@ -2283,7 +2285,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                h.ほっぺすりすり_apply_ailment_to_defender,
+                ha.ほっぺすりすり_apply_ailment_to_defender,
             ),
         }
     ),
@@ -2461,7 +2463,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.メタルクロー_modify_attacker_stats,
+                ha.メタルクロー_modify_attacker_stats,
             )
         }
     ),
@@ -2526,7 +2528,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.らいめいげり_modify_defender_stats,
+                ha.らいめいげり_modify_defender_stats,
             )
         }
     ),
@@ -2576,7 +2578,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ローキック_modify_defender_stats,
+                ha.ローキック_modify_defender_stats,
             )
         }
     ),
@@ -2605,7 +2607,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ワイドブレイカー_modify_defender_stats,
+                ha.ワイドブレイカー_modify_defender_stats,
             )
         }
     ),
@@ -2635,7 +2637,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.アーマーキャノン_modify_attacker_stats,
+                ha.アーマーキャノン_modify_attacker_stats,
             )
         }
     ),
@@ -2682,7 +2684,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.アシッドボム_modify_defender_stats,
+                ha.アシッドボム_modify_defender_stats,
             )
         }
     ),
@@ -2710,7 +2712,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.いてつくしせん_modify_defender_stats,
+                ha.いてつくしせん_modify_defender_stats,
             )
         }
     ),
@@ -2740,11 +2742,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_PAY_HP: h.MoveHandler(
-                h.いのちがけ_pay_hp,
+                ha.いのちがけ_pay_hp,
                 subject_spec="attacker:self",
             ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.いのちがけ_modify_damage,
+                ha.いのちがけ_modify_damage,
                 subject_spec="attacker:self",
             ),
         }
@@ -2838,7 +2840,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.エナジーボール_modify_defender_stats,
+                ha.エナジーボール_modify_defender_stats,
             )
         }
     ),
@@ -2852,7 +2854,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.エレキネット_modify_defender_stats,
+                ha.エレキネット_modify_defender_stats,
             )
         }
     ),
@@ -2889,7 +2891,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.オーバーヒート_modify_attacker_stats,
+                ha.オーバーヒート_modify_attacker_stats,
             )
         }
     ),
@@ -2934,7 +2936,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.HP_ratio_damage,
+                ha.HP_ratio_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -2957,7 +2959,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
-                h.かみなり_accuracy,
+                ha.かみなり_accuracy,
                 subject_spec="attacker:self"
             )
         }
@@ -2991,7 +2993,7 @@ MOVES: dict[str, MoveData] = {
         labels=["heal"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ギガドレイン_heal_attacker,
+                ha.ギガドレイン_heal_attacker,
             )
         }
     ),
@@ -3100,7 +3102,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.こごえるかぜ_modify_defender_stats,
+                ha.こごえるかぜ_modify_defender_stats,
             )
         }
     ),
@@ -3114,7 +3116,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.こごえるせかい_modify_defender_stats,
+                ha.こごえるせかい_modify_defender_stats,
             )
         }
     ),
@@ -3152,7 +3154,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.サイコキネシス_modify_defender_stats,
+                ha.サイコキネシス_modify_defender_stats,
             )
         }
     ),
@@ -3181,7 +3183,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.サイコブースト_modify_attacker_stats,
+                ha.サイコブースト_modify_attacker_stats,
             )
         }
     ),
@@ -3276,7 +3278,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.シャドーボール_modify_defender_stats,
+                ha.シャドーボール_modify_defender_stats,
             )
         }
     ),
@@ -3345,7 +3347,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.スケイルノイズ_modify_attacker_stats,
+                ha.スケイルノイズ_modify_attacker_stats,
             )
         }
     ),
@@ -3382,7 +3384,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.ohko_modify_damage,
+                ha.ohko_modify_damage,
             ),
         }
     ),
@@ -3467,7 +3469,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.チャージビーム_modify_attacker_stats,
+                ha.チャージビーム_modify_attacker_stats,
             )
         }
     ),
@@ -3514,16 +3516,16 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
-                h.テラバースト_modify_move_type,
+                ha.テラバースト_modify_move_type,
             ),
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
-                h.テラバースト_modify_move_category,
+                ha.テラバースト_modify_move_category,
             ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
-                h.テラバースト_stellar_power,
+                ha.テラバースト_stellar_power,
             ),
             Event.ON_HIT: h.MoveHandler(
-                h.テラバースト_stellar_stat_drop,
+                ha.テラバースト_stellar_stat_drop,
             ),
         }
     ),
@@ -3551,7 +3553,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.でんじほう_apply_ailment_to_defender,
+                ha.でんじほう_apply_ailment_to_defender,
             ),
         }
     ),
@@ -3609,7 +3611,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                h.level_fixed_damage,
+                ha.level_fixed_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -3685,7 +3687,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.バークアウト_modify_defender_stats,
+                ha.バークアウト_modify_defender_stats,
             )
         }
     ),
@@ -3827,7 +3829,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ひやみず_modify_defender_stats,
+                ha.ひやみず_modify_defender_stats,
             )
         }
     ),
@@ -3856,7 +3858,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
-                h.ふぶき_accuracy,
+                ha.ふぶき_accuracy,
                 subject_spec="attacker:self"
             )
         }
@@ -3900,7 +3902,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.フルールカノン_modify_attacker_stats,
+                ha.フルールカノン_modify_attacker_stats,
             )
         }
     ),
@@ -3936,7 +3938,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ふしょくガス_remove_item,
+                ha.ふしょくガス_remove_item,
             )
         }
     ),
@@ -3991,7 +3993,7 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
         handlers={
             Event.ON_MODIFY_ACCURACY: h.MoveHandler(
-                h.ぼうふう_accuracy,
+                ha.ぼうふう_accuracy,
                 subject_spec="attacker:self"
             )
         }
@@ -4027,7 +4029,7 @@ MOVES: dict[str, MoveData] = {
         power=70,
         accuracy=100,
         handlers={
-            Event.ON_HIT: h.MoveHandler(h.pivot)
+            Event.ON_HIT: h.MoveHandler(ha.pivot)
         }
     ),
     "マグマストーム": MoveData(
@@ -4055,7 +4057,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.マジカルフレイム_modify_defender_stats,
+                ha.マジカルフレイム_modify_defender_stats,
             )
         }
     ),
@@ -4076,7 +4078,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.マッドショット_modify_defender_stats,
+                ha.マッドショット_modify_defender_stats,
             )
         }
     ),
@@ -4135,7 +4137,7 @@ MOVES: dict[str, MoveData] = {
         labels=["bullet"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ミストボール_modify_defender_stats,
+                ha.ミストボール_modify_defender_stats,
             )
         }
     ),
@@ -4198,7 +4200,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.むしのさざめき_modify_defender_stats,
+                ha.むしのさざめき_modify_defender_stats,
             )
         }
     ),
@@ -4212,7 +4214,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.むしのていこう_modify_defender_stats,
+                ha.むしのていこう_modify_defender_stats,
             )
         }
     ),
@@ -4255,7 +4257,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.やきつくす_remove_berry,
+                ha.やきつくす_remove_berry,
             )
         }
     ),
@@ -4299,7 +4301,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ラスターカノン_modify_defender_stats,
+                ha.ラスターカノン_modify_defender_stats,
             )
         }
     ),
@@ -4313,7 +4315,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ラスターパージ_modify_defender_stats,
+                ha.ラスターパージ_modify_defender_stats,
             )
         }
     ),
@@ -4327,7 +4329,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.リーフストーム_modify_attacker_stats,
+                ha.リーフストーム_modify_attacker_stats,
             )
         }
     ),
@@ -4341,7 +4343,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.りゅうせいぐん_modify_attacker_stats,
+                ha.りゅうせいぐん_modify_attacker_stats,
             )
         }
     ),
@@ -4387,7 +4389,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                h.ルミナコリジョン_modify_defender_stats,
+                ha.ルミナコリジョン_modify_defender_stats,
             )
         }
     ),
@@ -4458,7 +4460,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.あまいかおり_modify_defender_stats,
+                hs.あまいかおり_modify_defender_stats,
             )
         }
     ),
@@ -4470,7 +4472,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.あまえる_modify_attacker_stats,
+                hs.あまえる_modify_attacker_stats,
             )
         }
     ),
@@ -4507,10 +4509,10 @@ MOVES: dict[str, MoveData] = {
         labels=["non_encore"],
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
-                h.アンコール_can_apply,
+                hs.アンコール_can_apply,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.アンコール_apply,
+                hs.アンコール_apply,
             )
         }
     ),
@@ -4535,7 +4537,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.いたみわけ_equalize_hp,
+                hs.いたみわけ_equalize_hp,
             )
         }
     ),
@@ -4547,7 +4549,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.いちゃもん_apply_volatile_to_defender,
+                hs.いちゃもん_apply_volatile_to_defender,
             ),
         }
     ),
@@ -4599,7 +4601,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.いやなおと_modify_defender_stats,
+                hs.いやなおと_modify_defender_stats,
             )
         }
     ),
@@ -4611,7 +4613,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.うそなき_modify_defender_stats,
+                hs.うそなき_modify_defender_stats,
             )
         }
     ),
@@ -4649,7 +4651,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.えんまく_modify_defender_stats,
+                hs.えんまく_modify_defender_stats,
             )
         }
     ),
@@ -4719,7 +4721,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.おにび_apply_ailment_to_defender,
+                hs.おにび_apply_ailment_to_defender,
             ),
         }
     ),
@@ -4756,7 +4758,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.かえんのまもり_apply_volatile_to_attacker,
+                hs.かえんのまもり_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -4774,7 +4776,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.かたくなる_modify_attacker_stats,
+                hs.かたくなる_modify_attacker_stats,
             )
         }
     ),
@@ -4792,7 +4794,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.からにこもる_modify_attacker_stats,
+                hs.からにこもる_modify_attacker_stats,
             )
         }
     ),
@@ -4822,7 +4824,7 @@ MOVES: dict[str, MoveData] = {
         labels=["powder"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.キノコのほうし_apply_ailment_to_defender,
+                hs.キノコのほうし_apply_ailment_to_defender,
             ),
         }
     ),
@@ -4834,7 +4836,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.きりばらい_modify_defender_stats,
+                hs.きりばらい_modify_defender_stats,
             )
         }
     ),
@@ -4846,7 +4848,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.きんぞくおん_modify_defender_stats,
+                hs.きんぞくおん_modify_defender_stats,
             )
         }
     ),
@@ -4891,7 +4893,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.こうそくいどう_modify_attacker_stats,
+                hs.こうそくいどう_modify_attacker_stats,
             )
         }
     ),
@@ -4921,7 +4923,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.コットンガード_modify_attacker_stats,
+                hs.コットンガード_modify_attacker_stats,
             )
         }
     ),
@@ -4947,7 +4949,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.こわいかお_modify_defender_stats,
+                hs.こわいかお_modify_defender_stats,
             )
         }
     ),
@@ -5008,6 +5010,11 @@ MOVES: dict[str, MoveData] = {
         pp=5,
 
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.じこさいせい_heal_self,
+            )
+        }
     ),
     "しっぽきり": MoveData(
         type="ノーマル",
@@ -5023,7 +5030,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.しっぽをふる_modify_defender_stats,
+                hs.しっぽをふる_modify_defender_stats,
             )
         }
     ),
@@ -5061,7 +5068,7 @@ MOVES: dict[str, MoveData] = {
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.じゅうりょく_activate_global_field,
+                hs.じゅうりょく_activate_global_field,
             ),
         }
     ),
@@ -5118,6 +5125,11 @@ MOVES: dict[str, MoveData] = {
         pp=20,
 
         target="foe_side",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ステルスロック_set_field,
+            )
+        }
     ),
     "すなあつめ": MoveData(
         type="じめん",
@@ -5133,7 +5145,7 @@ MOVES: dict[str, MoveData] = {
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.すなあらし_activate_weather,
+                hs.すなあらし_activate_weather,
             ),
         }
     ),
@@ -5145,7 +5157,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.すなかけ_modify_defender_stats,
+                hs.すなかけ_modify_defender_stats,
             )
         }
     ),
@@ -5162,7 +5174,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.すりかえ_swap_items,
+                hs.すりかえ_swap_items,
             )
         }
     ),
@@ -5176,7 +5188,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.スレッドトラップ_apply_volatile_to_attacker,
+                hs.スレッドトラップ_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -5207,10 +5219,10 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.タールショット_apply_volatile_to_defender,
+                hs.タールショット_apply_volatile_to_defender,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.タールショット_modify_defender_stats,
+                hs.タールショット_modify_defender_stats,
             )
         }
     ),
@@ -5241,7 +5253,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ちいさくなる_apply,
+                hs.ちいさくなる_apply,
             )
         }
     ),
@@ -5338,7 +5350,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.てっぺき_modify_attacker_stats,
+                hs.てっぺき_modify_attacker_stats,
             )
         }
     ),
@@ -5362,7 +5374,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.でんじは_apply_ailment_to_defender,
+                hs.でんじは_apply_ailment_to_defender,
             ),
         }
     ),
@@ -5388,7 +5400,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.トーチカ_apply_volatile_to_attacker,
+                hs.トーチカ_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -5412,7 +5424,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.どくどく_apply_ailment_to_defender,
+                hs.どくどく_apply_ailment_to_defender,
             ),
         }
     ),
@@ -5430,7 +5442,7 @@ MOVES: dict[str, MoveData] = {
         labels=["powder"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.どくのこな_apply_ailment_to_defender,
+                hs.どくのこな_apply_ailment_to_defender,
             ),
         }
     ),
@@ -5466,7 +5478,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.すりかえ_swap_items,
+                hs.すりかえ_swap_items,
             )
         }
     ),
@@ -5479,7 +5491,7 @@ MOVES: dict[str, MoveData] = {
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.トリックルーム_activate_global_field,
+                hs.トリックルーム_activate_global_field,
             ),
         }
     ),
@@ -5491,7 +5503,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ドわすれ_modify_attacker_stats,
+                hs.ドわすれ_modify_attacker_stats,
             )
         }
     ),
@@ -5522,7 +5534,7 @@ MOVES: dict[str, MoveData] = {
         labels=["sound"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.なきごえ_modify_defender_stats,
+                hs.なきごえ_modify_defender_stats,
             )
         }
     ),
@@ -5538,7 +5550,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.なみだめ_modify_defender_stats,
+                hs.なみだめ_modify_defender_stats,
             )
         }
     ),
@@ -5576,7 +5588,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.にらみつける_modify_defender_stats,
+                hs.にらみつける_modify_defender_stats,
             )
         }
     ),
@@ -5610,7 +5622,7 @@ MOVES: dict[str, MoveData] = {
         labels=["powder"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ねむりごな_apply_ailment_to_defender,
+                hs.ねむりごな_apply_ailment_to_defender,
             ),
         }
     ),
@@ -5739,7 +5751,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ふういん_apply_volatile_to_attacker,
+                hs.ふういん_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -5757,7 +5769,7 @@ MOVES: dict[str, MoveData] = {
         labels=["dance"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.フェザーダンス_modify_defender_stats,
+                hs.フェザーダンス_modify_defender_stats,
             )
         }
     ),
@@ -5769,10 +5781,10 @@ MOVES: dict[str, MoveData] = {
         labels=["wind"],
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
-                h.on_blow_apply,
+                hs.on_blow_apply,
                 priority=30,
             ),
-            Event.ON_HIT: h.MoveHandler(h.blow),
+            Event.ON_HIT: h.MoveHandler(hs.blow),
         }
     ),
     "フラフラダンス": MoveData(
@@ -5808,7 +5820,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.へびにらみ_apply_ailment_to_defender,
+                hs.へびにらみ_apply_ailment_to_defender,
             ),
         }
     ),
@@ -5847,7 +5859,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ほたるび_modify_attacker_stats,
+                hs.ほたるび_modify_attacker_stats,
             )
         }
     ),
@@ -5873,7 +5885,7 @@ MOVES: dict[str, MoveData] = {
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.マジックルーム_activate_global_field,
+                hs.マジックルーム_activate_global_field,
             ),
         }
     ),
@@ -5900,7 +5912,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.まもる_apply_volatile_to_attacker,
+                hs.まもる_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -5910,7 +5922,7 @@ MOVES: dict[str, MoveData] = {
         pp=40,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.まるくなる_apply,
+                hs.まるくなる_apply,
             )
         }
     ),
@@ -5935,11 +5947,11 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
-                h.みがわり_check,
+                hs.みがわり_check,
                 priority=100,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.みがわり_apply,
+                hs.みがわり_apply,
             )
         }
     ),
@@ -5953,7 +5965,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.みきり_apply_volatile_to_attacker,
+                hs.みきり_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -5978,7 +5990,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.みちづれ_apply_volatile_to_attacker,
+                hs.みちづれ_apply_volatile_to_attacker,
             ),
         }
     ),
@@ -6079,7 +6091,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ロックオン_apply_volatile_to_defender,
+                hs.ロックオン_apply_volatile_to_defender,
             ),
         }
     ),
@@ -6090,7 +6102,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ロックカット_modify_attacker_stats,
+                hs.ロックカット_modify_attacker_stats,
             )
         }
     ),
@@ -6116,7 +6128,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.わるだくみ_modify_attacker_stats,
+                hs.わるだくみ_modify_attacker_stats,
             )
         }
     ),
@@ -6129,7 +6141,7 @@ MOVES: dict[str, MoveData] = {
         labels=[],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.ワンダールーム_activate_global_field,
+                hs.ワンダールーム_activate_global_field,
             ),
         }
     ),
@@ -6150,7 +6162,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                h.キングシールド_apply_volatile_to_attacker,
+                hs.キングシールド_apply_volatile_to_attacker,
             ),
         }
     ),

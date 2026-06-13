@@ -16,8 +16,7 @@ def test_どく_ダメージ():
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "どく")
     t.end_turn(battle)
-    damage = mon.max_hp - mon.hp
-    assert damage == mon.max_hp // 8, "Poison damage is incorrect"
+    assert mon.hp == mon.max_hp - mon.max_hp // 8, "Poison damage is incorrect"
 
 
 def test_もうどく_ダメージ():

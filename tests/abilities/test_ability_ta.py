@@ -420,7 +420,7 @@ def test_てんのめぐみ_追加効果確率が2倍になる(chance_before, ch
         team1=[Pokemon("ピカチュウ")],
     )
     attacker = battle.actives[0]
-    ctx = AttackContext(attacker=attacker, move=attacker.moves[0])
+    ctx = AttackContext(attacker=attacker, defender=battle.actives[1], move=attacker.moves[0])
     assert chance_after == battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance_before)
 
 

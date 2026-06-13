@@ -41,6 +41,12 @@ class VolatileHandler(Handler):
         )
 
 
+def check_trapped_not_ghost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ゴーストタイプでなければ交代を禁止する。"""
+    source = ctx.source
+    return HandlerReturn(value=source is not None and not source.has_type("ゴースト"))
+
+
 def tick_volatile(battle: Battle,
                   ctx: EventContext,
                   value: Any,
@@ -647,8 +653,8 @@ def バインド_damage(battle: Battle, ctx: EventContext, value: Any) -> Handle
         return HandlerReturn(value=value)
 
     # ダメージ適用
-    r = -mon.volatiles["バインド"].bind_damage_ratio
-    battle.modify_hp(ctx.source, r=r)
+    r = battle.events.emit(Event.ON_MODIFY_BIND_DAMAGE, ctx, mon.volatiles["バインド"].bind_damage_ratio)
+    battle.modify_hp(ctx.source, r=-r)
     return HandlerReturn(value=value)
 
 

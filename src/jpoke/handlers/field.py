@@ -374,6 +374,8 @@ def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Field) -> Han
 
 def まきびし_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """まきびしのダメージ"""
+    if battle.query.is_hazard_immune(ctx.source):
+        return HandlerReturn(value=value)
     if battle.query.is_floating(ctx.source):
         return HandlerReturn(value=value)
 
@@ -396,6 +398,8 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
     side = battle.get_side(ctx.source)
     field = side.get("どくびし")
 
+    if battle.query.is_hazard_immune(ctx.source):
+        return HandlerReturn(value=value)
     # 浮いているポケモンは影響を受けない
     if battle.query.is_floating(ctx.source):
         return HandlerReturn(value=value)
@@ -413,6 +417,8 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ステルスロックのダメージ（岩タイプ相性依存）"""
+    if battle.query.is_hazard_immune(ctx.source):
+        return HandlerReturn(value=value)
     r = battle.calc_def_type_modifier(ctx.source, "ステルスロック")
     battle.modify_hp(ctx.source, r=-1/8*r)
     return HandlerReturn(value=value)
@@ -420,6 +426,8 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
 
 def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねばねばネットの素早さダウン"""
+    if battle.query.is_hazard_immune(ctx.source):
+        return HandlerReturn(value=value)
     # 浮いているポケモンは影響を受けない
     if battle.query.is_floating(ctx.source):
         return HandlerReturn(value=value)

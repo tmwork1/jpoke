@@ -911,7 +911,14 @@ def test_ヘドロえき_回復がダメージになる():
 
 def test_ヘドロえき_通常の回復には影響しない():
     """ヘドロえき: drain以外の理由の回復には影響しない"""
-    # TODO : 技じこさいせい実装後にテストする
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこさいせい"])],
+        team1=[Pokemon("カビゴン", ability_name="ヘドロえき")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 2
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
 
 
 def test_へんげんじざい_交代でリセットされ再発動できる():

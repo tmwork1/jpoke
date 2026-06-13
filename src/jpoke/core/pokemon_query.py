@@ -82,12 +82,11 @@ class PokemonQuery:
         Note:
             ゴーストタイプは逃げられる。
         """
-        trapped = self._events.emit(
+        return self._events.emit(
             Event.ON_CHECK_TRAPPED,
             EventContext(source=pokemon),
             False
         )
-        return trapped and not pokemon.has_type("ゴースト")
 
     def is_nervous(self, pokemon: Pokemon) -> bool:
         """きんちょうかん状態か判定する。
@@ -143,3 +142,11 @@ class PokemonQuery:
         if state.action_order_index is None:
             return None
         return state.action_order_index == 1
+
+    def is_hazard_immune(self, pokemon: Pokemon) -> bool:
+        """エントリーハザードへの免疫があるか判定する。"""
+        return self._events.emit(
+            Event.ON_CHECK_HAZARD_IMMUNE,
+            EventContext(source=pokemon),
+            False
+        )

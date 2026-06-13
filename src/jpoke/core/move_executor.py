@@ -237,7 +237,7 @@ class MoveExecutor:
         self.reset_monitoring_flags()
 
         defender = self.battle.foe(attacker)
-        ctx = AttackContext(attacker=attacker, defender=defender)
+        ctx = AttackContext(attacker=attacker, defender=defender, move=move)
 
         # 技の変更 (アンコールなど)
         move = self._events.emit(Event.ON_MODIFY_MOVE, ctx, move)
@@ -383,6 +383,8 @@ class MoveExecutor:
             return
 
         self.critical = self._check_critical(ctx)
+        if self.critical:
+            self.battle.add_event_log(ctx.attacker, LogCode.CRITICAL_HIT)
         damage = self.battle.roll_damage(
             ctx.attacker, ctx.defender, ctx.move, critical=self.critical
         )
@@ -442,7 +444,7 @@ class MoveExecutor:
         # move自身は変更せず、イベント結果の有効タイプを返す。
         return self._events.emit(
             Event.ON_MODIFY_MOVE_TYPE,
-            AttackContext(attacker=attacker, move=move),
+            AttackContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
             value=move.data.type,
         )
 
@@ -461,7 +463,7 @@ class MoveExecutor:
         """
         return self._events.emit(
             Event.ON_MODIFY_MOVE_CATEGORY,
-            AttackContext(attacker=attacker, move=move),
+            AttackContext(attacker=attacker, defender=self.battle.foe(attacker), move=move),
             value=move.category
         )
 

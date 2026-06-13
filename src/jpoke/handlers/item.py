@@ -13,7 +13,13 @@ from jpoke.utils.type_defs import RoleSpec, Stat, Type, WeatherName, TerrainName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
+from jpoke.data.pokedex import POKEDEX
 from . import common
+
+# 何らかのポケモンの進化前として登録されている = 進化先が存在する（未進化）ポケモン名の集合
+_HAS_EVOLUTION: frozenset[str] = frozenset(
+    d.pre_evolution for d in POKEDEX.values() if d.pre_evolution
+)
 
 
 class ItemHandler(Handler):
@@ -343,6 +349,13 @@ def しろいハーブ_cancel_stat_drop(battle: Battle, ctx: EventContext, value
         assert mon is not None
         _announce_item_triggered(battle, mon)
         battle.consume_item(mon)
+    return HandlerReturn(value=value)
+
+
+def しんかのきせき_boost_defenses(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """しんかのきせき: 未進化ポケモンのぼうぎょ・とくぼうを1.5倍にする。"""
+    if ctx.defender.name in _HAS_EVOLUTION:
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 

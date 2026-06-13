@@ -112,15 +112,16 @@ class AbilityManager:
         Returns:
             特性の有効状態に変化があった場合はTrue、そうでない場合はFalse
         """
+        ctx = EventContext(source=mon)
+        if self._events.emit(Event.ON_CHECK_ABILITY_DISABLE, ctx, False):
+            return False
+
         was_enabled = mon.ability.enabled
         mon.ability.add_disable_reason(reason)
         is_enabled = mon.ability.enabled
 
         if was_enabled and not is_enabled:
-            self._events.emit(
-                Event.ON_ABILITY_DISABLED,
-                EventContext(source=mon)
-            )
+            self._events.emit(Event.ON_ABILITY_DISABLED, ctx)
             return True
         return False
 
