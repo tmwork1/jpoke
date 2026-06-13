@@ -2,7 +2,7 @@
 
 ## プロジェクト概要
 
-ポケモンバトルシミュレーション／ボット開発用 Python ライブラリ。
+ポケモンバトルシミュレーション開発用 Python ライブラリ。
 SVシリーズ（スカーレット・バイオレット）のシングルバトルをターゲットにしている。
 テスト・仕様書・コード内コメントは **日本語** で書く。
 
@@ -17,9 +17,6 @@ python -m pytest tests/test_ability.py -v
 
 # 特定テスト関数（日本語関数名も可）
 python -m pytest tests/test_ability.py -k "ARシステム" -v
-
-# tests/run.py 経由（従来の実行方法）
-python tests/run.py
 ```
 
 テストは `tests/` 直下にあり、`tests/test_utils.py` はテストヘルパー（テスト対象外）。
@@ -86,9 +83,6 @@ battle = t.start_battle(
 - `subject_spec` は必須。イベントが渡すコンテキスト型のロールと一致させる
   - 攻撃フェーズ（`AttackContext`）: `attacker:self` / `defender:self`
   - 非攻撃フェーズ（`EventContext`）: `source:self` / `target:self`
-  - 例外: `ON_CHECK_BYPASS_SCREEN` は `AttackContext` で発火するため `attacker:self`
-  - 例外: `ON_CHECK_BYPASS_STATUS_GUARD` は `EventContext` で発火するため `source:self`
-  - 例外: `ON_MODIFY_MOVE_PRIORITY` は `speed_calculator` が `EventContext(source=attacker)` で発火するため `source:self`
 - 固有効果のロジックは `handlers/*` に名前付き関数で実装し、`data/*.py` からその関数を登録する
 - `handlers/*` の並びは `data/*.py` の定義順（五十音順）に合わせる
 - イベント発火側で前提が保証されている場合、ハンドラ側の重複ガード（`if not mon.alive` など）は不要
@@ -114,7 +108,7 @@ battle = t.start_battle(
 
 ## 開発ルール
 
-- **対象はSVシリーズシングルバトルのみ**。既存コードが対応していない限りダブルバトル前提の設計はしない
+- **対象はSVシリーズシングルバトルのみ**
 - コメント・docstring・テスト関数名は **日本語** で書く
 - テスト関数名は `test_<特性名/技名>_<確認内容>` の形式
 - ハンドラの実装は `handlers/`、登録は `data/` で行う
@@ -129,4 +123,3 @@ battle = t.start_battle(
   1. `python scripts/sort_tests.py <対象ファイル>` — テスト関数を五十音順に並び替える（複数指定可、例: `tests/test_ability.py tests/test_move.py`）
   2. `python scripts/generate_test_list.py` — `docs/test/` のテスト一覧を更新する
   3. `python -m pytest tests/ -v` — 全テストが通ることを確認する
-  4. `git commit` — テストが全通過したらコミットする
