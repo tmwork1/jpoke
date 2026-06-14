@@ -10,6 +10,7 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
+
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)
@@ -20,13 +21,15 @@ def _dummy_move(type_name: str) -> Move:
     return move
 
 
-@pytest.mark.parametrize("item_name, stat, amount", [
-    ("チイラのみ", "A", 1),
-    ("カムラのみ", "S", 1),
-    ("ヤタピのみ", "C", 1),
-    ("リュガのみ", "B", 1),
-    ("ズアのみ", "D", 1),
-])
+@pytest.mark.parametrize("item_name, stat, amount",
+                         [
+                             ("チイラのみ", "A", 1),
+                             ("カムラのみ", "S", 1),
+                             ("ヤタピのみ", "C", 1),
+                             ("リュガのみ", "B", 1),
+                             ("ズアのみ", "D", 1),
+                         ]
+                         )
 def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
     """HP1/4以下になった瞬間に能力ランクを上昇させる"""
     battle = t.start_battle(
@@ -40,8 +43,11 @@ def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
     assert not mon.has_item()
 
 
-@pytest.mark.parametrize("item_name", ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"])
-def test_HP25以下で回復するきのみ(item_name):
+@pytest.mark.parametrize(
+    "item_name",
+    ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"]
+)
+def test_HP4分の1以下で回復するきのみ(item_name):
     """HP1/4以下になった瞬間に最大HPの1/3を回復する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name=item_name)],
@@ -52,6 +58,23 @@ def test_HP25以下で回復するきのみ(item_name):
     battle.modify_hp(mon, v=-1)
     assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
     assert not mon.has_item()
+
+
+@pytest.mark.parametrize(
+    "item_name",
+    ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"]
+)
+def test_HP4分の1より多いときは発動しない(item_name):
+    """HP1/4以下になった瞬間に最大HPの1/3を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 2
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + 1
+    assert mon.has_item()
 
 
 def test_あかいいと_アイテム消費されない():
@@ -107,6 +130,7 @@ def test_あかいいと_他の揮発状態では発動しない():
 
 
 def test_アッキのみ_物理技でB上昇():
+    # TODO : レンブのみのテストとパラメタライズでまとめる
     """アッキのみ: 物理技ダメージを受けたときぼうぎょ+1"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
@@ -120,6 +144,7 @@ def test_アッキのみ_物理技でB上昇():
 
 
 def test_アッキのみ_特殊技では発動しない():
+    # TODO : レンブのみのテストとパラメタライズでまとめる
     """アッキのみ: 特殊技では発動しない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
@@ -132,6 +157,8 @@ def test_アッキのみ_特殊技では発動しない():
 
 
 def test_あつぞこブーツ_ステルスロック無効():
+    # TODO : まきびし、どくびし、ねばねばネット無効もテストする
+    # ねばねばネット以外はパラメタライズでまとめる
     """あつぞこブーツ: ステルスロックダメージを無効化する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", item_name="あつぞこブーツ")],
@@ -175,6 +202,7 @@ def test_いかさまダイス_ヒット数5():
 
 
 def test_いのちのたま():
+    # TODO : 火力補正も検証する
     """いのちのたま: 攻撃技で反動ダメージ"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="いのちのたま", move_names=["たいあたり"])],
@@ -196,19 +224,8 @@ def test_いのちのたま_変化技では発動しない():
     assert not battle.actives[0].item.revealed
 
 
-def test_ウイのみ_HP25超では発動しない():
-    """ウイのみ: HPが25%を超えているときは発動しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="ウイのみ")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    mon.hp = mon.max_hp // 4 + 2
-    battle.modify_hp(mon, v=-1)
-    assert mon.has_item()
-
-
 def test_エレキシード_エレキフィールドで防御上昇():
+    # TODO : フィールドシード系のテストをパラメタライズでまとめる
     """エレキシード: エレキフィールド展開時に登場してぼうぎょ+1"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="エレキシード")],
@@ -221,6 +238,7 @@ def test_エレキシード_エレキフィールドで防御上昇():
 
 
 def test_エレキシード_フィールドなしでは発動しない():
+    # TODO : フィールドシード系のテストをパラメタライズでまとめる
     """エレキシード: エレキフィールドがないとき発動しない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="エレキシード")],
@@ -232,6 +250,7 @@ def test_エレキシード_フィールドなしでは発動しない():
 
 
 def test_おうじゃのしるし_ひるまない確率():
+    # TODO : するどいキバとパラメタライズでまとめてテストする
     """おうじゃのしるし: 乱数が0.1以上のときひるまない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="おうじゃのしるし", move_names=["たいあたり"])],
@@ -244,6 +263,7 @@ def test_おうじゃのしるし_ひるまない確率():
 
 
 def test_おうじゃのしるし_ひるみ付与():
+    # TODO : するどいキバとパラメタライズでまとめてテストする
     """おうじゃのしるし: 攻撃命中時10%の確率でひるみ付与"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="おうじゃのしるし", move_names=["たいあたり"])],
@@ -296,6 +316,7 @@ def test_オボンのみ_HP50超では発動しない():
 
 
 def test_オレンのみ_HP50以下で10回復():
+    # TODO : 回復しないケースもテストする
     """オレンのみ: HP1/2以下になった瞬間に10HP回復する"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", item_name="オレンのみ")],
@@ -332,6 +353,7 @@ def test_オーガポンのめん_特殊技には補正なし():
 
 
 def test_かいがらのすず_攻撃後HP回復():
+    # TODO : 効果が間違っており、正しくは付与ダメージの1/8回復する。仕様書・実装計画から見直す
     """かいがらのすず: 攻撃技命中時に最大HPの1/8を回復"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="かいがらのすず", move_names=["たいあたり"])],
@@ -345,6 +367,7 @@ def test_かいがらのすず_攻撃後HP回復():
 
 
 def test_かえんだま_ターン終了でやけど():
+    # TODO : どくどくだまとパラメタライズでまとめる
     """かえんだま: ターン終了時にやけどを付与する"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", item_name="かえんだま")],
@@ -1871,6 +1894,7 @@ def test_天候延長アイテム(item_name, weather):
     ("でんきだま", "ピカチュウ", "でんきショック", 8192),
 ])
 def test_専用アイテム攻撃補正(item_name, mon_name, move_name, expected_modifier):
+    # TODO : 補正のかからないケースもこのテストに統合する
     """オーガポンのめん・でんきだま: 攻撃補正（atk_modifier）を上昇させる"""
     battle = t.start_battle(
         team0=[Pokemon(mon_name, item_name=item_name, move_names=[move_name])],

@@ -838,6 +838,7 @@ def こころのしずく_modify_power(battle: Battle, ctx: AttackContext, value
     return _dedicated_item_modify_power(ctx, value, {"ラティオス", "ラティアス"}, ("エスパー", "ドラゴン"))
 
 
+# TODO : 変数化するほどでもないため、関数内に直書きする
 _DIALGA_FORMS = frozenset({"ディアルガ", "ディアルガ(オリジン)"})
 _DIALGA_ORIGIN = frozenset({"ディアルガ(オリジン)"})
 _PALKIA_FORMS = frozenset({"パルキア", "パルキア(オリジン)"})
@@ -885,22 +886,19 @@ def だいはっきんだま_modify_power(battle: Battle, ctx: AttackContext, va
     return _dedicated_item_modify_power(ctx, value, _GIRATINA_ORIGIN, ("ドラゴン", "ゴースト"))
 
 
-_PIKACHU_NAMES = frozenset({"ピカチュウ"})
-
-
 def でんきだま_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """でんきだま: ピカチュウ持ちの攻撃技こうげき・とくこう2倍。"""
-    if ctx.attacker.name in _PIKACHU_NAMES and ctx.move.is_attack:
+    if ctx.attacker.name in {"ピカチュウ"}:
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
 
-_GIRATINA_FORMS = frozenset({"ギラティナ(アナザー)", "ギラティナ(オリジン)"})
-
-
 def はっきんだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はっきんだま: ギラティナ持ちのドラゴン・ゴースト技1.2倍。"""
-    if ctx.attacker.name in _GIRATINA_FORMS and ctx.move.type in ("ドラゴン", "ゴースト"):
+    if (
+        ctx.attacker.name in {"ギラティナ(アナザー)", "ギラティナ(オリジン)"}
+        and ctx.move.type in ("ドラゴン", "ゴースト")
+    ):
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
@@ -917,7 +915,7 @@ def あつぞこブーツ_check_hazard_immune(_battle: Battle, _ctx: EventContex
 
 
 def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """おうじゃのしるし: ダメージ技命中時10%の確率で相手をひるませる。"""
+    """おうじゃのしるし、するどいキバ: ダメージ技命中時10%の確率で相手をひるませる。"""
     defender = ctx.defender
     if (
         ctx.move.is_attack
@@ -930,7 +928,8 @@ def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> Handl
 
 def おおきなねっこ_boost_drain(_battle: Battle, _ctx: Any, value: int) -> HandlerReturn:
     """おおきなねっこ: 吸収技のHP回収量を1.3倍にする。"""
-    return HandlerReturn(value=int(value * 1.3))
+    value = apply_fixed_modifier(value, 5324)
+    return HandlerReturn(value=value)
 
 
 def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
@@ -939,6 +938,7 @@ def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext,
 
 
 def かいがらのすず_heal_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : 効果が間違っており、正しくは付与ダメージの1/8回復する。仕様書・実装計画から見直す
     """かいがらのすず: ダメージ技命中時最大HPの1/8を回復する。"""
     if ctx.move.is_attack:
         battle.modify_hp(ctx.attacker, r=1/8)
@@ -955,7 +955,7 @@ def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: Attac
     """じゃくてんほけん: 効果抜群のダメージを受けたときA・Cを+2。"""
     mon = ctx.defender
     assert mon is not None
-    if battle.damage_calculator.calc_def_type_modifier(ctx) > 4096:
+    if battle.query.is_super_effective(ctx):
         _announce_and_consume_item(battle, mon)
         battle.modify_stats(mon, {"A": +2, "C": +2})
     return HandlerReturn(value=value)
@@ -972,8 +972,8 @@ def しめつけバンド_boost_bind_damage(_battle: Battle, _ctx: EventContext,
 
 
 def せんせいのツメ_priority_boost(battle: Battle, _ctx: AttackContext, value: int) -> HandlerReturn:
-    """せんせいのツメ: 23.4%の確率で先制ティアを+1する。"""
-    if battle.random.random() < 0.234:
+    """せんせいのツメ: 20%の確率で先制ティアを+1する。"""
+    if battle.random.random() < 0.2:
         return HandlerReturn(value=value + 1)
     return HandlerReturn(value=value)
 
@@ -1047,16 +1047,11 @@ def ひかりのこな_reduce_accuracy(_battle: Battle, _ctx: AttackContext, val
     return HandlerReturn(value=value)
 
 
-_MENTAL_HERB_TARGETS = frozenset({
-    "いちゃもん", "アンコール", "かなしばり", "ちょうはつ", "さしおさえ"
-})
-
-
 def メンタルハーブ_cure_mental_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """メンタルハーブ: 特定の揮発性状態が付与されたとき即解除する。"""
     mon = ctx.source
     assert mon is not None
-    if value in _MENTAL_HERB_TARGETS:
+    if value in {"いちゃもん", "アンコール", "かなしばり", "ちょうはつ"}:
         battle.volatile_manager.remove(mon, value)
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -1137,7 +1132,8 @@ def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: A
     if commands:
         _announce_and_consume_item(battle, mon)
         command = battle.random.choice(commands)
-        battle.run_switch(foe_player, battle.player_states[foe_player].team[command.index])
+        new_mon = battle.player_states[foe_player].team[command.index]
+        battle.run_switch(foe_player, new_mon)
     return HandlerReturn(value=value)
 
 

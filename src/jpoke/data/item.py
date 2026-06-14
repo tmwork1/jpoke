@@ -1229,6 +1229,7 @@ ITEMS: dict[str, ItemData] = {
             ),
         }
     ),
+    # TODO : 状態異常回復きのみの発動タイミングは、ON_APPLY_AILMENTとON_ITEM_ENABLEDの2つが正しい。
     "ラムのみ": ItemData(
         consumable=True,
         fling_power=10,
