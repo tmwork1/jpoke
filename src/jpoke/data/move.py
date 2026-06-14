@@ -263,7 +263,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.HP_ratio_damage,
+                ha.hp_ratio_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -2946,7 +2946,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.HP_ratio_damage,
+                ha.hp_ratio_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -2975,13 +2975,11 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "かみなりあらし": MoveData(
-
         type="でんき",
         category="特殊",
         pp=10,
         power=100,
         accuracy=80,
-
         labels=["wind"],
     ),
     "きあいだま": MoveData(
@@ -3092,13 +3090,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "こがらしあらし": MoveData(
-
         type="ひこう",
         category="特殊",
         pp=10,
         power=100,
         accuracy=80,
-
         labels=["wind"],
     ),
     "こごえるかぜ": MoveData(
@@ -3637,13 +3633,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=100
     ),
     "ねっさのあらし": MoveData(
-
         type="じめん",
         category="特殊",
         pp=10,
         power=100,
         accuracy=80,
-
         labels=["wind"],
     ),
     "ねっさのだいち": MoveData(

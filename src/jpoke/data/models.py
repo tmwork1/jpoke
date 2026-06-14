@@ -32,7 +32,6 @@ class AbilityData:
 
 @dataclass
 class ItemData:
-    consumable: bool = False
     removable: bool = True
     fling_power: int = 0
     power_modifier_by_type: dict[Type, float] = field(default_factory=dict)

@@ -45,7 +45,7 @@ def ohko_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(value=ctx.defender.hp)
 
 
-def HP_ratio_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def hp_ratio_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
@@ -135,26 +135,12 @@ def いのちがけ_modify_damage(battle: Battle, ctx: EventContext, value: Any)
 
 
 def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かみなりの天候による命中率補正。
-
-    雨: 必中（防御側ばんのうがさで無効）
-    晴れ: 50%（攻撃側ばんのうがさで無効）
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在の命中率
-
-    Returns:
-        HandlerReturn: 補正があればTrue、なければFalse
-    """
+    """かみなりの天候による命中率補正。雨: 必中、晴れ: 50%"""
     weather = battle.weather
     if weather is not None and weather.rainy:
-        if not (ctx.defender.item.name == "ばんのうがさ" and ctx.defender.item.enabled):
-            return HandlerReturn(value=None)  # 必中
+        return HandlerReturn(value=None)  # 必中
     elif weather is not None and weather.sunny:
-        if not (ctx.attacker.item.name == "ばんのうがさ" and ctx.attacker.item.enabled):
-            return HandlerReturn(value=50)
+        return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
 
@@ -232,26 +218,12 @@ def ふしょくガス_remove_item(battle: Battle, ctx: EventContext, value: Any
 
 
 def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ぼうふうの天候による命中率補正。
-
-    雨: 必中（防御側ばんのうがさで無効）
-    晴れ: 50%（攻撃側ばんのうがさで無効）
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在の命中率
-
-    Returns:
-        HandlerReturn: 補正があればTrue、なければFalse
-    """
+    """ぼうふうの天候による命中率補正。雨: 必中、晴れ: 50%"""
     weather = battle.weather
     if weather is not None and weather.rainy:
-        if not (ctx.defender.item.name == "ばんのうがさ" and ctx.defender.item.enabled):
-            return HandlerReturn(value=None)  # 必中
+        return HandlerReturn(value=None)  # 必中
     elif weather is not None and weather.sunny:
-        if not (ctx.attacker.item.name == "ばんのうがさ" and ctx.attacker.item.enabled):
-            return HandlerReturn(value=50)
+        return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
 

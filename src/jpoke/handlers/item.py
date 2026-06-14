@@ -164,6 +164,19 @@ def _cure_ailment_berry(battle: Battle,
     return HandlerReturn(value=value)
 
 
+def _cure_ailment_berry_on_apply(battle: Battle,
+                                 ctx: EventContext,
+                                 value: Any,
+                                 *ailment_names: str) -> HandlerReturn:
+    """ON_APPLY_AILMENT用: 状態異常付与直後に治療して消費する共通処理。"""
+    mon = ctx.target
+    assert mon is not None
+    if not ailment_names or value in ailment_names:
+        if battle.ailment_manager.remove(mon):
+            _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     # _heal_on_hp_dropを外部からも参照する関数にすれば、この関数は不要
     return _heal_berry(battle, ctx, value, denominator=4, heal_r=1/3)
@@ -288,6 +301,13 @@ def オレンのみ_heal_on_half_hp(battle: Battle, ctx: EventContext, value: An
     return _heal_berry(battle, ctx, value, denominator=2, heal_v=10)
 
 
+def いのちのたま_boost_atk(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """いのちのたま: 攻撃技の攻撃補正を1.3倍にする。"""
+    if ctx.move.is_attack:
+        value = apply_fixed_modifier(value, 5324)
+    return HandlerReturn(value=value)
+
+
 def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     if ctx.move.is_attack:
         battle.modify_hp(ctx.attacker, r=-1/8, source=ctx.attacker)
@@ -376,8 +396,41 @@ def きせきのたね_modify_power_by_type(battle: Battle, ctx: AttackContext, 
     return _modify_power_by_type(ctx.move, value, type_="くさ", modifier=4915)
 
 
+def きれいなぬけがら_check_trapped(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
+    """きれいなぬけがら: 拘束効果を無効化する。"""
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def きゅうこん_boost_spatk_on_water_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """きゅうこん: みず技でダメージを受けたときとくこう+1。"""
+    return _boost_stat_on_type_hit(battle, ctx, value, type_="みず", stats={"C": +1})
+
+
 def ぎんのこな_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="むし", modifier=4915)
+
+
+def くっつきバリ_damage_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くっつきバリ: ターン終了時に最大HPの1/8ダメージを受ける。"""
+    mon = ctx.source
+    assert mon is not None
+    if battle.modify_hp(mon, r=-1/8):
+        _announce_item_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def くっつきバリ_transfer_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """くっつきバリ: 接触攻撃者がアイテムを持っていない場合、攻撃者に転送する。"""
+    mon = ctx.defender
+    assert mon is not None
+    if (
+        battle.query.is_contact(ctx) and
+        not ctx.attacker.has_item()
+    ):
+        _announce_item_triggered(battle, mon)
+        battle.remove_item(mon)
+        battle.gain_item(ctx.attacker, "くっつきバリ")
+    return HandlerReturn(value=value)
 
 
 def くろいメガネ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -385,8 +438,7 @@ def くろいメガネ_modify_power_by_type(battle: Battle, ctx: AttackContext, 
 
 
 def くろおび_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # 正しくはかくとうタイプ。仕様書と計画書も見直す
-    return _modify_power_by_type(ctx.move, value, type_="あく", modifier=4915)
+    return _modify_power_by_type(ctx.move, value, type_="かくとう", modifier=4915)
 
 
 def こうかくレンズ_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -431,10 +483,14 @@ def シルクのスカーフ_modify_power_by_type(battle: Battle, ctx: AttackCon
 
 
 def しろいハーブ_cancel_stat_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    if any(v < 0 for v in value.values()):
-        value = {s: max(v, 0) for s, v in value.items()}
-        mon = ctx.target
-        assert mon is not None
+    # value は actual_changes ({stat: 変化量})。今回の変化で負になったランクがあるか確認する。
+    mon = ctx.target
+    assert mon is not None
+    triggered = any(v < 0 and mon.rank[s] < 0 for s, v in value.items())
+    if triggered:
+        for s in list(mon.rank.keys()):
+            if mon.rank[s] < 0:
+                mon.rank[s] = 0
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -472,6 +528,20 @@ def どくバリ_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
     return _modify_power_by_type(ctx.move, value, type_="どく", modifier=4915)
 
 
+def とくせいガード_check_ability_disable(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
+    """とくせいガード: 特性の無効化を防ぐ。"""
+    return HandlerReturn(value=True, stop_event=True)
+
+
+def とつげきチョッキ_modify_command_options(_battle: Battle, ctx: EventContext, value: list) -> HandlerReturn:
+    """とつげきチョッキ: 変化技のコマンドを選択肢から除外する。"""
+    mon = ctx.source
+    return HandlerReturn(value=[
+        cmd for cmd in value
+        if not (cmd.is_move_family and mon.moves[cmd.index].category == "変化")
+    ])
+
+
 def とけないこおり_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="こおり", modifier=4915)
 
@@ -489,6 +559,27 @@ def のろいのおふだ_modify_power_by_type(battle: Battle, ctx: AttackContex
 
 def まがったスプーン_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="エスパー", modifier=4915)
+
+
+def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ミクルのみ: HP1/4以下に下がった瞬間に命中率アップフラグを立てる。"""
+    mon = ctx.target
+    assert mon is not None
+    hp_after = mon.hp
+    hp_before = hp_after + value
+    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+        mon.item.count = 1
+        _announce_item_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def ミクルのみ_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ミクルのみ: 命中率フラグが立っているとき次の技の命中率を1.2倍にする。"""
+    mon = ctx.attacker
+    if mon.item.count == 1:
+        battle.consume_item(mon)
+        return HandlerReturn(value=apply_fixed_modifier(value, 4915))
+    return HandlerReturn(value=value)
 
 
 def ミストシード_boost_spdef(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -610,6 +701,11 @@ def カゴのみ_cure_sleep(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return _cure_ailment_berry(battle, ctx, value, "ねむり")
 
 
+def カゴのみ_cure_sleep_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """カゴのみ: ねむり付与直後に治療して消費する。"""
+    return _cure_ailment_berry_on_apply(battle, ctx, value, "ねむり")
+
+
 def キーのみ_cure_confusion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     mon = ctx.source
     assert mon is not None
@@ -621,6 +717,11 @@ def キーのみ_cure_confusion(battle: Battle, ctx: EventContext, value: Any) -
 
 def クラボのみ_cure_paralysis(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _cure_ailment_berry(battle, ctx, value, "まひ")
+
+
+def クラボのみ_cure_paralysis_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """クラボのみ: まひ付与直後に治療して消費する。"""
+    return _cure_ailment_berry_on_apply(battle, ctx, value, "まひ")
 
 
 def グラスシード_boost_defense(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -664,6 +765,11 @@ def チーゴのみ_cure_burn(battle: Battle, ctx: EventContext, value: Any) -> 
     return _cure_ailment_berry(battle, ctx, value, "やけど")
 
 
+def チーゴのみ_cure_burn_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """チーゴのみ: やけど付与直後に治療して消費する。"""
+    return _cure_ailment_berry_on_apply(battle, ctx, value, "やけど")
+
+
 def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     if battle.query.is_super_effective(ctx):
         value = apply_fixed_modifier(value, 4915)
@@ -678,8 +784,18 @@ def ナナシのみ_cure_freeze(battle: Battle, ctx: EventContext, value: Any) -
     return _cure_ailment_berry(battle, ctx, value, "こおり")
 
 
+def ナナシのみ_cure_freeze_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ナナシのみ: こおり付与直後に治療して消費する。"""
+    return _cure_ailment_berry_on_apply(battle, ctx, value, "こおり")
+
+
 def モモンのみ_cure_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _cure_ailment_berry(battle, ctx, value, "どく", "もうどく")
+
+
+def モモンのみ_cure_poison_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """モモンのみ: どく・もうどく付与直後に治療して消費する。"""
+    return _cure_ailment_berry_on_apply(battle, ctx, value, "どく", "もうどく")
 
 
 def ひかりのねんど_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -723,12 +839,14 @@ def ふうせん_pop_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
-def かるいし_boost_speed(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
-    return HandlerReturn(value=apply_fixed_modifier(value, 8192))
-
 
 def ラムのみ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _cure_ailment_berry(battle, ctx, value)
+
+
+def ラムのみ_cure_ailment_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ラムのみ: 状態異常付与直後に治療して消費する。"""
+    return _cure_ailment_berry_on_apply(battle, ctx, value)
 
 
 def カムラのみ_boost_speed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -745,9 +863,7 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
     """スターのみ: HP1/4以下でランダムな能力+2。"""
     mon = ctx.target
     assert mon is not None
-    hp_after = mon.hp
-    hp_before = hp_after + value
-    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+    if mon.hp <= mon.max_hp // 4:
         stat = battle.random.choice(["A", "B", "C", "D", "S"])
         battle.modify_stats(mon, {stat: +2})
         _announce_and_consume_item(battle, mon)
@@ -778,17 +894,36 @@ def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: An
     """サンのみ: HP1/4以下できゅうしょアップ状態になる。"""
     mon = ctx.target
     assert mon is not None
-    if mon.hp * 4 <= mon.max_hp:
+    if mon.hp <= mon.max_hp // 4:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 
-def アッキのみ_boost_defense_on_physical_hit(
-    battle: Battle, ctx: AttackContext, value: Any
-) -> HandlerReturn:
+def アッキのみ_boost_defense_on_physical_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アッキのみ: 物理技でダメージを受けたときぼうぎょ+1。"""
     return _boost_on_attack_category(battle, ctx, value, "物理", "B", +1)
+
+
+def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """イバンのみ: HPが1/4以下に下がった瞬間に先制フラグを立てる。"""
+    mon = ctx.target
+    assert mon is not None
+    hp_after = mon.hp
+    hp_before = hp_after + value
+    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+        mon.item.count = 1
+        _announce_item_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def イバンのみ_boost_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """イバンのみ: 先制フラグが立っているとき行動ティアを+1する。"""
+    mon = ctx.attacker
+    if mon.item.count == 1:
+        battle.consume_item(mon)
+        return HandlerReturn(value=value + 1)
+    return HandlerReturn(value=value)
 
 
 def ジャポのみ_retaliate_physical(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -838,22 +973,14 @@ def こころのしずく_modify_power(battle: Battle, ctx: AttackContext, value
     return _dedicated_item_modify_power(ctx, value, {"ラティオス", "ラティアス"}, ("エスパー", "ドラゴン"))
 
 
-# TODO : 変数化するほどでもないため、関数内に直書きする
-_DIALGA_FORMS = frozenset({"ディアルガ", "ディアルガ(オリジン)"})
-_DIALGA_ORIGIN = frozenset({"ディアルガ(オリジン)"})
-_PALKIA_FORMS = frozenset({"パルキア", "パルキア(オリジン)"})
-_PALKIA_ORIGIN = frozenset({"パルキア(オリジン)"})
-_GIRATINA_ORIGIN = frozenset({"ギラティナ(オリジン)"})
-
-
 def こんごうだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こんごうだま: ディアルガ持ちのドラゴン・はがね技1.2倍。"""
-    return _dedicated_item_modify_power(ctx, value, _DIALGA_FORMS, ("ドラゴン", "はがね"))
+    return _dedicated_item_modify_power(ctx, value, frozenset({"ディアルガ", "ディアルガ(オリジン)"}), ("ドラゴン", "はがね"))
 
 
 def しらたま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """しらたま: パルキア持ちのドラゴン・みず技1.2倍。"""
-    return _dedicated_item_modify_power(ctx, value, _PALKIA_FORMS, ("ドラゴン", "みず"))
+    return _dedicated_item_modify_power(ctx, value, frozenset({"パルキア", "パルキア(オリジン)"}), ("ドラゴン", "みず"))
 
 
 def だいこんごうだま_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -863,7 +990,7 @@ def だいこんごうだま_form_change(battle: Battle, ctx: EventContext, valu
 
 def だいこんごうだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """だいこんごうだま: ディアルガ(オリジン)持ちのドラゴン・はがね技1.2倍。"""
-    return _dedicated_item_modify_power(ctx, value, _DIALGA_ORIGIN, ("ドラゴン", "はがね"))
+    return _dedicated_item_modify_power(ctx, value, frozenset({"ディアルガ(オリジン)"}), ("ドラゴン", "はがね"))
 
 
 def だいしらたま_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -873,7 +1000,7 @@ def だいしらたま_form_change(battle: Battle, ctx: EventContext, value: Any
 
 def だいしらたま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """だいしらたま: パルキア(オリジン)持ちのドラゴン・みず技1.2倍。"""
-    return _dedicated_item_modify_power(ctx, value, _PALKIA_ORIGIN, ("ドラゴン", "みず"))
+    return _dedicated_item_modify_power(ctx, value, frozenset({"パルキア(オリジン)"}), ("ドラゴン", "みず"))
 
 
 def だいはっきんだま_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -883,7 +1010,7 @@ def だいはっきんだま_form_change(battle: Battle, ctx: EventContext, valu
 
 def だいはっきんだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """だいはっきんだま: ギラティナ(オリジン)持ちのドラゴン・ゴースト技1.2倍。"""
-    return _dedicated_item_modify_power(ctx, value, _GIRATINA_ORIGIN, ("ドラゴン", "ゴースト"))
+    return _dedicated_item_modify_power(ctx, value, frozenset({"ギラティナ(オリジン)"}), ("ドラゴン", "ゴースト"))
 
 
 def でんきだま_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -895,12 +1022,7 @@ def でんきだま_boost_atk(battle: Battle, ctx: AttackContext, value: Any) ->
 
 def はっきんだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はっきんだま: ギラティナ持ちのドラゴン・ゴースト技1.2倍。"""
-    if (
-        ctx.attacker.name in {"ギラティナ(アナザー)", "ギラティナ(オリジン)"}
-        and ctx.move.type in ("ドラゴン", "ゴースト")
-    ):
-        value = apply_fixed_modifier(value, 4915)
-    return HandlerReturn(value=value)
+    return _dedicated_item_modify_power(ctx, value, {"ギラティナ(アナザー)"}, ("ドラゴン", "ゴースト"))
 
 
 def ブーストエナジー_refresh_paradox_charge(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -928,7 +1050,7 @@ def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> Handl
 
 def おおきなねっこ_boost_drain(_battle: Battle, _ctx: Any, value: int) -> HandlerReturn:
     """おおきなねっこ: 吸収技のHP回収量を1.3倍にする。"""
-    value = apply_fixed_modifier(value, 5324)
+    value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
 
@@ -937,11 +1059,10 @@ def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext,
     return HandlerReturn(value=0)
 
 
-def かいがらのすず_heal_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : 効果が間違っており、正しくは付与ダメージの1/8回復する。仕様書・実装計画から見直す
-    """かいがらのすず: ダメージ技命中時最大HPの1/8を回復する。"""
-    if ctx.move.is_attack:
-        battle.modify_hp(ctx.attacker, r=1/8)
+def かいがらのすず_drain_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かいがらのすず: ダメージ技命中時に与ダメージの1/8を回復する。"""
+    heal_amount = value // 8
+    if heal_amount > 0 and battle.modify_hp(ctx.attacker, v=heal_amount):
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -955,6 +1076,8 @@ def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: Attac
     """じゃくてんほけん: 効果抜群のダメージを受けたときA・Cを+2。"""
     mon = ctx.defender
     assert mon is not None
+    if not mon.alive:
+        return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
         _announce_and_consume_item(battle, mon)
         battle.modify_stats(mon, {"A": +2, "C": +2})
@@ -1140,3 +1263,13 @@ def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: A
 def レンブのみ_retaliate_special(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """レンブのみ: 特殊技でダメージを受けたとき攻撃者に最大HPの1/8ダメージ。"""
     return _retaliate_on_category(battle, ctx, value, "特殊")
+
+
+def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ナゾのみ: 効果抜群のダメージを受けたときHPを最大HPの25%回復する。"""
+    mon = ctx.defender
+    assert mon is not None
+    if battle.query.is_super_effective(ctx):
+        battle.modify_hp(mon, r=1/4)
+        _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
