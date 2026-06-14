@@ -17,8 +17,6 @@ from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
 
-from . import common
-
 
 AEGISLASH_SHIELD = "ギルガルド(シールド)"
 AEGISLASH_BLADE = "ギルガルド(ブレード)"
@@ -138,11 +136,12 @@ def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
 
 def _apply_contact_counter_ailment(battle: Battle,
                                    ctx: AttackContext,
+                                   value: Any,
                                    *,
                                    ailment: AilmentName,
-                                   chance: float) -> bool:
+                                   chance: float) -> HandlerReturn:
     """接触被弾時カウンターの状態異常付与を試行する。"""
-    # TODO : ログ書き込みとHandlerReturn返却までこの関数に含めるべきかも
+    assert ctx.defender is not None
     if (
         battle.query.is_contact(ctx)
         and battle.random.random() < chance
@@ -150,24 +149,22 @@ def _apply_contact_counter_ailment(battle: Battle,
         battle.ailment_manager.apply(
             ctx.attacker, ailment, source=ctx.defender, ctx=ctx,
         )
-        return True
-    return False
+        _announce_ability_triggered(battle, ctx.defender)
+    return HandlerReturn(value=value)
 
 
 def _apply_contact_counter_chip(battle: Battle,
                                 ctx: AttackContext,
+                                value: Any,
                                 *,
-                                ratio: float) -> bool:
-    """接触被弾時カウンターの固定割合ダメージを適用する。
-
-    Returns:
-        bool: ダメージが適用された場合True
-    """
-    # TODO : ログ書き込みとHandlerReturn返却までこの関数に含めるべきかも
+                                ratio: float) -> HandlerReturn:
+    """接触被弾時カウンターの固定割合ダメージを適用する。"""
+    assert ctx.defender is not None
     if battle.query.is_contact(ctx):
-        v = battle.modify_hp(ctx.attacker, r=-ratio, reason="ability")
-        return bool(v)
-    return False
+        v = battle.modify_hp(ctx.attacker, r=-ratio, reason="")
+        if v:
+            _announce_ability_triggered(battle, ctx.defender)
+    return HandlerReturn(value=value)
 
 
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
@@ -263,6 +260,23 @@ def _activate_terrain(battle: Battle,
     """地形を変更する"""
     if mon and battle.terrain_manager.apply(terrain, count, source=mon):
         _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def _block_stat_drop_by_foe(value: dict, ctx: EventContext, stat: Stat | None = None) -> dict:
+    """相手由来のランク低下を除去する。stat=Noneなら全能力が対象。"""
+    if ctx.source is not None and ctx.source != ctx.target:
+        if stat is None:
+            value = {s: v for s, v in value.items() if v >= 0}
+        else:
+            value = {s: v for s, v in value.items() if s != stat or v >= 0}
+    return value
+
+
+def _ignore_sandstorm_damage(_battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """すなあらしのダメージを無効化する。"""
+    if ctx.hp_change_reason == "sandstorm":
+        return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -517,7 +531,7 @@ def いたずらごころ_blocked_by_dark(battle: Battle, ctx: AttackContext, va
 
 def いろめがね_boost_ineffective(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """いろめがね特性: いまひとつの技の最終ダメージ補正を2倍にする。"""
-    if common.is_not_very_effective(battle, ctx):
+    if battle.query.is_not_very_effective(ctx):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
@@ -590,7 +604,7 @@ def うるおいボディ_cure_ailment_in_rain(battle: Battle, ctx: EventContext
     mon = ctx.source
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
-    result = common.cure_self_ailment(battle, ctx, value)
+    result = HandlerReturn(value=battle.ailment_manager.remove(mon))
     if result.value:
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -675,7 +689,7 @@ def おもかげやどし_boost_stat(battle: Battle, ctx: EventContext, value: A
 
 def かいりきバサミ_block_A_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """かいりきバサミ特性: 相手によるこうげきランク低下を無効化する。"""
-    value = common.block_stat_drop_by_foe(value, ctx, "A")
+    value = _block_stat_drop_by_foe(value, ctx, "A")
     return HandlerReturn(value=value)
 
 
@@ -1117,7 +1131,7 @@ def くさのけがわ_boost_B(battle: Battle, ctx: AttackContext, value: int) -
     """くさのけがわ特性: グラスフィールド中の物理技への防御補正を1.5倍にする。"""
     if (
         battle.terrain.name == "グラスフィールド"
-        and common.deals_physical_damage(battle, ctx)
+        and battle.query.deals_physical_damage(ctx.attacker, ctx.move)
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -1139,7 +1153,7 @@ def クリアボディ_block_stat_drop(battle: Battle, ctx: EventContext, value:
 
     自分の技や反動による能力低下は防げない。
     """
-    value = common.block_stat_drop_by_foe(value, ctx)
+    value = _block_stat_drop_by_foe(value, ctx)
     return HandlerReturn(value=value)
 
 
@@ -1201,8 +1215,7 @@ def さいせいりょく_heal_on_withdraw(battle: Battle, ctx: EventContext, va
 
 def さめはだ_chip_contact_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """さめはだ特性: 接触技を受けた相手に最大HPの1/8ダメージを与える。"""
-    _apply_contact_counter_chip(battle, ctx, ratio=1/8)
-    return HandlerReturn(value=value)
+    return _apply_contact_counter_chip(battle, ctx, value, ratio=1/8)
 
 
 def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1269,7 +1282,7 @@ def しろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) 
 def しぜんかいふく_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しぜんかいふく特性: 交代で引っ込んだとき状態異常を回復する。"""
     mon = ctx.source
-    result = common.cure_self_ailment(battle, ctx, value)
+    result = HandlerReturn(value=battle.ailment_manager.remove(mon))
     if result.value:
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1323,7 +1336,7 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
 
     # きのみでない、またはすでに別のアイテムを持っている場合は発動しない
     if (
-        not common.is_berry_item(item_name)
+        not item_name.endswith("のみ")
         or mon.has_item()
     ):
         return HandlerReturn(value=value)
@@ -1463,12 +1476,12 @@ def すなかき_modify_speed(battle: Battle, ctx: EventContext, value: int) -> 
 
 def すなかき_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すなかき特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
+    return _ignore_sandstorm_damage(battle, ctx, value)
 
 
 def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すながくれ特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
+    return _ignore_sandstorm_damage(battle, ctx, value)
 
 
 def すながくれ_reduce_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1480,7 +1493,7 @@ def すながくれ_reduce_accuracy(battle: Battle, ctx: EventContext, value: An
 
 def すなのちから_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すなのちから特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
+    return _ignore_sandstorm_damage(battle, ctx, value)
 
 
 def すなのちから_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1518,7 +1531,7 @@ def すりぬけ_bypass_status_guard(battle: Battle, ctx: EventContext, value: b
 
 def するどいめ_block_ACC_drop(battle: Battle, ctx: AttackContext, value: dict) -> HandlerReturn:
     """するどいめ特性: 相手による命中率ランク低下を無効化する。"""
-    value = common.block_stat_drop_by_foe(value, ctx, "ACC")
+    value = _block_stat_drop_by_foe(value, ctx, "ACC")
     return HandlerReturn(value=value)
 
 
@@ -1585,8 +1598,7 @@ def せいしんりょく_block_intimidate(battle: Battle, ctx: EventContext, va
 
 def せいでんき_maybe_paralyze_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """せいでんき特性: 直接攻撃を受けた相手を30%でまひにする。"""
-    _apply_contact_counter_ailment(battle, ctx, ailment="まひ", chance=0.3)
-    return HandlerReturn(value=value)
+    return _apply_contact_counter_ailment(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
 def ぜったいねむり_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1690,7 +1702,10 @@ def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> Han
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
 
-    result = common.cure_self_ailment(battle, ctx, value, chance=0.3)
+    chance = battle.resolve_secondary_chance(ctx, 0.3)
+    if chance < 1 and battle.random.random() >= chance:
+        return HandlerReturn(value=value)
+    result = HandlerReturn(value=battle.ailment_manager.remove(mon))
     if result.value:
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -1912,8 +1927,7 @@ def どくのくさり_maybe_badly_poison(battle: Battle, ctx: AttackContext, va
 
 def どくのトゲ_maybe_poison_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """どくのトゲ特性: 直接攻撃を受けた相手を30%でどくにする。"""
-    _apply_contact_counter_ailment(battle, ctx, ailment="どく", chance=0.3)
-    return HandlerReturn(value=value)
+    return _apply_contact_counter_ailment(battle, ctx, value, ailment="どく", chance=0.3)
 
 
 PINCH_TYPE_BOOST_ABILITIES: dict[str, str] = {
@@ -2133,7 +2147,7 @@ def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext,
 
 def ハードロック_reduce_effective(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """防御側特性: 効果抜群の技ダメージを0.75倍にする。"""
-    if common.is_super_effective(battle, ctx):
+    if battle.query.is_super_effective(ctx):
         value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
@@ -2164,7 +2178,7 @@ def はっこう_block_acc_drop(battle: Battle, ctx: EventContext, value: dict) 
 
 def はとむね_block_B_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """はとむね特性: 相手によるぼうぎょランク低下を無効化する。"""
-    value = common.block_stat_drop_by_foe(value, ctx, "B")
+    value = _block_stat_drop_by_foe(value, ctx, "B")
     return HandlerReturn(value=value)
 
 
@@ -2413,7 +2427,7 @@ def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dic
 
 def ファーコート_boost_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ファーコート特性: 物理技に対する防御補正を2倍にする。"""
-    if common.deals_physical_damage(battle, ctx):
+    if battle.query.deals_physical_damage(ctx.attacker, ctx.move):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
@@ -2519,7 +2533,7 @@ def ふしぎなうろこ_boost_B(battle: Battle, ctx: AttackContext, value: int
     """ふしぎなうろこ特性: 状態異常時に物理技への防御補正を1.5倍にする。"""
     if (
         ctx.defender.ailment.is_active
-        and common.deals_physical_damage(battle, ctx)
+        and battle.query.deals_physical_damage(ctx.attacker, ctx.move)
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
@@ -2529,7 +2543,7 @@ def ふしぎなまもり_block_non_effective(battle: Battle, ctx: AttackContext
     """ふしぎなまもり特性: 効果抜群でない攻撃技を無効化する。"""
     if (
         not ctx.move.is_attack
-        or common.is_super_effective(battle, ctx)
+        or battle.query.is_super_effective(ctx)
     ):
         return HandlerReturn(value=value)
     return HandlerReturn(value=False, stop_event=True)
@@ -2580,7 +2594,7 @@ def フラワーベール_prevent_stat_drop(battle: Battle, ctx: EventContext, v
 
 def ブレインフォース_boost_effective(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ブレインフォース特性: 効果抜群のときダメージを1.25倍"""
-    if common.is_super_effective(battle, ctx):
+    if battle.query.is_super_effective(ctx):
         value = apply_fixed_modifier(value, 5120)
     return HandlerReturn(value=value)
 
@@ -2673,7 +2687,7 @@ def ぼうじん_block_powder(battle: Battle, ctx: AttackContext, value: bool) -
 
 def ぼうじん_block_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """ぼうじん特性: すなあらしのダメージを受けない。"""
-    return common.ignore_damage_by_reason(battle, ctx, value, reason="sandstorm")
+    return _ignore_sandstorm_damage(battle, ctx, value)
 
 
 def ぼうだん_block_bullet(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
@@ -2704,8 +2718,7 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
 
 def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
-    _apply_contact_counter_ailment(battle, ctx, ailment="やけど", chance=0.3)
-    return HandlerReturn(value=value)
+    return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
 def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

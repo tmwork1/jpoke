@@ -199,7 +199,14 @@ ITEMS: dict[str, ItemData] = {
     ),
     "からぶりほけん": ItemData(
         consumable=True,
-        fling_power=80
+        fling_power=80,
+        handlers={
+            Event.ON_MISS: h.ItemHandler(
+                h.からぶりほけん_boost_speed_on_miss,
+                subject_spec="attacker:self",
+                once=True,
+            )
+        }
     ),
     "かるいし": ItemData(
         consumable=False,
@@ -291,7 +298,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "グランドコート": ItemData(
         consumable=False,
-        fling_power=60
+        fling_power=60,
+        handlers={
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
+                h.グランドコート_resolve_field_count,
+                subject_spec="source:self",
+            ),
+        }
     ),
     "クリアチャーム": ItemData(
         consumable=False,
@@ -665,7 +678,8 @@ ITEMS: dict[str, ItemData] = {
     ),
     "でかいきんのたま": ItemData(
         consumable=False,
-        fling_power=130
+        fling_power=130,
+        handlers={}  # 効果なし
     ),
     "でんきだま": ItemData(
         consumable=False,
@@ -735,7 +749,13 @@ ITEMS: dict[str, ItemData] = {
     ),
     "ねばりのかぎづめ": ItemData(
         consumable=False,
-        fling_power=90
+        fling_power=90,
+        handlers={
+            Event.ON_MODIFY_DURATION: h.ItemHandler(
+                h.ねばりのかぎづめ_fix_bind_duration,
+                subject_spec="attacker:self",
+            )
+        }
     ),
     "ねらいのまと": ItemData(
         consumable=False,

@@ -355,7 +355,7 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
 
-        labels=["contact"],
+        labels=["contact", "heal"],
     ),
     "うっぷんばらし": MoveData(
         type="あく",
@@ -607,7 +607,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        labels=["contact"],
+        labels=["contact", "heal"],
     ),
     "きょけんとつげき": MoveData(
         type="ドラゴン",
@@ -974,6 +974,9 @@ MOVES: dict[str, MoveData] = {
         power=15,
         accuracy=85,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "ジャイロボール": MoveData(
         type="はがね",
@@ -1103,7 +1106,9 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "スパーク": MoveData(
 
@@ -2350,6 +2355,9 @@ MOVES: dict[str, MoveData] = {
         power=15,
         accuracy=90,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "マッハパンチ": MoveData(
         type="かくとう",
@@ -2426,7 +2434,7 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
 
-        labels=["contact", "slash"],
+        labels=["contact", "slash", "heal"],
     ),
     "メガトンキック": MoveData(
         type="ノーマル",
@@ -2775,7 +2783,9 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "うたかたのアリア": MoveData(
         type="みず",
@@ -2947,7 +2957,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        labels=["bullet"],
+        labels=["bullet", "heal"],
     ),
     "かみなり": MoveData(
 
@@ -3217,7 +3227,9 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=90,
-
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "シードフレア": MoveData(
 
@@ -3265,7 +3277,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=90,
-
+        labels=["heal"],
     ),
     "シャドーボール": MoveData(
 
@@ -3335,6 +3347,7 @@ MOVES: dict[str, MoveData] = {
         pp=25,
         power=20,
         accuracy=100,
+        labels=["heal"],
     ),
     "スケイルノイズ": MoveData(
 
@@ -3786,6 +3799,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
+        labels=["heal"],
     ),
     "はるのあらし": MoveData(
 
@@ -4004,7 +4018,9 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=35,
         accuracy=85,
-
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "ほのおのちかい": MoveData(
         type="ほのお",
@@ -4089,6 +4105,9 @@ MOVES: dict[str, MoveData] = {
         power=20,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
     ),
     "みずあめボム": MoveData(
         type="くさ",
@@ -4267,6 +4286,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=100,
         accuracy=100,
+        labels=["heal"],
     ),
     "ようかいえき": MoveData(
 

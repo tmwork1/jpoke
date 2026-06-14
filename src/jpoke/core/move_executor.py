@@ -354,6 +354,7 @@ class MoveExecutor:
 
             if need_hit_check and not self._check_hit(ctx):
                 self.battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
+                self._events.emit(Event.ON_MISS, ctx)
                 break
 
             # 無効化されたら中断

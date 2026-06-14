@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event, LogCode
 from jpoke.core import HandlerReturn
-from . import common
 from .move import (
     apply_ailment_to_defender,
     apply_volatile_to_attacker,
@@ -208,7 +207,7 @@ def しっぽをふる_modify_defender_stats(battle: Battle, ctx: EventContext, 
 
 
 def じゅうりょく_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.activate_global_field(battle, ctx, value, global_field="じゅうりょく", source_spec="attacker:self")
+    return HandlerReturn(value=battle.global_manager.activate("じゅうりょく", 5))
 
 
 def ステルスロック_set_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -220,7 +219,7 @@ def ステルスロック_set_field(battle: Battle, ctx: EventContext, value: An
 
 
 def すなあらし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.activate_weather(battle, ctx, value, weather="すなあらし", source_spec="attacker:self")
+    return HandlerReturn(value=battle.weather_manager.apply("すなあらし", 5, source=ctx.attacker))
 
 
 def すなかけ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -260,7 +259,10 @@ def どくのこな_apply_ailment_to_defender(battle: Battle, ctx: EventContext,
 
 
 def トリックルーム_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.activate_global_field(battle, ctx, value, global_field="トリックルーム", source_spec="attacker:self", toggle=True)
+    manager = battle.global_manager
+    if manager.fields["トリックルーム"].is_active:
+        return HandlerReturn(value=manager.deactivate("トリックルーム"))
+    return HandlerReturn(value=manager.activate("トリックルーム", 5))
 
 
 def ドわすれ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -300,7 +302,10 @@ def ほたるび_modify_attacker_stats(battle: Battle, ctx: EventContext, value:
 
 
 def マジックルーム_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.activate_global_field(battle, ctx, value, global_field="マジックルーム", source_spec="attacker:self", toggle=True)
+    manager = battle.global_manager
+    if manager.fields["マジックルーム"].is_active:
+        return HandlerReturn(value=manager.deactivate("マジックルーム"))
+    return HandlerReturn(value=manager.activate("マジックルーム", 5))
 
 
 def まもる_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -328,7 +333,10 @@ def わるだくみ_modify_attacker_stats(battle: Battle, ctx: EventContext, val
 
 
 def ワンダールーム_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.activate_global_field(battle, ctx, value, global_field="ワンダールーム", source_spec="attacker:self", toggle=True)
+    manager = battle.global_manager
+    if manager.fields["ワンダールーム"].is_active:
+        return HandlerReturn(value=manager.deactivate("ワンダールーム"))
+    return HandlerReturn(value=manager.activate("ワンダールーム", 5))
 
 
 def キングシールド_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

@@ -10,8 +10,6 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
-# TODO : 複数アイテムをパラメタライズでまとめたテストはモジュール最下部に配置する。
-
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)
@@ -20,9 +18,6 @@ def _dummy_move(type_name: str) -> Move:
     move.data.type = t_name
     move.type = t_name
     return move
-
-# TODO : メトロノームのテストでは、実際にrun_moveで指定回数だけ技を使用したときの補正係数を検証すべき。
-# 使用回数と補正係数の組み合わせはパラメタライズでまとめる。
 
 
 @pytest.mark.parametrize("item_name, stat, amount", [
@@ -385,6 +380,32 @@ def test_カゴのみ_ねむり以外では発動しない():
     assert mon.has_item()
 
 
+def test_からぶりほけん_技が命中したときは発動しない():
+    """からぶりほけん: 技が命中したときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="からぶりほけん", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["S"] == 0
+    assert mon.has_item()
+
+
+def test_からぶりほけん_技が外れたときS上昇():
+    """からぶりほけん: 技が外れたときすばやさ+2"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="からぶりほけん", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["S"] == 2
+    assert not mon.has_item()
+
+
 def test_かるいし_素早さ2倍():
     """かるいし: 素早さを2倍にする"""
     battle = t.start_battle(
@@ -599,6 +620,52 @@ def test_グラスシード_グラスフィールドで防御上昇():
     mon = battle.actives[0]
     assert mon.rank["B"] == 1
     assert not mon.has_item()
+
+
+@pytest.mark.parametrize("terrain", ["エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド"])
+def test_グランドコート_フィールドを8ターンに延長(terrain):
+    """グランドコート: 4種フィールドの持続を8ターンに延長する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="グランドコート")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    result = battle.events.emit(
+        Event.ON_MODIFY_DURATION,
+        EventContext(source=mon),
+        [terrain, 5],
+    )
+    assert result == [terrain, 8]
+
+
+def test_グランドコート_天候は延長しない():
+    """グランドコート: 天候の持続は延長しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="グランドコート")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    result = battle.events.emit(
+        Event.ON_MODIFY_DURATION,
+        EventContext(source=mon),
+        ["はれ", 5],
+    )
+    assert result == ["はれ", 5]
+
+
+def test_グランドコート_非所持ではフィールドが5ターンのまま():
+    """グランドコート: 所持していない場合はフィールドは5ターンで終了する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    result = battle.events.emit(
+        Event.ON_MODIFY_DURATION,
+        EventContext(source=mon),
+        ["グラスフィールド", 5],
+    )
+    assert result == ["グラスフィールド", 5]
 
 
 def test_こうこうのしっぽ_行動が後になる():
@@ -1188,6 +1255,32 @@ def test_ナナシのみ_ターン終了でこおり回復():
     assert not mon.has_item()
 
 
+def test_ねばりのかぎづめ_なしでは通常ターン():
+    """ねばりのかぎづめなし: まきつくでバインド状態の継続ターンが4か5になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.has_volatile("バインド")
+    assert foe.volatiles["バインド"].count in {4, 5}
+
+
+def test_ねばりのかぎづめ_バインドターン固定():
+    """ねばりのかぎづめ: まきつくでバインド状態の継続ターンが7ターンに固定される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まきつく"], item_name="ねばりのかぎづめ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.has_volatile("バインド")
+    assert foe.volatiles["バインド"].count == 7
+
+
 def test_ねらいのまと_タイプ免疫を無効化():
     """ねらいのまと: タイプ相性による免疫（0倍）を無効化する"""
     battle = t.start_battle(
@@ -1237,6 +1330,110 @@ def test_ノーマルジュエル_ノーマル技威力1_5倍():
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 6144
     assert not mon.has_item()
+
+
+def test_ばんのうがさ_かみなり_晴れ_攻撃側_命中低下なし():
+    """ばんのうがさ: 攻撃側所持で晴れのかみなり命中率低下を無視（攻撃側の効果）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ばんのうがさ", move_names=["かみなり"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 70  # 元の命中率のまま
+
+
+def test_ばんのうがさ_かみなり_雨_防御側_必中なし():
+    """ばんのうがさ: 防御側所持で雨のかみなりが必中にならない（防御側の効果）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かみなり"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("あめ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 70  # 必中にならず元の命中率
+
+
+def test_ばんのうがさ_ぼうふう_晴れ_攻撃側_命中低下なし():
+    """ばんのうがさ: 攻撃側所持で晴れのぼうふう命中率低下を無視（攻撃側の効果）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ばんのうがさ", move_names=["ぼうふう"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 70  # 元の命中率のまま
+
+
+def test_ばんのうがさ_ぼうふう_雨_防御側_必中なし():
+    """ばんのうがさ: 防御側所持で雨のぼうふうが必中にならない（防御側の効果）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぼうふう"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("あめ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 70  # 必中にならず元の命中率
+
+
+def test_ばんのうがさ_晴れ_攻撃側持ちでも威力補正は有効():
+    """ばんのうがさ: 攻撃側所持では晴れのほのお補正は無効化されない（防御側の効果のため）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ばんのうがさ", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144  # 1.5倍が有効
+
+
+def test_ばんのうがさ_晴れ_防御側_ほのお補正無視():
+    """ばんのうがさ: 防御側所持で晴れのほのお×1.5が無視される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096  # 補正なし
+
+
+def test_ばんのうがさ_晴れ_防御側_みず補正無視():
+    """ばんのうがさ: 防御側所持で晴れのみず×0.5が無視される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096  # 補正なし
+
+
+def test_ばんのうがさ_雨_防御側_ほのお補正無視():
+    """ばんのうがさ: 防御側所持で雨のほのお×0.5が無視される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("あめ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096  # 補正なし
+
+
+def test_ばんのうがさ_雨_防御側_みず補正無視():
+    """ばんのうがさ: 防御側所持で雨のみず×1.5が無視される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("あめ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096  # 補正なし
 
 
 def test_パワフルハーブ_溜め技をスキップ():
@@ -1441,17 +1638,6 @@ def test_ミストシード_ミストフィールドでとくぼう上昇():
     assert not mon.has_item()
 
 
-def test_メトロノーム_初回は補正なし():
-    """メトロノーム: 同じ技の初回使用は威力補正なし"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4096
-
-
 def test_メトロノーム_別技でリセット():
     """メトロノーム: 違う技を使うとカウントリセット"""
     battle = t.start_battle(
@@ -1467,32 +1653,23 @@ def test_メトロノーム_別技でリセット():
     assert mon.item.move_name == "でんきショック"
 
 
-def test_メトロノーム_最大2倍():
-    """メトロノーム: 6回目以降は威力2倍（上限）"""
+@pytest.mark.parametrize("uses,expected_modifier", [
+    (1, 4096),  # 初回は補正なし
+    (2, 4915),  # 2回目: 1.2倍
+    (3, 5734),  # 3回目: 1.4倍
+    (6, 8191),  # 6回目: 2倍（上限）
+    (7, 8191),  # 7回目以降: 上限変わらず
+])
+def test_メトロノーム_連続使用_補正係数(uses, expected_modifier):
+    """メトロノーム: 連続使用回数に応じた補正係数"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
-    mon = battle.actives[0]
-    mon.item.count = 5
-    mon.item.move_name = "たいあたり"
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 8191
-
-
-def test_メトロノーム_連続使用で威力増加():
-    """メトロノーム: 2回目連続使用で威力1.2倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    mon = battle.actives[0]
-    mon.item.count = 1
-    mon.item.move_name = "たいあたり"
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 4915
+    for _ in range(uses):
+        t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == expected_modifier
 
 
 def test_メンタルハーブ_いちゃもんを即解除():
@@ -1721,7 +1898,6 @@ def test_専用アイテム攻撃補正(item_name, mon_name, move_name, expected
     ]
 )
 def test_専用アイテム補正(item_name, mon_name, move_name, expected_modifier):
-    # TODO : 補正がかからないケースも追加する
     """専用アイテム: 対応ポケモンの対応タイプ技を1.2倍にする"""
     battle = t.start_battle(
         team0=[Pokemon(mon_name, item_name=item_name, move_names=[move_name])],

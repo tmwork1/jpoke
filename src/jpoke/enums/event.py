@@ -205,6 +205,10 @@ class Event(Enum):
     # handle: volatile.py（いのちがけ・カウンター等、被ダメージトリガー処理）
     ON_DAMAGE_HIT = auto()
 
+    # emit: core/move_executor.py（命中判定に失敗したとき）
+    # handle: item.py（からぶりほけん: 外れ時にすばやさ+2）
+    ON_MISS = auto()
+
     # emit: core/move_executor.py（技実行完了直後）
     # handle: ability.py（もらいび等、技実行終了後の状態管理・撤去処理）
     ON_MOVE_END = auto()
@@ -267,7 +271,8 @@ class Event(Enum):
     # handle: ability.py（まけんき・かちき等の反応）
     ON_MODIFY_STAT = auto()
 
-    # TODO : コメント追加
+    # emit: core/move_executor.py（PP消費後）
+    # handle: item.py（ヒメリのみ: PP が 0 になったとき PP を回復）
     ON_PP_CONSUMED = auto()
 
     # ------------------------------------------------------------------ #
@@ -279,7 +284,8 @@ class Event(Enum):
     ON_MODIFY_PP_CONSUMED = auto()
 
     # emit: core/field_manager.py（フィールド・場の状態の残りターンを確認）
-    # handle: 各フィールド・揮発性状態の持続ターン管理ハンドラ
+    #        handlers/move_attack.py（バインド系技の継続ターン数を設定）
+    # handle: 各フィールド・バインドの持続ターン管理ハンドラ
     ON_MODIFY_DURATION = auto()
 
     # emit: core/battle.py（天候効果が有効かどうかを判定）

@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
-from . import common
 from .move import (
     apply_ailment_to_defender,
     apply_volatile_to_attacker,
@@ -94,6 +93,17 @@ def level_fixed_damage(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(value=ctx.attacker.level)
 
 
+def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """バインド系技: ランダムターン数でバインド状態を付与する。ねばりのかぎづめで7ターン固定。"""
+    count_pair = battle.events.emit(
+        Event.ON_MODIFY_DURATION,
+        ctx,
+        ["バインド", battle.random.randint(4, 5)]
+    )
+    battle.volatile_manager.apply(ctx.defender, "バインド", count=count_pair[1], source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def はたきおとす_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はたきおとすのアイテム除去効果。"""
     battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
@@ -127,8 +137,8 @@ def いのちがけ_modify_damage(battle: Battle, ctx: EventContext, value: Any)
 def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """かみなりの天候による命中率補正。
 
-    雨: 必中
-    晴れ: 50%
+    雨: 必中（防御側ばんのうがさで無効）
+    晴れ: 50%（攻撃側ばんのうがさで無効）
 
     Args:
         battle: バトルインスタンス
@@ -140,9 +150,11 @@ def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
     """
     weather = battle.weather
     if weather is not None and weather.rainy:
-        return HandlerReturn(value=None)  # 必中
+        if not (ctx.defender.item.name == "ばんのうがさ" and ctx.defender.item.enabled):
+            return HandlerReturn(value=None)  # 必中
     elif weather is not None and weather.sunny:
-        return HandlerReturn(value=50)
+        if not (ctx.attacker.item.name == "ばんのうがさ" and ctx.attacker.item.enabled):
+            return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
 
@@ -222,8 +234,8 @@ def ふしょくガス_remove_item(battle: Battle, ctx: EventContext, value: Any
 def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ぼうふうの天候による命中率補正。
 
-    雨: 必中
-    晴れ: 50%
+    雨: 必中（防御側ばんのうがさで無効）
+    晴れ: 50%（攻撃側ばんのうがさで無効）
 
     Args:
         battle: バトルインスタンス
@@ -235,15 +247,17 @@ def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
     """
     weather = battle.weather
     if weather is not None and weather.rainy:
-        return HandlerReturn(value=None)  # 必中
+        if not (ctx.defender.item.name == "ばんのうがさ" and ctx.defender.item.enabled):
+            return HandlerReturn(value=None)  # 必中
     elif weather is not None and weather.sunny:
-        return HandlerReturn(value=50)
+        if not (ctx.attacker.item.name == "ばんのうがさ" and ctx.attacker.item.enabled):
+            return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
 
 def やきつくす_remove_berry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """やきつくすのきのみ焼却効果。"""
-    if common.is_berry_item(ctx.defender.item.name):
+    if ctx.defender.item.is_berry():
         battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
     return HandlerReturn(value=value)
 
@@ -277,7 +291,7 @@ def _check_はやてがえし_condition(battle: Battle, ctx: EventContext) -> bo
 
 
 def わるあがき_self_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.self_damage(battle, ctx, value, r=1/4, reason="recoil")
+    return HandlerReturn(value=battle.modify_hp(ctx.attacker, r=-1/4, reason="recoil", source=ctx.attacker))
 
 
 def アームハンマー_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

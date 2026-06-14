@@ -56,15 +56,6 @@ class Field(GameEffect):
         return super().name if self.count else ""
 
     @property
-    def turn_extention_item(self) -> str | None:
-        """フィールド効果の継続ターンを延長するアイテムを取得する。
-
-        Returns:
-            ターン延長アイテムの名前。存在しない場合はNone
-        """
-        return self.data.turn_extension_item
-
-    @property
     def is_active(self) -> bool:
         """フィールド効果が有効かどうかを判定する。
 

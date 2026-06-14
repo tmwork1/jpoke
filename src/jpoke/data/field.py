@@ -24,7 +24,6 @@ FIELDS: dict[str, FieldData] = {
     "": FieldData(),
     # ===== 天候 (Weather) =====
     "はれ": FieldData(
-        turn_extension_item="あついいわ",
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.はれ_power_modifier,
@@ -42,7 +41,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "あめ": FieldData(
-        turn_extension_item="しめったいわ",
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.あめ_power_modifier,
@@ -56,7 +54,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "すなあらし": FieldData(
-        turn_extension_item="さらさらいわ",
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
                 h.すなあらし_D_boost,
@@ -70,7 +67,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "ゆき": FieldData(
-        turn_extension_item="つめたいいわ",
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
                 h.ゆき_B_boost,
@@ -124,7 +120,6 @@ FIELDS: dict[str, FieldData] = {
     ),
     # ===== 地形 (Terrain) =====
     "エレキフィールド": FieldData(
-        turn_extension_item="グランドコート",
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.エレキフィールド_power_modifier,
@@ -146,7 +141,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "グラスフィールド": FieldData(
-        turn_extension_item="グランドコート",
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.グラスフィールド_power_modifier,
@@ -167,7 +161,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "サイコフィールド": FieldData(
-        turn_extension_item="グランドコート",
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.サイコフィールド_power_modifier,
@@ -186,7 +179,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "ミストフィールド": FieldData(
-        turn_extension_item="グランドコート",
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.ミストフィールド_power_modifier,
@@ -279,7 +271,6 @@ FIELDS: dict[str, FieldData] = {
 
     # ===== サイドフィールド (SideField) =====
     "リフレクター": FieldData(
-        turn_extension_item="ひかりのねんど",
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.FieldHandler(
                 h.リフレクター_reduce_damage,
@@ -293,7 +284,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "ひかりのかべ": FieldData(
-        turn_extension_item="ひかりのねんど",
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.FieldHandler(
                 h.ひかりのかべ_reduce_damage,
@@ -307,7 +297,6 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "オーロラベール": FieldData(
-        turn_extension_item="ひかりのねんど",
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.FieldHandler(
                 h.オーロラベール_reduce_damage,

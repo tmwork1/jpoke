@@ -104,7 +104,10 @@ battle = t.start_battle(
 | `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md`） |
 | `docs/test/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
 
-実装数が変わるときは `docs/progress/*.md` の該当行を更新し、`README.md` の集計と整合させる。
+実装が完了したら、以下の順で進捗を更新する：
+
+1. `docs/progress/<category>.md` の該当行を更新する（実装済みフラグ・件数）
+2. `README.md` の集計数値を `docs/progress/` の合計と整合させる
 
 ## 開発ルール
 

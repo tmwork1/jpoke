@@ -67,7 +67,6 @@ class MoveData:
 
 @dataclass
 class FieldData:
-    turn_extension_item: str | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     name: str = ""
 

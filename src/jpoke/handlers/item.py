@@ -9,12 +9,12 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon, Move
 
-from jpoke.utils.type_defs import RoleSpec, Stat, Type, AilmentName, WeatherName, TerrainName, SideFieldName
+from jpoke.utils.type_defs import RoleSpec, Stat, Type, MoveCategory, \
+    AilmentName, WeatherName, TerrainName, SideFieldName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
 from jpoke.data.pokedex import POKEDEX
-from . import common
 
 # 何らかのポケモンの進化前として登録されている = 進化先が存在する（未進化）ポケモン名の集合
 _HAS_EVOLUTION: frozenset[str] = frozenset(
@@ -183,9 +183,25 @@ def _boost_on_quarter_hp(battle: Battle,
     return HandlerReturn(value=value)
 
 
-def _retaliate_on_category(
-    battle: Battle, ctx: AttackContext, value: Any, category: str
-) -> HandlerReturn:
+def _boost_on_attack_category(battle: Battle,
+                              ctx: AttackContext,
+                              value: Any,
+                              category: MoveCategory,
+                              stat: Stat,
+                              amount: int) -> HandlerReturn:
+    """指定カテゴリの技でダメージを受けたとき能力を上昇させる共通処理。"""
+    mon = ctx.defender
+    assert mon is not None
+    if ctx.move.category == category:
+        battle.modify_stats(mon, {stat: amount})
+        _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def _retaliate_on_category(battle: Battle,
+                           ctx: AttackContext,
+                           value: Any,
+                           category: MoveCategory) -> HandlerReturn:
     mon = ctx.defender
     assert mon is not None
     if ctx.move.category == category:
@@ -273,10 +289,8 @@ def オレンのみ_heal_on_half_hp(battle: Battle, ctx: EventContext, value: An
 
 
 def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    if (
-        ctx.move.is_attack
-        and common.self_damage(battle, ctx, value, r=1/8)
-    ):
+    if ctx.move.is_attack:
+        battle.modify_hp(ctx.attacker, r=-1/8, source=ctx.attacker)
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -327,6 +341,15 @@ def かえんだま_apply_burn(battle: Battle, ctx: EventContext, value: Any) ->
 
 def かたいいし_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="いわ", modifier=4915)
+
+
+def からぶりほけん_boost_speed_on_miss(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """からぶりほけん: 技が外れたときすばやさ+2。"""
+    mon = ctx.attacker
+    assert mon is not None
+    battle.modify_stats(mon, {"S": +2})
+    _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
 
 
 def きあいのタスキ_survive_ohko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -604,6 +627,10 @@ def グラスシード_boost_defense(battle: Battle, ctx: EventContext, value: A
     return _terrain_seed_boost(battle, ctx, value, "グラスフィールド", "B")
 
 
+def グランドコート_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
+    return _resolve_field_count(value, "エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド", additonal_count=3)
+
+
 def くろいてっきゅう_halve_speed(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=apply_fixed_modifier(value, 2048))
 
@@ -638,7 +665,7 @@ def チーゴのみ_cure_burn(battle: Battle, ctx: EventContext, value: Any) -> 
 
 
 def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    if common.is_super_effective(battle, ctx):
+    if battle.query.is_super_effective(ctx):
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
@@ -738,14 +765,8 @@ def チイラのみ_boost_attack(battle: Battle, ctx: EventContext, value: Any) 
 
 
 def タラプのみ_boost_spdef(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : アッキと共通関数化
     """タラプのみ: 特殊技でダメージを受けたときとくぼう+1。"""
-    mon = ctx.defender
-    assert mon is not None
-    if ctx.move.category == "特殊":
-        battle.modify_stats(mon, {"D": +1})
-        _announce_and_consume_item(battle, mon)
-    return HandlerReturn(value=value)
+    return _boost_on_attack_category(battle, ctx, value, "特殊", "D", +1)
 
 
 def ヤタピのみ_boost_spatk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -754,13 +775,10 @@ def ヤタピのみ_boost_spatk(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    # TODO : _boost_on_quarter_hpで実装
     """サンのみ: HP1/4以下できゅうしょアップ状態になる。"""
     mon = ctx.target
     assert mon is not None
-    hp_after = mon.hp
-    hp_before = hp_after + value
-    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+    if mon.hp * 4 <= mon.max_hp:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -770,12 +788,7 @@ def アッキのみ_boost_defense_on_physical_hit(
     battle: Battle, ctx: AttackContext, value: Any
 ) -> HandlerReturn:
     """アッキのみ: 物理技でダメージを受けたときぼうぎょ+1。"""
-    mon = ctx.defender
-    assert mon is not None
-    if ctx.move.category == "物理":
-        battle.modify_stats(mon, {"B": +1})
-        _announce_and_consume_item(battle, mon)
-    return HandlerReturn(value=value)
+    return _boost_on_attack_category(battle, ctx, value, "物理", "B", +1)
 
 
 def ジャポのみ_retaliate_physical(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -793,10 +806,15 @@ def あかいいと_infatuate_foe(battle: Battle, ctx: EventContext, value: Any)
 
 
 def クリアチャーム_block_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    # TODO : blockしたらannounceする。common関数を使わずに実装してもよい
     """クリアチャーム: 相手による能力ランク低下を無効化する。"""
-    value = common.block_stat_drop_by_foe(value, ctx)
-    return HandlerReturn(value=value)
+    mon = ctx.target
+    assert mon is not None
+    blocked = value
+    if ctx.source is not None and ctx.source != ctx.target:
+        blocked = {s: v for s, v in value.items() if v >= 0}
+    if blocked != value:
+        _announce_item_triggered(battle, mon)
+    return HandlerReturn(value=blocked)
 
 
 def くちたけん_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -971,6 +989,13 @@ def とつげきチョッキ_boost_spdef(_battle: Battle, ctx: AttackContext, va
     """とつげきチョッキ: 特殊技に対してとくぼうを1.5倍にする。"""
     if ctx.move.category == "特殊":
         value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def ねばりのかぎづめ_fix_bind_duration(_battle: Battle, _ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねばりのかぎづめ: バインドの継続ターンを7ターンに固定する。"""
+    if value[0] == "バインド":
+        value[1] = 7
     return HandlerReturn(value=value)
 
 

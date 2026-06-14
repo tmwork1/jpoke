@@ -15,8 +15,6 @@ from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
 
-from . import common
-
 
 HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
     "あなをほる": ["じしん", "マグニチュード"],
@@ -890,7 +888,7 @@ def トーチカ_protect(battle: Battle, ctx: EventContext, value: Any) -> Handl
 
 
 def アクアリング_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.self_heal(battle, ctx, value, r=1/16)
+    return HandlerReturn(value=battle.modify_hp(ctx.source, r=1/16, source=ctx.source))
 
 
 def アンコール_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -938,7 +936,7 @@ def ねむけ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def ねをはる_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.self_heal(battle, ctx, value, r=1/16)
+    return HandlerReturn(value=battle.modify_hp(ctx.source, r=1/16, source=ctx.source))
 
 
 def ひるみ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -950,7 +948,12 @@ def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: A
 
 
 def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return common.drain_hp(battle, ctx, value, from_="source:self", r=1/8, reason="drain")
+    from_mon = ctx.source
+    to_mon = battle.foe(from_mon)
+    damage = battle.modify_hp(from_mon, r=-1/8, reason="drain")
+    if damage:
+        battle.modify_hp(to_mon, -damage, reason="drain")
+    return HandlerReturn(value=damage)
 
 
 def ロックオン_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

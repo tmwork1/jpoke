@@ -47,6 +47,10 @@ class Item(GameEffect):
             reasons.add("consumed")
         self.replace_disabled_reasons(reasons)
 
+    def is_berry(self) -> bool:
+        """きのみかどうかを判定する。"""
+        return self.name.endswith("のみ")
+
     @property
     def mega_evol_before(self) -> str | None:
         """メガシンカ前のポケモンの名前を返すプロパティ。"""
