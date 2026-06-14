@@ -4451,13 +4451,26 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.あくび_can_apply,
+                priority=130,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.あくび_apply_volatile_to_defender,
+            ),
+        }
     ),
     "あくまのキッス": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
         accuracy=75,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.あくまのキッス_apply_ailment_to_defender,
+            ),
+        }
     ),
     "あさのひざし": MoveData(
         type="ノーマル",
@@ -4496,6 +4509,11 @@ MOVES: dict[str, MoveData] = {
         pp=5,
 
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.あまごい_activate_weather,
+            ),
+        }
     ),
     "あやしいひかり": MoveData(
         type="ゴースト",
@@ -4734,6 +4752,10 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         accuracy=85,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.おにび_can_apply,
+                priority=130,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.おにび_apply_ailment_to_defender,
             ),
@@ -4756,6 +4778,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=15,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.かいでんぱ_modify_defender_stats,
+            ),
+        }
     ),
     "かいふくふうじ": MoveData(
         type="エスパー",
@@ -5593,6 +5620,11 @@ MOVES: dict[str, MoveData] = {
         pp=5,
 
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.にほんばれ_activate_weather,
+            ),
+        }
     ),
     "にらみつける": MoveData(
         type="ノーマル",
@@ -6064,6 +6096,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
 
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ゆきげしき_activate_weather,
+            ),
+        }
     ),
     "ゆびをふる": MoveData(
         type="ノーマル",

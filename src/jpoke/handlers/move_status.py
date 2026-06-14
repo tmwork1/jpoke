@@ -129,12 +129,36 @@ def みがわり_apply(battle: Battle, ctx: EventContext, value: Any) -> Handler
     return HandlerReturn(value=value)
 
 
+def あくび_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """あくびの失敗チェック: 対象がねむけ状態または状態異常を持っている場合は失敗する。"""
+    mon = ctx.defender
+    if mon.has_volatile("ねむけ") or mon.ailment.is_active:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "あくび"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def あくび_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """あくびの効果: 相手をねむけ状態にする。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="ねむけ", count=1)
+
+
+def あくまのキッス_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """あくまのキッスの効果: 相手をねむり状態にする。"""
+    return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
+
+
 def あまいかおり_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"EVA": -2})
 
 
 def あまえる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"A": -2})
+
+
+def あまごい_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return HandlerReturn(value=battle.weather_manager.apply("あめ", 5, source=ctx.attacker))
 
 
 def いちゃもん_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -153,8 +177,23 @@ def えんまく_modify_defender_stats(battle: Battle, ctx: EventContext, value:
     return modify_defender_stats(battle, ctx, value, stats={"ACC": -1})
 
 
+def おにび_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """おにびの失敗チェック: 対象が状態異常またはほのおタイプの場合は失敗する。"""
+    mon = ctx.defender
+    if mon.ailment.is_active or mon.has_type("ほのお"):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "おにび"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def おにび_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
+
+
+def かいでんぱ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """相手の特攻を2段階下げる。"""
+    return modify_defender_stats(battle, ctx, value, stats={"C": -2})
 
 
 def かえんのまもり_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -281,6 +320,10 @@ def なみだめ_modify_defender_stats(battle: Battle, ctx: EventContext, value:
     return modify_defender_stats(battle, ctx, value, stats={"C": -1})
 
 
+def にほんばれ_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return HandlerReturn(value=battle.weather_manager.apply("はれ", 5, source=ctx.attacker))
+
+
 def にらみつける_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"B": -1})
 
@@ -318,6 +361,10 @@ def みきり_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, valu
 
 def みちづれ_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_attacker(battle, ctx, value, volatile="みちづれ")
+
+
+def ゆきげしき_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return HandlerReturn(value=battle.weather_manager.apply("ゆき", 5, source=ctx.attacker))
 
 
 def ロックオン_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

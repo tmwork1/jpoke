@@ -1,0 +1,16 @@
+{
+  "config": {
+    "category":      "変化技",
+    "plan_dir":      "docs/plan/moves",
+    "spec_hint":     "docs/spec/ の対応仕様書を参照",
+    "progress_file": "docs/progress/move.md",
+    "test_files":    ["tests/test_move.py"],
+    "impl_extra":    "4. data/move.py の MoveData に技が未登録なら追加する",
+    "review_extra":  ""
+  },
+  "impl_queue":       [],
+  "plan_queue":       [],
+  "current_planning": null,
+  "completed":        ["あくび", "あくまのキッス", "おにび", "かいでんぱ"],
+  "failed":           []
+}

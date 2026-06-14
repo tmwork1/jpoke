@@ -16,8 +16,15 @@
       "Bash(touch*)",
       "Bash(cd*)",
       "Bash(python*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Skill(loop)",
+      "Skill(loop:*)",
+      "Bash(mkdir c:/Users/tmtmp/Documents/pokemon/jpoke/.claude/loop)",
+      "Bash(rm c:/Users/tmtmp/Documents/pokemon/jpoke/.claude/loop_instructions.md c:/Users/tmtmp/Documents/pokemon/jpoke/.claude/loop_state.json)"
     ],
-    "deny": []
+    "deny": [],
+    "additionalDirectories": [
+      "c:\\Users\\tmtmp\\Documents\\pokemon\\jpoke\\.claude"
+    ]
   }
 }
