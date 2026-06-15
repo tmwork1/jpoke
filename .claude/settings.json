@@ -1,26 +1,13 @@
 {
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
-      "Edit",
-      "Write",
-      "Bash(python -m pytest*)",
-      "Bash(python tests/run.py*)",
-      "Bash(git log*)",
-      "Bash(git diff*)",
-      "Bash(git status*)",
-      "Bash(git show*)",
-      "Bash(mkdir*)",
-      "Bash(rm*)",
-      "Bash(mv*)",
-      "Bash(cp*)",
-      "Bash(touch*)",
-      "Bash(cd*)",
-      "Bash(python*)",
-      "WebFetch(domain:github.com)",
-      "Skill(loop)",
-      "Skill(loop:*)",
-      "Bash(mkdir c:/Users/tmtmp/Documents/pokemon/jpoke/.claude/loop)",
-      "Bash(rm c:/Users/tmtmp/Documents/pokemon/jpoke/.claude/loop_instructions.md c:/Users/tmtmp/Documents/pokemon/jpoke/.claude/loop_state.json)"
+      "Bash(*)",
+      "PowerShell(*)",
+      "Edit(*)",
+      "Write(*)",
+      "TodoWrite(*)",
+      "Agent(*)"
     ],
     "deny": [],
     "additionalDirectories": [

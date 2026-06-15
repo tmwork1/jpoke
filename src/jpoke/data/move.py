@@ -4445,7 +4445,12 @@ MOVES: dict[str, MoveData] = {
         type="みず",
         category="変化",
         pp=20,
-
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.アクアリング_apply_volatile_to_attacker,
+            ),
+        }
     ),
     "あくび": MoveData(
         type="ノーマル",
@@ -4478,6 +4483,11 @@ MOVES: dict[str, MoveData] = {
         pp=5,
 
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.あさのひざし_heal_self,
+            )
+        }
     ),
     "あまいかおり": MoveData(
         type="ノーマル",
@@ -4520,6 +4530,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=10,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.あやしいひかり_apply_volatile_to_defender,
+            ),
+        }
     ),
     "アロマセラピー": MoveData(
         type="くさ",
@@ -4531,7 +4546,12 @@ MOVES: dict[str, MoveData] = {
         type="フェアリー",
         category="変化",
         pp=20,
-        accuracy=100,
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.アロマミスト_modify_attacker_stats,
+            ),
+        }
     ),
     "アンコール": MoveData(
         type="ノーマル",
@@ -4590,6 +4610,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=40,
         accuracy=95,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.いとをはく_modify_defender_stats,
+            ),
+        }
     ),
     "いのちのしずく": MoveData(
         type="みず",
@@ -4655,6 +4680,11 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         accuracy=55,
         labels=["sound"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.うたう_apply_ailment_to_defender,
+            ),
+        }
     ),
     "うつしえ": MoveData(
         type="ノーマル",
@@ -4672,8 +4702,12 @@ MOVES: dict[str, MoveData] = {
         type="でんき",
         category="変化",
         pp=10,
-
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.エレキフィールド_activate_terrain,
+            ),
+        }
     ),
     "えんまく": MoveData(
         type="ノーマル",
@@ -4691,9 +4725,13 @@ MOVES: dict[str, MoveData] = {
         type="ひこう",
         category="変化",
         pp=15,
-
-        target="field",
+        target="own_side",
         labels=["wind"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.おいかぜ_set_side_field,
+            ),
+        }
     ),
     "おいわい": MoveData(
         type="ノーマル",
@@ -4733,6 +4771,11 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         accuracy=100,
         labels=["sound"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.おたけび_modify_defender_stats,
+            ),
+        }
     ),
     "おだてる": MoveData(
         type="あく",
@@ -4807,7 +4850,11 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.かげぶんしん_modify_attacker_stats,
+            ),
+        }
     ),
     "かたくなる": MoveData(
         type="ノーマル",
@@ -4843,13 +4890,21 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=15,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.からをやぶる_modify_attacker_stats,
+            ),
+        }
     ),
     "きあいだめ": MoveData(
         type="ノーマル",
         category="変化",
         pp=30,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.きあいだめ_apply_volatile_to_attacker,
+            ),
+        }
     ),
     "ギアチェンジ": MoveData(
         type="はがね",
@@ -4898,13 +4953,22 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.くすぐる_modify_defender_stats,
+            ),
+        }
     ),
     "グラスフィールド": MoveData(
         type="くさ",
         category="変化",
         pp=10,
-
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.グラスフィールド_activate_terrain,
+            ),
+        }
     ),
     "くろいきり": MoveData(
         type="こおり",
@@ -4923,8 +4987,12 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="変化",
         pp=5,
-
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.こうごうせい_heal_self,
+            )
+        }
     ),
     "こうそくいどう": MoveData(
         type="エスパー",
@@ -4954,7 +5022,11 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.コスモパワー_modify_attacker_stats,
+            ),
+        }
     ),
     "コットンガード": MoveData(
         type="くさ",
@@ -5005,8 +5077,12 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=10,
-
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.サイコフィールド_activate_terrain,
+            ),
+        }
     ),
     "サイドチェンジ": MoveData(
         type="エスパー",
@@ -5026,6 +5102,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
         accuracy=60,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.さいみんじゅつ_apply_ailment_to_defender,
+            ),
+        }
     ),
     "さきおくり": MoveData(
         type="あく",
@@ -5087,6 +5168,11 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         accuracy=75,
         labels=["powder"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.しびれごな_apply_ailment_to_defender,
+            ),
+        }
     ),
     "ジャングルヒール": MoveData(
         type="くさ",
@@ -5131,8 +5217,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=25,
-
-        target="field",
+        target="own_side",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.しんぴのまもり_set_side_field,
+            ),
+        }
     ),
     "シンプルビーム": MoveData(
         type="ノーマル",
@@ -5237,7 +5327,11 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.せいちょう_modify_attacker_stats,
+            ),
+        }
     ),
     "ソウルビート": MoveData(
         type="ドラゴン",
@@ -5279,7 +5373,11 @@ MOVES: dict[str, MoveData] = {
         type="はがね",
         category="変化",
         pp=10,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.たてこもる_modify_attacker_stats,
+            ),
+        }
     ),
     "タマゴうみ": MoveData(
         type="ノーマル",
@@ -5316,21 +5414,34 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=20,
-
         labels=["dance"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ちょうのまい_modify_attacker_stats,
+            ),
+        }
     ),
     "ちょうはつ": MoveData(
         type="あく",
         category="変化",
         pp=20,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ちょうはつ_apply_volatile_to_defender,
+            ),
+        }
     ),
     "つきのひかり": MoveData(
         type="フェアリー",
         category="変化",
         pp=5,
-
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.つきのひかり_heal_self,
+            )
+        }
     ),
     "つぶらなひとみ": MoveData(
         type="フェアリー",
@@ -5358,6 +5469,9 @@ MOVES: dict[str, MoveData] = {
         target="self",
         labels=["dance"],
         handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.つるぎのまい_modify_attacker_stats,
+            ),
         }
     ),
     "テクスチャー": MoveData(
@@ -5498,13 +5612,21 @@ MOVES: dict[str, MoveData] = {
         type="どく",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.とぐろをまく_modify_attacker_stats,
+            ),
+        }
     ),
     "とける": MoveData(
         type="どく",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.とける_modify_attacker_stats,
+            ),
+        }
     ),
     "ドラゴンエール": MoveData(
         type="ドラゴン",
@@ -5584,6 +5706,11 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=5,
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.なまける_heal_self,
+            ),
+        }
     ),
     "なみだめ": MoveData(
         type="ノーマル",
@@ -5657,8 +5784,12 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="変化",
         pp=20,
-
         target="foe_side",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ねばねばネット_set_side_field,
+            ),
+        }
     ),
     "ねむりごな": MoveData(
         type="くさ",
@@ -5769,8 +5900,12 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=30,
-
-        target="field",
+        target="own_side",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ひかりのかべ_set_side_field,
+            ),
+        }
     ),
     "ひっくりかえす": MoveData(
         type="あく",
@@ -5782,7 +5917,11 @@ MOVES: dict[str, MoveData] = {
         type="かくとう",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ビルドアップ_modify_attacker_stats,
+            ),
+        }
     ),
     "ファストガード": MoveData(
         type="かくとう",
@@ -6063,7 +6202,11 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.めいそう_modify_attacker_stats,
+            ),
+        }
     ),
     "メロメロ": MoveData(
         type="ノーマル",
@@ -6119,8 +6262,11 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=20,
-        target="field",
+        target="own_side",
         handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.リフレクター_set_side_field,
+            ),
         }
     ),
     "リフレッシュ": MoveData(

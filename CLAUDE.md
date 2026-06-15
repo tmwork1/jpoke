@@ -107,7 +107,6 @@ battle = t.start_battle(
 実装が完了したら、以下の順で進捗を更新する：
 
 1. `docs/progress/<category>.md` の該当行を更新する（実装済みフラグ・件数）
-2. `README.md` の集計数値を `docs/progress/` の合計と整合させる
 
 ## 開発ルール
 

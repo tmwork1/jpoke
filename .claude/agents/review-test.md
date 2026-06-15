@@ -38,4 +38,3 @@ tools:
 - [ ] テストを追加して全件パスした
 - [ ] `python scripts/generate_test_list.py` を実行して `docs/test/` を更新した
 - [ ] `docs/progress/<category>.md` のテスト済みマークを更新した
-- [ ] `README.md` の集計と整合している

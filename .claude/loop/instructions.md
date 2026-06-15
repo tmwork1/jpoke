@@ -4,73 +4,52 @@
 
 ---
 
-## ループの役割
-
-エントリを一件ずつ自律的に実装・テストする。
-状態ファイル（`.claude/loop/state.json`）で現在位置とカテゴリ設定を管理し、
-一件処理したら次ウェイクアップを予約する。
-
----
-
 ## 状態ファイルのスキーマ
 
 ```json
 {
   "config": {
-    "category":       "変化技",              // 人間向けラベル（ログ・報告に使う）
-    "plan_dir":       "docs/plan/moves",     // 計画書ディレクトリ
-    "spec_hint":      "docs/spec/ を参照",   // Plan エージェントへのヒント（自由記述）
-    "progress_file":  "docs/progress/move.md",
-    "test_files":     ["tests/test_move.py"],
-    "impl_extra":     "",                    // impl エージェントへの追加指示（任意）
-    "review_extra":   ""                     // review-test エージェントへの追加指示（任意）
+    "category":           "変化技",
+    "plan_dir":           "docs/plan/moves",
+    "spec_hint":          "docs/spec/ を参照",
+    "progress_file":      "docs/progress/move.md",
+    "test_files":         ["tests/test_move.py"],
+    "impl_extra":         "",
+    "review_extra":       "",
+    "planning_slots_max": 1
   },
-  "impl_queue":       ["..."],   // 計画書あり、実装待ち
-  "plan_queue":       ["..."],   // 計画書なし、計画待ち（パイプライン用）
-  "current_planning": null,      // Plan エージェントで処理中のエントリ名
-  "completed":        ["..."],
-  "failed":           ["..."]
+  "plan_queue":  ["..."],
+  "impl_queue":  ["..."],
+  "completed":   ["..."],
+  "failed":      ["..."]
 }
 ```
 
+`planning_slots_max` は省略時 `1`。
+
 ---
 
-## 毎回のウェイクアップ手順
+## ウェイクアップ手順
 
-### ステップ 1 — 状態ファイルを読む
+### 1. 状態ファイルを読む
 
-`.claude/loop/state.json` を Read ツールで読み、`config` を変数として保持する。
+`.claude/loop/state.json` を Read で読み込む。
 
-### ステップ 2 — 終了チェック
+### 2. 終了チェック
 
-`impl_queue`・`plan_queue`・`current_planning` がすべて空なら
-→ 「{config.category} 全件完了: {completed のリスト}」と報告してループを終了（ScheduleWakeup を呼ばない）。
+`plan_queue` と `impl_queue` が両方空なら
+→「{config.category} 全件完了: {completed}」と報告してループ終了（ScheduleWakeup を呼ばない）。
 
-### ステップ 3 — plan_queue の処理（パイプライン）
+### 3. 収穫（Harvest）
 
-`plan_queue` に件があり `current_planning` が null の場合のみ実行：
+`plan_queue` を先頭から走査し、`{config.plan_dir}/{entry}.md` が存在するエントリを
+`impl_queue` 末尾に移して `plan_queue` から除く。
 
-- `plan_queue` から先頭のエントリを取り出す（→ `entry`）
-- `Plan` エージェントを foreground で起動し `{config.plan_dir}/{entry}.md` を作成させる
-  - 指示:
-    ```
-    jpoke {config.category} 計画書作成タスク: {entry}
+### 4. 実装
 
-    作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+`impl_queue` が空でなければ先頭エントリを取り出す（→ `entry`）。
 
-    {config.spec_hint}
-    ハンドラ構成・subject_spec・priority（docs/spec/turn.md 参照）・実装コードを含む計画書を
-    {config.plan_dir}/{entry}.md に作成すること。
-    CLAUDE.md のハンドラ約束事に厳守。
-    ```
-- Plan 完了後: `impl_queue` の末尾に追加、`current_planning` を null に
-- `.claude/loop/state.json` を更新
-
-### ステップ 4 — impl_queue の処理
-
-`impl_queue` から先頭のエントリを取り出す（→ `entry`）。
-
-#### 4-a. impl エージェント（foreground）
+**impl エージェント（foreground）**
 
 ```
 jpoke {config.category} 実装タスク: {entry}
@@ -86,16 +65,11 @@ jpoke {config.category} 実装タスク: {entry}
 {config.impl_extra}
 ```
 
-impl が失敗した場合: `failed` に追加して次の件へ（ループ継続）。
+失敗した場合: `failed` に追加して次のステップへ（review-test はスキップ）。
 
-#### 4-b. パイプライン起動（impl 実行前に並行）
+**review-test エージェント（foreground）**
 
-impl foreground 呼び出しの直前に、`plan_queue` に次の件があれば
-Plan エージェントを background で起動する（ステップ 3 の条件と同じ）。
-
-#### 4-c. review-test エージェント（foreground）
-
-impl 成功後：
+impl 成功後のみ実行：
 
 ```
 jpoke {config.category} レビュー・テストタスク: {entry}
@@ -112,69 +86,61 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 {config.review_extra}
 ```
 
-review-test 成功後: `completed` に追加。失敗した場合: `failed` に追加（ループ継続）。
+成功: `completed` に追加。失敗: `failed` に追加。
 
-### ステップ 5 — 状態ファイルを更新
+### 5. 種まき（Sow）
 
-Write ツールで `.claude/loop/state.json` を上書き保存する。
-
-### ステップ 6 — 次のウェイクアップを予約
+`plan_queue` の先頭から最大 `planning_slots_max` 件を **background** で planner エージェントに渡す
+（収穫後に plan_queue に残っているものはすべてファイル未生成）。
 
 ```
-ScheduleWakeup(
-    delaySeconds=120,
-    prompt="<<autonomous-loop-dynamic>>",
-    reason="{config.category} 実装ループ: 次の件へ"
-)
+jpoke {config.category} 計画書作成タスク: {entry}
+
+作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+
+{config.spec_hint}
+ハンドラ構成・subject_spec・priority（docs/spec/turn.md 参照）・実装コードを含む計画書を
+{config.plan_dir}/{entry}.md に作成すること。
+CLAUDE.md のハンドラ約束事を厳守。
+```
+
+### 6. 状態ファイルを保存
+
+Write ツールで `.claude/loop/state.json` を上書き。
+
+### 7. 次のウェイクアップを予約
+
+```
+ScheduleWakeup(delaySeconds=120, prompt="<<autonomous-loop-dynamic>>",
+               reason="{config.category} 実装ループ: 次の件へ")
 ```
 
 ---
 
 ## エラーハンドリング
 
-- impl か review-test が例外・失敗した場合: `failed` に追加してループ継続
-- 同じ件が `failed` に 2 回以上入った場合: スキップして次へ
+- impl / review-test 失敗 → `failed` に追加してループ継続
+- 同じ件が `failed` に 2 回以上 → スキップして次へ
 
 ---
 
-## 状態例（変化技、進行中）
+## 状態例
 
 ```json
 {
   "config": {
-    "category":      "変化技",
-    "plan_dir":      "docs/plan/moves",
-    "spec_hint":     "docs/spec/ の対応仕様書を参照",
-    "progress_file": "docs/progress/move.md",
-    "test_files":    ["tests/test_move.py"],
-    "impl_extra":    "4. data/move.py の MoveData に技が未登録なら追加する",
-    "review_extra":  ""
+    "category":           "変化技",
+    "plan_dir":           "docs/plan/moves",
+    "spec_hint":          "docs/spec/ の対応仕様書を参照（volatiles/, moves/, side_fields/, global_fields/ 以下も確認）",
+    "progress_file":      "docs/progress/move.md",
+    "test_files":         ["tests/test_move.py"],
+    "impl_extra":         "4. data/move.py の MoveData に技が未登録なら追加する",
+    "review_extra":       "",
+    "planning_slots_max": 2
   },
-  "impl_queue":       ["あくまのキッス", "おにび", "かいでんぱ"],
-  "plan_queue":       [],
-  "current_planning": null,
-  "completed":        ["あくび"],
-  "failed":           []
-}
-```
-
-## 状態例（特性、新規開始）
-
-```json
-{
-  "config": {
-    "category":      "特性",
-    "plan_dir":      "docs/plan/abilities",
-    "spec_hint":     "docs/spec/ability/ の対応仕様書を参照",
-    "progress_file": "docs/progress/ability.md",
-    "test_files":    ["tests/test_ability.py"],
-    "impl_extra":    "",
-    "review_extra":  ""
-  },
-  "impl_queue":       [],
-  "plan_queue":       ["いかく", "うるおいボディ", "おみとおし"],
-  "current_planning": null,
-  "completed":        [],
-  "failed":           []
+  "plan_queue":  ["からをやぶる", "ガードシェア"],
+  "impl_queue":  ["いばる"],
+  "completed":   ["あくび", "あくまのキッス"],
+  "failed":      []
 }
 ```
