@@ -361,6 +361,19 @@ def しろいきり_prevent_stat_drop(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
+def いやしのねがい_heal_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いやしのねがい: 場に出たポケモンの HP を全回復し、状態異常を回復する。
+
+    回復後にフィールドを解除する。
+    """
+    mon = ctx.source
+    side = battle.get_side(mon)
+    battle.modify_hp(mon, v=mon.max_hp - mon.hp)
+    battle.ailment_manager.remove(mon)
+    side.deactivate("いやしのねがい")
+    return HandlerReturn(value=value)
+
+
 def おいかぜ_speed_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """追い風で素早さ2倍"""
     return HandlerReturn(value=value * 2)

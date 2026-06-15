@@ -78,6 +78,23 @@ def アンコール_apply(battle: Battle, ctx: EventContext, value: Any) -> Hand
                                       count=3, move_name=move.name)
 
 
+def いえき_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いえきの失敗条件を判定する。
+
+    対象の特性が protected フラグを持つ場合は失敗させる。
+    """
+    if ctx.defender.ability.has_flag("protected"):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "いえき"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def いえき_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いえきの効果: 相手に「とくせいなし」状態を付与する。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="とくせいなし")
+
+
 def いとをはく_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いとをはくの効果: 相手のすばやさを 2 段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"S": -2})
@@ -97,6 +114,37 @@ def いたみわけ_equalize_hp(battle: Battle, ctx: EventContext, value: Any) -
         v=shared_hp - ctx.defender.hp,
         reason="pain_split",
     )
+    return HandlerReturn(value=value)
+
+
+def いのちのしずく_heal_self(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いのちのしずく: 最大HPの1/4を回復する。HPが満タンの場合は失敗する。"""
+    mon = ctx.attacker
+    if mon.hp == mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
+    battle.modify_hp(mon, r=1/4)
+    return HandlerReturn(value=value)
+
+
+def いやしのはどう_heal_self(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いやしのはどう: 最大HPの1/2を回復する。HPが満タンの場合は失敗する。"""
+    mon = ctx.attacker
+    if mon.hp == mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
+    battle.modify_hp(mon, r=1/2)
+    return HandlerReturn(value=value)
+
+
+def いやしのねがい_faint_and_set_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いやしのねがい: 使用者をひんしにし、自陣営に「いやしのねがい」フィールドを設置する。
+
+    次に場に出たポケモンの HP が全回復し、状態異常が回復する。
+    PP は回復しない（みかづきのまいとの違い）。
+    """
+    mon = ctx.attacker
+    side = battle.get_side(mon)
+    side.activate("いやしのねがい", 1)
+    battle.modify_hp(mon, -mon.max_hp)
     return HandlerReturn(value=value)
 
 
@@ -224,6 +272,24 @@ def いばる_modify_defender_stats_and_apply_volatile(battle: Battle, ctx: Even
     return HandlerReturn(value=value)
 
 
+def いやしのすず_cure_team_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """いやしのすず: 自分（シングルバトルでは選出チーム）の状態異常を回復する。
+
+    音系の技のためみがわり状態でも効果が発生する。
+    チームに状態異常のポケモンがいない場合は技が失敗する。
+    """
+    mon = ctx.attacker
+    player = battle.get_player(mon)
+    state = battle.player_states[player]
+    # シングルバトルでは selection は場にいる 1 体のみ
+    targets = [m for m in state.selection if m.ailment.is_active]
+    if not targets:
+        return HandlerReturn(value=False, stop_event=True)
+    for target in targets:
+        battle.ailment_manager.remove(target)
+    return HandlerReturn(value=value)
+
+
 def いやなおと_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"B": -2})
 
@@ -289,6 +355,30 @@ def おいかぜ_set_side_field(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def おかたづけ_cleanup(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """おかたづけ: 両陣営のみがわり・トラップを除去し、こうげき・すばやさを1段階上げる。"""
+    cleaned = False
+    for mon in battle.actives:
+        if mon.has_volatile("みがわり"):
+            battle.volatile_manager.remove(mon, "みがわり")
+            cleaned = True
+    trap_names = ["まきびし", "どくびし", "ステルスロック", "ねばねばネット"]
+    for side in battle.side_managers:
+        for trap in trap_names:
+            if side.deactivate(trap):
+                cleaned = True
+    if cleaned:
+        battle.add_event_log(ctx.attacker, LogCode.TEXT_LOG, payload={"text": "かたづけ おわり!"})
+    return modify_attacker_stats(battle, ctx, value, stats={"A": 1, "S": 1})
+
+
+def おきみやげ_faint_and_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """おきみやげ: 使用者をひんしにし、相手のこうげき・とくこうを2段階ずつ下げる。"""
+    battle.modify_hp(ctx.attacker, -ctx.attacker.max_hp)
+    modify_defender_stats(battle, ctx, value, stats={"A": -2, "C": -2})
+    return HandlerReturn(value=value)
+
+
 def おたけび_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おたけびの効果: 相手のこうげきととくこうを 1 段階ずつ下げる。音系の技のためみがわりを貫通する。"""
     return modify_defender_stats(battle, ctx, value, stats={"A": -1, "C": -1})
@@ -332,6 +422,27 @@ def かげぶんしん_modify_attacker_stats(battle: Battle, ctx: EventContext, 
 
 def かたくなる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"B": 1})
+
+
+def かなしばり_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かなしばりの失敗条件を判定する。
+
+    - 相手がまだ技を使っていない（executed_move が None）場合は失敗する
+    - わるあがきに対して使うと失敗する
+    """
+    move = ctx.defender.executed_move
+    if not move or move.name == "わるあがき":
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "かなしばり"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def かなしばり_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かなしばりの効果: 相手に「かなしばり」状態を付与する（4 ターン）。"""
+    move = ctx.defender.executed_move
+    return apply_volatile_to_defender(battle, ctx, value, volatile="かなしばり",
+                                      count=4, move_name=move.name)
 
 
 def からにこもる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

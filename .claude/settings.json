@@ -1,17 +1,20 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash(*)",
       "PowerShell(*)",
       "Edit(*)",
       "Write(*)",
+      "Write(.claude/*)",
       "TodoWrite(*)",
-      "Agent(*)"
+      "Agent(*)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Skill(fewer-permission-prompts)",
+      "Skill(fewer-permission-prompts:*)"
     ],
     "deny": [],
-    "additionalDirectories": [
-      "c:\\Users\\tmtmp\\Documents\\pokemon\\jpoke\\.claude"
-    ]
+    "defaultMode": "bypassPermissions",
+    "additionalDirectories": []
   }
 }

@@ -4573,6 +4573,14 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=10,
         accuracy=100,
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.いえき_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.いえき_apply_volatile_to_defender,
+            ),
+        }
     ),
     "いかりのこな": MoveData(
         type="むし",
@@ -4620,8 +4628,12 @@ MOVES: dict[str, MoveData] = {
         type="みず",
         category="変化",
         pp=10,
-
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.いのちのしずく_heal_self,
+            ),
+        }
     ),
     "いばる": MoveData(
         type="ノーマル",
@@ -4638,8 +4650,12 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-
         labels=["sound"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.いやしのすず_cure_team_ailment,
+            ),
+        }
     ),
     "いやしのねがい": MoveData(
         type="エスパー",
@@ -4647,6 +4663,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
 
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.いやしのねがい_faint_and_set_side_field,
+            ),
+        }
     ),
     "いやしのはどう": MoveData(
         type="エスパー",
@@ -4654,6 +4675,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
 
         labels=["heal"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.いやしのはどう_heal_self,
+            ),
+        }
     ),
     "いやなおと": MoveData(
         type="ノーマル",
@@ -4772,13 +4798,21 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(hs.おかたづけ_cleanup),
+        }
     ),
     "おきみやげ": MoveData(
         type="あく",
         category="変化",
         pp=10,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.おきみやげ_faint_and_modify_defender_stats,
+            ),
+        }
     ),
     "おさきにどうぞ": MoveData(
         type="ノーマル",
@@ -4899,6 +4933,16 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=20,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: [
+                h.MoveHandler(
+                    hs.かなしばり_can_apply,
+                ),
+                h.MoveHandler(
+                    hs.かなしばり_apply_volatile_to_defender,
+                ),
+            ],
+        }
     ),
     "からにこもる": MoveData(
         type="みず",

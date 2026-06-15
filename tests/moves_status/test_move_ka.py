@@ -1,6 +1,7 @@
 """変化技ハンドラの単体テスト（か行）。"""
 
-from jpoke import Pokemon
+from jpoke import Move, Pokemon
+from jpoke.enums import LogCode
 from .. import test_utils as t
 
 
@@ -69,6 +70,104 @@ def test_かげぶんしん_回避率最大なら変化なし():
     t.run_move(battle, 0)
 
     assert attacker.rank["EVA"] == 6
+
+
+def test_かなしばり_かなしばり中の技は使用できない():
+    """かなしばり: かなしばりで封じられた技を使おうとすると行動がブロックされる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かなしばり"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # defenderが事前に技を使ったことを示す
+    defender.executed_move = defender.moves[0]
+    # attacker が かなしばり を使い defender に volatile を付与する
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("かなしばり")
+    # defender がかなしばりで封じられた技（たいあたり）を使おうとするとブロックされる
+    t.run_move(battle, 1)
+    assert not battle.move_executor.action_success
+
+
+def test_かなしばり_すでにかなしばり中の相手には失敗する():
+    """かなしばり: 相手がすでにかなしばり状態の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かなしばり"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.executed_move = defender.moves[0]
+    # 1回目: 成功
+    t.run_move(battle, 0)
+    assert defender.has_volatile("かなしばり")
+    old_count = defender.volatiles["かなしばり"].count
+
+    # 2回目: すでにかなしばり状態なので失敗（count は変わらない）
+    t.run_move(battle, 0)
+    assert defender.volatiles["かなしばり"].count == old_count
+
+
+def test_かなしばり_わるあがきを使った相手には失敗する():
+    """かなしばり: 相手の直前使用技がわるあがきの場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かなしばり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # defender の executed_move にわるあがきをセット
+    defender.executed_move = Move("わるあがき")
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("かなしばり")
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "かなしばり"
+        for log in logs
+    )
+
+
+def test_かなしばり_成功してかなしばり揮発状態が付与される():
+    """かなしばり: 相手が技を使った後に使うとかなしばり揮発状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かなしばり"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # defenderが事前に技を使ったことを示す
+    defender.executed_move = defender.moves[0]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("かなしばり")
+
+
+def test_かなしばり_未行動の相手には失敗する():
+    """かなしばり: 相手がまだ技を使っていない（executed_move が None）場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かなしばり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # executed_move は None のまま（デフォルト）
+    assert defender.executed_move is None
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("かなしばり")
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "かなしばり"
+        for log in logs
+    )
 
 
 def test_からをやぶる_Bが最低でも他のランクは上昇する():

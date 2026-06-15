@@ -339,6 +339,15 @@ FIELDS: dict[str, FieldData] = {
             ),
         },
     ),
+    "いやしのねがい": FieldData(
+        handlers={
+            Event.ON_SWITCH_IN: h.FieldHandler(
+                h.いやしのねがい_heal_on_switch_in,
+                subject_spec="source:self",
+                priority=100,
+            ),
+        },
+    ),
     "おいかぜ": FieldData(
         handlers={
             DomainEvent.ON_CALC_SPEED: h.FieldHandler(

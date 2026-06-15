@@ -1,6 +1,7 @@
 """変化技ハンドラの単体テスト（お行）。"""
 
 from jpoke import Pokemon
+from jpoke.enums import LogCode
 from .. import test_utils as t
 
 
@@ -30,6 +31,95 @@ def test_おいかぜ_自陣営に4ターン設置される():
     side = battle.get_side(battle.actives[0])
     assert side.fields["おいかぜ"].is_active
     assert side.fields["おいかぜ"].count == 4
+
+
+def test_おかたづけ_こうげきとすばやさが1段階ずつ上がる():
+    """おかたづけ: 使用するとこうげきとすばやさが1段階ずつ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["A"] == 1
+    assert attacker.rank["S"] == 1
+
+
+def test_おかたづけ_みがわりを除去してかたづけおわりログが出る():
+    """おかたづけ: 相手のみがわりを除去すると「かたづけ おわり!」TEXT_LOGが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("みがわり")
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.TEXT_LOG
+        and log.payload is not None
+        and log.payload.get("text") == "かたづけ おわり!"
+        for log in logs
+    )
+
+
+def test_おかたづけ_相手陣営のまきびしを除去する():
+    """おかたづけ: 相手陣営のまきびしを除去する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"まきびし": 1},
+    )
+    foe_side = battle.get_side(battle.actives[1])
+    assert foe_side.get("まきびし").is_active
+    t.run_move(battle, 0)
+
+    assert not foe_side.get("まきびし").is_active
+
+
+def test_おきみやげ_まもるで防がれると使用者はひんしにならない():
+    """おきみやげ: 相手にまもるがかかっている場合、使用者はひんしにならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手にまもるを付与する
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    t.run_move(battle, 0)
+
+    assert not attacker.fainted
+    assert defender.rank["A"] == 0
+    assert defender.rank["C"] == 0
+
+
+def test_おきみやげ_使用者がひんしになる():
+    """おきみやげ: 使用者がひんしになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+
+
+def test_おきみやげ_相手のこうげきとくこうが2段階下がる():
+    """おきみやげ: 相手のこうげきととくこうが2段階ずつ下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == -2
+    assert defender.rank["C"] == -2
 
 
 def test_おたけび_こうげきとくこう1段階ずつ下がる():
