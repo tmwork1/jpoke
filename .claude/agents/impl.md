@@ -25,4 +25,5 @@ tools:
 - [ ] `handlers/` に関数を追加した
 - [ ] `data/` でハンドラを登録した
 - [ ] 新しい `Literal` 型が必要なら `utils/type_defs.py` に追加した
+- [ ] `docs/progress/<category>.md` の実装列（実装）を `x` に更新した
 - [ ] `review-test` に渡すべき仕様上の注意点・エッジケースをまとめた

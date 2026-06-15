@@ -37,8 +37,8 @@ def download_html(name: str, output_dir: Path) -> Path:
 
 
 def main(target: str):
-    file = f"docs/data/{target}.txt"
-    output_dir = Path(f"docs/wiki_html/{target}/")
+    file = f"docs/wiki/_list/{target}.txt"
+    output_dir = Path(f"docs/wiki/{target}/")
 
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
@@ -53,6 +53,7 @@ def main(target: str):
 
 
 if __name__ == "__main__":
-    main("abilities")
+    # main("abilities")
     # main("items")
     # main("status_moves")
+    main("fields")

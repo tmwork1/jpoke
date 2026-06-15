@@ -48,7 +48,7 @@ Gender = Literal["", "オス", "メス"]
 
 MoveCategory = Literal["物理", "特殊", "変化"]
 
-MoveTarget = Literal["foe", "foe_side", "self", "field"]
+MoveTarget = Literal["foe", "foe_side", "own_side", "self", "field"]
 
 AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]
 
@@ -101,6 +101,8 @@ VolatileName = Literal[
     "ダイビング",
     "シャドーダイブ",
     "スレッドトラップ",
+    "ハロウィン",
+    "もりののろい",
 ]
 
 GlobalFieldName = Literal["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム"]

@@ -63,6 +63,7 @@ jpoke {config.category} 実装タスク: {entry}
 2. CLAUDE.md のハンドラ約束事に従い、handlers/ と data/ に実装する
 3. テストは書かない（review-test エージェントが担当）
 {config.impl_extra}
+- 実装完了後: {config.progress_file} の {entry} 行の実装列を `x` に更新する
 ```
 
 失敗した場合: `failed` に追加して次のステップへ（review-test はスキップ）。

@@ -153,3 +153,64 @@ def test_せいちょう_通常時こうげきととくこう1段階上がる():
 
     assert attacker.rank["A"] == 1
     assert attacker.rank["C"] == 1
+
+
+def test_ソウルビート_全能力1段階上がりHP3分の1消費():
+    """ソウルビート: 使用すると全能力が1段階ずつ上がり最大HPの1/3が消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ソウルビート"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["A"] == 1
+    assert attacker.rank["B"] == 1
+    assert attacker.rank["C"] == 1
+    assert attacker.rank["D"] == 1
+    assert attacker.rank["S"] == 1
+    assert attacker.hp == max_hp - (max_hp // 3)
+
+
+def test_ソウルビート_全能力最大なら能力は変化しない():
+    """ソウルビート: 全能力がすでに+6なら能力ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ソウルビート"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": 6, "B": 6, "C": 6, "D": 6, "S": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    # 全能力は変化しない
+    assert attacker.rank["A"] == 6
+    assert attacker.rank["B"] == 6
+    assert attacker.rank["C"] == 6
+    assert attacker.rank["D"] == 6
+    assert attacker.rank["S"] == 6
+
+
+def test_ミストフィールド_すでに同じフィールドなら失敗():
+    """ミストフィールド: すでにミストフィールド中は発動しない（失敗）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミストフィールド"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("ミストフィールド", 5),
+    )
+    t.run_move(battle, 0)
+
+    assert battle.terrain.name == "ミストフィールド"
+    assert battle.terrain.count == 5
+
+
+def test_ミストフィールド_フィールドが5ターン展開される():
+    """ミストフィールド: 使用すると5ターンのミストフィールドが展開される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミストフィールド"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    assert battle.terrain.name == "ミストフィールド"
+    assert battle.terrain.count == 5

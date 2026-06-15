@@ -156,6 +156,36 @@ def test_くすぐる_すでに最低ランクなら変化なし():
     assert defender.rank["B"] == -6
 
 
+def test_くろいまなざし_すでににげられない状態なら失敗():
+    """くろいまなざし: 相手がすでににげられない状態なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいまなざし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"にげられない": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # カウントが変わらないことで重複付与されないことを確認
+    old_count = defender.volatiles["にげられない"].count
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("にげられない")
+    assert defender.volatiles["にげられない"].count == old_count
+
+
+def test_くろいまなざし_にげられない状態を付与する():
+    """くろいまなざし: 相手をにげられない状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいまなざし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("にげられない")
+
+
 def test_グラスフィールド_すでに同じフィールドなら失敗():
     """グラスフィールド: すでにグラスフィールド中は発動しない（失敗）"""
     battle = t.start_battle(

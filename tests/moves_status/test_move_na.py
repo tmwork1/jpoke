@@ -76,3 +76,31 @@ def test_ねばねばネット_相手陣営に設置される():
 
     side = battle.get_side(battle.actives[1])
     assert side.fields["ねばねばネット"].is_active
+
+
+def test_ねをはる_すでにねをはる状態なら失敗():
+    """ねをはる: すでにねをはる状態なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねをはる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"ねをはる": 1},
+    )
+    attacker = battle.actives[0]
+    old_count = attacker.volatiles["ねをはる"].count
+    t.run_move(battle, 0)
+
+    # カウントは変わらない（重複付与されない）
+    assert attacker.has_volatile("ねをはる")
+    assert attacker.volatiles["ねをはる"].count == old_count
+
+
+def test_ねをはる_ねをはる状態を付与する():
+    """ねをはる: 使用すると自分をねをはる状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねをはる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ねをはる")

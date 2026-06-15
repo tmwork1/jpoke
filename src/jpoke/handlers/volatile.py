@@ -986,3 +986,23 @@ def トーチカ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) 
 
 def かくれる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="かくれる")
+
+
+def ハロウィン_add_ghost_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ハロウィン状態: タイプ相性計算時にゴーストタイプの被弾倍率を追加乗算する。"""
+    from jpoke.data import TYPE_MODIFIER
+    move_type = ctx.move.type
+    type_chart = TYPE_MODIFIER.get(move_type, {})
+    rate = type_chart.get("ゴースト", 1.0)
+    value = int(value * rate)
+    return HandlerReturn(value=value)
+
+
+def もりののろい_add_grass_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """もりののろい状態: タイプ相性計算時にくさタイプの被弾倍率を追加乗算する。"""
+    from jpoke.data import TYPE_MODIFIER
+    move_type = ctx.move.type
+    type_chart = TYPE_MODIFIER.get(move_type, {})
+    rate = type_chart.get("くさ", 1.0)
+    value = int(value * rate)
+    return HandlerReturn(value=value)

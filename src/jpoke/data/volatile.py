@@ -555,6 +555,22 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ハロウィン": VolatileData(
+        handlers={
+            Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
+                h.ハロウィン_add_ghost_type,
+                subject_spec="defender:self",
+            ),
+        }
+    ),
+    "もりののろい": VolatileData(
+        handlers={
+            Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
+                h.もりののろい_add_grass_type,
+                subject_spec="defender:self",
+            ),
+        }
+    ),
 }
 
 
