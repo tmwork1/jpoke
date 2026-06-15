@@ -1,155 +1,155 @@
-Name	優先度	仕様書	実装	テスト
-あかいいと	M	x	x	x
-あついいわ	L2	x	x	x
-アッキのみ	L2	x	x	x
-あつぞこブーツ	L2	x	x	x
-イアのみ	L2	x	x	x
-いかさまダイス	L1	x	x	x
-いしずえのめん	L3	x	x	x
-いどのめん	L3	x	x	x
-いのちのたま	L2	x	x	x
-イバンのみ	L2	x	x	x
-ウイのみ	L2	x	x	x
-エレキシード	L2	x	x	x
-おうじゃのしるし	L2	x	x	x
-おおきなねっこ	L2	x	x	x
-オボンのみ	L2	x	x	x
-オレンのみ	L2	x	x	x
-おんみつマント	L2	x	x	x
-かいがらのすず	L2	x	x	x
-かえんだま	L2	x	x	x
-カゴのみ	L2	x	x	x
-かまどのめん	L3	x	x	x
-カムラのみ	L2	x	x	x
-からぶりほけん	L2	x	x	x
-かるいし	L2	x	x	x
-きあいのタスキ	L2	x	x	x
-きあいのハチマキ	L2	x	x	x
-キーのみ	L2	x	x	x
-きゅうこん	L2	x	-   -
-きれいなぬけがら	L1	x	x	x
-くちたけん	M	x	x	x
-くちたたて	M	x	x	x
-くっつきバリ	L2	x	x	x
-グラスシード	L2	x	x	x
-クラボのみ	L2	x	x	x
-グランドコート	L2	x	x	x
-クリアチャーム	M	x	x	x
-くろいてっきゅう	L2	x	x	x
-くろいヘドロ	L2	x	x	x
-こうかくレンズ	L2	x	x	-
-こうこうのしっぽ	L2	x	x	x
-こころのしずく	M	x	x	x
-こだわりスカーフ	L3	x	x	x
-こだわりハチマキ	L3	x	x	x
-こだわりメガネ	L3	x	x	x
-ゴツゴツメット	L2	x	x	x
-こんごうだま	M	x	x	x
-サイコシード	L2	x	x	x
-さらさらいわ	L2	x	x	x
-サンのみ	L2	x	x	x
-しめつけバンド	L2	x	x	x
-しめったいわ	L2	x	x	x
-じゃくてんほけん	L2	x	x	x
-ジャポのみ	L2	x	x	x
-じゅうでんち	L2	x	x	x
-しらたま	M	x	x	x
-しろいハーブ	L2	x	x	x
-しんかのきせき	L2	x	x	x
-ズアのみ	L2	x	x	x
-スターのみ	L2	x	x	x
-するどいキバ	L2	x	x	x
-するどいツメ	L2	x	x	x
-せんせいのツメ	L2	x	x	x
-だいこんごうだま	M	x	x	x
-だいしらたま	M	x	x	x
-だいはっきんだま	M	x	x	x
-だっしゅつパック	L2	x	x	x
-だっしゅつボタン	L2	x	x	x
-たつじんのおび	L2	x	x	x
-たべのこし	L2	x	x	x
-タラプのみ	L2	x	x	x
-チーゴのみ	L2	x	x	x
-チイラのみ	L2	x	x	x
-ちからのハチマキ	L1	x	x	x
-つめたいいわ	L2	x	x	x
-でかいきんのたま	L2	x	x	-
-でんきだま	M	x	x	x
-とくせいガード	L1	x	x	x
-どくどくだま	L2	x	x	x
-とつげきチョッキ	L2	x	x	x
-ナゾのみ	L2	x	x	x
-ナナシのみ	L2	x	x	x
-ねばりのかぎづめ	L2	x	x	x
-ねらいのまと	L2	x	x	x
-ノーマルジュエル	L1	x	x	x
-のどスプレー	L2	x	x	x
-はっきんだま	M	x	x	x
-パワフルハーブ	L2	x	x	x
-バンジのみ	L2	x	x	x
-パンチグローブ	L2	x	x	x
-ばんのうがさ	L2	x	-	-
-ひかりごけ	L2	x	x	x
-ひかりのこな	L2	x	x	-
-ひかりのねんど	L2	x	x	x
-ビビリだま	L2	x	x	x
-ヒメリのみ	L2	x	x	x
-ピントレンズ	L2	x	x	x
-フィラのみ	L2	x	x	x
-ブーストエナジー	M	x	x	x
-ふうせん	L2	x	x	x
-フォーカスレンズ	L2	x	x	-
-ぼうごパット	L2	x	x	x
-ぼうじんゴーグル	L2	x	x	x
-マゴのみ	L2	x	x	x
-ミクルのみ	L2	x	保留	-
-ミストシード	L2	x	x	x
-メトロノーム	L3	x	x	x
-メンタルハーブ	L2	x	x	x
-ものしりメガネ	L1	x	x	x
-ものまねハーブ	L2	x	x	x
-モモンのみ	L2	x	x	x
-ヤタピのみ	L2	x	x	x
-ゆきだま	L2	x	x	x
-ラムのみ	L2	x	x	x
-リュガのみ	L2	x	x	x
-ルームサービス	L2	x	x	x
-レッドカード	L2	x	x	x
-レンブのみ	L2	x	x	x
-くろいメガネ	L1	x	x	x
-かたいいし	L1	x	x	x
-まがったスプーン	L1	x	x	x
-くろおび	L1	x	x	x
-きせきのたね	L1	x	x	x
-のろいのおふだ	L1	x	x	x
-とけないこおり	L1	x	x	x
-やわらかいすな	L1	x	x	x
-じしゃく	L1	x	x	x
-どくバリ	L1	x	x	x
-りゅうのキバ	L1	x	x	x
-シルクのスカーフ	L1	x	x	x
-メタルコート	L1	x	x	x
-するどいくちばし	L1	x	x	x
-せいれいプレート	L1	x	x	x
-ようせいのハネ	L1	x	x	x
-もくたん	L1	x	x	x
-しんぴのしずく	L1	x	x	x
-ぎんのこな	L1	x	x	x
-ナモのみ	L1	x	x	x
-ヨロギのみ	L1	x	x	x
-ウタンのみ	L1	x	x	x
-ヨプのみ	L1	x	x	x
-リンドのみ	L1	x	x	x
-カシブのみ	L1	x	x	x
-ヤチェのみ	L1	x	x	x
-シュカのみ	L1	x	x	x
-ソクノのみ	L1	x	x	x
-ビアーのみ	L1	x	x	x
-ハバンのみ	L1	x	x	x
-ホズのみ	L1	x	x	-
-リリバのみ	L1	x	x	x
-バコウのみ	L1	x	x	x
-ロゼルのみ	L1	x	x	x
-オッカのみ	L1	x	x	x
-イトケのみ	L1	x	x	x
-タンガのみ	L1	x	x	x
+名前	仕様書	計画書	実装	テスト	レビュー
+あかいいと	x	x	x	x	-
+あついいわ	x	x	x	x	-
+アッキのみ	x	x	x	-	-
+あつぞこブーツ	x	x	x	-	-
+イアのみ	x	x	x	-	-
+いかさまダイス	x	x	x	-	-
+いしずえのめん	x	x	x	x	-
+いどのめん	x	x	x	x	-
+いのちのたま	x	x	x	x	-
+イバンのみ	x	x	-	-	-
+ウイのみ	x	x	x	-	-
+エレキシード	x	x	x	-	-
+おうじゃのしるし	x	x	x	-	-
+おおきなねっこ	x	x	x	-	-
+オボンのみ	x	x	x	-	-
+オレンのみ	x	x	x	-	-
+おんみつマント	x	x	x	-	-
+かいがらのすず	x	x	x	-	-
+かえんだま	x	x	x	-	-
+カゴのみ	x	x	x	-	-
+かまどのめん	x	x	x	x	-
+カムラのみ	x	x	x	-	-
+からぶりほけん	x	x	-	-	-
+かるいし	x	x	x	-	-
+きあいのタスキ	x	x	x	-	-
+きあいのハチマキ	x	x	x	-	-
+キーのみ	x	x	x	-	-
+きゅうこん	x	x	-	-	-
+きれいなぬけがら	x	x	x	x	-
+くちたけん	x	x	x	x	-
+くちたたて	x	x	x	x	-
+くっつきバリ	x	x	-	-	-
+グラスシード	x	x	x	-	-
+クラボのみ	x	x	x	-	-
+グランドコート	x	x	-	-	-
+クリアチャーム	x	x	x	x	-
+くろいてっきゅう	x	x	x	-	-
+くろいヘドロ	x	x	x	-	-
+こうかくレンズ	x	x	x	-	-
+こうこうのしっぽ	x	x	x	-	-
+こころのしずく	x	x	x	x	-
+こだわりスカーフ	x	x	x	x	-
+こだわりハチマキ	x	x	x	x	-
+こだわりメガネ	x	x	x	x	-
+ゴツゴツメット	x	x	x	-	-
+こんごうだま	x	x	x	x	-
+サイコシード	x	x	x	-	-
+さらさらいわ	x	x	x	x	-
+サンのみ	x	x	x	-	-
+しめつけバンド	x	x	x	-	-
+しめったいわ	x	x	x	x	-
+じゃくてんほけん	x	x	x	-	-
+ジャポのみ	x	x	x	-	-
+じゅうでんち	x	x	x	-	-
+しらたま	x	x	x	x	-
+しろいハーブ	x	x	x	-	-
+しんかのきせき	x	x	-	-	-
+ズアのみ	x	x	x	-	-
+スターのみ	x	x	x	-	-
+するどいキバ	x	x	x	-	-
+するどいツメ	x	x	x	-	-
+せんせいのツメ	x	x	x	-	-
+だいこんごうだま	x	x	x	x	-
+だいしらたま	x	x	x	x	-
+だいはっきんだま	x	x	x	x	-
+だっしゅつパック	x	x	x	x	-
+だっしゅつボタン	x	x	x	x	-
+たつじんのおび	x	x	x	-	-
+たべのこし	x	x	x	x	-
+タラプのみ	x	x	x	-	-
+チーゴのみ	x	x	x	-	-
+チイラのみ	x	x	x	-	-
+ちからのハチマキ	x	x	x	-	-
+つめたいいわ	x	x	x	x	-
+でかいきんのたま	x	x	-	-	-
+でんきだま	x	x	x	x	-
+とくせいガード	x	x	x	x	-
+どくどくだま	x	x	x	-	-
+とつげきチョッキ	x	x	x	-	-
+ナゾのみ	x	x	-	-	-
+ナナシのみ	x	x	x	-	-
+ねばりのかぎづめ	x	x	-	-	-
+ねらいのまと	x	x	x	-	-
+ノーマルジュエル	x	x	x	x	-
+のどスプレー	x	x	x	-	-
+はっきんだま	x	x	x	x	-
+パワフルハーブ	x	x	x	-	-
+バンジのみ	x	x	x	-	-
+パンチグローブ	x	x	x	-	-
+ばんのうがさ	x	x	-	-	-
+ひかりごけ	x	x	x	-	-
+ひかりのこな	x	x	x	-	-
+ひかりのねんど	x	x	x	-	-
+ビビリだま	x	x	x	-	-
+ヒメリのみ	x	x	x	-	-
+ピントレンズ	x	x	x	-	-
+フィラのみ	x	x	x	-	-
+ブーストエナジー	x	x	x	x	-
+ふうせん	x	x	x	-	-
+フォーカスレンズ	x	x	x	-	-
+ぼうごパット	x	x	x	-	-
+ぼうじんゴーグル	x	x	x	-	-
+マゴのみ	x	x	x	-	-
+ミクルのみ	x	x	-	-	-
+ミストシード	x	x	x	-	-
+メトロノーム	x	x	x	x	-
+メンタルハーブ	x	x	x	-	-
+ものしりメガネ	x	x	x	-	-
+ものまねハーブ	x	x	x	-	-
+モモンのみ	x	x	x	-	-
+ヤタピのみ	x	x	x	-	-
+ゆきだま	x	x	x	-	-
+ラムのみ	x	x	x	-	-
+リュガのみ	x	x	x	-	-
+ルームサービス	x	x	x	-	-
+レッドカード	x	x	x	-	-
+レンブのみ	x	x	x	-	-
+くろいメガネ	x	x	x	x	-
+かたいいし	x	x	x	x	-
+まがったスプーン	x	x	x	x	-
+くろおび	x	x	x	x	-
+きせきのたね	x	x	x	x	-
+のろいのおふだ	x	x	x	x	-
+とけないこおり	x	x	x	x	-
+やわらかいすな	x	x	x	x	-
+じしゃく	x	x	x	x	-
+どくバリ	x	x	x	x	-
+りゅうのキバ	x	x	x	x	-
+シルクのスカーフ	x	x	x	x	-
+メタルコート	x	x	x	x	-
+するどいくちばし	x	x	x	x	-
+せいれいプレート	x	x	x	x	-
+ようせいのハネ	x	x	x	x	-
+もくたん	x	x	x	x	-
+しんぴのしずく	x	x	x	x	-
+ぎんのこな	x	x	x	x	-
+ナモのみ	x	x	x	x	-
+ヨロギのみ	x	x	x	x	-
+ウタンのみ	x	x	x	x	-
+ヨプのみ	x	x	x	x	-
+リンドのみ	x	x	x	x	-
+カシブのみ	x	x	x	x	-
+ヤチェのみ	x	x	x	x	-
+シュカのみ	x	x	x	x	-
+ソクノのみ	x	x	x	x	-
+ビアーのみ	x	x	x	x	-
+ハバンのみ	x	x	x	x	-
+ホズのみ	x	x	x	-	-
+リリバのみ	x	x	x	x	-
+バコウのみ	x	x	x	x	-
+ロゼルのみ	x	x	x	x	-
+オッカのみ	x	x	x	x	-
+イトケのみ	x	x	x	x	-
+タンガのみ	x	x	x	x	-

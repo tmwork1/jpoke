@@ -53,7 +53,14 @@ def main(target: str):
 
 
 if __name__ == "__main__":
-    # main("abilities")
-    # main("items")
-    # main("status_moves")
-    main("fields")
+    targets = [
+        # "abilities",
+        # "items",
+        # "status_moves",
+        "ailments",
+        # "volatiles",
+        # "fields",
+    ]
+
+    for target in targets:
+        main(target)

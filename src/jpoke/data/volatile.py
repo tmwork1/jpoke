@@ -534,6 +534,7 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "かくれる": VolatileData(
+        # TODO : そらをとぶ, あなをほる, ダイビング, シャドーダイブ, シャドーダイブに分けて定義する
         forced=True,
         handlers={
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
@@ -556,6 +557,7 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "ハロウィン": VolatileData(
+        # TODO : タイプ付与系は影響範囲が広いため、揮発状態ではなくPokemonの状態として実装すべき。
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
                 h.ハロウィン_add_ghost_type,
@@ -564,6 +566,7 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "もりののろい": VolatileData(
+        # TODO : タイプ付与系は影響範囲が広いため、揮発状態ではなくPokemonの状態として実装すべき。
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
                 h.もりののろい_add_grass_type,
