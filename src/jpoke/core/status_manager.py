@@ -52,6 +52,7 @@ class StatusManager:
                   source: Pokemon | None = None,
                   reason: HPChangeReason = "",
                   move: Move | None = None) -> int:
+        # TODO : 使っていないmove引数を削除する
         """ポケモンのHPを変更する。
 
         Args:

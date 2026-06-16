@@ -84,6 +84,7 @@ class ItemManager:
                         target: Pokemon,
                         source: Pokemon | None = None,
                         move: Move | None = None) -> bool:
+        # TODO : 使われていないmove引数を削除する
         """アイテム変更が許可されるかを共通イベントで判定する。
 
         Args:

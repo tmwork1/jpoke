@@ -30,7 +30,7 @@
 
 ### 1. 状態ファイルを読む
 
-`.loop/state.json` を Read で読み込む。
+`.loop/review_state.json` を Read で読み込む。
 
 ### 2. 終了チェック
 
@@ -91,7 +91,7 @@ jpoke {config.category} 再レビュータスク: {entry}
 
 ### 6. 状態ファイルを保存
 
-Write ツールで `.loop/state.json` を上書き。
+Write ツールで `.loop/review_state.json` を上書き。
 
 ### 7. 次のウェイクアップを予約
 

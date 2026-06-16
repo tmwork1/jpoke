@@ -1,3 +1,5 @@
+# TODO : AttackContextが渡されるイベントのハンドラで、型ヒントがEventContextになっているものがある。
+
 """変化技関連のイベントハンドラ関数を提供するモジュール。
 
 変化技の実行に関連するハンドラ関数を提供します。
@@ -25,8 +27,7 @@ def on_blow_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerRetur
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
     if not value:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
-                             payload={"reason": "強制交代無効"})
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -59,6 +60,7 @@ def アクアリング_apply_volatile_to_attacker(battle: Battle, ctx: EventCont
 
 
 def アロマミスト_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO : アロマミストは味方の特防を上げるダブル専用技。ハンドラを削除して非実装にする
     return modify_attacker_stats(battle, ctx, value, stats={"D": 1})
 
 
@@ -66,7 +68,7 @@ def アンコール_can_apply(battle: Battle, ctx: EventContext, value: Any) -> 
     move = ctx.defender.executed_move
     if not move:
         battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "アンコール"})
+                             payload={"reason": "対象技が存在しない"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -84,6 +86,8 @@ def いえき_can_apply(battle: Battle, ctx: EventContext, value: Any) -> Handle
     対象の特性が protected フラグを持つ場合は失敗させる。
     """
     if ctx.defender.ability.has_flag("protected"):
+        # TODO : "reason": "いえき" は何の情報も付加しない。
+        # 例えば "保護された特性" のように失敗した理由を渡したほうがよい。他の"reason"も同様。
         battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
                              payload={"reason": "いえき"})
         return HandlerReturn(value=False, stop_event=True)
@@ -128,6 +132,7 @@ def いのちのしずく_heal_self(battle: Battle, ctx: EventContext, value: An
 
 def いやしのはどう_heal_self(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いやしのはどう: 最大HPの1/2を回復する。HPが満タンの場合は失敗する。"""
+    # TODO : いやしのはどうは相手(defender)のHPを回復させる技。仕様書と計画書も見直す。
     mon = ctx.attacker
     if mon.hp == mon.max_hp:
         return HandlerReturn(value=False, stop_event=True)
@@ -164,7 +169,7 @@ def ちいさくなる_apply(battle: Battle, ctx: EventContext, value: Any) -> H
 
 def ちょうはつ_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ちょうはつの効果: 相手にちょうはつ状態を付与する（3 ターン）。"""
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ちょうはつ")
+    return apply_volatile_to_defender(battle, ctx, value, volatile="ちょうはつ", count=3)
 
 
 def ちょうのまい_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -208,14 +213,18 @@ def あくび_can_apply(battle: Battle, ctx: EventContext, value: Any) -> Handle
     """あくびの失敗チェック: 対象がねむけ状態または状態異常を持っている場合は失敗する。"""
     mon = ctx.defender
     if mon.has_volatile("ねむけ") or mon.ailment.is_active:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "あくび"})
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "すでに状態異常になっている"},
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def あくび_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """あくびの効果: 相手をねむけ状態にする。"""
+    # TODO : count=2 にする（次のターンの終わりにねむり状態に移行する）
     return apply_volatile_to_defender(battle, ctx, value, volatile="ねむけ", count=1)
 
 
@@ -253,6 +262,7 @@ def あまいかおり_modify_defender_stats(battle: Battle, ctx: EventContext, 
 
 
 def あまえる_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO : あまえるは相手(defender)の攻撃を2段階下げる
     return modify_attacker_stats(battle, ctx, value, stats={"A": -2})
 
 
@@ -357,6 +367,7 @@ def おいかぜ_set_side_field(battle: Battle, ctx: EventContext, value: Any) -
 
 def おかたづけ_cleanup(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おかたづけ: 両陣営のみがわり・トラップを除去し、こうげき・すばやさを1段階上げる。"""
+    # TODO : かたづけおわり、のログは不要。代わりに、何を除去したかすべてログに書き込む。
     cleaned = False
     for mon in battle.actives:
         if mon.has_volatile("みがわり"):
@@ -374,6 +385,7 @@ def おかたづけ_cleanup(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 def おきみやげ_faint_and_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おきみやげ: 使用者をひんしにし、相手のこうげき・とくこうを2段階ずつ下げる。"""
+    # TODO : 瀕死にさせるというメソッドを実装するとよいかもしれない
     battle.modify_hp(ctx.attacker, -ctx.attacker.max_hp)
     modify_defender_stats(battle, ctx, value, stats={"A": -2, "C": -2})
     return HandlerReturn(value=value)
@@ -393,6 +405,7 @@ def おだてる_modify_defender_stats_and_apply_volatile(battle: Battle, ctx: E
 
 
 def おにび_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO : 状態異常の付与判定は AilmentManager で行っているので、技ハンドラで判定する必要はない。
     """おにびの失敗チェック: 対象が状態異常またはほのおタイプの場合は失敗する。"""
     mon = ctx.defender
     if mon.ailment.is_active or mon.has_type("ほのお"):
@@ -488,10 +501,12 @@ def きあいだめ_apply_volatile_to_attacker(battle: Battle, ctx: EventContext
 
 
 def キノコのほうし_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO : キノコのほうしは相手をねむらせる技。仕様書と計画書を見直す。
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
 def きりばらい_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO : ステルスロックなどの設置技を除去する効果もある。仕様書と計画書を見直す。
     return modify_defender_stats(battle, ctx, value, stats={"EVA": -1})
 
 
@@ -532,6 +547,7 @@ def グラスフィールド_activate_terrain(battle: Battle, ctx: EventContext,
 
 
 def こうごうせい_heal_self(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    # TODO : あさのひざしと同一効果ならハンドラを流用すればよい
     """こうごうせい: 天候に応じた割合で自分のHPを回復する。"""
     mon = ctx.attacker
     if mon.hp == mon.max_hp:

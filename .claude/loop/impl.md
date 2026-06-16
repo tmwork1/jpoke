@@ -31,7 +31,7 @@
 
 ### 1. 状態ファイルを読む
 
-`.loop/state.json` を Read で読み込む。
+`.loop/impl_state.json` を Read で読み込む。
 
 ### 2. 終了チェック
 
@@ -105,7 +105,7 @@ CLAUDE.md のハンドラ約束事を厳守。
 
 ### 6. 状態ファイルを保存
 
-Write ツールで `.loop/state.json` を上書き。
+Write ツールで `.loop/impl_state.json` を上書き。
 
 ### 7. 次のウェイクアップを予約
 

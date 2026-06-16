@@ -4481,7 +4481,6 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=5,
-
         labels=["heal"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
