@@ -16,7 +16,7 @@
     "test_files":         ["tests/test_move.py"],
     "impl_extra":         "",
     "review_extra":       "",
-    "planning_slots_max": 1
+    "planning_slots_max": 2
   },
   "plan_queue":  ["..."],
   "impl_queue":  ["..."],
@@ -24,8 +24,6 @@
   "failed":      ["..."]
 }
 ```
-
-`planning_slots_max` は省略時 `1`。
 
 ---
 

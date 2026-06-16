@@ -4869,12 +4869,22 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=10,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ガードシェア_equalize_stats,
+            ),
+        }
     ),
     "ガードスワップ": MoveData(
         type="エスパー",
         category="変化",
         pp=10,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ガードスワップ_swap_ranks,
+            ),
+        }
     ),
     "かいでんぱ": MoveData(
         type="でんき",
@@ -5044,8 +5054,12 @@ MOVES: dict[str, MoveData] = {
         type="こおり",
         category="変化",
         pp=30,
-
         target="field",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.くろいきり_reset_all_ranks,
+            ),
+        }
     ),
     "くろいまなざし": MoveData(
         type="ノーマル",
@@ -5126,8 +5140,13 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-
         priority=4,
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.こらえる_apply_volatile_to_attacker,
+            ),
+        }
     ),
     "こわいかお": MoveData(
         type="ノーマル",
@@ -5170,7 +5189,6 @@ MOVES: dict[str, MoveData] = {
         type="エスパー",
         category="変化",
         pp=15,
-
     ),
     "さいみんじゅつ": MoveData(
         type="エスパー",
@@ -5193,13 +5211,24 @@ MOVES: dict[str, MoveData] = {
         type="こおり",
         category="変化",
         pp=10,
-
+        target="field",
+        labels=["non_yubi"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.さむいギャグ_activate_weather_and_pivot,
+            ),
+        }
     ),
     "じこあんじ": MoveData(
         type="ノーマル",
         category="変化",
         pp=10,
         accuracy=100,
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.じこあんじ_copy_ranks,
+            ),
+        }
     ),
     "じこさいせい": MoveData(
         type="ノーマル",
@@ -5217,7 +5246,15 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="変化",
         pp=10,
-
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.しっぽきり_check,
+                priority=100,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.しっぽきり_apply,
+            ),
+        }
     ),
     "しっぽをふる": MoveData(
         type="ノーマル",
@@ -5235,7 +5272,14 @@ MOVES: dict[str, MoveData] = {
         type="でんき",
         category="変化",
         pp=20,
-
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.じばそうさ_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.じばそうさ_modify_attacker_stats,
+            ),
+        }
     ),
     "しびれごな": MoveData(
         type="くさ",
@@ -5260,7 +5304,12 @@ MOVES: dict[str, MoveData] = {
         type="でんき",
         category="変化",
         pp=20,
-
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.じゅうでん_apply,
+            ),
+        }
     ),
     "じゅうりょく": MoveData(
         type="エスパー",
@@ -5304,6 +5353,14 @@ MOVES: dict[str, MoveData] = {
         category="変化",
         pp=15,
         accuracy=100,
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.シンプルビーム_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.シンプルビーム_change_ability,
+            ),
+        }
     ),
     "スキルスワップ": MoveData(
         type="エスパー",
@@ -5324,6 +5381,11 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         accuracy=100,
         labels=["sound"],
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.すてゼリフ_modify_defender_stats_and_pivot,
+            ),
+        }
     ),
     "ステルスロック": MoveData(
         type="いわ",

@@ -175,7 +175,7 @@ class EventManager:
             list[RegisteredHandler]: ソート後のリスト
         """
         if len(rhs) <= 1:
-            return rhs
+            return list(rhs)
 
         def key(rh: RegisteredHandler):
             subject = self._resolve_subject(rh)

@@ -348,6 +348,21 @@ def きゅうしょアップ_boost_critical_rank(battle: Battle, ctx: EventConte
     return HandlerReturn(value=value)
 
 
+def こらえる_endure(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """こらえる状態: 致死ダメージを HP 1 残しに補正する。
+
+    ダメージが防御側の現在 HP 以上の場合、ダメージを hp - 1 に抑えて HP 1 を残す。
+    """
+    mon = ctx.defender
+    if value >= mon.hp:
+        value = mon.hp - 1
+    return HandlerReturn(value=value)
+
+
+def こらえる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="こらえる")
+
+
 def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 

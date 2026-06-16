@@ -1415,6 +1415,21 @@ def シンクロ_return_ailment(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def シンプル_modify_stat_delta(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
+    """シンプル特性: 自分のランク変化量を 2 倍にする。
+
+    ON_BEFORE_MODIFY_STAT イベントで value（能力とランク変化量の辞書）の各変化量を
+    2 倍にして返す。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_BEFORE_MODIFY_STAT)
+            - target: ランク変化を受けるポケモン（シンプル所持者）
+        value: 能力とランク変化量の辞書（例: {"A": 1, "S": -1}）
+    """
+    return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
+
+
 def すいすい_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すいすい特性: あめ中に素早さが2倍になる。"""
     if battle.weather.rainy:

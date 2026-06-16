@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
-from jpoke.enums import Event, LogCode
+from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
 from .move import (
     apply_ailment_to_defender,
@@ -406,6 +406,36 @@ def おにび_apply_ailment_to_defender(battle: Battle, ctx: EventContext, value
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
+def ガードシェア_equalize_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ガードシェア: 使用者と相手のぼうぎょ・とくぼうの実数値を平均化する。
+
+    ランク変化は行わず、実数値のみを書き換える。
+    平均は切り捨て（// 2）。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    # B=インデックス2、D=インデックス4
+    for idx in (2, 4):
+        avg = (attacker._stats_manager.stats[idx] + defender._stats_manager.stats[idx]) // 2
+        attacker._stats_manager.stats[idx] = avg
+        defender._stats_manager.stats[idx] = avg
+    return HandlerReturn(value=value)
+
+
+def ガードスワップ_swap_ranks(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ガードスワップ: 使用者と相手のぼうぎょ・とくぼうのランク変化を入れ替える。
+
+    実数値は変化せず、ランク変化のみを互いに入れ替える。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    for stat in ("B", "D"):
+        attacker.rank[stat], defender.rank[stat] = (
+            defender.rank[stat], attacker.rank[stat]
+        )
+    return HandlerReturn(value=value)
+
+
 def かいでんぱ_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """相手の特攻を2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"C": -2})
@@ -474,6 +504,23 @@ def くすぐる_modify_defender_stats(battle: Battle, ctx: EventContext, value:
     return modify_defender_stats(battle, ctx, value, stats={"A": -1, "B": -1})
 
 
+def くろいきり_reset_all_ranks(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くろいきりの効果: 場にいる全ポケモンの能力ランクを±0にリセットする。
+
+    しろいきり状態でも防げない（ON_BEFORE_MODIFY_STAT を経由しない直接リセット）。
+    """
+    for mon in battle.actives:
+        changed = {s: v for s, v in mon.rank.items() if v != 0}
+        if changed:
+            for s in changed:
+                mon.rank[s] = 0
+            battle.add_event_log(
+                mon, LogCode.STAT_CHANGED,
+                payload={"stats": {s: -v for s, v in changed.items()}, "reason": "くろいきり"},
+            )
+    return HandlerReturn(value=value)
+
+
 def くろいまなざし_apply_volatile_to_defender(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """くろいまなざしの効果: 相手をにげられない状態にする。"""
     return apply_volatile_to_defender(battle, ctx, value, volatile="にげられない")
@@ -512,6 +559,11 @@ def コットンガード_modify_attacker_stats(battle: Battle, ctx: EventContex
     return modify_attacker_stats(battle, ctx, value, stats={"B": 3})
 
 
+def こらえる_apply_volatile_to_attacker(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """こらえるの効果: 自分にこらえる状態を付与する。"""
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="こらえる")
+
+
 def こわいかお_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"S": -2})
 
@@ -521,9 +573,62 @@ def さいみんじゅつ_apply_ailment_to_defender(battle: Battle, ctx: EventCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
 
+def さむいギャグ_activate_weather_and_pivot(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """さむいギャグ: ゆきを5ターン発生させた後、自発交代する。
+
+    すでにゆき状態の場合はゆきの変更は失敗するが交代効果は発動する。
+    すでにゆき状態で交代先もいない場合にのみ技が失敗する。
+    """
+    weather_changed = battle.weather_manager.apply("ゆき", 5, source=ctx.attacker)
+
+    player = battle.get_player(ctx.attacker)
+    can_switch = bool(battle.get_available_switch_commands(player))
+    if can_switch:
+        battle.player_states[player].interrupt = Interrupt.PIVOT
+
+    # ゆき変更も交代もどちらも発動できない場合にのみ失敗
+    if not weather_changed and not can_switch:
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
+
+
+def すてゼリフ_modify_defender_stats_and_pivot(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """すてゼリフ: 相手のこうげき・とくこうを1段階下げ、自発交代する。
+
+    ランク低下が成功した場合のみ交代が発動する。
+    ランク低下が阻まれた（クリアボディ等）場合は交代も発動しない（第七世代以降）。
+    控えポケモンがいない場合はランク低下のみ発動し交代は発生しない。
+    """
+    result = modify_defender_stats(battle, ctx, value, stats={"A": -1, "C": -1})
+
+    # ランク低下が完全に阻まれた（実際の変化量が空）場合は交代しない
+    if not result.value:
+        return result
+
+    player = battle.get_player(ctx.attacker)
+    if battle.get_available_switch_commands(player):
+        battle.player_states[player].interrupt = Interrupt.PIVOT
+
+    return HandlerReturn(value=value)
+
+
 def サイコフィールド_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """サイコフィールド: 地形をサイコフィールドにする。"""
     return HandlerReturn(value=battle.terrain_manager.apply("サイコフィールド", 5))
+
+
+def じこあんじ_copy_ranks(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じこあんじ: 相手の能力ランク変化をすべて自分にコピーする。
+
+    相手のランクは変化しない。direct代入により、たんじゅん・あまのじゃく・
+    クリアボディ等のランク変化ハンドラを経由しない。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    rank_stats: list[str] = ["A", "B", "C", "D", "S", "ACC", "EVA"]
+    for stat in rank_stats:
+        attacker.rank[stat] = defender.rank[stat]
+    return HandlerReturn(value=value)
 
 
 def じこさいせい_heal_self(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -540,8 +645,73 @@ def しびれごな_apply_ailment_to_defender(battle: Battle, ctx: EventContext,
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
+def しっぽきり_check(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """しっぽきりの失敗条件チェック。
+
+    以下のいずれかに該当する場合は失敗する:
+    - 使用者がすでにみがわり状態
+    - 使用者のHPが最大HPの半分以下
+    - 交代できる控えのポケモンがいない
+    """
+    mon = ctx.attacker
+    player = battle.get_player(mon)
+    if mon.has_volatile("みがわり"):
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "しっぽきり_みがわり中"})
+        return HandlerReturn(value=False, stop_event=True)
+    if mon.hp <= mon.max_hp // 2:
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "しっぽきり_HP不足"})
+        return HandlerReturn(value=False, stop_event=True)
+    if not battle.get_available_switch_commands(player):
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "しっぽきり_交代不可"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def しっぽきり_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """しっぽきりの効果: HP消費・みがわり生成・ピボット交代。
+
+    消費HPは最大HPの1/2（小数点以下切り上げ）。
+    みがわりのHPは最大HPの1/4（切り捨て）で通常みがわりと同じ。
+    """
+    mon = ctx.attacker
+    player = battle.get_player(mon)
+    # 最大HPの1/2を消費（切り上げ）
+    cost = (mon.max_hp + 1) // 2
+    battle.modify_hp(mon, -cost)
+    # みがわり生成
+    battle.volatile_manager.apply(mon, "みがわり", hp=mon.max_hp // 4)
+    # ピボット交代（交代先選択をプレイヤーに委ねる）
+    battle.player_states[player].interrupt = Interrupt.PIVOT
+    return HandlerReturn(value=value)
+
+
 def しっぽをふる_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"B": -1})
+
+
+def じばそうさ_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じばそうさの失敗条件: 使用者の特性がプラス/マイナスでない場合は失敗させる。"""
+    if ctx.attacker.ability.name not in ("プラス", "マイナス"):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "じばそうさ"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def じばそうさ_modify_attacker_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じばそうさの効果: ぼうぎょ・とくぼうをそれぞれ1段階上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"B": 1, "D": 1})
+
+
+def じゅうでん_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じゅうでんの効果: 自分にじゅうでん状態を付与し、とくぼうを1段階上げる。"""
+    mon = ctx.attacker
+    battle.volatile_manager.apply(mon, "じゅうでん", source=mon)
+    battle.modify_stats(mon, {"D": 1}, source=mon)
+    return HandlerReturn(value=value)
 
 
 def じゅうりょく_activate_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -553,6 +723,24 @@ def しんぴのまもり_set_side_field(battle: Battle, ctx: EventContext, valu
     side = battle.get_side(ctx.attacker)
     if not side.activate("しんぴのまもり", 5):
         return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def シンプルビーム_can_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """シンプルビームの失敗条件チェック。
+
+    対象の特性が protected フラグを持つ場合は失敗する。
+    """
+    if ctx.defender.ability.has_flag("protected"):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "シンプルビーム"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def シンプルビーム_change_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """シンプルビームの効果: 相手の特性を「シンプル」に書き換える。"""
+    battle.change_ability(ctx.defender, "シンプル")
     return HandlerReturn(value=value)
 
 

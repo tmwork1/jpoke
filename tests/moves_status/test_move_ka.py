@@ -201,6 +201,140 @@ def test_からをやぶる_BとDが下がりAとCとSが上がる():
     assert attacker.rank["S"] == 2
 
 
+def test_ガードシェア_こうげきとくこうは変化しない():
+    """ガードシェア: こうげき・とくこうの実数値は変化しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    atk_a_before = attacker._stats_manager.stats[1]
+    atk_c_before = attacker._stats_manager.stats[3]
+    def_a_before = defender._stats_manager.stats[1]
+    def_c_before = defender._stats_manager.stats[3]
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[1] == atk_a_before
+    assert attacker._stats_manager.stats[3] == atk_c_before
+    assert defender._stats_manager.stats[1] == def_a_before
+    assert defender._stats_manager.stats[3] == def_c_before
+
+
+def test_ガードシェア_ランク変化は変更されない():
+    """ガードシェア: 実数値のみを平均化し、能力ランクは変化しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0
+    assert defender.rank["B"] == 0
+    assert defender.rank["D"] == 0
+
+
+def test_ガードシェア_使用者と相手のとくぼうが平均化される():
+    """ガードシェア: 使用者と相手のとくぼう実数値が平均値（切り捨て）になること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # ピカチュウD=70、カビゴンD=130 → 平均 (70+130)//2 = 100
+    expected_d = (attacker._stats_manager.stats[4] + defender._stats_manager.stats[4]) // 2
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[4] == expected_d
+    assert defender._stats_manager.stats[4] == expected_d
+
+
+def test_ガードシェア_使用者と相手のぼうぎょが平均化される():
+    """ガードシェア: 使用者と相手のぼうぎょ実数値が平均値（切り捨て）になること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # ピカチュウB=60、カビゴンB=85 → 平均 (60+85)//2 = 72
+    expected_b = (attacker._stats_manager.stats[2] + defender._stats_manager.stats[2]) // 2
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[2] == expected_b
+    assert defender._stats_manager.stats[2] == expected_b
+
+
+def test_ガードスワップ_ACランクは変化しない():
+    """ガードスワップ: こうげき・とくこうのランクは変化しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["A"] = 3
+    attacker.rank["C"] = 2
+    defender.rank["A"] = -1
+    defender.rank["C"] = -2
+    t.run_move(battle, 0)
+
+    # こうげき・とくこうは変化しない
+    assert attacker.rank["A"] == 3
+    assert attacker.rank["C"] == 2
+    assert defender.rank["A"] == -1
+    assert defender.rank["C"] == -2
+
+
+def test_ガードスワップ_BDランクが双方で入れ替わる():
+    """ガードスワップ: 使用者と相手のぼうぎょ・とくぼうランクが互いに入れ替わること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 事前にランクを変更しておく
+    attacker.rank["B"] = 2
+    attacker.rank["D"] = -1
+    defender.rank["B"] = -3
+    defender.rank["D"] = 1
+    t.run_move(battle, 0)
+
+    # 入れ替わった後のランクを確認
+    assert attacker.rank["B"] == -3
+    assert attacker.rank["D"] == 1
+    assert defender.rank["B"] == 2
+    assert defender.rank["D"] == -1
+
+
+def test_ガードスワップ_双方ともランク0のとき変化なし():
+    """ガードスワップ: 双方のぼうぎょ・とくぼうランクがともに0の場合は入れ替え後も0のまま"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0
+    assert defender.rank["B"] == 0
+    assert defender.rank["D"] == 0
+
+
 def test_きあいだめ_きゅうしょアップ付与():
     """きあいだめ: 使用すると自分にきゅうしょアップ揮発性状態が付与される"""
     battle = t.start_battle(
@@ -253,6 +387,93 @@ def test_くすぐる_すでに最低ランクなら変化なし():
 
     assert defender.rank["A"] == -6
     assert defender.rank["B"] == -6
+
+
+def test_くろいきり_ランクがすでに0なら変化なし():
+    """くろいきり: 全ポケモンのランクがすでに 0 の場合はSTAT_CHANGEDログが記録されないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    logs = battle.event_logger.logs
+    assert not any(log.log == LogCode.STAT_CHANGED for log in logs)
+
+
+def test_くろいきり_ランク変化ログが記録される():
+    """くろいきり: ランクをリセットしたときSTAT_CHANGEDログが記録されること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["A"] = 3
+    t.run_move(battle, 0)
+
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.STAT_CHANGED
+        and log.payload is not None
+        and log.payload.get("reason") == "くろいきり"
+        for log in logs
+    )
+
+
+def test_くろいきり_使用者のランクがゼロにリセットされる():
+    """くろいきり: 使用者自身のランク変化がすべて 0 にリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    # 事前にランクを変化させておく
+    attacker.rank["A"] = 3
+    attacker.rank["B"] = -2
+    attacker.rank["S"] = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["A"] == 0
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["S"] == 0
+
+
+def test_くろいきり_双方のランクが同時にリセットされる():
+    """くろいきり: 使用者と相手の双方のランク変化が同時に 0 にリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["A"] = 2
+    attacker.rank["S"] = -1
+    defender.rank["B"] = -2
+    defender.rank["ACC"] = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["A"] == 0
+    assert attacker.rank["S"] == 0
+    assert defender.rank["B"] == 0
+    assert defender.rank["ACC"] == 0
+
+
+def test_くろいきり_相手のランクがゼロにリセットされる():
+    """くろいきり: 相手のランク変化がすべて 0 にリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    # 事前にランクを変化させておく
+    defender.rank["C"] = 2
+    defender.rank["D"] = -3
+    defender.rank["EVA"] = 1
+    t.run_move(battle, 0)
+
+    assert defender.rank["C"] == 0
+    assert defender.rank["D"] == 0
+    assert defender.rank["EVA"] == 0
 
 
 def test_くろいまなざし_すでににげられない状態なら失敗():
@@ -392,3 +613,100 @@ def test_コスモパワー_ぼうぎょ最大でもとくぼうは上昇する(
 
     assert attacker.rank["B"] == 6
     assert attacker.rank["D"] == 1
+
+
+def test_こらえる_HP1のとき致死ダメージでHP1残る():
+    """こらえる: HP が 1 のとき致死ダメージを受けても HP 1 が残る"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert not defender.fainted
+
+
+def test_こらえる_こらえる揮発状態が付与される():
+    """こらえる: 使用すると自分にこらえる揮発状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("こらえる")
+
+
+def test_こらえる_すでにこらえる状態なら失敗():
+    """こらえる: すでにこらえる状態なら失敗する（重複付与されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"こらえる": 1},
+    )
+    attacker = battle.actives[0]
+    # すでに付与済みなので失敗するはず
+    t.run_move(battle, 0)
+
+    # カウントは変わらない（重複付与されない）
+    assert attacker.has_volatile("こらえる")
+    assert attacker.volatiles["こらえる"].count == 1
+
+
+def test_こらえる_ターン終了後にvolatileが解除される():
+    """こらえる: ターン終了後にこらえる揮発状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("こらえる")
+
+    t.end_turn(battle)
+
+    assert not attacker.has_volatile("こらえる")
+
+
+def test_こらえる_ターン経過ダメージには適用されない():
+    """こらえる: やけどなどのターン経過ダメージはこらえるで防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("やけど", None),
+        volatile0={"こらえる": 1},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+
+    # HP=1 でやけどダメージを受けるとひんしになる（こらえるは適用されない）
+    t.end_turn(battle)
+
+    assert mon.fainted
+
+
+def test_こらえる_致死ダメージを受けてもHP1残る():
+    """こらえる: こらえる状態のときに致死ダメージを受けてもHP 1 が残る"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    # defender にこらえる状態を付与
+    battle.volatile_manager.apply(defender, "こらえる")
+    # 致死ダメージを設定
+    t.fix_damage(battle, defender.max_hp)
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert not defender.fainted

@@ -150,6 +150,19 @@ VOLATILES: dict[str, VolatileData] = {
             )
         }
     ),
+    "こらえる": VolatileData(
+        handlers={
+            Event.ON_MODIFY_MOVE_DAMAGE: h.VolatileHandler(
+                h.こらえる_endure,
+                subject_spec="defender:self",
+                priority=60,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.こらえる_remove_volatile,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "こんらん": VolatileData(
         handlers={
             Event.ON_TRY_ACTION: h.VolatileHandler(

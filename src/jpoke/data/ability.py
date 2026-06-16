@@ -1131,6 +1131,14 @@ ABILITIES: dict[str, AbilityData] = {
             ),
         }
     ),
+    "シンプル": AbilityData(
+        handlers={
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.シンプル_modify_stat_delta,
+                subject_spec="target:self",
+            ),
+        }
+    ),
     "じんばいったい": AbilityData(
         flags=[
             "uncopyable",
