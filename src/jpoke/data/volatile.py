@@ -19,7 +19,9 @@ def common_setup() -> None:
     呼び出しタイミング: モジュール初期化時（ファイル末尾）
     """
     for name, data in VOLATILES.items():
-        VOLATILES[name].name = name
+        data.name = name
+
+# TODO : lambdaで定義しているハンドラは、名前付き関数に置き換える
 
 
 VOLATILES: dict[str, VolatileData] = {
@@ -36,6 +38,7 @@ VOLATILES: dict[str, VolatileData] = {
     "あなをほる": VolatileData(
         forced=True,
         handlers={
+            # TODO : あなをほる状態ではそもそも交代コマンドを選択できないため交代判定は不要。ほかの隠れる系状態も同様。
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
                 h.check_trapped_not_ghost,
                 subject_spec="source:self",

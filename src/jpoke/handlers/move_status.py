@@ -186,8 +186,11 @@ def みがわり_check(battle: Battle, ctx: AttackContext, value: Any) -> Handle
         mon.has_volatile("みがわり")
         or mon.hp <= mon.max_hp // 4
     ):
-        battle.add_event_log(mon, LogCode.MOVE_FAILED,
-                             payload={"reason": "みがわり"})
+        battle.add_event_log(
+            mon,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "みがわり"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -281,7 +284,6 @@ def いやしのすず_cure_team_ailment(battle: Battle, ctx: AttackContext, val
     mon = ctx.attacker
     player = battle.get_player(mon)
     state = battle.player_states[player]
-    # シングルバトルでは selection は場にいる 1 体のみ
     targets = [m for m in state.selection if m.ailment.is_active]
     if not targets:
         return HandlerReturn(value=False, stop_event=True)
@@ -333,8 +335,11 @@ def エレキフィールド_activate_terrain(battle: Battle, ctx: AttackContext
 def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベールの使用条件チェック: 天気が「ゆき」でない場合は失敗する。"""
     if battle.weather.name != "ゆき":
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "オーロラベール"})
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "オーロラベール"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -447,8 +452,11 @@ def かなしばり_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     """
     move = ctx.defender.executed_move
     if not move or move.name == "わるあがき":
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "かなしばり"})
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "かなしばり"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -578,6 +586,8 @@ def さむいギャグ_activate_weather_and_pivot(battle: Battle, ctx: AttackCon
     weather_changed = battle.weather_manager.apply("ゆき", 5, source=ctx.attacker)
 
     player = battle.get_player(ctx.attacker)
+
+    # TODO : can_switch()メソッドを実装したほうがよい。ほかの交代技の判定にも使える。
     can_switch = bool(battle.get_available_switch_commands(player))
     if can_switch:
         battle.player_states[player].interrupt = Interrupt.PIVOT
@@ -651,30 +661,42 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
     """
     mon = ctx.attacker
     player = battle.get_player(mon)
+
     if mon.has_volatile("みがわり"):
-        battle.add_event_log(mon, LogCode.MOVE_FAILED,
-                             payload={"reason": "しっぽきり_みがわり中"})
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "しっぽきり_みがわり中"}
+        )
         return HandlerReturn(value=False, stop_event=True)
-    if mon.hp <= mon.max_hp // 2:
-        battle.add_event_log(mon, LogCode.MOVE_FAILED,
-                             payload={"reason": "しっぽきり_HP不足"})
+
+    # 最大HPの半分以下は失敗する（切り上げ）
+    if mon.hp <= (mon.max_hp + 1) // 2:
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "しっぽきり_HP不足"}
+        )
         return HandlerReturn(value=False, stop_event=True)
+
     if not battle.get_available_switch_commands(player):
-        battle.add_event_log(mon, LogCode.MOVE_FAILED,
-                             payload={"reason": "しっぽきり_交代不可"})
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "しっぽきり_交代不可"}
+        )
         return HandlerReturn(value=False, stop_event=True)
+
     return HandlerReturn(value=value)
 
 
 def しっぽきり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : しっぽきりでは交代先のポケモンにみがわりを継承するが、実装はそうなっていない。
     """しっぽきりの効果: HP消費・みがわり生成・ピボット交代。
 
-    消費HPは最大HPの1/2（小数点以下切り上げ）。
+    消費HPは最大HPの半分（小数点以下切り上げ）。
     みがわりのHPは最大HPの1/4（切り捨て）で通常みがわりと同じ。
     """
     mon = ctx.attacker
     player = battle.get_player(mon)
-    # 最大HPの1/2を消費（切り上げ）
+    # 最大HPの半分を消費（切り上げ）
     cost = (mon.max_hp + 1) // 2
     battle.modify_hp(mon, -cost)
     # みがわり生成
@@ -691,8 +713,10 @@ def しっぽをふる_modify_defender_stats(battle: Battle, ctx: AttackContext,
 def じばそうさ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じばそうさの失敗条件: 使用者の特性がプラス/マイナスでない場合は失敗させる。"""
     if ctx.attacker.ability.name not in ("プラス", "マイナス"):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "じばそうさ"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "じばそうさ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -728,8 +752,10 @@ def シンプルビーム_can_apply(battle: Battle, ctx: AttackContext, value: A
     対象の特性が protected フラグを持つ場合は失敗する。
     """
     if ctx.defender.ability.has_flag("protected"):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "シンプルビーム"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "シンプルビーム"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -761,6 +787,7 @@ def スレッドトラップ_apply_volatile_to_attacker(battle: Battle, ctx: Att
 
 
 def ソウルビート_pay_hp_and_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : HPが1/3以下の場合は失敗するようにする
     """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。"""
     mon = ctx.attacker
     battle.modify_hp(mon, r=-1/3)
@@ -780,6 +807,7 @@ def タールショット_apply_volatile_to_defender(battle: Battle, ctx: Attack
 
 
 def タールショット_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : タールショット_apply_volatile_to_defenderとあわせて、ひとつの関数にまとめる
     return modify_defender_stats(battle, ctx, value, stats={"S": -1})
 
 
@@ -789,6 +817,7 @@ def たてこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
 
 
 def つきのひかり_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : あさのひかりと同一効果なので共通化する
     """つきのひかり: 天候に応じた割合で自分のHPを回復する。
     攻撃側がばんのうがさを持つ場合、晴れ/雨状態でも1/2回復。
     """
@@ -817,6 +846,7 @@ def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value
 
 def てんしのキッス_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """てんしのキッスの効果: 相手をこんらん状態にする（2〜5ターン）。"""
+    # TODO : こんらんターンを決定する関数をbattle.volatile_managerに実装したほうがよい
     count = battle.random.randint(2, 5)
     return HandlerReturn(value=battle.volatile_manager.apply(
         ctx.defender, "こんらん", count=count, source=ctx.attacker, ctx=ctx
@@ -859,6 +889,7 @@ def どくのいと_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
 
 
 def どくのいと_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : どくのいと_apply_ailment_to_defenderとあわせて、ひとつの関数にまとめる
     """どくのいとの効果（速度低下）: 相手のすばやさを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"S": -1})
 
@@ -970,10 +1001,13 @@ def ほたるび_modify_attacker_stats(battle: Battle, ctx: AttackContext, value
 
 
 def はらだいこ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : HPが半分以下の場合も失敗するようにする
     """はらだいこの使用条件チェック: こうげきランクがすでに+6ならば失敗する。"""
     if ctx.attacker.rank["A"] >= 6:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "はらだいこ"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "はらだいこ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -983,15 +1017,17 @@ def はらだいこ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     mon = ctx.attacker
     delta = 6 - mon.rank["A"]
     battle.modify_stats(mon, {"A": delta}, source=mon)
-    battle.modify_hp(mon, -(mon.max_hp // 2))
+    battle.modify_hp(mon, r=-0.5)
     return HandlerReturn(value=value)
 
 
 def ハロウィン_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ハロウィンの使用条件チェック: 相手がすでにゴーストタイプなら失敗する。"""
     if ctx.defender.has_type("ゴースト"):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "ハロウィン"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "ハロウィン"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1045,8 +1081,10 @@ def メロメロ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, 
 def もりののろい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """もりののろいの使用条件チェック: 相手がすでにくさタイプなら失敗する。"""
     if ctx.defender.has_type("くさ"):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "もりののろい"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "もりののろい"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1087,6 +1125,7 @@ def ロックカット_modify_attacker_stats(battle: Battle, ctx: AttackContext,
 
 
 def わたほうし_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : わたほうしは相手のSを2段階下げる。仕様書から見直す。
     """わたほうしの効果: 相手のすばやさを1段階下げる。粉技のためくさタイプ・ぼうじん無効。"""
     return modify_defender_stats(battle, ctx, value, stats={"S": -1})
 

@@ -7,10 +7,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
-    from jpoke.model import Pokemon
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName, \
-    AbilityDisabledReason
+from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn

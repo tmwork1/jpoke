@@ -94,16 +94,20 @@ class BaseFieldManager(Generic[T]):
         field.count = count
         for player in field.owners:
             field.register_handlers(self._events, player)
-        self.battle.add_event_log(0, LogCode.FIELD_STARTED,
-                                  payload={"field": field.name, "count": count})
+        self.battle.add_event_log(
+            0, LogCode.FIELD_STARTED,
+            payload={"field": field.name, "count": count}
+        )
         self._events.emit(Event.ON_FIELD_ACTIVATE, value=field)
 
     def _deactivate_field(self, field: Field):
         """解除イベントを発火してからフィールドを無効化する。"""
         field_name = field.data.name
         field.count = 0
-        self.battle.add_event_log(0, LogCode.FIELD_ENDED,
-                                  payload={"field": field_name})
+        self.battle.add_event_log(
+            0, LogCode.FIELD_ENDED,
+            payload={"field": field_name}
+        )
         self._events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
         for player in field.owners:
             field.unregister_handlers(self._events, player)

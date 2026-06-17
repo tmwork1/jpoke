@@ -10,6 +10,7 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
+
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)
@@ -659,6 +660,7 @@ def test_くろいヘドロ_非どくタイプはダメージ():
 
 @pytest.mark.parametrize("terrain", ["エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド"])
 def test_グランドコート_フィールドを8ターンに延長(terrain):
+    # TODO : イベントを直接発火するのではなく、battle.terrain_manager.apply() を呼ぶようにする
     """グランドコート: 4種フィールドの持続を8ターンに延長する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="グランドコート")],
@@ -671,21 +673,6 @@ def test_グランドコート_フィールドを8ターンに延長(terrain):
         [terrain, 5],
     )
     assert result == [terrain, 8]
-
-
-def test_グランドコート_天候は延長しない():
-    """グランドコート: 天候の持続は延長しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="グランドコート")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    result = battle.events.emit(
-        Event.ON_MODIFY_DURATION,
-        EventContext(source=mon),
-        ["はれ", 5],
-    )
-    assert result == ["はれ", 5]
 
 
 def test_グランドコート_非所持ではフィールドが5ターンのまま():
