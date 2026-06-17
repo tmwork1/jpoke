@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
-from jpoke.model import Pokemon, Move
+from jpoke.model import Pokemon
 from jpoke.utils.type_defs import Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
@@ -50,9 +50,7 @@ class StatusManager:
                   v: int = 0,
                   r: float = 0,
                   source: Pokemon | None = None,
-                  reason: HPChangeReason = "",
-                  move: Move | None = None) -> int:
-        # TODO : 使っていないmove引数を削除する
+                  reason: HPChangeReason = "") -> int:
         """ポケモンのHPを変更する。
 
         Args:
@@ -61,7 +59,6 @@ class StatusManager:
             r: 最大HPに対する割合（-1.0～1.0）。v と同時指定時は r が優先される
             reason: 変更の理由
             source: ダメージ源のポケモン
-            move: 使用された技
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）

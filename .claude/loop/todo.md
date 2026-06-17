@@ -87,7 +87,9 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 2. {config.test_files} に必要なテストを追加・修正する
 3. python scripts/sort_tests.py <変更したテストファイル> でソートする
 4. python scripts/generate_test_list.py でテスト一覧を更新する
-5. python -m pytest tests/ -v で全テストが通ることを確認する
+5. python -m pytest tests/ -v でテストを実行し、結果を docs/test/logs/<entry_slug>.log に保存する
+   （entry_slug は entry の先頭20文字をファイル名として使用する）
+   全テストが通ることを確認する
 {config.review_extra}
 ```
 

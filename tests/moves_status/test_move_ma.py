@@ -89,6 +89,20 @@ def test_メロメロ_異なる性別なら付与される():
     assert defender.has_volatile("メロメロ")
 
 
+def test_もりののろい_くさタイプが付与される():
+    """もりののろい: 使用後に defender が「くさ」タイプになること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["もりののろい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert not defender.has_type("くさ")
+    t.run_move(battle, 0)
+
+    assert defender.has_type("くさ")
+
+
 def test_もりののろい_すでにくさタイプなら失敗():
     """もりののろい: 相手がすでにくさタイプなら失敗する"""
     battle = t.start_battle(
@@ -114,3 +128,20 @@ def test_もりののろい_もりののろい状態を付与する():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("もりののろい")
+
+
+def test_もりののろい_交代後にくさタイプがリセットされる():
+    """もりののろい: 交代後に added_types がリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["もりののろい"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドラン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_type("くさ")
+
+    # 交代後はくさタイプが消えること
+    t.run_switch(battle, 1, 1)
+    assert not defender.has_type("くさ")
+    assert not defender.has_volatile("もりののろい")

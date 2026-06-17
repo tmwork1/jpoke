@@ -100,43 +100,21 @@ def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> Ha
     return HandlerReturn(value=[Command.FORCED], stop_event=True)
 
 
-def charge_hidden_move(battle: Battle,
-                       ctx: EventContext,
-                       value: Any,
-                       name: VolatileName) -> HandlerReturn:
-    """かくれる技の1ターン目のためる処理を行う。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在の判定値
-        name: 対象の揮発状態名
-
-    Returns:
-        HandlerReturn: 続行する場合はTrue、ためるターンで停止する場合はFalse
-    """
-    attacker = ctx.attacker
-    if ctx.move.name == name and not attacker.has_volatile("かくれる"):
-        battle.volatile_manager.apply(attacker, "かくれる", count=1, move=ctx.move)
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def can_hit_hidden_target(battle: Battle,
                           ctx: EventContext,
-                          value: Any) -> HandlerReturn:
+                          value: Any,
+                          volatile: VolatileName) -> HandlerReturn:
     """潜伏中の回避判定を行う。
 
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
         value: 現在の判定値
+        volatile: 対象の揮発状態名（技名と同一）
     Returns:
         HandlerReturn: 命中可ならTrue、回避するならFalse
     """
-    defender = ctx.defender
-    hidden_move = defender.volatiles["かくれる"].move_name
-    allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(hidden_move, [])
+    allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(volatile, [])
     if ctx.move.name not in allowed_moves:
         battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
         return HandlerReturn(value=False, stop_event=True)
@@ -999,25 +977,29 @@ def トーチカ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) 
     return remove_volatile(battle, ctx, value, volatile="トーチカ")
 
 
-def かくれる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return remove_volatile(battle, ctx, value, volatile="かくれる")
-
-
-def ハロウィン_add_ghost_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ハロウィン状態: タイプ相性計算時にゴーストタイプの被弾倍率を追加乗算する。"""
-    from jpoke.data import TYPE_MODIFIER
-    move_type = ctx.move.type
-    type_chart = TYPE_MODIFIER.get(move_type, {})
-    rate = type_chart.get("ゴースト", 1.0)
-    value = int(value * rate)
+def ハロウィン_add_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ハロウィン付与時: ゴーストタイプを added_types に追加する。"""
+    if "ゴースト" not in ctx.source.added_types:
+        ctx.source.added_types.append("ゴースト")
     return HandlerReturn(value=value)
 
 
-def もりののろい_add_grass_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """もりののろい状態: タイプ相性計算時にくさタイプの被弾倍率を追加乗算する。"""
-    from jpoke.data import TYPE_MODIFIER
-    move_type = ctx.move.type
-    type_chart = TYPE_MODIFIER.get(move_type, {})
-    rate = type_chart.get("くさ", 1.0)
-    value = int(value * rate)
+def ハロウィン_remove_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ハロウィン解除時: added_types からゴーストタイプを除去する。"""
+    if "ゴースト" in ctx.source.added_types:
+        ctx.source.added_types.remove("ゴースト")
+    return HandlerReturn(value=value)
+
+
+def もりののろい_add_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """もりののろい付与時: くさタイプを added_types に追加する。"""
+    if "くさ" not in ctx.source.added_types:
+        ctx.source.added_types.append("くさ")
+    return HandlerReturn(value=value)
+
+
+def もりののろい_remove_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """もりののろい解除時: added_types からくさタイプを除去する。"""
+    if "くさ" in ctx.source.added_types:
+        ctx.source.added_types.remove("くさ")
     return HandlerReturn(value=value)

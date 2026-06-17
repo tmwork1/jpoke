@@ -97,6 +97,7 @@ class Pokemon:
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
         self.stellar_boosted_types: set[Type] = set()
+        self.added_types: list[Type] = []
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
@@ -130,6 +131,7 @@ class Pokemon:
         self.last_lost_item_name = ""
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
+        self.added_types = []
 
         # 特性の状態をリセット
         # 特性が変わっている場合は特性自体をリセットする
@@ -238,17 +240,24 @@ class Pokemon:
             タイプのリスト
 
         Note:
-            テラスタル、タイプ追加/削除効果を考慮した現在のタイプを返す。
+            テラスタル、タイプ追加/削除効果、added_types を考慮した現在のタイプを返す。
+            added_types は ハロウィン・もりののろい などによって後付けされたタイプを保持する。
         """
         if self.active_tera_type:
             if self.active_tera_type == 'ステラ':
-                return self.data.types
+                base = self.data.types
             else:
-                return [self.active_tera_type]
+                base = [self.active_tera_type]
         elif self.ability_override_type is not None:
-            return [self.ability_override_type]
+            base = [self.ability_override_type]
         else:
-            return self.data.types
+            base = self.data.types
+
+        if not self.added_types:
+            return base
+        # 既にベースタイプに含まれているものは除外して追加する
+        extra = [t for t in self.added_types if t not in base]
+        return base + extra if extra else base
 
     def has_type(self, type_: Type) -> bool:
         """指定されたタイプを持っているか判定する。

@@ -362,6 +362,174 @@ def test_きあいだめ_すでにきゅうしょアップなら失敗():
     assert attacker.has_volatile("きゅうしょアップ")
 
 
+def test_キノコのほうし_使用者はねむり状態にならない():
+    """キノコのほうし: 使用者自身はねむり状態にならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
+def test_キノコのほうし_相手がねむり状態になる():
+    """キノコのほうし: 使用すると相手がねむり状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.ailment.name == "ねむり"
+
+
+def test_きりばらい_エレキフィールドが解除される():
+    """きりばらい: エレキフィールドが展開されている場合に使用するとフィールドが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.terrain.is_active
+
+
+def test_きりばらい_グラスフィールドが解除される():
+    """きりばらい: グラスフィールドが展開されている場合に使用するとフィールドが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("グラスフィールド", 5),
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.terrain.is_active
+
+
+def test_きりばらい_ステルスロックが両陣営から除去される():
+    """きりばらい: 両陣営にステルスロックが設置されていても両方除去される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"ステルスロック": 1},
+        side1={"ステルスロック": 1},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[0].fields["ステルスロック"].is_active
+    assert not battle.side_managers[1].fields["ステルスロック"].is_active
+
+
+def test_きりばらい_どくびしが両陣営から除去される():
+    """きりばらい: 両陣営にどくびしが設置されていても両方除去される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"どくびし": 1},
+        side1={"どくびし": 1},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[0].fields["どくびし"].is_active
+    assert not battle.side_managers[1].fields["どくびし"].is_active
+
+
+def test_きりばらい_ねばねばネットが両陣営から除去される():
+    """きりばらい: 両陣営にねばねばネットが設置されていても両方除去される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"ねばねばネット": 1},
+        side1={"ねばねばネット": 1},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[0].fields["ねばねばネット"].is_active
+    assert not battle.side_managers[1].fields["ねばねばネット"].is_active
+
+
+def test_きりばらい_まきびしが両陣営から除去される():
+    """きりばらい: 両陣営にまきびしが設置されていても両方除去される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"まきびし": 1},
+        side1={"まきびし": 1},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[0].fields["まきびし"].is_active
+    assert not battle.side_managers[1].fields["まきびし"].is_active
+
+
+def test_きりばらい_使用者側の壁は解除されない():
+    """きりばらい: 使用者側の壁系フィールドは解除されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"ひかりのかべ": 5},
+    )
+    t.run_move(battle, 0)
+
+    # 使用者側の壁は解除されない
+    assert battle.side_managers[0].fields["ひかりのかべ"].is_active
+
+
+def test_きりばらい_対象の回避率が1段階下がる():
+    """きりばらい: 使用すると対象の回避率ランクが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    assert defender.rank["EVA"] == 0
+    t.run_move(battle, 0)
+
+    assert defender.rank["EVA"] == -1
+
+
+def test_きりばらい_対象側のオーロラベールが解除される():
+    """きりばらい: 対象側のオーロラベールが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"オーロラベール": 5},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[1].fields["オーロラベール"].is_active
+
+
+def test_きりばらい_対象側のひかりのかべが解除される():
+    """きりばらい: 対象側のひかりのかべが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"ひかりのかべ": 5},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[1].fields["ひかりのかべ"].is_active
+
+
+def test_きりばらい_対象側のリフレクターが解除される():
+    """きりばらい: 対象側のリフレクターが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"リフレクター": 5},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[1].fields["リフレクター"].is_active
+
+
 def test_くすぐる_こうげきとぼうぎょ1段階ずつ下がる():
     """くすぐる: 相手のこうげきとぼうぎょランクが1段階ずつ下がる"""
     battle = t.start_battle(

@@ -281,13 +281,47 @@ def test_かえんのまもり_非接触ではやけどにならない():
 
 
 @pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
+def test_かくれる_1ターン目に揮発状態が付与される(hidden_move_name):
+    """技を使った1ターン目に対応する揮発状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile(hidden_move_name)
+
+
+@pytest.mark.parametrize("hidden_move_name,defender_name", [
+    ("あなをほる", "カビゴン"),
+    ("そらをとぶ", "カビゴン"),
+    ("ダイビング", "カビゴン"),
+    ("シャドーダイブ", "ドガース"),  # ノーマルタイプはゴースト無効なのでどくタイプを使用
+])
+def test_かくれる_2ターン目に技が発動して揮発状態が解除される(hidden_move_name, defender_name):
+    """2ターン目に技が発動し、揮発状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name])],
+        team1=[Pokemon(defender_name)],
+    )
+    attacker = battle.actives[0]
+    # 1ターン目: 揮発状態が付与される
+    t.run_move(battle, 0)
+    assert attacker.has_volatile(hidden_move_name)
+    # 2ターン目: 技が発動して揮発状態が解除される
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile(hidden_move_name)
+    assert battle.move_executor.move_success
+
+
+@pytest.mark.parametrize("hidden_move_name", ["あなをほる", "そらをとぶ", "ダイビング", "シャドーダイブ"])
 def test_かくれる_強制行動ターンはPPを消費しない(hidden_move_name):
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name])],
     )
     attacker = battle.actives[0]
-    battle.volatile_manager.apply(attacker, "かくれる", count=1, move_name=hidden_move_name)
+    battle.volatile_manager.apply(attacker, hidden_move_name, count=1)
     initial_pp = attacker.moves[0].pp
     battle.advance_turn()
     assert attacker.moves[0].pp == initial_pp
@@ -300,7 +334,7 @@ def test_かくれる_潜伏中はコマンドが固定される(hidden_move_nam
         team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name, "なきごえ"])],
     )
     mon = battle.actives[0]
-    battle.volatile_manager.apply(mon, "かくれる", count=1, move_name=hidden_move_name)
+    battle.volatile_manager.apply(mon, hidden_move_name, count=1)
     commands = battle.get_available_action_commands(battle.players[0])
     assert commands == [Command.FORCED]
 
@@ -311,7 +345,7 @@ def test_かくれる_潜伏中は交代できない(hidden_move_name):
         team0=[Pokemon("ピカチュウ", move_names=[hidden_move_name]), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ")],
     )
-    battle.volatile_manager.apply(battle.actives[0], "かくれる", count=1, move_name=hidden_move_name)
+    battle.volatile_manager.apply(battle.actives[0], hidden_move_name, count=1)
     assert not battle.can_switch(battle.players[0])
 
 
@@ -327,7 +361,7 @@ def test_かくれる_特定技は命中する(hidden_move_name, hit_move_name):
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
-    battle.volatile_manager.apply(defender, "かくれる", count=1, move_name=hidden_move_name)
+    battle.volatile_manager.apply(defender, hidden_move_name, count=1)
     t.run_move(battle, 0)
     assert battle.move_executor.move_success
 
@@ -340,7 +374,7 @@ def test_かくれる_通常技は回避する(hidden_move_name):
         team1=[Pokemon("ピカチュウ")],
     )
     attacker, defender = battle.actives
-    battle.volatile_manager.apply(defender, "かくれる", count=1, move_name=hidden_move_name)
+    battle.volatile_manager.apply(defender, hidden_move_name, count=1)
     t.run_move(battle, 0)
     assert not battle.move_executor.move_success
 

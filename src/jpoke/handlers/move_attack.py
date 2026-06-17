@@ -77,7 +77,7 @@ def きあいパンチ_check_move(battle: Battle, ctx: EventContext, value: Any)
 
 def どろぼう_steal_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """どろぼう・ほしがるのアイテム奪取効果。"""
-    battle.take_item(ctx.attacker, ctx.defender, move=ctx.move)
+    battle.take_item(ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -106,7 +106,7 @@ def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 def はたきおとす_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はたきおとすのアイテム除去効果。"""
-    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    battle.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -135,11 +135,13 @@ def いのちがけ_modify_damage(battle: Battle, ctx: EventContext, value: Any)
 
 
 def かみなり_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かみなりの天候による命中率補正。雨: 必中、晴れ: 50%"""
-    weather = battle.weather
-    if weather is not None and weather.rainy:
+    """かみなりの天候による命中率補正。雨: 必中、晴れ: 50%
+    攻撃側がばんのうがさを持つ場合、晴れでも命中率低下なし。
+    防御側がばんのうがさを持つ場合、雨でも必中にならない。
+    """
+    if battle.weather_for(ctx.defender).rainy:
         return HandlerReturn(value=None)  # 必中
-    elif weather is not None and weather.sunny:
+    elif battle.weather_for(ctx.attacker).sunny:
         return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
@@ -213,16 +215,18 @@ def ふぶき_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Handler
 
 def ふしょくガス_remove_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふしょくガスのアイテム除去効果。"""
-    battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+    battle.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
 def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ぼうふうの天候による命中率補正。雨: 必中、晴れ: 50%"""
-    weather = battle.weather
-    if weather is not None and weather.rainy:
+    """ぼうふうの天候による命中率補正。雨: 必中、晴れ: 50%
+    攻撃側がばんのうがさを持つ場合、晴れでも命中率低下なし。
+    防御側がばんのうがさを持つ場合、雨でも必中にならない。
+    """
+    if battle.weather_for(ctx.defender).rainy:
         return HandlerReturn(value=None)  # 必中
-    elif weather is not None and weather.sunny:
+    elif battle.weather_for(ctx.attacker).sunny:
         return HandlerReturn(value=50)
     return HandlerReturn(value=value)
 
@@ -230,7 +234,7 @@ def ぼうふう_accuracy(battle: Battle, ctx: EventContext, value: Any) -> Hand
 def やきつくす_remove_berry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """やきつくすのきのみ焼却効果。"""
     if ctx.defender.item.is_berry():
-        battle.remove_item(target=ctx.defender, source=ctx.attacker, move=ctx.move)
+        battle.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 

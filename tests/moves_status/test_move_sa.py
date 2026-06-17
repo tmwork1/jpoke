@@ -545,6 +545,51 @@ def test_すてゼリフ_通常発動でPIVOTが設定される():
     assert battle.player_states[player].interrupt == Interrupt.PIVOT
 
 
+def test_すりかえ_両者がアイテムを持っていないとき失敗():
+    """すりかえ: 両者ともアイテムを持っていない場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_item()
+    assert not defender.has_item()
+
+
+def test_すりかえ_両者のアイテムが入れ替わる():
+    """すりかえ: 使用者と相手のアイテムを入れ替える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "オボンのみ"
+    assert defender.item.name == "たべのこし"
+
+
+def test_すりかえ_使用者のみアイテムを持つとき入れ替わる():
+    """すりかえ: 使用者のみアイテムを持つ場合も入れ替えが成功する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_item()
+    assert defender.item.name == "たべのこし"
+
+
 def test_せいちょう_おおひでり時こうげきととくこう2段階上がる():
     """せいちょう: おおひでり中もこうげきととくこうランクが2段階ずつ上がる"""
     battle = t.start_battle(

@@ -56,7 +56,10 @@ def tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFie
 
 
 def はれ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """晴れ状態での技威力補正"""
+    """晴れ状態での技威力補正。防御側がばんのうがさを持つ場合は無効。"""
+    # 仕様: 晴れ/雨のダメージ補正は防御側の効果とみなされる
+    if battle.weather_for(ctx.defender).name == "":
+        return HandlerReturn(value=value)
     move_type = ctx.move.type
     if move_type == "ほのお":
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
@@ -73,7 +76,10 @@ def はれ_prevent_freeze(battle: Battle, ctx: EventContext, value: Any) -> Hand
 
 
 def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """雨状態での技威力補正"""
+    """雨状態での技威力補正。防御側がばんのうがさを持つ場合は無効。"""
+    # 仕様: 晴れ/雨のダメージ補正は防御側の効果とみなされる
+    if battle.weather_for(ctx.defender).name == "":
+        return HandlerReturn(value=value)
     move_type = ctx.move.type
     if move_type == "みず":
         value = apply_fixed_modifier(value, 6144)  # 1.5倍

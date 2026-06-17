@@ -256,6 +256,28 @@ class Battle:
         """有効な天候オブジェクトを返す。判定ロジックは WeatherManager に委譲する。"""
         return self.weather_manager.active
 
+    def weather_for(self, mon: Pokemon) -> Field:
+        """指定したポケモンに対して有効な天候を返す。
+
+        ばんのうがさを持つポケモンにはにほんばれ・あめの影響を受けないため、
+        天候が晴れ/雨系の場合は「なし」天候を返す。
+        エアロック・ノーてんきで天候が無効の場合も「なし」天候を返す。
+
+        Args:
+            mon: 対象のポケモン
+
+        Returns:
+            Field: 対象ポケモンに有効な天候
+        """
+        active = self.weather
+        if (
+            mon.item.enabled
+            and mon.item.name == "ばんのうがさ"
+            and active.name in {"はれ", "あめ", "おおひでり", "おおあめ"}
+        ):
+            return self.weather_manager.inactive
+        return active
+
     @property
     def raw_weather(self) -> Field:
         """現在セットされている天候を取得。
@@ -470,10 +492,9 @@ class Battle:
 
     def can_change_item(self,
                         target: Pokemon,
-                        source: Pokemon | None = None,
-                        move: Move | None = None) -> bool:
+                        source: Pokemon | None = None) -> bool:
         """アイテム変更可否を判定する（ItemManagerへの委譲）。"""
-        return self.item_manager.can_change_item(target, source=source, move=move)
+        return self.item_manager.can_change_item(target, source=source)
 
     def gain_item(self, target: Pokemon, item_name: str) -> bool:
         """ポケモンがアイテムを得る（ItemManagerへの委譲）。"""
@@ -481,24 +502,22 @@ class Battle:
 
     def remove_item(self,
                     target: Pokemon,
-                    source: Pokemon | None = None,
-                    move: Move | None = None) -> bool:
+                    source: Pokemon | None = None) -> bool:
         """ポケモンの道具を喪失状態にする（ItemManagerへの委譲）。"""
-        return self.item_manager.remove_item(target, source=source, move=move)
+        return self.item_manager.remove_item(target, source=source)
 
     def consume_item(self, mon: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
         return self.item_manager.remove_item(mon, source=mon)
 
-    def swap_items(self, move: Move | None = None) -> bool:
+    def swap_items(self) -> bool:
         """2体のアイテムを入れ替える（ItemManagerへの委譲）。"""
-        return self.item_manager.swap_items(move=move)
+        return self.item_manager.swap_items()
 
     def take_item(self,
-                  target: Pokemon,
-                  move: Move | None = None) -> bool:
+                  target: Pokemon) -> bool:
         """対象のアイテムを source に移す（ItemManagerへの委譲）。"""
-        return self.item_manager.take_item(target, move=move)
+        return self.item_manager.take_item(target)
 
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
@@ -517,10 +536,16 @@ class Battle:
                   v: int = 0,
                   r: float = 0,
                   source: Pokemon | None = None,
-                  move: Move | None = None,
                   reason: HPChangeReason = "") -> int:
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source, move=move)
+        return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source)
+
+    def faint(self,
+              target: Pokemon,
+              source: Pokemon | None = None,
+              reason: HPChangeReason = "") -> None:
+        """ポケモンをひんしにする（HPを0にする）。"""
+        self.modify_hp(target, v=-target.max_hp, source=source, reason=reason)
 
     def modify_stats(self,
                      target: Pokemon,

@@ -39,6 +39,20 @@ def test_うらみ_相手の技のPPが4減る():
     assert move.pp == pp_after_use - 4
 
 
+def test_ハロウィン_ゴーストタイプが付与される():
+    """ハロウィン: 使用後に defender が「ゴースト」タイプになること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハロウィン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert not defender.has_type("ゴースト")
+    t.run_move(battle, 0)
+
+    assert defender.has_type("ゴースト")
+
+
 def test_ハロウィン_すでにゴーストタイプなら失敗():
     """ハロウィン: 相手がすでにゴーストタイプなら失敗する"""
     battle = t.start_battle(
@@ -64,6 +78,23 @@ def test_ハロウィン_ハロウィン状態を付与する():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("ハロウィン")
+
+
+def test_ハロウィン_交代後にゴーストタイプがリセットされる():
+    """ハロウィン: 交代後に added_types がリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハロウィン"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドラン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_type("ゴースト")
+
+    # 交代後はゴーストタイプが消えること
+    t.run_switch(battle, 1, 1)
+    assert not defender.has_type("ゴースト")
+    assert not defender.has_volatile("ハロウィン")
 
 
 def test_やどりぎのタネ_すでにやどりぎ状態なら失敗():

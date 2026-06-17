@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from jpoke.utils import fast_copy
 from jpoke.utils.type_defs import ItemDisabledReason
 from jpoke.enums import Event, LogCode
-from jpoke.model import Pokemon, Move, Item
+from jpoke.model import Pokemon, Item
 
 from .context import EventContext
 
@@ -82,15 +82,12 @@ class ItemManager:
 
     def can_change_item(self,
                         target: Pokemon,
-                        source: Pokemon | None = None,
-                        move: Move | None = None) -> bool:
-        # TODO : 使われていないmove引数を削除する
+                        source: Pokemon | None = None) -> bool:
         """アイテム変更が許可されるかを共通イベントで判定する。
 
         Args:
             target: アイテムを変更するポケモン
             source: 変更の発生源となるポケモン
-            move: 関連する技
 
         Returns:
             変更可能な場合はTrue
@@ -157,14 +154,12 @@ class ItemManager:
 
     def remove_item(self,
                     target: Pokemon,
-                    source: Pokemon | None = None,
-                    move: Move | None = None) -> bool:
+                    source: Pokemon | None = None) -> bool:
         """対象のアイテムを失わせる。
 
         Args:
             target: アイテムを失うポケモン
             source: 変更の発生源となるポケモン
-            move: 関連する技
 
         Returns:
             取り外しに成功した場合はTrue
@@ -174,19 +169,14 @@ class ItemManager:
             return False
 
         # アイテムの変更が禁止されている場合は失敗
-        if not self.can_change_item(target, source=source, move=move):
+        if not self.can_change_item(target, source=source):
             return False
 
         self._change_item(target, "")
         return True
 
-    def swap_items(self, move: Move | None = None) -> bool:
+    def swap_items(self) -> bool:
         """2体のアイテムを入れ替える。
-
-        Args:
-            target: 入れ替え元のポケモン
-            source: 入れ替え先のポケモン
-            move: 関連する技
 
         Returns:
             入れ替えに成功した場合はTrue
@@ -200,7 +190,7 @@ class ItemManager:
 
         # アイテムの変更が禁止されている場合は失敗
         if not all(
-            self.can_change_item(target=mon, move=move) for mon in mons
+            self.can_change_item(target=mon) for mon in mons
         ):
             return False
 
@@ -210,13 +200,11 @@ class ItemManager:
         return True
 
     def take_item(self,
-                  target: Pokemon,
-                  move: Move | None = None) -> bool:
+                  target: Pokemon) -> bool:
         """対象のアイテムを奪う。
 
         Args:
             target: アイテムを奪われるポケモン
-            move: 関連する技
 
         Returns:
             奪取に成功した場合はTrue
@@ -229,4 +217,4 @@ class ItemManager:
             or source.has_item()
         ):
             return False
-        return self.swap_items(move=move)
+        return self.swap_items()

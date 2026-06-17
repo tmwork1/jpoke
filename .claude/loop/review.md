@@ -82,7 +82,9 @@ jpoke {config.category} 再レビュータスク: {entry}
    {config.test_files} のテストを実装と照合する。
    誤り・欠落があれば修正・追加する。
    python scripts/sort_tests.py {config.test_files をスペース区切り} でソート後、
-   python -m pytest tests/ -v で全テストが通ることを確認する。
+   python -m pytest tests/ -v でテストを実行し、結果を docs/test/logs/<entry_slug>.log に保存する
+   （entry_slug は entry の先頭20文字をファイル名として使用する）
+   全テストが通ることを確認する。
 
 6. 結果を記録する
    成功: `.loop/review_results/{entry}.ok` を Write で作成（内容は空でよい）

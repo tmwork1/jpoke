@@ -33,6 +33,28 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "あなをほる": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.check_trapped_not_ghost,
+                subject_spec="source:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "あなをほる"),
+                subject_spec="defender:self",
+                priority=50,
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                lambda b, c, v: h.remove_volatile(b, c, v, volatile="あなをほる"),
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "あばれる": VolatileData(
         forced=True,
         handlers={
@@ -213,6 +235,28 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "シャドーダイブ": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.check_trapped_not_ghost,
+                subject_spec="source:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "シャドーダイブ"),
+                subject_spec="defender:self",
+                priority=50,
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                lambda b, c, v: h.remove_volatile(b, c, v, volatile="シャドーダイブ"),
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "しおづけ": VolatileData(
         handlers={
             Event.ON_TURN_END: h.VolatileHandler(
@@ -247,6 +291,28 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "そらをとぶ": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.check_trapped_not_ghost,
+                subject_spec="source:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "そらをとぶ"),
+                subject_spec="defender:self",
+                priority=50,
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                lambda b, c, v: h.remove_volatile(b, c, v, volatile="そらをとぶ"),
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "たくわえる": VolatileData(
         # Volatileではカウントの管理のみ行い、実際の効果は技のハンドラ側で処理
         handlers={}
@@ -256,6 +322,28 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
                 h.タールショット_boost_fire,
                 subject_spec="defender:self",
+            ),
+        }
+    ),
+    "ダイビング": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
+                h.check_trapped_not_ghost,
+                subject_spec="source:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "ダイビング"),
+                subject_spec="defender:self",
+                priority=50,
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                lambda b, c, v: h.remove_volatile(b, c, v, volatile="ダイビング"),
+                subject_spec="attacker:self",
             ),
         }
     ),
@@ -546,44 +634,27 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
-    "かくれる": VolatileData(
-        # TODO : そらをとぶ, あなをほる, ダイビング, シャドーダイブ, シャドーダイブに分けて定義する
-        forced=True,
-        handlers={
-            Event.ON_CHECK_TRAPPED: h.VolatileHandler(
-                h.check_trapped_not_ghost,
-                subject_spec="source:self",
-            ),
-            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
-                h.force_command,
-                subject_spec="source:self",
-            ),
-            Event.ON_TRY_MOVE_1: h.VolatileHandler(
-                h.can_hit_hidden_target,
-                subject_spec="defender:self",
-                priority=50
-            ),
-            Event.ON_HIT: h.VolatileHandler(
-                h.かくれる_remove_volatile,
-                subject_spec="attacker:self",
-            ),
-        }
-    ),
     "ハロウィン": VolatileData(
-        # TODO : タイプ付与系は影響範囲が広いため、揮発状態ではなくPokemonの状態として実装すべき。
         handlers={
-            Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
-                h.ハロウィン_add_ghost_type,
-                subject_spec="defender:self",
+            Event.ON_VOLATILE_START: h.VolatileHandler(
+                h.ハロウィン_add_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.ハロウィン_remove_type,
+                subject_spec="source:self",
             ),
         }
     ),
     "もりののろい": VolatileData(
-        # TODO : タイプ付与系は影響範囲が広いため、揮発状態ではなくPokemonの状態として実装すべき。
         handlers={
-            Event.ON_CALC_DEF_TYPE_MODIFIER: h.VolatileHandler(
-                h.もりののろい_add_grass_type,
-                subject_spec="defender:self",
+            Event.ON_VOLATILE_START: h.VolatileHandler(
+                h.もりののろい_add_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.もりののろい_remove_type,
+                subject_spec="source:self",
             ),
         }
     ),

@@ -431,11 +431,13 @@ def あまのじゃく_reverse_stat(battle: Battle, ctx: EventContext, value: di
 
 
 def あめうけざら_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """あめうけざら特性: あめ/おおあめ中にターン終了時に最大HPの1/16を回復する。"""
-    if not battle.weather.rainy:
+    """あめうけざら特性: あめ/おおあめ中にターン終了時に最大HPの1/16を回復する。
+    ばんのうがさを持つ場合は雨の恩恵を受けない。
+    """
+    mon = ctx.source
+    if not battle.weather_for(mon).rainy:
         return HandlerReturn(value=value)
 
-    mon = ctx.source
     if battle.modify_hp(mon, r=1/16):
         _announce_ability_triggered(battle, mon)
 
@@ -563,7 +565,10 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
     form = mon.name
     if (
         form not in (CRAMORANT_GULPING, CRAMORANT_GORGING)
-        or mon.has_volatile("かくれる")
+        or mon.has_volatile("そらをとぶ")
+        or mon.has_volatile("あなをほる")
+        or mon.has_volatile("ダイビング")
+        or mon.has_volatile("シャドーダイブ")
         or ctx.attacker.fainted
     ):
         return HandlerReturn(value=value)
@@ -598,10 +603,12 @@ def うるおいボイス_modify_move_type(battle: Battle, ctx: AttackContext, v
 
 
 def うるおいボディ_cure_ailment_in_rain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """うるおいボディ特性: あめ/おおあめ中にターン終了時に状態異常を回復する。"""
-    if not battle.weather.rainy:
-        return HandlerReturn(value=value)
+    """うるおいボディ特性: あめ/おおあめ中にターン終了時に状態異常を回復する。
+    ばんのうがさを持つ場合は雨の恩恵を受けない。
+    """
     mon = ctx.source
+    if not battle.weather_for(mon).rainy:
+        return HandlerReturn(value=value)
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
     result = HandlerReturn(value=battle.ailment_manager.remove(mon))
@@ -941,19 +948,22 @@ def かんそうはだ_modify_fire_damage(battle: Battle, ctx: AttackContext, va
 
 
 def かんそうはだ_change_hp_by_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かんそうはだ特性: 天候に応じてターン終了時にHP変化を受ける。"""
+    """かんそうはだ特性: 天候に応じてターン終了時にHP変化を受ける。
+    ばんのうがさを持つ場合は晴れダメージ・雨回復を受けない。
+    """
     mon = ctx.source
+    weather = battle.weather_for(mon)
 
     # あめ中は最大HPの1/8回復
     if (
-        battle.weather.rainy
+        weather.rainy
         and battle.modify_hp(mon, r=1/8)
     ):
         _announce_ability_triggered(battle, mon)
 
     # にほんばれ中は最大HPの1/8ダメージ
     if (
-        battle.weather.sunny
+        weather.sunny
         and battle.modify_hp(mon, r=-1/8)
     ):
         _announce_ability_triggered(battle, mon)
@@ -1235,9 +1245,11 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
 
 
 def サンパワー_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """サンパワー特性: にほんばれ/おおひでり中に特殊技の特攻補正を1.5倍にする。"""
+    """サンパワー特性: にほんばれ/おおひでり中に特殊技の特攻補正を1.5倍にする。
+    ばんのうがさを持つ場合は晴れの恩恵を受けない。
+    """
     if (
-        battle.weather.sunny
+        battle.weather_for(ctx.attacker).sunny
         and ctx.move.category == "特殊"
     ):
         value = apply_fixed_modifier(value, 6144)
@@ -1245,9 +1257,11 @@ def サンパワー_modify_atk(battle: Battle, ctx: AttackContext, value: int) -
 
 
 def サンパワー_take_sun_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """サンパワー特性: にほんばれ/おおひでり中にターン終了時に最大HPの1/8ダメージを受ける。"""
+    """サンパワー特性: にほんばれ/おおひでり中にターン終了時に最大HPの1/8ダメージを受ける。
+    ばんのうがさを持つ場合は晴れのダメージを受けない。
+    """
     mon = ctx.source
-    if not battle.weather.sunny:
+    if not battle.weather_for(mon).sunny:
         return HandlerReturn(value=value)
     result = battle.modify_hp(mon, r=-1/8)
     if result:
@@ -1341,8 +1355,8 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
     ):
         return HandlerReturn(value=value)
 
-    # 発動確率の計算
-    chance = 1.0 if battle.weather.sunny else 0.5
+    # 発動確率の計算（ばんのうがさを持つ場合は晴れの恩恵を受けない）
+    chance = 1.0 if battle.weather_for(mon).sunny else 0.5
 
     if battle.random.random() >= chance:
         return HandlerReturn(value=value)
@@ -1431,8 +1445,8 @@ def シンプル_modify_stat_delta(battle: Battle, ctx: EventContext, value: dic
 
 
 def すいすい_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """すいすい特性: あめ中に素早さが2倍になる。"""
-    if battle.weather.rainy:
+    """すいすい特性: あめ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
+    if battle.weather_for(ctx.source).rainy:
         value *= 2
     return HandlerReturn(value=value)
 
@@ -2401,9 +2415,9 @@ def ひひいろのこどう_activate_weather(battle: Battle, ctx: EventContext,
 
 
 def ひひいろのこどう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ひひいろのこどう特性: はれ中の攻撃補正を1.33倍にする。"""
+    """ひひいろのこどう特性: はれ中の攻撃補正を1.33倍にする。ばんのうがさを持つ場合は無効。"""
     if (
-        battle.weather.sunny
+        battle.weather_for(ctx.attacker).sunny
         and ctx.move.category == "物理"
     ):
         value = apply_fixed_modifier(value, 5461)
@@ -2581,8 +2595,19 @@ def ふゆう_float(battle: Battle, ctx: EventContext, value: bool) -> HandlerRe
 
 
 def フラワーギフト_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """フラワーギフト特性: はれ中にこうげき/とくぼうが1.5倍になる。"""
-    if battle.weather.sunny:
+    """フラワーギフト特性（攻撃側）: はれ中にこうげきが1.5倍になる。
+    フラワーギフト持ちポケモン（attacker）自身がばんのうがさを持つ場合は無効。
+    """
+    if battle.weather_for(ctx.attacker).sunny:
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def フラワーギフト_modify_def(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """フラワーギフト特性（防御側）: はれ中にとくぼうが1.5倍になる。
+    フラワーギフト持ちポケモン（defender）自身がばんのうがさを持つ場合は無効。
+    """
+    if battle.weather_for(ctx.defender).sunny:
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -2776,7 +2801,7 @@ def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value
 
 def マジシャン_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジシャン特性: 攻撃成功後に相手のアイテムを奪う。"""
-    battle.take_item(ctx.defender, move=ctx.move)
+    battle.take_item(ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -3074,8 +3099,8 @@ def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: A
 
 
 def ようりょくそ_boost_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ようりょくそ特性: はれ中に素早さが2倍になる。"""
-    if battle.weather.sunny:
+    """ようりょくそ特性: はれ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
+    if battle.weather_for(ctx.source).sunny:
         value *= 2
     return HandlerReturn(value=value)
 
@@ -3124,8 +3149,8 @@ def よわき_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> Hand
 
 
 def リーフガード_prevent_ailment(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
-    """リーフガード特性: にほんばれ/おおひでり中に状態異常付与を防ぐ。"""
-    if battle.weather.sunny:
+    """リーフガード特性: にほんばれ/おおひでり中に状態異常付与を防ぐ。ばんのうがさを持つ場合は無効。"""
+    if battle.weather_for(ctx.target).sunny:
         _announce_ability_triggered(battle, ctx.target)
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
@@ -3238,7 +3263,7 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any
         battle.query.is_contact(ctx)
         and not ctx.defender.fainted
     ):
-        battle.take_item(ctx.attacker, move=ctx.move)
+        battle.take_item(ctx.attacker)
     return HandlerReturn(value=value)
 
 # 天候展開系

@@ -2551,7 +2551,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
-                h.フラワーギフト_modify_atk,
+                h.フラワーギフト_modify_def,
                 subject_spec="defender:self",
             ),
         }

@@ -769,6 +769,7 @@ def test_技カテゴリによる威力補正_param(ability_name: str, move_name
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
     t.run_move(battle, 0)
     assert expected_power == battle.damage_calculator.power_modifier
@@ -945,6 +946,7 @@ def test_音ラベル無効系_param(defender_ability: str, attacker_ability: st
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name=attacker_ability, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ", ability_name=defender_ability)],
+        accuracy=100,
     )
     # attacker is index 0 or 1 depending on order
     # attacker chosen is battle.actives[0] when team0 provided

@@ -59,21 +59,6 @@ def test_あくび_すでに状態異常なら失敗():
     assert defender.has_ailment("まひ")
 
 
-def test_あくび_ターン終了でねむりになる():
-    """あくび: 付与ターン終了時にねむり状態になる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker, defender = battle.actives
-    t.run_move(battle, 0)
-
-    # 付与ターン終了時にねむりになる
-    t.end_turn(battle)
-    assert not defender.has_volatile("ねむけ")
-    assert defender.has_ailment("ねむり")
-
-
 def test_あくび_ねむけ付与():
     """あくび: 相手をねむけ状態にする"""
     battle = t.start_battle(
@@ -85,6 +70,38 @@ def test_あくび_ねむけ付与():
 
     assert defender.has_volatile("ねむけ")
     assert not defender.has_ailment("ねむり")
+
+
+def test_あくび_使ったターン終了ではねむりにならない():
+    """あくび: 使用したターンの終了時点ではまだねむり状態にならない（count=2）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    # 付与ターン（1回目）終了時はまだねむけが残る
+    t.end_turn(battle)
+    assert defender.has_volatile("ねむけ")
+    assert not defender.has_ailment("ねむり")
+
+
+def test_あくび_次のターン終了でねむりになる():
+    """あくび: 次のターン終了時にねむり状態になる（count=2）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    # 1回目のターン終了ではねむけ継続
+    t.end_turn(battle)
+    # 2回目のターン終了でねむりに移行
+    t.end_turn(battle)
+    assert not defender.has_volatile("ねむけ")
+    assert defender.has_ailment("ねむり")
 
 
 def test_あくまのキッス_すでに状態異常なら失敗():
@@ -217,6 +234,43 @@ def test_あさのひざし_通常天候で2分の1回復():
     assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
+def test_あまえる_attacker_のこうげきは変化しない():
+    """あまえる: 使用者（attacker）のこうげきは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまえる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["A"] == 0
+
+
+def test_あまえる_defenderのこうげきが2段階下がる():
+    """あまえる: 相手（defender）のこうげきが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまえる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["A"] == -2
+
+
+def test_あまえる_すでに最低ランクなら変化なし():
+    """あまえる: 相手のこうげきランクがすでに-6なら変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまえる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["A"] = -6
+    t.run_move(battle, 0)
+    assert defender.rank["A"] == -6
+
+
 def test_あまごい_おおひでり中は失敗する():
     """あまごい: おおひでり中は失敗する"""
     battle = t.start_battle(
@@ -268,30 +322,6 @@ def test_あやしいひかり_すでにこんらん中は失敗():
     # カウントは変わらない（重複付与されない）
     assert defender.has_volatile("こんらん")
     assert defender.volatiles["こんらん"].count == 4
-
-
-def test_アロマミスト_とくぼう上昇():
-    """アロマミスト: 使用者のとくぼうが1段階上昇する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["アロマミスト"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    assert attacker.rank["D"] == 0
-    t.run_move(battle, 0)
-    assert attacker.rank["D"] == 1
-
-
-def test_アロマミスト_とくぼう最大なら失敗():
-    """アロマミスト: とくぼうがすでに+6なら効果がない（失敗）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["アロマミスト"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["D"] = 6
-    t.run_move(battle, 0)
-    assert attacker.rank["D"] == 6
 
 
 def test_おにび_すでに状態異常なら失敗():

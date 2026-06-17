@@ -1334,6 +1334,106 @@ def test_ノーマルジュエル_ノーマル技威力1_5倍():
     assert not mon.has_item()
 
 
+def test_ばんのうがさ_あさのひざしが晴れでも半分回復():
+    """ばんのうがさ使用者: 晴れ状態でもあさのひざしの回復量が最大HPの1/2になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["あさのひざし"], item_name="ばんのうがさ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    max_hp = mon.max_hp
+    # HPを1にして回復量を確認する
+    mon.hp = 1
+    t.run_move(battle, 0)
+    # 晴れなら2/3回復 (int(max_hp * 2/3)) のはずだが、
+    # ばんのうがさで1/2回復 (int(max_hp * 1/2)) になる
+    expected_hp = 1 + int(max_hp * 0.5)
+    assert mon.hp == expected_hp
+
+
+def test_ばんのうがさ_すいすいが発動しない():
+    """ばんのうがさ使用者: 雨状態でもすいすいによる素早さ上昇が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すいすい", item_name="ばんのうがさ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 99),
+    )
+    mon = battle.actives[0]
+    # ばんのうがさがあるので素早さは2倍にならない
+    assert battle.calc_effective_speed(mon) == mon.stats["S"]
+
+
+def test_ばんのうがさ_晴れのほのお技強化が無効():
+    """ばんのうがさ防御側: 晴れでほのお技の1.5倍補正を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        weather=("はれ", 99),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # 天候補正なし (4096 = 等倍)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ばんのうがさ_晴れのみず技弱化が無効():
+    """ばんのうがさ防御側: 晴れでみず技の0.5倍補正を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        weather=("はれ", 99),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # 天候補正なし (4096 = 等倍)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ばんのうがさ_雨でかみなりが必中にならない():
+    """ばんのうがさ防御側: 雨状態でもかみなりが必中にならない"""
+    # test_option.accuracy を設定すると命中率判定がスキップされるため、ここでは使用しない
+    # 代わりに weather_for の返り値を直接検証する
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かみなり"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("あめ", 99),
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # ばんのうがさを持つ防御側に対する雨天候は「なし」として扱われる
+    assert not battle.weather_for(defender).rainy
+    # 攻撃側は雨天候の恩恵を受ける（必中になるはず、ばんのうがさなし）
+    assert battle.weather.rainy
+
+
+def test_ばんのうがさ_雨のほのお技弱化が無効():
+    """ばんのうがさ防御側: 雨でほのお技の0.5倍補正を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        weather=("あめ", 99),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # 天候補正なし (4096 = 等倍)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ばんのうがさ_雨のみず技強化が無効():
+    """ばんのうがさ防御側: 雨でみず技の1.5倍補正を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        weather=("あめ", 99),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # 天候補正なし (4096 = 等倍)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_パワフルハーブ_溜め技をスキップ():
     """パワフルハーブ: 溜め技の溜めターンをスキップして即発動"""
     battle = t.start_battle(

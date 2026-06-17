@@ -104,3 +104,25 @@ def apply_volatile_to_defender(battle: Battle,
     return HandlerReturn(value=battle.volatile_manager.apply(
         ctx.defender, volatile, count=count, source=ctx.attacker, ctx=ctx, **kwargs
     ))
+
+
+def charge_into_volatile(battle: Battle,
+                         ctx: EventContext,
+                         value: Any,
+                         volatile: VolatileName) -> HandlerReturn:
+    """半透明技の1ターン目：揮発状態を付与して技を停止する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 現在のイベント値
+        volatile: 付与する揮発状態名（技名と同一）
+
+    Returns:
+        HandlerReturn: ためターンなら False/stop_event=True、2ターン目なら value をそのまま返す
+    """
+    attacker = ctx.attacker
+    if not attacker.has_volatile(volatile):
+        battle.volatile_manager.apply(attacker, volatile, count=1, source=attacker, ctx=ctx)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)

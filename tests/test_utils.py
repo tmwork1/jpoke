@@ -190,8 +190,7 @@ def can_switch(battle: Battle, player_idx: int) -> bool:
 def change_item(battle: Battle,
                 mon: Pokemon,
                 item_name: str,
-                source: Pokemon | None = None,
-                move: Move | None = None) -> bool:
+                source: Pokemon | None = None) -> bool:
     """アイテムを変更する。
 
     Args:
@@ -199,7 +198,6 @@ def change_item(battle: Battle,
         mon: アイテムを変更するポケモン
         item_name: 変更後のアイテム名（空文字列の場合はアイテムを外す）
         source: アイテムを変更する原因となったポケモン（例: 交換元のポケモン、技の使用者など）
-        move: アイテムを変更する原因となった技（例: 交換元の技、使用した技など）
 
     Returns:
         アイテムの変更が成功したかどうか
@@ -211,9 +209,9 @@ def change_item(battle: Battle,
         return battle.gain_item(mon, item_name)
 
     if not item_name:
-        return battle.remove_item(mon, source=source, move=move)
+        return battle.remove_item(mon, source=source)
 
-    if not battle.can_change_item(mon, source=source, move=move):
+    if not battle.can_change_item(mon, source=source):
         return False
 
     battle.item_manager._change_item(mon, item_name)

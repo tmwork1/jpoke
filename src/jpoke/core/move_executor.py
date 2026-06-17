@@ -393,7 +393,7 @@ class MoveExecutor:
         damage = self._events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
         actual_damage = -self.battle.modify_hp(
-            ctx.defender, -damage, source=ctx.attacker, move=ctx.move, reason="move_damage"
+            ctx.defender, -damage, source=ctx.attacker, reason="move_damage"
         )
 
         self._events.emit(Event.ON_HIT, ctx, actual_damage)
