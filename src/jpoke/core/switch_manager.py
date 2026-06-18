@@ -85,13 +85,26 @@ class SwitchManager:
         # 割り込みフラグを破棄
         state.interrupt = Interrupt.NONE
 
-        # 退場
+        # 退場前にみがわり継承HPを確保（しっぽきり用）
+        migawari_hp: int | None = None
         old = state.active
+        if (
+            state.inherit_migawari
+            and old is not None
+            and old.has_volatile("みがわり")
+        ):
+            migawari_hp = old.volatiles["みがわり"].hp
+        state.inherit_migawari = False
+
         if old is not None:
             self._switch_out(old)
 
         # 入場
         self._switch_in(state, new)
+
+        # みがわりを交代先に引き継ぐ
+        if migawari_hp is not None:
+            self.battle.volatile_manager.apply(new, "みがわり", hp=migawari_hp)
 
         # ポケモンが場に出た時の処理
         if process_events_after_switch:

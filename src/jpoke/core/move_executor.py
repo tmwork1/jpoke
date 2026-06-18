@@ -222,6 +222,8 @@ class MoveExecutor:
         """
         if ctx.move.target != "foe":
             return False
+        if ctx.move.has_label("bypass_substitute"):
+            return False
         return self._events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
 
     def run_move(self, attacker: Pokemon, move: Move):

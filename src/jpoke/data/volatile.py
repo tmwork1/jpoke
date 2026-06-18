@@ -4,7 +4,6 @@ Note:
     このモジュール内の揮発状態定義はVOLATILES辞書内で五十音順に配置されています。
 """
 from jpoke.enums import Event
-from jpoke.core import HandlerReturn
 from jpoke.handlers import volatile as h
 from .models import VolatileData
 
@@ -21,9 +20,6 @@ def common_setup() -> None:
     for name, data in VOLATILES.items():
         data.name = name
 
-# TODO : lambdaで定義しているハンドラは、名前付き関数に置き換える
-
-
 VOLATILES: dict[str, VolatileData] = {
     "": VolatileData(),
     "アクアリング": VolatileData(
@@ -38,7 +34,6 @@ VOLATILES: dict[str, VolatileData] = {
     "あなをほる": VolatileData(
         forced=True,
         handlers={
-            # TODO : あなをほる状態ではそもそも交代コマンドを選択できないため交代判定は不要。ほかの隠れる系状態も同様。
             Event.ON_CHECK_TRAPPED: h.VolatileHandler(
                 h.check_trapped_not_ghost,
                 subject_spec="source:self",
@@ -48,12 +43,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(
-                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "あなをほる"),
+                h.あなをほる_can_hit_hidden_target,
                 subject_spec="defender:self",
                 priority=50,
             ),
             Event.ON_HIT: h.VolatileHandler(
-                lambda b, c, v: h.remove_volatile(b, c, v, volatile="あなをほる"),
+                h.あなをほる_remove_volatile,
                 subject_spec="attacker:self",
             ),
         }
@@ -250,12 +245,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(
-                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "シャドーダイブ"),
+                h.シャドーダイブ_can_hit_hidden_target,
                 subject_spec="defender:self",
                 priority=50,
             ),
             Event.ON_HIT: h.VolatileHandler(
-                lambda b, c, v: h.remove_volatile(b, c, v, volatile="シャドーダイブ"),
+                h.シャドーダイブ_remove_volatile,
                 subject_spec="attacker:self",
             ),
         }
@@ -294,6 +289,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "そうでん": VolatileData(
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.VolatileHandler(
+                h.そうでん_move_type,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.そうでん_turn_end,
+                subject_spec="source:self",
+                priority=110,
+            ),
+        }
+    ),
     "そらをとぶ": VolatileData(
         forced=True,
         handlers={
@@ -306,12 +314,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(
-                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "そらをとぶ"),
+                h.そらをとぶ_can_hit_hidden_target,
                 subject_spec="defender:self",
                 priority=50,
             ),
             Event.ON_HIT: h.VolatileHandler(
-                lambda b, c, v: h.remove_volatile(b, c, v, volatile="そらをとぶ"),
+                h.そらをとぶ_remove_volatile,
                 subject_spec="attacker:self",
             ),
         }
@@ -340,12 +348,12 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(
-                lambda b, c, v: h.can_hit_hidden_target(b, c, v, "ダイビング"),
+                h.ダイビング_can_hit_hidden_target,
                 subject_spec="defender:self",
                 priority=50,
             ),
             Event.ON_HIT: h.VolatileHandler(
-                lambda b, c, v: h.remove_volatile(b, c, v, volatile="ダイビング"),
+                h.ダイビング_remove_volatile,
                 subject_spec="attacker:self",
             ),
         }
@@ -379,7 +387,7 @@ VOLATILES: dict[str, VolatileData] = {
     "でんじふゆう": VolatileData(
         handlers={
             Event.ON_CHECK_FLOATING: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=True),
+                h.でんじふゆう_check_floating,
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.VolatileHandler(
@@ -434,7 +442,7 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
             ),
             Event.ON_CHECK_FLOATING: h.VolatileHandler(
-                lambda *args: HandlerReturn(value=False, stop_event=True),
+                h.ねをはる_check_floating,
                 subject_spec="source:self",
             ),
         }
@@ -633,6 +641,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
             Event.ON_TURN_END: h.VolatileHandler(
                 h.トーチカ_remove_volatile,
+                subject_spec="source:self",
+            ),
+        }
+    ),
+    "ニードルガード": VolatileData(
+        handlers={
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                h.ニードルガード_protect,
+                subject_spec="defender:self",
+                priority=100,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.ニードルガード_remove_volatile,
                 subject_spec="source:self",
             ),
         }

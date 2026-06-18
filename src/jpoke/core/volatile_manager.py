@@ -147,6 +147,16 @@ class VolatileManager:
         for volatile_name in list(target.volatiles.keys()):
             self.remove(target, volatile_name)
 
+    def apply_confusion(self,
+                        target: Pokemon | None,
+                        source: Pokemon | None = None,
+                        ctx: BaseContext | None = None) -> bool:
+        """こんらん状態を2〜5ターンのランダム期間で付与する。"""
+        if target is None:
+            return False
+        count = self.battle.random.randint(2, 5)
+        return self.apply(target, "こんらん", count=count, source=source, ctx=ctx)
+
     def tick(self, target: Pokemon, volatile_name: VolatileName) -> bool:
         """揮発性状態のターン経過処理を行う。
 

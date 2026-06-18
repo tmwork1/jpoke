@@ -467,6 +467,144 @@ def test_じばそうさ_マイナス特性ならぼうぎょとくぼう1段階
     assert attacker.rank["D"] == 1
 
 
+def test_スキルスワップ_かたやぶり使用者でもprotected特性が相手にあれば失敗():
+    """スキルスワップ: かたやぶりを持っていても対象の特性がprotectedなら失敗する"""
+    from jpoke.enums import LogCode
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="かたやぶり")],
+        team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は入れ替わらない
+    assert attacker.ability.name == "かたやぶり"
+    assert defender.ability.name == "アイスフェイス"
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "スキルスワップ"
+        for log in logs
+    )
+
+
+def test_スキルスワップ_交代後に元の特性に戻る():
+    """スキルスワップ: 特性を入れ替えられたポケモンが交代すると元の特性に戻る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="せいでんき")],
+        team1=[
+            Pokemon("カビゴン", ability_name="めんえき"),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        accuracy=100,
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender_before.ability.name == "せいでんき"
+
+    # 交代で元の特性に戻ることを確認
+    t.run_switch(battle, 1, 1)
+    assert defender_before.ability.name == "めんえき"
+
+
+def test_スキルスワップ_使用者の特性がprotectedなら失敗():
+    """スキルスワップ: 使用者自身の特性がprotectedフラグを持つ場合は失敗する"""
+    from jpoke.enums import LogCode
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="アイスフェイス")],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は入れ替わらない
+    assert attacker.ability.name == "アイスフェイス"
+    assert defender.ability.name == "めんえき"
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "スキルスワップ"
+        for log in logs
+    )
+
+
+def test_スキルスワップ_同一特性どうしのスワップも成功する():
+    """スキルスワップ: 第九世代では同一特性どうしのスワップも成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", ability_name="せいでんき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 両者とも同じ特性のまま（入れ替えは成功している）
+    assert attacker.ability.name == "せいでんき"
+    assert defender.ability.name == "せいでんき"
+
+
+def test_スキルスワップ_対象がみがわり状態でも成功する():
+    """スキルスワップ: 対象がみがわり状態であっても特性の入れ替えは成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "めんえき"
+    assert defender.ability.name == "せいでんき"
+
+
+def test_スキルスワップ_対象の特性がprotectedなら失敗():
+    """スキルスワップ: 対象の特性がprotectedフラグを持つ場合は失敗する"""
+    from jpoke.enums import LogCode
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は入れ替わらない
+    assert attacker.ability.name == "せいでんき"
+    assert defender.ability.name == "アイスフェイス"
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "スキルスワップ"
+        for log in logs
+    )
+
+
+def test_スキルスワップ_通常発動で特性が入れ替わる():
+    """スキルスワップ: 通常の使用で使用者と対象の特性が入れ替わる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "めんえき"
+    assert defender.ability.name == "せいでんき"
+
+
 def test_すてゼリフ_クリアボディで完全阻止されたとき交代しない():
     """すてゼリフ: クリアボディで全ランク低下が阻止された場合は交代も発動しない"""
     battle = t.start_battle(
@@ -543,6 +681,85 @@ def test_すてゼリフ_通常発動でPIVOTが設定される():
     assert defender.rank["A"] == -1
     assert defender.rank["C"] == -1
     assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+
+def test_スピードスワップ_すばやさ実数値が入れ替わる():
+    """スピードスワップ: 使用者と相手のすばやさ実数値が入れ替わる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    a_spd_before = attacker.stats["S"]
+    d_spd_before = defender.stats["S"]
+
+    t.run_move(battle, 0)
+
+    assert attacker.stats["S"] == d_spd_before
+    assert defender.stats["S"] == a_spd_before
+
+
+def test_スピードスワップ_ランク変化は行われない():
+    """スピードスワップ: 実数値の入れ替えのみでランク変化は発生しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    t.run_move(battle, 0)
+
+    assert attacker.rank["S"] == 0
+    assert defender.rank["S"] == 0
+
+
+def test_スピードスワップ_ランク変化後の実数値は入れ替わらない():
+    """スピードスワップ: ランク変化はスワップされない（実数値のみ）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 攻撃者のすばやさランクを事前に上げておく
+    attacker.rank["S"] = 2
+    a_spd_base = attacker.stats["S"]
+    d_spd_base = defender.stats["S"]
+
+    t.run_move(battle, 0)
+
+    # 実数値（ランクなし）が入れ替わっている
+    assert attacker.stats["S"] == d_spd_base
+    assert defender.stats["S"] == a_spd_base
+    # ランク変化はそのまま（スワップされていない）
+    assert attacker.rank["S"] == 2
+    assert defender.rank["S"] == 0
+
+
+def test_スピードスワップ_双方すばやさ同値でも成功する():
+    """スピードスワップ: 双方のすばやさが同値でも失敗せず成功する"""
+    # 同じポケモン同士でも成功する（失敗しない）
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    a_spd_before = attacker.stats["S"]
+    d_spd_before = defender.stats["S"]
+    assert a_spd_before == d_spd_before
+
+    t.run_move(battle, 0)
+
+    # 値は同じだが技は失敗していない（実数値は変化なし）
+    assert attacker.stats["S"] == d_spd_before
+    assert defender.stats["S"] == a_spd_before
 
 
 def test_すりかえ_両者がアイテムを持っていないとき失敗():
@@ -629,6 +846,69 @@ def test_せいちょう_通常時こうげきととくこう1段階上がる():
 
     assert attacker.rank["A"] == 1
     assert attacker.rank["C"] == 1
+
+
+def test_そうでん_そうでん状態が相手に付与される():
+    """そうでん: 使用すると相手にそうでん揮発状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["そうでん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("そうでん")
+
+
+def test_そうでん_ターン終了時に状態が解除される():
+    """そうでん: ターン終了時（ON_TURN_END）にそうでん状態が自動で解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "そうでん")
+    assert attacker.has_volatile("そうでん")
+
+    t.end_turn(battle)
+
+    assert not attacker.has_volatile("そうでん")
+
+
+def test_そうでん_わるあがきはでんきタイプに変換されない():
+    """そうでん: そうでん状態でもわるあがきはでんきタイプに変換されない（タイプは空文字のまま）"""
+    from jpoke.model import Move
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "そうでん")
+    # わるあがきを直接実行してタイプ変換が適用されないことを確認
+    battle.run_move(attacker, Move("わるあがき"))
+    battle.print_logs()
+
+    # わるあがきのタイプはでんきに変換されない（元の空文字のまま）
+    assert battle.move_executor.move_type == ""
+
+
+def test_そうでん_状態中の攻撃技がでんきタイプになる():
+    """そうでん: そうでん状態で使う攻撃技はでんきタイプに変換される"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["そうでん"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 相手（カビゴン）にそうでん状態を付与
+    battle.volatile_manager.apply(attacker, "そうでん")
+    assert attacker.has_volatile("そうでん")
+    # カビゴンがたいあたりを使う→でんきタイプになるはず
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_type == "でんき"
 
 
 def test_ソウルビート_全能力1段階上がりHP3分の1消費():

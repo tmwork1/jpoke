@@ -4,6 +4,83 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_はきだす_カウント0で失敗する():
+    """はきだす: たくわえていない（カウント0）なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+
+    assert defender.hp == hp_before
+
+
+def test_はきだす_カウント1で威力100():
+    """はきだす: たくわえカウント1のとき威力100でダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 1},
+        accuracy=100,
+    )
+    # 威力100相当で必ずダメージが入る
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+
+    assert defender.hp < hp_before
+
+
+def test_はきだす_カウント3で最大威力300():
+    """はきだす: たくわえカウント3のとき威力300でダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 3},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+
+    assert defender.hp < hp_before
+
+
+def test_はきだす_命中後にたくわえる状態が消える():
+    """はきだす: 命中後にたくわえる揮発状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("たくわえる")
+
+
+def test_はきだす_命中後にランクが元に戻る():
+    """はきだす: 命中後にたくわえた回数分だけぼうぎょとくぼうが下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # たくわえカウント2相当のランクを事前に設定
+    attacker.rank["B"] = 2
+    attacker.rank["D"] = 2
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0
+
+
 def test_はらだいこ_こうげきすでに最大なら失敗():
     """はらだいこ: こうげきランクがすでに+6なら失敗し、HPは消費されない"""
     battle = t.start_battle(

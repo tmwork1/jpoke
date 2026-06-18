@@ -6,9 +6,11 @@ Note:
     このモジュール内の関数定義は五十音順に配置されています。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
+
+from jpoke.utils.type_defs import Stat
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
@@ -157,6 +159,33 @@ def ちいさくなる_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
+def ちからをすいとる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ちからをすいとるの失敗チェック: 相手のこうげきランクがすでに -6 なら失敗する。"""
+    assert ctx.defender is not None
+    if ctx.defender.rank["A"] <= -6:
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "ちからをすいとる_こうげき最低"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ちからをすいとるの効果: 相手のこうげき実数値分HPを回復し、相手のこうげきを1段階下げる。
+
+    特性などでランクが下がらない場合は回復効果のみ発動する。
+    """
+    assert ctx.defender is not None
+    # 相手のこうげき実数値（ランク補正前）分だけ自分のHPを回復
+    recover_amount = ctx.defender.stats["A"]
+    battle.modify_hp(ctx.attacker, v=recover_amount)
+    # 相手のこうげきを1段階下げる（失敗しても回復は発動済み）
+    battle.modify_stats(ctx.defender, {"A": -1}, source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def ちょうはつ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちょうはつの効果: 相手にちょうはつ状態を付与する（3 ターン）。"""
     return apply_volatile_to_defender(battle, ctx, value, volatile="ちょうはつ", count=3)
@@ -245,9 +274,8 @@ def あさのひざし_heal_self(battle: Battle, ctx: AttackContext, value: Any)
 
 def あやしいひかり_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """あやしいひかりの効果: 相手をこんらん状態にする（2〜5ターン）。"""
-    count = battle.random.randint(2, 5)
-    return HandlerReturn(value=battle.volatile_manager.apply(
-        ctx.defender, "こんらん", count=count, source=ctx.attacker, ctx=ctx
+    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
+        ctx.defender, source=ctx.attacker, ctx=ctx
     ))
 
 
@@ -270,8 +298,7 @@ def いちゃもん_apply_volatile_to_defender(battle: Battle, ctx: AttackContex
 def いばる_modify_defender_stats_and_apply_volatile(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いばるの効果: 相手のこうげきを2段階上げ、相手をこんらん状態にする（2〜5ターン）。"""
     battle.modify_stats(ctx.defender, {"A": 2}, source=ctx.attacker)
-    count = battle.random.randint(2, 5)
-    battle.volatile_manager.apply(ctx.defender, "こんらん", count=count, source=ctx.attacker, ctx=ctx)
+    battle.volatile_manager.apply_confusion(ctx.defender, source=ctx.attacker, ctx=ctx)
     return HandlerReturn(value=value)
 
 
@@ -387,8 +414,7 @@ def おたけび_modify_defender_stats(battle: Battle, ctx: AttackContext, value
 def おだてる_modify_defender_stats_and_apply_volatile(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おだてるの効果: 相手のとくこうを1段階上げ、相手をこんらん状態にする（2〜5ターン）。"""
     battle.modify_stats(ctx.defender, {"C": 1}, source=ctx.attacker)
-    count = battle.random.randint(2, 5)
-    battle.volatile_manager.apply(ctx.defender, "こんらん", count=count, source=ctx.attacker, ctx=ctx)
+    battle.volatile_manager.apply_confusion(ctx.defender, source=ctx.attacker, ctx=ctx)
     return HandlerReturn(value=value)
 
 
@@ -587,8 +613,7 @@ def さむいギャグ_activate_weather_and_pivot(battle: Battle, ctx: AttackCon
 
     player = battle.get_player(ctx.attacker)
 
-    # TODO : can_switch()メソッドを実装したほうがよい。ほかの交代技の判定にも使える。
-    can_switch = bool(battle.get_available_switch_commands(player))
+    can_switch = battle.can_switch(player)
     if can_switch:
         battle.player_states[player].interrupt = Interrupt.PIVOT
 
@@ -688,11 +713,11 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def しっぽきり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : しっぽきりでは交代先のポケモンにみがわりを継承するが、実装はそうなっていない。
     """しっぽきりの効果: HP消費・みがわり生成・ピボット交代。
 
     消費HPは最大HPの半分（小数点以下切り上げ）。
     みがわりのHPは最大HPの1/4（切り捨て）で通常みがわりと同じ。
+    みがわり状態は交代先のポケモンに引き継がれる。
     """
     mon = ctx.attacker
     player = battle.get_player(mon)
@@ -701,6 +726,8 @@ def しっぽきり_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     battle.modify_hp(mon, -cost)
     # みがわり生成
     battle.volatile_manager.apply(mon, "みがわり", hp=mon.max_hp // 4)
+    # 交代先にみがわりを引き継ぐフラグをセット
+    battle.player_states[player].inherit_migawari = True
     # ピボット交代（交代先選択をプレイヤーに委ねる）
     battle.player_states[player].interrupt = Interrupt.PIVOT
     return HandlerReturn(value=value)
@@ -766,6 +793,30 @@ def シンプルビーム_change_ability(battle: Battle, ctx: AttackContext, val
     return HandlerReturn(value=value)
 
 
+def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スキルスワップの失敗条件チェック。
+
+    使用者または対象の特性が protected フラグを持つ場合は失敗する。
+    かたやぶりを持っていても、この失敗条件は回避できない。
+    """
+    assert ctx.defender is not None
+    if (
+        ctx.attacker.ability.has_flag("protected")
+        or ctx.defender.ability.has_flag("protected")
+    ):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "スキルスワップ"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def スキルスワップ_swap_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スキルスワップの効果: 使用者と対象の特性を入れ替える。"""
+    assert ctx.defender is not None
+    battle.ability_manager.swap_ability(ctx.attacker, ctx.defender)
+    return HandlerReturn(value=value)
+
+
 def ステルスロック_set_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ステルスロック: 相手側のフィールドにステルスロックを設置する。"""
     side = battle.get_side(ctx.defender)
@@ -782,12 +833,35 @@ def すなかけ_modify_defender_stats(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"ACC": -1})
 
 
+def スピードスワップ_swap_speed(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スピードスワップ: 使用者と相手のすばやさの実数値を入れ替える。
+
+    ランク変化は行わず、実数値のみを入れ替える。
+    インデックス 5 = すばやさ（[HP, 攻撃, 防御, 特攻, 特防, 素早さ]）。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    a_spd = attacker._stats_manager.stats[5]
+    d_spd = defender._stats_manager.stats[5]
+    attacker._stats_manager.stats[5] = d_spd
+    defender._stats_manager.stats[5] = a_spd
+    return HandlerReturn(value=value)
+
+
 def スレッドトラップ_apply_volatile_to_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_attacker(battle, ctx, value, volatile="スレッドトラップ")
 
 
+def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ソウルビートの失敗条件: HPが最大HPの1/3以下の場合は失敗。"""
+    mon = ctx.attacker
+    if mon.hp <= mon.max_hp // 3:
+        battle.add_event_log(mon, LogCode.MOVE_FAILED, payload={"reason": "ソウルビート_HP不足"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ソウルビート_pay_hp_and_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : HPが1/3以下の場合は失敗するようにする
     """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。"""
     mon = ctx.attacker
     battle.modify_hp(mon, r=-1/3)
@@ -802,13 +876,16 @@ def せいちょう_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     return modify_attacker_stats(battle, ctx, value, stats={"A": n, "C": n})
 
 
-def タールショット_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="タールショット")
+def そうでん_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """そうでんの効果: 相手をそうでん状態にする（そのターン中のみ）。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="そうでん")
 
 
-def タールショット_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : タールショット_apply_volatile_to_defenderとあわせて、ひとつの関数にまとめる
-    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+def タールショット_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """タールショットの効果: 相手にタールショット状態を付与し、すばやさを1段階下げる。"""
+    assert ctx.defender is not None
+    battle.volatile_manager.apply(ctx.defender, "タールショット", source=ctx.attacker, ctx=ctx)
+    return HandlerReturn(value=battle.modify_stats(ctx.defender, {"S": -1}, source=ctx.attacker))
 
 
 def たてこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -816,28 +893,98 @@ def たてこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     return modify_attacker_stats(battle, ctx, value, stats={"B": 2})
 
 
-def つきのひかり_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : あさのひかりと同一効果なので共通化する
-    """つきのひかり: 天候に応じた割合で自分のHPを回復する。
-    攻撃側がばんのうがさを持つ場合、晴れ/雨状態でも1/2回復。
-    """
+def たくわえる_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """たくわえるの使用条件チェック: たくわえた回数がすでに3なら失敗する。"""
     mon = ctx.attacker
-    if mon.hp == mon.max_hp:
+    if mon.has_volatile("たくわえる") and (mon.volatiles["たくわえる"].count or 0) >= 3:
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "たくわえる"})
         return HandlerReturn(value=False, stop_event=True)
-    weather = battle.weather_for(mon)
-    if weather.sunny:
-        r = 2 / 3
-    elif weather.name in {"あめ", "おおあめ", "すなあらし", "ゆき"}:
-        r = 1 / 4
-    else:
-        r = 1 / 2
-    battle.modify_hp(mon, r=r)
     return HandlerReturn(value=value)
+
+
+def たくわえる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """たくわえるの効果: ぼうぎょ・とくぼうを1段階上げ、たくわえカウントをインクリメントする。"""
+    mon = ctx.attacker
+    # ぼうぎょ・とくぼうのランク上昇を試みる
+    result = battle.modify_stats(mon, {"B": 1, "D": 1}, source=mon)
+    # volatile がなければ新規付与（count=1）、あればカウントを+1
+    if not mon.has_volatile("たくわえる"):
+        battle.volatile_manager.apply(mon, "たくわえる", count=1)
+    else:
+        mon.volatiles["たくわえる"].count = (mon.volatiles["たくわえる"].count or 0) + 1
+    return HandlerReturn(value=result)
+
+
+def のみこむ_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """のみこむの使用条件チェック: たくわえた回数が0なら失敗する。"""
+    mon = ctx.attacker
+    count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
+    if count == 0:
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "のみこむ"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def のみこむ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """のみこむの効果: たくわえ回数に応じてHPを回復し、たくわえ状態をリセットする。"""
+    mon = ctx.attacker
+    count = mon.volatiles["たくわえる"].count or 0
+    # 回復量: 1回=1/4, 2回=1/2, 3回=全回復
+    if count >= 3:
+        battle.modify_hp(mon, v=mon.max_hp - mon.hp)
+    elif count == 2:
+        battle.modify_hp(mon, r=1 / 2)
+    else:
+        battle.modify_hp(mon, r=1 / 4)
+    # たくわえた回数分だけランクを戻す
+    battle.modify_stats(mon, {"B": -count, "D": -count}, source=mon)
+    # volatile 削除
+    battle.volatile_manager.remove(mon, "たくわえる")
+    return HandlerReturn(value=value)
+
+
+def はきだす_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだすの使用条件チェック: たくわえた回数が0なら失敗する。"""
+    mon = ctx.attacker
+    count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
+    if count == 0:
+        battle.add_event_log(mon, LogCode.MOVE_FAILED,
+                             payload={"reason": "はきだす"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def はきだす_set_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだすの効果（ON_BEGIN_MOVE）: たくわえ回数に応じて威力を設定する。"""
+    mon = ctx.attacker
+    count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
+    power = count * 100  # 1回=100, 2回=200, 3回=300
+    ctx.move.power = power
+    return HandlerReturn(value=value)
+
+
+def はきだす_apply_after(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだすのヒット後処理（ON_HIT）: たくわえ状態をリセットし、上がったランクを戻す。"""
+    mon = ctx.attacker
+    count = mon.volatiles["たくわえる"].count or 0
+    # ランクをたくわえた回数分だけ逆方向へ
+    battle.modify_stats(mon, {"B": -count, "D": -count}, source=mon)
+    battle.volatile_manager.remove(mon, "たくわえる")
+    return HandlerReturn(value=value)
+
 
 
 def つぶらなひとみ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """つぶらなひとみの効果: 相手のこうげきを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"A": -1})
+
+
+def つぼをつく_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """つぼをつく: 7種類の能力からランダムに1つ選んでランクを2段階上げる。"""
+    stat = cast(Stat, battle.random.choice(["A", "B", "C", "D", "S", "ACC", "EVA"]))
+    return HandlerReturn(value=battle.modify_stats(ctx.attacker, {stat: 2}, source=ctx.attacker))
 
 
 def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -846,10 +993,8 @@ def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value
 
 def てんしのキッス_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """てんしのキッスの効果: 相手をこんらん状態にする（2〜5ターン）。"""
-    # TODO : こんらんターンを決定する関数をbattle.volatile_managerに実装したほうがよい
-    count = battle.random.randint(2, 5)
-    return HandlerReturn(value=battle.volatile_manager.apply(
-        ctx.defender, "こんらん", count=count, source=ctx.attacker, ctx=ctx
+    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
+        ctx.defender, source=ctx.attacker, ctx=ctx
     ))
 
 
@@ -883,15 +1028,11 @@ def どくのこな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
 
 
-def どくのいと_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """どくのいとの効果（毒）: 相手をどく状態にする。"""
-    return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
-
-
-def どくのいと_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : どくのいと_apply_ailment_to_defenderとあわせて、ひとつの関数にまとめる
-    """どくのいとの効果（速度低下）: 相手のすばやさを1段階下げる。"""
-    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+def どくのいと_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """どくのいとの効果: 相手をどく状態にし、すばやさを1段階下げる。"""
+    assert ctx.defender is not None
+    battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
+    return HandlerReturn(value=battle.modify_stats(ctx.defender, {"S": -1}, source=ctx.attacker))
 
 
 def どくびし_set_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -930,6 +1071,60 @@ def なきごえ_modify_defender_stats(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"A": -1})
 
 
+def なかまづくり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なかまづくりの失敗条件チェック。
+
+    以下の場合は失敗する:
+    - 対象の特性が「なまけ」である
+    - 対象の特性が protected フラグを持つ（上書きできない特性）
+    - 使用者の特性が uncopyable フラグを持つ（コピーできない特性）
+    - 使用者と対象が同じ特性である
+    """
+    assert ctx.defender is not None
+    attacker_ability = ctx.attacker.ability.base_name
+    defender_ability = ctx.defender.ability.base_name
+    if (
+        defender_ability == "なまけ"
+        or ctx.defender.ability.has_flag("protected")
+        or ctx.attacker.ability.has_flag("uncopyable")
+        or attacker_ability == defender_ability
+    ):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "なかまづくり"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def なかまづくり_change_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なかまづくりの効果: 相手の特性を使用者と同じ特性に書き換える。"""
+    assert ctx.defender is not None
+    battle.change_ability(ctx.defender, ctx.attacker.ability.base_name)
+    return HandlerReturn(value=value)
+
+
+def なりきり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なりきりの失敗条件チェック。
+
+    対象の特性が uncopyable フラグを持つ場合は失敗する
+    （ふしぎなまもり・かわりものなど固有の特性）。
+    """
+    if ctx.defender.ability.has_flag("uncopyable"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "なりきり"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def なりきり_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なりきりの効果: 自分の特性を相手の特性と同じにする。"""
+    battle.change_ability(ctx.attacker, ctx.defender.ability.name)
+    return HandlerReturn(value=value)
+
+
 def なまける_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なまける: 最大HPの1/2を回復する。"""
     mon = ctx.attacker
@@ -939,12 +1134,41 @@ def なまける_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
-def ねむりごな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
-
-
 def なみだめ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"C": -1})
+
+
+def なやみのタネ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なやみのタネの失敗条件チェック。
+
+    対象の特性が protected フラグを持つ場合、
+    または「ふみん」「なまけ」の場合は失敗する。
+    """
+    assert ctx.defender is not None
+    ability = ctx.defender.ability
+    if (ability.has_flag("protected")
+            or ability.name == "ふみん"
+            or ability.name == "なまけ"):
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "なやみのタネ"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def なやみのタネ_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なやみのタネの効果: 相手の特性を「ふみん」に書き換える。"""
+    assert ctx.defender is not None
+    battle.change_ability(ctx.defender, "ふみん")
+    return HandlerReturn(value=value)
+
+
+def ニードルガード_apply_volatile_to_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ニードルガードの効果: 自分にニードルガード状態を付与する。"""
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="ニードルガード")
+
+
+def ねむりごな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
 
 def ねばねばネット_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -963,6 +1187,57 @@ def にらみつける_modify_defender_stats(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"B": -1})
 
 
+def ねがいごと_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねがいごとの失敗チェック: すでにねがいごとフィールドが有効なら失敗する。"""
+    side = battle.get_side(ctx.attacker)
+    if side.get("ねがいごと").is_active:
+        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
+                             payload={"reason": "ねがいごと"})
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ねがいごと_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねがいごとの効果: 自陣営に「ねがいごと」を設置し、回復量を使用者の最大HPの半分に設定する。"""
+    mon = ctx.attacker
+    side = battle.get_side(mon)
+    field = side.get("ねがいごと")
+    side.activate("ねがいごと", 2)
+    field.heal = mon.max_hp // 2
+    return HandlerReturn(value=value)
+
+
+def ねごと_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねごとの発動条件チェック: ねむり状態でない場合に失敗させる。"""
+    if not ctx.attacker.has_ailment("ねむり"):
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "ねごと_ねむり状態でない"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ねごと_select_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねごとで使う技をランダムに選ぶ。
+
+    non_negoto ラベルを持たない技の中からランダムに選択する。
+    選べる技がない場合は None を返して技の実行を中止する。
+    """
+    attacker = ctx.attacker
+    candidates = [m for m in attacker.moves if not m.has_label("non_negoto")]
+    if not candidates:
+        battle.add_event_log(
+            attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "ねごと_候補技なし"},
+        )
+        return HandlerReturn(value=None, stop_event=True)
+    chosen = battle.random.choice(candidates)
+    return HandlerReturn(value=chosen, stop_event=True)
+
+
 def ねをはる_apply_volatile_to_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ねをはるの効果: 自分をねをはる状態にする。"""
     return apply_volatile_to_attacker(battle, ctx, value, volatile="ねをはる")
@@ -978,9 +1253,8 @@ def フェザーダンス_modify_defender_stats(battle: Battle, ctx: AttackConte
 
 def フラフラダンス_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フラフラダンスの効果: 相手をこんらん状態にする（2〜5ターン）。"""
-    count = battle.random.randint(2, 5)
-    return HandlerReturn(value=battle.volatile_manager.apply(
-        ctx.defender, "こんらん", count=count, source=ctx.attacker, ctx=ctx
+    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
+        ctx.defender, source=ctx.attacker, ctx=ctx
     ))
 
 
@@ -1001,11 +1275,11 @@ def ほたるび_modify_attacker_stats(battle: Battle, ctx: AttackContext, value
 
 
 def はらだいこ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : HPが半分以下の場合も失敗するようにする
-    """はらだいこの使用条件チェック: こうげきランクがすでに+6ならば失敗する。"""
-    if ctx.attacker.rank["A"] >= 6:
+    """はらだいこの使用条件チェック: こうげきランクがすでに+6、またはHPが最大HPの半分以下ならば失敗する。"""
+    mon = ctx.attacker
+    if mon.rank["A"] >= 6 or mon.hp <= mon.max_hp // 2:
         battle.add_event_log(
-            ctx.attacker, LogCode.MOVE_FAILED,
+            mon, LogCode.MOVE_FAILED,
             payload={"reason": "はらだいこ"}
         )
         return HandlerReturn(value=False, stop_event=True)
@@ -1125,9 +1399,8 @@ def ロックカット_modify_attacker_stats(battle: Battle, ctx: AttackContext,
 
 
 def わたほうし_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO : わたほうしは相手のSを2段階下げる。仕様書から見直す。
-    """わたほうしの効果: 相手のすばやさを1段階下げる。粉技のためくさタイプ・ぼうじん無効。"""
-    return modify_defender_stats(battle, ctx, value, stats={"S": -1})
+    """わたほうしの効果: 相手のすばやさを2段階下げる。粉技のためくさタイプ・ぼうじん無効。"""
+    return modify_defender_stats(battle, ctx, value, stats={"S": -2})
 
 
 def わるだくみ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

@@ -21,6 +21,7 @@ class PlayerState:
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.action_order_index: int | None = None
+        self.inherit_migawari: bool = False
 
     def __deepcopy__(self, memo):
         cls = self.__class__

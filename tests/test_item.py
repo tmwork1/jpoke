@@ -10,7 +10,6 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
-
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)

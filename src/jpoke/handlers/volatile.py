@@ -6,7 +6,7 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, EventContext, AttackContext
 
 from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
 
@@ -137,6 +137,16 @@ def restrict_commands(battle: Battle,
     return HandlerReturn(value=new_options)
 
 
+def あなをほる_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """あなをほる状態の回避判定"""
+    return can_hit_hidden_target(battle, ctx, value, "あなをほる")
+
+
+def あなをほる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """あなをほる状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="あなをほる")
+
+
 def あばれる_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
 
@@ -151,8 +161,7 @@ def あばれる_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerR
     mon = ctx.attacker
     battle.volatile_manager.tick(mon, "あばれる")
     if not mon.has_volatile("あばれる"):
-        count = battle.random.randint(2, 5)
-        battle.volatile_manager.apply(mon, "こんらん", count=count)
+        battle.volatile_manager.apply_confusion(mon)
     return HandlerReturn(value=value)
 
 
@@ -449,6 +458,32 @@ def さわぐ_prevent_nemuke(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
+def そうでん_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """そうでん状態による技タイプ変換: 攻撃側の使う技をでんきタイプに変換する。
+
+    わるあがきはでんきタイプに変換されない。
+    """
+    if ctx.move and ctx.move.name != "わるあがき":
+        return HandlerReturn(value="でんき")
+    return HandlerReturn(value=value)
+
+
+def そうでん_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """そうでん状態のターン終了処理: ターン終了時に無条件で解除する。"""
+    battle.volatile_manager.remove(ctx.source, "そうでん")
+    return HandlerReturn(value=value)
+
+
+def シャドーダイブ_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """シャドーダイブ状態の回避判定"""
+    return can_hit_hidden_target(battle, ctx, value, "シャドーダイブ")
+
+
+def シャドーダイブ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """シャドーダイブ状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="シャドーダイブ")
+
+
 def しおづけ_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しおづけ状態のターン終了時ダメージ
 
@@ -515,6 +550,16 @@ def じゅうでん_boost_electric(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(value=value)
 
 
+def そらをとぶ_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """そらをとぶ状態の回避判定"""
+    return can_hit_hidden_target(battle, ctx, value, "そらをとぶ")
+
+
+def そらをとぶ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """そらをとぶ状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="そらをとぶ")
+
+
 def タールショット_boost_fire(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """タールショット状態でほのお技のダメージ補正
 
@@ -529,6 +574,16 @@ def タールショット_boost_fire(battle: Battle, ctx: EventContext, value: A
     if ctx.move.type == "ほのお":
         value *= 2
     return HandlerReturn(value=value)
+
+
+def ダイビング_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ダイビング状態の回避判定"""
+    return can_hit_hidden_target(battle, ctx, value, "ダイビング")
+
+
+def ダイビング_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ダイビング状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="ダイビング")
 
 
 def ちいさくなる_guaranteed_hit(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -581,6 +636,11 @@ def ちょうはつ_try_action(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=True)
 
 
+def でんじふゆう_check_floating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """でんじふゆう状態での浮遊判定（常に浮遊）"""
+    return HandlerReturn(value=True)
+
+
 def とくせいなし_disable_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     battle.add_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
@@ -606,6 +666,11 @@ def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: EventContext, value: A
     count = battle.random.randint(1, 3)
     battle.ailment_manager.apply(ctx.source, "ねむり", count=count)
     return HandlerReturn(value=True)
+
+
+def ねをはる_check_floating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ねをはる状態では浮遊しない（地面に根を張っているため）"""
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def のろい_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -828,6 +893,7 @@ def _run_protect(battle: Battle,
                  value: Any,
                  stats_change_on_contact: dict[Stat, int] | None = None,
                  ailment_on_contact: AilmentName | None = None,
+                 chip_on_contact: float | None = None,
                  protect_non_attack: bool = True) -> HandlerReturn:
     """protect系の共通骨格。
 
@@ -835,7 +901,9 @@ def _run_protect(battle: Battle,
         battle: バトルインスタンス
         ctx: コンテキスト
         value: イベント値
-        on_contact: 接触時の追加効果関数 (battle, ctx, value) -> None
+        stats_change_on_contact: 接触時に攻撃者に与えるランク変化（例: {"A": -1}）
+        ailment_on_contact: 接触時に攻撃者に付与する状態異常名
+        chip_on_contact: 接触時に攻撃者の最大HPから削る割合（例: 1/8）
         protect_non_attack: False の場合、変化技を保護しない
     """
     if not _check_protect_success(battle, ctx, protect_non_attack):
@@ -849,6 +917,8 @@ def _run_protect(battle: Battle,
             battle.modify_stats(ctx.attacker, stats_change_on_contact, source=ctx.defender)
         if ailment_on_contact:
             battle.ailment_manager.apply(ctx.attacker, ailment_on_contact, source=ctx.defender)
+        if chip_on_contact is not None:
+            battle.modify_hp(ctx.attacker, r=-chip_on_contact, reason="")
 
     return HandlerReturn(value=False, stop_event=True)
 
@@ -973,6 +1043,15 @@ def スレッドトラップ_remove_volatile(battle: Battle, ctx: EventContext, 
 
 def トーチカ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return remove_volatile(battle, ctx, value, volatile="トーチカ")
+
+
+def ニードルガード_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ニードルガードの保護判定。接触した相手の最大HPの1/8ダメージを与える。"""
+    return _run_protect(battle, ctx, value, chip_on_contact=1/8)
+
+
+def ニードルガード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="ニードルガード")
 
 
 def ハロウィン_add_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

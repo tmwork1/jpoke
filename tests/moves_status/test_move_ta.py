@@ -4,6 +4,61 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_たくわえる_3回目にカウント3になる():
+    """たくわえる: 3回使用するとたくわえカウントが3になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    t.run_move(battle, 0)
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("たくわえる")
+    assert attacker.volatiles["たくわえる"].count == 3
+
+
+def test_たくわえる_カウント3で失敗する():
+    """たくわえる: たくわえカウントがすでに3なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 3},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # カウントは3のまま変わらない
+    assert attacker.volatiles["たくわえる"].count == 3
+
+
+def test_たくわえる_ぼうぎょとくぼうが上がる():
+    """たくわえる: 使用するとぼうぎょとくぼうがそれぞれ1段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 1
+    assert attacker.rank["D"] == 1
+
+
+def test_たくわえる_初回でvolatile付与される():
+    """たくわえる: 初めて使用するとたくわえる揮発状態がcount=1で付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("たくわえる")
+    assert attacker.volatiles["たくわえる"].count == 1
+
+
 def test_たてこもる_ぼうぎょ2段階上がる():
     """たてこもる: 使用すると自分のぼうぎょランクが2段階上がる"""
     battle = t.start_battle(
@@ -28,6 +83,90 @@ def test_たてこもる_ぼうぎょ最大なら変化なし():
     t.run_move(battle, 0)
 
     assert attacker.rank["B"] == 6
+
+
+def test_ちからをすいとる_HPが満タンのとき上限でとまる():
+    """ちからをすいとる: 回復量で最大HPを超えることはない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # HPをあえて満タンにしておく
+    attacker.hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+
+
+def test_ちからをすいとる_HPを回復する():
+    """ちからをすいとる: 相手のこうげき実数値分だけ自分のHPを回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # カビゴンの最大HPは大きいため、ピカチュウの攻撃実数値分の回復でもオーバーしない
+    hp_before = 1
+    attacker.hp = hp_before
+    expected_recovery = defender.stats["A"]
+    t.run_move(battle, 0)
+
+    assert attacker.hp == hp_before + expected_recovery
+
+
+def test_ちからをすいとる_クリアボディでランク低下阻止でもHP回復は発動():
+    """ちからをすいとる: クリアボディでランク低下が阻まれても回復効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("ピカチュウ", ability_name="クリアボディ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = 1
+    attacker.hp = hp_before
+    expected_recovery = defender.stats["A"]
+    t.run_move(battle, 0)
+
+    # クリアボディでランク低下は阻まれる
+    assert defender.rank["A"] == 0
+    # それでも回復は発動する
+    assert attacker.hp == hp_before + expected_recovery
+
+
+def test_ちからをすいとる_こうげきランク最低で失敗():
+    """ちからをすいとる: 相手のこうげきランクがすでに-6なら失敗する（HP回復も発動しない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"A": -6}, source=attacker)
+    attacker.hp = 1
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == hp_before
+    assert defender.rank["A"] == -6
+
+
+def test_ちからをすいとる_こうげきを1段階下げる():
+    """ちからをすいとる: 相手のこうげきランクを1段階下げる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == -1
 
 
 def test_ちょうのまい_1つでも上昇できれば成功():
@@ -165,6 +304,91 @@ def test_つぶらなひとみ_相手のこうげき1段階下がる():
     t.run_move(battle, 0)
 
     assert defender.rank["A"] == -1
+
+
+def test_つぼをつく_かいひりつが選ばれた場合ランクが2段階上がる():
+    """つぼをつく: 回避率が選ばれた場合、自分の回避率ランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "EVA"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["EVA"] == 2
+
+
+def test_つぼをつく_こうげきが選ばれた場合ランクが2段階上がる():
+    """つぼをつく: こうげきが選ばれた場合、自分のこうげきランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "A"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["A"] == 2
+
+
+def test_つぼをつく_すばやさが選ばれた場合ランクが2段階上がる():
+    """つぼをつく: すばやさが選ばれた場合、自分のすばやさランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "S"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["S"] == 2
+
+
+def test_つぼをつく_めいちゅうりつが選ばれた場合ランクが2段階上がる():
+    """つぼをつく: 命中率が選ばれた場合、自分の命中率ランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "ACC"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["ACC"] == 2
+
+
+def test_つぼをつく_ランクが最大の場合変化しない():
+    """つぼをつく: 選ばれた能力のランクがすでに+6なら変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["C"] = 6
+    battle.random.choice = lambda seq: "C"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["C"] == 6
+
+
+def test_つぼをつく_選ばれない能力のランクは変化しない():
+    """つぼをつく: ランダムで選ばれた1種類以外の能力ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "B"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 2
+    assert attacker.rank["A"] == 0
+    assert attacker.rank["C"] == 0
+    assert attacker.rank["D"] == 0
+    assert attacker.rank["S"] == 0
+    assert attacker.rank["ACC"] == 0
+    assert attacker.rank["EVA"] == 0
 
 
 def test_つるぎのまい_こうげき2段階上がる():
@@ -410,3 +634,107 @@ def test_どくびし_相手陣営に設置される():
 
     side = battle.get_side(battle.actives[1])
     assert side.fields["どくびし"].is_active
+
+
+def test_のみこむ_カウント0で失敗する():
+    """のみこむ: たくわえていない（カウント0）なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == hp_before
+
+
+def test_のみこむ_カウント1で4分の1回復():
+    """のみこむ: たくわえカウント1で最大HPの1/4を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    expected = 1 + int(attacker.max_hp * 1 / 4)
+    assert attacker.hp == expected
+
+
+def test_のみこむ_カウント2で2分の1回復():
+    """のみこむ: たくわえカウント2で最大HPの1/2を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    expected = 1 + int(attacker.max_hp * 1 / 2)
+    assert attacker.hp == expected
+
+
+def test_のみこむ_カウント3で全回復():
+    """のみこむ: たくわえカウント3で最大HPまで全回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 3},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+
+
+def test_のみこむ_ランク逆補正がクリアボディに阻まれない():
+    """のみこむ: ランク戻し（自分源）はクリアボディに阻まれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="クリアボディ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.rank["B"] = 1
+    attacker.rank["D"] = 1
+    t.run_move(battle, 0)
+
+    # クリアボディでも自分源のランク低下は防げない
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0
+
+
+def test_のみこむ_使用後にたくわえる状態が消える():
+    """のみこむ: 使用後にたくわえる揮発状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("たくわえる")
+
+
+def test_のみこむ_使用後にランクが元に戻る():
+    """のみこむ: たくわえた回数分だけぼうぎょとくぼうが下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+    )
+    attacker = battle.actives[0]
+    # たくわえカウント2相当のランクを事前に設定
+    attacker.rank["B"] = 2
+    attacker.rank["D"] = 2
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0
