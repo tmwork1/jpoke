@@ -77,10 +77,15 @@ def アクアリング_apply_volatile_to_attacker(battle: Battle, ctx: AttackCon
 
 
 def アンコール_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アンコールの失敗条件を判定する。
+
+    - 相手がまだ技を使っていない（executed_move が None）場合は失敗する
+    - 相手の最後に使った技が non_encore ラベルを持つ場合は失敗する
+    """
     move = ctx.defender.executed_move
-    if not move:
+    if not move or move.has_label("non_encore"):
         battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "対象技が存在しない"})
+                             payload={"reason": "アンコール失敗"})
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1301,19 +1306,23 @@ def ねむる_check_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def ねむる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ねむるの効果: HP全回復・状態異常全回復・2ターンのねむり付与。
+    """ねむるの効果: HP全回復・状態異常全回復・3ターンのねむり付与。
 
     1. HP を最大HPまで回復する
     2. 現在の状態異常を解除する
-    3. ねむり状態を付与する（count=2）
+    3. ねむり状態を付与する（count=3: Champions仕様固定）
+
+    Notes:
+        Champions仕様: ねむるのカウントは3固定（Wiki「ねむるによってねむり状態になったときは
+        カウントは3で固定」）。説明文「技ねむるでは3度目まで回復しない」と一致。
     """
     mon = ctx.attacker
     # HP全回復
     battle.modify_hp(mon, v=mon.max_hp - mon.hp)
     # 状態異常を解除（上書きフラグで強制解除）
     battle.ailment_manager.remove(mon)
-    # ねむり付与（count=2: 残り2ターン眠る）
-    battle.ailment_manager.apply(mon, "ねむり", count=2, source=mon)
+    # ねむり付与（count=3: Champions仕様固定）
+    battle.ailment_manager.apply(mon, "ねむり", count=3, source=mon)
     return HandlerReturn(value=value)
 
 

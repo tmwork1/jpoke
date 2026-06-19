@@ -80,14 +80,13 @@ jpoke {config.category} 再レビュータスク: {entry}
 
 5. テストのレビュー・修正
    {config.test_files} のテストを実装と照合する。
-   誤り・欠落があれば修正・追加する。
+   誤り・過不足があれば修正する。
    python scripts/sort_tests.py {config.test_files をスペース区切り} でソート後、
-   python -m pytest tests/ -v でテストを実行し、結果を docs/test/logs/<entry_slug>.log に保存する
-   （entry_slug は entry の先頭20文字をファイル名として使用する）
+   python -m pytest tests/ -v でテストを実行し、結果を .loop/test_logs/{entry}.log に保存する。
    全テストが通ることを確認する。
 
 6. 修正内容を書き出す
-   `docs/review/{entry_slug}.md` を Write で作成し、以下の形式で記録する:
+   `docs/review/{entry}.md` を Write で作成し、以下の形式で記録する:
 
    ```markdown
    # {entry} レビュー結果
@@ -107,7 +106,10 @@ jpoke {config.category} 再レビュータスク: {entry}
 
    修正がなかった項目は「変更なし」と記載する。
 
-7. 結果を記録する
+7. 進捗ファイルを更新する
+   `{config.progress_file}` の {entry} 該当行を実装済みに更新する。
+
+8. 結果を記録する
    成功: `.loop/review_results/{entry}.ok` を Write で作成（内容は空でよい）
    失敗: `.loop/review_results/{entry}.fail` を Write で作成（失敗理由を記述）
 ```

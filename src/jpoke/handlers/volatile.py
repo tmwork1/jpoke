@@ -137,6 +137,13 @@ def restrict_commands(battle: Battle,
     return HandlerReturn(value=new_options)
 
 
+def あなをほる_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """あなをほる状態の相手に対して じしん・マグニチュード の威力を2倍にする。"""
+    if ctx.move.name in ("じしん", "マグニチュード"):
+        value *= 2
+    return HandlerReturn(value=value)
+
+
 def あなをほる_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """あなをほる状態の回避判定"""
     return can_hit_hidden_target(battle, ctx, value, "あなをほる")
@@ -168,6 +175,9 @@ def あばれる_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerR
 def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """あめまみれのターン経過処理
 
+    仕様: 3ターンの間、毎ターン終了時にすばやさを1段階下げる。
+    S-1を先に適用し、その後カウントを減らす（count=1の最終ターンもS-1を発動させるため）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -177,9 +187,8 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
         HandlerReturn:
     """
     mon = ctx.source
+    battle.modify_stats(mon, {"S": -1}, reason="あめまみれ")
     battle.volatile_manager.tick(mon, "あめまみれ")
-    if mon.has_volatile("あめまみれ"):
-        battle.modify_stats(mon, {"S": -1}, reason="あめまみれ")
     return HandlerReturn(value=value)
 
 
@@ -240,6 +249,10 @@ def うちおとす_check_floating(battle: Battle, ctx: EventContext, value: Any
 def おんねん_deplete_attacking_move_pp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おんねん状態のひんし時処理（相手の技PPを0にする）
 
+    発動しない条件:
+    - すでにPPが0になっている技
+    - non_onnen ラベルを持つ技（わるあがき等）
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -248,6 +261,8 @@ def おんねん_deplete_attacking_move_pp(battle: Battle, ctx: EventContext, va
     Returns:
         HandlerReturn: 常にTrue
     """
+    if ctx.move.pp == 0 or ctx.move.has_label("non_onnen"):
+        return HandlerReturn(value=value)
     ctx.move.pp = 0
     battle.add_event_log(
         ctx.attacker,
@@ -653,7 +668,9 @@ def とくせいなし_enable_ability(battle: Battle, ctx: EventContext, value: 
 
 
 def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ねむけを解除してねむりを付与する
+    """ねむけを解除してねむりを付与する。
+
+    Champions 仕様: count=2（確率1/3）または count=3（確率2/3）。
 
     Args:
         battle: バトルインスタンス
@@ -663,7 +680,9 @@ def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: EventContext, value: A
     Returns:
         HandlerReturn: 常にTrue
     """
-    count = battle.random.randint(1, 3)
+    # Champions仕様: count=2が1/3、count=3が2/3
+    # AilmentManager.apply でも同じ分布で自動決定されるが、ねむけ→ねむり移行は明示指定
+    count = 2 if battle.random.random() < 1 / 3 else 3
     battle.ailment_manager.apply(ctx.source, "ねむり", count=count)
     return HandlerReturn(value=True)
 
@@ -949,7 +968,10 @@ def トーチカ_protect(battle: Battle, ctx: EventContext, value: Any) -> Handl
 
 
 def アクアリング_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return HandlerReturn(value=battle.modify_hp(ctx.source, r=1/16, source=ctx.source))
+    """アクアリング状態のターン終了時回復（最大HPの1/16、最小1）。"""
+    mon = ctx.source
+    heal = max(1, mon.max_hp // 16)
+    return HandlerReturn(value=battle.modify_hp(mon, v=heal, source=mon))
 
 
 def アンコール_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

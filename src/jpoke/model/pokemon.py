@@ -150,6 +150,9 @@ class Pokemon:
         # アイテムの状態をリセット
         self.item.reset_on_switch_out()
 
+        # 状態異常の経過ターンをリセット（もうどくは交代でカウントが1/16からやり直し）
+        self.ailment.reset_on_switch_out()
+
     def reset_turn_state(self):
         """ターン初期化処理。"""
         self.hits_taken = 0

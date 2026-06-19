@@ -50,6 +50,25 @@ def hp_ratio_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRet
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
+def あばれる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """あばれる系技の初回命中時に揮発性状態を付与する。
+
+    あばれる・げきりん・はなびらのまい・だいふんげきで共用。
+    すでにあばれる状態の場合（強制行動の2ターン目以降）は何もしない。
+
+    ターン数は 2〜3 ターンのランダム（最初の使用時に決定）。
+    """
+    attacker = ctx.attacker
+    if attacker.has_volatile("あばれる"):
+        return HandlerReturn(value=value)
+    count = battle.random.randint(2, 3)
+    battle.volatile_manager.apply(
+        attacker, "あばれる", count=count, source=attacker, ctx=ctx,
+        move_name=ctx.move.name
+    )
+    return HandlerReturn(value=value)
+
+
 def オーラぐるま_check_move_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """オーラぐるまのタイプを判定する。"""
     if ctx.source and ctx.source.ability.is_hangry:

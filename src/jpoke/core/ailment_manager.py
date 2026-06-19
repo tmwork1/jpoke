@@ -58,7 +58,7 @@ class AilmentManager:
         Args:
             target: 対象のポケモン
             name: 状態異常名
-            count: 継続ターン数（必要な状態異常のみ）
+            count: 継続ターン数（ねむりは省略時に Champions 仕様で自動決定）
             source: 状態異常の原因となったポケモン
             overwrite: Trueの場合、既存の状態異常を上書き
             ctx: ON_BEFORE_APPLY_AILMENT イベントの EventContext
@@ -68,7 +68,12 @@ class AilmentManager:
         Note:
             - overwrite=Falseの場合、既に状態異常があれば失敗
             - 同じ状態異常の重ね掛けは不可
+            - ねむりの count=None 時は Champions 仕様で自動決定（2: 1/3、3: 2/3）
         """
+        # ねむりのcountをChampions仕様で自動決定（count=Noneのとき）
+        if name == "ねむり" and count is None:
+            count = 2 if self.battle.random.random() < 1 / 3 else 3
+
         # overwrite=True でない限り上書き不可
         if target.ailment.is_active and not overwrite:
             return False

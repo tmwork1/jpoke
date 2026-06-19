@@ -258,7 +258,7 @@ def test_ねむる_すでにねむり状態では失敗する():
 
 
 def test_ねむる_ねむり状態になる():
-    """ねむる: 使用後に count=2 のねむり状態になること"""
+    """ねむる: 使用後に count=3 のねむり状態になること（Champions仕様: ねむる固定count=3）"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ねむる"])],
         team1=[Pokemon("ピカチュウ")],
@@ -270,7 +270,7 @@ def test_ねむる_ねむり状態になる():
     t.run_move(battle, 0)
 
     assert mon.has_ailment("ねむり")
-    assert mon.ailment.count == 2
+    assert mon.ailment.count == 3
 
 
 def test_ねむる_既存の状態異常が解除される():

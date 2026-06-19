@@ -33,7 +33,7 @@ MOVES: dict[str, MoveData] = {
         category="物理",
         pp=99999,
         power=40,
-        labels=["contact", "non_encore"],
+        labels=["contact", "non_encore", "non_onnen"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.わるあがき_self_damage,
@@ -239,6 +239,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.あばれる_apply,
+            ),
         }
     ),
     "あんこくきょうだ": MoveData(

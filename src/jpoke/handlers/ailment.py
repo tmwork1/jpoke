@@ -23,17 +23,24 @@ class AilmentHandler(Handler):
 
 
 def どく_damage(battle: Battle, ctx: EventContext, value: Any):
-    """どく状態によるターン終了時ダメージ（1/8）。"""
+    """どく状態によるターン終了時ダメージ（最大HPの1/8、最小1）。"""
     mon = ctx.source
-    battle.modify_hp(mon, v=-(mon.max_hp // 8), reason="poison")
+    damage = max(1, mon.max_hp // 8)
+    battle.modify_hp(mon, v=-damage, reason="poison")
     return HandlerReturn(value=value)
 
 
 def もうどく_damage(battle: Battle, ctx: EventContext, value: Any):
+    """もうどく状態によるターン終了時ダメージ（経過ターンに比例して増加）。
+
+    ダメージ量: max(1, 最大HP × min(15, 経過ターン数) // 16)
+    経過ターン数の上限は15（最大ダメージは最大HP × 15/16）。
+    """
     battle.ailment_manager.tick(ctx.source)
     mon = ctx.source
-    damage = -(mon.max_hp * mon.ailment.elapsed_turns // 16)
-    battle.modify_hp(mon, v=damage, reason="poison")
+    turns = min(15, mon.ailment.elapsed_turns)
+    damage = max(1, mon.max_hp * turns // 16)
+    battle.modify_hp(mon, v=-damage, reason="poison")
     return HandlerReturn(value=value)
 
 
@@ -43,12 +50,15 @@ def まひ_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn
 
 
 def まひ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """まひ状態による行動不能チェック（25%確率）"""
+    """まひ状態による行動不能チェック（12.5%確率）。
+
+    Champions仕様: 行動不能率は12.5%（SV以前の25%から変更）。
+    """
     # テスト用に確率を固定できる
     if battle.test_option.trigger_ailment is not None:
         trigger = battle.test_option.trigger_ailment
     else:
-        trigger = battle.random.random() < 0.25
+        trigger = battle.random.random() < 0.125
 
     if trigger:
         battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
@@ -58,8 +68,10 @@ def まひ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerRetur
 
 
 def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """やけど状態によるターン終了時ダメージ（1/16）"""
-    battle.modify_hp(ctx.source, r=-1/16)
+    """やけど状態によるターン終了時ダメージ（最大HPの1/16、最小1）。"""
+    mon = ctx.source
+    damage = max(1, mon.max_hp // 16)
+    battle.modify_hp(mon, v=-damage, reason="burn")
     return HandlerReturn(value=value)
 
 
@@ -90,20 +102,32 @@ def ねむり_check_action(battle: Battle, ctx: EventContext, value: Any) -> Han
 
 
 def こおり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """こおり状態による行動不能チェック（20%確率で解凍）"""
+    """こおり状態による行動不能チェック。
+
+    Champions仕様:
+    - わざを出す直前に25%の確率で解凍（SV以前は20%）
+    - 行動不能2回の後（3回目の行動時）は必ず解凍
+    """
+    mon = ctx.attacker
+
+    # 3回目の行動時は必ず解凍（elapsed_turns >= 2 = 既に2回行動不能）
+    if mon.ailment.elapsed_turns >= 2:
+        battle.ailment_manager.remove(mon)
+        return HandlerReturn(value=True)
+
     # テスト用に確率を固定できる
     if battle.test_option.trigger_ailment is not None:
         thaw = battle.test_option.trigger_ailment
     else:
-        thaw = battle.random.random() < 0.2
+        thaw = battle.random.random() < 0.25
 
-    mon = ctx.attacker
     if thaw:
         # 解凍した：ハンドラを解除して空の状態に
         battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
 
-    # まだ凍っている
+    # まだ凍っている：行動不能カウントを増やす
+    battle.ailment_manager.tick(mon)
     battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
                          payload={"reason": "こおり"})
     return HandlerReturn(value=False, stop_event=True)
