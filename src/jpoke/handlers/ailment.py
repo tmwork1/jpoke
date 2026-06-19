@@ -79,7 +79,7 @@ def ねむり_check_action(battle: Battle, ctx: EventContext, value: Any) -> Han
         battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
 
-    if ctx.move.name in ["いびき", "ねごと"]:
+    if ctx.move.name in ["いびき", "ねごと"] or ctx.attacker.sleep_talk_active:
         return HandlerReturn(value=True)
 
     # まだ眠っている

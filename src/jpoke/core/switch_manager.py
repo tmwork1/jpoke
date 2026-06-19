@@ -96,6 +96,10 @@ class SwitchManager:
             migawari_hp = old.volatiles["みがわり"].hp
         state.inherit_migawari = False
 
+        # バトンタッチの引き継ぎデータを確保
+        baton_data = state.baton_pass_data
+        state.baton_pass_data = None
+
         if old is not None:
             self._switch_out(old)
 
@@ -105,6 +109,17 @@ class SwitchManager:
         # みがわりを交代先に引き継ぐ
         if migawari_hp is not None:
             self.battle.volatile_manager.apply(new, "みがわり", hp=migawari_hp)
+
+        # バトンタッチのランク・volatile を交代先に適用する
+        if baton_data is not None:
+            # ランク引き継ぎ（クリアボディ等を経由しない直接代入）
+            for stat, v in baton_data["rank"].items():
+                new.rank[stat] = v
+            # volatile 引き継ぎ
+            for volatile_name, v_data in baton_data["volatiles"].items():
+                count = v_data.get("count")
+                kwargs = {k: val for k, val in v_data.items() if k != "count"}
+                self.battle.volatile_manager.apply(new, volatile_name, count=count, **kwargs)
 
         # ポケモンが場に出た時の処理
         if process_events_after_switch:

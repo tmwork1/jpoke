@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .player_state import PlayerState
 
 from jpoke.utils import fast_copy
-from jpoke.enums import Event, Command
+from jpoke.enums import Event, Command, Interrupt
 from jpoke.model import Move
 
 from .context import EventContext
@@ -36,10 +36,23 @@ class CommandManager:
         return Command.selection_commands()[:len(state.team)]
 
     def get_available_switch_commands(self, player: Player) -> list[Command]:
-        """交代可能なコマンドのリストを取得する。"""
-        if not self.battle.can_switch(player):
-            return []
+        """交代可能なコマンドのリストを取得する。
+
+        Note:
+            バトンタッチによる PIVOT 交代中はとらわれ状態チェックをスキップし、
+            控えに生きているポケモンがいれば交代可能とする。
+        """
         state = self.battle.player_states[player]
+        # PIVOT（バトンタッチ等）中はとらわれ状態に関わらず交代可能
+        if state.interrupt != Interrupt.PIVOT:
+            if not self.battle.can_switch(player):
+                return []
+        bench_alive = any(
+            mon is not state.active and mon.alive
+            for mon in state.team
+        )
+        if not bench_alive:
+            return []
         return [
             Command.get_switch_command(i)
             for i, mon in enumerate(state.team)

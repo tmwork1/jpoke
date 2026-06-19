@@ -230,6 +230,19 @@ FIELDS: dict[str, FieldData] = {
             ),
         },
     ),
+    "フェアリーロック": FieldData(
+        handlers={
+            Event.ON_CHECK_TRAPPED: h.FieldHandler(
+                h.フェアリーロック_check_trapped,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END: h.FieldHandler(
+                h.フェアリーロック_tick_global_field,
+                subject_spec="source:self",
+                priority=140,
+            ),
+        },
+    ),
     "マジックルーム": FieldData(
         handlers={
             Event.ON_FIELD_ACTIVATE: h.FieldHandler(

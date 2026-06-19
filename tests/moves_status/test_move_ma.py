@@ -31,6 +31,222 @@ def test_まきびし_相手陣営に設置される():
     assert side.fields["まきびし"].is_active
 
 
+def test_みずびたし_すでにみずタイプのみなら失敗():
+    """みずびたし: 相手がすでにみずタイプのみなら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("ゼニガメ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert defender.types == ["みず"]
+    t.run_move(battle, 0)
+
+    # volatile が付与されないこと
+    assert not defender.has_volatile("みずびたし")
+
+
+def test_みずびたし_テラスタル中はタイプが変わらない():
+    """みずびたし: テラスタル中の相手には volatile が付与されてもタイプが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("カビゴン", tera_type="ほのお")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # テラスタル状態にする
+    defender.terastallized = True
+    assert defender.active_tera_type == "ほのお"
+    t.run_move(battle, 0)
+
+    # volatile は付与されるが、タイプはテラスタルタイプが優先される
+    assert defender.has_volatile("みずびたし")
+    assert defender.types == ["ほのお"]
+
+
+def test_みずびたし_ハロウィン後の相手に使うとaddedTypesがクリアされみずのみになる():
+    """みずびたし: ハロウィン後の相手に使うと added_types がクリアされてみずタイプのみになること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"ハロウィン": 0},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # ハロウィン付与後はゴーストタイプが追加されている
+    assert defender.has_type("ゴースト")
+    t.run_move(battle, 0)
+
+    # みずびたし後は added_types がクリアされてみずのみになること
+    assert defender.types == ["みず"]
+    assert not defender.has_type("ゴースト")
+
+
+def test_みずびたし_みずタイプに変える():
+    """みずびたし: 使用後に defender がみずタイプのみになること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert not defender.has_type("みず")
+    t.run_move(battle, 0)
+
+    assert defender.types == ["みず"]
+    assert defender.has_volatile("みずびたし")
+
+
+def test_みずびたし_交代すると元のタイプに戻る():
+    """みずびたし: 交代後に volatile_override_type がリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドラン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.types == ["みず"]
+
+    # 交代後は元のタイプに戻ること
+    t.run_switch(battle, 1, 1)
+    assert not defender.has_volatile("みずびたし")
+    assert defender.volatile_override_type is None
+    # カビゴンはノーマルタイプ
+    assert defender.types == ["ノーマル"]
+
+
+def test_みずびたし_複合タイプに使うと成功しみずのみになる():
+    """みずびたし: みず+ほのおの複合タイプを持つ相手にもみずのみになること"""
+    # シャワーズはみずタイプのみなので、カメックス（みず）ではなく
+    # ボルケニオン（みず+ほのお）を使う
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("ボルケニオン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert "みず" in defender.types
+    assert "ほのお" in defender.types
+    t.run_move(battle, 0)
+
+    # みずタイプのみになること
+    assert defender.types == ["みず"]
+    assert defender.has_volatile("みずびたし")
+
+
+def test_ミラータイプ_コピー後addedTypesがリセットされる():
+    """ミラータイプ: タイプコピー後に attacker の added_types がリセットされること"""
+    # ハロウィンでゴーストが追加されたピカチュウがミラータイプを使った場合
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("エンテイ")],
+        volatile0={"ハロウィン": 0},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert "ゴースト" in attacker.types
+    t.run_move(battle, 0)
+
+    # コピー後は added_types がリセットされること
+    assert attacker.added_types == []
+    # エンテイ（ほのお）のタイプをコピー
+    assert attacker.types == ["ほのお"]
+
+
+def test_ミラータイプ_ステラテラスタル中はdataTypesをコピーする():
+    """ミラータイプ: 相手がステラテラスタル中なら data.types をコピーする"""
+    # ゲッコウガがステラテラスタルしている場合は元のタイプ（みず・あく）をコピー
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラータイプ"])],
+        team1=[Pokemon("ゲッコウガ", tera_type="ステラ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.terastallized = True
+    assert defender.active_tera_type == "ステラ"
+    t.run_move(battle, 0)
+
+    # data.types をコピー（みず・あく）
+    assert "みず" in attacker.types
+    assert "あく" in attacker.types
+    assert attacker.move_override_types == list(defender.data.types)
+
+
+def test_ミラータイプ_タイプが同じなら失敗する():
+    """ミラータイプ: 使用者のタイプが対象のタイプと同じなら失敗する"""
+    # ピカチュウ（でんき）→ ピカチュウ（でんき）なら失敗
+    # ただし使用者はすでにミラータイプ後でないとタイプが同じにならないので
+    # カビゴン（ノーマル）対カビゴン（ノーマル）で試す
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラータイプ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["ノーマル"]
+    t.run_move(battle, 0)
+
+    # 失敗するためタイプ変化なし
+    assert attacker.move_override_types is None
+    assert attacker.types == ["ノーマル"]
+
+
+def test_ミラータイプ_テラスタル中はテラタイプをコピーする():
+    """ミラータイプ: 相手がテラスタル中（ステラ以外）ならテラタイプのみをコピーする"""
+    # ゲッコウガ（みず・あく）がほのおテラスタルしている場合はほのおをコピー
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("ゲッコウガ", tera_type="ほのお")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.terastallized = True
+    assert defender.active_tera_type == "ほのお"
+    t.run_move(battle, 0)
+
+    # テラタイプのみをコピー
+    assert attacker.types == ["ほのお"]
+    assert attacker.move_override_types == ["ほのお"]
+
+
+def test_ミラータイプ_交代するとタイプがリセットされる():
+    """ミラータイプ: 交代後に move_override_types がリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"]), Pokemon("カビゴン")],
+        team1=[Pokemon("ゲッコウガ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.move_override_types == ["みず", "あく"]
+
+    # 交代後はリセットされること
+    t.run_switch(battle, 0, 1)
+    assert attacker.move_override_types is None
+    # ピカチュウのタイプは元に戻る
+    assert attacker.types == ["でんき"]
+
+
+def test_ミラータイプ_相手のタイプをコピーする():
+    """ミラータイプ: 使用後に attacker のタイプが defender のタイプと同じになること"""
+    # ピカチュウ（でんき）→ ゲッコウガ（みず・あく）のタイプをコピー
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("ゲッコウガ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["でんき"]
+    t.run_move(battle, 0)
+
+    assert "みず" in attacker.types
+    assert "あく" in attacker.types
+    assert attacker.move_override_types == ["みず", "あく"]
+
+
 def test_めいそう_とくこうととくぼう1段階ずつ上がる():
     """めいそう: 使用すると自分のとくこうとぼうぎょランクが1段階ずつ上がる"""
     battle = t.start_battle(

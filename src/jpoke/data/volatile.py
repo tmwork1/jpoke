@@ -670,6 +670,31 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "はねやすめ": VolatileData(
+        handlers={
+            Event.ON_VOLATILE_START: h.VolatileHandler(
+                h.はねやすめ_remove_flying,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.はねやすめ_restore_flying,
+                subject_spec="source:self",
+                priority=120,
+            ),
+        }
+    ),
+    "みずびたし": VolatileData(
+        handlers={
+            Event.ON_VOLATILE_START: h.VolatileHandler(
+                h.みずびたし_set_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.みずびたし_clear_type,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "もりののろい": VolatileData(
         handlers={
             Event.ON_VOLATILE_START: h.VolatileHandler(

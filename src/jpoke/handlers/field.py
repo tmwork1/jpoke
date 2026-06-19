@@ -464,6 +464,15 @@ def トリックルーム_tick_global_field(battle: Battle, ctx: EventContext, v
     return tick_global_field(battle, ctx, value, name="トリックルーム")
 
 
+def フェアリーロック_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """フェアリーロック場の状態: ゴーストタイプを含む全ポケモンの交代を禁止する。"""
+    return HandlerReturn(value=True)
+
+
+def フェアリーロック_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return tick_global_field(battle, ctx, value, name="フェアリーロック")
+
+
 def マジックルーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return tick_global_field(battle, ctx, value, name="マジックルーム")
 

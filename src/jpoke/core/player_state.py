@@ -22,6 +22,8 @@ class PlayerState:
         self.has_switched: bool = False
         self.action_order_index: int | None = None
         self.inherit_migawari: bool = False
+        # バトンタッチ引き継ぎデータ（Noneは引き継ぎなし）
+        self.baton_pass_data: dict | None = None
 
     def __deepcopy__(self, memo):
         cls = self.__class__

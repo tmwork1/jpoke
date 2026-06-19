@@ -98,12 +98,16 @@ class Pokemon:
         self.ailment: Ailment = Ailment()
         self.stellar_boosted_types: set[Type] = set()
         self.added_types: list[Type] = []
+        self.removed_types: list[Type] = []
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
         self.ability_override_type: Type | None = None
+        self.move_override_types: list[Type] | None = None
+        self.volatile_override_type: Type | None = None
+        self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -127,11 +131,14 @@ class Pokemon:
         self.rank = {k: 0 for k in STATS}
         self.executed_move = None
         self.ability_override_type = None
+        self.move_override_types = None
+        self.volatile_override_type = None
         self.ability.activated_since_switch_in = False
         self.last_lost_item_name = ""
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
         self.added_types = []
+        self.removed_types = []
 
         # 特性の状態をリセット
         # 特性が変わっている場合は特性自体をリセットする
@@ -248,16 +255,25 @@ class Pokemon:
                 base = self.data.types
             else:
                 base = [self.active_tera_type]
+        elif self.move_override_types is not None:
+            base = self.move_override_types
         elif self.ability_override_type is not None:
             base = [self.ability_override_type]
+        elif self.volatile_override_type is not None:
+            base = [self.volatile_override_type]
         else:
             base = self.data.types
 
         if not self.added_types:
-            return base
-        # 既にベースタイプに含まれているものは除外して追加する
-        extra = [t for t in self.added_types if t not in base]
-        return base + extra if extra else base
+            result = base
+        else:
+            # 既にベースタイプに含まれているものは除外して追加する
+            extra = [t for t in self.added_types if t not in base]
+            result = base + extra if extra else base
+        # はねやすめ等によるタイプ除去を適用（テラスタル中は無視）
+        if self.removed_types and not self.active_tera_type:
+            result = [t for t in result if t not in self.removed_types]
+        return result
 
     def has_type(self, type_: Type) -> bool:
         """指定されたタイプを持っているか判定する。

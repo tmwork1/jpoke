@@ -1068,6 +1068,36 @@ def ハロウィン_remove_type(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def はねやすめ_remove_flying(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はねやすめ volatile 付与時: ひこうタイプを removed_types に追加する。"""
+    mon = ctx.source
+    if "ひこう" not in mon.removed_types:
+        mon.removed_types.append("ひこう")
+    return HandlerReturn(value=value)
+
+
+def はねやすめ_restore_flying(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はねやすめ volatile 解除時 (ターン終了): ひこうタイプを復帰する。"""
+    mon = ctx.source
+    if "ひこう" in mon.removed_types:
+        mon.removed_types.remove("ひこう")
+    battle.volatile_manager.remove(mon, "はねやすめ")
+    return HandlerReturn(value=value)
+
+
+def みずびたし_set_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """みずびたし付与時: volatile_override_type をみずに設定し added_types をクリアする。"""
+    ctx.source.volatile_override_type = "みず"
+    ctx.source.added_types.clear()
+    return HandlerReturn(value=value)
+
+
+def みずびたし_clear_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """みずびたし解除時: volatile_override_type を None に戻す。"""
+    ctx.source.volatile_override_type = None
+    return HandlerReturn(value=value)
+
+
 def もりののろい_add_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """もりののろい付与時: くさタイプを added_types に追加する。"""
     if "くさ" not in ctx.source.added_types:
