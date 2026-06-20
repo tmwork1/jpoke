@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext
+    from jpoke.core import Battle, EventContext, AttackContext
 
 from jpoke.utils.type_defs import RoleSpec
 from jpoke.utils.math import apply_fixed_modifier
@@ -75,14 +75,14 @@ def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
     return HandlerReturn(value=value)
 
 
-def やけど_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def やけど_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
     if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
-def ねむり_check_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ねむり状態による行動不能チェック"""
     mon = ctx.attacker
     battle.ailment_manager.tick(mon)
@@ -101,7 +101,7 @@ def ねむり_check_action(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(value=False, stop_event=True)
 
 
-def こおり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こおり状態による行動不能チェック。
 
     Champions仕様:
@@ -133,7 +133,7 @@ def こおり_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
     return HandlerReturn(value=False, stop_event=True)
 
 
-def こおり_cure_by_fire_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def こおり_cure_by_fire_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほのお技でダメージを受けたら解凍する。"""
     if ctx.move.type == "ほのお":
         battle.ailment_manager.remove(ctx.defender)

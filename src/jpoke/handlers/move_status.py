@@ -85,8 +85,10 @@ def アンコール_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     """
     move = ctx.defender.executed_move
     if not move or move.has_label("non_encore"):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "アンコール失敗"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "アンコール失敗"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -94,8 +96,9 @@ def アンコール_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
 def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アンコールの効果を発動する。"""
     move = ctx.defender.executed_move
-    return apply_volatile_to_defender(battle, ctx, value, volatile="アンコール",
-                                      count=3, move_name=move.name)
+    return apply_volatile_to_defender(
+        battle, ctx, value, volatile="アンコール", count=3, move_name=move.name
+    )
 
 
 def いえき_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -104,8 +107,10 @@ def いえき_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     対象の特性が protected フラグを持つ場合は失敗させる。
     """
     if ctx.defender.ability.has_flag("protected"):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "保護された特性"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "保護された特性"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -123,17 +128,8 @@ def いとをはく_modify_defender_stats(battle: Battle, ctx: AttackContext, va
 def いたみわけ_equalize_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """両者の現在HPを平均化する。"""
     shared_hp = (ctx.attacker.hp + ctx.defender.hp) // 2
-
-    battle.modify_hp(
-        ctx.attacker,
-        v=shared_hp - ctx.attacker.hp,
-        reason="pain_split",
-    )
-    battle.modify_hp(
-        ctx.defender,
-        v=shared_hp - ctx.defender.hp,
-        reason="pain_split",
-    )
+    for mon in (ctx.attacker, ctx.defender):
+        battle.modify_hp(mon, v=shared_hp - mon.hp, reason="pain_split")
     return HandlerReturn(value=value)
 
 
@@ -185,17 +181,17 @@ def ちいさくなる_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
 def ちからをすいとる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちからをすいとるの失敗チェック: 相手のこうげきランクがすでに -6 なら失敗する。"""
     assert ctx.defender is not None
-    if ctx.defender.rank["A"] <= -6:
+    if ctx.defender.rank["A"] == -6:
         battle.add_event_log(
-            ctx.attacker,
-            LogCode.MOVE_FAILED,
-            payload={"reason": "ちからをすいとる_こうげき最低"},
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "こうげき最低"},
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : 回復量はランク補正込みの攻撃実数値となる
     """ちからをすいとるの効果: 相手のこうげき実数値分HPを回復し、相手のこうげきを1段階下げる。
 
     特性などでランクが下がらない場合は回復効果のみ発動する。
@@ -239,8 +235,7 @@ def みがわり_check(battle: Battle, ctx: AttackContext, value: Any) -> Handle
         or mon.hp <= mon.max_hp // 4
     ):
         battle.add_event_log(
-            mon,
-            LogCode.MOVE_FAILED,
+            mon, LogCode.MOVE_FAILED,
             payload={"reason": "みがわり"}
         )
         return HandlerReturn(value=False, stop_event=True)
@@ -259,8 +254,7 @@ def あくび_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     mon = ctx.defender
     if mon.has_volatile("ねむけ") or mon.ailment.is_active:
         battle.add_event_log(
-            ctx.attacker,
-            LogCode.MOVE_FAILED,
+            ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "すでに状態異常になっている"},
         )
         return HandlerReturn(value=False, stop_event=True)
@@ -358,8 +352,10 @@ def うたう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, valu
 def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うらみの失敗チェック: 相手が技を使っていない場合は失敗する。"""
     if ctx.defender.executed_move is None:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "うらみ"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "うらみ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -386,8 +382,7 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
     """オーロラベールの使用条件チェック: 天気が「ゆき」でない場合は失敗する。"""
     if battle.weather.name != "ゆき":
         battle.add_event_log(
-            ctx.attacker,
-            LogCode.MOVE_FAILED,
+            ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "オーロラベール"}
         )
         return HandlerReturn(value=False, stop_event=True)
@@ -451,13 +446,13 @@ def ガードシェア_equalize_stats(battle: Battle, ctx: AttackContext, value:
     ランク変化は行わず、実数値のみを書き換える。
     平均は切り捨て（// 2）。
     """
-    attacker = ctx.attacker
-    defender = ctx.defender
+    atk_stats = ctx.attacker._stats_manager.stats
+    def_stats = ctx.defender._stats_manager.stats
     # B=インデックス2、D=インデックス4
     for idx in (2, 4):
-        avg = (attacker._stats_manager.stats[idx] + defender._stats_manager.stats[idx]) // 2
-        attacker._stats_manager.stats[idx] = avg
-        defender._stats_manager.stats[idx] = avg
+        avg = (atk_stats[idx] + def_stats[idx]) // 2
+        atk_stats[idx] = avg
+        def_stats[idx] = avg
     return HandlerReturn(value=value)
 
 
@@ -466,12 +461,10 @@ def ガードスワップ_swap_ranks(battle: Battle, ctx: AttackContext, value: 
 
     実数値は変化せず、ランク変化のみを互いに入れ替える。
     """
-    attacker = ctx.attacker
-    defender = ctx.defender
+    atk_rank = ctx.attacker.rank
+    def_rank = ctx.defender.rank
     for stat in ("B", "D"):
-        attacker.rank[stat], defender.rank[stat] = (
-            defender.rank[stat], attacker.rank[stat]
-        )
+        atk_rank[stat], def_rank[stat] = def_rank[stat], atk_rank[stat]
     return HandlerReturn(value=value)
 
 
@@ -500,10 +493,12 @@ def かなしばり_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     - わるあがきに対して使うと失敗する
     """
     move = ctx.defender.executed_move
-    if not move or move.name == "わるあがき":
+    if (
+        not move
+        or move.name == "わるあがき"
+    ):
         battle.add_event_log(
-            ctx.attacker,
-            LogCode.MOVE_FAILED,
+            ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "かなしばり"}
         )
         return HandlerReturn(value=False, stop_event=True)
@@ -513,8 +508,9 @@ def かなしばり_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
 def かなしばり_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かなしばりの効果: 相手に「かなしばり」状態を付与する（4 ターン）。"""
     move = ctx.defender.executed_move
-    return apply_volatile_to_defender(battle, ctx, value, volatile="かなしばり",
-                                      count=4, move_name=move.name)
+    return apply_volatile_to_defender(
+        battle, ctx, value, volatile="かなしばり", count=4, move_name=move.name
+    )
 
 
 def からにこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

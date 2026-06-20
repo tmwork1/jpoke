@@ -40,12 +40,12 @@ def pivot(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=value)
 
 
-def ohko_modify_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ohko_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
     return HandlerReturn(value=ctx.defender.hp)
 
 
-def hp_ratio_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def hp_ratio_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
@@ -82,7 +82,7 @@ def がむしゃら_modify_damage(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def きあいパンチ_check_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def きあいパンチ_check_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """きあいパンチの発動可否を判定する。
 
     行動前に実際の攻撃ダメージを受けていた場合は不発になる。

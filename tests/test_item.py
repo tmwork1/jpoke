@@ -660,7 +660,6 @@ def test_くろいヘドロ_非どくタイプはダメージ():
 
 @pytest.mark.parametrize("terrain", ["エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド"])
 def test_グランドコート_フィールドを8ターンに延長(terrain):
-    # TODO : イベントを直接発火するのではなく、battle.terrain_manager.apply() を呼ぶようにする
     """グランドコート: 4種フィールドの持続を8ターンに延長する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="グランドコート")],
@@ -1485,9 +1484,6 @@ def test_ひかりごけ_みず被弾でD上昇():
 
 
 def test_ひかりのねんど_スクリーン8ターンに延長():
-    # TODO : イベントを直接発火するのではなく、
-    # battle.get_side(mon).activate("リフレクター", 5)
-    # を実行したときのターンを検証する
     """ひかりのねんど: リフレクターを8ターンに延長する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど")],

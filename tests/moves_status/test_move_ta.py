@@ -85,6 +85,37 @@ def test_たてこもる_ぼうぎょ最大なら変化なし():
     assert attacker.rank["B"] == 6
 
 
+def test_タールショット_すでにタールショット状態でもSは下がる():
+    """タールショット: 相手がすでにタールショット状態でもすばやさは1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タールショット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"タールショット": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # タールショット状態は重複付与されない
+    assert defender.has_volatile("タールショット")
+    # すばやさは下がる（どくのいとのすでにどく状態と同様）
+    assert defender.rank["S"] == -1
+
+
+def test_タールショット_すばやさ1段階下がりタールショット状態付与():
+    """タールショット: 相手のすばやさが1段階下がり、タールショット状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タールショット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["S"] == -1
+    assert defender.has_volatile("タールショット")
+
+
 def test_ちからをすいとる_HPが満タンのとき上限でとまる():
     """ちからをすいとる: 回復量で最大HPを超えることはない"""
     battle = t.start_battle(

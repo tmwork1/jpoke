@@ -1,11 +1,11 @@
 """変化技ハンドラの単体テスト（あ行）。"""
 
-import pytest
 from jpoke import Pokemon
 from .. import test_utils as t
 
 
 def test_アクアリング_すでに付与済みなら失敗する():
+    # TODO : 同一Volatileの重複付与は失敗する仕様のためテスト不要。他も同様
     """アクアリング: すでにアクアリング状態なら効果を上書きしない（失敗扱い）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["アクアリング"])],
@@ -46,7 +46,8 @@ def test_あくび_すでにねむけ状態なら失敗():
 
 
 def test_あくび_すでに状態異常なら失敗():
-    """あくび: 対象がすでに状態異常を持っているなら失敗する"""
+    """あくび: 対象がすでに状態異常を持っているなら失敗する。
+    状態異常による揮発状態のブロックなので追加検証している。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
         team1=[Pokemon("カビゴン")],
@@ -69,10 +70,12 @@ def test_あくび_ねむけ付与():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("ねむけ")
+    assert defender.volatiles["ねむけ"].count == 2
     assert not defender.has_ailment("ねむり")
 
 
-def test_あくび_使ったターン終了ではねむりにならない():
+def test_あくび_次のターン終了でねむりになる():
+    # TODO : ねむけVolatileの挙動はtest/volatile.pyでテストされているので不要。
     """あくび: 使用したターンの終了時点ではまだねむり状態にならない（count=2）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
@@ -86,18 +89,6 @@ def test_あくび_使ったターン終了ではねむりにならない():
     assert defender.has_volatile("ねむけ")
     assert not defender.has_ailment("ねむり")
 
-
-def test_あくび_次のターン終了でねむりになる():
-    """あくび: 次のターン終了時にねむり状態になる（count=2）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker, defender = battle.actives
-    t.run_move(battle, 0)
-
-    # 1回目のターン終了ではねむけ継続
-    t.end_turn(battle)
     # 2回目のターン終了でねむりに移行
     t.end_turn(battle)
     assert not defender.has_volatile("ねむけ")
@@ -105,6 +96,7 @@ def test_あくび_次のターン終了でねむりになる():
 
 
 def test_あくまのキッス_すでに状態異常なら失敗():
+    # TODO : Ailmentの重複付与は失敗する仕様のため、強制上書きする効果以外はテスト不要。他も同様
     """あくまのキッス: 対象がすでに状態異常を持っている場合は失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["あくまのキッス"])],
@@ -133,6 +125,7 @@ def test_あくまのキッス_ねむり付与():
 
 
 def test_あさのひざし_あめで4分の1回復():
+    # TODO : 天候による効果変動はパラメタライズでまとめる
     """あさのひざし: あめ中は最大HPの1/4を回復する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["あさのひざし"])],
@@ -235,6 +228,7 @@ def test_あさのひざし_通常天候で2分の1回復():
 
 
 def test_あまえる_attacker_のこうげきは変化しない():
+    # TODO : 効果対象の検証までは冗長なので不要
     """あまえる: 使用者（attacker）のこうげきは変化しない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["あまえる"])],
@@ -294,6 +288,7 @@ def test_あまごい_天気があめになる():
 
 
 def test_あやしいひかり_こんらん付与():
+    # TODO : こんらんのカウント数は検証不要。他ハンドラも同様。
     """あやしいひかり: 相手をこんらん状態にする"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["あやしいひかり"])],
@@ -322,6 +317,602 @@ def test_あやしいひかり_すでにこんらん中は失敗():
     # カウントは変わらない（重複付与されない）
     assert defender.has_volatile("こんらん")
     assert defender.volatiles["こんらん"].count == 4
+
+
+def test_いえき_protectedフラグ持ちに失敗():
+    """いえき: アイスフェイス（protectedフラグ持ち）の相手には失敗してMOVE_FAILEDログが出る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いえき"])],
+        team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("とくせいなし")
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "保護された特性"
+        for log in logs
+    )
+
+
+def test_いえき_すでにとくせいなし状態なら失敗():
+    """いえき: 対象がすでに「とくせいなし」状態なら失敗する（volatile_manager 内部チェック）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いえき"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"とくせいなし": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # すでに付与されているため「とくせいなし」は変化なし（count も変わらない）
+    assert defender.volatiles["とくせいなし"].count == 1
+
+
+def test_いえき_とくせいなし解除後に特性が復活():
+    """いえき: 「とくせいなし」状態の相手が交代すると特性が復活する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いえき"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="めんえき"),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        accuracy=100,
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender_before.has_volatile("とくせいなし")
+    assert not defender_before.ability.enabled
+
+    # 交代でとくせいなしが解除され特性が復活することを確認
+    t.run_switch(battle, 1, 1)
+    assert not defender_before.has_volatile("とくせいなし")
+    assert defender_before.ability.enabled
+
+
+def test_いえき_通常特性を持つ相手に成功():
+    """いえき: 通常特性（せいでんき等）の相手に使うと「とくせいなし」揮発状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いえき"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("とくせいなし")
+
+
+def test_いとをはく_すでに最低ランクなら変化なし():
+    """いとをはく: 相手のすばやさがすでに-6ならランク変化なし"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いとをはく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"S": -6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    assert defender.rank["S"] == -6
+
+
+def test_いとをはく_すばやさ2段階下がる():
+    """いとをはく: 相手のすばやさランクが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いとをはく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["S"] == -2
+
+
+def test_いのちのしずく_HPが4分の1回復する():
+    """いのちのしずく: HPが減っているとき最大HPの1/4を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちのしずく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 4)
+
+
+def test_いのちのしずく_HP満タンなら失敗してMOVE_FAILEDログが出る():
+    """いのちのしずく: HPが満タンのとき技が失敗し MOVE_FAILED ログが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちのしずく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+    logs = battle.event_logger.logs
+    assert any(log.log == LogCode.MOVE_FAILED for log in logs)
+
+
+def test_いのちのしずく_かいふくふうじ中は回復が無効化される():
+    """いのちのしずく: かいふくふうじ状態のとき回復が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちのしずく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"かいふくふうじ": 3},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1
+
+
+def test_いばる_こうげき2段階上がりこんらん付与():
+    """いばる: 相手のこうげきが2段階上がり、こんらん状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いばる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == 2
+    assert defender.has_volatile("こんらん")
+
+
+def test_いばる_こうげき最大でもこんらん未付与なら成功():
+    """いばる: こうげきが+6でもこんらん状態でなければ技は成功しこんらんを付与する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いばる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"A": 6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == 6
+    assert defender.has_volatile("こんらん")
+
+
+def test_いばる_すでにこんらんかつこうげき最大なら失敗():
+    """いばる: こうげきが+6かつこんらん済みなら技が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いばる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"こんらん": 3},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # こうげきを+6にする
+    battle.modify_stats(defender, {"A": 6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    # こうげきは変化せず、こんらんも新たに付与されない
+    assert defender.rank["A"] == 6
+    assert defender.volatiles["こんらん"].count == 3  # カウント変わらず
+
+
+def test_いやしのすず_どくを回復する():
+    """いやしのすず: 使用者がどく状態のとき回復される"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("どく", None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
+def test_いやしのすず_まひを回復する():
+    """いやしのすず: 使用者がまひ状態のとき回復される（でんきタイプ以外で確認）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("まひ", None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
+def test_いやしのすず_やけどを回復する():
+    """いやしのすず: 使用者がやけど状態のとき回復される"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("やけど", None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
+def test_いやしのすず_状態異常なしなら失敗():
+    """いやしのすず: チームに状態異常がいない場合は技が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    assert not attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    # 状態異常なし → 技が失敗 → 状態に変化なし
+    assert not attacker.ailment.is_active
+    logs = battle.event_logger.logs
+    assert any(log.log == LogCode.MOVE_FAILED for log in logs)
+
+
+def test_いやしのねがい_使用者がひんしになりサイドフィールドが設置される():
+    """いやしのねがい: 使用後に使用者がひんし状態になり、自陣営にサイドフィールドが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやしのねがい"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+    side = battle.get_side(attacker)
+    assert side.get("いやしのねがい").is_active
+
+
+def test_いやしのねがい_死に出しポケモンのHPが全回復される():
+    """いやしのねがい: 死に出しのポケモンのHPが全回復される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやしのねがい"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    # battle 内部の PlayerState のチームからベンチポケモンを取得する
+    bench = battle.player_states[battle.players[0]].team[1]
+    bench.hp = 1
+    battle.run_faint_switch()
+
+    assert bench.hp == bench.max_hp
+    side = battle.get_side(bench)
+    assert not side.get("いやしのねがい").is_active
+
+
+def test_いやしのねがい_死に出しポケモンの状態異常が回復される():
+    """いやしのねがい: 死に出しのポケモンの状態異常（まひ）が回復される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやしのねがい"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("まひ", None),
+    )
+    t.run_move(battle, 0)
+
+    bench = battle.player_states[battle.players[0]].team[1]
+    battle.ailment_manager.apply(bench, "まひ")
+    assert bench.ailment.is_active
+    battle.run_faint_switch()
+
+    assert not bench.ailment.is_active
+
+
+def test_いやしのはどう_HPが半分回復する():
+    """いやしのはどう: 相手のHPが減っているとき相手の最大HPの1/2を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやしのはどう"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1 + int(defender.max_hp * 1 / 2)
+
+
+def test_いやしのはどう_HP満タンなら失敗してMOVE_FAILEDログが出る():
+    """いやしのはどう: 相手のHPが満タンのとき技が失敗し MOVE_FAILED ログが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやしのはどう"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    assert defender.hp == defender.max_hp
+    t.run_move(battle, 0)
+
+    assert defender.hp == defender.max_hp
+    logs = battle.event_logger.logs
+    assert any(log.log == LogCode.MOVE_FAILED for log in logs)
+
+
+def test_いやしのはどう_かいふくふうじ中は回復が無効化される():
+    """いやしのはどう: かいふくふうじ状態の相手には回復が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやしのはどう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"かいふくふうじ": 3},
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+
+
+def test_うたう_すでに状態異常なら失敗():
+    """うたう: 対象がすでに状態異常を持っている場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うたう"])],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("まひ", None),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("まひ")
+    assert not defender.has_ailment("ねむり")
+
+
+def test_うたう_ねむり付与():
+    """うたう: 相手をねむり状態にする（accuracy=100で固定）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うたう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("ねむり")
+
+
+def test_エレキフィールド_すでに同じフィールドなら失敗():
+    """エレキフィールド: すでにエレキフィールド中は発動しない（失敗）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキフィールド"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+    )
+    t.run_move(battle, 0)
+
+    # カウントは変わらない（再発動されない）
+    assert battle.terrain.name == "エレキフィールド"
+    assert battle.terrain.count == 5
+
+
+def test_エレキフィールド_フィールドが5ターン展開される():
+    """エレキフィールド: 使用すると5ターンのエレキフィールドが展開される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキフィールド"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    assert battle.terrain.name == "エレキフィールド"
+    assert battle.terrain.count == 5
+
+
+def test_オーロラベール_ゆき中なら自陣営に設置される():
+    """オーロラベール: ゆき天候中に使用すると自陣営に5ターンのオーロラベールが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["オーロラベール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("ゆき", 5),
+    )
+    t.run_move(battle, 0)
+
+    side = battle.get_side(battle.actives[0])
+    assert side.fields["オーロラベール"].is_active
+    assert side.fields["オーロラベール"].count == 5
+
+
+def test_オーロラベール_ゆき以外では失敗():
+    """オーロラベール: ゆき天候でない場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["オーロラベール"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    side = battle.get_side(battle.actives[0])
+    assert not side.fields["オーロラベール"].is_active
+
+
+def test_おいかぜ_すでにおいかぜなら失敗():
+    """おいかぜ: すでにおいかぜが有効なら失敗（再設置されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おいかぜ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"おいかぜ": 3},
+    )
+    side = battle.get_side(battle.actives[0])
+    t.run_move(battle, 0)
+
+    # カウントは変わらない
+    assert side.fields["おいかぜ"].is_active
+    assert side.fields["おいかぜ"].count == 3
+
+
+def test_おいかぜ_自陣営に4ターン設置される():
+    """おいかぜ: 使用すると自陣営に4ターンのおいかぜが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おいかぜ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    side = battle.get_side(battle.actives[0])
+    assert side.fields["おいかぜ"].is_active
+    assert side.fields["おいかぜ"].count == 4
+
+
+def test_おかたづけ_こうげきとすばやさが1段階ずつ上がる():
+    """おかたづけ: 使用するとこうげきとすばやさが1段階ずつ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["A"] == 1
+    assert attacker.rank["S"] == 1
+
+
+def test_おかたづけ_みがわりを除去するとVOLATILE_REMOVEDログが出る():
+    """おかたづけ: 相手のみがわりを除去するとVOLATILE_REMOVEDログが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("みがわり")
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.VOLATILE_REMOVED
+        and log.payload is not None
+        and log.payload.get("volatile") == "みがわり"
+        for log in logs
+    )
+
+
+def test_おかたづけ_相手陣営のまきびしを除去するとFIELD_ENDEDログが出る():
+    """おかたづけ: 相手陣営のまきびしを除去するとFIELD_ENDEDログが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"まきびし": 1},
+    )
+    foe_side = battle.get_side(battle.actives[1])
+    assert foe_side.get("まきびし").is_active
+    t.run_move(battle, 0)
+
+    assert not foe_side.get("まきびし").is_active
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.FIELD_ENDED
+        and log.payload is not None
+        and log.payload.get("field") == "まきびし"
+        for log in logs
+    )
+
+
+def test_おきみやげ_まもるで防がれると使用者はひんしにならない():
+    """おきみやげ: 相手にまもるがかかっている場合、使用者はひんしにならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手にまもるを付与する
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    t.run_move(battle, 0)
+
+    assert not attacker.fainted
+    assert defender.rank["A"] == 0
+    assert defender.rank["C"] == 0
+
+
+def test_おきみやげ_使用者がひんしになる():
+    """おきみやげ: 使用者がひんしになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+
+
+def test_おきみやげ_相手のこうげきとくこうが2段階下がる():
+    """おきみやげ: 相手のこうげきととくこうが2段階ずつ下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == -2
+    assert defender.rank["C"] == -2
+
+
+def test_おたけび_こうげきとくこう1段階ずつ下がる():
+    """おたけび: 相手のこうげきととくこうランクが1段階ずつ下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おたけび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == -1
+    assert defender.rank["C"] == -1
+
+
+def test_おたけび_すでに最低ランクなら変化なし():
+    """おたけび: こうげき・とくこうがともにすでに-6ならランク変化なし"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おたけび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"A": -6, "C": -6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    assert defender.rank["A"] == -6
+    assert defender.rank["C"] == -6
+
+
+def test_おだてる_すでにこんらんかつとくこう最大なら失敗():
+    """おだてる: とくこうが+6かつこんらん済みなら技が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おだてる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"こんらん": 3},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"C": 6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    # とくこうは変化せず、こんらんも新たに付与されない
+    assert defender.rank["C"] == 6
+    assert defender.volatiles["こんらん"].count == 3
+
+
+def test_おだてる_とくこう1段階上がりこんらん付与():
+    """おだてる: 相手のとくこうが1段階上がり、こんらん状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おだてる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["C"] == 1
+    assert defender.has_volatile("こんらん")
 
 
 def test_おにび_すでに状態異常なら失敗():
@@ -360,6 +951,7 @@ def test_おにび_やけど付与():
 
 
 def test_おにび_複合ほのおタイプにも無効():
+    # TODO : タイプ無効テストはパラメタライズでまとめる
     """おにび: ほのお複合タイプの相手にも無効（ファイアロー: ほのお+ひこう）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["おにび"])],

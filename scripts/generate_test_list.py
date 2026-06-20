@@ -4,8 +4,11 @@ import ast
 from pathlib import Path
 
 
+# TODO : tests/subdir/test_*.py に分割されている場合、
+# 出力では docs/tests/subdir.md にすべてまとめるように修正
+
 TESTS_DIR = Path("tests")
-OUTPUT_DIR = Path("docs/test")
+OUTPUT_DIR = Path("docs/tests")
 
 
 def extract_parametrize_cases(

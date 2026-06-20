@@ -348,6 +348,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.force_command,
                 subject_spec="source:self",
             ),
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.ダイビング_boost_power,
+                subject_spec="defender:self",
+            ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.ダイビング_can_hit_hidden_target,
                 subject_spec="defender:self",
@@ -376,7 +380,7 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_TRY_ACTION: h.VolatileHandler(
                 h.ちょうはつ_try_action,
                 subject_spec="attacker:self",
-                priority=200
+                priority=100
             ),
             Event.ON_TURN_END: h.VolatileHandler(
                 h.ちょうはつ_tick_volatile,
@@ -482,7 +486,9 @@ VOLATILES: dict[str, VolatileData] = {
                 priority=40,
             ),
             Event.ON_TURN_END: h.VolatileHandler(
-                h.ひるみ_remove_volatile),
+                h.ひるみ_remove_volatile,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ふういん": VolatileData(

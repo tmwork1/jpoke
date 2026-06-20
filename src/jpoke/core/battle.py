@@ -537,6 +537,8 @@ class Battle:
                   r: float = 0,
                   source: Pokemon | None = None,
                   reason: HPChangeReason = "") -> int:
+        # TODO : rの指定はBattleクラスのmodify_hpからにして、StatusManagerはvのみ受け取るようにする
+        # TODO : r > 0 の場合は v > 0, r < 0の場合は v < 0 を担保するようにして、modify_hp呼び出し側でmax(1, v)をせずに済むようにする。
         """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source)
 

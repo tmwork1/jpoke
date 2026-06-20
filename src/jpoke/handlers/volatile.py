@@ -287,8 +287,10 @@ def かいふくふうじ_block_heal(battle: Battle, ctx: EventContext, value: A
     if ctx.hp_change_reason in ("pain_split", "bench_heal"):
         return HandlerReturn(value=value)
 
-    battle.add_event_log(ctx.target, LogCode.HEAL_BLOCKED,
-                         payload={"reason": "かいふくふうじ"})
+    battle.add_event_log(
+        ctx.target, LogCode.HEAL_BLOCKED,
+        payload={"reason": "かいふくふうじ"}
+    )
     return HandlerReturn(value=0)
 
 
@@ -327,8 +329,10 @@ def かなしばり_try_action(battle: Battle, ctx: EventContext, value: Any) ->
     """
     volatile = ctx.attacker.volatiles["かなしばり"]
     if ctx.move.name == volatile.move_name:
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "かなしばり"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.ACTION_BLOCKED,
+            payload={"reason": "かなしばり"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -395,8 +399,10 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
     # ダメージ適用
     battle.modify_hp(ctx.attacker, v=-damage, reason="self_attack")
-    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                         payload={"reason": "こんらん"})
+    battle.add_event_log(
+        ctx.attacker, LogCode.ACTION_BLOCKED,
+        payload={"reason": "こんらん"}
+    )
     return HandlerReturn(value=False, stop_event=True)
 
 
@@ -515,8 +521,10 @@ def じごくづき_restrict_commands(battle: Battle, ctx: EventContext, value: 
 def じごくづき_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """じごくづき状態による技の不発"""
     if ctx.move.has_label("sound"):
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "じごくづき"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.ACTION_BLOCKED,
+            payload={"reason": "じごくづき"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -571,6 +579,13 @@ def タールショット_boost_fire(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
+def ダイビング_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ダイビング状態の相手に対して なみのり・うずしお の威力を2倍にする。"""
+    if ctx.move.name in ("なみのり", "うずしお"):
+        value *= 2
+    return HandlerReturn(value=value)
+
+
 def ダイビング_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ダイビング状態の回避判定"""
     return can_hit_hidden_target(battle, ctx, value, "ダイビング")
@@ -581,7 +596,7 @@ def ダイビング_remove_volatile(battle: Battle, ctx: EventContext, value: An
     return remove_volatile(battle, ctx, value, volatile="ダイビング")
 
 
-def ちいさくなる_guaranteed_hit(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちいさくなる_guaranteed_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちいさくなる状態への必中補正
 
     Args:
@@ -597,7 +612,7 @@ def ちいさくなる_guaranteed_hit(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
-def ちいさくなる_boost_power(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ちいさくなる_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちいさくなる状態への威力補正
 
     Args:
@@ -625,8 +640,10 @@ def ちょうはつ_try_action(battle: Battle, ctx: EventContext, value: Any) ->
         HandlerReturn: 変化技の場合はvalue=None（使用禁止）、攻撃技の場合はTrue
     """
     if ctx.move.category == "変化":
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "ちょうはつ"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.ACTION_BLOCKED,
+            payload={"reason": "ちょうはつ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -637,6 +654,7 @@ def でんじふゆう_check_floating(battle: Battle, ctx: EventContext, value: 
 
 
 def とくせいなし_disable_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """とくせいなし付与時に特性を無効化する。"""
     battle.add_ability_disabled_reason(ctx.source, "とくせいなし")
     return HandlerReturn(value=value)
 
@@ -738,16 +756,20 @@ def ひるみ_block_action(battle: Battle, ctx: EventContext, value: Any) -> Han
     Returns:
         HandlerReturn: 行動不能の場合はFalse
     """
-    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                         payload={"reason": "ひるみ"})
+    battle.add_event_log(
+        ctx.attacker, LogCode.ACTION_BLOCKED,
+        payload={"reason": "ひるみ"}
+    )
     return HandlerReturn(value=False, stop_event=True)
 
 
 def ふういん_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふういん状態の相手が共有技を使えないようにする。"""
     if ctx.defender.has_move(ctx.move.name):
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "ふういん"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.ACTION_BLOCKED,
+            payload={"reason": "ふういん"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -792,8 +814,10 @@ def みがわり_immune(battle: Battle, ctx: EventContext, value: Any) -> Handle
         hit_substitute
         and ctx.move.category == "変化"
     ):
-        battle.add_event_log(ctx.defender, LogCode.MOVE_IMMUNED,
-                             payload={"reason": "みがわり"})
+        battle.add_event_log(
+            ctx.defender, LogCode.MOVE_IMMUNED,
+            payload={"reason": "みがわり"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -805,8 +829,7 @@ def みがわり_block_damage(battle: Battle, ctx: EventContext, value: Any) -> 
         return HandlerReturn(value=damage)
 
     battle.add_event_log(
-        ctx.defender,
-        LogCode.SUBSTITUTE_HIT,
+        ctx.defender, LogCode.SUBSTITUTE_HIT,
         payload={"move": ctx.move.name}
     )
     volatile = ctx.defender.volatiles["みがわり"]
@@ -829,8 +852,7 @@ def みちづれ_faint(battle: Battle, ctx: EventContext, value: Any) -> Handler
     mon = ctx.attacker
     battle.modify_hp(mon, v=-mon.hp)
     battle.add_event_log(
-        mon,
-        LogCode.VOLATILE_DISPLAY,
+        mon, LogCode.VOLATILE_DISPLAY,
         payload={"volatile": "みちづれ"}
     )
     return HandlerReturn(value=value)
@@ -848,8 +870,10 @@ def メロメロ_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
         HandlerReturn: 行動不能の場合はFalse、行動可能の場合はTrue
     """
     # メロメロ状態の宣言
-    battle.add_event_log(ctx.attacker, LogCode.VOLATILE_DISPLAY,
-                         payload={"volatile": "メロメロ"})
+    battle.add_event_log(
+        ctx.attacker, LogCode.VOLATILE_DISPLAY,
+        payload={"volatile": "メロメロ"}
+    )
 
     # テスト用に確率を固定できる
     if battle.test_option.trigger_volatile is not None:
@@ -858,8 +882,10 @@ def メロメロ_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
         action_blocked = battle.random.random() < 0.5
 
     if action_blocked:
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "メロメロ"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.ACTION_BLOCKED,
+            payload={"reason": "メロメロ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -999,6 +1025,10 @@ def ねむけ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def ねをはる_self_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ねをはる状態のターン終了時回復（最大HPの1/16、切り捨て）。
+
+    かいふくふうじ状態では ON_MODIFY_HEAL 経由でブロックされる。
+    """
     return HandlerReturn(value=battle.modify_hp(ctx.source, r=1/16, source=ctx.source))
 
 

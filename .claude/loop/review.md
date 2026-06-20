@@ -87,7 +87,7 @@ jpoke {config.category} 再レビュータスク: {entry}
    全テストが通ることを確認する。
 
 6. 修正内容を書き出す
-   `docs/review/{entry}.md` を Write で作成し、以下の形式で記録する:
+   `{config.review_dir}{entry}.md` を Write で作成し、以下の形式で記録する:
 
    ```markdown
    # {entry} レビュー結果
@@ -145,6 +145,7 @@ ScheduleWakeup(delaySeconds=600, prompt="<<autonomous-loop-dynamic>>",
     "spec_dir":    "docs/spec/moves/",
     "plan_dir":    "docs/plan/moves",
     "progress_file": "docs/progress/move.md",
+    "review_dir":    "docs/review/moves/",
     "test_files":  ["tests/moves_status/"],
     "parallel_max": 3
   },

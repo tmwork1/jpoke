@@ -51,6 +51,7 @@ class StatusManager:
                   r: float = 0,
                   source: Pokemon | None = None,
                   reason: HPChangeReason = "") -> int:
+        # TODO : rの指定はBattleクラスのmodify_hpからにして、StatusManagerはvのみ受け取るようにする
         """ポケモンのHPを変更する。
 
         Args:

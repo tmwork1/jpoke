@@ -1,3 +1,5 @@
+# TODO : ファイル規模が大きいため複数モジュールに分割する
+
 """揮発性状態ハンドラの単体テスト"""
 import pytest
 from jpoke import Move, Pokemon
@@ -1111,27 +1113,16 @@ def test_スレッドトラップ_非接触では素早さが下がらない():
 
 @pytest.mark.parametrize("boost_move_name", ["かぜおこし", "たつまき"])
 def test_そらをとぶ_かぜおこしたつまきの威力が2倍になる(boost_move_name):
-    """そらをとぶ状態の相手にかぜおこし・たつまきを使うと威力2倍"""
-    battle_normal = t.start_battle(
+    """そらをとぶ状態の相手にかぜおこし・たつまきを使うと威力補正が2倍（8192）になる"""
+    battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=[boost_move_name])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
-    attacker_n, defender_n = battle_normal.actives
-    t.run_move(battle_normal, 0)
-    damage_normal = defender_n.max_hp - defender_n.hp
-
-    battle_fly = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=[boost_move_name])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker_f, defender_f = battle_fly.actives
-    battle_fly.volatile_manager.apply(defender_f, "そらをとぶ", count=1)
-    t.run_move(battle_fly, 0)
-    damage_fly = defender_f.max_hp - defender_f.hp
-
-    assert damage_fly == damage_normal * 2
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "そらをとぶ", count=1)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
 
 
 def test_そらをとぶ_ぼうふうが命中する():
@@ -1156,6 +1147,18 @@ def test_タールショット_ほのお以外は変化しない():
     assert 4096 == battle.damage_calculator.def_type_modifier
 
 
+def test_タールショット_ほのお半減ポケモンが等倍になる():
+    """タールショット状態のほのおタイプポケモンに対してほのお技が等倍になる（半減→等倍）"""
+    # ヒトカゲはほのおタイプ（ほのお半減）なのでタールショット後は等倍(4096)になる
+    battle = t.start_battle(
+        team1=[Pokemon("ヒトカゲ")],
+        team0=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+        volatile1={"タールショット": 1}
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_type_modifier
+
+
 def test_タールショット_ほのお弱点付与():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -1164,6 +1167,31 @@ def test_タールショット_ほのお弱点付与():
     )
     t.run_move(battle, 0)
     assert 8192 == battle.damage_calculator.def_type_modifier
+
+
+def test_ダイビング_その他技は威力2倍にならない():
+    """ダイビング状態でないときはなみのりの威力補正なし（power_modifier=4096）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["なみのり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+@pytest.mark.parametrize("boost_move_name", ["なみのり", "うずしお"])
+def test_ダイビング_なみのりうずしおは威力2倍(boost_move_name):
+    """ダイビング状態の相手になみのり・うずしおを使うと威力2倍"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=[boost_move_name])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "ダイビング", count=1)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
 
 
 @pytest.mark.parametrize("move_name", minimize_enhance_moves)
@@ -1189,6 +1217,22 @@ def test_ちいさくなる_対象外技には影響しない():
     assert 4096 == battle.damage_calculator.power_modifier
 
 
+def test_ちょうはつ_すでにちょうはつ状態の相手には効果なし():
+    """ちょうはつ技: 相手がすでにちょうはつ状態の場合は効果がない（カウントが更新されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうはつ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        volatile1={"ちょうはつ": 3},
+    )
+    # すでにちょうはつ状態（count=3）のまま変化しないことを確認
+    defender = battle.actives[1]
+    assert defender.has_volatile("ちょうはつ")
+    t.run_move(battle, 0)
+    # volatile_manager.apply は既存状態があると False を返しカウントは更新されない
+    assert defender.volatiles["ちょうはつ"].count == 3
+
+
 def test_ちょうはつ_ターン経過で解除():
     n_turn = 1
     battle = t.start_battle(
@@ -1211,6 +1255,18 @@ def test_ちょうはつ_変化技は使えない():
     )
     t.run_move(battle, 0)
     assert not battle.move_executor.action_success
+
+
+def test_ちょうはつ_技を使うと相手がちょうはつ状態になる():
+    """ちょうはつ技: 命中すると相手にちょうはつ状態を付与する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうはつ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("ちょうはつ")
 
 
 def test_ちょうはつ_攻撃技は使える():
@@ -1295,6 +1351,16 @@ def test_トーチカ_非接触では毒にならない():
     assert not battle.actives[0].ailment.is_active
 
 
+def test_にげられない_ゴーストタイプは交代できる():
+    # ゴーストタイプはにげられない状態の効果を無視して交代できる
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"にげられない": 1},
+    )
+    assert battle.can_switch(battle.players[0])
+
+
 def test_にげられない_交代不可():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
@@ -1306,6 +1372,7 @@ def test_にげられない_交代不可():
 
 
 def test_ねむけ_ターン経過でねむりになる():
+    """ねむけ: count=2 でターン終了×2回後にねむり状態になる"""
     n_turn = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -1320,8 +1387,24 @@ def test_ねむけ_ターン経過でねむりになる():
     assert not mon.has_volatile("ねむけ")
     assert mon.has_ailment("ねむり")
 
+# TODO : ねむけ状態で交代しても眠り状態にならないことを確認するテストを追加する
+
+
+def test_ねをはる_かいふくふうじ中は回復しない():
+    """ねをはる: かいふくふうじ状態ではターン終了時の回復がブロックされる"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        volatile0={"ねをはる": 1, "かいふくふうじ": 1}
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
 
 def test_ねをはる_交代不可():
+    """ねをはる: 通常ポケモンは交代できない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ")],
@@ -1331,6 +1414,7 @@ def test_ねをはる_交代不可():
 
 
 def test_ねをはる_回復():
+    """ねをはる: ターン終了時に最大HPの1/16回復する"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
@@ -1343,6 +1427,7 @@ def test_ねをはる_回復():
 
 
 def test_ねをはる_浮遊無効():
+    """ねをはる: 浮遊しているポケモンでも地面にいる扱いになる"""
     battle = t.start_battle(
         team0=[Pokemon("ポッポ")],
         team1=[Pokemon("ピカチュウ")],
@@ -1362,6 +1447,41 @@ def test_のろい_ダメージ():
     t.end_turn(battle)
     damage = mon.max_hp - mon.hp
     assert damage == mon.max_hp // 4
+
+
+def test_のろい_マジックガードでダメージ無効():
+    """のろい: マジックガード特性を持つポケモンはダメージを受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"のろい": 1}
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
+def test_のろい_交代で解除():
+    """のろい: 交代するとのろい状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"のろい": 1}
+    )
+    mon = battle.actives[0]
+    assert mon.has_volatile("のろい")
+    t.run_switch(battle, 0, 1)
+    assert not mon.has_volatile("のろい")
+
+
+def test_バインド_ゴーストタイプは交代可能():
+    """バインド: ゴーストタイプは第六世代以降バインド状態でも交代できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"バインド": 99},
+    )
+    assert battle.can_switch(battle.players[0])
 
 
 def test_バインド_ターン経過でダメージ():
