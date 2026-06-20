@@ -763,8 +763,8 @@ def ひるみ_block_action(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ふういん_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ふういん状態の相手が共有技を使えないようにする。"""
+def ふういん_try_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふういん状態のポケモンと共通する技を相手が使えないようにする。"""
     if ctx.defender.has_move(ctx.move.name):
         battle.add_event_log(
             ctx.attacker, LogCode.ACTION_BLOCKED,
@@ -775,13 +775,13 @@ def ふういん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ほろびのうたでひんしになる処理"""
+    """ほろびのうたでひんしになる処理。マジックガードでも防げない。"""
     mon = ctx.source
-    battle.modify_hp(mon, v=-mon.hp)
+    battle.modify_hp(mon, v=-mon.hp, reason="perish")
     return HandlerReturn(value=value)
 
 
-def マジックコート_reflect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def マジックコート_reflect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
     value = (
         ctx.move.category == "変化"
@@ -791,8 +791,15 @@ def マジックコート_reflect(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def まるくなる_boost_power(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def マジックコート_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """マジックコート状態のターン終了時解除"""
+    return remove_volatile(battle, ctx, value, volatile="マジックコート")
+
+
+def まるくなる_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """まるくなる状態で特定技の威力補正
+
+    まるくなる状態のポケモンが ころがる・アイスボール を使うと威力が2倍になる。
 
     Args:
         battle: バトルインスタンス
@@ -802,7 +809,7 @@ def まるくなる_boost_power(battle: Battle, ctx: EventContext, value: Any) -
     Returns:
         HandlerReturn: 補正後の値
     """
-    if ctx.move.name in ["ころがる", "アイスボール"]:
+    if ctx.move.name in ("ころがる", "アイスボール"):
         value *= 2
     return HandlerReturn(value=value)
 
@@ -848,14 +855,19 @@ def みがわり_block_damage(battle: Battle, ctx: EventContext, value: Any) -> 
 
 
 def みちづれ_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """みちづれ状態のひんし時処理（相手もひんしにする）"""
+    """みちづれ状態のひんし時処理（相手もひんしにする）。マジックガードでも防げない。"""
     mon = ctx.attacker
-    battle.modify_hp(mon, v=-mon.hp)
+    battle.modify_hp(mon, v=-mon.hp, reason="perish")
     battle.add_event_log(
         mon, LogCode.VOLATILE_DISPLAY,
         payload={"volatile": "みちづれ"}
     )
     return HandlerReturn(value=value)
+
+
+def みちづれ_remove(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """みちづれ状態の解除（自身の行動時に解除）。"""
+    return remove_volatile(battle, ctx, value, volatile="みちづれ")
 
 
 def メロメロ_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

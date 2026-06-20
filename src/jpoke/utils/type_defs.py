@@ -132,6 +132,7 @@ HPChangeReason = Literal[
     "self_cost",            # 自己HP消費（みがわり等）
     "bench_heal",           # 控え回復（さいせいりょく等、かいふくふうじ無効）
     "drain",                # 吸収技・やどりぎのタネによる回復 (ヘドロえきのダメージ変換用)
+    "perish",               # ほろびのうた/みちづれによるひんし（マジックガードで防げない）
 ]
 
 StatChangeReason = Literal[

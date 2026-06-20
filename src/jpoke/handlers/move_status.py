@@ -1769,6 +1769,22 @@ def ミラータイプ_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
+def メロメロ_check_gender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """メロメロの失敗条件: 相手が同性または性別不明の場合は失敗させる。"""
+    attacker = ctx.attacker
+    defender = ctx.defender
+    # 性別不明（""）または同性の場合は失敗
+    if (defender.gender == ""
+            or attacker.gender == ""
+            or attacker.gender == defender.gender):
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "メロメロ_性別不一致"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def メロメロ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """メロメロの効果: 相手をメロメロ状態にする。"""
     return apply_volatile_to_defender(battle, ctx, value, volatile="メロメロ")
@@ -1788,6 +1804,17 @@ def もりののろい_can_apply(battle: Battle, ctx: AttackContext, value: Any)
 def もりののろい_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """もりののろいの効果: 相手にもりののろい状態を付与してくさタイプを追加する。"""
     return apply_volatile_to_defender(battle, ctx, value, volatile="もりののろい")
+
+
+def やどりぎのタネ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """やどりぎのタネの使用条件チェック: くさタイプのポケモンには失敗する。"""
+    if ctx.defender.has_type("くさ"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "やどりぎのタネ"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def やどりぎのタネ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

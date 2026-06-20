@@ -224,6 +224,9 @@ class MoveExecutor:
             return False
         if ctx.move.has_label("bypass_substitute"):
             return False
+        # 音技はみがわりを貫通する（第六世代以降の仕様）
+        if ctx.move.has_label("sound"):
+            return False
         return self._events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
 
     def run_move(self, attacker: Pokemon, move: Move):

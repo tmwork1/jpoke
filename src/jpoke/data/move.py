@@ -6653,6 +6653,10 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         accuracy=100,
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.メロメロ_check_gender,
+                priority=120,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.メロメロ_apply_volatile_to_defender,
             ),
@@ -6685,6 +6689,10 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         accuracy=90,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.やどりぎのタネ_can_apply,
+                priority=130,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.やどりぎのタネ_apply_volatile_to_defender,
             ),

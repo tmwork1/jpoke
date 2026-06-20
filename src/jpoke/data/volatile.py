@@ -520,6 +520,10 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="defender:self",
                 priority=200
             ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.マジックコート_turn_end,
+                subject_spec="source:self",
+            ),
         }
     ),
     "まるくなる": VolatileData(
@@ -550,6 +554,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.みちづれ_faint,
                 subject_spec="defender:self",
                 priority=30
+            ),
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.みちづれ_remove,
+                subject_spec="attacker:self",
+                priority=10,
             ),
         }
     ),

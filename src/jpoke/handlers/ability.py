@@ -2807,8 +2807,8 @@ def マジシャン_steal_item(battle: Battle, ctx: AttackContext, value: Any) -
 
 def マジックガード_ignore_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """マジックガード特性: 間接ダメージを無効化する。"""
-    # 直接ダメージ・自己由来の特定HP変動は無効化しない。
-    if ctx.hp_change_reason not in {"move_damage", "pain_split", "self_attack", "self_cost"}:
+    # 直接ダメージ・自己由来の特定HP変動・ほろびのうた/みちづれのひんしは無効化しない。
+    if ctx.hp_change_reason not in {"move_damage", "pain_split", "self_attack", "self_cost", "perish"}:
         value = 0
     return HandlerReturn(value=value)
 
