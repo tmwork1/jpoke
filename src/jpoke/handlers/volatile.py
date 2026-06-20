@@ -16,7 +16,7 @@ from jpoke.core import Handler, HandlerReturn
 
 HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
     "あなをほる": ["じしん", "マグニチュード"],
-    "そらをとぶ": ["かぜおこし", "たつまき", "かみなり"],
+    "そらをとぶ": ["かぜおこし", "たつまき", "かみなり", "ぼうふう"],
     "ダイビング": ["なみのり", "うずしお"],
     "シャドーダイブ": [],
 }
@@ -401,16 +401,18 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def さわぐ_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """さわぐ状態を付与し、場のねむり関連状態を解除する。"""
+    """さわぐ状態を付与し、場のねむり状態を解除する。
+
+    第五世代以降: さわぎだした瞬間に場のねむり状態のポケモンが全員目を覚ます。
+    ねむけ状態はさわぐでは解除されない。
+    """
     # 相手にさわがしい状態を付与
     foe = battle.foe(ctx.source)
     count = ctx.source.volatiles["さわぐ"].count
     battle.volatile_manager.apply(foe, "さわがしい", count=count)
 
-    # 場のポケモンのねむり・ねむけ状態を解除
+    # 場のポケモンのねむり状態を解除（ねむけは解除しない）
     for mon in battle.actives:
-        if mon.has_volatile("ねむけ"):
-            battle.volatile_manager.remove(mon, "ねむけ")
         if mon.has_ailment("ねむり"):
             battle.ailment_manager.remove(mon)
 
@@ -422,23 +424,6 @@ def さわぐ_remove_さわがしい(battle: Battle, ctx: EventContext, value: A
     foe = battle.foe(ctx.source)
     battle.volatile_manager.remove(foe, "さわがしい")
     return HandlerReturn(value=value)
-
-
-def さわぐ_modify_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """さわぐ中の強制技固定
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 使用しようとしている技
-
-    Returns:
-        HandlerReturn: 固定技に差し替える
-    """
-    mon = ctx.attacker
-    volatile = mon.volatiles["さわぐ"]
-    move = mon.get_move(volatile.move_name)
-    return HandlerReturn(value=move)
 
 
 def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -453,22 +438,6 @@ def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> Ha
         HandlerReturn: ねむりを防ぐ場合は空文字列
     """
     if value == "ねむり":
-        return HandlerReturn(value="", stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def さわぐ_prevent_nemuke(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """さわぐ状態でねむけを防ぐ
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 揮発状態名
-
-    Returns:
-        HandlerReturn: ねむけを防ぐ場合は空文字列
-    """
-    if value == "ねむけ":
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
@@ -502,6 +471,10 @@ def シャドーダイブ_remove_volatile(battle: Battle, ctx: EventContext, val
 def しおづけ_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """しおづけ状態のターン終了時ダメージ
 
+    Champions仕様:
+    - 通常: 最大HPの 1/16（小数点以下切り捨て）
+    - みず・はがねタイプ: 最大HPの 1/8（小数点以下切り捨て）
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -511,7 +484,7 @@ def しおづけ_damage(battle: Battle, ctx: EventContext, value: Any) -> Handle
         HandlerReturn: ダメージが発生した場合True
     """
     mon = ctx.source
-    r = -1/8
+    r = -1/16
     if mon.has_type("みず") or mon.has_type("はがね"):
         r *= 2
     battle.modify_hp(mon, r=r)
@@ -548,7 +521,7 @@ def じごくづき_try_action(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=True)
 
 
-def じゅうでん_boost_electric(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def じゅうでん_boost_electric(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうでん状態による威力補正
 
     Args:
@@ -565,6 +538,13 @@ def じゅうでん_boost_electric(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(value=value)
 
 
+def そらをとぶ_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """そらをとぶ状態の相手に対して かぜおこし・たつまき の威力を2倍にする。"""
+    if ctx.move.name in ("かぜおこし", "たつまき"):
+        value *= 2
+    return HandlerReturn(value=value)
+
+
 def そらをとぶ_can_hit_hidden_target(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """そらをとぶ状態の回避判定"""
     return can_hit_hidden_target(battle, ctx, value, "そらをとぶ")
@@ -575,13 +555,13 @@ def そらをとぶ_remove_volatile(battle: Battle, ctx: EventContext, value: An
     return remove_volatile(battle, ctx, value, volatile="そらをとぶ")
 
 
-def タールショット_boost_fire(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """タールショット状態でほのお技のダメージ補正
+def タールショット_boost_fire(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """タールショット状態でほのお技のタイプ相性補正を2倍にする。
 
     Args:
         battle: バトルインスタンス
-        ctx: コンテキスト
-        value: ダメージ補正値（4096基準）
+        ctx: コンテキスト（AttackContext）
+        value: タイプ相性補正値（4096基準）
 
     Returns:
         HandlerReturn: 補正後の値
@@ -953,13 +933,13 @@ def かえんのまもり_protect(battle: Battle, ctx: EventContext, value: Any)
 
 
 def キングシールド_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """キングシールドの保護判定。接触した相手の攻撃ランクを1段階下げる"""
-    return _run_protect(battle, ctx, value, stats_change_on_contact={"A": -1})
+    """キングシールドの保護判定。攻撃技のみ防ぎ、接触した相手の攻撃ランクを1段階下げる"""
+    return _run_protect(battle, ctx, value, stats_change_on_contact={"A": -1}, protect_non_attack=False)
 
 
 def スレッドトラップ_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """スレッドトラップの保護判定。接触した相手の素早さランクを1段階下げる"""
-    return _run_protect(battle, ctx, value, stats_change_on_contact={"S": -1})
+    """スレッドトラップの保護判定。攻撃技のみ防ぎ、接触した相手の素早さランクを1段階下げる"""
+    return _run_protect(battle, ctx, value, stats_change_on_contact={"S": -1}, protect_non_attack=False)
 
 
 def トーチカ_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

@@ -46,6 +46,17 @@ def test_かいでんぱ_相手の特攻がすでにマイナス6なら変化な
     assert defender.rank["C"] == -6
 
 
+def test_かえんのまもり_技使用でかえんのまもり状態が付与される():
+    """かえんのまもり: 技を使うと自分にかえんのまもり揮発性状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かえんのまもり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("かえんのまもり")
+
+
 def test_かげぶんしん_回避率1段階上がる():
     """かげぶんしん: 使用すると自分の回避率ランクが1段階上がる"""
     battle = t.start_battle(

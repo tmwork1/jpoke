@@ -1007,7 +1007,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        labels=["contact"],
+        labels=["contact", "unprotectable"],
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),
@@ -3230,6 +3230,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["non_negoto", "sound"],
         handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.さわぐ_apply,
+            ),
         }
     ),
     "サンダープリズン": MoveData(

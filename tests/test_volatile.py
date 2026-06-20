@@ -507,6 +507,17 @@ def test_かいふくふうじ_交代で解除():
     assert not mon.has_volatile("かいふくふうじ")
 
 
+def test_かえんのまもり_ぼうごパット持ちの接触技はやけどにならない():
+    """かえんのまもり: ぼうごパットを持つ攻撃者は接触判定が無効になりやけどにならない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", item_name="ぼうごパット", move_names=["たいあたり"])],
+    )
+    battle.volatile_manager.apply(battle.actives[1], "かえんのまもり", count=1)
+    t.run_move(battle, 0)
+    assert not battle.actives[0].ailment.is_active
+
+
 def test_かえんのまもり_接触技でやけどを付与():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -638,6 +649,20 @@ def test_かなしばり_コマンド制限():
     assert all(cmd.index != 0 for cmd in commands)
 
 
+def test_かなしばり_コマンド制限で他の技は選択可能():
+    """かなしばり: 封じた技以外の技は引き続き選択可能"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり", "なきごえ"])],
+    )
+    player = battle.players[0]
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "かなしばり", move_name="たいあたり")
+    commands = battle.get_available_action_commands(player)
+    move_commands = [cmd for cmd in commands if cmd.is_move_family]
+    assert any(cmd.index == 1 for cmd in move_commands)
+
+
 def test_かなしばり_ターン経過で解除():
     n_turn = 1
     battle = t.start_battle(
@@ -679,14 +704,40 @@ def test_かなしばり_実行ブロック():
     assert not battle.move_executor.action_success
 
 
-def test_きゅうしょアップ():
+def test_きゅうしょアップ_交代で解除():
+    """きゅうしょアップ: 交代するとリセットされる（揮発状態の共通仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン")],
+        team1=[Pokemon("ヤドラン")],
+        volatile0={"きゅうしょアップ": 2}
+    )
+    attacker = battle.actives[0]
+    assert attacker.has_volatile("きゅうしょアップ")
+    t.run_switch(battle, 0, 1)
+    # 交代前のポケモンが引っ込んだあとは揮発状態が消えている
+    assert not attacker.has_volatile("きゅうしょアップ")
+
+
+def test_きゅうしょアップ_急所ランク加算():
+    """きゅうしょアップ: count値ぶん急所ランクが上昇する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
-        volatile0={"きゅうしょアップ": 1}
+        volatile0={"きゅうしょアップ": 2}
     )
     t.run_move(battle, 0)
-    assert battle.move_executor.critical_rank == 1
+    assert battle.move_executor.critical_rank == 2
+
+
+def test_キングシールド_変化技は防がない():
+    """キングシールドは変化技（攻撃技でない）を無効化しない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
+    )
+    battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
 
 
 def test_キングシールド_接触技で攻撃を下げる():
@@ -760,6 +811,7 @@ def test_こだわり_固定技のPPが0だとわるあがきになる():
 
 
 def test_こんらん_カウント満了で解除():
+    """こんらん: カウントが0になったときに揮発状態が解除される"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
@@ -802,7 +854,22 @@ def test_こんらん_通常行動():
     assert attacker.hp == attacker.max_hp
 
 
+def test_さわぐ_さわぎだしでねむりを起こす():
+    """さわぐ: さわぎだしたとき、場のねむり状態のポケモンが目を覚ます"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さわぐ"])],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("ねむり", 3),
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    assert foe.ailment.name == "ねむり"
+    t.run_move(battle, 0)
+    assert not foe.ailment.is_active
+
+
 def test_さわぐ_技固定():
+    """さわぐ: Command.FORCED が返り、解決後の技がさわぐになる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["さわぐ", "たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
@@ -810,20 +877,38 @@ def test_さわぐ_技固定():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "さわぐ", count=2, move_name="さわぐ")
     assert battle.get_available_action_commands(battle.players[0]) == [Command.FORCED]
+    move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
+    assert move.name == "さわぐ"
 
 
 @pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
-def test_さわぐさわがしい_ねむけを防ぐ(volatile_name):
+def test_さわぐさわがしい_ねむけからねむりへの移行を防ぐ(volatile_name):
+    """さわぐ/さわがしい: ねむけ終了時にねむり状態への移行を防ぐ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        volatile0={volatile_name: 2, "ねむけ": 1}
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert not mon.has_volatile("ねむけ")
+    assert not mon.ailment.is_active
+
+
+@pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
+def test_さわぐさわがしい_ねむけは防がない(volatile_name):
+    """さわぐ/さわがしい: ねむけ状態の付与は防がない（第五世代以降）"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
         volatile0={volatile_name: 2}
     )
-    assert not battle.volatile_manager.apply(battle.actives[0], "ねむけ", count=2)
+    assert battle.volatile_manager.apply(battle.actives[0], "ねむけ", count=2)
 
 
 @pytest.mark.parametrize("volatile_name", ["さわぐ", "さわがしい"])
 def test_さわぐさわがしい_ねむりを防ぐ(volatile_name):
+    """さわぐ/さわがしい: ねむり状態の付与を防ぐ"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
@@ -843,6 +928,20 @@ def test_さわぐ交代時_さわがしいを解除する():
     assert not battle.actives[1].has_volatile("さわがしい")
 
 
+def test_さわぐ技使用_揮発性状態を付与する():
+    """さわぐ: 技使用命中時にさわぐ揮発性状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さわぐ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert not mon.has_volatile("さわぐ")
+    t.run_move(battle, 0)
+    assert mon.has_volatile("さわぐ")
+    assert mon.volatiles["さわぐ"].count == 3
+
+
 def test_さわぐ終了時_さわがしいを解除する():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")],
@@ -857,14 +956,14 @@ def test_さわぐ終了時_さわがしいを解除する():
 @pytest.mark.parametrize(
     "pokemon, expected_frac",
     [
-        ("ピカチュウ", 8),
-        ("ゼニガメ", 4),
-        ("コイル", 4),
-        ("エンペルト", 4),
+        ("ピカチュウ", 16),
+        ("ゼニガメ", 8),
+        ("コイル", 8),
+        ("エンペルト", 8),
     ]
 )
-def test_しおづけ(pokemon, expected_frac):
-    """しおづけ: ターン終了時ダメージ"""
+def test_しおづけ_ターン終了時ダメージ(pokemon, expected_frac):
+    """しおづけ: Champions仕様のターン終了時ダメージ（通常1/16、みず・はがね1/8）"""
     battle = t.start_battle(
         team0=[Pokemon(pokemon)],
         team1=[Pokemon("ピカチュウ")],
@@ -873,6 +972,50 @@ def test_しおづけ(pokemon, expected_frac):
     mon = battle.actives[0]
     t.end_turn(battle)
     assert mon.max_hp - mon.hp == mon.max_hp // expected_frac
+
+
+def test_しおづけ_マジックガードでダメージ無効():
+    """しおづけ: マジックガード特性を持つポケモンはダメージを受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"しおづけ": 1}
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
+def test_しおづけ_交代で解除():
+    """しおづけ: 交代するとしおづけ状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"しおづけ": 1}
+    )
+    mon = battle.actives[0]
+    assert mon.has_volatile("しおづけ")
+    t.run_switch(battle, 0, 1)
+    assert not mon.has_volatile("しおづけ")
+
+
+def test_シャドーダイブ_まもる中の相手にダメージを与えられる():
+    """シャドーダイブはまもる状態を貫通する（unprotectable ラベル）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", move_names=["シャドーダイブ"])],
+        team1=[Pokemon("ドガース")],
+    )
+    defender = battle.actives[1]
+    initial_hp = defender.hp
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    # 溜めターン
+    t.run_move(battle, 0)
+    assert battle.actives[0].has_volatile("シャドーダイブ")
+    # 攻撃ターン（まもる状態の相手に攻撃）
+    t.run_move(battle, 0)
+    assert not battle.actives[0].has_volatile("シャドーダイブ")
+    assert battle.move_executor.move_success
+    assert defender.hp < initial_hp
 
 
 def test_じごくづき_コマンド制限():
@@ -922,6 +1065,19 @@ def test_じゅうでん_でんき技強化():
     assert not battle.actives[0].has_volatile("じゅうでん")
 
 
+def test_じゅうでん_交代で解除():
+    """じゅうでん: 交代するとじゅうでん状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"じゅうでん": 1}
+    )
+    mon = battle.actives[0]
+    assert mon.has_volatile("じゅうでん")
+    t.run_switch(battle, 0, 1)
+    assert not mon.has_volatile("じゅうでん")
+
+
 def test_じゅうでん_非でんき技では残る():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -951,6 +1107,44 @@ def test_スレッドトラップ_非接触では素早さが下がらない():
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
     t.run_move(battle, 0)
     assert battle.actives[0].rank["S"] == 0
+
+
+@pytest.mark.parametrize("boost_move_name", ["かぜおこし", "たつまき"])
+def test_そらをとぶ_かぜおこしたつまきの威力が2倍になる(boost_move_name):
+    """そらをとぶ状態の相手にかぜおこし・たつまきを使うと威力2倍"""
+    battle_normal = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=[boost_move_name])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker_n, defender_n = battle_normal.actives
+    t.run_move(battle_normal, 0)
+    damage_normal = defender_n.max_hp - defender_n.hp
+
+    battle_fly = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=[boost_move_name])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker_f, defender_f = battle_fly.actives
+    battle_fly.volatile_manager.apply(defender_f, "そらをとぶ", count=1)
+    t.run_move(battle_fly, 0)
+    damage_fly = defender_f.max_hp - defender_f.hp
+
+    assert damage_fly == damage_normal * 2
+
+
+def test_そらをとぶ_ぼうふうが命中する():
+    """そらをとぶ状態でもぼうふうは命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぼうふう"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "そらをとぶ", count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
 
 
 def test_タールショット_ほのお以外は変化しない():
@@ -1295,8 +1489,8 @@ def test_まもる系_攻撃技を無効化(volatile_name):
 @pytest.mark.parametrize("volatile_name,blocks_status", [
     ("まもる", True),
     ("トーチカ", True),
-    ("キングシールド", True),
-    ("スレッドトラップ", True),
+    ("キングシールド", False),
+    ("スレッドトラップ", False),
     ("かえんのまもり", False),
 ])
 def test_まもる系_相手対象変化技への反応(volatile_name, blocks_status):

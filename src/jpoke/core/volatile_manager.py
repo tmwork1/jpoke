@@ -53,6 +53,7 @@ class VolatileManager:
               source: Pokemon | None = None,
               ctx: BaseContext | None = None,
               **kwargs) -> bool:
+        # TODO : ctx引数が使われていないなら削除する
         """揮発性状態を付与する。
 
         Args:

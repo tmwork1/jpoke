@@ -10,6 +10,7 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
+
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)
@@ -1484,6 +1485,9 @@ def test_ひかりごけ_みず被弾でD上昇():
 
 
 def test_ひかりのねんど_スクリーン8ターンに延長():
+    # TODO : イベントを直接発火するのではなく、
+    # battle.get_side(mon).activate("リフレクター", 5)
+    # を実行したときのターンを検証する
     """ひかりのねんど: リフレクターを8ターンに延長する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど")],

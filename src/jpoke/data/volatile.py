@@ -197,6 +197,7 @@ VOLATILES: dict[str, VolatileData] = {
         }
     ),
     "さわぐ": VolatileData(
+        forced=True,
         handlers={
             Event.ON_VOLATILE_START: h.VolatileHandler(
                 h.さわぐ_start,
@@ -219,20 +220,12 @@ VOLATILES: dict[str, VolatileData] = {
                 h.さわぐ_prevent_sleep,
                 subject_spec="target:self",
             ),
-            Event.ON_BEFORE_APPLY_VOLATILE: h.VolatileHandler(
-                h.さわぐ_prevent_nemuke,
-                subject_spec="target:self",
-            ),
         }
     ),
     "さわがしい": VolatileData(
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.VolatileHandler(
                 h.さわぐ_prevent_sleep,
-                subject_spec="target:self",
-            ),
-            Event.ON_BEFORE_APPLY_VOLATILE: h.VolatileHandler(
-                h.さわぐ_prevent_nemuke,
                 subject_spec="target:self",
             ),
         }
@@ -316,6 +309,10 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
                 h.force_command,
                 subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.そらをとぶ_boost_power,
+                subject_spec="defender:self",
             ),
             Event.ON_TRY_MOVE_1: h.VolatileHandler(
                 h.そらをとぶ_can_hit_hidden_target,

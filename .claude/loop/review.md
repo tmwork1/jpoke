@@ -14,6 +14,7 @@
     "spec_dir":    "docs/spec/",
     "plan_dir":    "docs/plan/moves",
     "progress_file": "docs/progress/move.md",
+    "review_dir":  "docs/review/moves/",
     "test_files":  ["tests/moves_status/"],
     "parallel_max": 3
   },

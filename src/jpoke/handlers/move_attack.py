@@ -429,6 +429,22 @@ def こごえるせかい_modify_defender_stats(battle: Battle, ctx: EventContex
     return modify_defender_stats(battle, ctx, value, stats={"S": -1})
 
 
+def さわぐ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さわぐ技の初回命中時にさわぐ揮発性状態を付与する。
+
+    すでにさわぐ状態の場合（強制行動の2・3ターン目）は何もしない。
+    カウントは3ターン固定。
+    """
+    attacker = ctx.attacker
+    if attacker.has_volatile("さわぐ"):
+        return HandlerReturn(value=value)
+    battle.volatile_manager.apply(
+        attacker, "さわぐ", count=3, source=attacker, ctx=ctx,
+        move_name=ctx.move.name
+    )
+    return HandlerReturn(value=value)
+
+
 def サイコキネシス_modify_defender_stats(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
 
