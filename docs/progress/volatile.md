@@ -51,4 +51,4 @@
 みちづれ	x	x	x	x	x
 メロメロ	x	x	x	x	x
 やどりぎのタネ	x	x	x	x	x
-ロックオン	-	-	x	x	-
+ロックオン	x	x	x	x	x

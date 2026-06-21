@@ -1066,7 +1066,10 @@ def ロックオン_tick_volatile(battle: Battle, ctx: EventContext, value: Any)
 
 
 def ロックオン_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return remove_volatile(battle, ctx, value, volatile="ロックオン")
+    """相手が交代したときに自分のロックオン状態を解除する。"""
+    mon = battle.foe(ctx.source)
+    battle.volatile_manager.remove(mon, "ロックオン")
+    return HandlerReturn(value=value)
 
 
 def まもる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

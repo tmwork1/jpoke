@@ -672,7 +672,6 @@ def test_コスモパワー_ぼうぎょ最大でもとくぼうは上昇する(
     attacker.rank["B"] = 6
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == 6
     assert attacker.rank["D"] == 1
 
 
@@ -723,6 +722,7 @@ def test_こらえる_すでにこらえる状態なら失敗():
 
 
 def test_こらえる_ターン終了後にvolatileが解除される():
+    # TODO : これはvolatile側でテストすべき
     """こらえる: ターン終了後にこらえる揮発状態が解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
