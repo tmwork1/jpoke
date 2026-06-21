@@ -1,7 +1,7 @@
 {
   "config": {
     "category":       "フィールド",
-    "wiki_hint":      "docs/wiki/items/ に関連アイテム（ひかりのねんど等）の HTML があれば参照。フィールド専用 wiki ページは存在しない。handlers/field.py・data/field.py・tests/test_field.py を一次情報として扱う",
+    "wiki_hint":      "docs/wiki/global_fields/, docs/wiki/side_fields/",
     "spec_dir":       "docs/spec/fields/",
     "plan_dir":       "docs/plan/fields",
     "progress_files": {
@@ -13,14 +13,14 @@
     "parallel_max":   3
   },
   "review_queue": [
-    "らんきりゅう",
+    "はれ", "あめ", "すなあらし", "おおひでり", "おおあめ", "らんきりゅう",
     "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド",
     "じゅうりょく", "トリックルーム", "フェアリーロック", "マジックルーム", "ワンダールーム",
     "オーロラベール", "おいかぜ", "いやしのねがい", "ステルスロック",
     "しんぴのまもり", "しろいきり", "どくびし", "ねがいごと",
     "ねばねばネット", "ひかりのかべ", "まきびし", "リフレクター"
   ],
-  "in_progress":  ["すなあらし", "おおひでり", "おおあめ"],
-  "completed":    ["はれ", "あめ"],
+  "in_progress":  [],
+  "completed":    [],
   "failed":       []
 }
