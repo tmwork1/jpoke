@@ -164,6 +164,26 @@ def test_しっぽきり_HP半分以下なら失敗():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_しっぽきり_みがわりとそのHPが交代先に引き継がれる():
+    """しっぽきり: 生成したみがわりとそのHPが交代先ポケモンに引き継がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    migawari_hp = max_hp // 4
+
+    t.run_move(battle, 0)
+    battle.run_interrupt_switch(Interrupt.PIVOT)
+
+    new_mon = battle.actives[0]
+    # 交代先にみがわりが引き継がれている
+    assert new_mon.has_volatile("みがわり")
+    # みがわりのHPは使用者の最大HPの1/4（切り捨て）
+    assert new_mon.volatiles["みがわり"].hp == migawari_hp
+
+
 def test_しっぽきり_みがわり中は失敗():
     """しっぽきり: 使用者がすでにみがわり状態の場合は失敗する"""
     battle = t.start_battle(
@@ -191,6 +211,21 @@ def test_しっぽきり_交代が実行される():
     battle.run_interrupt_switch(Interrupt.PIVOT)
 
     assert battle.actives[0] is raichu
+
+
+def test_しっぽきり_使用者にはみがわりが残らない():
+    """しっぽきり: 交代後、使用者（退場したポケモン）にはみがわりが残らない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+
+    t.run_move(battle, 0)
+    battle.run_interrupt_switch(Interrupt.PIVOT)
+
+    # 交代で退場したカビゴンにはみがわりが残っていない
+    assert not attacker.has_volatile("みがわり")
 
 
 def test_しっぽきり_控えがいない場合は失敗():

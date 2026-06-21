@@ -4,6 +4,10 @@ from jpoke import Move, Pokemon
 from jpoke.enums import LogCode
 from .. import test_utils as t
 
+# TODO : キノコのほうしは草タイプに無効化されることを検証する。
+
+# TODO : くすぐるで攻撃が最低ランクでも防御が下がることを検証する
+
 
 def test_かいでんぱ_相手の特攻が2段階下がる():
     """かいでんぱ: 通常使用で相手の特攻ランクが-2になること"""
@@ -303,7 +307,7 @@ def test_きあいだめ_きゅうしょアップ付与():
 
 
 def test_きあいだめ_すでにきゅうしょアップなら失敗():
-    """きあいだめ: すでにきゅうしょアップ状態なら失敗する"""
+    """きあいだめ: すでにきゅうしょアップ状態なら失敗し MOVE_FAILED ログが記録される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["きあいだめ"])],
         team1=[Pokemon("カビゴン")],
@@ -311,7 +315,8 @@ def test_きあいだめ_すでにきゅうしょアップなら失敗():
     )
     t.run_move(battle, 0)
 
-    assert not battle.move_executor.move_success
+    logs = battle.event_logger.logs
+    assert any(log.log == LogCode.MOVE_FAILED for log in logs)
 
 
 def test_キノコのほうし_相手がねむり状態になる():
@@ -325,8 +330,6 @@ def test_キノコのほうし_相手がねむり状態になる():
     t.run_move(battle, 0)
 
     assert defender.ailment.name == "ねむり"
-
-# TODO : キノコのほうしは草タイプに無効化されることを検証する。
 
 
 def test_きりばらい_エレキフィールドが解除される():
@@ -496,8 +499,6 @@ def test_くすぐる_すでに最低ランクなら変化なし():
 
     assert defender.rank["A"] == -6
     assert defender.rank["B"] == -6
-
-# TODO : くすぐるで攻撃が最低ランクでも防御が下がることを検証する
 
 
 def test_くろいきり_使用者のランクがゼロにリセットされる():

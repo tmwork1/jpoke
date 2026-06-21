@@ -21,8 +21,7 @@ class PlayerState:
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.action_order_index: int | None = None
-        self.inherit_migawari: bool = False
-        # バトンタッチ引き継ぎデータ（Noneは引き継ぎなし）
+        # バトンタッチ・しっぽきりの引き継ぎデータ（Noneは引き継ぎなし）
         self.baton_pass_data: dict | None = None
 
     def __deepcopy__(self, memo):

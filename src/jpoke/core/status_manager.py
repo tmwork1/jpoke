@@ -47,28 +47,22 @@ class StatusManager:
 
     def modify_hp(self,
                   target: Pokemon,
-                  v: int = 0,
-                  r: float = 0,
+                  v: int,
                   source: Pokemon | None = None,
                   reason: HPChangeReason = "") -> int:
-        # TODO : rの指定はBattleクラスのmodify_hpからにして、StatusManagerはvのみ受け取るようにする
         """ポケモンのHPを変更する。
 
         Args:
             target: 対象のポケモン
             v: 変更する固定HP量
-            r: 最大HPに対する割合（-1.0～1.0）。v と同時指定時は r が優先される
             reason: 変更の理由
             source: ダメージ源のポケモン
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）
         """
-        if v == 0 and r == 0:
+        if v == 0:
             return 0
-
-        if r:
-            v = int(target.max_hp * r)
 
         ctx = EventContext(source=source, target=target, hp_change_reason=reason)
 

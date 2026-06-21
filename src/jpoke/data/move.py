@@ -2017,7 +2017,7 @@ MOVES: dict[str, MoveData] = {
                 ha.はやてがえし_try_move,
             ),
             Event.ON_HIT: h.MoveHandler(
-                ha.はやてがえし_apply_volatile_to_defender,
+                ha.はやてがえし_apply,
             ),
         }
     ),
@@ -4478,7 +4478,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.アクアリング_apply_volatile_to_attacker,
+                hs.アクアリング_apply,
             ),
         }
     ),
@@ -4492,7 +4492,7 @@ MOVES: dict[str, MoveData] = {
                 priority=130,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.あくび_apply_volatile_to_defender,
+                hs.あくび_apply,
             ),
         }
     ),
@@ -4561,7 +4561,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.あやしいひかり_apply_volatile_to_defender,
+                hs.あやしいひかり_apply,
             ),
         }
     ),
@@ -4602,7 +4602,7 @@ MOVES: dict[str, MoveData] = {
                 hs.いえき_can_apply,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.いえき_apply_volatile_to_defender,
+                hs.いえき_apply,
             ),
         }
     ),
@@ -4633,7 +4633,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.いちゃもん_apply_volatile_to_defender,
+                hs.いちゃもん_apply,
             ),
         }
     ),
@@ -4932,7 +4932,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.かえんのまもり_apply_volatile_to_attacker,
+                hs.かえんのまもり_apply,
             ),
         }
     ),
@@ -4969,7 +4969,7 @@ MOVES: dict[str, MoveData] = {
                     hs.かなしばり_can_apply,
                 ),
                 h.MoveHandler(
-                    hs.かなしばり_apply_volatile_to_defender,
+                    hs.かなしばり_apply,
                 ),
             ],
         }
@@ -5002,7 +5002,7 @@ MOVES: dict[str, MoveData] = {
         pp=30,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.きあいだめ_apply_volatile_to_attacker,
+                hs.きあいだめ_apply,
             ),
         }
     ),
@@ -5088,7 +5088,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.くろいまなざし_apply_volatile_to_defender,
+                hs.くろいまなざし_apply,
             ),
         }
     ),
@@ -5164,7 +5164,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.こらえる_apply_volatile_to_attacker,
+                hs.こらえる_apply,
             ),
         }
     ),
@@ -5490,7 +5490,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.スレッドトラップ_apply_volatile_to_attacker,
+                hs.スレッドトラップ_apply,
             ),
         }
     ),
@@ -5525,7 +5525,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.そうでん_apply_volatile_to_defender,
+                hs.そうでん_apply,
             ),
         }
     ),
@@ -5628,7 +5628,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ちょうはつ_apply_volatile_to_defender,
+                hs.ちょうはつ_apply,
             ),
         }
     ),
@@ -5733,7 +5733,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=75,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.てんしのキッス_apply_volatile_to_defender,
+                hs.てんしのキッス_apply,
             ),
         }
     ),
@@ -5754,7 +5754,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.でんじふゆう_apply_volatile_to_attacker,
+                hs.でんじふゆう_apply,
             ),
         }
     ),
@@ -5765,7 +5765,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.とおせんぼう_apply_volatile_to_defender,
+                hs.とおせんぼう_apply,
             ),
         }
     ),
@@ -5779,7 +5779,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.トーチカ_apply_volatile_to_attacker,
+                hs.トーチカ_apply,
             ),
         }
     ),
@@ -6003,7 +6003,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ニードルガード_apply_volatile_to_attacker,
+                hs.ニードルガード_apply,
             ),
         }
     ),
@@ -6117,7 +6117,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ねをはる_apply_volatile_to_attacker,
+                hs.ねをはる_apply,
             ),
         }
     ),
@@ -6226,7 +6226,7 @@ MOVES: dict[str, MoveData] = {
                 hs.ハロウィン_can_apply,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ハロウィン_apply_volatile_to_defender,
+                hs.ハロウィン_apply,
             ),
         }
     ),
@@ -6316,7 +6316,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ふういん_apply_volatile_to_attacker,
+                hs.ふういん_apply,
             ),
         }
     ),
@@ -6364,7 +6364,7 @@ MOVES: dict[str, MoveData] = {
         labels=["dance"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.フラフラダンス_apply_volatile_to_defender,
+                hs.フラフラダンス_apply,
             ),
         }
     ),
@@ -6516,7 +6516,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.まもる_apply_volatile_to_attacker,
+                hs.まもる_apply,
             ),
         }
     ),
@@ -6569,7 +6569,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.みきり_apply_volatile_to_attacker,
+                hs.みきり_apply,
             ),
         }
     ),
@@ -6594,7 +6594,7 @@ MOVES: dict[str, MoveData] = {
                 hs.みずびたし_can_apply,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.みずびたし_apply_volatile_to_defender,
+                hs.みずびたし_apply,
             ),
         }
     ),
@@ -6606,7 +6606,7 @@ MOVES: dict[str, MoveData] = {
 
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.みちづれ_apply_volatile_to_attacker,
+                hs.みちづれ_apply,
             ),
         }
     ),
@@ -6658,7 +6658,7 @@ MOVES: dict[str, MoveData] = {
                 priority=120,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.メロメロ_apply_volatile_to_defender,
+                hs.メロメロ_apply,
             ),
         }
     ),
@@ -6679,7 +6679,7 @@ MOVES: dict[str, MoveData] = {
                 hs.もりののろい_can_apply,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.もりののろい_apply_volatile_to_defender,
+                hs.もりののろい_apply,
             ),
         }
     ),
@@ -6694,7 +6694,7 @@ MOVES: dict[str, MoveData] = {
                 priority=130,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.やどりぎのタネ_apply_volatile_to_defender,
+                hs.やどりぎのタネ_apply,
             ),
         }
     ),
@@ -6765,7 +6765,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ロックオン_apply_volatile_to_defender,
+                hs.ロックオン_apply,
             ),
         }
     ),
@@ -6841,7 +6841,7 @@ MOVES: dict[str, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.キングシールド_apply_volatile_to_attacker,
+                hs.キングシールド_apply,
             ),
         }
     ),

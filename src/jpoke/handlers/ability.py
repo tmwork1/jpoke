@@ -17,7 +17,6 @@ from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
 
-
 AEGISLASH_SHIELD = "ギルガルド(シールド)"
 AEGISLASH_BLADE = "ギルガルド(ブレード)"
 PALAFIN_ZERO = "イルカマン(ナイーブ)"
@@ -70,7 +69,6 @@ _EFFECT_SPORE_AILMENTS: list[tuple[float, AilmentName]] = [
 # メガソーラー: ON_BEGIN_MOVE で保存した天候状態（current_name, はれのcount）を ON_END_MOVE で復元するための辞書
 _メガソーラー_saved: dict[int, tuple[str, int]] = {}
 
-
 class AbilityHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -84,7 +82,6 @@ class AbilityHandler(Handler):
             priority=priority,
             once=once,
         )
-
 
 def announce_ability_triggered(battle: Battle,
                                ctx: EventContext | AttackContext,
@@ -106,7 +103,6 @@ def announce_ability_triggered(battle: Battle,
     _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
-
 def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
     """特性発動ログを記録する。"""
     mon.ability.revealed = True
@@ -115,7 +111,6 @@ def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": mon.ability.name}
     )
-
 
 def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
     """HPが最大HPの50%を跨いだかどうかを判定する。
@@ -132,7 +127,6 @@ def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
         bool: 50%を跨いだら True
     """
     return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
-
 
 def _apply_contact_counter_ailment(battle: Battle,
                                    ctx: AttackContext,
@@ -152,7 +146,6 @@ def _apply_contact_counter_ailment(battle: Battle,
         _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
-
 def _apply_contact_counter_chip(battle: Battle,
                                 ctx: AttackContext,
                                 value: Any,
@@ -166,14 +159,12 @@ def _apply_contact_counter_chip(battle: Battle,
             _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
-
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
     """緊急交代を発動する。"""
     player = battle.get_player(mon)
     if battle.get_available_switch_commands(player):
         battle.player_states[player].interrupt = Interrupt.EMERGENCY
         _announce_ability_triggered(battle, mon=mon)
-
 
 def _apply_type_absorb(battle: Battle,
                        ctx: AttackContext,
@@ -205,7 +196,6 @@ def _apply_type_absorb(battle: Battle,
 
     return HandlerReturn(value=False, stop_event=True)
 
-
 def _modify_by_move_condition(move: Move,
                               value: int,
                               *,
@@ -220,7 +210,6 @@ def _modify_by_move_condition(move: Move,
         value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
-
 def _activate_weather(battle: Battle,
                       mon: Pokemon | None,
                       value: Any,
@@ -231,7 +220,6 @@ def _activate_weather(battle: Battle,
     if mon and battle.weather_manager.apply(weather, count, source=mon):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
-
 
 def _deactivate_strong_weather(battle: Battle,
                                ctx: EventContext,
@@ -250,7 +238,6 @@ def _deactivate_strong_weather(battle: Battle,
         battle.weather_manager.remove()
     return HandlerReturn(value=value)
 
-
 def _activate_terrain(battle: Battle,
                       mon: Pokemon | None,
                       value: Any,
@@ -262,7 +249,6 @@ def _activate_terrain(battle: Battle,
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
-
 def _block_stat_drop_by_foe(value: dict, ctx: EventContext, stat: Stat | None = None) -> dict:
     """相手由来のランク低下を除去する。stat=Noneなら全能力が対象。"""
     if ctx.source is not None and ctx.source != ctx.target:
@@ -272,13 +258,11 @@ def _block_stat_drop_by_foe(value: dict, ctx: EventContext, stat: Stat | None = 
             value = {s: v for s, v in value.items() if s != stat or v >= 0}
     return value
 
-
 def _ignore_sandstorm_damage(_battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すなあらしのダメージを無効化する。"""
     if ctx.hp_change_reason == "sandstorm":
         return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
-
 
 def _prevent_ailment(battle: Battle,
                      ctx: EventContext,
@@ -303,7 +287,6 @@ def _prevent_ailment(battle: Battle,
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
-
 def _prevent_volatile(battle: Battle,
                       ctx: EventContext,
                       value: VolatileName,
@@ -327,12 +310,10 @@ def _prevent_volatile(battle: Battle,
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
-
 def ARシステム_apply_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ARシステム特性: 登場時にメモリに合わせてタイプを変更する。"""
     _apply_multitype(ctx.source, MEMORY_TO_TYPE)
     return HandlerReturn(value=value)
-
 
 def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """ARシステム特性: メモリの奪取・交換を防ぐ。"""
@@ -391,7 +372,7 @@ def あくしゅう_maybe_flinch(battle: Battle, ctx: AttackContext, value: Any)
     if defender is None:
         return HandlerReturn(value=value)
     if battle.random.random() < 0.1:
-        battle.volatile_manager.apply(defender, "ひるみ", source=ctx.attacker, ctx=ctx)
+        battle.volatile_manager.apply(defender, "ひるみ", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -444,6 +425,10 @@ def あめうけざら_heal(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
+def あめふらし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="あめ", count=5)
+
+
 def ありじごく_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ありじごく特性: 浮いていないポケモンの交代を防ぐ。
 
@@ -464,6 +449,12 @@ def ありじごく_check_trapped(battle: Battle, ctx: EventContext, value: Any)
         and not battle.query.is_floating(source)
     )
     return HandlerReturn(value=result)
+
+
+def アロマベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=[
+        "アンコール", "いちゃもん", "かいふくふうじ", "かなしばり", "ちょうはつ", "メロメロ"
+    ])
 
 
 def いかく_lower_foe_atk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -508,13 +499,6 @@ def いしあたま_ignore_recoil(battle: Battle, ctx: AttackContext, value: int
     return HandlerReturn(value=value)
 
 
-def いたずらごころ_modify_move_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """いたずらごころ特性: 変化技の優先度を+1する。"""
-    if ctx.move.category == "変化":
-        value += 1
-    return HandlerReturn(value=value)
-
-
 def いたずらごころ_blocked_by_dark(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """いたずらごころ特性: 優先度が上がった変化技はあくタイプ相手に無効化される。"""
     if (
@@ -528,6 +512,13 @@ def いたずらごころ_blocked_by_dark(battle: Battle, ctx: AttackContext, va
             payload={"reason": "いたずらごころ"}
         )
         return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def いたずらごころ_modify_move_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """いたずらごころ特性: 変化技の優先度を+1する。"""
+    if ctx.move.category == "変化":
+        value += 1
     return HandlerReturn(value=value)
 
 
@@ -559,6 +550,14 @@ def うのミサイル_load_prey(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
+def うのミサイル_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """うのミサイル特性: 交代時に通常のすがたに戻す。"""
+    mon = ctx.source
+    if mon.name in (CRAMORANT_GULPING, CRAMORANT_GORGING):
+        mon.set_form(CRAMORANT_NORMAL)
+    return HandlerReturn(value=value)
+
+
 def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うのミサイル特性: 咥えたすがたのときダメージを受けると獲物を吐き出して反撃する。"""
     mon = ctx.defender
@@ -584,14 +583,6 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
     else:
         battle.ailment_manager.apply(ctx.attacker, "まひ", source=mon, ctx=ctx)
 
-    return HandlerReturn(value=value)
-
-
-def うのミサイル_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """うのミサイル特性: 交代時に通常のすがたに戻す。"""
-    mon = ctx.source
-    if mon.name in (CRAMORANT_GULPING, CRAMORANT_GORGING):
-        mon.set_form(CRAMORANT_NORMAL)
     return HandlerReturn(value=value)
 
 
@@ -622,6 +613,10 @@ def エアロック_check_weather_enabled(battle: Battle, ctx: EventContext, val
     return HandlerReturn(value=False, stop_event=True)
 
 
+def エレキメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_terrain(battle, ctx.source, value, terrain="エレキフィールド", count=5)
+
+
 def えんかく_nullify_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """えんかく特性: 自分が使う技の接触判定を無効化する。"""
     return HandlerReturn(value=False, stop_event=True)
@@ -643,21 +638,6 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: AttackContex
     return HandlerReturn(value=value)
 
 
-def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """おやこあい特性: 単発攻撃技を2ヒット化する。"""
-    if ctx.move.is_attack and ctx.move.max_hits == 1:
-        value = 2
-    return HandlerReturn(value=value)
-
-
-def おやこあい_reduce_second_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """おやこあい特性: 2ヒット目のダメージを減衰させる。"""
-    print(vars(ctx))
-    if ctx.hit_index == 2:
-        value //= 4
-    return HandlerReturn(value=value)
-
-
 def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おみとおし特性: 場に出たとき相手のアイテムを公開する。"""
     mon = ctx.source
@@ -674,14 +654,6 @@ def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: An
     return HandlerReturn(value=value)
 
 
-def カーリーヘアー_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """カーリーヘアー特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
-    attacker = ctx.attacker
-    if attacker is not None and battle.query.is_contact(ctx):
-        battle.modify_stats(attacker, {"S": -1}, source=ctx.defender)
-    return HandlerReturn(value=value)
-
-
 def おもかげやどし_boost_stat(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """おもかげやどし特性: 場に出たときフォルムに対応する能力が1段階上がる。"""
     mon = ctx.source
@@ -692,6 +664,29 @@ def おもかげやどし_boost_stat(battle: Battle, ctx: EventContext, value: A
     _announce_ability_triggered(battle, mon)
     battle.modify_stats(mon, {stat: +1}, source=mon)
     return HandlerReturn(value=value)
+
+
+def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """おやこあい特性: 単発攻撃技を2ヒット化する。"""
+    if ctx.move.is_attack and ctx.move.max_hits == 1:
+        value = 2
+    return HandlerReturn(value=value)
+
+
+def おやこあい_reduce_second_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """おやこあい特性: 2ヒット目のダメージを減衰させる。"""
+    print(vars(ctx))
+    if ctx.hit_index == 2:
+        value //= 4
+    return HandlerReturn(value=value)
+
+
+def おわりのだいち_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="おおひでり", count=1)
+
+
+def おわりのだいち_deactivate_strong_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _deactivate_strong_weather(battle, ctx, value, weather="おおひでり")
 
 
 def かいりきバサミ_block_A_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
@@ -864,12 +859,6 @@ def かるわざ_init_state(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
-def かるわざ_reset_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かるわざ特性: 交代で状態を初期化する。"""
-    ctx.source.ability.state = ""
-    return HandlerReturn(value=value)
-
-
 def かるわざ_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """かるわざ特性: アイテム消失中は素早さを2倍にする。"""
     mon = ctx.source
@@ -889,6 +878,70 @@ def かるわざ_modify_speed(battle: Battle, ctx: EventContext, value: int) -> 
 
     if mon.ability.state == "active" and not mon.has_item():
         value *= 2
+    return HandlerReturn(value=value)
+
+
+def かるわざ_reset_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かるわざ特性: 交代で状態を初期化する。"""
+    ctx.source.ability.state = ""
+    return HandlerReturn(value=value)
+
+
+def かんそうはだ_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """かんそうはだ特性: みず技を無効化し、HPが減っていれば最大HPの1/4を回復する。"""
+    return _apply_type_absorb(battle, ctx, value, move_type="みず", heal_ratio=1/4)
+
+
+def かんそうはだ_change_hp_by_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かんそうはだ特性: 天候に応じてターン終了時にHP変化を受ける。
+    ばんのうがさを持つ場合は晴れダメージ・雨回復を受けない。
+    """
+    mon = ctx.source
+    weather = battle.weather_for(mon)
+
+    # あめ中は最大HPの1/8回復
+    if (
+        weather.rainy
+        and battle.modify_hp(mon, r=1/8)
+    ):
+        _announce_ability_triggered(battle, mon)
+
+    # にほんばれ中は最大HPの1/8ダメージ
+    if (
+        weather.sunny
+        and battle.modify_hp(mon, r=-1/8)
+    ):
+        _announce_ability_triggered(battle, mon)
+
+    return HandlerReturn(value=value)
+
+
+def かんそうはだ_modify_fire_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """かんそうはだ特性: ほのお技を受けたときの威力が5/4倍になる。"""
+    if ctx.move.type == "ほのお":
+        value = apply_fixed_modifier(value, 5120)  # 5/4倍 = 5120/4096
+    return HandlerReturn(value=value)
+
+
+def かんろなミツ_lower_foe_evasion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かんろなミツ特性: 初登場時に相手の回避率を1段階下げる（バトル中1回）。"""
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=value)
+    foe = battle.foe(mon)
+    if foe is None:
+        return HandlerReturn(value=value)
+    battle.add_ability_disabled_reason(mon, "consumed")
+    if battle.modify_stats(foe, {"EVA": -1}, source=mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def カーリーヘアー_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """カーリーヘアー特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
+    attacker = ctx.attacker
+    if attacker is not None and battle.query.is_contact(ctx):
+        battle.modify_stats(attacker, {"S": -1}, source=ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -918,56 +971,6 @@ def がんじょうあご_modify_power(battle: Battle, ctx: AttackContext, value
     """がんじょうあご特性: かみつき技の威力を1.5倍にする。"""
     if ctx.move.has_label("bite"):
         value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
-def かんろなミツ_lower_foe_evasion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かんろなミツ特性: 初登場時に相手の回避率を1段階下げる（バトル中1回）。"""
-    mon = ctx.source
-    if mon is None:
-        return HandlerReturn(value=value)
-    foe = battle.foe(mon)
-    if foe is None:
-        return HandlerReturn(value=value)
-    battle.add_ability_disabled_reason(mon, "consumed")
-    if battle.modify_stats(foe, {"EVA": -1}, source=mon):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def かんそうはだ_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """かんそうはだ特性: みず技を無効化し、HPが減っていれば最大HPの1/4を回復する。"""
-    return _apply_type_absorb(battle, ctx, value, move_type="みず", heal_ratio=1/4)
-
-
-def かんそうはだ_modify_fire_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """かんそうはだ特性: ほのお技を受けたときの威力が5/4倍になる。"""
-    if ctx.move.type == "ほのお":
-        value = apply_fixed_modifier(value, 5120)  # 5/4倍 = 5120/4096
-    return HandlerReturn(value=value)
-
-
-def かんそうはだ_change_hp_by_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かんそうはだ特性: 天候に応じてターン終了時にHP変化を受ける。
-    ばんのうがさを持つ場合は晴れダメージ・雨回復を受けない。
-    """
-    mon = ctx.source
-    weather = battle.weather_for(mon)
-
-    # あめ中は最大HPの1/8回復
-    if (
-        weather.rainy
-        and battle.modify_hp(mon, r=1/8)
-    ):
-        _announce_ability_triggered(battle, mon)
-
-    # にほんばれ中は最大HPの1/8ダメージ
-    if (
-        weather.sunny
-        and battle.modify_hp(mon, r=-1/8)
-    ):
-        _announce_ability_triggered(battle, mon)
-
     return HandlerReturn(value=value)
 
 
@@ -1010,6 +1013,13 @@ def きけんよち_warn_threat(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def きもったま_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """きもったま特性: いかくによるこうげきランク低下を無効化する。"""
+    if ctx.stat_change_reason == "いかく":
+        value = {}
+    return HandlerReturn(value=value)
+
+
 def きもったま_ghost_immune_bypass(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """きもったま特性: ノーマル/かくとう技がゴーストタイプに当たるよう相性補正を書き換える。"""
     if ctx.move.type not in ("ノーマル", "かくとう") or not ctx.defender.has_type("ゴースト"):
@@ -1024,27 +1034,6 @@ def きもったま_ghost_immune_bypass(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=base)
 
 
-def きもったま_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """きもったま特性: いかくによるこうげきランク低下を無効化する。"""
-    if ctx.stat_change_reason == "いかく":
-        value = {}
-    return HandlerReturn(value=value)
-
-
-def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
-    mon = ctx.defender
-    hp_after = mon.hp
-    hp_before = hp_after + value
-
-    if (
-        _crossed_half_hp(hp_before, hp_after, mon.max_hp)
-        and battle.modify_stats(mon, {"C": +1}, source=ctx.attacker, reason="ぎゃくじょう")
-    ):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
 def きゅうばん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """きゅうばん特性: 強制交代技の効果を防ぐ。"""
     _announce_ability_triggered(battle, ctx.defender)
@@ -1056,30 +1045,24 @@ def きょううん_modify_critical_rank(battle: Battle, ctx: AttackContext, val
     return HandlerReturn(value=value + 1)
 
 
-def ぎょぐん_enter_school_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ぎょぐん特性: 登場時にレベル20以上かつHP1/4超ならむれたすがたへフォルムチェンジする。"""
-    mon = ctx.source
-    if mon.level < 20:
-        return HandlerReturn(value=value)
-    if mon.hp * 4 > mon.max_hp:
-        mon.set_form(WISHIWASHI_SCHOOL)
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
+def prevent_poison_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_ailment(battle, ctx, value, blocked_ailments=["どく", "もうどく"])
+
+def prevent_paralysis_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_ailment(battle, ctx, value, blocked_ailments=["まひ"])
+
+def prevent_burn_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_ailment(battle, ctx, value, blocked_ailments=["やけど"])
+
+def prevent_sleep_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_ailment(battle, ctx, value, blocked_ailments=["ねむり"])
+
+def prevent_freeze_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_ailment(battle, ctx, value, blocked_ailments=["こおり"])
 
 
-def ぎょぐん_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ぎょぐん特性: ターン終了時にHPに応じてフォルムを切り替える。"""
-    mon = ctx.source
-    if mon.level < 20:
-        return HandlerReturn(value=value)
-
-    if mon.hp * 4 > mon.max_hp:
-        if mon.set_form(WISHIWASHI_SCHOOL):
-            _announce_ability_triggered(battle, mon)
-    else:
-        if mon.set_form(WISHIWASHI_SOLO):
-            _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
+def きよめのしお_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_ailment(battle, ctx, value)
 
 
 def きよめのしお_reduce_ghost(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1126,6 +1109,46 @@ def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=True)
 
 
+def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
+    mon = ctx.defender
+    hp_after = mon.hp
+    hp_before = hp_after + value
+
+    if (
+        _crossed_half_hp(hp_before, hp_after, mon.max_hp)
+        and battle.modify_stats(mon, {"C": +1}, source=ctx.attacker, reason="ぎゃくじょう")
+    ):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def ぎょぐん_enter_school_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぎょぐん特性: 登場時にレベル20以上かつHP1/4超ならむれたすがたへフォルムチェンジする。"""
+    mon = ctx.source
+    if mon.level < 20:
+        return HandlerReturn(value=value)
+    if mon.hp * 4 > mon.max_hp:
+        mon.set_form(WISHIWASHI_SCHOOL)
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def ぎょぐん_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぎょぐん特性: ターン終了時にHPに応じてフォルムを切り替える。"""
+    mon = ctx.source
+    if mon.level < 20:
+        return HandlerReturn(value=value)
+
+    if mon.hp * 4 > mon.max_hp:
+        if mon.set_form(WISHIWASHI_SCHOOL):
+            _announce_ability_triggered(battle, mon)
+    else:
+        if mon.set_form(WISHIWASHI_SOLO):
+            _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def クイックドロウ_maybe_fast_attack(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """クイックドロウ特性: 攻撃技選択時に 30% の確率で先攻化する（後攻ティア +1）。"""
     if (
@@ -1167,6 +1190,21 @@ def クリアボディ_block_stat_drop(battle: Battle, ctx: EventContext, value:
     return HandlerReturn(value=value)
 
 
+def _boost_on_move_ko(battle: Battle, ctx: AttackContext, value: Any, stats: dict[Stat, int]) -> HandlerReturn:
+    if battle.modify_stats(ctx.attacker, stats, source=ctx.attacker):
+        _announce_ability_triggered(battle, ctx.attacker)
+    return HandlerReturn(value=value)
+
+
+def くろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """くろのいななき特性: 攻撃技で相手を倒すと特攻が1段階上がる。"""
+    return _boost_on_move_ko(battle, ctx, value, stats={"C": +1})
+
+
+def グラスメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_terrain(battle, ctx.source, value, terrain="グラスフィールド", count=5)
+
+
 def こおりのりんぷん_reduce_special_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """こおりのりんぷん特性: 特殊技で受けるダメージを0.5倍にする。"""
     if ctx.move.category == "特殊":
@@ -1182,15 +1220,13 @@ def こぼれダネ_set_grassy_terrain(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def ごりむちゅう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ごりむちゅう特性: 物理技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "物理":
-        value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
 def こんがりボディ_absorb_fire(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     return _apply_type_absorb(battle, ctx, value, move_type="ほのお", stats={"B": 2})
+
+
+def こんじょう_ignore_burn_penalty(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """こんじょう特性: 状態異常時はやけどの物理半減を無効化する。"""
+    return HandlerReturn(value=4096)
 
 
 def こんじょう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1203,16 +1239,15 @@ def こんじょう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -
     return HandlerReturn(value=value)
 
 
-def こんじょう_ignore_burn_penalty(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """こんじょう特性: 状態異常時はやけどの物理半減を無効化する。"""
-    return HandlerReturn(value=4096)
-
-
-def サーフテール_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """サーフテール特性: エレキフィールド中に素早さが2倍になる。"""
-    if battle.terrain.name == "エレキフィールド":
-        value *= 2
+def ごりむちゅう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ごりむちゅう特性: 物理技の攻撃補正を1.5倍にする。"""
+    if ctx.move.category == "物理":
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
+
+
+def サイコメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_terrain(battle, ctx.source, value, terrain="サイコフィールド", count=5)
 
 
 def さいせいりょく_heal_on_withdraw(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1221,11 +1256,6 @@ def さいせいりょく_heal_on_withdraw(battle: Battle, ctx: EventContext, va
     if battle.modify_hp(mon, r=1/3, reason="bench_heal"):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
-
-
-def さめはだ_chip_contact_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """さめはだ特性: 接触技を受けた相手に最大HPの1/8ダメージを与える。"""
-    return _apply_contact_counter_chip(battle, ctx, value, ratio=1/8)
 
 
 def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1242,6 +1272,11 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
         return HandlerReturn(value=value)
     battle.ability_manager.swap_ability(defender, attacker)
     return HandlerReturn(value=value)
+
+
+def さめはだ_chip_contact_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さめはだ特性: 接触技を受けた相手に最大HPの1/8ダメージを与える。"""
+    return _apply_contact_counter_chip(battle, ctx, value, ratio=1/8)
 
 
 def サンパワー_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1269,28 +1304,11 @@ def サンパワー_take_sun_damage(battle: Battle, ctx: EventContext, value: An
     return HandlerReturn(value=value)
 
 
-def _boost_on_move_ko(battle: Battle, ctx: AttackContext, value: Any, stats: dict[Stat, int]) -> HandlerReturn:
-    if battle.modify_stats(ctx.attacker, stats, source=ctx.attacker):
-        _announce_ability_triggered(battle, ctx.attacker)
+def サーフテール_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """サーフテール特性: エレキフィールド中に素早さが2倍になる。"""
+    if battle.terrain.name == "エレキフィールド":
+        value *= 2
     return HandlerReturn(value=value)
-
-
-def くろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """くろのいななき特性: 攻撃技で相手を倒すと特攻が1段階上がる。"""
-    return _boost_on_move_ko(battle, ctx, value, stats={"C": +1})
-
-
-def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じきゅうりょく特性: 攻撃技でダメージを受けるたびにぼうぎょが1段階上がる。"""
-    mon = ctx.defender
-    if battle.modify_stats(mon, {"B": +1}, source=ctx.attacker):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def しろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
-    return _boost_on_move_ko(battle, ctx, value, stats={"A": +1})
 
 
 def しぜんかいふく_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1299,18 +1317,6 @@ def しぜんかいふく_cure_ailment(battle: Battle, ctx: EventContext, value:
     result = HandlerReturn(value=battle.ailment_manager.remove(mon))
     if result.value:
         _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def しめりけ_block_explosion_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """しめりけ特性（攻撃側）: 自分が爆発技を使おうとしたとき失敗させる。"""
-    if ctx.move.has_label("explosion"):
-        battle.add_event_log(
-            ctx.attacker,
-            LogCode.MOVE_FAILED,
-            payload={"reason": "しめりけ"}
-        )
-        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1326,20 +1332,15 @@ def しめりけ_block_explosion_foe(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じょうききかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。"""
-    if ctx.move.type not in ("みず", "ほのお"):
-        return HandlerReturn(value=value)
-    mon = ctx.defender
-    if battle.modify_stats(mon, {"S": +6}, source=ctx.attacker):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def しょうりのほし_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """しょうりのほし特性: 技の命中率を1.1倍にする（一撃必殺技を除く）。"""
-    if not ctx.move.has_label("ohko"):
-        value = apply_fixed_modifier(value, 4506)
+def しめりけ_block_explosion_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """しめりけ特性（攻撃側）: 自分が爆発技を使おうとしたとき失敗させる。"""
+    if ctx.move.has_label("explosion"):
+        battle.add_event_log(
+            ctx.attacker,
+            LogCode.MOVE_FAILED,
+            payload={"reason": "しめりけ"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1369,23 +1370,16 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def じょおうのいげん_block_priority(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じょおうのいげん/テイルアーマー/ビビッドボディ: 優先度+1以上の技を無効化する。"""
-    effective_priority = battle.speed_calculator.calc_move_priority(ctx.attacker, ctx.move)
-    if effective_priority <= 0:
-        return HandlerReturn(value=value)
-    _announce_ability_triggered(battle, ctx.defender)
-    battle.add_event_log(
-        ctx.attacker,
-        LogCode.MOVE_FAILED,
-        payload={"reason": "じょおうのいげん"}
-    )
-    return HandlerReturn(value=False, stop_event=True)
+def しょうりのほし_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """しょうりのほし特性: 技の命中率を1.1倍にする（一撃必殺技を除く）。"""
+    if not ctx.move.has_label("ohko"):
+        value = apply_fixed_modifier(value, 4506)
+    return HandlerReturn(value=value)
 
 
-def じりょく_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """じりょく特性: はがねタイプのポケモンの交代を防ぐ。"""
-    return HandlerReturn(value=ctx.source.has_type("はがね"))
+def しろのいななき_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じしんかじょう特性: 攻撃技で相手を倒すと攻撃が1段階上がる。"""
+    return _boost_on_move_ko(battle, ctx, value, stats={"A": +1})
 
 
 def しんがん_ghost_immune_bypass(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1444,6 +1438,64 @@ def シンプル_modify_stat_delta(battle: Battle, ctx: EventContext, value: dic
     return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
 
 
+PINCH_TYPE_BOOST_ABILITIES: dict[str, str] = {
+    "しんりょく": "くさ",
+    "もうか": "ほのお",
+    "げきりゅう": "みず",
+    "むしのしらせ": "むし",
+}
+
+
+def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ピンチ系特性: HP1/3以下かつ対応タイプ技で攻撃補正を1.5倍にする。"""
+    required_type = PINCH_TYPE_BOOST_ABILITIES.get(ctx.attacker.ability.name)
+
+    if (
+        ctx.move is not None
+        and ctx.attacker.hp * 3 <= ctx.attacker.max_hp
+        and ctx.move.type == required_type
+    ):
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じきゅうりょく特性: 攻撃技でダメージを受けるたびにぼうぎょが1段階上がる。"""
+    mon = ctx.defender
+    if battle.modify_stats(mon, {"B": +1}, source=ctx.attacker):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じょうききかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。"""
+    if ctx.move.type not in ("みず", "ほのお"):
+        return HandlerReturn(value=value)
+    mon = ctx.defender
+    if battle.modify_stats(mon, {"S": +6}, source=ctx.attacker):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def じょおうのいげん_block_priority(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じょおうのいげん/テイルアーマー/ビビッドボディ: 優先度+1以上の技を無効化する。"""
+    effective_priority = battle.speed_calculator.calc_move_priority(ctx.attacker, ctx.move)
+    if effective_priority <= 0:
+        return HandlerReturn(value=value)
+    _announce_ability_triggered(battle, ctx.defender)
+    battle.add_event_log(
+        ctx.attacker,
+        LogCode.MOVE_FAILED,
+        payload={"reason": "じょおうのいげん"}
+    )
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def じりょく_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じりょく特性: はがねタイプのポケモンの交代を防ぐ。"""
+    return HandlerReturn(value=ctx.source.has_type("はがね"))
+
+
 def すいすい_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すいすい特性: あめ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
     if battle.weather_for(ctx.source).rainy:
@@ -1465,10 +1517,42 @@ def すいほう_reduce_fire(battle: Battle, ctx: AttackContext, value: int) -> 
     return HandlerReturn(value=value)
 
 
+def スイートベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
+
+
+def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: Type, *, from_type: str, to_type: str) -> HandlerReturn:
+    """スキン系特性共通: from_type の技を to_type に変換する。"""
+    if value == from_type:
+        value = to_type
+    return HandlerReturn(value=value)
+
+def _skin_boost_power(battle: Battle, ctx: AttackContext, value: int, *, trigger_type: str) -> HandlerReturn:
+    """スキン系特性共通: trigger_type だった技の威力を 4915/4096 倍にする。"""
+    if ctx.move.data.type == trigger_type:
+        value = apply_fixed_modifier(value, 4915)
+    return HandlerReturn(value=value)
+
+
+def スカイスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
+    return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="ひこう")
+
+
+def スカイスキン_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
+
+
 def スキルリンク_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """スキルリンク特性: 連続技のヒット数を最大にする。"""
     if ctx.move.max_hits > 1:
         value = ctx.move.max_hits
+    return HandlerReturn(value=value)
+
+
+def すてみ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """すてみ特性: 反動を受ける技の威力を1.2倍にする。"""
+    if ctx.move.has_label("recoil"):
+        value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
 
@@ -1479,11 +1563,13 @@ def スナイパー_boost_critical(battle: Battle, ctx: AttackContext, value: in
     return HandlerReturn(value=value)
 
 
-def すてみ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """すてみ特性: 反動を受ける技の威力を1.2倍にする。"""
-    if ctx.move.has_label("recoil"):
-        value = apply_fixed_modifier(value, 4915)
-    return HandlerReturn(value=value)
+def すなおこし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="すなあらし", count=5)
+
+
+def すなかき_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """すなかき特性: すなあらしのダメージを受けない。"""
+    return _ignore_sandstorm_damage(battle, ctx, value)
 
 
 def すなかき_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
@@ -1501,11 +1587,6 @@ def すなかき_modify_speed(battle: Battle, ctx: EventContext, value: int) -> 
     if battle.weather.name == "すなあらし":
         value *= 2
     return HandlerReturn(value=value)
-
-
-def すなかき_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """すなかき特性: すなあらしのダメージを受けない。"""
-    return _ignore_sandstorm_damage(battle, ctx, value)
 
 
 def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
@@ -1543,11 +1624,6 @@ def すなはき_set_sandstorm(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def すりぬけ_bypass_substitute(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """すりぬけ特性: みがわりを無視して攻撃する。"""
-    return HandlerReturn(value=False, stop_event=True)
-
-
 def すりぬけ_bypass_screen(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """すりぬけ特性: リフレクター・ひかりのかべ等の壁を貫通する"""
     return HandlerReturn(value=True)
@@ -1556,6 +1632,11 @@ def すりぬけ_bypass_screen(battle: Battle, ctx: AttackContext, value: bool) 
 def すりぬけ_bypass_status_guard(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """すりぬけ特性: しんぴのまもり・しろいきり等の耐性を貫通する"""
     return HandlerReturn(value=True)
+
+
+def すりぬけ_bypass_substitute(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """すりぬけ特性: みがわりを無視して攻撃する。"""
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def するどいめ_block_ACC_drop(battle: Battle, ctx: AttackContext, value: dict) -> HandlerReturn:
@@ -1567,6 +1648,16 @@ def するどいめ_block_ACC_drop(battle: Battle, ctx: AttackContext, value: di
 def するどいめ_ignore_evasion(battle: Battle, ctx: AttackContext, value: dict[Stat, int]) -> HandlerReturn:
     """するどいめ特性: 相手の回避率ランク上昇を無効化する。"""
     value["EVA"] = 0
+    return HandlerReturn(value=value)
+
+
+def スロースタート_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """スロースタート特性: 登場から5ターンの物理攻撃補正を0.5倍にする。"""
+    if (
+        ctx.attacker.ability.count < 5
+        and ctx.move.category == "物理"
+    ):
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -1583,16 +1674,6 @@ def スロースタート_tick(battle: Battle, ctx: EventContext, value: Any) ->
     mon.ability.count += 1
     if mon.ability.count == 5:
         _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def スロースタート_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """スロースタート特性: 登場から5ターンの物理攻撃補正を0.5倍にする。"""
-    if (
-        ctx.attacker.ability.count < 5
-        and ctx.move.category == "物理"
-    ):
-        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
 
@@ -1623,6 +1704,10 @@ def せいしんりょく_block_intimidate(battle: Battle, ctx: EventContext, va
         value = {}
         _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
+
+
+def せいしんりょく_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ひるみ"])
 
 
 def せいでんき_maybe_paralyze_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1697,6 +1782,11 @@ def たいねつ_reduce_fire(battle: Battle, ctx: AttackContext, value: int) -> 
     return HandlerReturn(value=value)
 
 
+def たんじゅん_double_stat(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
+    """たんじゅん特性: 能力変化量を2倍にする。"""
+    return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
+
+
 def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ダウンロード特性: 入場時に相手の防御と特防を比較し、低い方に対応する攻撃能力を上げる。"""
     mon = ctx.source
@@ -1711,18 +1801,6 @@ def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any)
         _announce_ability_triggered(battle, mon)
 
     return HandlerReturn(value=value)
-
-
-def ダークオーラ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ダークオーラ特性: あく技の威力を1.33倍にする。オーラブレイクがいる場合は0.75倍にする。"""
-    if ctx.move.type != "あく":
-        return HandlerReturn(value=value)
-    aura_break = (
-        ctx.attacker.ability.name == "オーラブレイク"
-        or ctx.defender.ability.name == "オーラブレイク"
-    )
-    modifier = 3072 if aura_break else 5448
-    return HandlerReturn(value=apply_fixed_modifier(value, modifier))
 
 
 def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1740,9 +1818,12 @@ def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def たんじゅん_double_stat(battle: Battle, ctx: EventContext, value: dict[str, int]) -> HandlerReturn:
-    """たんじゅん特性: 能力変化量を2倍にする。"""
-    return HandlerReturn(value={stat: delta * 2 for stat, delta in value.items()})
+def ダルマモード_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ダルマモード特性: 交代時にダルマのすがたから元のすがたへ戻す。"""
+    mon = ctx.source
+    if mon.name == DARMANITAN_ZEN:
+        mon.set_form(DARMANITAN_NORMAL)
+    return HandlerReturn(value=value)
 
 
 def ダルマモード_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1759,12 +1840,16 @@ def ダルマモード_update_form(battle: Battle, ctx: EventContext, value: Any
     return HandlerReturn(value=value)
 
 
-def ダルマモード_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ダルマモード特性: 交代時にダルマのすがたから元のすがたへ戻す。"""
-    mon = ctx.source
-    if mon.name == DARMANITAN_ZEN:
-        mon.set_form(DARMANITAN_NORMAL)
-    return HandlerReturn(value=value)
+def ダークオーラ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ダークオーラ特性: あく技の威力を1.33倍にする。オーラブレイクがいる場合は0.75倍にする。"""
+    if ctx.move.type != "あく":
+        return HandlerReturn(value=value)
+    aura_break = (
+        ctx.attacker.ability.name == "オーラブレイク"
+        or ctx.defender.ability.name == "オーラブレイク"
+    )
+    modifier = 3072 if aura_break else 5448
+    return HandlerReturn(value=apply_fixed_modifier(value, modifier))
 
 
 def ちからずく_boost(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1851,19 +1936,6 @@ def テラスチェンジ_form_change_on_entry(battle: Battle, ctx: EventContext
     return HandlerReturn(value=value)
 
 
-def でんきエンジン_absorb_electric(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """でんきエンジン特性: でんき技を無効化し素早さを1段階上げる。"""
-    return _apply_type_absorb(battle, ctx, value, move_type="でんき", stats={"S": 1})
-
-
-def でんきにかえる_charge_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """でんきにかえる特性: 攻撃技でダメージを受けるとじゅうでん状態になる。"""
-    mon = ctx.defender
-    if battle.volatile_manager.apply(mon, "じゅうでん", source=mon):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
 def てんきや_sync_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """てんきや特性: 現在の天気に合わせたフォルムへフォルムチェンジする。ノーてんき/エアロック中は通常フォルムに戻す。"""
     mon = ctx.source
@@ -1886,6 +1958,27 @@ def てんのめぐみ_boost_secondary_chance(battle: Battle, ctx: AttackContext
     return HandlerReturn(value=min(1.0, value * 2))
 
 
+def デルタストリーム_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="らんきりゅう", count=1)
+
+
+def デルタストリーム_deactivate_strong_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _deactivate_strong_weather(battle, ctx, value, weather="らんきりゅう")
+
+
+def でんきエンジン_absorb_electric(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """でんきエンジン特性: でんき技を無効化し素早さを1段階上げる。"""
+    return _apply_type_absorb(battle, ctx, value, move_type="でんき", stats={"S": 1})
+
+
+def でんきにかえる_charge_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """でんきにかえる特性: 攻撃技でダメージを受けるとじゅうでん状態になる。"""
+    mon = ctx.defender
+    if battle.volatile_manager.apply(mon, "じゅうでん", source=mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def とうそうしん_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """とうそうしん特性: 同性の相手にこうげく/とくこうが1.25倍、異性には0.75倍になる。"""
     a_gender = ctx.attacker.gender
@@ -1896,6 +1989,68 @@ def とうそうしん_modify_atk(battle: Battle, ctx: AttackContext, value: int
         value = apply_fixed_modifier(value, 5120)
     else:
         value = apply_fixed_modifier(value, 3072)
+    return HandlerReturn(value=value)
+
+
+def とびだすなかみ_retaliate_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とびだすなかみ特性: 攻撃技でひんしになったとき攻撃者に反撃ダメージを与える。"""
+    attacker = ctx.attacker
+    defender = ctx.defender
+    if attacker is None or attacker.fainted:
+        return HandlerReturn(value=value)
+    hp_before = _とびだすなかみ_hp_before.pop(id(defender), abs(value))
+    if hp_before <= 0:
+        return HandlerReturn(value=value)
+    battle.modify_hp(attacker, -hp_before)
+    _announce_ability_triggered(battle, defender)
+    return HandlerReturn(value=value)
+
+
+_とびだすなかみ_hp_before: dict[int, int] = {}  # id(defender) → HP before move
+
+
+def とびだすなかみ_save_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とびだすなかみ補助: 技開始時に防御側の初期HPを保存する。"""
+    _とびだすなかみ_hp_before[id(ctx.defender)] = ctx.defender.hp
+    return HandlerReturn(value=value)
+
+
+def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とびだすハバネロ特性: 攻撃技を受けたとき攻撃者をやけど状態にする。"""
+    attacker = ctx.attacker
+    if attacker is None:
+        return HandlerReturn(value=value)
+    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender, ctx=ctx)
+    return HandlerReturn(value=value)
+
+
+def トランジスタ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """トランジスタ特性: でんき技の攻撃補正を1.3倍にする。"""
+    if ctx.move.type == "でんき":
+        value = apply_fixed_modifier(value, 5325)
+    return HandlerReturn(value=value)
+
+
+def とれないにおい_overwrite_attacker_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とれないにおい特性: 直接攻撃でダメージを受けたとき攻撃者の特性をとれないにおいにする。"""
+    if _overwrite_ability_on_contact(battle, ctx, new_ability="とれないにおい"):
+        _announce_ability_triggered(battle, ctx.defender)
+    return HandlerReturn(value=value)
+
+
+def トレース_copy_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """トレース特性: 入場時に相手のコピー可能な特性へ変更する。"""
+    mon = ctx.source
+    foe = battle.foe(mon)
+
+    copied_ability = foe.ability.base_name
+    if (
+        not copied_ability
+        or foe.ability.has_flag("uncopyable")
+    ):
+        return HandlerReturn(value=value)
+
+    battle.change_ability(mon, copied_ability)
     return HandlerReturn(value=value)
 
 
@@ -1911,7 +2066,7 @@ def どくくぐつ_confuse_on_poison(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
-def どくげしょう_set_toxic_spikes(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def どくげしょう_set_toxic_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """どくげしょう特性: 物理技被弾時に攻撃者の場にどくびしを1層設置する。"""
     if ctx.move.category != "物理":
         return HandlerReturn(value=value)
@@ -1959,27 +2114,6 @@ def どくのトゲ_maybe_poison_attacker(battle: Battle, ctx: AttackContext, va
     return _apply_contact_counter_ailment(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-PINCH_TYPE_BOOST_ABILITIES: dict[str, str] = {
-    "しんりょく": "くさ",
-    "もうか": "ほのお",
-    "げきりゅう": "みず",
-    "むしのしらせ": "むし",
-}
-
-
-def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ピンチ系特性: HP1/3以下かつ対応タイプ技で攻撃補正を1.5倍にする。"""
-    required_type = PINCH_TYPE_BOOST_ABILITIES.get(ctx.attacker.ability.name)
-
-    if (
-        ctx.move is not None
-        and ctx.attacker.hp * 3 <= ctx.attacker.max_hp
-        and ctx.move.type == required_type
-    ):
-        value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
 def どくぼうそう_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """どくぼうそう特性: どく状態時に特殊技の威力を1.5倍にする。"""
     if (
@@ -1995,38 +2129,6 @@ def どしょく_absorb_ground(battle: Battle, ctx: AttackContext, value: bool) 
     return _apply_type_absorb(battle, ctx, value, move_type="じめん", heal_ratio=1/4)
 
 
-_とびだすなかみ_hp_before: dict[int, int] = {}  # id(defender) → HP before move
-
-
-def とびだすなかみ_save_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすなかみ補助: 技開始時に防御側の初期HPを保存する。"""
-    _とびだすなかみ_hp_before[id(ctx.defender)] = ctx.defender.hp
-    return HandlerReturn(value=value)
-
-
-def とびだすなかみ_retaliate_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすなかみ特性: 攻撃技でひんしになったとき攻撃者に反撃ダメージを与える。"""
-    attacker = ctx.attacker
-    defender = ctx.defender
-    if attacker is None or attacker.fainted:
-        return HandlerReturn(value=value)
-    hp_before = _とびだすなかみ_hp_before.pop(id(defender), abs(value))
-    if hp_before <= 0:
-        return HandlerReturn(value=value)
-    battle.modify_hp(attacker, -hp_before)
-    _announce_ability_triggered(battle, defender)
-    return HandlerReturn(value=value)
-
-
-def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすハバネロ特性: 攻撃技を受けたとき攻撃者をやけど状態にする。"""
-    attacker = ctx.attacker
-    if attacker is None:
-        return HandlerReturn(value=value)
-    battle.ailment_manager.apply(attacker, "やけど", source=ctx.defender, ctx=ctx)
-    return HandlerReturn(value=value)
-
-
 def ドラゴンスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="ドラゴン")
 
@@ -2035,34 +2137,8 @@ def ドラゴンスキン_modify_power(battle: Battle, ctx: AttackContext, value
     return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
 
 
-def トランジスタ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """トランジスタ特性: でんき技の攻撃補正を1.3倍にする。"""
-    if ctx.move.type == "でんき":
-        value = apply_fixed_modifier(value, 5325)
-    return HandlerReturn(value=value)
-
-
-def トレース_copy_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """トレース特性: 入場時に相手のコピー可能な特性へ変更する。"""
-    mon = ctx.source
-    foe = battle.foe(mon)
-
-    copied_ability = foe.ability.base_name
-    if (
-        not copied_ability
-        or foe.ability.has_flag("uncopyable")
-    ):
-        return HandlerReturn(value=value)
-
-    battle.change_ability(mon, copied_ability)
-    return HandlerReturn(value=value)
-
-
-def とれないにおい_overwrite_attacker_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とれないにおい特性: 直接攻撃でダメージを受けたとき攻撃者の特性をとれないにおいにする。"""
-    if _overwrite_ability_on_contact(battle, ctx, new_ability="とれないにおい"):
-        _announce_ability_triggered(battle, ctx.defender)
-    return HandlerReturn(value=value)
+def どんかん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ちょうはつ", "メロメロ"])
 
 
 def ナイトメア_damage_sleeping_foe(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -2084,14 +2160,6 @@ def なまけ_init(battle: Battle, ctx: EventContext, value: Any) -> HandlerRetu
     return HandlerReturn(value=value)
 
 
-def ぬめぬめ_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ぬめぬめ特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
-    if battle.query.is_contact(ctx):
-        _announce_ability_triggered(battle, ctx.defender)
-        battle.modify_stats(ctx.attacker, {"S": -1}, source=ctx.defender)
-    return HandlerReturn(value=value)
-
-
 def なまけ_try_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なまけ特性: X=1のターンは行動をスキップし、Xを反転する。"""
     mon = ctx.attacker
@@ -2103,6 +2171,14 @@ def なまけ_try_action(battle: Battle, ctx: AttackContext, value: Any) -> Hand
         return HandlerReturn(value=False, stop_event=True)
     # state == "can_act"
     mon.ability.state = "skip_next"
+    return HandlerReturn(value=value)
+
+
+def ぬめぬめ_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぬめぬめ特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
+    if battle.query.is_contact(ctx):
+        _announce_ability_triggered(battle, ctx.defender)
+        battle.modify_stats(ctx.attacker, {"S": -1}, source=ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -2137,6 +2213,19 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=value)
 
 
+def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """のろわれボディ特性: 直接攻撃を受けたとき30%の確率で攻撃技をかなしばりにする。"""
+    if not battle.query.is_contact(ctx) or ctx.attacker is None:
+        return HandlerReturn(value=value)
+    if battle.random.random() < 0.3:
+        battle.volatile_manager.apply(
+            ctx.attacker, "かなしばり",
+            source=ctx.defender, move_name=ctx.move.name,
+        )
+        _announce_ability_triggered(battle, ctx.defender)
+    return HandlerReturn(value=value)
+
+
 def ノーガード_guarantee_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ノーガード特性: 命中判定を必中化する。"""
     if value is not None:
@@ -2147,13 +2236,6 @@ def ノーガード_guarantee_hit(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
-def ノーマルスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """ノーマルスキン特性: 全ての技をノーマルタイプに変換する（ステラタイプ除く）。"""
-    if value not in ("ノーマル", "ステラ"):
-        value = "ノーマル"
-    return HandlerReturn(value=value)
-
-
 def ノーマルスキン_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ノーマルスキン特性: 変換した技の威力を4915/4096倍にする。"""
     if ctx.move.data.type not in ("ノーマル", "ステラ"):
@@ -2161,23 +2243,10 @@ def ノーマルスキン_boost_power(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """のろわれボディ特性: 直接攻撃を受けたとき30%の確率で攻撃技をかなしばりにする。"""
-    if not battle.query.is_contact(ctx) or ctx.attacker is None:
-        return HandlerReturn(value=value)
-    if battle.random.random() < 0.3:
-        battle.volatile_manager.apply(
-            ctx.attacker, "かなしばり",
-            source=ctx.defender, ctx=ctx, move_name=ctx.move.name,
-        )
-        _announce_ability_triggered(battle, ctx.defender)
-    return HandlerReturn(value=value)
-
-
-def ハードロック_reduce_effective(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """防御側特性: 効果抜群の技ダメージを0.75倍にする。"""
-    if battle.query.is_super_effective(ctx):
-        value = apply_fixed_modifier(value, 3072)
+def ノーマルスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
+    """ノーマルスキン特性: 全ての技をノーマルタイプに変換する（ステラタイプ除く）。"""
+    if value not in ("ノーマル", "ステラ"):
+        value = "ノーマル"
     return HandlerReturn(value=value)
 
 
@@ -2191,12 +2260,12 @@ def はがねのせいしん_modify_power(battle: Battle, ctx: AttackContext, va
     return _modify_by_move_condition(ctx.move, value, modifier=6144, move_type="はがね")
 
 
-def ばけのかわ_block_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。"""
-    battle.add_ability_disabled_reason(ctx.defender, "consumed")
-    battle.modify_hp(ctx.defender, r=-1/8)
-    _announce_ability_triggered(battle, ctx.defender)
-    return HandlerReturn(value=0)
+def はじまりのうみ_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="おおあめ", count=1)
+
+
+def はじまりのうみ_deactivate_strong_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _deactivate_strong_weather(battle, ctx, value, weather="おおあめ")
 
 
 def はっこう_block_acc_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
@@ -2208,29 +2277,6 @@ def はっこう_block_acc_drop(battle: Battle, ctx: EventContext, value: dict) 
 def はとむね_block_B_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """はとむね特性: 相手によるぼうぎょランク低下を無効化する。"""
     value = _block_stat_drop_by_foe(value, ctx, "B")
-    return HandlerReturn(value=value)
-
-
-def バトルスイッチ_change_form(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """バトルスイッチ特性: 行動前に必要なフォルムへ切り替える。"""
-    mon = ctx.attacker
-    next_name = ""
-    if mon.name == AEGISLASH_SHIELD and ctx.move.is_attack:
-        next_name = AEGISLASH_BLADE
-    elif mon.name == AEGISLASH_BLADE and ctx.move.name == "キングシールド":
-        next_name = AEGISLASH_SHIELD
-
-    if next_name:
-        mon.set_form(next_name)
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def バトルスイッチ_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """バトルスイッチ特性: 交代時にシールドフォルムへ戻す。"""
-    mon = ctx.source
-    if mon.name == AEGISLASH_BLADE:
-        mon.set_form(AEGISLASH_SHIELD)
     return HandlerReturn(value=value)
 
 
@@ -2262,7 +2308,7 @@ def はやあし_modify_speed(battle: Battle, ctx: EventContext, value: int) -> 
     return HandlerReturn(value=value)
 
 
-def はやおき_extra_decrement(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def はやおき_extra_decrement(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はやおき特性: ねむり状態のとき、ねむりカウンタを追加で1消費する。
 
     Args:
@@ -2290,6 +2336,13 @@ def はやてのつばさ_modify_priority(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=value)
 
 
+def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
+    """はらぺこスイッチ特性: オーラぐるまのタイプをフォルムで変える。"""
+    if ctx.move.name == "オーラぐるま":
+        value = "あく" if ctx.attacker.ability.is_hangry else "でんき"
+    return HandlerReturn(value=value)
+
+
 def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
     # テラスタル状態でなければ
@@ -2309,10 +2362,69 @@ def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
-def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """はらぺこスイッチ特性: オーラぐるまのタイプをフォルムで変える。"""
-    if ctx.move.name == "オーラぐるま":
-        value = "あく" if ctx.attacker.ability.is_hangry else "でんき"
+def はりきり_modify_accuracy(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
+    if (
+        ctx.move.category == "物理"
+        and not ctx.move.has_label("ohko")  # 一撃必殺技は命中率ペナルティなし
+        and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
+    ):
+        value = apply_fixed_modifier(value, 3277)
+    return HandlerReturn(value=value)
+
+
+def はりきり_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
+    if ctx.move.category == "物理":
+        value = apply_fixed_modifier(value, 6144)
+    return HandlerReturn(value=value)
+
+
+def はりこみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。"""
+    if (
+        ctx.defender is not None
+        and battle.player_states[battle.get_player(ctx.defender)].has_switched
+    ):
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
+def ハードロック_reduce_effective(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """防御側特性: 効果抜群の技ダメージを0.75倍にする。"""
+    if battle.query.is_super_effective(ctx):
+        value = apply_fixed_modifier(value, 3072)
+    return HandlerReturn(value=value)
+
+
+def ばけのかわ_block_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。"""
+    battle.add_ability_disabled_reason(ctx.defender, "consumed")
+    battle.modify_hp(ctx.defender, r=-1/8)
+    _announce_ability_triggered(battle, ctx.defender)
+    return HandlerReturn(value=0)
+
+
+def バトルスイッチ_change_form(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """バトルスイッチ特性: 行動前に必要なフォルムへ切り替える。"""
+    mon = ctx.attacker
+    next_name = ""
+    if mon.name == AEGISLASH_SHIELD and ctx.move.is_attack:
+        next_name = AEGISLASH_BLADE
+    elif mon.name == AEGISLASH_BLADE and ctx.move.name == "キングシールド":
+        next_name = AEGISLASH_SHIELD
+
+    if next_name:
+        mon.set_form(next_name)
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def バトルスイッチ_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """バトルスイッチ特性: 交代時にシールドフォルムへ戻す。"""
+    mon = ctx.source
+    if mon.name == AEGISLASH_BLADE:
+        mon.set_form(AEGISLASH_SHIELD)
     return HandlerReturn(value=value)
 
 
@@ -2332,31 +2444,13 @@ def バリアフリー_remove_screens(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
-def はりきり_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりきり特性: 物理技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "物理":
-        value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
-def はりきり_modify_accuracy(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
-    if (
-        ctx.move.category == "物理"
-        and not ctx.move.has_label("ohko")  # 一撃必殺技は命中率ペナルティなし
-        and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
-    ):
-        value = apply_fixed_modifier(value, 3277)
-    return HandlerReturn(value=value)
-
-
-def はりこみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。"""
-    if (
-        ctx.defender is not None
-        and battle.player_states[battle.get_player(ctx.defender)].has_switched
-    ):
-        value = apply_fixed_modifier(value, 8192)
+def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """ばんけん特性: いかくを受けたときこうげきを1段階上げる。"""
+    if ctx.stat_change_reason != "いかく":
+        return HandlerReturn(value=value)
+    mon = ctx.target
+    battle.modify_stats(mon, {"A": +1}, source=mon)
+    _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
 
@@ -2374,39 +2468,17 @@ def パンクロック_reduce_damage(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """ばんけん特性: いかくを受けたときこうげきを1段階上げる。"""
-    if ctx.stat_change_reason != "いかく":
-        return HandlerReturn(value=value)
-    mon = ctx.target
-    battle.modify_stats(mon, {"A": +1}, source=mon)
-    _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
+# 天候展開系
 
 
-_BEAST_BOOST_ORDER: tuple[str, ...] = ("A", "B", "C", "D", "S")
-
-
-def ビーストブースト_boost_best_stat_on_ko(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ビーストブースト特性: 攻撃技で倒すと最も実数値が高い能力が1段階上がる。"""
-    mon = ctx.attacker
-    best_stat = max(_BEAST_BOOST_ORDER, key=lambda s: mon.stats[s])
-    if battle.modify_stats(mon, {best_stat: +1}, source=mon):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
+def ひでり_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="はれ", count=5)
 
 
 def ひとでなし_modify_critical_rank(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ひとでなし特性: どく/もうどく状態の相手への攻撃を必ず急所にする。"""
     if ctx.defender.has_ailment("どく", "もうどく"):
         value = 10
-    return HandlerReturn(value=value)
-
-
-def ヒーリングシフト_modify_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ヒーリングシフト特性: 回復技・吸収技の優先度を+3する。"""
-    if ctx.move.has_label("heal"):
-        value += 3
     return HandlerReturn(value=value)
 
 
@@ -2424,6 +2496,18 @@ def ひひいろのこどう_modify_atk(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
+def ひらいしん_absorb_electric(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """ひらいしん特性: でんき技を無効化し特攻を1段階上げる。"""
+    return _apply_type_absorb(battle, ctx, value, move_type="でんき", stats={"C": 1})
+
+
+def ヒーリングシフト_modify_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ヒーリングシフト特性: 回復技・吸収技の優先度を+3する。"""
+    if ctx.move.has_label("heal"):
+        value += 3
+    return HandlerReturn(value=value)
+
+
 def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """びびり特性: あく/ゴースト/むしタイプの技でダメージを受けるとすばやさが1段階上がる。"""
     if ctx.move.type not in ("あく", "ゴースト", "むし"):
@@ -2432,11 +2516,6 @@ def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: 
     if battle.modify_stats(mon, {"S": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
-
-
-def ひらいしん_absorb_electric(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """ひらいしん特性: でんき技を無効化し特攻を1段階上げる。"""
-    return _apply_type_absorb(battle, ctx, value, move_type="でんき", stats={"C": 1})
 
 
 def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
@@ -2454,51 +2533,23 @@ def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dic
     return HandlerReturn(value=value)
 
 
+_BEAST_BOOST_ORDER: tuple[str, ...] = ("A", "B", "C", "D", "S")
+
+
+def ビーストブースト_boost_best_stat_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ビーストブースト特性: 攻撃技で倒すと最も実数値が高い能力が1段階上がる。"""
+    mon = ctx.attacker
+    best_stat = max(_BEAST_BOOST_ORDER, key=lambda s: mon.stats[s])
+    if battle.modify_stats(mon, {best_stat: +1}, source=mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ファーコート_boost_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ファーコート特性: 物理技に対する防御補正を2倍にする。"""
     if battle.query.deals_physical_damage(ctx.attacker, ctx.move):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
-
-
-def フェアリーオーラ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """フェアリーオーラ特性: フェアリー技の威力を1.33倍にする。オーラブレイクがいる場合は0.75倍にする。"""
-    if ctx.move.type != "フェアリー":
-        return HandlerReturn(value=value)
-    aura_break = (
-        ctx.attacker.ability.name == "オーラブレイク"
-        or ctx.defender.ability.name == "オーラブレイク"
-    )
-    modifier = 3072 if aura_break else 5448
-    return HandlerReturn(value=apply_fixed_modifier(value, modifier))
-
-
-def ぶきよう_disable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
-    battle.add_item_disabled_reason(ctx.source, "ぶきよう")
-    return HandlerReturn(value=value)
-
-
-def ぶきよう_enable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
-    battle.remove_item_disabled_reason(ctx.source, "ぶきよう")
-    return HandlerReturn(value=value)
-
-
-def ふかしのこぶし_bypass_protect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """接触技使用時にまもる系の防護を貫通する"""
-    if battle.query.is_contact(ctx):
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def ふかしのこぶし_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """まもる系揮発性状態を持つ相手への接触技ダメージを1/4にする"""
-    if (
-        not battle.query.is_contact(ctx)
-        or not ctx.move.is_blocked_by_protect
-        or not any(ctx.defender.has_volatile(v) for v in _PROTECT_VOLATILES)
-    ):
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=1024)
 
 
 def ふうりょくでんき_on_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2526,6 +2577,44 @@ def ふうりょくでんき_on_field_activate(battle: Battle, ctx: EventContext
     return HandlerReturn(value=value)
 
 
+def フェアリーオーラ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """フェアリーオーラ特性: フェアリー技の威力を1.33倍にする。オーラブレイクがいる場合は0.75倍にする。"""
+    if ctx.move.type != "フェアリー":
+        return HandlerReturn(value=value)
+    aura_break = (
+        ctx.attacker.ability.name == "オーラブレイク"
+        or ctx.defender.ability.name == "オーラブレイク"
+    )
+    modifier = 3072 if aura_break else 5448
+    return HandlerReturn(value=apply_fixed_modifier(value, modifier))
+
+
+def フェアリースキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
+    return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="フェアリー")
+
+
+def フェアリースキン_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
+
+
+def ふかしのこぶし_bypass_protect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """接触技使用時にまもる系の防護を貫通する"""
+    if battle.query.is_contact(ctx):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ふかしのこぶし_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まもる系揮発性状態を持つ相手への接触技ダメージを1/4にする"""
+    if (
+        not battle.query.is_contact(ctx)
+        or not ctx.move.is_blocked_by_protect
+        or not any(ctx.defender.has_volatile(v) for v in _PROTECT_VOLATILES)
+    ):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=1024)
+
+
 def ふくがん_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふくがん特性: 使用技の命中率を1.3倍にする（一撃必殺技を除く）。"""
     if not ctx.move.has_label("ohko"):
@@ -2547,7 +2636,7 @@ def ふくつのこころ_boost_spd_on_flinch(battle: Battle, ctx: EventContext,
     return HandlerReturn(value=value)
 
 
-def ふくつのたて_boost_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ふくつのたて_boost_B(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふくつのたて特性: 初登場時にぼうぎょが1段階上がる（バトル中1回）。"""
     mon = ctx.source
     if mon is None:
@@ -2578,7 +2667,7 @@ def ふしぎなまもり_block_non_effective(battle: Battle, ctx: AttackContext
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ふとうのけん_boost_A(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ふとうのけん_boost_A(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ふとうのけん特性: 初登場時にこうげきが1段階上がる（バトル中1回）。"""
     mon = ctx.source
     if mon is None:
@@ -2587,6 +2676,10 @@ def ふとうのけん_boost_A(battle: Battle, ctx: AttackContext, value: Any) -
         _announce_ability_triggered(battle, mon)
         battle.add_ability_disabled_reason(mon, "consumed")
     return HandlerReturn(value=value)
+
+
+def ふみん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
 
 def ふゆう_float(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
@@ -2630,6 +2723,24 @@ def フラワーベール_prevent_stat_drop(battle: Battle, ctx: EventContext, v
     if filtered != value:
         _announce_ability_triggered(battle, target)
     return HandlerReturn(value=filtered)
+
+
+def フリーズスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
+    return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="こおり")
+
+
+def フリーズスキン_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
+
+
+def ぶきよう_disable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
+    battle.add_item_disabled_reason(ctx.source, "ぶきよう")
+    return HandlerReturn(value=value)
+
+
+def ぶきよう_enable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
+    battle.remove_item_disabled_reason(ctx.source, "ぶきよう")
+    return HandlerReturn(value=value)
 
 
 def ブレインフォース_boost_effective(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -2690,10 +2801,39 @@ def へんしょく_copy_move_type(battle: Battle, ctx: AttackContext, value: An
     return HandlerReturn(value=value)
 
 
-def ポイズンヒール_modify_poison_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ポイズンヒール特性: どく/もうどく由来のHP変化を最大HPの1/8回復に置き換える。"""
-    if value < 0:
-        value = ctx.target.max_hp // 8
+def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。"""
+    if not battle.query.is_contact(ctx):
+        return HandlerReturn(value=value)
+    r = battle.random.random()
+    ailment: AilmentName | None = next((a for threshold, a in _EFFECT_SPORE_AILMENTS if r < threshold), None)
+    if ailment is None:
+        return HandlerReturn(value=value)
+    battle.ailment_manager.apply(ctx.attacker, ailment, source=ctx.defender, ctx=ctx)
+    return HandlerReturn(value=value)
+
+
+def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
+    return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)
+
+
+def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ほろびのボディ特性: 直接攻撃を受けると自分と攻撃者の双方にほろびのうたを付与する。"""
+    attacker = ctx.attacker
+    if (
+        not battle.query.is_contact(ctx)
+        or attacker is None
+        or attacker.fainted
+    ):
+        return HandlerReturn(value=value)
+    defender = ctx.defender
+    triggered = False
+    for mon in (defender, attacker):
+        if battle.volatile_manager.apply(mon, "ほろびのうた", source=defender):
+            triggered = True
+    if triggered:
+        _announce_ability_triggered(battle, defender)
     return HandlerReturn(value=value)
 
 
@@ -2744,39 +2884,10 @@ def ぼうだん_block_bullet(battle: Battle, ctx: AttackContext, value: bool) -
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。"""
-    if not battle.query.is_contact(ctx):
-        return HandlerReturn(value=value)
-    r = battle.random.random()
-    ailment: AilmentName | None = next((a for threshold, a in _EFFECT_SPORE_AILMENTS if r < threshold), None)
-    if ailment is None:
-        return HandlerReturn(value=value)
-    battle.ailment_manager.apply(ctx.attacker, ailment, source=ctx.defender, ctx=ctx)
-    return HandlerReturn(value=value)
-
-
-def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
-    return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)
-
-
-def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほろびのボディ特性: 直接攻撃を受けると自分と攻撃者の双方にほろびのうたを付与する。"""
-    attacker = ctx.attacker
-    if (
-        not battle.query.is_contact(ctx)
-        or attacker is None
-        or attacker.fainted
-    ):
-        return HandlerReturn(value=value)
-    defender = ctx.defender
-    triggered = False
-    for mon in (defender, attacker):
-        if battle.volatile_manager.apply(mon, "ほろびのうた", source=defender):
-            triggered = True
-    if triggered:
-        _announce_ability_triggered(battle, defender)
+def ポイズンヒール_modify_poison_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """ポイズンヒール特性: どく/もうどく由来のHP変化を最大HPの1/8回復に置き換える。"""
+    if value < 0:
+        value = ctx.target.max_hp // 8
     return HandlerReturn(value=value)
 
 
@@ -2786,6 +2897,10 @@ def マイティチェンジ_change_form(battle: Battle, ctx: EventContext, valu
     if mon.name == PALAFIN_ZERO and mon.alive:
         mon.set_form(PALAFIN_HERO)
     return HandlerReturn(value=value)
+
+
+def マイペース_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["こんらん"])
 
 
 def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
@@ -2843,40 +2958,6 @@ def マルチタイプ_block_item_change(battle: Battle, ctx: EventContext, valu
     return _block_item_change(mon, list(PLATE_TO_TYPE.keys()))
 
 
-def みずがため_boost_B_on_water(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """みずがため特性: みずタイプの技でダメージを受けるとぼうぎょが2段階上がる。"""
-    if ctx.move.type != "みず":
-        return HandlerReturn(value=value)
-    mon = ctx.defender
-    if battle.modify_stats(mon, {"B": +2}, source=ctx.attacker):
-        _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """ミラーアーマー特性: 相手由来の能力ランク低下を反射する。"""
-    if (
-        not ctx.is_foe_target()
-        or ctx.stat_change_reason == "ミラーアーマー"
-    ):
-        return HandlerReturn(value=value)
-
-    drops = {stat: v for stat, v in value.items() if v < 0}
-    if drops:
-        # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
-        battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
-        # 自分側の低下分を除去（上昇分は残す）
-        value = {stat: v for stat, v in value.items() if v > 0}
-    return HandlerReturn(value=value)
-
-
-def ミラクルスキン_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ミラクルスキン特性: 相手の変化技の命中率を50%に固定する。"""
-    if ctx.move.is_attack or value is None:
-        return HandlerReturn(value=value)
-    return HandlerReturn(value=min(value, 50))
-
-
 def _overwrite_ability_on_contact(battle: Battle,
                                   ctx: AttackContext,
                                   *,
@@ -2901,6 +2982,44 @@ def ミイラ_overwrite_attacker_ability(battle: Battle, ctx: AttackContext, val
     """ミイラ特性: 直接攻撃でダメージを受けたとき攻撃者の特性をミイラにする。"""
     if _overwrite_ability_on_contact(battle, ctx, new_ability="ミイラ"):
         _announce_ability_triggered(battle, ctx.defender)
+    return HandlerReturn(value=value)
+
+
+def ミストメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_terrain(battle, ctx.source, value, terrain="ミストフィールド", count=5)
+
+
+def みずがため_boost_B_on_water(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みずがため特性: みずタイプの技でダメージを受けるとぼうぎょが2段階上がる。"""
+    if ctx.move.type != "みず":
+        return HandlerReturn(value=value)
+    mon = ctx.defender
+    if battle.modify_stats(mon, {"B": +2}, source=ctx.attacker):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def ミラクルスキン_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ミラクルスキン特性: 相手の変化技の命中率を50%に固定する。"""
+    if ctx.move.is_attack or value is None:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=min(value, 50))
+
+
+def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """ミラーアーマー特性: 相手由来の能力ランク低下を反射する。"""
+    if (
+        not ctx.is_foe_target()
+        or ctx.stat_change_reason == "ミラーアーマー"
+    ):
+        return HandlerReturn(value=value)
+
+    drops = {stat: v for stat, v in value.items() if v < 0}
+    if drops:
+        # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
+        battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
+        # 自分側の低下分を除去（上昇分は残す）
+        value = {stat: v for stat, v in value.items() if v > 0}
     return HandlerReturn(value=value)
 
 
@@ -2987,7 +3106,7 @@ def メロメロボディ_maybe_infatuate_attacker(battle: Battle, ctx: AttackCo
     """メロメロボディ特性: 直接攻撃を受けたとき30%の確率で攻撃者をメロメロにする。"""
     if battle.query.is_contact(ctx) and battle.random.random() < 0.3:
         battle.volatile_manager.apply(
-            ctx.attacker, "メロメロ", source=ctx.defender, ctx=ctx,
+            ctx.attacker, "メロメロ", source=ctx.defender,
         )
     return HandlerReturn(value=value)
 
@@ -3033,9 +3152,28 @@ def もらいび_block_fire(battle: Battle, ctx: AttackContext, value: bool) -> 
     return HandlerReturn(value=False, stop_event=True)
 
 
+def もらいび_consume_fire_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """もらいび特性: 行動終了時に強化を消費済みにする。"""
+    mon = ctx.attacker
+    state = mon.ability.state
+    if state == "active":
+        mon.ability.state = "idle"
+    return HandlerReturn(value=value)
+
+
 def もらいび_init_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """もらいび特性: 登場時に炎技強化状態を初期化する。"""
     ctx.source.ability.state = "idle"
+    return HandlerReturn(value=value)
+
+
+def もらいび_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """もらいび特性: 吸収後の最初のほのお技のみ威力を1.5倍にする。"""
+    if (
+        ctx.move.type == "ほのお"
+        and ctx.attacker.ability.state == "active"
+    ):
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
@@ -3051,23 +3189,8 @@ def もらいび_reserve_fire_boost(battle: Battle, ctx: AttackContext, value: b
     return HandlerReturn(value=value)
 
 
-def もらいび_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """もらいび特性: 吸収後の最初のほのお技のみ威力を1.5倍にする。"""
-    if (
-        ctx.move.type == "ほのお"
-        and ctx.attacker.ability.state == "active"
-    ):
-        value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
-def もらいび_consume_fire_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """もらいび特性: 行動終了時に強化を消費済みにする。"""
-    mon = ctx.attacker
-    state = mon.ability.state
-    if state == "active":
-        mon.ability.state = "idle"
-    return HandlerReturn(value=value)
+def やるき_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
 
 def ゆうばく_damage_attacker_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3098,16 +3221,15 @@ def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
+def ゆきふらし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _activate_weather(battle, ctx.source, value, weather="ゆき", count=5)
+
+
 def ようりょくそ_boost_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """ようりょくそ特性: はれ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
     if battle.weather_for(ctx.source).sunny:
         value *= 2
     return HandlerReturn(value=value)
-
-
-def よびみず_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """よびみず特性: みず技を無効化し特攻を1段階上げる。"""
-    return _apply_type_absorb(battle, ctx, value, move_type="みず", stats={"C": 1})
 
 
 # よちむ仕様: 変化技=0、その他は data.power を使用
@@ -3141,18 +3263,15 @@ def よちむ_reveal_strongest_move(battle: Battle, ctx: EventContext, value: An
     return HandlerReturn(value=value)
 
 
+def よびみず_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """よびみず特性: みず技を無効化し特攻を1段階上げる。"""
+    return _apply_type_absorb(battle, ctx, value, move_type="みず", stats={"C": 1})
+
+
 def よわき_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """よわき特性: HP半分以下で攻撃補正を0.5倍にする。"""
     if ctx.attacker.hp * 2 <= ctx.attacker.max_hp:
         value = apply_fixed_modifier(value, 2048)
-    return HandlerReturn(value=value)
-
-
-def リーフガード_prevent_ailment(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
-    """リーフガード特性: にほんばれ/おおひでり中に状態異常付与を防ぐ。ばんのうがさを持つ場合は無効。"""
-    if battle.weather_for(ctx.target).sunny:
-        _announce_ability_triggered(battle, ctx.target)
-        return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -3164,18 +3283,6 @@ def リミットシールド_enter_meteor_form(battle: Battle, ctx: EventContext
     if mon.hp * 2 > mon.max_hp:
         mon.set_form(METEONO_METEOR)
         _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
-
-
-def リミットシールド_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """リミットシールド特性: ターン終了時にHPに応じてフォルムを切り替える。"""
-    mon = ctx.source
-    if mon.hp * 2 > mon.max_hp:
-        if mon.set_form(METEONO_METEOR):
-            _announce_ability_triggered(battle, mon)
-    else:
-        if mon.set_form(METEONO_CORE):
-            _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
 
@@ -3194,6 +3301,18 @@ def リミットシールド_revert_form(battle: Battle, ctx: EventContext, valu
     return HandlerReturn(value=value)
 
 
+def リミットシールド_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """リミットシールド特性: ターン終了時にHPに応じてフォルムを切り替える。"""
+    mon = ctx.source
+    if mon.hp * 2 > mon.max_hp:
+        if mon.set_form(METEONO_METEOR):
+            _announce_ability_triggered(battle, mon)
+    else:
+        if mon.set_form(METEONO_CORE):
+            _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def りゅうのあぎと_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """りゅうのあぎと特性: ドラゴン技の攻撃補正を1.5倍にする。"""
     return _modify_by_move_condition(ctx.move, value, modifier=6144, move_type="ドラゴン")
@@ -3202,6 +3321,14 @@ def りゅうのあぎと_modify_atk(battle: Battle, ctx: AttackContext, value: 
 def りんぷん_block_secondary_chance(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
     """りんぷん特性: 相手の攻撃技の追加効果を無効化する。"""
     return HandlerReturn(value=0, stop_event=True)
+
+
+def リーフガード_prevent_ailment(battle: Battle, ctx: EventContext, value: str) -> HandlerReturn:
+    """リーフガード特性: にほんばれ/おおひでり中に状態異常付与を防ぐ。ばんのうがさを持つ場合は無効。"""
+    if battle.weather_for(ctx.target).sunny:
+        _announce_ability_triggered(battle, ctx.target)
+        return HandlerReturn(value="", stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def わざわいのうつわ_reduce_C(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -3215,7 +3342,6 @@ def _apply_multitype(mon: Pokemon, item_table: dict[str, Type]) -> None:
     """道具に応じてポケモンのタイプを変更する共通ロジック。"""
     item_name = mon.item.name if mon.has_item() else ""
     mon.ability_override_type = item_table.get(item_name)
-
 
 def _block_item_change(mon: Pokemon, unchangable_items: list[str]) -> HandlerReturn:
     """道具の奪取・交換を防ぐ共通ロジック。"""
@@ -3265,153 +3391,3 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any
     ):
         battle.take_item(ctx.attacker)
     return HandlerReturn(value=value)
-
-# 天候展開系
-
-
-def ひでり_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="はれ", count=5)
-
-
-def あめふらし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="あめ", count=5)
-
-
-def すなおこし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="すなあらし", count=5)
-
-
-def ゆきふらし_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="ゆき", count=5)
-
-
-def おわりのだいち_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="おおひでり", count=1)
-
-
-def おわりのだいち_deactivate_strong_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _deactivate_strong_weather(battle, ctx, value, weather="おおひでり")
-
-
-def はじまりのうみ_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="おおあめ", count=1)
-
-
-def はじまりのうみ_deactivate_strong_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _deactivate_strong_weather(battle, ctx, value, weather="おおあめ")
-
-
-def デルタストリーム_activate_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_weather(battle, ctx.source, value, weather="らんきりゅう", count=1)
-
-
-def デルタストリーム_deactivate_strong_weather(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _deactivate_strong_weather(battle, ctx, value, weather="らんきりゅう")
-
-
-def エレキメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_terrain(battle, ctx.source, value, terrain="エレキフィールド", count=5)
-
-
-def グラスメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_terrain(battle, ctx.source, value, terrain="グラスフィールド", count=5)
-
-
-def サイコメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_terrain(battle, ctx.source, value, terrain="サイコフィールド", count=5)
-
-
-def ミストメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _activate_terrain(battle, ctx.source, value, terrain="ミストフィールド", count=5)
-
-
-def prevent_poison_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_ailment(battle, ctx, value, blocked_ailments=["どく", "もうどく"])
-
-
-def prevent_paralysis_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_ailment(battle, ctx, value, blocked_ailments=["まひ"])
-
-
-def prevent_burn_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_ailment(battle, ctx, value, blocked_ailments=["やけど"])
-
-
-def prevent_sleep_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_ailment(battle, ctx, value, blocked_ailments=["ねむり"])
-
-
-def prevent_freeze_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_ailment(battle, ctx, value, blocked_ailments=["こおり"])
-
-
-def きよめのしお_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_ailment(battle, ctx, value)
-
-
-def アロマベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=[
-        "アンコール", "いちゃもん", "かいふくふうじ", "かなしばり", "ちょうはつ", "メロメロ"
-    ])
-
-
-def スイートベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
-
-
-def せいしんりょく_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ひるみ"])
-
-
-def どんかん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ちょうはつ", "メロメロ"])
-
-
-def ふみん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
-
-
-def マイペース_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["こんらん"])
-
-
-def やるき_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
-
-
-def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: Type, *, from_type: str, to_type: str) -> HandlerReturn:
-    """スキン系特性共通: from_type の技を to_type に変換する。"""
-    if value == from_type:
-        value = to_type
-    return HandlerReturn(value=value)
-
-
-def _skin_boost_power(battle: Battle, ctx: AttackContext, value: int, *, trigger_type: str) -> HandlerReturn:
-    """スキン系特性共通: trigger_type だった技の威力を 4915/4096 倍にする。"""
-    if ctx.move.data.type == trigger_type:
-        value = apply_fixed_modifier(value, 4915)
-    return HandlerReturn(value=value)
-
-
-def スカイスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="ひこう")
-
-
-def フェアリースキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="フェアリー")
-
-
-def フリーズスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="こおり")
-
-
-def スカイスキン_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
-
-
-def フェアリースキン_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
-
-
-def フリーズスキン_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")

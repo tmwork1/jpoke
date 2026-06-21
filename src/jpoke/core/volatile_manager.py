@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from jpoke.model import Pokemon, Volatile
 from jpoke.utils.type_defs import VolatileName
 from jpoke.enums import Event, LogCode
-from jpoke.core import EventContext, BaseContext
+from jpoke.core import EventContext
 from jpoke.utils import fast_copy
 
 
@@ -51,9 +51,7 @@ class VolatileManager:
               name: VolatileName,
               count: int | None = None,
               source: Pokemon | None = None,
-              ctx: BaseContext | None = None,
               **kwargs) -> bool:
-        # TODO : ctx引数が使われていないなら削除する
         """揮発性状態を付与する。
 
         Args:
@@ -61,7 +59,6 @@ class VolatileManager:
             name: 揮発性状態名
             count: 継続ターン数
             source: 揮発性状態の原因となったポケモン
-            ctx: ON_BEFORE_APPLY_VOLATILE イベントの EventContext
             **kwargs: Volatile クラスの追加引数（例: move_name, hp)
         Returns:
             付与に成功したTrue
@@ -74,10 +71,7 @@ class VolatileManager:
             return False
 
         # ON_BEFORE_APPLY_VOLATILE イベントを発火して特性やフィールドによる無効化をチェック
-        if ctx is not None:
-            apply_ctx = EventContext(source=source, target=target)
-        else:
-            apply_ctx = EventContext(target=target, source=source)
+        apply_ctx = EventContext(source=source, target=target)
 
         # ハンドラーが空値を返した場合は無効化させる
         resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_VOLATILE, apply_ctx, name)
@@ -150,13 +144,12 @@ class VolatileManager:
 
     def apply_confusion(self,
                         target: Pokemon | None,
-                        source: Pokemon | None = None,
-                        ctx: BaseContext | None = None) -> bool:
+                        source: Pokemon | None = None) -> bool:
         """こんらん状態を2〜5ターンのランダム期間で付与する。"""
         if target is None:
             return False
         count = self.battle.random.randint(2, 5)
-        return self.apply(target, "こんらん", count=count, source=source, ctx=ctx)
+        return self.apply(target, "こんらん", count=count, source=source)
 
     def tick(self, target: Pokemon, volatile_name: VolatileName) -> bool:
         """揮発性状態のターン経過処理を行う。

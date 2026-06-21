@@ -217,6 +217,12 @@ class Event(Enum):
     # handle: ability.py（にげごし等、ダメージ要因をまたいでHP閾値を監視する特性）
     ON_HP_CHANGED = auto()
 
+    # emit: core/battle.py（force_trigger_berry）
+    # handle: item.py（HP閾値チェックなしにきのみ効果を強制発動。
+    #         ほおばる・おちゃかい等できのみを強制消費するとき専用）
+    #         subject_spec="source:self" を使う
+    ON_FORCE_BERRY_TRIGGER = auto()
+
     # emit: core/move_executor.py（技によるひんし時）
     # handle: volatile.py（おんねん・みちづれ等のひんし時効果）
     ON_MOVE_KO = auto()

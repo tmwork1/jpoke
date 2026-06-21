@@ -510,6 +510,32 @@ class Battle:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
         return self.item_manager.remove_item(mon, source=mon)
 
+    def force_trigger_berry(self, mon: Pokemon) -> None:
+        """きのみを強制発動してから消費する。
+
+        ほおばる・おちゃかい等で「HP閾値やターン終了を待たずに即座に」
+        きのみ効果を発動させるときに使う。
+
+        発火順:
+        1. ON_HP_CHANGED (value=max_hp): HP 閾値ベースのきのみ（オボンのみ等）を対象にする
+        2. ON_FORCE_BERRY_TRIGGER: ON_HP_CHANGED に登録されていないきのみ（
+           状態異常治療きのみ等）を発動する
+        3. まだ消費されていなければ consume_item で明示的に消費する
+
+        Args:
+            mon: きのみを強制発動するポケモン
+        """
+        # HP 閾値ベースのきのみを発動（オボンのみ・フィラのみ等）
+        hp_ctx = EventContext(target=mon, source=mon)
+        self.events.emit(Event.ON_HP_CHANGED, hp_ctx, mon.max_hp)
+        # HP 閾値チェックなしで発動するきのみ（状態異常治療きのみ等）
+        if mon.item.is_berry():
+            force_ctx = EventContext(source=mon)
+            self.events.emit(Event.ON_FORCE_BERRY_TRIGGER, force_ctx)
+        # いずれの発火でも消費されなかった場合は明示的に消費する
+        if mon.item.is_berry():
+            self.consume_item(mon)
+
     def swap_items(self) -> bool:
         """2体のアイテムを入れ替える（ItemManagerへの委譲）。"""
         return self.item_manager.swap_items()
@@ -537,10 +563,22 @@ class Battle:
                   r: float = 0,
                   source: Pokemon | None = None,
                   reason: HPChangeReason = "") -> int:
-        # TODO : rの指定はBattleクラスのmodify_hpからにして、StatusManagerはvのみ受け取るようにする
         # TODO : r > 0 の場合は v > 0, r < 0の場合は v < 0 を担保するようにして、modify_hp呼び出し側でmax(1, v)をせずに済むようにする。
-        """ポケモンのHPを変更する（StatusManagerへの委譲）。"""
-        return self.status_manager.modify_hp(target, v=v, r=r, reason=reason, source=source)
+        """ポケモンのHPを変更する（StatusManagerへの委譲）。
+
+        Args:
+            target: 対象のポケモン
+            v: 変更する固定HP量
+            r: 最大HPに対する割合（-1.0～1.0）。v と同時指定時は r が優先される
+            source: ダメージ源のポケモン
+            reason: 変更の理由
+
+        Returns:
+            実際に変化したHP量（正=回復、負=ダメージ）
+        """
+        if r:
+            v = int(target.max_hp * r)
+        return self.status_manager.modify_hp(target, v=v, reason=reason, source=source)
 
     def faint(self,
               target: Pokemon,

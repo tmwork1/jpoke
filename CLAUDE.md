@@ -119,6 +119,12 @@ battle = t.start_battle(
 - 型アノテーションは Python 3.10+ の構文（`X | Y`, `list[X]`）を使う
 - 長い `if` 文（80文字以上）は括弧で囲んで複数行に展開し、`and` で条件ごとに改行する
 
+## ハンドラの追加ルール
+
+- `handlers/<category>.py` に関数を実装したら、以下の順で実行する：
+  1. `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` — 日本語始まりの公開ハンドラ関数を五十音順に並び替える
+  2. `python -m pytest tests/ -v` — 全テストが通ることを確認する
+
 ## テストの追加ルール
 
 - `test_utils.py` の `start_battle`、`run_move`、`run_switch` などを再利用する

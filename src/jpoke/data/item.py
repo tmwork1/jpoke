@@ -1150,6 +1150,11 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
+                h.ラムのみ_cure_ailment,
+                subject_spec="source:self",
+                priority=50,
+            ),
         }
     ),
     "クラボのみ": ItemData(
@@ -1166,6 +1171,11 @@ ITEMS: dict[str, ItemData] = {
                 priority=50,
             ),
             Event.ON_ITEM_ENABLED: h.ItemHandler(
+                h.クラボのみ_cure_paralysis,
+                subject_spec="source:self",
+                priority=50,
+            ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
                 h.クラボのみ_cure_paralysis,
                 subject_spec="source:self",
                 priority=50,
@@ -1190,6 +1200,11 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
+                h.カゴのみ_cure_sleep,
+                subject_spec="source:self",
+                priority=50,
+            ),
         }
     ),
     "モモンのみ": ItemData(
@@ -1206,6 +1221,11 @@ ITEMS: dict[str, ItemData] = {
                 priority=50,
             ),
             Event.ON_ITEM_ENABLED: h.ItemHandler(
+                h.モモンのみ_cure_poison,
+                subject_spec="source:self",
+                priority=50,
+            ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
                 h.モモンのみ_cure_poison,
                 subject_spec="source:self",
                 priority=50,
@@ -1230,6 +1250,11 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
+                h.チーゴのみ_cure_burn,
+                subject_spec="source:self",
+                priority=50,
+            ),
         }
     ),
     "ナナシのみ": ItemData(
@@ -1250,6 +1275,11 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
+                h.ナナシのみ_cure_freeze,
+                subject_spec="source:self",
+                priority=50,
+            ),
         }
     ),
     "キーのみ": ItemData(
@@ -1259,7 +1289,12 @@ ITEMS: dict[str, ItemData] = {
                 h.キーのみ_cure_confusion,
                 subject_spec="source:self",
                 priority=50,
-            )
+            ),
+            Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
+                h.キーのみ_cure_confusion,
+                subject_spec="source:self",
+                priority=50,
+            ),
         }
     ),
     "ヒメリのみ": ItemData(

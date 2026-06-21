@@ -545,3 +545,72 @@ def test_ねをはる_ねをはる状態を付与する():
     t.run_move(battle, 0)
 
     assert attacker.has_volatile("ねをはる")
+
+
+def test_のみこむ_count1で4分の1回復():
+    """のみこむ: たくわえ回数1回のとき最大HPの1/4を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    expected_heal = int(attacker.max_hp * 1 / 4)
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1 + expected_heal
+    assert not attacker.has_volatile("たくわえる")
+
+
+def test_のみこむ_count2で2分の1回復():
+    """のみこむ: たくわえ回数2回のとき最大HPの1/2を回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    expected_heal = int(attacker.max_hp * 1 / 2)
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1 + expected_heal
+    assert not attacker.has_volatile("たくわえる")
+
+
+def test_のみこむ_count3で全回復():
+    """のみこむ: たくわえ回数3回のとき最大HPまで全回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 3},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+    assert not attacker.has_volatile("たくわえる")
+
+
+def test_のみこむ_たくわえなしで失敗():
+    """のみこむ: たくわえていない状態では失敗する"""
+    from jpoke.enums import LogCode
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    # HP が変わらず失敗している
+    assert attacker.hp == 1
+    logs = battle.event_logger.logs
+    assert any(
+        log.log == LogCode.MOVE_FAILED
+        and log.payload is not None
+        and log.payload.get("reason") == "のみこむ"
+        for log in logs
+    )

@@ -49,7 +49,7 @@ def まひ_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn
     return HandlerReturn(value=value // 2)
 
 
-def まひ_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def まひ_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """まひ状態による行動不能チェック（12.5%確率）。
 
     Champions仕様: 行動不能率は12.5%（SV以前の25%から変更）。

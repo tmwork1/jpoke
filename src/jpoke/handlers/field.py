@@ -55,7 +55,7 @@ def tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFie
 # ===== 天候ハンドラ =====
 
 
-def はれ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def はれ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """晴れ状態での技威力補正。防御側がばんのうがさを持つ場合は無効。"""
     # 仕様: 晴れ/雨のダメージ補正は防御側の効果とみなされる
     if battle.weather_for(ctx.defender).name == "":
@@ -75,7 +75,7 @@ def はれ_prevent_freeze(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(value=value)
 
 
-def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あめ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """雨状態での技威力補正。防御側がばんのうがさを持つ場合は無効。"""
     # 仕様: 晴れ/雨のダメージ補正は防御側の効果とみなされる
     if battle.weather_for(ctx.defender).name == "":
@@ -88,7 +88,7 @@ def あめ_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> Hand
     return HandlerReturn(value=value)
 
 
-def すなあらし_D_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def すなあらし_D_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
     if (
         ctx.defender.has_type("いわ")
@@ -112,7 +112,7 @@ def すなあらし_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
-def ゆき_B_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ゆき_B_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
     if (
         ctx.defender.has_type("こおり")
@@ -125,7 +125,7 @@ def ゆき_B_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerRetu
 # ===== 強天候ハンドラ =====
 
 
-def おおひでり_block_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def おおひでり_block_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おおひでり中にみずタイプ技を失敗させる（攻撃技・変化技を問わない）"""
     if ctx.move.type == "みず":
         battle.add_event_log(
@@ -136,7 +136,7 @@ def おおひでり_block_move(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def おおあめ_block_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def おおあめ_block_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おおあめ中にほのおタイプ技を失敗させる（攻撃技・変化技を問わない）"""
     if ctx.move.type == "ほのお":
         battle.add_event_log(
@@ -147,7 +147,7 @@ def おおあめ_block_move(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
-def らんきりゅう_type_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def らんきりゅう_type_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する"""
     if (
         ctx.defender.has_type("ひこう")
@@ -160,7 +160,7 @@ def らんきりゅう_type_modifier(battle: Battle, ctx: EventContext, value: A
 # ===== 地形ハンドラ =====
 
 
-def エレキフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def エレキフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """エレキフィールドでの電気技威力1.3倍"""
     if (
         ctx.move.type == "でんき" and
@@ -190,7 +190,7 @@ def エレキフィールド_prevent_nemuke(battle: Battle, ctx: EventContext, v
     return HandlerReturn(value=value)
 
 
-def グラスフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def グラスフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """グラスフィールドでの草技威力1.3倍・地面技威力0.5倍"""
     # 草技威力1.3倍（攻撃側が接地している場合）
     if (
@@ -214,7 +214,7 @@ def グラスフィールド_heal(battle: Battle, ctx: EventContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def サイコフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def サイコフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコフィールドでのエスパー技威力1.3倍"""
     if (
         ctx.move.type == "エスパー"
@@ -224,7 +224,7 @@ def サイコフィールド_power_modifier(battle: Battle, ctx: EventContext, v
     return HandlerReturn(value=value)
 
 
-def サイコフィールド_block_priority_move(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def サイコフィールド_block_priority_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコフィールドで先制技無効"""
     if (
         ctx.move.priority > 0
@@ -238,7 +238,7 @@ def サイコフィールド_block_priority_move(battle: Battle, ctx: EventConte
     return HandlerReturn(value=True)
 
 
-def ミストフィールド_power_modifier(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ミストフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ミストフィールドでのドラゴン技威力0.5倍"""
     if (
         ctx.move.type == "ドラゴン"
@@ -294,7 +294,7 @@ def マジックルーム_remove(battle: Battle, ctx: EventContext, value: Any) 
     return HandlerReturn(value=value)
 
 
-def ワンダールーム_def_rank_modifier(battle: Battle, ctx: EventContext, value: float) -> HandlerReturn:
+def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
     """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
     category_to_stat = {"物理": "D", "特殊": "B"}
     swapped_stat = category_to_stat.get(ctx.move.category)
@@ -302,7 +302,7 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: EventContext, v
     return HandlerReturn(value=value)
 
 
-def ワンダールーム_def_modifier(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+def ワンダールーム_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ワンダールーム中は防御実数値参照を入れ替える。"""
     catergory_to_stat = {"物理": "D", "特殊": "B"}
     base_stat = "B" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "D"

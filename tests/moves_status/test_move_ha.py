@@ -969,6 +969,27 @@ def test_ほおばる_HP閾値以下でオボンのみの回復が発動する()
     assert attacker.hp > hp_before
 
 
+def test_ほおばる_オボンのみでHP半分以下なら回復する():
+    """ほおばる + オボンのみ: HP1/2以下ならオボンのみが通常通り発動してHPが回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # HPを50%以下に直接設定
+    attacker.hp = attacker.max_hp // 4
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    # オボンのみの回復効果が発動する（HP閾値以下のため）
+    assert attacker.hp > hp_before
+    # オボンのみは消費される
+    assert not attacker.item.is_berry()
+    # ぼうぎょも上がる
+    assert attacker.rank["B"] == 2
+
+
 def test_ほおばる_きのみが消費される():
     """ほおばる: 使用後にきのみが消費されアイテムがなくなる"""
     battle = t.start_battle(
@@ -1010,6 +1031,28 @@ def test_ほおばる_きのみを持っている場合はぼうぎょが2段階
     assert attacker.rank["B"] == 2
 
 
+def test_ほおばる_キーのみでこんらんが治る():
+    """ほおばる + キーのみ: こんらん状態のポケモンがほおばるを使うとキーのみが発動してこんらんが治る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="キーのみ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"こんらん": 3},
+        accuracy=100,
+    )
+    # こんらんによる行動失敗を防ぐ（確率的に行動失敗しないよう固定）
+    battle.test_option.trigger_volatile = False
+    attacker = battle.actives[0]
+    assert attacker.has_volatile("こんらん")
+    t.run_move(battle, 0)
+
+    # キーのみが発動してこんらんが治る
+    assert not attacker.has_volatile("こんらん")
+    # キーのみは消費される
+    assert not attacker.item.is_berry()
+    # ぼうぎょも上がる
+    assert attacker.rank["B"] == 2
+
+
 def test_ほおばる_ぼうぎょが最大の場合は失敗する():
     """ほおばる: ぼうぎょランクがすでに+6の場合はきのみを消費せず失敗する"""
     battle = t.start_battle(
@@ -1024,6 +1067,34 @@ def test_ほおばる_ぼうぎょが最大の場合は失敗する():
     # 失敗のためランクは変化せず、きのみも消費されない
     assert attacker.rank["B"] == 6
     assert attacker.item.is_berry()
+
+
+def test_ほおばる_ラムのみでやけどが治る():
+    """ほおばる + ラムのみ: やけど状態のポケモンがほおばるを使うとラムのみが発動してやけどが治る
+
+    ラムのみは ON_FORCE_BERRY_TRIGGER で発動する。
+    やけどはほおばる使用を妨げないため、技は正常に実行される。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # ねむり以外の状態異常（やけど）を付与してからラムのみを持たせる
+    # (ailment付与後にアイテムを持たせることで ON_APPLY_AILMENT による即時回復を防ぐ)
+    battle.ailment_manager.apply(attacker, "やけど")
+    t.change_item(battle, attacker, "ラムのみ")
+    assert attacker.ailment.name == "やけど"
+    assert attacker.item.is_berry()
+    t.run_move(battle, 0)
+
+    # ラムのみが発動してやけどが治る
+    assert not attacker.ailment.is_active
+    # ラムのみは消費される
+    assert not attacker.item.is_berry()
+    # ぼうぎょも上がる
+    assert attacker.rank["B"] == 2
 
 
 def test_ほろびのうた_3ターン後に瀕死になる():
