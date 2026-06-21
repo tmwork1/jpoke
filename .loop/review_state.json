@@ -1,29 +1,26 @@
 {
   "config": {
-    "category":      "揮発性状態",
-    "wiki_hint":     "docs/wiki/volatiles/ の一次情報を参照",
-    "spec_dir":      "docs/spec/volatiles/",
-    "plan_dir":      "docs/plan/volatiles",
-    "progress_file": "docs/progress/volatile.md",
-    "review_dir":    "docs/review/volatiles/",
-    "test_files":    ["tests/test_volatile.py"],
-    "parallel_max":  3
+    "category":       "フィールド",
+    "wiki_hint":      "docs/wiki/items/ に関連アイテム（ひかりのねんど等）の HTML があれば参照。フィールド専用 wiki ページは存在しない。handlers/field.py・data/field.py・tests/test_field.py を一次情報として扱う",
+    "spec_dir":       "docs/spec/fields/",
+    "plan_dir":       "docs/plan/fields",
+    "progress_files": {
+      "global_field": "docs/progress/global_field.md",
+      "side_field":   "docs/progress/side_field.md"
+    },
+    "review_dir":     "docs/review/fields/",
+    "test_files":     ["tests/test_field.py"],
+    "parallel_max":   3
   },
-  "review_queue": [],
-  "in_progress":  [],
-  "completed":    [
-    "アクアリング", "あなをほる", "あばれる", "あめまみれ", "いちゃもん", "アンコール",
-    "かいふくふうじ", "うちおとす", "おんねん", "きゅうしょアップ", "かなしばり",
-    "かえんのまもり", "キングシールド", "こんらん", "こだわり", "しおづけ",
-    "さわがしい", "さわぐ", "じごくづき", "じゅうでん", "シャドーダイブ", "スレッドトラップ",
-    "そらをとぶ", "タールショット", "ダイビング", "たくわえる", "ちいさくなる", "ちょうはつ",
-    "でんじふゆう", "トーチカ", "とくせいなし",
-    "にげられない", "ねむけ", "ねをはる",
-    "のろい", "バインド", "ひるみ",
-    "ふういん", "ほろびのうた", "マジックコート",
-    "まもる", "まるくなる", "みがわり",
-    "みちづれ", "メロメロ", "やどりぎのタネ",
-    "ロックオン"
+  "review_queue": [
+    "おおひでり", "おおあめ", "らんきりゅう",
+    "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド",
+    "じゅうりょく", "トリックルーム", "フェアリーロック", "マジックルーム", "ワンダールーム",
+    "オーロラベール", "おいかぜ", "いやしのねがい", "ステルスロック",
+    "しんぴのまもり", "しろいきり", "どくびし", "ねがいごと",
+    "ねばねばネット", "ひかりのかべ", "まきびし", "リフレクター"
   ],
+  "in_progress":  ["はれ", "あめ", "すなあらし"],
+  "completed":    [],
   "failed":       []
 }

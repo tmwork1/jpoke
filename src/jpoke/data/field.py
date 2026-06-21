@@ -59,11 +59,18 @@ FIELDS: dict[str, FieldData] = {
                 h.すなあらし_D_boost,
                 subject_spec="defender:self",
             ),
-            Event.ON_TURN_END: h.FieldHandler(
-                h.すなあらし_turn_end,
-                subject_spec="source:self",
-                priority=10,
-            ),
+            Event.ON_TURN_END: [
+                h.FieldHandler(
+                    h.tick_weather,
+                    subject_spec="source:self",
+                    priority=10,
+                ),
+                h.FieldHandler(
+                    h.すなあらし_turn_end,
+                    subject_spec="source:self",
+                    priority=20,
+                ),
+            ],
         },
     ),
     "ゆき": FieldData(

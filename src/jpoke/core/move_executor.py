@@ -302,6 +302,23 @@ class MoveExecutor:
             return False
         return True
 
+    def _check_grass_type_powder_immunity(self, ctx: AttackContext) -> bool:
+        """くさタイプへの粉技無効化チェック (ON_TRY_MOVE_2, priority=120)。
+
+        くさタイプの防御側に powder ラベルを持つ技を使うと無効化される。
+        """
+        if (
+            ctx.move.has_label("powder")
+            and ctx.defender.has_type("くさ")
+        ):
+            self.battle.add_event_log(
+                ctx.attacker,
+                LogCode.MOVE_IMMUNED,
+                payload={"reason": "くさタイプ粉技無効"}
+            )
+            return False
+        return True
+
     def _execute_move(self, ctx: AttackContext) -> None:
         """技実行の内部フローを処理する。
 
@@ -323,9 +340,14 @@ class MoveExecutor:
         if ctx.move.is_attack and not self._check_hit_by_type(ctx):
             return
 
-        # 発動成功判定(2)
+        # 発動成功判定(2): priority=110 のハンドラ群（ぼうじんゴーグル等）
         self.move_success = self._events.emit(Event.ON_TRY_MOVE_2, ctx, True)
         if not self.move_success:
+            return
+
+        # くさタイプ: 粉技無効 (priority=120 相当のコアルール)
+        if not self._check_grass_type_powder_immunity(ctx):
+            self.move_success = False
             return
 
         # 発動した技の確定

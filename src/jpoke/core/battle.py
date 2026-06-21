@@ -563,7 +563,6 @@ class Battle:
                   r: float = 0,
                   source: Pokemon | None = None,
                   reason: HPChangeReason = "") -> int:
-        # TODO : r > 0 の場合は v > 0, r < 0の場合は v < 0 を担保するようにして、modify_hp呼び出し側でmax(1, v)をせずに済むようにする。
         """ポケモンのHPを変更する（StatusManagerへの委譲）。
 
         Args:
@@ -577,7 +576,11 @@ class Battle:
             実際に変化したHP量（正=回復、負=ダメージ）
         """
         if r:
-            v = int(target.max_hp * r)
+            raw = int(target.max_hp * r)
+            if r > 0:
+                v = max(1, raw)
+            else:
+                v = min(-1, raw)
         return self.status_manager.modify_hp(target, v=v, reason=reason, source=source)
 
     def faint(self,

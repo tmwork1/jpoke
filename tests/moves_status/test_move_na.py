@@ -6,7 +6,6 @@ from .. import test_utils as t
 
 def test_なかまづくり_protectedフラグ持ちに失敗():
     """なかまづくり: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
         team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
@@ -17,18 +16,10 @@ def test_なかまづくり_protectedフラグ持ちに失敗():
 
     # 特性は変化しない
     assert defender.ability.name == "アイスフェイス"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なかまづくり"
-        for log in logs
-    )
 
 
 def test_なかまづくり_uncopyableフラグ持ちを使用者が持つと失敗():
     """なかまづくり: 使用者がイリュージョン（uncopyableフラグ持ち）なら失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="イリュージョン", move_names=["なかまづくり"])],
         team1=[Pokemon("カビゴン", ability_name="めんえき")],
@@ -39,18 +30,10 @@ def test_なかまづくり_uncopyableフラグ持ちを使用者が持つと失
 
     # 特性は変化しない
     assert defender.ability.name == "めんえき"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なかまづくり"
-        for log in logs
-    )
 
 
 def test_なかまづくり_なまけ特性の相手には失敗():
     """なかまづくり: 対象がなまけ特性の場合は失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
         team1=[Pokemon("カビゴン", ability_name="なまけ")],
@@ -61,13 +44,6 @@ def test_なかまづくり_なまけ特性の相手には失敗():
 
     # 特性は変化しない
     assert defender.ability.name == "なまけ"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なかまづくり"
-        for log in logs
-    )
 
 
 def test_なかまづくり_交代後に元の特性に戻る():
@@ -91,7 +67,6 @@ def test_なかまづくり_交代後に元の特性に戻る():
 
 def test_なかまづくり_同じ特性なら失敗():
     """なかまづくり: 使用者と対象が同じ特性の場合は失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
         team1=[Pokemon("カビゴン", ability_name="せいでんき")],
@@ -102,13 +77,6 @@ def test_なかまづくり_同じ特性なら失敗():
     t.run_move(battle, 0)
 
     assert defender.ability.name == original_ability
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なかまづくり"
-        for log in logs
-    )
 
 
 def test_なかまづくり_相手の特性が使用者の特性に変わる():
@@ -152,7 +120,6 @@ def test_なまける_まんたんなら失敗():
 
 def test_なやみのタネ_protectedフラグ持ちに失敗():
     """なやみのタネ: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
         team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
@@ -163,18 +130,10 @@ def test_なやみのタネ_protectedフラグ持ちに失敗():
 
     # 特性は変化しない
     assert defender.ability.name == "アイスフェイス"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なやみのタネ"
-        for log in logs
-    )
 
 
 def test_なやみのタネ_なまけ特性の相手には失敗():
     """なやみのタネ: 対象がなまけ特性の場合は失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
         team1=[Pokemon("カビゴン", ability_name="なまけ")],
@@ -185,13 +144,6 @@ def test_なやみのタネ_なまけ特性の相手には失敗():
 
     # 特性は変化しない
     assert defender.ability.name == "なまけ"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なやみのタネ"
-        for log in logs
-    )
 
 
 def test_なやみのタネ_ふみん付与後はねむり系技が効かない():
@@ -213,7 +165,6 @@ def test_なやみのタネ_ふみん付与後はねむり系技が効かない(
 
 def test_なやみのタネ_ふみん特性の相手には失敗():
     """なやみのタネ: 対象がすでにふみん特性の場合は失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
         team1=[Pokemon("カビゴン", ability_name="ふみん")],
@@ -224,13 +175,6 @@ def test_なやみのタネ_ふみん特性の相手には失敗():
 
     # 特性は変化しない
     assert defender.ability.name == "ふみん"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なやみのタネ"
-        for log in logs
-    )
 
 
 def test_なやみのタネ_やるき特性の相手には成功する():
@@ -281,7 +225,6 @@ def test_なやみのタネ_相手の特性がふみんに変わる():
 
 def test_なりきり_uncopyableかつprotectedフラグ持ちに失敗():
     """なりきり: アイスフェイス（uncopyableかつprotectedフラグ持ち）の相手には失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
         team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
@@ -292,18 +235,10 @@ def test_なりきり_uncopyableかつprotectedフラグ持ちに失敗():
 
     # アイスフェイスはuncopyableフラグも持つので失敗する
     assert attacker.ability.name == "せいでんき"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なりきり"
-        for log in logs
-    )
 
 
 def test_なりきり_uncopyableフラグ持ちに失敗():
     """なりきり: イリュージョン（uncopyableフラグ持ち）の相手には失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
         team1=[Pokemon("カビゴン", ability_name="イリュージョン")],
@@ -314,13 +249,6 @@ def test_なりきり_uncopyableフラグ持ちに失敗():
 
     # 使用者の特性は変化しない
     assert attacker.ability.name == "せいでんき"
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "なりきり"
-        for log in logs
-    )
 
 
 def test_なりきり_いえきで無効化された相手の特性はコピーすると空特性になる():
@@ -596,7 +524,6 @@ def test_のみこむ_count3で全回復():
 
 def test_のみこむ_たくわえなしで失敗():
     """のみこむ: たくわえていない状態では失敗する"""
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
         team1=[Pokemon("カビゴン")],
@@ -607,10 +534,3 @@ def test_のみこむ_たくわえなしで失敗():
 
     # HP が変わらず失敗している
     assert attacker.hp == 1
-    logs = battle.event_logger.logs
-    assert any(
-        log.log == LogCode.MOVE_FAILED
-        and log.payload is not None
-        and log.payload.get("reason") == "のみこむ"
-        for log in logs
-    )

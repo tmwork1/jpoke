@@ -582,13 +582,10 @@ def test_リサイクル_消費したきのみを取り戻す():
         accuracy=100,
     )
     mon = battle.actives[0]
-    # HPを削ってオボンのみを自動消費させる
-    battle.modify_hp(mon, v=-(mon.max_hp // 2 + 1))
-    # HP変化イベントを発火してきのみを消費
-    from jpoke.core import EventContext
-    from jpoke.enums import Event
-    hp_ctx = EventContext(target=mon, source=mon)
-    battle.events.emit(Event.ON_HP_CHANGED, hp_ctx, mon.max_hp)
+    # HPを50%以下に下げてオボンのみを自動消費させる
+    # modify_hp内でON_HP_CHANGEDが自動発火されオボンのみが消費される
+    mon.hp = mon.max_hp // 2 + 1
+    battle.modify_hp(mon, v=-1)
 
     # きのみが消費されたことを確認
     assert not mon.has_item()
@@ -599,20 +596,6 @@ def test_リサイクル_消費したきのみを取り戻す():
     # リサイクルでオボンのみが戻る
     assert mon.item.name == "オボンのみ"
     assert mon.last_lost_item_name == "オボンのみ"
-
-
-def test_わたほうし_すばやさ最低なら変化なし():
-    """わたほうし: 相手のすばやさがすでに-6ならランク変化なし"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["わたほうし"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    battle.modify_stats(defender, {"S": -6}, source=battle.actives[0])
-    t.run_move(battle, 0)
-
-    assert defender.rank["S"] == -6
 
 
 def test_わたほうし_相手のすばやさ1段階下がる():

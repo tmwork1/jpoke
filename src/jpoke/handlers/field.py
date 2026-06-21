@@ -99,8 +99,7 @@ def すなあらし_D_boost(battle: Battle, ctx: AttackContext, value: Any) -> H
 
 
 def すなあらし_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """すなあらしのターン終了時ダメージ"""
-    tick_weather(battle, ctx, value)
+    """すなあらしのターン終了時ダメージ（Priority 20: tick後に天候チェック）"""
     if battle.weather.name != "すなあらし":
         return HandlerReturn(value=value)
     if not (
@@ -235,7 +234,7 @@ def サイコフィールド_block_priority_move(battle: Battle, ctx: AttackCont
             payload={"reason": "サイコフィールド"}
         )
         return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
+    return HandlerReturn(value=value)
 
 
 def ミストフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -304,9 +303,8 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, 
 
 def ワンダールーム_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ワンダールーム中は防御実数値参照を入れ替える。"""
-    catergory_to_stat = {"物理": "D", "特殊": "B"}
     base_stat = "B" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "D"
-    swapped_stat = catergory_to_stat.get(base_stat, base_stat)
+    swapped_stat = "D" if base_stat == "B" else "B"
     base_value = max(1, ctx.defender.stats[base_stat])
     swap_value = max(1, ctx.defender.stats[swapped_stat])
     return HandlerReturn(value=value * swap_value // base_value)
@@ -376,10 +374,14 @@ def しろいきり_prevent_stat_drop(battle: Battle, ctx: EventContext, value: 
 def いやしのねがい_heal_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いやしのねがい: 場に出たポケモンの HP を全回復し、状態異常を回復する。
 
-    回復後にフィールドを解除する。
+    HP 満タンかつ状態異常なしのポケモンには発動せず、フィールドは保留される（第八世代以降仕様）。
+    HP またはAliment に変化があった場合のみフィールドを解除する。
     """
     mon = ctx.source
     side = battle.get_side(mon)
+    # HP 満タンかつ状態異常なしなら発動しない（フィールドは保留）
+    if mon.hp == mon.max_hp and not mon.ailment.is_active:
+        return HandlerReturn(value=value)
     battle.modify_hp(mon, v=mon.max_hp - mon.hp)
     battle.ailment_manager.remove(mon)
     side.deactivate("いやしのねがい")

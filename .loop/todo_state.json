@@ -1,26 +1,12 @@
 {
   "config": {
     "category": "TODO修正",
-    "scan_glob": "src/**/*.py",
+    "scan_glob": "**/*.py",
     "test_files": ["tests/"],
     "review_extra": ""
   },
-  "todo_queue": [
-    "r > 0 の場合は v > 0, r < 0の場合は v < 0 を担保するようにして、modify_hp呼び出し側でmax(1, v)をせずに済むようにする。"
-  ],
+  "todo_queue": [],
   "completed": [
-    "ctx引数が使われていないなら削除する",
-    "コピー処理はdeepcopyを使ったほうが確実かもしれない",
-    "ねむる_checkと共通化",
-    "ほおばる_check_has_berryと統合して単一の成功判定関数にする。",
-    "関数名はアクアリング_applyでよい。他のハンドラも同様。",
-    "全ハンドラモジュールに共通で、対応するイベントに応じて、ハンドラ関数の引数のctxの型をEventContextかAttackContextか適切に使い分ける",
-    "ハンドラを五十音順に並べるスクリプトを作成してモジュールを整理する。新規実装後に五十音順に並べるフローを追加する。",
-    "回復量はランク補正込みの攻撃実数値となる",
-    "きのみを強制発動するイベントを新設する。",
-    "inherit_migawariを使うのではなく、バトンタッチの仕組みを流用したい。",
-    "{count: r} のような辞書で管理しても良いかもしれない",
-    "rの指定はBattleクラスのmodify_hpからにして、StatusManagerはvのみ受け取るようにする"
   ],
   "failed": []
 }

@@ -7,8 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.core import AttackContext
-from jpoke.enums import Event, Command
+from jpoke.enums import Command
 from jpoke.utils.type_defs import Stat, AilmentName, VolatileName
 
 from .. import test_utils as t
@@ -233,20 +232,15 @@ def test_はりきり_物理技の命中率が下がる(move_name: str, expected
 
 
 def test_はりこみ_交代直後の相手への攻撃強化():
+    """はりこみ: 交代直後の相手に攻撃すると atk_modifier が2倍になる。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="はりこみ", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
     )
-    attacker, defender = battle.actives
-    defender_player = battle.get_player(defender)
-    battle.player_states[defender_player].has_switched = True
-
-    atk_modifier = battle.events.emit(
-        Event.ON_CALC_ATK_MODIFIER,
-        AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0]),
-        4096,
-    )
-    assert atk_modifier == 8192
+    # 相手を交代させてから攻撃する
+    t.run_switch(battle, 1, 1)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 8192
 
 
 def test_ハードロック_かたやぶりで無効():
@@ -379,7 +373,6 @@ def test_バリアフリー_入場で壁を解除():
 
 
 def test_バリアフリー_壁がない場合アナウンスなし():
-    from jpoke.enums import LogCode
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="バリアフリー")],
         team1=[Pokemon("フシギダネ")],

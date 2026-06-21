@@ -28,6 +28,8 @@ class SwitchManager:
 
     def __init__(self, battle: Battle):
         self.battle = battle
+        # 交代退場処理中のポケモン（退場処理中はねむけ→ねむりなどの移行を抑制する）
+        self.switching_out_mon: Pokemon | None = None
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -248,8 +250,10 @@ class SwitchManager:
             EventContext(source=mon)
         )
 
-        # 揮発状態をすべて解除
+        # 揮発状態をすべて解除（退場処理中フラグを立てて揮発終了時の副作用を抑制）
+        self.switching_out_mon = mon
         self.battle.remove_all_volatiles(mon)
+        self.switching_out_mon = None
 
         mon.reset_on_switch_out()
         self._unregister_handlers_on_switch_out(mon)

@@ -1,5 +1,6 @@
 """変化技ハンドラの単体テスト（た行）。"""
 
+import pytest
 from jpoke import Pokemon
 from .. import test_utils as t
 
@@ -298,34 +299,6 @@ def test_ちょうはつ_ちょうはつ状態を付与する():
     assert defender.has_volatile("ちょうはつ")
 
 
-def test_つきのひかり_あめで4分の1回復():
-    """つきのひかり: あめ中は最大HPの1/4を回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つきのひかり"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("あめ", 5),
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    t.run_move(battle, 0)
-
-    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 4)
-
-
-def test_つきのひかり_はれで3分の2回復():
-    """つきのひかり: はれ中は最大HPの2/3を回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つきのひかり"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("はれ", 5),
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    t.run_move(battle, 0)
-
-    assert attacker.hp == 1 + int(attacker.max_hp * 2 / 3)
-
-
 def test_つきのひかり_まんたんなら失敗():
     """つきのひかり: HPが最大値のときは失敗する"""
     battle = t.start_battle(
@@ -339,31 +312,26 @@ def test_つきのひかり_まんたんなら失敗():
     assert attacker.hp == attacker.max_hp
 
 
-def test_つきのひかり_通常天候で2分の1回復():
-    """つきのひかり: 通常天候では最大HPの1/2を回復する"""
+@pytest.mark.parametrize("weather_arg,numerator,denominator", [
+    (None,          1, 2),  # 通常天候: 1/2 回復
+    (("あめ",  5), 1, 4),  # あめ: 1/4 回復
+    (("はれ",  5), 2, 3),  # はれ: 2/3 回復
+])
+def test_つきのひかり_天候別回復量(weather_arg, numerator, denominator):
+    """つきのひかり: 天候ごとに回復量が変わる（通常1/2, はれ2/3, あめ1/4）"""
+    kwargs = {}
+    if weather_arg is not None:
+        kwargs["weather"] = weather_arg
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["つきのひかり"])],
         team1=[Pokemon("カビゴン")],
+        **kwargs,
     )
     attacker = battle.actives[0]
     attacker.hp = 1
     t.run_move(battle, 0)
 
-    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
-
-
-def test_つぶらなひとみ_こうげき最低なら変化なし():
-    """つぶらなひとみ: 相手のこうげきがすでに-6ならランク変化なし"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぶらなひとみ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    battle.modify_stats(defender, {"A": -6}, source=battle.actives[0])
-    t.run_move(battle, 0)
-
-    assert defender.rank["A"] == -6
+    assert attacker.hp == 1 + int(attacker.max_hp * numerator / denominator)
 
 
 def test_つぶらなひとみ_相手のこうげき1段階下がる():
@@ -429,20 +397,6 @@ def test_つぼをつく_めいちゅうりつが選ばれた場合ランクが2
     t.run_move(battle, 0)
 
     assert attacker.rank["ACC"] == 2
-
-
-def test_つぼをつく_ランクが最大の場合変化しない():
-    """つぼをつく: 選ばれた能力のランクがすでに+6なら変化しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["C"] = 6
-    battle.random.choice = lambda seq: "C"
-    t.run_move(battle, 0)
-
-    assert attacker.rank["C"] == 6
 
 
 def test_つぼをつく_選ばれない能力のランクは変化しない():

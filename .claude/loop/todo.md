@@ -10,7 +10,7 @@
 {
   "config": {
     "category":      "TODO修正",
-    "scan_glob":     "**/*.py",
+    "scan_glob":     "**/*.py",  // .claude/ 除外、プロジェクト全体
     "test_files":    ["tests/"],
     "review_extra":  ""
   },
@@ -30,7 +30,8 @@
 ループを開始する前に、Grep で TODO を収集して `todo_queue` に列挙する。
 
 ```
-Grep pattern="# TODO" glob="src/**/*.py" output_mode="content"
+Grep pattern="# TODO" glob="**/*.py" path="." output_mode="content"
+（.claude/ 配下は除外する）
 ```
 
 各行の `# TODO: ` 以降のテキストをそのまま `todo_queue` に書き込む。
@@ -63,7 +64,7 @@ jpoke {config.category} 修正タスク: {entry}
 対象 TODO: "{entry}"
 
 手順:
-1. Grep で "{entry}" を {config.scan_glob} から検索し、現在のファイル・行を特定する
+1. Grep で "{entry}" をプロジェクト全体（glob="**/*.py"、.claude/ 除外）から検索し、現在のファイル・行を特定する
    （見つからない場合は既に解決済みとみなして completed に追加し終了する）
 2. 該当箇所を Read で確認し、TODO の内容を把握する
 3. CLAUDE.md の実装時参照順・ハンドラ約束事に従って修正を実装する

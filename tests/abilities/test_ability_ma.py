@@ -7,10 +7,8 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.core import AttackContext, EventContext
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import PLATE_TO_TYPE
-from jpoke.enums import Event
 from jpoke.utils.type_defs import HPChangeReason
 
 from .. import test_utils as t
@@ -169,16 +167,17 @@ def test_マルチタイプ_プレートなしでタイプ変更なし():
 
 
 def test_マルチタイプ_プレートの奪取を阻止する():
+    """マルチタイプ: はたきおとすでプレートを奪取できない。"""
     battle = t.start_battle(
         team0=[Pokemon("アルセウス", ability_name="マルチタイプ", item_name="せいれいプレート")],
         team1=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        accuracy=100,
     )
     mon = battle.actives[0]
-    attacker = battle.actives[1]
-    # ON_CHECK_ITEM_CHANGE: target=アルセウス, source=ピカチュウ → 奪取を阻止
-    ctx = AttackContext(attacker=attacker, defender=mon, move=attacker.moves[0])
-    result = battle.events.emit(Event.ON_CHECK_ITEM_CHANGE, ctx, True)
-    assert result is False
+    t.run_move(battle, 1)
+    # プレートが奪取されずに残っている
+    assert mon.item.name == "せいれいプレート"
+    assert mon.has_item()
 
 
 def test_ミイラ_接触技で攻撃した相手の特性がミイラになる():

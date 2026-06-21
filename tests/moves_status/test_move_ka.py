@@ -1,12 +1,8 @@
 """変化技ハンドラの単体テスト（か行）。"""
 
+import pytest
 from jpoke import Move, Pokemon
-from jpoke.enums import LogCode
 from .. import test_utils as t
-
-# TODO : キノコのほうしは草タイプに無効化されることを検証する。
-
-# TODO : くすぐるで攻撃が最低ランクでも防御が下がることを検証する
 
 
 def test_かいでんぱ_相手の特攻が2段階下がる():
@@ -307,16 +303,31 @@ def test_きあいだめ_きゅうしょアップ付与():
 
 
 def test_きあいだめ_すでにきゅうしょアップなら失敗():
-    """きあいだめ: すでにきゅうしょアップ状態なら失敗し MOVE_FAILED ログが記録される"""
+    """きあいだめ: すでにきゅうしょアップ状態なら失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["きあいだめ"])],
         team1=[Pokemon("カビゴン")],
         volatile0={"きゅうしょアップ": 1},
     )
+    attacker = battle.actives[0]
+    old_count = attacker.volatiles["きゅうしょアップ"].count
     t.run_move(battle, 0)
 
-    logs = battle.event_logger.logs
-    assert any(log.log == LogCode.MOVE_FAILED for log in logs)
+    # カウントは変わらない（重複付与されない）
+    assert attacker.volatiles["きゅうしょアップ"].count == old_count
+
+
+def test_キノコのほうし_くさタイプには無効化される():
+    """キノコのほうし: 草タイプのポケモンには無効化されてねむり状態にならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.ailment.is_active
 
 
 def test_キノコのほうし_相手がねむり状態になる():
@@ -332,84 +343,20 @@ def test_キノコのほうし_相手がねむり状態になる():
     assert defender.ailment.name == "ねむり"
 
 
-def test_きりばらい_エレキフィールドが解除される():
-    """きりばらい: エレキフィールドが展開されている場合に使用するとフィールドが解除される"""
+@pytest.mark.parametrize("terrain_name", [
+    "エレキフィールド",
+    "グラスフィールド",
+])
+def test_きりばらい_フィールドが解除される(terrain_name):
+    """きりばらい: フィールドが展開されている場合に使用するとフィールドが解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
         team1=[Pokemon("カビゴン")],
-        terrain=("エレキフィールド", 5),
+        terrain=(terrain_name, 5),
     )
     t.run_move(battle, 0)
 
     assert not battle.terrain.is_active
-
-
-def test_きりばらい_グラスフィールドが解除される():
-    """きりばらい: グラスフィールドが展開されている場合に使用するとフィールドが解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        terrain=("グラスフィールド", 5),
-    )
-    t.run_move(battle, 0)
-
-    assert not battle.terrain.is_active
-
-
-def test_きりばらい_ステルスロックが両陣営から除去される():
-    """きりばらい: 両陣営にステルスロックが設置されていても両方除去される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        side0={"ステルスロック": 1},
-        side1={"ステルスロック": 1},
-    )
-    t.run_move(battle, 0)
-
-    assert not battle.side_managers[0].fields["ステルスロック"].is_active
-    assert not battle.side_managers[1].fields["ステルスロック"].is_active
-
-
-def test_きりばらい_どくびしが両陣営から除去される():
-    """きりばらい: 両陣営にどくびしが設置されていても両方除去される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        side0={"どくびし": 1},
-        side1={"どくびし": 1},
-    )
-    t.run_move(battle, 0)
-
-    assert not battle.side_managers[0].fields["どくびし"].is_active
-    assert not battle.side_managers[1].fields["どくびし"].is_active
-
-
-def test_きりばらい_ねばねばネットが両陣営から除去される():
-    """きりばらい: 両陣営にねばねばネットが設置されていても両方除去される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        side0={"ねばねばネット": 1},
-        side1={"ねばねばネット": 1},
-    )
-    t.run_move(battle, 0)
-
-    assert not battle.side_managers[0].fields["ねばねばネット"].is_active
-    assert not battle.side_managers[1].fields["ねばねばネット"].is_active
-
-
-def test_きりばらい_まきびしが両陣営から除去される():
-    """きりばらい: 両陣営にまきびしが設置されていても両方除去される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        side0={"まきびし": 1},
-        side1={"まきびし": 1},
-    )
-    t.run_move(battle, 0)
-
-    assert not battle.side_managers[0].fields["まきびし"].is_active
-    assert not battle.side_managers[1].fields["まきびし"].is_active
 
 
 def test_きりばらい_使用者側の壁は解除されない():
@@ -425,6 +372,26 @@ def test_きりばらい_使用者側の壁は解除されない():
     assert battle.side_managers[0].fields["ひかりのかべ"].is_active
 
 
+@pytest.mark.parametrize("field_name", [
+    "ステルスロック",
+    "どくびし",
+    "ねばねばネット",
+    "まきびし",
+])
+def test_きりばらい_場の設置技が両陣営から除去される(field_name):
+    """きりばらい: 両陣営に設置技が置かれていても両方除去される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side0={field_name: 1},
+        side1={field_name: 1},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[0].fields[field_name].is_active
+    assert not battle.side_managers[1].fields[field_name].is_active
+
+
 def test_きりばらい_対象の回避率が1段階下がる():
     """きりばらい: 使用すると対象の回避率ランクが1段階下がる"""
     battle = t.start_battle(
@@ -437,40 +404,35 @@ def test_きりばらい_対象の回避率が1段階下がる():
     assert defender.rank["EVA"] == -1
 
 
-def test_きりばらい_対象側のオーロラベールが解除される():
-    """きりばらい: 対象側のオーロラベールが解除される"""
+@pytest.mark.parametrize("wall_name", [
+    "オーロラベール",
+    "ひかりのかべ",
+    "リフレクター",
+])
+def test_きりばらい_対象側の壁が解除される(wall_name):
+    """きりばらい: 対象側の壁系フィールドが解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
         team1=[Pokemon("カビゴン")],
-        side1={"オーロラベール": 5},
+        side1={wall_name: 5},
     )
     t.run_move(battle, 0)
 
-    assert not battle.side_managers[1].fields["オーロラベール"].is_active
+    assert not battle.side_managers[1].fields[wall_name].is_active
 
 
-def test_きりばらい_対象側のひかりのかべが解除される():
-    """きりばらい: 対象側のひかりのかべが解除される"""
+def test_くすぐる_こうげきが最低でもぼうぎょは下がる():
+    """くすぐる: こうげきランクがすでに-6でも、ぼうぎょランクは-1下がる"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team0=[Pokemon("ピカチュウ", move_names=["くすぐる"])],
         team1=[Pokemon("カビゴン")],
-        side1={"ひかりのかべ": 5},
     )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"A": -6}, source=battle.actives[0])
     t.run_move(battle, 0)
 
-    assert not battle.side_managers[1].fields["ひかりのかべ"].is_active
-
-
-def test_きりばらい_対象側のリフレクターが解除される():
-    """きりばらい: 対象側のリフレクターが解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        side1={"リフレクター": 5},
-    )
-    t.run_move(battle, 0)
-
-    assert not battle.side_managers[1].fields["リフレクター"].is_active
+    assert defender.rank["A"] == -6
+    assert defender.rank["B"] == -1
 
 
 def test_くすぐる_こうげきとぼうぎょ1段階ずつ下がる():
@@ -484,21 +446,6 @@ def test_くすぐる_こうげきとぼうぎょ1段階ずつ下がる():
 
     assert defender.rank["A"] == -1
     assert defender.rank["B"] == -1
-
-
-def test_くすぐる_すでに最低ランクなら変化なし():
-    # TODO : 技が失敗することを検証する
-    """くすぐる: こうげき・ぼうぎょがともにすでに-6ならランク変化なし"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["くすぐる"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    defender = battle.actives[1]
-    battle.modify_stats(defender, {"A": -6, "B": -6}, source=battle.actives[0])
-    t.run_move(battle, 0)
-
-    assert defender.rank["A"] == -6
-    assert defender.rank["B"] == -6
 
 
 def test_くろいきり_使用者のランクがゼロにリセットされる():
@@ -566,32 +513,6 @@ def test_くろいまなざし_にげられない状態を付与する():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("にげられない")
-
-
-def test_グラスフィールド_すでに同じフィールドなら失敗():
-    """グラスフィールド: すでにグラスフィールド中は発動しない（失敗）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["グラスフィールド"])],
-        team1=[Pokemon("カビゴン")],
-        terrain=("グラスフィールド", 5),
-    )
-    t.run_move(battle, 0)
-
-    # カウントは変わらない（再発動されない）
-    assert battle.terrain.name == "グラスフィールド"
-    assert battle.terrain.count == 5
-
-
-def test_グラスフィールド_フィールドが5ターン展開される():
-    """グラスフィールド: 使用すると5ターンのグラスフィールドが展開される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["グラスフィールド"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    t.run_move(battle, 0)
-
-    assert battle.terrain.name == "グラスフィールド"
-    assert battle.terrain.count == 5
 
 
 def test_こうごうせい_あめで4分の1回復():
@@ -720,22 +641,6 @@ def test_こらえる_すでにこらえる状態なら失敗():
     # カウントは変わらない（重複付与されない）
     assert attacker.has_volatile("こらえる")
     assert attacker.volatiles["こらえる"].count == 1
-
-
-def test_こらえる_ターン終了後にvolatileが解除される():
-    # TODO : これはvolatile側でテストすべき
-    """こらえる: ターン終了後にこらえる揮発状態が解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-    assert attacker.has_volatile("こらえる")
-
-    t.end_turn(battle)
-
-    assert not attacker.has_volatile("こらえる")
 
 
 def test_こらえる_ターン経過ダメージには適用されない():

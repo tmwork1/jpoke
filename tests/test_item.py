@@ -4,12 +4,9 @@ import math
 from typing import cast
 import pytest
 from jpoke import Pokemon
-from jpoke.core.context import EventContext
-from jpoke.enums import Event, DomainEvent
 from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
-
 
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
@@ -250,37 +247,43 @@ def test_イバンのみ_HP25以下でフラグが立つ():
 
 
 def test_イバンのみ_先制で行動する():
-    """フラグが立った後、行動ティアが +1 されアイテムが消費される"""
+    """イバンのみ: フラグが立った後は相手より遅くても先に行動できる。"""
+    # カビゴン（遅い）にイバンのみを持たせ、ピカチュウ（速い）より先に行動することを確認
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="イバンのみ")],
-        team1=[Pokemon("カビゴン")],
+        team0=[Pokemon("カビゴン", item_name="イバンのみ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     mon = battle.actives[0]
+    # HPを25%以下にしてフラグを立てる
     mon.hp = mon.max_hp // 4 + 1
     battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1  # フラグが立っていることを確認
 
-    ctx = t.build_context(battle, atk_idx=0)
-    tier = battle.events.emit(DomainEvent.ON_CALC_BACK_TIER, ctx, 0)
-    assert tier == 1
-    assert not mon.has_item()
+    # 行動順を確認: イバンのみ発動でカビゴンが先攻になるはず
+    order = t.get_action_order(battle)
+    assert order[0] == mon
+    assert not mon.has_item()  # アイテムが消費されている
 
 
 def test_イバンのみ_先制後は通常行動順になる():
-    """先制発動後はフラグが解除され、次の行動ティアは 0 に戻る"""
+    """イバンのみ: 先制発動後は通常の行動順に戻る（カビゴンが後攻）。"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="イバンのみ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
+        team0=[Pokemon("カビゴン", item_name="イバンのみ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     mon = battle.actives[0]
+    # HPを25%以下にしてフラグを立てる
     mon.hp = mon.max_hp // 4 + 1
     battle.modify_hp(mon, v=-1)
 
-    ctx = t.build_context(battle, atk_idx=0)
-    battle.events.emit(DomainEvent.ON_CALC_BACK_TIER, ctx, 0)
+    # 1回目: イバンのみ発動でカビゴン先攻
+    order1 = t.get_action_order(battle)
+    assert order1[0] == mon
+    assert not mon.has_item()  # アイテム消費済み
 
-    tier2 = battle.events.emit(DomainEvent.ON_CALC_BACK_TIER, ctx, 0)
-    assert tier2 == 0
+    # 2回目: フラグが解除されてピカチュウが先攻（通常順）
+    order2 = t.get_action_order(battle)
+    assert order2[0] == battle.actives[1]  # ピカチュウが先攻
 
 
 def test_おおきなねっこ_吸収技の回復量増加():
@@ -660,18 +663,14 @@ def test_くろいヘドロ_非どくタイプはダメージ():
 
 @pytest.mark.parametrize("terrain", ["エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド"])
 def test_グランドコート_フィールドを8ターンに延長(terrain):
-    """グランドコート: 4種フィールドの持続を8ターンに延長する"""
+    """グランドコート: 4種フィールドを展開すると持続ターンが8になる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="グランドコート")],
         team1=[Pokemon("ピカチュウ")],
     )
-    mon = battle.actives[0]
-    result = battle.events.emit(
-        Event.ON_MODIFY_DURATION,
-        EventContext(source=mon),
-        [terrain, 5],
-    )
-    assert result == [terrain, 8]
+    # グランドコート所持者をsourceとしてフィールドを展開すると8ターンに延長される
+    battle.terrain_manager.apply(terrain, 5, source=battle.actives[0])
+    assert battle.terrain.count == 8
 
 
 def test_グランドコート_非所持ではフィールドが5ターンのまま():
@@ -680,13 +679,9 @@ def test_グランドコート_非所持ではフィールドが5ターンのま
         team0=[Pokemon("ピカチュウ")],
         team1=[Pokemon("ピカチュウ")],
     )
-    mon = battle.actives[0]
-    result = battle.events.emit(
-        Event.ON_MODIFY_DURATION,
-        EventContext(source=mon),
-        ["グラスフィールド", 5],
-    )
-    assert result == ["グラスフィールド", 5]
+    # グランドコートなしでフィールドを展開すると5ターンのまま
+    battle.terrain_manager.apply("グラスフィールド", 5, source=battle.actives[0])
+    assert battle.terrain.count == 5
 
 
 def test_こうこうのしっぽ_行動が後になる():
@@ -1069,12 +1064,12 @@ def test_たべのこし():
     )
     mon = battle.actives[0]
     # HPが満タンのときは回復しない
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     battle.print_logs()
     assert not mon.item.revealed
 
     mon.hp = 1  # テスト用に内部変数を直接変更
-    battle.events.emit(Event.ON_TURN_END)
+    t.end_turn(battle)
     assert mon.item.revealed
     assert mon.hp == 1 + mon.max_hp // 16
 
@@ -1486,16 +1481,14 @@ def test_ひかりごけ_みず被弾でD上昇():
 def test_ひかりのねんど_スクリーン8ターンに延長():
     """ひかりのねんど: リフレクターを8ターンに延長する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど")],
+        team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど", move_names=["リフレクター"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
-    mon = battle.actives[0]
-    result = battle.events.emit(
-        Event.ON_MODIFY_DURATION,
-        EventContext(source=mon),
-        ["リフレクター", 5],
-    )
-    assert result == ["リフレクター", 8]
+    t.run_move(battle, 0)
+    # ひかりのねんどによりリフレクターが8ターンに延長されている
+    side = battle.get_side(battle.players[0])
+    assert side.get("リフレクター").count == 8
 
 
 @pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])

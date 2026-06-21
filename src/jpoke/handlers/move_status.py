@@ -347,7 +347,7 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
 def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
-    if not side.activate("オーロラベール", 5):
+    if not side.apply("オーロラベール", 5, source=ctx.attacker):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1507,7 +1507,7 @@ def パワートリック_swap_stats(battle: Battle, ctx: AttackContext, value: 
 def ひかりのかべ_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ひかりのかべ: 自陣営に「ひかりのかべ」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
-    if not side.activate("ひかりのかべ", 5):
+    if not side.apply("ひかりのかべ", 5, source=ctx.attacker):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1818,7 +1818,7 @@ def リサイクル_restore_item(battle: Battle, ctx: AttackContext, value: Any)
 def リフレクター_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """リフレクター: 自陣営に「リフレクター」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
-    if not side.activate("リフレクター", 5):
+    if not side.apply("リフレクター", 5, source=ctx.attacker):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

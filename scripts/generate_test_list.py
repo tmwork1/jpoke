@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 import ast
+import shutil
 from pathlib import Path
 
-
-# TODO : tests/subdir/test_*.py に分割されている場合、
-# 出力では docs/tests/subdir.md にすべてまとめるように修正
 
 TESTS_DIR = Path("tests")
 OUTPUT_DIR = Path("docs/tests")
@@ -96,10 +94,11 @@ def extract_test_names(path: Path) -> list[str]:
 
 def write_markdown(
     output_path: Path,
+    title: str,
     test_names: list[str],
 ) -> None:
     lines = [
-        f"# {output_path.stem}",
+        f"# {title}",
         "",
         f"テスト数: {len(test_names)}",
         "",
@@ -124,29 +123,77 @@ def main():
         exist_ok=True,
     )
 
-    for test_file in TESTS_DIR.rglob("test_*.py"):
-        relative = test_file.relative_to(TESTS_DIR)
+    # サブディレクトリごとにテストファイルをまとめる
+    # tests/subdir/test_*.py → docs/tests/subdir.md（1ファイルに統合）
+    # tests/test_*.py → docs/tests/test_xxx.md（個別出力）
 
-        output_path = (
-            OUTPUT_DIR
-            / relative.with_suffix(".md")
+    # サブディレクトリを収集
+    subdirs: dict[Path, list[Path]] = {}
+    top_level_files: list[Path] = []
+
+    for test_file in sorted(TESTS_DIR.rglob("test_*.py")):
+        relative = test_file.relative_to(TESTS_DIR)
+        parts = relative.parts
+
+        if len(parts) == 1:
+            # tests/test_xxx.py（直下ファイル）
+            top_level_files.append(test_file)
+        else:
+            # tests/subdir/test_xxx.py
+            subdir = TESTS_DIR / parts[0]
+            subdirs.setdefault(subdir, []).append(test_file)
+
+    # 既存のサブディレクトリ出力（docs/tests/subdir/）を削除する
+    for subdir in subdirs:
+        old_output_subdir = OUTPUT_DIR / subdir.name
+        if old_output_subdir.is_dir():
+            shutil.rmtree(old_output_subdir)
+            print(f"removed: {old_output_subdir}/")
+
+    # サブディレクトリをまとめて1ファイルに出力
+    for subdir, test_files in subdirs.items():
+        all_names: list[str] = []
+        for test_file in test_files:
+            all_names.extend(extract_test_names(test_file))
+
+        output_path = OUTPUT_DIR / f"{subdir.name}.md"
+
+        write_markdown(
+            output_path,
+            title=subdir.name,
+            test_names=all_names,
         )
+
+        print(f"generated: {output_path}")
+
+    # トップレベルファイルを個別出力
+    generated_top_level: set[Path] = set()
+
+    for test_file in top_level_files:
+        relative = test_file.relative_to(TESTS_DIR)
+        output_path = OUTPUT_DIR / relative.with_suffix(".md")
 
         output_path.parent.mkdir(
             parents=True,
             exist_ok=True,
         )
 
-        test_names = extract_test_names(
-            test_file
-        )
+        test_names = extract_test_names(test_file)
 
         write_markdown(
             output_path,
-            test_names,
+            title=output_path.stem,
+            test_names=test_names,
         )
 
+        generated_top_level.add(output_path)
         print(f"generated: {output_path}")
+
+    # ソースが存在しないレガシーの docs/tests/test_*.md を削除する
+    for legacy_md in OUTPUT_DIR.glob("test_*.md"):
+        if legacy_md not in generated_top_level:
+            legacy_md.unlink()
+            print(f"removed legacy: {legacy_md}")
 
 
 if __name__ == "__main__":

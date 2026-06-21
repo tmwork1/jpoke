@@ -1,289 +1,26 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import pytest
 from jpoke import Battle, Pokemon
-from jpoke.enums import Event
 from jpoke.utils.type_defs import WeatherName, TerrainName, GlobalFieldName, SideFieldName
-from jpoke.core import AttackContext, EventContext
+from jpoke.core import AttackContext
 from . import test_utils as t
 
 
-# ──────────────────────────────────────────────────────────────────
-# はれ、あめ
-# ──────────────────────────────────────────────────────────────────
-
 @pytest.mark.parametrize("weather,pokemon_name,move_name,expected", [
-    ("はれ", "ヒトカゲ", "ひのこ", 6144),
-    ("はれ", "ゼニガメ", "みずでっぽう", 2048),
-    ("あめ", "ゼニガメ", "みずでっぽう", 6144),
-    ("あめ", "ヒトカゲ", "ひのこ", 2048),
+    ("あめ", "ゼニガメ", "みずでっぽう", 4096),
+    ("あめ", "ヒトカゲ", "ひのこ", 4096),
+    ("はれ", "ヒトカゲ", "ひのこ", 4096),
+    ("はれ", "ゼニガメ", "みずでっぽう", 4096),
 ])
-def test_はれあめ_タイプ威力補正(weather: WeatherName, pokemon_name: str, move_name: str, expected: int):
-    """はれ/あめ: ほのお・みず技威力補正"""
+def test_あめはれ_ばんのうがさ防御側は補正なし(weather: WeatherName, pokemon_name: str, move_name: str, expected: int):
+    """あめ/はれ: 防御側がばんのうがさを持つ場合は威力補正を受けない"""
     battle = t.start_battle(
         team0=[Pokemon(pokemon_name, move_names=[move_name])],
-        team1=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
         weather=(weather, 99),
     )
     t.run_move(battle, 0)
     assert expected == battle.damage_calculator.power_modifier
-
-
-# ──────────────────────────────────────────────────────────────────
-# すなあらし
-# ──────────────────────────────────────────────────────────────────
-
-def test_すなあらし_いわ特防強化():
-    """すなあらし: いわタイプ特防1.5倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["スピードスター"])],
-        team1=[Pokemon("イシツブテ")],
-        weather=("すなあらし", 99),
-    )
-    t.run_move(battle, 0)
-    assert 6144 == battle.damage_calculator.def_modifier
-
-
-def test_すなあらし_ダメージ():
-    """すなあらし: ターン終了時ダメージ"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        weather=("すなあらし", 99)
-    )
-    t.end_turn(battle)
-    actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
-    expected_damages = [mon.max_hp // 16 for mon in battle.actives]
-    assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
-
-
-@pytest.mark.parametrize("pokemon_name", ["イシツブテ", "サンドパン", "コイル"])
-def test_すなあらし_タイプ免疫(pokemon_name: str):
-    """すなあらし: いわ・じめん・はがねタイプはダメージを受けない"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon(pokemon_name)],
-        weather=("すなあらし", 99),
-    )
-    mon = battle.actives[0]
-    t.end_turn(battle)
-    assert mon.hp == mon.max_hp
-
-
-@pytest.mark.parametrize(
-    "ability_name",
-    ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]
-)
-def test_すなあらし_特性免疫(ability_name: str):
-    """特定の特性を持つポケモンはすなあらしのダメージを受けない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
-        team1=[Pokemon("ピカチュウ")],
-        weather=("すなあらし", 999),
-    )
-    mon = battle.actives[0]
-    t.end_turn(battle)
-    assert mon.hp == mon.max_hp
-
-
-# ──────────────────────────────────────────────────────────────────
-# ゆき
-# ──────────────────────────────────────────────────────────────────
-
-def test_ゆき_こおり防御強化():
-    """ゆき: こおりタイプ防御1.5倍"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
-        team1=[Pokemon("ユキワラシ")],
-        weather=("ゆき", 99),
-    )
-    t.run_move(battle, 0)
-    assert 6144 == battle.damage_calculator.def_modifier
-
-
-# ──────────────────────────────────────────────────────────────────
-# おおひでり、おおあめ
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize("weather,pokemon_name,move_name", [
-    ("おおひでり", "ヒトカゲ", "ひのこ"),
-    ("おおあめ", "ゼニガメ", "みずでっぽう"),
-])
-def test_強天候_同タイプ技は威力強化(weather: WeatherName, pokemon_name: str, move_name: str):
-    """おおひでり/おおあめ: 対応タイプ技威力1.5倍"""
-    battle = t.start_battle(
-        team0=[Pokemon(pokemon_name, move_names=[move_name])],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(weather, 99),
-    )
-    t.run_move(battle, 0)
-    assert 6144 == battle.damage_calculator.power_modifier
-
-
-@pytest.mark.parametrize("weather,pokemon_name,move_name", [
-    ("おおひでり", "ゼニガメ", "みずでっぽう"),
-    ("おおひでり", "ゼニガメ", "みずびたし"),
-    ("おおあめ", "ヒトカゲ", "ひのこ"),
-    ("おおあめ", "ヒトカゲ", "おにび"),
-])
-def test_強天候_反対タイプ技は失敗(weather: WeatherName, pokemon_name: str, move_name: str):
-    """おおひでり/おおあめ: 反対タイプ技は攻撃・変化を問わず失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon(pokemon_name, move_names=[move_name])],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(weather, 99),
-    )
-    t.run_move(battle, 0)
-    assert battle.move_executor.move_success is False
-
-
-@pytest.mark.parametrize("weather,pokemon_name,move_name", [
-    ("おおひでり", "ヒトカゲ", "ひのこ"),
-    ("おおあめ", "ゼニガメ", "みずでっぽう"),
-])
-def test_強天候_同タイプ技はブロックされない(weather: WeatherName, pokemon_name: str, move_name: str):
-    """おおひでり/おおあめ: 対応タイプ技はブロックされない"""
-    battle = t.start_battle(
-        team0=[Pokemon(pokemon_name, move_names=[move_name])],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(weather, 99),
-    )
-    t.run_move(battle, 0)
-    assert battle.move_executor.move_success is True
-
-
-def test_強天候中は通常天候で上書きできない():
-    """おおひでり中に通常天候(はれ)を発動しようとしても上書きされない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=("おおひでり", 99),
-    )
-    result = battle.weather_manager.apply("はれ", 5)
-    assert result is False
-    assert battle.raw_weather.name == "おおひでり"
-
-
-def test_強天候同士は上書きできる():
-    """おおひでり中におおあめを発動すると上書きされる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=("おおひでり", 99),
-    )
-    result = battle.weather_manager.apply("おおあめ", 99)
-    assert result is True
-    assert battle.raw_weather.name == "おおあめ"
-
-
-# ──────────────────────────────────────────────────────────────────
-# らんきりゅう
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize("move_name", ["でんきショック", "アクセルロック", "アイススピナー"])
-def test_らんきりゅう_ひこう弱点半減(move_name: str):
-    """らんきりゅう: でんき・いわ・こおり技のひこうタイプへの弱点を1倍に軽減する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
-        team1=[Pokemon("ピジョン")],
-        weather=("らんきりゅう", 99),
-    )
-    t.run_move(battle, 0)
-    assert 4096 == battle.damage_calculator.def_type_modifier
-
-
-def test_らんきりゅう_ひこう以外は軽減しない():
-    """らんきりゅう: ひこうタイプでなければ軽減しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("らんきりゅう", 99),
-    )
-    t.run_move(battle, 0)
-    assert 4096 == battle.damage_calculator.def_type_modifier
-
-
-@pytest.mark.parametrize("weather", ["はれ", "あめ", "すなあらし", "ゆき", "おおひでり", "おおあめ"])
-def test_らんきりゅう_全天候を上書き(weather: WeatherName):
-    """らんきりゅう: 通常天候・強天候を問わず上書きできる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=(weather, 99),
-    )
-    result = battle.weather_manager.apply("らんきりゅう", 5)
-    assert result is True
-    assert battle.raw_weather.name == "らんきりゅう"
-
-
-# ──────────────────────────────────────────────────────────────────
-# フィールド共通
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize("terrain,attacker_name,defender_name,move_name,expected", [
-    ("エレキフィールド", "ピカチュウ", "ピカチュウ", "でんきショック", 5325),
-    ("グラスフィールド", "フシギダネ", "ピカチュウ", "このは", 5325),
-    ("サイコフィールド", "フーディン", "ピカチュウ", "サイコキネシス", 5325),
-    ("ミストフィールド", "カイリュー", "ピカチュウ", "りゅうのはどう", 2048),
-])
-def test_フィールド_タイプ威力補正(
-    terrain: TerrainName, attacker_name: str, defender_name: str, move_name: str, expected: int
-):
-    """各フィールド: 接地ポケモンへのタイプ威力補正"""
-    battle = t.start_battle(
-        team0=[Pokemon(attacker_name, move_names=[move_name])],
-        team1=[Pokemon(defender_name)],
-        terrain=(terrain, 99),
-    )
-    t.run_move(battle, 0)
-    assert expected == battle.damage_calculator.power_modifier
-
-
-@pytest.mark.parametrize("terrain,attacker_name,defender_name,move_name", [
-    ("エレキフィールド", "ピジョン", "ピカチュウ", "でんきショック"),
-    ("グラスフィールド", "ピジョン", "ピカチュウ", "このは"),
-    ("サイコフィールド", "ピジョン", "ピカチュウ", "サイコキネシス"),
-    ("ミストフィールド", "カイリュー", "ピジョン", "りゅうのはどう"),
-])
-def test_フィールド_浮遊ポケモンは補正を受けない(
-    terrain: TerrainName, attacker_name: str, defender_name: str, move_name: str
-):
-    """各フィールド: 浮遊ポケモンにはタイプ威力補正が適用されない"""
-    battle = t.start_battle(
-        team0=[Pokemon(attacker_name, move_names=[move_name])],
-        team1=[Pokemon(defender_name)],
-        terrain=(terrain, 99),
-    )
-    t.run_move(battle, 0)
-    assert 4096 == battle.damage_calculator.power_modifier
-
-
-# ──────────────────────────────────────────────────────────────────
-# エレキフィールド
-# ──────────────────────────────────────────────────────────────────
-
-def test_エレキフィールド_ねむり防止():
-    """エレキフィールド: 接地ポケモンへのねむりは無効"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        terrain=("エレキフィールド", 99),
-    )
-    target = battle.actives[0]
-    result = battle.ailment_manager.apply(target, "ねむり")
-    assert not result, "エレキフィールド下でねむりが付与された"
-    assert not target.ailment.is_active, "エレキフィールド下でねむり状態が付与された"
-
-
-def test_エレキフィールド_非接地はねむり防止されない():
-    """エレキフィールド: 浮遊ポケモンへのねむりは防止されない"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン")],
-        terrain=("エレキフィールド", 99),
-    )
-    target = battle.actives[0]
-    assert battle.ailment_manager.apply(target, "ねむり")
-    assert target.ailment.is_active
 
 
 def test_エレキフィールド_ねむけ防止():
@@ -298,6 +35,19 @@ def test_エレキフィールド_ねむけ防止():
     assert not target.has_volatile("ねむけ")
 
 
+def test_エレキフィールド_ねむり防止():
+    """エレキフィールド: 接地ポケモンへのねむりは無効"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        terrain=("エレキフィールド", 99),
+    )
+    target = battle.actives[0]
+    result = battle.ailment_manager.apply(target, "ねむり")
+    assert not result, "エレキフィールド下でねむりが付与された"
+    assert not target.ailment.is_active, "エレキフィールド下でねむり状態が付与された"
+
+
 def test_エレキフィールド_非接地はねむけ防止されない():
     """エレキフィールド: 浮遊ポケモンへのねむけは防止されない"""
     battle = t.start_battle(
@@ -310,9 +60,28 @@ def test_エレキフィールド_非接地はねむけ防止されない():
     assert target.has_volatile("ねむけ")
 
 
-# ──────────────────────────────────────────────────────────────────
-# グラスフィールド
-# ──────────────────────────────────────────────────────────────────
+def test_エレキフィールド_非接地はねむり防止されない():
+    """エレキフィールド: 浮遊ポケモンへのねむりは防止されない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピジョン")],
+        terrain=("エレキフィールド", 99),
+    )
+    target = battle.actives[0]
+    assert battle.ailment_manager.apply(target, "ねむり")
+    assert target.ailment.is_active
+
+
+def test_おいかぜ():
+    """おいかぜ: 実効すばやさ2倍"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={"おいかぜ": 1},
+    )
+    mon = battle.actives[0]
+    assert battle.calc_effective_speed(mon) == 2 * mon.stats["S"]
+
 
 def test_グラスフィールド_じしん弱化():
     """グラスフィールド: じしん威力0.5倍"""
@@ -362,10 +131,6 @@ def test_グラスフィールド_非接地は回復しない():
     assert mon.hp == 1
 
 
-# ──────────────────────────────────────────────────────────────────
-# サイコフィールド
-# ──────────────────────────────────────────────────────────────────
-
 def test_サイコフィールド_先制技無効():
     """サイコフィールド: 接地ポケモンへの先制技無効"""
     battle = t.start_battle(
@@ -388,57 +153,115 @@ def test_サイコフィールド_浮遊は先制技有効():
     assert battle.move_executor.move_success is True
 
 
-# ──────────────────────────────────────────────────────────────────
-# ミストフィールド
-# ──────────────────────────────────────────────────────────────────
-
-def test_ミストフィールド_状態異常防止():
-    """ミストフィールド: 接地ポケモンへの状態異常無効化"""
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")],
-                            terrain=("ミストフィールド", 99),
-                            )
-    assert not battle.ailment_manager.apply(battle.actives[0], "どく")
-
-
-def test_ミストフィールド_非接地は状態異常防止されない():
-    """ミストフィールド: 浮遊ポケモンへの状態異常は防止されない"""
+@pytest.mark.parametrize("side_field,move_name,expected", [
+    ("リフレクター", "たいあたり", 2048),
+    ("リフレクター", "でんきショック", 4096),
+    ("ひかりのかべ", "でんきショック", 2048),
+    ("ひかりのかべ", "たいあたり", 4096),
+    ("オーロラベール", "たいあたり", 2048),
+    ("オーロラベール", "でんきショック", 2048),
+])
+def test_サイドフィールド_ダメージ軽減(side_field: SideFieldName, move_name: str, expected: int):
+    """リフレクター/ひかりのかべ/オーロラベール: ダメージ軽減"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン")],
-        terrain=("ミストフィールド", 99),
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        side1={side_field: 5},
+    )
+    t.run_move(battle, 0)
+    assert expected == battle.damage_calculator.damage_modifier
+
+
+@pytest.mark.parametrize("side_field,move_name", [
+    ("リフレクター", "たいあたり"),
+    ("ひかりのかべ", "でんきショック"),
+    ("オーロラベール", "たいあたり"),
+])
+def test_サイドフィールド_急所では軽減されない(side_field: SideFieldName, move_name: str):
+    """リフレクター/ひかりのかべ/オーロラベール: 急所では軽減されない（damage_modifier が等倍）"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        side1={side_field: 5},
+        accuracy=100,
+    )
+    # 乱数を 0.0 に固定して急所を確実に発生させる
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    # 急所のときはスクリーンが無視されるため damage_modifier が 4096（等倍）
+    assert battle.move_executor.critical is True
+    assert battle.damage_calculator.damage_modifier == 4096
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["リフレクター", "ひかりのかべ", "オーロラベール", "しんぴのまもり", "しろいきり", "おいかぜ"]
+)
+def test_サイドフィールドカウント減少(field: SideFieldName):
+    """カウントダウンテスト"""
+    initial_duration = 2
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={field: initial_duration},
+        side1={field: initial_duration},
+    )
+    fields = [battle.get_side(ply).get(field) for ply in battle.players]
+    # 初期カウント確認
+    assert all(f.count == initial_duration for f in fields)
+    # カウントダウン確認
+    t.end_turn(battle)
+    assert all(f.count == initial_duration - 1 for f in fields)
+    # カウントダウン確認
+    t.end_turn(battle)
+    assert all(f.count == initial_duration - 2 for f in fields)
+    assert all(not f.is_active for f in fields)
+
+
+def test_しろいきり_能力低下防止():
+    """しろいきり: 能力ランク低下を防ぐ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={"しろいきり": 1},
+    )
+    target, source = battle.actives
+    assert not battle.modify_stats(target, {"A": -1}, source=source)
+
+
+def test_しろいきり_自発的な能力低下は防げない():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={"しろいきり": 1},
     )
     target = battle.actives[0]
-    assert battle.ailment_manager.apply(target, "どく")
-    assert target.ailment.is_active
+    assert battle.modify_stats(target, {"A": -1}, source=target)
+    assert target.rank["A"] == -1
 
 
-def test_ミストフィールド_混乱防止():
-    """ミストフィールド: 接地ポケモンへの混乱無効化"""
-    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")],
-                            terrain=("ミストフィールド", 99),
-                            )
-    mon = battle.actives[0]
-    result = battle.volatile_manager.apply(mon, "こんらん", count=3)
-    assert not result, "ミストフィールド下で混乱が付与された"
-    assert "こんらん" not in mon.volatiles, "混乱状態が追加されている"
-
-
-def test_ミストフィールド_非接地は混乱防止されない():
-    """ミストフィールド: 浮遊ポケモンへの混乱は防止されない"""
+def test_しんぴのまもり_混乱防止():
+    """しんぴのまもり: 混乱付与を防ぐ"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピジョン")],
-        terrain=("ミストフィールド", 99),
+        team0=[Pokemon("ピカチュウ")],
+        side0={"しんぴのまもり": 1},
     )
-    mon = battle.actives[0]
-    result = battle.volatile_manager.apply(mon, "こんらん", count=3)
-    assert result
-    assert "こんらん" in mon.volatiles
+    target = battle.actives[0]
+    assert not battle.volatile_manager.apply(target, "こんらん", count=3)
+    assert not target.has_volatile("こんらん")
 
 
-# ──────────────────────────────────────────────────────────────────
-# じゅうりょく
-# ──────────────────────────────────────────────────────────────────
+def test_しんぴのまもり_状態異常防止():
+    """しんぴのまもり: 状態異常付与を防ぐ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={"しんぴのまもり": 1},
+    )
+    target = battle.actives[0]
+    assert not battle.ailment_manager.apply(target, "どく")
+    assert not target.ailment.is_active
 
 
 def test_じゅうりょく_命中補正():
@@ -461,9 +284,92 @@ def test_じゅうりょく_浮遊無効():
     )
     assert not battle.query.is_floating(battle.actives[0])
 
-# ──────────────────────────────────────────────────────────────────
-# トリックルーム
-# ──────────────────────────────────────────────────────────────────
+
+def test_ステルスロック_x1():
+    """ステルスロック: 1倍ダメージ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.hp == active.max_hp - active.max_hp // 8
+
+
+def test_ステルスロック_x4():
+    """ステルスロック: 交代時タイプ相性ダメージ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("リザードン")],
+        side0={"ステルスロック": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    actual_damage = active.max_hp - active.hp
+    assert actual_damage == active.max_hp // 2
+
+
+def test_すなあらし_いわ特防強化():
+    """すなあらし: いわタイプ特防1.5倍"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスター"])],
+        team1=[Pokemon("イシツブテ")],
+        weather=("すなあらし", 99),
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.def_modifier
+
+
+@pytest.mark.parametrize("pokemon_name", ["イシツブテ", "サンドパン", "コイル"])
+def test_すなあらし_タイプ免疫(pokemon_name: str):
+    """すなあらし: いわ・じめん・はがねタイプはダメージを受けない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon(pokemon_name)],
+        weather=("すなあらし", 99),
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
+def test_すなあらし_ダメージ():
+    """すなあらし: ターン終了時ダメージ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        weather=("すなあらし", 99)
+    )
+    t.end_turn(battle)
+    actual_damages = [mon.max_hp - mon.hp for mon in battle.actives]
+    expected_damages = [mon.max_hp // 16 for mon in battle.actives]
+    assert actual_damages == expected_damages, "Incorrect sandstorm damage applied"
+
+
+@pytest.mark.parametrize(
+    "ability_name",
+    ["すなかき", "すながくれ", "すなのちから", "ぼうじん"]
+)
+def test_すなあらし_特性免疫(ability_name: str):
+    """特定の特性を持つポケモンはすなあらしのダメージを受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name)],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("すなあらし", 999),
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
+def test_トリックルーム_技優先度が優先():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+        field={"トリックルーム": 5},
+    )
+
+    action_order = t.get_action_order(battle)
+    assert action_order[0] == battle.actives[1]
 
 
 def test_トリックルーム_素早さ逆順():
@@ -477,19 +383,206 @@ def test_トリックルーム_素早さ逆順():
     assert action_order[0] == battle.actives[0]
 
 
-def test_トリックルーム_技優先度が優先():
+def test_どくびし_1層():
+    """どくびし: 交代時どく状態付与（1層）"""
     battle = t.start_battle(
-        team0=[Pokemon("ヤドン", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
-        field={"トリックルーム": 5},
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        side0={"どくびし": 1},
     )
+    active = t.run_switch(battle, 0, 1)
+    assert active.ailment.name == "どく", "Poison status not applied"
 
-    action_order = t.get_action_order(battle)
-    assert action_order[0] == battle.actives[1]
 
-# ──────────────────────────────────────────────────────────────────
-# マジックルーム
-# ──────────────────────────────────────────────────────────────────
+def test_どくびし_2層():
+    """どくびし: 2層でもうどく状態付与"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.ailment.name == "もうどく", "Badly poison status not applied"
+
+
+def test_どくびし_どくタイプが着地すると解除される():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("フシギダネ")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
+    field = battle.get_side(battle.players[0]).get("どくびし")
+    assert not field.is_active
+    assert field.count == 0
+    assert not active.ailment.is_active
+
+
+def test_どくびし_浮いているポケモンには効かない():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert not active.ailment.is_active
+
+
+def test_ねがいごと_回復と解除():
+    """ねがいごと: ターン終了時回復と解除"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={"ねがいごと": 2},
+    )
+    field = battle.get_side(battle.players[0]).get("ねがいごと")
+
+    # HPを減らして回復確認
+    mon = battle.actives[0]
+    mon.hp = 1
+
+    heal = 20
+    field.heal = heal
+
+    t.end_turn(battle)
+    assert mon.hp == 1, "No wish heal occurred"
+    assert field.count == 1, "Wish field count did not decrease"
+
+    t.end_turn(battle)
+    assert mon.hp == 1 + heal, "Wish heal amount is incorrect"
+    assert not field.is_active, "Wish field did not deactivate"
+
+
+def test_ねばねばネット():
+    """ねばねばネット: 交代時素早さ-1"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        side0={"ねばねばネット": 1},
+    )
+    before_rank = battle.players[0].team[1].rank["S"]
+    active = t.run_switch(battle, 0, 1)
+    after_rank = active.rank["S"]
+    assert after_rank == before_rank - 1, "Speed rank not decreased"
+
+
+def test_ねばねばネット_浮いているポケモンには効かない():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        side0={"ねばねばネット": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.rank["S"] == 0
+
+
+def test_はれ_こおり防止():
+    """はれ: こおり状態の付与を防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 99),
+    )
+    target = battle.actives[0]
+    result = battle.ailment_manager.apply(target, "こおり")
+    assert not result, "はれ中にこおりが付与された"
+    assert not target.ailment.is_active, "はれ中にこおり状態になった"
+
+
+@pytest.mark.parametrize("weather,pokemon_name,move_name,expected", [
+    ("はれ", "ヒトカゲ", "ひのこ", 6144),
+    ("はれ", "ゼニガメ", "みずでっぽう", 2048),
+    ("あめ", "ゼニガメ", "みずでっぽう", 6144),
+    ("あめ", "ヒトカゲ", "ひのこ", 2048),
+])
+def test_はれあめ_タイプ威力補正(weather: WeatherName, pokemon_name: str, move_name: str, expected: int):
+    """はれ/あめ: ほのお・みず技威力補正"""
+    battle = t.start_battle(
+        team0=[Pokemon(pokemon_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather, 99),
+    )
+    t.run_move(battle, 0)
+    assert expected == battle.damage_calculator.power_modifier
+
+
+@pytest.mark.parametrize("weather,pokemon_name,move_name", [
+    ("はれ", "ヒトカゲ", "ひのこ"),
+    ("はれ", "ゼニガメ", "みずでっぽう"),
+    ("あめ", "ゼニガメ", "みずでっぽう"),
+    ("あめ", "ヒトカゲ", "ひのこ"),
+])
+def test_はれあめ_ばんのうがさ防御側は威力補正無効(weather: WeatherName, pokemon_name: str, move_name: str):
+    """はれ/あめ: 防御側がばんのうがさを持つ場合は威力補正が無効"""
+    battle = t.start_battle(
+        team0=[Pokemon(pokemon_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ", item_name="ばんのうがさ")],
+        weather=(weather, 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+@pytest.mark.parametrize("terrain,attacker_name,defender_name,move_name,expected", [
+    ("エレキフィールド", "ピカチュウ", "ピカチュウ", "でんきショック", 5325),
+    ("グラスフィールド", "フシギダネ", "ピカチュウ", "このは", 5325),
+    ("サイコフィールド", "フーディン", "ピカチュウ", "サイコキネシス", 5325),
+    ("ミストフィールド", "カイリュー", "ピカチュウ", "りゅうのはどう", 2048),
+])
+def test_フィールド_タイプ威力補正(
+    terrain: TerrainName, attacker_name: str, defender_name: str, move_name: str, expected: int
+):
+    """各フィールド: 接地ポケモンへのタイプ威力補正"""
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, move_names=[move_name])],
+        team1=[Pokemon(defender_name)],
+        terrain=(terrain, 99),
+    )
+    t.run_move(battle, 0)
+    assert expected == battle.damage_calculator.power_modifier
+
+
+@pytest.mark.parametrize("terrain,attacker_name,defender_name,move_name", [
+    ("エレキフィールド", "ピジョン", "ピカチュウ", "でんきショック"),
+    ("グラスフィールド", "ピジョン", "ピカチュウ", "このは"),
+    ("サイコフィールド", "ピジョン", "ピカチュウ", "サイコキネシス"),
+    ("ミストフィールド", "カイリュー", "ピジョン", "りゅうのはどう"),
+])
+def test_フィールド_浮遊ポケモンは補正を受けない(
+    terrain: TerrainName, attacker_name: str, defender_name: str, move_name: str
+):
+    """各フィールド: 浮遊ポケモンにはタイプ威力補正が適用されない"""
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, move_names=[move_name])],
+        team1=[Pokemon(defender_name)],
+        terrain=(terrain, 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+@pytest.mark.parametrize("layers,divisor", [(1, 8), (2, 6), (3, 4)])
+def test_まきびし_ダメージ(layers: int, divisor: int):
+    """まきびし: 層別交代時ダメージ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        side0={"まきびし": layers},
+    )
+    active = t.run_switch(battle, 0, 1)
+    expected_damage = active.max_hp // divisor
+    actual_damage = active.max_hp - active.hp
+    assert expected_damage == actual_damage, f"まきびし{layers}層のダメージが不正"
+
+
+def test_まきびし_浮いているポケモンはダメージを受けない():
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
+        side0={"まきびし": 3},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.hp == active.max_hp
 
 
 def test_マジックルーム_道具効果無効化():
@@ -504,9 +597,96 @@ def test_マジックルーム_道具効果無効化():
     t.end_turn(battle)
     assert mon.hp == 1
 
-# ──────────────────────────────────────────────────────────────────
-# ワンダールーム
-# ──────────────────────────────────────────────────────────────────
+
+def test_ミストフィールド_混乱防止():
+    """ミストフィールド: 接地ポケモンへの混乱無効化"""
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")],
+                            terrain=("ミストフィールド", 99),
+                            )
+    mon = battle.actives[0]
+    result = battle.volatile_manager.apply(mon, "こんらん", count=3)
+    assert not result, "ミストフィールド下で混乱が付与された"
+    assert "こんらん" not in mon.volatiles, "混乱状態が追加されている"
+
+
+def test_ミストフィールド_状態異常防止():
+    """ミストフィールド: 接地ポケモンへの状態異常無効化"""
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")], team0=[Pokemon("ピカチュウ")],
+                            terrain=("ミストフィールド", 99),
+                            )
+    assert not battle.ailment_manager.apply(battle.actives[0], "どく")
+
+
+def test_ミストフィールド_非接地は混乱防止されない():
+    """ミストフィールド: 浮遊ポケモンへの混乱は防止されない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピジョン")],
+        terrain=("ミストフィールド", 99),
+    )
+    mon = battle.actives[0]
+    result = battle.volatile_manager.apply(mon, "こんらん", count=3)
+    assert result
+    assert "こんらん" in mon.volatiles
+
+
+def test_ミストフィールド_非接地は状態異常防止されない():
+    """ミストフィールド: 浮遊ポケモンへの状態異常は防止されない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピジョン")],
+        terrain=("ミストフィールド", 99),
+    )
+    target = battle.actives[0]
+    assert battle.ailment_manager.apply(target, "どく")
+    assert target.ailment.is_active
+
+
+def test_ゆき_こおり防御強化():
+    """ゆき: こおりタイプ防御1.5倍"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ユキワラシ")],
+        weather=("ゆき", 99),
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.def_modifier
+
+
+def test_らんきりゅう_ひこう以外は軽減しない():
+    """らんきりゅう: ひこうタイプでなければ軽減しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("らんきりゅう", 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_type_modifier
+
+
+@pytest.mark.parametrize("move_name", ["でんきショック", "アクセルロック", "アイススピナー"])
+def test_らんきりゅう_ひこう弱点半減(move_name: str):
+    """らんきりゅう: でんき・いわ・こおり技のひこうタイプへの弱点を1倍に軽減する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ピジョン")],
+        weather=("らんきりゅう", 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_type_modifier
+
+
+@pytest.mark.parametrize("weather", ["はれ", "あめ", "すなあらし", "ゆき", "おおひでり", "おおあめ"])
+def test_らんきりゅう_全天候を上書き(weather: WeatherName):
+    """らんきりゅう: 通常天候・強天候を問わず上書きできる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather, 99),
+    )
+    result = battle.weather_manager.apply("らんきりゅう", 5)
+    assert result is True
+    assert battle.raw_weather.name == "らんきりゅう"
 
 
 def test_ワンダールーム_物理技は特防側を参照():
@@ -535,6 +715,24 @@ def test_ワンダールーム_物理技は特防側を参照():
     assert wonder_def < normal_def
 
 
+def test_ワンダールーム_物理技は特防実数値を使用():
+    """ワンダールーム: 物理技の防御計算が特防実数値を使う（ランクは0で検証）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"ワンダールーム": 99},
+    )
+    defender = battle.actives[1]
+    ctx = AttackContext(
+        attacker=battle.actives[0],
+        defender=defender,
+        move=battle.actives[0].moves[0],
+    )
+    expected = defender.stats["D"]
+    actual = battle.damage_calculator._calc_final_defense(ctx)
+    assert actual == expected, f"物理技がB実数値({defender.stats['B']})ではなくD実数値({expected})を参照するはず"
+
+
 def test_ワンダールーム_特殊技は防御側を参照():
     """ワンダールーム: 特殊技の防御参照が防御側に入れ替わる"""
     normal = t.start_battle(
@@ -560,332 +758,23 @@ def test_ワンダールーム_特殊技は防御側を参照():
 
     assert wonder_def < normal_def
 
-# ──────────────────────────────────────────────────────────────────
-# リフレクター、ひかりのかべ、オーロラベール
-# ──────────────────────────────────────────────────────────────────
 
-
-@pytest.mark.parametrize("side_field,move_name,expected", [
-    ("リフレクター", "たいあたり", 2048),
-    ("リフレクター", "でんきショック", 4096),
-    ("ひかりのかべ", "でんきショック", 2048),
-    ("ひかりのかべ", "たいあたり", 4096),
-    ("オーロラベール", "たいあたり", 2048),
-    ("オーロラベール", "でんきショック", 2048),
-])
-def test_サイドフィールド_ダメージ軽減(side_field: SideFieldName, move_name: str, expected: int):
-    """リフレクター/ひかりのかべ/オーロラベール: ダメージ軽減"""
+def test_ワンダールーム_特殊技は防御実数値を使用():
+    """ワンダールーム: 特殊技の防御計算が防御実数値を使う（ランクは0で検証）"""
     battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
         team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
-        side1={side_field: 5},
+        field={"ワンダールーム": 99},
     )
-    t.run_move(battle, 0)
-    assert expected == battle.damage_calculator.damage_modifier
-
-
-@pytest.mark.parametrize("side_field,move_name", [
-    ("リフレクター", "たいあたり"),
-    ("ひかりのかべ", "でんきショック"),
-    ("オーロラベール", "たいあたり"),
-])
-def test_サイドフィールド_急所では軽減されない(side_field: SideFieldName, move_name: str):
-    """リフレクター/ひかりのかべ/オーロラベール: 急所では軽減されない"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
-        side1={side_field: 5},
-    )
+    defender = battle.actives[1]
     ctx = AttackContext(
         attacker=battle.actives[0],
-        defender=battle.actives[1],
+        defender=defender,
         move=battle.actives[0].moves[0],
-        critical=True,
     )
-    assert battle.events.emit(Event.ON_CALC_DAMAGE_MODIFIER, ctx, 4096) == 4096
-
-# ──────────────────────────────────────────────────────────────────
-# しんぴのまもり
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_しんぴのまもり_状態異常防止():
-    """しんぴのまもり: 状態異常付与を防ぐ"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        side0={"しんぴのまもり": 1},
-    )
-    target = battle.actives[0]
-    assert not battle.ailment_manager.apply(target, "どく")
-    assert not target.ailment.is_active
-
-
-def test_しんぴのまもり_混乱防止():
-    """しんぴのまもり: 混乱付与を防ぐ"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        side0={"しんぴのまもり": 1},
-    )
-    target = battle.actives[0]
-    assert not battle.volatile_manager.apply(target, "こんらん", count=3)
-    assert not target.has_volatile("こんらん")
-
-# ──────────────────────────────────────────────────────────────────
-# しろいきり
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_しろいきり_能力低下防止():
-    """しろいきり: 能力ランク低下を防ぐ"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        side0={"しろいきり": 1},
-    )
-    target, source = battle.actives
-    assert not battle.modify_stats(target, {"A": -1}, source=source)
-
-
-def test_しろいきり_自発的な能力低下は防げない():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        side0={"しろいきり": 1},
-    )
-    target = battle.actives[0]
-    assert battle.modify_stats(target, {"A": -1}, source=target)
-    assert target.rank["A"] == -1
-
-# ──────────────────────────────────────────────────────────────────
-# おいかぜ
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_おいかぜ():
-    """おいかぜ: 実効すばやさ2倍"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        side0={"おいかぜ": 1},
-    )
-    mon = battle.actives[0]
-    assert battle.calc_effective_speed(mon) == 2 * mon.stats["S"]
-
-# ──────────────────────────────────────────────────────────────────
-# ねがいごと
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_ねがいごと_回復と解除():
-    """ねがいごと: ターン終了時回復と解除"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        side0={"ねがいごと": 2},
-    )
-    field = battle.get_side(battle.players[0]).get("ねがいごと")
-
-    # HPを減らして回復確認
-    mon = battle.actives[0]
-    mon.hp = 1
-
-    heal = 20
-    field.heal = heal
-
-    t.end_turn(battle)
-    assert mon.hp == 1, "No wish heal occurred"
-    assert field.count == 1, "Wish field count did not decrease"
-
-    t.end_turn(battle)
-    assert mon.hp == 1 + heal, "Wish heal amount is incorrect"
-    assert not field.is_active, "Wish field did not deactivate"
-
-
-# ──────────────────────────────────────────────────────────────────
-# まきびし
-# ──────────────────────────────────────────────────────────────────
-
-@pytest.mark.parametrize("layers,divisor", [(1, 8), (2, 6), (3, 4)])
-def test_まきびし_ダメージ(layers: int, divisor: int):
-    """まきびし: 層別交代時ダメージ"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
-        side0={"まきびし": layers},
-    )
-    active = t.run_switch(battle, 0, 1)
-    expected_damage = active.max_hp // divisor
-    actual_damage = active.max_hp - active.hp
-    assert expected_damage == actual_damage, f"まきびし{layers}層のダメージが不正"
-
-
-def test_まきびし_浮いているポケモンはダメージを受けない():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
-        side0={"まきびし": 3},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert active.hp == active.max_hp
-
-# ──────────────────────────────────────────────────────────────────
-# どくびし
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_どくびし_1層():
-    """どくびし: 交代時どく状態付与（1層）"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
-        side0={"どくびし": 1},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert active.ailment.name == "どく", "Poison status not applied"
-
-
-def test_どくびし_2層():
-    """どくびし: 2層でもうどく状態付与"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
-        side0={"どくびし": 2},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert active.ailment.name == "もうどく", "Badly poison status not applied"
-
-
-def test_どくびし_浮いているポケモンには効かない():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
-        side0={"どくびし": 2},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert not active.ailment.is_active
-
-
-def test_どくびし_どくタイプが着地すると解除される():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("フシギダネ")],
-        side0={"どくびし": 2},
-    )
-    active = t.run_switch(battle, 0, 1)
-    field = battle.get_side(battle.players[0]).get("どくびし")
-    assert not field.is_active
-    assert field.count == 0
-    assert not active.ailment.is_active
-
-# ──────────────────────────────────────────────────────────────────
-# ステルスロック
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_ステルスロック_x1():
-    """ステルスロック: 1倍ダメージ"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-        side0={"ステルスロック": 1},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert active.hp == active.max_hp - active.max_hp // 8
-
-
-def test_ステルスロック_x4():
-    """ステルスロック: 交代時タイプ相性ダメージ"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("リザードン")],
-        side0={"ステルスロック": 1},
-    )
-    active = t.run_switch(battle, 0, 1)
-    actual_damage = active.max_hp - active.hp
-    assert actual_damage == active.max_hp // 2
-
-# ──────────────────────────────────────────────────────────────────
-# ねばねばネット
-# ──────────────────────────────────────────────────────────────────
-
-
-def test_ねばねばネット():
-    """ねばねばネット: 交代時素早さ-1"""
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
-        side0={"ねばねばネット": 1},
-    )
-    before_rank = battle.players[0].team[1].rank["S"]
-    active = t.run_switch(battle, 0, 1)
-    after_rank = active.rank["S"]
-    assert after_rank == before_rank - 1, "Speed rank not decreased"
-
-
-def test_ねばねばネット_浮いているポケモンには効かない():
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ"), Pokemon("ピジョン")],
-        side0={"ねばねばネット": 1},
-    )
-    active = t.run_switch(battle, 0, 1)
-    assert active.rank["S"] == 0
-
-# ──────────────────────────────────────────────────────────────────
-# カウントダウン
-# ──────────────────────────────────────────────────────────────────
-
-
-@pytest.mark.parametrize(
-    "weather_name",
-    ["はれ", "あめ", "すなあらし", "ゆき"]
-)
-def test_天候カウント減少(weather_name: WeatherName):
-    """カウントダウンテスト"""
-    event = Event.ON_TURN_END
-    initial_duration = 2
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        weather=(weather_name, initial_duration)
-    )
-    field = battle.raw_weather
-    # 初期カウント確認
-    assert field.count == initial_duration
-    # カウントダウン確認
-    battle.events.emit(event)
-    assert field.count == initial_duration - 1, f"{field.name} count is incorrect"
-    # カウントダウン確認
-    battle.events.emit(event)
-    assert field.count == initial_duration - 2, f"{field.name} count is incorrect"
-    assert not field.is_active, f"{field.name} should be inactive"
-
-
-@pytest.mark.parametrize(
-    "terrain_name",
-    ["エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
-)
-def test_地形カウント減少(terrain_name: TerrainName):
-    """カウントダウンテスト"""
-    event = Event.ON_TURN_END
-    initial_duration = 2
-    battle = t.start_battle(
-        team1=[Pokemon("ピカチュウ")],
-        team0=[Pokemon("ピカチュウ")],
-        terrain=(terrain_name, initial_duration)
-    )
-    field = battle.terrain
-    # 初期カウント確認
-    assert field.count == initial_duration
-    # カウントダウン確認
-    battle.events.emit(event)
-    assert field.count == initial_duration - 1, f"{field.name} count is incorrect"
-    # カウントダウン確認
-    battle.events.emit(event)
-    assert field.count == initial_duration - 2, f"{field.name} count is incorrect"
-    assert not field.is_active, f"{field.name} should be inactive"
+    expected = defender.stats["B"]
+    actual = battle.damage_calculator._calc_final_defense(ctx)
+    assert actual == expected, f"特殊技がD実数値({defender.stats['D']})ではなくB実数値({expected})を参照するはず"
 
 
 @pytest.mark.parametrize(
@@ -894,7 +783,6 @@ def test_地形カウント減少(terrain_name: TerrainName):
 )
 def test_全体フィールドカウント減少(field_name: GlobalFieldName):
     """カウントダウンテスト"""
-    event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -905,38 +793,131 @@ def test_全体フィールドカウント減少(field_name: GlobalFieldName):
     # 初期カウント確認
     assert field.count == initial_duration
     # カウントダウン確認
-    battle.events.emit(event)
+    t.end_turn(battle)
     assert field.count == initial_duration - 1, f"{field.name} count is incorrect"
     # カウントダウン確認
-    battle.events.emit(event)
+    t.end_turn(battle)
     assert field.count == initial_duration - 2, f"{field.name} count is incorrect"
     assert not field.is_active, f"{field.name} should be inactive"
 
 
 @pytest.mark.parametrize(
-    "field",
-    ["リフレクター", "ひかりのかべ", "オーロラベール", "しんぴのまもり", "しろいきり", "おいかぜ"]
+    "terrain_name",
+    ["エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 )
-def test_サイドフィールドカウント減少(field: SideFieldName):
+def test_地形カウント減少(terrain_name: TerrainName):
     """カウントダウンテスト"""
-    event = Event.ON_TURN_END
     initial_duration = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],
-        side0={field: initial_duration},
-        side1={field: initial_duration},
+        terrain=(terrain_name, initial_duration)
     )
-    fields = [battle.get_side(ply).get(field) for ply in battle.players]
+    field = battle.terrain
     # 初期カウント確認
-    assert all(f.count == initial_duration for f in fields)
+    assert field.count == initial_duration
     # カウントダウン確認
-    battle.events.emit(event)
-    assert all(f.count == initial_duration - 1 for f in fields)
+    t.end_turn(battle)
+    assert field.count == initial_duration - 1, f"{field.name} count is incorrect"
     # カウントダウン確認
-    battle.events.emit(event)
-    assert all(f.count == initial_duration - 2 for f in fields)
-    assert all(not f.is_active for f in fields)
+    t.end_turn(battle)
+    assert field.count == initial_duration - 2, f"{field.name} count is incorrect"
+    assert not field.is_active, f"{field.name} should be inactive"
+
+
+@pytest.mark.parametrize(
+    "weather_name",
+    ["はれ", "あめ", "すなあらし", "ゆき"]
+)
+def test_天候カウント減少(weather_name: WeatherName):
+    """カウントダウンテスト"""
+    initial_duration = 2
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        weather=(weather_name, initial_duration)
+    )
+    field = battle.raw_weather
+    # 初期カウント確認
+    assert field.count == initial_duration
+    # カウントダウン確認
+    t.end_turn(battle)
+    assert field.count == initial_duration - 1, f"{field.name} count is incorrect"
+    # カウントダウン確認
+    t.end_turn(battle)
+    assert field.count == initial_duration - 2, f"{field.name} count is incorrect"
+    assert not field.is_active, f"{field.name} should be inactive"
+
+
+@pytest.mark.parametrize("weather,pokemon_name,move_name", [
+    ("おおひでり", "ゼニガメ", "みずでっぽう"),
+    ("おおひでり", "ゼニガメ", "みずびたし"),
+    ("おおあめ", "ヒトカゲ", "ひのこ"),
+    ("おおあめ", "ヒトカゲ", "おにび"),
+])
+def test_強天候_反対タイプ技は失敗(weather: WeatherName, pokemon_name: str, move_name: str):
+    """おおひでり/おおあめ: 反対タイプ技は攻撃・変化を問わず失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon(pokemon_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather, 99),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+
+
+@pytest.mark.parametrize("weather,pokemon_name,move_name", [
+    ("おおひでり", "ヒトカゲ", "ひのこ"),
+    ("おおあめ", "ゼニガメ", "みずでっぽう"),
+])
+def test_強天候_同タイプ技はブロックされない(weather: WeatherName, pokemon_name: str, move_name: str):
+    """おおひでり/おおあめ: 対応タイプ技はブロックされない"""
+    battle = t.start_battle(
+        team0=[Pokemon(pokemon_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather, 99),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True
+
+
+@pytest.mark.parametrize("weather,pokemon_name,move_name", [
+    ("おおひでり", "ヒトカゲ", "ひのこ"),
+    ("おおあめ", "ゼニガメ", "みずでっぽう"),
+])
+def test_強天候_同タイプ技は威力強化(weather: WeatherName, pokemon_name: str, move_name: str):
+    """おおひでり/おおあめ: 対応タイプ技威力1.5倍"""
+    battle = t.start_battle(
+        team0=[Pokemon(pokemon_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather, 99),
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
+
+
+def test_強天候中は通常天候で上書きできない():
+    """おおひでり中に通常天候(はれ)を発動しようとしても上書きされない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", 99),
+    )
+    result = battle.weather_manager.apply("はれ", 5)
+    assert result is False
+    assert battle.raw_weather.name == "おおひでり"
+
+
+def test_強天候同士は上書きできる():
+    """おおひでり中におおあめを発動すると上書きされる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("おおひでり", 99),
+    )
+    result = battle.weather_manager.apply("おおあめ", 99)
+    assert result is True
+    assert battle.raw_weather.name == "おおあめ"
 
 
 if __name__ == "__main__":

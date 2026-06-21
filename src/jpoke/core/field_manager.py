@@ -318,3 +318,31 @@ class SideFieldManager(StackableFieldManager[SideFieldName]):
             owner: 効果を管理するプレイヤー
         """
         super().__init__(battle, (owner,), SideFieldName)
+
+    def apply(self, name: SideFieldName, count: int, source: Pokemon | None = None) -> bool:
+        """サイドフィールド効果を発動する。ON_MODIFY_DURATION を発火してから activate する。
+
+        Args:
+            name: 発動するフィールド名
+            count: 効果の持続ターン数
+            source: 効果の発生源となるポケモン
+
+        Returns:
+            bool: 効果が発動された場合True（既に有効な場合はFalse）
+        """
+        field = self.get(name)
+        if field.is_active:
+            return False
+
+        # ON_MODIFY_DURATION イベントを発火して、ひかりのねんど等による持続ターン延長を可能にする
+        value = self._events.emit(
+            Event.ON_MODIFY_DURATION,
+            EventContext(source=source),
+            [name, count]
+        )
+        _, modified_count = value
+        if modified_count <= 0:
+            raise ValueError("フィールドの持続ターン数は1以上でなければなりません。")
+
+        self._activate_field(name, modified_count)
+        return True

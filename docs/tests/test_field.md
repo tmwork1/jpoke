@@ -1,70 +1,22 @@
 # test_field
 
-テスト数: 108
+テスト数: 119
 
-- [x] はれあめ_タイプ威力補正(weather=はれ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=6144)
-- [x] はれあめ_タイプ威力補正(weather=はれ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=2048)
-- [x] はれあめ_タイプ威力補正(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=6144)
-- [x] はれあめ_タイプ威力補正(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=2048)
-- [x] すなあらし_いわ特防強化
-- [x] すなあらし_ダメージ
-- [x] すなあらし_タイプ免疫(pokemon_name=イシツブテ)
-- [x] すなあらし_タイプ免疫(pokemon_name=サンドパン)
-- [x] すなあらし_タイプ免疫(pokemon_name=コイル)
-- [x] すなあらし_特性免疫(ability_name=すなかき)
-- [x] すなあらし_特性免疫(ability_name=すながくれ)
-- [x] すなあらし_特性免疫(ability_name=すなのちから)
-- [x] すなあらし_特性免疫(ability_name=ぼうじん)
-- [x] ゆき_こおり防御強化
-- [x] 強天候_同タイプ技は威力強化(weather=おおひでり, pokemon_name=ヒトカゲ, move_name=ひのこ)
-- [x] 強天候_同タイプ技は威力強化(weather=おおあめ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
-- [x] 強天候_反対タイプ技は失敗(weather=おおひでり, pokemon_name=ゼニガメ, move_name=みずでっぽう)
-- [x] 強天候_反対タイプ技は失敗(weather=おおひでり, pokemon_name=ゼニガメ, move_name=みずびたし)
-- [x] 強天候_反対タイプ技は失敗(weather=おおあめ, pokemon_name=ヒトカゲ, move_name=ひのこ)
-- [x] 強天候_反対タイプ技は失敗(weather=おおあめ, pokemon_name=ヒトカゲ, move_name=おにび)
-- [x] 強天候_同タイプ技はブロックされない(weather=おおひでり, pokemon_name=ヒトカゲ, move_name=ひのこ)
-- [x] 強天候_同タイプ技はブロックされない(weather=おおあめ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
-- [x] 強天候中は通常天候で上書きできない
-- [x] 強天候同士は上書きできる
-- [x] らんきりゅう_ひこう弱点半減(move_name=でんきショック)
-- [x] らんきりゅう_ひこう弱点半減(move_name=アクセルロック)
-- [x] らんきりゅう_ひこう弱点半減(move_name=アイススピナー)
-- [x] らんきりゅう_ひこう以外は軽減しない
-- [x] らんきりゅう_全天候を上書き(weather=はれ)
-- [x] らんきりゅう_全天候を上書き(weather=あめ)
-- [x] らんきりゅう_全天候を上書き(weather=すなあらし)
-- [x] らんきりゅう_全天候を上書き(weather=ゆき)
-- [x] らんきりゅう_全天候を上書き(weather=おおひでり)
-- [x] らんきりゅう_全天候を上書き(weather=おおあめ)
-- [x] フィールド_タイプ威力補正(terrain=エレキフィールド, attacker_name=ピカチュウ, defender_name=ピカチュウ, move_name=でんきショック, expected=5325)
-- [x] フィールド_タイプ威力補正(terrain=グラスフィールド, attacker_name=フシギダネ, defender_name=ピカチュウ, move_name=このは, expected=5325)
-- [x] フィールド_タイプ威力補正(terrain=サイコフィールド, attacker_name=フーディン, defender_name=ピカチュウ, move_name=サイコキネシス, expected=5325)
-- [x] フィールド_タイプ威力補正(terrain=ミストフィールド, attacker_name=カイリュー, defender_name=ピカチュウ, move_name=りゅうのはどう, expected=2048)
-- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=エレキフィールド, attacker_name=ピジョン, defender_name=ピカチュウ, move_name=でんきショック)
-- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=グラスフィールド, attacker_name=ピジョン, defender_name=ピカチュウ, move_name=このは)
-- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=サイコフィールド, attacker_name=ピジョン, defender_name=ピカチュウ, move_name=サイコキネシス)
-- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=ミストフィールド, attacker_name=カイリュー, defender_name=ピジョン, move_name=りゅうのはどう)
-- [x] エレキフィールド_ねむり防止
-- [x] エレキフィールド_非接地はねむり防止されない
+- [x] あめはれ_ばんのうがさ防御側は補正なし(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=4096)
+- [x] あめはれ_ばんのうがさ防御側は補正なし(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=4096)
+- [x] あめはれ_ばんのうがさ防御側は補正なし(weather=はれ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=4096)
+- [x] あめはれ_ばんのうがさ防御側は補正なし(weather=はれ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=4096)
 - [x] エレキフィールド_ねむけ防止
+- [x] エレキフィールド_ねむり防止
 - [x] エレキフィールド_非接地はねむけ防止されない
+- [x] エレキフィールド_非接地はねむり防止されない
+- [x] おいかぜ
 - [x] グラスフィールド_じしん弱化
 - [x] グラスフィールド_じならし弱化
 - [x] グラスフィールド_回復
 - [x] グラスフィールド_非接地は回復しない
 - [x] サイコフィールド_先制技無効
 - [x] サイコフィールド_浮遊は先制技有効
-- [x] ミストフィールド_状態異常防止
-- [x] ミストフィールド_非接地は状態異常防止されない
-- [x] ミストフィールド_混乱防止
-- [x] ミストフィールド_非接地は混乱防止されない
-- [x] じゅうりょく_命中補正
-- [x] じゅうりょく_浮遊無効
-- [x] トリックルーム_素早さ逆順
-- [x] トリックルーム_技優先度が優先
-- [x] マジックルーム_道具効果無効化
-- [x] ワンダールーム_物理技は特防側を参照
-- [x] ワンダールーム_特殊技は防御側を参照
 - [x] サイドフィールド_ダメージ軽減(side_field=リフレクター, move_name=たいあたり, expected=2048)
 - [x] サイドフィールド_ダメージ軽減(side_field=リフレクター, move_name=でんきショック, expected=4096)
 - [x] サイドフィールド_ダメージ軽減(side_field=ひかりのかべ, move_name=でんきショック, expected=2048)
@@ -74,39 +26,98 @@
 - [x] サイドフィールド_急所では軽減されない(side_field=リフレクター, move_name=たいあたり)
 - [x] サイドフィールド_急所では軽減されない(side_field=ひかりのかべ, move_name=でんきショック)
 - [x] サイドフィールド_急所では軽減されない(side_field=オーロラベール, move_name=たいあたり)
-- [x] しんぴのまもり_状態異常防止
-- [x] しんぴのまもり_混乱防止
-- [x] しろいきり_能力低下防止
-- [x] しろいきり_自発的な能力低下は防げない
-- [x] おいかぜ
-- [x] ねがいごと_回復と解除
-- [x] まきびし_ダメージ(layers=1, divisor=8)
-- [x] まきびし_ダメージ(layers=2, divisor=6)
-- [x] まきびし_ダメージ(layers=3, divisor=4)
-- [x] まきびし_浮いているポケモンはダメージを受けない
-- [x] どくびし_1層
-- [x] どくびし_2層
-- [x] どくびし_浮いているポケモンには効かない
-- [x] どくびし_どくタイプが着地すると解除される
-- [x] ステルスロック_x1
-- [x] ステルスロック_x4
-- [x] ねばねばネット
-- [x] ねばねばネット_浮いているポケモンには効かない
-- [x] 天候カウント減少(weather_name=はれ)
-- [x] 天候カウント減少(weather_name=あめ)
-- [x] 天候カウント減少(weather_name=すなあらし)
-- [x] 天候カウント減少(weather_name=ゆき)
-- [x] 地形カウント減少(terrain_name=エレキフィールド)
-- [x] 地形カウント減少(terrain_name=グラスフィールド)
-- [x] 地形カウント減少(terrain_name=サイコフィールド)
-- [x] 地形カウント減少(terrain_name=ミストフィールド)
-- [x] 全体フィールドカウント減少(field_name=じゅうりょく)
-- [x] 全体フィールドカウント減少(field_name=トリックルーム)
-- [x] 全体フィールドカウント減少(field_name=マジックルーム)
-- [x] 全体フィールドカウント減少(field_name=ワンダールーム)
 - [x] サイドフィールドカウント減少(field=リフレクター)
 - [x] サイドフィールドカウント減少(field=ひかりのかべ)
 - [x] サイドフィールドカウント減少(field=オーロラベール)
 - [x] サイドフィールドカウント減少(field=しんぴのまもり)
 - [x] サイドフィールドカウント減少(field=しろいきり)
 - [x] サイドフィールドカウント減少(field=おいかぜ)
+- [x] しろいきり_能力低下防止
+- [x] しろいきり_自発的な能力低下は防げない
+- [x] しんぴのまもり_混乱防止
+- [x] しんぴのまもり_状態異常防止
+- [x] じゅうりょく_命中補正
+- [x] じゅうりょく_浮遊無効
+- [x] ステルスロック_x1
+- [x] ステルスロック_x4
+- [x] すなあらし_いわ特防強化
+- [x] すなあらし_タイプ免疫(pokemon_name=イシツブテ)
+- [x] すなあらし_タイプ免疫(pokemon_name=サンドパン)
+- [x] すなあらし_タイプ免疫(pokemon_name=コイル)
+- [x] すなあらし_ダメージ
+- [x] すなあらし_特性免疫(ability_name=すなかき)
+- [x] すなあらし_特性免疫(ability_name=すながくれ)
+- [x] すなあらし_特性免疫(ability_name=すなのちから)
+- [x] すなあらし_特性免疫(ability_name=ぼうじん)
+- [x] トリックルーム_技優先度が優先
+- [x] トリックルーム_素早さ逆順
+- [x] どくびし_1層
+- [x] どくびし_2層
+- [x] どくびし_どくタイプが着地すると解除される
+- [x] どくびし_浮いているポケモンには効かない
+- [x] ねがいごと_回復と解除
+- [x] ねばねばネット
+- [x] ねばねばネット_浮いているポケモンには効かない
+- [x] はれ_こおり防止
+- [x] はれあめ_タイプ威力補正(weather=はれ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=6144)
+- [x] はれあめ_タイプ威力補正(weather=はれ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=2048)
+- [x] はれあめ_タイプ威力補正(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=6144)
+- [x] はれあめ_タイプ威力補正(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=2048)
+- [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=はれ, pokemon_name=ヒトカゲ, move_name=ひのこ)
+- [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=はれ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
+- [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
+- [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ)
+- [x] フィールド_タイプ威力補正(terrain=エレキフィールド, attacker_name=ピカチュウ, defender_name=ピカチュウ, move_name=でんきショック, expected=5325)
+- [x] フィールド_タイプ威力補正(terrain=グラスフィールド, attacker_name=フシギダネ, defender_name=ピカチュウ, move_name=このは, expected=5325)
+- [x] フィールド_タイプ威力補正(terrain=サイコフィールド, attacker_name=フーディン, defender_name=ピカチュウ, move_name=サイコキネシス, expected=5325)
+- [x] フィールド_タイプ威力補正(terrain=ミストフィールド, attacker_name=カイリュー, defender_name=ピカチュウ, move_name=りゅうのはどう, expected=2048)
+- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=エレキフィールド, attacker_name=ピジョン, defender_name=ピカチュウ, move_name=でんきショック)
+- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=グラスフィールド, attacker_name=ピジョン, defender_name=ピカチュウ, move_name=このは)
+- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=サイコフィールド, attacker_name=ピジョン, defender_name=ピカチュウ, move_name=サイコキネシス)
+- [x] フィールド_浮遊ポケモンは補正を受けない(terrain=ミストフィールド, attacker_name=カイリュー, defender_name=ピジョン, move_name=りゅうのはどう)
+- [x] まきびし_ダメージ(layers=1, divisor=8)
+- [x] まきびし_ダメージ(layers=2, divisor=6)
+- [x] まきびし_ダメージ(layers=3, divisor=4)
+- [x] まきびし_浮いているポケモンはダメージを受けない
+- [x] マジックルーム_道具効果無効化
+- [x] ミストフィールド_混乱防止
+- [x] ミストフィールド_状態異常防止
+- [x] ミストフィールド_非接地は混乱防止されない
+- [x] ミストフィールド_非接地は状態異常防止されない
+- [x] ゆき_こおり防御強化
+- [x] らんきりゅう_ひこう以外は軽減しない
+- [x] らんきりゅう_ひこう弱点半減(move_name=でんきショック)
+- [x] らんきりゅう_ひこう弱点半減(move_name=アクセルロック)
+- [x] らんきりゅう_ひこう弱点半減(move_name=アイススピナー)
+- [x] らんきりゅう_全天候を上書き(weather=はれ)
+- [x] らんきりゅう_全天候を上書き(weather=あめ)
+- [x] らんきりゅう_全天候を上書き(weather=すなあらし)
+- [x] らんきりゅう_全天候を上書き(weather=ゆき)
+- [x] らんきりゅう_全天候を上書き(weather=おおひでり)
+- [x] らんきりゅう_全天候を上書き(weather=おおあめ)
+- [x] ワンダールーム_物理技は特防側を参照
+- [x] ワンダールーム_物理技は特防実数値を使用
+- [x] ワンダールーム_特殊技は防御側を参照
+- [x] ワンダールーム_特殊技は防御実数値を使用
+- [x] 全体フィールドカウント減少(field_name=じゅうりょく)
+- [x] 全体フィールドカウント減少(field_name=トリックルーム)
+- [x] 全体フィールドカウント減少(field_name=マジックルーム)
+- [x] 全体フィールドカウント減少(field_name=ワンダールーム)
+- [x] 地形カウント減少(terrain_name=エレキフィールド)
+- [x] 地形カウント減少(terrain_name=グラスフィールド)
+- [x] 地形カウント減少(terrain_name=サイコフィールド)
+- [x] 地形カウント減少(terrain_name=ミストフィールド)
+- [x] 天候カウント減少(weather_name=はれ)
+- [x] 天候カウント減少(weather_name=あめ)
+- [x] 天候カウント減少(weather_name=すなあらし)
+- [x] 天候カウント減少(weather_name=ゆき)
+- [x] 強天候_反対タイプ技は失敗(weather=おおひでり, pokemon_name=ゼニガメ, move_name=みずでっぽう)
+- [x] 強天候_反対タイプ技は失敗(weather=おおひでり, pokemon_name=ゼニガメ, move_name=みずびたし)
+- [x] 強天候_反対タイプ技は失敗(weather=おおあめ, pokemon_name=ヒトカゲ, move_name=ひのこ)
+- [x] 強天候_反対タイプ技は失敗(weather=おおあめ, pokemon_name=ヒトカゲ, move_name=おにび)
+- [x] 強天候_同タイプ技はブロックされない(weather=おおひでり, pokemon_name=ヒトカゲ, move_name=ひのこ)
+- [x] 強天候_同タイプ技はブロックされない(weather=おおあめ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
+- [x] 強天候_同タイプ技は威力強化(weather=おおひでり, pokemon_name=ヒトカゲ, move_name=ひのこ)
+- [x] 強天候_同タイプ技は威力強化(weather=おおあめ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
+- [x] 強天候中は通常天候で上書きできない
+- [x] 強天候同士は上書きできる

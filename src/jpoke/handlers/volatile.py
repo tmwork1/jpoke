@@ -753,6 +753,7 @@ def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: EventContext, value: A
     """ねむけを解除してねむりを付与する。
 
     Champions 仕様: count=2（確率1/3）または count=3（確率2/3）。
+    交代によるねむけ解除の場合はねむりを付与しない。
 
     Args:
         battle: バトルインスタンス
@@ -762,6 +763,9 @@ def ねむけ_remove_and_apply_sleep(battle: Battle, ctx: EventContext, value: A
     Returns:
         HandlerReturn: 常にTrue
     """
+    # 交代退場処理中のポケモンはねむりを付与しない
+    if battle.switch_manager.switching_out_mon is ctx.source:
+        return HandlerReturn(value=True)
     # Champions仕様: count=2が1/3、count=3が2/3
     # AilmentManager.apply でも同じ分布で自動決定されるが、ねむけ→ねむり移行は明示指定
     count = 2 if battle.random.random() < 1 / 3 else 3

@@ -31,6 +31,36 @@ def test_faint_faintedがTrueになる():
     assert mon.fainted
 
 
+def test_modify_hp_r正_最低1回復():
+    """battle.modify_hp(r=1/16): max_hpが小さくint変換でゼロになっても最低1HP回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイキング")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    # max_hp=8 にすると int(8 * (1/16)) == 0 になる
+    mon._stats_manager._stats[0] = 8
+    mon.hp = 2
+    result = battle.modify_hp(mon, r=1/16)
+    assert result == 1, f"最低1HP回復のはずだが {result} だった"
+    assert mon.hp == 3
+
+
+def test_modify_hp_r負_最低1ダメージ():
+    """battle.modify_hp(r=-1/16): max_hpが小さくint変換でゼロになっても最低1ダメージになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイキング")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    # max_hp=8 にすると int(8 * (-1/16)) == 0 になる
+    mon._stats_manager._stats[0] = 8
+    mon.hp = 8
+    result = battle.modify_hp(mon, r=-1/16)
+    assert result == -1, f"最低1ダメージのはずだが {result} だった"
+    assert mon.hp == 7
+
+
 def test_こおり_3回目行動時に強制解凍():
     """こおり: Champions仕様 - 行動不能2回の後（3回目の行動時）は必ず解凍する"""
     battle = t.start_battle(

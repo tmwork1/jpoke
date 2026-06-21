@@ -2813,7 +2813,7 @@ ABILITIES: dict[str, AbilityData] = {
             ),
             Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
                 h.マルチタイプ_block_item_change,
-                subject_spec="defender:self",
+                subject_spec="target:self",
             ),
         }
     ),

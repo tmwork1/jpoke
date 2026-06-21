@@ -7,8 +7,6 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.core import AttackContext
-from jpoke.enums import Event
 from jpoke.utils.type_defs import Type, AilmentName, WeatherName, Gender
 
 from .. import test_utils as t
@@ -377,15 +375,38 @@ def test_てんきや_天候変化で即座にフォルムチェンジ():
     ]
 )
 def test_てんねん_攻撃側は防御ランク補正を無視する(move_name, stat):
-    battle = t.start_battle(
+    """てんねん攻撃側: 防御ランク+2でも防御の実効値がランクなし（+0）と同じになる。"""
+    # てんねんなし: 防御ランク+2でfinal_defenseが上昇する
+    without_ten = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    without_ten.actives[1].rank[stat] = 2
+    t.run_move(without_ten, 0)
+    defense_with_rank = without_ten.damage_calculator.final_defense
+
+    # ランクなし: 通常の防御値
+    without_rank = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(without_rank, 0)
+    defense_without_rank = without_rank.damage_calculator.final_defense
+
+    # てんねんあり: 防御ランク+2でもランクなしと同じ防御値になる
+    with_ten = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="てんねん", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
-    attacker, defender = battle.actives
-    defender.rank[stat] = 2
-    ctx = AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-    result = battle.events.emit(Event.ON_CALC_DEF_RANK_MODIFIER, ctx, 2.0)
-    assert result == 1.0
+    with_ten.actives[1].rank[stat] = 2
+    t.run_move(with_ten, 0)
+    defense_tennen = with_ten.damage_calculator.final_defense
+
+    assert defense_with_rank > defense_without_rank  # ランクあり > ランクなし（対照確認）
+    assert defense_tennen == defense_without_rank  # てんねんはランクを無視する
 
 
 @pytest.mark.parametrize(
@@ -396,32 +417,62 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
     ]
 )
 def test_てんねん_防御側はACランク無視(move_name, stat):
-    battle = t.start_battle(
+    """てんねん防御側: 攻撃ランク+2でも攻撃の実効値がランクなし（+0）と同じになる。"""
+    # てんねんなし: 攻撃ランク+2でfinal_attackが上昇する
+    without_ten = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    without_ten.actives[0].rank[stat] = 2
+    t.run_move(without_ten, 0)
+    attack_with_rank = without_ten.damage_calculator.final_attack
+
+    # ランクなし: 通常の攻撃値
+    without_rank = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(without_rank, 0)
+    attack_without_rank = without_rank.damage_calculator.final_attack
+
+    # てんねんあり: 攻撃ランク+2でもランクなしと同じ攻撃値になる
+    with_ten = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ", ability_name="てんねん")],
+        accuracy=100,
     )
-    attacker, defender = battle.actives
-    attacker.rank[stat] = 2
-    ctx = AttackContext(attacker=attacker, defender=defender, move=attacker.moves[0])
-    result = battle.events.emit(Event.ON_CALC_ATK_RANK_MODIFIER, ctx, 2)
-    assert result == 1
+    with_ten.actives[0].rank[stat] = 2
+    t.run_move(with_ten, 0)
+    attack_tennen = with_ten.damage_calculator.final_attack
+
+    assert attack_with_rank > attack_without_rank  # ランクあり > ランクなし（対照確認）
+    assert attack_tennen == attack_without_rank  # てんねんはランクを無視する
 
 
-@pytest.mark.parametrize(
-    "chance_before, chance_after",
-    [
-        (0.3, 0.6),
-        (0.7, 1.0),
-    ]
-)
-def test_てんのめぐみ_追加効果確率が2倍になる(chance_before, chance_after):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="てんのめぐみ", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
+def test_てんのめぐみ_追加効果確率が2倍になる():
+    """てんのめぐみ: 30%追加効果が2倍（60%）になることを、でんじほうを使って確認する。
+    乱数0.45はてんのめぐみなし（30%）では発動しないが、てんのめぐみあり（60%）では発動する。"""
+    # てんのめぐみなし: 乱数0.45ではまひが発動しない（境界: 0.30未満で発動）
+    without_megumi = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじほう"])],
+        team1=[Pokemon("ゼニガメ")],
+        accuracy=100,
     )
-    attacker = battle.actives[0]
-    ctx = AttackContext(attacker=attacker, defender=battle.actives[1], move=attacker.moves[0])
-    assert chance_after == battle.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance_before)
+    without_megumi.random.random = lambda: 0.45
+    t.run_move(without_megumi, 0)
+    assert not without_megumi.actives[1].ailment.is_active
+
+    # てんのめぐみあり: 乱数0.45でまひが発動する（確率2倍で境界: 0.60未満で発動）
+    with_megumi = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="てんのめぐみ", move_names=["でんじほう"])],
+        team1=[Pokemon("ゼニガメ")],
+        accuracy=100,
+    )
+    with_megumi.random.random = lambda: 0.45
+    t.run_move(with_megumi, 0)
+    assert with_megumi.actives[1].ailment.is_active
 
 
 def test_でんきにかえる_被弾でじゅうでん状態になる():
