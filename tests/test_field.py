@@ -83,6 +83,19 @@ def test_おいかぜ():
     assert battle.calc_effective_speed(mon) == 2 * mon.stats["S"]
 
 
+def test_おおあめ_こおりが付与される():
+    """おおあめ: こおり防止効果はなく、こおり状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", 99),
+    )
+    target = battle.actives[0]
+    result = battle.ailment_manager.apply(target, "こおり")
+    assert result, "おおあめ中にこおりが付与されなかった"
+    assert target.ailment.name == "こおり", "おおあめ中にこおり状態にならなかった"
+
+
 def test_グラスフィールド_じしん弱化():
     """グラスフィールド: じしん威力0.5倍"""
     battle = t.start_battle(

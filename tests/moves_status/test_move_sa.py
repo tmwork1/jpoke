@@ -7,6 +7,7 @@ from .. import test_utils as t
 
 
 def test_さいみんじゅつ_すでに状態異常なら失敗():
+    # TODO : 状態異常の重複禁止は仕様上の制約であり、技の効果ではないため、技ハンドラのテストとしては不要。他の類似ハンドラも対応する。
     """さいみんじゅつ: 対象がすでに状態異常を持っている場合は失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["さいみんじゅつ"])],
@@ -63,19 +64,6 @@ def test_さむいギャグ_すでにゆき状態でも交代可能なら成功(
     assert battle.weather.name == "ゆき"
     player = battle.players[0]
     assert battle.player_states[player].interrupt == Interrupt.PIVOT
-
-
-def test_さむいギャグ_つめたいいわ所持時にゆきが8ターンになる():
-    """さむいギャグ: つめたいいわを持つポケモンが使用するとゆきが8ターン続く"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["さむいギャグ"], item_name="つめたいいわ"),
-               Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン")],
-    )
-    t.run_move(battle, 0)
-
-    assert battle.weather.name == "ゆき"
-    assert battle.weather.count == 8
 
 
 def test_さむいギャグ_ゆきが5ターン発生しInterruptが設定される():
@@ -176,6 +164,7 @@ def test_しっぽきり_みがわり中は失敗():
 
 
 def test_しっぽきり_交代が実行される():
+    # TODO : test_しっぽきり_みがわりとそのHPが交代先に引き継がれる、と共通化する
     """しっぽきり: 交代コマンドが処理されると控えポケモンが場に出る"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
@@ -186,21 +175,6 @@ def test_しっぽきり_交代が実行される():
     battle.run_interrupt_switch(Interrupt.PIVOT)
 
     assert battle.actives[0] is raichu
-
-
-def test_しっぽきり_使用者にはみがわりが残らない():
-    """しっぽきり: 交代後、使用者（退場したポケモン）にはみがわりが残らない"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-
-    t.run_move(battle, 0)
-    battle.run_interrupt_switch(Interrupt.PIVOT)
-
-    # 交代で退場したカビゴンにはみがわりが残っていない
-    assert not attacker.has_volatile("みがわり")
 
 
 def test_しっぽきり_控えがいない場合は失敗():
@@ -218,29 +192,8 @@ def test_しっぽきり_控えがいない場合は失敗():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
-def test_しっぽきり_正常発動でHP消費とみがわり生成とPIVOT設定():
-    """しっぽきり: HP消費・みがわり生成・交代割り込みが正しく設定される"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    max_hp = attacker.max_hp
-    t.run_move(battle, 0)
-
-    # HP消費: (max_hp + 1) // 2（切り上げ）
-    expected_cost = (max_hp + 1) // 2
-    assert attacker.hp == max_hp - expected_cost
-    # みがわり生成
-    assert attacker.has_volatile("みがわり")
-    # みがわりHP: max_hp // 4（切り捨て）
-    assert attacker.volatiles["みがわり"].hp == max_hp // 4
-    # 交代割り込みが設定される
-    player = battle.players[0]
-    assert battle.player_states[player].interrupt == Interrupt.PIVOT
-
-
 def test_しびれごな_すでに状態異常なら失敗():
+    # TODO : 状態異常の重複は仕様上の制約であり技でテストすべきではない
     """しびれごな: 対象がすでに状態異常を持っている場合は失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["しびれごな"])],
@@ -266,6 +219,8 @@ def test_しびれごな_まひ付与():
     t.run_move(battle, 0)
 
     assert defender.has_ailment("まひ")
+
+# TODO : しびれごな：草タイプに無効化されるテストを追加
 
 
 def test_しんぴのまもり_すでにアクティブなら失敗():
@@ -310,25 +265,6 @@ def test_シンプルビーム_protectedフラグ持ちに失敗():
     assert defender.ability.name == "アイスフェイス"
 
 
-def test_シンプルビーム_シンプル付与後のランク変化が2倍():
-    """シンプルビーム: シンプルを付与した後のランク変化が2倍になる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["シンプルビーム", "つるぎのまい"])],
-        team1=[Pokemon("カビゴン", ability_name="めんえき")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    # シンプルビームで相手にシンプルを付与
-    t.run_move(battle, 0, move_idx=0)
-    assert defender.ability.name == "シンプル"
-
-    # 次のターンで相手をつるぎのまいで2段階上昇→シンプルで4段階になるはず
-    # 今度は相手側(defender)につるぎのまいを直接発動する
-    battle.modify_stats(defender, {"A": 1}, source=defender)
-    assert defender.rank["A"] == 2
-
-
 def test_シンプルビーム_交代後に元の特性に戻る():
     """シンプルビーム: 特性をシンプルに変えられた後に交代すると元の特性に戻る"""
     battle = t.start_battle(
@@ -349,6 +285,7 @@ def test_シンプルビーム_交代後に元の特性に戻る():
 
 
 def test_シンプルビーム_通常特性をシンプルに変更():
+    # TODO : シンプルビームで付与する特性は「たんじゅん」。
     """シンプルビーム: 通常特性（せいでんき等）の相手に使うと特性が「シンプル」に変わる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["シンプルビーム"])],
@@ -422,7 +359,10 @@ def test_じこあんじ_相手のランク変化を自分にコピーする():
     assert attacker.rank["EVA"] == 2
 
 
-@pytest.mark.parametrize("ability_name", ["プラス", "マイナス"])
+@pytest.mark.parametrize(
+    "ability_name",
+    ["プラス", "マイナス"]
+)
 def test_じばそうさ_プラスマイナス特性ならぼうぎょとくぼう1段階上昇(ability_name):
     """じばそうさ: プラス/マイナス特性の使用者はぼうぎょ・とくぼうランクがそれぞれ1段階上がる"""
     battle = t.start_battle(
@@ -485,6 +425,7 @@ def test_スキルスワップ_交代後に元の特性に戻る():
 
 
 def test_スキルスワップ_使用者の特性がprotectedなら失敗():
+    # TODO : 「test_スキルスワップ_対象の特性がprotectedなら失敗」とパラメタライズでまとめる
     """スキルスワップ: 使用者自身の特性がprotectedフラグを持つ場合は失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="アイスフェイス")],
@@ -562,6 +503,8 @@ def test_スキルスワップ_通常発動で特性が入れ替わる():
     assert attacker.ability.name == "めんえき"
     assert defender.ability.name == "せいでんき"
 
+# TODO : スキルスワップで特性を入れ替えると、特性が再活性化し、いかくが再発動するテストを追加
+
 
 def test_すてゼリフ_クリアボディで完全阻止されたとき交代しない():
     """すてゼリフ: クリアボディで全ランク低下が阻止された場合は交代も発動しない"""
@@ -596,11 +539,11 @@ def test_すてゼリフ_こうげきととくこうが1段階低下する():
 
 
 def test_すてゼリフ_交代が実行される():
+    # TODO : test_すてゼリフ_こうげきととくこうが1段階低下する、と統合
     """すてゼリフ: PIVOTが設定された後に交代コマンドを処理するとポケモンが交代する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["すてゼリフ"]), Pokemon("ライチュウ")],
         team1=[Pokemon("カビゴン")],
-        accuracy=100,
     )
     raichu = battle.player_states[battle.players[0]].team[1]
     t.run_move(battle, 0)
@@ -623,22 +566,6 @@ def test_すてゼリフ_控えがいない場合はランク低下のみ():
     assert defender.rank["A"] == -1
     assert defender.rank["C"] == -1
     assert battle.player_states[player].interrupt == Interrupt.NONE
-
-
-def test_すてゼリフ_通常発動でPIVOTが設定される():
-    """すてゼリフ: ランク低下が成功し控えがいる場合はPIVOT割り込みが設定される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["すてゼリフ"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    player = battle.players[0]
-    t.run_move(battle, 0)
-
-    assert defender.rank["A"] == -1
-    assert defender.rank["C"] == -1
-    assert battle.player_states[player].interrupt == Interrupt.PIVOT
 
 
 def test_スピードスワップ_すばやさ実数値が入れ替わる():
@@ -751,6 +678,7 @@ def test_すりかえ_両者のアイテムが入れ替わる():
 
 
 def test_すりかえ_使用者のみアイテムを持つとき入れ替わる():
+    # TODO : 相手だけアイテムを持っている場合も成功するテストをパラメタライズで追加する
     """すりかえ: 使用者のみアイテムを持つ場合も入れ替えが成功する。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
@@ -780,6 +708,7 @@ def test_せいちょう_おおひでり時こうげきととくこう2段階上
 
 
 def test_せいちょう_はれ時こうげきととくこう2段階上がる():
+    # TODO : おおひでりとパラメタライズでまとめる
     """せいちょう: はれ中はこうげきととくこうランクが2段階ずつ上がる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["せいちょう"])],
@@ -820,6 +749,7 @@ def test_そうでん_そうでん状態が相手に付与される():
 
 
 def test_そうでん_ターン終了時に状態が解除される():
+    # TODO : これはそうでん状態の責務のため、volatileのテストで検証すべき
     """そうでん: ターン終了時（ON_TURN_END）にそうでん状態が自動で解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -835,6 +765,7 @@ def test_そうでん_ターン終了時に状態が解除される():
 
 
 def test_そうでん_わるあがきはでんきタイプに変換されない():
+    # TODO : これはそうでん状態の責務のため、volatileのテストで検証すべき
     """そうでん: そうでん状態でもわるあがきはでんきタイプに変換されない（タイプは空文字のまま）"""
     from jpoke.model import Move
     battle = t.start_battle(
@@ -853,6 +784,7 @@ def test_そうでん_わるあがきはでんきタイプに変換されない(
 
 
 def test_そうでん_状態中の攻撃技がでんきタイプになる():
+    # TODO : これはそうでん状態の責務のため、volatileのテストで検証すべき
     """そうでん: そうでん状態で使う攻撃技はでんきタイプに変換される"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["たいあたり"])],

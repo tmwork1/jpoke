@@ -5,6 +5,7 @@ from .. import test_utils as t
 
 
 def test_なかまづくり_protectedフラグ持ちに失敗():
+    # TODO : 失敗条件をパラメタライズでまとめてテストする
     """なかまづくり: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
@@ -119,6 +120,7 @@ def test_なまける_まんたんなら失敗():
 
 
 def test_なやみのタネ_protectedフラグ持ちに失敗():
+    # TODO : 失敗条件をパラメタライズでまとめてテストする
     """なやみのタネ: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
@@ -224,6 +226,7 @@ def test_なやみのタネ_相手の特性がふみんに変わる():
 
 
 def test_なりきり_uncopyableかつprotectedフラグ持ちに失敗():
+    # TODO : 失敗条件をパラメタライズでまとめてテストする
     """なりきり: アイスフェイス（uncopyableかつprotectedフラグ持ち）の相手には失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
@@ -311,6 +314,7 @@ def test_なりきり_交代後に元の特性に戻る():
 
 
 def test_なりきり_通常特性をコピーできる():
+    # TODO : 他のテストですでにコピーできることは確認済みなので不要
     """なりきり: 使用すると自分の特性が相手と同じになる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
@@ -324,6 +328,7 @@ def test_なりきり_通常特性をコピーできる():
 
 
 def test_にほんばれ_おおあめ中は失敗する():
+    # TODO : 天候始動技に関するテストはtest_move__grouped.pyにまとめる
     """にほんばれ: おおあめ中は失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["にほんばれ"])],
@@ -346,6 +351,7 @@ def test_にほんばれ_天気がはれになる():
 
 
 def test_ニードルガード_ターン終了で解除される():
+    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: ターン終了時に揮発状態が解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -359,6 +365,7 @@ def test_ニードルガード_ターン終了で解除される():
 
 
 def test_ニードルガード_変化技も無効化する():
+    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 相手対象の変化技も無効化する（まもると同様）"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -371,6 +378,7 @@ def test_ニードルガード_変化技も無効化する():
 
 
 def test_ニードルガード_接触技で攻撃した相手に8分の1ダメージ():
+    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 直接攻撃してきた相手に最大HPの1/8ダメージを与える"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -397,6 +405,7 @@ def test_ニードルガード_揮発状態が付与される():
 
 
 def test_ニードルガード_攻撃技を無効化する():
+    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 相手の攻撃技を無効化する"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -409,6 +418,7 @@ def test_ニードルガード_攻撃技を無効化する():
 
 
 def test_ニードルガード_非接触技ではダメージなし():
+    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 非接触技では攻撃者にダメージを与えない"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -476,6 +486,7 @@ def test_ねをはる_ねをはる状態を付与する():
 
 
 def test_のみこむ_count1で4分の1回復():
+    # TODO : カウント1~3をパラメタライズですべてテストする
     """のみこむ: たくわえ回数1回のとき最大HPの1/4を回復する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
