@@ -1,20 +1,7 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(*)",
-      "PowerShell(*)",
-      "Edit(*)",
-      "Write(*)",
-      "Write(.claude/*)",
-      "TodoWrite(*)",
-      "Agent(*)",
-      "Skill(update-config)",
-      "Skill(update-config:*)",
-      "Skill(fewer-permission-prompts)",
-      "Skill(fewer-permission-prompts:*)"
-    ],
-    "deny": [],
     "defaultMode": "bypassPermissions",
+    "deny": [],
     "additionalDirectories": []
   }
 }
