@@ -224,17 +224,24 @@ class StackableFieldManager(BaseFieldManager[T]):
     def activate(self, name: T, count: int) -> bool:
         """フィールド効果を発動する。
 
+        max_count が 1 より大きいフィールド（まきびし・どくびし等）は、
+        すでに有効な場合でも max_count 未満であれば count を 1 増やす。
+
         Args:
             name: 発動するフィールド名
-            count: 効果の持続ターン数
+            count: 新規発動時の持続ターン数（重ね掛けは常に +1）
 
         Returns:
-            bool: 効果が発動された場合True（既に有効な場合はFalse）
+            bool: 効果が発動または増加した場合True、最大層に達している場合False
         """
         field = self.get(name)
-        if field.is_active:
+        if not field.is_active:
+            self._activate_field(name, count)
+            return True
+        max_count = field.data.max_count
+        if max_count <= 1 or field.count >= max_count:
             return False
-        self._activate_field(name, count)
+        field.count += 1
         return True
 
     def deactivate(self, name: T) -> bool:

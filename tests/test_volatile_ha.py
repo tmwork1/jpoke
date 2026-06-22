@@ -128,6 +128,28 @@ def test_ふういん_非共通技は使える():
     assert battle.move_executor.action_success is True
 
 
+def test_ほろびのうた_count3から3ターンで減少し瀕死():
+    """ほろびのうた: count=3 から3ターン経過するとカウントが減少し瀕死になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ほろびのうた": 3},
+    )
+    mon = battle.actives[0]
+
+    t.end_turn(battle)
+    assert mon.volatiles["ほろびのうた"].count == 2
+    assert mon.alive
+
+    t.end_turn(battle)
+    assert mon.volatiles["ほろびのうた"].count == 1
+    assert mon.alive
+
+    t.end_turn(battle)
+    assert not mon.has_volatile("ほろびのうた")
+    assert mon.fainted
+
+
 def test_ほろびのうた_ターン経過で瀕死():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],

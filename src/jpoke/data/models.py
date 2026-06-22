@@ -66,6 +66,7 @@ class MoveData:
 
 @dataclass
 class FieldData:
+    max_count: int = 1
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     name: str = ""
 

@@ -1,5 +1,6 @@
 """変化技ハンドラの単体テスト（な行）。"""
 
+import pytest
 from jpoke import Pokemon
 from .. import test_utils as t
 
@@ -351,7 +352,6 @@ def test_にほんばれ_天気がはれになる():
 
 
 def test_ニードルガード_ターン終了で解除される():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: ターン終了時に揮発状態が解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
@@ -365,7 +365,6 @@ def test_ニードルガード_ターン終了で解除される():
 
 
 def test_ニードルガード_変化技も無効化する():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 相手対象の変化技も無効化する（まもると同様）"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -378,7 +377,6 @@ def test_ニードルガード_変化技も無効化する():
 
 
 def test_ニードルガード_接触技で攻撃した相手に8分の1ダメージ():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 直接攻撃してきた相手に最大HPの1/8ダメージを与える"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -405,7 +403,6 @@ def test_ニードルガード_揮発状態が付与される():
 
 
 def test_ニードルガード_攻撃技を無効化する():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 相手の攻撃技を無効化する"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -418,7 +415,6 @@ def test_ニードルガード_攻撃技を無効化する():
 
 
 def test_ニードルガード_非接触技ではダメージなし():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ニードルガード: 非接触技では攻撃者にダメージを与えない"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -485,51 +481,25 @@ def test_ねをはる_ねをはる状態を付与する():
     assert attacker.has_volatile("ねをはる")
 
 
-def test_のみこむ_count1で4分の1回復():
-    # TODO : カウント1~3をパラメタライズですべてテストする
-    """のみこむ: たくわえ回数1回のとき最大HPの1/4を回復する"""
+@pytest.mark.parametrize("count,numerator,denominator", [
+    (1, 1, 4),
+    (2, 1, 2),
+    (3, 1, 1),
+])
+def test_のみこむ_たくわえカウントに応じて回復する(count, numerator, denominator):
+    """のみこむ: たくわえカウント1→1/4、2→1/2、3→全回復する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
         team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 1},
+        volatile0={"たくわえる": count},
     )
     attacker = battle.actives[0]
     attacker.hp = 1
-    expected_heal = int(attacker.max_hp * 1 / 4)
+    expected_heal = int(attacker.max_hp * numerator / denominator)
+    expected_hp = min(1 + expected_heal, attacker.max_hp)
     t.run_move(battle, 0)
 
-    assert attacker.hp == 1 + expected_heal
-    assert not attacker.has_volatile("たくわえる")
-
-
-def test_のみこむ_count2で2分の1回復():
-    """のみこむ: たくわえ回数2回のとき最大HPの1/2を回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 2},
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    expected_heal = int(attacker.max_hp * 1 / 2)
-    t.run_move(battle, 0)
-
-    assert attacker.hp == 1 + expected_heal
-    assert not attacker.has_volatile("たくわえる")
-
-
-def test_のみこむ_count3で全回復():
-    """のみこむ: たくわえ回数3回のとき最大HPまで全回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 3},
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    t.run_move(battle, 0)
-
-    assert attacker.hp == attacker.max_hp
+    assert attacker.hp == expected_hp
     assert not attacker.has_volatile("たくわえる")
 
 

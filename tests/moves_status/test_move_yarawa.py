@@ -39,86 +39,6 @@ def test_うらみ_相手の技のPPが4減る():
     assert move.pp == pp_after_use - 4
 
 
-def test_ねがいごと_2ターン後にHPが回復する():
-    # TODO : これは場の仕様なので技側でテストすべきではない
-    """ねがいごと: 使用2ターン後に最大HPの半分を回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ねがいごと"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    mon = battle.actives[0]
-    # HPを削っておく
-    battle.modify_hp(mon, v=-(mon.max_hp // 2))
-    hp_before = mon.hp
-    expected_heal = mon.max_hp // 2
-
-    # ねがいごとを使う
-    t.run_move(battle, 0)
-    assert battle.get_side(mon).get("ねがいごと").is_active
-    assert mon.hp == hp_before  # まだ回復しない
-
-    # ターン終了: count 2→1
-    t.end_turn(battle)
-    assert mon.hp == hp_before  # まだ回復しない
-
-    # ターン終了: count 1→0 → 回復発動
-    t.end_turn(battle)
-    assert mon.hp == hp_before + expected_heal
-
-
-def test_ねがいごと_フィールドが解除される():
-    # TODO : これは場の仕様なので技側でテストすべきではない
-    """ねがいごと: 回復後にフィールドが解除されること"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ねがいごと"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    mon = battle.actives[0]
-    t.run_move(battle, 0)
-    assert battle.get_side(mon).get("ねがいごと").is_active
-
-    t.end_turn(battle)
-    t.end_turn(battle)
-    assert not battle.get_side(mon).get("ねがいごと").is_active
-
-
-def test_ねがいごと_交代後は現在の場のポケモンが回復する():
-    # TODO : これは場の仕様なので技側でテストすべきではない
-    """ねがいごと: 使用者が交代しても同ポジションの現在のポケモンが回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ねがいごと"]), Pokemon("ヤドラン")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    user = battle.actives[0]
-    teammate = battle.player_states[battle.players[0]].team[1]
-
-    # 回復量は使用者（ピカチュウ）の最大HPの半分
-    expected_heal = user.max_hp // 2
-
-    # 交代先（ヤドラン）のHPを削っておく
-    battle.modify_hp(teammate, v=-expected_heal)
-    hp_teammate_before = teammate.hp
-
-    # ねがいごとを使う
-    t.run_move(battle, 0)
-
-    # 使用者を交代させる
-    t.run_switch(battle, 0, 1)
-    assert battle.actives[0] is teammate
-
-    # ターン終了 × 2
-    t.end_turn(battle)
-    t.end_turn(battle)
-
-    # 交代後のポケモン（ヤドラン）が回復していること
-    assert teammate.hp == hp_teammate_before + expected_heal
-    # 元の使用者（ピカチュウ）は回復していないこと（控え）
-    assert user.hp == user.max_hp  # ピカチュウはHP変更していないので満タン
-
-
 def test_ねがいごと_重複設置は失敗する():
     """ねがいごと: すでに設置済みなら失敗する"""
     battle = t.start_battle(
@@ -294,21 +214,6 @@ def test_ねむる_既存の状態異常が解除される():
     assert mon.has_ailment("ねむり")
 
 
-def test_のろい_ゴーストタイプ_HPが半分消費される():
-    # TODO : test_のろい_ゴーストタイプ_相手にのろい状態を付与する、と統合
-    """のろい（呪い）: ゴーストタイプが使うと最大HPの半分（切り捨て）を消費する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    mon = battle.actives[0]
-    max_hp = mon.max_hp
-    t.run_move(battle, 0)
-
-    assert mon.hp == max_hp - max_hp // 2
-
-
 def test_のろい_ゴーストタイプ_HP1でも呪いは成功し相手にのろい付与():
     """のろい（呪い）: 使用者がHP1でも呪いは成功し、使用者がひんしになっても相手にのろい状態が付与される"""
     battle = t.start_battle(
@@ -329,6 +234,21 @@ def test_のろい_ゴーストタイプ_HP1でも呪いは成功し相手にの
     assert not mon.alive
     # 相手にのろい状態が付与されている
     assert defender.has_volatile("のろい")
+
+
+def test_のろい_ゴーストタイプ_HPが半分消費される():
+    # TODO : test_のろい_ゴーストタイプ_相手にのろい状態を付与する、と統合
+    """のろい（呪い）: ゴーストタイプが使うと最大HPの半分（切り捨て）を消費する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    max_hp = mon.max_hp
+    t.run_move(battle, 0)
+
+    assert mon.hp == max_hp - max_hp // 2
 
 
 def test_のろい_ゴーストタイプ_すでにのろい状態なら失敗():
@@ -397,7 +317,6 @@ def test_のろい_のろい状態のポケモンはターン終了時に最大H
 
 
 def test_ハロウィン_ゴーストタイプが付与される():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ハロウィン: 使用後に defender が「ゴースト」タイプになること"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ハロウィン"])],
@@ -439,7 +358,6 @@ def test_ハロウィン_ハロウィン状態を付与する():
 
 
 def test_ハロウィン_交代後にゴーストタイプがリセットされる():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ハロウィン: 交代後に added_types がリセットされること"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ハロウィン"])],

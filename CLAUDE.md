@@ -110,9 +110,9 @@ battle = t.start_battle(
 
 ## 開発ルール
 
-- **ファイルの書き出し先はプロジェクトディレクトリ（`c:\Users\tmtmh\Documents\pokemon\jpoke\`）配下に限定する。プロジェクト外へのファイル作成・書き込みは禁止**
+- **ファイルの書き出し先はプロジェクトディレクトリ（`c:\Users\tmtmh\Documents\pokemon\jpoke\`）配下に限定する。**
 - **対象はポケモンチャンピオンズシングルバトルのみ**
-- コメント・docstring・テスト関数名は **日本語** で書く
+- コメント・docstringは **日本語** で書く
 - テスト関数名は `test_<特性名/技名>_<確認内容>` の形式
 - ハンドラの実装は `handlers/`、登録は `data/` で行う
 - 新しい `Literal` 型は `utils/type_defs.py` に追加する

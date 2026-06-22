@@ -44,6 +44,19 @@ Grep pattern="# TODO" glob="**/*.py" path="." output_mode="content"
 
 `.loop/todo_state.json` を Read で読み込む。
 
+### 1.5. キューが空なら TODO を収集する
+
+`todo_queue` が空の場合、ループ開始前にプロジェクト全体から TODO を収集してキューに投入する。
+
+```
+Grep pattern="# TODO" glob="**/*.py" path="." output_mode="content"
+（.claude/ 配下は除外する）
+```
+
+各行の `# TODO: ` 以降のテキストを `todo_queue` に追加し、状態ファイルを保存してから次のステップへ進む。
+
+収集しても `todo_queue` が空のまま（プロジェクトに TODO がない）なら、完了と判断してループ終了。
+
 ### 2. 終了チェック
 
 `todo_queue` が空なら

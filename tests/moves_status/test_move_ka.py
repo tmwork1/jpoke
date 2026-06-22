@@ -176,6 +176,36 @@ def test_ガードシェア_こうげきとくこうは変化しない():
     assert defender._stats_manager.stats[3] == def_c_before
 
 
+@pytest.mark.parametrize("attacker_name, defender_name", [
+    # B合計奇数（切り捨てあり）、D合計偶数（切り捨てなし）
+    ("ピカチュウ", "カビゴン"),
+    # B合計偶数、D合計奇数
+    ("フシギダネ", "ヒトカゲ"),
+    # B合計奇数、D合計奇数
+    ("ゼニガメ", "コイル"),
+    # B合計偶数、D合計偶数
+    ("イーブイ", "ラプラス"),
+])
+def test_ガードシェア_ぼうぎょとくぼうが平均化される(attacker_name: str, defender_name: str):
+    """ガードシェア: 使用者と相手のぼうぎょ・とくぼう実数値が平均値（切り捨て）になること"""
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, move_names=["ガードシェア"])],
+        team1=[Pokemon(defender_name)],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 使用前の平均値を計算（B=インデックス2、D=インデックス4）
+    expected_b = (attacker._stats_manager.stats[2] + defender._stats_manager.stats[2]) // 2
+    expected_d = (attacker._stats_manager.stats[4] + defender._stats_manager.stats[4]) // 2
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[2] == expected_b
+    assert defender._stats_manager.stats[2] == expected_b
+    assert attacker._stats_manager.stats[4] == expected_d
+    assert defender._stats_manager.stats[4] == expected_d
+
+
 def test_ガードシェア_ランク変化は変更されない():
     """ガードシェア: 実数値のみを平均化し、能力ランクは変化しないこと"""
     battle = t.start_battle(
@@ -191,40 +221,6 @@ def test_ガードシェア_ランク変化は変更されない():
     assert attacker.rank["D"] == 0
     assert defender.rank["B"] == 0
     assert defender.rank["D"] == 0
-
-
-def test_ガードシェア_使用者と相手のとくぼうが平均化される():
-    """ガードシェア: 使用者と相手のとくぼう実数値が平均値（切り捨て）になること"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    # ピカチュウD=70、カビゴンD=130 → 平均 (70+130)//2 = 100
-    expected_d = (attacker._stats_manager.stats[4] + defender._stats_manager.stats[4]) // 2
-    t.run_move(battle, 0)
-
-    assert attacker._stats_manager.stats[4] == expected_d
-    assert defender._stats_manager.stats[4] == expected_d
-
-
-def test_ガードシェア_使用者と相手のぼうぎょが平均化される():
-    """ガードシェア: 使用者と相手のぼうぎょ実数値が平均値（切り捨て）になること"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    # ピカチュウB=60、カビゴンB=85 → 平均 (60+85)//2 = 72
-    expected_b = (attacker._stats_manager.stats[2] + defender._stats_manager.stats[2]) // 2
-    t.run_move(battle, 0)
-
-    assert attacker._stats_manager.stats[2] == expected_b
-    assert defender._stats_manager.stats[2] == expected_b
 
 
 def test_ガードスワップ_ACランクは変化しない():

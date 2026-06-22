@@ -441,6 +441,36 @@ def test_どくびし_浮いているポケモンには効かない():
     assert not active.ailment.is_active
 
 
+def test_ねがいごと_交代後は現在の場のポケモンが回復する():
+    """ねがいごと: 使用者が交代しても同ポジションの現在のポケモンが回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ヤドラン")],
+        team1=[Pokemon("カビゴン")],
+        side0={"ねがいごと": 2},
+    )
+    field = battle.get_side(battle.players[0]).get("ねがいごと")
+    heal = 30
+    field.heal = heal
+
+    teammate = battle.player_states[battle.players[0]].team[1]
+
+    # 交代先（ヤドラン）のHPを削っておく
+    battle.modify_hp(teammate, v=-heal)
+    hp_teammate_before = teammate.hp
+
+    # 使用者を交代させる
+    t.run_switch(battle, 0, 1)
+    assert battle.actives[0] is teammate
+
+    # ターン終了 × 2
+    t.end_turn(battle)
+    t.end_turn(battle)
+
+    # 交代後のポケモン（ヤドラン）が回復していること
+    assert teammate.hp == hp_teammate_before + heal
+    assert not field.is_active
+
+
 def test_ねがいごと_回復と解除():
     """ねがいごと: ターン終了時回復と解除"""
     battle = t.start_battle(
@@ -572,6 +602,58 @@ def test_フィールド_浮遊ポケモンは補正を受けない(
     )
     t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーロック_ゴーストタイプも交代できない():
+    """フェアリーロック: ゴーストタイプのポケモンも交代できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ゲンガー")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not t.can_switch(battle, 0)
+
+
+def test_フェアリーロック_ターン終了でフィールドが解除される():
+    """フェアリーロック: ターン終了後にグローバルフィールドが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.global_manager.fields["フェアリーロック"].is_active
+
+    t.end_turn(battle)
+    assert not battle.global_manager.fields["フェアリーロック"].is_active
+
+
+def test_フェアリーロック_相手側も交代できない():
+    """フェアリーロック: フェアリーロック中は相手側のポケモンも交代できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not t.can_switch(battle, 1)
+
+
+def test_フェアリーロック_解除後は交代できる():
+    """フェアリーロック: フィールド解除後は双方が交代できるようになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    t.end_turn(battle)
+
+    assert t.can_switch(battle, 0)
+    assert t.can_switch(battle, 1)
 
 
 @pytest.mark.parametrize("layers,divisor", [(1, 8), (2, 6), (3, 4)])

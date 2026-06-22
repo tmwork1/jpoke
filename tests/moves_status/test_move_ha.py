@@ -1,5 +1,6 @@
 """変化技ハンドラの単体テスト（は行・ビ行）。"""
 
+import pytest
 from jpoke import Pokemon
 from jpoke.enums import Interrupt
 from .. import test_utils as t
@@ -19,29 +20,13 @@ def test_はきだす_カウント0で失敗する():
     assert defender.hp == hp_before
 
 
-def test_はきだす_カウント1で威力100():
-    # TODO : カウント1~3をパラメタライズですべてテストする
-    """はきだす: たくわえカウント1のとき威力100でダメージを与える"""
+@pytest.mark.parametrize("count", [1, 2, 3])
+def test_はきだす_各カウントでダメージを与える(count):
+    """はきだす: たくわえカウント1~3のいずれでも相手にダメージを与える（威力100~300）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
         team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 1},
-        accuracy=100,
-    )
-    # 威力100相当で必ずダメージが入る
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-
-    assert defender.hp < hp_before
-
-
-def test_はきだす_カウント3で最大威力300():
-    """はきだす: たくわえカウント3のとき威力300でダメージを与える"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 3},
+        volatile0={"たくわえる": count},
         accuracy=100,
     )
     defender = battle.actives[1]
@@ -51,23 +36,8 @@ def test_はきだす_カウント3で最大威力300():
     assert defender.hp < hp_before
 
 
-def test_はきだす_命中後にたくわえる状態が消える():
-    """はきだす: 命中後にたくわえる揮発状態が解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 2},
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert not attacker.has_volatile("たくわえる")
-
-
-def test_はきだす_命中後にランクが元に戻る():
-    # TODO : test_はきだす_命中後にたくわえる状態が消える、と統合
-    """はきだす: 命中後にたくわえた回数分だけぼうぎょとくぼうが下がる"""
+def test_はきだす_命中後にたくわえる状態が消えランクが元に戻る():
+    """はきだす: 命中後にたくわえる揮発状態が解除され、たくわえた回数分だけぼうぎょとくぼうが下がる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
         team1=[Pokemon("カビゴン")],
@@ -80,6 +50,7 @@ def test_はきだす_命中後にランクが元に戻る():
     attacker.rank["D"] = 2
     t.run_move(battle, 0)
 
+    assert not attacker.has_volatile("たくわえる")
     assert attacker.rank["B"] == 0
     assert attacker.rank["D"] == 0
 
@@ -120,7 +91,6 @@ def test_はねやすめ_HP満タン時は失敗する():
 
 
 def test_はねやすめ_volatile中はひこうタイプが除外される():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """はねやすめ: volatile 付与中はひこうタイプが types から除外される"""
     battle = t.start_battle(
         team0=[Pokemon("ムクホーク", move_names=["はねやすめ"])],
@@ -138,7 +108,6 @@ def test_はねやすめ_volatile中はひこうタイプが除外される():
 
 
 def test_はねやすめ_ターン終了でvolatileが解除される():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """はねやすめ: ターン終了時に volatile が解除される"""
     battle = t.start_battle(
         team0=[Pokemon("ムクホーク", move_names=["はねやすめ"])],
@@ -157,7 +126,6 @@ def test_はねやすめ_ターン終了でvolatileが解除される():
 
 
 def test_はねやすめ_ターン終了でひこうタイプが復帰する():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """はねやすめ: ターン終了時にひこうタイプが復帰する"""
     battle = t.start_battle(
         team0=[Pokemon("ムクホーク", move_names=["はねやすめ"])],
@@ -229,7 +197,6 @@ def test_はねやすめ_ひこうタイプ持ちにvoltatile付与される():
 
 
 def test_はねやすめ_交代後にremoved_typesがリセットされる():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """はねやすめ: 交代後に removed_types がリセットされること"""
     battle = t.start_battle(
         team0=[Pokemon("ムクホーク", move_names=["はねやすめ"]), Pokemon("カビゴン")],
@@ -249,79 +216,39 @@ def test_はねやすめ_交代後にremoved_typesがリセットされる():
     assert not mon.has_volatile("はねやすめ")
 
 
-def test_ハバネロエキス_こうげき2段階上がる():
-    # TODO : 発動前後の状態の組み合わせをパラメタライズで網羅的にテストする
-    """ハバネロエキス: 相手のこうげきランクが2段階上がる"""
+@pytest.mark.parametrize(
+    "atk_init,def_init,atk_exp,def_exp",
+    [
+        # 通常: A+2、B-2
+        (0, 0, 2, -2),
+        # こうげき上限: Aはキャップ、Bは-2
+        (6, 0, 6, -2),
+        # ぼうぎょ下限: Bはフロア、Aは+2
+        (0, -6, 2, -6),
+        # 両方限界: どちらも変化できないので失敗（変化なし）
+        (6, -6, 6, -6),
+        # こうげき上限まで1段階: Aはキャップぴったり、Bは-2
+        (5, 0, 6, -2),
+        # ぼうぎょ下限まで1段階: Bは下限ぴったり、Aは+2
+        (0, -5, 2, -6),
+        # 逆側の極端: どちらも変化する
+        (-6, 6, -4, 4),
+    ],
+)
+def test_ハバネロエキス_発動前後のランク変化(atk_init, def_init, atk_exp, def_exp):
+    """ハバネロエキス: 発動前後のこうげき・ぼうぎょランクの変化を網羅的に確認する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     defender = battle.actives[1]
-    assert defender.rank["A"] == 0
+    defender.rank["A"] = atk_init
+    defender.rank["B"] = def_init
     t.run_move(battle, 0)
 
-    assert defender.rank["A"] == 2
-
-
-def test_ハバネロエキス_こうげき最大かつぼうぎょ最低なら失敗():
-    """ハバネロエキス: こうげきが+6かつぼうぎょが-6なら技が失敗しランクは変化しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    defender.rank["A"] = 6
-    defender.rank["B"] = -6
-    t.run_move(battle, 0)
-
-    assert defender.rank["A"] == 6
-    assert defender.rank["B"] == -6
-
-
-def test_ハバネロエキス_こうげき最大でもぼうぎょは下がる():
-    """ハバネロエキス: こうげきがすでに+6でも、ぼうぎょは2段階下がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    defender.rank["A"] = 6
-    t.run_move(battle, 0)
-
-    assert defender.rank["A"] == 6
-    assert defender.rank["B"] == -2
-
-
-def test_ハバネロエキス_ぼうぎょ2段階下がる():
-    """ハバネロエキス: 相手のぼうぎょランクが2段階下がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    assert defender.rank["B"] == 0
-    t.run_move(battle, 0)
-
-    assert defender.rank["B"] == -2
-
-
-def test_ハバネロエキス_ぼうぎょ最低でもこうげきは上がる():
-    """ハバネロエキス: ぼうぎょがすでに-6でも、こうげきは2段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    defender.rank["B"] = -6
-    t.run_move(battle, 0)
-
-    assert defender.rank["A"] == 2
-    assert defender.rank["B"] == -6
+    assert defender.rank["A"] == atk_exp
+    assert defender.rank["B"] == def_exp
 
 
 def test_はらだいこ_こうげきすでに最大なら失敗():
@@ -351,22 +278,6 @@ def test_はらだいこ_こうげき最大化しHP半分消費():
 
     assert attacker.rank["A"] == 6
     assert attacker.hp == max_hp - (max_hp // 2)
-
-
-def test_バトンタッチ_こんらんが交代先に引き継がれる():
-    # TODO : 揮発状態の引き継ぎ可否をパラメタライズで網羅的にテストする
-    """バトンタッチ: こんらん状態が交代先ポケモンに引き継がれる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["バトンタッチ"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"こんらん": 3},
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    battle.run_interrupt_switch(Interrupt.PIVOT)
-
-    new_mon = battle.actives[0]
-    assert new_mon.has_volatile("こんらん")
 
 
 def test_バトンタッチ_とらわれ状態でも使用できる():
@@ -422,34 +333,60 @@ def test_バトンタッチ_ランクが交代先に引き継がれる():
     assert new_mon.rank["S"] == 2
 
 
-def test_バトンタッチ_交代が実行される():
-    # TODO : 他のテストですでに検証されているので不要
-    """バトンタッチ: PIVOT 後に交代コマンドを処理すると控えが場に出る"""
+@pytest.mark.parametrize("volatile_name", [
+    "アクアリング",
+    "きゅうしょアップ",
+    "こんらん",
+    "しおづけ",
+    "じゅうでん",
+    "ちいさくなる",
+    "ちょうはつ",
+    "たくわえる",
+    "でんじふゆう",
+    "ねをはる",
+    "まるくなる",
+    "やどりぎのタネ",
+])
+def test_バトンタッチ_引き継ぎ対象volatileが交代先に引き継がれる(volatile_name):
+    """バトンタッチ: 引き継ぎ対象の揮発性状態が交代先ポケモンに引き継がれる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["バトンタッチ"]), Pokemon("ライチュウ")],
         team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    raichu = battle.player_states[battle.players[0]].team[1]
-    t.run_move(battle, 0)
-    battle.run_interrupt_switch(Interrupt.PIVOT)
-
-    assert battle.actives[0] is raichu
-
-
-def test_バトンタッチ_引き継ぎ対象外のvolatileは引き継がれない():
-    """バトンタッチ: にげられないなど引き継ぎ対象外の volatile は交代先に引き継がれない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["バトンタッチ"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"にげられない": 3},
+        volatile0={volatile_name: 3},
         accuracy=100,
     )
     t.run_move(battle, 0)
     battle.run_interrupt_switch(Interrupt.PIVOT)
 
     new_mon = battle.actives[0]
-    assert not new_mon.has_volatile("にげられない")
+    assert new_mon.has_volatile(volatile_name)
+
+
+@pytest.mark.parametrize("volatile_name", [
+    "にげられない",
+    "バインド",
+    "ねむけ",
+    "のろい",
+    "おんねん",
+    "いちゃもん",
+    "ふういん",
+    "あめまみれ",
+    "タールショット",
+    "みちづれ",
+])
+def test_バトンタッチ_引き継ぎ対象外volatileは交代先に引き継がれない(volatile_name):
+    """バトンタッチ: 引き継ぎ対象外の揮発性状態は交代先ポケモンに引き継がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["バトンタッチ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={volatile_name: 3},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    battle.run_interrupt_switch(Interrupt.PIVOT)
+
+    new_mon = battle.actives[0]
+    assert not new_mon.has_volatile(volatile_name)
 
 
 def test_バトンタッチ_控えがいない場合は失敗する():
@@ -464,6 +401,36 @@ def test_バトンタッチ_控えがいない場合は失敗する():
 
     # 控えがいないので失敗し、PIVOT は設定されない
     assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+@pytest.mark.parametrize("attacker_name, defender_name", [
+    # A合計奇数（切り捨てあり）、C合計奇数（切り捨てあり）
+    ("ピカチュウ", "カビゴン"),
+    # A合計偶数（切り捨てなし）、C合計偶数（切り捨てなし）
+    ("イーブイ", "ラプラス"),
+    # A合計偶数（切り捨てなし）、C合計奇数（切り捨てあり）: フシギダネA=69 vs ピカチュウA=75→sum=144, C=85 vs C=70→sum=155
+    ("フシギダネ", "ピカチュウ"),
+    # A合計奇数（切り捨てあり）、C合計偶数（切り捨てなし）: コイルA=55 vs カビゴンA=130→sum=185, C=115 vs C=85→sum=200
+    ("コイル", "カビゴン"),
+])
+def test_パワーシェア_こうげきとくこうが平均化される(attacker_name: str, defender_name: str):
+    """パワーシェア: 使用者と相手のこうげき・とくこう実数値が平均値（切り捨て）になること"""
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, move_names=["パワーシェア"])],
+        team1=[Pokemon(defender_name)],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 使用前の平均値を計算（A=インデックス1、C=インデックス3）
+    expected_a = (attacker._stats_manager.stats[1] + defender._stats_manager.stats[1]) // 2
+    expected_c = (attacker._stats_manager.stats[3] + defender._stats_manager.stats[3]) // 2
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[1] == expected_a
+    assert defender._stats_manager.stats[1] == expected_a
+    assert attacker._stats_manager.stats[3] == expected_c
+    assert defender._stats_manager.stats[3] == expected_c
 
 
 def test_パワーシェア_ぼうぎょとくぼうは変化しない():
@@ -502,41 +469,6 @@ def test_パワーシェア_ランク変化は変更されない():
     assert attacker.rank["C"] == 0
     assert defender.rank["A"] == 0
     assert defender.rank["C"] == 0
-
-
-def test_パワーシェア_使用者と相手のこうげきが平均化される():
-    # TODO : こうげき・とくこうの平均化をパラメタライズで網羅的にテストする。ガードシェアも同様。
-    """パワーシェア: 使用者と相手のこうげき実数値が平均値（切り捨て）になること"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    # 使用前の平均値を計算
-    expected_a = (attacker._stats_manager.stats[1] + defender._stats_manager.stats[1]) // 2
-    t.run_move(battle, 0)
-
-    assert attacker._stats_manager.stats[1] == expected_a
-    assert defender._stats_manager.stats[1] == expected_a
-
-
-def test_パワーシェア_使用者と相手のとくこうが平均化される():
-    """パワーシェア: 使用者と相手のとくこう実数値が平均値（切り捨て）になること"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    # 使用前の平均値を計算
-    expected_c = (attacker._stats_manager.stats[3] + defender._stats_manager.stats[3]) // 2
-    t.run_move(battle, 0)
-
-    assert attacker._stats_manager.stats[3] == expected_c
-    assert defender._stats_manager.stats[3] == expected_c
 
 
 def test_パワースワップ_ACランクが双方で入れ替わる():
@@ -719,47 +651,36 @@ def test_ひかりのかべ_自陣営に5ターン設置される():
     assert side.fields["ひかりのかべ"].count == 5
 
 
-def test_ビルドアップ_こうげきとぼうぎょ1段階ずつ上がる():
-    # TODO : 発動前後の状態の組み合わせをパラメタライズで網羅的にテストする
-    """ビルドアップ: 使用すると自分のこうげきとぼうぎょランクが1段階ずつ上がる"""
+@pytest.mark.parametrize(
+    "atk_init,def_init,atk_exp,def_exp",
+    [
+        # 通常: A+1、B+1
+        (0, 0, 1, 1),
+        # こうげき上限: Aはキャップ、Bは+1
+        (6, 0, 6, 1),
+        # ぼうぎょ上限: Bはキャップ、Aは+1
+        (0, 6, 1, 6),
+        # 両方上限: どちらも変化できないので失敗（変化なし）
+        (6, 6, 6, 6),
+        # 両方上限まで1段階: どちらも上限ぴったりになる
+        (5, 5, 6, 6),
+        # 最低ランクから上昇
+        (-6, -6, -5, -5),
+    ],
+)
+def test_ビルドアップ_発動前後のランク変化(atk_init, def_init, atk_exp, def_exp):
+    """ビルドアップ: 発動前後のこうげき・ぼうぎょランクの変化を網羅的に確認する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ビルドアップ"])],
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    assert attacker.rank["A"] == 0
-    assert attacker.rank["B"] == 0
+    attacker.rank["A"] = atk_init
+    attacker.rank["B"] = def_init
     t.run_move(battle, 0)
 
-    assert attacker.rank["A"] == 1
-    assert attacker.rank["B"] == 1
-
-
-def test_ビルドアップ_こうげき最大でもぼうぎょは上昇する():
-    """ビルドアップ: こうげきがすでに+6でも、ぼうぎょは上昇する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ビルドアップ"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["A"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["A"] == 6
-    assert attacker.rank["B"] == 1
-
-
-def test_フェアリーロック_ゴーストタイプも交代できない():
-    # TODO : これはフィールドの責務なので技側でテストすべきではない
-    """フェアリーロック: ゴーストタイプのポケモンも交代できない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("ゲンガー")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-
-    assert not t.can_switch(battle, 0)
+    assert attacker.rank["A"] == atk_exp
+    assert attacker.rank["B"] == def_exp
 
 
 def test_フェアリーロック_すでに有効なら失敗する():
@@ -774,21 +695,6 @@ def test_フェアリーロック_すでに有効なら失敗する():
     t.run_move(battle, 0)
 
     assert battle.global_manager.fields["フェアリーロック"].count == count_before
-
-
-def test_フェアリーロック_ターン終了でフィールドが解除される():
-    # TODO : これはフィールドの責務なので技側でテストすべきではない
-    """フェアリーロック: ターン終了後にグローバルフィールドが解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.global_manager.fields["フェアリーロック"].is_active
-
-    t.end_turn(battle)
-    assert not battle.global_manager.fields["フェアリーロック"].is_active
 
 
 def test_フェアリーロック_使用後にグローバルフィールドが有効になる():
@@ -813,34 +719,6 @@ def test_フェアリーロック_使用者側が交代できない():
     t.run_move(battle, 0)
 
     assert not t.can_switch(battle, 0)
-
-
-def test_フェアリーロック_相手側も交代できない():
-    # TODO : これはフィールドの責務なので技側でテストすべきではない
-    """フェアリーロック: フェアリーロック中は相手側のポケモンも交代できない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-
-    assert not t.can_switch(battle, 1)
-
-
-def test_フェアリーロック_解除後は交代できる():
-    # TODO : これはフィールドの責務なので技側でテストすべきではない
-    """フェアリーロック: フィールド解除後は双方が交代できるようになる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    t.end_turn(battle)
-
-    assert t.can_switch(battle, 0)
-    assert t.can_switch(battle, 1)
 
 
 def test_フラフラダンス_こんらん状態を付与する():
@@ -872,21 +750,7 @@ def test_フラフラダンス_すでにこんらん状態なら失敗():
     assert defender.volatiles["こんらん"].count == old_count
 
 
-def test_ほえる_きゅうばん特性で無効化される():
-    # TODO : これは特性きゅうばんの責務なので技側でテストすべきではない
-    """ほえる: 相手がきゅうばん特性を持つ場合、強制交代が無効化される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
-        team1=[Pokemon("カビゴン", ability_name="きゅうばん"), Pokemon("ヤドン")],
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is defender_before
-
-
 def test_ほえる_ねをはる状態の相手には失敗する():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """ほえる: 相手がねをはる状態の場合、強制交代が無効化される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
@@ -922,64 +786,6 @@ def test_ほえる_控えポケモンがいる場合に交代が発生する():
     t.run_move(battle, 0)
 
     assert battle.actives[1] is not defender_before
-
-
-def test_ほおばる_HP閾値より上ではオボンのみの回復が発動しない():
-    # TODO : ほおばるの仕様として、きのみ本来の発動条件を無視して効果を得るため、オボンのみの回復効果を得られる。仕様書から見直す。
-    """ほおばる: HPが閾値（50%）より上の場合はオボンのみの回復効果は発動しない（きのみ消費のみ）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="オボンのみ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    # HPを満タンのままにする（閾値より上）
-    assert attacker.hp == attacker.max_hp
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-
-    # HPは変化しないがきのみは消費され、ぼうぎょは上がる
-    assert attacker.hp == hp_before
-    assert not attacker.item.is_berry()
-    assert attacker.rank["B"] == 2
-
-
-def test_ほおばる_HP閾値以下でオボンのみの回復が発動する():
-    """ほおばる: HPが閾値（50%）以下のときオボンのみの回復効果が発動する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="オボンのみ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    # HPを50%以下に直接設定（modify_hpを使うとオボンのみが先に発動してしまうため）
-    attacker.hp = attacker.max_hp // 4
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-
-    # オボンのみの回復（最大HPの1/4）が発動し、HPが増加している
-    assert attacker.hp > hp_before
-
-
-def test_ほおばる_オボンのみでHP半分以下なら回復する():
-    """ほおばる + オボンのみ: HP1/2以下ならオボンのみが通常通り発動してHPが回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="オボンのみ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    # HPを50%以下に直接設定
-    attacker.hp = attacker.max_hp // 4
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-
-    # オボンのみの回復効果が発動する（HP閾値以下のため）
-    assert attacker.hp > hp_before
-    # オボンのみは消費される
-    assert not attacker.item.is_berry()
-    # ぼうぎょも上がる
-    assert attacker.rank["B"] == 2
 
 
 def test_ほおばる_きのみが消費される():
@@ -1020,29 +826,6 @@ def test_ほおばる_きのみを持っている場合はぼうぎょが2段階
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == 2
-
-
-def test_ほおばる_キーのみでこんらんが治る():
-    # TODO : 通常ほおばるを使う前にきのみが発動してしまうため、このようなテストは不要。同種のテストも削除する。
-    """ほおばる + キーのみ: こんらん状態のポケモンがほおばるを使うとキーのみが発動してこんらんが治る"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほおばる"], item_name="キーのみ")],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"こんらん": 3},
-        accuracy=100,
-    )
-    # こんらんによる行動失敗を防ぐ（確率的に行動失敗しないよう固定）
-    battle.test_option.trigger_volatile = False
-    attacker = battle.actives[0]
-    assert attacker.has_volatile("こんらん")
-    t.run_move(battle, 0)
-
-    # キーのみが発動してこんらんが治る
-    assert not attacker.has_volatile("こんらん")
-    # キーのみは消費される
-    assert not attacker.item.is_berry()
-    # ぼうぎょも上がる
     assert attacker.rank["B"] == 2
 
 
@@ -1110,25 +893,6 @@ def test_ほろびのうた_3ターン後に瀕死になる():
     assert attacker.fainted
 
 
-def test_ほろびのうた_ターン終了でカウントが減少する():
-    # TODO : これは揮発状態の責務なので技側でテストすべきではない
-    """ほろびのうた: ターン終了ごとに count が1ずつ減少する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-    assert attacker.volatiles["ほろびのうた"].count == 3
-
-    t.end_turn(battle)
-    assert attacker.volatiles["ほろびのうた"].count == 2
-
-    t.end_turn(battle)
-    assert attacker.volatiles["ほろびのうた"].count == 1
-
-
 def test_ほろびのうた_使用者にもvolatileが付与される():
     """ほろびのうた: 使用者自身にも count=3 の volatile が付与される"""
     battle = t.start_battle(
@@ -1174,27 +938,6 @@ def test_ほろびのうた_相手にもvolatileが付与される():
 
     assert defender.has_volatile("ほろびのうた")
     assert defender.volatiles["ほろびのうた"].count == 3
-
-
-def test_ほろびのうた_相手も3ターン後に瀕死になる():
-    # TODO : これは揮発状態の責務なので技側でテストすべきではない
-    """ほろびのうた: 相手も count=3 から3ターン経過するとひんしになる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    t.end_turn(battle)
-    assert defender.alive
-
-    t.end_turn(battle)
-    assert defender.alive
-
-    t.end_turn(battle)
-    assert defender.fainted
 
 
 def test_ほろびのうた_自分だけ状態なら相手に付与できる():

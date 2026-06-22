@@ -1,23 +1,33 @@
 """変化技ハンドラの単体テスト（ま行）。"""
 
+import pytest
+
 from jpoke import Pokemon
 from .. import test_utils as t
 
 
-def test_まきびし_すでに設置済みなら失敗():
-    # TODO : まきびしはcount=3まで累積できる。countをパラメタライズでまとめてテストする。
-    """まきびし: すでにまきびしが設置済みなら失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["まきびし"])],
-        team1=[Pokemon("カビゴン")],
-        side1={"まきびし": 1},
-    )
+@pytest.mark.parametrize("initial_count,expected_count", [
+    (0, 1),  # 未設置 → 1層目
+    (1, 2),  # 1層 → 2層
+    (2, 3),  # 2層 → 3層（最大）
+    (3, 3),  # 最大層では変化なし（失敗）
+])
+def test_まきびし_カウント累積(initial_count: int, expected_count: int):
+    """まきびし: count=0~3の各状態から使用したときのカウント変化を検証する"""
+    if initial_count == 0:
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["まきびし"])],
+            team1=[Pokemon("カビゴン")],
+        )
+    else:
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["まきびし"])],
+            team1=[Pokemon("カビゴン")],
+            side1={"まきびし": initial_count},
+        )
     side = battle.get_side(battle.actives[1])
     t.run_move(battle, 0)
-
-    # カウントは変わらない
-    assert side.fields["まきびし"].is_active
-    assert side.fields["まきびし"].count == 1
+    assert side.fields["まきびし"].count == expected_count
 
 
 def test_まきびし_相手陣営に設置される():
@@ -251,34 +261,36 @@ def test_ミラータイプ_相手のタイプをコピーする():
     assert attacker.move_override_types == ["みず", "あく"]
 
 
-def test_めいそう_とくこうととくぼう1段階ずつ上がる():
-    # TODO : 発動前後の状態の組み合わせをパラメタライズしてまとめてテストする
-    """めいそう: 使用すると自分のとくこうとぼうぎょランクが1段階ずつ上がる"""
+@pytest.mark.parametrize(
+    "spa_init,spd_init,spa_exp,spd_exp",
+    [
+        # 通常: C+1、D+1
+        (0, 0, 1, 1),
+        # とくこう上限: Cはキャップ、Dは+1
+        (6, 0, 6, 1),
+        # とくぼう上限: Dはキャップ、Cは+1
+        (0, 6, 1, 6),
+        # 両方上限: どちらも変化できないので失敗（変化なし）
+        (6, 6, 6, 6),
+        # 両方上限まで1段階: どちらも上限ぴったりになる
+        (5, 5, 6, 6),
+        # 最低ランクから上昇
+        (-6, -6, -5, -5),
+    ],
+)
+def test_めいそう_発動前後のランク変化(spa_init, spd_init, spa_exp, spd_exp):
+    """めいそう: 発動前後のとくこう・とくぼうランクの変化を網羅的に確認する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["めいそう"])],
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    assert attacker.rank["C"] == 0
-    assert attacker.rank["D"] == 0
+    attacker.rank["C"] = spa_init
+    attacker.rank["D"] = spd_init
     t.run_move(battle, 0)
 
-    assert attacker.rank["C"] == 1
-    assert attacker.rank["D"] == 1
-
-
-def test_めいそう_とくこう最大でもとくぼうは上昇する():
-    """めいそう: とくこうがすでに+6でも、とくぼうは上昇する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["めいそう"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["C"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["C"] == 6
-    assert attacker.rank["D"] == 1
+    assert attacker.rank["C"] == spa_exp
+    assert attacker.rank["D"] == spd_exp
 
 
 def test_メロメロ_すでにメロメロ状態なら失敗():
@@ -312,7 +324,6 @@ def test_メロメロ_異なる性別なら付与される():
 
 
 def test_もりののろい_くさタイプが付与される():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """もりののろい: 使用後に defender が「くさ」タイプになること"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["もりののろい"])],
@@ -354,7 +365,6 @@ def test_もりののろい_もりののろい状態を付与する():
 
 
 def test_もりののろい_交代後にくさタイプがリセットされる():
-    # TODO : これは揮発状態の仕様なので技側でテストすべきではない
     """もりののろい: 交代後に added_types がリセットされること"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["もりののろい"])],

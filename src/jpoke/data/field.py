@@ -395,6 +395,7 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "まきびし": FieldData(
+        max_count=3,
         handlers={
             Event.ON_SWITCH_IN: h.FieldHandler(
                 h.まきびし_damage,
@@ -403,6 +404,7 @@ FIELDS: dict[str, FieldData] = {
         },
     ),
     "どくびし": FieldData(
+        max_count=2,
         handlers={
             Event.ON_SWITCH_IN: h.FieldHandler(
                 h.どくびし_poison,

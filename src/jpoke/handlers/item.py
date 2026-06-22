@@ -124,7 +124,8 @@ def _heal_berry(battle: Battle,
                 heal_v: int | None = None) -> HandlerReturn:
     mon = ctx.target
     assert mon is not None
-    if mon.hp * denominator <= mon.max_hp:
+    # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
+    if mon.hp * denominator <= mon.max_hp or value >= mon.max_hp:
         if heal_r is not None:
             battle.modify_hp(mon, r=heal_r)
         else:
@@ -171,10 +172,13 @@ def _boost_on_quarter_hp(battle: Battle,
                          value: Any,
                          stat: Stat,
                          amount: int) -> HandlerReturn:
-    """1/4HP以下になった瞬間に能力を上昇させる共通処理。"""
+    """1/4HP以下になった瞬間に能力を上昇させる共通処理。
+
+    value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    """
     mon = ctx.target
     assert mon is not None
-    if mon.hp * 4 <= mon.max_hp:
+    if mon.hp * 4 <= mon.max_hp or value >= mon.max_hp:
         battle.modify_stats(mon, {stat: amount})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
