@@ -236,19 +236,20 @@ def test_のろい_ゴーストタイプ_HP1でも呪いは成功し相手にの
     assert defender.has_volatile("のろい")
 
 
-def test_のろい_ゴーストタイプ_HPが半分消費される():
-    # TODO : test_のろい_ゴーストタイプ_相手にのろい状態を付与する、と統合
-    """のろい（呪い）: ゴーストタイプが使うと最大HPの半分（切り捨て）を消費する"""
+def test_のろい_ゴーストタイプ_HP消費と相手へのろい付与():
+    """のろい（呪い）: ゴーストタイプが使うと最大HPの半分を消費し相手にのろい状態を付与する"""
     battle = t.start_battle(
         team0=[Pokemon("ゲンガー", move_names=["のろい"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     mon = battle.actives[0]
+    defender = battle.actives[1]
     max_hp = mon.max_hp
     t.run_move(battle, 0)
 
     assert mon.hp == max_hp - max_hp // 2
+    assert defender.has_volatile("のろい")
 
 
 def test_のろい_ゴーストタイプ_すでにのろい状態なら失敗():
@@ -265,19 +266,6 @@ def test_のろい_ゴーストタイプ_すでにのろい状態なら失敗():
 
     # 失敗のためHPは消費されない
     assert mon.hp == hp_before
-
-
-def test_のろい_ゴーストタイプ_相手にのろい状態を付与する():
-    """のろい（呪い）: ゴーストタイプが使うと相手がのろい状態になる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert defender.has_volatile("のろい")
 
 
 def test_のろい_ゴーストタイプ以外_こうげきぼうぎょ上がりすばやさ下がる():

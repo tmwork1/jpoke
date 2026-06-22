@@ -265,6 +265,50 @@ def test_スレッドトラップ_非接触では素早さが下がらない():
     assert battle.actives[0].rank["S"] == 0
 
 
+def test_そうでん_ターン終了時に状態が解除される():
+    """そうでん: ターン終了時（ON_TURN_END）にそうでん状態が自動で解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "そうでん")
+    assert attacker.has_volatile("そうでん")
+
+    t.end_turn(battle)
+
+    assert not attacker.has_volatile("そうでん")
+
+
+def test_そうでん_わるあがきはでんきタイプに変換されない():
+    """そうでん: そうでん状態でもわるあがきはでんきタイプに変換されない（タイプは空文字のまま）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "そうでん")
+    battle.run_move(attacker, Move("わるあがき"))
+
+    assert battle.move_executor.move_type == ""
+
+
+def test_そうでん_状態中の攻撃技がでんきタイプになる():
+    """そうでん: そうでん状態で使う攻撃技はでんきタイプに変換される"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["そうでん"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "そうでん")
+    assert attacker.has_volatile("そうでん")
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_type == "でんき"
+
+
 @pytest.mark.parametrize("boost_move_name", ["かぜおこし", "たつまき"])
 def test_そらをとぶ_かぜおこしたつまきの威力が2倍になる(boost_move_name):
     """そらをとぶ状態の相手にかぜおこし・たつまきを使うと威力補正が2倍（8192）になる"""

@@ -565,32 +565,36 @@ def test_こうごうせい_通常天候で2分の1回復():
     assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
-def test_コスモパワー_ぼうぎょととくぼう1段階ずつ上がる():
-    """コスモパワー: 使用すると自分のぼうぎょととくぼうランクが1段階ずつ上がる"""
+@pytest.mark.parametrize(
+    "def_init,spd_init,def_exp,spd_exp",
+    [
+        # 通常: B+1、D+1
+        (0, 0, 1, 1),
+        # ぼうぎょ上限: Bはキャップ、Dは+1
+        (6, 0, 6, 1),
+        # とくぼう上限: Dはキャップ、Bは+1
+        (0, 6, 1, 6),
+        # 両方上限: どちらも変化できないので失敗（変化なし）
+        (6, 6, 6, 6),
+        # 両方上限まで1段階: どちらも上限ぴったりになる
+        (5, 5, 6, 6),
+        # 最低ランクから上昇
+        (-6, -6, -5, -5),
+    ],
+)
+def test_コスモパワー_発動前後のランク変化(def_init, spd_init, def_exp, spd_exp):
+    """コスモパワー: 発動前後のぼうぎょ・とくぼうランクの変化を網羅的に確認する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["コスモパワー"])],
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    assert attacker.rank["B"] == 0
-    assert attacker.rank["D"] == 0
+    attacker.rank["B"] = def_init
+    attacker.rank["D"] = spd_init
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == 1
-    assert attacker.rank["D"] == 1
-
-
-def test_コスモパワー_ぼうぎょ最大でもとくぼうは上昇する():
-    """コスモパワー: ぼうぎょがすでに+6でも、とくぼうは上昇する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["コスモパワー"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["B"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["D"] == 1
+    assert attacker.rank["B"] == def_exp
+    assert attacker.rank["D"] == spd_exp
 
 
 def test_こらえる_HP1のとき致死ダメージでHP1残る():

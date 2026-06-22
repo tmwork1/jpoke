@@ -452,27 +452,27 @@ def test_てんねん_防御側はACランク無視(move_name, stat):
 
 
 def test_てんのめぐみ_追加効果確率が2倍になる():
-    """てんのめぐみ: 30%追加効果が2倍（60%）になることを、でんじほうを使って確認する。
-    乱数0.45はてんのめぐみなし（30%）では発動しないが、てんのめぐみあり（60%）では発動する。"""
-    # てんのめぐみなし: 乱数0.45ではまひが発動しない（境界: 0.30未満で発動）
+    """てんのめぐみ: 20%追加効果が2倍（40%）になることを、シャドーボールを使って確認する。
+    乱数0.35はてんのめぐみなし（20%）では発動しないが、てんのめぐみあり（40%）では発動する。"""
+    # てんのめぐみなし: 乱数0.35ではD低下が発動しない（境界: 0.20未満で発動）
     without_megumi = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["でんじほう"])],
+        team0=[Pokemon("ピカチュウ", move_names=["シャドーボール"])],
         team1=[Pokemon("ゼニガメ")],
         accuracy=100,
     )
-    without_megumi.random.random = lambda: 0.45
+    without_megumi.random.random = lambda: 0.35
     t.run_move(without_megumi, 0)
-    assert not without_megumi.actives[1].ailment.is_active
+    assert without_megumi.actives[1].rank["D"] == 0
 
-    # てんのめぐみあり: 乱数0.45でまひが発動する（確率2倍で境界: 0.60未満で発動）
+    # てんのめぐみあり: 乱数0.35でD低下が発動する（確率2倍で境界: 0.40未満で発動）
     with_megumi = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="てんのめぐみ", move_names=["でんじほう"])],
+        team0=[Pokemon("ピカチュウ", ability_name="てんのめぐみ", move_names=["シャドーボール"])],
         team1=[Pokemon("ゼニガメ")],
         accuracy=100,
     )
-    with_megumi.random.random = lambda: 0.45
+    with_megumi.random.random = lambda: 0.35
     t.run_move(with_megumi, 0)
-    assert with_megumi.actives[1].ailment.is_active
+    assert with_megumi.actives[1].rank["D"] == -1
 
 
 def test_でんきにかえる_被弾でじゅうでん状態になる():

@@ -119,3 +119,78 @@ def test_はやてがえし_通常攻撃技には失敗():
 
     assert battle.actives[1].hp == before_foe_hp
     assert battle.actives[0].hp < before_ally_hp
+
+
+def test_バリアーラッシュ_防御1段階上昇が発動する():
+    """バリアーラッシュ: 命中時に使用者のBが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["バリアーラッシュ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["B"] == 1
+
+
+def test_はがねのつばさ_防御1段階上昇が発動する():
+    """はがねのつばさ: 確率10%で使用者のBが1段階上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("スコルピ", move_names=["はがねのつばさ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert attacker.rank["B"] == 1
+
+
+def test_ぶちかまし_防御と特防が各1段階低下する():
+    """ぶちかまし: 命中時に使用者のBとDが各1段階低下する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ぶちかまし"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["B"] == -1
+    assert attacker.rank["D"] == -1
+
+
+def test_ホイールスピン_素早さ2段階低下が発動する():
+    """ホイールスピン: 命中時に使用者のSが2段階低下する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドータクン", move_names=["ホイールスピン"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["S"] == -2
+
+
+def test_ほのおのまい_特攻1段階上昇が発動する():
+    """ほのおのまい: 確率50%で使用者のCが1段階上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ほのおのまい"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert attacker.rank["C"] == 1
+
+
+def test_フレアソング_特攻1段階上昇が発動する():
+    """フレアソング: 命中時に使用者のCが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニャオハ", move_names=["フレアソング"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["C"] == 1

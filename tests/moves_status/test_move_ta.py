@@ -4,12 +4,10 @@ import pytest
 from jpoke import Pokemon
 from .. import test_utils as t
 
-# TODO : 「のみこむ」のテストはtest_move_na.pyに移動
-
 
 @pytest.mark.parametrize("count", [1, 2, 3])
 def test_たくわえる_N回使用でカウントがNになる(count):
-    """たくわえる: N回使用するとたくわえカウントがNになる（N=1~3）"""
+    """たくわえる: N回使用するとたくわえカウントがNになり、ぼうぎょとくぼうがN段階上がる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
         team1=[Pokemon("カビゴン")],
@@ -20,6 +18,8 @@ def test_たくわえる_N回使用でカウントがNになる(count):
 
     assert attacker.has_volatile("たくわえる")
     assert attacker.volatiles["たくわえる"].count == count
+    assert attacker.rank["B"] == count
+    assert attacker.rank["D"] == count
 
 
 def test_たくわえる_カウント3で失敗する():
@@ -36,20 +36,6 @@ def test_たくわえる_カウント3で失敗する():
     assert attacker.volatiles["たくわえる"].count == 3
 
 
-def test_たくわえる_ぼうぎょとくぼうが上がる():
-    # TODO : カウントアップテストに統合
-    """たくわえる: 使用するとぼうぎょとくぼうがそれぞれ1段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert attacker.rank["B"] == 1
-    assert attacker.rank["D"] == 1
-
-
 def test_たてこもる_ぼうぎょ2段階上がる():
     """たてこもる: 使用すると自分のぼうぎょランクが2段階上がる"""
     battle = t.start_battle(
@@ -61,20 +47,6 @@ def test_たてこもる_ぼうぎょ2段階上がる():
     t.run_move(battle, 0)
 
     assert attacker.rank["B"] == 2
-
-
-def test_たてこもる_ぼうぎょ最大なら変化なし():
-    # TODO : ランクのクリップは仕様なので技側でテスト不要
-    """たてこもる: ぼうぎょがすでに+6なら効果がない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["たてこもる"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["B"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["B"] == 6
 
 
 def test_タールショット_すでにタールショット状態でもSは下がる():
@@ -268,59 +240,6 @@ def test_つぶらなひとみ_相手のこうげき1段階下がる():
     assert defender.rank["A"] == -1
 
 
-def test_つぼをつく_かいひりつが選ばれた場合ランクが2段階上がる():
-    # TODO : 上がる能力を指定せずとも、どれかひとつの能力が2段階上がっているかを検証すればよい。テストはひとつでOK.
-    """つぼをつく: 回避率が選ばれた場合、自分の回避率ランクが2段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.random.choice = lambda seq: "EVA"
-    t.run_move(battle, 0)
-
-    assert attacker.rank["EVA"] == 2
-
-
-def test_つぼをつく_こうげきが選ばれた場合ランクが2段階上がる():
-    """つぼをつく: こうげきが選ばれた場合、自分のこうげきランクが2段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.random.choice = lambda seq: "A"
-    t.run_move(battle, 0)
-
-    assert attacker.rank["A"] == 2
-
-
-def test_つぼをつく_すばやさが選ばれた場合ランクが2段階上がる():
-    """つぼをつく: すばやさが選ばれた場合、自分のすばやさランクが2段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.random.choice = lambda seq: "S"
-    t.run_move(battle, 0)
-
-    assert attacker.rank["S"] == 2
-
-
-def test_つぼをつく_めいちゅうりつが選ばれた場合ランクが2段階上がる():
-    """つぼをつく: 命中率が選ばれた場合、自分の命中率ランクが2段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.random.choice = lambda seq: "ACC"
-    t.run_move(battle, 0)
-
-    assert attacker.rank["ACC"] == 2
-
-
 def test_つぼをつく_選ばれない能力のランクは変化しない():
     """つぼをつく: ランダムで選ばれた1種類以外の能力ランクは変化しない"""
     battle = t.start_battle(
@@ -351,20 +270,6 @@ def test_つるぎのまい_こうげき2段階上がる():
     t.run_move(battle, 0)
 
     assert attacker.rank["A"] == 2
-
-
-def test_つるぎのまい_こうげき最大なら変化なし():
-    # TODO : ランクのクリップは仕様なので技側でテスト不要
-    """つるぎのまい: こうげきがすでに+6なら効果がない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つるぎのまい"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["A"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["A"] == 6
 
 
 def test_てんしのキッス_こんらん状態を付与する():
@@ -463,20 +368,6 @@ def test_とおぼえ_こうげき1段階上がる():
     assert attacker.rank["A"] == 1
 
 
-def test_とおぼえ_こうげき最大なら変化なし():
-    # TODO : ランクのクリップは仕様なので技側でテスト不要
-    """とおぼえ: こうげきがすでに+6なら効果がない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["A"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["A"] == 6
-
-
 def test_とぐろをまく_1つでも上昇できれば成功():
     """とぐろをまく: こうげきが最大でも、ぼうぎょと命中率は上昇する"""
     battle = t.start_battle(
@@ -517,20 +408,6 @@ def test_とける_ぼうぎょ2段階上がる():
     t.run_move(battle, 0)
 
     assert attacker.rank["B"] == 2
-
-
-def test_とける_ぼうぎょ最大なら変化なし():
-    # TODO : ランクのクリップは仕様なので技側でテスト不要
-    """とける: ぼうぎょがすでに+6なら効果がない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["とける"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["B"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["B"] == 6
 
 
 def test_どくのいと_すでにどく状態ならS下げのみ():
@@ -595,84 +472,3 @@ def test_どくびし_相手陣営に設置される():
 
     side = battle.get_side(battle.actives[1])
     assert side.fields["どくびし"].is_active
-
-
-def test_のみこむ_カウント0で失敗する():
-    """のみこむ: たくわえていない（カウント0）なら失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-
-    assert attacker.hp == hp_before
-
-
-@pytest.mark.parametrize("count,numerator,denominator", [
-    (1, 1, 4),
-    (2, 1, 2),
-    (3, 1, 1),
-])
-def test_のみこむ_たくわえカウントに応じて回復する(count, numerator, denominator):
-    """のみこむ: たくわえカウント1→1/4、2→1/2、3→全回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": count},
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    expected_heal = int(attacker.max_hp * numerator / denominator)
-    expected_hp = min(1 + expected_heal, attacker.max_hp)
-    t.run_move(battle, 0)
-
-    assert attacker.hp == expected_hp
-
-
-def test_のみこむ_ランク逆補正がクリアボディに阻まれない():
-    """のみこむ: ランク戻し（自分源）はクリアボディに阻まれない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="クリアボディ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 1},
-    )
-    attacker = battle.actives[0]
-    attacker.rank["B"] = 1
-    attacker.rank["D"] = 1
-    t.run_move(battle, 0)
-
-    # クリアボディでも自分源のランク低下は防げない
-    assert attacker.rank["B"] == 0
-    assert attacker.rank["D"] == 0
-
-
-def test_のみこむ_使用後にたくわえる状態が消える():
-    """のみこむ: 使用後にたくわえる揮発状態が解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 2},
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert not attacker.has_volatile("たくわえる")
-
-
-def test_のみこむ_使用後にランクが元に戻る():
-    """のみこむ: たくわえた回数分だけぼうぎょとくぼうが下がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 2},
-    )
-    attacker = battle.actives[0]
-    # たくわえカウント2相当のランクを事前に設定
-    attacker.rank["B"] = 2
-    attacker.rank["D"] = 2
-    t.run_move(battle, 0)
-
-    assert attacker.rank["B"] == 0
-    assert attacker.rank["D"] == 0

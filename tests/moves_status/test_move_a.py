@@ -121,17 +121,6 @@ def test_あまえる_defenderのこうげきが2段階下がる():
     assert defender.rank["A"] == -2
 
 
-def test_あまごい_おおひでり中は失敗する():
-    """あまごい: おおひでり中は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["あまごい"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("おおひでり", 99),
-    )
-    t.run_move(battle, 0)
-    assert battle.weather.name == "おおひでり"
-
-
 def test_あまごい_天気があめになる():
     """あまごい: 使用後に天気があめになる"""
     battle = t.start_battle(

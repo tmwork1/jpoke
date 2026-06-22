@@ -5,21 +5,6 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
-def test_なかまづくり_protectedフラグ持ちに失敗():
-    # TODO : 失敗条件をパラメタライズでまとめてテストする
-    """なかまづくり: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
-        team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    # 特性は変化しない
-    assert defender.ability.name == "アイスフェイス"
-
-
 def test_なかまづくり_uncopyableフラグ持ちを使用者が持つと失敗():
     """なかまづくり: 使用者がイリュージョン（uncopyableフラグ持ち）なら失敗する"""
     battle = t.start_battle(
@@ -32,20 +17,6 @@ def test_なかまづくり_uncopyableフラグ持ちを使用者が持つと失
 
     # 特性は変化しない
     assert defender.ability.name == "めんえき"
-
-
-def test_なかまづくり_なまけ特性の相手には失敗():
-    """なかまづくり: 対象がなまけ特性の場合は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
-        team1=[Pokemon("カビゴン", ability_name="なまけ")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    # 特性は変化しない
-    assert defender.ability.name == "なまけ"
 
 
 def test_なかまづくり_交代後に元の特性に戻る():
@@ -79,6 +50,21 @@ def test_なかまづくり_同じ特性なら失敗():
     t.run_move(battle, 0)
 
     assert defender.ability.name == original_ability
+
+
+@pytest.mark.parametrize("d_ability", ["アイスフェイス", "なまけ"])
+def test_なかまづくり_失敗条件(d_ability):
+    """なかまづくり: protectedフラグ持ちまたはなまけ特性の相手には失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は変化しない
+    assert defender.ability.name == d_ability
 
 
 def test_なかまづくり_相手の特性が使用者の特性に変わる():
@@ -120,35 +106,6 @@ def test_なまける_まんたんなら失敗():
     assert attacker.hp == attacker.max_hp
 
 
-def test_なやみのタネ_protectedフラグ持ちに失敗():
-    # TODO : 失敗条件をパラメタライズでまとめてテストする
-    """なやみのタネ: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
-        team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    # 特性は変化しない
-    assert defender.ability.name == "アイスフェイス"
-
-
-def test_なやみのタネ_なまけ特性の相手には失敗():
-    """なやみのタネ: 対象がなまけ特性の場合は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
-        team1=[Pokemon("カビゴン", ability_name="なまけ")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    # 特性は変化しない
-    assert defender.ability.name == "なまけ"
-
-
 def test_なやみのタネ_ふみん付与後はねむり系技が効かない():
     """なやみのタネ: ふみんに書き換えられた相手にはその後ねむり系技が効かない"""
     battle = t.start_battle(
@@ -164,20 +121,6 @@ def test_なやみのタネ_ふみん付与後はねむり系技が効かない(
     # ふみんになったのでねむりごなは失敗する
     t.run_move(battle, 0, move_idx=1)
     assert not defender.ailment.is_active
-
-
-def test_なやみのタネ_ふみん特性の相手には失敗():
-    """なやみのタネ: 対象がすでにふみん特性の場合は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
-        team1=[Pokemon("カビゴン", ability_name="ふみん")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    # 特性は変化しない
-    assert defender.ability.name == "ふみん"
 
 
 def test_なやみのタネ_やるき特性の相手には成功する():
@@ -213,6 +156,21 @@ def test_なやみのタネ_交代後に元の特性に戻る():
     assert defender_before.ability.name == "めんえき"
 
 
+@pytest.mark.parametrize("d_ability", ["アイスフェイス", "なまけ", "ふみん"])
+def test_なやみのタネ_失敗条件(d_ability):
+    """なやみのタネ: protectedフラグ持ち・なまけ・すでにふみんの相手には失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は変化しない
+    assert defender.ability.name == d_ability
+
+
 def test_なやみのタネ_相手の特性がふみんに変わる():
     """なやみのタネ: 使用すると相手の特性がふみんに変わる"""
     battle = t.start_battle(
@@ -224,35 +182,6 @@ def test_なやみのタネ_相手の特性がふみんに変わる():
     t.run_move(battle, 0)
 
     assert defender.ability.name == "ふみん"
-
-
-def test_なりきり_uncopyableかつprotectedフラグ持ちに失敗():
-    # TODO : 失敗条件をパラメタライズでまとめてテストする
-    """なりきり: アイスフェイス（uncopyableかつprotectedフラグ持ち）の相手には失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
-        team1=[Pokemon("カビゴン", ability_name="アイスフェイス")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    # アイスフェイスはuncopyableフラグも持つので失敗する
-    assert attacker.ability.name == "せいでんき"
-
-
-def test_なりきり_uncopyableフラグ持ちに失敗():
-    """なりきり: イリュージョン（uncopyableフラグ持ち）の相手には失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
-        team1=[Pokemon("カビゴン", ability_name="イリュージョン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    # 使用者の特性は変化しない
-    assert attacker.ability.name == "せいでんき"
 
 
 def test_なりきり_いえきで無効化された相手の特性はコピーすると空特性になる():
@@ -314,30 +243,19 @@ def test_なりきり_交代後に元の特性に戻る():
     assert attacker_before.ability.name == "せいでんき"
 
 
-def test_なりきり_通常特性をコピーできる():
-    # TODO : 他のテストですでにコピーできることは確認済みなので不要
-    """なりきり: 使用すると自分の特性が相手と同じになる"""
+@pytest.mark.parametrize("d_ability", ["アイスフェイス", "イリュージョン"])
+def test_なりきり_失敗条件(d_ability):
+    """なりきり: uncopyable/protectedフラグ持ちの相手には失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
-        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
         accuracy=100,
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.ability.name == "めんえき"
-
-
-def test_にほんばれ_おおあめ中は失敗する():
-    # TODO : 天候始動技に関するテストはtest_move__grouped.pyにまとめる
-    """にほんばれ: おおあめ中は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["にほんばれ"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("おおあめ", 99),
-    )
-    t.run_move(battle, 0)
-    assert battle.weather.name == "おおあめ"
+    # 使用者の特性は変化しない
+    assert attacker.ability.name == "せいでんき"
 
 
 def test_にほんばれ_天気がはれになる():
@@ -515,3 +433,37 @@ def test_のみこむ_たくわえなしで失敗():
 
     # HP が変わらず失敗している
     assert attacker.hp == 1
+
+
+def test_のみこむ_ランク逆補正がクリアボディに阻まれない():
+    """のみこむ: ランク戻し（自分源）はクリアボディに阻まれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="クリアボディ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.rank["B"] = 1
+    attacker.rank["D"] = 1
+    t.run_move(battle, 0)
+
+    # クリアボディでも自分源のランク低下は防げない
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0
+
+
+def test_のみこむ_使用後にランクが元に戻る():
+    """のみこむ: たくわえた回数分だけぼうぎょとくぼうが下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のみこむ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"たくわえる": 2},
+    )
+    attacker = battle.actives[0]
+    # たくわえカウント2相当のランクを事前に設定
+    attacker.rank["B"] = 2
+    attacker.rank["D"] = 2
+    t.run_move(battle, 0)
+
+    assert attacker.rank["B"] == 0
+    assert attacker.rank["D"] == 0

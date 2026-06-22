@@ -1,45 +1,33 @@
-{
+i{
   "config": {
-    "category":      "変化技",
+    "category":      "攻撃技（追加効果）",
     "plan_dir":      "docs/plan/moves",
-    "spec_hint":     "docs/spec/ の対応仕様書を参照（volatiles/, moves/, side_fields/, global_fields/ 以下に関連仕様書がある場合は必ず読む）",
+    "spec_hint":     "docs/spec/moves/_move_secondary_1.md を必ず読む。列順: move / 対象(attacker|defender) / 確率 / A / B / C / D / S / ACC / EVA / どく / まひ / やけど / ねむり / こおり / こんらん / ひるみ。0以外の値を持つ列が追加効果。\n未実装の技のみハンドラを追加する（src/jpoke/handlers/move_attack.py を読んで既存分をスキップ）。\nハンドラ登録イベント: 防御側への効果は Event.ON_HIT priority=100、攻撃側への効果は Event.ON_HIT priority=10。\nラベル secondary_effect を MoveData に追加する（既存分も確認して未付与ならまとめて追加）。",
     "progress_file": "docs/progress/move.md",
-    "test_files":    ["tests/moves_status/"],
-    "impl_extra":    "4. data/move.py の MoveData に技が未登録なら追加する",
-    "review_extra":  "",
-    "planning_slots_max": 1
+    "test_files":    [
+      "tests/moves_attack/test_move_a.py",
+      "tests/moves_attack/test_move_ka.py",
+      "tests/moves_attack/test_move_sa.py",
+      "tests/moves_attack/test_move_ta.py",
+      "tests/moves_attack/test_move_na.py",
+      "tests/moves_attack/test_move_ha.py",
+      "tests/moves_attack/test_move_ma.py",
+      "tests/moves_attack/test_move_yarawa.py"
+    ],
+    "impl_extra":    "4. data/move.py の MoveData に handlers={Event.ON_HIT: h.MoveHandler(...)} を追加する。技が MoveData に未登録なら基本データ（type/category/pp/power/accuracy/labels）も追加する。",
+    "review_extra":  "テストは技名の頭文字（五十音）に応じてファイルを選ぶ：あ行→test_move_a.py、か行→test_move_ka.py、さ行→test_move_sa.py、た行→test_move_ta.py、な行→test_move_na.py、は行→test_move_ha.py、ま行→test_move_ma.py、や・ら・わ行→test_move_yarawa.py。対象ファイルが存在しない場合は新規作成する。各技につき「副作用が発動する」テストを1件追加する（accuracy=100 固定、secondary_chance=1.0 上書き）。",
+    "planning_slots_max": 2
   },
-  "plan_queue":  [],
-  "impl_queue":  [],
-  "completed":   [
-    "あくび", "あくまのキッス", "おにび", "かいでんぱ",
-    "アクアリング", "あさのひざし", "あまごい", "あやしいひかり", "アロマミスト",
-    "いとをはく", "いばる", "うたう", "うらみ",
-    "エレキフィールド", "オーロラベール", "おいかぜ", "おたけび", "おだてる",
-    "かげぶんしん", "からをやぶる", "きあいだめ", "くすぐる", "くろいきり", "くろいまなざし",
-    "グラスフィールド", "こうごうせい", "こらえる", "コスモパワー",
-    "さいみんじゅつ", "さむいギャグ", "サイコフィールド", "しびれごな", "しっぽきり", "シンプルビーム", "しんぴのまもり", "せいちょう",
-    "ソウルビート", "すてゼリフ", "たてこもる", "ちょうのまい", "ちょうはつ",
-    "つきのひかり", "つぶらなひとみ", "つるぎのまい", "てんしのキッス", "でんじふゆう",
-    "とおせんぼう", "とおぼえ", "とぐろをまく", "とける", "どくのいと", "どくびし",
-    "なまける", "にほんばれ", "ねばねばネット", "ねをはる",
-    "はらだいこ", "ハロウィン", "ビルドアップ", "ひかりのかべ", "フラフラダンス",
-    "まきびし", "めいそう", "メロメロ", "ミストフィールド", "もりののろい",
-    "やどりぎのタネ", "ゆきげしき", "リフレクター", "りゅうのまい", "わたほうし",
-    "いえき", "いのちのしずく", "いやしのすず", "いやしのねがい", "いやしのはどう",
-    "おかたづけ", "おきみやげ", "かなしばり",
-    "ガードシェア", "ガードスワップ", "じこあんじ", "じばそうさ", "じゅうでん",
-    "スキルスワップ", "スピードスワップ", "そうでん", "たくわえる", "のみこむ", "はきだす",
-    "ちからをすいとる", "つぼをつく", "なかまづくり", "なやみのタネ", "なりきり", "ニードルガード",
-    "ねがいごと", "ねごと", "ねむる", "のろい", "はねやすめ", "ハバネロエキス", "バトンタッチ",
-    "パワーシェア", "パワースワップ", "パワートリック", "フェアリーロック", "ほえる", "ほおばる", "ほろびのうた",
-    "みずびたし", "ミラータイプ", "リサイクル"
+  "plan_queue":  [
+    "攻撃技_防御側ランク変化系",
+    "攻撃技_どく系",
+    "攻撃技_まひ系",
+    "攻撃技_やけど系",
+    "攻撃技_こおり系",
+    "攻撃技_こんらん系",
+    "攻撃技_ひるみ系"
   ],
-  "skipped_complex": ["おちゃかい", "へんしん"],
-  "skipped_doubles": [
-    "いかりのこな", "このゆびとまれ", "サイドチェンジ", "おさきにどうぞ",
-    "コーチング", "てだすけ", "ドラゴンエール", "ワイドガード", "ファストガード",
-    "さいはい", "さきおくり", "まほうのこな"
-  ],
+  "impl_queue":  ["攻撃技_攻撃側ランク変化系"],
+  "completed":   [],
   "failed":      []
 }

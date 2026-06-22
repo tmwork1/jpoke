@@ -893,18 +893,21 @@ def test_ほろびのうた_3ターン後に瀕死になる():
     assert attacker.fainted
 
 
-def test_ほろびのうた_使用者にもvolatileが付与される():
-    """ほろびのうた: 使用者自身にも count=3 の volatile が付与される"""
+def test_ほろびのうた_使用者と相手にvolatileが付与される():
+    """ほろびのうた: 使用者・相手ともに count=3 の volatile が付与される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     attacker = battle.actives[0]
+    defender = battle.actives[1]
     t.run_move(battle, 0)
 
     assert attacker.has_volatile("ほろびのうた")
     assert attacker.volatiles["ほろびのうた"].count == 3
+    assert defender.has_volatile("ほろびのうた")
+    assert defender.volatiles["ほろびのうた"].count == 3
 
 
 def test_ほろびのうた_全員すでに状態なら失敗():
@@ -923,21 +926,6 @@ def test_ほろびのうた_全員すでに状態なら失敗():
 
     # カウントが変化していない（技が失敗した）
     assert attacker.volatiles["ほろびのうた"].count == count_before
-
-
-def test_ほろびのうた_相手にもvolatileが付与される():
-    # TODO : 使用者の付与テストと統合
-    """ほろびのうた: 相手にも count=3 の volatile が付与される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert defender.has_volatile("ほろびのうた")
-    assert defender.volatiles["ほろびのうた"].count == 3
 
 
 def test_ほろびのうた_自分だけ状態なら相手に付与できる():

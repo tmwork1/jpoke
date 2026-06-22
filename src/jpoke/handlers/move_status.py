@@ -659,8 +659,8 @@ def シンプルビーム_can_apply(battle: Battle, ctx: AttackContext, value: A
 
 
 def シンプルビーム_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シンプルビームの効果: 相手の特性を「シンプル」に書き換える。"""
-    battle.change_ability(ctx.defender, "シンプル")
+    """シンプルビームの効果: 相手の特性を「たんじゅん」に書き換える。"""
+    battle.change_ability(ctx.defender, "たんじゅん")
     return HandlerReturn(value=value)
 
 

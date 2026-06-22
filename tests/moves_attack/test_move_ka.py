@@ -67,3 +67,85 @@ def test_きあいパンチ_行動前にダメージを受けず成功():
     battle.advance_turn()
 
     assert battle.actives[1].hp < before_foe_hp
+
+
+def test_ぎんいろのかぜ_全能力1段階上昇が発動する():
+    """ぎんいろのかぜ: 確率10%でA/B/C/D/Sが各1段階上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["ぎんいろのかぜ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert attacker.rank["A"] == 1
+    assert attacker.rank["B"] == 1
+    assert attacker.rank["C"] == 1
+    assert attacker.rank["D"] == 1
+    assert attacker.rank["S"] == 1
+
+
+def test_くさわけ_素早さ1段階上昇が発動する():
+    """くさわけ: 命中時に使用者のSが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["くさわけ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["S"] == 1
+
+
+def test_こうそくスピン_素早さ1段階上昇が発動する():
+    """こうそくスピン: 命中時に使用者のSが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうそくスピン"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["S"] == 1
+
+
+def test_ゴールドラッシュ_特攻1段階低下が発動する():
+    """ゴールドラッシュ: 命中時に使用者のCが1段階低下する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ゴールドラッシュ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["C"] == -1
+
+
+def test_グロウパンチ_攻撃1段階上昇が発動する():
+    """グロウパンチ: 命中時に使用者のAが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["グロウパンチ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["A"] == 1
+
+
+def test_げんしのちから_全能力1段階上昇が発動する():
+    """げんしのちから: 確率10%でA/B/C/D/Sが各1段階上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("プテラ", move_names=["げんしのちから"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert attacker.rank["A"] == 1
+    assert attacker.rank["B"] == 1
+    assert attacker.rank["C"] == 1
+    assert attacker.rank["D"] == 1
+    assert attacker.rank["S"] == 1
