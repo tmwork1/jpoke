@@ -30,7 +30,8 @@ def start_battle(team0: list[Pokemon],
                  field: dict[GlobalFieldName, int] | None = None,
                  side0: dict[SideFieldName, int] | None = None,
                  side1: dict[SideFieldName, int] | None = None,
-                 accuracy: int | None = None) -> Battle:
+                 accuracy: int | None = None,
+                 secondary_chance: float | None = None) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
@@ -46,6 +47,7 @@ def start_battle(team0: list[Pokemon],
         side1: 相手のサイドに設置する場の効果の辞書{名前: レイヤー数}（Noneの場合は効果なし）
         field: グローバルフィールドに設置する場の効果の辞書{名前: カウント}（Noneの場合は効果なし）
         accuracy: 固定命中率（Noneの場合は通常計算、デフォルト: None）
+        secondary_chance: 追加効果確率の固定値（1.0=必ず発動, 0.0=発動しない, Noneの場合は通常計算）
 
     Returns:
         Battle: セットアップ済みのBattleインスタンス
@@ -107,6 +109,10 @@ def start_battle(team0: list[Pokemon],
     # 命中率の設定
     if accuracy is not None:
         battle.test_option.accuracy = accuracy
+
+    # 追加効果確率の設定
+    if secondary_chance is not None:
+        battle.test_option.secondary_chance = secondary_chance
 
     battle.print_logs()
 

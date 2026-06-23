@@ -280,6 +280,30 @@ def test_はらだいこ_こうげき最大化しHP半分消費():
     assert attacker.hp == max_hp - (max_hp // 2)
 
 
+def test_ハートスタンプ_ひるみが発動する():
+    """ハートスタンプ: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピクシー", move_names=["ハートスタンプ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ハードローラー_ひるみが発動する():
+    """ハードローラー: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゴローニャ", move_names=["ハードローラー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_バトンタッチ_とらわれ状態でも使用できる():
     """バトンタッチ: にげられない状態でも技が失敗せず PIVOT が設定される"""
     battle = t.start_battle(
@@ -651,6 +675,42 @@ def test_ひかりのかべ_自陣営に5ターン設置される():
     assert side.fields["ひかりのかべ"].count == 5
 
 
+def test_ひっさつまえば_ひるみが発動する():
+    """ひっさつまえば: 10%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", move_names=["ひっさつまえば"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ひょうざんおろし_ひるみが発動する():
+    """ひょうざんおろし: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("マンムー", move_names=["ひょうざんおろし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_びりびりちくちく_ひるみが発動する():
+    """びりびりちくちく: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ライチュウ", move_names=["びりびりちくちく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 @pytest.mark.parametrize(
     "atk_init,def_init,atk_exp,def_exp",
     [
@@ -721,6 +781,18 @@ def test_フェアリーロック_使用者側が交代できない():
     assert not t.can_switch(battle, 0)
 
 
+def test_ふみつけ_ひるみが発動する():
+    """ふみつけ: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ふみつけ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_フラフラダンス_こんらん状態を付与する():
     """フラフラダンス: 相手をこんらん状態にする"""
     battle = t.start_battle(
@@ -748,6 +820,18 @@ def test_フラフラダンス_すでにこんらん状態なら失敗():
 
     assert defender.has_volatile("こんらん")
     assert defender.volatiles["こんらん"].count == old_count
+
+
+def test_ふわふわフォール_ひるみが発動する():
+    """ふわふわフォール: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("トゲキッス", move_names=["ふわふわフォール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_ほえる_ねをはる状態の相手には失敗する():
@@ -871,6 +955,31 @@ def test_ほおばる_ラムのみでやけどが治る():
     assert not attacker.item.is_berry()
     # ぼうぎょも上がる
     assert attacker.rank["B"] == 2
+
+
+def test_ホネこんぼう_ひるみが発動する():
+    """ホネこんぼう: 10%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カラカラ", move_names=["ホネこんぼう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ほのおのキバ_ひるみが発動する():
+    """ほのおのキバ: 10%でやけどかひるみのどちらかを付与する。乱数が0.5以上のときひるみが選択される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", move_names=["ほのおのキバ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.fix_random(battle, 0.9)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_ほろびのうた_3ターン後に瀕死になる():

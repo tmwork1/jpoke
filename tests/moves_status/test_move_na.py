@@ -269,6 +269,18 @@ def test_にほんばれ_天気がはれになる():
     assert battle.weather.count == 5
 
 
+def test_ニードルアーム_ひるみが発動する():
+    """ニードルアーム: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハリーセン", move_names=["ニードルアーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_ニードルガード_ターン終了で解除される():
     """ニードルガード: ターン終了時に揮発状態が解除される"""
     battle = t.start_battle(
@@ -343,6 +355,17 @@ def test_ニードルガード_非接触技ではダメージなし():
     t.run_move(battle, 0)
 
     assert attacker.hp == attacker.max_hp
+
+
+def test_ねこだまし_ひるみが発動する():
+    """ねこだまし: 100%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("エルレイド", move_names=["ねこだまし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_ねばねばネット_すでに設置済みなら失敗():

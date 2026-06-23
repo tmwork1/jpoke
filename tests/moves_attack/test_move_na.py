@@ -22,3 +22,27 @@ def test_にどげり_命中判定1回で2回ヒットする():
     attacker, defender = battle.actives
     t.run_move(battle, 0)
     assert defender.hits_taken == 2
+
+
+def test_ねんりき_こんらんが発動する():
+    """ねんりき: 10%でこんらんを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ねんりき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_のしかかり_まひが発動する():
+    """のしかかり: 30%でまひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["のしかかり"])],
+        team1=[Pokemon("リザードン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"

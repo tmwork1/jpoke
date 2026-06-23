@@ -124,6 +124,18 @@ def test_かなしばり_未行動の相手には失敗する():
     assert not defender.has_volatile("かなしばり")
 
 
+def test_かみつく_ひるみが発動する():
+    """かみつく: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", move_names=["かみつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_からをやぶる_Bが最低でも他のランクは上昇する():
     """からをやぶる: ぼうぎょがすでに-6でも他のランク変化は通常通り発生する"""
     battle = t.start_battle(
@@ -565,6 +577,19 @@ def test_こうごうせい_通常天候で2分の1回復():
     assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
+def test_こおりのキバ_ひるみが発動する():
+    """こおりのキバ: 10%でこおりかひるみのどちらかを付与する。乱数が0.5以上のときひるみが選択される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", move_names=["こおりのキバ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.fix_random(battle, 0.9)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 @pytest.mark.parametrize(
     "def_init,spd_init,def_exp,spd_exp",
     [
@@ -677,3 +702,15 @@ def test_こらえる_致死ダメージを受けてもHP1残る():
 
     assert defender.hp == 1
     assert not defender.fainted
+
+
+def test_ゴッドバード_ひるみが発動する():
+    """ゴッドバード: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイアロー", move_names=["ゴッドバード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")

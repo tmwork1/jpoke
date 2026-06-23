@@ -2,7 +2,7 @@
 import pytest
 from jpoke import Move, Pokemon
 from jpoke.enums import Command
-from . import test_utils as t
+from .. import test_utils as t
 
 
 def test_かいふくふうじ():

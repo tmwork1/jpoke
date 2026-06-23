@@ -5,6 +5,18 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_たきのぼり_ひるみが発動する():
+    """たきのぼり: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("キングラー", move_names=["たきのぼり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 @pytest.mark.parametrize("count", [1, 2, 3])
 def test_たくわえる_N回使用でカウントがNになる(count):
     """たくわえる: N回使用するとたくわえカウントがNになり、ぼうぎょとくぼうがN段階上がる"""
@@ -34,6 +46,18 @@ def test_たくわえる_カウント3で失敗する():
 
     # カウントは3のまま変わらない
     assert attacker.volatiles["たくわえる"].count == 3
+
+
+def test_たつまき_ひるみが発動する():
+    """たつまき: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー", move_names=["たつまき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_たてこもる_ぼうぎょ2段階上がる():
@@ -78,6 +102,18 @@ def test_タールショット_すばやさ1段階下がりタールショット
 
     assert defender.rank["S"] == -1
     assert defender.has_volatile("タールショット")
+
+
+def test_ダブルパンツァー_ひるみが発動する():
+    """ダブルパンツァー: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハッサム", move_names=["ダブルパンツァー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_ちからをすいとる_クリアボディでランク低下阻止でもHP回復は発動():
@@ -257,6 +293,18 @@ def test_つぼをつく_選ばれない能力のランクは変化しない():
     assert attacker.rank["S"] == 0
     assert attacker.rank["ACC"] == 0
     assert attacker.rank["EVA"] == 0
+
+
+def test_つららおとし_ひるみが発動する():
+    """つららおとし: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("マンムー", move_names=["つららおとし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_つるぎのまい_こうげき2段階上がる():
@@ -472,3 +520,15 @@ def test_どくびし_相手陣営に設置される():
 
     side = battle.get_side(battle.actives[1])
     assert side.fields["どくびし"].is_active
+
+
+def test_ドラゴンダイブ_ひるみが発動する():
+    """ドラゴンダイブ: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー", move_names=["ドラゴンダイブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")

@@ -47,6 +47,19 @@ def test_どろぼう_防御者がアイテムを持っていないとき失敗(
     assert not attacker.has_item()
 
 
+def test_はがねのつばさ_防御1段階上昇が発動する():
+    """はがねのつばさ: 確率10%で使用者のBが1段階上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("スコルピ", move_names=["はがねのつばさ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["B"] == 1
+
+
 def test_はたきおとす_相手のアイテムがないとき威力補正なし():
     """はたきおとす: 相手がアイテムを持っていない場合は威力1倍のまま。"""
     battle_no_item = t.start_battle(
@@ -80,6 +93,18 @@ def test_はたきおとす_相手のアイテムを失わせる():
     t.run_move(battle, 0)
 
     assert not defender.has_item()
+
+
+def test_はっけい_まひが発動する():
+    """はっけい: 30%でまひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["はっけい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
 
 
 def test_はやてがえし_先制変化技には失敗():
@@ -121,6 +146,17 @@ def test_はやてがえし_通常攻撃技には失敗():
     assert battle.actives[0].hp < before_ally_hp
 
 
+def test_ばくれつパンチ_こんらんが発動する():
+    """ばくれつパンチ: 100%でこんらんを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ばくれつパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("こんらん")
+
+
 def test_バリアーラッシュ_防御1段階上昇が発動する():
     """バリアーラッシュ: 命中時に使用者のBが1段階上昇する（確率100%）。"""
     battle = t.start_battle(
@@ -133,17 +169,76 @@ def test_バリアーラッシュ_防御1段階上昇が発動する():
     assert attacker.rank["B"] == 1
 
 
-def test_はがねのつばさ_防御1段階上昇が発動する():
-    """はがねのつばさ: 確率10%で使用者のBが1段階上昇する。"""
+def test_ピヨピヨパンチ_こんらんが発動する():
+    """ピヨピヨパンチ: 20%でこんらんを付与する。"""
     battle = t.start_battle(
-        team0=[Pokemon("スコルピ", move_names=["はがねのつばさ"])],
+        team0=[Pokemon("カイリキー", move_names=["ピヨピヨパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_フェイタルクロー_状態異常が発動する():
+    """フェイタルクロー: 50%でどく/まひ/こおりのいずれかを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name in ("どく", "まひ", "こおり")
+
+
+def test_ふぶき_こおりが発動する():
+    """ふぶき: 10%でこおりを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["ふぶき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "こおり"
+
+
+def test_フリーズドライ_こおりが発動する():
+    """フリーズドライ: 10%でこおりを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["フリーズドライ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "こおり"
+
+
+def test_フリーズボルト_まひが発動する():
+    """フリーズボルト: 30%でまひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["フリーズボルト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
+def test_フレアソング_特攻1段階上昇が発動する():
+    """フレアソング: 命中時に使用者のCが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニャオハ", move_names=["フレアソング"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
     attacker = battle.actives[0]
-    t.fix_random(battle, 0.0)
     t.run_move(battle, 0)
-    assert attacker.rank["B"] == 1
+    assert attacker.rank["C"] == 1
 
 
 def test_ぶちかまし_防御と特防が各1段階低下する():
@@ -159,6 +254,42 @@ def test_ぶちかまし_防御と特防が各1段階低下する():
     assert attacker.rank["D"] == -1
 
 
+def test_ヘドロウェーブ_どくが発動する():
+    """ヘドロウェーブ: 10%でどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ヘドロウェーブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"
+
+
+def test_ヘドロこうげき_どくが発動する():
+    """ヘドロこうげき: 30%でどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ヘドロこうげき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"
+
+
+def test_ヘドロばくだん_どくが発動する():
+    """ヘドロばくだん: 30%でどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ヘドロばくだん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"
+
+
 def test_ホイールスピン_素早さ2段階低下が発動する():
     """ホイールスピン: 命中時に使用者のSが2段階低下する（確率100%）。"""
     battle = t.start_battle(
@@ -171,26 +302,74 @@ def test_ホイールスピン_素早さ2段階低下が発動する():
     assert attacker.rank["S"] == -2
 
 
+def test_ほうでん_まひが発動する():
+    """ほうでん: 30%でまひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほうでん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
 def test_ほのおのまい_特攻1段階上昇が発動する():
     """ほのおのまい: 確率50%で使用者のCが1段階上昇する。"""
     battle = t.start_battle(
         team0=[Pokemon("リザードン", move_names=["ほのおのまい"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
+        secondary_chance=1.0,
     )
     attacker = battle.actives[0]
-    t.fix_random(battle, 0.0)
     t.run_move(battle, 0)
     assert attacker.rank["C"] == 1
 
 
-def test_フレアソング_特攻1段階上昇が発動する():
-    """フレアソング: 命中時に使用者のCが1段階上昇する（確率100%）。"""
+def test_ぼうふう_こんらんが発動する():
+    """ぼうふう: 30%でこんらんを付与する。"""
     battle = t.start_battle(
-        team0=[Pokemon("ニャオハ", move_names=["フレアソング"])],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ファイヤー", move_names=["ぼうふう"])],
+        team1=[Pokemon("カビゴン")],
         accuracy=100,
+        secondary_chance=1.0,
     )
-    attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["C"] == 1
+    assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_ボルテッカー_まひが発動する():
+    """ボルテッカー: 10%でまひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルテッカー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
+def test_ポイズンアクセル_どくが発動する():
+    """ポイズンアクセル: 30%でどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ポイズンアクセル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"
+
+
+def test_ポイズンテール_どくが発動する():
+    """ポイズンテール: 10%でどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ポイズンテール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"

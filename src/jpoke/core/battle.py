@@ -48,10 +48,13 @@ class TestOption:
             例: True = 必ず発動, False = 必ず発動しない
         trigger_volatile: 変動状態の確率的発動の固定値（Noneの場合は通常の乱数判定）
             例: True = 必ず発動, False = 必ず発動しない
+        secondary_chance: 追加効果確率の固定値（Noneの場合は通常計算）
+            例: 1.0 = 必ず発動, 0.0 = 必ず発動しない
     """
     accuracy: int | None = None
     trigger_ailment: bool | None = None
     trigger_volatile: bool | None = None
+    secondary_chance: float | None = None
 
 
 class Battle:
@@ -764,6 +767,8 @@ class Battle:
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
+        if self.test_option.secondary_chance is not None:
+            return self.test_option.secondary_chance
         return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
 
     def can_switch(self, player: Player) -> bool:

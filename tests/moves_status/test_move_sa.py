@@ -6,6 +6,18 @@ from jpoke.enums import Interrupt
 from .. import test_utils as t
 
 
+def test_３ぼんのや_ひるみが発動する():
+    """３ぼんのや: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バンギラス", move_names=["3ぼんのや"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_さいみんじゅつ_ねむり付与():
     """さいみんじゅつ: 相手をねむり状態にする（accuracy=100で固定）"""
     battle = t.start_battle(
@@ -162,6 +174,18 @@ def test_しっぽきり_控えがいない場合は失敗():
     assert not attacker.has_volatile("みがわり")
     player = battle.players[0]
     assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_しねんのずつき_ひるみが発動する():
+    """しねんのずつき: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["しねんのずつき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_しびれごな_くさタイプに無効化される():
@@ -353,6 +377,18 @@ def test_じばそうさ_プラス以外の特性では失敗する():
 
     assert attacker.rank["B"] == 0
     assert attacker.rank["D"] == 0
+
+
+def test_じんつうりき_ひるみが発動する():
+    """じんつうりき: 10%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["じんつうりき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 @pytest.mark.parametrize("a_ability,d_ability", [
@@ -661,6 +697,18 @@ def test_すりかえ_片方のみアイテムを持つとき入れ替わる(a_i
         assert not defender.has_item()
     else:
         assert defender.item.name == expected_d
+
+
+def test_ずつき_ひるみが発動する():
+    """ずつき: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ずつき"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 @pytest.mark.parametrize("weather", ["はれ", "おおひでり"])

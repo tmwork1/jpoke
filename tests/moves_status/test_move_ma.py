@@ -42,6 +42,18 @@ def test_まきびし_相手陣営に設置される():
     assert side.fields["まきびし"].is_active
 
 
+def test_まわしげり_ひるみが発動する():
+    """まわしげり: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["まわしげり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_みずびたし_すでにみずタイプのみなら失敗():
     """みずびたし: 相手がすでにみずタイプのみなら失敗する"""
     battle = t.start_battle(
@@ -318,6 +330,18 @@ def test_メロメロ_性別の組み合わせ(a_gender, d_gender, expected):
     t.run_move(battle, 0)
 
     assert defender.has_volatile("メロメロ") == expected
+
+
+def test_もえあがるいかり_ひるみが発動する():
+    """もえあがるいかり: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゾロアーク", move_names=["もえあがるいかり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_もりののろい_くさタイプが付与される():
