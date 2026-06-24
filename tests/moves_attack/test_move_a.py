@@ -6,6 +6,55 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_3ぼんのや_ひるみが発動する():
+    """3ぼんのや: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["3ぼんのや"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_アイアンヘッド_ひるみが発動する():
+    """アイアンヘッド: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンヘッド"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_あくのはどう_ひるみが発動する():
+    """あくのはどう: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["あくのはどう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_アフロブレイク_使用後に攻撃者が反動ダメージを受ける():
+    """アフロブレイク: 与えたダメージの1/4を攻撃者が反動として受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["アフロブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert attacker.hp < hp_before
+
+
 def test_あやしいかぜ_全能力1段階上昇が発動する():
     """あやしいかぜ: 確率10%の副作用でA/B/C/D/Sが各1段階上昇する。"""
     battle = t.start_battle(
@@ -88,6 +137,83 @@ def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
     assert attacker.hp == 0
 
 
+def test_いびき_ひるみが発動する():
+    """いびき: 30%でひるみを付与する。ねむり状態でないと使えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いびき"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_いわなだれ_ひるみが発動する():
+    """いわなだれ: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["いわなだれ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ウェーブタックル_使用後に攻撃者が反動ダメージを受ける():
+    """ウェーブタックル: 与えたダメージの1/3を攻撃者が反動として受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェーブタックル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert attacker.hp < hp_before
+
+
+def test_ウッドハンマー_使用後に攻撃者が反動ダメージを受ける():
+    """ウッドハンマー: 与えたダメージの1/3を攻撃者が反動として受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウッドハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert attacker.hp < hp_before
+
+
+def test_ウッドホーン_使用後に攻撃者のHPが回復する():
+    """ウッドホーン: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["ウッドホーン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert attacker.hp > hp_before
+
+
+def test_エアスラッシュ_ひるみが発動する():
+    """エアスラッシュ: 30%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["エアスラッシュ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_おしゃべり_こんらんが発動する():
     """おしゃべり: 100%でこんらんを付与する。"""
     battle = t.start_battle(
@@ -97,6 +223,18 @@ def test_おしゃべり_こんらんが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_おどろかす_ひるみが発動する():
+    """おどろかす: 30%でひるみを付与する。ゴーストタイプのため非ノーマル・非エスパーに有効。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["おどろかす"])],
+        team1=[Pokemon("ゲンガー")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_オーラウイング_素早さ1段階上昇が発動する():

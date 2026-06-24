@@ -1,10 +1,10 @@
 {
   "config": {
-    "category":      "攻撃技（追加効果）",
-    "plan_dir":      "docs/plan/moves",
-    "spec_hint":     "docs/spec/moves/_move_secondary_1.md を必ず読む。列順: move / 対象(attacker|defender) / 確率 / A / B / C / D / S / ACC / EVA / どく / まひ / やけど / ねむり / こおり / こんらん / ひるみ。0以外の値を持つ列が追加効果。\n未実装の技のみハンドラを追加する（src/jpoke/handlers/move_attack.py を読んで既存分をスキップ）。\nハンドラ登録イベント: 防御側への効果は Event.ON_HIT priority=100、攻撃側への効果は Event.ON_HIT priority=10。\nラベル secondary_effect を MoveData に追加する（既存分も確認して未付与ならまとめて追加）。",
+    "category": "攻撃技（HP変化）",
+    "plan_dir": "docs/plan/moves",
+    "spec_hint": "docs/spec/moves/_move_secondary_2.md を参照。HP吸収・反動・失敗反動・HPコストの実装パターンを含む計画書を作成すること",
     "progress_file": "docs/progress/move.md",
-    "test_files":    [
+    "test_files": [
       "tests/moves_attack/test_move_a.py",
       "tests/moves_attack/test_move_ka.py",
       "tests/moves_attack/test_move_sa.py",
@@ -14,18 +14,20 @@
       "tests/moves_attack/test_move_ma.py",
       "tests/moves_attack/test_move_yarawa.py"
     ],
-    "impl_extra":    "4. data/move.py の MoveData に handlers={Event.ON_HIT: h.MoveHandler(...)} を追加する。技が MoveData に未登録なら基本データ（type/category/pp/power/accuracy/labels）も追加する。",
-    "review_extra":  "テストは技名の頭文字（五十音）に応じてファイルを選ぶ：あ行→test_move_a.py、か行→test_move_ka.py、さ行→test_move_sa.py、た行→test_move_ta.py、な行→test_move_na.py、は行→test_move_ha.py、ま行→test_move_ma.py、や・ら・わ行→test_move_yarawa.py。対象ファイルが存在しない場合は新規作成する。各技につき「副作用が発動する」テストを1件追加する（accuracy=100 固定、secondary_chance=1.0 上書き）。",
+    "impl_extra": "- data/move.py の MoveData に技が未登録なら追加する\n- 既存エントリにはhandlerを追加し、不足ラベルも追記する\n- 計画書に記載の全技を一括実装すること",
+    "review_extra": "- テストは読みに対応するファイルに追加すること（あ行→test_move_a.py、か行→test_move_ka.py、さ行→test_move_sa.py、た行→test_move_ta.py、は行→test_move_ha.py、ま行→test_move_ma.py、やらわ行→test_move_yarawa.py）\n- 複数の test_files に分散してテストを追加した場合は、全ファイルに対して sort_tests.py を実行すること",
     "planning_slots_max": 2
   },
-  "plan_queue":  [
-    "攻撃技_どく系",
-    "攻撃技_やけど系",
-    "攻撃技_こおり系",
-    "攻撃技_こんらん系",
-    "攻撃技_ひるみ系"
+  "plan_queue": [],
+  "impl_queue": [],
+  "completed": [
+    "HP吸収技",
+    "反動技_025",
+    "反動技_033",
+    "反動技_05",
+    "失敗反動技",
+    "HPコスト05技",
+    "自爆技"
   ],
-  "impl_queue":  ["攻撃技_まひ系"],
-  "completed":   ["攻撃技_攻撃側ランク変化系", "攻撃技_防御側ランク変化系"],
-  "failed":      []
+  "failed": []
 }

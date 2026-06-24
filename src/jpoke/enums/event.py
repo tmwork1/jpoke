@@ -202,7 +202,7 @@ class Event(Enum):
     ON_MODIFY_SECONDARY_CHANCE = auto()
 
     # emit: core/move_executor.py（ダメージ適用後）
-    # handle: volatile.py（いのちがけ・カウンター等、被ダメージトリガー処理）
+    # handle: data/move.py（追加効果発動）, volatile.py（いのちがけ・カウンター等、被ダメージトリガー処理）
     ON_DAMAGE_HIT = auto()
 
     # emit: core/move_executor.py（命中判定に失敗したとき）

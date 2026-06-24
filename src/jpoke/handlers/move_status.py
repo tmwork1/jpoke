@@ -1791,6 +1791,17 @@ def ゆきげしき_activate_weather(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=battle.weather_manager.apply("ゆき", 5, source=ctx.attacker))
 
 
+def ゆめくい_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ゆめくいの使用条件チェック: 相手がねむり状態でない場合に失敗させる。"""
+    if not ctx.defender.has_ailment("ねむり"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "ゆめくい_ねむり状態でない"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def リサイクル_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """リサイクルの失敗条件チェック。
 
