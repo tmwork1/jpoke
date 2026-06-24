@@ -298,7 +298,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.hp_ratio_damage,
+                ha.half_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -331,7 +331,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=90
     ),
     "いわくだき": MoveData(
-
         type="かくとう",
         category="物理",
         pp=15,
@@ -345,7 +344,6 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "いわなだれ": MoveData(
-
         type="いわ",
         category="物理",
         pp=10,
@@ -1262,7 +1260,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.ohko_modify_damage,
+                ha.ohko_damage,
             ),
         }
     ),
@@ -1454,6 +1452,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ダークファイア": MoveData(
+        # TODO : 本編に登場しないのですべての文書から削除
         type="ゴースト",
         category="特殊",
         pp=5,
@@ -1709,7 +1708,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko", "contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.ohko_modify_damage,
+                ha.ohko_damage,
             ),
         }
     ),
@@ -2373,7 +2372,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko", "contact"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.ohko_modify_damage,
+                ha.ohko_damage,
             ),
         }
     ),
@@ -2757,7 +2756,7 @@ MOVES: dict[str, MoveData] = {
             )
         }
     ),
-    "Ｖジェネレート": MoveData(
+    "Vジェネレート": MoveData(
         type="ほのお",
         category="物理",
         pp=5,
@@ -2766,7 +2765,7 @@ MOVES: dict[str, MoveData] = {
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.Ｖジェネレート_modify_attacker_stats,
+                ha.Vジェネレート_modify_attacker_stats,
             )
         }
     ),
@@ -3688,7 +3687,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.hp_ratio_damage,
+                ha.half_damage,
                 subject_spec="attacker:self",
             )
         }
@@ -4077,13 +4076,12 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "シェルアームズ": MoveData(
-
+        # TODO : 補正込み実数値でAのほうがCより高いときに物理技としてダメージ計算する効果を追加
         type="どく",
         category="特殊",
         pp=10,
         power=90,
         accuracy=100,
-
         labels=["contact", "secondary_effect"],
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
@@ -4281,7 +4279,7 @@ MOVES: dict[str, MoveData] = {
         labels=["ohko"],
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.ohko_modify_damage,
+                ha.ohko_damage,
             ),
         }
     ),
@@ -4838,6 +4836,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "ひゃっきやこう": MoveData(
+        # TODO : 相手が状態異常のとき威力が2倍になる処理も実装
         type="ゴースト",
         category="特殊",
         pp=15,
@@ -4912,7 +4911,8 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "フリーズドライ": MoveData(
-
+        # TODO : こおり状態付与の追加効果はチャンピオンズから廃止
+        # TODO : みずタイプに対して効果抜群になる処理を実装
         type="こおり",
         category="特殊",
         pp=20,
@@ -4933,7 +4933,6 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
     ),
     "フルールカノン": MoveData(
-
         type="フェアリー",
         category="特殊",
         pp=5,

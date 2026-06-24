@@ -4,10 +4,10 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
-def test_Ｖジェネレート_防御特防素早さが各1段階低下する():
-    """Ｖジェネレート: 命中時に使用者のB/D/Sが各1段階低下する（確率100%）。"""
+def test_Vジェネレート_防御特防素早さが各1段階低下する():
+    """Vジェネレート: 命中時に使用者のB/D/Sが各1段階低下する（確率100%）。"""
     battle = t.start_battle(
-        team0=[Pokemon("ビクティニ", move_names=["Ｖジェネレート"])],
+        team0=[Pokemon("ビクティニ", move_names=["Vジェネレート"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )

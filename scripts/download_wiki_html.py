@@ -56,8 +56,8 @@ if __name__ == "__main__":
     targets = [
         # "abilities",
         # "items",
-        # "status_moves",
-        "ailments",
+        "moves",
+        # "ailments",
         # "volatiles",
         # "fields",
     ]

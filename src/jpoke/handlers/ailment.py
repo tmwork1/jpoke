@@ -102,6 +102,7 @@ def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO :  ねっとうなどの特定の技を使用することで解凍する処理を追加する。自己解凍する技は_move_labels.mdのthawラベルを参照。まずはMoveDataにthawラベルを設定する。
     """こおり状態による行動不能チェック。
 
     Champions仕様:
@@ -128,8 +129,10 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
     # まだ凍っている：行動不能カウントを増やす
     battle.ailment_manager.tick(mon)
-    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                         payload={"reason": "こおり"})
+    battle.add_event_log(
+        ctx.attacker, LogCode.ACTION_BLOCKED,
+        payload={"reason": "こおり"}
+    )
     return HandlerReturn(value=False, stop_event=True)
 
 

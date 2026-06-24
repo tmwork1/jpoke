@@ -20,6 +20,7 @@ from .move import (
     modify_defender_stats,
 )
 
+
 def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 
@@ -38,20 +39,24 @@ def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
         battle.player_states[player].interrupt = Interrupt.PIVOT
     return HandlerReturn(value=value)
 
-def ohko_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+
+def ohko_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
     return HandlerReturn(value=ctx.defender.hp)
 
-def hp_ratio_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+
+def half_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
 
 def アイアンテール_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : アイアンテール_reduce_def_B()のように関数名を具体化する。他の同種ハンドラも同様。
     return modify_defender_stats(battle, ctx, value, stats={"B": -1}, chance=0.3)
 
 
 def _3ぼんのや_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : ひるみ(flinch)を付与するということを関数名に含める。他の同種ハンドラも同様。
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
@@ -64,6 +69,7 @@ def アイスハンマー_modify_attacker_stats(battle: Battle, ctx: AttackConte
 
 
 def アクアステップ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : アクアステップ_boost_atk_S()のように関数名を具体化する。他の同種ハンドラも同様。
     return modify_attacker_stats(battle, ctx, value, stats={"S": 1})
 
 
@@ -92,14 +98,13 @@ def あばれる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
         return HandlerReturn(value=value)
     count = battle.random.randint(2, 3)
     battle.volatile_manager.apply(
-        attacker, "あばれる", count=count, source=attacker,
-        move_name=ctx.move.name
+        attacker, "あばれる", count=count, source=attacker, move_name=ctx.move.name
     )
     return HandlerReturn(value=value)
 
 
 def アフロブレイク_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    recoil = max(1, int(value / 4))
+    recoil = max(1, value // 4)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -107,33 +112,6 @@ def アフロブレイク_recoil(battle: Battle, ctx: AttackContext, value: Any)
 def あやしいかぜ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"A": 1, "B": 1, "C": 1, "D": 1, "S": 1}, chance=0.1)
 
-
-def _check_はやてがえし_condition(battle: Battle, ctx: AttackContext) -> bool:
-    """はやてがえしの発動条件を判定する。
-
-    相手が未行動かつ優先攻撃技を選択している時のみ成功する。
-    """
-    def_player = battle.get_player(ctx.defender)
-    def_state = battle.player_states[def_player]
-
-    # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
-    if def_state.next_command is None:
-        return False
-
-    defender_command = def_state.next_command
-    defender_move = battle.command_to_move(def_player, defender_command)
-
-    # 優先度が上がっていても変化技には失敗する。
-    if not defender_move.is_attack:
-        return False
-
-    priority = battle.speed_calculator.calc_move_priority(ctx.defender, defender_move)
-
-    # 先制技でないまたはより優先度が高い技には失敗する。
-    if priority <= 0 or priority > ctx.move.priority:
-        return False
-
-    return True
 
 def Gのちから_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"B": -1})
@@ -193,14 +171,15 @@ def インファイト_modify_attacker_stats(battle: Battle, ctx: AttackContext,
 
 def ウェーブタックル_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ウェーブタックルの反動ダメージを与える。与ダメの1/3を攻撃側が受ける。"""
-    recoil = max(1, int(value / 3))
+    recoil = max(1, value // 3)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
 def ウッドハンマー_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ウッドハンマーの反動ダメージを与える。与ダメの1/3を攻撃側が受ける。"""
-    recoil = max(1, int(value / 3))
+    # TODO : battle.modify_hp(r=-1/3)とすればよい。他のハンドラも同様に修正する。
+    recoil = max(1, value // 3)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -366,8 +345,10 @@ def きあいパンチ_check_move(battle: Battle, ctx: AttackContext, value: Any
     行動前に実際の攻撃ダメージを受けていた場合は不発になる。
     """
     if ctx.attacker.hits_taken > 0:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "きあいパンチ"})
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "きあいパンチ"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -380,6 +361,8 @@ def きゅうけつ_heal_attacker(battle: Battle, ctx: AttackContext, value: int
 
 def キラースピン_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
+
+# TODO : キラースピン、こうそくスピン : 設置物やバインドを解除する効果も実装する (仕様書の作成から行う)。
 
 
 def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float) -> None:
@@ -437,6 +420,7 @@ def こおりのキバ_apply_flinch_or_freeze(battle: Battle, ctx: AttackContext
 
     1回の確率判定（10%）で発動し、発動した場合はこおりかひるみをランダムに選択する。
     """
+    # TODO : < 0.05 ならこおり、< 0.1 ならひるみ、とすればよい。他のハンドラも同様に修正する。
     chance = battle.resolve_secondary_chance(ctx, 0.1)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
@@ -482,6 +466,7 @@ def ゴールドラッシュ_modify_attacker_stats(battle: Battle, ctx: AttackCo
 
 
 def サイケこうせん_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : こんらんもapply_volatile_to_defender()で実装したい
     """サイケこうせんの追加効果: 10%の確率で相手をこんらん状態にする。"""
     chance = battle.resolve_secondary_chance(ctx, 0.1)
     if battle.random.random() >= chance:
@@ -574,7 +559,7 @@ def シードフレア_modify_defender_stats(battle: Battle, ctx: AttackContext,
 
 
 def じごくぐるま_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    recoil = max(1, int(value / 4))
+    recoil = max(1, value // 4)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -617,7 +602,7 @@ def スチームバースト_apply_ailment_to_defender(battle: Battle, ctx: Atta
 
 def すてみタックル_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """すてみタックルの反動ダメージを与える。与ダメの1/3を攻撃側が受ける。"""
-    recoil = max(1, int(value / 3))
+    recoil = max(1, value // 3)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -751,7 +736,7 @@ def でんじほう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
 
 
 def とっしん_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    recoil = max(1, int(value / 4))
+    recoil = max(1, value // 4)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -890,6 +875,7 @@ def はがねのつばさ_modify_attacker_stats(battle: Battle, ctx: AttackConte
 
 def はたきおとす_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """はたきおとすのアイテム所持時1.5倍補正。"""
+    # TODO : battle_math.apply_fixed_modifier()を使う。他の技の威力補正も同様に修正する。
     if ctx.defender.has_item():
         value = value * 6144 // 4096
     return HandlerReturn(value=value)
@@ -899,8 +885,10 @@ def level_fixed_damage(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     """使用者レベルと同値の固定ダメージを計算する。"""
     return HandlerReturn(value=ctx.attacker.level)
 
+
 def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """バインド系技: ランダムターン数でバインド状態を付与する。ねばりのかぎづめで7ターン固定。"""
+    # TODO : ハンドラ内で直接イベントを発火せず、battle.queryに確認用のメソッドを作る。
     count_pair = battle.events.emit(
         Event.ON_MODIFY_DURATION,
         ctx,
@@ -921,7 +909,7 @@ def はっけい_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
 
 
 def はめつのひかり_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    recoil = max(1, int(value / 2))
+    recoil = max(1, value // 2)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -930,14 +918,44 @@ def はやてがえし_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ")
 
 
+def _はやてがえし_can_apply(battle: Battle, ctx: AttackContext) -> bool:
+    """はやてがえしの発動条件を判定する。
+
+    相手が未行動かつ優先攻撃技を選択している時のみ成功する。
+    """
+    def_player = battle.get_player(ctx.defender)
+    def_state = battle.player_states[def_player]
+
+    # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
+    if def_state.next_command is None:
+        return False
+
+    defender_command = def_state.next_command
+    defender_move = battle.command_to_move(def_player, defender_command)
+
+    # 優先度が上がっていても変化技には失敗する。
+    if not defender_move.is_attack:
+        return False
+
+    priority = battle.speed_calculator.calc_move_priority(ctx.defender, defender_move)
+
+    # 先制技でないまたはより優先度が高い技には失敗する。
+    if priority <= 0 or priority > ctx.move.priority:
+        return False
+
+    return True
+
+
 def はやてがえし_try_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はやてがえしの発動条件を判定する。
 
     相手が未行動かつ優先攻撃技を選択している時のみ成功する。
     """
-    if not _check_はやてがえし_condition(battle, ctx):
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_FAILED,
-                             payload={"reason": "はやてがえし"})
+    if not _はやてがえし_can_apply(battle, ctx):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "はやてがえし"}
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1033,6 +1051,8 @@ def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: Atta
 
     確率0.5で発動し、発動した場合はどく・まひ・こおりを各1/3の確率で付与する。
     """
+    # TODO : チャンピオンズで発動確率が0.3に修正された。
+    # TODO : < 0.1 ならどく、< 0.2 ならまひ、< 0.3 ならこおり、のように分岐するように修正する。
     chance = battle.resolve_secondary_chance(ctx, 0.5)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
@@ -1049,18 +1069,7 @@ def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: An
 
 
 def ふぶき_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふぶきの天候による命中率補正。
-
-    雪: 必中
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: 現在の命中率
-
-    Returns:
-        HandlerReturn: 補正があればTrue、なければFalse
-    """
+    """ふぶき: ゆき状態の時は必中になる補正。"""
     weather = battle.weather_manager.current.name
     if weather == "ゆき":
         return HandlerReturn(value=None)  # 必中
@@ -1097,7 +1106,7 @@ def フレアドライブ_apply_ailment_to_defender(battle: Battle, ctx: AttackC
 
 def フレアドライブ_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フレアドライブの反動ダメージを与える。与ダメの1/3を攻撃側が受ける。"""
-    recoil = max(1, int(value / 3))
+    recoil = max(1, value // 3)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -1110,7 +1119,7 @@ def ふんえん_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
-def Ｖジェネレート_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def Vジェネレート_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"B": -1, "D": -1, "S": -1})
 
 
@@ -1128,7 +1137,7 @@ def ブレイズキック_apply_ailment_to_defender(battle: Battle, ctx: AttackC
 
 def ブレイブバード_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ブレイブバードの反動ダメージを与える。与ダメの1/3を攻撃側が受ける。"""
-    recoil = max(1, int(value / 3))
+    recoil = max(1, value // 3)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -1217,7 +1226,7 @@ def ボルテッカー_apply_ailment_to_defender(battle: Battle, ctx: AttackCont
 
 
 def ボルテッカー_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    recoil = max(1, int(value / 4))
+    recoil = max(1, value // 4)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -1231,6 +1240,7 @@ def ポイズンテール_apply_ailment_to_defender(battle: Battle, ctx: AttackC
 
 
 def マジカルアクセル_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    # TODO : マジカルアクセルは本編に登場しない技のため、すべての文書から削除
     """マジカルアクセルの追加効果: 30%の確率で相手をこんらん状態にする。"""
     chance = battle.resolve_secondary_chance(ctx, 0.3)
     if battle.random.random() >= chance:
@@ -1285,7 +1295,6 @@ def むしのていこう_modify_defender_stats(battle: Battle, ctx: AttackConte
 
 
 def むねんのつるぎ_heal_attacker(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """むねんのつるぎの回復量を計算する。"""
     _drain_hp(battle, ctx, value, heal_ratio=0.5)
     return HandlerReturn(value=value)
 
@@ -1295,7 +1304,6 @@ def ムーンフォース_modify_defender_stats(battle: Battle, ctx: AttackConte
 
 
 def メガドレイン_heal_attacker(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """メガドレインの回復量を計算する。"""
     _drain_hp(battle, ctx, value, heal_ratio=0.5)
     return HandlerReturn(value=value)
 
@@ -1398,7 +1406,7 @@ def ワイドブレイカー_modify_defender_stats(battle: Battle, ctx: AttackCo
 
 
 def ワイルドボルト_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    recoil = max(1, int(value / 4))
+    recoil = max(1, value // 4)
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
