@@ -511,6 +511,8 @@ class Battle:
 
     def consume_item(self, mon: Pokemon) -> bool:
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
+        if mon.item.is_berry():
+            mon.ate_berry = True
         return self.item_manager.remove_item(mon, source=mon)
 
     def force_trigger_berry(self, mon: Pokemon) -> None:

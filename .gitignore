@@ -133,3 +133,6 @@ dmypy.json
 *.swo
 *~
 .DS_Store
+
+# Claude Code ローカル設定（個人の許可設定を含む）
+.claude/settings.local.json

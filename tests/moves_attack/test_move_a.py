@@ -19,7 +19,7 @@ def test_3ぼんのや_ひるみが発動する():
 
 
 def test_アイアンヘッド_ひるみが発動する():
-    """アイアンヘッド: 30%でひるみを付与する。"""
+    """アイアンヘッド: 20%でひるみを付与する。"""
     battle = t.start_battle(
         team0=[Pokemon("ハガネール", move_names=["アイアンヘッド"])],
         team1=[Pokemon("カビゴン")],
@@ -28,6 +28,69 @@ def test_アイアンヘッド_ひるみが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_アクアカッター_急所ランクが1():
+    """アクアカッター: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("サメハダー", move_names=["アクアカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_アクアカッター_急所ランクが1_乱数大で急所なし():
+    """アクアカッター: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("サメハダー", move_names=["アクアカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_アクアジェット_相手にダメージを与える():
+    """アクアジェット: 優先度+1の先制物理技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラプラス", move_names=["アクアジェット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_アクアテール_相手にダメージを与える():
+    """アクアテール: 追加効果なしの物理みず技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["アクアテール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_アクセルロック_相手にダメージを与える():
+    """アクセルロック: 優先度+1の先制物理技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガマゲロゲ", move_names=["アクセルロック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_あくのはどう_ひるみが発動する():
@@ -40,6 +103,198 @@ def test_あくのはどう_ひるみが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_アシストパワー_ランク上昇なしのとき基本威力20():
+    """アシストパワー: ランク上昇がないとき基本威力20のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["アシストパワー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 20
+
+
+def test_アシストパワー_ランク上昇合計1段階で威力40():
+    """アシストパワー: A+1のとき威力が40（20 + 20*1）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["アシストパワー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": 1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_アシストパワー_ランク上昇合計3段階で威力80():
+    """アシストパワー: A+2, B+1 の合計+3のとき威力が80（20 + 20*3）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["アシストパワー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": 2, "B": 1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_アシストパワー_ランク低下はカウントしない():
+    """アシストパワー: A-1 があっても正の合計がゼロならば威力は20のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["アシストパワー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": -1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 20
+
+
+def test_あなをほる_1ターン目は地中に潜りHPが変わらない():
+    """あなをほる: 1ターン目はチャージ（あなをほる揮発状態）になり、相手へのダメージはない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["あなをほる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender_hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("あなをほる")
+    assert defender.hp == defender_hp_before
+
+
+def test_あなをほる_2ターン目に攻撃して揮発状態が解除される():
+    """あなをほる: 2ターン目に攻撃が発動し、揮発状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["あなをほる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 1ターン目: チャージ
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("あなをほる")
+    hp_before = defender.hp
+    # 2ターン目: 攻撃
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("あなをほる")
+    assert defender.hp < hp_before
+
+
+def test_あなをほる_じしんは地中の相手に命中し威力が2倍になる():
+    """あなをほる状態の相手にじしんを使うと命中し威力補正が2倍（8192）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["じしん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "あなをほる", count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_あなをほる_じしんマグニチュード以外は命中しない():
+    """あなをほる状態の相手にじしん・マグニチュード以外の技は命中しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "あなをほる", count=1)
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+
+
+def test_あなをほる_チャージ中は一般技が命中しない():
+    """あなをほる状態の相手に一般技は命中しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ディグダ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "あなをほる", count=1)
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+
+
+@pytest.mark.skip(reason="マグニチュードは未実装")
+def test_あなをほる_マグニチュードは地中の相手に命中し威力が2倍になる():
+    """あなをほる状態の相手にマグニチュードを使うと命中し威力補正が2倍（8192）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディグダ", move_names=["マグニチュード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "あなをほる", count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_あばれる_あばれる状態中はON_HITで揮発状態を再付与しない():
+    """あばれる: あばれる揮発状態がある場合ON_HITで再付与を試みない（countが2のまま維持される）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["あばれる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 事前にcount=2の揮発状態を付与
+    battle.volatile_manager.apply(attacker, "あばれる", count=2, source=attacker, move_name="あばれる")
+    assert attacker.volatiles["あばれる"].count == 2
+    # あばれるを使う（ON_HITで再付与を試みるが、has_volatileチェックで弾かれる）
+    t.run_move(battle, 0)
+    # countが1に減っているだけで、2ターン分減ったりしていない
+    if attacker.has_volatile("あばれる"):
+        assert attacker.volatiles["あばれる"].count == 1
+    else:
+        # count=1だったのでON_DAMAGE_HITでtickしてcountが0になりこんらんが付与された
+        assert attacker.has_volatile("こんらん")
+
+
+def test_あばれる_カウント終了後にこんらんが付与される():
+    """あばれる: カウントが0になった後にこんらん状態が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["あばれる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # countを1に設定して次の命中でカウント終了させる
+    battle.volatile_manager.apply(attacker, "あばれる", count=1, source=attacker, move_name="あばれる")
+    t.run_move(battle, 0)
+    # あばれる揮発状態が解除されてこんらんが付与されている
+    assert not attacker.has_volatile("あばれる")
+    assert attacker.has_volatile("こんらん")
+
+
+def test_あばれる_初回命中時にあばれる揮発状態が付与される():
+    """あばれる: 初回命中時にあばれる揮発状態（強制行動）が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["あばれる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("あばれる")
 
 
 def test_アフロブレイク_使用後に攻撃者が反動ダメージを受ける():
@@ -125,6 +380,30 @@ def test_いてつくしせん_こおりが発動する():
     assert battle.actives[1].ailment.name == "こおり"
 
 
+def test_いにしえのうた_ねむりが発動しない():
+    """いにしえのうた: 追加効果不発時はねむり状態にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いにしえのうた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_いにしえのうた_ねむりが発動する():
+    """いにしえのうた: 10%の確率で相手をねむり状態にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いにしえのうた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "ねむり"
+
+
 def test_いのちがけ_与ダメージは現在HPで使用者はひんし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
@@ -202,6 +481,69 @@ def test_ウッドホーン_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_うっぷんばらし_ランクが下がったとき威力2倍():
+    """うっぷんばらし: そのターン中にランクが下げられていたとき威力2倍。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["うっぷんばらし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # ターン内でランクを下げる
+    attacker.stat_lowered_this_turn = True
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_うっぷんばらし_ランクが下がっていないとき通常威力():
+    """うっぷんばらし: ランクが下がっていないとき威力補正なし。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["うっぷんばらし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_うらみつらみ_こうげき1段階低下が発動する():
+    """うらみつらみ: 100%の確率で相手のこうげきを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["うらみつらみ"])],
+        team1=[Pokemon("フーディン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["A"] == -1
+
+
+def test_エアカッター_急所ランクが1():
+    """エアカッター: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["エアカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_エアカッター_急所ランクが1_乱数大で急所なし():
+    """エアカッター: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["エアカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
 def test_エアスラッシュ_ひるみが発動する():
     """エアスラッシュ: 30%でひるみを付与する。"""
     battle = t.start_battle(
@@ -212,6 +554,83 @@ def test_エアスラッシュ_ひるみが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_エレキボール_比率0のとき威力40():
+    """エレキボール: 攻撃者S // 防御者S が 0 のとき威力40。
+    カビゴン(S=50) vs ピカチュウ(S=110) → 比率0 → 威力40。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エレキボール"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_エレキボール_比率1のとき威力60():
+    """エレキボール: 攻撃者S // 防御者S が 1 のとき威力60。
+    ピカチュウ(S=110) vs ピカチュウ(S=110) → 比率1 → 威力60。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキボール"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 60
+
+
+def test_エレキボール_比率2のとき威力80():
+    """エレキボール: 攻撃者S // 防御者S が 2 のとき威力80。
+    ピカチュウ(S=110) vs カビゴン(S=50) → 比率2 → 威力80。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_エレキボール_比率3のとき威力120():
+    """エレキボール: 攻撃者S // 防御者S が 3 のとき威力120。
+    ライコウ(S=135) vs ヤドン(S=35) → 比率3 → 威力120。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ライコウ", move_names=["エレキボール"])],
+        team1=[Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 120
+
+
+def test_エレキボール_比率4以上のとき威力150():
+    """エレキボール: 攻撃者S // 防御者S が 4 以上のとき威力150。
+    ジュカイン(S=140) vs ヤドン(S=35) → 比率4 → 威力150。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ジュカイン", move_names=["エレキボール"])],
+        team1=[Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 150
+
+
+def test_オクタンほう_命中率1段階低下が発動する():
+    """オクタンほう: 50%の確率で相手の命中率を1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オクタン", move_names=["オクタンほう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["ACC"] == -1
 
 
 def test_おしゃべり_こんらんが発動する():

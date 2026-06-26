@@ -131,6 +131,12 @@ class StatusManager:
             actual_changes[stat] = actual_value
 
         if actual_changes:
+            # うっぷんばらし用: ランクが実際に下がった場合にフラグを立てる
+            if any(v < 0 for v in actual_changes.values()):
+                target.stat_lowered_this_turn = True
+            # みわくのボイス・しっとのほのお用: ランクが実際に上がった場合にフラグを立てる
+            if any(v > 0 for v in actual_changes.values()):
+                target.stat_raised_this_turn = True
             self.battle.add_event_log(
                 target, LogCode.STAT_CHANGED,
                 payload={"stats": actual_changes, "reason": reason},

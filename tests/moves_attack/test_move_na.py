@@ -4,6 +4,18 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_ナイトバースト_命中率1段階低下が発動する():
+    """ナイトバースト: 40%の確率で相手の命中率を1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゾロアーク", move_names=["ナイトバースト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["ACC"] == -1
+
+
 def test_ナイトヘッド_与ダメージは使用者レベル固定():
     battle = t.start_battle(team1=[Pokemon("ピカチュウ")],
                             team0=[Pokemon("ピカチュウ", level=50, move_names=["ナイトヘッド"])],
@@ -11,6 +23,19 @@ def test_ナイトヘッド_与ダメージは使用者レベル固定():
     before_hp = battle.actives[1].hp
     battle.advance_turn()
     assert before_hp - battle.actives[1].hp == 50
+
+
+def test_なみのり_相手にダメージを与える():
+    """なみのり: 追加効果なしの特殊みず技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["なみのり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_にどげり_命中判定1回で2回ヒットする():
@@ -45,6 +70,30 @@ def test_ねこだまし_ひるみが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ネズミざん_命中率0で全て外れる():
+    """ネズミざん: check_hit_each_time=Trueのため、命中率0では1発目から外れ、0回ヒットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ネズミざん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 0
+
+
+def test_ネズミざん_最大10回ヒットする():
+    """ネズミざん: 命中判定を各回行い、最大10回ヒットする（check_hit_each_time=True）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ネズミざん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 10
 
 
 def test_ねっさのあらし_やけどが発動する():

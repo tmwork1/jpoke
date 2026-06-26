@@ -160,3 +160,21 @@ class PokemonQuery:
         """技がいまひとつかどうかを判定する。"""
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
         return 0 < type_modifier / 4096 < 1
+
+    def get_volatile_duration(self, ctx: AttackContext, name: str, count: int) -> int:
+        """ON_MODIFY_DURATION を発火して揮発性状態の持続ターン数を返す。
+
+        Args:
+            ctx: AttackContext
+            name: 揮発性状態名
+            count: 基本ターン数
+
+        Returns:
+            int: アイテム等の効果を反映した最終ターン数
+        """
+        _, modified_count = self._events.emit(
+            Event.ON_MODIFY_DURATION,
+            ctx,
+            [name, count]
+        )
+        return modified_count

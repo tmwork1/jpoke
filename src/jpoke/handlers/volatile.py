@@ -153,7 +153,7 @@ def あなをほる_remove_volatile(battle: Battle, ctx: EventContext, value: An
     return remove_volatile(battle, ctx, value, volatile="あなをほる")
 
 
-def あばれる_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def あばれる_tick(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """あばれる状態のターン経過処理
 
     Args:
@@ -389,6 +389,21 @@ def キングシールド_remove_volatile(battle: Battle, ctx: EventContext, val
     return remove_volatile(battle, ctx, value, volatile="キングシールド")
 
 
+def くちばしキャノン_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """くちばしキャノン状態のポケモンが直接攻撃を受けたとき、攻撃者をやけど状態にする。"""
+    if not battle.query.is_contact(ctx):
+        return HandlerReturn(value=value)
+    battle.ailment_manager.apply(
+        ctx.attacker, "やけど", source=ctx.defender, ctx=ctx
+    )
+    return HandlerReturn(value=value)
+
+
+def くちばしキャノン_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くちばしキャノン状態のターン終了時解除。"""
+    return remove_volatile(battle, ctx, value, volatile="くちばしキャノン")
+
+
 def こだわり_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return restrict_commands(battle, ctx, value, name="こだわり")
 
@@ -621,6 +636,16 @@ def そらをとぶ_remove_volatile(battle: Battle, ctx: EventContext, value: An
     return remove_volatile(battle, ctx, value, volatile="そらをとぶ")
 
 
+def ソーラービーム_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ソーラービーム溜め状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="ソーラービーム")
+
+
+def ソーラーブレード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ソーラーブレード溜め状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="ソーラーブレード")
+
+
 def タールショット_boost_fire(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """タールショット状態でほのお技のタイプ相性補正を2倍にする。
 
@@ -708,6 +733,26 @@ def ちょうはつ_try_action(battle: Battle, ctx: EventContext, value: Any) ->
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
+
+
+def デカハンマー_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
+    """デカハンマー揮発状態: 前のターンにデカハンマーのPPを消費していた場合、
+    コマンド選択肢からデカハンマーを除外する。
+    """
+    mon = ctx.source
+    new_options = []
+    for cmd in value:
+        if (
+            not cmd.is_move_family
+            or mon.moves[cmd.index].name != "デカハンマー"
+        ):
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
+
+
+def デカハンマー_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """デカハンマー揮発状態のターン経過処理（count: 2→1→0 で自動解除）。"""
+    return tick_volatile(battle, ctx, value, volatile="デカハンマー")
 
 
 def でんじふゆう_check_floating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1074,6 +1119,11 @@ def みちづれ_remove(battle: Battle, ctx: EventContext, value: Any) -> Handle
     return remove_volatile(battle, ctx, value, volatile="みちづれ")
 
 
+def メテオビーム_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """メテオビーム溜め状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="メテオビーム")
+
+
 def メロメロ_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """メロメロ状態による行動不能判定（50%確率）
 
@@ -1127,6 +1177,17 @@ def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any
     if damage:
         battle.modify_hp(to_mon, -damage, reason="drain")
     return HandlerReturn(value=damage)
+
+
+def リチャージ_block_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """リチャージ状態による次ターン行動不能。状態を解除して行動をブロックする。"""
+    mon = ctx.attacker
+    battle.volatile_manager.remove(mon, "リチャージ")
+    battle.add_event_log(
+        mon, LogCode.ACTION_BLOCKED,
+        payload={"reason": "リチャージ"}
+    )
+    return HandlerReturn(value=False, stop_event=True)
 
 
 def ロックオン_guarantee_hit(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

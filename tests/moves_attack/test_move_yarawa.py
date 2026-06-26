@@ -30,6 +30,18 @@ def test_もえあがるいかり_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_やまあらし_確定急所():
+    """やまあらし: 急所ランク3のため乱数によらず常に急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒノアラシ", move_names=["やまあらし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、急所は確定ランク3で必ず発生
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
 def test_ゆめくい_ねむり状態でない相手には失敗する():
     """ゆめくい: 相手がねむり状態でない場合は失敗し、攻撃者のHPは変化しない。"""
     battle = t.start_battle(
@@ -86,6 +98,113 @@ def test_りゅうのいぶき_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_りゅうのはどう_相手にダメージを与える():
+    """りゅうのはどう: 追加効果なしの特殊ドラゴン技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["りゅうのはどう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_りんごさん_とくぼう1段階低下が発動する():
+    """りんごさん: 100%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("マホイップ", move_names=["りんごさん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["D"] == -1
+
+
+def test_リーフブレード_急所ランクが1():
+    """リーフブレード: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュカイン", move_names=["リーフブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_リーフブレード_急所ランクが1_乱数大で急所なし():
+    """リーフブレード: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュカイン", move_names=["リーフブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_レイジングブル_ケンタロスパルデア闘はかくとうタイプになる():
+    """レイジングブル: ケンタロス（パルデア闘）が使用するとかくとうタイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア闘)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "かくとう"
+
+
+def test_レイジングブル_ケンタロス水フォルムはみずタイプになる():
+    """レイジングブル: ケンタロス（パルデア水）が使用するとみずタイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア水)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "みず"
+
+
+def test_レイジングブル_ケンタロス炎フォルムはほのおタイプになる():
+    """レイジングブル: ケンタロス（パルデア炎）が使用するとほのおタイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア炎)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ほのお"
+
+
+def test_レイジングブル_ひかりのかべを解除する():
+    """レイジングブル: 命中時に相手側のひかりのかべを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア闘)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"ひかりのかべ": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["ひかりのかべ"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["ひかりのかべ"].is_active
+
+
+def test_レイジングブル_リフレクターを解除する():
+    """レイジングブル: 命中時に相手側のリフレクターを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア闘)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"リフレクター": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["リフレクター"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["リフレクター"].is_active
+
+
 def test_れいとうパンチ_こおりが発動する():
     """れいとうパンチ: 10%でこおりを付与する。"""
     battle = t.start_battle(
@@ -132,6 +251,19 @@ def test_ロッククライム_こんらんが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_ロックブラスト_複数ヒットする():
+    """ロックブラスト: 2～5回連続でヒットする複数ヒット技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックブラスト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    hit_count = battle.move_executor._resolve_hit_count(
+        t.build_context(battle, atk_idx=0)
+    )
+    assert 2 <= hit_count <= 5
 
 
 def test_ワイルドボルト_使用後に攻撃者が反動ダメージを受ける():

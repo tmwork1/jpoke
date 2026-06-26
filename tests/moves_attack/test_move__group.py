@@ -6,6 +6,42 @@ from jpoke.enums import Command
 from .. import test_utils as t
 
 
+def test_ダブルアタック_2回ヒットする():
+    """ダブルアタック: 必ず2回ヒットする固定2回攻撃技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ダブルアタック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 2
+
+
+def test_ダブルウイング_2回ヒットする():
+    """ダブルウイング: 必ず2回ヒットする固定2回攻撃技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["ダブルウイング"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 2
+
+
+def test_ツインビーム_2回ヒットする():
+    """ツインビーム: 必ず2回ヒットする固定2回特殊攻撃技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ツインビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 2
+
+
 @pytest.mark.parametrize(
     ("move_name", "foe_name"),
     [

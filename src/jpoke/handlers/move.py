@@ -106,6 +106,19 @@ def apply_volatile_to_defender(battle: Battle,
     ))
 
 
+def apply_confusion_to_defender(battle: Battle,
+                               ctx: AttackContext,
+                               value: Any,
+                               chance: float = 1) -> HandlerReturn:
+    """こんらん状態をランダムターン数（2〜5）で防御者に付与するヘルパー。"""
+    chance = battle.resolve_secondary_chance(ctx, chance)
+    if chance < 1 and battle.random.random() >= chance:
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
+        ctx.defender, source=ctx.attacker
+    ))
+
+
 def charge_into_volatile(battle: Battle,
                          ctx: AttackContext,
                          value: Any,

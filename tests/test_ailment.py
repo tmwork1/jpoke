@@ -85,10 +85,17 @@ def test_こおり_3回目行動時に強制解凍():
     assert not mon.ailment.is_active
 
 
-def test_こおり_ほのお技被弾で解凍する():
+def test_こおり_thaw技被弾で解凍する():
+    """thawラベルを持つ技（ねっとう等）で被弾すると解凍する。
+
+    ねっとうは30%でやけどを付与するため、secondary_chance=0.0 で副作用を無効化して
+    こおりの解凍のみをテストする。
+    """
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+        team0=[Pokemon("カビゴン", move_names=["ねっとう"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        secondary_chance=0.0,
     )
     attacker, defender = battle.actives
     battle.ailment_manager.apply(defender, "こおり")

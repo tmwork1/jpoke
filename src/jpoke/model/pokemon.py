@@ -102,12 +102,19 @@ class Pokemon:
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
+        self.last_physical_damage_received: int = 0  # 今ターン受けた物理ダメージ合計
+        self.last_special_damage_received: int = 0   # 今ターン受けた特殊ダメージ合計
+        self.last_damage_received: int = 0           # 今ターン最後に受けたダメージ量
+        self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
         self.ability_override_type: Type | None = None
         self.move_override_types: list[Type] | None = None
         self.volatile_override_type: Type | None = None
         self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
+        self.ate_berry: bool = False  # 今バトル中にきのみを食べたかどうか（ゲップの使用条件）
+        self.stat_lowered_this_turn: bool = False  # このターン中にランクが下がったか（うっぷんばらし用）
+        self.stat_raised_this_turn: bool = False  # このターン中にランクが上がったか（みわくのボイス・しっとのほのお用）
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -156,6 +163,12 @@ class Pokemon:
     def reset_turn_state(self):
         """ターン初期化処理。"""
         self.hits_taken = 0
+        self.last_physical_damage_received = 0
+        self.last_special_damage_received = 0
+        self.last_damage_received = 0
+        self.contact_hitter = None
+        self.stat_lowered_this_turn = False
+        self.stat_raised_this_turn = False
 
     # ── 基本情報 ────────────────────────────────────────────────
 

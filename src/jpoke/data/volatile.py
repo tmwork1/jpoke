@@ -166,6 +166,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "くちばしキャノン": VolatileData(
+        handlers={
+            Event.ON_DAMAGE_HIT: h.VolatileHandler(
+                h.くちばしキャノン_burn_attacker,
+                subject_spec="defender:self",
+                priority=10,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.くちばしキャノン_remove_volatile,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "こだわり": VolatileData(
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
@@ -325,6 +338,45 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ソーラービーム": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.ソーラービーム_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
+    "ソーラーブレード": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.ソーラーブレード_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
+    "メテオビーム": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.メテオビーム_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "たくわえる": VolatileData(
         # Volatileではカウントの管理のみ行い、実際の効果は技のハンドラ側で処理
         handlers={}
@@ -399,6 +451,18 @@ VOLATILES: dict[str, VolatileData] = {
                 h.でんじふゆう_tick_volatile,
                 subject_spec="source:self",
                 priority=110
+            ),
+        }
+    ),
+    "デカハンマー": VolatileData(
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.デカハンマー_modify_command_options,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.デカハンマー_tick_volatile,
+                subject_spec="source:self",
             ),
         }
     ),
@@ -577,6 +641,15 @@ VOLATILES: dict[str, VolatileData] = {
                 h.やどりぎのタネ_drain_hp,
                 subject_spec="source:self",
                 priority=80,
+            ),
+        }
+    ),
+    "リチャージ": VolatileData(
+        handlers={
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.リチャージ_block_action,
+                subject_spec="attacker:self",
+                priority=10,
             ),
         }
     ),

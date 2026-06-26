@@ -102,7 +102,6 @@ def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    # TODO :  ねっとうなどの特定の技を使用することで解凍する処理を追加する。自己解凍する技は_move_labels.mdのthawラベルを参照。まずはMoveDataにthawラベルを設定する。
     """こおり状態による行動不能チェック。
 
     Champions仕様:
@@ -136,8 +135,8 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
     return HandlerReturn(value=False, stop_event=True)
 
 
-def こおり_cure_by_fire_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほのお技でダメージを受けたら解凍する。"""
-    if ctx.move.type == "ほのお":
+def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """thawラベルを持つ技でダメージを受けたら解凍する。"""
+    if ctx.move.has_label("thaw"):
         battle.ailment_manager.remove(ctx.defender)
     return HandlerReturn(value=value)

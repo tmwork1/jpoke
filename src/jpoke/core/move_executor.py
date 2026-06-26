@@ -430,6 +430,15 @@ class MoveExecutor:
             return
 
         ctx.defender.hits_taken += 1
+        ctx.defender.last_damage_received = actual_damage
+        if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move):
+            ctx.defender.last_physical_damage_received += actual_damage
+        else:
+            ctx.defender.last_special_damage_received += actual_damage
+
+        # 接触技ヒット時に攻撃者を記録する（くちばしキャノン等の判定用）
+        if self.battle.query.is_contact(ctx):
+            ctx.defender.contact_hitter = ctx.attacker
 
         self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)
 

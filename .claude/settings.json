@@ -1,7 +1,12 @@
 {
   "permissions": {
-    "defaultMode": "bypassPermissions",
-    "deny": [],
-    "additionalDirectories": []
+    "defaultMode": "default",
+    "allow": [
+      "Bash(python -m pytest*)",
+      "Bash(python scripts/sort_handlers.py*)",
+      "Bash(python scripts/sort_tests.py*)",
+      "Bash(python scripts/generate_test_list.py*)"
+    ],
+    "deny": []
   }
 }
