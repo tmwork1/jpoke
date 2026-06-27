@@ -2,11 +2,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player, PlayerState
-    from jpoke.model import Pokemon, Move
+    from jpoke.model import Pokemon
 
 from copy import deepcopy
 
-from jpoke.model import Ability, Item, Move
+from jpoke.model import Ability, Item
+
+INDEX_CHANGES: dict[int, int] = {}  # 技のインデックス変更を記録する辞書
 
 
 def build(battle: Battle, observer: Player) -> Battle:
@@ -21,13 +23,13 @@ def build(battle: Battle, observer: Player) -> Battle:
     """
     rival = battle.rival(observer)
 
-    # Battle インスタンスをコピーして、観測対象のプレイヤー以外の情報を隠蔽する
+    # Battle インスタンスをコピーして、相手プレイヤーの情報を隠蔽する
     new = deepcopy(battle)
     _mask(new, rival)
     return new
 
 
-def _mask(battle: Battle, player: Player) -> PlayerState:
+def _mask(battle: Battle, player: Player):
     """PlayerState インスタンスの情報を隠蔽する。
 
     Args:
@@ -36,28 +38,21 @@ def _mask(battle: Battle, player: Player) -> PlayerState:
     """
     state = battle.player_states[player]
 
-    _mask_commands(state)
-
     # チームのポケモンの情報を隠蔽する
     for mon in state.team:
         _mask_pokemon(mon)
+
+    if battle.phase == "selection":
+        return
 
     # 選出されているポケモンのインデックスを、公開されているポケモンのみに更新する
     state.selection_indexes = [
         i for i in state.selection_indexes if state.team[i].revealed
     ]
 
-    return state
+    _mask_command(battle, player)
 
-
-def _mask_commands(state: PlayerState):
-    """PlayerState インスタンスの予約コマンドを隠蔽する。
-
-    Args:
-        state: PlayerState インスタンス
-    """
-    # 予約済みコマンドをクリアする
-    state.clear_reserved_commands()
+    return
 
 
 def _mask_pokemon(mon: Pokemon) -> Pokemon:
@@ -87,7 +82,7 @@ def _mask_pokemon(mon: Pokemon) -> Pokemon:
 
 
 def _mask_ability(mon: Pokemon):
-    """Ability インスタンスの情報を隠蔽する。
+    """特性情報を隠蔽する。
 
     Args:
         mon: Pokemon インスタンス
@@ -100,7 +95,7 @@ def _mask_ability(mon: Pokemon):
 
 
 def _mask_item(mon: Pokemon):
-    """Item インスタンスの情報を隠蔽する。
+    """アイテム情報を隠蔽する。
 
     Args:
         mon: Pokemon インスタンス
@@ -110,9 +105,61 @@ def _mask_item(mon: Pokemon):
 
 
 def _mask_move(mon: Pokemon):
-    """Move インスタンスの情報を隠蔽する。
+    """技情報を隠蔽する。
 
     Args:
         mon: Pokemon インスタンス
     """
-    mon.moves = [move for move in mon.moves if move.revealed]
+    new_moves = []
+    for i, move in enumerate(mon.moves):
+        if move.revealed:
+            new_moves.append(move)
+            new_index = len(new_moves) - 1
+            if new_index != i:
+                INDEX_CHANGES[i] = len(new_moves) - 1
+    mon.moves = new_moves
+
+
+def _mask_command(battle: Battle, player: Player):
+    state = battle.player_states[player]
+    active = state.active
+
+    # 予約済みコマンドをクリアする
+    state.clear_reserved_commands()
+
+    # 最後に利用可能だったコマンドの一覧を隠蔽する
+    commands = []
+    for cmd in state.last_available_commands:
+        # 交代コマンドは、控えのポケモンが公開されている場合のみ利用可能とする
+        if cmd.is_type("switch"):
+            mon = state.team[cmd.index]
+            if mon.revealed:
+                commands.append(cmd)
+            continue
+
+        if not active.moves:
+            continue
+
+        # 技コマンドは、技が公開されている場合のみ利用可能とする
+        idx = cmd.index
+        move = active.moves[idx]
+        if move.revealed:
+            commands.append(cmd)
+
+            # 技の隠蔽時にインデックスが変わっている可能性があるので、INDEX_CHANGES を参照してインデックスを更新する
+            if idx in INDEX_CHANGES:
+                new_index = INDEX_CHANGES[idx]
+                commands[-1] = cmd.change_index(new_index)
+
+    state.last_available_commands = commands
+
+    # 予約が必要なコマンドの種類を記録する
+    if battle.phase == "action":
+        battle.required_command_type = "action"
+    elif battle.phase == "switch":
+        # 後攻でかつ生存している場合は技コマンドの予約が必要
+        if (
+            battle.query.is_second_actor(player)
+            and active.alive
+        ):
+            battle.required_command_type = "move"

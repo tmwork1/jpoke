@@ -5,7 +5,7 @@
 """
 from __future__ import annotations
 from dataclasses import dataclass
-
+from contextlib import contextmanager
 import time
 from random import Random
 from copy import deepcopy
@@ -105,6 +105,7 @@ class Battle:
 
         self.copy_depth: int = 0
         self.observer: Player | None = None
+        self.required_command_type: CommandType | None = None  # 補完すべきコマンドタイプ（Noneの場合は補完不要）
 
         self.turn: int = -1
         self.phase: BattlePhase = ""
@@ -208,6 +209,15 @@ class Battle:
     def copy(self) -> Battle:
         return deepcopy(self)
 
+    @contextmanager
+    def phase_context(self, phase):
+        old_phase = self.phase
+        self.phase = phase
+        try:
+            yield
+        finally:
+            self.phase = old_phase
+
     def build_observation(self, observer: Player) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
@@ -226,7 +236,7 @@ class Battle:
         """
         return self.observer is not None
 
-    def complete(self, player: Player) -> CommandType | None:
+    def complete(self, player: Player) -> None:
         """指定したプレイヤーの情報を補完する。
 
         Args:
@@ -235,7 +245,7 @@ class Battle:
         Returns:
             対象プレイヤーが予約すべきコマンドの種類
         """
-        return comp.complete(self, player)
+        comp.complete(self, player)
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
@@ -381,32 +391,8 @@ class Battle:
         """
         return self.players[1 - self.players.index(player)]
 
-    def get_available_selection_commands(self, player: Player) -> list[Command]:
-        """ポケモン選出時に使用可能なコマンドを取得する。
-
-        Args:
-            player: プレイヤー
-
-        Returns:
-            list[Command]: 選出可能なコマンドのリスト
-        """
-        return self.command_manager.get_available_selection_commands(player)
-
-    def get_available_switch_commands(self, player: Player) -> list[Command]:
-        """交代可能なコマンドのリストを取得する。
-
-        Args:
-            player: プレイヤー
-
-        Returns:
-            list[Command]: 交代可能なコマンドのリスト（交代不可の場合は空リスト）
-        """
-        return self.command_manager.get_available_switch_commands(player)
-
-    def get_available_action_commands(self, player: Player) -> list[Command]:
-        """行動時に使用可能なコマンドを取得する。
-
-        技コマンド、テラスタルコマンド、交代コマンドを含みます。
+    def get_available_commands(self, player: Player) -> list[Command]:
+        """指定したプレイヤーが現在使用可能なコマンドのリストを取得する。
 
         Args:
             player: プレイヤー
@@ -414,7 +400,32 @@ class Battle:
         Returns:
             list[Command]: 使用可能なコマンドのリスト
         """
+        # 相手の観測状態でコマンドを取得する場合は、最後に利用可能だったコマンドを返す
+        if self.is_observation():
+            print(f"DEBUG: Observing battle for {self.observer.name}")
+
+        if self.observer == self.rival(player):
+            print(f"DEBUG: Returning last available commands for {player.name} as observer")
+            return self.player_states[player].last_available_commands
+
+        match self.phase:
+            case "selection":
+                return self.get_available_selection_commands(player)
+            case "action":
+                return self.get_available_action_commands(player)
+            case "switch":
+                return self.get_available_switch_commands(player)
+
+        raise ValueError(f"Invalid phase: {self.phase}")
+
+    def get_available_selection_commands(self, player: Player) -> list[Command]:
+        return self.command_manager.get_available_selection_commands(player)
+
+    def get_available_action_commands(self, player: Player) -> list[Command]:
         return self.command_manager.get_available_action_commands(player)
+
+    def get_available_switch_commands(self, player: Player) -> list[Command]:
+        return self.command_manager.get_available_switch_commands(player)
 
     def calc_effective_speed(self, mon: Pokemon) -> int:
         """実効素早さを計算（SpeedCalculatorへの委譲）。
@@ -453,40 +464,41 @@ class Battle:
 
     def resolve_selection_commands(self) -> dict[Player, list[Command]]:
         """プレイヤーの選出コマンドを解決する。"""
-        self.phase = "selection"
+        # 最後に利用可能だったコマンドを記録
+        for ply, state in self.player_states.items():
+            state.last_available_commands = self.get_available_selection_commands(ply)
 
         commands = {}
-        for i, ply in enumerate(self.players):
-            sim = self.build_observation(ply)
-            sim_player = sim.players[i]
-            commands[ply] = sim_player.choose_selection_commands(sim)
-
-        self.phase = ""
+        with self.phase_context("selection"):
+            for ply in self.players:
+                sim = self.build_observation(ply)
+                commands[ply] = ply.choose_selection_commands(sim)
         return commands
 
     def resolve_action_commands(self) -> dict[Player, Command]:
         """プレイヤーの行動コマンドを解決する。"""
-        self.phase = "action"
+        # 最後に利用可能だったコマンドを記録
+        for ply, state in self.player_states.items():
+            state.last_available_commands = self.get_available_action_commands(ply)
 
-        # プレイヤーの行動コマンドを解決する
+        # 行動コマンドを選択
         commands = {}
-        for i, ply in enumerate(self.players):
-            sim = self.build_observation(ply)
-            sim_player = sim.players[i]
-            commands[ply] = sim_player.choose_action_command(sim)
-
-        self.phase = ""
+        with self.phase_context("action"):
+            for ply in self.players:
+                sim = self.build_observation(ply)
+                commands[ply] = ply.choose_action_command(sim)
         return commands
 
     def resolve_switch_command(self, player: Player) -> Command:
         """プレイヤーの交代コマンドを解決する。"""
-        self.phase = "switch"
+        # 最後に利用可能だったコマンドを記録
+        for ply, state in self.player_states.items():
+            state.last_available_commands = self.get_available_switch_commands(ply)
 
-        # プレイヤーの交代コマンドを解決する
-        sim = self.build_observation(player)
-        command = player.choose_switch_command(sim)
-
-        self.phase = ""
+        # 交代コマンドを選択
+        with self.phase_context("switch"):
+            sim = self.build_observation(player)
+            command = player.choose_switch_command(sim)
         return command
 
     def start(self, commands: dict[Player, list[Command]] | None = None):

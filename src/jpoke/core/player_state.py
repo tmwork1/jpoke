@@ -18,6 +18,7 @@ class PlayerState:
         self.selection_indexes: list[int] = []
         self.active_index: int | None = None
         self.reserved_commands: list[Command] = []
+        self.last_available_commands: list[Command] = []  # 最後に利用可能だったコマンドのリスト
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.action_order_index: int | None = None

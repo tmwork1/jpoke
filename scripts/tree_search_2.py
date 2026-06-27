@@ -1,5 +1,5 @@
 """
-行動選択の方策関数で木探索を行うテスト
+自分が先攻でとんぼがえりを使う場合の木探索の例
 """
 
 from itertools import product
@@ -9,8 +9,8 @@ from jpoke.enums import Command
 
 
 class SearchPlayer(Player):
-    def choose_action_command(self, battle: Battle) -> Command:
-        print(f"[depth={battle.copy_depth}] Choosing action command")
+    def choose_switch_command(self, battle: Battle) -> Command:
+        print(f"[depth={battle.copy_depth}] Choosing switch command for {self.name}")
 
         rival = battle.rival(self)
 
@@ -19,7 +19,7 @@ class SearchPlayer(Player):
         rival_state = battle.player_states[rival]
 
         assert not rival_state.reserved_commands
-        assert battle.required_command_type == "action"
+        assert battle.required_command_type == "move"
 
         my_commands = battle.get_available_commands(self)
         rival_commands = battle.get_available_commands(rival)
@@ -27,7 +27,7 @@ class SearchPlayer(Player):
         print()
         print(f"My commands: {[cmd.name for cmd in my_commands]}")
         print(f"Rival commands: {[cmd.name for cmd in rival_commands]}")
-        print(f"Rival moves: {[m.name for m in rival_state.active.moves]}")
+        exit()
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
@@ -58,7 +58,7 @@ def play_game(seed: int | None = None,
     # Player 1
     player1 = SearchPlayer(name="SearchPlayer")
     player1.team = [
-        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
+        Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
     ]
 

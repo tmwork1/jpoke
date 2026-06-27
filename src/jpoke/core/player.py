@@ -48,7 +48,7 @@ class Player:
             選択された選出コマンドのリスト
         """
         n = battle.n_selected
-        commands = battle.get_available_selection_commands(self)
+        commands = battle.get_available_commands(self)
         return commands[:n]
 
     def choose_action_command(self, battle: Battle) -> Command:
@@ -62,7 +62,7 @@ class Player:
         Returns:
             選択された行動コマンド
         """
-        commands = battle.get_available_action_commands(self)
+        commands = battle.get_available_commands(self)
         return commands[0]
 
     def choose_switch_command(self, battle: Battle) -> Command:
@@ -76,5 +76,5 @@ class Player:
         Returns:
             選択された交代コマンド
         """
-        commands = battle.get_available_switch_commands(self)
+        commands = battle.get_available_commands(self)
         return commands[0]

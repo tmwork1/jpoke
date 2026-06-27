@@ -69,6 +69,7 @@ _EFFECT_SPORE_AILMENTS: list[tuple[float, AilmentName]] = [
 # メガソーラー: ON_BEGIN_MOVE で保存した天候状態（current_name, はれのcount）を ON_END_MOVE で復元するための辞書
 _メガソーラー_saved: dict[int, tuple[str, int]] = {}
 
+
 class AbilityHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -82,6 +83,7 @@ class AbilityHandler(Handler):
             priority=priority,
             once=once,
         )
+
 
 def announce_ability_triggered(battle: Battle,
                                ctx: EventContext | AttackContext,
@@ -103,6 +105,7 @@ def announce_ability_triggered(battle: Battle,
     _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
+
 def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
     """特性発動ログを記録する。"""
     mon.ability.revealed = True
@@ -111,6 +114,7 @@ def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
         LogCode.ABILITY_TRIGGERED,
         payload={"ability": mon.ability.name}
     )
+
 
 def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
     """HPが最大HPの50%を跨いだかどうかを判定する。
@@ -127,6 +131,7 @@ def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
         bool: 50%を跨いだら True
     """
     return hp_before * 2 > max_hp and hp_after * 2 <= max_hp
+
 
 def _apply_contact_counter_ailment(battle: Battle,
                                    ctx: AttackContext,
@@ -146,6 +151,7 @@ def _apply_contact_counter_ailment(battle: Battle,
         _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
+
 def _apply_contact_counter_chip(battle: Battle,
                                 ctx: AttackContext,
                                 value: Any,
@@ -159,12 +165,14 @@ def _apply_contact_counter_chip(battle: Battle,
             _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
+
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
     """緊急交代を発動する。"""
     player = battle.get_player(mon)
-    if battle.get_available_switch_commands(player):
+    if battle.can_switch(player):
         battle.player_states[player].interrupt = Interrupt.EMERGENCY
         _announce_ability_triggered(battle, mon=mon)
+
 
 def _apply_type_absorb(battle: Battle,
                        ctx: AttackContext,
@@ -196,6 +204,7 @@ def _apply_type_absorb(battle: Battle,
 
     return HandlerReturn(value=False, stop_event=True)
 
+
 def _modify_by_move_condition(move: Move,
                               value: int,
                               *,
@@ -210,6 +219,7 @@ def _modify_by_move_condition(move: Move,
         value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
+
 def _activate_weather(battle: Battle,
                       mon: Pokemon | None,
                       value: Any,
@@ -220,6 +230,7 @@ def _activate_weather(battle: Battle,
     if mon and battle.weather_manager.apply(weather, count, source=mon):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
+
 
 def _deactivate_strong_weather(battle: Battle,
                                ctx: EventContext,
@@ -238,6 +249,7 @@ def _deactivate_strong_weather(battle: Battle,
         battle.weather_manager.remove()
     return HandlerReturn(value=value)
 
+
 def _activate_terrain(battle: Battle,
                       mon: Pokemon | None,
                       value: Any,
@@ -249,6 +261,7 @@ def _activate_terrain(battle: Battle,
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
+
 def _block_stat_drop_by_foe(value: dict, ctx: EventContext, stat: Stat | None = None) -> dict:
     """相手由来のランク低下を除去する。stat=Noneなら全能力が対象。"""
     if ctx.source is not None and ctx.source != ctx.target:
@@ -258,11 +271,13 @@ def _block_stat_drop_by_foe(value: dict, ctx: EventContext, stat: Stat | None = 
             value = {s: v for s, v in value.items() if s != stat or v >= 0}
     return value
 
+
 def _ignore_sandstorm_damage(_battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """すなあらしのダメージを無効化する。"""
     if ctx.hp_change_reason == "sandstorm":
         return HandlerReturn(value=0, stop_event=True)
     return HandlerReturn(value=value)
+
 
 def _prevent_ailment(battle: Battle,
                      ctx: EventContext,
@@ -287,6 +302,7 @@ def _prevent_ailment(battle: Battle,
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
 
+
 def _prevent_volatile(battle: Battle,
                       ctx: EventContext,
                       value: VolatileName,
@@ -310,10 +326,12 @@ def _prevent_volatile(battle: Battle,
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
+
 def ARシステム_apply_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ARシステム特性: 登場時にメモリに合わせてタイプを変更する。"""
     _apply_multitype(ctx.source, MEMORY_TO_TYPE)
     return HandlerReturn(value=value)
+
 
 def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """ARシステム特性: メモリの奪取・交換を防ぐ。"""
@@ -1048,14 +1066,18 @@ def きょううん_modify_critical_rank(battle: Battle, ctx: AttackContext, val
 def prevent_poison_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_ailment(battle, ctx, value, blocked_ailments=["どく", "もうどく"])
 
+
 def prevent_paralysis_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_ailment(battle, ctx, value, blocked_ailments=["まひ"])
+
 
 def prevent_burn_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_ailment(battle, ctx, value, blocked_ailments=["やけど"])
 
+
 def prevent_sleep_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_ailment(battle, ctx, value, blocked_ailments=["ねむり"])
+
 
 def prevent_freeze_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_ailment(battle, ctx, value, blocked_ailments=["こおり"])
@@ -1526,6 +1548,7 @@ def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: Type, *, f
     if value == from_type:
         value = to_type
     return HandlerReturn(value=value)
+
 
 def _skin_boost_power(battle: Battle, ctx: AttackContext, value: int, *, trigger_type: str) -> HandlerReturn:
     """スキン系特性共通: trigger_type だった技の威力を 4915/4096 倍にする。"""
@@ -3342,6 +3365,7 @@ def _apply_multitype(mon: Pokemon, item_table: dict[str, Type]) -> None:
     """道具に応じてポケモンのタイプを変更する共通ロジック。"""
     item_name = mon.item.name if mon.has_item() else ""
     mon.ability_override_type = item_table.get(item_name)
+
 
 def _block_item_change(mon: Pokemon, unchangable_items: list[str]) -> HandlerReturn:
     """道具の奪取・交換を防ぐ共通ロジック。"""

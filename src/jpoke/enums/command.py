@@ -126,6 +126,21 @@ class Command(Enum):
             return int(self.name.split("_")[-1])
         return 0
 
+    def change_index(self, new_index: int) -> Command:
+        """コマンドのインデックスを変更して新しいコマンドを返す。
+
+        Args:
+            new_index: 新しいインデックス (0-9)
+
+        Returns:
+            新しいコマンド
+        """
+        if "_" in self.name:
+            prefix = self.name.split("_")[0]
+            new_name = f"{prefix}_{new_index}"
+            return Command[new_name]
+        return self
+
     def is_type(self, command_type: CommandType) -> bool:
         """指定したコマンドタイプかどうか"""
         match command_type:
