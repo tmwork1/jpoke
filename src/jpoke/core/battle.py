@@ -37,7 +37,6 @@ from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
 from .pokemon_query import PokemonQuery
 from . import observation_builder as obs
-from . import completer as comp
 
 
 @dataclass
@@ -105,7 +104,6 @@ class Battle:
 
         self.copy_depth: int = 0
         self.observer: Player | None = None
-        self.required_command_type: CommandType | None = None  # 補完すべきコマンドタイプ（Noneの場合は補完不要）
 
         self.turn: int = -1
         self.phase: BattlePhase = ""
@@ -220,12 +218,17 @@ class Battle:
 
     def build_observation(self, observer: Player) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
+
+        すでに観測状態の場合はそのままコピーを返す。
+
         Args:
             observer: 観測対象のプレイヤー。Noneの場合は全ての情報をコピー。
 
         Returns:
             Battle インスタンスのコピー
         """
+        if self.is_observation():
+            return self.copy()
         return obs.build(self, observer)
 
     def is_observation(self) -> bool:
@@ -235,17 +238,6 @@ class Battle:
             bool: 観測用の場合は True、通常の Battle インスタンスの場合は False
         """
         return self.observer is not None
-
-    def complete(self, player: Player) -> None:
-        """指定したプレイヤーの情報を補完する。
-
-        Args:
-            player: 補完対象のプレイヤー
-
-        Returns:
-            対象プレイヤーが予約すべきコマンドの種類
-        """
-        comp.complete(self, player)
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
@@ -401,11 +393,7 @@ class Battle:
             list[Command]: 使用可能なコマンドのリスト
         """
         # 相手の観測状態でコマンドを取得する場合は、最後に利用可能だったコマンドを返す
-        if self.is_observation():
-            print(f"DEBUG: Observing battle for {self.observer.name}")
-
         if self.observer == self.rival(player):
-            print(f"DEBUG: Returning last available commands for {player.name} as observer")
             return self.player_states[player].last_available_commands
 
         match self.phase:
@@ -464,9 +452,11 @@ class Battle:
 
     def resolve_selection_commands(self) -> dict[Player, list[Command]]:
         """プレイヤーの選出コマンドを解決する。"""
-        # 最後に利用可能だったコマンドを記録
         for ply, state in self.player_states.items():
+            # 最後に利用可能だったコマンドを記録
             state.last_available_commands = self.get_available_selection_commands(ply)
+            # 木探索を行う際に補完すべきコマンドタイプを指定
+            state.required_command_type = "selection"
 
         commands = {}
         with self.phase_context("selection"):
@@ -477,9 +467,11 @@ class Battle:
 
     def resolve_action_commands(self) -> dict[Player, Command]:
         """プレイヤーの行動コマンドを解決する。"""
-        # 最後に利用可能だったコマンドを記録
         for ply, state in self.player_states.items():
+            # 最後に利用可能だったコマンドを記録
             state.last_available_commands = self.get_available_action_commands(ply)
+            # 木探索を行う際に補完すべきコマンドタイプを指定
+            state.required_command_type = "action"
 
         # 行動コマンドを選択
         commands = {}
@@ -491,9 +483,12 @@ class Battle:
 
     def resolve_switch_command(self, player: Player) -> Command:
         """プレイヤーの交代コマンドを解決する。"""
+        state = self.player_states[player]
+
         # 最後に利用可能だったコマンドを記録
-        for ply, state in self.player_states.items():
-            state.last_available_commands = self.get_available_switch_commands(ply)
+        state.last_available_commands = self.get_available_switch_commands(player)
+        # 木探索を行う際に補完すべきコマンドタイプを指定
+        state.required_command_type = "switch"
 
         # 交代コマンドを選択
         with self.phase_context("switch"):
@@ -516,13 +511,37 @@ class Battle:
         Args:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
         """
-        if self.is_new_turn and not commands:
+        if self.is_new_turn() and commands is None:
+            # is_new_turn()だけで判定すると、行動コマンド選択時の木探索で
+            # resolve_action_commands()が再帰的に呼ばれてしまう。
             commands = self.resolve_action_commands()
+        else:
+            for ply, state in self.player_states.items():
+                command = commands.get(ply)
+                if not self._validate_command_type(state, command):
+                    raise ValueError(f"Invalid command type for {ply.name}: {command}.")
 
         if not commands:
             raise ValueError("No commands provided for step().")
 
         self.turn_controller.step(commands)
+
+    def _validate_command_type(self, state: PlayerState, command: Command | None) -> bool:
+        """プレイヤーの状態とコマンドの型を検証する。
+
+        Args:
+            state: プレイヤーの状態
+            command: 実行するコマンド
+
+        Returns:
+            bool: コマンドの型が状態に適合する場合は True、そうでない場合は False
+        """
+        required_type = state.required_command_type
+        return (
+            command is None
+            or required_type is None
+            or command.is_type(required_type)
+        )
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。

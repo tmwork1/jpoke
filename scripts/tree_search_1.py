@@ -12,29 +12,30 @@ class SearchPlayer(Player):
     def choose_action_command(self, battle: Battle) -> Command:
         print(f"[depth={battle.copy_depth}] Choosing action command")
 
-        rival = battle.rival(self)
+        if battle.copy_depth > 1:
+            raise ValueError("木探索の深さが2を超えています。")
 
-        # 木探索のために相手の情報を補完する
-        battle.complete(rival)
+        self_state = battle.player_states[self]
+        rival = battle.rival(self)
         rival_state = battle.player_states[rival]
 
+        assert self_state.required_command_type == "action"
+        assert rival_state.required_command_type == "action"
         assert not rival_state.reserved_commands
-        assert battle.required_command_type == "action"
 
         my_commands = battle.get_available_commands(self)
         rival_commands = battle.get_available_commands(rival)
 
-        print()
-        print(f"My commands: {[cmd.name for cmd in my_commands]}")
-        print(f"Rival commands: {[cmd.name for cmd in rival_commands]}")
-        print(f"Rival moves: {[m.name for m in rival_state.active.moves]}")
+        print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
+        print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
+        print(f"- Rival moves: {[m.name for m in rival_state.active.moves]}")
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
         for my_cmd, rival_cmd in product(my_commands, rival_commands):
             print(f"<< Simulation {my_cmd} vs {rival_cmd} >>")
-            sim = battle.copy()
             commands = {self: my_cmd, rival: rival_cmd}
+            sim = battle.copy()
             sim.step(commands)
             sim.print_logs()
             print()
@@ -67,6 +68,7 @@ def play_game(seed: int | None = None,
         Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
         Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
     ]
+    player2.team[0].moves[0].revealed = True  # 相手の技を公開する
 
     # バトルを作成・実行
     battle = Battle((player1, player2), n_selected=2, seed=seed)

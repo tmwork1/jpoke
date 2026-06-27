@@ -2,6 +2,7 @@
 自分が先攻でとんぼがえりを使う場合の木探索の例
 """
 
+import random
 from itertools import product
 
 from jpoke import Battle, Player, Pokemon
@@ -12,21 +13,23 @@ class SearchPlayer(Player):
     def choose_switch_command(self, battle: Battle) -> Command:
         print(f"[depth={battle.copy_depth}] Choosing switch command for {self.name}")
 
-        rival = battle.rival(self)
+        if battle.copy_depth > 1:
+            raise ValueError("木探索の深さが2を超えています。")
 
-        # 木探索のために相手の情報を補完する
-        battle.complete(rival)
+        self_state = battle.player_states[self]
+        rival = battle.rival(self)
         rival_state = battle.player_states[rival]
 
+        assert self_state.required_command_type == "switch"
+        assert rival_state.required_command_type == "move"
         assert not rival_state.reserved_commands
-        assert battle.required_command_type == "move"
 
         my_commands = battle.get_available_commands(self)
         rival_commands = battle.get_available_commands(rival)
 
-        print()
-        print(f"My commands: {[cmd.name for cmd in my_commands]}")
-        print(f"Rival commands: {[cmd.name for cmd in rival_commands]}")
+        print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
+        print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
+        print(f"{[m.name for m in rival_state.active.moves]}")
         exit()
 
         # コマンドの組み合わせを総当たりで評価する
@@ -42,6 +45,12 @@ class SearchPlayer(Player):
         print(f"{'-'*20}")
 
         return my_commands[0]
+
+
+class RandomPlayer(Player):
+    def choose_action_command(self, battle: Battle) -> Command:
+        commands = battle.get_available_commands(self)
+        return random.choice(commands)
 
 
 def play_game(seed: int | None = None,
@@ -62,11 +71,11 @@ def play_game(seed: int | None = None,
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
     ]
 
-    player2 = Player(name="RandomPlayer")
+    player2 = RandomPlayer(name="RandomPlayer")
     player2.team = [
-        Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
-        Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
+        Pokemon("ゼニガメ", item_name="", move_names=["たいあたり", "なきごえ", "しっぽをふる"]),
     ]
+    player2.team[0].moves[-1].revealed = True  # 先頭以外の技を公開する
 
     # バトルを作成・実行
     battle = Battle((player1, player2), n_selected=2, seed=seed)

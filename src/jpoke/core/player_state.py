@@ -6,6 +6,7 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 
+from jpoke.utils.type_defs import CommandType
 from jpoke.utils import fast_copy
 from jpoke.enums import Command, Interrupt
 
@@ -19,6 +20,7 @@ class PlayerState:
         self.active_index: int | None = None
         self.reserved_commands: list[Command] = []
         self.last_available_commands: list[Command] = []  # 最後に利用可能だったコマンドのリスト
+        self.required_command_type: CommandType | None = None  # 木探索を行う際に補完すべきコマンドタイプ（Noneの場合は補完不要）
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.action_order_index: int | None = None
