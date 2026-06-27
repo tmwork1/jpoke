@@ -130,7 +130,7 @@ def restrict_commands(battle: Battle,
     for cmd in value:
         if (
             mon.moves[cmd.index].name == fixed_move_name
-            or (can_switch and cmd.is_switch)
+            or (can_switch and cmd.is_type("switch"))
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
@@ -239,7 +239,7 @@ def いちゃもん_modify_command_options(battle: Battle, ctx: EventContext, va
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move
+            not cmd.is_type("move")
             or mon.moves[cmd.index].name != last_move_name
         ):
             new_options.append(cmd)
@@ -340,7 +340,7 @@ def かなしばり_modify_command_options(battle: Battle, ctx: EventContext, va
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family
+            not cmd.is_type("move")
             or ctx.source.moves[cmd.index].name != forbidden_name
         ):
             new_options.append(cmd)
@@ -562,7 +562,7 @@ def じごくづき_restrict_commands(battle: Battle, ctx: EventContext, value: 
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move
+            not cmd.is_type("move")
             or not ctx.source.moves[cmd.index].has_label("sound")
         ):
             new_options.append(cmd)
@@ -750,7 +750,7 @@ def デカハンマー_modify_command_options(battle: Battle, ctx: EventContext,
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move
+            not cmd.is_type("move")
             or mon.moves[cmd.index].name != "デカハンマー"
         ):
             new_options.append(cmd)

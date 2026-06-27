@@ -2,25 +2,42 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player, PlayerState
-    from jpoke.model import Pokemon, Move
+    from jpoke.model import Pokemon
 
+from jpoke.utils.type_defs import CommandType
 from jpoke.enums import Command
+from jpoke.model import Move
 
 
-def complete(battle: Battle, player: Player) -> None:
+def complete(battle: Battle, player: Player) -> CommandType | None:
     """指定したプレイヤーの情報を補完し、木探索できる状態にする。
 
     Args:
         battle: Battle インスタンス
         player: 情報を補完するプレイヤー
+
+    Returns:
+        対象プレイヤーが予約すべきコマンドの種類
     """
+    if battle.phase == "selection":
+        raise ValueError("Cannot complete commands during selection phase.")
+
+    state = battle.player_states[player]
+
+    # 選出情報を補完する
     _complete_selection_indexes(battle, player)
 
-    match battle.phase:
-        case "action":
-            _complete_action_command(battle, player)
-        case "switch":
-            _complete_switch_command(battle, player)
+    # ポケモンの情報を補完する
+    for mon in state.team:
+        _complete_pokemon(mon)
+
+    # 予約コマンドを補完する
+    if battle.phase == "action":
+        state.clear_reserved_commands()
+        return "action"
+
+    elif battle.phase == "switch":
+        return _complete_switch_command(battle, player)
 
 
 def _complete_selection_indexes(battle: Battle, player: Player) -> None:
@@ -39,36 +56,7 @@ def _complete_selection_indexes(battle: Battle, player: Player) -> None:
         state.selection_indexes.extend(unrevealed_indexes[:n_unrevealed])
 
 
-def _complete_action_command(battle: Battle, player: Player) -> None:
-    """PlayerState インスタンスの行動コマンドを補完する。
-
-    Args:
-        battle: Battle インスタンス
-        player: Player インスタンス
-    """
-    state = battle.player_states[player]
-
-    if state.command_reserved():
-        if state.next_command.is_action():
-            # 予約済みコマンドがある場合は補完不要
-            print(f"DEBUG: Action command {state.next_command} is already reserved. No need to complete.")
-            return
-        else:
-            # 不適切なコマンドが予約されている場合はクリアする
-            print(f"DEBUG: {state.next_command} is not an action command. Clearing reserved command.")
-            state.clear_reserved_commands()
-
-    commands = state.legal_commands
-
-    # 合法手がない場合は、MOVE_0を合法手とする
-    if not commands:
-        commands = [Command.MOVE_0]
-
-    state.reserve_command(commands[0])
-    print(f"DEBUG: Reserving action command {state.next_command} for player {player.name}.")
-
-
-def _complete_switch_command(battle: Battle, player: Player) -> None:
+def _complete_switch_command(battle: Battle, player: Player) -> CommandType | None:
     """PlayerState インスタンスの交代コマンドを補完する。
 
     Args:
@@ -77,28 +65,21 @@ def _complete_switch_command(battle: Battle, player: Player) -> None:
     """
     state = battle.player_states[player]
 
-    # 場のポケモンが瀕死でないならば補完不要
-    if not state.active.fainted:
-        print(f"DEBUG: Active Pokémon {state.active} is not fainted. No need to complete switch command.")
-        return
+    # 相手がまだ行動していない場合は、技コマンドが必要であることを示す
+    if battle.query.is_second_actor(player):
+        return "move"
 
-    if state.command_reserved():
-        if state.next_command.is_switch:
-            # 予約済みコマンドがある場合は補完不要
-            print(f"DEBUG: Switch command {state.next_command} is already reserved. No need to complete.")
-            return
-        else:
-            # 不適切なコマンドが予約されている場合はクリアする
-            print(f"DEBUG: {state.next_command} is not a switch command. Clearing reserved command.")
-            state.clear_reserved_commands()
+    # 相手の場のポケモンが瀕死の場合は、交代コマンドが必要であることを示す
+    if state.active.fainted:
+        return "switch"
 
-    commands = state.legal_commands
 
-    # 合法手がない場合は、ベンチの先頭ポケモンを交代コマンドとする
-    if not commands:
-        mon = state.bench[0]
-        mon_index = state.team.index(mon)
-        commands = [Command.get_switch_command(mon_index)]
+def _complete_pokemon(mon: Pokemon) -> None:
+    """Pokemon インスタンスの情報を補完する。
 
-    state.reserve_command(commands[0])
-    print(f"DEBUG: Reserving switch command {state.next_command} for player {player.name}.")
+    Args:
+        mon: Pokemon インスタンス
+    """
+    # 技の情報を補完する
+    if not mon.moves:
+        mon.moves = [Move("はねる")]

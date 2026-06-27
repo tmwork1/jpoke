@@ -21,7 +21,6 @@ class PlayerState:
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.action_order_index: int | None = None
-        self.legal_commands: list[Command] = []
         self.baton_pass_data: dict | None = None  # バトンタッチの引き継ぎデータ # TODO : {}で初期化し、Noneを許容しないようにする
 
     def __deepcopy__(self, memo):

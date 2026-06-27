@@ -55,7 +55,7 @@ class Pokemon:
                  ability_name: str = "",
                  item_name: str = "",
                  move_names: list[str] = ["はねる"],
-                 tera_type: Type = "ステラ") -> None:
+                 tera_type: Type | None = None) -> None:
         """ポケモンを初期化する。
 
         Args:
@@ -72,7 +72,8 @@ class Pokemon:
         self.gender: Gender = gender
         self._nature: Nature = nature
         self._level: int = level
-        self.tera_type: Type = tera_type
+
+        self.tera_type: Type = tera_type or self.base_types[0]
 
         self.ability: Ability = Ability(ability_name)
         self.base_ability_name: str = ability_name

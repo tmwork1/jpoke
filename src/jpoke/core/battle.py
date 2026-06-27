@@ -10,7 +10,7 @@ import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
+from jpoke.utils.type_defs import BattlePhase, CommandType, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
@@ -37,6 +37,7 @@ from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
 from .pokemon_query import PokemonQuery
 from . import observation_builder as obs
+from . import completer as comp
 
 
 @dataclass
@@ -102,8 +103,8 @@ class Battle:
 
         self.random = Random(self.seed)
 
-        self.depth: int = 0
-        self.perspective: Player | None = None  # 視点となるプレイヤー
+        self.copy_depth: int = 0
+        self.observer: Player | None = None
 
         self.turn: int = -1
         self.phase: BattlePhase = ""
@@ -179,7 +180,7 @@ class Battle:
         new._update_reference()
 
         # 深さを更新
-        new.depth += 1
+        new.copy_depth += 1
 
         return new
 
@@ -204,6 +205,9 @@ class Battle:
         for side in self.side_managers:
             side.update_reference(self)
 
+    def copy(self) -> Battle:
+        return deepcopy(self)
+
     def build_observation(self, observer: Player) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
@@ -211,12 +215,27 @@ class Battle:
 
         Returns:
             Battle インスタンスのコピー
-
-        Note:
-            observer の指定にかかわらず、乱数シードは隠蔽される。
         """
-        battle = obs.build(self, observer)
-        return battle
+        return obs.build(self, observer)
+
+    def is_observation(self) -> bool:
+        """Battle インスタンスが観測用かどうかを判定する。
+
+        Returns:
+            bool: 観測用の場合は True、通常の Battle インスタンスの場合は False
+        """
+        return self.observer is not None
+
+    def complete(self, player: Player) -> CommandType | None:
+        """指定したプレイヤーの情報を補完する。
+
+        Args:
+            player: 補完対象のプレイヤー
+
+        Returns:
+            対象プレイヤーが予約すべきコマンドの種類
+        """
+        return comp.complete(self, player)
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
@@ -449,10 +468,6 @@ class Battle:
         """プレイヤーの行動コマンドを解決する。"""
         self.phase = "action"
 
-        # プレイヤーの合法手を記録しておく
-        for ply, state in self.player_states.items():
-            state.legal_commands = self.get_available_action_commands(ply)
-
         # プレイヤーの行動コマンドを解決する
         commands = {}
         for i, ply in enumerate(self.players):
@@ -466,9 +481,6 @@ class Battle:
     def resolve_switch_command(self, player: Player) -> Command:
         """プレイヤーの交代コマンドを解決する。"""
         self.phase = "switch"
-
-        # プレイヤーの合法手を記録しておく
-        self.player_states[player].legal_commands = self.get_available_action_commands(player)
 
         # プレイヤーの交代コマンドを解決する
         sim = self.build_observation(player)
@@ -492,8 +504,12 @@ class Battle:
         Args:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
         """
-        if not commands:
+        if self.is_new_turn and not commands:
             commands = self.resolve_action_commands()
+
+        if not commands:
+            raise ValueError("No commands provided for step().")
+
         self.turn_controller.step(commands)
 
     def run_move(self, attacker: Pokemon, move: Move):

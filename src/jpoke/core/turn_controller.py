@@ -142,7 +142,7 @@ class TurnController:
 
             # 交代
             if self.battle.is_new_turn():
-                if state.next_command.is_switch:
+                if state.next_command.is_type("switch"):
                     # 予約されている交代コマンドを取得
                     command = state.pop_command()
 
@@ -175,8 +175,7 @@ class TurnController:
             if command.is_terastal and mon.can_terastallize():
                 mon.terastallize()
                 self.battle.add_event_log(
-                    mon,
-                    LogCode.TERASALLIZED,
+                    mon, LogCode.TERASALLIZED,
                     payload={"type": mon.tera_type}
                 )
                 self._events.emit(Event.ON_TERASTALLIZE, EventContext(source=mon))

@@ -2,6 +2,8 @@
 from __future__ import annotations
 from enum import Enum, auto
 
+from jpoke.utils.type_defs import CommandType
+
 
 class Command(Enum):
     """バトル中のコマンド
@@ -21,7 +23,7 @@ class Command(Enum):
     """
     # 特殊コマンド
     STRUGGLE = auto()  # わるあがき
-    FORCED = auto()  # 強制再行動（あばれる/かくれる技の2ターン目）
+    FORCED = auto()  # 強制再行動
 
     # 選出コマンド (0-9)
     SELECT_0 = auto()
@@ -115,10 +117,6 @@ class Command(Enum):
     def __str__(self):
         return self.name
 
-    def is_none(self) -> bool:
-        """NONEコマンドかどうか"""
-        return self.value is None
-
     @property
     def index(self) -> int:
         """コマンドのインデックス (0-9)
@@ -128,21 +126,18 @@ class Command(Enum):
             return int(self.name.split("_")[-1])
         return 0
 
-    # TODO : is_... はプロパティではなくメソッドにする
-
-    @property
-    def is_selection(self) -> bool:
-        """選出コマンドかどうか"""
-        return self.name[:-2] == "SELECT"
-
-    def is_action(self) -> bool:
-        """行動コマンドかどうか"""
-        return not self.is_selection
-
-    @property
-    def is_switch(self) -> bool:
-        """交代コマンドかどうか"""
-        return self.name[:-2] == "SWITCH"
+    def is_type(self, command_type: CommandType) -> bool:
+        """指定したコマンドタイプかどうか"""
+        match command_type:
+            case "selection":
+                return self.name[:-2] == "SELECT"
+            case "action":
+                return self.name[:-2] != "SELECT"
+            case "move":
+                return self.name[:-2] not in {"SELECT", "SWITCH"}
+            case "switch":
+                return self.name[:-2] == "SWITCH"
+        raise ValueError(f"Invalid command type: {command_type}")
 
     @property
     def is_regular_move(self) -> bool:
@@ -168,22 +163,6 @@ class Command(Enum):
     def is_zmove(self) -> bool:
         """Zワザコマンドかどうか"""
         return self.name[:-2] == "ZMOVE"
-
-    @property
-    def is_move(self) -> bool:
-        """技系全般かどうか（）"""
-        return (
-            self.is_regular_move
-            or self.is_terastal
-            or self.is_megaevol
-            or self.is_gigamax
-            or self.is_zmove
-        )
-
-    @property
-    def is_move_execution(self) -> bool:
-        """実際に技実行へ進むコマンドかどうか。"""
-        return self.is_move or self in {Command.FORCED, Command.STRUGGLE}
 
     @classmethod
     def get_selection_command(cls, index: int) -> Command:
@@ -223,17 +202,17 @@ class Command(Enum):
     @classmethod
     def selection_commands(cls) -> list[Command]:
         """全ての選出コマンドを取得"""
-        return [x for x in cls if x.is_selection]
+        return [x for x in cls if x.is_type("selection")]
 
     @classmethod
     def switch_commands(cls) -> list[Command]:
         """全ての交代コマンドを取得"""
-        return [x for x in cls if x.is_switch]
+        return [x for x in cls if x.is_type("switch")]
 
     @classmethod
     def all_move_commands(cls) -> list[Command]:
         """全ての技系コマンドを取得"""
-        return [x for x in cls if x.is_move]
+        return [x for x in cls if x.is_type("move")]
 
     @classmethod
     def regular_move_commands(cls) -> list[Command]:

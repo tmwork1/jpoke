@@ -217,9 +217,10 @@ class EventLog:
 
             case LogCode.TERASALLIZED:
                 type_ = payload.get("type")
+                text = "テラスタル化した"
                 if type_:
-                    return f"テラスタルした ({type_})"
-                return "テラスタルした"
+                    return text + f"（タイプ: {type_}）"
+                return text
 
             case LogCode.MEGA_EVOLVED:
                 return "メガシンカした"

@@ -210,7 +210,7 @@ def test_かなしばり_コマンド制限で他の技は選択可能():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "かなしばり", move_name="たいあたり")
     commands = battle.get_available_action_commands(player)
-    move_commands = [cmd for cmd in commands if cmd.is_move]
+    move_commands = [cmd for cmd in commands if cmd.is_type("move")]
     assert any(cmd.index == 1 for cmd in move_commands)
 
 

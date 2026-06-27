@@ -59,21 +59,6 @@ def _mask_commands(state: PlayerState):
     # 予約済みコマンドをクリアする
     state.clear_reserved_commands()
 
-    # 利用可能なコマンドのうち、開示されている選択肢のみを残す
-    predictable_commands = []
-    for cmd in state.legal_commands:
-        if cmd.is_move:
-            move = state.active.moves[cmd.index]
-            if move.revealed:
-                predictable_commands.append(cmd)
-
-        elif cmd.is_switch:
-            mon = state.team[cmd.index]
-            if mon.revealed:
-                predictable_commands.append(cmd)
-
-    state.legal_commands = predictable_commands
-
 
 def _mask_pokemon(mon: Pokemon) -> Pokemon:
     """Pokemon インスタンスの情報を隠蔽する。
@@ -131,5 +116,3 @@ def _mask_move(mon: Pokemon):
         mon: Pokemon インスタンス
     """
     mon.moves = [move for move in mon.moves if move.revealed]
-    if not mon.moves:
-        mon.moves = [Move("はねる")]  # デフォルトの技を設定

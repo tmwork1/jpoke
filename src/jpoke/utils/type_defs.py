@@ -2,6 +2,8 @@ from typing import Literal
 
 
 BattlePhase = Literal["", "selection", "action", "switch"]
+CommandType = Literal["", "selection", "action", "move", "switch"]
+
 
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",

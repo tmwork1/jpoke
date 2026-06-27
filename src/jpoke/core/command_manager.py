@@ -90,7 +90,7 @@ class CommandManager:
             return [Command.FORCED]
 
         # 技コマンドがない場合はわるあがきを追加
-        if not any(cmd.is_move_family for cmd in commands):
+        if not any(cmd.is_type("move") for cmd in commands):
             commands += [Command.STRUGGLE]
 
         return commands

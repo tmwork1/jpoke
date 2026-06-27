@@ -886,7 +886,7 @@ def とつげきチョッキ_modify_command_options(_battle: Battle, ctx: EventC
     mon = ctx.source
     return HandlerReturn(value=[
         cmd for cmd in value
-        if not (cmd.is_move_family and mon.moves[cmd.index].category == "変化")
+        if not (cmd.is_type("move") and mon.moves[cmd.index].category == "変化")
     ])
 
 
