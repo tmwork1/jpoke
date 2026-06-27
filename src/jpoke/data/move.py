@@ -1,3 +1,9 @@
+# TODO : _move_labels.mdのラベルがMoveData.labelsに含まれているか確認する。含まれていなければMoveData.labelsに追加する。
+# TODO : 定義を五十音順に並びかえるスクリプトを作成して実行する。ついでに定義内の空行も取り除く。
+# TODO : progress/move.mdにあってMOVESに登録されていない技があれば実装する。
+# TODO : MOVESに登録されているがprogress/move.mdにない技があれば進捗表に追加する。
+# TODO : 追加効果のない技やハンドラを実装しない技にはhandlers={}とし、同じ行にコメントを残す。
+
 """技データ定義モジュール。
 
 Note:
@@ -25,9 +31,6 @@ def common_setup() -> None:
 
 
 MOVES: dict[str, MoveData] = {
-    # -------------------------
-    # 攻撃技
-    # -------------------------
     "わるあがき": MoveData(
         type="",
         category="物理",
@@ -41,6 +44,7 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "こんらん": MoveData(
+        # TODO : _こんらん、に改名する
         type="",
         category="物理",
         pp=99999,
@@ -1155,7 +1159,8 @@ MOVES: dict[str, MoveData] = {
         category="物理",
         pp=15,
         power=80,
-        accuracy=100
+        accuracy=100,
+        # TODO : ハンドラ実装
     ),
     "シザークロス": MoveData(
         type="むし",
@@ -2175,8 +2180,8 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
     ),
+    # TODO : トラバサミ実装
     "ドラムアタック": MoveData(
-
         type="くさ",
         category="物理",
         pp=10,
@@ -3252,6 +3257,7 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
+        # TODO : ハンドラ実装
         handlers={
         }
     ),
@@ -5269,9 +5275,13 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
+        labels=["secondary_effect"],
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.MoveHandler(
                 ha.フリーズドライ_water_effectiveness,
+            ),
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.フリーズドライ_apply_ailment_to_defender,
             )
         }
     ),
@@ -5478,6 +5488,19 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=75,
 
+    ),
+    "マジカルアクセル": MoveData(
+        type="エスパー",
+        category="特殊",
+        pp=10,
+        power=100,
+        accuracy=100,
+        labels=["secondary_effect"],
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.マジカルアクセル_apply_confusion_to_defender,
+            )
+        }
     ),
     "マジカルシャイン": MoveData(
         type="フェアリー",
@@ -5750,7 +5773,6 @@ MOVES: dict[str, MoveData] = {
         }
     ),
     "もえあがるいかり": MoveData(
-
         type="あく",
         category="特殊",
         pp=10,
@@ -5763,6 +5785,7 @@ MOVES: dict[str, MoveData] = {
             )
         }
     ),
+    # TODO : もえつきる実装
     "やきつくす": MoveData(
         type="ほのお",
         category="特殊",
@@ -5990,9 +6013,6 @@ MOVES: dict[str, MoveData] = {
             )
         }
     ),
-    # -------------------------
-    # 変化技
-    # -------------------------
     "アクアリング": MoveData(
         type="みず",
         category="変化",

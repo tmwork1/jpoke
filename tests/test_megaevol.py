@@ -41,7 +41,7 @@ def test_メガシンカ_フォルムが変わる(stone: str, normal_name: str, 
         team1=[Pokemon("ピカチュウ")],
     )
     t.reserve_command(battle, Command.MEGAEVOL_0)
-    battle.advance_turn()
+    battle.step()
 
     mon = battle.actives[0]
     assert mon.name == mega_name
@@ -56,7 +56,7 @@ def test_メガシンカ_直後に特性が起動する():
     assert battle.weather.name == ""
 
     t.reserve_command(battle, Command.MEGAEVOL_0)
-    battle.advance_turn()
+    battle.step()
 
     mon = battle.actives[0]
     assert mon.name == "メガバンギラス"

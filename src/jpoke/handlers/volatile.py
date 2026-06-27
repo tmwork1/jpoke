@@ -20,6 +20,7 @@ HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
     "シャドーダイブ": [],
 }
 
+
 class VolatileHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -34,10 +35,12 @@ class VolatileHandler(Handler):
             once=once
         )
 
+
 def check_trapped_not_ghost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ゴーストタイプでなければ交代を禁止する。"""
     source = ctx.source
     return HandlerReturn(value=source is not None and not source.has_type("ゴースト"))
+
 
 def tick_volatile(battle: Battle,
                   ctx: EventContext,
@@ -54,6 +57,7 @@ def tick_volatile(battle: Battle,
     mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
     battle.volatile_manager.tick(mon, volatile)
     return HandlerReturn(value=value)
+
 
 def remove_volatile(battle: Battle,
                     ctx: EventContext,
@@ -78,6 +82,7 @@ def remove_volatile(battle: Battle,
         )
     return HandlerReturn(value=value)
 
+
 def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """強制コマンドを返すハンドラーの共通処理
 
@@ -90,6 +95,7 @@ def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> Ha
         HandlerReturn: 常にCommand.FORCEDを返す
     """
     return HandlerReturn(value=[Command.FORCED], stop_event=True)
+
 
 def can_hit_hidden_target(battle: Battle,
                           ctx: EventContext,
@@ -110,6 +116,7 @@ def can_hit_hidden_target(battle: Battle,
         battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
 
 def restrict_commands(battle: Battle,
                       ctx: EventContext,
@@ -232,7 +239,7 @@ def いちゃもん_modify_command_options(battle: Battle, ctx: EventContext, va
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family
+            not cmd.is_move
             or mon.moves[cmd.index].name != last_move_name
         ):
             new_options.append(cmd)
@@ -555,7 +562,7 @@ def じごくづき_restrict_commands(battle: Battle, ctx: EventContext, value: 
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family
+            not cmd.is_move
             or not ctx.source.moves[cmd.index].has_label("sound")
         ):
             new_options.append(cmd)
@@ -743,7 +750,7 @@ def デカハンマー_modify_command_options(battle: Battle, ctx: EventContext,
     new_options = []
     for cmd in value:
         if (
-            not cmd.is_move_family
+            not cmd.is_move
             or mon.moves[cmd.index].name != "デカハンマー"
         ):
             new_options.append(cmd)
@@ -987,6 +994,7 @@ def _check_protect_success(battle: Battle, ctx: EventContext, protect_non_attack
     ):
         return False
     return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
+
 
 def _run_protect(battle: Battle,
                  ctx: EventContext,

@@ -21,7 +21,7 @@ def test_ナイトヘッド_与ダメージは使用者レベル固定():
                             team0=[Pokemon("ピカチュウ", level=50, move_names=["ナイトヘッド"])],
                             )
     before_hp = battle.actives[1].hp
-    battle.advance_turn()
+    battle.step()
     assert before_hp - battle.actives[1].hp == 50
 
 

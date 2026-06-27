@@ -21,8 +21,8 @@ class PlayerState:
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.action_order_index: int | None = None
-        # バトンタッチ・しっぽきりの引き継ぎデータ（Noneは引き継ぎなし）
-        self.baton_pass_data: dict | None = None
+        self.legal_commands: list[Command] = []
+        self.baton_pass_data: dict | None = None  # バトンタッチの引き継ぎデータ # TODO : {}で初期化し、Noneを許容しないようにする
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -59,6 +59,10 @@ class PlayerState:
     def reserve_command(self, command: Command):
         """コマンドを予約する。"""
         self.reserved_commands.append(command)
+
+    def command_reserved(self) -> bool:
+        """予約コマンドが存在するかどうかを判定する。"""
+        return bool(self.reserved_commands)
 
     @property
     def next_command(self) -> Command:

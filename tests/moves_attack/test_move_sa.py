@@ -187,7 +187,7 @@ def test_しっぺがえし_先攻のとき通常威力():
         accuracy=100,
     )
     battle.random.random = lambda: 0.9
-    battle.advance_turn()
+    battle.step()
     assert battle.damage_calculator.power_modifier == 4096
 
 
@@ -202,7 +202,7 @@ def test_しっぺがえし_後攻のとき威力2倍():
         accuracy=100,
     )
     battle.random.random = lambda: 0.9
-    battle.advance_turn()
+    battle.step()
     assert battle.damage_calculator.power_modifier == 8192
 
 

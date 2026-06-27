@@ -8,6 +8,7 @@ from jpoke.model import Move
 from jpoke.utils.type_defs import Type
 from . import test_utils as t
 
+
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)
@@ -1136,7 +1137,7 @@ def test_だっしゅつボタン():
     print(battle.get_available_switch_commands(player))
     state = battle._player_states[0]
     ejected_mon = battle.actives[0]
-    battle.advance_turn()
+    battle.step()
     assert state.active_index == 1
     assert ejected_mon.item.revealed
     assert not ejected_mon.has_item()

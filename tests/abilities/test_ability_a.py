@@ -189,7 +189,7 @@ def test_アナライズ_先攻なら威力据え置き():
         team0=[Pokemon("ピカチュウ", ability_name="アナライズ", move_names=["でんきショック"])],
         team1=[Pokemon("コイル")],
     )
-    battle.advance_turn()
+    battle.step()
     assert 4096 == battle.damage_calculator.power_modifier
 
 
@@ -198,7 +198,7 @@ def test_アナライズ_後攻なら威力上昇():
         team0=[Pokemon("コイル", ability_name="アナライズ", move_names=["でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
     )
-    battle.advance_turn()
+    battle.step()
     assert 5325 == battle.damage_calculator.power_modifier
 
 
@@ -667,9 +667,9 @@ def test_おもかげやどし_テラスタル時に能力が上昇する():
     mon = battle.actives[0]
     # 登場時の上昇をリセット
     mon.rank["S"] = 0
-    # テラスタルコマンドを予約して advance_turn でテラスタルフェーズを実行する
+    # テラスタルコマンドを予約して step でテラスタルフェーズを実行する
     t.reserve_command(battle, Command.TERASTAL_0, Command.MOVE_0)
-    battle.advance_turn()
+    battle.step()
     assert mon.terastallized
     assert mon.rank["S"] == 1
 

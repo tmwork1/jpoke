@@ -78,7 +78,7 @@ def play_game(row_probs: tuple[float, float, float],
     battle.start()  # Turn 0: 初期繰り出し
 
     while battle.judge_winner() is None and battle.turn <= max_turns:
-        battle.advance_turn()
+        battle.step()
 
     winner = battle.judge_winner()
     if winner is p0:

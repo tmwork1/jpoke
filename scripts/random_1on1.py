@@ -98,7 +98,7 @@ def play_game(seed: int = None, max_turns: int = 10) -> tuple[Player | None, int
     battle.start()
 
     while (winner := battle.judge_winner()) is None:
-        battle.advance_turn()
+        battle.step()
         battle.print_logs()
         print("-" * 50)
         if battle.turn == max_turns:

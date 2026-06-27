@@ -22,6 +22,7 @@ from .move import (
     modify_defender_stats,
 )
 
+
 def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 
@@ -40,9 +41,11 @@ def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
         battle.player_states[player].interrupt = Interrupt.PIVOT
     return HandlerReturn(value=value)
 
+
 def ohko_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
     return HandlerReturn(value=ctx.defender.hp)
+
 
 def half_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
@@ -484,12 +487,14 @@ def _clear_spin_effects(battle: Battle, ctx: AttackContext) -> None:
     for hazard in ("まきびし", "どくびし", "ステルスロック", "ねばねばネット"):
         side.deactivate(hazard)
 
+
 def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float) -> None:
     """ドレイン回収(drain)で回復するHP量を計算する。"""
     damage = damage or ctx.substitute_damage
     heal_amount = int(damage * heal_ratio)
     heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
+
 
 def _recoil(battle: Battle, ctx: AttackContext, value: int, ratio: float) -> HandlerReturn:
     """反動ダメージを与えるヘルパー関数。与ダメの ratio 分を攻撃側が受ける。"""
@@ -1253,6 +1258,7 @@ def level_fixed_damage(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     """使用者レベルと同値の固定ダメージを計算する。"""
     return HandlerReturn(value=ctx.attacker.level)
 
+
 def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """バインド系技: ランダムターン数でバインド状態を付与する。ねばりのかぎづめで7ターン固定。"""
     count = battle.query.get_volatile_duration(ctx, "バインド", battle.random.randint(4, 5))
@@ -1287,7 +1293,7 @@ def _はやてがえし_can_apply(battle: Battle, ctx: AttackContext) -> bool:
     def_state = battle.player_states[def_player]
 
     # 相手が既に行動済み（予約コマンドが消費済み）なら失敗。
-    if not def_state.reserved_commands:
+    if not def_state.command_reserved():
         return False
 
     defender_command = def_state.next_command
@@ -1459,7 +1465,7 @@ def _ふいうち_can_apply(battle: Battle, ctx: AttackContext) -> bool:
     def_state = battle.player_states[def_player]
 
     # 対象がすでに行動済み（コマンドが消費済み）なら失敗。
-    if not def_state.reserved_commands:
+    if not def_state.command_reserved():
         return False
 
     defender_command = def_state.next_command
@@ -1488,18 +1494,18 @@ def ふいうち_try_move(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """フェイタルクローの追加効果: 単一乱数で どく/まひ/こおり のいずれかを付与する。
+    """フェイタルクローの追加効果: 単一乱数で どく/まひ/ねむり のいずれかを付与する。
 
-    r < base/3 → どく、r < base*2/3 → まひ、r < base → こおり（チャンピオンズ: 確率0.3）。
+    r < base/3 → どく、r < base*2/3 → まひ、r < base → ねむり（チャンピオンズ: 確率0.5）。
     """
-    base = battle.resolve_secondary_chance(ctx, 0.3)
+    base = battle.resolve_secondary_chance(ctx, 0.5)
     r = battle.random.random()
     if r < base / 3:
         ailment = "どく"
     elif r < base * 2 / 3:
         ailment = "まひ"
     elif r < base:
-        ailment = "こおり"
+        ailment = "ねむり"
     else:
         return HandlerReturn(value=value)
     return HandlerReturn(value=battle.ailment_manager.apply(
@@ -1561,6 +1567,10 @@ def フライングプレス_add_flying_type(battle: Battle, ctx: AttackContext,
         rate = flying_chart.get(def_type, 1.0)
         value = int(value * rate)
     return HandlerReturn(value=value)
+
+
+def フリーズドライ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
 def フリーズドライ_water_effectiveness(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -1753,6 +1763,11 @@ def ポイズンアクセル_apply_ailment_to_defender(battle: Battle, ctx: Atta
 
 def ポイズンテール_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
+
+
+def マジカルアクセル_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """マジカルアクセルの追加効果: 30%の確率で相手をこんらん状態にする。"""
+    return apply_confusion_to_defender(battle, ctx, value, chance=0.3)
 
 
 def マジカルフレイム_reduce_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

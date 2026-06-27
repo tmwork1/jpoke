@@ -3,14 +3,14 @@
 バトル全体の状態管理、ターン進行、イベント処理、ログ記録などを統括します。
 プレイヤー、ポケモン、技、場の状態などを一元管理し、バトルの進行を制御します。
 """
-from typing import Self
+from __future__ import annotations
 from dataclasses import dataclass
 
 import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import Stat, StatChangeReason, GlobalFieldName, \
+from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
@@ -36,6 +36,7 @@ from .ailment_manager import AilmentManager
 from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
 from .pokemon_query import PokemonQuery
+from . import observation_builder as obs
 
 
 @dataclass
@@ -85,15 +86,18 @@ class Battle:
 
     def __init__(self,
                  players: tuple[Player, ...],
+                 n_selected: int = 3,
                  seed: int | None = None) -> None:
         """Battleインスタンスを初期化する。
 
         Args:
             players: 参加プレイヤーのタプル（通常2人）
+            n_selected: 選出可能なポケモンの数（デフォルトは3）
             seed: 乱数シード値（Noneの場合は現在時刻を使用）
         """
 
         self.players: tuple[Player, ...] = players
+        self.n_selected: int = n_selected
         self.seed: int = seed or int(time.time())
 
         self.random = Random(self.seed)
@@ -102,6 +106,7 @@ class Battle:
         self.perspective: Player | None = None  # 視点となるプレイヤー
 
         self.turn: int = -1
+        self.phase: BattlePhase = ""
         self.winner: Player | None = None
 
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
@@ -199,29 +204,19 @@ class Battle:
         for side in self.side_managers:
             side.update_reference(self)
 
-    def copy(self, perspective: Player | None = None) -> Self:
+    def build_observation(self, observer: Player) -> Battle:
         """指定したプレイヤー視点で情報を隠蔽した Battle インスタンスのコピーを作成。
         Args:
-            perspective: 視点となるプレイヤー
+            observer: 観測対象のプレイヤー。Noneの場合は全ての情報をコピー。
 
         Returns:
             Battle インスタンスのコピー
+
+        Note:
+            observer の指定にかかわらず、乱数シードは隠蔽される。
         """
-        new = deepcopy(self)
-
-        if perspective is None:
-            return new
-
-        # 相手の選出の隠蔽
-        i = self.players.index(perspective)
-        rival = new.rival(new.players[i])
-
-        # 隠蔽すべき情報
-        # - 乱数シード
-        # - 相手プレイヤーの情報 (選出、予約コマンド、方策関数)
-        # - 公開されていない相手ポケモンの情報 (ステータス、特性、アイテム、技)
-
-        return new
+        battle = obs.build(self, observer)
+        return battle
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
@@ -439,46 +434,67 @@ class Battle:
 
     def resolve_selection_commands(self) -> dict[Player, list[Command]]:
         """プレイヤーの選出コマンドを解決する。"""
+        self.phase = "selection"
+
         commands = {}
         for i, ply in enumerate(self.players):
-            sim = self.copy(ply)
+            sim = self.build_observation(ply)
             sim_player = sim.players[i]
             commands[ply] = sim_player.choose_selection_commands(sim)
+
+        self.phase = ""
         return commands
 
     def resolve_action_commands(self) -> dict[Player, Command]:
         """プレイヤーの行動コマンドを解決する。"""
+        self.phase = "action"
+
+        # プレイヤーの合法手を記録しておく
+        for ply, state in self.player_states.items():
+            state.legal_commands = self.get_available_action_commands(ply)
+
+        # プレイヤーの行動コマンドを解決する
         commands = {}
         for i, ply in enumerate(self.players):
-            sim = self.copy(ply)
+            sim = self.build_observation(ply)
             sim_player = sim.players[i]
             commands[ply] = sim_player.choose_action_command(sim)
+
+        self.phase = ""
         return commands
 
     def resolve_switch_command(self, player: Player) -> Command:
         """プレイヤーの交代コマンドを解決する。"""
-        i = self.players.index(player)
-        sim = self.copy(player)
-        return player.choose_switch_command(sim)
+        self.phase = "switch"
+
+        # プレイヤーの合法手を記録しておく
+        self.player_states[player].legal_commands = self.get_available_action_commands(player)
+
+        # プレイヤーの交代コマンドを解決する
+        sim = self.build_observation(player)
+        command = player.choose_switch_command(sim)
+
+        self.phase = ""
+        return command
 
     def start(self, commands: dict[Player, list[Command]] | None = None):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
 
-        選出と初期繰り出しを完了し、以降の `advance_turn` を可能にする。
+        選出と初期繰り出しを完了し、以降の `step` を可能にする。
         """
         if commands is None:
             commands = self.resolve_selection_commands()
         self.turn_controller.start_battle(commands)
 
-    def advance_turn(self, commands: dict[Player, Command] | None = None):
-        """ターンを進める（TurnControllerへの委譲）。
+    def step(self, commands: dict[Player, Command] | None = None):
+        """ターンを1つ進める（TurnControllerへの委譲）。
 
         Args:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
         """
         if not commands:
             commands = self.resolve_action_commands()
-        self.turn_controller.advance_turn(commands)
+        self.turn_controller.step(commands)
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。

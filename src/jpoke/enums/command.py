@@ -128,10 +128,16 @@ class Command(Enum):
             return int(self.name.split("_")[-1])
         return 0
 
+    # TODO : is_... はプロパティではなくメソッドにする
+
     @property
     def is_selection(self) -> bool:
         """選出コマンドかどうか"""
         return self.name[:-2] == "SELECT"
+
+    def is_action(self) -> bool:
+        """行動コマンドかどうか"""
+        return not self.is_selection
 
     @property
     def is_switch(self) -> bool:
@@ -164,7 +170,7 @@ class Command(Enum):
         return self.name[:-2] == "ZMOVE"
 
     @property
-    def is_move_family(self) -> bool:
+    def is_move(self) -> bool:
         """技系全般かどうか（）"""
         return (
             self.is_regular_move
@@ -177,7 +183,7 @@ class Command(Enum):
     @property
     def is_move_execution(self) -> bool:
         """実際に技実行へ進むコマンドかどうか。"""
-        return self.is_move_family or self in {Command.FORCED, Command.STRUGGLE}
+        return self.is_move or self in {Command.FORCED, Command.STRUGGLE}
 
     @classmethod
     def get_selection_command(cls, index: int) -> Command:
@@ -227,7 +233,7 @@ class Command(Enum):
     @classmethod
     def all_move_commands(cls) -> list[Command]:
         """全ての技系コマンドを取得"""
-        return [x for x in cls if x.is_move_family]
+        return [x for x in cls if x.is_move]
 
     @classmethod
     def regular_move_commands(cls) -> list[Command]:

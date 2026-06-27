@@ -256,6 +256,15 @@ class Pokemon:
         return w
 
     @property
+    def base_types(self) -> list[Type]:
+        """ポケモンの基本タイプを取得する。
+
+        Returns:
+            基本タイプのリスト
+        """
+        return self.data.types
+
+    @property
     def types(self) -> list[Type]:
         """ポケモンの現在のタイプを取得する。
 

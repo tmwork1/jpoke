@@ -132,7 +132,7 @@ def test_かくれる_強制行動ターンはPPを消費しない(hidden_move_n
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, hidden_move_name, count=1)
     initial_pp = attacker.moves[0].pp
-    battle.advance_turn()
+    battle.step()
     assert attacker.moves[0].pp == initial_pp
 
 
@@ -210,7 +210,7 @@ def test_かなしばり_コマンド制限で他の技は選択可能():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "かなしばり", move_name="たいあたり")
     commands = battle.get_available_action_commands(player)
-    move_commands = [cmd for cmd in commands if cmd.is_move_family]
+    move_commands = [cmd for cmd in commands if cmd.is_move]
     assert any(cmd.index == 1 for cmd in move_commands)
 
 

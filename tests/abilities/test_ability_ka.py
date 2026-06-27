@@ -107,14 +107,14 @@ def test_かそく_交代直後のターンは発動しない():
     )
     # 交代したターンはかそくが発動しない
     t.reserve_command(battle, command0=Command.SWITCH_1)
-    battle.advance_turn()
+    battle.step()
 
     mon = battle.actives[0]
     assert mon.rank["S"] == 0
 
     # 次のターンはかそくが発動する
     t.reserve_command(battle, command0=Command.MOVE_0)
-    battle.advance_turn()
+    battle.step()
     assert mon.rank["S"] == 1
 
 
@@ -291,7 +291,7 @@ def test_ききかいひ_HPが半分以下になると交代():
     )
     defender = battle.actives[0]
     defender.hp = defender.max_hp // 2 + 1
-    battle.advance_turn()
+    battle.step()
 
     assert battle.actives[0] is not defender
 
@@ -316,7 +316,7 @@ def test_ききかいひ_やけどダメージでも発動する():
     )
     defender = battle.actives[0]
     defender.hp = defender.max_hp // 2 + 1
-    battle.advance_turn()
+    battle.step()
 
     assert battle.actives[0] is not defender
 
@@ -328,7 +328,7 @@ def test_ききかいひ_被弾前HPが半分以下なら発動しない():
     )
     defender = battle.actives[0]
     defender.hp = defender.max_hp // 2
-    battle.advance_turn()
+    battle.step()
 
     assert battle.actives[0] is defender
 

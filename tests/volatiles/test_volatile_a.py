@@ -64,11 +64,11 @@ def test_あばれる_3ターンで解除されこんらんになる():
     )
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, "あばれる", count=3, move_name="あばれる")
-    battle.advance_turn()
+    battle.step()
     assert attacker.has_volatile("あばれる")
-    battle.advance_turn()
+    battle.step()
     assert attacker.has_volatile("あばれる")
-    battle.advance_turn()
+    battle.step()
     assert not attacker.has_volatile("あばれる")
     assert attacker.has_volatile("こんらん")
 
@@ -81,10 +81,10 @@ def test_あばれる_カウント進行():
     )
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, "あばれる", count=2, move_name="あばれる")
-    battle.advance_turn()
+    battle.step()
     assert attacker.has_volatile("あばれる")
     assert not attacker.has_volatile("こんらん")
-    battle.advance_turn()
+    battle.step()
     assert not attacker.has_volatile("あばれる")
     assert attacker.has_volatile("こんらん")
 
@@ -114,7 +114,7 @@ def test_あばれる_行動固定():
     assert commands == [Command.FORCED]
 
     initial_pp = attacker.moves[0].pp
-    battle.advance_turn()  # 1ターン進める
+    battle.step()  # 1ターン進める
     assert attacker.moves[0].pp == initial_pp, "あばれるで技のPPが消費されている"
 
 
@@ -295,7 +295,7 @@ def test_いちゃもん_別の技は選択できる():
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "いちゃもん", move_name="たいあたり")
     commands = battle.get_available_action_commands(battle.players[0])
-    move_indices = {cmd.index for cmd in commands if cmd.is_move_family}
+    move_indices = {cmd.index for cmd in commands if cmd.is_move}
     assert move_indices == {1, 2}
 
 

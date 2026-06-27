@@ -13,7 +13,7 @@ def test_mon():
         team0=[Pokemon("ピカチュウ", item_name="たべのこし"), Pokemon("ヒトカゲ")],
         team1=[Pokemon("フシギダネ")],
     )
-    new = old.copy()
+    new = old.build_observation()
 
     assert new is not old
     assert new.actives[0] is not old.actives[0]
@@ -39,7 +39,7 @@ def test_weather():
         team1=[Pokemon("フシギダネ")],
         weather=("すなあらし", 2),
     )
-    new = old.copy()
+    new = old.build_observation()
     assert new.weather is not old.weather
 
     # newの天候が正しく機能することを確認する
@@ -60,7 +60,7 @@ def test_terrain():
     old.actives[0].hp = 1
     assert Event.ON_TURN_END in old.events.handlers
 
-    new = old.copy()
+    new = old.build_observation()
     assert new.terrain is not old.terrain
 
     t.end_turn(new)

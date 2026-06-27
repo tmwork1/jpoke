@@ -88,14 +88,14 @@ class TurnController:
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
-    def advance_turn(self, commands: dict[Player, Command]):
+    def step(self, commands: dict[Player, Command]):
         """ターンを1つ進める。
 
         Args:
             commands: 各プレイヤーのコマンド辞書（Noneの場合は予約済みコマンドを使用）
         """
         if self.battle.turn < 0:
-            raise RuntimeError("Battle is not started. Call battle.start() before advance_turn().")
+            raise RuntimeError("Battle is not started. Call battle.start() before step().")
 
         # ターン開始処理
         self._begin_turn()
@@ -167,7 +167,7 @@ class TurnController:
         for mon in action_order:
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
-            if not state.reserved_commands:
+            if not state.command_reserved():
                 continue
 
             # コマンドがテラスタルで、かつテラスタル可能な場合にテラスタルを実行
@@ -186,7 +186,7 @@ class TurnController:
         for mon in action_order:
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
-            if not state.reserved_commands:
+            if not state.command_reserved():
                 continue
 
             # コマンドがメガシンカで、かつメガシンカ可能な場合にメガシンカを実行

@@ -21,7 +21,7 @@ class SearchPlayer(Player):
         print(f"[depth={battle.depth}] Choosing action command for {self.name}")
         player_index = battle.players.index(self)
         my_commands = battle.get_available_action_commands(self)
-        # return my_commands[0]
+        return my_commands[0]
 
         rival = battle.rival(self)
         rival_commands = battle.get_available_action_commands(rival)
@@ -30,11 +30,11 @@ class SearchPlayer(Player):
         for my_cmd, rival_cmd in product(my_commands, rival_commands):
             print(f"\tSimulation {my_cmd} vs {rival_cmd}")
             # コマンドの組み合わせごとにBattleのコピーを作成してシミュレーション
-            sim = battle.copy()
+            sim = battle.build_observation()
             sim_player = sim.players[player_index]
             sim_rival = sim.rival(sim_player)
             commands = {sim_player: my_cmd, sim_rival: rival_cmd}
-            sim.advance_turn(commands)
+            sim.step(commands)
             break
 
         return my_commands[0]
@@ -42,7 +42,8 @@ class SearchPlayer(Player):
     def choose_switch_command(self, battle: Battle) -> Command:
         """交代コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
         print(f"[depth={battle.depth}] Choosing switch command for {self.name}")
-        return battle.get_available_switch_commands(self)[0]
+        my_commands = battle.get_available_switch_commands(self)
+        return my_commands[0]
 
 
 def play_game(seed: int | None = None,
@@ -56,31 +57,29 @@ def play_game(seed: int | None = None,
     Returns:
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
-    players = []
-
     # Player 1
-    players.append(SearchPlayer(name="Player1"))
-    players[-1].team = [
+    player1 = SearchPlayer(name="SearchPlayer")
+    player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
         Pokemon("リザード", item_name="", move_names=["たいあたり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
     ]
 
-    players.append(SearchPlayer(name="Player2"))
-    players[-1].team = [
+    player2 = Player(name="RandomPlayer")
+    player2.team = [
         Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
         Pokemon("カメール", item_name="", move_names=["たいあたり"]),
         Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
     ]
 
     # バトルを作成・実行
-    battle = Battle(players, seed=seed)
+    battle = Battle((player1, player2), seed=seed)
 
     battle.start()
 
     while True:
         print(f"--- ターン {battle.turn} ---")
-        battle.advance_turn()
+        battle.step()
         battle.print_logs()
         winner = battle.judge_winner()
         if winner is not None or battle.turn >= max_turns:

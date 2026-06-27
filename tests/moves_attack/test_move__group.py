@@ -80,6 +80,6 @@ def test_一撃必殺技_外した時はダメージを与えない():
     t.reserve_command(battle,
                       command0=Command.MOVE_0,
                       command1=Command.MOVE_0)
-    battle.advance_turn()
+    battle.step()
 
     assert battle.actives[1].hp == before_foe_hp

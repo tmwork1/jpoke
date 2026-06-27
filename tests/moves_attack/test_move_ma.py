@@ -30,6 +30,30 @@ def test_じたばた_HP満タンのとき威力20():
     assert battle.damage_calculator.final_power == 20
 
 
+def test_マジカルアクセル_こんらんが発動する():
+    """マジカルアクセル: 30%でこんらんを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジカルアクセル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_マジカルアクセル_確率外れでこんらんが発動しない():
+    """マジカルアクセル: 確率が外れたとき（secondary_chance=0.0）こんらんを付与しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジカルアクセル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("こんらん")
+
+
 def test_マジカルシャイン_相手にダメージを与える():
     """マジカルシャイン: 追加効果なしの特殊フェアリー技で相手にダメージを与える。"""
     battle = t.start_battle(

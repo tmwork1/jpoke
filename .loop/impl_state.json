@@ -2,7 +2,7 @@
   "config": {
     "category": "攻撃技",
     "plan_dir": "docs/plan/moves",
-    "spec_hint": "docs/spec/moves/ 以下の仕様書を参照。対象グループに応じて _multi_hit.md／連続技.md（連続技系）、威力変動技.md／_variable_power.md（威力変動技系）、強制交代技.md（強制交代系）、_move_secondary_1.md（先制・追加効果）、_move_secondary_2.md（HP変化・反動・吸収）、固定ダメージ.md（固定ダメージ技）などを確認し、計画書を作成すること",
+    "spec_hint": "docs/spec/moves/ 以下の仕様書を参照。対象グループに応じて _move_secondary_1.md／_move_secondary_2.md・_variable_power.md・固定ダメージ.md などを確認し、計画書を作成すること",
     "progress_file": "docs/progress/move.md",
     "test_files": [
       "tests/moves_attack/test_move_a.py",
@@ -15,15 +15,30 @@
       "tests/moves_attack/test_move_yarawa.py",
       "tests/moves_attack/test_move__group.py"
     ],
-    "impl_extra": "- data/move.py の MoveData に技が未登録なら追加する\n- 既存エントリにはhandlerを追加し、不足ラベルも追記する\n- 計画書に記載の全技を一括実装すること\n- 進捗ファイルで 実装=x 済みの技はスキップして未実装の技だけ実装すること",
+    "impl_extra": "- data/move.py の MoveData に技が未登録なら追加する\n- 既存エントリにはhandlerを追加し、不足ラベルも追記する\n- 計画書に記載の全技を一括実装すること\n- 進捗ファイルで 実装=x 済みの技はスキップして未実装（handler未設定）の技だけ実装すること",
     "review_extra": "- テストは読みに対応するファイルに追加すること（あ行→test_move_a.py、か行→test_move_ka.py、さ行→test_move_sa.py、た行→test_move_ta.py、な行→test_move_na.py、は行→test_move_ha.py、ま行→test_move_ma.py、やらわ行→test_move_yarawa.py）\n- 複数の test_files に分散してテストを追加した場合は、全ファイルに対して sort_tests.py を実行すること",
     "planning_slots_max": 2
   },
-  "plan_queue": [],
-  "impl_queue": [
-    "攻撃技_特殊効果系"
+  "plan_queue": [
+    "エレクトロビーム",
+    "攻撃技_特殊効果系2"
   ],
-  "review_queue": [],
+  "impl_queue": [
+    "攻撃技_まひ系",
+    "攻撃技_やけど系",
+    "自爆技",
+    "失敗反動技",
+    "反動技_025",
+    "反動技_033",
+    "反動技_05",
+    "攻撃技_壁解除系",
+    "攻撃技_フィールド解除系",
+    "攻撃技_特殊威力計算系"
+  ],
+  "review_queue": [
+    "攻撃技_こんらん系",
+    "攻撃技_どく系"
+  ],
   "completed": [
     "あなをほる",
     "ゲップ",
@@ -47,7 +62,10 @@
     "デカハンマー",
     "ふいうち",
     "メテオビーム",
-    "レイジングブル"
+    "レイジングブル",
+    "攻撃技_特殊効果系",
+    "攻撃技_攻撃側ランク変化系",
+    "攻撃技_こおり系"
   ],
   "failed": []
 }
