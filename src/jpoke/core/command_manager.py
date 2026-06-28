@@ -30,11 +30,6 @@ class CommandManager:
     def update_reference(self, battle: Battle):
         self.battle = battle
 
-    def get_available_selection_commands(self, player: Player) -> list[Command]:
-        """ポケモン選出時に使用可能なコマンドを取得する。"""
-        state = self.battle.player_states[player]
-        return Command.selection_commands()[:len(state.team)]
-
     def get_available_switch_commands(self, player: Player) -> list[Command]:
         """交代可能なコマンドのリストを取得する。
 

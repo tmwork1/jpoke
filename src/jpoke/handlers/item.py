@@ -45,8 +45,7 @@ def announce_item_triggered(battle: Battle, ctx: EventContext, value: Any) -> Ha
 def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
     mon.item.revealed = True
     battle.add_event_log(
-        mon,
-        LogCode.ITEM_TRIGGERED,
+        mon, LogCode.ITEM_TRIGGERED,
         payload={"item": mon.item.name}
     )
 

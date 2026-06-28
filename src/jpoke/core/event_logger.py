@@ -101,11 +101,11 @@ class EventLog:
 
             case LogCode.SWITCHED_IN:
                 pokemon = payload.get("pokemon", "ポケモン")
-                return f"{pokemon} が場に出た"
+                return f"{pokemon} 入場"
 
             case LogCode.SWITCHED_OUT:
                 pokemon = payload.get("pokemon", "ポケモン")
-                return f"{pokemon} は戻った"
+                return f"{pokemon} 退場"
 
             case LogCode.TEXT_LOG:
                 return payload.get("text") or ""

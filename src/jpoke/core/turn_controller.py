@@ -68,7 +68,7 @@ class TurnController:
 
         return None
 
-    def start_battle(self, commands: dict[Player, list[Command]]):
+    def start_battle(self):
         """バトル開始処理を実行する。
 
         選出と初期繰り出しを行い、バトルを0ターン目の開始状態にする。
@@ -77,17 +77,24 @@ class TurnController:
             raise RuntimeError("Battle already started.")
 
         self.battle.turn = 0
+
+        # ポケモンを選出する
+        self._run_selection()
+
         self.battle.add_event_log(0, LogCode.GAME_STARTED)
 
-        # ポケモンを選出
-        for player, cmds in commands.items():
-            self.battle.player_states[player].selection_indexes = [c.index for c in cmds]
-
-        # ポケモンを場に出す
+        # 先頭のポケモンを場に出す
         self.battle.run_initial_switch()
 
         # だっしゅつパックによる交代
         self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
+
+    def _run_selection(self):
+        with self.battle.phase_context("selection"):
+            for player in self.battle.players:
+                observed = self.battle.build_observation(player)
+                indexes = player.choose_selection(observed)
+                self.battle.player_states[player].selected_indexes = indexes
 
     def step(self, commands: dict[Player, Command]):
         """ターンを1つ進める。

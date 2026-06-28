@@ -505,17 +505,19 @@ class MoveExecutor:
         )
 
     def _consume_pp(self, ctx: AttackContext):
-        """技のPPを消費する。
+        """技を開示してPPを消費する。
 
         技を使用した際にPPを減らします。
 
         Args:
             ctx: EventContextインスタンス
         """
+        move = ctx.move
+        move.revealed = True
         v = self._events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
-        ctx.move.pp = max(0, ctx.move.pp - v)
+        move.pp = max(0, move.pp - v)
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,
-            payload={"move": ctx.move.name, "value": v}
+            payload={"move": move.name, "value": v}
         )

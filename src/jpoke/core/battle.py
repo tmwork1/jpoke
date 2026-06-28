@@ -208,7 +208,7 @@ class Battle:
         return deepcopy(self)
 
     @contextmanager
-    def phase_context(self, phase):
+    def phase_context(self, phase: BattlePhase):
         old_phase = self.phase
         self.phase = phase
         try:
@@ -397,17 +397,12 @@ class Battle:
             return self.player_states[player].last_available_commands
 
         match self.phase:
-            case "selection":
-                return self.get_available_selection_commands(player)
             case "action":
                 return self.get_available_action_commands(player)
             case "switch":
                 return self.get_available_switch_commands(player)
 
         raise ValueError(f"Invalid phase: {self.phase}")
-
-    def get_available_selection_commands(self, player: Player) -> list[Command]:
-        return self.command_manager.get_available_selection_commands(player)
 
     def get_available_action_commands(self, player: Player) -> list[Command]:
         return self.command_manager.get_available_action_commands(player)
@@ -442,60 +437,33 @@ class Battle:
         """
         return self.turn_controller.judge_winner()
 
-    def resolve_selection_commands(self) -> dict[Player, list[Command]]:
-        """プレイヤーの選出コマンドを解決する。"""
-        for ply, state in self.player_states.items():
-            # 最後に利用可能だったコマンドを記録
-            state.last_available_commands = self.get_available_selection_commands(ply)
-            # 木探索を行う際に補完すべきコマンドタイプを指定
-            state.required_command_type = "selection"
+    def resolve_command(self, phase: BattlePhase, player: Player | None = None) -> dict[Player, Command]:
+        """コマンドを解決する。"""
+        players = [player] if player else self.players
 
-        commands = {}
-        with self.phase_context("selection"):
-            for ply in self.players:
+        with self.phase_context(phase):
+            for ply in players:
+                state = self.player_states[ply]
+
+                # 最後に利用可能だったコマンドを記録
+                state.last_available_commands = self.get_available_commands(ply)
+
+                # 木探索を行う際に補完すべきコマンドタイプを指定
+                state.required_command_type = "any" if self.phase == "action" else "switch"
+
+            # コマンドを選択
+            commands = {}
+            for ply in players:
                 sim = self.build_observation(ply)
-                commands[ply] = ply.choose_selection_commands(sim)
+                commands[ply] = ply.choose_command(sim)
         return commands
 
-    def resolve_action_commands(self) -> dict[Player, Command]:
-        """プレイヤーの行動コマンドを解決する。"""
-        for ply, state in self.player_states.items():
-            # 最後に利用可能だったコマンドを記録
-            state.last_available_commands = self.get_available_action_commands(ply)
-            # 木探索を行う際に補完すべきコマンドタイプを指定
-            state.required_command_type = "action"
-
-        # 行動コマンドを選択
-        commands = {}
-        with self.phase_context("action"):
-            for ply in self.players:
-                sim = self.build_observation(ply)
-                commands[ply] = ply.choose_action_command(sim)
-        return commands
-
-    def resolve_switch_command(self, player: Player) -> Command:
-        """プレイヤーの交代コマンドを解決する。"""
-        state = self.player_states[player]
-
-        # 最後に利用可能だったコマンドを記録
-        state.last_available_commands = self.get_available_switch_commands(player)
-        # 木探索を行う際に補完すべきコマンドタイプを指定
-        state.required_command_type = "switch"
-
-        # 交代コマンドを選択
-        with self.phase_context("switch"):
-            sim = self.build_observation(player)
-            command = player.choose_switch_command(sim)
-        return command
-
-    def start(self, commands: dict[Player, list[Command]] | None = None):
+    def start(self):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
 
         選出と初期繰り出しを完了し、以降の `step` を可能にする。
         """
-        if commands is None:
-            commands = self.resolve_selection_commands()
-        self.turn_controller.start_battle(commands)
+        self.turn_controller.start_battle()
 
     def step(self, commands: dict[Player, Command] | None = None):
         """ターンを1つ進める（TurnControllerへの委譲）。
@@ -505,11 +473,11 @@ class Battle:
         """
         if self.is_new_turn() and commands is None:
             # is_new_turn()だけで判定すると、行動コマンド選択時の木探索でresolve_action_commands()が再帰的に呼ばれてしまうため、command is Noneのガードが必要。
-            commands = self.resolve_action_commands()
+            commands = self.resolve_command("action")
         else:
             for ply, state in self.player_states.items():
                 command = commands.get(ply)
-                if not self._validate_command_type(state, command):
+                if not self._validate_command(ply, command):
                     raise ValueError(f"Invalid command type for {ply.name}: {command}.")
 
         if not commands:
@@ -517,8 +485,8 @@ class Battle:
 
         self.turn_controller.step(commands)
 
-    def _validate_command_type(self, state: PlayerState, command: Command | None) -> bool:
-        """プレイヤーの状態とコマンドの型を検証する。
+    def _validate_command(self, player: Player, command: Command | None) -> bool:
+        """コマンドがコンテキストに合致しているか検証する。
 
         Args:
             state: プレイヤーの状態
@@ -527,10 +495,11 @@ class Battle:
         Returns:
             bool: コマンドの型が状態に適合する場合は True、そうでない場合は False
         """
+        state = self.player_states[player]
         required_type = state.required_command_type
         return (
             command is None
-            or required_type is ""
+            or required_type in {None, "any"}
             or command.is_type(required_type)
         )
 

@@ -79,7 +79,7 @@ class CommandLogger:
         Args:
             file: 出力先ファイルパス
             seed: バトルのシード値
-            players_data: プレイヤーごとのデータ（name, selection_indexes, team）
+            players_data: プレイヤーごとのデータ（name, selection, team）
         """
         data = {
             "seed": seed,
@@ -90,7 +90,7 @@ class CommandLogger:
         for player_data in players_data:
             data["players"].append({
                 "name": player_data["name"],
-                "selection_indexes": player_data["selection_indexes"],
+                "selection": player_data["selection_indexes"],
                 "commands": {},
                 "team": player_data["team"],
             })

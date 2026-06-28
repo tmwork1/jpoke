@@ -16,11 +16,11 @@ class PlayerState:
 
     def __init__(self, player: Player):
         self.team: list[Pokemon] = deepcopy(player.team)
-        self.selection_indexes: list[int] = []
+        self.selected_indexes: list[int] = []
         self.active_index: int | None = None
         self.reserved_commands: list[Command] = []
         self.last_available_commands: list[Command] = []  # 最後に利用可能だったコマンドのリスト
-        self.required_command_type: CommandType = ""  # 木探索を行う際に補完すべきコマンドタイプ（""の場合は補完不要）
+        self.required_command_type: CommandType | None = None  # 木探索を行う際に補完すべきコマンドタイプ（Noneの場合は補完不要）
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.baton_pass_data: dict | None = None  # バトンタッチの引き継ぎデータ # TODO : {}で初期化し、Noneを許容しないようにする
@@ -47,7 +47,7 @@ class PlayerState:
     @property
     def selection(self) -> list[Pokemon]:
         """選出されているポケモンのリストを取得する。"""
-        return [self.team[i] for i in self.selection_indexes]
+        return [self.team[i] for i in self.selected_indexes]
 
     @property
     def bench(self) -> list[Pokemon]:

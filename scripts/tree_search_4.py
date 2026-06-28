@@ -1,7 +1,7 @@
 """
-行動選択の方策関数で木探索を行うテスト
+一般的な木探索の例
 """
-
+import random
 from itertools import product
 
 from jpoke import Battle, Player, Pokemon
@@ -10,36 +10,28 @@ from jpoke.enums import Command
 
 class SearchPlayer(Player):
     def choose_command(self, battle: Battle) -> Command:
-        print(f"[depth={battle.copy_depth}] Choosing action command")
-
-        if battle.copy_depth > 1:
-            raise ValueError("木探索の深さが2を超えています。")
-
-        self_state = battle.player_states[self]
-        rival = battle.rival(self)
-        rival_state = battle.player_states[rival]
-
-        assert self_state.required_command_type == "any"
-        assert rival_state.required_command_type == "any"
-        assert not rival_state.reserved_commands
+        print(f"turn={battle.turn} [depth={battle.copy_depth}] Choosing command for {self.name}")
 
         my_commands = battle.get_available_commands(self)
+
+        if battle.copy_depth > 1:
+            print(f"{battle.copy_depth=} : return random command")
+            return random.choice(my_commands)
+
+        rival = battle.rival(self)
         rival_commands = battle.get_available_commands(rival)
 
         print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
         print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
-        print(f"- Rival moves: {[m.name for m in rival_state.active.moves]}")
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
         for my_cmd, rival_cmd in product(my_commands, rival_commands):
-            print(f"<< Simulation {my_cmd} vs {rival_cmd} >>")
-            commands = {self: my_cmd, rival: rival_cmd}
+            print(f"\n<< Simulation {my_cmd} vs {rival_cmd} >>")
             sim = battle.copy()
+            commands = {self: my_cmd, rival: rival_cmd}
             sim.step(commands)
             sim.print_logs()
-            print()
-            # break
         print(f"{'-'*20}")
 
         return my_commands[0]
@@ -59,8 +51,8 @@ def play_game(seed: int | None = None,
     # Player 1
     player1 = SearchPlayer(name="SearchPlayer")
     player1.team = [
-        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
-        Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
+        Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
+        Pokemon("リザードン", item_name="", move_names=["とんぼがえり"]),
     ]
 
     player2 = Player(name="RandomPlayer")
@@ -68,7 +60,6 @@ def play_game(seed: int | None = None,
         Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
         Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
     ]
-    player2.team[0].moves[0].revealed = True  # 相手の技を公開する
 
     # バトルを作成・実行
     battle = Battle((player1, player2), n_selected=len(player1.team), seed=seed)
@@ -87,7 +78,7 @@ def play_game(seed: int | None = None,
 
 
 def main():
-    winner, turn = play_game(max_turns=1)
+    winner, turn = play_game(max_turns=2)
 
     if winner is None:
         print(f"結果: 引き分け（{turn}ターン）")

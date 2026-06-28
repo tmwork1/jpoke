@@ -615,7 +615,7 @@ def test_使える技がなければわるあがきになる():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"じごくづき": 2}
     )
-    commands = battle.get_available_action_commands(battle.players[0])
+    commands = battle.get_available_commands(battle.players[0])
     assert commands == [Command.STRUGGLE]
 
 

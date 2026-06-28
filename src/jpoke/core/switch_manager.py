@@ -177,7 +177,8 @@ class SwitchManager:
                 command = state.pop_command()
             else:
                 # 方策関数に従う
-                command = self.battle.resolve_switch_command(player)
+                commands = self.battle.resolve_command("switch", player)
+                command = commands[player]
 
             self.run_switch(
                 player,

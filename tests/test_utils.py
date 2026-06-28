@@ -10,13 +10,14 @@ class CustomPlayer(Player):
     常に利用可能な最初のコマンドを選択します。
     """
 
-    def choose_selection_commands(self, battle: Battle) -> list[Command]:
+    def choose_selection(self, battle: Battle) -> list[int]:
         """選出コマンドを選択する。"""
-        return battle.get_available_selection_commands(self)
+        n_team = len(self.team)
+        return list(range(n_team))
 
-    def choose_action_command(self, battle: Battle) -> Command:
+    def choose_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（常に最初の利用可能なコマンド）。"""
-        return battle.get_available_action_commands(self)[0]
+        return battle.get_available_commands(self)[0]
 
 
 def start_battle(team0: list[Pokemon],
@@ -132,7 +133,7 @@ def reserve_command(battle: Battle,
         state.reset_turn_state()
         command = commands[i]
         if command is None:
-            command = player.choose_action_command(battle)
+            command = player.choose_command(battle)
         state.reserve_command(command)
 
 

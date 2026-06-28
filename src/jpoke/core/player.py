@@ -36,23 +36,22 @@ class Player:
         self.n_won: int = 0
         self.rating: float = 1500
 
-    def choose_selection_commands(self, battle: Battle) -> list[Command]:
-        """選出コマンドを選択する。
+    def choose_selection(self, battle: Battle) -> list[int]:
+        """選出番号を返す
 
-        デフォルト実装では利用可能な選出コマンドから選出可能なポケモンの数分を返す。
+        デフォルト実装では先頭から順番に選出する。
 
         Args:
             battle: バトルオブジェクト
 
         Returns:
-            選択された選出コマンドのリスト
+            選択された選出番号のリスト
         """
         n = battle.n_selected
-        commands = battle.get_available_commands(self)
-        return commands[:n]
+        return list(range(n))
 
-    def choose_action_command(self, battle: Battle) -> Command:
-        """行動コマンドを選択する。
+    def choose_command(self, battle: Battle) -> Command:
+        """コマンドを選択する。
 
         デフォルト実装では利用可能な行動コマンドの最初の1つを返す。
 
@@ -61,20 +60,6 @@ class Player:
 
         Returns:
             選択された行動コマンド
-        """
-        commands = battle.get_available_commands(self)
-        return commands[0]
-
-    def choose_switch_command(self, battle: Battle) -> Command:
-        """交代コマンドを選択する。
-
-        デフォルト実装では利用可能な交代コマンドの最初の1つを返す。
-
-        Args:
-            battle: バトルオブジェクト
-
-        Returns:
-            選択された交代コマンド
         """
         commands = battle.get_available_commands(self)
         return commands[0]

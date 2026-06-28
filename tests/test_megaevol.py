@@ -27,7 +27,7 @@ def test_メガシンカ_コマンドが追加される(stone: str, normal_name:
         team1=[Pokemon("ピカチュウ")],
     )
     player = battle.players[0]
-    commands = battle.get_available_action_commands(player)
+    commands = battle.get_available_commands(player)
     assert Command.MEGAEVOL_0 in commands
 
 

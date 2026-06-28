@@ -1134,7 +1134,6 @@ def test_だっしゅつボタン():
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
     player = battle.players[0]
-    print(battle.get_available_switch_commands(player))
     state = battle._player_states[0]
     ejected_mon = battle.actives[0]
     battle.step()

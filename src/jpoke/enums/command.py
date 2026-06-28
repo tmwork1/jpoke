@@ -8,12 +8,10 @@ from jpoke.utils.type_defs import CommandType
 class Command(Enum):
     """バトル中のコマンド
 
-    ポケモンの選出、技選択、交代などの
-    プレイヤーの行動を表す。
+    技選択、交代などのプレイヤーの行動を表す。
 
     命名規則:
     - {TYPE}_{INDEX}: コマンドタイプとインデックス (0-9)
-    - SELECT: ポケモン選出
     - SWITCH: ポケモン交代
     - MOVE: 技使用
     - TERASTAL: テラスタル + 技使用
@@ -24,18 +22,6 @@ class Command(Enum):
     # 特殊コマンド
     STRUGGLE = auto()  # わるあがき
     FORCED = auto()  # 強制再行動
-
-    # 選出コマンド (0-9)
-    SELECT_0 = auto()
-    SELECT_1 = auto()
-    SELECT_2 = auto()
-    SELECT_3 = auto()
-    SELECT_4 = auto()
-    SELECT_5 = auto()
-    SELECT_6 = auto()
-    SELECT_7 = auto()
-    SELECT_8 = auto()
-    SELECT_9 = auto()
 
     # 交代コマンド (0-9)
     SWITCH_0 = auto()
@@ -141,19 +127,17 @@ class Command(Enum):
             return Command[new_name]
         return self
 
-    def is_type(self, command_type: CommandType) -> bool:
+    def is_type(self, command_type: CommandType | None) -> bool:
         """指定したコマンドタイプかどうか"""
         match command_type:
-            case "selection":
-                return self.name[:-2] == "SELECT"
-            case "action":
-                return self.name[:-2] != "SELECT"
+            case None:
+                return False
+            case "any":
+                return True
             case "move":
                 return self.name[:-2] not in {"SELECT", "SWITCH"}
             case "switch":
                 return self.name[:-2] == "SWITCH"
-            case "":
-                return False
         raise ValueError(f"Invalid command type: {command_type}")
 
     def is_switch(self) -> bool:
@@ -185,11 +169,6 @@ class Command(Enum):
         return self.name[:-2] == "ZMOVE"
 
     @classmethod
-    def get_selection_command(cls, index: int) -> Command:
-        """対応する選出コマンドを取得"""
-        return cls[f"SELECT_{index}"]
-
-    @classmethod
     def get_switch_command(cls, index: int) -> Command:
         """対応する交代コマンドを取得"""
         return cls[f"SWITCH_{index}"]
@@ -218,11 +197,6 @@ class Command(Enum):
     def get_zmove_command(cls, index: int) -> Command:
         """指定インデックスのZワザコマンドを取得"""
         return cls[f"ZMOVE_{index}"]
-
-    @classmethod
-    def selection_commands(cls) -> list[Command]:
-        """全ての選出コマンドを取得"""
-        return [x for x in cls if x.is_type("selection")]
 
     @classmethod
     def switch_commands(cls) -> list[Command]:

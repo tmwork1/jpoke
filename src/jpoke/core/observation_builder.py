@@ -47,16 +47,15 @@ def _mask(battle: Battle, player: Player):
     for mon in state.team:
         _mask_pokemon(mon)
 
+    # 選出されているポケモンのインデックスを、公開されているポケモンのみに更新する
+    state.selected_indexes = [
+        i for i in state.selected_indexes if state.team[i].revealed
+    ]
+
     if battle.phase == "selection":
         return
 
-    # 選出されているポケモンのインデックスを、公開されているポケモンのみに更新する
-    state.selection_indexes = [
-        i for i in state.selection_indexes if state.team[i].revealed
-    ]
-
     _mask_command(battle, player)
-
     return
 
 
@@ -140,9 +139,9 @@ def _mask_command(battle: Battle, player: Player):
     state.clear_reserved_commands()
 
     # 予約が必要なコマンドの種類を記録する
-    state.required_command_type = ""
+    state.required_command_type = None
     if battle.phase == "action":
-        state.required_command_type = "action"
+        state.required_command_type = "any"
     elif battle.phase == "switch":
         # 後攻でかつ生存している場合は技コマンドの予約が必要
         if (
@@ -150,8 +149,6 @@ def _mask_command(battle: Battle, player: Player):
             and active.alive
         ):
             state.required_command_type = "move"
-
-    print(f"DEBUG: phase={battle.phase} {player.name} requried={state.required_command_type}")
 
     observed_move_indexes = OBSERVED_MOVE_INDEXES[active]
 

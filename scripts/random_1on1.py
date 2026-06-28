@@ -19,7 +19,7 @@ from jpoke.enums import Command
 class RandomPlayer(Player):
     """毎ターン、利用可能なコマンドからランダムに選ぶプレイヤー。"""
 
-    def choose_action_command(self, battle: Battle) -> Command:
+    def choose_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
         available_commands = battle.get_available_commands(self)
         return random.choice(available_commands)

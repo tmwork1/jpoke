@@ -10,11 +10,15 @@ from jpoke.enums import Command
 
 
 class SearchPlayer(Player):
-    def choose_switch_command(self, battle: Battle) -> Command:
+    def choose_command(self, battle: Battle) -> Command:
         print(f"[depth={battle.copy_depth}] Choosing switch command for {self.name}")
 
         if battle.copy_depth > 1:
             raise ValueError("木探索の深さが2を超えています。")
+
+        my_commands = battle.get_available_commands(self)
+        if battle.phase == "action":
+            return my_commands[0]
 
         self_state = battle.player_states[self]
         rival = battle.rival(self)
@@ -24,7 +28,6 @@ class SearchPlayer(Player):
         assert rival_state.required_command_type == "move"
         assert not rival_state.reserved_commands
 
-        my_commands = battle.get_available_commands(self)
         rival_commands = battle.get_available_commands(rival)
 
         print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
@@ -45,7 +48,7 @@ class SearchPlayer(Player):
 
 
 class RandomPlayer(Player):
-    def choose_action_command(self, battle: Battle) -> Command:
+    def choose_command(self, battle: Battle) -> Command:
         commands = battle.get_available_commands(self)
         return random.choice(commands)
 

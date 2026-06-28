@@ -31,10 +31,7 @@ class MixedMovePlayer(Player):
         super().__init__(name)
         self.probs = probs
 
-    def choose_selection_commands(self, battle: Battle) -> list[Command]:
-        return [Command.SELECT_0]
-
-    def choose_action_command(self, battle: Battle) -> Command:
+    def choose_command(self, battle: Battle) -> Command:
         r = battle.random.random()
         p0, p1, _p2 = self.probs
         if r < p0:
