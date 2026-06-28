@@ -5,18 +5,19 @@
 from jpoke import Battle, Player, Pokemon, Move
 
 
-def main(attacker_name: str,
-         defender_name: str,
-         move_name: str):
+def main(attacker: str,
+         defender: str,
+         move: str,
+         defender_item: str = ""):
     # Attacker
     player1 = Player()
     player1.team = [
-        Pokemon(attacker_name)
+        Pokemon(attacker)
     ]
 
     player2 = Player(name="RandomPlayer")
     player2.team = [
-        Pokemon(defender_name)
+        Pokemon(defender, item_name=defender_item)
     ]
 
     # バトルを作成・実行
@@ -25,9 +26,10 @@ def main(attacker_name: str,
 
     battle.calc_lethal(
         attacker=battle.actives[0],
-        move=Move(move_name),
+        move=Move(move),
     )
 
 
 if __name__ == "__main__":
-    main("ガブリアス", "ブリジュラス", "ドラゴンテール")
+    # main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="")
+    main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="たべのこし")

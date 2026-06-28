@@ -4,9 +4,12 @@ Note:
     このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
 """
 from jpoke.enums import Event, DomainEvent
+from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import item as h
+
 from .models import ItemData
 from .megaevol import MEGA_STONES
+from . import lethal_func as l
 
 
 def common_setup():
@@ -607,8 +610,13 @@ ITEMS: dict[str, ItemData] = {
                 h.たべのこし_heal_hp,
                 subject_spec="source:self",
                 priority=60,
-            )
-        }
+            ),
+        },
+        lethal_handler=LethalHandler(
+            func=l.たべのこし_heal_hp,
+            target="defender",
+            priority=60
+        )
     ),
     "ちからのハチマキ": ItemData(
         fling_power=10,

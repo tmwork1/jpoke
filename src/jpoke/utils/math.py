@@ -26,7 +26,7 @@ def clamp_critic(value: int) -> int:
     return max(0, min(3, value))
 
 
-def to_dist(a: list[int] | int) -> dict[int, int]:
+def to_dist(a: dict[int, int] | list[int] | int) -> dict[int, int]:
     if isinstance(a, dict):
         return a
     elif isinstance(a, list):
@@ -35,8 +35,24 @@ def to_dist(a: list[int] | int) -> dict[int, int]:
         return {a: 1}
 
 
-def add_dist(a: dict[int, int] | list[int] | int,
-             b: dict[int, int] | list[int] | int) -> dict[int, int]:
+def _clip_dist(a: dict[int, int],
+               minimum: int | None = None,
+               maximum: int | None = None) -> dict[int, int]:
+    if minimum is None and maximum is None:
+        return a
+
+    result = defaultdict(int)
+    for value, freq in a.items():
+        if minimum is not None:
+            value = max(value, minimum)
+        if maximum is not None:
+            value = min(value, maximum)
+        result[value] += freq
+    return dict(result)
+
+
+def _convolve(a: dict[int, int] | list[int] | int,
+              b: dict[int, int] | list[int] | int) -> dict[int, int]:
     x = to_dist(a)
     y = to_dist(b)
 
@@ -47,21 +63,19 @@ def add_dist(a: dict[int, int] | list[int] | int,
     return dict(result)
 
 
+def add_dist(a: dict[int, int] | list[int] | int,
+             b: dict[int, int] | list[int] | int,
+             minimum: int | None = None,
+             maximum: int | None = None) -> dict[int, int]:
+    result = _convolve(a, b)
+    return _clip_dist(result, minimum=minimum, maximum=maximum)
+
+
 def subtract_dist(a: dict[int, int] | list[int] | int,
-                  b: dict[int, int] | list[int] | int) -> dict[int, int]:
+                  b: dict[int, int] | list[int] | int,
+                  minimum: int | None = None,
+                  maximum: int | None = None) -> dict[int, int]:
     b_dist = to_dist(b)
     rev_b = {-k: v for k, v in b_dist.items()}
-    return add_dist(a, rev_b)
-
-
-def clip_dist(a: dict[int, int],
-              minimum: int | None = None,
-              maximum: int | None = None) -> dict[int, int]:
-    result = defaultdict(int)
-    for value, freq in a.items():
-        if minimum is not None:
-            value = max(value, minimum)
-        if maximum is not None:
-            value = min(value, maximum)
-        result[value] += freq
-    return dict(result)
+    result = _convolve(a, rev_b)
+    return _clip_dist(result, minimum=minimum, maximum=maximum)

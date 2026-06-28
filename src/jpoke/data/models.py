@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, Callable
 if TYPE_CHECKING:
     from jpoke.enums import Event, DomainEvent
-    from jpoke.core import Handler
+    from jpoke.core import Handler, LethalHandler
 
 from dataclasses import dataclass, field
 
@@ -27,6 +27,7 @@ class PokemonData:
 class AbilityData:
     flags: list[AbilityFlag] = field(default_factory=list)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
+    lethal_handler: LethalHandler | None = None
     name: str = ""
 
 
@@ -38,6 +39,7 @@ class ItemData:
     damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     mega_evol: tuple[str, ...] | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
+    lethal_handler: LethalHandler | None = None
     name: str = ""
 
 
@@ -61,6 +63,7 @@ class MoveData:
     multi_hit: MultiHit | None = None
     labels: list[MoveLabel] = field(default_factory=list)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
+    lethal_handler: LethalHandler | None = None
     name: str = ""
 
 
@@ -68,6 +71,7 @@ class MoveData:
 class FieldData:
     max_count: int = 1
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
+    lethal_handler: LethalHandler | None = None
     name: str = ""
 
 
@@ -76,6 +80,7 @@ class AilmentData:
     is_sleep: bool = False
     uncurable: bool = False
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
+    lethal_handler: LethalHandler | None = None
     name: str = ""
 
 
@@ -83,4 +88,5 @@ class AilmentData:
 class VolatileData:
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     forced: bool = False
+    lethal_handler: LethalHandler | None = None
     name: str = ""

@@ -10,7 +10,7 @@ import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import BattlePhase, CommandType, Stat, StatChangeReason, GlobalFieldName, \
+from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
@@ -23,7 +23,7 @@ from .context import EventContext, AttackContext
 from .player import Player
 from .event_logger import EventLogger, Payload
 from .command_logger import CommandLogger
-from .damage_calculator import DamageCalculator
+from .damage import DamageCalculator
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
 from .switch_manager import SwitchManager
@@ -35,8 +35,9 @@ from .ability_manager import AbilityManager
 from .ailment_manager import AilmentManager
 from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
-from .pokemon_query import PokemonQuery
-from . import observation_builder, lethal_calculator
+from .query import PokemonQuery
+from . import observation_builder
+from .lethal import LethalCalculator
 
 
 @dataclass
@@ -132,6 +133,7 @@ class Battle:
         self.side_managers: list[SideFieldManager] = [
             SideFieldManager(self, ply) for ply in self.players
         ]
+        self.lethal: LethalCalculator = LethalCalculator(self)
 
         self.test_option: TestOption = TestOption()
 
@@ -172,6 +174,7 @@ class Battle:
                 "terrain_manager",
                 "global_manager",
                 "side_managers",
+                "lethal",
             ]
         )
 
@@ -203,6 +206,7 @@ class Battle:
         self.global_manager.update_reference(self)
         for side in self.side_managers:
             side.update_reference(self)
+        self.lethal.update_reference(self)
 
     def copy(self) -> Battle:
         return deepcopy(self)
@@ -240,7 +244,7 @@ class Battle:
         return self.observer is not None
 
     def calc_lethal(self, attacker: Pokemon, move: Move):
-        lethal_calculator.calc_lethal(self, attacker, move)
+        self.lethal.calc_lethal(attacker, move)
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
