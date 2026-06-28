@@ -69,11 +69,11 @@ class DamageCalculator:
     def _events(self) -> EventManager:
         return self.battle.events
 
-    def calc_damage_range(self,
-                          attacker: Pokemon,
-                          defender: Pokemon,
-                          move: Move,
-                          critical: bool = False) -> list[int]:
+    def calc_damages(self,
+                     attacker: Pokemon,
+                     defender: Pokemon,
+                     move: Move,
+                     critical: bool = False) -> list[int]:
         """1回の攻撃で与えるダメージ乱数列を計算する。
 
         Args:

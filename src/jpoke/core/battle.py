@@ -36,7 +36,7 @@ from .ailment_manager import AilmentManager
 from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
 from .pokemon_query import PokemonQuery
-from . import observation_builder as obs
+from . import observation_builder, lethal_calculator
 
 
 @dataclass
@@ -229,7 +229,7 @@ class Battle:
         """
         if self.is_observation():
             return self.copy()
-        return obs.build(self, observer)
+        return observation_builder.build(self, observer)
 
     def is_observation(self) -> bool:
         """Battle インスタンスが観測用かどうかを判定する。
@@ -238,6 +238,9 @@ class Battle:
             bool: 観測用の場合は True、通常の Battle インスタンスの場合は False
         """
         return self.observer is not None
+
+    def calc_lethal(self, attacker: Pokemon, move: Move):
+        lethal_calculator.calc_lethal(self, attacker, move)
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
@@ -271,6 +274,11 @@ class Battle:
         return mon in self.actives
 
     @property
+    def raw_weather(self) -> Field:
+        """現在セットされている天候を取得。"""
+        return self.weather_manager.current
+
+    @property
     def weather(self) -> Field:
         """有効な天候オブジェクトを返す。判定ロジックは WeatherManager に委譲する。"""
         return self.weather_manager.active
@@ -288,23 +296,13 @@ class Battle:
         Returns:
             Field: 対象ポケモンに有効な天候
         """
-        active = self.weather
         if (
             mon.item.enabled
             and mon.item.name == "ばんのうがさ"
             and active.name in {"はれ", "あめ", "おおひでり", "おおあめ"}
         ):
             return self.weather_manager.inactive
-        return active
-
-    @property
-    def raw_weather(self) -> Field:
-        """現在セットされている天候を取得。
-
-        Returns:
-            Field: 現在セットされている天候フィールド
-        """
-        return self.weather_manager.current
+        return self.weather
 
     @property
     def terrain(self) -> Field:
@@ -328,7 +326,8 @@ class Battle:
         Returns:
             SideFieldManager: 対応するサイドフィールドマネージャー
         """
-        return self.side_managers[self.get_player_index(source)]
+        index = self._get_player_index(source)
+        return self.side_managers[index]
 
     def get_player(self, mon: Pokemon) -> Player:
         """ポケモンが所属するプレイヤーを検索する。
@@ -342,9 +341,10 @@ class Battle:
         Raises:
             Exception: ポケモンが見つからない場合
         """
-        return self.players[self.get_player_index(mon)]
+        index = self._get_player_index(mon)
+        return self.players[index]
 
-    def get_player_index(self, source: Player | Pokemon) -> int:
+    def _get_player_index(self, source: Player | Pokemon) -> int:
         """プレイヤーまたはポケモンからプレイヤーインデックスを取得。
 
         Args:
@@ -398,28 +398,11 @@ class Battle:
 
         match self.phase:
             case "action":
-                return self.get_available_action_commands(player)
+                return self.command_manager.get_available_action_commands(player)
             case "switch":
-                return self.get_available_switch_commands(player)
+                return self.command_manager.get_available_switch_commands(player)
 
         raise ValueError(f"Invalid phase: {self.phase}")
-
-    def get_available_action_commands(self, player: Player) -> list[Command]:
-        return self.command_manager.get_available_action_commands(player)
-
-    def get_available_switch_commands(self, player: Player) -> list[Command]:
-        return self.command_manager.get_available_switch_commands(player)
-
-    def calc_effective_speed(self, mon: Pokemon) -> int:
-        """実効素早さを計算（SpeedCalculatorへの委譲）。
-
-        Args:
-            mon: 対象のポケモン
-
-        Returns:
-            補正後の実効素早さ
-        """
-        return self.speed_calculator.calc_effective_speed(mon)
 
     def resolve_speed_order(self) -> list[Pokemon]:
         """素早さ順序を解決（SpeedCalculatorへの委譲）。
@@ -438,16 +421,16 @@ class Battle:
         return self.turn_controller.judge_winner()
 
     def resolve_command(self, phase: BattlePhase, player: Player | None = None) -> dict[Player, Command]:
+        # TODO : command_managerに移譲したほうがよいかもしれない。
         """コマンドを解決する。"""
         players = [player] if player else self.players
 
         with self.phase_context(phase):
+            # 方策関数を呼び出す前準備
             for ply in players:
                 state = self.player_states[ply]
-
-                # 最後に利用可能だったコマンドを記録
+                # 利用できるコマンドを記録
                 state.last_available_commands = self.get_available_commands(ply)
-
                 # 木探索を行う際に補完すべきコマンドタイプを指定
                 state.required_command_type = "any" if self.phase == "action" else "switch"
 
@@ -466,6 +449,7 @@ class Battle:
         self.turn_controller.start_battle()
 
     def step(self, commands: dict[Player, Command] | None = None):
+        # turn_controller.step()より前の処理はcommand_managerに移譲したほうがよいかもしれない
         """ターンを1つ進める（TurnControllerへの委譲）。
 
         Args:
@@ -475,10 +459,10 @@ class Battle:
             # is_new_turn()だけで判定すると、行動コマンド選択時の木探索でresolve_action_commands()が再帰的に呼ばれてしまうため、command is Noneのガードが必要。
             commands = self.resolve_command("action")
         else:
-            for ply, state in self.player_states.items():
-                command = commands.get(ply)
-                if not self._validate_command(ply, command):
-                    raise ValueError(f"Invalid command type for {ply.name}: {command}.")
+            for player in self.players:
+                command = commands.get(player)
+                if not self._validate_command(player, command):
+                    raise ValueError(f"Invalid command type for {player.name}: {command}.")
 
         if not commands:
             raise ValueError("No commands provided for step().")
@@ -486,6 +470,7 @@ class Battle:
         self.turn_controller.step(commands)
 
     def _validate_command(self, player: Player, command: Command | None) -> bool:
+        # TODO : command_managerに移譲したほうがよいかもしれない。
         """コマンドがコンテキストに合致しているか検証する。
 
         Args:
@@ -516,12 +501,6 @@ class Battle:
         """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
         self.ability_manager.change_ability(mon, ability)
 
-    def can_change_item(self,
-                        target: Pokemon,
-                        source: Pokemon | None = None) -> bool:
-        """アイテム変更可否を判定する（ItemManagerへの委譲）。"""
-        return self.item_manager.can_change_item(target, source=source)
-
     def gain_item(self, target: Pokemon, item_name: str) -> bool:
         """ポケモンがアイテムを得る（ItemManagerへの委譲）。"""
         return self.item_manager.gain_item(target, item_name)
@@ -533,12 +512,14 @@ class Battle:
         return self.item_manager.remove_item(target, source=source)
 
     def consume_item(self, mon: Pokemon) -> bool:
+        # TODO : item_managerに実装を完全移譲する
         """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
         if mon.item.is_berry():
             mon.ate_berry = True
         return self.item_manager.remove_item(mon, source=mon)
 
     def force_trigger_berry(self, mon: Pokemon) -> None:
+        # TODO : item_managerに移譲してBattleクラスにはメソッドを残さない
         """きのみを強制発動してから消費する。
 
         ほおばる・おちゃかい等で「HP閾値やターン終了を待たずに即座に」
@@ -563,15 +544,6 @@ class Battle:
         # いずれの発火でも消費されなかった場合は明示的に消費する
         if mon.item.is_berry():
             self.consume_item(mon)
-
-    def swap_items(self) -> bool:
-        """2体のアイテムを入れ替える（ItemManagerへの委譲）。"""
-        return self.item_manager.swap_items()
-
-    def take_item(self,
-                  target: Pokemon) -> bool:
-        """対象のアイテムを source に移す（ItemManagerへの委譲）。"""
-        return self.item_manager.take_item(target)
 
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
@@ -642,14 +614,14 @@ class Battle:
         Returns:
             int: 計算されたダメージ値
         """
-        damages = self.calc_damage_range(attacker, defender, move, critical)
+        damages = self.calc_damages(attacker, defender, move, critical)
         return self.random.choice(damages)
 
-    def calc_damage_range(self,
-                          attacker: Pokemon,
-                          defender: Pokemon,
-                          move: Move | str,
-                          critical: bool = False) -> list[int]:
+    def calc_damages(self,
+                     attacker: Pokemon,
+                     defender: Pokemon,
+                     move: Move | str,
+                     critical: bool = False) -> list[int]:
         """可能なダメージ値のリストを計算する。
 
         乱数によるダメージ幅を考慮した全ての可能なダメージ値を返します。
@@ -665,8 +637,9 @@ class Battle:
         """
         if isinstance(move, str):
             move = Move(move)
-        return self.damage_calculator.calc_damage_range(
-            attacker, defender, move, critical=critical)
+        return self.damage_calculator.calc_damages(
+            attacker, defender, move, critical=critical
+        )
 
     def has_interrupt(self) -> bool:
         """割り込みフラグが設定されているか確認。
@@ -684,14 +657,6 @@ class Battle:
         """
         return not self.has_interrupt()
 
-    def override_ejectpack_interrupt(self, flag: Interrupt):
-        """割り込みフラグを上書き（SwitchManagerへの委譲）。
-
-        Args:
-            flag: 設定する割り込みフラグ
-        """
-        self.switch_manager._override_ejectpack_interrupt(flag)
-
     def run_switch(self, player: Player, new: Pokemon, emit: bool = True):
         """ポケモンを交代（SwitchManagerへの委譲）。
 
@@ -701,23 +666,6 @@ class Battle:
             emit: ON_SWITCH_INイベントを発火する場合True
         """
         self.switch_manager.run_switch(player, new, emit)
-
-    def run_initial_switch(self):
-        """バトル開始時の初期交代（SwitchManagerへの委譲）。"""
-        self.switch_manager.run_initial_switch()
-
-    def run_interrupt_switch(self, flag: Interrupt, emit_on_each_switch: bool = True):
-        """割り込み交代を実行（SwitchManagerへの委譲）。
-
-        Args:
-            flag: 対象とする割り込みフラグ
-            emit_on_each_switch: 各交代ごとにON_SWITCH_INを発火する場合True
-        """
-        self.switch_manager.run_interrupt_switch(flag, emit_on_each_switch)
-
-    def run_faint_switch(self):
-        """瀕死による交代を実行（SwitchManagerへの委譲）。"""
-        self.switch_manager.run_faint_switch()
 
     def add_event_log(self,
                       source: Player | Pokemon | int,
@@ -733,7 +681,7 @@ class Battle:
         if isinstance(source, int):
             idx = source
         else:
-            idx = self.get_player_index(source)
+            idx = self._get_player_index(source)
         if isinstance(source, Pokemon) and payload is not None and "pokemon" not in payload:
             payload = {"pokemon": source.name, **payload}
         elif isinstance(source, Pokemon) and payload is None:
@@ -755,6 +703,7 @@ class Battle:
                 for i, player in enumerate(self.players)}
 
     def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
+        # TODO : battle.queryに移譲してBattleクラスから削除すべきかもしれない
         """実際の技カテゴリを判定する（MoveExecutorへの委譲）。
 
         Args:
@@ -782,14 +731,6 @@ class Battle:
         """道具の無効化理由を削除する（ItemManagerへの委譲）。"""
         return self.item_manager.remove_disabled_reason(mon, reason)
 
-    def calc_def_type_modifier(self, defender: Pokemon, move: str | Move) -> float:
-        """防御側のタイプ相性補正を計算する（DamageCalculatorへの委譲）。"""
-        if isinstance(move, str):
-            move = Move(move)
-        # attacker はタイプ相性計算で未参照だが必須フィールドのため対面ポケモンをセット
-        ctx = AttackContext(attacker=self.foe(defender), defender=defender, move=move)
-        return self.damage_calculator.calc_def_type_modifier(ctx) / 4096
-
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
         if self.test_option.secondary_chance is not None:
@@ -797,6 +738,7 @@ class Battle:
         return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
 
     def can_switch(self, player: Player) -> bool:
+        # TODO : 実装をswitch_managerからqueryに移譲して、Battleクラスのメソッドは廃止したほうがよいかもしれない。
         """プレイヤーが交代可能かどうかを判定する（SwitchManagerへの委譲）。"""
         state = self.player_states[player]
         return self.switch_manager.can_switch(state)

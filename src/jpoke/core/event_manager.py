@@ -179,7 +179,7 @@ class EventManager:
 
         def key(rh: RegisteredHandler):
             subject = self._resolve_subject(rh)
-            speed = self.battle.calc_effective_speed(subject)
+            speed = self.battle.speed_calculator.calc_effective_speed(subject)
             return (rh.handler.priority, -speed)
 
         return sorted(rhs, key=key)

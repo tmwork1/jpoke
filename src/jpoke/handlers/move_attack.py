@@ -37,7 +37,7 @@ def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
         HandlerReturn: 交代が可能な場合はTrue、不可能な場合はFalse
     """
     player = battle.get_player(ctx.attacker)
-    if battle.get_available_switch_commands(player):
+    if battle.command_manager.get_available_switch_commands(player):
         battle.player_states[player].interrupt = Interrupt.PIVOT
     return HandlerReturn(value=value)
 
@@ -1107,7 +1107,7 @@ def _force_switch_next(battle: Battle, ctx: AttackContext, value: Any) -> Handle
         return HandlerReturn(value=value)
     player = battle.get_player(ctx.defender)
     state = battle.player_states[player]
-    commands = battle.get_available_switch_commands(player)
+    commands = battle.command_manager.get_available_switch_commands(player)
     if commands:
         command = commands[0]
         battle.run_switch(player, state.team[command.index])
@@ -1194,7 +1194,7 @@ def どろばくだん_reduce_acc(battle: Battle, ctx: AttackContext, value: Any
 
 def どろぼう_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """どろぼう・ほしがるのアイテム奪取効果。"""
-    battle.take_item(ctx.defender)
+    battle.item_manager.take_item(ctx.defender)
     return HandlerReturn(value=value)
 
 

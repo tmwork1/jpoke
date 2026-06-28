@@ -47,6 +47,10 @@ class TurnController:
     def _events(self):
         return self.battle.events
 
+    @property
+    def _switch(self):
+        return self.battle.switch_manager
+
     def judge_winner(self) -> Player | None:
         """勝者を判定して返す。
 
@@ -84,10 +88,10 @@ class TurnController:
         self.battle.add_event_log(0, LogCode.GAME_STARTED)
 
         # 先頭のポケモンを場に出す
-        self.battle.run_initial_switch()
+        self._switch.run_initial_switch()
 
         # だっしゅつパックによる交代
-        self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
+        self._switch.run_interrupt_switch(Interrupt.EJECTPACK_ON_START)
 
     def _run_selection(self):
         with self.battle.phase_context("selection"):
@@ -162,10 +166,10 @@ class TurnController:
                     self.battle.run_switch(player, new)
 
                 # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
-                self.battle.override_ejectpack_interrupt(interrupt)
+                self._switch.override_ejectpack_interrupt(interrupt)
 
             # だっしゅつパックによる交代
-            self.battle.run_interrupt_switch(interrupt)
+            self._switch.run_interrupt_switch(interrupt)
 
     def _resolve_action_order(self):
         """行動順を解決する。"""
@@ -249,22 +253,22 @@ class TurnController:
                 self.battle.run_move(attacker, move)
 
             # だっしゅつボタンによる交代
-            self.battle.run_interrupt_switch(Interrupt.EJECTBUTTON)
+            self._switch.run_interrupt_switch(Interrupt.EJECTBUTTON)
 
             # ききかいひによる交代
-            self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+            self._switch.run_interrupt_switch(Interrupt.EMERGENCY)
 
             # 交代技による交代
-            self.battle.run_interrupt_switch(Interrupt.PIVOT)
+            self._switch.run_interrupt_switch(Interrupt.PIVOT)
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
             interrupt = Interrupt.ejectpack_on_after_move(
                 self.battle.players.index(player)
             )
-            self.battle.override_ejectpack_interrupt(interrupt)
+            self._switch.override_ejectpack_interrupt(interrupt)
 
             # だっしゅつパックによる交代
-            self.battle.run_interrupt_switch(interrupt)
+            self._switch.run_interrupt_switch(interrupt)
 
     def _run_end_phase(self):
         """ターン終了時の処理を実行する。"""
@@ -272,13 +276,13 @@ class TurnController:
             self._events.emit(Event.ON_TURN_END)
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
-            self.battle.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
+            self._switch.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_TURN_END)
 
         # ききかいひによる交代
-        self.battle.run_interrupt_switch(Interrupt.EMERGENCY)
+        self._switch.run_interrupt_switch(Interrupt.EMERGENCY)
 
         # だっしゅつパックによる交代
-        self.battle.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
+        self._switch.run_interrupt_switch(Interrupt.EJECTPACK_ON_TURN_END)
 
         # 瀕死による交代
-        self.battle.run_faint_switch()
+        self._switch.run_faint_switch()

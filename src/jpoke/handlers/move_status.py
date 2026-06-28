@@ -39,6 +39,7 @@ _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "たくわえる",
 })
 
+
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
@@ -46,6 +47,7 @@ def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRetu
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
 
 def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
@@ -62,12 +64,11 @@ def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """
     player = battle.get_player(ctx.defender)
     state = battle.player_states[player]
-    commands = battle.get_available_switch_commands(player)
-    success = bool(commands)
-    if success:
+    commands = battle.command_manager.get_available_switch_commands(player)
+    if commands:
         command = battle.random.choice(commands)
         battle.run_switch(player, state.team[command.index])
-    return HandlerReturn(value=success)
+    return HandlerReturn(value=value)
 
 
 def アクアリング_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -617,7 +618,7 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    if not battle.get_available_switch_commands(player):
+    if not battle.can_switch(player):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload={"reason": "しっぽきり_交代不可"}
@@ -755,7 +756,7 @@ def すてゼリフ_modify_defender_stats_and_pivot(battle: Battle, ctx: AttackC
         return result
 
     player = battle.get_player(ctx.attacker)
-    if battle.get_available_switch_commands(player):
+    if battle.can_switch(player):
         battle.player_states[player].interrupt = Interrupt.PIVOT
 
     return HandlerReturn(value=value)
@@ -791,7 +792,7 @@ def スピードスワップ_swap_speed(battle: Battle, ctx: AttackContext, valu
 
 def すりかえ_swap_items(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """すりかえ・トリックのアイテム交換効果。"""
-    success = battle.swap_items()
+    success = battle.item_manager.swap_items()
     return HandlerReturn(value=success)
 
 

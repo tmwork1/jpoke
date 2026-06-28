@@ -2939,7 +2939,7 @@ def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value
 
 def マジシャン_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジシャン特性: 攻撃成功後に相手のアイテムを奪う。"""
-    battle.take_item(ctx.defender)
+    battle.item_manager.take_item(ctx.defender)
     return HandlerReturn(value=value)
 
 
@@ -3413,5 +3413,5 @@ def わるいてぐせ_steal_item(battle: Battle, ctx: AttackContext, value: Any
         battle.query.is_contact(ctx)
         and not ctx.defender.fainted
     ):
-        battle.take_item(ctx.attacker)
+        battle.item_manager.take_item(ctx.attacker)
     return HandlerReturn(value=value)

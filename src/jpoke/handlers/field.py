@@ -446,8 +446,9 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
     """ステルスロックのダメージ（岩タイプ相性依存）"""
     if battle.query.is_hazard_immune(ctx.source):
         return HandlerReturn(value=value)
-    r = battle.calc_def_type_modifier(ctx.source, "ステルスロック")
-    battle.modify_hp(ctx.source, r=-1/8*r)
+    tmp_ctx = AttackContext(attacker=ctx.source, defender=ctx.source, move="ステルスロック")
+    r = battle.damage_calculator.calc_def_type_modifier(tmp_ctx) // 4096
+    battle.modify_hp(ctx.source, r=-r/8)
     return HandlerReturn(value=value)
 
 

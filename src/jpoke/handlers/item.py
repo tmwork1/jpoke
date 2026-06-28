@@ -1262,7 +1262,7 @@ def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: A
 
     if battle.can_switch(rival):
         _announce_and_consume_item(battle, mon)
-        commands = battle.get_available_switch_commands(rival)
+        commands = battle.command_manager.get_available_switch_commands(rival)
         command = battle.random.choice(commands)
         new_mon = battle.player_states[rival].team[command.index]
         battle.run_switch(rival, new_mon)

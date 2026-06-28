@@ -130,7 +130,7 @@ class SwitchManager:
         # リクエストがなくなるまで再帰的に交代する
         while self.battle.has_interrupt():
             flag = Interrupt.EJECTPACK_ON_AFTER_SWITCH
-            self._override_ejectpack_interrupt(flag)
+            self.override_ejectpack_interrupt(flag)
             self.run_interrupt_switch(flag)
 
     def run_initial_switch(self):
@@ -147,7 +147,7 @@ class SwitchManager:
         self._events.emit(Event.ON_SWITCH_IN)
 
         # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定
-        self._override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
+        self.override_ejectpack_interrupt(Interrupt.EJECTPACK_ON_START)
 
     def run_interrupt_switch(self,
                              flag: Interrupt,
@@ -268,7 +268,7 @@ class SwitchManager:
             payload={"pokemon": mon.name}
         )
 
-    def _override_ejectpack_interrupt(self, flag: Interrupt):
+    def override_ejectpack_interrupt(self, flag: Interrupt):
         """割り込みフラグを上書き。
 
         EJECTPACK_REQUESTED状態のプレイヤーに対して、指定したフラグを設定する。
