@@ -121,10 +121,6 @@ class Event(Enum):
     # handle: ability.py（ゼロフォーミング: テラスタル時に天候・フィールドを消去）
     ON_TERASTALLIZE = auto()
 
-    # emit: core/turn_controller.py（技フェーズ開始直前・ターン内に1回）
-    # handle: 現時点でハンドラ登録なし（将来の拡張用スロット）
-    ON_BEFORE_MOVE = auto()
-
     # emit: core/move_executor.py（技を実際に適用する前）
     # handle: volatile.py（アンコールによる技プロパティ上書き、メトロノームなど）
     ON_MODIFY_MOVE = auto()

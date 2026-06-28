@@ -140,6 +140,7 @@ def _mask_command(battle: Battle, player: Player):
     state.clear_reserved_commands()
 
     # 予約が必要なコマンドの種類を記録する
+    state.required_command_type = ""
     if battle.phase == "action":
         state.required_command_type = "action"
     elif battle.phase == "switch":
@@ -149,6 +150,8 @@ def _mask_command(battle: Battle, player: Player):
             and active.alive
         ):
             state.required_command_type = "move"
+
+    print(f"DEBUG: phase={battle.phase} {player.name} requried={state.required_command_type}")
 
     observed_move_indexes = OBSERVED_MOVE_INDEXES[active]
 

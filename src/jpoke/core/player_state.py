@@ -20,10 +20,9 @@ class PlayerState:
         self.active_index: int | None = None
         self.reserved_commands: list[Command] = []
         self.last_available_commands: list[Command] = []  # 最後に利用可能だったコマンドのリスト
-        self.required_command_type: CommandType | None = None  # 木探索を行う際に補完すべきコマンドタイプ（Noneの場合は補完不要）
+        self.required_command_type: CommandType = ""  # 木探索を行う際に補完すべきコマンドタイプ（""の場合は補完不要）
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
-        self.action_order_index: int | None = None
         self.baton_pass_data: dict | None = None  # バトンタッチの引き継ぎデータ # TODO : {}で初期化し、Noneを許容しないようにする
 
     def __deepcopy__(self, memo):
@@ -36,7 +35,6 @@ class PlayerState:
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
         self.has_switched = False
-        self.action_order_index = None
         self.active.reset_turn_state()
 
     @property

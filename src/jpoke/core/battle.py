@@ -434,14 +434,6 @@ class Battle:
         """
         return self.speed_calculator.resolve_speed_order()
 
-    def resolve_action_order(self) -> list[Pokemon]:
-        """行動順序を解決（SpeedCalculatorへの委譲）。
-
-        Returns:
-            行動順にソートされたポケモンのリスト
-        """
-        return self.speed_calculator.resolve_action_order()
-
     def judge_winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
 
@@ -512,8 +504,7 @@ class Battle:
             commands: 各プレイヤーのコマンド辞書。Noneの場合はプレイヤーの方策関数に従う。
         """
         if self.is_new_turn() and commands is None:
-            # is_new_turn()だけで判定すると、行動コマンド選択時の木探索で
-            # resolve_action_commands()が再帰的に呼ばれてしまう。
+            # is_new_turn()だけで判定すると、行動コマンド選択時の木探索でresolve_action_commands()が再帰的に呼ばれてしまうため、command is Noneのガードが必要。
             commands = self.resolve_action_commands()
         else:
             for ply, state in self.player_states.items():
@@ -539,7 +530,7 @@ class Battle:
         required_type = state.required_command_type
         return (
             command is None
-            or required_type is None
+            or required_type is ""
             or command.is_type(required_type)
         )
 

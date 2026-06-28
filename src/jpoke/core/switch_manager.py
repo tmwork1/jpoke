@@ -168,12 +168,16 @@ class SwitchManager:
             if state.interrupt != flag:
                 continue
 
-            # 交代を引き起こしたアイテムを消費させる
+            # 消費アイテムによる交代の場合はアイテムを消費させる
             if flag.requires_item_consumption():
                 self.battle.consume_item(state.active)
 
-            # 予約されているコマンドを破棄し、方策関数に従って交代コマンドを取得
-            command = self.battle.resolve_switch_command(player)
+            if state.command_reserved() and state.next_command.is_switch():
+                # 予約されている交代コマンドを使う
+                command = state.pop_command()
+            else:
+                # 方策関数に従う
+                command = self.battle.resolve_switch_command(player)
 
             self.run_switch(
                 player,
@@ -259,8 +263,7 @@ class SwitchManager:
         self._unregister_handlers_on_switch_out(mon)
 
         self.battle.add_event_log(
-            mon,
-            LogCode.SWITCHED_OUT,
+            mon, LogCode.SWITCHED_OUT,
             payload={"pokemon": mon.name}
         )
 

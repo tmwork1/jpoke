@@ -26,6 +26,7 @@ class TurnController:
 
     def __init__(self, battle: Battle):
         self.battle = battle
+        self.action_order: list[int] = []
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -107,18 +108,17 @@ class TurnController:
         # 交代フェーズ
         self._run_switch_phase()
 
-        # 行動順を確定し、ターン中に参照できるよう記録
-        action_order = self.battle.resolve_action_order()
-        self._record_action_order(action_order)
+        # 行動順解決
+        self._resolve_action_order()
 
         # テラスタル
-        self._run_terastal_phase(action_order)
+        self._run_terastal_phase()
 
         # メガシンカ
-        self._run_megaevolve_phase(action_order)
+        self._run_megaevolve_phase()
 
         # 技の処理
-        self._run_move_phase(action_order)
+        self._run_move_phase()
 
         # ターン終了時の処理
         self._run_end_phase()
@@ -127,6 +127,7 @@ class TurnController:
         """ターン開始処理を実行する。"""
         self.battle.turn += 1
         if self.battle.is_new_turn():
+            self.action_order = []
             for state in self.battle.player_states.values():
                 state.reset_turn_state()
 
@@ -143,6 +144,9 @@ class TurnController:
             # 交代
             if self.battle.is_new_turn():
                 if state.next_command.is_type("switch"):
+                    # 行動順を記録
+                    self.action_order.append(idx)
+
                     # 予約されている交代コマンドを取得
                     command = state.pop_command()
 
@@ -156,21 +160,29 @@ class TurnController:
             # だっしゅつパックによる交代
             self.battle.run_interrupt_switch(interrupt)
 
-    def _record_action_order(self, action_order: list[Pokemon]):
-        """確定した行動順をプレイヤー状態へ記録する。"""
-        for index, mon in enumerate(action_order):
-            player = self.battle.get_player(mon)
-            self.battle.player_states[player].action_order_index = index
+    def _resolve_action_order(self):
+        """行動順を解決する。"""
+        if not self.battle.is_new_turn():
+            return
 
-    def _run_terastal_phase(self, action_order: list[Pokemon]):
-        """テラスタルを実行する。"""
+        action_order = self.battle.speed_calculator.resolve_action_order()
         for mon in action_order:
-            player = self.battle.get_player(mon)
+            index = self.battle.actives.index(mon)
+            self.action_order.append(index)
+
+    def _run_terastal_phase(self):
+        """テラスタルを実行する。"""
+        if not self.battle.is_new_turn():
+            return
+
+        for index in self.action_order:
+            player = self.battle.players[index]
             state = self.battle.player_states[player]
             if not state.command_reserved():
                 continue
 
             # コマンドがテラスタルで、かつテラスタル可能な場合にテラスタルを実行
+            mon = state.active
             command = state.next_command
             if command.is_terastal and mon.can_terastallize():
                 mon.terastallize()
@@ -180,15 +192,19 @@ class TurnController:
                 )
                 self._events.emit(Event.ON_TERASTALLIZE, EventContext(source=mon))
 
-    def _run_megaevolve_phase(self, action_order: list[Pokemon]):
+    def _run_megaevolve_phase(self):
         """メガシンカを実行する。"""
-        for mon in action_order:
-            player = self.battle.get_player(mon)
+        if not self.battle.is_new_turn():
+            return
+
+        for index in self.action_order:
+            player = self.battle.players[index]
             state = self.battle.player_states[player]
             if not state.command_reserved():
                 continue
 
             # コマンドがメガシンカで、かつメガシンカ可能な場合にメガシンカを実行
+            mon = state.active
             command = state.next_command
             if command.is_megaevol and mon.can_megaevolve():
                 # メガシンカ前の特性を無効化し、メガシンカ後に特性を有効化する
@@ -204,12 +220,10 @@ class TurnController:
                 # メガシンカ後の特性が発動するイベントを追加
                 self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))
 
-    def _run_move_phase(self, action_order: list[Pokemon]):
+    def _run_move_phase(self):
         """技発動フェーズを実行する。"""
-        self._events.emit(Event.ON_BEFORE_MOVE)
-
-        for attacker in action_order:
-            player = self.battle.get_player(attacker)
+        for index in self.action_order:
+            player = self.battle.players[index]
             state = self.battle.player_states[player]
 
             if state.has_switched:
@@ -218,6 +232,10 @@ class TurnController:
             if self.battle.is_new_turn():
                 # コマンドを取得
                 command = state.pop_command()
+
+                attacker = state.active
+                if attacker.fainted:
+                    continue
 
                 # 技を実行
                 move = self.battle.command_to_move(player, command)

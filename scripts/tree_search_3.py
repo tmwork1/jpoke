@@ -1,8 +1,7 @@
 """
-自分が先攻でとんぼがえりを使う場合の木探索の例
+同時に死に出しする場合の木探索の例
 """
 
-import random
 from itertools import product
 
 from jpoke import Battle, Player, Pokemon
@@ -21,7 +20,7 @@ class SearchPlayer(Player):
         rival_state = battle.player_states[rival]
 
         assert self_state.required_command_type == "switch"
-        assert rival_state.required_command_type == "move"
+        assert rival_state.required_command_type == ""
         assert not rival_state.reserved_commands
 
         my_commands = battle.get_available_commands(self)
@@ -29,7 +28,6 @@ class SearchPlayer(Player):
 
         print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
         print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
-        print(f"{[m.name for m in rival_state.active.moves]}")
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
@@ -42,12 +40,6 @@ class SearchPlayer(Player):
         print(f"{'-'*20}")
 
         return my_commands[0]
-
-
-class RandomPlayer(Player):
-    def choose_action_command(self, battle: Battle) -> Command:
-        commands = battle.get_available_commands(self)
-        return random.choice(commands)
 
 
 def play_game(seed: int | None = None,
@@ -64,19 +56,24 @@ def play_game(seed: int | None = None,
     # Player 1
     player1 = SearchPlayer(name="SearchPlayer")
     player1.team = [
-        Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
+        Pokemon("ヒトカゲ", item_name="いのちのたま", move_names=["たいあたり"]),
+        Pokemon("リザード", item_name="", move_names=["たいあたり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
     ]
 
-    player2 = RandomPlayer(name="RandomPlayer")
+    player2 = Player(name="RandomPlayer")
     player2.team = [
-        Pokemon("ゼニガメ", item_name="", move_names=["たいあたり", "なきごえ", "しっぽをふる"]),
+        Pokemon("ゼニガメ", item_name="", move_names=["たいあたり"]),
+        Pokemon("カメール", item_name="", move_names=["たいあたり"]),
         Pokemon("カメックス", item_name="", move_names=["たいあたり"]),
     ]
 
-    # 先頭以外の技を公開する
-    for i in range(1, 3):
-        player2.team[0].moves[i].revealed = True
+    # 相手のポケモンを公開する
+    player2.team[2].revealed = True
+
+    # 先頭のポケモンのHPを1にする
+    player1.team[0].hp = 1
+    player2.team[0].hp = 1
 
     # バトルを作成・実行
     battle = Battle((player1, player2), n_selected=len(player1.team), seed=seed)

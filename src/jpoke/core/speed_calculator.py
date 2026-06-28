@@ -141,7 +141,7 @@ class SpeedCalculator:
         return actives
 
     def resolve_action_order(self) -> list[Pokemon]:
-        """技の行動順序を計算。
+        """技の行動順序を解決する。
 
         優先度と実効素早さを考慮して行動順を決定。
         既に交代したポケモンは除外される。

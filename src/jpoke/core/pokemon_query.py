@@ -131,17 +131,19 @@ class PokemonQuery:
 
     def is_first_actor(self, player: Player) -> bool | None:
         """このターンで player が先攻かどうかを返す（1vs1想定）。"""
-        state = self.battle.player_states[player]
-        if state.action_order_index is None:
+        order = self.battle.turn_controller.action_order
+        if not order:
             return None
-        return state.action_order_index == 0
+        index = self.battle.players.index(player)
+        return order[0] == index
 
     def is_second_actor(self, player: Player) -> bool | None:
         """このターンで player が後攻かどうかを返す（1vs1想定）。"""
-        state = self.battle.player_states[player]
-        if state.action_order_index is None:
+        order = self.battle.turn_controller.action_order
+        if not order:
             return None
-        return state.action_order_index == 1
+        index = self.battle.players.index(player)
+        return order[0] != index
 
     def is_hazard_immune(self, pokemon: Pokemon) -> bool:
         """エントリーハザードへの免疫があるか判定する。"""

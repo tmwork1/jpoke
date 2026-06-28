@@ -152,7 +152,12 @@ class Command(Enum):
                 return self.name[:-2] not in {"SELECT", "SWITCH"}
             case "switch":
                 return self.name[:-2] == "SWITCH"
+            case "":
+                return False
         raise ValueError(f"Invalid command type: {command_type}")
+
+    def is_switch(self) -> bool:
+        return self.name[:-2] == "SWITCH"
 
     @property
     def is_regular_move(self) -> bool:
