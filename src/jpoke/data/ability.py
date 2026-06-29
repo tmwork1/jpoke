@@ -5,8 +5,10 @@ Note:
 """
 
 from jpoke.enums import DomainEvent, Event
+from jpoke.core.lethal_calculator import LethalHandler
+
 from jpoke.handlers import ability as h, ability_paradox as paradox
-from .models import AbilityData
+from jpoke.handlers.models import AbilityData
 
 
 def common_setup():

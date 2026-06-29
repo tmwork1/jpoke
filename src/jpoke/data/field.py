@@ -1,6 +1,6 @@
 from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import field as h
-from .models import FieldData
+from ..handlers.models import FieldData
 
 WEATHER_PRIORITY = {
     "": 0,

@@ -4,6 +4,8 @@ from typing import Literal
 BattlePhase = Literal["", "selection", "action", "switch"]
 CommandType = Literal["any", "move", "switch"]
 
+LethalEvent = Literal["pre_hit", "post_hit"]
+LethalSubject = Literal["attacker", "defender", "both"]
 
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",

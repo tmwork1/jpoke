@@ -1,6 +1,6 @@
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
-from jpoke.data.models import ItemData
+from jpoke.handlers.models import ItemData
 
 from .effect import GameEffect
 

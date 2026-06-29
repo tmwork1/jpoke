@@ -8,6 +8,7 @@ from jpoke import Battle, Player, Pokemon, Move
 def main(attacker: str,
          defender: str,
          move: str,
+         defender_ability: str = "",
          defender_item: str = ""):
     # Attacker
     player1 = Player()
@@ -17,7 +18,7 @@ def main(attacker: str,
 
     player2 = Player(name="RandomPlayer")
     player2.team = [
-        Pokemon(defender, item_name=defender_item)
+        Pokemon(defender, ability_name=defender_ability, item_name=defender_item)
     ]
 
     # バトルを作成・実行
@@ -32,4 +33,5 @@ def main(attacker: str,
 
 if __name__ == "__main__":
     # main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="")
-    main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="たべのこし")
+    # main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="たべのこし")
+    main("ガブリアス", "カイリュー", "ドラゴンテール", defender_ability="マルチスケイル")

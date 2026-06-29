@@ -1,6 +1,6 @@
 import json
 from importlib import resources
-from jpoke.data.models import PokemonData
+from jpoke.handlers.models import PokemonData
 
 
 def resource_path(*path_parts: str) -> str:

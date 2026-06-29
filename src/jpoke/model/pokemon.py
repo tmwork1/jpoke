@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import EventManager
-    from jpoke.data.models import PokemonData
+    from jpoke.handlers.models import PokemonData
 
 from jpoke.utils.type_defs import Nature, Type, Stat, Gender, \
     BoostSource, AilmentName, VolatileName

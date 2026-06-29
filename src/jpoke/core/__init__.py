@@ -8,4 +8,4 @@ from .ailment_manager import AilmentManager
 from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
 from .query import PokemonQuery
-from .lethal import LethalHandler, LethalContext
+from .lethal_calculator import LethalHandler, LethalContext

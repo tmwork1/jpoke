@@ -5,7 +5,7 @@ Note:
 """
 from jpoke.enums import Event
 from jpoke.handlers import volatile as h
-from .models import VolatileData
+from ..handlers.models import VolatileData
 
 
 def common_setup() -> None:
@@ -19,6 +19,7 @@ def common_setup() -> None:
     """
     for name, data in VOLATILES.items():
         data.name = name
+
 
 VOLATILES: dict[str, VolatileData] = {
     "": VolatileData(),

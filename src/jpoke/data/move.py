@@ -13,7 +13,7 @@ from jpoke.enums import Event
 from jpoke.handlers import move as h
 from jpoke.handlers import move_attack as ha
 from jpoke.handlers import move_status as hs
-from .models import MoveData
+from ..handlers.models import MoveData
 
 
 def common_setup() -> None:

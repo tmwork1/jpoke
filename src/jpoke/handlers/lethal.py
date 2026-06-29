@@ -18,6 +18,4 @@ def _heal_hp(hp_dist: dict[int, int],
 
 
 def たべのこし_heal_hp(battle: Battle, ctx: LethalContext, hp_dist: dict[int, int]) -> dict[int, int]:
-    if ctx.defender.item.name != "たべのこし":
-        return hp_dist
     return _heal_hp(hp_dist, ctx.defender, r=1/16)
