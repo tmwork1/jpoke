@@ -11,16 +11,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 
 from jpoke.utils.type_defs import LethalEvent, LethalSubject
-from jpoke.utils import fast_copy
-from jpoke.utils import math as m
-
-
-@dataclass
-class LethalContext:
-    attacker: Pokemon
-    defender: Pokemon
-    move: Move
-    critical: bool = False
+from jpoke.utils import fast_copy, math as m
 
 
 @dataclass(frozen=True)
@@ -31,11 +22,43 @@ class LethalHandler:
     priority: int = 100
 
 
+@dataclass
+class LethalContext:
+    attacker: Pokemon
+    defender: Pokemon
+    move: Move
+    critical: bool = False
+
+
+@dataclass
+class LethalResult:
+    attack_count: int
+    move: Move
+    hit: int
+    hp_dist: dict[int, int]
+    damage_dist: dict[int, int]
+
+    @property
+    def min_damage(self):
+        return min(self.damage_dist.keys())
+
+    @property
+    def max_damage(self):
+        return max(self.damage_dist.keys())
+
+    @property
+    def lethal_probability(self) -> float:
+        zero_freq = self.hp_dist.get(0, 0)
+        total_freq = sum(self.hp_dist.values())
+        return zero_freq / total_freq
+
+
 def calc_lethal(battle: Battle,
                 attacker: Pokemon,
-                moves: list[Move],
+                moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
                 critical: bool,
-                max_hit: int):
+                max_attack: int) -> list[LethalResult]:
+
     # 攻撃側のインデックスを取得
     attacker_index = battle._get_player_index(attacker)
 
@@ -44,22 +67,24 @@ def calc_lethal(battle: Battle,
     attacker = battle.actives[attacker_index]
     defender = battle.foe(attacker)
     hp_dist = m.to_dist(defender.hp)
+    move_list = _generate_move_list(moves)
 
     # 致死率計算
-    for hit in range(1, max_hit + 1):
-        for move in moves:
-            ctx = LethalContext(
-                attacker=attacker,
-                defender=defender,
-                move=move,
-                critical=critical,
-            )
+    results = []
+    for atk in range(1, max_attack + 1):
+        for move, count in move_list:
+            ctx = LethalContext(attacker, defender, move, critical=critical)
 
             hp_dist = _emit("pre_hit", battle, ctx, hp_dist)
             if 0 in hp_dist:
                 break
 
-            hp_dist = _apply_damage(battle, ctx, hp_dist)
+            for hit in range(count):
+                hp_dist, damage_dist = _apply_damage(battle, ctx, hp_dist)
+                results.append(
+                    LethalResult(attack_count=atk, move=move, hit=hit,
+                                 hp_dist=hp_dist, damage_dist=damage_dist)
+                )
             if 0 in hp_dist:
                 break
 
@@ -70,16 +95,22 @@ def calc_lethal(battle: Battle,
         if 0 in hp_dist:
             break
 
-    zero_freq = hp_dist.get(0, 0)
-    total_freq = sum(hp_dist.values())
-    lethal_prob = zero_freq / total_freq
+    return results
 
-    print(f"Attacker: {attacker.name}")
-    print(f"Defender: {defender.name} hp={defender.max_hp}")
-    print(f"Moves: {moves}")
-    # print(f"Damages: {damages[0]}~{damages[-1]}")
-    print(f"Lethal count: {hit}")
-    print(f"Lethal probability: {lethal_prob: .2%}")
+
+def _generate_move_list(moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]]) -> list[tuple[Move, int]]:
+    if isinstance(moves, list):
+        result = []
+        for x in moves:
+            if isinstance(x, tuple):
+                result.append(x)
+            else:
+                result.append((x, 1))
+        return result
+    elif isinstance(moves, tuple):
+        return [moves]
+    else:
+        return [(moves, 1)]
 
 
 def _get_pokemon_handlers(mon: Pokemon,
@@ -124,8 +155,8 @@ def _apply_handlers(battle: Battle,
     return hp_dist
 
 
-def _update_defender_hp(ctx: LethalContext, hp_dist: dict[int, int]):
-    ctx.defender.hp = min(hp_dist.keys())
+def _update_hp(mon: Pokemon, hp_dist: dict[int, int]):
+    mon.hp = min(hp_dist.keys())
 
 
 def _emit(event: LethalEvent,
@@ -134,17 +165,17 @@ def _emit(event: LethalEvent,
           hp_dist: dict[int, int]) -> dict[int, int]:
     handlers = _get_handlers(event, ctx)
     hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
-    _update_defender_hp(ctx, hp_dist)
+    _update_hp(ctx.defender, hp_dist)
     return hp_dist
 
 
 def _apply_damage(battle: Battle,
                   ctx: LethalContext,
-                  hp_dist: dict[int, int]) -> dict[int, int]:
+                  hp_dist: dict[int, int]) -> tuple[dict[int, int], ...]:
     damages = battle.calc_damages(
         ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical
     )
     damage_dist = m.to_dist(damages)
     hp_dist = m.subtract_dist(hp_dist, damage_dist, minimum=0)
-    _update_defender_hp(ctx, hp_dist)
-    return hp_dist
+    _update_hp(ctx.defender, hp_dist)
+    return hp_dist, damage_dist

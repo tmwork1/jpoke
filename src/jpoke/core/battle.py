@@ -4,6 +4,10 @@
 プレイヤー、ポケモン、技、場の状態などを一元管理し、バトルの進行を制御します。
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .lethal_calculator import LethalResult
+
 from dataclasses import dataclass
 from contextlib import contextmanager
 import time
@@ -12,14 +16,14 @@ from copy import deepcopy
 
 from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
-from jpoke.enums import Event, Command, Interrupt, LogCode
+from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
 
 from jpoke.model import Pokemon, Move, Field
 
 from .player_state import PlayerState
 from .event_manager import EventManager
-from .context import EventContext, AttackContext
+from .context import EventContext
 from .player import Player
 from .event_logger import EventLogger, Payload
 from .command_logger import CommandLogger
@@ -241,11 +245,12 @@ class Battle:
 
     def calc_lethal(self,
                     attacker: Pokemon,
-                    move: Move | list[Move],
+                    moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
                     critical: bool = False,
-                    max_hit: int = 9):
-        moves = [move] if isinstance(move, Move) else move
-        lethal_calculator.calc_lethal(self, attacker, moves, critical=critical, max_hit=max_hit)
+                    max_attack: int = 10) -> list[LethalResult]:
+        return lethal_calculator.calc_lethal(
+            self, attacker, moves, critical=critical, max_attack=max_attack
+        )
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:

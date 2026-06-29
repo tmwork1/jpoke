@@ -7,7 +7,7 @@ from jpoke import Battle, Player, Pokemon, Move
 
 def main(attacker: str,
          defender: str,
-         moves: list[str],
+         moves: list[tuple[str, int]],
          defender_ability: str = "",
          defender_item: str = ""):
     # Attacker
@@ -25,14 +25,25 @@ def main(attacker: str,
     battle = Battle((player1, player2), n_selected=1)
     battle.start()
 
-    battle.calc_lethal(
+    results = battle.calc_lethal(
         attacker=battle.actives[0],
-        move=[Move(m) for m in moves],
+        moves=[(Move(m), v) for m, v in moves],
     )
+    result = results[-1]
+
+    attacker_mon = player1.team[0]
+    defender_mon = player2.team[0]
+
+    print(f"Attacker: {attacker_mon.name}")
+    print(f"Defender: {defender_mon.name} HP={defender_mon.max_hp}")
+    print(f"Damages: {result.min_damage}~{result.max_damage}")
+    print(f"Lethal count: {result.attack_count}")
+    print(f"Lethal probability: {result.lethal_probability: .2%}")
 
 
 if __name__ == "__main__":
-    # main("ガブリアス", "ブリジュラス", ["ドラゴンテール"], defender_item="")
-    # main("ガブリアス", "ブリジュラス", ["ドラゴンテール"], defender_item="たべのこし")
-    # main("ガブリアス", "カイリュー", ["ドラゴンテール"], defender_ability="マルチスケイル")
-    main("ガブリアス", "カイリュー", ["ドラゴンテール", "ドラゴンクロー"], defender_ability="マルチスケイル")
+    # main("ガブリアス", "ブリジュラス", [("ドラゴンテール",1)], defender_item="")
+    # main("ガブリアス", "ブリジュラス", [("ドラゴンテール",1)], defender_item="たべのこし")
+    # main("ガブリアス", "カイリュー", [("ドラゴンテール",1)], defender_ability="マルチスケイル")
+    # main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
+    main("ガブリアス", "カイリュー", [("スケイルショット", 2), ("スケイルショット", 2)], defender_ability="マルチスケイル")
