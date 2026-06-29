@@ -4,7 +4,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    from jpoke.core import Battle, SideFieldManager
     from jpoke.model import Pokemon, Move
 
 from copy import deepcopy
@@ -113,8 +113,8 @@ def _generate_move_list(moves: Move | tuple[Move, int] | list[Move | tuple[Move,
         return [(moves, 1)]
 
 
-def _get_pokemon_handlers(mon: Pokemon,
-                          event: LethalEvent,
+def _get_pokemon_handlers(event: LethalEvent,
+                          mon: Pokemon,
                           subject: LethalSubject) -> list[LethalHandler]:
     candidates = [
         mon.ability.data.lethal_handler,
@@ -123,23 +123,44 @@ def _get_pokemon_handlers(mon: Pokemon,
     ]
     # 揮発状態のハンドラを追加
     candidates += [v.data.lethal_handler for v in mon.volatiles.values()]
+    # 条件に一致するハンドラを返す
+    return [h for h in candidates if (
+        h is not None and h.event == event and h.subject in {subject, "both"}
+    )]
 
-    # Noneを除去したリストを返す
+
+def _get_global_field_handlers(event: LethalEvent, battle: Battle) -> list[LethalHandler]:
+    fields = [battle.weather, battle.terrain] + \
+        list(battle.global_manager.fields.values())
+    candidates = [field.data.lethal_handler for field in fields if field.is_active]
+    # 条件に一致するハンドラを返す
+    return [h for h in candidates if h is not None and h.event == event]
+
+
+def _get_side_field_handlers(event: LethalEvent,
+                             side: SideFieldManager,
+                             subject: LethalSubject) -> list[LethalHandler]:
+    fields = side.fields.values()
+    candidates = [field.data.lethal_handler for field in fields if field.is_active]
     return [h for h in candidates if (
         h is not None and h.event == event and h.subject in {subject, "both"}
     )]
 
 
 def _get_handlers(event: LethalEvent,
+                  battle: Battle,
                   ctx: LethalContext) -> list[LethalHandler]:
     handlers = []
 
     # 攻撃側のハンドラを追加
-    handlers += _get_pokemon_handlers(ctx.attacker, event, "attacker")
+    handlers += _get_pokemon_handlers(event, ctx.attacker, "attacker")
     # 防御側のハンドラを追加
-    handlers += _get_pokemon_handlers(ctx.defender, event, "defender")
+    handlers += _get_pokemon_handlers(event, ctx.defender, "defender")
     # 共通場のハンドラを追加
+    handlers += _get_global_field_handlers(event, battle)
     # 片場のハンドラを追加
+    handlers += _get_side_field_handlers(event, battle.get_side(ctx.attacker), "attacker")
+    handlers += _get_side_field_handlers(event, battle.get_side(ctx.defender), "defender")
 
     return sorted(handlers, key=lambda h: h.priority)
 
@@ -163,7 +184,7 @@ def _emit(event: LethalEvent,
           battle: Battle,
           ctx: LethalContext,
           hp_dist: dict[int, int]) -> dict[int, int]:
-    handlers = _get_handlers(event, ctx)
+    handlers = _get_handlers(event, battle, ctx)
     hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
     _update_hp(ctx.defender, hp_dist)
     return hp_dist

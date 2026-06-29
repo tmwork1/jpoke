@@ -1,155 +1,155 @@
-名前	仕様書	計画書	実装	テスト	レビュー	効果
-あかいいと	x	x	x	x	-	?
-あついいわ	x	x	x	x	-	?
-アッキのみ	x	x	x	-	-	?
-あつぞこブーツ	x	x	x	-	-	?
-イアのみ	x	x	x	-	-	?
-いかさまダイス	x	x	x	-	-	?
-いしずえのめん	x	x	x	x	-	?
-いどのめん	x	x	x	x	-	?
-いのちのたま	x	x	x	x	-	?
-イバンのみ	x	x	-	-	-	?
-ウイのみ	x	x	x	-	-	?
-エレキシード	x	x	x	-	-	?
-おうじゃのしるし	x	x	x	-	-	?
-おおきなねっこ	x	x	x	-	-	?
-オボンのみ	x	x	x	-	-	?
-オレンのみ	x	x	x	-	-	?
-おんみつマント	x	x	x	-	-	?
-かいがらのすず	x	x	x	-	-	?
-かえんだま	x	x	x	-	-	?
-カゴのみ	x	x	x	-	-	?
-かまどのめん	x	x	x	x	-	?
-カムラのみ	x	x	x	-	-	?
-からぶりほけん	x	x	-	-	-	?
-かるいし	x	x	x	-	-	?
-きあいのタスキ	x	x	x	-	-	?
-きあいのハチマキ	x	x	x	-	-	?
-キーのみ	x	x	x	-	-	?
-きゅうこん	x	x	-	-	-	?
-きれいなぬけがら	x	x	x	x	-	?
-くちたけん	x	x	x	x	-	?
-くちたたて	x	x	x	x	-	?
-くっつきバリ	x	x	-	-	-	?
-グラスシード	x	x	x	-	-	?
-クラボのみ	x	x	x	-	-	?
-グランドコート	x	x	-	-	-	?
-クリアチャーム	x	x	x	x	-	?
-くろいてっきゅう	x	x	x	-	-	?
-くろいヘドロ	x	x	x	-	-	?
-こうかくレンズ	x	x	x	-	-	?
-こうこうのしっぽ	x	x	x	-	-	?
-こころのしずく	x	x	x	x	-	?
-こだわりスカーフ	x	x	x	x	-	?
-こだわりハチマキ	x	x	x	x	-	?
-こだわりメガネ	x	x	x	x	-	?
-ゴツゴツメット	x	x	x	-	-	?
-こんごうだま	x	x	x	x	-	?
-サイコシード	x	x	x	-	-	?
-さらさらいわ	x	x	x	x	-	?
-サンのみ	x	x	x	-	-	?
-しめつけバンド	x	x	x	-	-	?
-しめったいわ	x	x	x	x	-	?
-じゃくてんほけん	x	x	x	-	-	?
-ジャポのみ	x	x	x	-	-	?
-じゅうでんち	x	x	x	-	-	?
-しらたま	x	x	x	x	-	?
-しろいハーブ	x	x	x	-	-	?
-しんかのきせき	x	x	-	-	-	?
-ズアのみ	x	x	x	-	-	?
-スターのみ	x	x	x	-	-	?
-するどいキバ	x	x	x	-	-	?
-するどいツメ	x	x	x	-	-	?
-せんせいのツメ	x	x	x	-	-	?
-だいこんごうだま	x	x	x	x	-	?
-だいしらたま	x	x	x	x	-	?
-だいはっきんだま	x	x	x	x	-	?
-だっしゅつパック	x	x	x	x	-	?
-だっしゅつボタン	x	x	x	x	-	?
-たつじんのおび	x	x	x	-	-	?
-たべのこし	x	x	x	x	-	?
-タラプのみ	x	x	x	-	-	?
-チーゴのみ	x	x	x	-	-	?
-チイラのみ	x	x	x	-	-	?
-ちからのハチマキ	x	x	x	-	-	?
-つめたいいわ	x	x	x	x	-	?
-でかいきんのたま	x	x	-	-	-	?
-でんきだま	x	x	x	x	-	?
-とくせいガード	x	x	x	x	-	?
-どくどくだま	x	x	x	-	-	?
-とつげきチョッキ	x	x	x	-	-	?
-ナゾのみ	x	x	-	-	-	?
-ナナシのみ	x	x	x	-	-	?
-ねばりのかぎづめ	x	x	-	-	-	?
-ねらいのまと	x	x	x	-	-	?
-ノーマルジュエル	x	x	x	x	-	?
-のどスプレー	x	x	x	-	-	?
-はっきんだま	x	x	x	x	-	?
-パワフルハーブ	x	x	x	-	-	?
-バンジのみ	x	x	x	-	-	?
-パンチグローブ	x	x	x	-	-	?
-ばんのうがさ	x	x	-	-	-	?
-ひかりごけ	x	x	x	-	-	?
-ひかりのこな	x	x	x	-	-	?
-ひかりのねんど	x	x	x	-	-	?
-ビビリだま	x	x	x	-	-	?
-ヒメリのみ	x	x	x	-	-	?
-ピントレンズ	x	x	x	-	-	?
-フィラのみ	x	x	x	-	-	?
-ブーストエナジー	x	x	x	x	-	?
-ふうせん	x	x	x	-	-	?
-フォーカスレンズ	x	x	x	-	-	?
-ぼうごパット	x	x	x	-	-	?
-ぼうじんゴーグル	x	x	x	-	-	?
-マゴのみ	x	x	x	-	-	?
-ミクルのみ	x	x	-	-	-	?
-ミストシード	x	x	x	-	-	?
-メトロノーム	x	x	x	x	-	?
-メンタルハーブ	x	x	x	-	-	?
-ものしりメガネ	x	x	x	-	-	?
-ものまねハーブ	x	x	x	-	-	?
-モモンのみ	x	x	x	-	-	?
-ヤタピのみ	x	x	x	-	-	?
-ゆきだま	x	x	x	-	-	?
-ラムのみ	x	x	x	-	-	?
-リュガのみ	x	x	x	-	-	?
-ルームサービス	x	x	x	-	-	?
-レッドカード	x	x	x	-	-	?
-レンブのみ	x	x	x	-	-	?
-くろいメガネ	x	x	x	x	-	?
-かたいいし	x	x	x	x	-	?
-まがったスプーン	x	x	x	x	-	?
-くろおび	x	x	x	x	-	?
-きせきのたね	x	x	x	x	-	?
-のろいのおふだ	x	x	x	x	-	?
-とけないこおり	x	x	x	x	-	?
-やわらかいすな	x	x	x	x	-	?
-じしゃく	x	x	x	x	-	?
-どくバリ	x	x	x	x	-	?
-りゅうのキバ	x	x	x	x	-	?
-シルクのスカーフ	x	x	x	x	-	?
-メタルコート	x	x	x	x	-	?
-するどいくちばし	x	x	x	x	-	?
-せいれいプレート	x	x	x	x	-	?
-ようせいのハネ	x	x	x	x	-	?
-もくたん	x	x	x	x	-	?
-しんぴのしずく	x	x	x	x	-	?
-ぎんのこな	x	x	x	x	-	?
-ナモのみ	x	x	x	x	-	?
-ヨロギのみ	x	x	x	x	-	?
-ウタンのみ	x	x	x	x	-	?
-ヨプのみ	x	x	x	x	-	?
-リンドのみ	x	x	x	x	-	?
-カシブのみ	x	x	x	x	-	?
-ヤチェのみ	x	x	x	x	-	?
-シュカのみ	x	x	x	x	-	?
-ソクノのみ	x	x	x	x	-	?
-ビアーのみ	x	x	x	x	-	?
-ハバンのみ	x	x	x	x	-	?
-ホズのみ	x	x	x	-	-	?
-リリバのみ	x	x	x	x	-	?
-バコウのみ	x	x	x	x	-	?
-ロゼルのみ	x	x	x	x	-	?
-オッカのみ	x	x	x	x	-	?
-イトケのみ	x	x	x	x	-	?
-タンガのみ	x	x	x	x	-	?
+名前	仕様書	計画書	実装	テスト	レビュー	リーサル実装	リーサルテスト	効果
+あかいいと	x	x	x	x	-	n/a	n/a	?
+あついいわ	x	x	x	x	-	n/a	n/a	?
+アッキのみ	x	x	x	-	-	-	-	?
+あつぞこブーツ	x	x	x	-	-	n/a	n/a	?
+イアのみ	x	x	x	-	-	-	-	?
+いかさまダイス	x	x	x	-	-	n/a	n/a	?
+いしずえのめん	x	x	x	x	-	n/a	n/a	?
+いどのめん	x	x	x	x	-	n/a	n/a	?
+いのちのたま	x	x	x	x	-	n/a	n/a	?
+イバンのみ	x	x	-	-	-	n/a	n/a	?
+ウイのみ	x	x	x	-	-	-	-	?
+エレキシード	x	x	x	-	-	n/a	n/a	?
+おうじゃのしるし	x	x	x	-	-	n/a	n/a	?
+おおきなねっこ	x	x	x	-	-	n/a	n/a	?
+オボンのみ	x	x	x	-	-	-	-	?
+オレンのみ	x	x	x	-	-	-	-	?
+おんみつマント	x	x	x	-	-	n/a	n/a	?
+かいがらのすず	x	x	x	-	-	n/a	n/a	?
+かえんだま	x	x	x	-	-	n/a	n/a	?
+カゴのみ	x	x	x	-	-	n/a	n/a	?
+かまどのめん	x	x	x	x	-	n/a	n/a	?
+カムラのみ	x	x	x	-	-	n/a	n/a	?
+からぶりほけん	x	x	-	-	-	n/a	n/a	?
+かるいし	x	x	x	-	-	n/a	n/a	?
+きあいのタスキ	x	x	x	-	-	n/a	n/a	?
+きあいのハチマキ	x	x	x	-	-	n/a	n/a	?
+キーのみ	x	x	x	-	-	n/a	n/a	?
+きゅうこん	x	x	-	-	-	n/a	n/a	?
+きれいなぬけがら	x	x	x	x	-	n/a	n/a	?
+くちたけん	x	x	x	x	-	n/a	n/a	?
+くちたたて	x	x	x	x	-	n/a	n/a	?
+くっつきバリ	x	x	-	-	-	-	-	?
+グラスシード	x	x	x	-	-	n/a	n/a	?
+クラボのみ	x	x	x	-	-	n/a	n/a	?
+グランドコート	x	x	-	-	-	n/a	n/a	?
+クリアチャーム	x	x	x	x	-	n/a	n/a	?
+くろいてっきゅう	x	x	x	-	-	n/a	n/a	?
+くろいヘドロ	x	x	x	-	-	-	-	?
+こうかくレンズ	x	x	x	-	-	n/a	n/a	?
+こうこうのしっぽ	x	x	x	-	-	n/a	n/a	?
+こころのしずく	x	x	x	x	-	n/a	n/a	?
+こだわりスカーフ	x	x	x	x	-	n/a	n/a	?
+こだわりハチマキ	x	x	x	x	-	n/a	n/a	?
+こだわりメガネ	x	x	x	x	-	n/a	n/a	?
+ゴツゴツメット	x	x	x	-	-	n/a	n/a	?
+こんごうだま	x	x	x	x	-	n/a	n/a	?
+サイコシード	x	x	x	-	-	n/a	n/a	?
+さらさらいわ	x	x	x	x	-	n/a	n/a	?
+サンのみ	x	x	x	-	-	n/a	n/a	?
+しめつけバンド	x	x	x	-	-	n/a	n/a	?
+しめったいわ	x	x	x	x	-	n/a	n/a	?
+じゃくてんほけん	x	x	x	-	-	n/a	n/a	?
+ジャポのみ	x	x	x	-	-	n/a	n/a	?
+じゅうでんち	x	x	x	-	-	n/a	n/a	?
+しらたま	x	x	x	x	-	n/a	n/a	?
+しろいハーブ	x	x	x	-	-	n/a	n/a	?
+しんかのきせき	x	x	-	-	-	n/a	n/a	?
+ズアのみ	x	x	x	-	-	n/a	n/a	?
+スターのみ	x	x	x	-	-	n/a	n/a	?
+するどいキバ	x	x	x	-	-	n/a	n/a	?
+するどいツメ	x	x	x	-	-	n/a	n/a	?
+せんせいのツメ	x	x	x	-	-	n/a	n/a	?
+だいこんごうだま	x	x	x	x	-	n/a	n/a	?
+だいしらたま	x	x	x	x	-	n/a	n/a	?
+だいはっきんだま	x	x	x	x	-	n/a	n/a	?
+だっしゅつパック	x	x	x	x	-	n/a	n/a	?
+だっしゅつボタン	x	x	x	x	-	n/a	n/a	?
+たつじんのおび	x	x	x	-	-	n/a	n/a	?
+たべのこし	x	x	x	x	-	x	x	?
+タラプのみ	x	x	x	-	-	-	-	?
+チーゴのみ	x	x	x	-	-	n/a	n/a	?
+チイラのみ	x	x	x	-	-	n/a	n/a	?
+ちからのハチマキ	x	x	x	-	-	n/a	n/a	?
+つめたいいわ	x	x	x	x	-	n/a	n/a	?
+でかいきんのたま	x	x	-	-	-	n/a	n/a	?
+でんきだま	x	x	x	x	-	n/a	n/a	?
+とくせいガード	x	x	x	x	-	n/a	n/a	?
+どくどくだま	x	x	x	-	-	n/a	n/a	?
+とつげきチョッキ	x	x	x	-	-	n/a	n/a	?
+ナゾのみ	x	x	-	-	-	-	-	?
+ナナシのみ	x	x	x	-	-	n/a	n/a	?
+ねばりのかぎづめ	x	x	-	-	-	n/a	n/a	?
+ねらいのまと	x	x	x	-	-	n/a	n/a	?
+ノーマルジュエル	x	x	x	x	-	n/a	n/a	?
+のどスプレー	x	x	x	-	-	n/a	n/a	?
+はっきんだま	x	x	x	x	-	n/a	n/a	?
+パワフルハーブ	x	x	x	-	-	n/a	n/a	?
+バンジのみ	x	x	x	-	-	-	-	?
+パンチグローブ	x	x	x	-	-	n/a	n/a	?
+ばんのうがさ	x	x	-	-	-	n/a	n/a	?
+ひかりごけ	x	x	x	-	-	n/a	n/a	?
+ひかりのこな	x	x	x	-	-	n/a	n/a	?
+ひかりのねんど	x	x	x	-	-	n/a	n/a	?
+ビビリだま	x	x	x	-	-	n/a	n/a	?
+ヒメリのみ	x	x	x	-	-	n/a	n/a	?
+ピントレンズ	x	x	x	-	-	n/a	n/a	?
+フィラのみ	x	x	x	-	-	-	-	?
+ブーストエナジー	x	x	x	x	-	n/a	n/a	?
+ふうせん	x	x	x	-	-	n/a	n/a	?
+フォーカスレンズ	x	x	x	-	-	n/a	n/a	?
+ぼうごパット	x	x	x	-	-	n/a	n/a	?
+ぼうじんゴーグル	x	x	x	-	-	n/a	n/a	?
+マゴのみ	x	x	x	-	-	-	-	?
+ミクルのみ	x	x	-	-	-	n/a	n/a	?
+ミストシード	x	x	x	-	-	n/a	n/a	?
+メトロノーム	x	x	x	x	-	n/a	n/a	?
+メンタルハーブ	x	x	x	-	-	n/a	n/a	?
+ものしりメガネ	x	x	x	-	-	n/a	n/a	?
+ものまねハーブ	x	x	x	-	-	n/a	n/a	?
+モモンのみ	x	x	x	-	-	n/a	n/a	?
+ヤタピのみ	x	x	x	-	-	n/a	n/a	?
+ゆきだま	x	x	x	-	-	n/a	n/a	?
+ラムのみ	x	x	x	-	-	n/a	n/a	?
+リュガのみ	x	x	x	-	-	n/a	n/a	?
+ルームサービス	x	x	x	-	-	n/a	n/a	?
+レッドカード	x	x	x	-	-	n/a	n/a	?
+レンブのみ	x	x	x	-	-	n/a	n/a	?
+くろいメガネ	x	x	x	x	-	n/a	n/a	?
+かたいいし	x	x	x	x	-	n/a	n/a	?
+まがったスプーン	x	x	x	x	-	n/a	n/a	?
+くろおび	x	x	x	x	-	n/a	n/a	?
+きせきのたね	x	x	x	x	-	n/a	n/a	?
+のろいのおふだ	x	x	x	x	-	n/a	n/a	?
+とけないこおり	x	x	x	x	-	n/a	n/a	?
+やわらかいすな	x	x	x	x	-	n/a	n/a	?
+じしゃく	x	x	x	x	-	n/a	n/a	?
+どくバリ	x	x	x	x	-	n/a	n/a	?
+りゅうのキバ	x	x	x	x	-	n/a	n/a	?
+シルクのスカーフ	x	x	x	x	-	n/a	n/a	?
+メタルコート	x	x	x	x	-	n/a	n/a	?
+するどいくちばし	x	x	x	x	-	n/a	n/a	?
+せいれいプレート	x	x	x	x	-	n/a	n/a	?
+ようせいのハネ	x	x	x	x	-	n/a	n/a	?
+もくたん	x	x	x	x	-	n/a	n/a	?
+しんぴのしずく	x	x	x	x	-	n/a	n/a	?
+ぎんのこな	x	x	x	x	-	n/a	n/a	?
+ナモのみ	x	x	x	x	-	-	-	?
+ヨロギのみ	x	x	x	x	-	-	-	?
+ウタンのみ	x	x	x	x	-	-	-	?
+ヨプのみ	x	x	x	x	-	-	-	?
+リンドのみ	x	x	x	x	-	-	-	?
+カシブのみ	x	x	x	x	-	-	-	?
+ヤチェのみ	x	x	x	x	-	-	-	?
+シュカのみ	x	x	x	x	-	-	-	?
+ソクノのみ	x	x	x	x	-	-	-	?
+ビアーのみ	x	x	x	x	-	-	-	?
+ハバンのみ	x	x	x	x	-	-	-	?
+ホズのみ	x	x	x	-	-	-	-	?
+リリバのみ	x	x	x	x	-	-	-	?
+バコウのみ	x	x	x	x	-	-	-	?
+ロゼルのみ	x	x	x	x	-	-	-	?
+オッカのみ	x	x	x	x	-	-	-	?
+イトケのみ	x	x	x	x	-	-	-	?
+タンガのみ	x	x	x	x	-	-	-	?

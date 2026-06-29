@@ -3,13 +3,15 @@
 """
 
 from jpoke import Battle, Player, Pokemon, Move
+from jpoke.utils.type_defs import VolatileName
 
 
 def main(attacker: str,
          defender: str,
          moves: list[tuple[str, int]],
          defender_ability: str = "",
-         defender_item: str = ""):
+         defender_item: str = "",
+         defender_volatiles: dict[VolatileName, int] | None = None):
     # Attacker
     player1 = Player()
     player1.team = [
@@ -42,8 +44,7 @@ def main(attacker: str,
 
 
 if __name__ == "__main__":
-    # main("ガブリアス", "ブリジュラス", [("ドラゴンテール",1)], defender_item="")
-    # main("ガブリアス", "ブリジュラス", [("ドラゴンテール",1)], defender_item="たべのこし")
-    # main("ガブリアス", "カイリュー", [("ドラゴンテール",1)], defender_ability="マルチスケイル")
+    # main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_item="")
+    main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_ability="マルチスケイル")
     # main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
-    main("ガブリアス", "カイリュー", [("スケイルショット", 2), ("スケイルショット", 2)], defender_ability="マルチスケイル")
+    # main("ガブリアス", "カイリュー", [("スケイルショット", 2), ("スケイルショット", 2)], defender_ability="マルチスケイル")
