@@ -239,8 +239,13 @@ class Battle:
         """
         return self.observer is not None
 
-    def calc_lethal(self, attacker: Pokemon, move: Move, critical: bool = False, max_hit: int = 9):
-        lethal_calculator.calc_lethal(self, attacker, move, critical=critical, max_hit=max_hit)
+    def calc_lethal(self,
+                    attacker: Pokemon,
+                    move: Move | list[Move],
+                    critical: bool = False,
+                    max_hit: int = 9):
+        moves = [move] if isinstance(move, Move) else move
+        lethal_calculator.calc_lethal(self, attacker, moves, critical=critical, max_hit=max_hit)
 
     @property
     def player_states(self) -> dict[Player, PlayerState]:
@@ -299,7 +304,7 @@ class Battle:
         if (
             mon.item.enabled
             and mon.item.name == "ばんのうがさ"
-            and active.name in {"はれ", "あめ", "おおひでり", "おおあめ"}
+            and self.weather.name in {"はれ", "あめ", "おおひでり", "おおあめ"}
         ):
             return self.weather_manager.inactive
         return self.weather

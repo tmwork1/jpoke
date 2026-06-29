@@ -31,6 +31,57 @@ class LethalHandler:
     priority: int = 100
 
 
+def calc_lethal(battle: Battle,
+                attacker: Pokemon,
+                moves: list[Move],
+                critical: bool,
+                max_hit: int):
+    # 攻撃側のインデックスを取得
+    attacker_index = battle._get_player_index(attacker)
+
+    # 初期化
+    battle = deepcopy(battle)
+    attacker = battle.actives[attacker_index]
+    defender = battle.foe(attacker)
+    hp_dist = m.to_dist(defender.hp)
+
+    # 致死率計算
+    for hit in range(1, max_hit + 1):
+        for move in moves:
+            ctx = LethalContext(
+                attacker=attacker,
+                defender=defender,
+                move=move,
+                critical=critical,
+            )
+
+            hp_dist = _emit("pre_hit", battle, ctx, hp_dist)
+            if 0 in hp_dist:
+                break
+
+            hp_dist = _apply_damage(battle, ctx, hp_dist)
+            if 0 in hp_dist:
+                break
+
+            hp_dist = _emit("post_hit", battle, ctx, hp_dist)
+            if 0 in hp_dist:
+                break
+
+        if 0 in hp_dist:
+            break
+
+    zero_freq = hp_dist.get(0, 0)
+    total_freq = sum(hp_dist.values())
+    lethal_prob = zero_freq / total_freq
+
+    print(f"Attacker: {attacker.name}")
+    print(f"Defender: {defender.name} hp={defender.max_hp}")
+    print(f"Moves: {moves}")
+    # print(f"Damages: {damages[0]}~{damages[-1]}")
+    print(f"Lethal count: {hit}")
+    print(f"Lethal probability: {lethal_prob: .2%}")
+
+
 def _get_pokemon_handlers(mon: Pokemon,
                           event: LethalEvent,
                           subject: LethalSubject) -> list[LethalHandler]:
@@ -97,47 +148,3 @@ def _apply_damage(battle: Battle,
     hp_dist = m.subtract_dist(hp_dist, damage_dist, minimum=0)
     _update_defender_hp(ctx, hp_dist)
     return hp_dist
-
-
-def calc_lethal(battle: Battle,
-                attacker: Pokemon,
-                move: Move,
-                critical: bool,
-                max_hit: int):
-    attacker_index = battle._get_player_index(attacker)
-
-    # 初期化
-    battle = deepcopy(battle)
-    attacker = battle.actives[attacker_index]
-    defender = battle.foe(attacker)
-
-    ctx = LethalContext(
-        attacker=attacker, defender=defender, move=move, critical=critical,
-    )
-
-    hp_dist = m.to_dist(defender.hp)
-
-    # 致死率計算
-    for hit in range(1, max_hit + 1):
-        hp_dist = _emit("pre_hit", battle, ctx, hp_dist)
-        if 0 in hp_dist:
-            break
-
-        hp_dist = _apply_damage(battle, ctx, hp_dist)
-        if 0 in hp_dist:
-            break
-
-        hp_dist = _emit("post_hit", battle, ctx, hp_dist)
-        if 0 in hp_dist:
-            break
-
-    zero_freq = hp_dist.get(0, 0)
-    total_freq = sum(hp_dist.values())
-    lethal_prob = zero_freq / total_freq
-
-    print(f"Attacker: {attacker.name}")
-    print(f"Defender: {defender.name} hp={defender.max_hp}")
-    print(f"Move: {move.name}")
-    # print(f"Damages: {damages[0]}~{damages[-1]}")
-    print(f"Lethal count: {hit}")
-    print(f"Lethal probability: {lethal_prob: .2%}")

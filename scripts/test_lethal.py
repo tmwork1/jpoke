@@ -7,7 +7,7 @@ from jpoke import Battle, Player, Pokemon, Move
 
 def main(attacker: str,
          defender: str,
-         move: str,
+         moves: list[str],
          defender_ability: str = "",
          defender_item: str = ""):
     # Attacker
@@ -27,11 +27,12 @@ def main(attacker: str,
 
     battle.calc_lethal(
         attacker=battle.actives[0],
-        move=Move(move),
+        move=[Move(m) for m in moves],
     )
 
 
 if __name__ == "__main__":
-    # main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="")
-    # main("ガブリアス", "ブリジュラス", "ドラゴンテール", defender_item="たべのこし")
-    main("ガブリアス", "カイリュー", "ドラゴンテール", defender_ability="マルチスケイル")
+    # main("ガブリアス", "ブリジュラス", ["ドラゴンテール"], defender_item="")
+    # main("ガブリアス", "ブリジュラス", ["ドラゴンテール"], defender_item="たべのこし")
+    # main("ガブリアス", "カイリュー", ["ドラゴンテール"], defender_ability="マルチスケイル")
+    main("ガブリアス", "カイリュー", ["ドラゴンテール", "ドラゴンクロー"], defender_ability="マルチスケイル")
