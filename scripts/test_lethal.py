@@ -39,12 +39,14 @@ def main(attacker: str,
     print(f"Attacker: {attacker_mon.name}")
     print(f"Defender: {defender_mon.name} HP={defender_mon.max_hp}")
     print(f"Damages: {result.min_damage}~{result.max_damage}")
-    print(f"Lethal count: {result.attack_count}")
+    print(f"Lethal count: {result.n_attack}")
     print(f"Lethal probability: {result.lethal_probability: .2%}")
 
 
 if __name__ == "__main__":
-    # main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_item="")
-    main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_ability="マルチスケイル")
+    # main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)])
+    main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_item="オボンのみ")  # 乱2 (5.9%)
+    # main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_ability="マルチスケイル")
     # main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
-    # main("ガブリアス", "カイリュー", [("スケイルショット", 2), ("スケイルショット", 2)], defender_ability="マルチスケイル")
+    # main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
+    # main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")

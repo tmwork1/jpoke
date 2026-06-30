@@ -12,14 +12,22 @@
 # 全テスト
 python -m pytest tests/ -v
 
+# カテゴリ別
+python -m pytest tests/abilities/ -v
+python -m pytest tests/moves_attack/ -v
+python -m pytest tests/moves_status/ -v
+python -m pytest tests/volatiles/ -v
+
 # 特定ファイル
-python -m pytest tests/test_ability.py -v
+python -m pytest tests/abilities/test_ability_ka.py -v
 
 # 特定テスト関数（日本語関数名も可）
-python -m pytest tests/test_ability.py -k "ARシステム" -v
+python -m pytest tests/abilities/ -k "ARシステム" -v
 ```
 
-テストは `tests/` 直下にあり、`tests/test_utils.py` はテストヘルパー（テスト対象外）。
+テストは `tests/` 直下（ailment, copy, damage, field, item, megaevol, terastal など）と
+サブディレクトリ（`abilities/`, `moves_attack/`, `moves_status/`, `volatiles/`）に分かれている。
+`tests/test_utils.py` はテストヘルパー（テスト対象外）。
 
 ## アーキテクチャ
 
@@ -33,8 +41,8 @@ python -m pytest tests/test_ability.py -k "ARシステム" -v
 | `core/handler.py` `Handler` | ハンドラ定義（subject, subject_spec, 関数） |
 | `core/context.py` `BaseContext` / `EventContext` / `AttackContext` | ハンドラに渡すイベントコンテキスト（攻撃フローは `AttackContext`、それ以外は `EventContext`） |
 | `model/` | `Pokemon`, `Move`, `Field` などのモデル |
-| `data/` | `ability.py`, `move.py`, `item.py` — 各エンティティのデータ定義とハンドラ登録 |
-| `handlers/` | `ability.py`, `move.py`, `item.py` など — ハンドラ実装 |
+| `data/` | `ability.py`, `move.py`, `item.py` など — 各エンティティのデータ定義とハンドラ登録 |
+| `handlers/` | `ability.py`, `ability_paradox.py`, `ailment.py`, `field.py`, `item.py`, `lethal.py`, `move.py`, `move_attack.py`, `move_status.py`, `volatile.py` など — ハンドラ実装 |
 | `enums/` | `Event`, `Command`, `Interrupt`, `LogCode` |
 | `utils/type_defs.py` | `Stat`, `Type`, `AilmentName`, `VolatileName` など Literal 型の定義 |
 
@@ -53,15 +61,42 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 ### テストユーティリティ
 
-`tests/test_utils.py` の `start_battle()` でバトルを即座にセットアップできる。
+`tests/test_utils.py` の各ヘルパーを再利用する。
 
 ```python
+# バトルのセットアップ
 battle = t.start_battle(
     team0=[Pokemon("ピカチュウ", ability_name="せいでんき")],
     team1=[Pokemon("カビゴン")],
     weather=("はれ", 5),
-    accuracy=100,   # 命中率を固定
+    accuracy=100,          # 命中率を固定
+    secondary_chance=1.0,  # 追加効果を必ず発動
 )
+
+# 技の実行
+t.run_move(battle, atk_idx=0, move_idx=0)
+
+# ポケモンの交代
+t.run_switch(battle, player_idx=0, new_idx=1)
+
+# ターン終了処理
+t.end_turn(battle)
+
+# 状態異常の適用
+t.apply_ailment(battle, active_index=0, ailment_name="やけど", by_foe=True)
+
+# ダメージ固定 / 乱数固定
+t.fix_damage(battle, 100)
+t.fix_random(battle, 0.0)
+
+# アイテム変更
+t.change_item(battle, mon, "たべのこし")
+
+# 行動順の取得
+order = t.get_action_order(battle)
+
+# AttackContext の構築
+ctx = t.build_context(battle, atk_idx=0, move_idx=0)
 ```
 
 ## 実装時の参照順
@@ -70,9 +105,9 @@ battle = t.start_battle(
 
 1. `src/jpoke/core/handler.py`
 2. `src/jpoke/core/context.py`
-3. `src/jpoke/core/event.py`
+3. `src/jpoke/enums/event.py`
 4. `src/jpoke/core/battle.py`
-5. `src/jpoke/data/models.py`
+5. `src/jpoke/model/pokemon.py`
 6. 対象の `src/jpoke/data/<category>.py` と `src/jpoke/handlers/<category>.py`
 7. `tests/test_utils.py` と最寄りの既存テスト
 8. **`docs/spec/turn.md`** — 実装するイベントの priority を確認し、計画書に明記する
@@ -102,7 +137,7 @@ battle = t.start_battle(
 | `docs/spec/` | 技・アイテム・特性・場の効果の挙動仕様（実装前に読む） |
 | `docs/plan/` | 現在の実行計画と優先順位 |
 | `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md`） |
-| `docs/test/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
+| `docs/tests/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
 
 実装が完了したら、以下の順で進捗を更新する：
 
@@ -129,6 +164,6 @@ battle = t.start_battle(
 
 - `test_utils.py` の `start_battle`、`run_move`、`run_switch` などを再利用する
 - テスト項目を追加・修正したら、以下の順で実行する：
-  1. `python scripts/sort_tests.py <対象ファイル>` — テスト関数を五十音順に並び替える（複数指定可、例: `tests/test_ability.py tests/test_move.py`）
-  2. `python scripts/generate_test_list.py` — `docs/test/` のテスト一覧を更新する
+  1. `python scripts/sort_tests.py <対象ファイル>` — テスト関数を五十音順に並び替える（複数指定可、例: `tests/abilities/test_ability_ka.py tests/moves_attack/test_move_ka.py`）
+  2. `python scripts/generate_test_list.py` — `docs/tests/` のテスト一覧を更新する
   3. `python -m pytest tests/ -v` — 全テストが通ることを確認する

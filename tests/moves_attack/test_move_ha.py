@@ -813,6 +813,45 @@ def test_ふいうち_相手が攻撃技選択時に成功():
     assert battle.actives[1].hp < defender_hp_before
 
 
+def test_フェイタルクロー_乱数によりどくが付与される():
+    """フェイタルクロー: 乱数r < 1/3のとき(r=0.1)どくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.fix_random(battle, 0.1)  # 0.1 < 1/3 → どく
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"
+
+
+def test_フェイタルクロー_乱数によりねむりが付与される():
+    """フェイタルクロー: 乱数2/3 <= r < 1.0のとき(r=0.7)ねむりを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.fix_random(battle, 0.7)  # 2/3 <= 0.7 < 1.0 → ねむり
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "ねむり"
+
+
+def test_フェイタルクロー_乱数によりまひが付与される():
+    """フェイタルクロー: 乱数1/3 <= r < 2/3のとき(r=0.45)まひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.fix_random(battle, 0.45)  # 1/3 <= 0.45 < 2/3 → まひ
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
 def test_フェイタルクロー_状態異常が発動する():
     """フェイタルクロー: 50%でどく/まひ/ねむりのいずれかを付与する。"""
     battle = t.start_battle(
@@ -1307,6 +1346,18 @@ def test_ホイールスピン_素早さ2段階低下が発動する():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["S"] == -2
+
+
+def test_ほうでん_でんきタイプにはまひが付与されない():
+    """ほうでん: でんきタイプの相手にはまひが付与されない（タイプ耐性）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほうでん"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
 
 
 def test_ほうでん_まひが発動する():

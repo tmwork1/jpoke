@@ -530,6 +530,18 @@ def test_ダメおし_同ターンにダメージを受けていたら威力2倍
     assert battle.damage_calculator.power_modifier == 8192
 
 
+def test_ダークファイア_やけどが発動する():
+    """ダークファイア: 10%でやけどを付与する。ゴーストタイプはノーマルには無効のため、エスパータイプのミュウツーを対象とする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ダークファイア"])],
+        team1=[Pokemon("ミュウツー")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "やけど"
+
+
 def test_ちきゅうなげ_ゴーストには無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ちきゅうなげ"])],
@@ -1105,6 +1117,42 @@ def test_どくづき_どくが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "どく"
+
+
+def test_どくづき_どくタイプのポケモンにはどくが付与されない():
+    """どくづき: どくタイプのポケモンにはどく状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["どくづき"])],
+        team1=[Pokemon("ドガース")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_どくづき_はがねタイプのポケモンにはどくが付与されない():
+    """どくづき: はがねタイプのポケモンにはどく状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["どくづき"])],
+        team1=[Pokemon("ハガネール")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_どくづき_めんえき特性持ちにはどくが付与されない():
+    """どくづき: めんえき特性を持つポケモンにはどく状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["どくづき"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
 
 
 def test_どくどくのキバ_もうどくが発動する():

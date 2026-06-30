@@ -175,6 +175,18 @@ def test_かかとおとし_外れたとき失敗反動ダメージを受ける(
     assert attacker.hp == hp_before - expected_damage
 
 
+def test_かかとおとし_確率外れでこんらんが発動しない():
+    """かかとおとし: secondary_chance=0.0のとき（確率外れ）こんらんを付与しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かかとおとし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("こんらん")
+
+
 def test_かげうち_相手にダメージを与える():
     """かげうち: 優先度+1の先制物理技で相手にダメージを与える。ゴーストタイプはエスパータイプに有効。"""
     battle = t.start_battle(
@@ -1161,6 +1173,31 @@ def test_こなゆき_こおりが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "こおり"
+
+
+def test_こんらん_マイペース持ちには付与されない():
+    """こんらん系追加効果: マイペース特性を持つ相手はこんらん状態にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かかとおとし"])],
+        team1=[Pokemon("カビゴン", ability_name="マイペース")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("こんらん")
+
+
+def test_こんらん_ミストフィールド中は付与されない():
+    """こんらん系追加効果: ミストフィールド展開中は接地した相手がこんらん状態にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かかとおとし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+        terrain=("ミストフィールド", 5),
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("こんらん")
 
 
 def test_コールドフレア_やけどが発動する():

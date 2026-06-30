@@ -612,7 +612,7 @@ ITEMS: dict[str, ItemData] = {
             ),
         },
         lethal_handler=LethalHandler(
-            func=l.たべのこし_heal_hp,
+            func=l.たべのこし_heal,
             event="post_hit",
             subject="defender",
             priority=60
@@ -1138,7 +1138,12 @@ ITEMS: dict[str, ItemData] = {
                 h.オボンのみ_heal_on_half_hp,
                 subject_spec="target:self",
             ),
-        }
+        },
+        lethal_handler=LethalHandler(
+            func=l.オボンのみ_heal,
+            event="post_hit",
+            subject="defender",
+        )
     ),
     "ラムのみ": ItemData(
         fling_power=10,

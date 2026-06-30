@@ -1742,6 +1742,19 @@ MOVES: dict[str, MoveData] = {
         power=120,
         accuracy=85
     ),
+    "ダークファイア": MoveData(
+        type="ゴースト",
+        category="特殊",
+        pp=5,
+        power=135,
+        accuracy=85,
+        labels=["secondary_effect"],
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.ダークファイア_apply_ailment_to_defender,
+            )
+        }
+    ),
     "ちきゅうなげ": MoveData(
         type="かくとう",
         category="物理",

@@ -22,7 +22,6 @@ from .move import (
     modify_defender_stats,
 )
 
-
 def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """交代技の効果を発動する。
 
@@ -41,11 +40,9 @@ def pivot(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
         battle.player_states[player].interrupt = Interrupt.PIVOT
     return HandlerReturn(value=value)
 
-
 def ohko_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """一撃必殺技の確定ダメージを計算する。"""
     return HandlerReturn(value=ctx.defender.hp)
-
 
 def half_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
@@ -487,14 +484,12 @@ def _clear_spin_effects(battle: Battle, ctx: AttackContext) -> None:
     for hazard in ("まきびし", "どくびし", "ステルスロック", "ねばねばネット"):
         side.deactivate(hazard)
 
-
 def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float) -> None:
     """ドレイン回収(drain)で回復するHP量を計算する。"""
     damage = damage or ctx.substitute_damage
     heal_amount = int(damage * heal_ratio)
     heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
-
 
 def _recoil(battle: Battle, ctx: AttackContext, value: int, ratio: float) -> HandlerReturn:
     """反動ダメージを与えるヘルパー関数。与ダメの ratio 分を攻撃側が受ける。"""
@@ -987,6 +982,10 @@ def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
+def ダークファイア_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
+
+
 def チャージビーム_boost_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"C": 1}, chance=0.7)
 
@@ -1257,7 +1256,6 @@ def はたきおとす_power(battle: Battle, ctx: AttackContext, value: int) -> 
 def level_fixed_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """使用者レベルと同値の固定ダメージを計算する。"""
     return HandlerReturn(value=ctx.attacker.level)
-
 
 def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """バインド系技: ランダムターン数でバインド状態を付与する。ねばりのかぎづめで7ターン固定。"""
