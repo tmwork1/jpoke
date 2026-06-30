@@ -9,4 +9,4 @@ from .volatile_manager import VolatileManager
 from .field_manager import SideFieldManager
 from .status_manager import StatusManager
 from .query import PokemonQuery
-from .lethal_calculator import LethalDist, LethalHandler, LethalContext
+from .lethal import LethalDist, LethalHandler, LethalContext

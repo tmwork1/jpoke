@@ -61,6 +61,29 @@ def アイアンヘッド_apply_flinch_to_defender(battle: Battle, ctx: AttackCo
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
 
+def アイアンローラー_check_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アイアンローラーの使用可否: フィールドが存在しない場合に失敗させる。"""
+    if not battle.terrain.is_active:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "アイアンローラー_フィールドなし"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def アイアンローラー_clear_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アイアンローラー: ダメージ後にフィールドを解除する。"""
+    battle.terrain_manager.remove()
+    return HandlerReturn(value=value)
+
+
+def アイススピナー_clear_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アイススピナー: ダメージ後にフィールドを解除する。"""
+    battle.terrain_manager.remove()
+    return HandlerReturn(value=value)
+
+
 def アイスハンマー_reduce_attacker_S(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"S": -1})
 
@@ -247,6 +270,38 @@ def エレキボール_calc_power(battle: Battle, ctx: AttackContext, value: int
     return HandlerReturn(value=power * 4096)
 
 
+def エレクトロビーム_boost_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エレクトロビーム: とくこうを1段階上げる（追加効果ではないため必ず発動）。
+
+    仕様:
+    - ちからずくの追加効果ではないため、battle.modify_stats を直接呼ぶ。
+    - パワフルハーブ使用時・あめでスキップ時もこのハンドラ（priority=50）が
+      先に実行されるため、とくこう上昇は必ず発動する。
+    """
+    battle.modify_stats(ctx.attacker, {"C": 1}, source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
+def エレクトロビーム_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エレクトロビーム: 1ターン目に溜め状態へ移行、あめ/おおあめ時または2ターン目は通過する。
+
+    仕様:
+    - 揮発状態なし + 非あめ天気（1ターン目）: 揮発状態を付与して攻撃を停止する。
+    - 揮発状態なし + あめ/おおあめ（1ターン目）: 溜めをスキップして攻撃に進む。
+    - 揮発状態あり（2ターン目）: そのまま通過して攻撃に進む。
+    - とくこう上昇は エレクトロビーム_boost_spa（priority=50）で先に処理される。
+    - ばんのうがさを持つ場合は weather_for により あめ の恩恵を受けない。
+    """
+    attacker = ctx.attacker
+    if not attacker.has_volatile("エレクトロビーム"):
+        # あめ/おおあめなら溜めをスキップ
+        if battle.weather_for(attacker).rainy:
+            return HandlerReturn(value=value)
+        battle.volatile_manager.apply(attacker, "エレクトロビーム", count=1, source=attacker)
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def オクタンほう_reduce_acc(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"ACC": -1}, chance=0.5)
 
@@ -258,6 +313,19 @@ def おしゃべり_apply_confusion_to_defender(battle: Battle, ctx: AttackConte
 
 def おどろかす_apply_flinch_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
+
+
+def おはかまいり_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """おはかまいり: ひんしになった味方の数に応じて威力が増加する。
+
+    基本威力 50 に対して (1 + ひんし味方数) 倍の modifier を掛ける。
+    ひんし味方数は控えポケモン（bench）のうちひんしのもの。
+    場に出ている自分自身はひんしでないため bench に含まれない。
+    """
+    player = battle.get_player(ctx.attacker)
+    state = battle.player_states[player]
+    fainted_count = sum(1 for p in state.bench if p.fainted)
+    return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + fainted_count)))
 
 
 def オーバーヒート_sharply_reduce_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -390,6 +458,18 @@ def からげんき_ignore_burn_modifier(battle: Battle, ctx: AttackContext, val
 
 def からみつく_reduce_defender_S(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"S": -1}, chance=0.1)
+
+
+def かわらわり_break_screens(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かわらわり: 相手側のリフレクター・ひかりのかべ・オーロラベールを解除する。
+
+    壁解除は追加効果ではないため、りんぷん・おんみつマント・ちからずくの対象外。
+    技が無効化されなかった場合（ON_HITに到達した場合）のみ発動する。
+    """
+    defender_side = battle.get_side(ctx.defender)
+    for wall in ("リフレクター", "ひかりのかべ", "オーロラベール"):
+        defender_side.deactivate(wall)
+    return HandlerReturn(value=value)
 
 
 def がむしゃら_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -657,6 +737,18 @@ def サイコキネシス_reduce_defender_D(battle: Battle, ctx: AttackContext, 
     return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
 
 
+def サイコファング_break_screens(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """サイコファング: 相手側のリフレクター・ひかりのかべ・オーロラベールを解除する。
+
+    壁解除は追加効果ではないため、りんぷん・おんみつマント・ちからずくの対象外。
+    技が無効化されなかった場合（ON_HITに到達した場合）のみ発動する。
+    """
+    defender_side = battle.get_side(ctx.defender)
+    for wall in ("リフレクター", "ひかりのかべ", "オーロラベール"):
+        defender_side.deactivate(wall)
+    return HandlerReturn(value=value)
+
+
 def サイコブースト_sharply_reduce_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"C": -2})
 
@@ -786,6 +878,22 @@ def じばく_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
     """じばく: 使用前に現在HPを全消費する。"""
     battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost", source=ctx.attacker)
     return HandlerReturn(value=value)
+
+
+def ジャイロボール_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ジャイロボール: 自分の実効素早さが相手より遅いほど威力が高くなる。
+
+    威力 = floor(25 × 相手の実効素早さ ÷ 自分の実効素早さ) + 1、最大150。
+    実効素早さはランク補正・特性・もちもの・まひ・おいかぜ・しつげんの影響を含む。
+    自分の実効素早さが 0 の場合は威力を 1 として扱う（第六世代以降の仕様）。
+    """
+    atk_speed = battle.speed_calculator.calc_effective_speed(ctx.attacker)
+    def_speed = battle.speed_calculator.calc_effective_speed(ctx.defender)
+    if atk_speed <= 0:
+        power = 1
+    else:
+        power = min(150, 25 * def_speed // atk_speed + 1)
+    return HandlerReturn(value=power * 4096)
 
 
 def じゃどくのくさり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -988,6 +1096,18 @@ def ダークファイア_apply_ailment_to_defender(battle: Battle, ctx: AttackC
 
 def チャージビーム_boost_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"C": 1}, chance=0.7)
+
+
+def つけあがる_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """つけあがる: 使用者の能力ランク上昇段階の合計1段階ごとに威力が20増加する（基本威力20）。
+
+    基本威力 20 に対して (1 + rank_sum) 倍の modifier を掛ける。
+    A/B/C/D/S の正ランク合計を使う（ACC/EVA は対象外）。
+    アシストパワーと同様の計算。
+    """
+    attacker = ctx.attacker
+    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k in ("A", "B", "C", "D", "S"))
+    return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + rank_sum)))
 
 
 def つららおとし_apply_flinch_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1752,7 +1872,7 @@ def ボルテッカー_apply_ailment_to_defender(battle: Battle, ctx: AttackCont
 
 
 def ボルテッカー_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _recoil(battle, ctx, value, 1/4)
+    return _recoil(battle, ctx, value, 1/3)
 
 
 def ポイズンアクセル_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

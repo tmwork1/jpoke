@@ -4,7 +4,7 @@ Note:
     このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
 """
 from jpoke.enums import Event, DomainEvent
-from jpoke.core.lethal_calculator import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import item as h, lethal as l
 from jpoke.handlers.models import ItemData
 
@@ -606,14 +606,14 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_TURN_END: h.ItemHandler(
-                h.たべのこし_heal_hp,
+                h.たべのこし_heal,
                 subject_spec="source:self",
                 priority=60,
             ),
         },
         lethal_handler=LethalHandler(
             func=l.たべのこし_heal,
-            event="post_hit",
+            event="on_turn_end",
             subject="defender",
             priority=60
         )
@@ -1141,7 +1141,7 @@ ITEMS: dict[str, ItemData] = {
         },
         lethal_handler=LethalHandler(
             func=l.オボンのみ_heal,
-            event="post_hit",
+            event="any",
             subject="defender",
         )
     ),

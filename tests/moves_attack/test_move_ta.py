@@ -343,6 +343,45 @@ def test_だいちのはどう_ミストフィールドで威力2倍が乗る():
     assert battle.damage_calculator.power_modifier == 8192
 
 
+def test_だいばくはつ_HP消費後も攻撃が相手に届く():
+    """だいばくはつ: ON_PAY_HPはヒット処理より前に発火するため、HP0でも攻撃が相手に届く。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["だいばくはつ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_だいばくはつ_しめりけ持ちには技が失敗する():
+    """だいばくはつ: labels=["explosion"]のため、しめりけ持ちには技が失敗する。ON_PAY_HPは発火しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["だいばくはつ"])],
+        team1=[Pokemon("ニョロモ", ability_name="しめりけ")],
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+    assert attacker.hp == hp_before
+
+
+def test_だいばくはつ_使用後に攻撃者がひんしになる():
+    """だいばくはつ: ON_PAY_HPで現在HPを全消費し、技使用後に使用者がひんし状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["だいばくはつ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == 0
+    assert not attacker.alive
+
+
 def test_ダイビング_1ターン目は水中に潜りHPが変わらない():
     """ダイビング: 1ターン目はチャージターンのため相手にダメージを与えず、ダイビング揮発状態が付与される。"""
     battle = t.start_battle(
@@ -549,6 +588,74 @@ def test_ちきゅうなげ_ゴーストには無効():
     )
     battle.step()
     assert battle.actives[1].hp == battle.actives[1].max_hp
+
+
+def test_つけあがる_ACCランク上昇はカウントしない():
+    """つけあがる: ACC+1があっても威力に影響しない（ACC/EVAはランク合計の対象外）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["つけあがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"ACC": 1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 20
+
+
+def test_つけあがる_こうげきランク上昇1段階で威力40():
+    """つけあがる: A+1のとき威力40（20 × (1+1)）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["つけあがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": 1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_つけあがる_ランク上昇なしのとき威力20():
+    """つけあがる: ランク上昇がないとき基本威力20のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["つけあがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 20
+
+
+def test_つけあがる_ランク低下はカウントしない():
+    """つけあがる: A-1があっても正のランク合計がゼロならば威力は20のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["つけあがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": -1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 20
+
+
+def test_つけあがる_複数ステータス上昇合計3段階のとき威力80():
+    """つけあがる: A+2, B+1 の合計+3のとき威力80（20 × (1+3)）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["つけあがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"A": 2, "B": 1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
 
 
 def test_つじぎり_急所ランクが1():
@@ -850,6 +957,21 @@ def test_とっしん_使用後に攻撃者が反動ダメージを受ける():
     assert attacker.hp < hp_before
 
 
+def test_とっしん_反動ダメージが与ダメの4分の1になる():
+    """とっしん: 反動量は max(1, int(与ダメ * 1/4)) で計算される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["とっしん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_damage(battle, 100)
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    # max(1, int(100 * 1/4)) = 25
+    assert attacker.hp == hp_before - 25
+
+
 def test_とどめばり_相手を倒さないときこうげきが上昇しない():
     """とどめばり: 相手を倒さなかった場合はこうげきランクが上昇しない。"""
     battle = t.start_battle(
@@ -908,6 +1030,21 @@ def test_とびげり_外れたとき失敗反動ダメージを受ける():
     expected_damage = max(1, attacker.max_hp // 2)
     t.run_move(battle, 0)
     assert attacker.hp == hp_before - expected_damage
+
+
+def test_とびげり_外れて残HPが半分未満でもひんしになる():
+    """とびげり: 残HPが失敗反動ダメージ未満でもひんし処理が行われる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["とびげり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    # 残HPを1にしてから外す → 失敗反動でひんしになる
+    battle.modify_hp(attacker, v=-(attacker.hp - 1), reason="self_cost", source=attacker)
+    assert attacker.hp == 1
+    t.run_move(battle, 0)
+    assert not attacker.alive
 
 
 def test_とびはねる_まひが発動する():

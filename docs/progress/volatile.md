@@ -3,7 +3,7 @@
 あくむ	保留	保留	保留	保留	保留	n/a	n/a
 あなをほる	x	x	x	x	x	n/a	n/a
 あばれる	x	x	x	x	x	n/a	n/a
-あめまみれ	x	x	x	x	x	n/a	n/a
+あめまみれ	x	x	x	x	x	-	-
 アンコール	x	x	x	x	x	n/a	n/a
 いちゃもん	x	x	x	x	x	n/a	n/a
 うちおとす	x	x	x	x	x	n/a	n/a
@@ -47,7 +47,7 @@
 マジックコート	x	x	x	x	x	n/a	n/a
 まもる	x	x	x	x	x	n/a	n/a
 まるくなる	x	x	x	x	x	n/a	n/a
-みがわり	x	x	x	x	x	n/a	n/a
+みがわり	x	x	x	x	x	-	-
 みちづれ	x	x	x	x	x	n/a	n/a
 メロメロ	x	x	x	x	x	n/a	n/a
 やどりぎのタネ	x	x	x	x	x	-	-

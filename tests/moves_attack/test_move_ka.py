@@ -175,6 +175,19 @@ def test_かかとおとし_外れたとき失敗反動ダメージを受ける(
     assert attacker.hp == hp_before - expected_damage
 
 
+def test_かかとおとし_外れた場合こんらんが発動しない():
+    """かかとおとし: 外れた場合はON_DAMAGE_HITが発火しないためこんらんが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かかとおとし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    # 外れた場合はこんらんが付与されない
+    assert not battle.actives[1].has_volatile("こんらん")
+
+
 def test_かかとおとし_確率外れでこんらんが発動しない():
     """かかとおとし: secondary_chance=0.0のとき（確率外れ）こんらんを付与しない。"""
     battle = t.start_battle(
@@ -333,6 +346,89 @@ def test_からげんき_状態異常のとき威力2倍():
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_かわらわり_オーロラベールを解除する():
+    """かわらわり: 命中時に相手側のオーロラベールを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かわらわり"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"オーロラベール": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["オーロラベール"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["オーロラベール"].is_active
+
+
+def test_かわらわり_ひかりのかべを解除する():
+    """かわらわり: 命中時に相手側のひかりのかべを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かわらわり"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"ひかりのかべ": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["ひかりのかべ"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["ひかりのかべ"].is_active
+
+
+def test_かわらわり_まもるで防がれたとき壁を解除しない():
+    """かわらわり: まもるで無効化された場合はリフレクターを解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かわらわり"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"リフレクター": 1},
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["リフレクター"].is_active
+    t.run_move(battle, 0)
+    assert battle.side_managers[1].fields["リフレクター"].is_active
+
+
+def test_かわらわり_リフレクターを解除する():
+    """かわらわり: 命中時に相手側のリフレクターを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かわらわり"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"リフレクター": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["リフレクター"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["リフレクター"].is_active
+
+
+def test_かわらわり_壁3種を同時に解除する():
+    """かわらわり: 命中時にリフレクター・ひかりのかべ・オーロラベールを同時に解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かわらわり"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"リフレクター": 1, "ひかりのかべ": 1, "オーロラベール": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["リフレクター"].is_active
+    assert battle.side_managers[1].fields["ひかりのかべ"].is_active
+    assert battle.side_managers[1].fields["オーロラベール"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["リフレクター"].is_active
+    assert not battle.side_managers[1].fields["ひかりのかべ"].is_active
+    assert not battle.side_managers[1].fields["オーロラベール"].is_active
+
+
+def test_かわらわり_壁がなくても動作する():
+    """かわらわり: 相手側に壁が張られていない場合もエラーなく動作する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かわらわり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 @pytest.mark.parametrize(
@@ -682,6 +778,34 @@ def test_ギガインパクト_次ターン行動不能になる():
     battle.step()
     assert not attacker.has_volatile("リチャージ")
     assert defender.hp == defender_hp_after_t1
+
+
+def test_ギガドレイン_使用後に攻撃者のHPが回復する():
+    """ギガドレイン: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+
+
+def test_ギガドレイン_回復量が与ダメの半分になる():
+    """ギガドレイン: 回復量は int(与えたダメージ * 0.5) で計算される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_damage(battle, 100)
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    # int(100 * 0.5) = 50
+    assert attacker.hp == 1 + 50
 
 
 def test_ぎんいろのかぜ_全能力1段階上昇が発動する():
@@ -1234,31 +1358,3 @@ def test_ゴールドラッシュ_特攻1段階低下が発動する():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["C"] == -1
-
-
-def test_サンダーダイブ_命中時は失敗反動ダメージを受けない():
-    """サンダーダイブ: 命中したときはON_MISSが発火しないため失敗反動はない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["サンダーダイブ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-    # 命中時は使用者のHPは変わらない（反動なし）
-    assert attacker.hp == hp_before
-
-
-def test_サンダーダイブ_外れたとき失敗反動ダメージを受ける():
-    """サンダーダイブ: 外れたとき自分の最大HPの1/2ダメージを受ける。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["サンダーダイブ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=0,
-    )
-    attacker = battle.actives[0]
-    hp_before = attacker.hp
-    expected_damage = max(1, attacker.max_hp // 2)
-    t.run_move(battle, 0)
-    assert attacker.hp == hp_before - expected_damage

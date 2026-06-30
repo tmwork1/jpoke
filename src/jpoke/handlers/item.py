@@ -761,7 +761,7 @@ def たつじんのおび_boost_super_effective(battle: Battle, ctx: AttackConte
     return HandlerReturn(value=value)
 
 
-def たべのこし_heal_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def たべのこし_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """たべのこし: ターン終了時HP回復"""
     mon = ctx.source
     if battle.modify_hp(mon, r=1/16):

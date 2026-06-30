@@ -378,6 +378,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "エレクトロビーム": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.エレクトロビーム_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "たくわえる": VolatileData(
         # Volatileではカウントの管理のみ行い、実際の効果は技のハンドラ側で処理
         handlers={}

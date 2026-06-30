@@ -6,7 +6,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .lethal_calculator import LethalResult
+    from .lethal import LethalResult
 
 from dataclasses import dataclass
 from contextlib import contextmanager
@@ -40,7 +40,7 @@ from .ailment_manager import AilmentManager
 from .volatile_manager import VolatileManager
 from .status_manager import StatusManager
 from .query import PokemonQuery
-from . import lethal_calculator, observation_builder
+from . import lethal, observation_builder
 
 
 @dataclass
@@ -247,9 +247,11 @@ class Battle:
                     attacker: Pokemon,
                     moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
                     critical: bool = False,
+                    secondary: bool = False,
                     max_attack: int = 10) -> list[LethalResult]:
-        return lethal_calculator.calc_lethal(
-            self, attacker, moves, critical=critical, max_attack=max_attack
+        return lethal.calc_lethal(
+            self, attacker, moves, critical=critical,
+            secondary=secondary, max_attack=max_attack
         )
 
     @property

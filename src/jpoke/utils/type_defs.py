@@ -4,8 +4,8 @@ from typing import Literal
 BattlePhase = Literal["", "selection", "action", "switch"]
 CommandType = Literal["any", "move", "switch"]
 
-LethalEvent = Literal["pre_hit", "post_hit"]
-LethalSubject = Literal["attacker", "defender", "both"]
+LethalEvent = Literal["any", "on_damage", "on_move_secondary", "on_turn_end"]
+LethalSubject = Literal["any", "attacker", "defender"]
 
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",
@@ -34,11 +34,11 @@ RoleSpec = Literal[
 Side = Literal["self", "foe"]
 
 Nature = Literal[
-    "さみしがり", "いじっぱり", "やんちゃ", "ゆうかん",  # A↑
-    "ずぶとい", "わんぱく", "のうてんき", "のんき",  # B↑
-    "ひかえめ", "おっとり", "うっかりや", "れいせい",  # C↑
-    "おだやか", "おとなしい", "しんちょう", "なまいき",  # D↑
-    "おくびょう", "せっかち", "ようき", "むじゃき",  # S↑
+    "さみしがり", "いじっぱり", "やんちゃ", "ゆうかん",  # A+
+    "ずぶとい", "わんぱく", "のうてんき", "のんき",  # B+
+    "ひかえめ", "おっとり", "うっかりや", "れいせい",  # C+
+    "おだやか", "おとなしい", "しんちょう", "なまいき",  # D+
+    "おくびょう", "せっかち", "ようき", "むじゃき",  # S+
     "がんばりや", "すなお", "てれや", "きまぐれ", "まじめ",  # 無補正
 ]
 
@@ -113,6 +113,7 @@ VolatileName = Literal[
     "ソーラービーム",
     "ソーラーブレード",
     "メテオビーム",
+    "エレクトロビーム",
     "ダイビング",
     "シャドーダイブ",
     "スレッドトラップ",

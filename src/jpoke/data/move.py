@@ -145,6 +145,18 @@ MOVES: dict[str, MoveData] = {
         power=130,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.アイアンローラー_check_terrain,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.アイアンローラー_clear_terrain,
+                subject_spec="attacker:self",
+                priority=180,
+            ),
+        }
     ),
     "アイススピナー": MoveData(
         type="こおり",
@@ -153,6 +165,13 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.アイススピナー_clear_terrain,
+                subject_spec="attacker:self",
+                priority=180,
+            ),
+        }
     ),
     "アイスハンマー": MoveData(
         type="こおり",
@@ -421,7 +440,7 @@ MOVES: dict[str, MoveData] = {
 
         labels=["contact", "heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.ウッドホーン_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.ウッドホーン_heal_attacker, priority=20)
         }
     ),
     "うっぷんばらし": MoveData(
@@ -489,7 +508,13 @@ MOVES: dict[str, MoveData] = {
         category="物理",
         pp=10,
         power=50,
-        accuracy=100
+        accuracy=100,
+        labels=["contact"],
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.おはかまいり_calc_power,
+            ),
+        }
     ),
     "かいりき": MoveData(
         type="ノーマル",
@@ -702,6 +727,11 @@ MOVES: dict[str, MoveData] = {
         power=75,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.かわらわり_break_screens,
+            ),
+        },
     ),
     "がんせきアックス": MoveData(
         type="いわ",
@@ -786,7 +816,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact", "heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.きゅうけつ_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.きゅうけつ_heal_attacker, priority=20)
         }
     ),
     "きょけんとつげき": MoveData(
@@ -1084,6 +1114,11 @@ MOVES: dict[str, MoveData] = {
         power=85,
         accuracy=100,
         labels=["bite", "contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.サイコファング_break_screens,
+            ),
+        },
     ),
     "サイコブレイド": MoveData(
         type="エスパー",
@@ -1282,6 +1317,11 @@ MOVES: dict[str, MoveData] = {
         power=1,
         accuracy=100,
         labels=["bullet", "contact"],
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ジャイロボール_calc_power,
+            ),
+        }
     ),
     "シャドークロー": MoveData(
         type="ゴースト",
@@ -1786,6 +1826,11 @@ MOVES: dict[str, MoveData] = {
         power=20,
         accuracy=100,
         labels=["contact"],
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.つけあがる_calc_power,
+            ),
+        }
     ),
     "つじぎり": MoveData(
         type="あく",
@@ -1923,7 +1968,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact", "heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.デスウイング_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.デスウイング_heal_attacker, priority=20)
         }
     ),
     "でんこうせっか": MoveData(
@@ -2281,7 +2326,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact", "punch", "heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.ドレインパンチ_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.ドレインパンチ_heal_attacker, priority=20)
         }
     ),
     "トロピカルキック": MoveData(
@@ -3283,7 +3328,7 @@ MOVES: dict[str, MoveData] = {
 
         labels=["contact", "slash", "heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.むねんのつるぎ_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.むねんのつるぎ_heal_attacker, priority=20)
         }
     ),
     "メガトンキック": MoveData(
@@ -3851,9 +3896,20 @@ MOVES: dict[str, MoveData] = {
     "エレクトロビーム": MoveData(
         type="でんき",
         category="特殊",
-        pp=10,
+        pp=12,
         power=130,
         accuracy=100,
+        handlers={
+            Event.ON_MOVE_CHARGE: [
+                h.MoveHandler(
+                    ha.エレクトロビーム_boost_spa,
+                    priority=50,
+                ),
+                h.MoveHandler(
+                    ha.エレクトロビーム_charge,
+                ),
+            ],
+        }
     ),
     "オーバードライブ": MoveData(
         type="でんき",
@@ -4030,6 +4086,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ギガドレイン_heal_attacker,
+                priority=20,  # turn.md: ON_HIT priority 20 (HP吸収技による回復)
             )
         }
     ),
@@ -4423,7 +4480,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         labels=["heal", "secondary_effect", "thaw"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_heal_attacker),
+            Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_heal_attacker, priority=20),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シャカシャカほう_apply_ailment_to_defender,
             )
@@ -4523,7 +4580,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.すいとる_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.すいとる_heal_attacker, priority=20)
         }
     ),
     "スケイルノイズ": MoveData(
@@ -4847,7 +4904,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact", "heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.ドレインキッス_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.ドレインキッス_heal_attacker, priority=20)
         }
     ),
     "どろかけ": MoveData(
@@ -5149,7 +5206,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.パラボラチャージ_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.パラボラチャージ_heal_attacker, priority=20)
         }
     ),
     "はめつのひかり": MoveData(
@@ -5756,7 +5813,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["heal"],
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.メガドレイン_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.メガドレイン_heal_attacker, priority=20)
         }
     ),
     "めざめるダンス": MoveData(
@@ -5832,7 +5889,7 @@ MOVES: dict[str, MoveData] = {
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.ゆめくい_check_sleep,
             ),
-            Event.ON_HIT: h.MoveHandler(ha.ゆめくい_heal_attacker)
+            Event.ON_HIT: h.MoveHandler(ha.ゆめくい_heal_attacker, priority=20)
         }
     ),
     "ようかいえき": MoveData(
