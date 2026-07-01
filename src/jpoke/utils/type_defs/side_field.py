@@ -1,6 +1,4 @@
 from typing import Literal
 
 
-SideFieldName = Literal["リフレクター", "ひかりのかべ", "しんぴのまもり", "しろいきり", "おいかぜ", "ねがいごと",
-                        "まきびし", "どくびし", "ステルスロック", "ねばねばネット", "オーロラベール",
-                        "いやしのねがい"]  # TODO : 専用モジュールを作り、data/side_field.pyから自動生成するようにする
+SideFieldName = Literal["リフレクター", "ひかりのかべ", "オーロラベール", "しんぴのまもり", "しろいきり", "いやしのねがい", "おいかぜ", "ねがいごと", "まきびし", "どくびし", "ステルスロック", "ねばねばネット"]  # 自動生成: python scripts/generate_side_field_literal.py で更新（元: src/jpoke/data/field/side_field.py）
