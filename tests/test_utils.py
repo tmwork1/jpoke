@@ -129,12 +129,13 @@ def reserve_command(battle: Battle,
         battle: Battleインスタンス
     """
     commands = [command0, command1]
-    for i, (player, state) in enumerate(battle.player_states.items()):
-        state.reset_turn_state()
-        command = commands[i]
-        if command is None:
-            command = player.choose_command(battle)
-        state.reserve_command(command)
+    with battle.phase_context("action"):
+        for i, (player, state) in enumerate(battle.player_states.items()):
+            state.reset_turn_state()
+            command = commands[i]
+            if command is None:
+                command = player.choose_command(battle)
+            state.reserve_command(command)
 
 
 def build_context(battle: Battle, atk_idx: int, move_idx: int = 0) -> AttackContext:
@@ -218,7 +219,7 @@ def change_item(battle: Battle,
     if not item_name:
         return battle.remove_item(mon, source=source)
 
-    if not battle.can_change_item(mon, source=source):
+    if not battle.item_manager.can_change_item(mon, source=source):
         return False
 
     battle.item_manager._change_item(mon, item_name)
@@ -270,7 +271,7 @@ def get_action_order(battle: Battle,
         行動順のポケモンのリスト
     """
     reserve_command(battle, command0, command1)
-    return battle.resolve_action_order()
+    return battle.speed_calculator.resolve_action_order()
 
 
 def fix_damage(battle: Battle, damage: int):

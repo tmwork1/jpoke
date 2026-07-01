@@ -635,7 +635,7 @@ def test_くろいてっきゅう_素早さ半分():
     )
     mon = battle.actives[0]
     base_speed = mon.stats["S"]
-    assert battle.calc_effective_speed(mon) == base_speed * 2048 // 4096
+    assert battle.speed_calculator.calc_effective_speed(mon) == base_speed * 2048 // 4096
 
 
 def test_くろいヘドロ_どくタイプは回復():
@@ -703,7 +703,7 @@ def test_こだわりスカーフ_素早さ強化():
     )
     mon = battle.actives[0]
     base_speed = mon.stats["S"]
-    assert battle.calc_effective_speed(mon) == base_speed * 6144 // 4096
+    assert battle.speed_calculator.calc_effective_speed(mon) == base_speed * 6144 // 4096
 
 
 @pytest.mark.parametrize(
@@ -1343,7 +1343,7 @@ def test_ばんのうがさ_すいすいが発動しない():
     )
     mon = battle.actives[0]
     # ばんのうがさがあるので素早さは2倍にならない
-    assert battle.calc_effective_speed(mon) == mon.stats["S"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"]
 
 
 def test_ばんのうがさ_晴れのほのお技強化が無効():
@@ -1977,5 +1977,4 @@ def test_被弾反応きのみ_対応外の技ではアイテム消費しない(
 
 
 if __name__ == "__main__":
-    import pytest
     pytest.main([__file__, "-v"])

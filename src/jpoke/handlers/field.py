@@ -444,6 +444,7 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ステルスロックのダメージ（岩タイプ相性依存）"""
+    # 循環インポート回避のため遅延インポート（jpoke.core/jpoke.model はこの時点で初期化中）
     from jpoke.core import AttackContext
     from jpoke.model import Move
 

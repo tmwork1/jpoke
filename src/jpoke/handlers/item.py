@@ -15,6 +15,7 @@ from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
 from jpoke.data.pokedex import POKEDEX
+from . import ability_paradox as paradox
 
 # 何らかのポケモンの進化前として登録されている = 進化先が存在する（未進化）ポケモン名の集合
 _HAS_EVOLUTION: frozenset[str] = frozenset(
@@ -1068,7 +1069,6 @@ def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackCo
 
 def ブーストエナジー_refresh_paradox_charge(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ブーストエナジー: アイテム有効化・取得時にパラドックスブーストを再判定する。"""
-    from . import ability_paradox as paradox
     return paradox.refresh_paradox_charge_state(battle, ctx, value)
 
 

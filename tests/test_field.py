@@ -80,7 +80,7 @@ def test_おいかぜ():
         side0={"おいかぜ": 1},
     )
     mon = battle.actives[0]
-    assert battle.calc_effective_speed(mon) == 2 * mon.stats["S"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == 2 * mon.stats["S"]
 
 
 def test_おおあめ_こおりが付与される():

@@ -114,6 +114,8 @@ class LethalResult:
         total_freq = sum(hp_counter.values())
         return zero_freq / total_freq
 
+# TODO : 分布の演算関数をcore/に置いていると、handlers/からcore/をimportする構造になるので、低レベルのモジュールに移譲したい
+
 
 def to_dist(x: int | list[int] | LethalDist,
             ability_enabled: bool = True,

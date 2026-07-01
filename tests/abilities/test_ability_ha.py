@@ -86,7 +86,7 @@ def test_はやあし_状態異常で素早さ1_5倍(ailment_name: AilmentName):
         ailment0=(ailment_name, None),
     )
     mon = battle.actives[0]
-    assert battle.calc_effective_speed(mon) == mon.stats["S"] * 3 // 2
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"] * 3 // 2
 
 
 def test_はやおき_ねむりカウンタが通常の2倍速で減る():
@@ -403,6 +403,7 @@ def test_パンクロック_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["バークアウト"])],
         team1=[Pokemon("ピカチュウ", ability_name="パンクロック")],
+        accuracy=100,
     )
     t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.damage_modifier
@@ -412,6 +413,7 @@ def test_パンクロック_音技与ダメ1_3倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="パンクロック", move_names=["バークアウト"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
     t.run_move(battle, 0)
     assert 5325 == battle.damage_calculator.power_modifier
@@ -421,6 +423,7 @@ def test_パンクロック_音技被ダメ半減():
     battle2 = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["バークアウト"])],
         team1=[Pokemon("ピカチュウ", ability_name="パンクロック", move_names=["バークアウト"])],
+        accuracy=100,
     )
     t.run_move(battle2, 0)
     assert 2048 == battle2.damage_calculator.damage_modifier

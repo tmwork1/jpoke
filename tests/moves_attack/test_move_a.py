@@ -406,6 +406,7 @@ def test_いかりのまえば_最低1ダメージ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
     )
     attacker, defender = battle.actives
     defender.hp = 1

@@ -32,7 +32,8 @@ def test_さわぐ_技固定():
     )
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, "さわぐ", count=2, move_name="さわぐ")
-    assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+    with battle.phase_context("action"):
+        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
     move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
     assert move.name == "さわぐ"
 
@@ -181,7 +182,8 @@ def test_じごくづき_コマンド制限():
         volatile0={"じごくづき": 2}
     )
     player = battle.players[0]
-    commands = battle.get_available_commands(player)
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
     assert all(cmd.index != 0 for cmd in commands)
 
 

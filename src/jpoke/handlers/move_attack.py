@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
 from jpoke.utils.math import apply_fixed_modifier
+from jpoke.data import TYPE_MODIFIER
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -1684,7 +1685,6 @@ def フライングプレス_add_flying_type(battle: Battle, ctx: AttackContext,
     damage_calculator.py がすでにかくとうタイプ相性を value に計算済み。
     ここでひこうタイプの相性を追加で掛け算することで複合タイプ判定を実現する。
     """
-    from jpoke.data import TYPE_MODIFIER
     flying_chart = TYPE_MODIFIER.get("ひこう", {})
     for def_type in ctx.defender.types:
         rate = flying_chart.get(def_type, 1.0)

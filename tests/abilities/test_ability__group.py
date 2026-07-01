@@ -670,7 +670,7 @@ def test_天候依存素早さ上昇(ability: str, weather: WeatherName, expecte
         weather=(weather, 999),
     )
     mon = battle.actives[0]
-    assert battle.calc_effective_speed(mon) == mon.stats["S"] * expected_mult
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"] * expected_mult
 
 
 @pytest.mark.parametrize(
@@ -683,7 +683,7 @@ def test_天候依存素早さ上昇_非対応天候は据え置き(ability: str
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    assert battle.calc_effective_speed(mon) == mon.stats["S"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"]
 
 
 @pytest.mark.parametrize(

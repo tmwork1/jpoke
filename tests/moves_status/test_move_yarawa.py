@@ -475,7 +475,7 @@ def test_リサイクル_すりかえ後はlast_lost_item_nameが設定されず
     )
     mon = battle.actives[0]
     # 両者アイテムありの状態ですりかえを模倣（swap_items）
-    battle.swap_items()
+    battle.item_manager.swap_items()
     # すりかえ後はピカチュウがたべのこしを持ち、last_lost_item_name は空のまま
     assert mon.item.name == "たべのこし"
     assert mon.last_lost_item_name == ""
