@@ -455,7 +455,7 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
     damage = battle.roll_damage(
         attacker=ctx.attacker,
         defender=ctx.attacker,
-        move="こんらん",
+        move="_こんらん",
     )
 
     # ダメージ適用

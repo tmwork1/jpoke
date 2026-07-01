@@ -22,6 +22,11 @@ tools:
 - `handlers/` に実装関数を追加し、`data/` にハンドラを登録する
 - テストは書かない（`review-test` エージェントが担当）
 
+## ブランチ管理
+
+ループから呼ばれる場合、プロンプトに `git checkout -b impl/{entry} main` が含まれる。
+必ず指示通りにブランチを作成してから実装を開始し、完了後はコミットして main に戻ること。
+
 ## 成果物チェックリスト
 
 完了時に確認して報告する：
@@ -29,5 +34,8 @@ tools:
 - [ ] `handlers/` に関数を追加した
 - [ ] `data/` でハンドラを登録した
 - [ ] 新しい `Literal` 型が必要なら `utils/type_defs.py` に追加した
+- [ ] `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` を実行した
 - [ ] `docs/progress/<category>.md` の実装列（実装）を `x` に更新した
+- [ ] 変更をコミットした（`git add -A && git commit -m "impl: {entry}"`）
+- [ ] main ブランチに戻った（`git checkout main`）
 - [ ] `review-test` に渡すべき仕様上の注意点・エッジケースをまとめた

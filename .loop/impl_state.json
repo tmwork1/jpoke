@@ -17,11 +17,14 @@
     ],
     "impl_extra": "- data/move.py の MoveData に技が未登録なら追加する\n- 既存エントリにはhandlerを追加し、不足ラベルも追記する\n- 計画書に記載の全技を一括実装すること\n- 進捗ファイルで 実装=x 済みの技はスキップして未実装（handler未設定）の技だけ実装すること",
     "review_extra": "- テストは読みに対応するファイルに追加すること（あ行→test_move_a.py、か行→test_move_ka.py、さ行→test_move_sa.py、た行→test_move_ta.py、な行→test_move_na.py、は行→test_move_ha.py、ま行→test_move_ma.py、やらわ行→test_move_yarawa.py）\n- 複数の test_files に分散してテストを追加した場合は、全ファイルに対して sort_tests.py を実行すること",
-    "planning_slots_max": 2
+    "planning_slots_max": 2,
+    "review_parallel_max": 1,
+    "review_worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-review"
   },
   "plan_queue": [],
   "impl_queue": [],
   "review_queue": [],
+  "review_in_progress": [],
   "completed": [
     "あなをほる",
     "ゲップ",

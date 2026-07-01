@@ -429,6 +429,51 @@ def test_じごくぐるま_反動ダメージが与ダメの4分の1になる()
     assert attacker.hp == hp_before - 25
 
 
+def test_じごくづき_2ターン後にじごくづき揮発状態が解除される():
+    """じごくづき: 付与したじごくづき揮発状態は2ターン後（count=2）に解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["じごくづき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("じごくづき")
+    # 1ターン終了後はまだ揮発状態が続く
+    t.end_turn(battle)
+    assert defender.has_volatile("じごくづき")
+    # 2ターン終了後は揮発状態が解除される
+    t.end_turn(battle)
+    assert not defender.has_volatile("じごくづき")
+
+
+def test_じごくづき_じごくづき状態の相手は音技を使えない():
+    """じごくづき: 命中後、同ターン内に相手が音技を使おうとするとON_TRY_ACTIONでブロックされる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["じごくづき"])],
+        team1=[Pokemon("カビゴン", move_names=["ハイパーボイス"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("じごくづき")
+    # カビゴンがハイパーボイス（音技）を使おうとするとブロックされる
+    t.run_move(battle, 1)
+    assert not battle.move_executor.action_success
+
+
+def test_じごくづき_命中後にじごくづき揮発状態が付与される():
+    """じごくづき: 命中後、相手がじごくづき揮発状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["じごくづき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("じごくづき")
+
+
 def test_じばく_HP消費後も攻撃が相手に届く():
     """じばく: ON_PAY_HPはヒット処理より前に発火するため、HP0でも攻撃が相手に届く。"""
     battle = t.start_battle(

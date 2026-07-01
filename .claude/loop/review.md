@@ -78,11 +78,13 @@ jpoke {config.category} 再レビュータスク: {entry}
 4. 実装のレビュー・修正
    handlers/ と data/ の実装を仕様書・計画書と照合する。
    誤り・欠落があれば修正する。
+   handlers を修正した場合は python scripts/sort_handlers.py src/jpoke/handlers/<category>.py を実行する。
 
 5. テストのレビュー・修正
    {config.test_files} のテストを実装と照合する。
    誤り・過不足があれば修正する。
    python scripts/sort_tests.py {config.test_files をスペース区切り} でソート後、
+   python scripts/generate_test_list.py でテスト一覧を更新し、
    python -m pytest tests/ -v でテストを実行し、結果を .loop/test_logs/{entry}.log に保存する。
    全テストが通ることを確認する。
 
@@ -108,7 +110,7 @@ jpoke {config.category} 再レビュータスク: {entry}
    修正がなかった項目は「変更なし」と記載する。
 
 7. 進捗ファイルを更新する
-   `{config.progress_file}` の {entry} 該当行を実装済みに更新する。
+   `{config.progress_file}` の {entry} 該当行のテスト済みマークを更新する。
 
 8. 結果を記録する
    成功: `.loop/review_results/{entry}.ok` を Write で作成（内容は空でよい）

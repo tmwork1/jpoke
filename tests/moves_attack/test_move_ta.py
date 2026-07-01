@@ -1212,6 +1212,59 @@ def test_トライアタック_追加効果が発動しない():
     assert not battle.actives[1].ailment.is_active
 
 
+def test_トラバサミ_バインド中は相手が交代できない():
+    """トラバサミ: バインド状態の間、ゴーストタイプでない相手は交代できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["トラバサミ"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("バインド")
+    assert not t.can_switch(battle, 1)
+
+
+def test_トラバサミ_バインド中は相手が毎ターン最大HPの8分の1ダメージを受ける():
+    """トラバサミ: バインド状態のターン終了時に相手が最大HPの1/8ダメージを受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["トラバサミ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    hp_after_attack = defender.hp
+    t.end_turn(battle)
+    expected_damage = defender.max_hp // 8
+    assert defender.hp == hp_after_attack - expected_damage
+
+
+def test_トラバサミ_命中後にバインド状態になる():
+    """トラバサミ: 命中時に相手がバインド揮発状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["トラバサミ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+
+
+def test_トラバサミ_攻撃者が交代するとバインドが解除される():
+    """トラバサミ: 技を使った側が交代するとバインド状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["トラバサミ"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+    t.run_switch(battle, 0, 1)
+    assert not defender.has_volatile("バインド")
+
+
 def test_トリックフラワー_確定急所():
     """トリックフラワー: 急所ランク3のため乱数によらず常に急所が発生する。"""
     battle = t.start_battle(
