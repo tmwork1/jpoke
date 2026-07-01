@@ -53,7 +53,7 @@ def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
 
 def _announce_and_consume_item(battle: Battle, mon: Pokemon) -> None:
     _announce_item_triggered(battle, mon)
-    battle.consume_item(mon)
+    battle.item_manager.consume_item(mon)
 
 
 def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
@@ -317,7 +317,7 @@ def イバンのみ_boost_priority(battle: Battle, ctx: AttackContext, value: in
     """イバンのみ: 先制フラグが立っているとき行動ティアを+1する。"""
     mon = ctx.attacker
     if mon.item.count == 1:
-        battle.consume_item(mon)
+        battle.item_manager.consume_item(mon)
         return HandlerReturn(value=value + 1)
     return HandlerReturn(value=value)
 
@@ -509,8 +509,8 @@ def くっつきバリ_transfer_on_contact(battle: Battle, ctx: AttackContext, v
         not ctx.attacker.has_item()
     ):
         _announce_item_triggered(battle, mon)
-        battle.remove_item(mon)
-        battle.gain_item(ctx.attacker, "くっつきバリ")
+        battle.item_manager.remove_item(mon)
+        battle.item_manager.gain_item(ctx.attacker, "くっつきバリ")
     return HandlerReturn(value=value)
 
 
@@ -1054,7 +1054,7 @@ def ふうせん_check_floating(_battle: Battle, _ctx: EventContext, _value: Any
 def ふうせん_pop_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     mon = ctx.defender
     assert mon is not None
-    battle.consume_item(mon)
+    battle.item_manager.consume_item(mon)
     _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1103,7 +1103,7 @@ def ミクルのみ_boost_accuracy(battle: Battle, ctx: AttackContext, value: An
     """ミクルのみ: 命中率フラグが立っているとき次の技の命中率を1.2倍にする。"""
     mon = ctx.attacker
     if mon.item.count == 1:
-        battle.consume_item(mon)
+        battle.item_manager.consume_item(mon)
         return HandlerReturn(value=apply_fixed_modifier(value, 4915))
     return HandlerReturn(value=value)
 

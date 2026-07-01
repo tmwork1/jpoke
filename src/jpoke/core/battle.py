@@ -15,7 +15,7 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, MoveCategory, AbilityDisabledReason, ItemDisabledReason
+    HPChangeReason, MoveCategory, AbilityDisabledReason
 from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
 
@@ -476,20 +476,6 @@ class Battle:
         """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
         self.ability_manager.change_ability(mon, ability)
 
-    def gain_item(self, target: Pokemon, item_name: str) -> bool:
-        """ポケモンがアイテムを得る（ItemManagerへの委譲）。"""
-        return self.item_manager.gain_item(target, item_name)
-
-    def remove_item(self,
-                    target: Pokemon,
-                    source: Pokemon | None = None) -> bool:
-        """ポケモンの道具を喪失状態にする（ItemManagerへの委譲）。"""
-        return self.item_manager.remove_item(target, source=source)
-
-    def consume_item(self, mon: Pokemon) -> bool:
-        """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
-        return self.item_manager.consume_item(mon)
-
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
 
@@ -667,14 +653,6 @@ class Battle:
     def remove_ability_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
         """特性の無効化理由を削除する（AbilityManagerへの委譲）。"""
         return self.ability_manager.remove_disabled_reason(mon, reason)
-
-    def add_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
-        """道具の無効化理由を追加する（ItemManagerへの委譲）。"""
-        return self.item_manager.add_disabled_reason(mon, reason)
-
-    def remove_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
-        """道具の無効化理由を削除する（ItemManagerへの委譲）。"""
-        return self.item_manager.remove_disabled_reason(mon, reason)
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""

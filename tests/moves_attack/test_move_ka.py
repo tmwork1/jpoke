@@ -1123,7 +1123,7 @@ def test_ゲップ_きのみ消費後は発動する():
     )
     attacker = battle.actives[0]
     # きのみを消費してate_berryをセットする
-    battle.consume_item(attacker)
+    battle.item_manager.consume_item(attacker)
     assert attacker.ate_berry
     defender_hp_before = battle.actives[1].hp
     t.run_move(battle, 0)
@@ -1160,7 +1160,7 @@ def test_ゲップ_交代後も使えること():
     )
     attacker = battle.actives[0]
     # きのみを消費してate_berryをセットする
-    battle.consume_item(attacker)
+    battle.item_manager.consume_item(attacker)
     assert attacker.ate_berry
     # 控えのカビゴンと交代
     t.run_switch(battle, 0, 1)

@@ -170,7 +170,7 @@ class SwitchManager:
 
             # 消費アイテムによる交代の場合はアイテムを消費させる
             if flag.requires_item_consumption():
-                self.battle.consume_item(state.active)
+                self.battle.item_manager.consume_item(state.active)
 
             if state.command_reserved() and state.next_command.is_switch():
                 # 予約されている交代コマンドを使う

@@ -1823,7 +1823,7 @@ def リサイクル_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
 def リサイクル_restore_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """リサイクルの効果: 最後に失ったアイテムを取り戻す。"""
     mon = ctx.attacker
-    battle.gain_item(mon, mon.last_lost_item_name)
+    battle.item_manager.gain_item(mon, mon.last_lost_item_name)
     return HandlerReturn(value=value)
 
 

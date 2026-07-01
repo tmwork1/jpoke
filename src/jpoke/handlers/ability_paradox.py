@@ -45,7 +45,7 @@ def _activate_paradox_boost(battle: Battle,
 
     # ブーストエナジーを消費する
     if source == "item" and mon.has_item("ブーストエナジー", consider_enabled=True):
-        battle.consume_item(mon)
+        battle.item_manager.consume_item(mon)
 
 
 def refresh_paradox_charge_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

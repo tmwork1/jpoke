@@ -456,7 +456,7 @@ def test_リサイクル_アイテム喪失後に取り戻す():
     )
     mon = battle.actives[0]
     # アイテムを失わせる
-    battle.remove_item(mon)
+    battle.item_manager.remove_item(mon)
     assert not mon.has_item()
     assert mon.last_lost_item_name == "オボンのみ"
 

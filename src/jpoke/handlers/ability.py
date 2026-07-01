@@ -1384,7 +1384,7 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
     if battle.random.random() >= chance:
         return HandlerReturn(value=value)
 
-    battle.gain_item(mon, item_name)
+    battle.item_manager.gain_item(mon, item_name)
 
     _announce_ability_triggered(battle, mon)
 
@@ -2757,12 +2757,12 @@ def フリーズスキン_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def ぶきよう_disable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
-    battle.add_item_disabled_reason(ctx.source, "ぶきよう")
+    battle.item_manager.add_disabled_reason(ctx.source, "ぶきよう")
     return HandlerReturn(value=value)
 
 
 def ぶきよう_enable_item(battle: Battle, ctx: EventContext, value: set[ItemDisabledReason]) -> HandlerReturn:
-    battle.remove_item_disabled_reason(ctx.source, "ぶきよう")
+    battle.item_manager.remove_disabled_reason(ctx.source, "ぶきよう")
     return HandlerReturn(value=value)
 
 
@@ -3143,7 +3143,7 @@ def ものひろい_pickup_foe_item(battle: Battle, ctx: EventContext, value: An
     item_name = foe.last_lost_item_name
     if not item_name:
         return HandlerReturn(value=value)
-    if battle.gain_item(mon, item_name):
+    if battle.item_manager.gain_item(mon, item_name):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 

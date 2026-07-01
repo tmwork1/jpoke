@@ -1392,7 +1392,7 @@ def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 def はたきおとす_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はたきおとすのアイテム除去効果。"""
-    battle.remove_item(target=ctx.defender, source=ctx.attacker)
+    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -1659,7 +1659,7 @@ def フェイント_remove_protect(battle: Battle, ctx: AttackContext, value: An
 
 def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふしょくガスのアイテム除去効果。"""
-    battle.remove_item(target=ctx.defender, source=ctx.attacker)
+    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -2093,7 +2093,7 @@ def もろはのずつき_recoil(battle: Battle, ctx: AttackContext, value: Any)
 def やきつくす_remove_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """やきつくすのきのみ焼却効果。"""
     if ctx.defender.item.is_berry():
-        battle.remove_item(target=ctx.defender, source=ctx.attacker)
+        battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 

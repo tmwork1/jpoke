@@ -214,10 +214,10 @@ def change_item(battle: Battle,
         return True
 
     if not mon.has_item():
-        return battle.gain_item(mon, item_name)
+        return battle.item_manager.gain_item(mon, item_name)
 
     if not item_name:
-        return battle.remove_item(mon, source=source)
+        return battle.item_manager.remove_item(mon, source=source)
 
     if not battle.item_manager.can_change_item(mon, source=source):
         return False
