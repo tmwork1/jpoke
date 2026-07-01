@@ -1,3 +1,5 @@
+# TODO : 採取的にFIELDSに統合する構成はそのままで、定義ファイルはweather.py, terrain.py, global_field.py, side_field.pyに分割する
+
 from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import field as h
 from ..handlers.models import FieldData

@@ -22,13 +22,13 @@ AbilityState = Literal["", "idle", "charged", "active", "inactive", "can_act", "
 
 ContextRole = Literal["source", "target", "attacker", "defender"]
 
-# role:side 形式で、特定の側のロールを指定
+
 RoleSpec = Literal[
     "source:self", "source:foe",
     "target:self", "target:foe",
     "attacker:self",
     "defender:self",
-]
+]  # role:side 形式で、特定の側のロールを指定
 
 
 Side = Literal["self", "foe"]
@@ -42,7 +42,7 @@ Nature = Literal[
     "がんばりや", "すなお", "てれや", "きまぐれ", "まじめ",  # 無補正
 ]
 
-Stat = Literal["H", "A", "B", "C", "D", "S", "ACC", "EVA"]
+Stat = Literal["H", "A", "B", "C", "D", "S", "ACC", "EVA"]  # TODO : poke-envのキーの表記に合わせる (atk, spdなど。docs/poke-env/を確認)
 
 Type = Literal[
     "", "ノーマル", "ほのお", "みず", "でんき", "くさ",
@@ -51,15 +51,16 @@ Type = Literal[
     "あく", "はがね", "フェアリー", "ステラ"
 ]
 
-Gender = Literal["", "オス", "メス"]
+Gender = Literal["", "オス", "メス"]  # TODO : poke-envの英語表記にそろえる
 
-MoveCategory = Literal["物理", "特殊", "変化"]
+MoveCategory = Literal["物理", "特殊", "変化"]  # TODO : poke-envの英語表記にそろえる
 
 MoveTarget = Literal["foe", "foe_side", "own_side", "self", "field"]
 
-AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]
+AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]  # TODO : 専用モジュールを作り、data/ailment.pyから自動生成するようにする
 
 VolatileName = Literal[
+    # TODO : 専用モジュールを作り、data/volatile.pyから自動生成するようにする
     "アクアリング",
     "あばれる",
     "あめまみれ",
@@ -121,15 +122,6 @@ VolatileName = Literal[
     "はねやすめ",
     "もりののろい",
 ]
-
-GlobalFieldName = Literal["じゅうりょく", "トリックルーム", "マジックルーム", "ワンダールーム", "フェアリーロック"]
-
-SideFieldName = Literal["リフレクター", "ひかりのかべ", "しんぴのまもり", "しろいきり", "おいかぜ", "ねがいごと",
-                        "まきびし", "どくびし", "ステルスロック", "ねばねばネット", "オーロラベール",
-                        "いやしのねがい"]
-
-WeatherName = Literal["", "はれ", "あめ", "ゆき", "すなあらし", "おおひでり", "おおあめ", "らんきりゅう"]
-TerrainName = Literal["", "エレキフィールド", "グラスフィールド", "サイコフィールド", "ミストフィールド"]
 
 BoostSource = Literal["", "item", "field"]
 
