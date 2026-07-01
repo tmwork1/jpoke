@@ -5883,10 +5883,12 @@ MOVES: dict[str, MoveData] = {
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.もえつきる_fail_if_no_fire_type,
                 subject_spec="attacker:self",
-                priority=30,
+                priority=10,
             ),
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.もえつきる_remove_fire_type,
+                subject_spec="attacker:self",
+                priority=180,
             ),
         }
     ),
