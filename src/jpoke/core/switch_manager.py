@@ -89,7 +89,7 @@ class SwitchManager:
 
         # バトンタッチ（またはしっぽきり）の引き継ぎデータを確保
         baton_data = state.baton_pass_data
-        state.baton_pass_data = None
+        state.baton_pass_data = {}
 
         old = state.active
         if old is not None:
@@ -99,7 +99,7 @@ class SwitchManager:
         self._switch_in(state, new)
 
         # バトンタッチのランク・volatile を交代先に適用する
-        if baton_data is not None:
+        if baton_data:
             # ランク引き継ぎ（クリアボディ等を経由しない直接代入）
             for stat, v in baton_data["rank"].items():
                 new.rank[stat] = v

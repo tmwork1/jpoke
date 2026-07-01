@@ -23,7 +23,7 @@ class PlayerState:
         self.required_command_type: CommandType | None = None  # 木探索を行う際に補完すべきコマンドタイプ（Noneの場合は補完不要）
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
-        self.baton_pass_data: dict | None = None  # バトンタッチの引き継ぎデータ # TODO : {}で初期化し、Noneを許容しないようにする
+        self.baton_pass_data: dict = {}  # バトンタッチの引き継ぎデータ
 
     def __deepcopy__(self, memo):
         cls = self.__class__
