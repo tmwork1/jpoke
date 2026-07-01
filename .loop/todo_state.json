@@ -6,11 +6,11 @@
     "review_extra": ""
   },
   "todo_queue": [
+    "採取的にFIELDSに統合する構成はそのままで、定義ファイルはweather.py, terrain.py, global_field.py, side_field.pyに分割する",
     "専用モジュールを作り、data/global_field.pyから自動生成するようにする",
     "専用モジュールを作り、data/side_field.pyから自動生成するようにする",
     "専用モジュールを作り、data/weather.pyから自動生成するようにする",
     "専用モジュールを作り、data/terrain.pyから自動生成するようにする",
-    "採取的にFIELDSに統合する構成はそのままで、定義ファイルはweather.py, terrain.py, global_field.py, side_field.pyに分割する",
     "poke-envのキーの表記に合わせる (atk, spdなど。docs/poke-env/を確認)",
     "poke-envの英語表記にそろえる",
     "poke-envの英語表記にそろえる"

@@ -35,7 +35,7 @@
 
 - **ABILITIES** ([data/ability.py](src/jpoke/data/ability.py)) - 特性定義（299種）
 - **ITEMS** ([data/item.py](src/jpoke/data/item.py)) - アイテム定義（154種）
-- **FIELDS** ([data/field.py](src/jpoke/data/field.py)) - フィールド効果定義（18種）
+- **FIELDS** ([data/field/](src/jpoke/data/field)) - フィールド効果定義（18種）
 - **VOLATILES** ([data/volatile.py](src/jpoke/data/volatile.py)) - 揮発性状態定義（24種）
 - **AILMENTS** ([data/ailment.py](src/jpoke/data/ailment.py)) - 状態異常定義（6種）
 
