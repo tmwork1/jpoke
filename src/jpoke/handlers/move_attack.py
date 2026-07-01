@@ -865,6 +865,11 @@ def じごくぐるま_recoil(battle: Battle, ctx: AttackContext, value: Any) ->
     return _recoil(battle, ctx, value, 1/4)
 
 
+def じごくづき_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じごくづきの追加効果: 2ターンの間、相手が音技を使えなくなる。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="じごくづき", count=2)
+
+
 def じたばた_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """じたばた: 自分の残りHPが少ないほど威力が高くなる（きしかいせいと同計算）。"""
     return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp) * 4096)
@@ -1950,6 +1955,24 @@ def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: Attac
     return apply_confusion_to_defender(battle, ctx, value)
 
 
+def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """むしくい・ついばむ: 相手のバトルに効果のあるきのみを奪って自分が消費する。
+
+    take_item はねんちゃくチェックを内包し、attacker がアイテムを
+    持っている場合は失敗して何もしない。
+    """
+    defender = ctx.defender
+    attacker = ctx.attacker
+    if not defender.has_item() or not defender.item.is_berry():
+        return HandlerReturn(value=value)
+    # take_item でdefenderのきのみをattackerに移す（ねんちゃく等で失敗する場合あり）
+    if not battle.item_manager.take_item(defender):
+        return HandlerReturn(value=value)
+    # attackerがきのみを得たので効果を発動して消費する
+    battle.force_trigger_berry(attacker)
+    return HandlerReturn(value=value)
+
+
 def むしのさざめき_reduce_defender_D(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"D": -1}, chance=0.1)
 
@@ -2026,6 +2049,41 @@ def メテオビーム_charge(battle: Battle, ctx: AttackContext, value: Any) ->
 
 def もえあがるいかり_apply_flinch_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
+
+
+def もえつきる_fail_if_no_fire_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """もえつきる: ほのおタイプを持たない場合に失敗させる。"""
+    if not ctx.attacker.has_type("ほのお"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "もえつきる_ほのおタイプなし"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def もえつきる_remove_fire_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """もえつきる: 命中後に自分のほのおタイプを除去する。
+
+    removed_types に追加することで、交代するまでほのおタイプを持たない状態になる。
+    """
+    mon = ctx.attacker
+    if "ほのお" not in mon.removed_types:
+        mon.removed_types.append("ほのお")
+    return HandlerReturn(value=value)
+
+
+def もえつきる_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """もえつきる: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
 
 
 def もろはのずつき_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

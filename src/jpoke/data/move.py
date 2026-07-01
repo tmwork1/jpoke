@@ -43,8 +43,7 @@ MOVES: dict[str, MoveData] = {
             )
         }
     ),
-    "こんらん": MoveData(
-        # TODO : _こんらん、に改名する
+    "_こんらん": MoveData(
         type="",
         category="物理",
         pp=99999,
@@ -1195,7 +1194,12 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        # TODO : ハンドラ実装
+        labels=["contact"],
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.じごくづき_apply_volatile_to_defender,
+            )
+        }
     ),
     "シザークロス": MoveData(
         type="むし",
@@ -1817,6 +1821,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
         handlers={
+            Event.ON_HIT: h.MoveHandler(ha.むしくい_steal_and_use_berry)
         }
     ),
     "つけあがる": MoveData(
@@ -2238,7 +2243,16 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         labels=["contact"],
     ),
-    # TODO : トラバサミ実装
+    "トラバサミ": MoveData(
+        type="はがね",
+        category="物理",
+        pp=16,
+        power=35,
+        accuracy=100,
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        }
+    ),
     "ドラムアタック": MoveData(
         type="くさ",
         category="物理",
@@ -3315,8 +3329,8 @@ MOVES: dict[str, MoveData] = {
         power=60,
         accuracy=100,
         labels=["contact"],
-        # TODO : ハンドラ実装
         handlers={
+            Event.ON_HIT: h.MoveHandler(ha.むしくい_steal_and_use_berry)
         }
     ),
     "むねんのつるぎ": MoveData(
@@ -5855,7 +5869,27 @@ MOVES: dict[str, MoveData] = {
             )
         }
     ),
-    # TODO : もえつきる実装
+    "もえつきる": MoveData(
+        type="ほのお",
+        category="特殊",
+        pp=8,
+        power=130,
+        accuracy=100,
+        handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.もえつきる_thaw_attacker,
+                priority=5,
+            ),
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.もえつきる_fail_if_no_fire_type,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.もえつきる_remove_fire_type,
+            ),
+        }
+    ),
     "やきつくす": MoveData(
         type="ほのお",
         category="特殊",
