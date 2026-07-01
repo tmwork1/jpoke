@@ -126,6 +126,8 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 
 1. handlers/ と data/ の実装をレビュー、問題があれば修正
    - handlers を修正した場合は python scripts/sort_handlers.py src/jpoke/handlers/<category>.py を実行する
+   - data/ability.py・data/item.py・data/move.py を修正した場合、対応するスクリプト
+     （sort_abilities.py / sort_items.py / sort_moves.py）を実行する
 2. {config.test_files} にテストを追加
 3. python scripts/sort_tests.py {config.test_files をスペース区切り} でソート
 4. python scripts/generate_test_list.py でテスト一覧更新
@@ -166,13 +168,17 @@ jpoke {config.category} 実装タスク: {entry}
 2. CLAUDE.md のハンドラ約束事に従い、handlers/ と data/ に実装する
 3. python scripts/sort_handlers.py src/jpoke/handlers/<category>.py でハンドラを五十音順に並び替える
    （<category> は変更した handlers/ のファイル名に合わせる）
+4. data/ability.py・data/item.py・data/move.py にエントリを追加・変更した場合、対応するスクリプトを実行する:
+   python scripts/sort_abilities.py（data/ability.py を変更した場合）
+   python scripts/sort_items.py（data/item.py を変更した場合）
+   python scripts/sort_moves.py（data/move.py を変更した場合）
 {config.impl_extra}
-4. テストは書かない（review-test エージェントが担当）
-5. {config.progress_file} の {entry} 行の実装列を `x` に更新する
-6. 変更をすべてコミットする:
+5. テストは書かない（review-test エージェントが担当）
+6. {config.progress_file} の {entry} 行の実装列を `x` に更新する
+7. 変更をすべてコミットする:
    git add -A
    git commit -m "impl: {entry}"
-7. main に戻る:
+8. main に戻る:
    git checkout main
 ```
 

@@ -122,7 +122,11 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 - `handlers/<category>.py` に関数を実装したら、以下の順で実行する：
   1. `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` — 日本語始まりの公開ハンドラ関数を五十音順に並び替える
-  2. `python -m pytest tests/ -v` — 全テストが通ることを確認する
+  2. `data/ability.py` / `data/item.py` / `data/move.py` にエントリを追加・変更した場合、対応するスクリプトを実行する：
+     - `python scripts/sort_abilities.py` — `ABILITIES` 辞書を五十音順に並び替える
+     - `python scripts/sort_items.py` — `ITEMS` 辞書を五十音順に並び替える
+     - `python scripts/sort_moves.py` — `MOVES` 辞書を五十音順に並び替える
+  3. `python -m pytest tests/ -v` — 全テストが通ることを確認する
 
 ## テストの追加ルール
 

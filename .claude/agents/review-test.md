@@ -52,6 +52,7 @@ git worktree になっている（例: `C:\Users\tmtmp\Documents\pokemon\jpoke-r
 
 - [ ] レビュー指摘があれば修正した
 - [ ] handlers を修正した場合は `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` を実行した
+- [ ] `data/ability.py` / `data/item.py` / `data/move.py` を修正した場合、対応するスクリプト（`sort_abilities.py` / `sort_items.py` / `sort_moves.py`）を実行した
 - [ ] テストを追加して `python scripts/sort_tests.py <テストファイル>` でソートした
 - [ ] `python scripts/generate_test_list.py` を実行して `docs/tests/` を更新した
 - [ ] `python -m pytest tests/ -v` で全件パスした

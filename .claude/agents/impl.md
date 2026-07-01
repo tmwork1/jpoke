@@ -35,6 +35,7 @@ tools:
 - [ ] `data/` でハンドラを登録した
 - [ ] 新しい `Literal` 型が必要なら `utils/type_defs.py` に追加した
 - [ ] `python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` を実行した
+- [ ] `data/ability.py` / `data/item.py` / `data/move.py` を変更した場合、対応するスクリプト（`sort_abilities.py` / `sort_items.py` / `sort_moves.py`）を実行した
 - [ ] `docs/progress/<category>.md` の実装列（実装）を `x` に更新した
 - [ ] 変更をコミットした（`git add -A && git commit -m "impl: {entry}"`）
 - [ ] main ブランチに戻った（`git checkout main`）
