@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" />
+  <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; Poke-env  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <script src="_static/js/versions.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Examples" href="examples/index.html" />
+    <link rel="prev" title="Poke-env: A Python Interface for Pokémon Showdown Bots" href="index.html" /> 
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="poke-env" /><meta name="readthedocs-version-slug" content="stable" /><meta name="readthedocs-resolver-filename" content="/getting_started.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Poke-env
+          </a>
+              <div class="switch-menus">
+                <div class="version-switch"></div>
+                <div class="language-switch"></div>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installing-poke-env">Installing <code class="docutils literal notranslate"><span class="pre">poke-env</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-a-pokemon-showdown-server">Configuring a Pokémon Showdown Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#your-first-local-battle">Your First Local Battle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-agents">Creating Agents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-showdown-players">Configuring Showdown Players</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#connecting-bots-to-showdown">Connecting Bots to Showdown</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#local-servers">Local Servers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#official-showdown-server">Official Showdown Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-servers">Custom Servers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#connection-lifecycle">Connection Lifecycle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#what-next">What Next</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Main modules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules/battle.html">The Battle object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/player.html">The player object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/pokemon.html">The pokémon object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/move.html">The move object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/env.html">The env object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/other_environment.html">Other objects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Standalone submodules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules/data.html">Data - Access and manipulate pokémon data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/ps_client.html">PS Client - Interact with Pokémon Showdown servers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/teambuilder.html">Teambuilder - Parse and generate showdown teams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/concurrency.html">Concurrency utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/calc.html">Damage calculator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/stats.html">Stats utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/exceptions.html">Exceptions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Poke-env</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/getting_started.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<span id="id1"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<p>This section guides you through installing <code class="docutils literal notranslate"><span class="pre">poke-env</span></code> and setting up a Pokémon Showdown server.</p>
+<section id="installing-poke-env">
+<h2>Installing <code class="docutils literal notranslate"><span class="pre">poke-env</span></code><a class="headerlink" href="#installing-poke-env" title="Link to this heading"></a></h2>
+<p>Ensure Python 3.10 or later is installed. Package dependencies are installed
+automatically.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>poke-env
+</pre></div>
+</div>
+</section>
+<section id="configuring-a-pokemon-showdown-server">
+<span id="configuring-a-showdown-server"></span><h2>Configuring a Pokémon Showdown Server<a class="headerlink" href="#configuring-a-pokemon-showdown-server" title="Link to this heading"></a></h2>
+<p>Though <code class="docutils literal notranslate"><span class="pre">poke-env</span></code> can interact with a <a class="reference external" href="https://play.pokemonshowdown.com/">public server</a>, hosting a private server is advisable for training agents due to performance and rate limitations on the public server.</p>
+<ol class="arabic simple">
+<li><p>Install <a class="reference external" href="https://nodejs.org/en/">Node.js v10+</a>.</p></li>
+<li><p>Clone the Pokémon Showdown repository and set it up:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/smogon/pokemon-showdown.git
+<span class="nb">cd</span><span class="w"> </span>pokemon-showdown
+npm<span class="w"> </span>install
+cp<span class="w"> </span>config/config-example.js<span class="w"> </span>config/config.js
+node<span class="w"> </span>pokemon-showdown<span class="w"> </span>start<span class="w"> </span>--no-security
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">--no-security</span></code> flag disables crucial security features, use with caution. This flag facilitates AI training by removing rate limiting and authentication requirements.</p>
+</div>
+</section>
+<section id="your-first-local-battle">
+<h2>Your First Local Battle<a class="headerlink" href="#your-first-local-battle" title="Link to this heading"></a></h2>
+<p>Once your local server is running, you can verify your setup by running two
+built-in players against each other. <code class="docutils literal notranslate"><span class="pre">RandomPlayer</span></code> uses the default
+localhost server configuration, so no explicit account or server setup is
+required for this example.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.player</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomPlayer</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">player_1</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">max_concurrent_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">player_2</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">max_concurrent_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">player_1</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">player_2</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished battles: </span><span class="si">{</span><span class="n">player_1</span><span class="o">.</span><span class="n">n_finished_battles</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Player 1 wins: </span><span class="si">{</span><span class="n">player_1</span><span class="o">.</span><span class="n">n_won_battles</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+<section id="creating-agents">
+<h2>Creating Agents<a class="headerlink" href="#creating-agents" title="Link to this heading"></a></h2>
+<p>Agents in <code class="docutils literal notranslate"><span class="pre">poke-env</span></code> are instances of the <code class="docutils literal notranslate"><span class="pre">Player</span></code> class. Explore the following examples to get started:</p>
+<ul class="simple">
+<li><p>Quickstart: <a class="reference internal" href="examples/quickstart.html"><span class="doc">poke-env Quickstart: Practical Examples and Snippets</span></a></p></li>
+<li><p>Custom team builder: <a class="reference internal" href="examples/using_a_custom_teambuilder.html"><span class="doc">Creating a custom teambuilder</span></a></p></li>
+<li><p>Reinforcement learning with action masking: <a class="reference internal" href="examples/reinforcement_learning.html#reinforcement-learning"><span class="std std-ref">Reinforcement learning with Stable-Baselines3</span></a></p></li>
+<li><p>Action mapping and strict/fake conversion modes: <a class="reference internal" href="examples/action_mapping_and_strict_modes.html#action-mapping-and-strict-modes"><span class="std std-ref">Action Mapping and Strict/Fake Modes</span></a></p></li>
+<li><p>Strict battle-state validation: <a class="reference internal" href="examples/strict_battle_tracking.html#strict-battle-tracking"><span class="std std-ref">Strict Battle Tracking</span></a></p></li>
+<li><p>Replay export: <a class="reference internal" href="examples/saving_replays.html#saving-replays"><span class="std std-ref">Saving Battle Replays</span></a></p></li>
+</ul>
+</section>
+<section id="configuring-showdown-players">
+<h2>Configuring Showdown Players<a class="headerlink" href="#configuring-showdown-players" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Player</span></code> instances require account configurations tied to Showdown accounts.
+Auto-generated configurations are enough for local or unauthenticated servers.
+For authenticated servers or custom setups, pass an
+<code class="docutils literal notranslate"><span class="pre">AccountConfiguration</span></code> object explicitly.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">poke_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">AccountConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.player</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomPlayer</span>
+
+<span class="c1"># No authentication required</span>
+<span class="n">my_account_config</span> <span class="o">=</span> <span class="n">AccountConfiguration</span><span class="p">(</span><span class="s2">&quot;my_username&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">account_configuration</span><span class="o">=</span><span class="n">my_account_config</span><span class="p">)</span>
+
+<span class="c1"># Authentication required</span>
+<span class="n">my_account_config</span> <span class="o">=</span> <span class="n">AccountConfiguration</span><span class="p">(</span><span class="s2">&quot;my_username&quot;</span><span class="p">,</span> <span class="s2">&quot;super-secret-password&quot;</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span>
+    <span class="n">account_configuration</span><span class="o">=</span><span class="n">my_account_config</span><span class="p">,</span>
+    <span class="n">server_configuration</span><span class="o">=...</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Auto-generated configuration for local use</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="connecting-bots-to-showdown">
+<h2>Connecting Bots to Showdown<a class="headerlink" href="#connecting-bots-to-showdown" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Player</span></code> instances require an account configuration to connect to a Pokémon
+Showdown server. You can configure the connection to local servers, the
+official Showdown server, or other custom servers.</p>
+<section id="local-servers">
+<h3>Local Servers<a class="headerlink" href="#local-servers" title="Link to this heading"></a></h3>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">Player</span></code> instances use <code class="docutils literal notranslate"><span class="pre">LocalhostServerConfiguration</span></code>, targeting the default local server endpoint.</p>
+</section>
+<section id="official-showdown-server">
+<h3>Official Showdown Server<a class="headerlink" href="#official-showdown-server" title="Link to this heading"></a></h3>
+<p>To connect to the official Pokémon Showdown server using <code class="docutils literal notranslate"><span class="pre">ShowdownServerConfiguration</span></code>, a player configuration with a password is required.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">poke_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">AccountConfiguration</span><span class="p">,</span> <span class="n">ShowdownServerConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.player</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomPlayer</span>
+<span class="n">account_config</span> <span class="o">=</span> <span class="n">AccountConfiguration</span><span class="p">(</span><span class="s2">&quot;my_username&quot;</span><span class="p">,</span> <span class="s2">&quot;super-secret-password&quot;</span><span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span>
+    <span class="n">server_configuration</span><span class="o">=</span><span class="n">ShowdownServerConfiguration</span><span class="p">,</span>
+    <span class="n">account_configuration</span><span class="o">=</span><span class="n">account_config</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-servers">
+<h3>Custom Servers<a class="headerlink" href="#custom-servers" title="Link to this heading"></a></h3>
+<p>For custom servers, create a <code class="docutils literal notranslate"><span class="pre">ServerConfiguration</span></code> object with the server URL and authentication endpoint.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">poke_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.player</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomPlayer</span>
+<span class="n">custom_config</span> <span class="o">=</span> <span class="n">ServerConfiguration</span><span class="p">(</span>
+    <span class="s2">&quot;ws://my.custom.host:5432/showdown/websocket&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;https://my.custom.host/action.php?&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">server_configuration</span><span class="o">=</span><span class="n">custom_config</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="connection-lifecycle">
+<h3>Connection Lifecycle<a class="headerlink" href="#connection-lifecycle" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Player</span></code> starts a background Showdown listener by default
+(<code class="docutils literal notranslate"><span class="pre">start_listening=True</span></code>). That is typically the right choice for live
+battles.</p>
+<p>If you want explicit teardown in scripts, notebooks, or tests, stop the
+underlying client when you are done:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.player</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomPlayer</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="n">player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+    <span class="n">opponent</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">player</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">opponent</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">player</span><span class="o">.</span><span class="n">ps_client</span><span class="o">.</span><span class="n">stop_listening</span><span class="p">()</span>
+        <span class="k">await</span> <span class="n">opponent</span><span class="o">.</span><span class="n">ps_client</span><span class="o">.</span><span class="n">stop_listening</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>For offline tests or object construction that should not connect to Showdown,
+use <code class="docutils literal notranslate"><span class="pre">start_listening=False</span></code>.</p>
+</section>
+</section>
+<section id="what-next">
+<h2>What Next<a class="headerlink" href="#what-next" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Browse task-oriented guides: <a class="reference internal" href="examples/index.html"><span class="doc">Examples</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Poke-env: A Python Interface for Pokémon Showdown Bots" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples/index.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Haris Sahovic.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

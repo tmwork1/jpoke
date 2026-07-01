@@ -6,11 +6,9 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "battle.queryに移譲してBattleクラスから削除すべきかもしれない",
     "実装をswitch_managerからqueryに移譲して、Battleクラスのメソッドは廃止したほうがよいかもしれない。"
   ],
   "completed": [
-    "item_managerに移譲してBattleクラスにはメソッドを残さない",
     "アイアンテール_reduce_def_B()のように関数名を具体化する。他の同種ハンドラも同様。",
     "ひるみ(flinch)を付与するということを関数名に含める。他の同種ハンドラも同様。",
     "battle.modify_hp(r=-1/3)とすればよい。他のハンドラも同様に修正する。",
@@ -40,7 +38,9 @@
     "追加効果のない技やハンドラを実装しない技にはhandlers={}とし、同じ行にコメントを残す。",
     "command_managerに移譲したほうがよいかもしれない。（battle.py:436）",
     "command_managerに移譲したほうがよいかもしれない。（battle.py:485）",
-    "item_managerに実装を完全移譲する"
+    "item_managerに実装を完全移譲する",
+    "item_managerに移譲してBattleクラスにはメソッドを残さない",
+    "battle.queryに移譲してBattleクラスから削除すべきかもしれない"
   ],
   "failed": []
 }

@@ -479,7 +479,7 @@ def test_きれいなぬけがら():
         team0=[Pokemon("ピカチュウ", item_name="きれいなぬけがら"), Pokemon("ライチュウ")],
         team1=[Pokemon("ピカチュウ", ability_name="かげふみ")],
     )
-    assert battle.can_switch(battle.players[0])
+    assert battle.query.can_switch(battle.players[0])
 
 
 def test_キーのみ_ターン終了でこんらん回復():

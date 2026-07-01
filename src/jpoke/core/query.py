@@ -176,6 +176,24 @@ class PokemonQuery:
         type_modifier = self.battle.damage_calculator.calc_def_type_modifier(ctx)
         return 0 < type_modifier / 4096 < 1
 
+    def can_switch(self, player: Player) -> bool:
+        """プレイヤーが交代可能かどうかを判定する。
+
+        Args:
+            player: 交代可能かを判定するプレイヤー
+
+        Returns:
+            bool: 交代可能な場合True、そうでない場合False
+        """
+        state = self.battle.player_states[player]
+        # 控えのポケモンがすべて瀕死の場合は交代不可
+        if all(mon.fainted for mon in state.bench):
+            return False
+        # 場のポケモンがとらわれ状態にある場合は交代不可
+        if self.is_trapped(state.active):
+            return False
+        return True
+
     def get_volatile_duration(self, ctx: AttackContext, name: str, count: int) -> int:
         """ON_MODIFY_DURATION を発火して揮発性状態の持続ターン数を返す。
 

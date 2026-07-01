@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from collections import defaultdict
-from jpoke.core.lethal import LethalState, LethalContext, add_dist
+from jpoke.utils.lethal_dist import LethalState, add_dist
 
 
 def _heal(hp_dist: LethalDist,

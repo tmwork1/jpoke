@@ -169,7 +169,7 @@ def _apply_contact_counter_chip(battle: Battle,
 def _trigger_emergency_switch(battle: Battle, mon: Pokemon):
     """緊急交代を発動する。"""
     player = battle.get_player(mon)
-    if battle.can_switch(player):
+    if battle.query.can_switch(player):
         battle.player_states[player].interrupt = Interrupt.EMERGENCY
         _announce_ability_triggered(battle, mon=mon)
 

@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stats utilities &mdash; Poke-env  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <script src="../_static/js/versions.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Exceptions" href="exceptions.html" />
+    <link rel="prev" title="Damage calculator" href="calc.html" /> 
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="poke-env" /><meta name="readthedocs-version-slug" content="stable" /><meta name="readthedocs-resolver-filename" content="/modules/stats.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Poke-env
+          </a>
+              <div class="switch-menus">
+                <div class="version-switch"></div>
+                <div class="language-switch"></div>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Main modules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="battle.html">The Battle object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="player.html">The player object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pokemon.html">The pokémon object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="move.html">The move object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">The env object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="other_environment.html">Other objects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Standalone submodules documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data - Access and manipulate pokémon data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ps_client.html">PS Client - Interact with Pokémon Showdown servers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teambuilder.html">Teambuilder - Parse and generate showdown teams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrency utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calc.html">Damage calculator</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Stats utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#poke_env.stats.compute_raw_stats"><code class="docutils literal notranslate"><span class="pre">compute_raw_stats()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#poke_env.stats.compute_raw_stats_dvs"><code class="docutils literal notranslate"><span class="pre">compute_raw_stats_dvs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Poke-env</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Stats utilities</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/stats.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="stats-utilities">
+<span id="stats"></span><h1>Stats utilities<a class="headerlink" href="#stats-utilities" title="Link to this heading"></a></h1>
+<p>This module provides utilities for computing raw Pokémon stats based on base stats, IVs/DVs, EVs, nature, and level.</p>
+<p id="module-poke_env.stats">This module contains utility functions and objects related to stats.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="poke_env.stats.compute_raw_stats">
+<span class="sig-prename descclassname"><span class="pre">poke_env.stats.</span></span><span class="sig-name descname"><span class="pre">compute_raw_stats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">evs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ivs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">nature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="data.html#poke_env.data.gen_data.GenData" title="poke_env.data.gen_data.GenData"><span class="pre">GenData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.stats.compute_raw_stats" title="Link to this definition"></a></dt>
+<dd><p>Compute raw stats for a Pokémon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – Pokémon species.</p></li>
+<li><p><strong>evs</strong> – List of EV values (size 6).</p></li>
+<li><p><strong>ivs</strong> – List of IV values (size 6).</p></li>
+<li><p><strong>level</strong> – Pokémon level.</p></li>
+<li><p><strong>nature</strong> – Pokémon nature.</p></li>
+<li><p><strong>data</strong> – <code class="docutils literal notranslate"><span class="pre">GenData</span></code> instance providing Pokédex information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Raw stats as <code class="docutils literal notranslate"><span class="pre">[hp,</span> <span class="pre">atk,</span> <span class="pre">def,</span> <span class="pre">spa,</span> <span class="pre">spd,</span> <span class="pre">spe]</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="poke_env.stats.compute_raw_stats_dvs">
+<span class="sig-prename descclassname"><span class="pre">poke_env.stats.</span></span><span class="sig-name descname"><span class="pre">compute_raw_stats_dvs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="data.html#poke_env.data.gen_data.GenData" title="poke_env.data.gen_data.GenData"><span class="pre">GenData</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.stats.compute_raw_stats_dvs" title="Link to this definition"></a></dt>
+<dd><p>Compute raw stats for a Pokémon in gen 1 or 2 as calculation for those generations is different. EV’s are not included as they are assumed to be maxed out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>species</strong> – Pokémon species.</p></li>
+<li><p><strong>evs</strong> – List of EV values (size 6).</p></li>
+<li><p><strong>dvs</strong> – List of DV values (size 6).</p></li>
+<li><p><strong>level</strong> – Pokémon level.</p></li>
+<li><p><strong>data</strong> – <code class="docutils literal notranslate"><span class="pre">GenData</span></code> instance providing Pokédex information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Raw stats as <code class="docutils literal notranslate"><span class="pre">[hp,</span> <span class="pre">atk,</span> <span class="pre">def,</span> <span class="pre">spa,</span> <span class="pre">spd,</span> <span class="pre">spe]</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="calc.html" class="btn btn-neutral float-left" title="Damage calculator" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="exceptions.html" class="btn btn-neutral float-right" title="Exceptions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Haris Sahovic.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

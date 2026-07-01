@@ -555,7 +555,7 @@ def さむいギャグ_activate_weather_and_pivot(battle: Battle, ctx: AttackCon
 
     player = battle.get_player(ctx.attacker)
 
-    can_switch = battle.can_switch(player)
+    can_switch = battle.query.can_switch(player)
     if can_switch:
         battle.player_states[player].interrupt = Interrupt.PIVOT
 
@@ -618,7 +618,7 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    if not battle.can_switch(player):
+    if not battle.query.can_switch(player):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload={"reason": "しっぽきり_交代不可"}
@@ -756,7 +756,7 @@ def すてゼリフ_modify_defender_stats_and_pivot(battle: Battle, ctx: AttackC
         return result
 
     player = battle.get_player(ctx.attacker)
-    if battle.can_switch(player):
+    if battle.query.can_switch(player):
         battle.player_states[player].interrupt = Interrupt.PIVOT
 
     return HandlerReturn(value=value)

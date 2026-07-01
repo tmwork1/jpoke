@@ -1,0 +1,722 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>poke-env Quickstart: Practical Examples and Snippets &mdash; Poke-env  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+      <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <script src="../_static/js/versions.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Creating a custom teambuilder" href="using_a_custom_teambuilder.html" />
+    <link rel="prev" title="Examples" href="index.html" /> 
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="poke-env" /><meta name="readthedocs-version-slug" content="stable" /><meta name="readthedocs-resolver-filename" content="/examples/quickstart.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Poke-env
+          </a>
+              <div class="switch-menus">
+                <div class="version-switch"></div>
+                <div class="language-switch"></div>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#choose-an-example">Choose an Example</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">poke-env</span></code> Quickstart: Practical Examples and Snippets</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#Creating-Agents-and-Making-Them-Battle">Creating Agents and Making Them Battle</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Building-a-Max-Damage-Player">Building a Max Damage Player</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Setting-teams">Setting teams</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#Other-Initialization-Options-for-Player-Objects">Other Initialization Options for <code class="docutils literal notranslate"><span class="pre">Player</span></code> Objects</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="using_a_custom_teambuilder.html">Creating a custom teambuilder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="connecting_to_showdown_and_challenging_humans.html">Connecting to Showdown and Challenging Humans</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tracking_observations.html">Tracking battle observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="reinforcement_learning.html">Reinforcement learning with Stable-Baselines3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="self_play.html">Self-play reinforcement learning with SuperSuit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="action_mapping_and_strict_modes.html">Action Mapping and Strict/Fake Modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="strict_battle_tracking.html">Strict Battle Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="saving_replays.html">Saving Battle Replays</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Main modules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/battle.html">The Battle object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/player.html">The player object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/pokemon.html">The pokémon object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/move.html">The move object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/env.html">The env object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/other_environment.html">Other objects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Standalone submodules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/data.html">Data - Access and manipulate pokémon data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/ps_client.html">PS Client - Interact with Pokémon Showdown servers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/teambuilder.html">Teambuilder - Parse and generate showdown teams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/concurrency.html">Concurrency utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/calc.html">Damage calculator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/stats.html">Stats utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/exceptions.html">Exceptions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Poke-env</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Examples</a></li>
+      <li class="breadcrumb-item active"><code class="docutils literal notranslate"><span class="pre">poke-env</span></code> Quickstart: Practical Examples and Snippets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/examples/quickstart.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="poke-env-Quickstart:-Practical-Examples-and-Snippets">
+<h1><code class="docutils literal notranslate"><span class="pre">poke-env</span></code> Quickstart: Practical Examples and Snippets<a class="headerlink" href="#poke-env-Quickstart:-Practical-Examples-and-Snippets" title="Link to this heading"></a></h1>
+<p>Complete source code for this example is available <a class="reference external" href="https://github.com/hsahovic/poke-env/blob/master/examples/quickstart.ipynb">here</a>.</p>
+<p><strong>Best for</strong>: your first local battle and your first custom agent.</p>
+<p><strong>Prerequisites</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">poke-env</span></code></p></li>
+<li><p>a local Pokémon Showdown server running with <code class="docutils literal notranslate"><span class="pre">--no-security</span></code></p></li>
+</ul>
+<p>If setup does not work as expected, revisit the getting started guide and confirm your local server is running.</p>
+<section id="Creating-Agents-and-Making-Them-Battle">
+<h2>Creating Agents and Making Them Battle<a class="headerlink" href="#Creating-Agents-and-Making-Them-Battle" title="Link to this heading"></a></h2>
+<section id="Creating-Built-in-Agents">
+<h3>Creating Built-in Agents<a class="headerlink" href="#Creating-Built-in-Agents" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">poke-env</span></code> comes with a few built-in agents. These agents are meant to be used as a baseline for your own agents.</p>
+<p>The simplest agent is the <code class="docutils literal notranslate"><span class="pre">RandomPlayer</span></code> agent. This agent will select a random valid move at each turn. Let’s create one:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">poke_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomPlayer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenData</span>
+
+<span class="c1"># The RandomPlayer is a basic agent that makes decisions randomly,</span>
+<span class="c1"># serving as a starting point for more complex agent development.</span>
+<span class="n">random_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Creating-a-Battle">
+<h3>Creating a Battle<a class="headerlink" href="#Creating-a-Battle" title="Link to this heading"></a></h3>
+<p>To create a battle, let’s create a second agent and use the <code class="docutils literal notranslate"><span class="pre">battle_against</span></code> method. It’s an asynchronous method, so we need to <code class="docutils literal notranslate"><span class="pre">await</span></code> it.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">second_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+
+<span class="c1"># The battle_against method initiates a battle between two players.</span>
+<span class="c1"># Here we are using asynchronous programming (await) to start the battle.</span>
+<span class="k">await</span> <span class="n">random_player</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">second_player</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>If you want to look at this battle, you can open a browser at <a class="reference external" href="http://localhost:8000">http://localhost:8000</a> - you should see the battle in the lobby.</p>
+</section>
+<section id="Inspecting-the-Result">
+<h3>Inspecting the Result<a class="headerlink" href="#Inspecting-the-Result" title="Link to this heading"></a></h3>
+<p>Here are a couple of ways to inspect the result of this battle.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># n_won_battles and n_finished_battles</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Player </span><span class="si">{</span><span class="n">random_player</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> won </span><span class="si">{</span><span class="n">random_player</span><span class="o">.</span><span class="n">n_won_battles</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">random_player</span><span class="o">.</span><span class="n">n_finished_battles</span><span class="si">}</span><span class="s2"> played&quot;</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;Player </span><span class="si">{</span><span class="n">second_player</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> won </span><span class="si">{</span><span class="n">second_player</span><span class="o">.</span><span class="n">n_won_battles</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">second_player</span><span class="o">.</span><span class="n">n_finished_battles</span><span class="si">}</span><span class="s2"> played&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># Looping over battles</span>
+
+<span class="k">for</span> <span class="n">battle_tag</span><span class="p">,</span> <span class="n">battle</span> <span class="ow">in</span> <span class="n">random_player</span><span class="o">.</span><span class="n">battles</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">battle_tag</span><span class="p">,</span> <span class="n">battle</span><span class="o">.</span><span class="n">won</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Player RandomPlayer 1 won 1 out of 1 played
+Player RandomPlayer 2 won 0 out of 1 played
+battle-gen9randombattle-170418 True
+</pre></div></div>
+</div>
+<p>You can look at more properties of the <a class="reference internal" href="../modules/player.html"><span class="doc">Player</span></a> and <a class="reference internal" href="../modules/battle.html"><span class="doc">Battle</span></a> classes in the documentation.</p>
+</section>
+<section id="Running-a-Cross-Evaluation">
+<h3>Running a Cross-Evaluation<a class="headerlink" href="#Running-a-Cross-Evaluation" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">poke-env</span></code> provides a <code class="docutils literal notranslate"><span class="pre">cross_evaluate</span></code> function, that allows you to run a cross evaluation between multiple agents. It will run a number of battles between the two agents, and return the results of the evaluation in a structured way.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">poke_env</span><span class="w"> </span><span class="kn">import</span> <span class="n">cross_evaluate</span>
+
+<span class="n">third_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+
+<span class="n">players</span> <span class="o">=</span> <span class="p">[</span><span class="n">random_player</span><span class="p">,</span> <span class="n">second_player</span><span class="p">,</span> <span class="n">third_player</span><span class="p">]</span>
+
+<span class="n">cross_evaluation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">cross_evaluate</span><span class="p">(</span><span class="n">players</span><span class="p">,</span> <span class="n">n_challenges</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">cross_evaluation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;RandomPlayer 1&#39;: {&#39;RandomPlayer 1&#39;: None,
+  &#39;RandomPlayer 2&#39;: 0.8333333333333334,
+  &#39;RandomPlayer 3&#39;: 0.4},
+ &#39;RandomPlayer 2&#39;: {&#39;RandomPlayer 1&#39;: 0.16666666666666666,
+  &#39;RandomPlayer 2&#39;: None,
+  &#39;RandomPlayer 3&#39;: 0.4},
+ &#39;RandomPlayer 3&#39;: {&#39;RandomPlayer 1&#39;: 0.6,
+  &#39;RandomPlayer 2&#39;: 0.6,
+  &#39;RandomPlayer 3&#39;: None}}
+</pre></div></div>
+</div>
+<p>Here’s one way to pretty print the results of the cross evaluation using <code class="docutils literal notranslate"><span class="pre">tabulate</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">tabulate</span><span class="w"> </span><span class="kn">import</span> <span class="n">tabulate</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">username</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">players</span><span class="p">]]</span>
+<span class="k">for</span> <span class="n">p_1</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="n">cross_evaluation</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">p_1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">cross_evaluation</span><span class="p">[</span><span class="n">p_1</span><span class="p">][</span><span class="n">p_2</span><span class="p">]</span> <span class="k">for</span> <span class="n">p_2</span> <span class="ow">in</span> <span class="n">results</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">tabulate</span><span class="p">(</span><span class="n">table</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+--------------  -------------------  ------------------  --------------
+-               RandomPlayer 1       RandomPlayer 2      RandomPlayer 3
+RandomPlayer 1                       0.8333333333333334  0.4
+RandomPlayer 2  0.16666666666666666                      0.4
+RandomPlayer 3  0.6                  0.6
+--------------  -------------------  ------------------  --------------
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Building-a-Max-Damage-Player">
+<h2>Building a Max Damage Player<a class="headerlink" href="#Building-a-Max-Damage-Player" title="Link to this heading"></a></h2>
+<p>In this section, we introduce the <code class="docutils literal notranslate"><span class="pre">MaxDamagePlayer</span></code>, a custom agent designed to choose moves that maximize damage output.</p>
+<section id="Implementing-the-MaxDamagePlayer-Class">
+<h3>Implementing the MaxDamagePlayer Class<a class="headerlink" href="#Implementing-the-MaxDamagePlayer-Class" title="Link to this heading"></a></h3>
+<p>The primary task is to override the <code class="docutils literal notranslate"><span class="pre">choose_move</span></code> method. It receives a <code class="docutils literal notranslate"><span class="pre">Battle</span></code> object representing the current game state and returns a battle order, typically created with <code class="docutils literal notranslate"><span class="pre">create_order</span></code> from <code class="docutils literal notranslate"><span class="pre">Pokemon</span></code> and <code class="docutils literal notranslate"><span class="pre">Move</span></code> objects.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">battle</span></code> parameter, a <code class="docutils literal notranslate"><span class="pre">Battle</span></code> object, encapsulates the agent’s current knowledge of the game state. It provides various properties for easy access to game details, such as <code class="docutils literal notranslate"><span class="pre">active_pokemon</span></code>, <code class="docutils literal notranslate"><span class="pre">available_moves</span></code>, <code class="docutils literal notranslate"><span class="pre">available_switches</span></code>, <code class="docutils literal notranslate"><span class="pre">opponent_active_pokemon</span></code>, <code class="docutils literal notranslate"><span class="pre">opponent_team</span></code>, and <code class="docutils literal notranslate"><span class="pre">team</span></code>.</p>
+<p>For this example, we’ll utilize <code class="docutils literal notranslate"><span class="pre">available_moves</span></code>, which gives us a list of <code class="docutils literal notranslate"><span class="pre">Move</span></code> objects available in the current turn.</p>
+<p>Our focus in implementing <code class="docutils literal notranslate"><span class="pre">MaxDamagePlayer</span></code> involves two key steps: interpreting the game state information from the battle object and then generating and returning a correctly formatted move order.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">poke_env.player</span><span class="w"> </span><span class="kn">import</span> <span class="n">Player</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MaxDamagePlayer</span><span class="p">(</span><span class="n">Player</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">choose_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">battle</span><span class="p">):</span>
+        <span class="c1"># Chooses a move with the highest base power when possible</span>
+        <span class="k">if</span> <span class="n">battle</span><span class="o">.</span><span class="n">available_moves</span><span class="p">:</span>
+            <span class="c1"># Iterating over available moves to find the one with the highest base power</span>
+            <span class="n">best_move</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">battle</span><span class="o">.</span><span class="n">available_moves</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">move</span><span class="p">:</span> <span class="n">move</span><span class="o">.</span><span class="n">base_power</span><span class="p">)</span>
+            <span class="c1"># Creating an order for the selected move</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_order</span><span class="p">(</span><span class="n">best_move</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># If no attacking move is available, perform a random switch</span>
+            <span class="c1"># This involves choosing a random move, which could be a switch or another available action</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_random_move</span><span class="p">(</span><span class="n">battle</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>In the <code class="docutils literal notranslate"><span class="pre">choose_move</span></code> method, our first step is to determine if there are any available moves for the current turn, as indicated by <code class="docutils literal notranslate"><span class="pre">battle.available_moves</span></code>. When a move is available, we select the one with the highest <code class="docutils literal notranslate"><span class="pre">base_power</span></code>. Formatting our choice is achieved by the <code class="docutils literal notranslate"><span class="pre">create_order</span></code>.</p>
+<p>However, there are scenarios where no moves are available. In such cases, we use <code class="docutils literal notranslate"><span class="pre">choose_random_move(battle)</span></code>. This method randomly selects either a move or a switch, and guarantees that we will return a valid order.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Player.create_order</span></code> function is a crucial part of this process. It’s a wrapper method that generates valid battle messages. It can take either a <code class="docutils literal notranslate"><span class="pre">Move</span></code> or a <code class="docutils literal notranslate"><span class="pre">Pokemon</span></code> object as its input. When passing a <code class="docutils literal notranslate"><span class="pre">Move</span></code> object, additional parameters such as <code class="docutils literal notranslate"><span class="pre">mega</span></code>, <code class="docutils literal notranslate"><span class="pre">z_move</span></code>, <code class="docutils literal notranslate"><span class="pre">dynamax</span></code>, or <code class="docutils literal notranslate"><span class="pre">terastallize</span></code> can be specified to indicate special battle actions.</p>
+<p>We will adjust our strategy to include <code class="docutils literal notranslate"><span class="pre">terastallize</span></code> at the earliest opportunity, enhancing the effectiveness of our player in battle scenarios.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MaxDamagePlayer</span><span class="p">(</span><span class="n">Player</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">choose_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">battle</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">battle</span><span class="o">.</span><span class="n">available_moves</span><span class="p">:</span>
+            <span class="n">best_move</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">battle</span><span class="o">.</span><span class="n">available_moves</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">move</span><span class="p">:</span> <span class="n">move</span><span class="o">.</span><span class="n">base_power</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">battle</span><span class="o">.</span><span class="n">can_tera</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_order</span><span class="p">(</span><span class="n">best_move</span><span class="p">,</span> <span class="n">terastallize</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_order</span><span class="p">(</span><span class="n">best_move</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_random_move</span><span class="p">(</span><span class="n">battle</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Testing-the-MaxDamagePlayer">
+<h3>Testing the MaxDamagePlayer<a class="headerlink" href="#Testing-the-MaxDamagePlayer" title="Link to this heading"></a></h3>
+<p>Next, we’ll test our <code class="docutils literal notranslate"><span class="pre">MaxDamagePlayer</span></code> against a <code class="docutils literal notranslate"><span class="pre">RandomPlayer</span></code> in a series of battles:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Creating players</span>
+<span class="n">random_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">()</span>
+<span class="n">max_damage_player</span> <span class="o">=</span> <span class="n">MaxDamagePlayer</span><span class="p">()</span>
+
+<span class="c1"># Running battles</span>
+<span class="k">await</span> <span class="n">max_damage_player</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">random_player</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="c1"># Displaying results</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Max damage player won </span><span class="si">{</span><span class="n">max_damage_player</span><span class="o">.</span><span class="n">n_won_battles</span><span class="si">}</span><span class="s2"> / 100 battles&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Max damage player won 91 / 100 battles
+</pre></div></div>
+</div>
+<p>Unsurprisingly, the <code class="docutils literal notranslate"><span class="pre">MaxDamagePlayer</span></code> wins most of the battles.</p>
+</section>
+</section>
+<section id="Setting-teams">
+<h2>Setting teams<a class="headerlink" href="#Setting-teams" title="Link to this heading"></a></h2>
+<p>Most formats do not provide a team automatically.</p>
+<p>To specify a team, you have two main options: you can either provide a <code class="docutils literal notranslate"><span class="pre">str</span></code> describing your team, or a <code class="docutils literal notranslate"><span class="pre">Teambuilder</span></code> object. This example will focus on the first option; if you want to learn more about using teambuilders, please refer to <a class="reference internal" href="using_a_custom_teambuilder.html"><span class="doc">Creating a custom teambuilder and Teambuilder: Parse, manage and generate showdown teams</span></a>.</p>
+<p>The easiest way to specify a team in poke-env is to copy-paste a showdown team. You can use showdown’s teambuilder and export it directly.</p>
+<p>Alternatively, you can use showdown’s packed formats, which correspond to the actual string sent by the showdown client to the server.</p>
+<section id="Using-a-str">
+<h3>Using a <code class="docutils literal notranslate"><span class="pre">str</span></code><a class="headerlink" href="#Using-a-str" title="Link to this heading"></a></h3>
+<p>Here’s an example:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">team_1</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Goodra (M) @ Assault Vest</span>
+<span class="s2">Ability: Sap Sipper</span>
+<span class="s2">EVs: 248 HP / 252 SpA / 8 Spe</span>
+<span class="s2">Modest Nature</span>
+<span class="s2">IVs: 0 Atk</span>
+<span class="s2">- Dragon Pulse</span>
+<span class="s2">- Flamethrower</span>
+<span class="s2">- Sludge Wave</span>
+<span class="s2">- Thunderbolt</span>
+
+<span class="s2">Sylveon (M) @ Leftovers</span>
+<span class="s2">Ability: Pixilate</span>
+<span class="s2">EVs: 248 HP / 244 Def / 16 SpD</span>
+<span class="s2">Calm Nature</span>
+<span class="s2">IVs: 0 Atk</span>
+<span class="s2">- Hyper Voice</span>
+<span class="s2">- Mystical Fire</span>
+<span class="s2">- Protect</span>
+<span class="s2">- Wish</span>
+
+<span class="s2">Toxtricity (M) @ Throat Spray</span>
+<span class="s2">Ability: Punk Rock</span>
+<span class="s2">EVs: 4 Atk / 252 SpA / 252 Spe</span>
+<span class="s2">Rash Nature</span>
+<span class="s2">- Overdrive</span>
+<span class="s2">- Boomburst</span>
+<span class="s2">- Shift Gear</span>
+<span class="s2">- Fire Punch</span>
+
+<span class="s2">Seismitoad (M) @ Leftovers</span>
+<span class="s2">Ability: Water Absorb</span>
+<span class="s2">EVs: 252 HP / 252 Def / 4 SpD</span>
+<span class="s2">Relaxed Nature</span>
+<span class="s2">- Stealth Rock</span>
+<span class="s2">- Scald</span>
+<span class="s2">- Earthquake</span>
+<span class="s2">- Toxic</span>
+
+<span class="s2">Corviknight (M) @ Leftovers</span>
+<span class="s2">Ability: Pressure</span>
+<span class="s2">EVs: 248 HP / 80 SpD / 180 Spe</span>
+<span class="s2">Impish Nature</span>
+<span class="s2">- Defog</span>
+<span class="s2">- Brave Bird</span>
+<span class="s2">- Roost</span>
+<span class="s2">- U-turn</span>
+
+<span class="s2">Galvantula @ Focus Sash</span>
+<span class="s2">Ability: Compound Eyes</span>
+<span class="s2">EVs: 252 SpA / 4 SpD / 252 Spe</span>
+<span class="s2">Timid Nature</span>
+<span class="s2">IVs: 0 Atk</span>
+<span class="s2">- Sticky Web</span>
+<span class="s2">- Thunder Wave</span>
+<span class="s2">- Thunder</span>
+<span class="s2">- Energy Ball</span>
+<span class="s2">&quot;&quot;&quot;</span>
+<span class="n">team_2</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Togekiss @ Leftovers</span>
+<span class="s2">Ability: Serene Grace</span>
+<span class="s2">EVs: 248 HP / 8 SpA / 252 Spe</span>
+<span class="s2">Timid Nature</span>
+<span class="s2">IVs: 0 Atk</span>
+<span class="s2">- Air Slash</span>
+<span class="s2">- Nasty Plot</span>
+<span class="s2">- Substitute</span>
+<span class="s2">- Thunder Wave</span>
+
+<span class="s2">Galvantula @ Focus Sash</span>
+<span class="s2">Ability: Compound Eyes</span>
+<span class="s2">EVs: 252 SpA / 4 SpD / 252 Spe</span>
+<span class="s2">Timid Nature</span>
+<span class="s2">IVs: 0 Atk</span>
+<span class="s2">- Sticky Web</span>
+<span class="s2">- Thunder Wave</span>
+<span class="s2">- Thunder</span>
+<span class="s2">- Energy Ball</span>
+
+<span class="s2">Cloyster @ Leftovers</span>
+<span class="s2">Ability: Skill Link</span>
+<span class="s2">EVs: 252 Atk / 4 SpD / 252 Spe</span>
+<span class="s2">Adamant Nature</span>
+<span class="s2">- Icicle Spear</span>
+<span class="s2">- Rock Blast</span>
+<span class="s2">- Ice Shard</span>
+<span class="s2">- Shell Smash</span>
+
+<span class="s2">Sandaconda @ Focus Sash</span>
+<span class="s2">Ability: Sand Spit</span>
+<span class="s2">EVs: 252 Atk / 4 SpD / 252 Spe</span>
+<span class="s2">Jolly Nature</span>
+<span class="s2">- Stealth Rock</span>
+<span class="s2">- Glare</span>
+<span class="s2">- Earthquake</span>
+<span class="s2">- Rock Tomb</span>
+
+<span class="s2">Excadrill @ Focus Sash</span>
+<span class="s2">Ability: Sand Rush</span>
+<span class="s2">EVs: 252 Atk / 4 SpD / 252 Spe</span>
+<span class="s2">Adamant Nature</span>
+<span class="s2">- Iron Head</span>
+<span class="s2">- Rock Slide</span>
+<span class="s2">- Earthquake</span>
+<span class="s2">- Rapid Spin</span>
+
+<span class="s2">Cinccino @ Leftovers</span>
+<span class="s2">Ability: Skill Link</span>
+<span class="s2">EVs: 252 Atk / 4 Def / 252 Spe</span>
+<span class="s2">Jolly Nature</span>
+<span class="s2">- Bullet Seed</span>
+<span class="s2">- Knock Off</span>
+<span class="s2">- Rock Blast</span>
+<span class="s2">- Tail Slap</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">p1</span> <span class="o">=</span> <span class="n">MaxDamagePlayer</span><span class="p">(</span><span class="n">battle_format</span><span class="o">=</span><span class="s2">&quot;gen8ou&quot;</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="n">team_1</span><span class="p">)</span>
+<span class="n">p2</span> <span class="o">=</span> <span class="n">MaxDamagePlayer</span><span class="p">(</span><span class="n">battle_format</span><span class="o">=</span><span class="s2">&quot;gen8ou&quot;</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="n">team_2</span><span class="p">)</span>
+
+<span class="k">await</span> <span class="n">p1</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Dealing-with-team-preview">
+<h3>Dealing with team preview<a class="headerlink" href="#Dealing-with-team-preview" title="Link to this heading"></a></h3>
+<p>By default, teampreview will be handled by randomly selecting the order of your pokemons. You can change this behaviour by overriding the <code class="docutils literal notranslate"><span class="pre">teampreview</span></code> method of the <code class="docutils literal notranslate"><span class="pre">Player</span></code> class. Here is an example using type-based heuristics:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">teampreview_performance</span><span class="p">(</span><span class="n">mon_a</span><span class="p">,</span> <span class="n">mon_b</span><span class="p">):</span>
+    <span class="c1"># We evaluate the performance on mon_a against mon_b as its type advantage</span>
+    <span class="n">a_on_b</span> <span class="o">=</span> <span class="n">b_on_a</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="n">mon_a</span><span class="o">.</span><span class="n">types</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">type_</span><span class="p">:</span>
+            <span class="n">a_on_b</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">a_on_b</span><span class="p">,</span>
+                <span class="n">type_</span><span class="o">.</span><span class="n">damage_multiplier</span><span class="p">(</span>
+                    <span class="o">*</span><span class="n">mon_b</span><span class="o">.</span><span class="n">types</span><span class="p">,</span> <span class="n">type_chart</span><span class="o">=</span><span class="n">GenData</span><span class="o">.</span><span class="n">from_gen</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">type_chart</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+    <span class="c1"># We do the same for mon_b over mon_a</span>
+    <span class="k">for</span> <span class="n">type_</span> <span class="ow">in</span> <span class="n">mon_b</span><span class="o">.</span><span class="n">types</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">type_</span><span class="p">:</span>
+            <span class="n">b_on_a</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">b_on_a</span><span class="p">,</span>
+                <span class="n">type_</span><span class="o">.</span><span class="n">damage_multiplier</span><span class="p">(</span>
+                    <span class="o">*</span><span class="n">mon_a</span><span class="o">.</span><span class="n">types</span><span class="p">,</span> <span class="n">type_chart</span><span class="o">=</span><span class="n">GenData</span><span class="o">.</span><span class="n">from_gen</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">type_chart</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+    <span class="c1"># Our performance metric is the different between the two</span>
+    <span class="k">return</span> <span class="n">a_on_b</span> <span class="o">-</span> <span class="n">b_on_a</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MaxDamagePlayerWithTeampreview</span><span class="p">(</span><span class="n">MaxDamagePlayer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">teampreview</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">battle</span><span class="p">):</span>
+        <span class="n">mon_performance</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># For each of our pokemons</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mon</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">battle</span><span class="o">.</span><span class="n">team</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="c1"># We store their average performance against the opponent team</span>
+            <span class="n">mon_performance</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">teampreview_performance</span><span class="p">(</span><span class="n">mon</span><span class="p">,</span> <span class="n">opp</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">opp</span> <span class="ow">in</span> <span class="n">battle</span><span class="o">.</span><span class="n">opponent_team</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="c1"># We sort our mons by performance</span>
+        <span class="n">ordered_mons</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mon_performance</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="o">-</span><span class="n">mon_performance</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+        <span class="c1"># We start with the one we consider best overall</span>
+        <span class="c1"># We use i + 1 as python indexes start from 0</span>
+        <span class="c1">#  but showdown&#39;s indexes start from 1</span>
+        <span class="k">return</span> <span class="s2">&quot;/team &quot;</span> <span class="o">+</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ordered_mons</span><span class="p">])</span>
+
+
+<span class="n">p3</span> <span class="o">=</span> <span class="n">MaxDamagePlayerWithTeampreview</span><span class="p">(</span><span class="n">battle_format</span><span class="o">=</span><span class="s2">&quot;gen8ou&quot;</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="n">team_1</span><span class="p">)</span>
+<span class="n">p4</span> <span class="o">=</span> <span class="n">MaxDamagePlayerWithTeampreview</span><span class="p">(</span><span class="n">battle_format</span><span class="o">=</span><span class="s2">&quot;gen8ou&quot;</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="n">team_2</span><span class="p">)</span>
+
+<span class="k">await</span> <span class="n">p3</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">p4</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Other-Initialization-Options-for-Player-Objects">
+<h2>Other Initialization Options for <code class="docutils literal notranslate"><span class="pre">Player</span></code> Objects<a class="headerlink" href="#Other-Initialization-Options-for-Player-Objects" title="Link to this heading"></a></h2>
+<section id="Specifying-an-Avatar">
+<h3>Specifying an Avatar<a class="headerlink" href="#Specifying-an-Avatar" title="Link to this heading"></a></h3>
+<p>You can specify an <code class="docutils literal notranslate"><span class="pre">avatar</span></code> argument when initializing a <code class="docutils literal notranslate"><span class="pre">Player</span></code> object. This argument is a string, corresponding to the avatar’s name.</p>
+<p>You can find a <a class="reference external" href="https://github.com/smogon/pokemon-showdown-client/blob/6d55434cb85e7bbe614caadada819238190214f6/play.pokemonshowdown.com/src/battle-dex-data.ts#L690">list of avatar names here</a>. If the avatar you are looking for is not in this list, you can inspect the message the client is sending to the server by opening your browser’s development console and selecting the avatar manually.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">player_with_avatar</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">avatar</span><span class="o">=</span><span class="s2">&quot;boarder&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Saving-Battle-Replays">
+<h3>Saving Battle Replays<a class="headerlink" href="#Saving-Battle-Replays" title="Link to this heading"></a></h3>
+<p>You can save battle replays automatically by specifying a <code class="docutils literal notranslate"><span class="pre">save_replays</span></code> value when initializing a <code class="docutils literal notranslate"><span class="pre">Player</span></code> object. This argument can either be a boolean (if <code class="docutils literal notranslate"><span class="pre">True</span></code>, the replays will be saved in the <code class="docutils literal notranslate"><span class="pre">replays</span></code>) or a string - in which case the replays will be saved in the specified directory. You can also export replays explicitly with <code class="docutils literal notranslate"><span class="pre">battle.save_replay(path)</span></code> or <code class="docutils literal notranslate"><span class="pre">player.save_replay(battle_tag,</span> <span class="pre">path)</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">player_with_replays</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">save_replays</span><span class="o">=</span><span class="s2">&quot;my_folder&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Logging">
+<h3>Logging<a class="headerlink" href="#Logging" title="Link to this heading"></a></h3>
+<p>Every <code class="docutils literal notranslate"><span class="pre">Player</span></code> instance has a custom logger. By default, it will only surface warnings and errors. You can change the logging level by specifying a <code class="docutils literal notranslate"><span class="pre">log_level</span></code> argument when initializing a <code class="docutils literal notranslate"><span class="pre">Player</span></code> object.</p>
+<p>The two most relevant values are <code class="docutils literal notranslate"><span class="pre">logging.INFO</span></code> or 20, which will surface every message sent or received by the client (which is very useful when debugging) and 25, which is a custom level used by <code class="docutils literal notranslate"><span class="pre">poke-env</span></code> to surface only the most relevant events.</p>
+<p>You can also use <code class="docutils literal notranslate"><span class="pre">logging.DEBUG</span></code> or 10, but the difference with <code class="docutils literal notranslate"><span class="pre">logging.INFO</span></code> should only be relevant for <code class="docutils literal notranslate"><span class="pre">poke-env</span></code> internals.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">verbose_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">log_level</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">sleep</span>
+
+<span class="k">await</span> <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-12-17 02:56:44,681 - RandomPlayer 7 - INFO - Starting listening to showdown websocket
+2023-12-17 02:56:44,684 - RandomPlayer 7 - INFO - <span class="ansi-green-intense-fg ansi-bold">&lt;&lt;&lt;</span> |updateuser| Guest 32|0|1|{&#34;blockChallenges&#34;:false,&#34;blockPMs&#34;:false,&#34;ignoreTickets&#34;:false,&#34;hideBattlesFromTrainerCard&#34;:false,&#34;blockInvites&#34;:false,&#34;doNotDisturb&#34;:false,&#34;blockFriendRequests&#34;:false,&#34;allowFriendNotifications&#34;:false,&#34;displayBattlesToFriends&#34;:false,&#34;hideLogins&#34;:false,&#34;hiddenNextBattle&#34;:false,&#34;inviteOnlyNextBattle&#34;:false,&#34;language&#34;:null}
+|customgroups|[{&#34;symbol&#34;:&#34;&amp;&#34;,&#34;name&#34;:&#34;Administrator&#34;,&#34;type&#34;:&#34;leadership&#34;},{&#34;symbol&#34;:&#34;#&#34;,&#34;name&#34;:&#34;Room Owner&#34;,&#34;type&#34;:&#34;leadership&#34;},{&#34;symbol&#34;:&#34;★&#34;,&#34;name&#34;:&#34;Host&#34;,&#34;type&#34;:&#34;leadership&#34;},{&#34;symbol&#34;:&#34;@&#34;,&#34;name&#34;:&#34;Moderator&#34;,&#34;type&#34;:&#34;staff&#34;},{&#34;symbol&#34;:&#34;%&#34;,&#34;name&#34;:&#34;Driver&#34;,&#34;type&#34;:&#34;staff&#34;},{&#34;symbol&#34;:&#34;§&#34;,&#34;name&#34;:&#34;Section Leader&#34;,&#34;type&#34;:&#34;staff&#34;},{&#34;symbol&#34;:&#34;*&#34;,&#34;name&#34;:&#34;Bot&#34;,&#34;type&#34;:&#34;normal&#34;},{&#34;symbol&#34;:&#34;☆&#34;,&#34;name&#34;:&#34;Player&#34;,&#34;type&#34;:&#34;normal&#34;},{&#34;symbol&#34;:&#34;+&#34;,&#34;name&#34;:&#34;Voice&#34;,&#34;type&#34;:&#34;normal&#34;},{&#34;symbol&#34;:&#34;^&#34;,&#34;name&#34;:&#34;Prize Winner&#34;,&#34;type&#34;:&#34;normal&#34;},{&#34;symbol&#34;:&#34;whitelist&#34;,&#34;name&#34;:&#34;Whitelist&#34;,&#34;type&#34;:&#34;normal&#34;},{&#34;symbol&#34;:&#34; &#34;,&#34;name&#34;:null,&#34;type&#34;:&#34;normal&#34;},{&#34;symbol&#34;:&#34;‽&#34;,&#34;name&#34;:&#34;Locked&#34;,&#34;type&#34;:&#34;punishment&#34;},{&#34;symbol&#34;:&#34;!&#34;,&#34;name&#34;:&#34;Muted&#34;,&#34;type&#34;:&#34;punishment&#34;}]
+|formats|,LL|,1|S/V Singles|[Gen 9] Random Battle,f|[Gen 9] Unrated Random Battle,b|[Gen 9] Free-For-All Random Battle,7|[Gen 9] Random Battle (Blitz),f|[Gen 9] Multi Random Battle,5|[Gen 9] OU,e|[Gen 9] Ubers,e|[Gen 9] UU,e|[Gen 9] RU,e|[Gen 9] NU,e|[Gen 9] PU,e|[Gen 9] LC,e|[Gen 9] Monotype,e|[Gen 9] CAP,e|[Gen 9] Battle Stadium Singles Regulation D,5c|[Gen 9] Battle Stadium Singles Regulation E,5e|[Gen 9] Dragon King Cup,1e|[Gen 9] Custom Game,c|,1|S/V Doubles|[Gen 9] Random Doubles Battle,f|[Gen 9] Doubles OU,e|[Gen 9] Doubles Ubers,e|[Gen 9] Doubles UU,e|[Gen 9] Doubles LC,c|[Gen 9] VGC 2023 Regulation D,5c|[Gen 9] VGC 2023 Regulation E,5e|[Gen 9] VGC 2023 Regulation E (Bo3),1a|[Gen 9] Doubles Custom Game,c|,1|Unofficial Metagames|[Gen 9] 1v1,e|[Gen 9] 2v2 Doubles,e|[Gen 9] Anything Goes,e|[Gen 9] Free-For-All,6|[Gen 9] LC UU,c|[Gen 9] Monothreat Poison,c|[Gen 9] Monotype CAP,c|[Gen 9] Monotype LC,c|[Gen 9] NFE,c|[Gen 9] ZU,e|,1|Pet Mods|[Gen 3] Hoenn Gaiden,e|[Gen 8] JolteMons Random Battle,f|[Gen 6] NEXT OU,8|,1|Draft|[Gen 9] Paldea Dex Draft,c|[Gen 9] Tera Preview Paldea Dex Draft,c|[Gen 9] 6v6 Doubles Draft,c|[Gen 9] 4v4 Doubles Draft,1c|[Gen 9] NatDex Draft,c|[Gen 9] Tera Preview NatDex Draft,c|[Gen 9] NatDex 6v6 Doubles Draft,c|[Gen 9] NatDex LC Draft,c|[Gen 8] Galar Dex Draft,c|[Gen 8] NatDex Draft,c|[Gen 8] NatDex 4v4 Doubles Draft,1c|[Gen 7] Draft,c|[Gen 6] Draft,c|,2|OM of the Month|[Gen 9] Shared Power,e|[Gen 9] Protean Palace,e|[Gen 9] Inheritance,e|,2|Other Metagames|[Gen 9] Almost Any Ability,e|[Gen 9] Balanced Hackmons,e|[Gen 9] Godly Gift,e|[Gen 9] Mix and Mega,e|[Gen 9] STABmons,e|[Gen 9] Partners in Crime,e|[Gen 6] Pure Hackmons,e|,2|Challengeable OMs|[Gen 9] Camomons,c|[Gen 9] Convergence,c|[Gen 9] Cross Evolution,c|[Gen 9] Fortemons,c|[Gen 9] Frantic Fusions,c|[Gen 9] Full Potential,c|[Gen 9] Pokebilities,c|[Gen 9] Pure Hackmons,c|[Gen 9] Revelationmons,c|[Gen 9] Sharing is Caring,c|[Gen 9] Tera Donation,c|[Gen 9] The Card Game,c|[Gen 9] The Loser&#39;s Game,c|[Gen 9] Trademarked,c|,2|National Dex|[Gen 9] National Dex,e|[Gen 9] National Dex Ubers,e|[Gen 9] National Dex UU,e|[Gen 9] National Dex RU,c|[Gen 9] National Dex Monotype,e|[Gen 9] National Dex Doubles,e|[Gen 9] National Dex AG,c|[Gen 9] National Dex BH,c|[Gen 8] National Dex,e|[Gen 8] National Dex UU,c|[Gen 8] National Dex Monotype,c|,3|Randomized Format Spotlight|[Gen 9] Partners in Crime Random Battle,f|[Gen 9] Random Roulette,d|,3|Randomized Metas|[Gen 9] Monotype Random Battle,f|[Gen 9] Random Battle Mayhem,f|[Gen 9] Computer-Generated Teams,f|[Gen 9] Hackmons Cup,f|[Gen 9] Doubles Hackmons Cup,d|[Gen 9] Broken Cup,d|[Gen 9] Challenge Cup 1v1,f|[Gen 9] Challenge Cup 2v2,f|[Gen 9] Challenge Cup 6v6,d|[Gen 9] Metronome Battle,e|[Gen 8] Random Battle,f|[Gen 8] Random Doubles Battle,f|[Gen 8] Free-For-All Random Battle,7|[Gen 8] Multi Random Battle,5|[Gen 8] Battle Factory,f|[Gen 8] BSS Factory,1d|[Gen 8] Super Staff Bros 4,f|[Gen 8] Hackmons Cup,f|[Gen 8] Metronome Battle,c|[Gen 8] CAP 1v1,d|[Gen 8 BDSP] Random Battle,d|[Gen 7] Random Battle,f|[Gen 7] Random Doubles Battle,9|[Gen 7] Battle Factory,f|[Gen 7] BSS Factory,1d|[Gen 7] Hackmons Cup,d|[Gen 7 Let&#39;s Go] Random Battle,d|[Gen 6] Random Battle,f|[Gen 6] Battle Factory,9|[Gen 5] Random Battle,f|[Gen 4] Random Battle,f|[Gen 3] Random Battle,f|[Gen 2] Random Battle,f|[Gen 1] Random Battle,f|[Gen 1] Challenge Cup,9|[Gen 1] Hackmons Cup,9|,4|RoA Spotlight|[Gen 6] Ubers,e|[Gen 3] ZU,e|[Gen 3] LC,e|,4|Past Gens OU|[Gen 8] OU,e|[Gen 7] OU,e|[Gen 6] OU,e|[Gen 5] OU,e|[Gen 4] OU,e|[Gen 3] OU,e|[Gen 2] OU,e|[Gen 1] OU,e|,4|Past Gens Doubles OU|[Gen 8] Doubles OU,e|[Gen 7] Doubles OU,e|[Gen 6] Doubles OU,e|[Gen 5] Doubles OU,c|[Gen 4] Doubles OU,c|[Gen 3] Doubles OU,c|,4|Sw/Sh Singles|[Gen 8] Ubers,c|[Gen 8] UU,c|[Gen 8] RU,c|[Gen 8] NU,c|[Gen 8] PU,c|[Gen 8] LC,c|[Gen 8] Monotype,c|[Gen 8] 1v1,c|[Gen 8] Anything Goes,c|[Gen 8] ZU,c|[Gen 8] CAP,c|[Gen 8] Battle Stadium Singles,5c|[Gen 8 BDSP] OU,c|[Gen 8] Custom Game,c|,4|Sw/Sh Doubles|[Gen 8] Doubles Ubers,c|[Gen 8] Doubles UU,c|[Gen 8] VGC 2022,5c|[Gen 8] VGC 2021,5c|[Gen 8] VGC 2020,5c|[Gen 8 BDSP] Doubles OU,c|[Gen 8 BDSP] Battle Festival Doubles,1c|[Gen 8] Doubles Custom Game,c|,4|US/UM Singles|[Gen 7] Ubers,c|[Gen 7] UU,c|[Gen 7] RU,c|[Gen 7] NU,c|[Gen 7] PU,c|[Gen 7] LC,c|[Gen 7] Monotype,c|[Gen 7] 1v1,c|[Gen 7] Anything Goes,c|[Gen 7] ZU,c|[Gen 7] CAP,c|[Gen 7] Battle Spot Singles,5c|[Gen 7 Let&#39;s Go] OU,1c|[Gen 7] Custom Game,c|,4|US/UM Doubles|[Gen 7] Doubles UU,c|[Gen 7] VGC 2019,5c|[Gen 7] VGC 2018,5c|[Gen 7] VGC 2017,5c|[Gen 7] Battle Spot Doubles,5c|[Gen 7 Let&#39;s Go] Doubles OU,c|[Gen 7] Doubles Custom Game,c|,4|OR/AS Singles|[Gen 6] UU,c|[Gen 6] RU,c|[Gen 6] NU,c|[Gen 6] PU,c|[Gen 6] LC,c|[Gen 6] Monotype,c|[Gen 6] 1v1,c|[Gen 6] Anything Goes,c|[Gen 6] ZU,c|[Gen 6] CAP,c|[Gen 6] Battle Spot Singles,5c|[Gen 6] Custom Game,c|,4|OR/AS Doubles/Triples|[Gen 6] VGC 2016,5c|[Gen 6] VGC 2015,5c|[Gen 6] VGC 2014,5c|[Gen 6] Battle Spot Doubles,5c|[Gen 6] Doubles Custom Game,c|[Gen 6] Battle Spot Triples,1c|[Gen 6] Triples Custom Game,c|,4|B2/W2 Singles|[Gen 5] Ubers,c|[Gen 5] UU,c|[Gen 5] RU,c|[Gen 5] NU,c|[Gen 5] PU,c|[Gen 5] LC,c|[Gen 5] Monotype,c|[Gen 5] 1v1,c|[Gen 5] ZU,c|[Gen 5] CAP,c|[Gen 5] GBU Singles,5c|[Gen 5] Custom Game,c|,4|B2/W2 Doubles|[Gen 5] VGC 2013,5c|[Gen 5] VGC 2012,5c|[Gen 5] VGC 2011,5c|[Gen 5] Doubles Custom Game,c|[Gen 5] Triples Custom Game,c|,4|DPP Singles|[Gen 4] Ubers,c|[Gen 4] UU,c|[Gen 4] NU,c|[Gen 4] PU,c|[Gen 4] LC,c|[Gen 4] Anything Goes,c|[Gen 4] 1v1,c|[Gen 4] ZU,c|[Gen 4] CAP,c|[Gen 4] Custom Game,c|,4|DPP Doubles|[Gen 4] VGC 2010,1c|[Gen 4] VGC 2009,1c|[Gen 4] Doubles Custom Game,c|,4|Past Generations|[Gen 3] Ubers,c|[Gen 3] UU,c|[Gen 3] NU,c|[Gen 3] PU,c|[Gen 3] 1v1,c|[Gen 3] Custom Game,c|[Gen 3] Doubles Custom Game,c|[Gen 2] Ubers,c|[Gen 2] UU,c|[Gen 2] NU,c|[Gen 2] 1v1,c|[Gen 2] Nintendo Cup 2000,c|[Gen 2] Stadium OU,c|[Gen 2] Custom Game,c|[Gen 1] Ubers,c|[Gen 1] UU,c|[Gen 1] NU,c|[Gen 1] PU,c|[Gen 1] 1v1,c|[Gen 1] Japanese OU,c|[Gen 1] Stadium OU,c|[Gen 1] Tradebacks OU,c|[Gen 1] Nintendo Cup 1997,c|[Gen 1] Custom Game,c
+2023-12-17 02:56:44,684 - RandomPlayer 7 - INFO - <span class="ansi-green-intense-fg ansi-bold">&lt;&lt;&lt;</span> |challstr|4|4df5324a13edbe03218bab5a290e6d64e24eadbbc4213517711beb393505ddbdc7142c71ef5a4d5cafe6e4a3407bcdc2d83e433d0c5d38eb24a046f28f99c93730aface163d8a78e05ae1cd77a1b1f085db56e72b9550e4b7c3ad487cbd59de6500a6d48b92527b279231ce93717fd795a80d6d617f73928a4826475e21c5232
+2023-12-17 02:56:44,685 - RandomPlayer 7 - INFO - Bypassing authentication request
+2023-12-17 02:56:44,685 - RandomPlayer 7 - INFO - <span class="ansi-yellow-intense-fg ansi-bold">&gt;&gt;&gt;</span> |/trn RandomPlayer 7,0,
+2023-12-17 02:56:44,686 - RandomPlayer 7 - INFO - <span class="ansi-green-intense-fg ansi-bold">&lt;&lt;&lt;</span> |updatesearch|{&#34;searching&#34;:[],&#34;games&#34;:null}
+2023-12-17 02:56:44,687 - RandomPlayer 7 - INFO - <span class="ansi-green-intense-fg ansi-bold">&lt;&lt;&lt;</span> |updateuser| RandomPlayer 7|1|170|{&#34;blockChallenges&#34;:false,&#34;blockPMs&#34;:false,&#34;ignoreTickets&#34;:false,&#34;hideBattlesFromTrainerCard&#34;:false,&#34;blockInvites&#34;:false,&#34;doNotDisturb&#34;:false,&#34;blockFriendRequests&#34;:false,&#34;allowFriendNotifications&#34;:false,&#34;displayBattlesToFriends&#34;:false,&#34;hideLogins&#34;:false,&#34;hiddenNextBattle&#34;:false,&#34;inviteOnlyNextBattle&#34;:false,&#34;language&#34;:null}
+2023-12-17 02:56:44,687 - RandomPlayer 7 - INFO - <span class="ansi-green-intense-fg ansi-bold">&lt;&lt;&lt;</span> |updatesearch|{&#34;searching&#34;:[],&#34;games&#34;:null}
+</pre></div></div>
+</div>
+</section>
+<section id="Concurrency">
+<h3>Concurrency<a class="headerlink" href="#Concurrency" title="Link to this heading"></a></h3>
+<p>By default, a <code class="docutils literal notranslate"><span class="pre">poke-env</span></code> <code class="docutils literal notranslate"><span class="pre">Player</span></code> will only run a single battle at a time. You can change this behavior by specifying a <code class="docutils literal notranslate"><span class="pre">max_concurrent_battles</span></code> argument when initializing a <code class="docutils literal notranslate"><span class="pre">Player</span></code> object.</p>
+<p>This argument is an integer, and represents the maximum number of battles a <code class="docutils literal notranslate"><span class="pre">Player</span></code> can run at the same time. If 0, no limit will be enforced.</p>
+<p>This can provide a significant speedup when your process is not CPU bound.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="c1"># Time to run 50 battles, one at a time</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="k">await</span> <span class="n">random_player</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span><span class="n">second_player</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time to run 50 battles, one at a time: </span><span class="si">{</span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Time to run 50 battles, one at a time: 8.12 seconds
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">unrestricted_random_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">max_concurrent_battles</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">unrestricted_second_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">max_concurrent_battles</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Time to run 50 battles, in parallel</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="k">await</span> <span class="n">unrestricted_random_player</span><span class="o">.</span><span class="n">battle_against</span><span class="p">(</span>
+    <span class="n">unrestricted_second_player</span><span class="p">,</span> <span class="n">n_battles</span><span class="o">=</span><span class="mi">50</span>
+<span class="p">)</span>
+<span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time to run 50 battles, in parallel: </span><span class="si">{</span><span class="n">end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Time to run 50 battles, in parallel: 4.22 seconds
+</pre></div></div>
+</div>
+<p>Other options can also be used on the server side to make battles run faster.</p>
+</section>
+<section id="Pokemon-Showdown-Timer">
+<h3>Pokemon Showdown Timer<a class="headerlink" href="#Pokemon-Showdown-Timer" title="Link to this heading"></a></h3>
+<p>You can turn on the Pokemon Showdown timer by setting <code class="docutils literal notranslate"><span class="pre">start_timer_on_battle_start</span></code> to <code class="docutils literal notranslate"><span class="pre">True</span></code> when initializing a <code class="docutils literal notranslate"><span class="pre">Player</span></code> object.</p>
+<p>This is mostly relevant when pitting your agents against humans.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">impatient_player</span> <span class="o">=</span> <span class="n">RandomPlayer</span><span class="p">(</span><span class="n">start_timer_on_battle_start</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="using_a_custom_teambuilder.html" class="btn btn-neutral float-right" title="Creating a custom teambuilder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Haris Sahovic.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

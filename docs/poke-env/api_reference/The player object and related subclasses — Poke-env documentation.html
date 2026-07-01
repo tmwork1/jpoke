@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The player object and related subclasses &mdash; Poke-env  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <script src="../_static/js/versions.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The pokémon object" href="pokemon.html" />
+    <link rel="prev" title="The Battle object" href="battle.html" /> 
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="poke-env" /><meta name="readthedocs-version-slug" content="stable" /><meta name="readthedocs-resolver-filename" content="/modules/player.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Poke-env
+          </a>
+              <div class="switch-menus">
+                <div class="version-switch"></div>
+                <div class="language-switch"></div>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Main modules documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="battle.html">The Battle object</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The player object and related subclasses</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Player</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.player.Player"><code class="docutils literal notranslate"><span class="pre">Player</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.DEFAULT_CHOICE_CHANCE"><code class="docutils literal notranslate"><span class="pre">Player.DEFAULT_CHOICE_CHANCE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.MESSAGES_TO_IGNORE"><code class="docutils literal notranslate"><span class="pre">Player.MESSAGES_TO_IGNORE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.accept_challenges"><code class="docutils literal notranslate"><span class="pre">Player.accept_challenges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.accept_open_team_sheet"><code class="docutils literal notranslate"><span class="pre">Player.accept_open_team_sheet</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.battle_against"><code class="docutils literal notranslate"><span class="pre">Player.battle_against()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.battles"><code class="docutils literal notranslate"><span class="pre">Player.battles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.choose_default_move"><code class="docutils literal notranslate"><span class="pre">Player.choose_default_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.choose_move"><code class="docutils literal notranslate"><span class="pre">Player.choose_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.choose_random_doubles_move"><code class="docutils literal notranslate"><span class="pre">Player.choose_random_doubles_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.choose_random_move"><code class="docutils literal notranslate"><span class="pre">Player.choose_random_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.choose_random_singles_move"><code class="docutils literal notranslate"><span class="pre">Player.choose_random_singles_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.create_order"><code class="docutils literal notranslate"><span class="pre">Player.create_order()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.format"><code class="docutils literal notranslate"><span class="pre">Player.format</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.format_is_doubles"><code class="docutils literal notranslate"><span class="pre">Player.format_is_doubles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.get_next_team"><code class="docutils literal notranslate"><span class="pre">Player.get_next_team()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.ladder"><code class="docutils literal notranslate"><span class="pre">Player.ladder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.logger"><code class="docutils literal notranslate"><span class="pre">Player.logger</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.n_finished_battles"><code class="docutils literal notranslate"><span class="pre">Player.n_finished_battles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.n_lost_battles"><code class="docutils literal notranslate"><span class="pre">Player.n_lost_battles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.n_tied_battles"><code class="docutils literal notranslate"><span class="pre">Player.n_tied_battles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.n_won_battles"><code class="docutils literal notranslate"><span class="pre">Player.n_won_battles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.random_teampreview"><code class="docutils literal notranslate"><span class="pre">Player.random_teampreview()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.reset_battles"><code class="docutils literal notranslate"><span class="pre">Player.reset_battles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.save_replay"><code class="docutils literal notranslate"><span class="pre">Player.save_replay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.send_challenges"><code class="docutils literal notranslate"><span class="pre">Player.send_challenges()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.teampreview"><code class="docutils literal notranslate"><span class="pre">Player.teampreview()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.update_team"><code class="docutils literal notranslate"><span class="pre">Player.update_team()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.username"><code class="docutils literal notranslate"><span class="pre">Player.username</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.player.Player.win_rate"><code class="docutils literal notranslate"><span class="pre">Player.win_rate</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-poke_env.player.baselines">Baselines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.baselines.MaxBasePowerPlayer"><code class="docutils literal notranslate"><span class="pre">MaxBasePowerPlayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.MaxBasePowerPlayer.choose_doubles_move"><code class="docutils literal notranslate"><span class="pre">MaxBasePowerPlayer.choose_doubles_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.MaxBasePowerPlayer.choose_move"><code class="docutils literal notranslate"><span class="pre">MaxBasePowerPlayer.choose_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.MaxBasePowerPlayer.choose_singles_move"><code class="docutils literal notranslate"><span class="pre">MaxBasePowerPlayer.choose_singles_move()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.baselines.PseudoBattle"><code class="docutils literal notranslate"><span class="pre">PseudoBattle</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.PseudoBattle.active_pokemon"><code class="docutils literal notranslate"><span class="pre">PseudoBattle.active_pokemon</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.PseudoBattle.in_team_preview"><code class="docutils literal notranslate"><span class="pre">PseudoBattle.in_team_preview</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.PseudoBattle.logger"><code class="docutils literal notranslate"><span class="pre">PseudoBattle.logger</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.PseudoBattle.opponent_active_pokemon"><code class="docutils literal notranslate"><span class="pre">PseudoBattle.opponent_active_pokemon</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.PseudoBattle.rules"><code class="docutils literal notranslate"><span class="pre">PseudoBattle.rules</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.baselines.RandomPlayer"><code class="docutils literal notranslate"><span class="pre">RandomPlayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.RandomPlayer.choose_move"><code class="docutils literal notranslate"><span class="pre">RandomPlayer.choose_move()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.ANTI_HAZARDS_MOVES"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.ANTI_HAZARDS_MOVES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.ENTRY_HAZARDS"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.ENTRY_HAZARDS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.HP_FRACTION_COEFICIENT"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.HP_FRACTION_COEFICIENT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.SPEED_TIER_COEFICIENT"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.SPEED_TIER_COEFICIENT</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.SWITCH_OUT_MATCHUP_THRESHOLD"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.SWITCH_OUT_MATCHUP_THRESHOLD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.choose_move"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.choose_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.choose_singles_move"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.choose_singles_move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.get_double_target_multiplier"><code class="docutils literal notranslate"><span class="pre">SimpleHeuristicsPlayer.get_double_target_multiplier()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-poke_env.player.battle_order">Battle orders</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder"><code class="docutils literal notranslate"><span class="pre">BattleOrder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder.message"><code class="docutils literal notranslate"><span class="pre">BattleOrder.message</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.battle_order.DefaultBattleOrder"><code class="docutils literal notranslate"><span class="pre">DefaultBattleOrder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder"><code class="docutils literal notranslate"><span class="pre">DoubleBattleOrder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder.first_order"><code class="docutils literal notranslate"><span class="pre">DoubleBattleOrder.first_order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder.join_orders"><code class="docutils literal notranslate"><span class="pre">DoubleBattleOrder.join_orders()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder.message"><code class="docutils literal notranslate"><span class="pre">DoubleBattleOrder.message</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder.second_order"><code class="docutils literal notranslate"><span class="pre">DoubleBattleOrder.second_order</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.battle_order.ForfeitBattleOrder"><code class="docutils literal notranslate"><span class="pre">ForfeitBattleOrder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.ForfeitBattleOrder.message"><code class="docutils literal notranslate"><span class="pre">ForfeitBattleOrder.message</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.battle_order.PassBattleOrder"><code class="docutils literal notranslate"><span class="pre">PassBattleOrder</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.dynamax"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.dynamax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.mega"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.mega</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.message"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.message</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.move_target"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.move_target</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.order"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.order</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.terastallize"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.terastallize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder.z_move"><code class="docutils literal notranslate"><span class="pre">SingleBattleOrder.z_move</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-poke_env.player.utils">Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.utils.background_cross_evaluate"><code class="docutils literal notranslate"><span class="pre">background_cross_evaluate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.utils.background_evaluate_player"><code class="docutils literal notranslate"><span class="pre">background_evaluate_player()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.utils.cross_evaluate"><code class="docutils literal notranslate"><span class="pre">cross_evaluate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.player.utils.evaluate_player"><code class="docutils literal notranslate"><span class="pre">evaluate_player()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pokemon.html">The pokémon object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="move.html">The move object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">The env object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="other_environment.html">Other objects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Standalone submodules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data - Access and manipulate pokémon data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ps_client.html">PS Client - Interact with Pokémon Showdown servers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teambuilder.html">Teambuilder - Parse and generate showdown teams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrency utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calc.html">Damage calculator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stats.html">Stats utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Poke-env</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The player object and related subclasses</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/player.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="the-player-object-and-related-subclasses">
+<span id="player"></span><h1>The player object and related subclasses<a class="headerlink" href="#the-player-object-and-related-subclasses" title="Link to this heading"></a></h1>
+<nav class="contents local" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#id1" id="id2">Player</a></p></li>
+<li><p><a class="reference internal" href="#module-poke_env.player.baselines" id="id3">Baselines</a></p></li>
+<li><p><a class="reference internal" href="#module-poke_env.player.battle_order" id="id4">Battle orders</a></p></li>
+<li><p><a class="reference internal" href="#module-poke_env.player.utils" id="id5">Utilities</a></p></li>
+</ul>
+</nav>
+<section id="id1">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Player</a><a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p id="module-poke_env.player.player">This module defines a base class for players.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.player.Player">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.player.</span></span><span class="sig-name descname"><span class="pre">Player</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.account_configuration.AccountConfiguration" title="poke_env.ps_client.account_configuration.AccountConfiguration"><span class="pre">AccountConfiguration</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avatar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">battle_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gen9randombattle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accept_open_team_sheet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_replays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.server_configuration.ServerConfiguration" title="poke_env.ps_client.server_configuration.ServerConfiguration"><span class="pre">ServerConfiguration</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('ws://localhost:8000/showdown/websocket'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'https</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">//play.pokemonshowdown.com/action.php?')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_timer_on_battle_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_listening</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AbstractEventLoop</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;_UnixSelectorEventLoop</span> <span class="pre">running=True</span> <span class="pre">closed=False</span> <span class="pre">debug=False&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder.Teambuilder" title="poke_env.teambuilder.teambuilder.Teambuilder"><span class="pre">Teambuilder</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_battle_tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<p>Base class for players.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.DEFAULT_CHOICE_CHANCE">
+<span class="sig-name descname"><span class="pre">DEFAULT_CHOICE_CHANCE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></span><a class="headerlink" href="#poke_env.player.player.Player.DEFAULT_CHOICE_CHANCE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.MESSAGES_TO_IGNORE">
+<span class="sig-name descname"><span class="pre">MESSAGES_TO_IGNORE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'expire',</span> <span class="pre">'t:',</span> <span class="pre">'uhtmlchange'}</span></span><a class="headerlink" href="#poke_env.player.player.Player.MESSAGES_TO_IGNORE" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.accept_challenges">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">accept_challenges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_challenges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">packed_team</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player.accept_challenges" title="Link to this definition"></a></dt>
+<dd><p>Let the player wait for challenges from opponent, and accept them.</p>
+<p>If opponent is None, every challenge will be accepted. If opponent if a string,
+all challenges from player with that name will be accepted. If opponent is a
+list all challenges originating from players whose name is in the list will be
+accepted.</p>
+<p>Up to n_challenges challenges will be accepted, after what the function will
+wait for these battles to finish, and then return.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>opponent</strong> (<em>None</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Players from which challenges will be accepted.</p></li>
+<li><p><strong>n_challenges</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of challenges that will be accepted</p></li>
+</ul>
+</dd>
+<dt class="field-even">Packed_team<span class="colon">:</span></dt>
+<dd class="field-even"><p>Team to use. Defaults to generating a team with the agent’s teambuilder.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.accept_open_team_sheet">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">accept_open_team_sheet</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.accept_open_team_sheet" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.battle_against">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">battle_against</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">opponents</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><span class="pre">Player</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player.battle_against" title="Link to this definition"></a></dt>
+<dd><p>Make the player play n_battles against the given opponents.</p>
+<p>This function is a wrapper around send_challenges and accept_challenges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>opponents</strong> (<a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><em>Player</em></a>) – The opponents to play against.</p></li>
+<li><p><strong>n_battles</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The number of games to play. Defaults to 1.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.battles">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">battles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.player.player.Player.battles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.choose_default_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_default_move</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.DefaultBattleOrder" title="poke_env.player.battle_order.DefaultBattleOrder"><span class="pre">DefaultBattleOrder</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.choose_default_move" title="Link to this definition"></a></dt>
+<dd><p>Returns showdown’s default move order.</p>
+<p>This order will result in the first legal order - according to showdown’s
+ordering - being chosen.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.choose_move">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><span class="pre">BattleOrder</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Awaitable" title="(in Python v3.14)"><span class="pre">Awaitable</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><span class="pre">BattleOrder</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.player.Player.choose_move" title="Link to this definition"></a></dt>
+<dd><p>Abstract method to choose a move in a battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The move order, or an awaitable resolving to one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a> or Awaitable[<a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.choose_random_doubles_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_random_doubles_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.double_battle.DoubleBattle" title="poke_env.battle.double_battle.DoubleBattle"><span class="pre">DoubleBattle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder" title="poke_env.player.battle_order.DoubleBattleOrder"><span class="pre">DoubleBattleOrder</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.choose_random_doubles_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.choose_random_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_random_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><span class="pre">BattleOrder</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.choose_random_move" title="Link to this definition"></a></dt>
+<dd><p>Returns a random legal move from battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle in which to move.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Move order</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.choose_random_singles_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_random_singles_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.battle.Battle" title="poke_env.battle.battle.Battle"><span class="pre">Battle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.choose_random_singles_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.create_order">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">create_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="pokemon.html#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><span class="pre">Pokemon</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_move</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terastallize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.create_order" title="Link to this definition"></a></dt>
+<dd><p>Formats an move order corresponding to the provided pokemon or move.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>order</strong> (<a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><em>Move</em></a><em> or </em><a class="reference internal" href="pokemon.html#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><em>Pokemon</em></a>) – Move to make or Pokemon to switch to.</p></li>
+<li><p><strong>mega</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to mega evolve the pokemon, if a move is chosen.</p></li>
+<li><p><strong>z_move</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to make a zmove, if a move is chosen.</p></li>
+<li><p><strong>dynamax</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to dynamax, if a move is chosen.</p></li>
+<li><p><strong>terastallize</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Whether to terastallize, if a move is chosen.</p></li>
+<li><p><strong>move_target</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Target Pokemon slot of a given move</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Formatted move order</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.format">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.format_is_doubles">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">format_is_doubles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.format_is_doubles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.get_next_team">
+<span class="sig-name descname"><span class="pre">get_next_team</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.get_next_team" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.ladder">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ladder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_games</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player.ladder" title="Link to this definition"></a></dt>
+<dd><p>Make the player play games on the ladder.</p>
+<p>n_games defines how many battles will be played.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n_games</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of battles that will be played</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.logger">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">logger</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.14)"><span class="pre">Logger</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.n_finished_battles">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">n_finished_battles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.n_finished_battles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.n_lost_battles">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">n_lost_battles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.n_lost_battles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.n_tied_battles">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">n_tied_battles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.n_tied_battles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.n_won_battles">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">n_won_battles</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.n_won_battles" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.random_teampreview">
+<span class="sig-name descname"><span class="pre">random_teampreview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.random_teampreview" title="Link to this definition"></a></dt>
+<dd><p>Returns a random valid teampreview order for the given battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The random teampreview order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.reset_battles">
+<span class="sig-name descname"><span class="pre">reset_battles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player.reset_battles" title="Link to this definition"></a></dt>
+<dd><p>Resets the player’s inner battle tracker.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.save_replay">
+<span class="sig-name descname"><span class="pre">save_replay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle_tag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><span class="pre">Path</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><span class="pre">Path</span></a></span></span><a class="headerlink" href="#poke_env.player.player.Player.save_replay" title="Link to this definition"></a></dt>
+<dd><p>Saves replay html for a known battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>battle_tag</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – The battle tag to export (with or without leading ‘&gt;’).</p></li>
+<li><p><strong>file_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)"><em>pathlib.Path</em></a>) – Path where replay html should be written.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The written replay path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/pathlib.html#pathlib.Path" title="(in Python v3.14)">pathlib.Path</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.14)"><strong>KeyError</strong></a> – If battle_tag does not correspond to a known battle.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.send_challenges">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">send_challenges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">opponent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_challenges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_wait</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Event</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player.send_challenges" title="Link to this definition"></a></dt>
+<dd><p>Make the player send challenges to opponent.</p>
+<p>opponent must be a string, corresponding to the name of the player to challenge.</p>
+<p>n_challenges defines how many challenges will be sent.</p>
+<p>to_wait is an optional event that can be set, in which case it will be waited
+before launching challenges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>opponent</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Player username to challenge.</p></li>
+<li><p><strong>n_challenges</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of battles that will be started</p></li>
+<li><p><strong>to_wait</strong> (<em>Event</em><em>, </em><em>optional.</em>) – Optional event to wait before launching challenges.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.teampreview">
+<span class="sig-name descname"><span class="pre">teampreview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Awaitable" title="(in Python v3.14)"><span class="pre">Awaitable</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.player.Player.teampreview" title="Link to this definition"></a></dt>
+<dd><p>Returns a teampreview order for the given battle.</p>
+<p>This order must be of the form /team TEAM, where TEAM is a string defining the
+team chosen by the player. Multiple formats are supported, among which ‘3461’
+and ‘3, 4, 6, 1’ are correct and indicate leading with pokemon 3, with pokemons
+4, 6 and 1 in the back in single battles or leading with pokemons 3 and 4 with
+pokemons 6 and 1 in the back in double battles.</p>
+<p>Please refer to Pokemon Showdown’s protocol documentation for more information.</p>
+<p>IMPORTANT: If overwriting this method, make sure to mark Pokemon selected in
+teampreview as such by setting their _selected_in_teampreview attribute to True.
+See random_teampreview implementation for an example.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The teampreview order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.update_team">
+<span class="sig-name descname"><span class="pre">update_team</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder.Teambuilder" title="poke_env.teambuilder.teambuilder.Teambuilder"><span class="pre">Teambuilder</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.player.Player.update_team" title="Link to this definition"></a></dt>
+<dd><p>Updates the team used by the player.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>team</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder.Teambuilder" title="poke_env.teambuilder.teambuilder.Teambuilder"><em>Teambuilder</em></a>) – The new team to use.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.username">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">username</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.username" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.player.Player.win_rate">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">win_rate</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#poke_env.player.player.Player.win_rate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-poke_env.player.baselines">
+<span id="baselines"></span><h2><a class="toc-backref" href="#id3" role="doc-backlink">Baselines</a><a class="headerlink" href="#module-poke_env.player.baselines" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.baselines.MaxBasePowerPlayer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.baselines.</span></span><span class="sig-name descname"><span class="pre">MaxBasePowerPlayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.account_configuration.AccountConfiguration" title="poke_env.ps_client.account_configuration.AccountConfiguration"><span class="pre">AccountConfiguration</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avatar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">battle_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gen9randombattle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accept_open_team_sheet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_replays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.server_configuration.ServerConfiguration" title="poke_env.ps_client.server_configuration.ServerConfiguration"><span class="pre">ServerConfiguration</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('ws://localhost:8000/showdown/websocket'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'https</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">//play.pokemonshowdown.com/action.php?')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_timer_on_battle_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_listening</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AbstractEventLoop</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;_UnixSelectorEventLoop</span> <span class="pre">running=True</span> <span class="pre">closed=False</span> <span class="pre">debug=False&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder.Teambuilder" title="poke_env.teambuilder.teambuilder.Teambuilder"><span class="pre">Teambuilder</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_battle_tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.MaxBasePowerPlayer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><code class="xref py py-class docutils literal notranslate"><span class="pre">Player</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.MaxBasePowerPlayer.choose_doubles_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_doubles_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.double_battle.DoubleBattle" title="poke_env.battle.double_battle.DoubleBattle"><span class="pre">DoubleBattle</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.MaxBasePowerPlayer.choose_doubles_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.MaxBasePowerPlayer.choose_move">
+<span class="sig-name descname"><span class="pre">choose_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.MaxBasePowerPlayer.choose_move" title="Link to this definition"></a></dt>
+<dd><p>Abstract method to choose a move in a battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The move order, or an awaitable resolving to one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a> or Awaitable[<a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.MaxBasePowerPlayer.choose_singles_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_singles_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.MaxBasePowerPlayer.choose_singles_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.baselines.PseudoBattle">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.baselines.</span></span><span class="sig-name descname"><span class="pre">PseudoBattle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.double_battle.DoubleBattle" title="poke_env.battle.double_battle.DoubleBattle"><span class="pre">DoubleBattle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">opp_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.PseudoBattle" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="battle.html#poke_env.battle.battle.Battle" title="poke_env.battle.battle.Battle"><code class="xref py py-class docutils literal notranslate"><span class="pre">Battle</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.baselines.PseudoBattle.active_pokemon">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">active_pokemon</span></span><a class="headerlink" href="#poke_env.player.baselines.PseudoBattle.active_pokemon" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The active pokemon</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[<a class="reference internal" href="pokemon.html#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon">Pokemon</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.PseudoBattle.in_team_preview">
+<span class="sig-name descname"><span class="pre">in_team_preview</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.player.baselines.PseudoBattle.in_team_preview" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.PseudoBattle.logger">
+<span class="sig-name descname"><span class="pre">logger</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger" title="(in Python v3.14)"><span class="pre">Logger</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.player.baselines.PseudoBattle.logger" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.baselines.PseudoBattle.opponent_active_pokemon">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">opponent_active_pokemon</span></span><a class="headerlink" href="#poke_env.player.baselines.PseudoBattle.opponent_active_pokemon" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The opponent active pokemon</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="pokemon.html#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon">Pokemon</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.PseudoBattle.rules">
+<span class="sig-name descname"><span class="pre">rules</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.player.baselines.PseudoBattle.rules" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.baselines.RandomPlayer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.baselines.</span></span><span class="sig-name descname"><span class="pre">RandomPlayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.account_configuration.AccountConfiguration" title="poke_env.ps_client.account_configuration.AccountConfiguration"><span class="pre">AccountConfiguration</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avatar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">battle_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gen9randombattle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accept_open_team_sheet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_replays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.server_configuration.ServerConfiguration" title="poke_env.ps_client.server_configuration.ServerConfiguration"><span class="pre">ServerConfiguration</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('ws://localhost:8000/showdown/websocket'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'https</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">//play.pokemonshowdown.com/action.php?')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_timer_on_battle_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_listening</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AbstractEventLoop</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;_UnixSelectorEventLoop</span> <span class="pre">running=True</span> <span class="pre">closed=False</span> <span class="pre">debug=False&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder.Teambuilder" title="poke_env.teambuilder.teambuilder.Teambuilder"><span class="pre">Teambuilder</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_battle_tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.RandomPlayer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><code class="xref py py-class docutils literal notranslate"><span class="pre">Player</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.RandomPlayer.choose_move">
+<span class="sig-name descname"><span class="pre">choose_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><span class="pre">BattleOrder</span></a></span></span><a class="headerlink" href="#poke_env.player.baselines.RandomPlayer.choose_move" title="Link to this definition"></a></dt>
+<dd><p>Abstract method to choose a move in a battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The move order, or an awaitable resolving to one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a> or Awaitable[<a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.baselines.</span></span><span class="sig-name descname"><span class="pre">SimpleHeuristicsPlayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">account_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.account_configuration.AccountConfiguration" title="poke_env.ps_client.account_configuration.AccountConfiguration"><span class="pre">AccountConfiguration</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avatar</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">battle_format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gen9randombattle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accept_open_team_sheet</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_replays</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ps_client.html#poke_env.ps_client.server_configuration.ServerConfiguration" title="poke_env.ps_client.server_configuration.ServerConfiguration"><span class="pre">ServerConfiguration</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('ws://localhost:8000/showdown/websocket'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'https</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">//play.pokemonshowdown.com/action.php?')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_timer_on_battle_start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_listening</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_interval</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ping_timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">AbstractEventLoop</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;_UnixSelectorEventLoop</span> <span class="pre">running=True</span> <span class="pre">closed=False</span> <span class="pre">debug=False&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder.Teambuilder" title="poke_env.teambuilder.teambuilder.Teambuilder"><span class="pre">Teambuilder</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_battle_tracking</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><code class="xref py py-class docutils literal notranslate"><span class="pre">Player</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.ANTI_HAZARDS_MOVES">
+<span class="sig-name descname"><span class="pre">ANTI_HAZARDS_MOVES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'defog',</span> <span class="pre">'rapidspin'}</span></span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.ANTI_HAZARDS_MOVES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.ENTRY_HAZARDS">
+<span class="sig-name descname"><span class="pre">ENTRY_HAZARDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'spikes':</span> <span class="pre">SideCondition.SPIKES,</span> <span class="pre">'stealhrock':</span> <span class="pre">SideCondition.STEALTH_ROCK,</span> <span class="pre">'stickyweb':</span> <span class="pre">SideCondition.STICKY_WEB,</span> <span class="pre">'toxicspikes':</span> <span class="pre">SideCondition.TOXIC_SPIKES}</span></span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.ENTRY_HAZARDS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.HP_FRACTION_COEFICIENT">
+<span class="sig-name descname"><span class="pre">HP_FRACTION_COEFICIENT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.4</span></span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.HP_FRACTION_COEFICIENT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.SPEED_TIER_COEFICIENT">
+<span class="sig-name descname"><span class="pre">SPEED_TIER_COEFICIENT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.SPEED_TIER_COEFICIENT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.SWITCH_OUT_MATCHUP_THRESHOLD">
+<span class="sig-name descname"><span class="pre">SWITCH_OUT_MATCHUP_THRESHOLD</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-2</span></span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.SWITCH_OUT_MATCHUP_THRESHOLD" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.choose_move">
+<span class="sig-name descname"><span class="pre">choose_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><span class="pre">AbstractBattle</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.choose_move" title="Link to this definition"></a></dt>
+<dd><p>Abstract method to choose a move in a battle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>battle</strong> (<a class="reference internal" href="battle.html#poke_env.battle.abstract_battle.AbstractBattle" title="poke_env.battle.abstract_battle.AbstractBattle"><em>AbstractBattle</em></a>) – The battle.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The move order, or an awaitable resolving to one.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a> or Awaitable[<a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder">BattleOrder</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.choose_singles_move">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">choose_singles_move</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.battle.Battle" title="poke_env.battle.battle.Battle"><span class="pre">Battle</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.choose_singles_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.baselines.SimpleHeuristicsPlayer.get_double_target_multiplier">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_double_target_multiplier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">battle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="battle.html#poke_env.battle.double_battle.DoubleBattle" title="poke_env.battle.double_battle.DoubleBattle"><span class="pre">DoubleBattle</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.baselines.SimpleHeuristicsPlayer.get_double_target_multiplier" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-poke_env.player.battle_order">
+<span id="battle-orders"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Battle orders</a><a class="headerlink" href="#module-poke_env.player.battle_order" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.BattleOrder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.battle_order.</span></span><span class="sig-name descname"><span class="pre">BattleOrder</span></span><a class="headerlink" href="#poke_env.player.battle_order.BattleOrder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.BattleOrder.message">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.BattleOrder.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.DefaultBattleOrder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.battle_order.</span></span><span class="sig-name descname"><span class="pre">DefaultBattleOrder</span></span><a class="headerlink" href="#poke_env.player.battle_order.DefaultBattleOrder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SingleBattleOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.DoubleBattleOrder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.battle_order.</span></span><span class="sig-name descname"><span class="pre">DoubleBattleOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'SingleBattleOrder'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'SingleBattleOrder'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.battle_order.DoubleBattleOrder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BattleOrder</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.DoubleBattleOrder.first_order">
+<span class="sig-name descname"><span class="pre">first_order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.DoubleBattleOrder.first_order" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.DoubleBattleOrder.join_orders">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">join_orders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_orders</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.battle_order.DoubleBattleOrder" title="poke_env.player.battle_order.DoubleBattleOrder"><span class="pre">DoubleBattleOrder</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.battle_order.DoubleBattleOrder.join_orders" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.DoubleBattleOrder.message">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.DoubleBattleOrder.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.DoubleBattleOrder.second_order">
+<span class="sig-name descname"><span class="pre">second_order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><span class="pre">SingleBattleOrder</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.DoubleBattleOrder.second_order" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.ForfeitBattleOrder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.battle_order.</span></span><span class="sig-name descname"><span class="pre">ForfeitBattleOrder</span></span><a class="headerlink" href="#poke_env.player.battle_order.ForfeitBattleOrder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BattleOrder</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.ForfeitBattleOrder.message">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.ForfeitBattleOrder.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.PassBattleOrder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.battle_order.</span></span><span class="sig-name descname"><span class="pre">PassBattleOrder</span></span><a class="headerlink" href="#poke_env.player.battle_order.PassBattleOrder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.battle_order.SingleBattleOrder" title="poke_env.player.battle_order.SingleBattleOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">SingleBattleOrder</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.battle_order.</span></span><span class="sig-name descname"><span class="pre">SingleBattleOrder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'Union[Move,</span> <span class="pre">Pokemon,</span> <span class="pre">str]'</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mega</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_move</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dynamax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terastallize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'bool'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="s"><span class="pre">'int'</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#poke_env.player.battle_order.BattleOrder" title="poke_env.player.battle_order.BattleOrder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BattleOrder</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.dynamax">
+<span class="sig-name descname"><span class="pre">dynamax</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.dynamax" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.mega">
+<span class="sig-name descname"><span class="pre">mega</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.mega" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.message">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.move_target">
+<span class="sig-name descname"><span class="pre">move_target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.move_target" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.order">
+<span class="sig-name descname"><span class="pre">order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="pokemon.html#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><span class="pre">Pokemon</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.order" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.terastallize">
+<span class="sig-name descname"><span class="pre">terastallize</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.terastallize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="poke_env.player.battle_order.SingleBattleOrder.z_move">
+<span class="sig-name descname"><span class="pre">z_move</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#poke_env.player.battle_order.SingleBattleOrder.z_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-poke_env.player.utils">
+<span id="utilities"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Utilities</a><a class="headerlink" href="#module-poke_env.player.utils" title="Link to this heading"></a></h2>
+<p>This module contains utility functions and objects related to Player classes.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="poke_env.player.utils.background_cross_evaluate">
+<span class="sig-prename descclassname"><span class="pre">poke_env.player.utils.</span></span><span class="sig-name descname"><span class="pre">background_cross_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">players</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><span class="pre">Player</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_challenges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Future</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.utils.background_cross_evaluate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="poke_env.player.utils.background_evaluate_player">
+<span class="sig-prename descclassname"><span class="pre">poke_env.player.utils.</span></span><span class="sig-name descname"><span class="pre">background_evaluate_player</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><span class="pre">Player</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_placement_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Future</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.utils.background_evaluate_player" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="poke_env.player.utils.cross_evaluate">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.utils.</span></span><span class="sig-name descname"><span class="pre">cross_evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">players</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><span class="pre">Player</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_challenges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.utils.cross_evaluate" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="poke_env.player.utils.evaluate_player">
+<span class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.player.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_player</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><span class="pre">Player</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_placement_battles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><span class="pre">Tuple</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.player.utils.evaluate_player" title="Link to this definition"></a></dt>
+<dd><p>Estimate player strength.</p>
+<p>This functions calculates an estimate of a player’s strength, measured as its
+expected performance against a random opponent in a gen 8 random battle. The
+returned number can be interpreted as follows: a strength of k means that the
+probability of the player winning a gen 8 random battle against a random player is k
+times higher than the probability of the random player winning.</p>
+<p>The function returns a tuple containing the best guess based on the played games
+as well as a tuple describing a 95% confidence interval for that estimated strength.</p>
+<p>The actual evaluation can be performed against any baseline player for which an
+accurate strength estimate is available. This baseline is determined at the start of
+the process, by playing a limited number of placement battles and choosing the
+opponent closest to the player in terms of performance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>player</strong> (<a class="reference internal" href="#poke_env.player.player.Player" title="poke_env.player.player.Player"><em>Player</em></a>) – The player to evaluate.</p></li>
+<li><p><strong>n_battles</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – The total number of battle to perform, including placement
+battles.</p></li>
+<li><p><strong>n_placement_battles</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><em>int</em></a>) – Number of placement battles to perform per baseline
+player.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p>ValueError if the results are too extreme to be interpreted.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p>AssertionError if the player is not configured to play gen8battles or the
+selected number of games to play it too small.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the estimated player strength and a 95% confidence
+interval</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.14)">tuple</a> of float and tuple of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="battle.html" class="btn btn-neutral float-left" title="The Battle object" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pokemon.html" class="btn btn-neutral float-right" title="The pokémon object" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Haris Sahovic.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

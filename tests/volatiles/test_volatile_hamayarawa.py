@@ -12,7 +12,7 @@ def test_バインド_ゴーストタイプは交代可能():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"バインド": 99},
     )
-    assert battle.can_switch(battle.players[0])
+    assert battle.query.can_switch(battle.players[0])
 
 
 def test_バインド_ターン経過でダメージ():
@@ -54,7 +54,7 @@ def test_バインド_交代不可():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"バインド": 99},
     )
-    assert not battle.can_switch(battle.players[0])
+    assert not battle.query.can_switch(battle.players[0])
 
 
 def test_バインド_発生源が交代すると解除():

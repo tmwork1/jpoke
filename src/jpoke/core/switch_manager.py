@@ -50,25 +50,6 @@ class SwitchManager:
     def _events(self) -> EventManager:
         return self.battle.events
 
-    def can_switch(self, state: PlayerState) -> bool:
-        """プレイヤーが交代可能かどうかを判定する。
-
-        Args:
-            state: 交代可能かを判定するプレイヤーの状態
-
-        Returns:
-            bool: 交代可能な場合True、そうでない場合False
-        """
-        # 控えのポケモンがすべて瀕死の場合は交代不可
-        if all(mon.fainted for mon in state.bench):
-            return False
-
-        # 場のポケモンがとらわれ状態にある場合は交代不可
-        if self.battle.query.is_trapped(state.active):
-            return False
-
-        return True
-
     def run_switch(self,
                    player: Player,
                    new: Pokemon,

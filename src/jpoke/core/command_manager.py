@@ -41,7 +41,7 @@ class CommandManager:
         state = self.battle.player_states[player]
         # PIVOT（バトンタッチ等）中はとらわれ状態に関わらず交代可能
         if state.interrupt != Interrupt.PIVOT:
-            if not self.battle.can_switch(player):
+            if not self.battle.query.can_switch(player):
                 return []
         bench_alive = any(
             mon is not state.active and mon.alive

@@ -1,14 +1,15 @@
-# TODO: 分布の演算ロジックをcore/に置いていると、handlers/からcore/をimportする構造になるので、低レベルのモジュールに移譲したい
-
-
 """致死率計算ロジックを提供するモジュール。
 
 技・アイテム・揮発状態などの効果をHP分布（LethalDist）として扱い、
 複数回攻撃後の確定数と致死率を求める。
 
+分布そのものの演算（LethalState / LethalDist / to_dist など）は
+Battle に依存しないため `jpoke.utils.lethal_dist` に置く。
+このモジュールは Battle/Pokemon/Move と結びついた計算ループを担う。
+
 主要な型:
-  LethalState  — HP・特性/道具の有効フラグをまとめた不変値
-  LethalDist   — LethalState → 出現頻度 の辞書（確率分布）
+  LethalState  — HP・特性/道具の有効フラグをまとめた不変値（utils.lethal_dist）
+  LethalDist   — LethalState → 出現頻度 の辞書（確率分布、utils.lethal_dist）
   LethalResult — 1ヒット分の計算結果（HP分布・ダメージ分布・致死率など）
 """
 
@@ -20,24 +21,10 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 from dataclasses import dataclass, field
-from collections import defaultdict, Counter
+from collections import defaultdict
 
 from jpoke.utils.type_defs import Stat, AilmentName, LethalEvent, LethalSubject
-
-
-@dataclass(frozen=True)
-class LethalState:
-    """HP分布の1要素。HP値と特性・道具の有効フラグを保持する。
-
-    ability_enabled / item_enabled は「消耗型アイテム使用済み」など
-    一度無効になったら戻らない状態を追跡するために使う。
-    """
-    hp: int
-    ability_enabled: bool = True
-    item_enabled: bool = True
-
-
-type LethalDist = dict[LethalState, int]
+from jpoke.utils.lethal_dist import LethalDist, to_dist, _check_hp, subtract_dist
 
 
 @dataclass(frozen=True)
@@ -119,86 +106,6 @@ class LethalResult:
         zero_freq = hp_counter.get(0, 0)
         total_freq = sum(hp_counter.values())
         return zero_freq / total_freq
-
-
-def to_dist(x: int | list[int] | LethalDist,
-            ability_enabled: bool = True,
-            item_enabled: bool = True) -> LethalDist:
-    """整数・リスト・既存の LethalDist を LethalDist に正規化する。"""
-    if isinstance(x, dict):
-        return x
-    elif isinstance(x, list):
-        counter = Counter(x)
-        return {LethalState(hp=k, ability_enabled=ability_enabled, item_enabled=item_enabled): v
-                for k, v in counter.items()}
-    else:
-        return {LethalState(hp=x, ability_enabled=ability_enabled, item_enabled=item_enabled): 1}
-
-
-def flip_dist(dist: LethalDist) -> LethalDist:
-    """分布の hp 符号を反転する（subtract_dist の内部用）。"""
-    return {LethalState(hp=-k.hp, ability_enabled=k.ability_enabled, item_enabled=k.item_enabled): v
-            for k, v in dist.items()}
-
-
-def _clip_dist(dist: LethalDist,
-               minimum: int | None = None,
-               maximum: int | None = None) -> LethalDist:
-    """HP値を [minimum, maximum] にクランプし、同一 LethalState を集約する。"""
-    if minimum is None and maximum is None:
-        return dist
-
-    result = defaultdict(int)
-    for value, freq in dist.items():
-        hp = value.hp
-        if minimum is not None:
-            hp = max(hp, minimum)
-        if maximum is not None:
-            hp = min(hp, maximum)
-        key = LethalState(hp=hp, ability_enabled=value.ability_enabled, item_enabled=value.item_enabled)
-        result[key] += freq
-    return dict(result)
-
-
-def _check_hp(dist: LethalDist, value: int) -> bool:
-    """分布内に指定 HP 値を持つ状態が存在するか確認する。"""
-    return any(state.hp == value for state in dist)
-
-
-def _convolve(a: LethalDist | list[int] | int,
-              b: LethalDist | list[int] | int) -> LethalDist:
-    """2つの分布の畳み込みを計算する（HP を加算、フラグは AND）。"""
-    x = to_dist(a)
-    y = to_dist(b)
-
-    result = defaultdict(int)
-    for vx, fx in x.items():
-        for vy, fy in y.items():
-            hp = vx.hp + vy.hp
-            ability_enabled = vx.ability_enabled and vy.ability_enabled
-            item_enabled = vx.item_enabled and vy.item_enabled
-            key = LethalState(hp=hp, ability_enabled=ability_enabled, item_enabled=item_enabled)
-            result[key] += fx * fy
-    return dict(result)
-
-
-def add_dist(a: LethalDist | list[int] | int,
-             b: LethalDist | list[int] | int,
-             minimum: int | None = None,
-             maximum: int | None = None) -> LethalDist:
-    """HP 分布 a に b を加算し、結果を [minimum, maximum] にクランプする。"""
-    result = _convolve(a, b)
-    return _clip_dist(result, minimum=minimum, maximum=maximum)
-
-
-def subtract_dist(a: LethalDist | list[int] | int,
-                  b: LethalDist | list[int] | int,
-                  minimum: int | None = None,
-                  maximum: int | None = None) -> LethalDist:
-    """HP 分布 a から b を減算し、結果を [minimum, maximum] にクランプする。"""
-    y = to_dist(b)
-    result = _convolve(a, flip_dist(y))
-    return _clip_dist(result, minimum=minimum, maximum=maximum)
 
 
 def _lethal_loop(hp_dist: LethalDist,

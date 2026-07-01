@@ -647,12 +647,6 @@ class Battle:
             return self.test_option.secondary_chance
         return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
 
-    def can_switch(self, player: Player) -> bool:
-        # TODO : 実装をswitch_managerからqueryに移譲して、Battleクラスのメソッドは廃止したほうがよいかもしれない。
-        """プレイヤーが交代可能かどうかを判定する（SwitchManagerへの委譲）。"""
-        state = self.player_states[player]
-        return self.switch_manager.can_switch(state)
-
     def print_logs(self, turn: int | None = None):
         """指定したターンのログを整形して出力。
 

@@ -1,0 +1,1121 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="readthedocs-addons-api-version" content="1"><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The pokémon object &mdash; Poke-env  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <script src="../_static/js/versions.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The move object" href="move.html" />
+    <link rel="prev" title="The player object and related subclasses" href="player.html" /> 
+<script async type="text/javascript" src="/_/static/javascript/readthedocs-addons.js"></script><meta name="readthedocs-project-slug" content="poke-env" /><meta name="readthedocs-version-slug" content="stable" /><meta name="readthedocs-resolver-filename" content="/modules/pokemon.html" /><meta name="readthedocs-http-status" content="200" /></head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Poke-env
+          </a>
+              <div class="switch-menus">
+                <div class="version-switch"></div>
+                <div class="language-switch"></div>
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Main modules documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="battle.html">The Battle object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="player.html">The player object and related subclasses</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The pokémon object</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon"><code class="docutils literal notranslate"><span class="pre">Pokemon</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.ability"><code class="docutils literal notranslate"><span class="pre">Pokemon.ability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.active"><code class="docutils literal notranslate"><span class="pre">Pokemon.active</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.available_moves_from_request"><code class="docutils literal notranslate"><span class="pre">Pokemon.available_moves_from_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.available_z_moves"><code class="docutils literal notranslate"><span class="pre">Pokemon.available_z_moves</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.base_ability"><code class="docutils literal notranslate"><span class="pre">Pokemon.base_ability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.base_moves"><code class="docutils literal notranslate"><span class="pre">Pokemon.base_moves</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.base_species"><code class="docutils literal notranslate"><span class="pre">Pokemon.base_species</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.base_stats"><code class="docutils literal notranslate"><span class="pre">Pokemon.base_stats</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.base_types"><code class="docutils literal notranslate"><span class="pre">Pokemon.base_types</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.boost"><code class="docutils literal notranslate"><span class="pre">Pokemon.boost()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.boosts"><code class="docutils literal notranslate"><span class="pre">Pokemon.boosts</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.cant_move"><code class="docutils literal notranslate"><span class="pre">Pokemon.cant_move()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.check_consistency"><code class="docutils literal notranslate"><span class="pre">Pokemon.check_consistency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.check_move_consistency"><code class="docutils literal notranslate"><span class="pre">Pokemon.check_move_consistency()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.clear_active"><code class="docutils literal notranslate"><span class="pre">Pokemon.clear_active()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.clear_boosts"><code class="docutils literal notranslate"><span class="pre">Pokemon.clear_boosts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.clear_negative_boosts"><code class="docutils literal notranslate"><span class="pre">Pokemon.clear_negative_boosts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.clear_positive_boosts"><code class="docutils literal notranslate"><span class="pre">Pokemon.clear_positive_boosts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.copy_boosts"><code class="docutils literal notranslate"><span class="pre">Pokemon.copy_boosts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.cure_status"><code class="docutils literal notranslate"><span class="pre">Pokemon.cure_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.current_hp"><code class="docutils literal notranslate"><span class="pre">Pokemon.current_hp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.current_hp_fraction"><code class="docutils literal notranslate"><span class="pre">Pokemon.current_hp_fraction</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.damage"><code class="docutils literal notranslate"><span class="pre">Pokemon.damage()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.damage_multiplier"><code class="docutils literal notranslate"><span class="pre">Pokemon.damage_multiplier()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.effects"><code class="docutils literal notranslate"><span class="pre">Pokemon.effects</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.end_effect"><code class="docutils literal notranslate"><span class="pre">Pokemon.end_effect()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.end_item"><code class="docutils literal notranslate"><span class="pre">Pokemon.end_item()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.end_turn"><code class="docutils literal notranslate"><span class="pre">Pokemon.end_turn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.evs"><code class="docutils literal notranslate"><span class="pre">Pokemon.evs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.faint"><code class="docutils literal notranslate"><span class="pre">Pokemon.faint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.fainted"><code class="docutils literal notranslate"><span class="pre">Pokemon.fainted</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.first_turn"><code class="docutils literal notranslate"><span class="pre">Pokemon.first_turn</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.forme_change"><code class="docutils literal notranslate"><span class="pre">Pokemon.forme_change()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.forme_change_ability"><code class="docutils literal notranslate"><span class="pre">Pokemon.forme_change_ability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.gen"><code class="docutils literal notranslate"><span class="pre">Pokemon.gen</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.gender"><code class="docutils literal notranslate"><span class="pre">Pokemon.gender</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.height"><code class="docutils literal notranslate"><span class="pre">Pokemon.height</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.hp_status"><code class="docutils literal notranslate"><span class="pre">Pokemon.hp_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.identifier"><code class="docutils literal notranslate"><span class="pre">Pokemon.identifier()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.identifies_as"><code class="docutils literal notranslate"><span class="pre">Pokemon.identifies_as()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.invert_boosts"><code class="docutils literal notranslate"><span class="pre">Pokemon.invert_boosts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.is_dynamaxed"><code class="docutils literal notranslate"><span class="pre">Pokemon.is_dynamaxed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.is_terastallized"><code class="docutils literal notranslate"><span class="pre">Pokemon.is_terastallized</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.item"><code class="docutils literal notranslate"><span class="pre">Pokemon.item</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.ivs"><code class="docutils literal notranslate"><span class="pre">Pokemon.ivs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.last_move"><code class="docutils literal notranslate"><span class="pre">Pokemon.last_move</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.level"><code class="docutils literal notranslate"><span class="pre">Pokemon.level</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.max_hp"><code class="docutils literal notranslate"><span class="pre">Pokemon.max_hp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.mega_evolve"><code class="docutils literal notranslate"><span class="pre">Pokemon.mega_evolve()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.mimic_move"><code class="docutils literal notranslate"><span class="pre">Pokemon.mimic_move</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.moved"><code class="docutils literal notranslate"><span class="pre">Pokemon.moved()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.moves"><code class="docutils literal notranslate"><span class="pre">Pokemon.moves</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.must_recharge"><code class="docutils literal notranslate"><span class="pre">Pokemon.must_recharge</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.name"><code class="docutils literal notranslate"><span class="pre">Pokemon.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.nature"><code class="docutils literal notranslate"><span class="pre">Pokemon.nature</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.pokeball"><code class="docutils literal notranslate"><span class="pre">Pokemon.pokeball</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.possible_abilities"><code class="docutils literal notranslate"><span class="pre">Pokemon.possible_abilities</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.prepare"><code class="docutils literal notranslate"><span class="pre">Pokemon.prepare()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.preparing"><code class="docutils literal notranslate"><span class="pre">Pokemon.preparing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.preparing_move"><code class="docutils literal notranslate"><span class="pre">Pokemon.preparing_move</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.preparing_target"><code class="docutils literal notranslate"><span class="pre">Pokemon.preparing_target</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.primal"><code class="docutils literal notranslate"><span class="pre">Pokemon.primal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.protect_counter"><code class="docutils literal notranslate"><span class="pre">Pokemon.protect_counter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.revealed"><code class="docutils literal notranslate"><span class="pre">Pokemon.revealed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.selected_in_teampreview"><code class="docutils literal notranslate"><span class="pre">Pokemon.selected_in_teampreview</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.set_boost"><code class="docutils literal notranslate"><span class="pre">Pokemon.set_boost()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.set_hp"><code class="docutils literal notranslate"><span class="pre">Pokemon.set_hp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.set_hp_status"><code class="docutils literal notranslate"><span class="pre">Pokemon.set_hp_status()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.shiny"><code class="docutils literal notranslate"><span class="pre">Pokemon.shiny</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.species"><code class="docutils literal notranslate"><span class="pre">Pokemon.species</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.stab_multiplier"><code class="docutils literal notranslate"><span class="pre">Pokemon.stab_multiplier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.start_effect"><code class="docutils literal notranslate"><span class="pre">Pokemon.start_effect()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.stats"><code class="docutils literal notranslate"><span class="pre">Pokemon.stats</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.status"><code class="docutils literal notranslate"><span class="pre">Pokemon.status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.status_counter"><code class="docutils literal notranslate"><span class="pre">Pokemon.status_counter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.switch_in"><code class="docutils literal notranslate"><span class="pre">Pokemon.switch_in()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.switch_out"><code class="docutils literal notranslate"><span class="pre">Pokemon.switch_out()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.temporary_ability"><code class="docutils literal notranslate"><span class="pre">Pokemon.temporary_ability</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.tera_type"><code class="docutils literal notranslate"><span class="pre">Pokemon.tera_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.terastallize"><code class="docutils literal notranslate"><span class="pre">Pokemon.terastallize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.transform"><code class="docutils literal notranslate"><span class="pre">Pokemon.transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.transformed"><code class="docutils literal notranslate"><span class="pre">Pokemon.transformed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.type_1"><code class="docutils literal notranslate"><span class="pre">Pokemon.type_1</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.type_2"><code class="docutils literal notranslate"><span class="pre">Pokemon.type_2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.types"><code class="docutils literal notranslate"><span class="pre">Pokemon.types</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.update_from_request"><code class="docutils literal notranslate"><span class="pre">Pokemon.update_from_request()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.was_illusioned"><code class="docutils literal notranslate"><span class="pre">Pokemon.was_illusioned()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon.weight"><code class="docutils literal notranslate"><span class="pre">Pokemon.weight</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="move.html">The move object</a></li>
+<li class="toctree-l1"><a class="reference internal" href="env.html">The env object and related subclasses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="other_environment.html">Other objects</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Standalone submodules documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data - Access and manipulate pokémon data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ps_client.html">PS Client - Interact with Pokémon Showdown servers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teambuilder.html">Teambuilder - Parse and generate showdown teams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="concurrency.html">Concurrency utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calc.html">Damage calculator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stats.html">Stats utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Poke-env</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">The pokémon object</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/modules/pokemon.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-poke_env.battle.pokemon">
+<span id="the-pokemon-object"></span><span id="pokemon"></span><h1>The pokémon object<a class="headerlink" href="#module-poke_env.battle.pokemon" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">poke_env.battle.pokemon.</span></span><span class="sig-name descname"><span class="pre">Pokemon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gen</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_pokemon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teambuilder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="teambuilder.html#poke_env.teambuilder.teambuilder_pokemon.TeambuilderPokemon" title="poke_env.teambuilder.teambuilder_pokemon.TeambuilderPokemon"><span class="pre">TeambuilderPokemon</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.ability">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.ability" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s ability. None if unknown or removed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.active">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">active</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.active" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Boolean indicating whether the pokemon is active.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.available_moves_from_request">
+<span class="sig-name descname"><span class="pre">available_moves_from_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.available_moves_from_request" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.available_z_moves">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">available_z_moves</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.available_z_moves" title="Link to this definition"></a></dt>
+<dd><p>Caution: this property is not properly tested yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The set of moves that pokemon can use as z-moves.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move">Move</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.base_ability">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">base_ability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.base_ability" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s base ability. None if unknown.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.base_moves">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">base_moves</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.base_moves" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s underlying move dictionary. When transformed, this
+returns the temporary move set; otherwise it returns the learned moves.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move">Move</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.base_species">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">base_species</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.base_species" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s base species.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.base_stats">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">base_stats</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.base_stats" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s base stats.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.base_types">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">base_types</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><span class="pre">PokemonType</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.base_types" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s non-Tera types, accounting for temporary type changes.
+Unlike <cite>types</cite>, this ignores Terastallization.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType">PokemonType</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.boost">
+<span class="sig-name descname"><span class="pre">boost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.boost" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.boosts">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">boosts</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.boosts" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s boosts.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.cant_move">
+<span class="sig-name descname"><span class="pre">cant_move</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.cant_move" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.check_consistency">
+<span class="sig-name descname"><span class="pre">check_consistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pkmn_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player_role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.check_consistency" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.check_move_consistency">
+<span class="sig-name descname"><span class="pre">check_move_consistency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">active_request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_doubles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.check_move_consistency" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.clear_active">
+<span class="sig-name descname"><span class="pre">clear_active</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.clear_active" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.clear_boosts">
+<span class="sig-name descname"><span class="pre">clear_boosts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.clear_boosts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.clear_negative_boosts">
+<span class="sig-name descname"><span class="pre">clear_negative_boosts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.clear_negative_boosts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.clear_positive_boosts">
+<span class="sig-name descname"><span class="pre">clear_positive_boosts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.clear_positive_boosts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.copy_boosts">
+<span class="sig-name descname"><span class="pre">copy_boosts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><span class="pre">Pokemon</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.copy_boosts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.cure_status">
+<span class="sig-name descname"><span class="pre">cure_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.cure_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.current_hp">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">current_hp</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.current_hp" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s current hp. For your pokemons, this is the actual value.
+For opponent’s pokemon, this value depends on showdown information: it can
+be on a scale from 0 to 100 or on a pixel scale.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.current_hp_fraction">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">current_hp_fraction</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.current_hp_fraction" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s current remaining hp fraction.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.damage">
+<span class="sig-name descname"><span class="pre">damage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.damage" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.damage_multiplier">
+<span class="sig-name descname"><span class="pre">damage_multiplier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_or_move</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><span class="pre">PokemonType</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.damage_multiplier" title="Link to this definition"></a></dt>
+<dd><p>Returns the damage multiplier associated with a given type or move on this
+pokemon.</p>
+<p>This method is a shortcut for PokemonType.damage_multiplier with relevant types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>type_or_move</strong> (<a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><em>PokemonType</em></a><em> or </em><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><em>Move</em></a>) – The type or move of interest.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The damage multiplier associated with given type on the pokemon.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.effects">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">effects</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="other_environment.html#poke_env.battle.effect.Effect" title="poke_env.battle.effect.Effect"><span class="pre">Effect</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.effects" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A Dict mapping the effects currently affecting the pokemon and the
+associated counter.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference internal" href="other_environment.html#poke_env.battle.effect.Effect" title="poke_env.battle.effect.Effect">Effect</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.end_effect">
+<span class="sig-name descname"><span class="pre">end_effect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">effect_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.end_effect" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.end_item">
+<span class="sig-name descname"><span class="pre">end_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.end_item" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.end_turn">
+<span class="sig-name descname"><span class="pre">end_turn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.end_turn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.evs">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.evs" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s EVs as a list of [HP, Atk, Def, SpA, SpD, Spe].
+None if unknown (e.g. opponent’s pokemon).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.faint">
+<span class="sig-name descname"><span class="pre">faint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.faint" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.fainted">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fainted</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.fainted" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the pokemon has fainted.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.first_turn">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">first_turn</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.first_turn" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether this is this pokemon’s first action since its last switch in.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.forme_change">
+<span class="sig-name descname"><span class="pre">forme_change</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">species</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.forme_change" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.forme_change_ability">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">forme_change_ability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.forme_change_ability" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s ability after changing forme. None if the pokemon hasn’t changed forme.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.gen">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">gen</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.gen" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The generation of the pokemon.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.gender">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">gender</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_gender.PokemonGender" title="poke_env.battle.pokemon_gender.PokemonGender"><span class="pre">PokemonGender</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.gender" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s gender.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_gender.PokemonGender" title="poke_env.battle.pokemon_gender.PokemonGender">PokemonGender</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.height">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">height</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.height" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s height, in meters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.hp_status">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hp_status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.hp_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.identifier">
+<span class="sig-name descname"><span class="pre">identifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player_role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.identifier" title="Link to this definition"></a></dt>
+<dd><p>”
+:param player_role: The player’s role in the battle (p1 or p2)
+:type player_role: str
+:return: The pokemon’s identifier, which can be used to identify it in Showdown logs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.identifies_as">
+<span class="sig-name descname"><span class="pre">identifies_as</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ident</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.identifies_as" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.invert_boosts">
+<span class="sig-name descname"><span class="pre">invert_boosts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.invert_boosts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.is_dynamaxed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_dynamaxed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.is_dynamaxed" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the pokemon is currently dynamaxed</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.is_terastallized">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_terastallized</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.is_terastallized" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the pokemon is currently terastallized</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.item">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">item</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.item" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s item.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.ivs">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ivs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.14)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.ivs" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s IVs as a list of [HP, Atk, Def, SpA, SpD, Spe].
+None if unknown (e.g. opponent’s pokemon).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.last_move">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">last_move</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.last_move" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The last move used by this pokemon, or None.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move">Move</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.level">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">level</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.level" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s level.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.max_hp">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">max_hp</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.max_hp" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s max hp. For your pokemons, this is the actual value.
+For opponent’s pokemon, this value depends on showdown information: it can
+be on a scale from 0 to 100 or on a pixel scale.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.mega_evolve">
+<span class="sig-name descname"><span class="pre">mega_evolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.mega_evolve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.mimic_move">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mimic_move</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.mimic_move" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The move currently copied by Mimic, if any.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move">Move</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.moved">
+<span class="sig-name descname"><span class="pre">moved</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">move_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">failed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reveal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pressure</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.moved" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.moves">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">moves</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.moves" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary of the pokemon’s known moves.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move">Move</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.must_recharge">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">must_recharge</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.must_recharge" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A boolean indicating whether the pokemon must recharge.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.name">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.name" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s name, which can be used to create Showdown’s
+identifier.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.nature">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nature</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.nature" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s nature if known. None if not provided by the teambuilder.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.pokeball">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pokeball</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.pokeball" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokeball in which is the pokemon.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.possible_abilities">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">possible_abilities</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.possible_abilities" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The list of possible abilities for this pokemon.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.prepare">
+<span class="sig-name descname"><span class="pre">prepare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">move_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><span class="pre">Pokemon</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.prepare" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.preparing">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">preparing</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.preparing" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether this pokemon is preparing a multi-turn move.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.preparing_move">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">preparing_move</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move"><span class="pre">Move</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.preparing_move" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The move being prepared - optional.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="move.html#poke_env.battle.move.Move" title="poke_env.battle.move.Move">Move</a>, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.preparing_target">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">preparing_target</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><span class="pre">Pokemon</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.preparing_target" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The moves target - optional.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.primal">
+<span class="sig-name descname"><span class="pre">primal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.primal" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.protect_counter">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">protect_counter</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.protect_counter" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>How many protect-like moves where used in a row by this pokemon.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.revealed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">revealed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.revealed" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether this pokemon has appeared in the current battle.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.selected_in_teampreview">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">selected_in_teampreview</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.selected_in_teampreview" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether this pokemon was selected in teampreview.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.set_boost">
+<span class="sig-name descname"><span class="pre">set_boost</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">amount</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.set_boost" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.set_hp">
+<span class="sig-name descname"><span class="pre">set_hp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.set_hp" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.set_hp_status">
+<span class="sig-name descname"><span class="pre">set_hp_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hp_status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.set_hp_status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.shiny">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">shiny</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.shiny" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether this pokemon is shiny.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.species">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">species</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.species" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s species.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a> | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.stab_multiplier">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stab_multiplier</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.stab_multiplier" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s STAB multiplier.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.start_effect">
+<span class="sig-name descname"><span class="pre">start_effect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">effect_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.start_effect" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.stats">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stats</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.stats" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s stats, as a dictionary.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a> | None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.status">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">status</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="other_environment.html#poke_env.battle.status.Status" title="poke_env.battle.status.Status"><span class="pre">Status</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.status" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s status.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[<a class="reference internal" href="other_environment.html#poke_env.battle.status.Status" title="poke_env.battle.status.Status">Status</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.status_counter">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">status_counter</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.status_counter" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s status turn count. Only counts TOXIC and SLEEP statuses.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.switch_in">
+<span class="sig-name descname"><span class="pre">switch_in</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.switch_in" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.switch_out">
+<span class="sig-name descname"><span class="pre">switch_out</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="other_environment.html#poke_env.battle.field.Field" title="poke_env.battle.field.Field"><span class="pre">Field</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.switch_out" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.temporary_ability">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">temporary_ability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.temporary_ability" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s temporary ability, None if none is set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.tera_type">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tera_type</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><span class="pre">PokemonType</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.tera_type" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Tera Type of the Pokemon, None if unnown</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[<a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType">PokemonType</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.terastallize">
+<span class="sig-name descname"><span class="pre">terastallize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.terastallize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">into</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#poke_env.battle.pokemon.Pokemon" title="poke_env.battle.pokemon.Pokemon"><span class="pre">Pokemon</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.transform" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.transformed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">transformed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><span class="pre">bool</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.transformed" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the pokemon is currently transformed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.type_1">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">type_1</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><span class="pre">PokemonType</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.type_1" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s first type.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType">PokemonType</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.type_2">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">type_2</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><span class="pre">PokemonType</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><span class="pre">None</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.type_2" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s second type.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Optional[<a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType">PokemonType</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.types">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">types</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType"><span class="pre">PokemonType</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.types" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s types. Not a Tuple because moves can add types
+and also remove types, and override them too.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[<a class="reference internal" href="other_environment.html#poke_env.battle.pokemon_type.PokemonType" title="poke_env.battle.pokemon_type.PokemonType">PokemonType</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.update_from_request">
+<span class="sig-name descname"><span class="pre">update_from_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_pokemon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><span class="pre">Any</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.update_from_request" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.was_illusioned">
+<span class="sig-name descname"><span class="pre">was_illusioned</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><span class="pre">Dict</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="other_environment.html#poke_env.battle.field.Field" title="poke_env.battle.field.Field"><span class="pre">Field</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.was_illusioned" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="poke_env.battle.pokemon.Pokemon.weight">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">weight</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)"><span class="pre">float</span></a></span><a class="headerlink" href="#poke_env.battle.pokemon.Pokemon.weight" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The pokemon’s weight, in kilograms.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.14)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="player.html" class="btn btn-neutral float-left" title="The player object and related subclasses" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="move.html" class="btn btn-neutral float-right" title="The move object" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Haris Sahovic.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

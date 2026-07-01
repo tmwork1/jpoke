@@ -192,7 +192,7 @@ def can_switch(battle: Battle, player_idx: int) -> bool:
         入れ替え可能かどうか
     """
     player = battle.players[player_idx]
-    return battle.can_switch(player)
+    return battle.query.can_switch(player)
 
 
 def change_item(battle: Battle,

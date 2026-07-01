@@ -558,7 +558,7 @@ def test_にげられない_ゴーストタイプは交代できる():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"にげられない": 1},
     )
-    assert battle.can_switch(battle.players[0])
+    assert battle.query.can_switch(battle.players[0])
 
 
 def test_にげられない_交代不可():
@@ -568,7 +568,7 @@ def test_にげられない_交代不可():
         volatile0={"にげられない": 1},
     )
     # 交代コマンドが利用不可
-    assert not battle.can_switch(battle.players[0])
+    assert not battle.query.can_switch(battle.players[0])
 
 
 def test_ねむけ_ターン経過でねむりになる():
@@ -639,7 +639,7 @@ def test_ねをはる_交代不可():
         team1=[Pokemon("ピカチュウ")],
         volatile0={"ねをはる": 1},
     )
-    assert not battle.can_switch(battle.players[0])
+    assert not battle.query.can_switch(battle.players[0])
 
 
 def test_ねをはる_回復():

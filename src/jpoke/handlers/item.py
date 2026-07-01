@@ -814,7 +814,7 @@ def だっしゅつパック_reserve_switch(battle: Battle, ctx: EventContext, v
     player = battle.get_player(ctx.target)
     if (
         any(v < 0 for v in value.values())
-        and battle.can_switch(player)
+        and battle.query.can_switch(player)
     ):
         battle.player_states[player].interrupt = Interrupt.EJECTPACK_REQUESTED
     return HandlerReturn(value=value)
@@ -1260,7 +1260,7 @@ def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: A
     foe = ctx.attacker
     rival = battle.get_player(foe)
 
-    if battle.can_switch(rival):
+    if battle.query.can_switch(rival):
         _announce_and_consume_item(battle, mon)
         commands = battle.command_manager.get_available_switch_commands(rival)
         command = battle.random.choice(commands)

@@ -156,7 +156,7 @@ def test_かくれる_潜伏中は交代できない(hidden_move_name):
         team1=[Pokemon("ピカチュウ")],
     )
     battle.volatile_manager.apply(battle.actives[0], hidden_move_name, count=1)
-    assert not battle.can_switch(battle.players[0])
+    assert not battle.query.can_switch(battle.players[0])
 
 
 @pytest.mark.parametrize("hidden_move_name,hit_move_name", [
