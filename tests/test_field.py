@@ -129,6 +129,20 @@ def test_おおあめ_こおりが付与される():
     assert target.ailment.name == "こおり", "おおあめ中にこおり状態にならなかった"
 
 
+def test_グラスフィールド_かいふくふうじで回復しない():
+    """グラスフィールド: かいふくふうじ状態のポケモンはターン終了時に回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("グラスフィールド", 99),
+        volatile0={"かいふくふうじ": 3},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1, "かいふくふうじ状態でグラスフィールドの回復が発生した"
+
+
 def test_グラスフィールド_じしん弱化():
     """グラスフィールド: じしん威力0.5倍"""
     battle = t.start_battle(
