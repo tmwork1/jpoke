@@ -2,11 +2,11 @@
 
 テスト数: 242
 
-- [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=A, amount=1)
-- [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=S, amount=1)
-- [x] HP25以下でランク上昇するきのみ(item_name=ヤタピのみ, stat=C, amount=1)
-- [x] HP25以下でランク上昇するきのみ(item_name=リュガのみ, stat=B, amount=1)
-- [x] HP25以下でランク上昇するきのみ(item_name=ズアのみ, stat=D, amount=1)
+- [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=atk, amount=1)
+- [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=spe, amount=1)
+- [x] HP25以下でランク上昇するきのみ(item_name=ヤタピのみ, stat=spa, amount=1)
+- [x] HP25以下でランク上昇するきのみ(item_name=リュガのみ, stat=def, amount=1)
+- [x] HP25以下でランク上昇するきのみ(item_name=ズアのみ, stat=spd, amount=1)
 - [x] HP4分の1より多いときは発動しない(item_name=ウイのみ)
 - [x] HP4分の1より多いときは発動しない(item_name=イアのみ)
 - [x] HP4分の1より多いときは発動しない(item_name=フィラのみ)
@@ -180,10 +180,10 @@
 - [x] フィールドシード_フィールドなしでは発動しない(item_name=グラスシード)
 - [x] フィールドシード_フィールドなしでは発動しない(item_name=サイコシード)
 - [x] フィールドシード_フィールドなしでは発動しない(item_name=ミストシード)
-- [x] フィールドシード_発動(item_name=エレキシード, terrain=エレキフィールド, stat=B)
-- [x] フィールドシード_発動(item_name=グラスシード, terrain=グラスフィールド, stat=B)
-- [x] フィールドシード_発動(item_name=サイコシード, terrain=サイコフィールド, stat=D)
-- [x] フィールドシード_発動(item_name=ミストシード, terrain=ミストフィールド, stat=D)
+- [x] フィールドシード_発動(item_name=エレキシード, terrain=エレキフィールド, stat=def)
+- [x] フィールドシード_発動(item_name=グラスシード, terrain=グラスフィールド, stat=def)
+- [x] フィールドシード_発動(item_name=サイコシード, terrain=サイコフィールド, stat=spd)
+- [x] フィールドシード_発動(item_name=ミストシード, terrain=ミストフィールド, stat=spd)
 - [x] ふうせん_じめん技を無効化
 - [x] ふうせん_ダメージを受けると割れる
 - [x] ブーストエナジー_こだいかっせいマジックルーム解除後に発動

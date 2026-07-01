@@ -251,12 +251,12 @@
 - [x] めいそう_発動前後のランク変化(spa_init=5, spd_init=5, spa_exp=6, spd_exp=6)
 - [x] めいそう_発動前後のランク変化(spa_init=-6, spd_init=-6, spa_exp=-5, spd_exp=-5)
 - [x] メロメロ_すでにメロメロ状態なら失敗
-- [x] メロメロ_性別の組み合わせ(a_gender=オス, d_gender=メス, expected=True)
-- [x] メロメロ_性別の組み合わせ(a_gender=メス, d_gender=オス, expected=True)
-- [x] メロメロ_性別の組み合わせ(a_gender=オス, d_gender=オス, expected=False)
-- [x] メロメロ_性別の組み合わせ(a_gender=メス, d_gender=メス, expected=False)
-- [x] メロメロ_性別の組み合わせ(a_gender=オス, d_gender=, expected=False)
-- [x] メロメロ_性別の組み合わせ(a_gender=, d_gender=メス, expected=False)
+- [x] メロメロ_性別の組み合わせ(a_gender=male, d_gender=female, expected=True)
+- [x] メロメロ_性別の組み合わせ(a_gender=female, d_gender=male, expected=True)
+- [x] メロメロ_性別の組み合わせ(a_gender=male, d_gender=male, expected=False)
+- [x] メロメロ_性別の組み合わせ(a_gender=female, d_gender=female, expected=False)
+- [x] メロメロ_性別の組み合わせ(a_gender=male, d_gender=, expected=False)
+- [x] メロメロ_性別の組み合わせ(a_gender=, d_gender=female, expected=False)
 - [x] もえあがるいかり_ひるみが発動する
 - [x] もりののろい_くさタイプが付与される
 - [x] もりののろい_すでにくさタイプなら失敗

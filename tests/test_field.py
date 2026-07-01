@@ -1,7 +1,7 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import pytest
 from jpoke import Battle, Pokemon
-from jpoke.utils.type_defs import WeatherName, TerrainName, GlobalFieldName, SideFieldName
+from jpoke.types import WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.core import AttackContext
 from . import test_utils as t
 
@@ -48,6 +48,23 @@ def test_エレキフィールド_ねむり防止():
     assert not target.ailment.is_active, "エレキフィールド下でねむり状態が付与された"
 
 
+def test_エレキフィールド_ねむる失敗():
+    """エレキフィールド: 接地ポケモンのねむるは失敗しHPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("エレキフィールド", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2
+    hp_before = mon.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False, "ねむるが失敗しなかった"
+    assert mon.hp == hp_before, "ねむる失敗なのにHPが回復した"
+    assert not mon.ailment.is_active, "ねむる失敗なのにねむり状態になった"
+
+
 def test_エレキフィールド_非接地はねむけ防止されない():
     """エレキフィールド: 浮遊ポケモンへのねむけは防止されない"""
     battle = t.start_battle(
@@ -72,6 +89,22 @@ def test_エレキフィールド_非接地はねむり防止されない():
     assert target.ailment.is_active
 
 
+def test_エレキフィールド_非接地はねむる使用可能():
+    """エレキフィールド: 浮遊ポケモンのねむるは失敗しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョン", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("エレキフィールド", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True, "浮遊ポケモンのねむるが失敗した"
+    assert mon.hp == mon.max_hp, "浮遊ポケモンのねむるでHPが回復しなかった"
+    assert mon.ailment.name == "ねむり", "浮遊ポケモンのねむるでねむり状態にならなかった"
+
+
 def test_おいかぜ():
     """おいかぜ: 実効すばやさ2倍"""
     battle = t.start_battle(
@@ -80,7 +113,7 @@ def test_おいかぜ():
         side0={"おいかぜ": 1},
     )
     mon = battle.actives[0]
-    assert battle.speed_calculator.calc_effective_speed(mon) == 2 * mon.stats["S"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == 2 * mon.stats["spe"]
 
 
 def test_おおあめ_こおりが付与される():
@@ -239,7 +272,7 @@ def test_しろいきり_能力低下防止():
         side0={"しろいきり": 1},
     )
     target, source = battle.actives
-    assert not battle.modify_stats(target, {"A": -1}, source=source)
+    assert not battle.modify_stats(target, {"atk": -1}, source=source)
 
 
 def test_しろいきり_自発的な能力低下は防げない():
@@ -249,8 +282,8 @@ def test_しろいきり_自発的な能力低下は防げない():
         side0={"しろいきり": 1},
     )
     target = battle.actives[0]
-    assert battle.modify_stats(target, {"A": -1}, source=target)
-    assert target.rank["A"] == -1
+    assert battle.modify_stats(target, {"atk": -1}, source=target)
+    assert target.rank["atk"] == -1
 
 
 def test_しんぴのまもり_混乱防止():
@@ -503,9 +536,9 @@ def test_ねばねばネット():
         team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
         side0={"ねばねばネット": 1},
     )
-    before_rank = battle.players[0].team[1].rank["S"]
+    before_rank = battle.players[0].team[1].rank["spe"]
     active = t.run_switch(battle, 0, 1)
-    after_rank = active.rank["S"]
+    after_rank = active.rank["spe"]
     assert after_rank == before_rank - 1, "Speed rank not decreased"
 
 
@@ -516,7 +549,7 @@ def test_ねばねばネット_浮いているポケモンには効かない():
         side0={"ねばねばネット": 1},
     )
     active = t.run_switch(battle, 0, 1)
-    assert active.rank["S"] == 0
+    assert active.rank["spe"] == 0
 
 
 def test_はれ_こおり防止():
@@ -784,6 +817,32 @@ def test_らんきりゅう_全天候を上書き(weather: WeatherName):
     assert battle.raw_weather.name == "らんきりゅう"
 
 
+@pytest.mark.parametrize("weather", ["おおひでり", "おおあめ"])
+def test_らんきりゅう_強天候に上書きされない(weather: WeatherName):
+    """らんきりゅう: 強天候（おおひでり・おおあめ）による上書きも失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("らんきりゅう", 99),
+    )
+    result = battle.weather_manager.apply(weather, 99)
+    assert result is False
+    assert battle.raw_weather.name == "らんきりゅう"
+
+
+@pytest.mark.parametrize("weather", ["はれ", "あめ", "すなあらし", "ゆき"])
+def test_らんきりゅう_通常天候に上書きされない(weather: WeatherName):
+    """らんきりゅう: 通常天候（はれ・あめ等）による上書きは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("らんきりゅう", 99),
+    )
+    result = battle.weather_manager.apply(weather, 5)
+    assert result is False
+    assert battle.raw_weather.name == "らんきりゅう"
+
+
 def test_ワンダールーム_物理技は特防側を参照():
     """ワンダールーム: 物理技の防御参照が特防側に入れ替わる"""
     normal = t.start_battle(
@@ -791,8 +850,8 @@ def test_ワンダールーム_物理技は特防側を参照():
         team1=[Pokemon("ピカチュウ")],
     )
     normal_defender = normal.actives[1]
-    normal_defender.rank["B"] = 6
-    normal_defender.rank["D"] = -6
+    normal_defender.rank["def"] = 6
+    normal_defender.rank["spd"] = -6
     normal_ctx = AttackContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
     normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
@@ -802,8 +861,8 @@ def test_ワンダールーム_物理技は特防側を参照():
         field={"ワンダールーム": 99},
     )
     wonder_defender = wonder.actives[1]
-    wonder_defender.rank["B"] = 6
-    wonder_defender.rank["D"] = -6
+    wonder_defender.rank["def"] = 6
+    wonder_defender.rank["spd"] = -6
     wonder_ctx = AttackContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
     wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
 
@@ -823,7 +882,7 @@ def test_ワンダールーム_物理技は特防実数値を使用():
         defender=defender,
         move=battle.actives[0].moves[0],
     )
-    expected = defender.stats["D"]
+    expected = defender.stats["spd"]
     actual = battle.damage_calculator._calc_final_defense(ctx)
     assert actual == expected, f"物理技がB実数値({defender.stats['B']})ではなくD実数値({expected})を参照するはず"
 
@@ -835,8 +894,8 @@ def test_ワンダールーム_特殊技は防御側を参照():
         team1=[Pokemon("ピカチュウ")],
     )
     normal_defender = normal.actives[1]
-    normal_defender.rank["B"] = -6
-    normal_defender.rank["D"] = 6
+    normal_defender.rank["def"] = -6
+    normal_defender.rank["spd"] = 6
     normal_ctx = AttackContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
     normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
 
@@ -846,8 +905,8 @@ def test_ワンダールーム_特殊技は防御側を参照():
         field={"ワンダールーム": 99},
     )
     wonder_defender = wonder.actives[1]
-    wonder_defender.rank["B"] = -6
-    wonder_defender.rank["D"] = 6
+    wonder_defender.rank["def"] = -6
+    wonder_defender.rank["spd"] = 6
     wonder_ctx = AttackContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
     wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
 
@@ -867,7 +926,7 @@ def test_ワンダールーム_特殊技は防御実数値を使用():
         defender=defender,
         move=battle.actives[0].moves[0],
     )
-    expected = defender.stats["B"]
+    expected = defender.stats["def"]
     actual = battle.damage_calculator._calc_final_defense(ctx)
     assert actual == expected, f"特殊技がD実数値({defender.stats['D']})ではなくB実数値({expected})を参照するはず"
 
