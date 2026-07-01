@@ -9,7 +9,7 @@
 エレキフィールド	x	x	x	x	x	n/a	n/a
 グラスフィールド	x	x	x	x	x	-	-
 サイコフィールド	-	-	x	x	-	n/a	n/a
-ミストフィールド	-	-	x	x	-	n/a	n/a
+ミストフィールド	x	x	x	x	x	n/a	n/a
 じゅうりょく	-	-	x	x	-	n/a	n/a
 トリックルーム	-	-	x	x	-	n/a	n/a
 マジックルーム	-	-	x	x	-	n/a	n/a

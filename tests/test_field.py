@@ -191,6 +191,17 @@ def test_グラスフィールド_非接地は回復しない():
     assert mon.hp == 1
 
 
+def test_サイコフィールド_優先度0技は有効():
+    """サイコフィールド: 優先度0の技は接地ポケモンにも有効"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("サイコフィールド", 99),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True
+
+
 def test_サイコフィールド_先制技無効():
     """サイコフィールド: 接地ポケモンへの先制技無効"""
     battle = t.start_battle(
@@ -738,6 +749,23 @@ def test_マジックルーム_道具効果無効化():
     mon.hp = 1
     t.end_turn(battle)
     assert mon.hp == 1
+
+
+def test_ミストフィールド_ねむる失敗():
+    """ミストフィールド: 接地ポケモンのねむるは失敗しHPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("ミストフィールド", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2
+    hp_before = mon.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False, "ねむるが失敗しなかった"
+    assert mon.hp == hp_before, "ねむる失敗なのにHPが回復した"
+    assert not mon.ailment.is_active, "ねむる失敗なのにねむり状態になった"
 
 
 def test_ミストフィールド_混乱防止():

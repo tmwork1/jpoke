@@ -1221,6 +1221,7 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     - HP が最大HP（すでに満タン）
     - すでにねむり状態
     - エレキフィールド下で接地している
+    - ミストフィールド下で接地している
     """
     mon = ctx.attacker
     if mon.hp == mon.max_hp or mon.has_ailment("ねむり"):
@@ -1237,6 +1238,16 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload={"reason": "エレキフィールド"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    # ミストフィールド下で接地しているポケモンのねむるは失敗する
+    if (
+        battle.terrain.name == "ミストフィールド"
+        and not battle.query.is_floating(mon)
+    ):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "ミストフィールド"},
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
