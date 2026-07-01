@@ -335,19 +335,67 @@ def test_しんぴのまもり_状態異常防止():
     assert not target.ailment.is_active
 
 
+def test_じゅうりょく_Gのちから強化():
+    """じゅうりょく: Gのちからの威力が1.5倍（6144/4096）になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["Gのちから"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"じゅうりょく": 99},
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_じゅうりょく_使用禁止技ブロック():
+    """じゅうりょく: gravity_restrictedフラグの技は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はねる"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"じゅうりょく": 99},
+    )
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+
+
 def test_じゅうりょく_命中補正():
-    """じゅうりょく: 命中率5/3倍"""
+    """じゅうりょく: 命中率が6840/4096倍になる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんじほう"])],
         team1=[Pokemon("ピカチュウ")],
         field={"じゅうりょく": 99}
     )
     move = t.run_move(battle, 0)
-    assert battle.move_executor.accuracy == move.accuracy * 5 // 3
+    assert battle.move_executor.accuracy == move.accuracy * 6840 // 4096
+
+
+def test_じゅうりょく_発動時にでんじふゆう解除():
+    """じゅうりょく: 発動時にでんじふゆう揮発性状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "でんじふゆう")
+    assert mon.has_volatile("でんじふゆう")
+    battle.global_manager.activate("じゅうりょく", 5)
+    assert not mon.has_volatile("でんじふゆう")
+
+
+def test_じゅうりょく_発動時にそらをとぶ解除():
+    """じゅうりょく: 発動時にそらをとぶ揮発性状態が解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["そらをとぶ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "そらをとぶ")
+    assert mon.has_volatile("そらをとぶ")
+    battle.global_manager.activate("じゅうりょく", 5)
+    assert not mon.has_volatile("そらをとぶ")
 
 
 def test_じゅうりょく_浮遊無効():
-    """じゅうりょく: 浮遊状態を無効化"""
+    """じゅうりょく: ひこうタイプポケモンが接地状態になる"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピジョン")],

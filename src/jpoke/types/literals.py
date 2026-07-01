@@ -94,6 +94,7 @@ MoveFlag = Literal[
     "bypass_substitute",  # みがわりを貫通する技。
     "contact",  # 接触技。さめはだ等の接触トリガー判定に使う。
     "dance",  # おどり技。おどりこ等の対象判定に使う。
+    "gravity_restricted",  # じゅうりょく中に使用・選択不可になる技（はねる・そらをとぶ・でんじふゆう等）。
     "heal",  # 回復技。かいふくふうじ等の対象判定に使う。
     "non_encore",  # アンコールで固定できない技。
     "non_negoto",  # ねごとで選ばれない技。

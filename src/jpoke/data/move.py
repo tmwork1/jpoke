@@ -3725,7 +3725,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=90,
         accuracy=95,
-        flags=["contact"],
+        flags=["contact", "gravity_restricted"],
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "そらをとぶ"),
@@ -4597,6 +4597,7 @@ MOVES: dict[str, MoveData] = {
         type="でんき",
         category="status",
         pp=10,
+        flags=["gravity_restricted"],
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.でんじふゆう_apply,
@@ -4721,7 +4722,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=85,
         accuracy=90,
-        flags=["contact"],
+        flags=["contact", "gravity_restricted"],
         handlers={
             Event.ON_MISS: h.MoveHandler(
                 ha.とびげり_crash,
@@ -4747,7 +4748,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=85,
         accuracy=85,
-        flags=["contact", "secondary_effect"],
+        flags=["contact", "gravity_restricted", "secondary_effect"],
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.とびはねる_apply_ailment_to_defender,
@@ -4760,7 +4761,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=130,
         accuracy=90,
-        flags=["contact"],
+        flags=["contact", "gravity_restricted"],
         handlers={
             Event.ON_MISS: h.MoveHandler(
                 ha.とびひざげり_crash,
@@ -5914,7 +5915,7 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="status",
         pp=40,
-        flags=[],
+        flags=["gravity_restricted"],
         handlers={},  # 追加効果なし
     ),
     "ハバネロエキス": MoveData(
@@ -6569,7 +6570,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=95,
-        flags=["minimize", "contact"],
+        flags=["contact", "gravity_restricted", "minimize"],
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.MoveHandler(
                 ha.フライングプレス_add_flying_type,

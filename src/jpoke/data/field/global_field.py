@@ -5,6 +5,18 @@ from ..models import FieldData
 GLOBAL_FIELD: dict[str, FieldData] = {
     "じゅうりょく": FieldData(
         handlers={
+            Event.ON_FIELD_ACTIVATE: h.FieldHandler(
+                h.じゅうりょく_activate_release_volatiles,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
+                h.じゅうりょく_g_power_modifier,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_TRY_MOVE_1: h.FieldHandler(
+                h.じゅうりょく_block_gravity_move,
+                subject_spec="attacker:self",
+            ),
             Event.ON_MODIFY_ACCURACY: h.FieldHandler(
                 h.じゅうりょく_modify_accuracy,
                 subject_spec="attacker:self",
