@@ -3,6 +3,7 @@
 """
 
 from jpoke import Battle, Player, Pokemon, Move
+from jpoke.core.lethal import LethalResult
 from jpoke.utils.type_defs import VolatileName
 
 
@@ -11,7 +12,8 @@ def main(attacker: str,
          moves: list[tuple[str, int]],
          defender_ability: str = "",
          defender_item: str = "",
-         defender_volatiles: dict[VolatileName, int] | None = None):
+         defender_volatiles: dict[VolatileName, int] | None = None) -> LethalResult:
+
     # Attacker
     player1 = Player()
     player1.team = [
@@ -42,11 +44,18 @@ def main(attacker: str,
     print(f"Lethal count: {result.n_attack}")
     print(f"Lethal probability: {result.lethal_probability: .2%}")
 
+    return result
+
 
 if __name__ == "__main__":
-    # main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)])
-    main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_item="オボンのみ")  # 乱2 (5.9%)
-    # main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_ability="マルチスケイル")
-    # main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
-    # main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
-    # main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
+    # result = main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)])
+    result = main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_item="オボンのみ")  # 乱2 (5.9%)
+    # result = main("ガブリアス", "カイリュー", [("ドラゴンテール", 1)], defender_ability="マルチスケイル")
+    # result = main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
+    # result = main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
+    # result = main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
+
+    assert result.min_damage == 90
+    assert result.max_damage == 108
+    assert result.n_attack == 2
+    assert result.lethal_probability == 0.059

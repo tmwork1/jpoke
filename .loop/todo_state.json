@@ -6,10 +6,6 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "MOVESに登録されているがprogress/move.mdにない技があれば進捗表に追加する。",
-    "追加効果のない技やハンドラを実装しない技にはhandlers={}とし、同じ行にコメントを残す。",
-    "command_managerに移譲したほうがよいかもしれない。（battle.py:436）",
-    "command_managerに移譲したほうがよいかもしれない。（battle.py:485）",
     "item_managerに実装を完全移譲する",
     "item_managerに移譲してBattleクラスにはメソッドを残さない",
     "battle.queryに移譲してBattleクラスから削除すべきかもしれない",
@@ -40,7 +36,11 @@
     "もえつきる実装",
     "{}で初期化し、Noneを許容しないようにする",
     "定義を五十音順に並びかえるスクリプトを作成して実行する。ついでに定義内の空行も取り除く。",
-    "progress/move.mdにあってMOVESに登録されていない技があれば実装する。"
+    "progress/move.mdにあってMOVESに登録されていない技があれば実装する。",
+    "MOVESに登録されているがprogress/move.mdにない技があれば進捗表に追加する。",
+    "追加効果のない技やハンドラを実装しない技にはhandlers={}とし、同じ行にコメントを残す。",
+    "command_managerに移譲したほうがよいかもしれない。（battle.py:436）",
+    "command_managerに移譲したほうがよいかもしれない。（battle.py:485）"
   ],
   "failed": []
 }

@@ -8,7 +8,7 @@
             //"program": "${workspaceFolder}/scripts/generate_test_list.py",
             //"program": "${workspaceFolder}/scripts/random_1on1.py",
             //"program": "${workspaceFolder}/scripts/tree_search_4.py",
-            "program": "${workspaceFolder}/scripts/test_lethal.py",
+            "program": "${workspaceFolder}/scripts/lethal_calc.py",
             //"program": "${workspaceFolder}/tests/abilities/test_ability_a.py",
             "console": "integratedTerminal"
         }

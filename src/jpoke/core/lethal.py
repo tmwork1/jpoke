@@ -1,3 +1,6 @@
+# TODO: 分布の演算ロジックをcore/に置いていると、handlers/からcore/をimportする構造になるので、低レベルのモジュールに移譲したい
+
+
 """致死率計算ロジックを提供するモジュール。
 
 技・アイテム・揮発状態などの効果をHP分布（LethalDist）として扱い、
@@ -91,7 +94,10 @@ class LethalResult:
     @property
     def hp_counter(self) -> dict[int, int]:
         """HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
-        return {state.hp: freq for state, freq in self.hp_dist.items()}
+        result: dict[int, int] = defaultdict(int)
+        for state, freq in self.hp_dist.items():
+            result[state.hp] += freq
+        return dict(result)
 
     @property
     def damage_counter(self) -> dict[int, int]:
@@ -113,8 +119,6 @@ class LethalResult:
         zero_freq = hp_counter.get(0, 0)
         total_freq = sum(hp_counter.values())
         return zero_freq / total_freq
-
-# TODO : 分布の演算関数をcore/に置いていると、handlers/からcore/をimportする構造になるので、低レベルのモジュールに移譲したい
 
 
 def to_dist(x: int | list[int] | LethalDist,
@@ -210,11 +214,15 @@ def _lethal_loop(hp_dist: LethalDist,
     max_attack 回分、move_list の技を順に使用し、各ヒット後の LethalResult を返す。
     いずれかの時点で HP=0 の状態が現れたら途中で打ち切る。
     """
+    # attacker, defender, critical はループ中に変化しないため、move ごとに1回だけ ctx を作る
+    ctx_list = [
+        (move, count, LethalContext(attacker, defender, move, critical=critical))
+        for move, count in move_list
+    ]
+
     results = []
     for atk in range(1, max_attack + 1):
-        for move, count in move_list:
-            ctx = LethalContext(attacker, defender, move, critical=critical)
-
+        for move, count, ctx in ctx_list:
             for hit in range(count):
                 # 技ダメージを適用
                 hp_dist, damage_dist = _apply_damage(battle, ctx, hp_dist)
