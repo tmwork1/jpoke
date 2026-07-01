@@ -6,8 +6,6 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "採取的にFIELDSに統合する構成はそのままで、定義ファイルはweather.py, terrain.py, global_field.py, side_field.pyに分割する",
-    "専用モジュールを作り、data/global_field.pyから自動生成するようにする",
     "専用モジュールを作り、data/side_field.pyから自動生成するようにする",
     "専用モジュールを作り、data/weather.pyから自動生成するようにする",
     "専用モジュールを作り、data/terrain.pyから自動生成するようにする",
@@ -18,7 +16,9 @@
   "completed": [
     "スクリプトによる一部自動生成も考慮すると、src/jpoke/直下に type_defs/ フォルダを作り、そこに type_defs.py, global_field.py, side_field.py, weather.py, terrain.py を分割すると良い",
     "専用モジュールを作り、data/ailment.pyから自動生成するようにする",
-    "専用モジュールを作り、data/volatile.pyから自動生成するようにする"
+    "専用モジュールを作り、data/volatile.pyから自動生成するようにする",
+    "採取的にFIELDSに統合する構成はそのままで、定義ファイルはweather.py, terrain.py, global_field.py, side_field.pyに分割する",
+    "専用モジュールを作り、data/global_field.pyから自動生成するようにする"
   ],
   "failed": []
 }

@@ -1,3 +1,6 @@
+# TODO : src/jpoke/直下に置く。
+# TODO : type_defs は長いので types にリネームする
+
 from .type_defs import (
     AbilityDisabledReason,
     AbilityFlag,
