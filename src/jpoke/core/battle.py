@@ -15,7 +15,7 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, MoveCategory, AbilityDisabledReason
+    HPChangeReason, AbilityDisabledReason
 from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
 
@@ -632,19 +632,6 @@ class Battle:
             turn = self.turn
         return {player: self.event_logger.get(turn, i)
                 for i, player in enumerate(self.players)}
-
-    def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
-        # TODO : battle.queryに移譲してBattleクラスから削除すべきかもしれない
-        """実際の技カテゴリを判定する（MoveExecutorへの委譲）。
-
-        Args:
-            move: 技オブジェクト
-            attacker: 技を使用するポケモン
-
-        Returns:
-            有効な技のカテゴリ（"物理"、"特殊"、"変化"のいずれか）
-        """
-        return self.move_executor.resolve_move_category(attacker, move)
 
     def add_ability_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
         """特性の無効化理由を追加する（AbilityManagerへの委譲）。"""

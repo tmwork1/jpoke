@@ -77,7 +77,7 @@ def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
 
 def やけど_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
-    if battle.resolve_move_category(ctx.attacker, ctx.move) == "物理":
+    if battle.query.resolve_move_category(ctx.attacker, ctx.move) == "物理":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 

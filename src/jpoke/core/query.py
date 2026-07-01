@@ -12,6 +12,7 @@ from jpoke.model import Pokemon
 from jpoke.enums import Event
 from jpoke.core import EventContext, AttackContext
 from jpoke.utils import fast_copy
+from jpoke.utils.type_defs import MoveCategory
 
 
 class PokemonQuery:
@@ -117,13 +118,25 @@ class PokemonQuery:
             ctx.move.has_label("contact")
         )
 
+    def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
+        """実際の技カテゴリを判定する（MoveExecutorへの委譲）。
+
+        Args:
+            attacker: 技を使用するポケモン
+            move: 技オブジェクト
+
+        Returns:
+            有効な技のカテゴリ（"物理"、"特殊"、"変化"のいずれか）
+        """
+        return self.battle.move_executor.resolve_move_category(attacker, move)
+
     def deals_physical_damage(self, attacker: Pokemon, move: Move) -> bool:
         """技が物理ダメージを与えるかどうかを判定する。一部の特殊技も該当する。
 
         Returns:
             技が物理ダメージを与える場合True
         """
-        move_category = self.battle.resolve_move_category(attacker, move)
+        move_category = self.resolve_move_category(attacker, move)
         return (
             move_category == "物理"
             or move.has_label("physical_damage")
