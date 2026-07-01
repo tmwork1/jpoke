@@ -340,3 +340,76 @@ def test_メテオビーム_パワフルハーブ使用時1ターンで攻撃し
     assert defender.hp < hp_before
     assert not attacker.has_item()
     assert attacker.rank["C"] == 1
+
+
+def test_もえつきる_こおり状態で使うと解凍されて攻撃できる():
+    """もえつきる: こおり状態でも使用でき、使うと解凍される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["もえつきる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # こおり状態を付与してから使用
+    t.apply_ailment(battle, 0, "こおり")
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # こおりが解除されてダメージを与えられる
+    assert not attacker.ailment.is_active
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+
+
+def test_もえつきる_テラスタルほのお中でも成功しタイプ除去が記録される():
+    """もえつきる: テラスタル（ほのお）中でも成功し、ほのおタイプの除去が記録される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["もえつきる"], tera_type="ほのお")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+    assert attacker.has_type("ほのお")  # テラスタルでほのおタイプを持つ
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # テラスタル中でも成功してダメージあり、除去が記録される
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+    assert "ほのお" in attacker.removed_types
+
+
+def test_もえつきる_ほのおタイプでないポケモンが使うと技が失敗する():
+    """もえつきる: ほのおタイプを持たないポケモンが使うと技が失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["もえつきる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # 技が失敗してダメージなし
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_もえつきる_ほのおタイプのポケモンが使うと成功し攻撃後にほのおタイプでなくなる():
+    """もえつきる: ほのおタイプのポケモンが使うと成功し、攻撃後にほのおタイプが除去される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["もえつきる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    assert attacker.has_type("ほのお")
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # 技が成功してダメージあり、ほのおタイプが除去されている
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+    assert not attacker.has_type("ほのお")
+    assert "ほのお" in attacker.removed_types
