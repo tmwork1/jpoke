@@ -57,7 +57,7 @@ MoveCategory = Literal["物理", "特殊", "変化"]  # TODO : poke-envの英語
 
 MoveTarget = Literal["foe", "foe_side", "own_side", "self", "field"]
 
-AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]  # TODO : 専用モジュールを作り、data/ailment.pyから自動生成するようにする
+AilmentName = Literal["", "どく", "もうどく", "まひ", "やけど", "ねむり", "こおり", "ゆめうつつ"]  # 自動生成: python scripts/generate_ailment_literal.py で更新（元: src/jpoke/data/ailment.py）
 
 VolatileName = Literal[
     # TODO : 専用モジュールを作り、data/volatile.pyから自動生成するようにする
