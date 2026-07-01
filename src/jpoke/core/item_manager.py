@@ -218,3 +218,44 @@ class ItemManager:
         ):
             return False
         return self.swap_items()
+
+    def consume_item(self, mon: Pokemon) -> bool:
+        """ポケモンの道具を消費する。
+
+        きのみを消費する場合は食べたフラグを立ててから remove_item を呼ぶ。
+
+        Args:
+            mon: アイテムを消費するポケモン
+
+        Returns:
+            消費に成功した場合はTrue
+        """
+        if mon.item.is_berry():
+            mon.ate_berry = True
+        return self.remove_item(mon, source=mon)
+
+    def force_trigger_berry(self, mon: Pokemon) -> None:
+        """きのみを強制発動してから消費する。
+
+        ほおばる・おちゃかい等で「HP閾値やターン終了を待たずに即座に」
+        きのみ効果を発動させるときに使う。
+
+        発火順:
+        1. ON_HP_CHANGED (value=max_hp): HP 閾値ベースのきのみ（オボンのみ等）を対象にする
+        2. ON_FORCE_BERRY_TRIGGER: ON_HP_CHANGED に登録されていないきのみ（
+           状態異常治療きのみ等）を発動する
+        3. まだ消費されていなければ consume_item で明示的に消費する
+
+        Args:
+            mon: きのみを強制発動するポケモン
+        """
+        # HP 閾値ベースのきのみを発動（オボンのみ・フィラのみ等）
+        hp_ctx = EventContext(target=mon, source=mon)
+        self._events.emit(Event.ON_HP_CHANGED, hp_ctx, mon.max_hp)
+        # HP 閾値チェックなしで発動するきのみ（状態異常治療きのみ等）
+        if mon.item.is_berry():
+            force_ctx = EventContext(source=mon)
+            self._events.emit(Event.ON_FORCE_BERRY_TRIGGER, force_ctx)
+        # いずれの発火でも消費されなかった場合は明示的に消費する
+        if mon.item.is_berry():
+            self.consume_item(mon)

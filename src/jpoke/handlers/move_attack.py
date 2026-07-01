@@ -1969,7 +1969,7 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     if not battle.item_manager.take_item(defender):
         return HandlerReturn(value=value)
     # attackerがきのみを得たので効果を発動して消費する
-    battle.force_trigger_berry(attacker)
+    battle.item_manager.force_trigger_berry(attacker)
     return HandlerReturn(value=value)
 
 

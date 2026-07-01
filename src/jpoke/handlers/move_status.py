@@ -1571,11 +1571,11 @@ def ほおばる_check_has_berry(battle: Battle, ctx: AttackContext, value: Any)
 def ほおばる_consume_berry_and_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほおばるの効果: 自分のきのみを強制消費して効果を発動し、ぼうぎょを2段階上げる。
 
-    battle.force_trigger_berry により HP 閾値を無視してきのみ効果を発動し消費する。
+    battle.item_manager.force_trigger_berry により HP 閾値を無視してきのみ効果を発動し消費する。
     その後ぼうぎょを 2 段階上げる。
     """
     mon = ctx.attacker
-    battle.force_trigger_berry(mon)
+    battle.item_manager.force_trigger_berry(mon)
     # ぼうぎょを2段階上げる
     return modify_attacker_stats(battle, ctx, value, stats={"B": 2})
 
