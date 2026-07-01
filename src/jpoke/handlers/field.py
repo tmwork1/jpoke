@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
-    from jpoke.core import Battle, EventContext, AttackContext
+    from jpoke.core import Battle, EventContext
 
 from jpoke.enums import LogCode
 from jpoke.utils.type_defs import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
@@ -444,9 +444,12 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ステルスロックのダメージ（岩タイプ相性依存）"""
+    from jpoke.core import AttackContext
+    from jpoke.model import Move
+
     if battle.query.is_hazard_immune(ctx.source):
         return HandlerReturn(value=value)
-    tmp_ctx = AttackContext(attacker=ctx.source, defender=ctx.source, move="ステルスロック")
+    tmp_ctx = AttackContext(attacker=ctx.source, defender=ctx.source, move=Move("ステルスロック"))
     r = battle.damage_calculator.calc_def_type_modifier(tmp_ctx) // 4096
     battle.modify_hp(ctx.source, r=-r/8)
     return HandlerReturn(value=value)

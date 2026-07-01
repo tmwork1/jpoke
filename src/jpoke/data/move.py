@@ -1,7 +1,3 @@
-# TODO : _move_labels.mdのラベルがMoveData.labelsに含まれているか確認する。含まれていなければMoveData.labelsに追加する。
-# TODO : MOVESに登録されているがprogress/move.mdにない技があれば進捗表に追加する。
-# TODO : 追加効果のない技やハンドラを実装しない技にはhandlers={}とし、同じ行にコメントを残す。
-
 """技データ定義モジュール。
 
 Note:
