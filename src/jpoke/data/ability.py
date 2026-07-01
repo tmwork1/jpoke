@@ -8,7 +8,7 @@ from jpoke.enums import DomainEvent, Event
 from jpoke.core.lethal import LethalHandler
 
 from jpoke.handlers import ability as h, ability_paradox as paradox
-from jpoke.handlers.models import AbilityData
+from jpoke.data.models import AbilityData
 
 
 def common_setup():

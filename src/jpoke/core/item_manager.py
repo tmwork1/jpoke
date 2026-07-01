@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from .event_manager import EventManager
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import ItemDisabledReason
+from jpoke.types import ItemDisabledReason
 from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Item
 

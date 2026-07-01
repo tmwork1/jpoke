@@ -2,7 +2,7 @@
 from __future__ import annotations
 from enum import Enum, auto
 
-from jpoke.utils.type_defs import CommandType
+from jpoke.types import CommandType
 
 
 class Command(Enum):

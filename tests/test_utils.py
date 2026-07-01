@@ -1,7 +1,7 @@
 from jpoke.core import Battle, Player, EventContext, AttackContext
 from jpoke.core.lethal import LethalResult
 from jpoke.model import Pokemon, Move
-from jpoke.utils.type_defs import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName
+from jpoke.types import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.enums import Event, Command, LogCode
 
 

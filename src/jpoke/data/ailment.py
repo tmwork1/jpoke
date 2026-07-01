@@ -1,6 +1,6 @@
 from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import ailment as h
-from ..handlers.models import AilmentData
+from .models import AilmentData
 
 
 def common_setup():

@@ -1,4 +1,4 @@
-from ...handlers.models import FieldData
+from ..models import FieldData
 from .global_field import GLOBAL_FIELD
 from .side_field import SIDE_FIELD
 from .terrain import TERRAIN

@@ -16,25 +16,25 @@ class SearchPlayer(Player):
             raise ValueError("木探索の深さが2を超えています。")
 
         self_state = battle.player_states[self]
-        rival = battle.rival(self)
-        rival_state = battle.player_states[rival]
+        opponent = battle.opponent(self)
+        opponent_state = battle.player_states[opponent]
 
         assert self_state.required_command_type == "any"
-        assert rival_state.required_command_type == "any"
-        assert not rival_state.reserved_commands
+        assert opponent_state.required_command_type == "any"
+        assert not opponent_state.reserved_commands
 
         my_commands = battle.get_available_commands(self)
-        rival_commands = battle.get_available_commands(rival)
+        opponent_commands = battle.get_available_commands(opponent)
 
         print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
-        print(f"- Rival moves: {[m.name for m in rival_state.active.moves]}")
+        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
+        print(f"- Rival moves: {[m.name for m in opponent_state.active.moves]}")
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
-        for my_cmd, rival_cmd in product(my_commands, rival_commands):
-            print(f"<< Simulation {my_cmd} vs {rival_cmd} >>")
-            commands = {self: my_cmd, rival: rival_cmd}
+        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
+            print(f"<< Simulation {my_cmd} vs {opponent_cmd} >>")
+            commands = {self: my_cmd, opponent: opponent_cmd}
             sim = battle.copy()
             sim.step(commands)
             sim.print_logs()

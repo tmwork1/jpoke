@@ -6,8 +6,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 
-from jpoke.utils.constants import STATS
-from jpoke.utils.type_defs import AbilityFlag, Type, MoveCategory, MoveTarget, MoveLabel
+from jpoke.types import AbilityFlag, PokemonType, MoveCategory, MoveTarget, MoveFlag
 
 
 class PokemonData:
@@ -15,9 +14,9 @@ class PokemonData:
         self.name: str = data["name"]
         self.pre_evolution: str = data.get("pre_evolution", "")
         self.weight: float = data["weight"]
-        self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
+        self.types: list[PokemonType] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
-        self.base: list[int] = [data[s] for s in STATS[:6]]
+        self.base: list[int] = [data[s] for s in ["H", "A", "B", "C", "D", "S"]]
 
         if not self.abilities:
             self.abilities = [""]
@@ -25,7 +24,7 @@ class PokemonData:
 
 @dataclass
 class AbilityData:
-    flags: list[AbilityFlag] = field(default_factory=list)
+    flags: list[AbilityFlag] = field(default_factory=list)  # TODO: set[AbilityFlag]に変更する
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handler: LethalHandler | None = None
     name: str = ""
@@ -35,9 +34,9 @@ class AbilityData:
 class ItemData:
     removable: bool = True
     fling_power: int = 0
-    power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
-    damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
-    mega_evol: tuple[str, ...] | None = None
+    power_modifier_by_type: dict[PokemonType, float] = field(default_factory=dict)
+    damage_modifier_by_type: dict[PokemonType, float] = field(default_factory=dict)
+    mega_evolve: tuple[str, ...] | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handler: LethalHandler | None = None
     name: str = ""
@@ -52,7 +51,7 @@ class MultiHit(TypedDict):
 
 @dataclass
 class MoveData:
-    type: Type
+    type: PokemonType
     category: MoveCategory
     pp: int
     power: int | None = None
@@ -61,7 +60,7 @@ class MoveData:
     critical_rank: int = 0
     target: MoveTarget = "foe"
     multi_hit: MultiHit | None = None
-    labels: list[MoveLabel] = field(default_factory=list)
+    flags: list[MoveFlag] = field(default_factory=list)  # TODO: set[MoveFlag]にする
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handler: LethalHandler | None = None
     name: str = ""

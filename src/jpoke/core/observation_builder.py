@@ -22,12 +22,12 @@ def build(battle: Battle, observer: Player) -> Battle:
     Returns:
         Observation インスタンス
     """
-    rival = battle.rival(observer)
+    opponent = battle.opponent(observer)
 
     # Battle インスタンスをコピーして、相手プレイヤーの情報を隠蔽する
     new = deepcopy(battle)
     new.observer = observer
-    _mask(new, rival)
+    _mask(new, opponent)
     return new
 
 

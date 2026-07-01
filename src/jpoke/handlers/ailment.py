@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
 
-from jpoke.utils.type_defs import RoleSpec
+from jpoke.types import RoleSpec
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode
 from jpoke.core import Handler, HandlerReturn
@@ -77,7 +77,7 @@ def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerRe
 
 def やけど_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """やけど状態による物理技ダメージ半減"""
-    if battle.query.resolve_move_category(ctx.attacker, ctx.move) == "物理":
+    if battle.query.resolve_move_category(ctx.attacker, ctx.move) == "physical":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
@@ -137,6 +137,6 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
 def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """thawラベルを持つ技でダメージを受けたら解凍する。"""
-    if ctx.move.has_label("thaw"):
+    if ctx.move.has_flag("thaw"):
         battle.ailment_manager.remove(ctx.defender)
     return HandlerReturn(value=value)

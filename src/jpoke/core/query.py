@@ -12,7 +12,7 @@ from jpoke.model import Pokemon
 from jpoke.enums import Event
 from jpoke.core import EventContext, AttackContext
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import MoveCategory
+from jpoke.types import MoveCategory
 
 
 class PokemonQuery:
@@ -115,7 +115,7 @@ class PokemonQuery:
         return self._events.emit(
             Event.ON_CHECK_CONTACT,
             ctx,
-            ctx.move.has_label("contact")
+            ctx.move.has_flag("contact")
         )
 
     def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
@@ -126,7 +126,7 @@ class PokemonQuery:
             move: 技オブジェクト
 
         Returns:
-            有効な技のカテゴリ（"物理"、"特殊"、"変化"のいずれか）
+            有効な技のカテゴリ（"physical"、"special"、"status"のいずれか）
         """
         return self.battle.move_executor.resolve_move_category(attacker, move)
 
@@ -138,8 +138,8 @@ class PokemonQuery:
         """
         move_category = self.resolve_move_category(attacker, move)
         return (
-            move_category == "物理"
-            or move.has_label("physical_damage")
+            move_category == "physical"
+            or move.has_flag("physical_damage")
         )
 
     def is_first_actor(self, player: Player) -> bool | None:

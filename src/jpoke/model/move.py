@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.utils.type_defs import Type, MoveCategory, MoveLabel, MoveTarget
+    from jpoke.types import PokemonType, MoveCategory, MoveFlag, MoveTarget
 
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
-from jpoke.handlers.models import MoveData
+from jpoke.data.models import MoveData
 from .effect import GameEffect
 
 
@@ -29,7 +29,7 @@ class Move(GameEffect):
         super().__init__(MOVES[name])
         self.pp: int = self.data.pp
 
-        self.type: Type = self.data.type
+        self.type: PokemonType = self.data.type
         self.power: int | None = self.data.power
         self.category: MoveCategory = self.data.category
 
@@ -57,19 +57,19 @@ class Move(GameEffect):
         """
         return {"name": self.name, "pp": self.pp}
 
-    def has_label(self, label: MoveLabel | list[MoveLabel]) -> bool:
-        """技が特定のラベルを持っているかを判定する。
+    def has_flag(self, flag: MoveFlag | list[MoveFlag]) -> bool:
+        """技が特定のフラグを持っているかを判定する。
 
         Args:
-            label: 判定するラベル（単一のラベルまたは複数のラベルのリスト）
-            複数のラベルが指定された場合、いずれかのラベルを持っていればTrueを返す
+            label: 判定するフラグ（単一のフラグまたは複数のフラグのリスト）
+            複数のフラグが指定された場合、いずれかのフラグを持っていればTrueを返す
 
         Returns:
-            技が指定されたラベルを持っている場合True
+            技が指定されたフラグを持っている場合True
         """
-        if isinstance(label, list):
-            return any(s in self.data.labels for s in label)
-        return label in self.data.labels
+        if isinstance(flag, list):
+            return any(s in self.data.flags for s in flag)
+        return flag in self.data.flags
 
     def modify_pp(self, v: int):
         """技のPPを増減させる。PPは0から最大PPの範囲に制限される。
@@ -120,7 +120,7 @@ class Move(GameEffect):
         Returns:
             技が物理または特殊技の場合True
         """
-        return self.category in ["物理", "特殊"]
+        return self.category in ["physical", "special"]
 
     @property
     def is_blocked_by_protect(self) -> bool:
@@ -131,5 +131,5 @@ class Move(GameEffect):
         """
         return (
             self.target == "foe"
-            and not self.has_label("unprotectable")
+            and not self.has_flag("unprotectable")
         )

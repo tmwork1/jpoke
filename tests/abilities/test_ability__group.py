@@ -9,7 +9,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import PLATE_TO_TYPE
-from jpoke.utils.type_defs import Stat, AilmentName, VolatileName, \
+from jpoke.types import Stat, AilmentName, VolatileName, \
     WeatherName, TerrainName
 
 from .. import test_utils as t
@@ -140,11 +140,11 @@ def test_オーラ系_自分の技の威力が1_33倍になる(ability_name: str
 @pytest.mark.parametrize(
     "name, stat",
     [
-        ("スピアー", "A"),
-        ("ゼニガメ", "B"),
-        ("フシギダネ", "C"),
-        ("カメックス", "D"),
-        ("ピカチュウ", "S"),
+        ("スピアー", "atk"),
+        ("ゼニガメ", "def"),
+        ("フシギダネ", "spa"),
+        ("カメックス", "spd"),
+        ("ピカチュウ", "spe"),
     ]
 )
 def test_クォークチャージ_最大ステータスがバフされる(name: str, stat: Stat):
@@ -243,11 +243,11 @@ def test_タイプ強化系(ability_name: str, move_name: str, expected: int):
 @pytest.mark.parametrize(
     "ability, move, stat, rank",
     [
-        ("こんがりボディ", "ひのこ", "B", 2),
-        ("そうしょく", "このは", "A", 1),
-        ("でんきエンジン", "でんきショック", "S", 1),
-        ("ひらいしん", "でんきショック", "C", 1),
-        ("よびみず", "みずでっぽう", "C", 1),
+        ("こんがりボディ", "ひのこ", "def", 2),
+        ("そうしょく", "このは", "atk", 1),
+        ("でんきエンジン", "でんきショック", "spe", 1),
+        ("ひらいしん", "でんきショック", "spa", 1),
+        ("よびみず", "みずでっぽう", "spa", 1),
     ],
 )
 def test_タイプ無効バフ系(ability: str, move: str, stat: Stat, rank: int):
@@ -265,11 +265,11 @@ def test_タイプ無効バフ系(ability: str, move: str, stat: Stat, rank: int
 @pytest.mark.parametrize(
     "ability, move, stat, rank",
     [
-        ("こんがりボディ", "ひのこ", "B", 2),
-        ("そうしょく", "このは", "A", 1),
-        ("でんきエンジン", "でんきショック", "S", 1),
-        ("ひらいしん", "でんきショック", "C", 1),
-        ("よびみず", "でんきショック", "C", 1),
+        ("こんがりボディ", "ひのこ", "def", 2),
+        ("そうしょく", "このは", "atk", 1),
+        ("でんきエンジン", "でんきショック", "spe", 1),
+        ("ひらいしん", "でんきショック", "spa", 1),
+        ("よびみず", "でんきショック", "spa", 1),
     ],
 )
 def test_タイプ無効バフ系_かたやぶりで無効(ability: str, move: str, stat: Stat, rank: int):
@@ -440,8 +440,8 @@ def test_らんきりゅう_すべての天候を上書きする(weather_name: W
 @pytest.mark.parametrize(
     "ability_name, stat",
     [
-        ("ふとうのけん", "A"),
-        ("ふくつのたて", "B"),
+        ("ふとうのけん", "atk"),
+        ("ふくつのたて", "def"),
     ],
 )
 def test_一度きりの能力上昇特性(ability_name: str, stat: Stat):
@@ -494,9 +494,9 @@ def test_体重操作系(ability_name: str, expected_modifier: float):
 @pytest.mark.parametrize(
     "ability_name, stat",
     [
-        ("じしんかじょう", "A"),
-        ("しろのいななき", "A"),
-        ("くろのいななき", "C"),
+        ("じしんかじょう", "atk"),
+        ("しろのいななき", "atk"),
+        ("くろのいななき", "spa"),
     ],
 )
 def test_倒すと能力上昇系_相手を倒すと指定ステータスが1段階上昇する(ability_name: str, stat: Stat):
@@ -514,9 +514,9 @@ def test_倒すと能力上昇系_相手を倒すと指定ステータスが1段
 @pytest.mark.parametrize(
     "ability_name, stat",
     [
-        ("じしんかじょう", "A"),
-        ("しろのいななき", "A"),
-        ("くろのいななき", "C"),
+        ("じしんかじょう", "atk"),
+        ("しろのいななき", "atk"),
+        ("くろのいななき", "spa"),
     ],
 )
 def test_倒すと能力上昇系_相手を倒せないと発動しない(ability_name: str, stat: Stat):
@@ -670,7 +670,7 @@ def test_天候依存素早さ上昇(ability: str, weather: WeatherName, expecte
         weather=(weather, 999),
     )
     mon = battle.actives[0]
-    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"] * expected_mult
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * expected_mult
 
 
 @pytest.mark.parametrize(
@@ -683,7 +683,7 @@ def test_天候依存素早さ上昇_非対応天候は据え置き(ability: str
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
 
 
 @pytest.mark.parametrize(
@@ -882,9 +882,9 @@ def test_状態異常無効_かたやぶりで無効(ability: str, ailment: Ailm
 @pytest.mark.parametrize(
     "ability_name, stats, source_is_self, expected",
     [
-        ("かいりきバサミ", {"A": -1, "B": -1, "C": -2}, False, {"B": -1, "C": -2}),
-        ("かいりきバサミ", {"A": -1}, True, {"A": -1}),
-        ("はとむね", {"A": -1, "B": -1, "C": -2}, False, {"A": -1, "C": -2}),
+        ("かいりきバサミ", {"atk": -1, "def": -1, "spa": -2}, False, {"def": -1, "spa": -2}),
+        ("かいりきバサミ", {"atk": -1}, True, {"atk": -1}),
+        ("はとむね", {"atk": -1, "def": -1, "spa": -2}, False, {"atk": -1, "spa": -2}),
     ],
 )
 def test_能力低下防止特性_param(ability_name: str, stats: dict, source_is_self: bool, expected: dict):
@@ -901,8 +901,8 @@ def test_能力低下防止特性_param(ability_name: str, stats: dict, source_i
 @pytest.mark.parametrize(
     "ability_name, stat, expected",
     [
-        ("かちき", "C", 2),
-        ("まけんき", "A", 1),
+        ("かちき", "spa", 2),
+        ("まけんき", "atk", 1),
     ],
 )
 def test_能力反発系_相手による能力低下で発動(ability_name: str, stat: Stat, expected: int):
@@ -916,8 +916,8 @@ def test_能力反発系_相手による能力低下で発動(ability_name: str,
 @pytest.mark.parametrize(
     "ability_name, stat, expected",
     [
-        ("かちき", "C", 0),
-        ("まけんき", "A", 0),
+        ("かちき", "spa", 0),
+        ("まけんき", "atk", 0),
     ],
 )
 def test_能力反発系_自己能力低下では発動しない(ability_name: str, stat: Stat, expected: int):
@@ -928,7 +928,7 @@ def test_能力反発系_自己能力低下では発動しない(ability_name: s
     )
     mon = battle.actives[0]
     t.run_move(battle, 0)
-    assert mon.rank["S"] == -1
+    assert mon.rank["spe"] == -1
     assert mon.rank[stat] == expected
 
 

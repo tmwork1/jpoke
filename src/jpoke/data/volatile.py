@@ -5,7 +5,7 @@ Note:
 """
 from jpoke.enums import Event
 from jpoke.handlers import volatile as h
-from ..handlers.models import VolatileData
+from .models import VolatileData
 
 
 def common_setup() -> None:

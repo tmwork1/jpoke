@@ -314,15 +314,15 @@ class DamageCalculator:
 
         # ステータス
         if move.name == 'イカサマ':
-            final_attack = defender.stats["A"]
-            r_rank = defender.rank_modifier("A")
+            final_attack = defender.stats["atk"]
+            r_rank = defender.rank_modifier("atk")
         else:
             if move.name == 'ボディプレス':
-                stat = "B"
-            elif move.category == "物理":
-                stat = "A"
+                stat = "def"
+            elif move.category == "physical":
+                stat = "atk"
             else:
-                stat = "C"
+                stat = "spa"
             final_attack = attacker.stats[stat]
             r_rank = attacker.rank_modifier(stat)
 
@@ -362,9 +362,9 @@ class DamageCalculator:
 
         # ステータス
         if self.battle.query.deals_physical_damage(attacker, move):
-            stat = "B"
+            stat = "def"
         else:
-            stat = "D"
+            stat = "spd"
 
         final_defense = defender.stats[stat]
         r_rank = defender.rank_modifier(stat)

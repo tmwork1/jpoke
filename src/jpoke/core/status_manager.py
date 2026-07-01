@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
 from jpoke.model import Pokemon
-from jpoke.utils.type_defs import Stat, HPChangeReason, StatChangeReason
+from jpoke.types import Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
 from jpoke.utils import fast_copy
@@ -108,7 +108,7 @@ class StatusManager:
 
         Args:
             target: 対象のポケモン
-            stats: 能力とランク変化量の辞書（例: {"B": -1, "D": -1}）
+            stats: 能力とランク変化量の辞書（例: {"def": -1, "spd": -1}）
             source: 変更の原因となったポケモン
             reason: 変更の理由（ログ記録用）
 

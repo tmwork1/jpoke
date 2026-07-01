@@ -2,7 +2,7 @@
 import pytest
 
 from jpoke.model import Pokemon
-from jpoke.utils.type_defs import AilmentName
+from jpoke.types import AilmentName
 
 from . import test_utils as t
 
@@ -247,7 +247,7 @@ def test_まひ_すばやさ低下():
     )
     mon = battle.actives[0]
     battle.ailment_manager.apply(mon, "まひ")
-    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"] // 2
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] // 2
 
 
 def test_まひ_行動不能():

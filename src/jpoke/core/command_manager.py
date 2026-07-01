@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from .player_state import PlayerState
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import BattlePhase
+from jpoke.types import BattlePhase
 from jpoke.enums import Event, Command, Interrupt
 from jpoke.model import Move
 

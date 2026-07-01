@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
-    from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
+    from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.core import Handler, HandlerReturn
 

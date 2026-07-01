@@ -23,7 +23,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from collections import defaultdict
 
-from jpoke.utils.type_defs import Stat, AilmentName, LethalEvent, LethalSubject
+from jpoke.types import Stat, AilmentName, LethalEvent, LethalSubject
 from jpoke.utils.lethal_dist import LethalDist, to_dist, _check_hp, subtract_dist
 
 

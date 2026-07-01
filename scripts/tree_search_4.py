@@ -18,18 +18,18 @@ class SearchPlayer(Player):
             print(f"{battle.copy_depth=} : return random command")
             return random.choice(my_commands)
 
-        rival = battle.rival(self)
-        rival_commands = battle.get_available_commands(rival)
+        opponent = battle.opponent(self)
+        opponent_commands = battle.get_available_commands(opponent)
 
         print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
+        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
-        for my_cmd, rival_cmd in product(my_commands, rival_commands):
-            print(f"\n<< Simulation {my_cmd} vs {rival_cmd} >>")
+        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
+            print(f"\n<< Simulation {my_cmd} vs {opponent_cmd} >>")
             sim = battle.copy()
-            commands = {self: my_cmd, rival: rival_cmd}
+            commands = {self: my_cmd, opponent: opponent_cmd}
             sim.step(commands)
             sim.print_logs()
         print(f"{'-'*20}")

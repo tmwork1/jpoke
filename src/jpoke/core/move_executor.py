@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
-from jpoke.utils.type_defs import Type, MoveCategory
+from jpoke.types import PokemonType, MoveCategory
 from jpoke.utils.math import clamp_stats, clamp_critic
 from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
@@ -52,7 +52,7 @@ class MoveExecutor:
         self.action_success: bool | None = None
         self.move_success: bool | None = None
         self.move_applied: bool | None = None
-        self.move_type: Type | None = None
+        self.move_type: PokemonType | None = None
         self.critical_rank: int | None = None
         self.critical: bool | None = None
 
@@ -166,11 +166,11 @@ class MoveExecutor:
 
         # ランク補正
         ranks = {
-            "ACC": attacker.rank["ACC"],
-            "EVA": defender.rank["EVA"]
+            "accuracy": attacker.rank["accuracy"],
+            "evasion": defender.rank["evasion"]
         }
         modified_rank = self._events.emit(Event.ON_GET_STAT_RANK, ctx, ranks)
-        rank_modifier = hit_rank_modifier(modified_rank["ACC"], modified_rank["EVA"])
+        rank_modifier = hit_rank_modifier(modified_rank["accuracy"], modified_rank["evasion"])
         accuracy = int(accuracy * rank_modifier)
 
         self.accuracy = accuracy  # デバッグ用に保存
@@ -222,10 +222,10 @@ class MoveExecutor:
         """
         if ctx.move.target != "foe":
             return False
-        if ctx.move.has_label("bypass_substitute"):
+        if ctx.move.has_flag("bypass_substitute"):
             return False
         # 音技はみがわりを貫通する（第六世代以降の仕様）
-        if ctx.move.has_label("sound"):
+        if ctx.move.has_flag("sound"):
             return False
         return self._events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
 
@@ -308,7 +308,7 @@ class MoveExecutor:
         くさタイプの防御側に powder ラベルを持つ技を使うと無効化される。
         """
         if (
-            ctx.move.has_label("powder")
+            ctx.move.has_flag("powder")
             and ctx.defender.has_type("くさ")
         ):
             self.battle.add_event_log(
@@ -376,7 +376,7 @@ class MoveExecutor:
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (
                 ctx.move.accuracy is not None
-                and (hit_index == 1 or ctx.move.has_label("check_hit_each_time"))
+                and (hit_index == 1 or ctx.move.has_flag("check_hit_each_time"))
             )
 
             if need_hit_check and not self._check_hit(ctx):
@@ -406,7 +406,7 @@ class MoveExecutor:
             ctx: 技実行中のバトルコンテキスト
         """
         # 変化技の処理はダメージ処理とは別に行う
-        if ctx.move.category == "変化":
+        if ctx.move.category == "status":
             self._execute_status_hit(ctx)
             return
 
@@ -465,7 +465,7 @@ class MoveExecutor:
                 payload={"move": ctx.move.name}
             )
 
-    def resolve_move_type(self, attacker: Pokemon, move: Move) -> Type:
+    def resolve_move_type(self, attacker: Pokemon, move: Move) -> PokemonType:
         """技の有効タイプを取得する。
 
         Args:

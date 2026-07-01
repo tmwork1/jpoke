@@ -13,9 +13,9 @@ def test_Vジェネレート_防御特防素早さが各1段階低下する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["B"] == -1
-    assert attacker.rank["D"] == -1
-    assert attacker.rank["S"] == -1
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+    assert attacker.rank["spe"] == -1
 
 
 def test_もえあがるいかり_ひるみが発動する():
@@ -119,7 +119,7 @@ def test_りんごさん_とくぼう1段階低下が発動する():
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].rank["D"] == -1
+    assert battle.actives[1].rank["spd"] == -1
 
 
 def test_リーフブレード_急所ランクが1():

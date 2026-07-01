@@ -1,6 +1,6 @@
 from jpoke.enums import Event
 from jpoke.handlers import field as h
-from ...handlers.models import FieldData
+from ..models import FieldData
 
 TERRAIN: dict[str, FieldData] = {
     "エレキフィールド": FieldData(

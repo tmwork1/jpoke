@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event
 from jpoke.model import Move
-from jpoke.utils.type_defs import RoleSpec, HPChangeReason, StatChangeReason
+from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason
 
 
 @dataclass(eq=False)

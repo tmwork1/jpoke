@@ -9,7 +9,7 @@
   定義順のまま抽出する（実行時 import は行わない）
 - WEATHER 辞書には「天候なし」を表す `""` キーが含まれていない
   （FIELDS 辞書の組み立て時に別途追加される）ため、抽出したキーの先頭に `""` を追加する
-- src/jpoke/utils/type_defs/weather.py 内の `WeatherName = Literal[...]` の行を
+- src/jpoke/types/weather.py 内の `WeatherName = Literal[...]` の行を
   抽出したキーから再構築した内容で置換する
 - 冪等に実行できる（再実行しても同じ結果になる）
 """
@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 WEATHER_PY = ROOT / "src/jpoke/data/field/weather.py"
-TYPE_DEFS_PY = ROOT / "src/jpoke/utils/type_defs/weather.py"
+TYPE_DEFS_PY = ROOT / "src/jpoke/types/weather.py"
 
 GENERATED_COMMENT = (
     "# 自動生成: python scripts/generate_weather_literal.py で更新"
@@ -71,8 +71,8 @@ def build_literal_line(keys: list[str]) -> str:
     return f"WeatherName = Literal[{items}]  {GENERATED_COMMENT}"
 
 
-def update_type_defs(target: Path, new_line: str) -> None:
-    """type_defs/weather.py内のWeatherName定義行(単一/複数行)を置換する。"""
+def update_literal_file(target: Path, new_line: str) -> None:
+    """types/weather.py内のWeatherName定義行(単一/複数行)を置換する。"""
     content = target.read_text(encoding="utf-8")
     lines = content.splitlines(keepends=False)
 
@@ -107,7 +107,7 @@ def main() -> None:
     print(f"抽出したキー: {keys}")
 
     new_line = build_literal_line(keys)
-    update_type_defs(TYPE_DEFS_PY, new_line)
+    update_literal_file(TYPE_DEFS_PY, new_line)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 
-from jpoke.utils.type_defs import CommandType
+from jpoke.types import CommandType
 from jpoke.utils import fast_copy
 from jpoke.enums import Command, Interrupt
 

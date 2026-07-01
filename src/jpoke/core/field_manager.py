@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import GlobalFieldName, SideFieldName, WeatherName, TerrainName
+from jpoke.types import GlobalFieldName, SideFieldName, WeatherName, TerrainName
 from jpoke.data import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
 from jpoke.model import Field

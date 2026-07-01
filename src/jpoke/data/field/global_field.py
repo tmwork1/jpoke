@@ -1,6 +1,6 @@
 from jpoke.enums import DomainEvent, Event
 from jpoke.handlers import field as h
-from ...handlers.models import FieldData
+from ..models import FieldData
 
 GLOBAL_FIELD: dict[str, FieldData] = {
     "じゅうりょく": FieldData(

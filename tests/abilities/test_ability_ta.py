@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.utils.type_defs import Type, AilmentName, WeatherName, Gender
+from jpoke.types import PokemonType, AilmentName, WeatherName, PokemonGender
 
 from .. import test_utils as t
 
@@ -18,7 +18,7 @@ def test_たんじゅん_かたやぶりで無効():
         team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["A"] == -1
+    assert battle.actives[0].rank["atk"] == -1
 
 
 def test_たんじゅん_能力変化量が2倍になる():
@@ -28,7 +28,7 @@ def test_たんじゅん_能力変化量が2倍になる():
     )
     target, source = battle.actives
 
-    stats = {"A": 1, "B": -2, "C": 3, "D": -4, "S": 1, "ACC": -2, "EVA": 3}
+    stats = {"atk": 1, "def": -2, "spa": 3, "spd": -4, "spe": 1, "accuracy": -2, "evasion": 3}
     battle.modify_stats(target, stats, source=source)
     for stat, change in stats.items():
         assert target.rank[stat] == max(-6, min(6, change * 2))
@@ -37,9 +37,9 @@ def test_たんじゅん_能力変化量が2倍になる():
 @pytest.mark.parametrize(
     "foe_name, stat",
     [
-        ("フシギダネ", "A"),
-        ("ゼニガメ", "C"),
-        ("ウインディ", "C"),  # BD同じならCアップ
+        ("フシギダネ", "atk"),
+        ("ゼニガメ", "spa"),
+        ("ウインディ", "spa"),  # BD同じならCアップ
     ],
 )
 def test_ダウンロード_能力アップ(foe_name, stat):
@@ -148,7 +148,7 @@ def test_ちからずく_追加効果が発動せず威力が1_3倍():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert 5325 == battle.damage_calculator.power_modifier
-    assert attacker.rank["S"] == 0
+    assert attacker.rank["spe"] == 0
 
 
 def test_ちからもち_イカサマで攻撃するときも2倍():
@@ -222,7 +222,7 @@ def test_ちどりあし_こんらん中命中率が半減する():
         ("ピカチュウ", "", "ひのこ", 4096),
     ]
 )
-def test_てきおうりょく_STAB補正(name: str, tera_type: Type, move_name: str, expected_modifier: float):
+def test_てきおうりょく_STAB補正(name: str, tera_type: PokemonType, move_name: str, expected_modifier: float):
     battle = t.start_battle(
         team0=[Pokemon(name, ability_name="てきおうりょく", tera_type=tera_type, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
@@ -370,8 +370,8 @@ def test_てんきや_天候変化で即座にフォルムチェンジ():
 @pytest.mark.parametrize(
     "move_name, stat",
     [
-        ("たいあたり", "B"),
-        ("ひのこ", "D"),
+        ("たいあたり", "def"),
+        ("ひのこ", "spd"),
     ]
 )
 def test_てんねん_攻撃側は防御ランク補正を無視する(move_name, stat):
@@ -412,8 +412,8 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
 @pytest.mark.parametrize(
     "move_name, stat",
     [
-        ("たいあたり", "A"),
-        ("ひのこ", "C"),
+        ("たいあたり", "atk"),
+        ("ひのこ", "spa"),
     ]
 )
 def test_てんねん_防御側はACランク無視(move_name, stat):
@@ -462,7 +462,7 @@ def test_てんのめぐみ_追加効果確率が2倍になる():
     )
     without_megumi.random.random = lambda: 0.35
     t.run_move(without_megumi, 0)
-    assert without_megumi.actives[1].rank["D"] == 0
+    assert without_megumi.actives[1].rank["spd"] == 0
 
     # てんのめぐみあり: 乱数0.35でD低下が発動する（確率2倍で境界: 0.40未満で発動）
     with_megumi = t.start_battle(
@@ -472,7 +472,7 @@ def test_てんのめぐみ_追加効果確率が2倍になる():
     )
     with_megumi.random.random = lambda: 0.35
     t.run_move(with_megumi, 0)
-    assert with_megumi.actives[1].rank["D"] == -1
+    assert with_megumi.actives[1].rank["spd"] == -1
 
 
 def test_でんきにかえる_被弾でじゅうでん状態になる():
@@ -487,14 +487,14 @@ def test_でんきにかえる_被弾でじゅうでん状態になる():
 @pytest.mark.parametrize(
     "gendar0, gendar1, expected_modifier",
     [
-        ("オス", "オス", 5120),
-        ("メス", "メス", 5120),
-        ("オス", "メス", 3072),
-        ("オス", "", 4096),
+        ("male", "male", 5120),
+        ("female", "female", 5120),
+        ("male", "female", 3072),
+        ("male", "", 4096),
         ("", "", 4096),
     ]
 )
-def test_とうそうしん_攻撃補正(gendar0: Gender, gendar1: Gender, expected_modifier: int):
+def test_とうそうしん_攻撃補正(gendar0: PokemonGender, gendar1: PokemonGender, expected_modifier: int):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="とうそうしん", move_names=["たいあたり"], gender=gendar0)],
         team1=[Pokemon("カビゴン", gender=gendar1)],
@@ -592,7 +592,7 @@ def test_トレース_いかくをコピーすると即発動():
         team1=[Pokemon("ピカチュウ", ability_name="いかく")],
     )
     assert battle.actives[0].ability.base_name == "いかく"
-    assert battle.actives[1].rank["A"] == -1
+    assert battle.actives[1].rank["atk"] == -1
 
 
 def test_トレース_交代で元の特性に戻る():

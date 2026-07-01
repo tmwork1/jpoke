@@ -41,8 +41,8 @@ def test_りゅうのまい_こうげきとすばやさ1段階ずつ上がる():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["A"] == 1
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 1
 
 
 def test_りゅうのまい_こうげき最大でもすばやさは上昇する():
@@ -52,8 +52,8 @@ def test_りゅうのまい_こうげき最大でもすばやさは上昇する(
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    attacker.rank["A"] = 6
+    attacker.rank["atk"] = 6
     t.run_move(battle, 0)
 
-    assert attacker.rank["A"] == 6
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["spe"] == 1

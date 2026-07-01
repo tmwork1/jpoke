@@ -185,7 +185,7 @@ def test_アシストパワー_ランク上昇合計1段階で威力40():
         accuracy=100,
     )
     attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"A": 1}, source=attacker)
+    battle.modify_stats(attacker, {"atk": 1}, source=attacker)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 40
@@ -199,7 +199,7 @@ def test_アシストパワー_ランク上昇合計3段階で威力80():
         accuracy=100,
     )
     attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"A": 2, "B": 1}, source=attacker)
+    battle.modify_stats(attacker, {"atk": 2, "def": 1}, source=attacker)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 80
@@ -213,7 +213,7 @@ def test_アシストパワー_ランク低下はカウントしない():
         accuracy=100,
     )
     attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"A": -1}, source=attacker)
+    battle.modify_stats(attacker, {"atk": -1}, source=attacker)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 20
@@ -395,11 +395,11 @@ def test_あやしいかぜ_全能力1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["A"] == 1
-    assert attacker.rank["B"] == 1
-    assert attacker.rank["C"] == 1
-    assert attacker.rank["D"] == 1
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["spd"] == 1
+    assert attacker.rank["spe"] == 1
 
 
 def test_いかりのまえば_最低1ダメージ():
@@ -441,7 +441,7 @@ def test_いじげんラッシュ_防御1段階低下が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["B"] == -1
+    assert attacker.rank["def"] == -1
 
 
 def test_いてつくしせん_こおりが発動する():
@@ -608,7 +608,7 @@ def test_うらみつらみ_こうげき1段階低下が発動する():
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].rank["A"] == -1
+    assert battle.actives[1].rank["atk"] == -1
 
 
 def test_エアカッター_急所ランクが1():
@@ -723,7 +723,7 @@ def test_エレクトロビーム_1ターン目にとくこうが上昇する():
 
     # 1ターン目: とくこう+1、ダメージなし
     t.run_move(battle, 0)
-    assert attacker.rank["C"] == 1
+    assert attacker.rank["spa"] == 1
 
 
 def test_エレクトロビーム_2ターンで攻撃する():
@@ -764,7 +764,7 @@ def test_エレクトロビーム_あめ時1ターンで攻撃してとくこう
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_volatile("エレクトロビーム")
-    assert attacker.rank["C"] == 1
+    assert attacker.rank["spa"] == 1
 
 
 def test_エレクトロビーム_ばんのうがさ持ちはあめでも2ターンかかる():
@@ -804,7 +804,7 @@ def test_エレクトロビーム_パワフルハーブ使用時1ターンで攻
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_item()
-    assert attacker.rank["C"] == 1
+    assert attacker.rank["spa"] == 1
 
 
 def test_オクタンほう_命中率1段階低下が発動する():
@@ -816,7 +816,7 @@ def test_オクタンほう_命中率1段階低下が発動する():
         secondary_chance=1.0,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].rank["ACC"] == -1
+    assert battle.actives[1].rank["accuracy"] == -1
 
 
 def test_おしゃべり_こんらんが発動する():
@@ -894,4 +894,4 @@ def test_オーラウイング_素早さ1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["spe"] == 1

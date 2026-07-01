@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.utils.type_defs import AilmentName, WeatherName
+from jpoke.types import AilmentName, WeatherName
 
 from .. import test_utils as t
 
@@ -252,7 +252,7 @@ def test_わたげ_クリアボディではブロックされる():
         team1=[Pokemon("カビゴン", ability_name="クリアボディ", move_names=["たいあたり"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[1].rank["S"] == 0
+    assert battle.actives[1].rank["spe"] == 0
 
 
 def test_わたげ_被弾で攻撃者のSが1段階下がる():
@@ -261,7 +261,7 @@ def test_わたげ_被弾で攻撃者のSが1段階下がる():
         team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[1].rank["S"] == -1
+    assert battle.actives[1].rank["spe"] == -1
 
 
 def test_わるいてぐせ_接触技を受けたら相手のアイテムを奪う():

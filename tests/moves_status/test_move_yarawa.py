@@ -278,9 +278,9 @@ def test_のろい_ゴーストタイプ以外_こうげきぼうぎょ上がり
     mon = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert mon.rank["A"] == 1
-    assert mon.rank["B"] == 1
-    assert mon.rank["S"] == -1
+    assert mon.rank["atk"] == 1
+    assert mon.rank["def"] == 1
+    assert mon.rank["spe"] == -1
 
 
 def test_のろい_のろい状態のポケモンはターン終了時に最大HPの1_4ダメージ():
@@ -520,4 +520,4 @@ def test_わたほうし_相手のすばやさ1段階下がる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["S"] == -2
+    assert defender.rank["spe"] == -2

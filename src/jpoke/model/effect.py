@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.utils.type_defs import AbilityDisabledReason, ItemDisabledReason
+from jpoke.types import AbilityDisabledReason, ItemDisabledReason
 
 
 class EffectData(Protocol):

@@ -15,7 +15,7 @@ def test_かいでんぱ_相手の特攻が2段階下がる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["C"] == -2
+    assert defender.rank["spa"] == -2
 
 
 def test_かえんのまもり_技使用でかえんのまもり状態が付与される():
@@ -38,7 +38,7 @@ def test_かげぶんしん_回避率1段階上がる():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["EVA"] == 1
+    assert attacker.rank["evasion"] == 1
 
 
 def test_かなしばり_かなしばり中の技は使用できない():
@@ -143,12 +143,12 @@ def test_からをやぶる_Bが最低でも他のランクは上昇する():
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"B": -6}, source=attacker)
+    battle.modify_stats(attacker, {"def": -6}, source=attacker)
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == -6
-    assert attacker.rank["A"] == 2
-    assert attacker.rank["S"] == 2
+    assert attacker.rank["def"] == -6
+    assert attacker.rank["atk"] == 2
+    assert attacker.rank["spe"] == 2
 
 
 def test_からをやぶる_BとDが下がりAとCとSが上がる():
@@ -160,11 +160,11 @@ def test_からをやぶる_BとDが下がりAとCとSが上がる():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["A"] == 2
-    assert attacker.rank["B"] == -1
-    assert attacker.rank["C"] == 2
-    assert attacker.rank["D"] == -1
-    assert attacker.rank["S"] == 2
+    assert attacker.rank["atk"] == 2
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spa"] == 2
+    assert attacker.rank["spd"] == -1
+    assert attacker.rank["spe"] == 2
 
 
 def test_ガードシェア_こうげきとくこうは変化しない():
@@ -229,10 +229,10 @@ def test_ガードシェア_ランク変化は変更されない():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == 0
-    assert attacker.rank["D"] == 0
-    assert defender.rank["B"] == 0
-    assert defender.rank["D"] == 0
+    assert attacker.rank["def"] == 0
+    assert attacker.rank["spd"] == 0
+    assert defender.rank["def"] == 0
+    assert defender.rank["spd"] == 0
 
 
 def test_ガードスワップ_ACランクは変化しない():
@@ -244,17 +244,17 @@ def test_ガードスワップ_ACランクは変化しない():
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    attacker.rank["A"] = 3
-    attacker.rank["C"] = 2
-    defender.rank["A"] = -1
-    defender.rank["C"] = -2
+    attacker.rank["atk"] = 3
+    attacker.rank["spa"] = 2
+    defender.rank["atk"] = -1
+    defender.rank["spa"] = -2
     t.run_move(battle, 0)
 
     # こうげき・とくこうは変化しない
-    assert attacker.rank["A"] == 3
-    assert attacker.rank["C"] == 2
-    assert defender.rank["A"] == -1
-    assert defender.rank["C"] == -2
+    assert attacker.rank["atk"] == 3
+    assert attacker.rank["spa"] == 2
+    assert defender.rank["atk"] == -1
+    assert defender.rank["spa"] == -2
 
 
 def test_ガードスワップ_BDランクが双方で入れ替わる():
@@ -267,17 +267,17 @@ def test_ガードスワップ_BDランクが双方で入れ替わる():
     attacker = battle.actives[0]
     defender = battle.actives[1]
     # 事前にランクを変更しておく
-    attacker.rank["B"] = 2
-    attacker.rank["D"] = -1
-    defender.rank["B"] = -3
-    defender.rank["D"] = 1
+    attacker.rank["def"] = 2
+    attacker.rank["spd"] = -1
+    defender.rank["def"] = -3
+    defender.rank["spd"] = 1
     t.run_move(battle, 0)
 
     # 入れ替わった後のランクを確認
-    assert attacker.rank["B"] == -3
-    assert attacker.rank["D"] == 1
-    assert defender.rank["B"] == 2
-    assert defender.rank["D"] == -1
+    assert attacker.rank["def"] == -3
+    assert attacker.rank["spd"] == 1
+    assert defender.rank["def"] == 2
+    assert defender.rank["spd"] == -1
 
 
 def test_ガードスワップ_双方ともランク0のとき変化なし():
@@ -291,10 +291,10 @@ def test_ガードスワップ_双方ともランク0のとき変化なし():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == 0
-    assert attacker.rank["D"] == 0
-    assert defender.rank["B"] == 0
-    assert defender.rank["D"] == 0
+    assert attacker.rank["def"] == 0
+    assert attacker.rank["spd"] == 0
+    assert defender.rank["def"] == 0
+    assert defender.rank["spd"] == 0
 
 
 def test_きあいだめ_きゅうしょアップ付与():
@@ -409,7 +409,7 @@ def test_きりばらい_対象の回避率が1段階下がる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["EVA"] == -1
+    assert defender.rank["evasion"] == -1
 
 
 @pytest.mark.parametrize("wall_name", [
@@ -436,11 +436,11 @@ def test_くすぐる_こうげきが最低でもぼうぎょは下がる():
         team1=[Pokemon("カビゴン")],
     )
     defender = battle.actives[1]
-    battle.modify_stats(defender, {"A": -6}, source=battle.actives[0])
+    battle.modify_stats(defender, {"atk": -6}, source=battle.actives[0])
     t.run_move(battle, 0)
 
-    assert defender.rank["A"] == -6
-    assert defender.rank["B"] == -1
+    assert defender.rank["atk"] == -6
+    assert defender.rank["def"] == -1
 
 
 def test_くすぐる_こうげきとぼうぎょ1段階ずつ下がる():
@@ -452,8 +452,8 @@ def test_くすぐる_こうげきとぼうぎょ1段階ずつ下がる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["A"] == -1
-    assert defender.rank["B"] == -1
+    assert defender.rank["atk"] == -1
+    assert defender.rank["def"] == -1
 
 
 def test_くろいきり_使用者のランクがゼロにリセットされる():
@@ -464,14 +464,14 @@ def test_くろいきり_使用者のランクがゼロにリセットされる(
     )
     attacker = battle.actives[0]
     # 事前にランクを変化させておく
-    attacker.rank["A"] = 3
-    attacker.rank["B"] = -2
-    attacker.rank["S"] = 1
+    attacker.rank["atk"] = 3
+    attacker.rank["def"] = -2
+    attacker.rank["spe"] = 1
     t.run_move(battle, 0)
 
-    assert attacker.rank["A"] == 0
-    assert attacker.rank["B"] == 0
-    assert attacker.rank["S"] == 0
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["def"] == 0
+    assert attacker.rank["spe"] == 0
 
 
 def test_くろいきり_双方のランクが同時にリセットされる():
@@ -482,16 +482,16 @@ def test_くろいきり_双方のランクが同時にリセットされる():
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
-    attacker.rank["A"] = 2
-    attacker.rank["S"] = -1
-    defender.rank["B"] = -2
-    defender.rank["ACC"] = 1
+    attacker.rank["atk"] = 2
+    attacker.rank["spe"] = -1
+    defender.rank["def"] = -2
+    defender.rank["accuracy"] = 1
     t.run_move(battle, 0)
 
-    assert attacker.rank["A"] == 0
-    assert attacker.rank["S"] == 0
-    assert defender.rank["B"] == 0
-    assert defender.rank["ACC"] == 0
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spe"] == 0
+    assert defender.rank["def"] == 0
+    assert defender.rank["accuracy"] == 0
 
 
 def test_くろいまなざし_すでににげられない状態なら失敗():
@@ -614,12 +614,12 @@ def test_コスモパワー_発動前後のランク変化(def_init, spd_init, d
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    attacker.rank["B"] = def_init
-    attacker.rank["D"] = spd_init
+    attacker.rank["def"] = def_init
+    attacker.rank["spd"] = spd_init
     t.run_move(battle, 0)
 
-    assert attacker.rank["B"] == def_exp
-    assert attacker.rank["D"] == spd_exp
+    assert attacker.rank["def"] == def_exp
+    assert attacker.rank["spd"] == spd_exp
 
 
 def test_こらえる_HP1のとき致死ダメージでHP1残る():

@@ -13,12 +13,12 @@ KEEP_KEYS = {
     "ability-1",
     "ability-2",
     "ability-3",
-    "H",
-    "A",
-    "B",
-    "C",
-    "D",
-    "S",
+    "hp",
+    "atk",
+    "def",
+    "spa",
+    "spd",
+    "spe",
 }
 
 RENAME_DICT = {

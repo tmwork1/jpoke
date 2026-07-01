@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle
     from jpoke.model.pokemon import Pokemon
-    from jpoke.handlers.models import AilmentData
+    from jpoke.data.models import AilmentData
 
-from jpoke.utils.type_defs import AilmentName
+from jpoke.types import AilmentName
 from jpoke.utils import fast_copy
 from jpoke.data.ailment import AILMENTS
 

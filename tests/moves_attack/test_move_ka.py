@@ -222,7 +222,7 @@ def test_かみくだく_ぼうぎょ1段階低下が発動する():
         secondary_chance=1.0,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].rank["B"] == -1
+    assert battle.actives[1].rank["def"] == -1
 
 
 def test_かみつく_ひるみが発動する():
@@ -530,7 +530,7 @@ def test_きあいだま_とくぼう1段階低下が発動する():
         secondary_chance=1.0,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].rank["D"] == -1
+    assert battle.actives[1].rank["spd"] == -1
 
 
 def test_きあいパンチ_みがわりへの被弾では中断しない():
@@ -818,11 +818,11 @@ def test_ぎんいろのかぜ_全能力1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["A"] == 1
-    assert attacker.rank["B"] == 1
-    assert attacker.rank["C"] == 1
-    assert attacker.rank["D"] == 1
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["spd"] == 1
+    assert attacker.rank["spe"] == 1
 
 
 def test_くさむすび_100kg以上200kg未満のとき威力100():
@@ -912,7 +912,7 @@ def test_くさわけ_素早さ1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["spe"] == 1
 
 
 def test_くちばしキャノン_接触技を受けると攻撃者がやけどになる():
@@ -1046,7 +1046,7 @@ def test_グロウパンチ_攻撃1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["A"] == 1
+    assert attacker.rank["atk"] == 1
 
 
 def test_けたぐり_10kg未満のとき威力20():
@@ -1184,11 +1184,11 @@ def test_げんしのちから_全能力1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["A"] == 1
-    assert attacker.rank["B"] == 1
-    assert attacker.rank["C"] == 1
-    assert attacker.rank["D"] == 1
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["spd"] == 1
+    assert attacker.rank["spe"] == 1
 
 
 def test_こうそくスピン_バインドを解除する():
@@ -1227,7 +1227,7 @@ def test_こうそくスピン_素早さ1段階上昇が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["S"] == 1
+    assert attacker.rank["spe"] == 1
 
 
 def test_こおりのいぶき_確定急所():
@@ -1357,4 +1357,4 @@ def test_ゴールドラッシュ_特攻1段階低下が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["C"] == -1
+    assert attacker.rank["spa"] == -1

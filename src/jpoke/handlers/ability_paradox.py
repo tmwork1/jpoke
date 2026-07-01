@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from jpoke.core import HandlerReturn
 from jpoke.enums import LogCode
 from jpoke.utils.math import apply_fixed_modifier
-from jpoke.utils.type_defs import BoostSource, Stat
+from jpoke.types import BoostSource, Stat
 
 from .ability import _announce_ability_triggered
 
@@ -18,7 +18,7 @@ def _select_paradox_boost_stat(mon: Pokemon) -> Stat:
     """パラドックス補正の対象能力を選ぶ。
     実数値(ランク補正込み)が最も高い能力を選ぶ。同値時は A>B>C>D>S の順で先勝ち。
     """
-    stat_order: tuple[Stat, ...] = ("A", "B", "C", "D", "S")
+    stat_order: tuple[Stat, ...] = ("atk", "def", "spa", "spd", "spe")
     best_stat: Stat = stat_order[0]
     best_value = mon.ranked_stats[best_stat]
     for stat in stat_order[1:]:
@@ -90,7 +90,7 @@ def refresh_paradox_charge_state(battle: Battle, ctx: EventContext, value: Any) 
 def modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """素早さ補正時: S が強化対象なら 1.5 倍補正を適用する。"""
     mon = ctx.source
-    if mon.paradox_boost_stat == "S":
+    if mon.paradox_boost_stat == "spe":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -102,13 +102,13 @@ def apply_atk_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
 
     if ctx.move.name == "イカサマ":
         boost_mon = defender
-        stat = "A"
+        stat = "atk"
     elif ctx.move.name == "ボディプレス":
         boost_mon = attacker
-        stat = "B"
+        stat = "def"
     else:
         boost_mon = attacker
-        stat = "A" if ctx.move.category == "物理" else "C"
+        stat = "atk" if ctx.move.category == "physical" else "spa"
 
     if boost_mon.paradox_boost_stat == stat:
         value = apply_fixed_modifier(value, 5325)
@@ -120,7 +120,7 @@ def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
     if ctx.attacker is None or ctx.move is None or ctx.defender is None:
         return HandlerReturn(value=value)
 
-    stat = "B" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "D"
+    stat = "def" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "spd"
     if ctx.defender.paradox_boost_stat == stat:
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)

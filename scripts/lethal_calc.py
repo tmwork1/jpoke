@@ -4,7 +4,7 @@
 
 from jpoke import Battle, Player, Pokemon, Move
 from jpoke.core.lethal import LethalResult
-from jpoke.utils.type_defs import VolatileName
+from jpoke.types import VolatileName
 
 
 def main(attacker: str,

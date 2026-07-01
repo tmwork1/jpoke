@@ -143,7 +143,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.model import Move
-from jpoke.utils.type_defs import HPChangeReason, StatChangeReason, RoleSpec
+from jpoke.types import HPChangeReason, StatChangeReason, RoleSpec
 import dataclasses
 
 

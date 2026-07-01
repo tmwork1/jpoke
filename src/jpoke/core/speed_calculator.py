@@ -67,7 +67,7 @@ class SpeedCalculator:
         return self.battle.events.emit(
             DomainEvent.ON_CALC_SPEED,
             EventContext(source=mon),
-            mon.stats["S"]
+            mon.stats["spe"]
         )
 
     def calc_speed_order_key(self, mon: Pokemon) -> int:

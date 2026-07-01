@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.data import ABILITIES
-from jpoke.utils.type_defs import AbilityState
+from jpoke.types import AbilityState
 
 from .effect import GameEffect
 

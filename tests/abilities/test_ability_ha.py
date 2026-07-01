@@ -8,7 +8,7 @@ import pytest
 
 from jpoke import Pokemon
 from jpoke.enums import Command
-from jpoke.utils.type_defs import Stat, AilmentName, VolatileName
+from jpoke.types import Stat, AilmentName, VolatileName
 
 from .. import test_utils as t
 
@@ -31,7 +31,7 @@ def test_はっこう_かたやぶりで無効():
         team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["すなかけ"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["ACC"] == -1
+    assert battle.actives[0].rank["accuracy"] == -1
 
 
 def test_はっこう_命中率低下を防ぐ():
@@ -40,7 +40,7 @@ def test_はっこう_命中率低下を防ぐ():
         team1=[Pokemon("カビゴン", move_names=["すなかけ"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["ACC"] == 0
+    assert battle.actives[0].rank["accuracy"] == 0
 
 
 @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ def test_はやあし_状態異常で素早さ1_5倍(ailment_name: AilmentName):
         ailment0=(ailment_name, None),
     )
     mon = battle.actives[0]
-    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"] * 3 // 2
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * 3 // 2
 
 
 def test_はやおき_ねむりカウンタが通常の2倍速で減る():
@@ -386,7 +386,7 @@ def test_ばんけん_いかくでAが下がらない():
         team0=[Pokemon("ピカチュウ", ability_name="ばんけん")],
         team1=[Pokemon("カビゴン", ability_name="いかく")],
     )
-    assert battle.actives[0].rank["A"] == 0
+    assert battle.actives[0].rank["atk"] == 0
 
 
 def test_ばんけん_ほえるを無効化する():
@@ -507,7 +507,7 @@ def test_びびり_Sが1段階上がる(move_name: str, rank: int):
         team1=[Pokemon("カビゴン", move_names=[move_name])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["S"] == rank
+    assert battle.actives[0].rank["spe"] == rank
 
 
 def test_びんじょう_相手のランク上昇をコピーする():
@@ -518,8 +518,8 @@ def test_びんじょう_相手のランク上昇をコピーする():
     )
     binjou_mon, foe = battle.actives
 
-    assert battle.modify_stats(foe, {"A": 2}, source=foe)
-    assert binjou_mon.rank["A"] == 2
+    assert battle.modify_stats(foe, {"atk": 2}, source=foe)
+    assert binjou_mon.rank["atk"] == 2
 
 
 def test_びんじょう_相手のランク低下はコピーしない():
@@ -530,15 +530,15 @@ def test_びんじょう_相手のランク低下はコピーしない():
     )
     binjou_mon, foe = battle.actives
 
-    assert battle.modify_stats(foe, {"A": -2}, source=foe)
-    assert binjou_mon.rank["A"] == 0
+    assert battle.modify_stats(foe, {"atk": -2}, source=foe)
+    assert binjou_mon.rank["atk"] == 0
 
 
 @pytest.mark.parametrize(
     "name, stat",
     [
-        ("ウインディ", "A"),
-        ("ピカチュウ", "S"),
+        ("ウインディ", "atk"),
+        ("ピカチュウ", "spe"),
     ]
 )
 def test_ビーストブースト_倒すと最高実数値の能力が上がる(name: str, stat: Stat):
@@ -676,7 +676,7 @@ def test_ふくつのこころ_ひるみ時にS上昇(volatile_name: VolatileNam
     )
     mon = battle.actives[0]
     battle.volatile_manager.apply(mon, volatile_name)
-    assert mon.rank["S"] == expected_rank
+    assert mon.rank["spe"] == expected_rank
 
 
 def test_ふしぎなうろこ_かたやぶりで無効():
@@ -722,7 +722,7 @@ def test_ふしぎなまもり_変化技は通る():
     )
     _, defender = battle.actives
     t.run_move(battle, 0)
-    assert defender.rank["A"] == -1
+    assert defender.rank["atk"] == -1
 
 
 @pytest.mark.parametrize(

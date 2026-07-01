@@ -1,6 +1,6 @@
-from jpoke.utils.type_defs import Type
+from jpoke.types import PokemonType
 
-PLATE_TO_TYPE: dict[str, Type] = {
+PLATE_TO_TYPE: dict[str, PokemonType] = {
     "ひのたまプレート": "ほのお",
     "もりのプレート": "くさ",
     "しずくプレート": "みず",
@@ -20,7 +20,7 @@ PLATE_TO_TYPE: dict[str, Type] = {
     "せいれいプレート": "フェアリー",
 }
 
-MEMORY_TO_TYPE: dict[str, Type] = {
+MEMORY_TO_TYPE: dict[str, PokemonType] = {
     "ファイトメモリ": "かくとう",
     "フライングメモリ": "ひこう",
     "ポイズンメモリ": "どく",

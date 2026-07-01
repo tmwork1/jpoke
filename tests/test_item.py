@@ -5,13 +5,13 @@ from typing import cast
 import pytest
 from jpoke import Pokemon
 from jpoke.model import Move
-from jpoke.utils.type_defs import Type
+from jpoke.types import PokemonType
 from . import test_utils as t
 
 
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
-    t_name = cast(Type, type_name)
+    t_name = cast(PokemonType, type_name)
     move = Move("たいあたり")
     move.data = copy.copy(move.data)
     move.data.type = t_name
@@ -21,11 +21,11 @@ def _dummy_move(type_name: str) -> Move:
 
 @pytest.mark.parametrize("item_name, stat, amount",
                          [
-                             ("チイラのみ", "A", 1),
-                             ("カムラのみ", "S", 1),
-                             ("ヤタピのみ", "C", 1),
-                             ("リュガのみ", "B", 1),
-                             ("ズアのみ", "D", 1),
+                             ("チイラのみ", "atk", 1),
+                             ("カムラのみ", "spe", 1),
+                             ("ヤタピのみ", "spa", 1),
+                             ("リュガのみ", "def", 1),
+                             ("ズアのみ", "spd", 1),
                          ]
                          )
 def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
@@ -78,8 +78,8 @@ def test_HP4分の1以下で回復するきのみ(item_name):
 def test_あかいいと_アイテム消費されない():
     """あかいいと: 発動しても消費されない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="メス")],
-        team1=[Pokemon("カビゴン", gender="オス")],
+        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="female")],
+        team1=[Pokemon("カビゴン", gender="male")],
     )
     mon0 = battle.actives[0]
     foe = battle.actives[1]
@@ -91,8 +91,8 @@ def test_あかいいと_アイテム消費されない():
 def test_あかいいと_どんかん持ちには付与されない():
     """あかいいと: 相手がどんかんならメロメロを付与しない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="メス")],
-        team1=[Pokemon("カビゴン", ability_name="どんかん", gender="オス")],
+        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="female")],
+        team1=[Pokemon("カビゴン", ability_name="どんかん", gender="male")],
     )
     mon0 = battle.actives[0]
     foe = battle.actives[1]
@@ -104,8 +104,8 @@ def test_あかいいと_どんかん持ちには付与されない():
 def test_あかいいと_メロメロ被弾で相手もメロメロ():
     """あかいいと: 持ち主がメロメロになったとき相手にもメロメロを付与する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="メス")],
-        team1=[Pokemon("カビゴン", gender="オス")],
+        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="female")],
+        team1=[Pokemon("カビゴン", gender="male")],
     )
     mon0 = battle.actives[0]
     foe = battle.actives[1]
@@ -117,8 +117,8 @@ def test_あかいいと_メロメロ被弾で相手もメロメロ():
 def test_あかいいと_他の揮発状態では発動しない():
     """あかいいと: メロメロ以外の揮発状態では相手に付与しない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="メス")],
-        team1=[Pokemon("カビゴン", gender="オス")],
+        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="female")],
+        team1=[Pokemon("カビゴン", gender="male")],
     )
     mon0 = battle.actives[0]
     foe = battle.actives[1]
@@ -136,7 +136,7 @@ def test_アッキのみ_物理技でB上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["B"] == 1
+    assert foe.rank["def"] == 1
     assert not foe.has_item()
 
 
@@ -149,7 +149,7 @@ def test_あつぞこブーツ_ねばねばネット無効():
     )
     raichu = battle._player_states[0].team[1]
     t.run_switch(battle, 0, 1)
-    assert raichu.rank["S"] == 0
+    assert raichu.rank["spe"] == 0
 
 
 @pytest.mark.parametrize("side_name", ["ステルスロック", "まきびし", "どくびし"])
@@ -388,7 +388,7 @@ def test_からぶりほけん_技が命中したときは発動しない():
     )
     mon = battle.actives[0]
     t.run_move(battle, 0)
-    assert mon.rank["S"] == 0
+    assert mon.rank["spe"] == 0
     assert mon.has_item()
 
 
@@ -401,7 +401,7 @@ def test_からぶりほけん_技が外れたときS上昇():
     )
     mon = battle.actives[0]
     t.run_move(battle, 0)
-    assert mon.rank["S"] == 2
+    assert mon.rank["spe"] == 2
     assert not mon.has_item()
 
 
@@ -600,7 +600,7 @@ def test_クリアチャーム_いかくを防ぐ():
         team1=[Pokemon("ピカチュウ", ability_name="いかく")],
     )
     mon = battle.actives[0]
-    assert mon.rank["A"] == 0
+    assert mon.rank["atk"] == 0
 
 
 def test_クリアチャーム_自分の技の低下は防げない():
@@ -612,7 +612,7 @@ def test_クリアチャーム_自分の技の低下は防げない():
     )
     t.run_move(battle, 0)
     mon = battle.actives[0]
-    assert mon.rank["C"] == -2
+    assert mon.rank["spa"] == -2
 
 
 def test_くろいてっきゅう_浮遊を無効化():
@@ -634,7 +634,7 @@ def test_くろいてっきゅう_素早さ半分():
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    base_speed = mon.stats["S"]
+    base_speed = mon.stats["spe"]
     assert battle.speed_calculator.calc_effective_speed(mon) == base_speed * 2048 // 4096
 
 
@@ -702,7 +702,7 @@ def test_こだわりスカーフ_素早さ強化():
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    base_speed = mon.stats["S"]
+    base_speed = mon.stats["spe"]
     assert battle.speed_calculator.calc_effective_speed(mon) == base_speed * 6144 // 4096
 
 
@@ -820,7 +820,7 @@ def test_しろいハーブ_2回目の能力低下はキャンセルされない
     mon = battle.actives[0]
     t.run_move(battle, 0)
     t.run_move(battle, 0)
-    assert mon.rank["C"] == -2
+    assert mon.rank["spa"] == -2
 
 
 def test_しろいハーブ_能力低下を1度だけキャンセル():
@@ -832,7 +832,7 @@ def test_しろいハーブ_能力低下を1度だけキャンセル():
     )
     mon = battle.actives[0]
     t.run_move(battle, 0)
-    assert mon.rank["C"] == 0
+    assert mon.rank["spa"] == 0
     assert not mon.has_item()
 
 
@@ -856,8 +856,8 @@ def test_じゃくてんほけん_効果抜群でAC上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["A"] == 2
-    assert foe.rank["C"] == 2
+    assert foe.rank["atk"] == 2
+    assert foe.rank["spa"] == 2
     assert not foe.has_item()
 
 
@@ -870,7 +870,7 @@ def test_じゃくてんほけん_等倍では発動しない():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["A"] == 0
+    assert foe.rank["atk"] == 0
     assert foe.has_item()
 
 
@@ -908,7 +908,7 @@ def test_じゅうでんち_でんき以外では発動しない():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["A"] == 0
+    assert foe.rank["atk"] == 0
     assert foe.has_item()
 
 
@@ -921,7 +921,7 @@ def test_じゅうでんち_でんき被弾でA上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["A"] == 1
+    assert foe.rank["atk"] == 1
     assert not foe.has_item()
 
 
@@ -935,7 +935,7 @@ def test_スターのみ_HP25以下でランダム能力上昇():
     mon.hp = mon.max_hp // 4 + 1
     battle.random.choice = lambda seq: seq[0]  # A が選ばれる
     battle.modify_hp(mon, v=-1)
-    assert mon.rank["A"] == 2
+    assert mon.rank["atk"] == 2
     assert not mon.has_item()
 
 
@@ -1084,7 +1084,7 @@ def test_タラプのみ_物理技では発動しない():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["D"] == 0
+    assert foe.rank["spd"] == 0
 
 
 def test_タラプのみ_特殊技被弾でD上昇():
@@ -1096,7 +1096,7 @@ def test_タラプのみ_特殊技被弾でD上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["D"] == 1
+    assert foe.rank["spd"] == 1
     assert not foe.has_item()
 
 
@@ -1285,7 +1285,7 @@ def test_のどスプレー_非音技では発動しない():
     )
     t.run_move(battle, 0)
     mon = battle.actives[0]
-    assert mon.rank["C"] == 0
+    assert mon.rank["spa"] == 0
     assert mon.has_item()
 
 
@@ -1298,7 +1298,7 @@ def test_のどスプレー_音技使用後にC上昇():
     )
     t.run_move(battle, 0)
     mon = battle.actives[0]
-    assert mon.rank["C"] == 1
+    assert mon.rank["spa"] == 1
     assert not mon.has_item()
 
 
@@ -1343,7 +1343,7 @@ def test_ばんのうがさ_すいすいが発動しない():
     )
     mon = battle.actives[0]
     # ばんのうがさがあるので素早さは2倍にならない
-    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["S"]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
 
 
 def test_ばんのうがさ_晴れのほのお技強化が無効():
@@ -1461,7 +1461,7 @@ def test_ひかりごけ_みず以外では発動しない():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["D"] == 0
+    assert foe.rank["spd"] == 0
     assert foe.has_item()
 
 
@@ -1474,7 +1474,7 @@ def test_ひかりごけ_みず被弾でD上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["D"] == 1
+    assert foe.rank["spd"] == 1
     assert not foe.has_item()
 
 
@@ -1524,8 +1524,8 @@ def test_ビビリだま_いかくでS上昇():
         team1=[Pokemon("ピカチュウ", ability_name="いかく")],
     )
     mon = battle.actives[0]
-    assert mon.rank["S"] == 1
-    assert mon.rank["A"] == -1
+    assert mon.rank["spe"] == 1
+    assert mon.rank["atk"] == -1
     assert not mon.has_item()
 
 
@@ -1549,16 +1549,16 @@ def test_フィールドシード_フィールドなしでは発動しない(ite
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    assert mon.rank["B"] == 0
-    assert mon.rank["D"] == 0
+    assert mon.rank["def"] == 0
+    assert mon.rank["spd"] == 0
     assert mon.has_item()
 
 
 @pytest.mark.parametrize("item_name, terrain, stat", [
-    ("エレキシード", "エレキフィールド", "B"),
-    ("グラスシード", "グラスフィールド", "B"),
-    ("サイコシード", "サイコフィールド", "D"),
-    ("ミストシード", "ミストフィールド", "D"),
+    ("エレキシード", "エレキフィールド", "def"),
+    ("グラスシード", "グラスフィールド", "def"),
+    ("サイコシード", "サイコフィールド", "spd"),
+    ("ミストシード", "ミストフィールド", "spd"),
 ])
 def test_フィールドシード_発動(item_name, terrain, stat):
     """フィールドシード系: 対応フィールド展開時に登場してランク+1"""
@@ -1748,8 +1748,8 @@ def test_ものまねハーブ_相手のランク上昇をコピー():
     )
     mon = battle.actives[0]
     foe = battle.actives[1]
-    battle.modify_stats(foe, {"A": +2})
-    assert mon.rank["A"] == 2
+    battle.modify_stats(foe, {"atk": +2})
+    assert mon.rank["atk"] == 2
     assert not mon.has_item()
 
 
@@ -1762,7 +1762,7 @@ def test_ゆきだま_こおり以外では発動しない():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["B"] == 0
+    assert foe.rank["def"] == 0
     assert foe.has_item()
 
 
@@ -1775,7 +1775,7 @@ def test_ゆきだま_こおり被弾でB上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["B"] == 1
+    assert foe.rank["def"] == 1
     assert not foe.has_item()
 
 
@@ -1800,7 +1800,7 @@ def test_ルームサービス_トリックルームでS低下():
     )
     t.run_move(battle, 1)
     mon = battle.actives[0]
-    assert mon.rank["S"] == -1
+    assert mon.rank["spe"] == -1
     assert not mon.has_item()
 
 

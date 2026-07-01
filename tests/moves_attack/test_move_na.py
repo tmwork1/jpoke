@@ -13,7 +13,7 @@ def test_ナイトバースト_命中率1段階低下が発動する():
         secondary_chance=1.0,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].rank["ACC"] == -1
+    assert battle.actives[1].rank["accuracy"] == -1
 
 
 def test_ナイトヘッド_与ダメージは使用者レベル固定():

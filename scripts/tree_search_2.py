@@ -21,25 +21,25 @@ class SearchPlayer(Player):
             return my_commands[0]
 
         self_state = battle.player_states[self]
-        rival = battle.rival(self)
-        rival_state = battle.player_states[rival]
+        opponent = battle.opponent(self)
+        opponent_state = battle.player_states[opponent]
 
         assert self_state.required_command_type == "switch"
-        assert rival_state.required_command_type == "move"
-        assert not rival_state.reserved_commands
+        assert opponent_state.required_command_type == "move"
+        assert not opponent_state.reserved_commands
 
-        rival_commands = battle.get_available_commands(rival)
+        opponent_commands = battle.get_available_commands(opponent)
 
         print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in rival_commands]}")
-        print(f"{[m.name for m in rival_state.active.moves]}")
+        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
+        print(f"{[m.name for m in opponent_state.active.moves]}")
 
         # コマンドの組み合わせを総当たりで評価する
         print("-"*20)
-        for my_cmd, rival_cmd in product(my_commands, rival_commands):
-            print(f"\n<< Simulation {my_cmd} vs {rival_cmd} >>")
+        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
+            print(f"\n<< Simulation {my_cmd} vs {opponent_cmd} >>")
             sim = battle.copy()
-            commands = {self: my_cmd, rival: rival_cmd}
+            commands = {self: my_cmd, opponent: opponent_cmd}
             sim.step(commands)
             sim.print_logs()
         print(f"{'-'*20}")

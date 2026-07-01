@@ -112,89 +112,94 @@
 
 ### 2-1. Pokemon プロパティ対応
 
-| poke-env | jpoke | 差異の種類 | ユーザーコメント |
+| poke-env | jpoke（現在） | 差異の種類 | 対応方針 |
 |---|---|---|---|
-| `current_hp` | `hp` | 変数名違い ||
-| `current_hp_fraction` | `hp_ratio` | 変数名違い ||
-| `weight` | `weight` | 同名だが意味が異なる（poke-env: 図鑑値、jpoke: 特性・アイテム反映済み） ||
-| `nature` | `nature` | 同名（英語 vs 日本語） ||
-| `ability: str \| None` | `ability: Ability`（`.name` で文字列） | 型違い ||
-| `base_ability: str \| None` | `base_ability_name: str` | 変数名・型違い ||
-| `item: str \| None` | `item: Item`（`.name` で文字列） | 型違い ||
-| `status: Status \| None` | `ailment: Ailment`（`.name` で文字列） | 変数名・型・言語違い ||
-| `status_counter: int` | `ailment.turn_count` | アクセスパス違い ||
-| `boosts: Dict[str, int]` | `rank: dict[Stat, int]` | 変数名・キー言語違い ||
-| `effects: Dict[Effect, int]` | `volatiles: dict[VolatileName, Volatile]` | 変数名・型違い ||
-| `moves: Dict[str, Move]` | `moves: list[Move]` | コンテナ型違い ||
-| `last_move: Move \| None` | `executed_move: Move \| None` | 変数名違い ||
-| `stats: Dict[str, int]` | `stats: dict[Stat, int]` | キー言語違い（"atk" vs "A"） ||
-| `base_stats: Dict[str, int]` | `base: list[int]` | 変数名・コンテナ型違い ||
-| `ivs: Dict[str, int]` | `indiv: list[int]` | 変数名・コンテナ型違い ||
-| `evs: Dict[str, int]` | `effort: list[int]` | 変数名・コンテナ型違い ||
-| `types: List[PokemonType]` | `types: list[Type]` | Enum vs 日本語 Literal ||
-| `base_types: List[PokemonType]` | `base_types: list[Type]` | 同名・型違い ||
-| `is_terastallized: bool` | `terastallized: bool` | 変数名違い ||
-| `tera_type: PokemonType \| None` | `tera_type: Type` | Enum vs 日本語 Literal ||
-| `first_turn: bool` | （`active_turn == 0` で代替） | 直接プロパティなし ||
-| `must_recharge: bool` | （`has_volatile("リチャージ")` で代替） | 直接プロパティなし ||
-| `protect_counter: int` | （volatile 内部に保持） | アクセスパス違い ||
-| `gender: PokemonGender` | `gender: Gender` | Enum vs 日本語 Literal ||
-| `name: str` | `name: str` | 同名（英語 vs 日本語） ||
+| `current_hp` | `hp` | 変数名違い | A-2: `current_hp` エイリアス追加 |
+| `current_hp_fraction` | `hp_ratio` | 変数名違い | A-1: `hp_ratio` → `hp_fraction` に改名 |
+| `weight` | `weight` | 意味が異なる（poke-env: 図鑑値、jpoke: 特性・アイテム反映済み） | C: API 変更なし |
+| `name` | `name` | 英語 vs 日本語 | B-2: ポケモン名マッピング |
+| `nature` | `nature` | 英語 vs 日本語 | B-2: 性格名マッピング |
+| `ability: str \| None` | `ability: Ability`（`.name` で文字列） | 型違い | B-2: 特性名マッピング |
+| `base_ability: str \| None` | `base_ability_name: str` | 変数名・型違い | A-1: `base_ability_name` → `base_ability` に改名 |
+| `item: str \| None` | `item: Item`（`.name` で文字列） | 型違い | B-2: アイテム名マッピング |
+| `status: Status \| None` | `ailment: Ailment`（`.name` で文字列） | 変数名・型・言語違い | A-2: `status` エイリアス追加（型変換なし） |
+| `status_counter: int` | `ailment.turn_count` | アクセスパス違い | B-4 |
+| `boosts: Dict[str, int]` | `rank: dict[Stat, int]` | 変数名・キー言語違い | A-2: `boosts` エイリアス追加（Stat キー英語化後に対応） |
+| `effects: Dict[Effect, int]` | `volatiles: dict[VolatileName, Volatile]` | 変数名・型違い | A-2: `effects` エイリアス追加（型変換なし） |
+| `moves: Dict[str, Move]` | `moves: list[Move]` | コンテナ型違い | B-4 |
+| `last_move: Move \| None` | `executed_move: Move \| None` | 変数名違い | A-1: `executed_move` → `last_move` に改名 |
+| `stats: Dict[str, int]` | `stats: dict[Stat, int]` | キー言語違い（"atk" vs "A"） | A-1: `Stat` Literal を英語キーに変更することで解消 |
+| `base_stats: Dict[str, int]` | `base: list[int]` | 変数名・コンテナ型違い | B-3 |
+| `ivs: Dict[str, int]` | `indiv: list[int]` | 変数名・コンテナ型違い | A-1: `indiv` → `ivs` に改名 |
+| `evs: Dict[str, int]` | `effort: list[int]` | 変数名・コンテナ型違い | A-1: `effort` → `evs` に改名 |
+| `types: List[PokemonType]` | `types: list[Type]` | Enum vs 日本語 Literal | B-1 |
+| `base_types: List[PokemonType]` | `base_types: list[Type]` | 型違い（Enum vs Literal） | B-1 |
+| `is_terastallized: bool` | `terastallized: bool` | 変数名違い | A-1: `terastallized` → `is_terastallized` に改名 |
+| `tera_type: PokemonType \| None` | `tera_type: Type` | Enum vs 日本語 Literal | B-1 |
+| `first_turn: bool` | （`active_turn == 0` で代替） | 直接プロパティなし | A-2: property 追加 |
+| `must_recharge: bool` | （`has_volatile("リチャージ")` で代替） | 直接プロパティなし | B-4 |
+| `protect_counter: int` | （volatile 内部に保持） | アクセスパス違い | B-4 |
+| `gender: PokemonGender` | `gender: Gender` | Enum vs 日本語 Literal | A-1: `Gender` Literal を英語値に変更 |
+| `stab_multiplier: float` | （なし） | jpoke 非対応 | C: 対象外 |
 
 ### 2-2. Move プロパティ対応
 
-| poke-env | jpoke | 差異の種類 | ユーザーコメント |
+| poke-env | jpoke（現在） | 差異の種類 | 対応方針 |
 |---|---|---|---|
-| `id: str` | `name: str` | 変数名・言語違い（英語 ID vs 日本語名） ||
-| `base_power: int` | `power: int \| None` | 変数名違い ||
-| `accuracy: int \| bool` | `accuracy: int \| None` | 必中表現違い（True vs None） ||
-| `current_pp: int` | `pp: int` | 変数名違い ||
-| `max_pp: int` | `data.pp: int` | アクセスパス違い ||
-| `crit_ratio: int` | `critical_rank: int` | 変数名違い ||
-| `category: MoveCategory` | `category: MoveCategory（日本語 Literal）` | Enum vs 日本語 Literal ||
-| `type: PokemonType` | `type: Type（日本語 Literal）` | Enum vs 日本語 Literal ||
-| `n_hit: tuple[int, int]` | `min_hits, max_hits` | 単一プロパティ vs 分割 ||
-| `flags: Dict[str, int]` | `data.labels: list[MoveLabel]` | 表現形式違い ||
-| `recoil: float` | `has_label("recoil")` | float値 vs bool判定 ||
-| `is_protect_move: bool` | `has_label(...)` | ラベルで代替 ||
+| `id: str` | `name: str` | 変数名・言語違い | B-2: 技名マッピング |
+| `base_power: int` | `power: int \| None` | 変数名違い | A-1: `power` → `base_power` に改名 |
+| `accuracy: int \| bool` | `accuracy: int \| None` | 必中表現違い（True vs None） | B-4 |
+| `current_pp: int` | `pp: int` | 変数名違い | A-2: `current_pp` エイリアス追加 |
+| `max_pp: int` | `data.pp: int` | アクセスパス違い | B-4 |
+| `crit_ratio: int` | `critical_rank: int` | 変数名違い | A-1: `critical_rank` → `crit_ratio` に改名 |
+| `category: MoveCategory` | `category: MoveCategory（日本語 Literal）` | Enum vs 日本語 Literal | A-1: `MoveCategory` Literal を英語値に変更 |
+| `type: PokemonType` | `type: Type（日本語 Literal）` | Enum vs 日本語 Literal | B-1 |
+| `expected_hits: float` | （`(min_hits + max_hits) / 2`） | 直接プロパティなし | A-2: property 追加 |
+| `n_hit: tuple[int, int]` | `min_hits, max_hits`（分割） | 単一 vs 分割 | C: 対象外 |
+| `flags: Dict[str, int]` | `data.labels: list[MoveLabel]` | 表現形式違い | B-4 |
+| `recoil: float` | `has_label("recoil")`（bool） | float vs bool | C: 精度制限のため対象外 |
+| `is_protect_move: bool` | `has_label(...)` | ラベルで代替 | B-4 |
 
 ### 2-3. Battle プロパティ対応
 
-| poke-env（AbstractBattle） | jpoke（Battle） | 差異の種類 | ユーザーコメント |
+| poke-env（AbstractBattle） | jpoke（Battle） | 差異の種類 | 対応方針 |
 |---|---|---|---|
-| `active_pokemon` | `get_active(player)` / `actives[0]` | 自分視点固定 vs プレイヤー指定 ||
-| `opponent_active_pokemon` | `foe(mon)` / `actives[1]` | 同上 ||
-| `team: Dict[str, Pokemon]` | `player_states[p].team: list[Pokemon]` | Dict vs list ||
-| `available_moves: List[Move]` | `get_available_commands(player): list[Command]` | Move リスト vs Command Enum ||
-| `available_switches: List[Pokemon]` | コマンドから抽出 | 直接プロパティなし ||
-| `weather: Dict[Weather, int]` | `weather: Field` | Dict vs Field オブジェクト ||
-| `fields: Dict[Field, int]` | `terrain: Field` | Dict vs Field オブジェクト ||
-| `side_conditions` | `side_managers[i].fields` | アクセスパス違い ||
-| `finished: bool` | `winner is not None` | 直接フラグなし ||
-| `won / lost` | `winner == self_player` | 計算で対応 ||
+| `active_pokemon` | `get_active(player)` / `actives[0]` | 自分視点固定 vs プレイヤー指定 | A-2: property 追加 |
+| `opponent_active_pokemon` | `get_active(rival(observer))` | 同上 | A-2: property 追加（`rival` → `opponent` 改名後） |
+| `finished: bool` | `winner is not None` | 直接フラグなし | A-2: property 追加 |
+| `won / lost` | `winner == self_player` | 直接フラグなし | A-2: property 追加 |
+| `side_conditions` | `side_managers[i].fields` | アクセスパス違い | A-2: `side_conditions` エイリアス追加 |
+| `team: Dict[str, Pokemon]` | `player_states[p].team: list[Pokemon]` | Dict vs list | C: export 対象外 |
+| `available_moves: List[Move]` | `get_available_commands(player): list[Command]` | Move vs Command Enum | C: export 対象外 |
+| `available_switches: List[Pokemon]` | コマンドから抽出 | 直接プロパティなし | C: export 対象外 |
+| `weather: Dict[Weather, int]` | `weather: Field` | Dict vs Field オブジェクト | C: export 対象外 |
+| `fields: Dict[Field, int]` | `terrain: Field` | Dict vs Field オブジェクト | C: export 対象外 |
 
-### 2-4. Player メソッド対応
+### 2-4. Player メソッド・プロパティ対応
 
-| poke-env | jpoke | 差異の種類 | ユーザーコメント |
+| poke-env | jpoke（現在） | 差異の種類 | 対応方針 |
 |---|---|---|---|
-| `choose_move(battle) -> BattleOrder` | `choose_command(battle) -> Command` | 返り値型が異なる ||
-| `teampreview(battle) -> str` | `choose_selection(battle) -> list[int]` | 選出表現が異なる ||
-| `username: str` | `name: str` | 変数名違い ||
-| `n_won_battles` | `n_won` | 変数名違い ||
-| `n_finished_battles` | `n_game` | 変数名違い ||
+| `username: str` | `name: str` | 変数名違い | A-1: `name` → `username` に改名 |
+| `n_won_battles` | `n_won` | 変数名違い | A-1: `n_won` → `n_won_battles` に改名 |
+| `n_finished_battles` | `n_game` | 変数名違い | A-1: `n_game` → `n_finished_battles` に改名 |
+| `n_lost_battles` | （なし） | 直接プロパティなし | A-2: property 追加。あわせて `n_draw_battles` も追加 |
+| `win_rate: float` | （なし） | 直接プロパティなし | A-2: property 追加 |
+| `choose_move(battle) -> BattleOrder` | `choose_command(battle) -> Command` | 返り値型が異なる | C: export 対象外 |
+| `teampreview(battle) -> str` | `choose_selection(battle) -> list[int]` | 選出表現が異なる | C: export 対象外 |
 
 ### 2-5. Enum 値の対応
 
-| 概念 | poke-env | jpoke |  | ユーザーコメント |
+| 概念 | poke-env | jpoke（現在） | 対応方針 |
 |---|---|---|---|
-| タイプ（ほのお） | `PokemonType.FIRE` | `"ほのお"` ||
-| 状態異常（まひ） | `Status.PAR` | `"まひ"` ||
-| 技カテゴリ（物理） | `MoveCategory.PHYSICAL` | `"物理"` ||
-| 性別（オス） | `PokemonGender.MALE` | `"オス"` ||
-| 天候（はれ） | `Weather.SUNNYDAY` | `"はれ"` ||
-| 天候（おおひでり） | `Weather.DESOLATELAND` | `"おおひでり"` ||
-| フィールド（グラス） | `Field.GRASSY_TERRAIN` | `"グラスフィールド"` ||
-| フィールド（エレキ） | `Field.ELECTRIC_TERRAIN` | `"エレキフィールド"` ||
+| タイプ（ほのお） | `PokemonType.FIRE` | `"ほのお"` | B-1: 変換テーブル |
+| 状態異常（まひ） | `Status.PAR` | `"まひ"` | B-1: 変換テーブル |
+| 技カテゴリ（物理） | `MoveCategory.PHYSICAL` | `"物理"` | A-1: `"physical"` に変更 |
+| 性別（オス） | `PokemonGender.MALE` | `"オス"` | A-1: `"male"` に変更 |
+| 天候（はれ） | `Weather.SUNNYDAY` | `"はれ"` | B-1: 変換テーブル |
+| 天候（おおひでり） | `Weather.DESOLATELAND` | `"おおひでり"` | B-1: 変換テーブル |
+| フィールド（グラス） | `Field.GRASSY_TERRAIN` | `"グラスフィールド"` | B-1: 変換テーブル |
+| フィールド（エレキ） | `Field.ELECTRIC_TERRAIN` | `"エレキフィールド"` | B-1: 変換テーブル |
+| 能力値（攻撃） | `"atk"` | `"A"` | A-1: `Stat` Literal を `"atk"` 等に変更 |
 
 ---
 
@@ -205,63 +210,85 @@
 poke-env のデータ（チーム構成・技仕様等）を jpoke へ取り込む方向のみを対象とする。
 jpoke オブジェクトを poke-env 形式でエクスポートする機能（アダプタクラス等）は対象外。
 
-### 分類 A: エイリアス property の追加で済むもの
+---
 
-既存コードへの影響ゼロ。jpoke 側に後方互換 property を追加するだけ。
-poke-env に慣れたユーザーが jpoke を違和感なく扱えるようにする命名エイリアス。
+### 分類 A-1: jpoke 側の改名
 
-| 追加先クラス | poke-env 名 | jpoke 名 |　ユーザーコメント |
+既存の jpoke 名を poke-env に合わせて変更する。エイリアスは残さず、呼び出し元も一括変更する。
+
+**プロパティ・変数の改名**
+
+| 変更前（jpoke 現在） | 変更後 | 対象 |
 |---|---|---|
-| `Pokemon` | `current_hp` | `hp` ||
-| `Pokemon` | `current_hp_fraction` | `hp_ratio` | エイリアス対応するほか、hp_ratio -> hp_fractionに改名する |
-| `Pokemon` | `last_move` | `executed_move` | poke-envに合わせて改名する |
-| `Pokemon` | `is_terastallized` | `terastallized` | poke-envに合わせて改名する |
-| `Pokemon` | `first_turn` | `active_turn == 0` ||
-| `Pokemon` | `stab_multiplier` | 計算で実装 | 非対応 |
-| `Move` | `base_power` | `power` | poke-envに合わせて改名する |
-| `Move` | `current_pp` | `pp` ||
-| `Move` | `crit_ratio` | `critical_rank` | poke-envに合わせて改名する |
-| `Move` | `expected_hits` | `(min_hits + max_hits) / 2` ||
-| `Move` | `n_hit` | `(min_hits, max_hits)` | 非対応 |
-| `Player` | `username` | `name` | poke-envに合わせて改名する |
-| `Player` | `n_won_battles` | `n_won` | poke-envに合わせて改名する |
-| `Player` | `n_finished_battles` | `n_game` | poke-envに合わせて改名する |
-| `Player` | `n_lost_battles` | `n_game - n_won` | poke-envに合わせて変数化し、n_draw_battles = n_finished - n_won - n_lost とする |
-| `Player` | `win_rate` | `n_won / n_game` ||
-| `Battle` | `finished` | `winner is not None` ||
-| `Battle` | `won` | `winner == player` ||
-| `Battle` | `lost` | `winner is not None and winner != player` ||
-| `Battle` | `active_pokemon` | `get_active(observer)` ||
-| `Battle` | `opponent_active_pokemon` | `get_active(rival(observer))` | rival -> opponent に改名する　|
-| `Pokemon` | `base_ability` | `base_ability_name` | poke-envに合わせて改名する |
+| `executed_move` | `last_move` | `Pokemon` |
+| `hp_ratio` | `hp_fraction` | `Pokemon` |
+| `terastallized` | `is_terastallized` | `Pokemon` |
+| `base_ability_name` | `base_ability` | `Pokemon` |
+| `indiv` | `ivs` | `Pokemon` |
+| `effort` | `evs` | `Pokemon` |
+| `power` | `base_power` | `Move` |
+| `critical_rank` | `crit_ratio` | `Move` |
+| `name` | `username` | `Player` |
+| `n_won` | `n_won_battles` | `Player` |
+| `n_game` | `n_finished_battles` | `Player` |
+| `rival()` | `opponent()` | `Battle` |
+
+**Literal 型の英語化**（`utils/type_defs/type_defs.py`）
+
+| 型 | 変更前 | 変更後 |
+|---|---|---|
+| `Stat` | `"H", "A", "B", "C", "D", "S"` | `"hp", "atk", "def", "spa", "spd", "spe"` |
+| `MoveCategory` | `"物理", "特殊", "変化"` | `"physical", "special", "status"` |
+| `Gender` | `"オス", "メス", ""` | `"male", "female", ""` |
+
+`Stat` の変更は `rank`、`stats`、`base`、`ivs`、`evs` 等を参照するすべての箇所に影響する。
 
 ---
 
-### 分類 B: 変換ユーティリティが必要なもの（poke-env → jpoke 方向のみ）
+### 分類 A-2: property / エイリアスの追加
 
-jpoke→poke-env エクスポートは対象外のため、アダプタクラスは作成しない。
-変換ユーティリティ関数として jpoke 側に用意する。
+jpoke の既存名は維持しつつ、poke-env 互換名を property として追加する。
+
+| poke-env 名 | 実装方法 | 対象クラス |
+|---|---|---|
+| `current_hp` | `hp` のエイリアス | `Pokemon` |
+| `current_hp_fraction` | `hp_fraction` のエイリアス | `Pokemon` |
+| `status` | `ailment.name` を返す property（型変換なし） | `Pokemon` |
+| `boosts` | `rank` のエイリアス（`Stat` 英語化後に対応） | `Pokemon` |
+| `effects` | `volatiles` のエイリアス（型変換なし） | `Pokemon` |
+| `first_turn` | `active_turn == 0` property | `Pokemon` |
+| `current_pp` | `pp` のエイリアス | `Move` |
+| `expected_hits` | `(min_hits + max_hits) / 2` property | `Move` |
+| `finished` | `winner is not None` property | `Battle` |
+| `won` / `lost` | `winner` から計算する property | `Battle` |
+| `active_pokemon` | `get_active(observer)` property | `Battle` |
+| `opponent_active_pokemon` | `get_active(opponent(observer))` property | `Battle` |
+| `side_conditions` | `side_managers[i].fields` のエイリアス | `Battle` |
+| `n_lost_battles` | `n_finished_battles - n_won_battles` property | `Player` |
+| `n_draw_battles` | `n_finished_battles - n_won_battles - n_lost_battles` property | `Player` |
+| `win_rate` | `n_won_battles / n_finished_battles` property | `Player` |
+
+---
+
+### 分類 B: 変換ユーティリティ（poke-env → jpoke 方向のみ）
+
+アダプタクラスは作成せず、変換関数として `utils/type_defs/` に用意する。
+変換テーブルが肥大化するため専用モジュール（`utils/type_defs/poke_env.py`）を設ける。
 
 #### B-1: Enum → 日本語 Literal 変換テーブル
 
-最も広範囲に影響する差異。poke-env のデータを jpoke へ取り込む際の基盤。
-以下のプロパティの変換すべてに共通する。
-
-| 対象プロパティ | poke-env 型 | jpoke 型 | ユーザーコメント |
+| 対象プロパティ | poke-env 型 | jpoke 型 |
 |---|---|---|
-| `types` / `base_types` | `List[PokemonType]` | `list[Type]`（日本語 Literal） ||
-| `tera_type` | `PokemonType \| None` | `Type`（日本語 Literal） ||
-| `gender` | `PokemonGender` | `Gender`（日本語 Literal） ||
-| `status` → `ailment.name` | `Status` Enum | 日本語 Literal（"まひ" 等） ||
-| `effects` → `volatiles` のキー | `Effect` Enum | `VolatileName`（日本語 Literal） ||
-| Move `type` | `PokemonType` | `Type`（日本語 Literal） ||
-| Move `category` | `MoveCategory` | `MoveCategory`（日本語 Literal） ||
+| `types` / `base_types` / `tera_type` | `PokemonType` Enum | 日本語 Literal（`Type`） |
+| `status` → `ailment.name` | `Status` Enum | 日本語 Literal（`AilmentName`） |
+| `effects` → `volatiles` のキー | `Effect` Enum | 日本語 Literal（`VolatileName`） |
+| Move `type` | `PokemonType` Enum | 日本語 Literal（`Type`） |
+| `weather` | `Weather` Enum | 日本語 Literal（`WeatherName`） |
+| `fields` | `Field` Enum | 日本語 Literal（`TerrainName`） |
 
-実装: `utils/type_defs.py` または専用モジュールに変換辞書として用意する。
+`MoveCategory`・`Gender`・`Stat` の変換は A-1 の Literal 英語化によって不要になる。
 
 #### B-2: 名前マッピング（英語 ↔ 日本語）
-
-以下のプロパティは英日の名前マッピングテーブルが必要。
 
 | 対象プロパティ | 変換内容 |
 |---|---|
@@ -273,76 +300,70 @@ jpoke→poke-env エクスポートは対象外のため、アダプタクラス
 
 #### B-3: 数値形式変換
 
-[ユーザーコメント] jpokeのリスト管理のメリットを調査し、メリットがなければpoke-envの定義に合わせてリファクタしてもよい。
+`Stat` キー英語化（A-1）後も、poke-env は辞書形式・jpoke はリスト形式の差異が残る。
 
-| 対象プロパティ | poke-env | jpoke | 変換内容 |
+| 対象 | poke-env 形式 | jpoke 形式 | 変換 |
 |---|---|---|---|
-| `stats` | `Dict[str, int]`（英語キー） | `dict[Stat, int]`（"H","A",...） | キーマッピング |
-| `base_stats` | `Dict[str, int]`（英語キー） | `list[int]`（インデックス順） | キー→インデックス変換 |
-| `ivs` / `indiv` | `Dict[str, int]`（英語キー） | `list[int]` | 同上 |
-| `evs` / `effort` | `Dict[str, int]`（英語キー） | `list[int]` | 同上 |
-| `boosts` / `rank` | `Dict[str, int]`（英語キー） | `dict[Stat, int]`（"A","B",...） | キーマッピング |
+| `base_stats` | `Dict[str, int]`（英語キー） | `list[int]`（インデックス順） | キー → インデックス変換 |
+| `ivs`・`evs` のインポート | `Dict[str, int]`（英語キー） | `list[int]` | 同上 |
 
 ```
 インデックス対応: hp=0, atk=1, def=2, spa=3, spd=4, spe=5
-Stat キー対応:   H="hp", A="atk", B="def", C="spa", D="spd", S="spe"
 ```
 
 #### B-4: その他変換
 
-| 対象プロパティ（差異一覧の項目） | 差異 | 変換方法 |
+| 対象プロパティ | 差異 | 変換方法 |
 |---|---|---|
-| Move `accuracy` | True = 必中（poke-env）vs None = 必中（jpoke） | `True → None` に変換 |
+| Move `accuracy` | True = 必中（poke-env）vs None = 必中（jpoke） | `True → None` |
 | `status_counter` | `ailment.turn_count`（アクセスパス違い） | インポート時に `Ailment.turn_count` に設定 |
 | `must_recharge` | `has_volatile("リチャージ")` で代替 | 揮発性状態名で判定 |
 | `protect_counter` | volatile 内部に保持 | `Volatile.counter` から取得 |
-| Move `max_pp` | `data.pp`（アクセスパス違い） | `move.data.pp` 経由でアクセス |
-| Move `flags` / `data.labels` | `Dict[str, int]` vs `list[MoveLabel]` | contact, sound 等をラベルに変換 |
+| Move `max_pp` | `data.pp`（アクセスパス違い） | `move.data.pp` 経由 |
+| Move `flags` | `Dict[str, int]` vs `list[MoveLabel]` | contact, sound 等をラベルに変換 |
 | Pokemon `moves` | `Dict[str, Move]`（英語 ID キー）vs `list[Move]` | B-2 の名前マッピング経由でリストに変換 |
-| `effects` / `volatiles` | `Dict[Effect, int]` vs `dict[VolatileName, Volatile]` | B-1 の Enum→Literal 変換後に lookup |
-| Move `recoil: float` | 割合の数値（poke-env）vs `has_label("recoil")`（jpoke） | jpoke は割合を保持しないため精度に制限あり |
+| `effects` / `volatiles` | `Dict[Effect, int]` vs `dict[VolatileName, Volatile]` | B-1 の Enum → Literal 変換後に lookup |
+| Move `is_protect_move` | `has_label(...)` で代替 | ラベル名で判定 |
 
 ---
 
 ### 分類 C: 対象外
 
-以下はいずれも対象外。
-
-**jpoke に存在しない poke-env 機能（実装しない）**
-
-- Pokémon Showdown サーバーへの WebSocket 接続全般（`parse_message`, `accept_challenges`, `ladder` 等）
-- バトルフォーマット（`format`）・世代（`gen`）・バトルタグ（`battle_tag`）
-- ダイナマックス（`is_dynamaxed`, `can_dynamax` 等）— jpoke 未実装
-- Z ワザ（`available_z_moves`, `can_z_move` 等）— jpoke 未実装
-- リプレイ保存（`save_replay`）
-- `available_moves_from_request(request)` — PS リクエスト JSON 解析
-- `was_illusioned()` — イリュージョン解除
-- `selected_in_teampreview` — チームプレビュー選出フラグ
-
 **jpoke → poke-env エクスポート（方針として対象外）**
-
-差異一覧の以下の項目はすべて jpoke 状態を poke-env 形式で読み出す（export）方向のため対象外。
 
 | 差異一覧の項目 | 対象外の理由 |
 |---|---|
 | Battle `available_moves: List[Move]` | `Command` → `Move` 変換が必要（export） |
 | Battle `available_switches: List[Pokemon]` | jpoke バトル状態から抽出・変換が必要（export） |
 | Battle `team: Dict[str, Pokemon]` | `list[Pokemon]` → `Dict` 変換（export） |
-| Battle `weather: Dict[Weather, int]` | `Field` オブジェクト → `Dict` 変換（export） |
-| Battle `fields: Dict[Field, int]` | `Field` オブジェクト → `Dict` 変換（export） |
-| Battle `side_conditions` | `side_managers` → `Dict` 変換（export） |
+| Battle `weather: Dict[Weather, int]` | `Field` → `Dict` 変換（export） |
+| Battle `fields: Dict[Field, int]` | `Field` → `Dict` 変換（export） |
 | Player `choose_move(battle) -> BattleOrder` | `Command` ↔ `BattleOrder` 変換が必要（export） |
 | Player `teampreview(battle) -> str` | `choose_selection` → 文字列変換（export） |
-| PokeEnvBattleAdapter 等アダプタクラス | jpoke オブジェクトを poke-env 形式でラップ（export） |
+
+**jpoke 非対応**
+
+| 項目 | 理由 |
+|---|---|
+| `stab_multiplier` | 計算可能だが利用頻度が低い |
+| Move `n_hit: tuple[int, int]` | jpoke は `min_hits` / `max_hits` を個別に保持 |
+| Move `recoil: float` | jpoke は割合を保持しないため精度制限あり |
+
+**jpoke に存在しない poke-env 機能**
+
+- Pokémon Showdown サーバーへの接続全般（`parse_message`, `accept_challenges`, `ladder` 等）
+- バトルフォーマット（`format`）・世代（`gen`）・バトルタグ（`battle_tag`）
+- ダイナマックス・Z ワザ — jpoke 未実装
+- リプレイ保存（`save_replay`）
+- `available_moves_from_request(request)` — PS リクエスト JSON 解析
 
 **既知の意味的差異（API 変更なし）**
 
-- Pokemon `weight`: 同名だが poke-env は図鑑値、jpoke は特性・アイテム反映済みの値。インポート時に注意が必要だが変換は行わない。
-- Pokemon `name` / Move `id`: 英語 vs 日本語の言語差異は B-2 の名前マッピングで対処。
+- Pokemon `weight`: poke-env は図鑑値、jpoke は特性・アイテム反映済み。インポート時に注意が必要だが変換は行わない。
 
 ---
 
-### 分類 D: jpoke 側にのみある機能（変更不要・jpoke の強み）
+### 分類 D: jpoke 独自機能（変更不要）
 
 | 機能 | 説明 |
 |---|---|
@@ -370,29 +391,29 @@ Stat キー対応:   H="hp", A="atk", B="def", C="spa", D="spd", S="spe"
 ```
 src/jpoke/
   model/
-    pokemon.py    ← エイリアス property 追加（分類 A）
-    move.py       ← エイリアス property 追加（分類 A）
+    pokemon.py        ← A-1 改名 / A-2 property 追加
+    move.py           ← A-1 改名 / A-2 property 追加
   core/
-    player.py     ← エイリアス property 追加（分類 A）
-    battle.py     ← エイリアス property 追加（分類 A）
+    player.py         ← A-1 改名 / A-2 property 追加
+    battle.py         ← A-1 改名（rival → opponent）/ A-2 property 追加
   utils/
-    type_defs.py  ← poke-env Enum ↔ 日本語 Literal 変換テーブル追記（分類 B-1）
+    type_defs/
+      type_defs.py    ← A-1: Stat / MoveCategory / Gender の Literal 英語化
+      poke_env.py     ← B-1: Enum → Literal 変換テーブル（新規）
+                      ← B-2: 名前マッピングテーブル（新規）
+                      ← B-3 / B-4: 数値形式・その他変換関数（新規）
 ```
-
-新規モジュール（`compat/` 等）は作成しない。変換テーブルは既存の `utils/type_defs.py` へ追記し、
-stats 形式変換はヘルパー関数として `utils/` に置く。
-
-[ユーザーコメント]　変換テーブルが肥大化する可能性があるため、専用モジュールに実装したい。
 
 ### 依存関係
 
-- poke-env への依存なし（変換テーブルは純粋な辞書・関数）
-- 既存テストへの影響なし（エイリアス property の追加のみ）
+- poke-env パッケージへの依存なし（変換テーブルは純粋な辞書・関数）
+- `Stat` Literal 英語化（A-1）はコードベース全体に影響するため、他の変更より先に実施する
 
 ### 実装方針
 
-- エイリアス property は既存クラスに直接追加する（アダプタクラスは作成しない）
-- 変換テーブルは `utils/type_defs.py` に集約し、他所でハードコーディングしない
-- poke-env → jpoke のインポートは「変換関数」として提供し、呼び出し側が明示的に変換する
+- A-1 の改名はエイリアスを残さず、呼び出し元を一括変更する
+- A-2 のエイリアス・property は既存クラスに直接追加する（アダプタクラスは作成しない）
+- 変換テーブルは `utils/type_defs/poke_env.py` に集約し、他所でハードコーディングしない
+- poke-env → jpoke のインポートは変換関数として提供し、呼び出し側が明示的に変換する
 
 詳細な実装計画は `docs/plan/poke_env_compat.md` を参照。

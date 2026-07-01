@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext
 
 from jpoke.enums import LogCode
-from jpoke.utils.type_defs import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
+from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 
@@ -92,7 +92,7 @@ def すなあらし_D_boost(battle: Battle, ctx: AttackContext, value: Any) -> H
     """砂嵐時のいわタイプ特防1.5倍"""
     if (
         ctx.defender.has_type("いわ")
-        and ctx.move.category == "特殊"
+        and ctx.move.category == "special"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
     return HandlerReturn(value=value)
@@ -115,7 +115,7 @@ def ゆき_B_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRet
     """雪時のこおりタイプ防御1.5倍"""
     if (
         ctx.defender.has_type("こおり")
-        and ctx.move.category == "物理"
+        and ctx.move.category == "physical"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
     return HandlerReturn(value=value)
@@ -295,7 +295,7 @@ def マジックルーム_remove(battle: Battle, ctx: EventContext, value: Any) 
 
 def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
     """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
-    category_to_stat = {"物理": "D", "特殊": "B"}
+    category_to_stat = {"physical": "spd", "special": "def"}
     swapped_stat = category_to_stat.get(ctx.move.category)
     value = ctx.defender.rank_modifier(swapped_stat)
     return HandlerReturn(value=value)
@@ -303,8 +303,8 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, 
 
 def ワンダールーム_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ワンダールーム中は防御実数値参照を入れ替える。"""
-    base_stat = "B" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "D"
-    swapped_stat = "D" if base_stat == "B" else "B"
+    base_stat = "def" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "spd"
+    swapped_stat = "spd" if base_stat == "def" else "def"
     base_value = max(1, ctx.defender.stats[base_stat])
     swap_value = max(1, ctx.defender.stats[swapped_stat])
     return HandlerReturn(value=value * swap_value // base_value)
@@ -317,7 +317,7 @@ def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: 
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
-        and ctx.move.category == "物理"
+        and ctx.move.category == "physical"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -328,7 +328,7 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: AttackContext, value: 
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
-        and ctx.move.category == "特殊"
+        and ctx.move.category == "special"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
@@ -465,7 +465,7 @@ def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: A
         return HandlerReturn(value=value)
 
     # 素早さランクを1段階下げる (相手由来と判定される)
-    battle.modify_stats(ctx.source, {"S": -1}, source=battle.foe(ctx.source))
+    battle.modify_stats(ctx.source, {"spe": -1}, source=battle.foe(ctx.source))
     return HandlerReturn(value=value)
 
 

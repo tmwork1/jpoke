@@ -75,11 +75,11 @@ def test_急所_攻撃側の能力ランク低下を無視する():
     )
     attacker, defender = battle.actives
 
-    attacker.rank["A"] = -6
+    attacker.rank["atk"] = -6
     normal_with_drop = battle.calc_damages(attacker, defender, "たいあたり", critical=False)
     critical_with_drop = battle.calc_damages(attacker, defender, "たいあたり", critical=True)
 
-    attacker.rank["A"] = 0
+    attacker.rank["atk"] = 0
     critical_without_drop = battle.calc_damages(attacker, defender, "たいあたり", critical=True)
 
     assert normal_with_drop[0] < critical_with_drop[0]
@@ -93,11 +93,11 @@ def test_急所_防御側の能力ランク上昇を無視する():
     )
     attacker, defender = battle.actives
 
-    defender.rank["B"] = 6
+    defender.rank["def"] = 6
     normal_with_boost = battle.calc_damages(attacker, defender, "たいあたり", critical=False)
     critical_with_boost = battle.calc_damages(attacker, defender, "たいあたり", critical=True)
 
-    defender.rank["B"] = 0
+    defender.rank["def"] = 0
     critical_without_boost = battle.calc_damages(attacker, defender, "たいあたり", critical=True)
 
     assert normal_with_boost[0] < critical_with_boost[0]

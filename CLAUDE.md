@@ -44,7 +44,7 @@ python -m pytest tests/abilities/ -k "ARシステム" -v
 | `data/` | `ability.py`, `move.py`, `item.py` など — 各エンティティのデータ定義とハンドラ登録 |
 | `handlers/` | `ability.py`, `ability_paradox.py`, `ailment.py`, `field.py`, `item.py`, `lethal.py`, `move.py`, `move_attack.py`, `move_status.py`, `volatile.py` など — ハンドラ実装 |
 | `enums/` | `Event`, `Command`, `Interrupt`, `LogCode` |
-| `utils/type_defs.py` | `Stat`, `Type`, `AilmentName`, `VolatileName` など Literal 型の定義 |
+| `types/` | `Stat`, `Type`, `AilmentName`, `VolatileName` など Literal 型の定義 |
 
 ### イベント駆動モデル
 
@@ -114,7 +114,7 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 - コメント・docstringは **日本語** で書く
 - テスト関数名は `test_<特性名/技名>_<確認内容>` の形式
 - ハンドラの実装は `handlers/`、登録は `data/` で行う
-- 新しい `Literal` 型は `utils/type_defs.py` に追加する
+- 新しい `Literal` 型は `types/` に追加する
 - 型アノテーションは Python 3.10+ の構文（`X | Y`, `list[X]`）を使う
 - 長い `if` 文（80文字以上）は括弧で囲んで複数行に展開し、`and` で条件ごとに改行する
 

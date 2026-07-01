@@ -301,7 +301,7 @@ def test_キングシールド_接触技で攻撃を下げる():
     )
     battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
     t.run_move(battle, 0)
-    assert battle.actives[0].rank["A"] == -1
+    assert battle.actives[0].rank["atk"] == -1
 
 
 def test_キングシールド_非接触では攻撃が下がらない():
@@ -311,7 +311,7 @@ def test_キングシールド_非接触では攻撃が下がらない():
     )
     battle.volatile_manager.apply(battle.actives[1], "キングシールド", count=1)
     t.run_move(battle, 0)
-    assert battle.actives[0].rank["A"] == 0
+    assert battle.actives[0].rank["atk"] == 0
 
 
 def test_こだわり():

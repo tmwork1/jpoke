@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon, Move
 
-from jpoke.utils.type_defs import RoleSpec, Stat, Type, MoveCategory, \
+from jpoke.types import RoleSpec, Stat, PokemonType, MoveCategory, \
     AilmentName, WeatherName, TerrainName, SideFieldName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
@@ -71,7 +71,7 @@ def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[C
 
 def _modify_power_by_type(move: Move,
                           value: Any,
-                          type_: Type,
+                          type_: PokemonType,
                           modifier: int) -> HandlerReturn:
     if move.type == type_:
         value = apply_fixed_modifier(value, modifier)
@@ -81,7 +81,7 @@ def _modify_power_by_type(move: Move,
 def _modify_super_effective_damage(battle: Battle,
                                    ctx: AttackContext,
                                    value: Any,
-                                   type_: Type,
+                                   type_: PokemonType,
                                    modifier: float) -> HandlerReturn:
     # ON_CALC_DAMAGE_MODIFIER
     if (
@@ -241,7 +241,7 @@ def _dedicated_item_form_change(battle: Battle,
 def _dedicated_item_modify_power(ctx: AttackContext,
                                  value: Any,
                                  allowed_names: frozenset[str],
-                                 allowed_types: tuple[Type, ...]) -> HandlerReturn:
+                                 allowed_types: tuple[PokemonType, ...]) -> HandlerReturn:
     if (
         ctx.attacker.name in allowed_names
         and ctx.move.type in allowed_types
@@ -254,7 +254,7 @@ def _boost_stat_on_type_hit(battle: Battle,
                             ctx: AttackContext,
                             value: Any,
                             *,
-                            type_: Type,
+                            type_: PokemonType,
                             stats: dict[Stat, int]) -> HandlerReturn:
     mon = ctx.defender
     assert mon is not None
@@ -275,7 +275,7 @@ def あかいいと_infatuate_foe(battle: Battle, ctx: EventContext, value: Any)
 
 def アッキのみ_boost_defense_on_physical_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アッキのみ: 物理技でダメージを受けたときぼうぎょ+1。"""
-    return _boost_on_attack_category(battle, ctx, value, "物理", "B", +1)
+    return _boost_on_attack_category(battle, ctx, value, "physical", "def", +1)
 
 
 def あついいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -339,7 +339,7 @@ def ウタンのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
 
 
 def エレキシード_boost_defense(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "エレキフィールド", "B")
+    return _terrain_seed_boost(battle, ctx, value, "エレキフィールド", "def")
 
 
 def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -379,7 +379,7 @@ def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext,
 
 def オーガポンのめん_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーガポンのめん共通: 物理技の攻撃補正を1.2倍にする。"""
-    if ctx.move.category == "物理":
+    if ctx.move.category == "physical":
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
@@ -416,14 +416,14 @@ def かたいいし_modify_power_by_type(battle: Battle, ctx: AttackContext, val
 
 def カムラのみ_boost_speed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """カムラのみ: HP1/4以下ですばやさ+1。"""
-    return _boost_on_quarter_hp(battle, ctx, value, stat="S", amount=+1)
+    return _boost_on_quarter_hp(battle, ctx, value, stat="spe", amount=+1)
 
 
 def からぶりほけん_boost_speed_on_miss(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """からぶりほけん: 技が外れたときすばやさ+2。"""
     mon = ctx.attacker
     assert mon is not None
-    battle.modify_stats(mon, {"S": +2})
+    battle.modify_stats(mon, {"spe": +2})
     _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -454,7 +454,7 @@ def きせきのたね_modify_power_by_type(battle: Battle, ctx: AttackContext, 
 
 def きゅうこん_boost_spatk_on_water_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """きゅうこん: みず技でダメージを受けたときとくこう+1。"""
-    return _boost_stat_on_type_hit(battle, ctx, value, type_="みず", stats={"C": +1})
+    return _boost_stat_on_type_hit(battle, ctx, value, type_="みず", stats={"spa": +1})
 
 
 def きれいなぬけがら_check_trapped(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
@@ -561,7 +561,7 @@ def くろおび_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
 
 
 def グラスシード_boost_defense(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "グラスフィールド", "B")
+    return _terrain_seed_boost(battle, ctx, value, "グラスフィールド", "def")
 
 
 def グランドコート_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -601,14 +601,14 @@ def こだわりスカーフ_boost_speed(battle: Battle, ctx: EventContext, valu
 
 def こだわりハチマキ_boost_physical(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こだわりハチマキ: 物理技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "物理":
+    if ctx.move.category == "physical":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def こだわりメガネ_boost_special(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こだわりメガネ: 特殊技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "特殊":
+    if ctx.move.category == "special":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -627,7 +627,7 @@ def ゴツゴツメット_chip_contact_attacker(battle: Battle, ctx: AttackConte
 
 
 def サイコシード_boost_spdef(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "サイコフィールド", "D")
+    return _terrain_seed_boost(battle, ctx, value, "サイコフィールド", "spd")
 
 
 def さらさらいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -702,18 +702,18 @@ def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: Attac
         return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
         _announce_and_consume_item(battle, mon)
-        battle.modify_stats(mon, {"A": +2, "C": +2})
+        battle.modify_stats(mon, {"atk": +2, "spa": +2})
     return HandlerReturn(value=value)
 
 
 def ジャポのみ_retaliate_physical(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ジャポのみ: 物理技でダメージを受けたとき攻撃者に最大HPの1/8ダメージ。"""
-    return _retaliate_on_category(battle, ctx, value, "物理")
+    return _retaliate_on_category(battle, ctx, value, "physical")
 
 
 def じゅうでんち_boost_atk_on_electric_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうでんち: でんき技でダメージを受けたときこうげき+1。"""
-    return _boost_stat_on_type_hit(battle, ctx, value, type_="でんき", stats={"A": +1})
+    return _boost_stat_on_type_hit(battle, ctx, value, type_="でんき", stats={"atk": +1})
 
 
 def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -721,7 +721,7 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
     mon = ctx.target
     assert mon is not None
     if mon.hp <= mon.max_hp // 4:
-        stat = battle.random.choice(["A", "B", "C", "D", "S"])
+        stat = battle.random.choice(["atk", "def", "spa", "spd", "spe"])
         battle.modify_stats(mon, {stat: +2})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -738,7 +738,7 @@ def するどいツメ_boost_critical_rank(battle: Battle, ctx: AttackContext, v
 
 def ズアのみ_boost_spdef(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ズアのみ: HP1/4以下でとくぼう+1。"""
-    return _boost_on_quarter_hp(battle, ctx, value, stat="D", amount=+1)
+    return _boost_on_quarter_hp(battle, ctx, value, stat="spd", amount=+1)
 
 
 def せいれいプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -772,7 +772,7 @@ def たべのこし_heal(battle: Battle, ctx: EventContext, value: Any) -> Handl
 
 def タラプのみ_boost_spdef(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """タラプのみ: 特殊技でダメージを受けたときとくぼう+1。"""
-    return _boost_on_attack_category(battle, ctx, value, "特殊", "D", +1)
+    return _boost_on_attack_category(battle, ctx, value, "special", "spd", +1)
 
 
 def タンガのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -828,12 +828,12 @@ def だっしゅつボタン_reserve_switch(battle: Battle, ctx: AttackContext, 
 
 def チイラのみ_boost_attack(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """チイラのみ: HP1/4以下でこうげき+1。"""
-    return _boost_on_quarter_hp(battle, ctx, value, stat="A", amount=+1)
+    return _boost_on_quarter_hp(battle, ctx, value, stat="atk", amount=+1)
 
 
 def ちからのハチマキ_boost_physical(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """物理技1.1倍"""
-    if ctx.move.category == "物理":
+    if ctx.move.category == "physical":
         value = apply_fixed_modifier(value, 4505)
     return HandlerReturn(value=value)
 
@@ -869,14 +869,14 @@ def とけないこおり_modify_power_by_type(battle: Battle, ctx: AttackContex
 
 def とつげきチョッキ_block_status_move(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """とつげきチョッキ: 変化技の使用を禁止する。"""
-    if ctx.move.category == "変化":
+    if ctx.move.category == "status":
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def とつげきチョッキ_boost_spdef(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """とつげきチョッキ: 特殊技に対してとくぼうを1.5倍にする。"""
-    if ctx.move.category == "特殊":
+    if ctx.move.category == "special":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -886,7 +886,7 @@ def とつげきチョッキ_modify_command_options(_battle: Battle, ctx: EventC
     mon = ctx.source
     return HandlerReturn(value=[
         cmd for cmd in value
-        if not (cmd.is_type("move") and mon.moves[cmd.index].category == "変化")
+        if not (cmd.is_type("move") and mon.moves[cmd.index].category == "status")
     ])
 
 
@@ -939,8 +939,8 @@ def ねらいのまと_negate_immunity(_battle: Battle, _ctx: AttackContext, val
 def のどスプレー_boost_spatk_on_sound(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """のどスプレー: 音技使用後にとくこう+1。"""
     mon = ctx.attacker
-    if ctx.move.has_label("sound"):
-        battle.modify_stats(mon, {"C": +1})
+    if ctx.move.has_flag("sound"):
+        battle.modify_stats(mon, {"spa": +1})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -978,21 +978,21 @@ def パワフルハーブ_skip_charge(battle: Battle, ctx: AttackContext, value:
 
 def パンチグローブ_boost_punch_power(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """パンチグローブ: パンチ技の威力を1.1倍にする。"""
-    if ctx.move.has_label("punch"):
+    if ctx.move.has_flag("punch"):
         value = apply_fixed_modifier(value, 4506)
     return HandlerReturn(value=value)
 
 
 def パンチグローブ_negate_punch_contact(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """パンチグローブ: パンチ技の接触判定を無効化する。"""
-    if ctx.move.has_label("punch"):
+    if ctx.move.has_flag("punch"):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
 def ひかりごけ_boost_spdef_on_water_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ひかりごけ: みず技でダメージを受けたときとくぼう+1。"""
-    return _boost_stat_on_type_hit(battle, ctx, value, type_="みず", stats={"D": +1})
+    return _boost_stat_on_type_hit(battle, ctx, value, type_="みず", stats={"spd": +1})
 
 
 def ひかりのこな_reduce_accuracy(_battle: Battle, _ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1034,10 +1034,10 @@ def ビビリだま_boost_speed_on_intimidate(battle: Battle, ctx: EventContext,
     mon = ctx.target
     assert mon is not None
     if (
-        value.get("A", 0) < 0
+        value.get("atk", 0) < 0
         and ctx.stat_change_reason == "いかく"
     ):
-        battle.modify_stats(mon, {"S": +1})
+        battle.modify_stats(mon, {"spe": +1})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1083,7 +1083,7 @@ def ぼうごパット_negate_contact(_battle: Battle, _ctx: AttackContext, _val
 
 def ぼうじんゴーグル_block_powder_move(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ぼうじんゴーグル: 粉技を無効化する。"""
-    if ctx.move.has_label("powder"):
+    if ctx.move.has_flag("powder"):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1121,7 +1121,7 @@ def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: 
 
 
 def ミストシード_boost_spdef(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _terrain_seed_boost(battle, ctx, value, "ミストフィールド", "D")
+    return _terrain_seed_boost(battle, ctx, value, "ミストフィールド", "spd")
 
 
 def メタルコート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1163,7 +1163,7 @@ def もくたん_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
 
 def ものしりメガネ_boost_special(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """特殊技1.1倍"""
-    if ctx.move.category == "特殊":
+    if ctx.move.category == "special":
         value = apply_fixed_modifier(value, 4505)
     return HandlerReturn(value=value)
 
@@ -1189,7 +1189,7 @@ def モモンのみ_cure_poison_on_apply(battle: Battle, ctx: EventContext, valu
 
 def ヤタピのみ_boost_spatk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ヤタピのみ: HP1/4以下でとくこう+1。"""
-    return _boost_on_quarter_hp(battle, ctx, value, stat="C", amount=+1)
+    return _boost_on_quarter_hp(battle, ctx, value, stat="spa", amount=+1)
 
 
 def ヤチェのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1202,7 +1202,7 @@ def やわらかいすな_modify_power_by_type(battle: Battle, ctx: AttackContex
 
 def ゆきだま_boost_defense_on_ice_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ゆきだま: こおり技でダメージを受けたときぼうぎょ+1。"""
-    return _boost_stat_on_type_hit(battle, ctx, value, type_="こおり", stats={"B": +1})
+    return _boost_stat_on_type_hit(battle, ctx, value, type_="こおり", stats={"def": +1})
 
 
 def ようせいのハネ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1232,7 +1232,7 @@ def りゅうのキバ_modify_power_by_type(battle: Battle, ctx: AttackContext, 
 
 def リュガのみ_boost_defense(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """リュガのみ: HP1/4以下でぼうぎょ+1。"""
-    return _boost_on_quarter_hp(battle, ctx, value, stat="B", amount=+1)
+    return _boost_on_quarter_hp(battle, ctx, value, stat="def", amount=+1)
 
 
 def リリバのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1248,7 +1248,7 @@ def ルームサービス_drop_speed_on_trick_room(battle: Battle, ctx: EventCon
     mon = ctx.source
     assert mon is not None
     if value.name == "トリックルーム":
-        battle.modify_stats(mon, {"S": -1})
+        battle.modify_stats(mon, {"spe": -1})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1258,21 +1258,21 @@ def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: A
     mon = ctx.defender
     assert mon is not None
     foe = ctx.attacker
-    rival = battle.get_player(foe)
+    opponent = battle.get_player(foe)
 
-    if battle.query.can_switch(rival):
+    if battle.query.can_switch(opponent):
         _announce_and_consume_item(battle, mon)
-        commands = battle.command_manager.get_available_switch_commands(rival)
+        commands = battle.command_manager.get_available_switch_commands(opponent)
         command = battle.random.choice(commands)
-        new_mon = battle.player_states[rival].team[command.index]
-        battle.run_switch(rival, new_mon)
+        new_mon = battle.player_states[opponent].team[command.index]
+        battle.run_switch(opponent, new_mon)
 
     return HandlerReturn(value=value)
 
 
 def レンブのみ_retaliate_special(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """レンブのみ: 特殊技でダメージを受けたとき攻撃者に最大HPの1/8ダメージ。"""
-    return _retaliate_on_category(battle, ctx, value, "特殊")
+    return _retaliate_on_category(battle, ctx, value, "special")
 
 
 def ロゼルのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

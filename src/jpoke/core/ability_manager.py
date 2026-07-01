@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import AbilityDisabledReason
+from jpoke.types import AbilityDisabledReason
 from jpoke.enums import Event
 from jpoke.model import Ability
 from .context import EventContext

@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.data.field import FIELDS
-from jpoke.handlers.models import FieldData
+from jpoke.data.models import FieldData
 from .effect import GameEffect
 
 

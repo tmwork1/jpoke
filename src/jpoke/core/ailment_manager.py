@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
 from jpoke.model import Pokemon, Ailment
-from jpoke.utils.type_defs import AilmentName
+from jpoke.types import AilmentName
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext, BaseContext
 from jpoke.utils import fast_copy

@@ -13,7 +13,7 @@ from typing import Callable
 from dataclasses import dataclass, field
 
 from jpoke.utils import fast_copy
-from jpoke.utils.type_defs import HandlerSource, ContextRole, RoleSpec, Side
+from jpoke.types import HandlerSource, ContextRole, RoleSpec, Side
 from jpoke.core.player import Player
 
 

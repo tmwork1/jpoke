@@ -128,7 +128,7 @@ def test_あめまみれ_1ターン経過でSマイナス1():
         volatile0={"あめまみれ": 2}
     )
     t.end_turn(battle)
-    assert battle.actives[0].rank["S"] == -1
+    assert battle.actives[0].rank["spe"] == -1
 
 
 def test_あめまみれ_3ターンで合計3回Sが下がる():
@@ -140,11 +140,11 @@ def test_あめまみれ_3ターンで合計3回Sが下がる():
     )
     mon = battle.actives[0]
     t.end_turn(battle)
-    assert mon.rank["S"] == -1
+    assert mon.rank["spe"] == -1
     t.end_turn(battle)
-    assert mon.rank["S"] == -2
+    assert mon.rank["spe"] == -2
     t.end_turn(battle)
-    assert mon.rank["S"] == -3
+    assert mon.rank["spe"] == -3
     assert not mon.has_volatile("あめまみれ")
 
 

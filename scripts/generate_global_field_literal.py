@@ -7,7 +7,7 @@
 処理内容:
 - src/jpoke/data/field/global_field.py を AST 解析し、GLOBAL_FIELD 辞書のトップレベルキーを
   定義順のまま抽出する（実行時 import は行わない）
-- src/jpoke/utils/type_defs/global_field.py 内の `GlobalFieldName = Literal[...]` の行を
+- src/jpoke/types/global_field.py 内の `GlobalFieldName = Literal[...]` の行を
   抽出したキーから再構築した内容で置換する
 - 冪等に実行できる（再実行しても同じ結果になる）
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 GLOBAL_FIELD_PY = ROOT / "src/jpoke/data/field/global_field.py"
-TYPE_DEFS_PY = ROOT / "src/jpoke/utils/type_defs/global_field.py"
+TYPE_DEFS_PY = ROOT / "src/jpoke/types/global_field.py"
 
 GENERATED_COMMENT = (
     "# 自動生成: python scripts/generate_global_field_literal.py で更新"
@@ -65,8 +65,8 @@ def build_literal_line(keys: list[str]) -> str:
     return f"GlobalFieldName = Literal[{items}]  {GENERATED_COMMENT}"
 
 
-def update_type_defs(target: Path, new_line: str) -> None:
-    """type_defs/global_field.py内のGlobalFieldName定義行を置換する。"""
+def update_literal_file(target: Path, new_line: str) -> None:
+    """types/global_field.py内のGlobalFieldName定義行を置換する。"""
     content = target.read_text(encoding="utf-8")
     lines = content.splitlines(keepends=False)
 
@@ -94,7 +94,7 @@ def main() -> None:
     print(f"抽出したキー: {keys}")
 
     new_line = build_literal_line(keys)
-    update_type_defs(TYPE_DEFS_PY, new_line)
+    update_literal_file(TYPE_DEFS_PY, new_line)
 
 
 if __name__ == "__main__":

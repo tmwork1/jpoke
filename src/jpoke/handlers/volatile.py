@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
 
-from jpoke.utils.type_defs import RoleSpec, Stat, AilmentName, VolatileName
+from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
@@ -19,6 +19,7 @@ HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
     "ダイビング": ["なみのり", "うずしお"],
     "シャドーダイブ": [],
 }
+
 
 class VolatileHandler(Handler):
     def __init__(self,
@@ -34,10 +35,12 @@ class VolatileHandler(Handler):
             once=once
         )
 
+
 def check_trapped_not_ghost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ゴーストタイプでなければ交代を禁止する。"""
     source = ctx.source
     return HandlerReturn(value=source is not None and not source.has_type("ゴースト"))
+
 
 def tick_volatile(battle: Battle,
                   ctx: EventContext,
@@ -54,6 +57,7 @@ def tick_volatile(battle: Battle,
     mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
     battle.volatile_manager.tick(mon, volatile)
     return HandlerReturn(value=value)
+
 
 def remove_volatile(battle: Battle,
                     ctx: EventContext,
@@ -78,6 +82,7 @@ def remove_volatile(battle: Battle,
         )
     return HandlerReturn(value=value)
 
+
 def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """強制コマンドを返すハンドラーの共通処理
 
@@ -90,6 +95,7 @@ def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> Ha
         HandlerReturn: 常にCommand.FORCEDを返す
     """
     return HandlerReturn(value=[Command.FORCED], stop_event=True)
+
 
 def can_hit_hidden_target(battle: Battle,
                           ctx: EventContext,
@@ -110,6 +116,7 @@ def can_hit_hidden_target(battle: Battle,
         battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
 
 def restrict_commands(battle: Battle,
                       ctx: EventContext,
@@ -186,7 +193,7 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
         HandlerReturn:
     """
     mon = ctx.source
-    battle.modify_stats(mon, {"S": -1}, reason="あめまみれ")
+    battle.modify_stats(mon, {"spe": -1}, reason="あめまみれ")
     battle.volatile_manager.tick(mon, "あめまみれ")
     return HandlerReturn(value=value)
 
@@ -273,7 +280,7 @@ def おんねん_deplete_attacking_move_pp(battle: Battle, ctx: EventContext, va
     Returns:
         HandlerReturn: 常にTrue
     """
-    if ctx.move.pp == 0 or ctx.move.has_label("non_onnen"):
+    if ctx.move.pp == 0 or ctx.move.has_flag("non_onnen"):
         return HandlerReturn(value=value)
     ctx.move.pp = 0
     battle.add_event_log(
@@ -387,7 +394,7 @@ def きゅうしょアップ_boost_critical_rank(battle: Battle, ctx: EventConte
 
 def キングシールド_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """キングシールドの保護判定。攻撃技のみ防ぎ、接触した相手の攻撃ランクを1段階下げる"""
-    return _run_protect(battle, ctx, value, stats_change_on_contact={"A": -1}, protect_non_attack=False)
+    return _run_protect(battle, ctx, value, stats_change_on_contact={"atk": -1}, protect_non_attack=False)
 
 
 def キングシールド_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -561,7 +568,7 @@ def じごくづき_restrict_commands(battle: Battle, ctx: EventContext, value: 
     for cmd in value:
         if (
             not cmd.is_type("move")
-            or not ctx.source.moves[cmd.index].has_label("sound")
+            or not ctx.source.moves[cmd.index].has_flag("sound")
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
@@ -573,7 +580,7 @@ def じごくづき_tick_volatile(battle: Battle, ctx: EventContext, value: Any)
 
 def じごくづき_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """じごくづき状態による技の不発"""
-    if ctx.move.has_label("sound"):
+    if ctx.move.has_flag("sound"):
         battle.add_event_log(
             ctx.attacker, LogCode.ACTION_BLOCKED,
             payload={"reason": "じごくづき"}
@@ -601,7 +608,7 @@ def じゅうでん_boost_electric(battle: Battle, ctx: AttackContext, value: An
 
 def スレッドトラップ_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """スレッドトラップの保護判定。攻撃技のみ防ぎ、接触した相手の素早さランクを1段階下げる"""
-    return _run_protect(battle, ctx, value, stats_change_on_contact={"S": -1}, protect_non_attack=False)
+    return _run_protect(battle, ctx, value, stats_change_on_contact={"spe": -1}, protect_non_attack=False)
 
 
 def スレッドトラップ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -695,7 +702,7 @@ def ちいさくなる_boost_power(battle: Battle, ctx: AttackContext, value: An
     Returns:
         HandlerReturn: 補正後の値
     """
-    if ctx.move.has_label("minimize"):
+    if ctx.move.has_flag("minimize"):
         value *= 2
     return HandlerReturn(value=value)
 
@@ -711,7 +718,7 @@ def ちいさくなる_guaranteed_hit(battle: Battle, ctx: AttackContext, value:
     Returns:
         HandlerReturn: 必中の場合はNoneを返す
     """
-    if ctx.move.has_label("minimize"):
+    if ctx.move.has_flag("minimize"):
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -731,7 +738,7 @@ def ちょうはつ_try_action(battle: Battle, ctx: EventContext, value: Any) ->
     Returns:
         HandlerReturn: 変化技の場合はvalue=None（使用禁止）、攻撃技の場合はTrue
     """
-    if ctx.move.category == "変化":
+    if ctx.move.category == "status":
         battle.add_event_log(
             ctx.attacker, LogCode.ACTION_BLOCKED,
             payload={"reason": "ちょうはつ"}
@@ -973,7 +980,7 @@ def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: A
 def マジックコート_reflect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
     value = (
-        ctx.move.category == "変化"
+        ctx.move.category == "status"
         and ctx.move.target in {"foe", "foe_side"}
     )
 
@@ -993,6 +1000,7 @@ def _check_protect_success(battle: Battle, ctx: EventContext, protect_non_attack
         return False
     return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
 
+
 def _run_protect(battle: Battle,
                  ctx: EventContext,
                  value: Any,
@@ -1006,7 +1014,7 @@ def _run_protect(battle: Battle,
         battle: バトルインスタンス
         ctx: コンテキスト
         value: イベント値
-        stats_change_on_contact: 接触時に攻撃者に与えるランク変化（例: {"A": -1}）
+        stats_change_on_contact: 接触時に攻撃者に与えるランク変化（例: {"atk": -1}）
         ailment_on_contact: 接触時に攻撃者に付与する状態異常名
         chip_on_contact: 接触時に攻撃者の最大HPから削る割合（例: 1/8）
         protect_non_attack: False の場合、変化技を保護しない
@@ -1085,7 +1093,7 @@ def みがわり_immune(battle: Battle, ctx: EventContext, value: Any) -> Handle
     hit_substitute = battle.move_executor.check_hit_substitute(ctx)
     if (
         hit_substitute
-        and ctx.move.category == "変化"
+        and ctx.move.category == "status"
     ):
         battle.add_event_log(
             ctx.defender, LogCode.MOVE_IMMUNED,

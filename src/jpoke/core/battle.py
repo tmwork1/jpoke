@@ -14,7 +14,7 @@ import time
 from random import Random
 from copy import deepcopy
 
-from jpoke.utils.type_defs import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
+from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, AbilityDisabledReason
 from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
@@ -373,19 +373,8 @@ class Battle:
                     return self.players.index(player)
         raise ValueError(f"Source {source} not found in battle.")
 
-    def foe(self, active: Pokemon) -> Pokemon:
-        """指定したポケモンの対戦相手を取得する。
-
-        Args:
-            active: 場に出ているポケモン
-
-        Returns:
-            Pokemon: 対戦相手のポケモン
-        """
-        return self.actives[1 - self.actives.index(active)]
-
-    def rival(self, player: Player) -> Player:
-        """指定したプレイヤーの対戦相手を取得する。
+    def opponent(self, player: Player) -> Player:
+        """相手のプレイヤーを取得する。
 
         Args:
             player: プレイヤー
@@ -394,6 +383,17 @@ class Battle:
             Player: 対戦相手のプレイヤー
         """
         return self.players[1 - self.players.index(player)]
+
+    def foe(self, active: Pokemon) -> Pokemon:
+        """相手の場のポケモンを取得する。
+
+        Args:
+            active: 場に出ているポケモン
+
+        Returns:
+            Pokemon: 対戦相手のポケモン
+        """
+        return self.actives[1 - self.actives.index(active)]
 
     def get_available_commands(self, player: Player) -> list[Command]:
         """指定したプレイヤーが現在使用可能なコマンドのリストを取得する。
@@ -405,7 +405,7 @@ class Battle:
             list[Command]: 使用可能なコマンドのリスト
         """
         # 相手の観測状態でコマンドを取得する場合は、最後に利用可能だったコマンドを返す
-        if self.observer == self.rival(player):
+        if self.observer == self.opponent(player):
             return self.player_states[player].last_available_commands
 
         match self.phase:

@@ -229,13 +229,13 @@ def test_マジックコート_変化技を跳ね返す():
     attacker = battle.actives[0]
     defender = battle.actives[1]
     # 技使用前のランク確認
-    assert attacker.rank["B"] == 0
-    assert defender.rank["B"] == 0
+    assert attacker.rank["def"] == 0
+    assert defender.rank["def"] == 0
     # 0番（ピカチュウ側）がにらみつけるを使う
     t.run_move(battle, 0)
     # マジックコートで跳ね返されるため、attacker（技使用者）の防御が下がる
-    assert attacker.rank["B"] == -1
-    assert defender.rank["B"] == 0
+    assert attacker.rank["def"] == -1
+    assert defender.rank["def"] == 0
 
 
 def test_マジックコート_攻撃技は跳ね返さない():
@@ -443,8 +443,8 @@ def test_みちづれ_発動条件を満たせば両者ひんし():
 def test_メロメロ_同性に効かない():
     """メロメロ技: 同性ポケモンには効かない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="オス")],
-        team1=[Pokemon("ピカチュウ", gender="オス")],
+        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="male")],
+        team1=[Pokemon("ピカチュウ", gender="male")],
     )
     _, defender = battle.actives
     t.run_move(battle, 0)
@@ -454,7 +454,7 @@ def test_メロメロ_同性に効かない():
 def test_メロメロ_性別不明に効かない():
     """メロメロ技: 性別不明ポケモンには効かない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="オス")],
+        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="male")],
         team1=[Pokemon("ピカチュウ", gender="")],
     )
     _, defender = battle.actives
@@ -465,8 +465,8 @@ def test_メロメロ_性別不明に効かない():
 def test_メロメロ_異性に効く():
     """メロメロ技: 異性ポケモンにはメロメロ状態を付与できる"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="オス")],
-        team1=[Pokemon("ピカチュウ", gender="メス")],
+        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="male")],
+        team1=[Pokemon("ピカチュウ", gender="female")],
     )
     _, defender = battle.actives
     t.run_move(battle, 0)

@@ -6,7 +6,7 @@ Note:
 from jpoke.enums import Event, DomainEvent
 from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import item as h, lethal as l
-from jpoke.handlers.models import ItemData
+from jpoke.data.models import ItemData
 
 from .megaevol import MEGA_STONES
 
@@ -25,7 +25,7 @@ def _add_mega_stones(items: dict[str, ItemData]):
         items[name] = ItemData(
             removable=False,
             fling_power=80,
-            mega_evol=forms,
+            mega_evolve=forms,
             handlers={
                 Event.ON_MODIFY_COMMAND_OPTIONS: h.ItemHandler(
                     h.mega_modify_command_options,

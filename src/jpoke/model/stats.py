@@ -3,7 +3,7 @@
 種族値、個体値、努力値、性格補正を基に実数値を計算する。
 """
 
-from jpoke.utils.type_defs import Nature, Stat
+from jpoke.types import Nature, Stat
 from jpoke.utils.constants import STATS
 from jpoke.data import NATURE_MODIFIER
 

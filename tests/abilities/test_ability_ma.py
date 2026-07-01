@@ -9,7 +9,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import PLATE_TO_TYPE
-from jpoke.utils.type_defs import HPChangeReason
+from jpoke.types import HPChangeReason
 
 from .. import test_utils as t
 
@@ -118,8 +118,8 @@ def test_マジックミラー_変化技を跳ね返す():
     )
     attacker, defender = battle.actives
     t.run_move(battle, 0)
-    assert attacker.rank["A"] == -1
-    assert defender.rank["A"] == 0
+    assert attacker.rank["atk"] == -1
+    assert defender.rank["atk"] == 0
 
 
 def test_マルチスケイル_HP満タンのとき半減():
@@ -221,7 +221,7 @@ def test_みずがため_みず技でBが2段階上がる(move_name: str, expect
         team1=[Pokemon("カビゴン", move_names=[move_name])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["B"] == expected_rank
+    assert battle.actives[0].rank["def"] == expected_rank
 
 
 @pytest.mark.parametrize(
@@ -246,8 +246,8 @@ def test_ミラーアーマー_かたやぶりで反射されない():
         team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["A"] == -1
-    assert battle.actives[1].rank["A"] == 0
+    assert battle.actives[0].rank["atk"] == -1
+    assert battle.actives[1].rank["atk"] == 0
 
 
 def test_ミラーアーマー_反射により相手のかちきが発動する():
@@ -256,10 +256,10 @@ def test_ミラーアーマー_反射により相手のかちきが発動する(
         team1=[Pokemon("ピカチュウ", ability_name="かちき")],
     )
     ally, foe = battle.actives
-    battle.modify_stats(ally, {"A": -1}, source=foe)
-    assert ally.rank["A"] == 0
-    assert foe.rank["A"] == -1
-    assert foe.rank["C"] == 2
+    battle.modify_stats(ally, {"atk": -1}, source=foe)
+    assert ally.rank["atk"] == 0
+    assert foe.rank["atk"] == -1
+    assert foe.rank["spa"] == 2
 
 
 def test_ミラーアーマー_能力低下のみ反射する():
@@ -268,14 +268,14 @@ def test_ミラーアーマー_能力低下のみ反射する():
         team1=[Pokemon("ピカチュウ")],
     )
     ally, foe = battle.actives
-    stats = {"A": -1, "B": +1, "C": -2}
+    stats = {"atk": -1, "def": +1, "spa": -2}
     battle.modify_stats(ally, stats, source=foe)  # type: ignore
-    assert ally.rank["A"] == 0
-    assert ally.rank["B"] == 1
-    assert ally.rank["C"] == 0
-    assert foe.rank["A"] == -1
-    assert foe.rank["B"] == 0
-    assert foe.rank["C"] == -2
+    assert ally.rank["atk"] == 0
+    assert ally.rank["def"] == 1
+    assert ally.rank["spa"] == 0
+    assert foe.rank["atk"] == -1
+    assert foe.rank["def"] == 0
+    assert foe.rank["spa"] == -2
 
 
 def test_ミラーアーマー_自己能力低下は反射しない():
@@ -284,9 +284,9 @@ def test_ミラーアーマー_自己能力低下は反射しない():
         team1=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
     )
     target, source = battle.actives
-    battle.modify_stats(target, {"A": -1}, source=target)
-    assert battle.actives[0].rank["A"] == -1
-    assert battle.actives[1].rank["A"] == 0
+    battle.modify_stats(target, {"atk": -1}, source=target)
+    assert battle.actives[0].rank["atk"] == -1
+    assert battle.actives[1].rank["atk"] == 0
 
 
 def test_ムラっけ_ターン終了時に別々の能力が上昇と下降する():
@@ -307,7 +307,7 @@ def test_ムラっけ_全能力が最大なら下降のみ発動する():
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    for stat in ("A", "B", "C", "D", "S"):
+    for stat in ("atk", "def", "spa", "spd", "spe"):
         mon.rank[stat] = 6
     t.end_turn(battle)
 
@@ -320,7 +320,7 @@ def test_ムラっけ_全能力が最小なら上昇のみ発動する():
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    for stat in ("A", "B", "C", "D", "S"):
+    for stat in ("atk", "def", "spa", "spd", "spe"):
         mon.rank[stat] = -6
     t.end_turn(battle)
 
@@ -390,13 +390,13 @@ def test_メタルプロテクト_かたやぶりで無効化されない():
         team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].rank["A"] == 0
+    assert battle.actives[0].rank["atk"] == 0
 
 
 def test_メロメロボディ_接触攻撃30パーセントでメロメロ():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="メス")],
-        team1=[Pokemon("カビゴン", move_names=["たいあたり"], gender="オス")],
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"], gender="male")],
     )
     battle.random.random = lambda: 0.29
     t.run_move(battle, 1)

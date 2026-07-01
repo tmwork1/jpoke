@@ -5,7 +5,7 @@ if TYPE_CHECKING:
     from jpoke.model.pokemon import Pokemon
     from jpoke.data.volatile import VolatileData
 
-from jpoke.utils.type_defs import VolatileName
+from jpoke.types import VolatileName
 from jpoke.utils import fast_copy
 from jpoke.data.volatile import VOLATILES
 

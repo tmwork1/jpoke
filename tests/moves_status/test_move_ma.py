@@ -287,19 +287,19 @@ def test_めいそう_発動前後のランク変化(spa_init, spd_init, spa_exp
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    attacker.rank["C"] = spa_init
-    attacker.rank["D"] = spd_init
+    attacker.rank["spa"] = spa_init
+    attacker.rank["spd"] = spd_init
     t.run_move(battle, 0)
 
-    assert attacker.rank["C"] == spa_exp
-    assert attacker.rank["D"] == spd_exp
+    assert attacker.rank["spa"] == spa_exp
+    assert attacker.rank["spd"] == spd_exp
 
 
 def test_メロメロ_すでにメロメロ状態なら失敗():
     """メロメロ: 相手がすでにメロメロ状態なら失敗する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="オス")],
-        team1=[Pokemon("カビゴン", gender="メス")],
+        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="male")],
+        team1=[Pokemon("カビゴン", gender="female")],
         volatile1={"メロメロ": 1},
         accuracy=100,
     )
@@ -312,12 +312,12 @@ def test_メロメロ_すでにメロメロ状態なら失敗():
 
 
 @pytest.mark.parametrize("a_gender,d_gender,expected", [
-    ("オス", "メス", True),   # 異性→成功
-    ("メス", "オス", True),   # 異性→成功
-    ("オス", "オス", False),  # 同性→失敗
-    ("メス", "メス", False),  # 同性→失敗
-    ("オス", "",    False),  # 相手が無性→失敗
-    ("",    "メス", False),  # 使用者が無性→失敗
+    ("male", "female", True),   # 異性→成功
+    ("female", "male", True),   # 異性→成功
+    ("male", "male", False),  # 同性→失敗
+    ("female", "female", False),  # 同性→失敗
+    ("male", "",    False),  # 相手が無性→失敗
+    ("",    "female", False),  # 使用者が無性→失敗
 ])
 def test_メロメロ_性別の組み合わせ(a_gender, d_gender, expected):
     """メロメロ: 異性なら付与、同性・無性なら失敗"""
