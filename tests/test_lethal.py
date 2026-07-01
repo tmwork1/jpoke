@@ -1,4 +1,6 @@
 """致死率計算（core/lethal.py）のテスト"""
+import pytest
+
 from jpoke import Pokemon, Move
 
 from . import test_utils as t
@@ -10,13 +12,10 @@ def test_オボンのみで乱数2発():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー", item_name="オボンのみ")],
     )
-    results = battle.calc_lethal(
-        attacker=battle.actives[0],
-        moves=[(Move("ドラゴンテール"), 1)],
-    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)])
 
-    assert len(results) == 2
-    assert results[1].lethal_probability == 0.05859375
+    assert results[-1].n_attack == 2
+    assert results[-1].lethal_probability == pytest.approx(0.05859375, abs=0.001)
 
 
 def test_たべのこしでターン終了時に回復():
@@ -30,19 +29,16 @@ def test_たべのこしでターン終了時に回復():
         team1=[Pokemon("カバルドン")],
     )
 
-    results_with_item = with_item.calc_lethal(
-        attacker=with_item.actives[0],
-        moves=[(Move("ドラゴンテール"), 1)],
-        max_attack=2,
+    results_with_item = t.calc_lethal(
+        with_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)], max_attack=2,
     )
-    results_without_item = without_item.calc_lethal(
-        attacker=without_item.actives[0],
-        moves=[(Move("ドラゴンテール"), 1)],
-        max_attack=2,
+    results_without_item = t.calc_lethal(
+        without_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)], max_attack=2,
     )
 
-    # たべのこしの回復分（183 // 16 = 11）だけ2発目のHP分布が高くなる
-    assert max(results_with_item[1].hp_counter) - max(results_without_item[1].hp_counter) == 11
+    # たべのこしの回復分（最大HPの1/16）だけ2発目のHP分布が高くなる
+    leftover_heal = with_item.actives[1].max_hp // 16
+    assert max(results_with_item[1].hp_counter) - max(results_without_item[1].hp_counter) == leftover_heal
 
 
 def test_マルチスケイルでダメージ半減():
@@ -51,12 +47,9 @@ def test_マルチスケイルでダメージ半減():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー", ability_name="マルチスケイル")],
     )
-    results = battle.calc_lethal(
-        attacker=battle.actives[0],
-        moves=[(Move("ドラゴンテール"), 1)],
-    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)])
 
-    assert len(results) == 3
+    assert results[-1].n_attack == 3
     assert results[0].min_damage == 45
     assert results[0].max_damage == 54
     assert results[1].min_damage == 90
@@ -70,12 +63,9 @@ def test_多段技はヒットごとに分布を記録():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー", ability_name="マルチスケイル")],
     )
-    results = battle.calc_lethal(
-        attacker=battle.actives[0],
-        moves=[(Move("スケイルショット"), 4)],
-    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("スケイルショット"), 4)])
 
-    assert [r.hit for r in results] == [0, 1, 2, 3]
+    assert [r.hit for r in results] == [1, 2, 3, 4]
     assert all(r.n_attack == 1 for r in results)
     assert results[0].min_damage == 19
     assert results[0].max_damage == 24
@@ -87,12 +77,9 @@ def test_特性道具なし():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
     )
-    results = battle.calc_lethal(
-        attacker=battle.actives[0],
-        moves=[(Move("ドラゴンテール"), 1)],
-    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)])
 
-    assert len(results) == 2
+    assert results[-1].n_attack == 2
     assert results[0].min_damage == 90
     assert results[0].max_damage == 108
     assert results[0].lethal_probability == 0.0
@@ -105,9 +92,8 @@ def test_複数の技を順に使用():
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー", ability_name="マルチスケイル")],
     )
-    results = battle.calc_lethal(
-        attacker=battle.actives[0],
-        moves=[(Move("ドラゴンテール"), 1), (Move("ドラゴンクロー"), 1)],
+    results = t.calc_lethal(
+        battle, atk_idx=0, moves=[(Move("ドラゴンテール"), 1), (Move("ドラゴンクロー"), 1)],
     )
 
     assert len(results) == 2

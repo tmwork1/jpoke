@@ -1,4 +1,5 @@
 from jpoke.core import Battle, Player, EventContext, AttackContext
+from jpoke.core.lethal import LethalResult
 from jpoke.model import Pokemon, Move
 from jpoke.utils.type_defs import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.enums import Event, Command, LogCode
@@ -292,6 +293,32 @@ def fix_random(battle: Battle, value: float):
         value: 固定する乱数の値（0.0以上1.0未満）
     """
     battle.random.random = lambda: value
+
+
+def calc_lethal(battle: Battle,
+                atk_idx: int,
+                moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
+                critical: bool = False,
+                secondary: bool = False,
+                max_attack: int = 10) -> list[LethalResult]:
+    """致死率計算を実行するヘルパー関数。
+
+    Args:
+        battle: Battleインスタンス
+        atk_idx: 攻撃側ポケモンのインデックス
+        moves: 技（単体 / (技, ヒット数) / リスト）
+        critical: 急所計算をするか（デフォルト: False）
+        secondary: 追加効果ハンドラを適用するか（デフォルト: False）
+        max_attack: 最大攻撃回数（デフォルト: 10）
+
+    Returns:
+        各ヒット後の LethalResult のリスト（確定数が出た時点で打ち切り）
+    """
+    attacker = battle.actives[atk_idx]
+    return battle.calc_lethal(
+        attacker=attacker, moves=moves, critical=critical,
+        secondary=secondary, max_attack=max_attack
+    )
 
 
 def calc_move_priority(battle: Battle, player_index: int, move_index: int = 0) -> int:

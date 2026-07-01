@@ -62,7 +62,7 @@ class LethalResult:
     Attributes:
         n_attack: 何回目の攻撃か（1始まり）
         move: 使用した技
-        hit: 多段技の何ヒット目か（0始まり）
+        hit: 多段技の何ヒット目か（1始まり）
         hp_dist: ダメージ適用後のHP分布
         damage_dist: このヒットで与えたダメージの分布
         attacker_rank / defender_rank: 計算時のランク補正
@@ -130,7 +130,7 @@ def _lethal_loop(hp_dist: LethalDist,
     results = []
     for atk in range(1, max_attack + 1):
         for move, count, ctx in ctx_list:
-            for hit in range(count):
+            for hit in range(1, count + 1):
                 # 技ダメージを適用
                 hp_dist, damage_dist = _apply_damage(battle, ctx, hp_dist)
                 results.append(
