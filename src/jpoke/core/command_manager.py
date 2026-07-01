@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from .player_state import PlayerState
 
 from jpoke.utils import fast_copy
+from jpoke.utils.type_defs import BattlePhase
 from jpoke.enums import Event, Command, Interrupt
 from jpoke.model import Move
 
@@ -118,6 +119,53 @@ class CommandManager:
             return Move("わるあがき")
 
         return attacker.moves[command.index]
+
+    def resolve_command(self, phase: BattlePhase, player: Player | None = None) -> dict[Player, Command]:
+        """コマンドを解決する。
+
+        Args:
+            phase: コマンド選択を行うフェーズ
+            player: 対象プレイヤー。Noneの場合は全プレイヤーを対象にする。
+
+        Returns:
+            各プレイヤーのコマンド辞書
+        """
+        battle = self.battle
+        players = [player] if player else battle.players
+
+        with battle.phase_context(phase):
+            # 方策関数を呼び出す前準備
+            for ply in players:
+                state = battle.player_states[ply]
+                # 利用できるコマンドを記録
+                state.last_available_commands = battle.get_available_commands(ply)
+                # 木探索を行う際に補完すべきコマンドタイプを指定
+                state.required_command_type = "any" if battle.phase == "action" else "switch"
+
+            # コマンドを選択
+            commands: dict[Player, Command] = {}
+            for ply in players:
+                sim = battle.build_observation(ply)
+                commands[ply] = ply.choose_command(sim)
+        return commands
+
+    def validate_command(self, player: Player, command: Command | None) -> bool:
+        """コマンドがコンテキストに合致しているか検証する。
+
+        Args:
+            player: コマンドを出したプレイヤー
+            command: 実行するコマンド
+
+        Returns:
+            bool: コマンドの型が状態に適合する場合は True、そうでない場合は False
+        """
+        state = self.battle.player_states[player]
+        required_type = state.required_command_type
+        return (
+            command is None
+            or required_type in {None, "any"}
+            or command.is_type(required_type)
+        )
 
     def _can_use_megaevol(self, state: PlayerState) -> bool:
         """メガシンカが使用可能かどうかを判定する。

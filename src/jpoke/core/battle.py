@@ -433,25 +433,8 @@ class Battle:
         return self.turn_controller.judge_winner()
 
     def resolve_command(self, phase: BattlePhase, player: Player | None = None) -> dict[Player, Command]:
-        # TODO : command_managerに移譲したほうがよいかもしれない。
-        """コマンドを解決する。"""
-        players = [player] if player else self.players
-
-        with self.phase_context(phase):
-            # 方策関数を呼び出す前準備
-            for ply in players:
-                state = self.player_states[ply]
-                # 利用できるコマンドを記録
-                state.last_available_commands = self.get_available_commands(ply)
-                # 木探索を行う際に補完すべきコマンドタイプを指定
-                state.required_command_type = "any" if self.phase == "action" else "switch"
-
-            # コマンドを選択
-            commands = {}
-            for ply in players:
-                sim = self.build_observation(ply)
-                commands[ply] = ply.choose_command(sim)
-        return commands
+        """コマンドを解決する（CommandManagerへの委譲）。"""
+        return self.command_manager.resolve_command(phase, player)
 
     def start(self):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
@@ -461,7 +444,6 @@ class Battle:
         self.turn_controller.start_battle()
 
     def step(self, commands: dict[Player, Command] | None = None):
-        # turn_controller.step()より前の処理はcommand_managerに移譲したほうがよいかもしれない
         """ターンを1つ進める（TurnControllerへの委譲）。
 
         Args:
@@ -473,32 +455,13 @@ class Battle:
         else:
             for player in self.players:
                 command = commands.get(player)
-                if not self._validate_command(player, command):
+                if not self.command_manager.validate_command(player, command):
                     raise ValueError(f"Invalid command type for {player.name}: {command}.")
 
         if not commands:
             raise ValueError("No commands provided for step().")
 
         self.turn_controller.step(commands)
-
-    def _validate_command(self, player: Player, command: Command | None) -> bool:
-        # TODO : command_managerに移譲したほうがよいかもしれない。
-        """コマンドがコンテキストに合致しているか検証する。
-
-        Args:
-            state: プレイヤーの状態
-            command: 実行するコマンド
-
-        Returns:
-            bool: コマンドの型が状態に適合する場合は True、そうでない場合は False
-        """
-        state = self.player_states[player]
-        required_type = state.required_command_type
-        return (
-            command is None
-            or required_type in {None, "any"}
-            or command.is_type(required_type)
-        )
 
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。
