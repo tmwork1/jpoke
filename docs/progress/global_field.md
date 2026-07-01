@@ -6,7 +6,7 @@
 おおひでり	x	x	x	x	x	n/a	n/a
 おおあめ	x	x	x	x	x	n/a	n/a
 らんきりゅう	x	x	x	x	x	n/a	n/a
-エレキフィールド	-	-	x	x	-	n/a	n/a
+エレキフィールド	x	x	x	x	x	n/a	n/a
 グラスフィールド	-	-	x	x	-	-	-
 サイコフィールド	-	-	x	x	-	n/a	n/a
 ミストフィールド	-	-	x	x	-	n/a	n/a
