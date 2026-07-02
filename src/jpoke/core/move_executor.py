@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
-from jpoke.types import PokemonType, MoveCategory
+from jpoke.types import Type, MoveCategory
 from jpoke.utils.math import clamp_stats, clamp_critic
 from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
@@ -52,7 +52,7 @@ class MoveExecutor:
         self.action_success: bool | None = None
         self.move_success: bool | None = None
         self.move_applied: bool | None = None
-        self.move_type: PokemonType | None = None
+        self.move_type: Type | None = None
         self.critical_rank: int | None = None
         self.critical: bool | None = None
 
@@ -466,7 +466,7 @@ class MoveExecutor:
                 payload={"move": ctx.move.name}
             )
 
-    def resolve_move_type(self, attacker: Pokemon, move: Move) -> PokemonType:
+    def resolve_move_type(self, attacker: Pokemon, move: Move) -> Type:
         """技の有効タイプを取得する。
 
         Args:

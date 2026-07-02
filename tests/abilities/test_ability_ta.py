@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.types import PokemonType, AilmentName, WeatherName, PokemonGender
+from jpoke.types import Type, AilmentName, WeatherName, Gender
 
 from .. import test_utils as t
 
@@ -222,7 +222,7 @@ def test_ちどりあし_こんらん中命中率が半減する():
         ("ピカチュウ", "", "ひのこ", 4096),
     ]
 )
-def test_てきおうりょく_STAB補正(name: str, tera_type: PokemonType, move_name: str, expected_modifier: float):
+def test_てきおうりょく_STAB補正(name: str, tera_type: Type, move_name: str, expected_modifier: float):
     battle = t.start_battle(
         team0=[Pokemon(name, ability_name="てきおうりょく", tera_type=tera_type, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
@@ -494,7 +494,7 @@ def test_でんきにかえる_被弾でじゅうでん状態になる():
         ("", "", 4096),
     ]
 )
-def test_とうそうしん_攻撃補正(gendar0: PokemonGender, gendar1: PokemonGender, expected_modifier: int):
+def test_とうそうしん_攻撃補正(gendar0: Gender, gendar1: Gender, expected_modifier: int):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="とうそうしん", move_names=["たいあたり"], gender=gendar0)],
         team1=[Pokemon("カビゴン", gender=gendar1)],

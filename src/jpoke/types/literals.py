@@ -44,14 +44,14 @@ Nature = Literal[
 
 Stat = Literal["hp", "atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
 
-PokemonType = Literal[
+Type = Literal[
     "", "ノーマル", "ほのお", "みず", "でんき", "くさ",
     "こおり", "かくとう", "どく", "じめん", "ひこう",
     "エスパー", "むし", "いわ", "ゴースト", "ドラゴン",
     "あく", "はがね", "フェアリー", "ステラ"
 ]
 
-PokemonGender = Literal["", "male", "female"]
+Gender = Literal["", "male", "female"]
 
 MoveCategory = Literal["physical", "special", "status"]
 

@@ -13,6 +13,8 @@ from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
 from jpoke.utils import fast_copy
 
+# TODO : クラスではなく関数モジュールで十分ではないか。
+
 
 class StatusManager:
     """HPと能力ランクの更新を管理するクラス。

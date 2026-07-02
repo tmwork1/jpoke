@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
 
-from jpoke.types import Stat, PokemonType
+from jpoke.types import Stat, Type
 
 from jpoke.enums import Event, Interrupt, LogCode
 
@@ -39,6 +39,7 @@ _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "たくわえる",
 })
 
+
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
@@ -46,6 +47,7 @@ def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRetu
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
 
 def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
@@ -1722,7 +1724,7 @@ def ミラータイプ_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     """
     attacker = ctx.attacker
     defender = ctx.defender
-    target_types: list[PokemonType]
+    target_types: list[Type]
     if defender.terastallized and defender.tera_type != "ステラ":
         target_types = [defender.tera_type]
     else:
@@ -1737,7 +1739,7 @@ def ミラータイプ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     """ミラータイプの失敗チェック: 使用者と対象のタイプが一致する場合は失敗する。"""
     attacker = ctx.attacker
     defender = ctx.defender
-    target_types: list[PokemonType]
+    target_types: list[Type]
     if defender.terastallized and defender.tera_type != "ステラ":
         target_types = [defender.tera_type]
     else:

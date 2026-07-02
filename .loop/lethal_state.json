@@ -1,0 +1,47 @@
+{
+  "config": {
+    "category":       "リーサル計算ハンドラ",
+    "spec_hint":      "docs/spec/ 以下の仕様書を参照",
+    "test_files":     ["tests/test_lethal.py"],
+    "progress_files": [
+      "docs/progress/item.md",
+      "docs/progress/ability.md",
+      "docs/progress/ailment.md",
+      "docs/progress/volatile.md",
+      "docs/progress/global_field.md",
+      "docs/progress/move.md"
+    ]
+  },
+  "completed": [
+    {"name": "アッキのみ", "type": "item"},
+    {"name": "イアのみ", "type": "item"},
+    {"name": "ウイのみ", "type": "item"},
+    {"name": "オボンのみ", "type": "item"},
+    {"name": "オレンのみ", "type": "item"},
+    {"name": "バンジのみ", "type": "item"},
+    {"name": "フィラのみ", "type": "item"},
+    {"name": "マゴのみ", "type": "item"},
+    {"name": "くろいヘドロ", "type": "item"},
+    {"name": "タラプのみ", "type": "item"},
+    {"name": "ナモのみ", "type": "item"},
+    {"name": "ヨロギのみ", "type": "item"},
+    {"name": "ウタンのみ", "type": "item"},
+    {"name": "ヨプのみ", "type": "item"},
+    {"name": "リンドのみ", "type": "item"},
+    {"name": "カシブのみ", "type": "item"},
+    {"name": "ヤチェのみ", "type": "item"},
+    {"name": "シュカのみ", "type": "item"},
+    {"name": "ソクノのみ", "type": "item"},
+    {"name": "ビアーのみ", "type": "item"},
+    {"name": "ハバンのみ", "type": "item"},
+    {"name": "ホズのみ", "type": "item"},
+    {"name": "リリバのみ", "type": "item"},
+    {"name": "バコウのみ", "type": "item"},
+    {"name": "ロゼルのみ", "type": "item"},
+    {"name": "オッカのみ", "type": "item"},
+    {"name": "イトケのみ", "type": "item"},
+    {"name": "タンガのみ", "type": "item"},
+    {"name": "ばけのかわ", "type": "ability"}
+  ],
+  "failed":    []
+}

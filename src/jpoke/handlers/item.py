@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon, Move
 
-from jpoke.types import RoleSpec, Stat, PokemonType, MoveCategory, \
+from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
     AilmentName, WeatherName, TerrainName, SideFieldName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import Interrupt, LogCode, Command
@@ -71,7 +71,7 @@ def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[C
 
 def _modify_power_by_type(move: Move,
                           value: Any,
-                          type_: PokemonType,
+                          type_: Type,
                           modifier: int) -> HandlerReturn:
     if move.type == type_:
         value = apply_fixed_modifier(value, modifier)
@@ -81,7 +81,7 @@ def _modify_power_by_type(move: Move,
 def _modify_super_effective_damage(battle: Battle,
                                    ctx: AttackContext,
                                    value: Any,
-                                   type_: PokemonType,
+                                   type_: Type,
                                    modifier: float) -> HandlerReturn:
     # ON_CALC_DAMAGE_MODIFIER
     if (
@@ -241,7 +241,7 @@ def _dedicated_item_form_change(battle: Battle,
 def _dedicated_item_modify_power(ctx: AttackContext,
                                  value: Any,
                                  allowed_names: frozenset[str],
-                                 allowed_types: tuple[PokemonType, ...]) -> HandlerReturn:
+                                 allowed_types: tuple[Type, ...]) -> HandlerReturn:
     if (
         ctx.attacker.name in allowed_names
         and ctx.move.type in allowed_types
@@ -254,7 +254,7 @@ def _boost_stat_on_type_hit(battle: Battle,
                             ctx: AttackContext,
                             value: Any,
                             *,
-                            type_: PokemonType,
+                            type_: Type,
                             stats: dict[Stat, int]) -> HandlerReturn:
     mon = ctx.defender
     assert mon is not None

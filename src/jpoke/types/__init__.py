@@ -6,7 +6,7 @@ from .literals import (
     BoostSource,
     CommandType,
     ContextRole,
-    PokemonGender,
+    Gender,
     HandlerSource,
     HPChangeReason,
     ItemDisabledReason,
@@ -19,7 +19,7 @@ from .literals import (
     Side,
     Stat,
     StatChangeReason,
-    PokemonType,
+    Type,
 )
 from .ailment import AilmentName
 from .global_field import GlobalFieldName
@@ -28,6 +28,7 @@ from .terrain import TerrainName
 from .volatile import VolatileName
 from .weather import WeatherName
 
+# TODO : PokemonName, AbilityName, ItemName, MoveName もスクリプトで自動生成する
 
 __all__ = [
     "AbilityDisabledReason",
@@ -38,7 +39,7 @@ __all__ = [
     "BoostSource",
     "CommandType",
     "ContextRole",
-    "PokemonGender",
+    "Gender",
     "GlobalFieldName",
     "HandlerSource",
     "HPChangeReason",
@@ -54,7 +55,7 @@ __all__ = [
     "Stat",
     "StatChangeReason",
     "TerrainName",
-    "PokemonType",
+    "Type",
     "VolatileName",
     "WeatherName",
 ]

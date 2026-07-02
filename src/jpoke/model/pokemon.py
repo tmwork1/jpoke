@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
-from jpoke.types import Nature, PokemonType, Stat, PokemonGender, \
-    BoostSource, AilmentName, VolatileName
+from jpoke.types import Nature, Type, Stat, Gender, \
+    AilmentName, VolatileName, BoostSource
 from jpoke.utils.constants import STATS
-from jpoke.utils.math import clamp_stats
+from jpoke.utils import math as m
 from jpoke.utils import fast_copy
 from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS
 
@@ -48,13 +48,13 @@ class Pokemon:
 
     def __init__(self,
                  name: str,
-                 gender: PokemonGender = "",
+                 gender: Gender = "",
                  nature: Nature = "まじめ",
                  level: int = 50,
                  ability_name: str = "",
                  item_name: str = "",
                  move_names: list[str] = ["はねる"],
-                 tera_type: PokemonType | None = None) -> None:
+                 tera_type: Type | None = None) -> None:
         """ポケモンを初期化する。
 
         Args:
@@ -68,11 +68,11 @@ class Pokemon:
             tera_type: テラスタルタイプ
         """
         self.data: PokemonData = POKEDEX[name]
-        self.gender: PokemonGender = gender
+        self.gender: Gender = gender
         self._nature: Nature = nature
         self._level: int = level
 
-        self.tera_type: PokemonType = tera_type or self.base_types[0]
+        self.tera_type: Type = tera_type or self.base_types[0]
 
         self.ability: Ability = Ability(ability_name)
         self.base_ability_name: str = ability_name
@@ -96,9 +96,9 @@ class Pokemon:
         self.terastallized: bool = False
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
-        self.stellar_boosted_types: set[PokemonType] = set()
-        self.added_types: list[PokemonType] = []
-        self.removed_types: list[PokemonType] = []
+        self.stellar_boosted_types: set[Type] = set()
+        self.added_types: list[Type] = []
+        self.removed_types: list[Type] = []
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
@@ -108,9 +108,9 @@ class Pokemon:
         self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
-        self.ability_override_type: PokemonType | None = None
-        self.move_override_types: list[PokemonType] | None = None
-        self.volatile_override_type: PokemonType | None = None
+        self.ability_override_type: Type | None = None
+        self.move_override_types: list[Type] | None = None
+        self.volatile_override_type: Type | None = None
         self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
         self.ate_berry: bool = False  # 今バトル中にきのみを食べたかどうか（ゲップの使用条件）
         self.stat_lowered_this_turn: bool = False  # このターン中にランクが下がったか（うっぷんばらし用）
@@ -256,7 +256,7 @@ class Pokemon:
         return w
 
     @property
-    def base_types(self) -> list[PokemonType]:
+    def base_types(self) -> list[Type]:
         """ポケモンの基本タイプを取得する。
 
         Returns:
@@ -265,7 +265,7 @@ class Pokemon:
         return self.data.types
 
     @property
-    def types(self) -> list[PokemonType]:
+    def types(self) -> list[Type]:
         """ポケモンの現在のタイプを取得する。
 
         Returns:
@@ -300,7 +300,7 @@ class Pokemon:
             result = [t for t in result if t not in self.removed_types]
         return result
 
-    def has_type(self, type_: PokemonType) -> bool:
+    def has_type(self, type_: Type) -> bool:
         """指定されたタイプを持っているか判定する。
 
         Args:
@@ -356,7 +356,7 @@ class Pokemon:
         return True
 
     @property
-    def active_tera_type(self) -> PokemonType:
+    def active_tera_type(self) -> Type:
         """テラスタルのタイプを取得する。
 
         Returns:
@@ -618,7 +618,7 @@ class Pokemon:
             ランクは-6から+6の範囲に制限される。
         """
         old = self.rank[stat]
-        self.rank[stat] = clamp_stats(old + v)
+        self.rank[stat] = m.clamp_stats(old + v)
         return self.rank[stat] - old
 
     @property

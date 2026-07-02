@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.types import PokemonType, MoveCategory, MoveFlag, MoveTarget
+    from jpoke.types import Type, MoveCategory, MoveFlag, MoveTarget
 
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
@@ -29,7 +29,7 @@ class Move(GameEffect):
         super().__init__(MOVES[name])
         self.pp: int = self.data.pp
 
-        self.type: PokemonType = self.data.type
+        self.type: Type = self.data.type
         self.power: int | None = self.data.power
         self.category: MoveCategory = self.data.category
 

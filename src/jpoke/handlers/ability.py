@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon, Move
 
-from jpoke.types import RoleSpec, PokemonType, Stat, WeatherName, TerrainName, \
+from jpoke.types import RoleSpec, Type, Stat, WeatherName, TerrainName, \
     AilmentName, VolatileName, ItemDisabledReason, MoveFlag
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.data import TYPE_MODIFIER
@@ -178,7 +178,7 @@ def _apply_type_absorb(battle: Battle,
                        ctx: AttackContext,
                        value: bool,
                        *,
-                       move_type: PokemonType,
+                       move_type: Type,
                        heal_ratio: float = 0,
                        stats: dict[Stat, int] | None = None) -> HandlerReturn:
     """特定のタイプの技を無効化し、副次効果（回復/能力上昇）を適用する。"""
@@ -209,7 +209,7 @@ def _modify_by_move_condition(move: Move,
                               value: int,
                               *,
                               modifier: int,
-                              move_type: PokemonType | None = None,
+                              move_type: Type | None = None,
                               move_flag: MoveFlag | None = None) -> HandlerReturn:
     """技のタイプ/フラグ条件を満たすときのみ固定倍率補正を適用する。"""
     if (
@@ -604,7 +604,7 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-def うるおいボイス_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def うるおいボイス_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     """うるおいボイス特性: ノーマルタイプの音技をみずタイプに変換する。"""
     if ctx.move.has_flag("sound") and value == "ノーマル":
         return HandlerReturn(value="みず")
@@ -1543,7 +1543,7 @@ def スイートベール_prevent_volatile(battle: Battle, ctx: EventContext, va
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
 
-def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType, *, from_type: str, to_type: str) -> HandlerReturn:
+def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: Type, *, from_type: str, to_type: str) -> HandlerReturn:
     """スキン系特性共通: from_type の技を to_type に変換する。"""
     if value == from_type:
         value = to_type
@@ -1557,7 +1557,7 @@ def _skin_boost_power(battle: Battle, ctx: AttackContext, value: int, *, trigger
     return HandlerReturn(value=value)
 
 
-def スカイスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def スカイスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="ひこう")
 
 
@@ -2152,7 +2152,7 @@ def どしょく_absorb_ground(battle: Battle, ctx: AttackContext, value: bool) 
     return _apply_type_absorb(battle, ctx, value, move_type="じめん", heal_ratio=1/4)
 
 
-def ドラゴンスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def ドラゴンスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="ドラゴン")
 
 
@@ -2266,7 +2266,7 @@ def ノーマルスキン_boost_power(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def ノーマルスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def ノーマルスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     """ノーマルスキン特性: 全ての技をノーマルタイプに変換する（ステラタイプ除く）。"""
     if value not in ("ノーマル", "ステラ"):
         value = "ノーマル"
@@ -2359,7 +2359,7 @@ def はやてのつばさ_modify_priority(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=value)
 
 
-def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     """はらぺこスイッチ特性: オーラぐるまのタイプをフォルムで変える。"""
     if ctx.move.name == "オーラぐるま":
         value = "あく" if ctx.attacker.ability.is_hangry else "でんき"
@@ -2612,7 +2612,7 @@ def フェアリーオーラ_boost_power(battle: Battle, ctx: AttackContext, val
     return HandlerReturn(value=apply_fixed_modifier(value, modifier))
 
 
-def フェアリースキン_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def フェアリースキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="フェアリー")
 
 
@@ -2748,7 +2748,7 @@ def フラワーベール_prevent_stat_drop(battle: Battle, ctx: EventContext, v
     return HandlerReturn(value=filtered)
 
 
-def フリーズスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: PokemonType) -> HandlerReturn:
+def フリーズスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
     return _skin_modify_move_type(battle, ctx, value, from_type="ノーマル", to_type="こおり")
 
 
@@ -3361,7 +3361,7 @@ def わざわいのうつわ_reduce_C(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def _apply_multitype(mon: Pokemon, item_table: dict[str, PokemonType]) -> None:
+def _apply_multitype(mon: Pokemon, item_table: dict[str, Type]) -> None:
     """道具に応じてポケモンのタイプを変更する共通ロジック。"""
     item_name = mon.item.name if mon.has_item() else ""
     mon.ability_override_type = item_table.get(item_name)

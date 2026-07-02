@@ -6,7 +6,7 @@
 from typing import TypedDict
 from dataclasses import dataclass
 
-from jpoke.types import Stat, PokemonType
+from jpoke.types import Stat, Type
 from jpoke.enums import LogCode
 from jpoke.utils import fast_copy
 
@@ -26,7 +26,7 @@ class Payload(TypedDict, total=False):
     ailment: str | None
     volatile: str | None
     stats: dict[Stat, int] | None
-    type: PokemonType | None
+    type: Type | None
     value: int | float | None
     hp: int | None
     max_hp: int | None

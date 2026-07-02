@@ -5,13 +5,13 @@ from typing import cast
 import pytest
 from jpoke import Pokemon
 from jpoke.model import Move
-from jpoke.types import PokemonType
+from jpoke.types import Type
 from . import test_utils as t
 
 
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
-    t_name = cast(PokemonType, type_name)
+    t_name = cast(Type, type_name)
     move = Move("たいあたり")
     move.data = copy.copy(move.data)
     move.data.type = t_name

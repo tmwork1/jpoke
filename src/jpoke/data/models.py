@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 
-from jpoke.types import AbilityFlag, PokemonType, MoveCategory, MoveTarget, MoveFlag
+from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag
 
 
 class PokemonData:
@@ -14,7 +14,7 @@ class PokemonData:
         self.name: str = data["name"]
         self.pre_evolution: str = data.get("pre_evolution", "")
         self.weight: float = data["weight"]
-        self.types: list[PokemonType] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
+        self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
         self.base: list[int] = [data[s] for s in ["H", "A", "B", "C", "D", "S"]]
 
@@ -34,8 +34,8 @@ class AbilityData:
 class ItemData:
     removable: bool = True
     fling_power: int = 0
-    power_modifier_by_type: dict[PokemonType, float] = field(default_factory=dict)
-    damage_modifier_by_type: dict[PokemonType, float] = field(default_factory=dict)
+    power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
+    damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     mega_evolve: tuple[str, ...] | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
@@ -51,7 +51,7 @@ class MultiHit(TypedDict):
 
 @dataclass
 class MoveData:
-    type: PokemonType
+    type: Type
     category: MoveCategory
     pp: int
     power: int | None = None
