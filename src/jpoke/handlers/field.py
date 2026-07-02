@@ -256,7 +256,7 @@ def じゅうりょく_activate_release_volatiles(battle: Battle, ctx: EventCont
 
 def じゅうりょく_block_gravity_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうりょく中にgravity_restrictedフラグの技を失敗させる"""
-    if "gravity_restricted" in ctx.move.flags:
+    if ctx.move.has_flag("gravity_restricted"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "じゅうりょく"}
