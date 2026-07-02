@@ -1013,6 +1013,17 @@ def test_フェアリーロック_解除後は交代できる():
     assert t.can_switch(battle, 1)
 
 
+def test_まきびし_あつぞこブーツで無効():
+    """まきびし: あつぞこブーツを持つポケモンはダメージを受けない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", item_name="あつぞこブーツ")],
+        side0={"まきびし": 3},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.hp == active.max_hp
+
+
 @pytest.mark.parametrize("layers,divisor", [(1, 8), (2, 6), (3, 4)])
 def test_まきびし_ダメージ(layers: int, divisor: int):
     """まきびし: 層別交代時ダメージ"""
@@ -1025,6 +1036,17 @@ def test_まきびし_ダメージ(layers: int, divisor: int):
     expected_damage = active.max_hp // divisor
     actual_damage = active.max_hp - active.hp
     assert expected_damage == actual_damage, f"まきびし{layers}層のダメージが不正"
+
+
+def test_まきびし_マジックガードで無効():
+    """まきびし: マジックガードを持つポケモンはダメージを受けない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", ability_name="マジックガード")],
+        side0={"まきびし": 3},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.hp == active.max_hp
 
 
 def test_まきびし_浮いているポケモンはダメージを受けない():
@@ -1211,6 +1233,18 @@ def test_らんきりゅう_通常天候に上書きされない(weather: Weathe
     result = battle.weather_manager.apply(weather, 5)
     assert result is False
     assert battle.raw_weather.name == "らんきりゅう"
+
+
+def test_リフレクター_すりぬけは軽減を貫通する():
+    """リフレクター: すりぬけ特性を持つ攻撃側はリフレクターを無視する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すりぬけ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"リフレクター": 5},
+    )
+    t.run_move(battle, 0)
+    # すりぬけ特性のため damage_modifier が 4096（等倍、軽減なし）
+    assert battle.damage_calculator.damage_modifier == 4096
 
 
 def test_ワンダールーム_再使用で解除():

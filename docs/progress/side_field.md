@@ -9,5 +9,5 @@
 ねがいごと	x	x	x	x	x	n/a	n/a
 ねばねばネット	x	x	x	x	x	n/a	n/a
 ひかりのかべ	x	x	x	x	x	n/a	n/a
-まきびし	-	-	x	x	-	n/a	n/a
-リフレクター	-	-	x	x	-	n/a	n/a
+まきびし	x	x	x	x	x	n/a	n/a
+リフレクター	x	x	x	x	x	n/a	n/a
