@@ -16,7 +16,19 @@ from jpoke import Pokemon, Move
 
 from . import test_utils as t
 
-# TODO : オボンのみがあればスケイルショット5発で乱数1発 (80.31%) になることをテストする
+
+def test_オボンのみ_スケイルショット5発_乱数1発():
+    """オボンのみ所持時、多段技はヒットごとにHP半分以下判定・回復が発生するため
+    5発目終了時点でも乱数1発 (80.31%) になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="オボンのみ")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("スケイルショット"), 5)])
+
+    assert results[-1].n_attack == 1
+    assert results[-1].hit == 5
+    assert results[-1].lethal_probability == pytest.approx(0.8031, abs=0.001)
 
 
 def test_オボンのみ_乱数2発():

@@ -60,7 +60,8 @@ class LethalContext:
 
 @dataclass
 class LethalResult:
-    # TODO : 事後の加算ダメージ計算機能として、LethalResultどうしの和を取れるようにする
+    # TODO : 将来的な拡張も見据えて、attacker/defenderの状態の記録方法を構造化する
+    # TODO : LethalResultどうしの和をとることで加算ダメージ計算できるように演算を定義する
     """1ヒット時点の致死率計算結果。
 
     Attributes:
@@ -77,7 +78,6 @@ class LethalResult:
     hit: int
     hp_dist: StateDist
     damage_dist: StateDist
-    # TODO : 将来的な拡張も見据えて、attacker/defenderの状態の記録方法を構造化する
     attacker_rank: dict[Stat, int] = field(default_factory=dict)
     defender_rank: dict[Stat, int] = field(default_factory=dict)
     attacker_ailment: AilmentName = ""
@@ -257,7 +257,7 @@ def _run_move(battle: Battle,
     hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx, hp_dist)
 
     # 技の追加効果ハンドラを適用
-    # TODO : move_secondaryは発動タイミングが技によって異なる場合があるため、イベントではなく技ハンドラ内の条件分岐で制御するようにする
+    # TODO : 追加効果は発生タイミングが複数あるため、イベントではなくハンドラ内の条件分岐で制御する。
     if secondary:
         hp_dist = _emit(LethalEvent.ON_MOVE_SECONDARY, battle, ctx, hp_dist)
 
