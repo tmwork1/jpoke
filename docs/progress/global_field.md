@@ -13,5 +13,5 @@
 じゅうりょく	x	x	x	x	x	n/a	n/a
 トリックルーム	x	x	x	x	x	n/a	n/a
 フェアリーロック	x	x	x	x	x	n/a	n/a
-マジックルーム	-	-	x	x	-	n/a	n/a
+マジックルーム	x	x	x	x	x	n/a	n/a
 ワンダールーム	-	-	x	x	-	n/a	n/a
