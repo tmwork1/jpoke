@@ -302,16 +302,21 @@ def じゅうりょく_tick_global_field(battle: Battle, ctx: EventContext, valu
 
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ステルスロックのダメージ（岩タイプ相性依存）"""
-    # 循環インポート回避のため遅延インポート（jpoke.core/jpoke.model はこの時点で初期化中）
-    from jpoke.core import AttackContext
-    from jpoke.model import Move
+    """ステルスロックのダメージ（岩タイプ相性依存）
+
+    らんきりゅうの影響を受けないため ON_CALC_DEF_TYPE_MODIFIER イベントを経由せず、
+    タイプ表から直接相性を計算する。
+    """
+    from jpoke.data import TYPE_MODIFIER
 
     if battle.query.is_hazard_immune(ctx.source):
         return HandlerReturn(value=value)
-    tmp_ctx = AttackContext(attacker=ctx.source, defender=ctx.source, move=Move("ステルスロック"))
-    r = battle.damage_calculator.calc_def_type_modifier(tmp_ctx) // 4096
-    battle.modify_hp(ctx.source, r=-r/8)
+    # タイプ相性をイベント経由せずタイプ表から直接計算する（×1/4・×1/2も正しく処理）
+    type_chart = TYPE_MODIFIER.get("いわ", {})
+    base = 4096
+    for def_type in ctx.source.types:
+        base = int(base * type_chart.get(def_type, 1.0))
+    battle.modify_hp(ctx.source, r=-base / (4096 * 8))
     return HandlerReturn(value=value)
 
 
