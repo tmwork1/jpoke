@@ -1,6 +1,6 @@
 # test_field
 
-テスト数: 157
+テスト数: 161
 
 - [x] あめはれ_ばんのうがさ防御側は補正なし(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう, expected=4096)
 - [x] あめはれ_ばんのうがさ防御側は補正なし(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=4096)
@@ -80,6 +80,9 @@
 - [x] ねがいごと_交代後は現在の場のポケモンが回復する
 - [x] ねがいごと_回復と解除
 - [x] ねばねばネット
+- [x] ねばねばネット_あつぞこブーツで無効
+- [x] ねばねばネット_あまのじゃくは1段階上がる
+- [x] ねばねばネット_たんじゅんは2段階下がる
 - [x] ねばねばネット_浮いているポケモンには効かない
 - [x] はれ_こおり防止
 - [x] はれあめ_タイプ威力補正(weather=はれ, pokemon_name=ヒトカゲ, move_name=ひのこ, expected=6144)
@@ -90,6 +93,7 @@
 - [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=はれ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
 - [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=あめ, pokemon_name=ゼニガメ, move_name=みずでっぽう)
 - [x] はれあめ_ばんのうがさ防御側は威力補正無効(weather=あめ, pokemon_name=ヒトカゲ, move_name=ひのこ)
+- [x] ひかりのかべ_すりぬけは軽減を貫通する
 - [x] フィールド_タイプ威力補正(terrain=エレキフィールド, attacker_name=ピカチュウ, defender_name=ピカチュウ, move_name=でんきショック, expected=5325)
 - [x] フィールド_タイプ威力補正(terrain=グラスフィールド, attacker_name=フシギダネ, defender_name=ピカチュウ, move_name=このは, expected=5325)
 - [x] フィールド_タイプ威力補正(terrain=サイコフィールド, attacker_name=フーディン, defender_name=ピカチュウ, move_name=サイコキネシス, expected=5325)

@@ -784,6 +784,39 @@ def test_ねばねばネット():
     assert after_rank == before_rank - 1, "Speed rank not decreased"
 
 
+def test_ねばねばネット_あつぞこブーツで無効():
+    """ねばねばネット: あつぞこブーツを持つポケモンはすばやさが下がらない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", item_name="あつぞこブーツ")],
+        side0={"ねばねばネット": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.rank["spe"] == 0, "あつぞこブーツ持ちはねばねばネットの影響を受けない"
+
+
+def test_ねばねばネット_あまのじゃくは1段階上がる():
+    """ねばねばネット: あまのじゃく持ちのポケモンはすばやさが1段階上がる"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", ability_name="あまのじゃく")],
+        side0={"ねばねばネット": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.rank["spe"] == 1, "あまのじゃく持ちはすばやさが上がる"
+
+
+def test_ねばねばネット_たんじゅんは2段階下がる():
+    """ねばねばネット: たんじゅん持ちのポケモンはすばやさが2段階下がる"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", ability_name="たんじゅん")],
+        side0={"ねばねばネット": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.rank["spe"] == -2, "たんじゅん持ちはすばやさが2段階下がる"
+
+
 def test_ねばねばネット_浮いているポケモンには効かない():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
@@ -839,6 +872,18 @@ def test_はれあめ_ばんのうがさ防御側は威力補正無効(weather: 
     )
     t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_ひかりのかべ_すりぬけは軽減を貫通する():
+    """ひかりのかべ: すりぬけ特性を持つ攻撃側はひかりのかべを無視する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すりぬけ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"ひかりのかべ": 5},
+    )
+    t.run_move(battle, 0)
+    # すりぬけ特性のため damage_modifier が 4096（等倍、軽減なし）
+    assert battle.damage_calculator.damage_modifier == 4096
 
 
 @pytest.mark.parametrize("terrain,attacker_name,defender_name,move_name,expected", [
