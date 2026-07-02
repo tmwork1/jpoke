@@ -17,6 +17,57 @@ from jpoke import Pokemon, Move
 from . import test_utils as t
 
 
+def test_アッキのみ_消費後は発動しない():
+    """アッキのみは1回だけ発動し、2発目以降は効果がない（2発目と3発目のダメージが同じ）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="アッキのみ")],
+    )
+    # たいあたり（低威力）で3回攻撃。カイリューは3発では倒れない
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=3)
+
+    assert len(results) == 3
+    # 1発目: アッキのみ未発動（rank 0）
+    assert results[0].min_damage == 20
+    assert results[0].max_damage == 24
+    # 2発目と3発目のダメージが同じ（消費後は再発動しない）
+    assert results[1].min_damage == results[2].min_damage
+    assert results[1].max_damage == results[2].max_damage
+    # 2発目はぼうぎょ+1が乗るため1発目より少ない
+    assert results[1].max_damage < results[0].min_damage
+
+
+def test_アッキのみ_物理技受けた後ぼうぎょ上昇():
+    """物理技を受けた直後にぼうぎょ+1し、2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="アッキのみ")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)], max_attack=2)
+
+    # 1発目: アッキのみ未発動（rank 0）、ガブA150 vs カイリューB115
+    assert results[0].min_damage == 90
+    assert results[0].max_damage == 108
+    # 2発目: ぼうぎょ+1（rank +1: × 3/2 補正）でダメージが減少
+    assert results[1].min_damage == 62
+    assert results[1].max_damage == 74
+
+
+def test_アッキのみ_特殊技では発動しない():
+    """特殊技を受けてもアッキのみは発動せず、2発目のダメージが1発目と変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="アッキのみ")],
+    )
+    # りゅうのはどう（ドラゴン特殊技）で2回攻撃
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("りゅうのはどう"), 1)], max_attack=2)
+
+    assert len(results) == 2
+    # ランクが変わらないため1発目と2発目のダメージが同じ
+    assert results[0].min_damage == results[1].min_damage
+    assert results[0].max_damage == results[1].max_damage
+
+
 def test_オボンのみ_スケイルショット5発_乱数1発():
     """オボンのみ所持時、多段技はヒットごとにHP半分以下判定・回復が発生するため
     5発目終了時点でも乱数1発 (80.31%) になる"""

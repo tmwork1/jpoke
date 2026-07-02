@@ -53,6 +53,12 @@ ITEMS: dict[str, ItemData] = {
                 h.アッキのみ_boost_defense_on_physical_hit,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(
+                func=l.アッキのみ_boost_def,
+                subject="defender",
+            )
         }
     ),
     "あついいわ": ItemData(
@@ -217,7 +223,7 @@ ITEMS: dict[str, ItemData] = {
             ),
         },
         lethal_handlers={
-            LethalEvent.ON_HIT: LethalHandler(
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
                 func=l.オボンのみ_heal,
                 subject="defender",
             )

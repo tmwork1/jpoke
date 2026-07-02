@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 from collections import defaultdict
 from jpoke.utils.lethal_dist import State, add_dist
 
-
 def _heal(hp_dist: StateDist,
           target: Pokemon,
           v: int = 0,
@@ -29,7 +28,6 @@ def _heal(hp_dist: StateDist,
     else:
         heal = v
     return add_dist(hp_dist, heal, maximum=max_hp)
-
 
 def _heal_at_pinch(hp_dist: StateDist,
                    target: Pokemon,
@@ -84,11 +82,71 @@ def _heal_at_pinch(hp_dist: StateDist,
     return new_dist
 
 
-def たべのこし_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """たべのこし — ターン終了時に max_hp の 1/16 回復する。"""
-    return _heal(hp_dist, ctx.defender, r=1/16)
+def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """アッキのみ: 物理技を受けた直後にぼうぎょ+1して消費する。
+
+    ぼうぎょランクが+6のとき、またはitem_enabledがFalseのときは発動しない。
+    """
+    if ctx.move.category != "physical":
+        return hp_dist
+
+    # item_enabled=True の state があるか確認
+    if not any(state.item_enabled for state in hp_dist):
+        return hp_dist
+
+    # ぼうぎょランクが最大なら発動しない（消費もしない）
+    if ctx.defender.rank["def"] >= 6:
+        return hp_dist
+
+    # ぼうぎょランクを+1（一度だけ）
+    ctx.defender.rank["def"] = min(6, ctx.defender.rank["def"] + 1)
+
+    # item_enabled=True の state を消費済みに更新して新しい StateDist を返す
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        if state.item_enabled:
+            new_state = State(
+                value=state.value,
+                ability_enabled=state.ability_enabled,
+                item_enabled=False,
+            )
+            new_dist[new_state] += freq
+        else:
+            new_dist[state] += freq
+    return dict(new_dist)
 
 
 def オボンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """オボンのみ — HP が 1/2 以下になると max_hp の 1/4 回復し、消費する。"""
+    """オボンのみ: HP が 1/2 以下になると max_hp の 1/4 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/4, threshold_rate=1/2, heal_with="item", consume=True)
+
+
+def たべのこし_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """たべのこし: max_hp の 1/16 回復する。"""
+    return _heal(hp_dist, ctx.defender, r=1/16)
+
+
+def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ばけのかわ: 1回だけダメージを無効化する。"""
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        if state.ability_enabled:
+            # ばけのかわが有効な状態ではダメージを無効化し、HPを1/8消費する
+            damage = max(1, int(ctx.defender.max_hp / 8))
+            new_state = State(
+                value=max(0, state.value - damage),
+                ability_enabled=False,
+                item_enabled=state.item_enabled
+            )
+            new_dist[new_state] += freq
+        else:
+            # ばけのかわが無効な状態はそのまま維持
+            new_dist[state] += freq
+    return dict(new_dist)
+
+
+def メテオビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """メテオビーム: C+1する"""
+    if ctx.move_secondary:
+        ctx.attacker.rank["spa"] += 1
+    return hp_dist
