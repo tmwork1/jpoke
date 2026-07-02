@@ -6,7 +6,7 @@
 しんぴのまもり	x	x	x	x	x	n/a	n/a
 しろいきり	x	x	x	x	x	n/a	n/a
 どくびし	x	x	x	x	x	n/a	n/a
-ねがいごと	-	-	x	x	-	n/a	n/a
+ねがいごと	x	x	x	x	x	n/a	n/a
 ねばねばネット	x	x	x	x	x	n/a	n/a
 ひかりのかべ	x	x	x	x	x	n/a	n/a
 まきびし	-	-	x	x	-	n/a	n/a
