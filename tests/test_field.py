@@ -23,6 +23,24 @@ def test_あめはれ_ばんのうがさ防御側は補正なし(weather: Weathe
     assert expected == battle.damage_calculator.power_modifier
 
 
+def test_いやしのねがい_HP減少ポケモンの交代で全回復しフィールドが解除される():
+    """いやしのねがい: 場に出たポケモンのHPが減っている（状態異常なし）場合、HP が全回復してフィールドが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン")],
+        side0={"いやしのねがい": 1},
+    )
+    bench = battle.player_states[battle.players[0]].team[1]
+    bench.hp = 1
+    assert not bench.ailment.is_active
+
+    active = t.run_switch(battle, 0, 1)
+
+    assert active is bench
+    assert active.hp == active.max_hp
+    assert not battle.get_side(active).get("いやしのねがい").is_active
+
+
 def test_エレキフィールド_ねむけ防止():
     """エレキフィールド: 接地ポケモンへのねむけは無効"""
     battle = t.start_battle(
@@ -454,8 +472,30 @@ def test_ステルスロック_x1():
     assert active.hp == active.max_hp - active.max_hp // 8
 
 
+def test_ステルスロック_x1_2():
+    """ステルスロック: ×1/2耐性ポケモン（カイリキー）は最大HPの1/16ダメージ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カイリキー")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.max_hp - active.hp == max(1, active.max_hp // 16)
+
+
+def test_ステルスロック_x1_4():
+    """ステルスロック: ×1/4耐性ポケモン（ルカリオ）は最大HPの1/32ダメージ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ルカリオ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.max_hp - active.hp == max(1, active.max_hp // 32)
+
+
 def test_ステルスロック_x4():
-    """ステルスロック: 交代時タイプ相性ダメージ"""
+    """ステルスロック: ×4弱点ポケモン（リザードン）は最大HPの1/2ダメージ"""
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ"), Pokemon("リザードン")],
@@ -464,6 +504,17 @@ def test_ステルスロック_x4():
     active = t.run_switch(battle, 0, 1)
     actual_damage = active.max_hp - active.hp
     assert actual_damage == active.max_hp // 2
+
+
+def test_ステルスロック_マジックガード無効():
+    """ステルスロック: マジックガードを持つポケモンはダメージを受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ステルスロック": 1},
+    )
+    active = t.run_switch(battle, 0, 1)
+    assert active.hp == active.max_hp
 
 
 def test_すなあらし_いわ特防強化():
