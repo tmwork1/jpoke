@@ -1,3 +1,9 @@
+# TODO : 既存のpokedex.jsonを上書きしてしまわないように、存在しない場合のみ実行できるようにする。生成処理をmain()にまとめるとよい。
+
+"""pokedex.json を生成するスクリプト。
+zukan.json は、ポケモンの図鑑データを含む JSONファイルである。
+このスクリプトは、zukan.json から必要なキーのみを抽出し、pokedex.json を生成する。
+"""
 import json
 
 

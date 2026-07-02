@@ -1,3 +1,5 @@
+# TODO : scripts/sort_data/のようなサブディレクトリにまとめ、指示書に反映する
+
 #!/usr/bin/env python3
 """ABILITIES辞書の定義を五十音順に並び替えるスクリプト。
 

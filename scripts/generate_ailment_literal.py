@@ -1,3 +1,5 @@
+# TODO : scripts/generate_literals/のようなサブディレクトリにまとめ、指示書に反映する
+
 #!/usr/bin/env python3
 """AilmentName の Literal 定義を data/ailment.py の AILMENTS 辞書から自動生成するスクリプト。
 
