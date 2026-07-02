@@ -525,6 +525,13 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.くろいヘドロ_recover_or_damage,
+                subject="defender",
+                priority=60,
+            )
         }
     ),
     "くろいメガネ": ItemData(
@@ -904,6 +911,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.タラプのみ_boost_spdef,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(
+                func=l.タラプのみ_boost_spd,
+                subject="defender",
             )
         }
     ),

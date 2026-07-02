@@ -140,6 +140,48 @@ def test_オレンのみ_HP2分の1以下で10回復():
     assert max(results_with[0].hp_counter) - max(results_without[0].hp_counter) == 10
 
 
+def test_くろいヘドロ_どくタイプは毎ターン回復():
+    """くろいヘドロ所持のどくタイプポケモンは、ターン終了時に最大HPの1/16を回復する。"""
+    with_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("アーボック", item_name="くろいヘドロ")],
+    )
+    without_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("アーボック")],
+    )
+
+    results_with = t.calc_lethal(with_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
+    results_without = t.calc_lethal(without_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
+
+    heal = with_item.actives[1].max_hp // 16
+    assert (
+        max(results_with[1].hp_counter) - max(results_without[1].hp_counter)
+        == heal * 2
+    )
+
+
+def test_くろいヘドロ_非どくタイプは毎ターンダメージ():
+    """くろいヘドロ所持の非どくタイプポケモンは、ターン終了時に最大HPの1/16のダメージを受ける。"""
+    with_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="くろいヘドロ")],
+    )
+    without_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
+    results_without = t.calc_lethal(without_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
+
+    damage = with_item.actives[1].max_hp // 16
+    assert (
+        max(results_without[1].hp_counter) - max(results_with[1].hp_counter)
+        == damage * 2
+    )
+
+
 def test_たべのこし_ターン終了時に回復():
     """たべのこし所持時、ターン終了時に最大HPの1/16回復した状態が次の攻撃に引き継がれる"""
     with_item = t.start_battle(
@@ -167,6 +209,35 @@ def test_たべのこし_ターン終了時に回復():
         max(results_with_item[1].hp_counter) - max(results_without_item[1].hp_counter)
         == leftover_heal * 2
     )
+
+
+def test_タラプのみ_物理技では発動しない():
+    """物理技を受けてもタラプのみは発動せず、2発目のダメージが変わらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="タラプのみ")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)], max_attack=2)
+
+    # ランクが変わらないため1発目と2発目のダメージが同じ
+    assert results[0].min_damage == results[1].min_damage
+    assert results[0].max_damage == results[1].max_damage
+
+
+def test_タラプのみ_特殊技受けた後とくぼう上昇():
+    """特殊技を受けた直後にとくぼう+1し、2発目のダメージが減少する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="タラプのみ")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("りゅうのはどう"), 1)], max_attack=2)
+
+    # 1発目: タラプのみ未発動、A150ガブリアス C110 vs D120カイリュー
+    assert results[0].min_damage == 84
+    assert results[0].max_damage == 98
+    # 2発目: とくぼう+1 (D120→D180相当) でダメージ減少
+    assert results[1].min_damage == 54
+    assert results[1].max_damage == 66
 
 
 def test_マルチスケイル_ダメージ半減():

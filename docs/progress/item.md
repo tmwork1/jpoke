@@ -13,7 +13,7 @@
 エレキシード	x	x	x	-	-	n/a	n/a	?
 おうじゃのしるし	x	x	x	-	-	n/a	n/a	?
 おおきなねっこ	x	x	x	-	-	n/a	n/a	?
-オボンのみ	x	x	x	-	-	-	-	?
+オボンのみ	x	x	x	-	-	x	x	?
 オレンのみ	x	x	x	-	-	x	x	?
 おんみつマント	x	x	x	-	-	n/a	n/a	?
 かいがらのすず	x	x	x	-	-	n/a	n/a	?
@@ -36,7 +36,7 @@
 グランドコート	x	x	-	-	-	n/a	n/a	?
 クリアチャーム	x	x	x	x	-	n/a	n/a	?
 くろいてっきゅう	x	x	x	-	-	n/a	n/a	?
-くろいヘドロ	x	x	x	-	-	-	-	?
+くろいヘドロ	x	x	x	-	-	x	x	?
 こうかくレンズ	x	x	x	-	-	n/a	n/a	?
 こうこうのしっぽ	x	x	x	-	-	n/a	n/a	?
 こころのしずく	x	x	x	x	-	n/a	n/a	?
@@ -68,7 +68,7 @@
 だっしゅつボタン	x	x	x	x	-	n/a	n/a	?
 たつじんのおび	x	x	x	-	-	n/a	n/a	?
 たべのこし	x	x	x	x	-	x	x	?
-タラプのみ	x	x	x	-	-	-	-	?
+タラプのみ	x	x	x	-	-	x	x	?
 チーゴのみ	x	x	x	-	-	n/a	n/a	?
 チイラのみ	x	x	x	-	-	n/a	n/a	?
 ちからのハチマキ	x	x	x	-	-	n/a	n/a	?

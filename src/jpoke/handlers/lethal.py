@@ -136,9 +136,60 @@ def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, v=10, threshold_rate=1/2, heal_with="item", consume=True)
 
 
+def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """くろいヘドロ: どくタイプは1/16回復、それ以外は1/16ダメージ。"""
+    if "どく" in ctx.defender.types:
+        return _heal(hp_dist, ctx.defender, r=1/16)
+    # 1/16ダメージ（最低1、HP は 0 未満にならない）
+    amount = max(1, int(ctx.defender.max_hp / 16))
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        new_state = State(
+            max(0, state.value - amount),
+            ability_enabled=state.ability_enabled,
+            item_enabled=state.item_enabled,
+        )
+        new_dist[new_state] += freq
+    return dict(new_dist)
+
+
 def たべのこし_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """たべのこし: max_hp の 1/16 回復する。"""
     return _heal(hp_dist, ctx.defender, r=1/16)
+
+
+def タラプのみ_boost_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """タラプのみ: 特殊技を受けた直後にとくぼう+1して消費する。
+
+    とくぼうランクが+6のとき、またはitem_enabledがFalseのときは発動しない。
+    """
+    if ctx.move.category != "special":
+        return hp_dist
+
+    # item_enabled=True の state があるか確認
+    if not any(state.item_enabled for state in hp_dist):
+        return hp_dist
+
+    # とくぼうランクが最大なら発動しない（消費もしない）
+    if ctx.defender.rank["spd"] >= 6:
+        return hp_dist
+
+    # とくぼうランクを+1（一度だけ）
+    ctx.defender.rank["spd"] = min(6, ctx.defender.rank["spd"] + 1)
+
+    # item_enabled=True の state を消費済みに更新して新しい StateDist を返す
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        if state.item_enabled:
+            new_state = State(
+                value=state.value,
+                ability_enabled=state.ability_enabled,
+                item_enabled=False,
+            )
+            new_dist[new_state] += freq
+        else:
+            new_dist[state] += freq
+    return dict(new_dist)
 
 
 def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
