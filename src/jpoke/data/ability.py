@@ -20,11 +20,11 @@ def common_setup():
 ABILITIES: dict[str, AbilityData] = {
     "": AbilityData(name=""),
     "ARシステム": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ARシステム_apply_type,
@@ -37,12 +37,12 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "アイスフェイス": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "mold_breaker_ignorable",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.アイスフェイス_block_physical,
@@ -78,9 +78,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "あついしぼう": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.あついしぼう_reduce_fire_ice,
@@ -105,9 +105,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "あまのじゃく": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.あまのじゃく_reverse_stat,
@@ -145,9 +145,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "アロマベール": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.アロマベール_prevent_volatile,
@@ -206,9 +206,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "いやしのこころ": AbilityData(),
     "イリュージョン": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ]
+        }
     ),
     "いろめがね": AbilityData(
         handlers={
@@ -227,11 +227,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "うのミサイル": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_MOVE_END: h.AbilityHandler(
                 h.うのミサイル_load_prey,
@@ -289,9 +289,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "おうごんのからだ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.おうごんのからだ_block_status_move,
@@ -309,10 +309,10 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "おもかげやどし": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.おもかげやどし_boost_stat,
@@ -362,9 +362,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "オーラブレイク": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.announce_ability_triggered,
@@ -377,9 +377,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "かいりきバサミ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.かいりきバサミ_block_A_drop,
@@ -388,10 +388,10 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "かがくへんかガス": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: [
                 h.AbilityHandler(
@@ -428,9 +428,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "かぜのり": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.かぜのり_absorb_wind,
@@ -483,7 +483,7 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "かちき": AbilityData(
-        flags=[],
+        flags=set(),
         handlers={
             Event.ON_MODIFY_STAT: h.AbilityHandler(
                 h.かちき_boost_spa_on_stat_drop,
@@ -492,9 +492,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "カブトアーマー": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_CRITICAL_RATE: h.AbilityHandler(
                 h.カブトアーマー_block_crit,
@@ -523,14 +523,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "かわりもの": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ]
+        }
     ),
     "かんそうはだ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.かんそうはだ_absorb_water,
@@ -560,9 +560,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "かんろなミツ": AbilityData(
-        flags=[
+        flags={
             "per_battle_once"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.かんろなミツ_lower_foe_evasion,
@@ -579,9 +579,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "がんじょう": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.がんじょう_survive_lethal,
@@ -602,8 +602,7 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ききかいひ": AbilityData(
-        flags=[
-        ],
+        flags=set(),
         handlers={
             Event.ON_HP_CHANGED: h.AbilityHandler(
                 h.ききかいひ_switch_on_half_hp,
@@ -633,9 +632,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "きゅうばん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_TRY_BLOW: h.AbilityHandler(
                 h.きゅうばん_block_blow,
@@ -654,9 +653,9 @@ ABILITIES: dict[str, AbilityData] = {
     "きょうえん": AbilityData(),
     "きょうせい": AbilityData(),
     "きよめのしお": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.きよめのしお_prevent_ailment,
@@ -714,11 +713,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぎょぐん": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ぎょぐん_enter_school_form,
@@ -742,9 +741,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "クォークチャージ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
@@ -776,9 +775,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "くさのけがわ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
                 h.くさのけがわ_boost_B,
@@ -796,9 +795,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "クリアボディ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.クリアボディ_block_stat_drop,
@@ -831,9 +830,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "こおりのりんぷん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.こおりのりんぷん_reduce_special_damage,
@@ -842,9 +841,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "こだいかっせい": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
@@ -889,9 +888,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "こんがりボディ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.こんがりボディ_absorb_fire,
@@ -974,9 +973,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "シェルアーマー": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_CRITICAL_RATE: h.AbilityHandler(
                 h.カブトアーマー_block_crit,
@@ -993,9 +992,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "しめりけ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_TRY_MOVE_1: [
                 h.AbilityHandler(
@@ -1026,14 +1025,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "しれいとう": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ]
+        }
     ),
     "しろいけむり": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.クリアボディ_block_stat_drop,
@@ -1050,9 +1049,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "しんがん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.AbilityHandler(
                 h.しんがん_ghost_immune_bypass,
@@ -1109,9 +1108,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "じゅうなん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_paralysis_ailment,
@@ -1129,9 +1128,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "じょおうのいげん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_TRY_MOVE_1: h.AbilityHandler(
                 h.じょおうのいげん_block_priority,
@@ -1149,10 +1148,10 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "じんばいったい": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.announce_ability_triggered,
@@ -1173,9 +1172,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "すいほう": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_ATK_MODIFIER: [
                 h.AbilityHandler(
@@ -1190,9 +1189,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "スイートベール": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_sleep_ailment,
@@ -1267,9 +1266,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "すながくれ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
                 h.すながくれ_reduce_accuracy,
@@ -1318,9 +1317,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "するどいめ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.するどいめ_block_ACC_drop,
@@ -1350,11 +1349,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "スワームチェンジ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_TURN_END: h.AbilityHandler(
                 h.スワームチェンジ_form_change_on_low_hp,
@@ -1372,9 +1371,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "せいしんりょく": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.せいしんりょく_prevent_volatile,
@@ -1395,11 +1394,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぜったいねむり": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ぜったいねむり_switch_in,
@@ -1408,9 +1407,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "ゼロフォーミング": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ],
+        },
         handlers={
             Event.ON_TERASTALLIZE: h.AbilityHandler(
                 h.ゼロフォーミング_clear_field,
@@ -1419,9 +1418,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "そうしょく": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.そうしょく_absorb_grass,
@@ -1450,9 +1449,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "たいねつ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.たいねつ_reduce_fire,
@@ -1462,9 +1461,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "たまひろい": AbilityData(),
     "たんじゅん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.たんじゅん_double_stat,
@@ -1506,11 +1505,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ダルマモード": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_TURN_END: h.AbilityHandler(
                 h.ダルマモード_update_form,
@@ -1524,9 +1523,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ダークオーラ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable",
-        ],
+        },
         handlers={
             Event.ON_CALC_POWER_MODIFIER: [
                 h.AbilityHandler(
@@ -1561,9 +1560,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ちくでん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ちくでん_absorb_electric,
@@ -1572,9 +1571,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ちどりあし": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
                 h.ちどりあし_reduce_accuracy,
@@ -1583,9 +1582,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ちょすい": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ちょすい_absorb_water,
@@ -1594,9 +1593,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "テイルアーマー": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_TRY_MOVE_1: h.AbilityHandler(
                 h.じょおうのいげん_block_priority,
@@ -1638,10 +1637,10 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "テラスシェル": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "mold_breaker_ignorable",
-        ],
+        },
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.AbilityHandler(
                 h.テラスシェル_overwrite_type_modifier,
@@ -1650,11 +1649,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "テラスチェンジ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.テラスチェンジ_form_change_on_entry,
@@ -1680,14 +1679,14 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "テレパシー": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ]
+        }
     ),
     "てんきや": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.てんきや_sync_form,
@@ -1701,9 +1700,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "てんねん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_ATK_RANK_MODIFIER: h.AbilityHandler(
                 h.てんねん_ignore_rank,
@@ -1744,9 +1743,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "でんきエンジン": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.でんきエンジン_absorb_electric,
@@ -1807,9 +1806,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "トレース": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.トレース_copy_ability,
@@ -1818,9 +1817,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "どくくぐつ": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ],
+        },
         handlers={
             Event.ON_APPLY_AILMENT: h.AbilityHandler(
                 h.どくくぐつ_confuse_on_poison,
@@ -1870,9 +1869,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "どしょく": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.どしょく_absorb_ground,
@@ -1893,9 +1892,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "どんかん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
@@ -1947,9 +1946,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ねつこうかん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_burn_ailment,
@@ -1970,9 +1969,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ねんちゃく": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CHECK_ITEM_CHANGE: h.AbilityHandler(
                 h.ねんちゃく_prevent_item_change,
@@ -2060,9 +2059,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "はっこう": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.はっこう_block_acc_drop,
@@ -2071,9 +2070,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "はとむね": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.はとむね_block_B_drop,
@@ -2124,9 +2123,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "はらぺこスイッチ": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.はらぺこスイッチ_on_switch_out,
@@ -2160,9 +2159,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "はんすう": AbilityData(),
     "ハードロック": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.ハードロック_reduce_effective,
@@ -2171,13 +2170,13 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ばけのかわ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "per_battle_once",
             "mold_breaker_ignorable",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.AbilityHandler(
                 h.ばけのかわ_block_damage,
@@ -2188,11 +2187,11 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "バッテリー": AbilityData(),
     "バトルスイッチ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_TRY_ACTION: h.AbilityHandler(
                 h.バトルスイッチ_change_form,
@@ -2214,9 +2213,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ばんけん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.ばんけん_boost_atk_on_intimidate,
@@ -2229,9 +2228,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "パステルベール": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_poison_ailment,
@@ -2241,9 +2240,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "パワースポット": AbilityData(),
     "パンクロック": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
                 h.パンクロック_modify_power,
@@ -2292,9 +2291,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ひらいしん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ひらいしん_absorb_electric,
@@ -2311,9 +2310,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ビビッドボディ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_TRY_MOVE_1: h.AbilityHandler(
                 h.じょおうのいげん_block_priority,
@@ -2355,9 +2354,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ファーコート": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
                 h.ファーコート_boost_B,
@@ -2366,9 +2365,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "フィルター": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.ハードロック_reduce_effective,
@@ -2390,9 +2389,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "フェアリーオーラ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable",
-        ],
+        },
         handlers={
             Event.ON_CALC_POWER_MODIFIER: [
                 h.AbilityHandler(
@@ -2447,9 +2446,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ふくつのたて": AbilityData(
-        flags=[
+        flags={
             "per_battle_once"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ふくつのたて_boost_B,
@@ -2462,9 +2461,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ふしぎなうろこ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.AbilityHandler(
                 h.ふしぎなうろこ_boost_B,
@@ -2473,7 +2472,7 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ふしぎなまもり": AbilityData(
-        flags=["mold_breaker_ignorable"],
+        flags={"mold_breaker_ignorable"},
         handlers={
             Event.ON_TRY_MOVE_1: h.AbilityHandler(
                 h.ふしぎなまもり_block_non_effective,
@@ -2484,9 +2483,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "ふしょく": AbilityData(),
     "ふとうのけん": AbilityData(
-        flags=[
+        flags={
             "per_battle_once"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ふとうのけん_boost_A,
@@ -2499,9 +2498,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ふみん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_sleep_ailment,
@@ -2514,9 +2513,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ふゆう": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CHECK_FLOATING: h.AbilityHandler(
                 h.ふゆう_float,
@@ -2525,10 +2524,10 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "フラワーギフト": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "mold_breaker_ignorable",
-        ],
+        },
         handlers={
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.フラワーギフト_modify_atk,
@@ -2541,9 +2540,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "フラワーベール": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.フラワーベール_prevent_ailment,
@@ -2568,9 +2567,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "フレンドガード": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ]
+        }
     ),
     "ぶきよう": AbilityData(
         handlers={
@@ -2643,9 +2642,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ヘヴィメタル": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ]
+        }
     ),
     "ほうし": AbilityData(
         handlers={
@@ -2674,9 +2673,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぼうおん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうおん_block_sound,
@@ -2685,9 +2684,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぼうじん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうじん_block_powder,
@@ -2700,9 +2699,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ぼうだん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.ぼうだん_block_bullet,
@@ -2719,11 +2718,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "マイティチェンジ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_OUT: h.AbilityHandler(
                 h.マイティチェンジ_change_form,
@@ -2733,9 +2732,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "マイナス": AbilityData(),
     "マイペース": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.マイペース_prevent_volatile,
@@ -2744,9 +2743,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "マグマのよろい": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_freeze_ailment,
@@ -2779,9 +2778,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "マジックミラー": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CHECK_REFLECT: h.AbilityHandler(
                 h.マジックミラー_reflect,
@@ -2791,9 +2790,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "マルチスケイル": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.マルチスケイル_reduce_damage,
@@ -2802,11 +2801,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "マルチタイプ": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.マルチタイプ_apply_type,
@@ -2844,9 +2843,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "みずのベール": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_burn_ailment,
@@ -2856,9 +2855,9 @@ ABILITIES: dict[str, AbilityData] = {
     ),
     "みつあつめ": AbilityData(),
     "ミラクルスキン": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
                 h.ミラクルスキン_reduce_accuracy,
@@ -2867,9 +2866,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ミラーアーマー": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.ミラーアーマー_reflect_stat_drop,
@@ -2936,9 +2935,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "めんえき": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_poison_ailment,
@@ -2964,9 +2963,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "もふもふ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.もふもふ_modify_damage,
@@ -2975,9 +2974,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "もらいび": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.もらいび_init_state,
@@ -3002,9 +3001,9 @@ ABILITIES: dict[str, AbilityData] = {
         },
     ),
     "やるき": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_sleep_ailment,
@@ -3033,9 +3032,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ゆきがくれ": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_ACCURACY: h.AbilityHandler(
                 h.ゆきがくれ_reduce_accuracy,
@@ -3080,9 +3079,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "よびみず": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
                 h.よびみず_absorb_water,
@@ -3099,9 +3098,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "ライトメタル": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ]
+        }
     ),
     "リベロ": AbilityData(
         handlers={
@@ -3113,11 +3112,11 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "リミットシールド": AbilityData(
-        flags=[
+        flags={
             "uncopyable",
             "protected",
             "gas_proof",
-        ],
+        },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.リミットシールド_enter_meteor_form,
@@ -3148,9 +3147,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "りんぷん": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_MODIFY_SECONDARY_CHANCE: h.AbilityHandler(
                 h.りんぷん_block_secondary_chance,
@@ -3159,9 +3158,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "リーフガード": AbilityData(
-        flags=[
+        flags={
             "mold_breaker_ignorable"
-        ],
+        },
         handlers={
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.リーフガード_prevent_ailment,
@@ -3170,9 +3169,9 @@ ABILITIES: dict[str, AbilityData] = {
         }
     ),
     "レシーバー": AbilityData(
-        flags=[
+        flags={
             "uncopyable"
-        ]
+        }
     ),
     "わざわいのうつわ": AbilityData(
         handlers={

@@ -24,7 +24,7 @@ class PokemonData:
 
 @dataclass
 class AbilityData:
-    flags: list[AbilityFlag] = field(default_factory=list)  # TODO: set[AbilityFlag]に変更する
+    flags: set[AbilityFlag] = field(default_factory=set)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handler: LethalHandler | None = None
     name: str = ""
@@ -60,7 +60,7 @@ class MoveData:
     critical_rank: int = 0
     target: MoveTarget = "foe"
     multi_hit: MultiHit | None = None
-    flags: list[MoveFlag] = field(default_factory=list)  # TODO: set[MoveFlag]にする
+    flags: set[MoveFlag] = field(default_factory=set)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handler: LethalHandler | None = None
     name: str = ""
