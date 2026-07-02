@@ -121,9 +121,60 @@ def イアのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def _type_resist_berry(battle: Battle, ctx: LethalContext, hp_dist: StateDist,
+                       type_: str, super_effective_only: bool = True) -> StateDist:
+    """タイプ半減きのみの共通処理。
+
+    通常ハンドラ（ON_CALC_DAMAGE_MODIFIER）の `_modify_super_effective_damage` は
+    `calc_def_type_modifier(ctx) > 1`（免疫以外で発火）なので、タイプ一致かつ非免疫であれば
+    calc_damages 内でダメージを半減している。よってこのlethalハンドラでは
+    ctx.damage_dist は変更せず、アイテム消費と item_enabled 更新のみ行う。
+
+    super_effective_only=True  : 17種の通常タイプ半減きのみ。効果バツグン時のみ発動する。
+    super_effective_only=False : ホズのみ用。ノーマルタイプ技全般で発動する
+                                 （ノーマルは抜群にならないため super_effective 判定を省く）。
+    """
+    if ctx.move.type != type_:
+        return hp_dist
+    if super_effective_only and (battle.damage_calculator.def_type_modifier or 0) <= 4096:
+        return hp_dist
+    if not any(state.item_enabled for state in hp_dist):
+        return hp_dist
+
+    # バトル状態のアイテムを消費して次回の calc_damages で重複適用しないようにする
+    battle.item_manager.consume_item(ctx.defender)
+
+    # StateDist の item_enabled を False に更新する
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        if state.item_enabled:
+            new_state = State(state.value,
+                              ability_enabled=state.ability_enabled,
+                              item_enabled=False)
+            new_dist[new_state] += freq
+        else:
+            new_dist[state] += freq
+    return dict(new_dist)
+
+
+def イトケのみ_resist_water(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """イトケのみ: みずタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "みず")
+
+
 def ウイのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ウイのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def ウタンのみ_resist_psychic(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ウタンのみ: エスパータイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "エスパー")
+
+
+def オッカのみ_resist_fire(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """オッカのみ: ほのおタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "ほのお")
 
 
 def オボンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -134,6 +185,11 @@ def オボンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
 def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オレンのみ: HP が 1/2 以下になると 10 固定回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, v=10, threshold_rate=1/2, heal_with="item", consume=True)
+
+
+def カシブのみ_resist_ghost(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """カシブのみ: ゴーストタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "ゴースト")
 
 
 def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -151,6 +207,16 @@ def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_
         )
         new_dist[new_state] += freq
     return dict(new_dist)
+
+
+def シュカのみ_resist_ground(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """シュカのみ: じめんタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "じめん")
+
+
+def ソクノのみ_resist_electric(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ソクノのみ: でんきタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "でんき")
 
 
 def たべのこし_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -192,6 +258,21 @@ def タラプのみ_boost_spd(battle: Battle, ctx: LethalContext, hp_dist: State
     return dict(new_dist)
 
 
+def タンガのみ_resist_bug(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """タンガのみ: むしタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "むし")
+
+
+def ナモのみ_resist_dark(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ナモのみ: あくタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "あく")
+
+
+def ハバンのみ_resist_dragon(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ハバンのみ: ドラゴンタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "ドラゴン")
+
+
 def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ばけのかわ: 1回だけダメージを無効化する。"""
     new_dist: StateDist = defaultdict(int)
@@ -211,14 +292,29 @@ def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: St
     return dict(new_dist)
 
 
+def バコウのみ_resist_flying(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """バコウのみ: ひこうタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "ひこう")
+
+
 def バンジのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """バンジのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def ビアーのみ_resist_poison(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ビアーのみ: どくタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "どく")
+
+
 def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """フィラのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ホズのみ: ノーマルタイプの技のダメージを1/2にして消費する（抜群不要）。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "ノーマル", super_effective_only=False)
 
 
 def マゴのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -231,3 +327,33 @@ def メテオビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: St
     if ctx.move_secondary:
         ctx.attacker.rank["spa"] += 1
     return hp_dist
+
+
+def ヤチェのみ_resist_ice(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ヤチェのみ: こおりタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "こおり")
+
+
+def ヨプのみ_resist_fighting(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ヨプのみ: かくとうタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "かくとう")
+
+
+def ヨロギのみ_resist_rock(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ヨロギのみ: いわタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "いわ")
+
+
+def リリバのみ_resist_steel(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """リリバのみ: はがねタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "はがね")
+
+
+def リンドのみ_resist_grass(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """リンドのみ: くさタイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "くさ")
+
+
+def ロゼルのみ_resist_fairy(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ロゼルのみ: フェアリータイプの効果バツグン技のダメージを1/2にして消費する。"""
+    return _type_resist_berry(battle, ctx, hp_dist, "フェアリー")

@@ -9,6 +9,18 @@
 2. A150 ガブリアス -> H166/B115 カイリュー 特性マルチスケイル
 2.1 ドラゴンテール 45~54 (確定2発)
 2.2 スケイルショット 19~24/hit (4hit: 乱数1発 0.01%, 5hit: 確定1発)
+
+3. タイプ半減きのみ
+3.1 A150 ガブリアス -> H140/B80 エーフィ（エスパー）: かみくだく(あく2倍) 114~136
+    ナモのみ適用後1発目: 57~68, 2発目: 114~136
+3.2 A150 ガブリアス -> H166/B115 カイリュー: たいあたり(ノーマル等倍) 20~24
+    ホズのみ適用後1発目: 10~12, 2発目: 20~24
+3.3 A150 ガブリアス -> H45/B40 フシギダネ（くさ/どく）: かえんほうしゃ(ほのお2倍) 80~96
+    オッカのみ適用後1発目: 40~48, 2発目: 80~96
+3.4 A150 ガブリアス -> H41/B55 ミニリュウ（ドラゴン）: こおりのつぶて(こおり2倍) 70~84
+    ヤチェのみ適用後1発目: 35~42, 2発目: 70~84
+3.5 A150 ガブリアス -> H41/B55 ミニリュウ（ドラゴン）: マジカルシャイン(フェアリー2倍) 88~104
+    ロゼルのみ適用後1発目: 44~52, 2発目: 88~104
 """
 import pytest
 
@@ -182,6 +194,29 @@ def test_くろいヘドロ_非どくタイプは毎ターンダメージ():
     )
 
 
+@pytest.mark.parametrize("item_name, move_name, defender_name, dmg1_min, dmg1_max, dmg2_min, dmg2_max", [
+    # オッカのみ（ほのお）: フシギダネ（くさ/どく） → ほのお2倍
+    ("オッカのみ", "かえんほうしゃ", "フシギダネ", 40, 48, 80, 96),
+    # ヤチェのみ（こおり）: ミニリュウ（ドラゴン） → こおり2倍
+    ("ヤチェのみ", "こおりのつぶて", "ミニリュウ", 35, 42, 70, 84),
+    # ロゼルのみ（フェアリー）: ミニリュウ（ドラゴン） → フェアリー2倍
+    ("ロゼルのみ", "マジカルシャイン", "ミニリュウ", 44, 52, 88, 104),
+])
+def test_タイプ半減きのみ_代表種(item_name, move_name, defender_name,
+                               dmg1_min, dmg1_max, dmg2_min, dmg2_max):
+    """タイプ半減きのみ: 効果抜群技の1発目が半減され、2発目は通常ダメージになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon(defender_name, item_name=item_name)],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move(move_name), max_attack=3)
+
+    assert results[0].min_damage == dmg1_min
+    assert results[0].max_damage == dmg1_max
+    assert results[1].min_damage == dmg2_min
+    assert results[1].max_damage == dmg2_max
+
+
 def test_たべのこし_ターン終了時に回復():
     """たべのこし所持時、ターン終了時に最大HPの1/16回復した状態が次の攻撃に引き継がれる"""
     with_item = t.start_battle(
@@ -238,6 +273,63 @@ def test_タラプのみ_特殊技受けた後とくぼう上昇():
     # 2発目: とくぼう+1 (D120→D180相当) でダメージ減少
     assert results[1].min_damage == 54
     assert results[1].max_damage == 66
+
+
+def test_ナモのみ_抜群ダメージ半減():
+    """ナモのみ: あく抜群技の1発目が半減され、2発目は通常ダメージになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("エーフィ", item_name="ナモのみ")],
+    )
+    # かみくだく（あく物理）: エーフィはエスパー単タイプ → あく2倍
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("かみくだく"), max_attack=3)
+
+    # 1発目: ナモのみで半減（57~68）
+    assert results[0].min_damage == 57
+    assert results[0].max_damage == 68
+    # 2発目以降: アイテム消費済みで通常ダメージ（114~136）
+    assert results[1].min_damage == 114
+    assert results[1].max_damage == 136
+
+
+def test_ナモのみ_非抜群では発動しない():
+    """ナモのみ: 効果バツグンでないあく技では lethal ハンドラが発動しない
+    （ただし通常ハンドラは発火し続けるため、非抜群時は全打でダメージが揃う）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カビゴン", item_name="ナモのみ")],
+    )
+    # かみくだく（あく）vs カビゴン（ノーマル）: あく vs ノーマル = 等倍
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("かみくだく"), max_attack=2)
+
+    # lethal ハンドラが発動しないため、1発目と2発目のダメージが同じ
+    assert results[0].min_damage == results[1].min_damage
+    assert results[0].max_damage == results[1].max_damage
+
+
+def test_ホズのみ_ノーマル技ダメージ半減():
+    """ホズのみ: ノーマルタイプ技のダメージが半減され（抜群不要）、2発目は通常ダメージになる"""
+    with_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="ホズのみ")],
+    )
+    without_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    move = Move("たいあたり")
+    r_with = t.calc_lethal(with_item, atk_idx=0, moves=move, max_attack=3)
+    r_without = t.calc_lethal(without_item, atk_idx=0, moves=move, max_attack=3)
+
+    # 1発目: ホズのみで半減（10~12）
+    assert r_with[0].min_damage == 10
+    assert r_with[0].max_damage == 12
+    # 2発目: アイテム消費済みで通常ダメージ（20~24）
+    assert r_with[1].min_damage == 20
+    assert r_with[1].max_damage == 24
+    # ホズのみなしと同じ通常ダメージ
+    assert r_with[1].min_damage == r_without[1].min_damage
+    assert r_with[1].max_damage == r_without[1].max_damage
 
 
 def test_マルチスケイル_ダメージ半減():

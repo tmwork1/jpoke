@@ -120,6 +120,12 @@ ITEMS: dict[str, ItemData] = {
                 h.イトケのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.イトケのみ_resist_water,
+                subject="defender",
+            )
         }
     ),
     "いどのめん": ItemData(
@@ -180,6 +186,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ウタンのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ウタンのみ_resist_psychic,
+                subject="defender",
+            )
         }
     ),
     "エレキシード": ItemData(
@@ -223,6 +235,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.オッカのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.オッカのみ_resist_fire,
+                subject="defender",
             )
         }
     ),
@@ -315,6 +333,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.カシブのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.カシブのみ_resist_ghost,
+                subject="defender",
             )
         }
     ),
@@ -723,6 +747,12 @@ ITEMS: dict[str, ItemData] = {
                 h.シュカのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.シュカのみ_resist_ground,
+                subject="defender",
+            )
         }
     ),
     "しらたま": ItemData(
@@ -877,6 +907,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ソクノのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ソクノのみ_resist_electric,
+                subject="defender",
+            )
         }
     ),
     "たつじんのおび": ItemData(
@@ -926,6 +962,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.タンガのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.タンガのみ_resist_bug,
+                subject="defender",
             )
         }
     ),
@@ -1162,6 +1204,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ナモのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ナモのみ_resist_dark,
+                subject="defender",
+            )
         }
     ),
     "ねばりのかぎづめ": ItemData(
@@ -1227,6 +1275,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ハバンのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ハバンのみ_resist_dragon,
+                subject="defender",
+            )
         }
     ),
     "バコウのみ": ItemData(
@@ -1235,6 +1289,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.バコウのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.バコウのみ_resist_flying,
+                subject="defender",
             )
         }
     ),
@@ -1324,6 +1384,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ビアーのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ビアーのみ_resist_poison,
+                subject="defender",
+            )
         }
     ),
     "ビビリだま": ItemData(
@@ -1404,6 +1470,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.ホズのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ホズのみ_resist_normal,
+                subject="defender",
             )
         }
     ),
@@ -1584,6 +1656,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ヤチェのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ヤチェのみ_resist_ice,
+                subject="defender",
+            )
         }
     ),
     "やわらかいすな": ItemData(
@@ -1620,6 +1698,12 @@ ITEMS: dict[str, ItemData] = {
                 h.ヨプのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ヨプのみ_resist_fighting,
+                subject="defender",
+            )
         }
     ),
     "ヨロギのみ": ItemData(
@@ -1628,6 +1712,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.ヨロギのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ヨロギのみ_resist_rock,
+                subject="defender",
             )
         }
     ),
@@ -1681,6 +1771,12 @@ ITEMS: dict[str, ItemData] = {
                 h.リリバのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.リリバのみ_resist_steel,
+                subject="defender",
+            )
         }
     ),
     "リンドのみ": ItemData(
@@ -1690,8 +1786,13 @@ ITEMS: dict[str, ItemData] = {
                 h.リンドのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.リンドのみ_resist_grass,
+                subject="defender",
+            )
         }
-        # handlers=_type_damage_handler("くさ", 2048/4096)
     ),
     "ルームサービス": ItemData(
         fling_power=100,
@@ -1726,6 +1827,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.ItemHandler(
                 h.ロゼルのみ_modify_super_effective_damage,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
+                func=l.ロゼルのみ_resist_fairy,
+                subject="defender",
             )
         }
     ),
