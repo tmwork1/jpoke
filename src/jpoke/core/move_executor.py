@@ -459,6 +459,7 @@ class MoveExecutor:
         # これにより、ダメージを与えない状態変化技（でんじはなど）も同様のフローで処理できる。
         result = self._events.emit(Event.ON_STATUS_HIT, ctx, True)
         if not result:
+            self.move_success = False
             self.battle.add_event_log(
                 ctx.attacker,
                 LogCode.MOVE_FAILED,
