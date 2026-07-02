@@ -5,7 +5,7 @@ BattlePhase = Literal["", "selection", "action", "switch"]
 CommandType = Literal["any", "move", "switch"]
 
 
-LethalSubject = Literal["any", "attacker", "defender"]
+LethalSubject = Literal["attacker", "defender"]
 
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",
@@ -108,6 +108,7 @@ MoveFlag = Literal[
     "recoil",  # 反動技。すてみ等の対象判定に使う。
     "slash",  # きる・つるぎ系。きれあじ等の対象判定に使う。
     "sound",  # 音技。ぼうおん等の対象判定に使う。
+    "thaw",  # こおり状態で使用可能な技。こおり状態の解除判定に使う。
     "wind",  # 風技。かぜのり等の対象判定に使う。
     "minimize",  # ちいさくなる対象との相互作用を持つ技。
     "explosion",  # 爆発技。しめりけ等の対象判定に使う。

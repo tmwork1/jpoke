@@ -86,6 +86,12 @@ ITEMS: dict[str, ItemData] = {
                 h.heal_on_quarter_hp,
                 subject_spec="target:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
+                func=l.イアのみ_heal,
+                subject="defender",
+            )
         }
     ),
     "いかさまダイス": ItemData(
@@ -158,6 +164,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_HP_CHANGED: h.ItemHandler(
                 h.heal_on_quarter_hp,
                 subject_spec="target:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
+                func=l.ウイのみ_heal,
+                subject="defender",
             )
         }
     ),
@@ -236,6 +248,12 @@ ITEMS: dict[str, ItemData] = {
                 h.オレンのみ_heal_on_half_hp,
                 subject_spec="target:self",
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
+                func=l.オレンのみ_heal,
+                subject="defender",
+            )
         }
     ),
     "おんみつマント": ItemData(
@@ -1214,6 +1232,12 @@ ITEMS: dict[str, ItemData] = {
                 h.heal_on_quarter_hp,
                 subject_spec="target:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
+                func=l.バンジのみ_heal,
+                subject="defender",
+            )
         }
     ),
     "ばんのうがさ": ItemData(
@@ -1314,6 +1338,12 @@ ITEMS: dict[str, ItemData] = {
                 h.heal_on_quarter_hp,
                 subject_spec="target:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
+                func=l.フィラのみ_heal,
+                subject="defender",
+            )
         }
     ),
     "ふうせん": ItemData(
@@ -1401,6 +1431,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_HP_CHANGED: h.ItemHandler(
                 h.heal_on_quarter_hp,
                 subject_spec="target:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_EVERY_EVENT: LethalHandler(
+                func=l.マゴのみ_heal,
+                subject="defender",
             )
         }
     ),

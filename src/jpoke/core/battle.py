@@ -251,7 +251,7 @@ class Battle:
                     max_attack: int = 10) -> list[LethalResult]:
         return lethal.calc_lethal(
             self, attacker, moves, critical=critical,
-            secondary=secondary, max_attack=max_attack
+            move_secondary=secondary, max_attack=max_attack
         )
 
     @property

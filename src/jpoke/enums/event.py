@@ -9,9 +9,10 @@ from enum import Enum, auto
 class LethalEvent(Enum):
     """致死率計算専用の制御イベント。"""
     ON_BEFORE_MOVE = auto()
+    ON_BEFORE_HIT = auto()
     ON_HIT = auto()
-    ON_MOVE_SECONDARY = auto()
     ON_TURN_END = auto()
+    ON_EVERY_EVENT = auto()  # イベント発火後に発火するイベント (きのみによる回復など)
 
 
 class DomainEvent(Enum):

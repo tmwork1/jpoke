@@ -116,9 +116,24 @@ def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: State
     return dict(new_dist)
 
 
+def イアのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """イアのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
+    return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def ウイのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ウイのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
+    return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
 def オボンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オボンのみ: HP が 1/2 以下になると max_hp の 1/4 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/4, threshold_rate=1/2, heal_with="item", consume=True)
+
+
+def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """オレンのみ: HP が 1/2 以下になると 10 固定回復し、消費する。"""
+    return _heal_at_pinch(hp_dist, ctx.defender, v=10, threshold_rate=1/2, heal_with="item", consume=True)
 
 
 def たべのこし_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -143,6 +158,21 @@ def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: St
             # ばけのかわが無効な状態はそのまま維持
             new_dist[state] += freq
     return dict(new_dist)
+
+
+def バンジのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """バンジのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
+    return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """フィラのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
+    return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def マゴのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """マゴのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
+    return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
 def メテオビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

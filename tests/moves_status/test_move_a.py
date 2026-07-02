@@ -343,6 +343,7 @@ def test_いやしのすず_状態異常を回復する(ailment_name):
     )
     attacker = battle.actives[0]
     assert attacker.ailment.is_active
+    battle.test_option.trigger_ailment = False
     t.run_move(battle, 0)
 
     assert not attacker.ailment.is_active

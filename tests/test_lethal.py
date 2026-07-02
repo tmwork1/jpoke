@@ -68,6 +68,29 @@ def test_アッキのみ_特殊技では発動しない():
     assert results[0].max_damage == results[1].max_damage
 
 
+def test_イアのみ_HP4分の1以下で回復():
+    """イアのみ所持時、HP が 1/4 以下になると max_hp の 1/3 回復する。
+
+    たいあたり(20-24)を7回撃つと、最小ダメージ経路では7発目で HP が 1/4 以下に落ちて回復する。
+    アイテムなしとの最大 HP 差が int(max_hp * 1/3) = 55 になることを確認する。
+    """
+    with_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="イアのみ")],
+    )
+    without_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=7)
+    results_without = t.calc_lethal(without_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=7)
+
+    max_hp = with_item.actives[1].max_hp  # 166
+    heal = max(1, int(max_hp * 1 / 3))   # 55
+    assert max(results_with[-1].hp_counter) - max(results_without[-1].hp_counter) == heal
+
+
 def test_オボンのみ_スケイルショット5発_乱数1発():
     """オボンのみ所持時、多段技はヒットごとにHP半分以下判定・回復が発生するため
     5発目終了時点でも乱数1発 (80.31%) になる"""
@@ -94,6 +117,27 @@ def test_オボンのみ_乱数2発():
     assert results[0].max_damage == 108
     assert results[-1].n_attack == 2
     assert results[-1].lethal_probability == pytest.approx(0.0585, abs=0.001)
+
+
+def test_オレンのみ_HP2分の1以下で10回復():
+    """オレンのみ所持時、HP が 1/2 以下になると 10 固定回復する。
+
+    ドラゴンテール(90-108)を1回撃つと HP が 1/2 以下になり、全状態で回復が発動する。
+    アイテムなしとの最大 HP 差が 10 になることを確認する。
+    """
+    with_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="オレンのみ")],
+    )
+    without_item = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)])
+    results_without = t.calc_lethal(without_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)])
+
+    assert max(results_with[0].hp_counter) - max(results_without[0].hp_counter) == 10
 
 
 def test_たべのこし_ターン終了時に回復():

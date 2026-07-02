@@ -3,10 +3,14 @@
 Note:
     このモジュール内の技定義はMOVES辞書内で五十音順に配置されています。
 """
-from jpoke.enums import Event
+from jpoke.enums import Event, LethalEvent
+from jpoke.core import LethalHandler
+
 from jpoke.handlers import move as h
 from jpoke.handlers import move_attack as ha
 from jpoke.handlers import move_status as hs
+from jpoke.handlers import lethal as l
+
 from .models import MoveData
 
 
@@ -2720,7 +2724,6 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=10,
         target="field",
-        flags={"non_yubi"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.さむいギャグ_activate_weather_and_pivot,
@@ -7869,6 +7872,11 @@ MOVES: dict[str, MoveData] = {
                     ha.メテオビーム_charge,
                 ),
             ],
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_MOVE: LethalHandler(
+                l.メテオビーム_boost_spa,
+            )
         }
     ),
     "メロメロ": MoveData(

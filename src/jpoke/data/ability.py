@@ -4,9 +4,13 @@ Note:
     このモジュール内の特性定義はABILITIES辞書内で五十音順に配置されています。
 """
 
-from jpoke.enums import DomainEvent, Event
-from jpoke.handlers import ability as h, ability_paradox as paradox
-from jpoke.data.models import AbilityData
+from jpoke.enums import DomainEvent, Event, LethalEvent
+from jpoke.core import LethalHandler
+from jpoke.handlers import ability as h
+from jpoke.handlers import ability_paradox as paradox
+from jpoke.handlers import lethal as l
+
+from .models import AbilityData
 
 
 def common_setup():
@@ -2180,6 +2184,12 @@ ABILITIES: dict[str, AbilityData] = {
                 h.ばけのかわ_block_damage,
                 subject_spec="defender:self",
                 priority=10,
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(
+                func=l.ばけのかわ_block_damage,
+                subject="defender",
             )
         },
     ),
