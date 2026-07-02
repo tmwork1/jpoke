@@ -6,13 +6,13 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "set[MoveFlag]にする",
     "防御側をカイリューにする",
     "多段技 + マルチスケイルの場合、1ヒット目のみマルチスケイルが発動することをテストする",
     "オボンのみがあればスケイルショット5発で乱数1発 (80.31%) になることをテストする"
   ],
   "completed": [
-    "set[AbilityFlag]に変更する"
+    "set[AbilityFlag]に変更する",
+    "set[MoveFlag]にする"
   ],
   "failed": []
 }

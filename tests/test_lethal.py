@@ -31,22 +31,23 @@ def test_オボンのみ_乱数2発():
 
 
 def test_たべのこし_ターン終了時に回復():
-    # TODO : 防御側をカイリューにする
     """たべのこし所持時、ターン終了時に最大HPの1/16回復した状態が次の攻撃に引き継がれる"""
     with_item = t.start_battle(
         team0=[Pokemon("ガブリアス")],
-        team1=[Pokemon("カバルドン", item_name="たべのこし")]
+        team1=[Pokemon("カイリュー", item_name="たべのこし")]
     )
     without_item = t.start_battle(
         team0=[Pokemon("ガブリアス")],
-        team1=[Pokemon("カバルドン")],
+        team1=[Pokemon("カイリュー")],
     )
 
+    # ドラゴンテールは確定2発でカイリューを倒すため、たべのこしの回復量を
+    # 検証できるよう威力の低いたいあたりで2発目までHPが残る状況を作る
     results_with_item = t.calc_lethal(
-        with_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)], max_attack=2,
+        with_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2,
     )
     results_without_item = t.calc_lethal(
-        without_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)], max_attack=2,
+        without_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2,
     )
 
     # たべのこしの回復分（最大HPの1/16）だけ2発目のHP分布が高くなる

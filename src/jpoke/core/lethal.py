@@ -1,15 +1,15 @@
 """致死率計算ロジックを提供するモジュール。
 
-技・アイテム・揮発状態などの効果をHP分布（LethalDist）として扱い、
+技・アイテム・揮発状態などの効果をHP分布（StateDist）として扱い、
 複数回攻撃後の確定数と致死率を求める。
 
-分布そのものの演算（LethalState / LethalDist / to_dist など）は
+分布そのものの演算（LethalState / StateDist / to_dist など）は
 Battle に依存しないため `jpoke.utils.lethal_dist` に置く。
 このモジュールは Battle/Pokemon/Move と結びついた計算ループを担う。
 
 主要な型:
   LethalState  — HP・特性/道具の有効フラグをまとめた不変値（utils.lethal_dist）
-  LethalDist   — LethalState → 出現頻度 の辞書（確率分布、utils.lethal_dist）
+  StateDist   — LethalState → 出現頻度 の辞書（確率分布、utils.lethal_dist）
   LethalResult — 1ヒット分の計算結果（HP分布・ダメージ分布・致死率など）
 """
 
@@ -23,40 +23,43 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from collections import defaultdict
 
-from jpoke.types import Stat, AilmentName, LethalEvent, LethalSubject
-from jpoke.utils.lethal_dist import LethalDist, to_dist, _check_hp, subtract_dist
+from jpoke.types import Stat, AilmentName, LethalSubject
+from jpoke.enums import LethalEvent
+from jpoke.utils.lethal_dist import StateDist, State, to_dist, to_dist, subtract_dist
 
 
 @dataclass(frozen=True)
 class LethalHandler:
     """致死率計算専用のハンドラ定義。
 
-    通常の Handler とは独立した仕組みで、LethalDist を受け取り
-    加工した LethalDist を返す関数 func を保持する。
+    通常の Handler とは独立した仕組みで、StateDist を受け取り
+    加工した StateDist を返す関数 func を保持する。
 
     Attributes:
-        func: (battle, ctx, hp_dist) -> LethalDist を返す関数
-        event: 発火イベント種別（"on_damage" / "on_move_secondary" / "on_turn_end" / "any"）
+        func: (battle, ctx, hp_dist) -> StateDist を返す関数。ダメージ分布の変更は `ctx.damage_dist` を更新すること。
         subject: 対象ロール（"attacker" / "defender" / "any"）
         priority: 同一イベント内での処理順（小さいほど先）
     """
-    func: Callable[..., LethalDist]
-    event: LethalEvent
+    func: Callable[..., StateDist]
     subject: LethalSubject
     priority: int = 100
 
 
-@dataclass(frozen=True)
+@dataclass
 class LethalContext:
     """致死率計算中にハンドラへ渡すコンテキスト。"""
     attacker: Pokemon
     defender: Pokemon
     move: Move
     critical: bool = False
+    n_attack: int = 1
+    hit: int = 1
+    # このヒットで与えたダメージ分布。ハンドラはこれを参照・更新して良い。
+    damage_dist: StateDist = field(default_factory=lambda: to_dist(0))
 
 
-@dataclass(frozen=True)
 class LethalResult:
+    # TODO : 事後の加算ダメージ計算機能として、LethalResultどうしの和を取れるようにする
     """1ヒット時点の致死率計算結果。
 
     Attributes:
@@ -71,25 +74,37 @@ class LethalResult:
     n_attack: int
     move: Move
     hit: int
-    hp_dist: LethalDist
-    damage_dist: LethalDist
+    hp_dist: StateDist
+    damage_dist: StateDist
+    # TODO : 将来的な拡張も見据えて、attacker/defenderの状態の記録方法を構造化する
     attacker_rank: dict[Stat, int] = field(default_factory=dict)
     defender_rank: dict[Stat, int] = field(default_factory=dict)
     attacker_ailment: AilmentName = ""
     defender_ailment: AilmentName = ""
 
-    @property
-    def hp_counter(self) -> dict[int, int]:
-        """HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
+    def update(self, hp_dist: StateDist, attacker: Pokemon, defender: Pokemon):
+        self.hp_dist = hp_dist
+        self.attacker_rank = attacker.rank.copy()
+        self.defender_rank = defender.rank.copy()
+        self.attacker_ailment = attacker.ailment.name
+        self.defender_ailment = defender.ailment.name
+
+    def _counter(self, dist: StateDist) -> dict[int, int]:
+        """分布の HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
         result: dict[int, int] = defaultdict(int)
-        for state, freq in self.hp_dist.items():
-            result[state.hp] += freq
+        for state, freq in dist.items():
+            result[state.value] += freq
         return dict(result)
 
     @property
+    def hp_counter(self) -> dict[int, int]:
+        """HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
+        return self._counter(self.hp_dist)
+
+    @property
     def damage_counter(self) -> dict[int, int]:
-        """ダメージ値 → 出現頻度 の辞書を返す。"""
-        return {state.hp: freq for state, freq in self.damage_dist.items()}
+        """ダメージ値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
+        return self._counter(self.damage_dist)
 
     @property
     def min_damage(self) -> int:
@@ -108,55 +123,9 @@ class LethalResult:
         return zero_freq / total_freq
 
 
-def _lethal_loop(hp_dist: LethalDist,
-                 battle: Battle,
-                 attacker: Pokemon,
-                 defender: Pokemon,
-                 move_list: list[tuple[Move, int]],
-                 critical: bool,
-                 secondary: bool,
-                 max_attack: int) -> list[LethalResult]:
-    """致死率計算のメインループ。
-
-    max_attack 回分、move_list の技を順に使用し、各ヒット後の LethalResult を返す。
-    いずれかの時点で HP=0 の状態が現れたら途中で打ち切る。
-    """
-    # attacker, defender, critical はループ中に変化しないため、move ごとに1回だけ ctx を作る
-    ctx_list = [
-        (move, count, LethalContext(attacker, defender, move, critical=critical))
-        for move, count in move_list
-    ]
-
-    results = []
-    for atk in range(1, max_attack + 1):
-        for move, count, ctx in ctx_list:
-            for hit in range(1, count + 1):
-                # 技ダメージを適用
-                hp_dist, damage_dist = _apply_damage(battle, ctx, hp_dist)
-                results.append(
-                    LethalResult(n_attack=atk, move=move, hit=hit,
-                                 hp_dist=hp_dist, damage_dist=damage_dist)
-                )
-                if _check_hp(hp_dist, 0):
-                    return results
-
-                # ヒット時のハンドラを適用（きのみ回復など）
-                hp_dist = _emit("on_damage", battle, ctx, hp_dist)
-                if _check_hp(hp_dist, 0):
-                    return results
-
-                # 技の追加効果ハンドラを適用
-                if secondary:
-                    hp_dist = _emit("on_move_secondary", battle, ctx, hp_dist)
-                    if _check_hp(hp_dist, 0):
-                        return results
-
-            # ターン終了時のハンドラを適用（たべのこし回復など）
-            hp_dist = _emit("on_turn_end", battle, ctx, hp_dist)
-            if _check_hp(hp_dist, 0):
-                return results
-
-    return results
+def fainted(dist: StateDist) -> bool:
+    """分布内に HP=0 の状態が存在するか確認する。"""
+    return any(state.value == 0 for state in dist)
 
 
 def calc_lethal(battle: Battle,
@@ -212,27 +181,113 @@ def _generate_move_list(moves: Move | tuple[Move, int] | list[Move | tuple[Move,
         return [(moves, 1)]
 
 
+def _lethal_loop(hp_dist: StateDist,
+                 battle: Battle,
+                 attacker: Pokemon,
+                 defender: Pokemon,
+                 move_list: list[tuple[Move, int]],
+                 critical: bool,
+                 secondary: bool,
+                 max_attack: int) -> list[LethalResult]:
+    """致死率計算のメインループ。
+
+    max_attack 回分、move_list の技を順に使用し、各ヒット後の LethalResult を返す。
+    いずれかの時点で HP=0 の状態が現れたら途中で打ち切る。
+    """
+    # attacker, defender, critical はループ中に変化しないため、move ごとに1回だけ ctx を作る
+    ctx_list: list[tuple[int, LethalContext]] = [
+        (n_hits, LethalContext(attacker, defender, move, critical=critical))
+        for move, n_hits in move_list
+    ]
+
+    results = []
+    for atk in range(1, max_attack + 1):
+        for n_hits, ctx in ctx_list:
+            ctx.n_attack = atk
+
+            for hit in range(1, n_hits + 1):
+                ctx.hit = hit
+                # 技適用（ダメージ計算・ON_BEFORE_MOVE・ダメージ適用）
+                hp_dist = _run_move(battle, ctx, hp_dist, secondary)
+
+                # 結果を記録（ハンドラ適用前の最終ダメージ分布を反映）
+                result = LethalResult(
+                    n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
+                    hp_dist=hp_dist, damage_dist=ctx.damage_dist
+                )
+                results.append(result)
+
+                if fainted(hp_dist):
+                    return results
+
+            # ターン終了時のハンドラを適用（たべのこし回復など）
+            hp_dist = _run_turn_end(battle, ctx, hp_dist)
+            results[-1].hp_dist = hp_dist  # ターン終了後の HP 分布を反映
+            if fainted(hp_dist):
+                return results
+
+    return results
+
+
+def _run_move(battle: Battle,
+              ctx: LethalContext,
+              hp_dist: StateDist,
+              secondary: bool) -> StateDist:
+    """1回の技使用を計算する（LethalResult は生成しない）。
+
+    この関数はダメージ計算、`ON_BEFORE_MOVE` の適用、ダメージの適用
+    までを行い、更新された `hp_dist` を返す。ハンドラによる追加処理
+    （`ON_HIT` / `ON_MOVE_SECONDARY`）および `LethalResult` の生成は呼び出し側で行う。
+    """
+    # 技ダメージを計算して ctx に格納する
+    damages = battle.calc_damages(
+        ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical
+    )
+    ctx.damage_dist = to_dist(damages)
+
+    # 技を適用する直前の処理（ハンドラは ctx.damage_dist を参照・更新する）
+    hp_dist = _emit(LethalEvent.ON_BEFORE_MOVE, battle, ctx, hp_dist)
+
+    # ダメージを適用する
+    hp_dist = subtract_dist(hp_dist, ctx.damage_dist, minimum=0)
+    _update_hp(ctx.defender, hp_dist)
+
+    # ヒット時のハンドラを適用（きのみ回復など）
+    hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx, hp_dist)
+
+    # 技の追加効果ハンドラを適用
+    # TODO : move_secondaryは発動タイミングが技によって異なる場合があるため、イベントではなく技ハンドラ内の条件分岐で制御するようにする
+    if secondary:
+        hp_dist = _emit(LethalEvent.ON_MOVE_SECONDARY, battle, ctx, hp_dist)
+
+    return hp_dist
+
+
+def _run_turn_end(battle: Battle,
+                  ctx: LethalContext,
+                  hp_dist: StateDist) -> StateDist:
+    return _emit(LethalEvent.ON_TURN_END, battle, ctx, hp_dist)
+
+
 def _get_pokemon_handlers(event: LethalEvent,
                           mon: Pokemon,
                           subject: LethalSubject) -> list[LethalHandler]:
     """ポケモンの特性・道具・状態異常・揮発状態から該当ハンドラを取得する。"""
     candidates = [
-        mon.ability.data.lethal_handler,
-        mon.item.data.lethal_handler,
-        mon.ailment.data.lethal_handler,
+        mon.ability.data.lethal_handlers.get(event),
+        mon.item.data.lethal_handlers.get(event),
+        mon.ailment.data.lethal_handlers.get(event),
     ]
-    candidates += [v.data.lethal_handler for v in mon.volatiles.values()]
-    return [h for h in candidates if (
-        h is not None and h.event in {event, "any"} and h.subject in {subject, "any"}
-    )]
+    candidates += [v.data.lethal_handlers.get(event) for v in mon.volatiles.values()]
+    return [h for h in candidates if h is not None and h.subject in {subject, "any"}]
 
 
 def _get_global_field_handlers(event: LethalEvent, battle: Battle) -> list[LethalHandler]:
     """天候・地形・共通フィールドから該当ハンドラを取得する。"""
     fields = [battle.weather, battle.terrain] + \
         list(battle.global_manager.fields.values())
-    candidates = [field.data.lethal_handler for field in fields if field.is_active]
-    return [h for h in candidates if h is not None and h.event in {event, "any"}]
+    candidates = [field.data.lethal_handlers.get(event) for field in fields if field.is_active]
+    return [h for h in candidates if h is not None]
 
 
 def _get_side_field_handlers(event: LethalEvent,
@@ -240,10 +295,8 @@ def _get_side_field_handlers(event: LethalEvent,
                              subject: LethalSubject) -> list[LethalHandler]:
     """片側フィールド（ステルスロックなど）から該当ハンドラを取得する。"""
     fields = side.fields.values()
-    candidates = [field.data.lethal_handler for field in fields if field.is_active]
-    return [h for h in candidates if (
-        h is not None and h.event in {event, "any"} and h.subject in {subject, "any"}
-    )]
+    candidates = [field.data.lethal_handlers.get(event) for field in fields if field.is_active]
+    return [h for h in candidates if h is not None and h.subject in {subject, "any"}]
 
 
 def _get_handlers(event: LethalEvent,
@@ -262,41 +315,32 @@ def _get_handlers(event: LethalEvent,
 def _apply_handlers(battle: Battle,
                     handlers: list[LethalHandler],
                     ctx: LethalContext,
-                    hp_dist: LethalDist) -> LethalDist:
-    """ハンドラを順に適用する。HP=0 の状態が現れたら即打ち切り。"""
+                    hp_dist: StateDist) -> StateDist:
+    """ハンドラを順に適用する。HP=0 の状態が現れたら即打ち切り。
+
+    ハンドラは `(battle, ctx, hp_dist) -> StateDist` を返す。ダメージ分布の変更は
+    `ctx.damage_dist` を直接更新することで行う。
+    """
     for h in handlers:
-        if _check_hp(hp_dist, 0):
+        if fainted(hp_dist):
             break
         hp_dist = h.func(battle, ctx, hp_dist)
     return hp_dist
 
 
-def _update_hp(mon: Pokemon, hp_dist: LethalDist):
+def _update_hp(mon: Pokemon, hp_dist: StateDist):
     """分布内の最小 HP を mon.hp にセットする（後続ハンドラが参照するため）。"""
-    mon.hp = min(state.hp for state in hp_dist)
+    mon.hp = min(state.value for state in hp_dist)
 
 
 def _emit(event: LethalEvent,
           battle: Battle,
           ctx: LethalContext,
-          hp_dist: LethalDist) -> LethalDist:
-    """指定イベントのハンドラをすべて実行し、更新された HP 分布を返す。"""
-    if _check_hp(hp_dist, 0):
+          hp_dist: StateDist) -> StateDist:
+    """指定イベントのハンドラをすべて実行し、防御側のHPを更新して、更新後の hp_dist を返す。"""
+    if fainted(hp_dist):
         return hp_dist
     handlers = _get_handlers(event, battle, ctx)
     hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
     _update_hp(ctx.defender, hp_dist)
     return hp_dist
-
-
-def _apply_damage(battle: Battle,
-                  ctx: LethalContext,
-                  hp_dist: LethalDist) -> tuple[LethalDist, ...]:
-    """技ダメージを計算し、HP 分布を更新する。ダメージ分布も返す。"""
-    damages = battle.calc_damages(
-        ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical
-    )
-    damage_dist = to_dist(damages)
-    hp_dist = subtract_dist(hp_dist, damage_dist, minimum=0)
-    _update_hp(ctx.defender, hp_dist)
-    return hp_dist, damage_dist

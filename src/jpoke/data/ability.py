@@ -5,8 +5,6 @@ Note:
 """
 
 from jpoke.enums import DomainEvent, Event
-from jpoke.core.lethal import LethalHandler
-
 from jpoke.handlers import ability as h, ability_paradox as paradox
 from jpoke.data.models import AbilityData
 
@@ -2183,7 +2181,7 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="defender:self",
                 priority=10,
             )
-        }
+        },
     ),
     "バッテリー": AbilityData(),
     "バトルスイッチ": AbilityData(

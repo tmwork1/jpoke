@@ -6,6 +6,14 @@
 from enum import Enum, auto
 
 
+class LethalEvent(Enum):
+    """致死率計算専用の制御イベント。"""
+    ON_BEFORE_MOVE = auto()
+    ON_HIT = auto()
+    ON_MOVE_SECONDARY = auto()
+    ON_TURN_END = auto()
+
+
 class DomainEvent(Enum):
     """行動順の決定に関与するイベント（core/speed.py で使用）。
 

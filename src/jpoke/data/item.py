@@ -3,7 +3,7 @@
 Note:
     このモジュール内のアイテム定義はITEMS辞書内で五十音順に配置されています。
 """
-from jpoke.enums import Event, DomainEvent
+from jpoke.enums import Event, DomainEvent, LethalEvent
 from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import item as h, lethal as l
 from jpoke.data.models import ItemData
@@ -216,11 +216,12 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="target:self",
             ),
         },
-        lethal_handler=LethalHandler(
-            func=l.オボンのみ_heal,
-            event="any",
-            subject="defender",
-        )
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(
+                func=l.オボンのみ_heal,
+                subject="defender",
+            )
+        }
     ),
     "オレンのみ": ItemData(
         fling_power=10,
@@ -865,12 +866,13 @@ ITEMS: dict[str, ItemData] = {
                 priority=60,
             ),
         },
-        lethal_handler=LethalHandler(
-            func=l.たべのこし_heal,
-            event="on_turn_end",
-            subject="defender",
-            priority=60
-        )
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.たべのこし_heal,
+                subject="defender",
+                priority=60,
+            )
+        }
     ),
     "タラプのみ": ItemData(
         fling_power=10,

@@ -4,7 +4,7 @@
 各Enumは責務ごとに分割されたモジュールに配置されている。
 """
 
-from .event import DomainEvent, Event
+from .event import DomainEvent, Event, LethalEvent
 from .interrupt import Interrupt
 from .command import Command
 from .logcode import LogCode
