@@ -116,6 +116,21 @@ def test_おいかぜ():
     assert battle.speed_calculator.calc_effective_speed(mon) == 2 * mon.stats["spe"]
 
 
+def test_おいかぜ_相手サイドには補正なし():
+    """おいかぜ: 自陣営のみ効果を受け、相手のすばやさは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"おいかぜ": 1},
+    )
+    own = battle.actives[0]
+    foe = battle.actives[1]
+    # 自分は2倍
+    assert battle.speed_calculator.calc_effective_speed(own) == 2 * own.stats["spe"]
+    # 相手は補正なし
+    assert battle.speed_calculator.calc_effective_speed(foe) == foe.stats["spe"]
+
+
 def test_おおあめ_こおりが付与される():
     """おおあめ: こおり防止効果はなく、こおり状態が付与される"""
     battle = t.start_battle(
