@@ -129,6 +129,30 @@ def test_おおあめ_こおりが付与される():
     assert target.ailment.name == "こおり", "おおあめ中にこおり状態にならなかった"
 
 
+def test_オーロラベール_ひかりのかべとは重複しない():
+    """オーロラベール: ひかりのかべが有効でも特殊技ダメージ軽減は重複しない（1/2 のまま）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"オーロラベール": 5, "ひかりのかべ": 5},
+    )
+    t.run_move(battle, 0)
+    # どちらか一方の壁だけが適用され、damage_modifier は 2048（1/2）のまま
+    assert battle.damage_calculator.damage_modifier == 2048
+
+
+def test_オーロラベール_リフレクターとは重複しない():
+    """オーロラベール: リフレクターが有効でも物理技ダメージ軽減は重複しない（1/2 のまま）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"オーロラベール": 5, "リフレクター": 5},
+    )
+    t.run_move(battle, 0)
+    # リフレクターが適用済みのため オーロラベール の追加軽減はなし（2048 のまま）
+    assert battle.damage_calculator.damage_modifier == 2048
+
+
 def test_グラスフィールド_かいふくふうじで回復しない():
     """グラスフィールド: かいふくふうじ状態のポケモンはターン終了時に回復しない"""
     battle = t.start_battle(
@@ -814,6 +838,35 @@ def test_まきびし_浮いているポケモンはダメージを受けない(
     assert active.hp == active.max_hp
 
 
+def test_マジックルーム_交代後も道具無効():
+    """マジックルーム: 交代で場に出たポケモンのアイテムも無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", item_name="たべのこし")],
+        team1=[Pokemon("ピカチュウ")],
+        field={"マジックルーム": 99},
+    )
+    # 2番目のポケモンに交代する
+    t.run_switch(battle, 0, 1)
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    # マジックルーム中はたべのこしが発動しない
+    assert mon.hp == 1
+
+
+def test_マジックルーム_再発動で即解除():
+    """マジックルーム: 発動中に再度使用するとフィールドが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"マジックルーム": 5},
+    )
+    field = battle.global_manager.fields["マジックルーム"]
+    assert field.is_active
+    t.run_move(battle, 0)
+    assert not field.is_active
+
+
 def test_マジックルーム_道具効果無効化():
     """マジックルーム: アイテム効果が無効化される"""
     battle = t.start_battle(
@@ -959,6 +1012,19 @@ def test_らんきりゅう_通常天候に上書きされない(weather: Weathe
     result = battle.weather_manager.apply(weather, 5)
     assert result is False
     assert battle.raw_weather.name == "らんきりゅう"
+
+
+def test_ワンダールーム_再使用で解除():
+    """ワンダールーム: 発動中に再度使用するとフィールドが解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["ワンダールーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"ワンダールーム": 5},
+    )
+    field = battle.global_manager.fields["ワンダールーム"]
+    assert field.is_active
+    t.run_move(battle, 0)
+    assert not field.is_active
 
 
 def test_ワンダールーム_物理技は特防側を参照():

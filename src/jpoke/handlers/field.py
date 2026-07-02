@@ -147,11 +147,26 @@ def おおひでり_block_move(battle: Battle, ctx: AttackContext, value: Any) -
 
 
 def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """オーロラベールで物理・特殊技ダメージ軽減"""
+    """オーロラベールで物理・特殊技ダメージ軽減。
+
+    リフレクター（物理技）またはひかりのかべ（特殊技）が同時に有効でも効果は重複しない。
+    """
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
     ):
+        side = battle.get_side(ctx.defender)
+        # リフレクター/ひかりのかべと効果は重複しない
+        if (
+            ctx.move.category == "physical"
+            and side.get("リフレクター").is_active
+        ):
+            return HandlerReturn(value=value)
+        if (
+            ctx.move.category == "special"
+            and side.get("ひかりのかべ").is_active
+        ):
+            return HandlerReturn(value=value)
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
