@@ -10,7 +10,8 @@
 グラスフィールド	x	x	x	x	x	-	-
 サイコフィールド	x	x	x	x	x	n/a	n/a
 ミストフィールド	x	x	x	x	x	n/a	n/a
-じゅうりょく	-	-	x	x	-	n/a	n/a
+じゅうりょく	x	x	x	x	x	n/a	n/a
 トリックルーム	-	-	x	x	-	n/a	n/a
+フェアリーロック	x	x	x	x	x	n/a	n/a
 マジックルーム	-	-	x	x	-	n/a	n/a
 ワンダールーム	-	-	x	x	-	n/a	n/a
