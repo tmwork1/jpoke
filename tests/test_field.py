@@ -716,6 +716,28 @@ def test_どくびし_浮いているポケモンには効かない():
     assert not active.ailment.is_active
 
 
+def test_ねがいごと_かいふくふうじ中は回復しない():
+    """ねがいごと: かいふくふうじ状態のポケモンはねがいごとによる回復を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"ねがいごと": 2},
+        volatile0={"かいふくふうじ": 3},
+    )
+    field = battle.get_side(battle.players[0]).get("ねがいごと")
+    mon = battle.actives[0]
+    # HPを削ってから回復されないことを確認
+    battle.modify_hp(mon, v=-(mon.hp - 1))
+    hp_before = mon.hp
+    field.heal = 20
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+
+    assert mon.hp == hp_before, "かいふくふうじ状態でねがいごとの回復が発生した"
+    assert not field.is_active
+
+
 def test_ねがいごと_交代後は現在の場のポケモンが回復する():
     """ねがいごと: 使用者が交代しても同ポジションの現在のポケモンが回復する"""
     battle = t.start_battle(
@@ -757,7 +779,7 @@ def test_ねがいごと_回復と解除():
 
     # HPを減らして回復確認
     mon = battle.actives[0]
-    mon.hp = 1
+    battle.modify_hp(mon, v=-(mon.hp - 1))
 
     heal = 20
     field.heal = heal
