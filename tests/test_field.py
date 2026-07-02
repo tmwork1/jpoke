@@ -346,6 +346,19 @@ def test_サイドフィールドカウント減少(field: SideFieldName):
     assert all(not f.is_active for f in fields)
 
 
+def test_しろいきり_すりぬけは能力低下防止を貫通する():
+    """しろいきり: すりぬけ特性を持つポケモンによる能力低下は防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すりぬけ")],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"しろいきり": 1},
+    )
+    source = battle.actives[0]
+    target = battle.actives[1]
+    assert battle.modify_stats(target, {"atk": -1}, source=source)
+    assert target.rank["atk"] == -1
+
+
 def test_しろいきり_能力低下防止():
     """しろいきり: 能力ランク低下を防ぐ"""
     battle = t.start_battle(

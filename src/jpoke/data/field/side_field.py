@@ -64,6 +64,7 @@ SIDE_FIELD: dict[str, FieldData] = {
             Event.ON_BEFORE_MODIFY_STAT: h.FieldHandler(
                 h.しろいきり_prevent_stat_drop,
                 subject_spec="target:self",
+                priority=130,
             ),
             Event.ON_TURN_END: h.FieldHandler(
                 h.しろいきり_tick_side_field,

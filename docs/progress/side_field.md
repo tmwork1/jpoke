@@ -4,7 +4,7 @@
 おいかぜ	x	x	x	x	x	n/a	n/a
 ステルスロック	x	x	x	x	x	n/a	n/a
 しんぴのまもり	-	-	x	x	-	n/a	n/a
-しろいきり	-	-	x	x	-	n/a	n/a
+しろいきり	x	x	x	x	x	n/a	n/a
 どくびし	-	-	x	x	-	n/a	n/a
 ねがいごと	-	-	x	x	-	n/a	n/a
 ねばねばネット	-	-	x	x	-	n/a	n/a
