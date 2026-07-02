@@ -381,6 +381,32 @@ def test_しろいきり_自発的な能力低下は防げない():
     assert target.rank["atk"] == -1
 
 
+def test_しんぴのまもり_ねむけ防止():
+    """しんぴのまもり: ねむけ付与を防ぐ"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ")],
+        side0={"しんぴのまもり": 1},
+    )
+    target, source = battle.actives
+    assert not battle.volatile_manager.apply(target, "ねむけ", source=source)
+    assert not target.has_volatile("ねむけ")
+
+
+def test_しんぴのまもり_ねむるは防がない():
+    """しんぴのまもり: 自分が使うねむるによるねむり付与は防がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"しんぴのまもり": 5},
+    )
+    mon = battle.actives[0]
+    # HPを減らしてねむるの失敗条件（HP満タン）を回避
+    battle.modify_hp(mon, r=-0.5)
+    assert battle.ailment_manager.apply(mon, "ねむり", count=3, source=mon)
+    assert mon.has_ailment("ねむり")
+
+
 def test_しんぴのまもり_混乱防止():
     """しんぴのまもり: 混乱付与を防ぐ"""
     battle = t.start_battle(

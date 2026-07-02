@@ -238,17 +238,29 @@ def しろいきり_tick_side_field(battle: Battle, ctx: EventContext, value: An
 
 
 def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """しんぴのまもりで状態異常無効"""
-    if not ctx.can_bypass_status_guard(battle):
+    """しんぴのまもりで状態異常無効（他のポケモン由来のわざのみ対象）。
+
+    自分が使うねむるのような自己付与（source == target）は防がない。
+    すりぬけ特性を持つ相手からの状態異常は防げない。
+    """
+    if (
+        ctx.is_foe_target()
+        and not ctx.can_bypass_status_guard(battle)
+    ):
         value = ""  # 状態異常名を空にして無効化
     return HandlerReturn(value=value)
 
 
 def しんぴのまもり_prevent_confusion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """しんぴのまもりで揮発状態無効"""
+    """しんぴのまもりでこんらん・ねむけ無効（他のポケモン由来のわざのみ対象）。
+
+    自己付与（source == target）は防がない。
+    すりぬけ特性を持つ相手からの揮発状態は防げない。
+    """
     if (
-        not ctx.can_bypass_status_guard(battle)
-        and value in ["こんらん", "ねむけ"]
+        value in ["こんらん", "ねむけ"]
+        and ctx.is_foe_target()
+        and not ctx.can_bypass_status_guard(battle)
     ):
         value = ""  # 揮発状態名を空にして無効化
     return HandlerReturn(value=value)
@@ -358,15 +370,17 @@ def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> Handle
     side = battle.get_side(ctx.source)
     field = side.get("どくびし")
 
-    if battle.query.is_hazard_immune(ctx.source):
-        return HandlerReturn(value=value)
-    # 浮いているポケモンは影響を受けない
+    # 浮いているポケモンは影響を受けない（地面に接地していない場合はどくタイプでも消滅させられない）
     if battle.query.is_floating(ctx.source):
         return HandlerReturn(value=value)
 
-    # どくタイプは吸収して消滅
+    # どくタイプは吸収して消滅（あつぞこブーツ装備でも消滅する）
     if ctx.source.has_type("どく"):
         side.deactivate("どくびし")
+        return HandlerReturn(value=value)
+
+    # あつぞこブーツ等のハザード無効は消滅させずに効果のみ無効化
+    if battle.query.is_hazard_immune(ctx.source):
         return HandlerReturn(value=value)
 
     # 層数に応じて「どく」または「もうどく」を付与

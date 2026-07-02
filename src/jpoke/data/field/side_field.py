@@ -55,7 +55,7 @@ SIDE_FIELD: dict[str, FieldData] = {
             Event.ON_TURN_END: h.FieldHandler(
                 h.しんぴのまもり_tick_side_field,
                 subject_spec="source:self",
-                priority=10,
+                priority=130,
             ),
         },
     ),
