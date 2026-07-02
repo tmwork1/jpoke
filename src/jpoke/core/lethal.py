@@ -58,6 +58,7 @@ class LethalContext:
     damage_dist: StateDist = field(default_factory=lambda: to_dist(0))
 
 
+@dataclass
 class LethalResult:
     # TODO : 事後の加算ダメージ計算機能として、LethalResultどうしの和を取れるようにする
     """1ヒット時点の致死率計算結果。

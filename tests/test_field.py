@@ -679,6 +679,33 @@ def test_どくびし_どくタイプが着地すると解除される():
     assert not active.ailment.is_active
 
 
+def test_どくびし_どくタイプはあつぞこブーツでも解除する():
+    """どくびし: どくタイプはあつぞこブーツを持っていてもどくびしを消滅させる"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("フシギダネ", item_name="あつぞこブーツ")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
+    field = battle.get_side(battle.players[0]).get("どくびし")
+    assert not field.is_active
+    assert field.count == 0
+    assert not active.ailment.is_active
+
+
+def test_どくびし_はがねタイプには効かない():
+    """どくびし: はがねタイプのポケモンは毒状態にならない（フィールドは消滅しない）"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ニャース(ガラル)")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
+    field = battle.get_side(battle.players[0]).get("どくびし")
+    assert field.is_active
+    assert not active.ailment.is_active
+
+
 def test_どくびし_浮いているポケモンには効かない():
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
