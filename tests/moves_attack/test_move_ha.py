@@ -77,6 +77,64 @@ def test_ハイドロカノン_次ターン行動不能になる():
     assert defender.hp == defender_hp_after_t1
 
 
+def test_ハイドロスチーム_にほんばれで威力1_5倍():
+    """ハイドロスチーム: にほんばれ中は晴れ弱体化をキャンセルし、威力が1.5倍（6144）になる。
+
+    フィールドハンドラが0.5倍（2048）を適用後、ハイドロスチームハンドラが3倍（12288）を
+    乗算して最終的に 6144（1.5x）になる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ハイドロスチーム"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_ハイドロスチーム_攻撃側ばんのうがさのとき晴れで0_5倍():
+    """ハイドロスチーム: 攻撃側がばんのうがさを持つ場合、晴れでも1.5倍効果は発動しない。
+
+    通常みず技と同様に晴れの0.5倍弱体化（2048）のみが適用される。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ハイドロスチーム"], item_name="ばんのうがさ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 2048
+
+
+def test_ハイドロスチーム_晴れなしのとき補正なし():
+    """ハイドロスチーム: 晴れ天候なしのとき威力補正は等倍（4096）のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ハイドロスチーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ハイドロスチーム_防御側ばんのうがさのとき晴れでも1_5倍():
+    """ハイドロスチーム: 防御側がばんのうがさを持つ場合でも、晴れ中は1.5倍（6144）になる。
+
+    フィールドハンドラの0.5倍は防御側ばんのうがさで無効になるが、
+    ハイドロスチームハンドラは攻撃側の天候認識で発動し、直接1.5倍（6144）を適用する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ハイドロスチーム"])],
+        team1=[Pokemon("カビゴン", item_name="ばんのうがさ")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
 def test_ハイドロポンプ_相手にダメージを与える():
     """ハイドロポンプ: 追加効果なしの特殊みず技で相手にダメージを与える。"""
     battle = t.start_battle(

@@ -1507,15 +1507,21 @@ def ハイドロスチーム_power_modifier(battle: Battle, ctx: AttackContext, 
     ハイドロスチームはその弱体化を受けない。さらに晴れ下では1.5倍の威力になる。
 
     実装:
-    天候フィールドハンドラ（はれ_power_modifier）が先に0.5倍を適用するため、
-    その後に3倍（12288/4096）を乗算して最終的に1.5倍とする。
-    ばんのうがさを持つ防御側には天候効果が無効のため、ctx.defender で判定する
-    （天候フィールドハンドラと同じ判定方法）。
+    攻撃側がばんのうがさを持つ場合はこの効果が発動しない（通常みず技と同じく0.5倍になる）。
+    防御側がばんのうがさを持つ場合は天候フィールドハンドラ（はれ_power_modifier）が
+    0.5倍を適用しないため、直接1.5倍（6144）を乗算する。
+    防御側がばんのうがさを持たない場合はフィールドハンドラが先に0.5倍を適用しているため、
+    3倍（12288）を乗算して最終的に1.5倍とする。
     """
-    if not battle.weather_for(ctx.defender).sunny:
+    # 攻撃側がばんのうがさを持つ場合、この効果は発動しない
+    if not battle.weather_for(ctx.attacker).sunny:
         return HandlerReturn(value=value)
-    # フィールドハンドラの0.5倍をキャンセルし、1.5倍にするため3倍補正を適用
-    value = apply_fixed_modifier(value, 12288)
+    if not battle.weather_for(ctx.defender).sunny:
+        # 防御側ばんのうがさあり: フィールドハンドラが0.5倍を未適用のため直接1.5倍を適用
+        value = apply_fixed_modifier(value, 6144)
+    else:
+        # 防御側ばんのうがさなし: フィールドハンドラの0.5倍をキャンセルし1.5倍にするため3倍補正を適用
+        value = apply_fixed_modifier(value, 12288)
     return HandlerReturn(value=value)
 
 
