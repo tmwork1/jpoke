@@ -93,6 +93,13 @@ def _heal_at_pinch(hp_dist: StateDist,
 
     return new_dist
 
+def _apply_bind(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """バインド状態を付与する（未付与の場合のみ）。バインドダメージはON_TURN_ENDで処理される。"""
+    if "バインド" not in ctx.defender.volatiles:
+        from jpoke.model.volatile import Volatile
+        ctx.defender.volatiles["バインド"] = Volatile("バインド", count=4)
+    return hp_dist
+
 
 def アイスボディ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アイスボディ: ゆき天気のとき、ターン終了時に最大HPの1/16を回復する。"""
@@ -104,6 +111,19 @@ def アイスボディ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDi
 def アクアリング_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アクアリング: ターン終了時に最大HPの1/16を回復する。"""
     return _heal(hp_dist, ctx.defender, r=1/16)
+
+
+def Gのちから_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """Gのちから: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
+    if ctx.move_secondary:
+        ctx.defender.rank["def"] = max(-6, ctx.defender.rank["def"] - 1)
+    return hp_dist
+
+
+def アシッドボム_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """アシッドボム: 命中後、防御側のとくぼうを2段階下げる。"""
+    ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 2)
+    return hp_dist
 
 
 def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -203,6 +223,13 @@ def ウタンのみ_resist_psychic(battle: Battle, ctx: LethalContext, hp_dist: 
     return _type_resist_berry(battle, ctx, hp_dist, "エスパー")
 
 
+def エレクトロビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """エレクトロビーム: チャージ時に追加効果有効なら攻撃側のとくこうを1段階上げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.rank["spa"] = min(6, ctx.attacker.rank["spa"] + 1)
+    return hp_dist
+
+
 def オッカのみ_resist_fire(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オッカのみ: ほのおタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ほのお")
@@ -218,9 +245,23 @@ def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, v=10, threshold_rate=1/2, heal_with="item", consume=True)
 
 
+def オーバーヒート_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """オーバーヒート: 命中後、攻撃側のとくこうを2段階下げる。"""
+    ctx.attacker.rank["spa"] = max(-6, ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
 def カシブのみ_resist_ghost(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """カシブのみ: ゴーストタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ゴースト")
+
+
+def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """キラースピン: 命中後、追加効果有効時に防御側にどく状態を付与する。"""
+    if ctx.move_secondary and not ctx.defender.ailment.is_active:
+        from jpoke.model.ailment import Ailment
+        ctx.defender.ailment = Ailment("どく")
+    return hp_dist
 
 
 def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -249,6 +290,14 @@ def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: S
 
 def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """サンパワー: はれ・おおひでりのとき攻撃側が1/8ダメージ（攻撃者HP未追跡のためスタブ）。"""
+    return hp_dist
+
+
+def しおづけ_apply_volatile(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """しおづけ（技）: 命中後、追加効果有効時にしおづけ状態を付与する。しおづけダメージはON_TURN_ENDで処理。"""
+    if ctx.move_secondary and "しおづけ" not in ctx.defender.volatiles:
+        from jpoke.model.volatile import Volatile
+        ctx.defender.volatiles["しおづけ"] = Volatile("しおづけ")
     return hp_dist
 
 
@@ -376,6 +425,12 @@ def バインド_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) 
     return _damage(hp_dist, damage)
 
 
+def ばかぢから_lower_atk(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ばかぢから: 命中後、攻撃側のこうげきを1段階下げる。"""
+    ctx.attacker.rank["atk"] = max(-6, ctx.attacker.rank["atk"] - 1)
+    return hp_dist
+
+
 def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ばけのかわ: 攻撃を無効化し、変身解除ダメージ(max_hp/8)を与える。
 
@@ -424,9 +479,23 @@ def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def フレアソング_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """フレアソング: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.rank["spa"] = min(6, ctx.attacker.rank["spa"] + 1)
+    return hp_dist
+
+
 def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ホズのみ: ノーマルタイプの技のダメージを1/2にして消費する（抜群不要）。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ノーマル", super_effective_only=False)
+
+
+def ほのおのムチ_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ほのおのムチ: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
+    if ctx.move_secondary:
+        ctx.defender.rank["def"] = max(-6, ctx.defender.rank["def"] - 1)
+    return hp_dist
 
 
 def ポイズンヒール_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -489,14 +558,41 @@ def ヨロギのみ_resist_rock(battle: Battle, ctx: LethalContext, hp_dist: Sta
     return _type_resist_berry(battle, ctx, hp_dist, "いわ")
 
 
+def りゅうせいぐん_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """りゅうせいぐん: 命中後、攻撃側のとくこうを2段階下げる。"""
+    ctx.attacker.rank["spa"] = max(-6, ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
 def リリバのみ_resist_steel(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """リリバのみ: はがねタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "はがね")
 
 
+def りんごさん_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """りんごさん: 命中後、追加効果有効時に防御側のとくぼうを1段階下げる。"""
+    if ctx.move_secondary:
+        ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 1)
+    return hp_dist
+
+
 def リンドのみ_resist_grass(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """リンドのみ: くさタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "くさ")
+
+
+def ルミナコリジョン_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ルミナコリジョン: 命中後、防御側のとくぼうを2段階下げる。"""
+    ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 2)
+    return hp_dist
+
+
+def れんごく_apply_やけど(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """れんごく: 命中後、追加効果有効時に防御側にやけど状態を付与する。"""
+    if ctx.move_secondary and not ctx.defender.ailment.is_active:
+        from jpoke.model.ailment import Ailment
+        ctx.defender.ailment = Ailment("やけど")
+    return hp_dist
 
 
 def ロゼルのみ_resist_fairy(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

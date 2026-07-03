@@ -29,6 +29,26 @@ from jpoke import Pokemon, Move
 from . import test_utils as t
 
 
+def test_Gのちから_ぼうぎょダウン_secondary有り():
+    """Gのちから: secondary=True のとき相手のぼうぎょが1段階下がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("Gのちから"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_Gのちから_ぼうぎょダウン_secondary無し():
+    """Gのちから: secondary=False のときはぼうぎょダウンが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("Gのちから"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_アイスボディ_ゆき天気でターン終了時回復():
     """アイスボディ所持時、ゆき天気のターン終了時に最大HPの1/16を回復する"""
     with_ability = t.start_battle(
@@ -68,6 +88,16 @@ def test_アクアリング_ターン終了時回復():
     max_hp = with_volatile.actives[1].max_hp
     heal = max(1, max_hp // 16)
     assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
+def test_アシッドボム_とくぼうダウン():
+    """アシッドボム: 命中後に相手のとくぼうが2段階下がるため2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("アシッドボム"), max_attack=2)
+    assert results[1].min_damage > results[0].min_damage
 
 
 def test_アッキのみ_消費後は発動しない():
@@ -165,6 +195,42 @@ def test_イアのみ_HP4分の1以下で回復():
     assert max(results_with[-1].hp_counter) - max(results_without[-1].hp_counter) == heal
 
 
+def test_うずしお_バインド付与():
+    """うずしおは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("うずしお"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("うずしお"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
+def test_エレクトロビーム_とくこうアップ_secondary有り():
+    """エレクトロビーム: secondary=True のときチャージ前にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("エレクトロビーム"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_エレクトロビーム_とくこうアップ_secondary無し():
+    """エレクトロビーム: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("エレクトロビーム"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_オボンのみ_スケイルショット5発_乱数1発():
     """オボンのみ所持時、多段技はヒットごとにHP半分以下判定・回復が発生するため
     5発目終了時点でも乱数1発 (80.31%) になる"""
@@ -212,6 +278,33 @@ def test_オレンのみ_HP2分の1以下で10回復():
     results_without = t.calc_lethal(without_item, atk_idx=0, moves=[(Move("ドラゴンテール"), 1)])
 
     assert max(results_with[0].hp_counter) - max(results_without[0].hp_counter) == 10
+
+
+def test_オーバーヒート_とくこうダウン():
+    """オーバーヒート: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("オーバーヒート"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
+def test_キラースピン_どく付与_secondary有り():
+    """キラースピン: secondary=True のとき命中後にどく状態を付与し、ターン終了時ダメージが発生する"""
+    battle_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_no_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_with = t.calc_lethal(battle_secondary, atk_idx=0, moves=Move("キラースピン"), max_attack=2, secondary=True)
+    results_without = t.calc_lethal(battle_no_secondary, atk_idx=0, moves=Move("キラースピン"), max_attack=2, secondary=False)
+    max_hp = battle_secondary.actives[1].max_hp
+    poison_damage = max(1, max_hp // 8)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == poison_damage * 2
 
 
 def test_くろいヘドロ_どくタイプは毎ターン回復():
@@ -292,6 +385,23 @@ def test_しおづけ_ターン終了時ダメージ():
     results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
 
     max_hp = with_volatile.actives[1].max_hp
+    damage = max(1, max_hp // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_しおづけ技_しおづけ付与_secondary有り():
+    """しおづけ（技）: secondary=True のとき命中後にしおづけ状態を付与し、ターン終了時ダメージが発生する"""
+    battle_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_no_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_with = t.calc_lethal(battle_secondary, atk_idx=0, moves=Move("しおづけ"), max_attack=2, secondary=True)
+    results_without = t.calc_lethal(battle_no_secondary, atk_idx=0, moves=Move("しおづけ"), max_attack=2, secondary=False)
+    max_hp = battle_secondary.actives[1].max_hp
     damage = max(1, max_hp // 16)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
@@ -525,6 +635,16 @@ def test_バインド_ターン終了時ダメージ():
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 
+def test_ばかぢから_こうげきダウン():
+    """ばかぢから: 命中後にこうげきが1段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ばかぢから"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
 def test_ばけのかわ_2発目は通常ダメージ():
     """ばけのかわ: 1発目後はability_enabledがFalseになり、2発目以降は通常ダメージ"""
     with_ability = t.start_battle(
@@ -564,6 +684,26 @@ def test_ばけのかわ_初回攻撃を無効化():
     assert all(not state.ability_enabled for state in results[0].hp_dist)
 
 
+def test_フレアソング_とくこうアップ_secondary有り():
+    """フレアソング: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("フレアソング"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_フレアソング_とくこうアップ_secondary無し():
+    """フレアソング: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("フレアソング"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_ホズのみ_ノーマル技ダメージ半減():
     """ホズのみ: ノーマルタイプ技のダメージが半減され（抜群不要）、2発目は通常ダメージになる"""
     with_item = t.start_battle(
@@ -587,6 +727,26 @@ def test_ホズのみ_ノーマル技ダメージ半減():
     # ホズのみなしと同じ通常ダメージ
     assert r_with[1].min_damage == r_without[1].min_damage
     assert r_with[1].max_damage == r_without[1].max_damage
+
+
+def test_ほのおのムチ_ぼうぎょダウン_secondary有り():
+    """ほのおのムチ: secondary=True のとき相手のぼうぎょが1段階下がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ほのおのムチ"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_ほのおのムチ_ぼうぎょダウン_secondary無し():
+    """ほのおのムチ: secondary=False のときはぼうぎょダウンが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ほのおのムチ"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
 
 
 def test_ポイズンヒール_どく状態でターン終了時回復():
@@ -684,6 +844,63 @@ def test_やどりぎのタネ_ターン終了時ダメージ():
     max_hp = with_volatile.actives[1].max_hp
     damage = max(1, max_hp // 8)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_りゅうせいぐん_とくこうダウン():
+    """りゅうせいぐん: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("りゅうせいぐん"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
+def test_りんごさん_とくぼうダウン_secondary有り():
+    """りんごさん: secondary=True のとき相手のとくぼうが1段階下がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("りんごさん"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_りんごさん_とくぼうダウン_secondary無し():
+    """りんごさん: secondary=False のときはとくぼうダウンが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("りんごさん"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
+def test_ルミナコリジョン_とくぼうダウン():
+    """ルミナコリジョン: 命中後に相手のとくぼうが2段階下がるため2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ルミナコリジョン"), max_attack=2)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_れんごく_やけど付与_secondary有り():
+    """れんごく: secondary=True のとき命中後にやけど状態を付与し、ターン終了時ダメージが発生する"""
+    battle_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_no_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_with = t.calc_lethal(battle_secondary, atk_idx=0, moves=Move("れんごく"), max_attack=2, secondary=True)
+    results_without = t.calc_lethal(battle_no_secondary, atk_idx=0, moves=Move("れんごく"), max_attack=2, secondary=False)
+    max_hp = battle_secondary.actives[1].max_hp
+    burn_damage = max(1, max_hp // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == burn_damage * 2
 
 
 def test_多段技_ヒットごとに分布を記録():

@@ -108,6 +108,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.Gのちから_reduce_defender_B,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.Gのちから_lower_def)
         }
     ),
     "Vジェネレート": MoveData(
@@ -381,6 +384,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.アシッドボム_sharply_reduce_defender_D,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.アシッドボム_lower_spd)
         }
     ),
     "アストラルビット": MoveData(
@@ -891,6 +897,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "うそなき": MoveData(
@@ -1120,6 +1129,9 @@ MOVES: dict[str, MoveData] = {
                     ha.エレクトロビーム_charge,
                 ),
             ],
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_MOVE: LethalHandler(l.エレクトロビーム_boost_spa)
         }
     ),
     "えんまく": MoveData(
@@ -1289,6 +1301,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.オーバーヒート_sharply_reduce_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.オーバーヒート_lower_spa)
         }
     ),
     "オーラウイング": MoveData(
@@ -1924,6 +1939,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.キラースピン_apply_ailment_to_defender,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.キラースピン_apply_どく)
         }
     ),
     "きりさく": MoveData(
@@ -2806,6 +2824,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.しおづけ_apply_volatile_to_defender,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.しおづけ_apply_volatile)
         }
     ),
     "しおふき": MoveData(
@@ -2948,6 +2969,9 @@ MOVES: dict[str, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "シャカシャカほう": MoveData(
@@ -3543,6 +3567,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "スパーク": MoveData(
@@ -4816,6 +4843,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "トリック": MoveData(
@@ -6079,6 +6109,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.ばかぢから_reduce_attacker_def,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ばかぢから_lower_atk)
         }
     ),
     "ばくおんぱ": MoveData(
@@ -6657,6 +6690,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.フレアソング_boost_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.フレアソング_boost_spa)
         }
     ),
     "フレアドライブ": MoveData(
@@ -7060,6 +7096,9 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "ほのおのキバ": MoveData(
@@ -7120,6 +7159,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ほのおのムチ_reduce_defender_B,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ほのおのムチ_lower_def)
         }
     ),
     "ほろびのうた": MoveData(
@@ -7253,6 +7295,9 @@ MOVES: dict[str, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "まきびし": MoveData(
@@ -7357,6 +7402,9 @@ MOVES: dict[str, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "まねっこ": MoveData(
@@ -8175,6 +8223,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.りゅうせいぐん_sharply_reduce_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.りゅうせいぐん_lower_spa)
         }
     ),
     "りゅうのいぶき": MoveData(
@@ -8221,6 +8272,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.りんごさん_reduce_defender_D,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.りんごさん_lower_spd)
         }
     ),
     "りんしょう": MoveData(
@@ -8264,6 +8318,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ルミナコリジョン_sharply_reduce_defender_D,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ルミナコリジョン_lower_spd)
         }
     ),
     "レイジングブル": MoveData(
@@ -8319,6 +8376,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.れんごく_apply_ailment_to_defender,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.れんごく_apply_やけど)
         }
     ),
     "れんぞくぎり": MoveData(
