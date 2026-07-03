@@ -886,7 +886,14 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
         flags={"bullet"},
-        handlers={},  # TODO: 天候によって威力とタイプが変化する効果を実装する
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
+                ha.ウェザーボール_modify_move_type,
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ウェザーボール_power_modifier,
+            ),
+        },
     ),
     "ウェーブタックル": MoveData(
         type="みず",

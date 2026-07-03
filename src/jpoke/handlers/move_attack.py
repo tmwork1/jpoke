@@ -218,6 +218,35 @@ def インファイト_reduce_defender_stats(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
+def ウェザーボール_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ウェザーボール: 天候に応じてタイプを変化させる。
+
+    天候が有効な場合（エアロック・ノーてんき・ばんのうがさで無効化されていない）、
+    天候ごとに対応するタイプに変換する。
+    """
+    weather = battle.weather_for(ctx.attacker)
+    type_map = {
+        "はれ": "ほのお",
+        "おおひでり": "ほのお",
+        "あめ": "みず",
+        "おおあめ": "みず",
+        "すなあらし": "いわ",
+        "ゆき": "こおり",
+    }
+    new_type = type_map.get(weather.name)
+    if new_type is not None:
+        value = new_type
+    return HandlerReturn(value=value)
+
+
+def ウェザーボール_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ウェザーボール: 天候が有効なとき威力を2倍にする。"""
+    weather = battle.weather_for(ctx.attacker)
+    if weather.name != "":
+        value = apply_fixed_modifier(value, 8192)  # ×2倍
+    return HandlerReturn(value=value)
+
+
 def ウェーブタックル_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _recoil(battle, ctx, value, 1/3)
 
