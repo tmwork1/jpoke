@@ -5494,7 +5494,11 @@ MOVES: dict[str, MoveData] = {
         power=1,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.にぎりつぶす_calc_power,
+            ),
+        }
     ),
     "ニトロチャージ": MoveData(
         type="ほのお",

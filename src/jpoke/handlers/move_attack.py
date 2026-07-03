@@ -1454,6 +1454,15 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
+def にぎりつぶす_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """にぎりつぶす: 対象の残りHP / 最大HP の比率で威力を決定する（最大120）。
+
+    威力 = max(1, floor(120 × 現在HP / 最大HP))
+    """
+    power = max(1, int(120 * ctx.defender.hp / ctx.defender.max_hp))
+    return HandlerReturn(value=power * 4096)
+
+
 def ニトロチャージ_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 

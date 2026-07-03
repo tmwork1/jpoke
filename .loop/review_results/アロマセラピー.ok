@@ -1,0 +1,22 @@
+レビュー: アロマセラピー
+
+## 実装レビュー結果
+
+指摘なし。実装は仕様と一致している。
+
+### 確認ポイント
+- `ctx.attacker` で使用者を取得 — target="self" のため attacker == defender だが、attacker を使う実装は正しい
+- `state.selection` を走査してパーティ全員（控え含む）の状態異常を回復 — 仕様通り
+- 状態異常がいない場合も `HandlerReturn(value=value)` を返し失敗しない — 仕様通り
+- `battle.ailment_manager.remove(target)` を使用 — 正規 API 使用
+
+## テスト追加
+
+`tests/moves_status/test_move_a.py` に以下3テストを追加（5件）:
+- `test_アロマセラピー_使用者の状態異常が回復される` — やけど・まひ・どく の parametrize (3件)
+- `test_アロマセラピー_控えの状態異常も回復される`
+- `test_アロマセラピー_状態異常なしでも失敗しない`
+
+## 実行結果
+
+`python -m pytest tests/ -v`: 2630 passed, 0 failed, 1 skipped

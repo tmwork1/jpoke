@@ -46,6 +46,12 @@ git worktree になっている（例: `C:\Users\tmtmp\Documents\pokemon\jpoke-r
 - `handlers/` の並び順が五十音順になっているか
 - 不要な重複ガード（`if not mon.alive` など）が混入していないか
 
+### 進捗表の記述整合性
+- `docs/progress/<category>.md` の対象行について、**全列**（仕様書・計画書・実装・テスト・レビュー・リーサル実装・リーサルテスト・効果、`move.md` は分類/タイプ/威力/命中率/PP/対象も含む）が実際の状態と一致しているかを確認する
+  - `x` / `-` / `n/a` / `✓` の各マークが、対応するファイル（`docs/spec/`, `docs/plan/`, 実装コード, テストコード）の実在・完了状況と食い違っていないか
+  - `効果` 列の説明文が実装・仕様書の内容と一致しているか（未実装の効果が書かれていないか、実装済みなのに `?` のままになっていないか）
+  - 今回の対象エントリ以外の行でも、作業中に誤りに気づいた場合は修正する
+
 ## 成果物チェックリスト
 
 完了時に確認して報告する：
@@ -56,6 +62,6 @@ git worktree になっている（例: `C:\Users\tmtmp\Documents\pokemon\jpoke-r
 - [ ] テストを追加して `python scripts/sort_tests.py <テストファイル>` でソートした
 - [ ] `python scripts/generate_test_list.py` を実行して `docs/tests/` を更新した
 - [ ] `python -m pytest tests/ -v` で全件パスした
-- [ ] `docs/progress/<category>.md` のテスト済みマークを更新した
+- [ ] `docs/progress/<category>.md` の全列（マーク・効果列の説明文を含む）を実際の状態と照合し、テスト済みマークを更新した
 - [ ] 変更をコミットした（`git add -A && git commit -m "review: {entry}"`）
 - [ ] 結果ファイルを書き込んだ（`.ok` または `.fail`）
