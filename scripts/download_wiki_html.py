@@ -55,8 +55,8 @@ def main(target: str):
 if __name__ == "__main__":
     targets = [
         # "abilities",
-        # "items",
-        "moves",
+        "items",
+        # "moves",
         # "ailments",
         # "volatiles",
         # "fields",
