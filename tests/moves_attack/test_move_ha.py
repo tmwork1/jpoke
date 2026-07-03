@@ -725,6 +725,37 @@ def test_パワーウィップ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ひけん・ちえなみ_まきびし3層のとき設置されず攻撃は成功する():
+    """ひけん・ちえなみ: まきびしが3層でも攻撃は成功し、設置数は増えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ひけん・ちえなみ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        side1={"まきびし": 3},
+    )
+    defender = battle.actives[1]
+    side = battle.get_side(defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # 攻撃は成功してダメージを与える
+    assert defender.hp < hp_before
+    # まきびしは3層のまま
+    assert side.fields["まきびし"].count == 3
+
+
+def test_ひけん・ちえなみ_命中後まきびしが1層設置される():
+    """ひけん・ちえなみ: 命中すると相手陣営にまきびしが1層設置される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ひけん・ちえなみ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    side = battle.get_side(battle.actives[1])
+    t.run_move(battle, 0)
+    assert side.fields["まきびし"].is_active
+    assert side.fields["まきびし"].count == 1
+
+
 def test_ひっさつまえば_ひるみが発動する():
     """ひっさつまえば: 10%でひるみを付与する。"""
     battle = t.start_battle(

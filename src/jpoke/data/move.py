@@ -6435,7 +6435,7 @@ MOVES: dict[str, MoveData] = {
     "ひけん・ちえなみ": MoveData(
         type="あく",
         category="physical",
-        pp=15,
+        pp=16,
         power=65,
         accuracy=90,
         flags={"contact"},
