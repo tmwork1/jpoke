@@ -6,6 +6,100 @@ from jpoke.enums import Interrupt
 from .. import test_utils as t
 
 
+def test_はいすいのじん_2回目の使用で失敗する():
+    """はいすいのじん: はいすいのじん起因でにげられない状態の場合、2回目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    # 1回目は成功
+    t.run_move(battle, 0)
+    assert mon.rank["atk"] == 1
+
+    # 2回目はにげられない（はいすいのじん起因）でガード → 失敗
+    t.run_move(battle, 0)
+    assert mon.rank["atk"] == 1  # ランクは変化しない
+
+
+def test_はいすいのじん_すでにとらわれている場合はにげられないを再付与しない():
+    """はいすいのじん: すでにとらわれている場合はにげられないvolatileを重ねて付与しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"にげられない": 3},  # 他起因のにげられない（move_name=""）
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # にげられないはそのまま（move_nameは上書きされない）
+    assert mon.has_volatile("にげられない")
+    assert mon.volatiles["にげられない"].move_name == ""  # はいすいのじんで上書きされない
+
+
+def test_はいすいのじん_にげられない状態が付与される():
+    """はいすいのじん: 使用後に自分がにげられない状態（はいすいのじん起因）になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert mon.has_volatile("にげられない")
+    assert mon.volatiles["にげられない"].move_name == "はいすいのじん"
+
+
+def test_はいすいのじん_他起因のにげられない状態では失敗しない():
+    """はいすいのじん: 他の要因によるにげられない状態では失敗せず、ランクが上昇する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"にげられない": 3},  # move_name="" の他起因にげられない
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # 失敗しないのでランクが上がる
+    assert mon.rank["atk"] == 1
+    assert mon.rank["def"] == 1
+    assert mon.rank["spa"] == 1
+    assert mon.rank["spd"] == 1
+    assert mon.rank["spe"] == 1
+
+
+def test_はいすいのじん_全5能力が1段階ずつ上がる():
+    """はいすいのじん: 使用後にこうげき・ぼうぎょ・とくこう・とくぼう・すばやさが+1ずつ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert mon.rank["atk"] == 1
+    assert mon.rank["def"] == 1
+    assert mon.rank["spa"] == 1
+    assert mon.rank["spd"] == 1
+    assert mon.rank["spe"] == 1
+
+
+def test_はいすいのじん_全5能力が最大のとき失敗する():
+    """はいすいのじん: すべての能力ランクが+6のとき失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    for stat in ("atk", "def", "spa", "spd", "spe"):
+        mon.rank[stat] = 6
+    t.run_move(battle, 0)
+
+    # 失敗のためランクは変化しない
+    for stat in ("atk", "def", "spa", "spd", "spe"):
+        assert mon.rank[stat] == 6
+
+
 def test_はきだす_カウント0で失敗する():
     """はきだす: たくわえていない（カウント0）なら失敗する"""
     battle = t.start_battle(
