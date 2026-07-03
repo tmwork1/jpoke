@@ -3757,6 +3757,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
         flags={"contact", "gravity_restricted"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "そらをとぶ"),
             ),
@@ -4631,6 +4636,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         flags={"gravity_restricted"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.でんじふゆう_apply,
             ),
@@ -4756,6 +4766,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         flags={"contact", "gravity_restricted"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_MISS: h.MoveHandler(
                 ha.とびげり_crash,
             ),
@@ -4782,6 +4797,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=85,
         flags={"contact", "gravity_restricted", "secondary_effect"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.とびはねる_apply_ailment_to_defender,
             )
@@ -4795,6 +4815,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=90,
         flags={"contact", "gravity_restricted"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_MISS: h.MoveHandler(
                 ha.とびひざげり_crash,
             ),
@@ -5953,7 +5978,13 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=40,
         flags={"gravity_restricted"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
+        },
     ),
     "ハバネロエキス": MoveData(
         type="くさ",
@@ -6612,6 +6643,11 @@ MOVES: dict[str, MoveData] = {
         accuracy=95,
         flags={"contact", "gravity_restricted", "minimize"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                h.gravity_restricted_fail,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.MoveHandler(
                 ha.フライングプレス_add_flying_type,
             ),

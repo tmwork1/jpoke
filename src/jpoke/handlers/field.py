@@ -273,18 +273,6 @@ def じゅうりょく_remove_volatiles(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=value)
 
 
-def じゅうりょく_block_gravity_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じゅうりょく中にgravity_restrictedフラグの技を失敗させる"""
-    # TODO : 技ハンドラとして実装する
-    if ctx.move.has_flag("gravity_restricted"):
-        battle.add_event_log(
-            ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "じゅうりょく"}
-        )
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def じゅうりょく_g_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうりょく中にGのちからの威力が1.5倍になる"""
     # TODO : Gのちからのハンドラに移譲する

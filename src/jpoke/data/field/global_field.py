@@ -13,10 +13,6 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.じゅうりょく_g_power_modifier,
                 subject_spec="attacker:self",
             ),
-            Event.ON_TRY_MOVE_1: h.FieldHandler(
-                h.じゅうりょく_block_gravity_move,
-                subject_spec="attacker:self",
-            ),
             Event.ON_MODIFY_ACCURACY: h.FieldHandler(
                 h.じゅうりょく_modify_accuracy,
                 subject_spec="attacker:self",

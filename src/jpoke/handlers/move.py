@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.core import Handler, HandlerReturn
+from jpoke.enums import LogCode
 
 
 class MoveHandler(Handler):
@@ -117,6 +118,21 @@ def apply_confusion_to_defender(battle: Battle,
     return HandlerReturn(value=battle.volatile_manager.apply_confusion(
         ctx.defender, source=ctx.attacker
     ))
+
+
+def gravity_restricted_fail(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じゅうりょく中にこの技を失敗させる。
+
+    gravity_restricted フラグを持つ技に登録し、
+    じゅうりょくが有効な場合に技を失敗させる。
+    """
+    if battle.get_global_field("じゅうりょく").is_active:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "じゅうりょく"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def charge_into_volatile(battle: Battle,
