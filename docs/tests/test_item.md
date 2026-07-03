@@ -1,6 +1,6 @@
 # test_item
 
-テスト数: 245
+テスト数: 257
 
 - [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=atk, amount=1)
 - [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=spe, amount=1)
@@ -29,8 +29,19 @@
 - [x] あつぞこブーツ_まきびし系ハザード無効(side_name=ステルスロック)
 - [x] あつぞこブーツ_まきびし系ハザード無効(side_name=まきびし)
 - [x] あつぞこブーツ_まきびし系ハザード無効(side_name=どくびし)
+- [x] イアのみ_それ以外の性格ではこんらんしない
+- [x] イアのみ_ぼうぎょが上がりにくい性格でこんらんする(nature=さみしがり)
+- [x] イアのみ_ぼうぎょが上がりにくい性格でこんらんする(nature=おっとり)
+- [x] イアのみ_ぼうぎょが上がりにくい性格でこんらんする(nature=おとなしい)
+- [x] イアのみ_ぼうぎょが上がりにくい性格でこんらんする(nature=せっかち)
+- [x] いかさまダイス_スキルリンク所持時はスキルリンクが優先される
 - [x] いかさまダイス_ヒット数4
 - [x] いかさまダイス_ヒット数5
+- [x] いかさまダイス_固定回数技には効果がない(move_name=ダブルウイング)
+- [x] いかさまダイス_固定回数技には効果がない(move_name=にどげり)
+- [x] いかさまダイス_毎ヒット命中判定技は初回のみ判定(move_name=トリプルキック)
+- [x] いかさまダイス_毎ヒット命中判定技は初回のみ判定(move_name=トリプルアクセル)
+- [x] いかさまダイス_毎ヒット命中判定技は初回のみ判定(move_name=ネズミざん)
 - [x] いのちのたま
 - [x] いのちのたま_変化技では発動しない
 - [x] イバンのみ_HP25以下でなければフラグが立たない
@@ -221,7 +232,8 @@
 - [x] 専用アイテム攻撃補正(item_name=かまどのめん, mon_name=オーガポン(かまど), move_name=たいあたり, expected_modifier=4915)
 - [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ, move_name=たいあたり, expected_modifier=8192)
 - [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ, move_name=でんきショック, expected_modifier=8192)
-- [x] 専用アイテム攻撃補正(item_name=いしずえのめん, mon_name=オーガポン(いしずえ), move_name=エナジーボール, expected_modifier=4096)
+- [x] 専用アイテム攻撃補正(item_name=いしずえのめん, mon_name=オーガポン(いしずえ), move_name=エナジーボール, expected_modifier=4915)
+- [x] 専用アイテム攻撃補正(item_name=いどのめん, mon_name=オーガポン(いど), move_name=エナジーボール, expected_modifier=4915)
 - [x] 専用アイテム補正(item_name=こころのしずく, mon_name=ラティオス, move_name=サイコキネシス, expected_modifier=4915)
 - [x] 専用アイテム補正(item_name=こころのしずく, mon_name=ラティアス, move_name=ドラゴンクロー, expected_modifier=4915)
 - [x] 専用アイテム補正(item_name=こんごうだま, mon_name=ディアルガ, move_name=ドラゴンクロー, expected_modifier=4915)

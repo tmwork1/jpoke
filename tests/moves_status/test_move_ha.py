@@ -386,6 +386,44 @@ def test_ハートスタンプ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ハートスワップ_すべての能力ランクが入れ替わる():
+    """ハートスワップ: 攻撃者と防御者のすべての能力ランクが互いに入れ替わること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハートスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 攻撃者のこうげき+2、防御者のぼうぎょ-1 を設定
+    attacker.rank["atk"] = 2
+    defender.rank["def"] = -1
+    t.run_move(battle, 0)
+
+    # スワップ後: 攻撃者は防御者のランクを受け取る
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["def"] == -1
+    # スワップ後: 防御者は攻撃者のランクを受け取る
+    assert defender.rank["atk"] == 2
+    assert defender.rank["def"] == 0
+
+
+def test_ハートスワップ_全ランクゼロのとき変化なし():
+    """ハートスワップ: 両者のランクがすべて0のとき入れ替えても変化なし"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハートスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    for stat in ("atk", "def", "spa", "spd", "spe", "accuracy", "evasion"):
+        assert attacker.rank[stat] == 0
+        assert defender.rank[stat] == 0
+
+
 def test_ハードローラー_ひるみが発動する():
     """ハードローラー: 30%でひるみを付与する。"""
     battle = t.start_battle(
