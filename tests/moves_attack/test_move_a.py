@@ -597,6 +597,79 @@ def test_いわなだれ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ウェザーボール_ばんのうがさ持ちははれでもノーマルタイプのまま():
+    """ウェザーボール: 使用者がばんのうがさを持つ場合、はれ中でもノーマルタイプのまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ばんのうがさ", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ノーマル"
+
+
+def test_ウェザーボール_天候なし時ノーマルタイプになる():
+    """ウェザーボール: 天候がないとき、ノーマルタイプのまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ノーマル"
+
+
+@pytest.mark.parametrize("weather_name, expected_type", [
+    ("はれ", "ほのお"),
+    ("おおひでり", "ほのお"),
+    ("あめ", "みず"),
+    ("おおあめ", "みず"),
+    ("すなあらし", "いわ"),
+    ("ゆき", "こおり"),
+])
+def test_ウェザーボール_天候に応じてタイプが変化する(weather_name: str, expected_type: str):
+    """ウェザーボール: 天候が有効なとき、天候に対応するタイプに変化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=(weather_name, 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == expected_type
+
+
+def test_ウェザーボール_天候時威力が2倍になる():
+    """ウェザーボール: 天候が有効なとき威力が2倍（50→100）になる。"""
+    # 天候なし: ノーマルタイプ・威力50
+    battle_no = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender_no = battle_no.actives[1]
+    hp_before_no = defender_no.hp
+    t.fix_random(battle_no, 0.0)
+    t.run_move(battle_no, 0)
+    damage_no = hp_before_no - defender_no.hp
+
+    # すなあらし: いわタイプ・威力100（ノーマルへの等倍）
+    battle_yes = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("すなあらし", 5),
+        accuracy=100,
+    )
+    defender_yes = battle_yes.actives[1]
+    hp_before_yes = defender_yes.hp
+    t.fix_random(battle_yes, 0.0)
+    t.run_move(battle_yes, 0)
+    damage_yes = hp_before_yes - defender_yes.hp
+
+    assert damage_yes > damage_no
+
+
 def test_ウェーブタックル_使用後に攻撃者が反動ダメージを受ける():
     """ウェーブタックル: 与えたダメージの1/3を攻撃者が反動として受ける。"""
     battle = t.start_battle(
