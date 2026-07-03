@@ -115,6 +115,49 @@ def test_なみのり_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_にぎりつぶす_相手HP1のとき威力1():
+    """にぎりつぶす: 相手のHPが1のとき威力は最低1（max(1, floor(120*1/max_hp))）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["にぎりつぶす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 1
+
+
+def test_にぎりつぶす_相手HP半分のとき威力59():
+    """にぎりつぶす: 相手のHPが半分のとき威力が約59になる。
+    カビゴン max_hp=235, hp=117 → floor(120 * 117 / 235) = 59。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["にぎりつぶす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = defender.max_hp // 2
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 59
+
+
+def test_にぎりつぶす_相手HP満タンのとき威力120():
+    """にぎりつぶす: 相手のHPが満タンのとき威力120。
+    floor(120 * max_hp / max_hp) = 120。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["にぎりつぶす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = defender.max_hp  # 満タン
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 120
+
+
 def test_にどげり_命中判定1回で2回ヒットする():
     """にどげり: 命中判定は1回だけで、2ヒットする。"""
     battle = t.start_battle(
