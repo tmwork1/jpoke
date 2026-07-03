@@ -18,6 +18,41 @@ def test_かいでんぱ_相手の特攻が2段階下がる():
     assert defender.rank["spa"] == -2
 
 
+def test_かいふくふうじ_使用で相手にかいふくふうじ状態が付与される():
+    """かいふくふうじ: 技を使うと相手に「かいふくふうじ」揮発性状態が付与される（5ターン）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かいふくふうじ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("かいふくふうじ")
+    assert defender.volatiles["かいふくふうじ"].count == 5
+
+
+def test_かいふくふうじ_状態中はHP回復技が無効になる():
+    """かいふくふうじ: 状態中はじこさいせい等のHP回復技を使っても回復できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かいふくふうじ"])],
+        team1=[Pokemon("カビゴン", move_names=["じこさいせい"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    # あらかじめHPを減らしておく
+    defender.hp = defender.max_hp // 2
+    hp_before = defender.hp
+
+    # かいふくふうじを付与する
+    t.run_move(battle, 0)
+    assert defender.has_volatile("かいふくふうじ")
+
+    # かいふくふうじ状態でじこさいせいを使っても回復しない
+    t.run_move(battle, 1)
+    assert defender.hp == hp_before
+
+
 def test_かえんのまもり_技使用でかえんのまもり状態が付与される():
     """かえんのまもり: 技を使うと自分にかえんのまもり揮発性状態が付与される"""
     battle = t.start_battle(
