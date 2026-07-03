@@ -1,0 +1,30 @@
+レビュー完了: はめつのねがい・みらいよち
+
+## 実装レビュー結果
+
+### 仕様整合性 ✓
+- ダメージを使用ターンに計算・格納（roll_damage → field.damage）
+- フィールドは相手陣営に設置（get_side(ctx.defender)）
+- count=2 で設置、ターン終了時にtick、2回目のtickで解除 → 2ターン後ダメージ ✓
+- すでに発動中は失敗（fail_check）✓
+- 両技は独立したSideFieldNameキーで動作 ✓
+
+### コード品質 ✓
+- MoveHandler.subject_spec="attacker:self" （ON_MOVE_CHARGE/ON_TRY_MOVE_1） ✓
+- FieldHandler.subject_spec="source:self" （ON_TURN_END/ON_FIELD_DEACTIVATE） ✓
+- battle.modify_hp() 使用 ✓
+- handlers/ 五十音順 ✓
+- `if not ctx.source.alive` は遅延ダメージの正当なガード（重複ガードではない）✓
+- foe_side.activate() でON_MODIFY_DURATION をスキップ（ひかりのねんど不適用）→ 仕様通り ✓
+
+### テスト追加（各4件）
+- test_move_ha.py: はめつのねがい（使用ターン攻撃なし・2ターン後ダメージ・連続使用失敗・フィールド設置）
+- test_move_ma.py: みらいよち（使用ターン攻撃なし・2ターン後ダメージ・連続使用失敗・独立動作）
+
+### 進捗表更新
+- はめつのねがい: テスト x→x、レビュー -→✓
+- みらいよち: テスト -→x、レビュー -→✓
+
+### 注意事項
+test_いかさまダイス_固定回数技には効果がない[ダブルニードル] が失敗しているが、
+これは本タスク（はめつのねがい/みらいよち）と無関係の既存バグであり対応外。

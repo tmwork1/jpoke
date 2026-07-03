@@ -365,6 +365,13 @@ class MoveExecutor:
         hit_count = self._resolve_hit_count(ctx)
         ctx.hit_count = hit_count
 
+        # ヒットごとに命中判定を行うかどうか（いかさまダイス等で上書き可能）
+        check_hit_each_time = self._events.emit(
+            Event.ON_MODIFY_HIT_CHECK_EACH_TIME,
+            ctx,
+            ctx.move.has_flag("check_hit_each_time"),
+        )
+
         # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
         for hit_index in range(1, hit_count + 1):
             ctx.hit_index = hit_index
@@ -376,7 +383,7 @@ class MoveExecutor:
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (
                 ctx.move.accuracy is not None
-                and (hit_index == 1 or ctx.move.has_flag("check_hit_each_time"))
+                and (hit_index == 1 or check_hit_each_time)
             )
 
             if need_hit_check and not self._check_hit(ctx):

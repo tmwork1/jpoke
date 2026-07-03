@@ -207,6 +207,56 @@ def test_あつぞこブーツ_まきびし系ハザード無効(side_name):
     assert not raichu.ailment.is_active
 
 
+def test_イアのみ_それ以外の性格ではこんらんしない():
+    """イアのみ: すっぱい味が嫌いでない性格では発動してもこんらんしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="イアのみ", nature="いじっぱり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert not mon.has_volatile("こんらん")
+
+
+@pytest.mark.parametrize(
+    "nature",
+    ["さみしがり", "おっとり", "おとなしい", "せっかち"]
+)
+def test_イアのみ_ぼうぎょが上がりにくい性格でこんらんする(nature):
+    """イアのみ: すっぱい味が嫌いな性格（ぼうぎょが上がりにくい）は発動と同時にこんらんする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="イアのみ", nature=nature)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
+def test_いかさまダイス_スキルリンク所持時はスキルリンクが優先される():
+    """いかさまダイス: スキルリンクと併せ持つ場合、必ず最大ヒット数になる（いかさまダイスの抽選で減らない）"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", item_name="いかさまダイス", ability_name="スキルリンク",
+            move_names=["みだれひっかき"],
+        )],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)  # いかさまダイス単体なら4ヒットになる乱数
+    foe = battle.actives[1]
+    initial_hp = foe.max_hp
+    t.run_move(battle, 0)
+    assert foe.hp == initial_hp - 5  # スキルリンクの最大ヒット数が優先される
+
+
 def test_いかさまダイス_ヒット数4():
     """いかさまダイス: 2-5回技のヒット数を4か5に固定する（4ヒット側）"""
     battle = t.start_battle(
@@ -235,6 +285,38 @@ def test_いかさまダイス_ヒット数5():
     initial_hp = foe.max_hp
     t.run_move(battle, 0)
     assert foe.hp == initial_hp - 5
+
+
+@pytest.mark.parametrize("move_name", ["ダブルウイング", "にどげり"])
+def test_いかさまダイス_固定回数技には効果がない(move_name):
+    """いかさまダイス: 2回固定などの連続技のヒット数には影響しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", item_name="いかさまダイス", move_names=[move_name])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_damage(battle, 1)
+    foe = battle.actives[1]
+    initial_hp = foe.max_hp
+    t.run_move(battle, 0)
+    assert foe.hp == initial_hp - 2
+
+
+@pytest.mark.parametrize("move_name", ["トリプルキック", "トリプルアクセル", "ネズミざん"])
+def test_いかさまダイス_毎ヒット命中判定技は初回のみ判定(move_name):
+    """いかさまダイス: トリプルキック等の毎ヒット命中判定技を初回ヒットのみの判定にする。
+    2発目以降は本来なら外れる状況を疑似的に発生させても、判定自体が行われず全ヒットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", item_name="いかさまダイス", move_names=[move_name])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.fix_damage(battle, 1)
+    # 2発目以降で呼ばれたら外れる想定の命中判定（呼ばれなければヒットし続ける）
+    battle.move_executor._check_hit = lambda ctx: ctx.hit_index == 1
+    foe = battle.actives[1]
+    initial_hp = foe.max_hp
+    move = t.run_move(battle, 0)
+    assert foe.hp == initial_hp - move.max_hits
 
 
 def test_いのちのたま():
@@ -1906,10 +1988,12 @@ def test_天候延長アイテム(item_name, weather):
     ("かまどのめん", "オーガポン(かまど)", "たいあたり", 4915),
     ("でんきだま", "ピカチュウ", "たいあたり", 8192),
     ("でんきだま", "ピカチュウ", "でんきショック", 8192),
-    ("いしずえのめん", "オーガポン(いしずえ)", "エナジーボール", 4096),
+    ("いしずえのめん", "オーガポン(いしずえ)", "エナジーボール", 4915),
+    ("いどのめん", "オーガポン(いど)", "エナジーボール", 4915),
 ])
 def test_専用アイテム攻撃補正(item_name, mon_name, move_name, expected_modifier):
-    """オーガポンのめん・でんきだま: 攻撃補正（atk_modifier）を上昇させる（特殊技は補正なし）"""
+    """オーガポンのめん・でんきだま: 攻撃補正（atk_modifier）を上昇させる
+    （オーガポンのめんは物理・特殊問わず攻撃技の威力を1.2倍にする）"""
     battle = t.start_battle(
         team0=[Pokemon(mon_name, item_name=item_name, move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],

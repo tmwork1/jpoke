@@ -138,6 +138,10 @@ class Event(Enum):
     # handle: ability.py（スキルリンク・おやこあい）/ item.py（いかさまダイス）
     ON_MODIFY_HIT_COUNT = auto()
 
+    # emit: core/move_executor.py（連続技のヒット毎命中判定要否を決定。ヒットループ開始前に1回だけ発火）
+    # handle: item.py（いかさまダイス: トリプルキック等を初回のみの命中判定にする）
+    ON_MODIFY_HIT_CHECK_EACH_TIME = auto()
+
     # emit: core/move_executor.py（行動実行可否の判定）
     # handle: ailment.py（まひ・ねむり・こおり）, volatile.py（こんらん・ひるみ・どろぼう状態等）
     ON_TRY_ACTION = auto()

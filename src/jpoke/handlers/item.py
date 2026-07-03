@@ -121,7 +121,8 @@ def _heal_berry(battle: Battle,
                 *,
                 denominator: int,
                 heal_r: float | None = None,
-                heal_v: int | None = None) -> HandlerReturn:
+                heal_v: int | None = None,
+                confuse_natures: tuple[str, ...] | None = None) -> HandlerReturn:
     mon = ctx.target
     assert mon is not None
     # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
@@ -131,6 +132,9 @@ def _heal_berry(battle: Battle,
         else:
             battle.modify_hp(mon, v=heal_v)
         _announce_and_consume_item(battle, mon)
+        # 嫌いな味（性格でぼうぎょ等が下がりにくい/上がりにくい組）のときこんらんする
+        if confuse_natures is not None and mon.nature in confuse_natures:
+            battle.volatile_manager.apply_confusion(mon, source=mon)
     return HandlerReturn(value=value)
 
 def _apply_ailment_from_item(battle: Battle, ctx: EventContext, value: Any, ailment: AilmentName) -> HandlerReturn:
@@ -271,6 +275,22 @@ def あつぞこブーツ_check_hazard_immune(_battle: Battle, _ctx: EventContex
     return HandlerReturn(value=True, stop_event=True)
 
 
+def イアのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """イアのみ: HPが1/4以下になった瞬間に最大HPの1/3を回復するが、
+    ぼうぎょが上がりにくい性格（さみしがり・おっとり・おとなしい・せっかち）は
+    すっぱい味を嫌うためこんらんする。
+    """
+    return _heal_berry(
+        battle, ctx, value, denominator=4, heal_r=1/3,
+        confuse_natures=("さみしがり", "おっとり", "おとなしい", "せっかち"),
+    )
+
+
+def いかさまダイス_modify_hit_check_each_time(_battle: Battle, _ctx: AttackContext, _value: bool) -> HandlerReturn:
+    """いかさまダイス: トリプルキック等、毎ヒット命中判定する技を初回ヒットのみの判定にする。"""
+    return HandlerReturn(value=False)
+
+
 def いかさまダイス_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """いかさまダイス: 2-5回連続技のヒット数を4回または5回へ補正する。"""
     min_hits, max_hits = ctx.move.min_hits, ctx.move.max_hits
@@ -362,8 +382,8 @@ def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext,
 
 
 def オーガポンのめん_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """オーガポンのめん共通: 物理技の攻撃補正を1.2倍にする。"""
-    if ctx.move.category == "physical":
+    """オーガポンのめん共通: 攻撃技の威力を物理・特殊問わず1.2倍にする。"""
+    if ctx.move.is_attack:
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 

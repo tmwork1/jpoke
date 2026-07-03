@@ -6368,8 +6368,8 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=95,
         accuracy=100,
-        flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        flags={"contact", "unprotectable", "slash"},
+        handlers={},  # 追加効果なし
     ),
     "パワーウィップ": MoveData(
         type="くさ",

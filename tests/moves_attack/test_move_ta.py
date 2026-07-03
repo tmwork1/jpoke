@@ -1299,6 +1299,30 @@ def test_トリプルアクセル_最大3回ヒットする():
     assert defender.hits_taken == 3
 
 
+def test_トリプルキック_2発目が外れると打ち切られる():
+    """トリプルキック: check_hit_each_time=Trueのため、2発目の命中判定に外れるとそこで打ち切られる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["トリプルキック"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    battle.move_executor._check_hit = lambda ctx: ctx.hit_index == 1
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 1
+
+
+def test_トリプルキック_最大3回ヒットする():
+    """トリプルキック: 命中判定を各回行い、最大3回ヒットする（check_hit_each_time=True）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["トリプルキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 3
+
+
 def test_どくづき_どくが発動する():
     """どくづき: 30%でどくを付与する。"""
     battle = t.start_battle(

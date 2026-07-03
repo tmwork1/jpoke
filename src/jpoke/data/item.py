@@ -83,7 +83,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.heal_on_quarter_hp,
+                h.イアのみ_heal_on_quarter_hp,
                 subject_spec="target:self",
             )
         },
@@ -100,7 +100,12 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_MODIFY_HIT_COUNT: h.ItemHandler(
                 h.いかさまダイス_modify_hit_count,
                 subject_spec="attacker:self",
-            )
+                priority=90,  # スキルリンク等の特性側ハンドラ(priority=100)より先に発動し、後勝ちの上書きで特性側を優先させる
+            ),
+            Event.ON_MODIFY_HIT_CHECK_EACH_TIME: h.ItemHandler(
+                h.いかさまダイス_modify_hit_check_each_time,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "いしずえのめん": ItemData(
