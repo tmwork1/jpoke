@@ -79,7 +79,8 @@
     {"name": "りゅうせいぐん", "type": "move"},
     {"name": "りんごさん", "type": "move"},
     {"name": "ルミナコリジョン", "type": "move"},
-    {"name": "れんごく", "type": "move"}
+    {"name": "れんごく", "type": "move"},
+    {"name": "リーフストーム", "type": "move"}
   ],
   "failed":    []
 }

@@ -876,6 +876,16 @@ def test_りんごさん_とくぼうダウン_secondary無し():
     assert results[1].min_damage == results[0].min_damage
 
 
+def test_リーフストーム_とくこうダウン():
+    """リーフストーム: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("リーフストーム"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
 def test_ルミナコリジョン_とくぼうダウン():
     """ルミナコリジョン: 命中後に相手のとくぼうが2段階下がるため2発目のダメージが増加する"""
     battle = t.start_battle(

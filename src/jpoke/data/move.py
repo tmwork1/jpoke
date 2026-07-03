@@ -8296,6 +8296,9 @@ MOVES: dict[str, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.リーフストーム_sharply_reduce_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.オーバーヒート_lower_spa)
         }
     ),
     "リーフブレード": MoveData(
