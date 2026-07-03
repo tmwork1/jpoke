@@ -346,6 +346,59 @@ def test_はなふぶき_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_はめつのねがい_2ターン後に相手にダメージが入る():
+    """はめつのねがい: 使用から2ターン後のターン終了時に相手へダメージが発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", move_names=["はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    t.end_turn(battle)  # count: 2 → 1、まだダメージなし
+    assert defender.hp == hp_before
+    t.end_turn(battle)  # count: 1 → 0 → フィールド解除 → ダメージ発生
+    assert defender.hp < hp_before
+
+
+def test_はめつのねがい_2回連続使用で失敗する():
+    """はめつのねがい: 相手陣にすでにフィールドが存在する場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", move_names=["はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)  # 1回目: 成功してフィールド設置
+    t.run_move(battle, 0)  # 2回目: フィールド存在により失敗
+    assert battle.move_executor.move_success is False
+
+
+def test_はめつのねがい_使用ターンには攻撃が発動しない():
+    """はめつのねがい: 使用ターンには即時攻撃が発動せず、相手にダメージを与えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", move_names=["はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_はめつのねがい_相手陣にフィールドが設置される():
+    """はめつのねがい: 使用後に相手陣営に「はめつのねがい」サイドフィールドが設置される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", move_names=["はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    foe_side = battle.get_side(battle.actives[1])
+    t.run_move(battle, 0)
+    assert foe_side.get("はめつのねがい").is_active
+
+
 def test_はめつのひかり_使用後に攻撃者が反動ダメージを受ける():
     """はめつのひかり: 与えたダメージの1/2を攻撃者が反動として受ける。"""
     battle = t.start_battle(

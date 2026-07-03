@@ -212,6 +212,62 @@ def test_みずのはどう_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_みらいよち_2ターン後に相手にダメージが入る():
+    """みらいよち: 使用から2ターン後のターン終了時に相手へダメージが発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["みらいよち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    t.end_turn(battle)  # count: 2 → 1、まだダメージなし
+    assert defender.hp == hp_before
+    t.end_turn(battle)  # count: 1 → 0 → フィールド解除 → ダメージ発生
+    assert defender.hp < hp_before
+
+
+def test_みらいよち_2回連続使用で失敗する():
+    """みらいよち: 相手陣にすでにフィールドが存在する場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["みらいよち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)  # 1回目: 成功してフィールド設置
+    t.run_move(battle, 0)  # 2回目: フィールド存在により失敗
+    assert battle.move_executor.move_success is False
+
+
+def test_みらいよち_はめつのねがいと独立して動作する():
+    """みらいよち と はめつのねがい は別フィールドであり、同時に有効化できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["みらいよち", "はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    foe_side = battle.get_side(battle.actives[1])
+    t.run_move(battle, 0, 0)  # みらいよち
+    t.run_move(battle, 0, 1)  # はめつのねがい
+    # 両フィールドが同時に有効化されていること
+    assert foe_side.get("みらいよち").is_active
+    assert foe_side.get("はめつのねがい").is_active
+
+
+def test_みらいよち_使用ターンには攻撃が発動しない():
+    """みらいよち: 使用ターンには即時攻撃が発動せず、相手にダメージを与えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["みらいよち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
 def test_ミラーショット_命中率1段階低下が発動する():
     """ミラーショット: 30%の確率で相手の命中率を1段階下げる。"""
     battle = t.start_battle(
