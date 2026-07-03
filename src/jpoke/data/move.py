@@ -5416,7 +5416,19 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=1,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.なげつける_check_item,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.なげつける_apply_item_effect,
+            ),
+            Event.ON_MOVE_END: h.MoveHandler(
+                ha.なげつける_consume_item,
+            ),
+        },
     ),
     "なまける": MoveData(
         type="ノーマル",

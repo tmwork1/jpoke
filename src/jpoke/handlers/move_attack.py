@@ -1398,6 +1398,62 @@ def ナイトバースト_reduce_acc(battle: Battle, ctx: AttackContext, value: 
     return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.4)
 
 
+def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なげつける: アイテムに応じた追加効果を命中時に適用する。
+
+    対象のアイテムはこの時点ではまだ消費されていない（ON_MOVE_ENDで消費）。
+    でんきだま → まひ、かえんだま → やけど、どくバリ → どく、どくどくだま → もうどく。
+    """
+    item_name = ctx.attacker.item.base_name
+    if item_name == "でんきだま":
+        battle.ailment_manager.apply(ctx.defender, "まひ", source=ctx.attacker, ctx=ctx)
+    elif item_name == "かえんだま":
+        battle.ailment_manager.apply(ctx.defender, "やけど", source=ctx.attacker, ctx=ctx)
+    elif item_name == "どくバリ":
+        battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
+    elif item_name == "どくどくだま":
+        battle.ailment_manager.apply(ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx)
+    # TODO: おうじゃのしるし → ひるみ
+    # TODO: するどいキバ → ひるみ
+    # TODO: しろいハーブ → 相手の下がったランクを0に戻す
+    # TODO: メンタルハーブ → 相手のメンタル系状態を回復
+    # TODO: ラムのみ → 相手の状態異常・こんらんを回復
+    # TODO: その他のきのみ・追加効果アイテム
+    return HandlerReturn(value=value)
+
+
+def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なげつける: 使用者のアイテムを確認し、威力を設定する。
+
+    アイテムを持っていない場合、またはfling_power=0の対象外アイテムの場合は失敗する。
+    成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
+    """
+    attacker = ctx.attacker
+    if not attacker.has_item():
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "なげつける_アイテムなし"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+
+    fling_power = attacker.item.data.fling_power
+    if fling_power == 0:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "なげつける_対象外アイテム"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+
+    ctx.move.power = fling_power
+    return HandlerReturn(value=value)
+
+
+def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なげつける: 命中可否に関わらず使用後にアイテムを消費する。"""
+    battle.item_manager.remove_item(ctx.attacker, source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def ニトロチャージ_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
