@@ -181,6 +181,49 @@ def test_あやしいひかり_こんらん付与():
     assert defender.has_volatile("こんらん")
 
 
+@pytest.mark.parametrize("ailment_name", ["やけど", "まひ", "どく"])
+def test_アロマセラピー_使用者の状態異常が回復される(ailment_name):
+    """アロマセラピー: 使用者がやけど・まひ・どく等の状態異常のとき、使用後に回復される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["アロマセラピー"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=(ailment_name, None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    battle.test_option.trigger_ailment = False
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
+def test_アロマセラピー_控えの状態異常も回復される():
+    """アロマセラピー: 控えのポケモンが状態異常でも、使用後に回復される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["アロマセラピー"]), Pokemon("イーブイ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    bench = battle.player_states[battle.players[0]].team[1]
+    battle.ailment_manager.apply(bench, "まひ")
+    assert bench.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not bench.ailment.is_active
+
+
+def test_アロマセラピー_状態異常なしでも失敗しない():
+    """アロマセラピー: パーティ全員が状態異常でない場合でも技が失敗せず正常終了する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["アロマセラピー"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    assert not attacker.ailment.is_active
+    # 例外が発生せず正常完了することを確認する
+    t.run_move(battle, 0)
+    assert not attacker.ailment.is_active
+
+
 def test_いえき_protectedフラグ持ちに失敗():
     """いえき: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
     battle = t.start_battle(
