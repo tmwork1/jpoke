@@ -456,6 +456,38 @@ def test_いかりのまえば_相手HP半分のダメージ(defender_hp: int, e
     assert defender.hp == defender_hp - expected_damage
 
 
+def test_いじげんホール_まもる状態の相手にダメージを与える():
+    """いじげんホール: unprotectableフラグを持つため、まもる状態の相手を貫通してダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["いじげんホール"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_いじげんホール_みがわり状態の相手の本体にダメージを与える():
+    """いじげんホール: bypass_substituteフラグを持つため、みがわり状態の相手の本体にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["いじげんホール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    # みがわりにHPを設定（貫通しなければこのHPが削られる）
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    # bypass_substitute技はみがわりを無視して本体にダメージを与えるため、本体HPが減る
+    assert defender.hp < hp_before
+    # みがわりのHPは変化しない
+    assert defender.volatiles["みがわり"].hp == 999
+
+
 def test_いじげんラッシュ_防御1段階低下が発動する():
     """いじげんラッシュ: 命中時に使用者のBが1段階低下する（確率100%）。"""
     battle = t.start_battle(

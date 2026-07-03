@@ -636,7 +636,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=80,
         accuracy=None,
-        handlers={},  # TODO: 相手のまもる系とみがわり状態を無視する効果を実装
+        flags={"unprotectable", "bypass_substitute"},
     ),
     "いじげんラッシュ": MoveData(
         type="あく",
