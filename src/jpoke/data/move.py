@@ -4975,7 +4975,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=10,
         accuracy=90,
-        flags={"contact"},
+        flags={"contact", "check_hit_each_time"},
         multi_hit={
             "min": 3,
             "max": 3,
@@ -6193,7 +6193,11 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=10,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ハートスワップ_swap_ranks,
+            ),
+        }
     ),
     "ハードプラント": MoveData(
         type="くさ",

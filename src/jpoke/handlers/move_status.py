@@ -1497,6 +1497,16 @@ def ハロウィン_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
+def ハートスワップ_swap_ranks(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ハートスワップ: 使用者と相手のすべての能力ランク変化を入れ替える。
+
+    こうげき・ぼうぎょ・とくこう・とくぼう・すばやさ・めいちゅう・かいひの
+    ランク変化を互いに交換する。実数値は変化しない。
+    """
+    ctx.attacker.rank, ctx.defender.rank = ctx.defender.rank, ctx.attacker.rank
+    return HandlerReturn(value=value)
+
+
 def バトンタッチ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """バトンタッチの効果: ランク・揮発性状態を保存し、ピボット交代する。
 
