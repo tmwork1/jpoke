@@ -13,6 +13,18 @@ if TYPE_CHECKING:
 from collections import defaultdict
 from jpoke.utils.lethal_dist import State, add_dist, to_dist
 
+def _damage(hp_dist: StateDist, v: int) -> StateDist:
+    """全状態に固定ダメージを与える（HP は 0 未満にならない）。"""
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        new_state = State(
+            max(0, state.value - v),
+            ability_enabled=state.ability_enabled,
+            item_enabled=state.item_enabled,
+        )
+        new_dist[new_state] += freq
+    return dict(new_dist)
+
 def _heal(hp_dist: StateDist,
           target: Pokemon,
           v: int = 0,
@@ -290,6 +302,17 @@ def タンガのみ_resist_bug(battle: Battle, ctx: LethalContext, hp_dist: Stat
     return _type_resist_berry(battle, ctx, hp_dist, "むし")
 
 
+def どく_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """どく: ターン終了時に最大HPの1/8ダメージを受ける。
+
+    ポイズンヒール所持時はダメージを与えない（ポイズンヒール側で回復処理する）。
+    """
+    if ctx.defender.ability.base_name == "ポイズンヒール":
+        return hp_dist
+    damage = max(1, ctx.defender.max_hp // 8)
+    return _damage(hp_dist, damage)
+
+
 def ナモのみ_resist_dark(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ナモのみ: あくタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "あく")
@@ -370,6 +393,26 @@ def メテオビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: St
     if ctx.move_secondary:
         ctx.attacker.rank["spa"] += 1
     return hp_dist
+
+
+def もうどく_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """もうどく: ターン終了時に経過ターンに応じて増加するダメージを受ける。
+
+    ダメージ: max(1, 最大HP × min(15, 経過ターン数) // 16)
+    ポイズンヒール所持時はダメージを与えない（ポイズンヒール側で回復処理する）。
+    """
+    if ctx.defender.ability.base_name == "ポイズンヒール":
+        return hp_dist
+    ctx.defender.ailment.tick()
+    turns = min(15, ctx.defender.ailment.elapsed_turns)
+    damage = max(1, ctx.defender.max_hp * turns // 16)
+    return _damage(hp_dist, damage)
+
+
+def やけど_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """やけど: ターン終了時に最大HPの1/16ダメージを受ける。"""
+    damage = max(1, ctx.defender.max_hp // 16)
+    return _damage(hp_dist, damage)
 
 
 def ヤチェのみ_resist_ice(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

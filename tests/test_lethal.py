@@ -333,6 +333,26 @@ def test_タラプのみ_特殊技受けた後とくぼう上昇():
     assert results[1].max_damage == 66
 
 
+def test_どく_ターン終了時ダメージ():
+    """どく状態のポケモンはターン終了時に最大HPの1/8ダメージを受ける"""
+    with_ailment = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    without_ailment = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    t.apply_ailment(with_ailment, active_index=1, ailment_name="どく")
+
+    results_with = t.calc_lethal(with_ailment, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ailment, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ailment.actives[1].max_hp
+    damage = max(1, max_hp // 8)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
 def test_ナモのみ_抜群ダメージ半減():
     """ナモのみ: あく抜群技の1発目が半減され、2発目は通常ダメージになる"""
     battle = t.start_battle(
@@ -463,6 +483,47 @@ def test_マルチスケイル_ダメージ半減():
     assert results[1].min_damage == 90
     assert results[1].max_damage == 108
     assert results[2].lethal_probability == 1.0
+
+
+def test_もうどく_増加ダメージ():
+    """もうどく状態のポケモンはターン終了時に経過ターンに応じて増加するダメージを受ける"""
+    with_ailment = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    without_ailment = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    t.apply_ailment(with_ailment, active_index=1, ailment_name="もうどく")
+
+    results_with = t.calc_lethal(with_ailment, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ailment, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ailment.actives[1].max_hp
+    d1 = max(1, max_hp * 1 // 16)
+    d2 = max(1, max_hp * 2 // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == d1 + d2
+
+
+def test_やけど_ターン終了時ダメージ():
+    """やけど状態のポケモンはターン終了時に最大HPの1/16ダメージを受ける"""
+    with_ailment = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    without_ailment = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    t.apply_ailment(with_ailment, active_index=1, ailment_name="やけど")
+
+    results_with = t.calc_lethal(with_ailment, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ailment, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ailment.actives[1].max_hp
+    damage = max(1, max_hp // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 
 def test_多段技_ヒットごとに分布を記録():

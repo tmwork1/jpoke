@@ -46,7 +46,10 @@
     {"name": "あめうけざら", "type": "ability"},
     {"name": "サンパワー", "type": "ability"},
     {"name": "じきゅうりょく", "type": "ability"},
-    {"name": "ポイズンヒール", "type": "ability"}
+    {"name": "ポイズンヒール", "type": "ability"},
+    {"name": "どく", "type": "ailment"},
+    {"name": "もうどく", "type": "ailment"},
+    {"name": "やけど", "type": "ailment"}
   ],
   "failed":    []
 }

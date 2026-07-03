@@ -1,5 +1,7 @@
-from jpoke.enums import DomainEvent, Event
+from jpoke.enums import DomainEvent, Event, LethalEvent
+from jpoke.core import LethalHandler
 from jpoke.handlers import ailment as h
+from jpoke.handlers import lethal as l
 from .models import AilmentData
 
 
@@ -19,6 +21,12 @@ AILMENTS: dict[str, AilmentData] = {
                 subject_spec="source:self",
                 priority=90,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.どく_damage,
+                subject="defender",
+            )
         }
     ),
     "もうどく": AilmentData(
@@ -27,6 +35,12 @@ AILMENTS: dict[str, AilmentData] = {
                 h.もうどく_damage,
                 subject_spec="source:self",
                 priority=90,
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.もうどく_damage,
+                subject="defender",
             )
         }
     ),
@@ -53,6 +67,12 @@ AILMENTS: dict[str, AilmentData] = {
                 h.やけど_damage,
                 subject_spec="source:self",
                 priority=100,
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.やけど_damage,
+                subject="defender",
             )
         }
     ),
