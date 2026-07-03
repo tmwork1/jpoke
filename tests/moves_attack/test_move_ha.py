@@ -148,6 +148,20 @@ def test_ハイドロポンプ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ハイパードリル_まもる中の相手にダメージが入る():
+    """ハイパードリル: unprotectableフラグを持つため、まもる状態の相手にもダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ハイパードリル"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ハイパーボイス_みがわりを貫通して本体にダメージを与える():
     """ハイパーボイス: soundラベルを持つため、みがわり状態の相手の本体にダメージを与える。"""
     battle = t.start_battle(
@@ -656,6 +670,46 @@ def test_パラボラチャージ_使用後に攻撃者のHPが回復する():
     hp_before = attacker.hp
     t.run_move(battle, 0)
     assert attacker.hp > hp_before
+
+
+def test_パワフルエッジ_きれあじで威力1_5倍():
+    """パワフルエッジ: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きれあじ", move_names=["パワフルエッジ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_パワフルエッジ_まもる中の相手にダメージが入る():
+    """パワフルエッジ: unprotectableフラグを持つため、まもる状態の相手にもダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワフルエッジ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_パワフルエッジ_まもる状態が解除されない():
+    """パワフルエッジ: まもる状態を無視してダメージを与えるが、まもる揮発状態は解除しない。
+
+    フェイントはまもる揮発状態を解除するが、パワフルエッジは解除しない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワフルエッジ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("まもる")
 
 
 def test_パワーウィップ_相手にダメージを与える():

@@ -5874,7 +5874,7 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "unprotectable"},
         handlers={},  # 追加効果なし
     ),
     "ハイパーボイス": MoveData(
