@@ -1,5 +1,7 @@
-from jpoke.enums import Event
+from jpoke.enums import Event, LethalEvent
+from jpoke.core import LethalHandler
 from jpoke.handlers import field as h
+from jpoke.handlers import lethal as l
 from ..models import FieldData
 
 TERRAIN: dict[str, FieldData] = {
@@ -43,6 +45,9 @@ TERRAIN: dict[str, FieldData] = {
                 ),
             ]
         },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.グラスフィールド_heal)
+        }
     ),
     "サイコフィールド": FieldData(
         handlers={

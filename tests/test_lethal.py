@@ -50,6 +50,26 @@ def test_アイスボディ_ゆき天気でターン終了時回復():
     assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
 
 
+def test_アクアリング_ターン終了時回復():
+    """アクアリング状態のポケモンはターン終了時に最大HPの1/16を回復する"""
+    with_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"アクアリング": 5},
+    )
+    without_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_volatile.actives[1].max_hp
+    heal = max(1, max_hp // 16)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
 def test_アッキのみ_消費後は発動しない():
     """アッキのみは1回だけ発動し、2発目以降は効果がない（2発目と3発目のダメージが同じ）"""
     battle = t.start_battle(
@@ -236,6 +256,46 @@ def test_くろいヘドロ_非どくタイプは毎ターンダメージ():
     )
 
 
+def test_グラスフィールド_接地ポケモンのターン終了時回復():
+    """グラスフィールド中、接地しているポケモンはターン終了時に最大HPの1/16を回復する"""
+    with_terrain = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("アーボック")],
+        terrain=("グラスフィールド", 5),
+    )
+    without_terrain = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("アーボック")],
+    )
+
+    results_with = t.calc_lethal(with_terrain, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_terrain, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_terrain.actives[1].max_hp
+    heal = max(1, max_hp // 16)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
+def test_しおづけ_ターン終了時ダメージ():
+    """しおづけ状態の非みず・はがねタイプはターン終了時に最大HPの1/16ダメージを受ける"""
+    with_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"しおづけ": 5},
+    )
+    without_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_volatile.actives[1].max_hp
+    damage = max(1, max_hp // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
 def test_じきゅうりょく_物理技受けるとぼうぎょ上昇():
     """じきゅうりょく: 物理技を受けるたびにぼうぎょが+1され、2発目のダメージが減少する"""
     battle = t.start_battle(
@@ -250,6 +310,26 @@ def test_じきゅうりょく_物理技受けるとぼうぎょ上昇():
     # 2発目: ぼうぎょ+1（rank +1: ×3/2補正）でダメージが減少
     assert results[1].min_damage == 62
     assert results[1].max_damage == 74
+
+
+def test_すなあらし_非いわじめんはがねタイプにダメージ():
+    """すなあらし天気中、いわ・じめん・はがね以外のポケモンはターン終了時に最大HPの1/16ダメージを受ける"""
+    with_weather = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        weather=("すなあらし", 5),
+    )
+    without_weather = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_weather, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_weather, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_weather.actives[1].max_hp
+    damage = max(1, max_hp // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 
 @pytest.mark.parametrize("item_name, move_name, defender_name, dmg1_min, dmg1_max, dmg2_min, dmg2_max", [
@@ -383,6 +463,66 @@ def test_ナモのみ_非抜群では発動しない():
     # lethal ハンドラが発動しないため、1発目と2発目のダメージが同じ
     assert results[0].min_damage == results[1].min_damage
     assert results[0].max_damage == results[1].max_damage
+
+
+def test_ねをはる_ターン終了時回復():
+    """ねをはる状態のポケモンはターン終了時に最大HPの1/16を回復する"""
+    with_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"ねをはる": 5},
+    )
+    without_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_volatile.actives[1].max_hp
+    heal = max(1, max_hp // 16)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
+def test_のろい_ターン終了時ダメージ():
+    """のろい状態のポケモンはターン終了時に最大HPの1/4ダメージを受ける"""
+    with_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"のろい": 5},
+    )
+    without_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_volatile.actives[1].max_hp
+    damage = max(1, max_hp // 4)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_バインド_ターン終了時ダメージ():
+    """バインド状態のポケモンはターン終了時にbind_damage_ratio（デフォルト1/8）のダメージを受ける"""
+    with_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    without_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_volatile.actives[1].max_hp
+    damage = max(1, int(max_hp / 8))
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 
 def test_ばけのかわ_2発目は通常ダメージ():
@@ -523,6 +663,26 @@ def test_やけど_ターン終了時ダメージ():
 
     max_hp = with_ailment.actives[1].max_hp
     damage = max(1, max_hp // 16)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_やどりぎのタネ_ターン終了時ダメージ():
+    """やどりぎのタネ状態のポケモンはターン終了時に最大HPの1/8ダメージを受ける"""
+    with_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"やどりぎのタネ": 5},
+    )
+    without_volatile = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+
+    results_with = t.calc_lethal(with_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_volatile, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_volatile.actives[1].max_hp
+    damage = max(1, max_hp // 8)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 

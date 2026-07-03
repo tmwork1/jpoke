@@ -1,9 +1,9 @@
 揮発状態	仕様書	計画書	実装	テスト	レビュー	リーサル実装	リーサルテスト
-アクアリング	x	x	x	x	x	-	-
+アクアリング	x	x	x	x	x	x	x
 あくむ	保留	保留	保留	保留	保留	n/a	n/a
 あなをほる	x	x	x	x	x	n/a	n/a
 あばれる	x	x	x	x	x	n/a	n/a
-あめまみれ	x	x	x	x	x	-	-
+あめまみれ	x	x	x	x	x	n/a	n/a
 アンコール	x	x	x	x	x	n/a	n/a
 いちゃもん	x	x	x	x	x	n/a	n/a
 うちおとす	x	x	x	x	x	n/a	n/a
@@ -18,7 +18,7 @@
 さしおさえ	保留	保留	保留	保留	保留	n/a	n/a
 さわがしい	x	x	x	x	x	n/a	n/a
 さわぐ	x	x	x	x	x	n/a	n/a
-しおづけ	x	x	x	x	x	-	-
+しおづけ	x	x	x	x	x	x	x
 じごくづき	x	x	x	x	x	n/a	n/a
 シャドーダイブ	x	x	x	x	x	n/a	n/a
 じゅうでん	x	x	x	x	x	n/a	n/a
@@ -37,9 +37,9 @@
 とくせいなし	x	x	x	x	x	n/a	n/a
 にげられない	x	x	x	x	x	n/a	n/a
 ねむけ	x	x	x	x	x	n/a	n/a
-ねをはる	x	x	x	x	x	-	-
-のろい	x	x	x	x	x	-	-
-バインド	x	x	x	x	x	-	-
+ねをはる	x	x	x	x	x	x	x
+のろい	x	x	x	x	x	x	x
+バインド	x	x	x	x	x	x	x
 ひるみ	x	x	x	x	x	n/a	n/a
 ふういん	x	x	x	x	x	n/a	n/a
 へんしん	保留	保留	保留	保留	保留	n/a	n/a
@@ -47,8 +47,8 @@
 マジックコート	x	x	x	x	x	n/a	n/a
 まもる	x	x	x	x	x	n/a	n/a
 まるくなる	x	x	x	x	x	n/a	n/a
-みがわり	x	x	x	x	x	-	-
+みがわり	x	x	x	x	x	保留	保留
 みちづれ	x	x	x	x	x	n/a	n/a
 メロメロ	x	x	x	x	x	n/a	n/a
-やどりぎのタネ	x	x	x	x	x	-	-
+やどりぎのタネ	x	x	x	x	x	x	x
 ロックオン	x	x	x	x	x	n/a	n/a

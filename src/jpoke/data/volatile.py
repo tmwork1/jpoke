@@ -3,8 +3,10 @@
 Note:
     このモジュール内の揮発状態定義はVOLATILES辞書内で五十音順に配置されています。
 """
-from jpoke.enums import Event
+from jpoke.enums import Event, LethalEvent
+from jpoke.core import LethalHandler
 from jpoke.handlers import volatile as h
+from jpoke.handlers import lethal as l
 from .models import VolatileData
 
 
@@ -30,6 +32,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
                 priority=70,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.アクアリング_heal, subject="defender")
         }
     ),
     "あなをほる": VolatileData(
@@ -273,6 +278,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
                 priority=100,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.しおづけ_damage, subject="defender")
         }
     ),
     "じごくづき": VolatileData(
@@ -528,6 +536,9 @@ VOLATILES: dict[str, VolatileData] = {
                 h.ねをはる_check_floating,
                 subject_spec="source:self",
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.ねをはる_heal, subject="defender")
         }
     ),
     "のろい": VolatileData(
@@ -537,6 +548,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
                 priority=100,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.のろい_damage, subject="defender")
         }
     ),
     "バインド": VolatileData(
@@ -554,6 +568,9 @@ VOLATILES: dict[str, VolatileData] = {
                 h.バインド_remove,
                 subject_spec="source:foe",
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.バインド_damage, subject="defender")
         }
     ),
     "ひるみ": VolatileData(
@@ -656,6 +673,9 @@ VOLATILES: dict[str, VolatileData] = {
                 subject_spec="source:self",
                 priority=80,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(func=l.やどりぎのタネ_damage, subject="defender")
         }
     ),
     "リチャージ": VolatileData(

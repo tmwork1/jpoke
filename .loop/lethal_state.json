@@ -49,7 +49,16 @@
     {"name": "ポイズンヒール", "type": "ability"},
     {"name": "どく", "type": "ailment"},
     {"name": "もうどく", "type": "ailment"},
-    {"name": "やけど", "type": "ailment"}
+    {"name": "やけど", "type": "ailment"},
+    {"name": "アクアリング", "type": "volatile"},
+    {"name": "あめまみれ", "type": "volatile"},
+    {"name": "しおづけ", "type": "volatile"},
+    {"name": "ねをはる", "type": "volatile"},
+    {"name": "のろい", "type": "volatile"},
+    {"name": "バインド", "type": "volatile"},
+    {"name": "やどりぎのタネ", "type": "volatile"},
+    {"name": "すなあらし", "type": "global_field"},
+    {"name": "グラスフィールド", "type": "global_field"}
   ],
   "failed":    []
 }

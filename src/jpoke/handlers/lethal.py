@@ -101,6 +101,11 @@ def アイスボディ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDi
     return _heal(hp_dist, ctx.defender, r=1/16)
 
 
+def アクアリング_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """アクアリング: ターン終了時に最大HPの1/16を回復する。"""
+    return _heal(hp_dist, ctx.defender, r=1/16)
+
+
 def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アッキのみ: 物理技を受けた直後にぼうぎょ+1して消費する。
 
@@ -235,9 +240,25 @@ def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_
     return dict(new_dist)
 
 
+def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """グラスフィールド: 接地しているポケモンのターン終了時に最大HPの1/16を回復する。"""
+    if battle.query.is_floating(ctx.defender):
+        return hp_dist
+    return _heal(hp_dist, ctx.defender, r=1/16)
+
+
 def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """サンパワー: はれ・おおひでりのとき攻撃側が1/8ダメージ（攻撃者HP未追跡のためスタブ）。"""
     return hp_dist
+
+
+def しおづけ_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """しおづけ: ターン終了時ダメージ（みず・はがねタイプは1/8、それ以外は1/16）。"""
+    if ctx.defender.has_type("みず") or ctx.defender.has_type("はがね"):
+        damage = max(1, ctx.defender.max_hp // 8)
+    else:
+        damage = max(1, ctx.defender.max_hp // 16)
+    return _damage(hp_dist, damage)
 
 
 def シュカのみ_resist_ground(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -251,6 +272,18 @@ def じきゅうりょく_boost_def(battle: Battle, ctx: LethalContext, hp_dist:
         return hp_dist
     ctx.defender.rank["def"] = min(6, ctx.defender.rank["def"] + 1)
     return hp_dist
+
+
+def すなあらし_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """すなあらし: いわ・じめん・はがね以外のポケモンに最大HPの1/16のダメージを与える。"""
+    if (
+        ctx.defender.has_type("いわ")
+        or ctx.defender.has_type("じめん")
+        or ctx.defender.has_type("はがね")
+    ):
+        return hp_dist
+    damage = max(1, ctx.defender.max_hp // 16)
+    return _damage(hp_dist, damage)
 
 
 def ソクノのみ_resist_electric(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -318,9 +351,29 @@ def ナモのみ_resist_dark(battle: Battle, ctx: LethalContext, hp_dist: StateD
     return _type_resist_berry(battle, ctx, hp_dist, "あく")
 
 
+def ねをはる_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ねをはる: ターン終了時に最大HPの1/16を回復する。"""
+    return _heal(hp_dist, ctx.defender, r=1/16)
+
+
+def のろい_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """のろい: ターン終了時に最大HPの1/4ダメージを受ける。"""
+    damage = max(1, ctx.defender.max_hp // 4)
+    return _damage(hp_dist, damage)
+
+
 def ハバンのみ_resist_dragon(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ハバンのみ: ドラゴンタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ドラゴン")
+
+
+def バインド_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """バインド: ターン終了時に bind_damage_ratio に応じたダメージを受ける（デフォルト1/8）。"""
+    volatile = ctx.defender.volatiles.get("バインド")
+    if volatile is None:
+        return hp_dist
+    damage = max(1, int(ctx.defender.max_hp * volatile.bind_damage_ratio))
+    return _damage(hp_dist, damage)
 
 
 def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -418,6 +471,12 @@ def やけど_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> 
 def ヤチェのみ_resist_ice(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ヤチェのみ: こおりタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "こおり")
+
+
+def やどりぎのタネ_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """やどりぎのタネ: ターン終了時に最大HPの1/8ダメージを受ける（相手への回復は考慮外）。"""
+    damage = max(1, ctx.defender.max_hp // 8)
+    return _damage(hp_dist, damage)
 
 
 def ヨプのみ_resist_fighting(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

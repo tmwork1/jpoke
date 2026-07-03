@@ -1,13 +1,13 @@
 名前	仕様書	計画書	実装	テスト	レビュー	リーサル実装	リーサルテスト
 はれ	x	x	x	x	x	n/a	n/a
 あめ	x	x	x	x	x	n/a	n/a
-すなあらし	x	x	x	x	x	-	-
+すなあらし	x	x	x	x	x	x	x
 ゆき	-	-	x	x	-	n/a	n/a
 おおひでり	x	x	x	x	x	n/a	n/a
 おおあめ	x	x	x	x	x	n/a	n/a
 らんきりゅう	x	x	x	x	x	n/a	n/a
 エレキフィールド	x	x	x	x	x	n/a	n/a
-グラスフィールド	x	x	x	x	x	-	-
+グラスフィールド	x	x	x	x	x	x	x
 サイコフィールド	x	x	x	x	x	n/a	n/a
 ミストフィールド	x	x	x	x	x	n/a	n/a
 じゅうりょく	x	x	x	x	x	n/a	n/a
