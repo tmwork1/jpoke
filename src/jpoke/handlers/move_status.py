@@ -132,6 +132,21 @@ def あやしいひかり_apply(battle: Battle, ctx: AttackContext, value: Any) 
     ))
 
 
+def アロマセラピー_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アロマセラピー: 使用者のパーティ全員（控えも含む）の状態異常を回復する。
+
+    状態異常（やけど・まひ・ねむり・こおり・どく・もうどく）を持つポケモンを回復する。
+    状態異常のないポケモンはスキップする。
+    """
+    mon = ctx.attacker
+    player = battle.get_player(mon)
+    state = battle.player_states[player]
+    for target in state.selection:
+        if target.ailment.is_active:
+            battle.ailment_manager.remove(target)
+    return HandlerReturn(value=value)
+
+
 def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アンコールの効果を発動する。"""
     move = ctx.defender.executed_move

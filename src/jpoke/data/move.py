@@ -515,7 +515,12 @@ MOVES: dict[str, MoveData] = {
         type="くさ",
         category="status",
         pp=5,
-        handlers={},  # TODO : 効果実装
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.アロマセラピー_apply,
+            ),
+        },
     ),
     "アロマミスト": MoveData(
         type="フェアリー",
