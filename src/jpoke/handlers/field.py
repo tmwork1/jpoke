@@ -8,6 +8,7 @@ from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, 
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 
+
 class FieldHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -20,7 +21,6 @@ class FieldHandler(Handler):
             priority=priority,
         )
 
-# ===== カウントダウン =====
 
 def tick_weather(battle: Battle, ctx: EventContext, value: Any):
     # 1P側でのみカウントダウンを実行
@@ -28,25 +28,26 @@ def tick_weather(battle: Battle, ctx: EventContext, value: Any):
         battle.weather_manager.tick_down()
     return HandlerReturn(value=value)
 
+
 def tick_terrain(battle: Battle, ctx: EventContext, value: Any):
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
         battle.terrain_manager.tick_down()
     return HandlerReturn(value=value)
 
-def tick_global_field(battle: Battle, ctx: EventContext, value: Any, name: GlobalFieldName) -> HandlerReturn:
+
+def _tick_global_field(battle: Battle, ctx: EventContext, value: Any, name: GlobalFieldName) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
         battle.global_manager.tick_down(name)
     return HandlerReturn(value=value)
 
-def tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFieldName) -> HandlerReturn:
+
+def _tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFieldName) -> HandlerReturn:
     player = battle.get_player(ctx.source)
     side = battle.get_side(player)
     side.tick_down(name)
     return HandlerReturn(value=value)
-
-# ===== 天候ハンドラ =====
 
 
 def あめ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -62,7 +63,7 @@ def あめ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def いやしのねがい_heal_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def いやしのねがい_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """いやしのねがい: 場に出たポケモンの HP を全回復し、状態異常を回復する。
 
     HP 満タンかつ状態異常なしのポケモンには発動せず、フィールドは保留される（第八世代以降仕様）。
@@ -77,9 +78,6 @@ def いやしのねがい_heal_on_switch_in(battle: Battle, ctx: EventContext, v
     battle.ailment_manager.remove(mon)
     side.deactivate("いやしのねがい")
     return HandlerReturn(value=value)
-
-
-# ===== 地形ハンドラ =====
 
 
 def エレキフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -112,16 +110,16 @@ def エレキフィールド_prevent_sleep(battle: Battle, ctx: EventContext, va
     return HandlerReturn(value=value)
 
 
-def おいかぜ_speed_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def おいかぜ_boost_spe(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """追い風で素早さ2倍"""
     return HandlerReturn(value=value * 2)
 
 
-def おいかぜ_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="おいかぜ")
+def おいかぜ_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="おいかぜ")
 
 
-def おおあめ_block_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def おおあめ_block_fire_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おおあめ中にほのおタイプ技を失敗させる（攻撃技・変化技を問わない）"""
     if ctx.move.type == "ほのお":
         battle.add_event_log(
@@ -132,10 +130,7 @@ def おおあめ_block_move(battle: Battle, ctx: AttackContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
-# ===== 強天候ハンドラ =====
-
-
-def おおひでり_block_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def おおひでり_block_water_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おおひでり中にみずタイプ技を失敗させる（攻撃技・変化技を問わない）"""
     if ctx.move.type == "みず":
         battle.add_event_log(
@@ -171,8 +166,8 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def オーロラベール_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="オーロラベール")
+def オーロラベール_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="オーロラベール")
 
 
 def グラスフィールド_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -233,8 +228,8 @@ def しろいきり_prevent_stat_drop(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
-def しろいきり_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="しろいきり")
+def しろいきり_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="しろいきり")
 
 
 def しんぴのまもり_prevent_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -266,14 +261,11 @@ def しんぴのまもり_prevent_confusion(battle: Battle, ctx: EventContext, v
     return HandlerReturn(value=value)
 
 
-def しんぴのまもり_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="しんぴのまもり")
+def しんぴのまもり_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="しんぴのまもり")
 
 
-# ===== グローバルフィールドハンドラ =====
-
-
-def じゅうりょく_activate_release_volatiles(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def じゅうりょく_remove_volatiles(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """じゅうりょく発動時にそらをとぶ・でんじふゆう揮発性状態を解除する"""
     mon = ctx.source
     for volatile_name in ["そらをとぶ", "でんじふゆう"]:
@@ -283,6 +275,7 @@ def じゅうりょく_activate_release_volatiles(battle: Battle, ctx: EventCont
 
 def じゅうりょく_block_gravity_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうりょく中にgravity_restrictedフラグの技を失敗させる"""
+    # TODO : 技ハンドラとして実装する
     if ctx.move.has_flag("gravity_restricted"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -294,6 +287,7 @@ def じゅうりょく_block_gravity_move(battle: Battle, ctx: AttackContext, va
 
 def じゅうりょく_g_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうりょく中にGのちからの威力が1.5倍になる"""
+    # TODO : Gのちからのハンドラに移譲する
     if ctx.move.name == "Gのちから":
         return HandlerReturn(value=apply_fixed_modifier(value, 6144))  # 1.5倍
     return HandlerReturn(value=value)
@@ -309,8 +303,8 @@ def じゅうりょく_modify_accuracy(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=apply_fixed_modifier(value, 6840))
 
 
-def じゅうりょく_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_global_field(battle, ctx, value, name="じゅうりょく")
+def じゅうりょく_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_global_field(battle, ctx, value, name="じゅうりょく")
 
 
 def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -332,7 +326,7 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
     return HandlerReturn(value=value)
 
 
-def すなあらし_D_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def すなあらし_boost_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """砂嵐時のいわタイプ特防1.5倍"""
     if (
         ctx.defender.has_type("いわ")
@@ -355,16 +349,16 @@ def すなあらし_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
-def トリックルーム_reverse_speed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def トリックルーム_reverse_spe(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """トリックルームで素早さ反転"""
     return HandlerReturn(value=-value)
 
 
-def トリックルーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_global_field(battle, ctx, value, name="トリックルーム")
+def トリックルーム_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_global_field(battle, ctx, value, name="トリックルーム")
 
 
-def どくびし_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def どくびし_apply_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """どくびしの毒付与"""
     # 対象のサイドのどくびしフィールドを取得
     side = battle.get_side(ctx.source)
@@ -395,11 +389,11 @@ def ねがいごと_heal(battle: Battle, ctx: EventContext, value: Field) -> Han
     return HandlerReturn(value=value)
 
 
-def ねがいごと_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="ねがいごと")
+def ねがいごと_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="ねがいごと")
 
 
-def ねばねばネット_speed_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+def ねばねばネット_reduce_spe(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねばねばネットの素早さダウン"""
     if battle.query.is_hazard_immune(ctx.source):
         return HandlerReturn(value=value)
@@ -443,8 +437,8 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-def ひかりのかべ_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="ひかりのかべ")
+def ひかりのかべ_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="ひかりのかべ")
 
 
 def フェアリーロック_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -452,8 +446,8 @@ def フェアリーロック_check_trapped(battle: Battle, ctx: EventContext, va
     return HandlerReturn(value=True)
 
 
-def フェアリーロック_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_global_field(battle, ctx, value, name="フェアリーロック")
+def フェアリーロック_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_global_field(battle, ctx, value, name="フェアリーロック")
 
 
 def まきびし_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -488,8 +482,8 @@ def マジックルーム_remove(battle: Battle, ctx: EventContext, value: Any) 
     return HandlerReturn(value=value)
 
 
-def マジックルーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_global_field(battle, ctx, value, name="マジックルーム")
+def マジックルーム_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_global_field(battle, ctx, value, name="マジックルーム")
 
 
 def ミストフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -519,7 +513,7 @@ def ミストフィールド_prevent_confusion(battle: Battle, ctx: EventContext
     return HandlerReturn(value=value)  # 防がない
 
 
-def ゆき_B_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ゆき_boost_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """雪時のこおりタイプ防御1.5倍"""
     if (
         ctx.defender.has_type("こおり")
@@ -539,9 +533,6 @@ def らんきりゅう_type_modifier(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-# ===== サイドフィールドハンドラ =====
-
-
 def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """リフレクターで物理技ダメージ軽減"""
     if (
@@ -553,8 +544,8 @@ def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
-def リフレクター_tick_side_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_side_field(battle, ctx, value, name="リフレクター")
+def リフレクター_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_side_field(battle, ctx, value, name="リフレクター")
 
 
 def ワンダールーム_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -574,5 +565,5 @@ def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, 
     return HandlerReturn(value=value)
 
 
-def ワンダールーム_tick_global_field(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return tick_global_field(battle, ctx, value, name="ワンダールーム")
+def ワンダールーム_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _tick_global_field(battle, ctx, value, name="ワンダールーム")

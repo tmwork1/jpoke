@@ -54,8 +54,3 @@ if __name__ == "__main__":
     # result = main("ガブリアス", "カイリュー", [("ドラゴンテール",1), ("ドラゴンクロー",1)], defender_ability="マルチスケイル")
     # result = main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
     # result = main("ガブリアス", "カイリュー", [("スケイルショット", 4)], defender_ability="マルチスケイル")
-
-    assert result.min_damage == 90
-    assert result.max_damage == 108
-    assert result.n_attack == 2
-    assert result.lethal_probability == 0.059

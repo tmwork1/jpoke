@@ -6,7 +6,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
     "じゅうりょく": FieldData(
         handlers={
             Event.ON_FIELD_ACTIVATE: h.FieldHandler(
-                h.じゅうりょく_activate_release_volatiles,
+                h.じゅうりょく_remove_volatiles,
                 subject_spec="source:self",
             ),
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
@@ -26,7 +26,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.じゅうりょく_tick_global_field,
+                h.じゅうりょく_tick,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -35,11 +35,11 @@ GLOBAL_FIELD: dict[str, FieldData] = {
     "トリックルーム": FieldData(
         handlers={
             DomainEvent.ON_CHECK_SPEED_REVERSE: h.FieldHandler(
-                h.トリックルーム_reverse_speed,
+                h.トリックルーム_reverse_spe,
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.トリックルーム_tick_global_field,
+                h.トリックルーム_tick,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -52,7 +52,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.フェアリーロック_tick_global_field,
+                h.フェアリーロック_tick,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -73,7 +73,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.マジックルーム_tick_global_field,
+                h.マジックルーム_tick,
                 subject_spec="source:self",
                 priority=140,
             ),
@@ -90,7 +90,7 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.ワンダールーム_tick_global_field,
+                h.ワンダールーム_tick,
                 subject_spec="source:self",
                 priority=140,
             ),

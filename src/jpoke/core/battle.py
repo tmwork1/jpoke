@@ -26,7 +26,6 @@ from .event_manager import EventManager
 from .context import EventContext
 from .player import Player
 from .event_logger import EventLogger, Payload
-from .command_logger import CommandLogger
 from .damage import DamageCalculator
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
@@ -117,7 +116,6 @@ class Battle:
 
         self.events = EventManager(self)
         self.event_logger = EventLogger()
-        self.command_logger = CommandLogger()
         self.turn_controller: TurnController = TurnController(self)
         self.speed_calculator: SpeedCalculator = SpeedCalculator(self)
         self.switch_manager: SwitchManager = SwitchManager(self)
@@ -159,7 +157,6 @@ class Battle:
                 "_player_states",
                 "events",
                 "event_logger",
-                "command_logger",
                 "turn_controller",
                 "speed_calculator",
                 "switch_manager",

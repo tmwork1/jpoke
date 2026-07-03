@@ -50,7 +50,7 @@ WEATHER: dict[str, FieldData] = {
     "すなあらし": FieldData(
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
-                h.すなあらし_D_boost,
+                h.すなあらし_boost_spd,
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: [
@@ -73,7 +73,7 @@ WEATHER: dict[str, FieldData] = {
     "ゆき": FieldData(
         handlers={
             Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
-                h.ゆき_B_boost,
+                h.ゆき_boost_def,
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
@@ -95,7 +95,7 @@ WEATHER: dict[str, FieldData] = {
                 subject_spec="target:self",
             ),
             Event.ON_TRY_MOVE_1: h.FieldHandler(
-                h.おおひでり_block_move,
+                h.おおひでり_block_water_move,
                 priority=10,
                 subject_spec="attacker:self",
             ),
@@ -108,7 +108,7 @@ WEATHER: dict[str, FieldData] = {
                 subject_spec="attacker:self",
             ),
             Event.ON_TRY_MOVE_1: h.FieldHandler(
-                h.おおあめ_block_move,
+                h.おおあめ_block_fire_move,
                 priority=10,
                 subject_spec="attacker:self",
             ),

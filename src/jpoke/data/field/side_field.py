@@ -10,7 +10,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.リフレクター_tick_side_field,
+                h.リフレクター_tick,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -23,7 +23,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.ひかりのかべ_tick_side_field,
+                h.ひかりのかべ_tick,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -36,7 +36,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 subject_spec="defender:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.オーロラベール_tick_side_field,
+                h.オーロラベール_tick,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -53,7 +53,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 subject_spec="target:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.しんぴのまもり_tick_side_field,
+                h.しんぴのまもり_tick,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -67,7 +67,7 @@ SIDE_FIELD: dict[str, FieldData] = {
                 priority=130,
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.しろいきり_tick_side_field,
+                h.しろいきり_tick,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -76,7 +76,7 @@ SIDE_FIELD: dict[str, FieldData] = {
     "いやしのねがい": FieldData(
         handlers={
             Event.ON_SWITCH_IN: h.FieldHandler(
-                h.いやしのねがい_heal_on_switch_in,
+                h.いやしのねがい_heal,
                 subject_spec="source:self",
                 priority=100,
             ),
@@ -85,11 +85,11 @@ SIDE_FIELD: dict[str, FieldData] = {
     "おいかぜ": FieldData(
         handlers={
             DomainEvent.ON_CALC_SPEED: h.FieldHandler(
-                h.おいかぜ_speed_boost,
+                h.おいかぜ_boost_spe,
                 subject_spec="source:self",
             ),
             Event.ON_TURN_END: h.FieldHandler(
-                h.おいかぜ_tick_side_field,
+                h.おいかぜ_tick,
                 subject_spec="source:self",
                 priority=130,
             ),
@@ -98,7 +98,7 @@ SIDE_FIELD: dict[str, FieldData] = {
     "ねがいごと": FieldData(
         handlers={
             Event.ON_TURN_END: h.FieldHandler(
-                h.ねがいごと_tick_side_field,
+                h.ねがいごと_tick,
                 subject_spec="source:self",
                 priority=50,
             ),
@@ -121,7 +121,7 @@ SIDE_FIELD: dict[str, FieldData] = {
         max_count=2,
         handlers={
             Event.ON_SWITCH_IN: h.FieldHandler(
-                h.どくびし_poison,
+                h.どくびし_apply_poison,
                 subject_spec="source:self",
             ),
         },
@@ -137,7 +137,7 @@ SIDE_FIELD: dict[str, FieldData] = {
     "ねばねばネット": FieldData(
         handlers={
             Event.ON_SWITCH_IN: h.FieldHandler(
-                h.ねばねばネット_speed_drop,
+                h.ねばねばネット_reduce_spe,
                 subject_spec="source:self",
             ),
         },

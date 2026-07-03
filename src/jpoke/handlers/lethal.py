@@ -1,3 +1,4 @@
+# TODO : import文はなるべくモジュールの先頭に配置する。指示書にも明記する。
 """致死率計算ハンドラの実装。
 
 各関数は StateDist を受け取り、効果を適用した StateDist を返す。
@@ -13,6 +14,7 @@ if TYPE_CHECKING:
 from collections import defaultdict
 from jpoke.utils.lethal_dist import State, add_dist, to_dist
 
+
 def _damage(hp_dist: StateDist, v: int) -> StateDist:
     """全状態に固定ダメージを与える（HP は 0 未満にならない）。"""
     new_dist: StateDist = defaultdict(int)
@@ -24,6 +26,7 @@ def _damage(hp_dist: StateDist, v: int) -> StateDist:
         )
         new_dist[new_state] += freq
     return dict(new_dist)
+
 
 def _heal(hp_dist: StateDist,
           target: Pokemon,
@@ -40,6 +43,7 @@ def _heal(hp_dist: StateDist,
     else:
         heal = v
     return add_dist(hp_dist, heal, maximum=max_hp)
+
 
 def _heal_at_pinch(hp_dist: StateDist,
                    target: Pokemon,
@@ -93,6 +97,7 @@ def _heal_at_pinch(hp_dist: StateDist,
 
     return new_dist
 
+
 def _apply_bind(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """バインド状態を付与する（未付与の場合のみ）。バインドダメージはON_TURN_ENDで処理される。"""
     if "バインド" not in ctx.defender.volatiles:
@@ -120,7 +125,7 @@ def Gのちから_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDi
     return hp_dist
 
 
-def アシッドボム_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+def アシッドボム_reduce_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アシッドボム: 命中後、防御側のとくぼうを2段階下げる。"""
     ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 2)
     return hp_dist
@@ -262,7 +267,7 @@ def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, v=10, threshold_rate=1/2, heal_with="item", consume=True)
 
 
-def オーバーヒート_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オーバーヒート: 命中後、攻撃側のとくこうを2段階下げる。"""
     ctx.attacker.rank["spa"] = max(-6, ctx.attacker.rank["spa"] - 2)
     return hp_dist

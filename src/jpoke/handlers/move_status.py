@@ -189,12 +189,12 @@ def いちゃもん_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return apply_volatile_to_defender(battle, ctx, value, volatile="いちゃもん")
 
 
-def いとをはく_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いとをはく_reduce_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いとをはくの効果: 相手のすばやさを 2 段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
 
-def いのちのしずく_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いのちのしずく_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いのちのしずく: 最大HPの1/4を回復する。HPが満タンの場合は失敗する。"""
     mon = ctx.attacker
     if mon.hp == mon.max_hp:
@@ -203,14 +203,14 @@ def いのちのしずく_heal_self(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
-def いばる_modify_defender_stats_and_apply_volatile(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いばる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いばるの効果: 相手のこうげきを2段階上げ、相手をこんらん状態にする。"""
     battle.modify_stats(ctx.defender, {"atk": 2}, source=ctx.attacker)
     battle.volatile_manager.apply_confusion(ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
-def いやしのすず_cure_team_ailment(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いやしのすず_cure_ailment(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いやしのすず: 自分（シングルバトルでは選出チーム）の状態異常を回復する。
 
     音系の技のためみがわり状態でも効果が発生する。
@@ -227,7 +227,7 @@ def いやしのすず_cure_team_ailment(battle: Battle, ctx: AttackContext, val
     return HandlerReturn(value=value)
 
 
-def いやしのねがい_faint_and_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いやしのねがい_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いやしのねがい: 使用者をひんしにし、自陣営に「いやしのねがい」フィールドを設置する。
 
     次に場に出たポケモンの HP が全回復し、状態異常が回復する。
@@ -249,15 +249,15 @@ def いやしのはどう_heal_defender(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def いやなおと_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いやなおと_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"def": -2})
 
 
-def うそなき_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def うそなき_reduce_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spd": -2})
 
 
-def うたう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def うたう_apply_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うたうの効果: 相手をねむり状態にする。音系の技のためみがわりを貫通する。"""
     return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
@@ -311,7 +311,7 @@ def おかたづけ_cleanup(battle: Battle, ctx: AttackContext, value: Any) -> H
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spe": 1})
 
 
-def おきみやげ_faint_and_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def おきみやげ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おきみやげ: 使用者をひんしにし、相手のこうげき・とくこうを2段階ずつ下げる。"""
     battle.faint(ctx.attacker)
     modify_defender_stats(battle, ctx, value, stats={"atk": -2, "spa": -2})
@@ -323,14 +323,14 @@ def おたけび_modify_defender_stats(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
 
 
-def おだてる_modify_defender_stats_and_apply_volatile(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def おだてる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おだてるの効果: 相手のとくこうを1段階上げ、相手をこんらん状態にする。"""
     battle.modify_stats(ctx.defender, {"spa": 1}, source=ctx.attacker)
     battle.volatile_manager.apply_confusion(ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
-def おにび_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def おにび_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
@@ -345,7 +345,7 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def オーロラベール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
     if not side.apply("オーロラベール", 5, source=ctx.attacker):
@@ -362,7 +362,7 @@ def かえんのまもり_apply(battle: Battle, ctx: AttackContext, value: Any) 
     return apply_volatile_to_attacker(battle, ctx, value, volatile="かえんのまもり")
 
 
-def かげぶんしん_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かげぶんしん_boost_attacker_evasion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かげぶんしんの効果: 自分の回避率を 1 段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"evasion": 1})
 
