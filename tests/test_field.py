@@ -442,12 +442,22 @@ def test_じゅうりょく_Gのちから強化():
     assert battle.damage_calculator.power_modifier == 6144
 
 
-def test_じゅうりょく_使用禁止技ブロック():
-    """じゅうりょく: gravity_restrictedフラグの技は失敗する"""
+@pytest.mark.parametrize("move_name", [
+    "そらをとぶ",
+    "でんじふゆう",
+    "とびげり",
+    "とびはねる",
+    "とびひざげり",
+    "はねる",
+    "フライングプレス",
+])
+def test_じゅうりょく_使用禁止技ブロック(move_name: str):
+    """じゅうりょく: gravity_restrictedフラグを持つ全7技はじゅうりょく中に失敗する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はねる"])],
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
         field={"じゅうりょく": 99},
+        accuracy=100,
     )
     t.run_move(battle, 0)
     assert not battle.move_executor.move_success
