@@ -2001,7 +2001,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.キングシールド_apply,
             ),
@@ -5524,7 +5528,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ニードルガード_apply,
             ),
@@ -7498,8 +7506,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
-            # TODO : 2ターン連続で使用すると失敗する仕様を反映する。他の守る系の技についても同様。
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.まもる_apply,
             ),
@@ -7562,7 +7573,11 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.みきり_apply,
             ),

@@ -206,13 +206,15 @@ def _lethal_loop(hp_dist: StateDist,
     for atk in range(1, max_attack + 1):
         for n_hits, ctx in ctx_list:
             ctx.n_attack = atk
+            # ON_EVERY_EVENT ハンドラは同じ ctx では変化しないため、1回だけ取得する
+            every_event_handlers = _get_handlers(LethalEvent.ON_EVERY_EVENT, battle, ctx)
 
-            hp_dist = _before_move(battle, ctx, hp_dist)
+            hp_dist = _before_move(battle, ctx, hp_dist, every_event_handlers)
 
             for hit in range(1, n_hits + 1):
                 ctx.hit = hit
                 # 技の適用
-                hp_dist = _run_move(battle, ctx, hp_dist)
+                hp_dist = _run_move(battle, ctx, hp_dist, every_event_handlers)
 
                 # 結果を記録（ハンドラ適用前の最終ダメージ分布を反映）
                 result = LethalResult(
@@ -225,7 +227,7 @@ def _lethal_loop(hp_dist: StateDist,
                     return results
 
             # ターン終了時のハンドラを適用（たべのこし回復など）
-            hp_dist = _run_turn_end(battle, ctx, hp_dist)
+            hp_dist = _run_turn_end(battle, ctx, hp_dist, every_event_handlers)
             results[-1].hp_dist = hp_dist  # ターン終了後の HP 分布を反映
             if fainted(hp_dist):
                 return results
@@ -233,12 +235,18 @@ def _lethal_loop(hp_dist: StateDist,
     return results
 
 
-def _before_move(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+def _before_move(battle: Battle,
+                 ctx: LethalContext,
+                 hp_dist: StateDist,
+                 every_event_handlers: list[LethalHandler]) -> StateDist:
     """ON_BEFORE_MOVE イベントのハンドラを適用する。"""
-    return _emit(LethalEvent.ON_BEFORE_MOVE, battle, ctx, hp_dist)
+    return _emit(LethalEvent.ON_BEFORE_MOVE, battle, ctx, hp_dist, every_event_handlers)
 
 
-def _run_move(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+def _run_move(battle: Battle,
+              ctx: LethalContext,
+              hp_dist: StateDist,
+              every_event_handlers: list[LethalHandler]) -> StateDist:
     """1回の技使用を計算する。
 
     この関数はダメージ計算・ON_BEFORE_MOVE・ダメージ適用・ON_HITを順に実行する。
@@ -250,20 +258,23 @@ def _run_move(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDi
     ctx.damage_dist = to_dist(damages)
 
     # 技を適用する直前の処理（ハンドラは ctx.damage_dist を参照・更新する）
-    hp_dist = _emit(LethalEvent.ON_BEFORE_HIT, battle, ctx, hp_dist)
+    hp_dist = _emit(LethalEvent.ON_BEFORE_HIT, battle, ctx, hp_dist, every_event_handlers)
 
     # ダメージを適用する
     hp_dist = subtract_dist(hp_dist, ctx.damage_dist, minimum=0)
     _update_hp(ctx.defender, hp_dist)
 
     # ヒット時のハンドラを適用（きのみ回復など）
-    hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx, hp_dist)
+    hp_dist = _emit(LethalEvent.ON_HIT, battle, ctx, hp_dist, every_event_handlers)
 
     return hp_dist
 
 
-def _run_turn_end(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    return _emit(LethalEvent.ON_TURN_END, battle, ctx, hp_dist)
+def _run_turn_end(battle: Battle,
+                  ctx: LethalContext,
+                  hp_dist: StateDist,
+                  every_event_handlers: list[LethalHandler]) -> StateDist:
+    return _emit(LethalEvent.ON_TURN_END, battle, ctx, hp_dist, every_event_handlers)
 
 
 def _get_pokemon_handlers(event: LethalEvent,
@@ -340,15 +351,21 @@ def _update_hp(mon: Pokemon, hp_dist: StateDist):
 def _emit(event: LethalEvent,
           battle: Battle,
           ctx: LethalContext,
-          hp_dist: StateDist) -> StateDist:
-    """指定イベントのハンドラをすべて実行し、防御側のHPを更新して、更新後の hp_dist を返す。"""
+          hp_dist: StateDist,
+          every_event_handlers: list[LethalHandler]) -> StateDist:
+    """指定イベントのハンドラをすべて実行し、防御側のHPを更新して、更新後の hp_dist を返す。
+
+    Args:
+        every_event_handlers: 呼び出し元で事前取得した ON_EVERY_EVENT ハンドラ。
+    """
     if fainted(hp_dist):
         return hp_dist
 
-    # TODO LethalEvent.ON_EVERY_EVENTはemitするたびにハンドラを取得する必要は現状ない。_emitの外で取得して引数でhandlersを渡すとよい。
-    for events in [event, LethalEvent.ON_EVERY_EVENT]:
-        handlers = _get_handlers(events, battle, ctx)
-        hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
-        _update_hp(ctx.defender, hp_dist)
+    handlers = _get_handlers(event, battle, ctx)
+    hp_dist = _apply_handlers(battle, handlers, ctx, hp_dist)
+    _update_hp(ctx.defender, hp_dist)
+
+    hp_dist = _apply_handlers(battle, every_event_handlers, ctx, hp_dist)
+    _update_hp(ctx.defender, hp_dist)
 
     return hp_dist

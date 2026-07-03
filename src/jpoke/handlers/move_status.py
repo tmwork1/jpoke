@@ -1658,6 +1658,27 @@ def まもる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     return apply_volatile_to_attacker(battle, ctx, value, volatile="まもる")
 
 
+def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """守る系技の連続使用失敗チェック。
+
+    直前ターンに守る系の技（protect フラグを持つ技）を正常に使用していた場合、
+    今ターンの守る系技を失敗させる。
+    失敗時は executed_move を None にリセットして次ターンは再度使えるようにする。
+    """
+    mon = ctx.attacker
+    if (
+        mon.executed_move is not None
+        and mon.executed_move.has_flag("protect")
+    ):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "まもる系_連続使用"}
+        )
+        mon.executed_move = None
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def まるくなる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """まるくなるの効果を発動する。"""
     mon = ctx.attacker

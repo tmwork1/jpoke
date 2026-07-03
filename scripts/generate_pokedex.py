@@ -1,10 +1,10 @@
-# TODO : 既存のpokedex.jsonを上書きしてしまわないように、存在しない場合のみ実行できるようにする。生成処理をmain()にまとめるとよい。
-
 """pokedex.json を生成するスクリプト。
 zukan.json は、ポケモンの図鑑データを含む JSONファイルである。
 このスクリプトは、zukan.json から必要なキーのみを抽出し、pokedex.json を生成する。
 """
 import json
+import sys
+from pathlib import Path
 
 
 INPUT_PATH = "src/jpoke/data/zukan.json"
@@ -33,27 +33,40 @@ RENAME_DICT = {
 
 FLOAT_KEYS = ["weight", "height"]
 
-with open(INPUT_PATH, "r", encoding="utf-8") as f:
-    data = json.load(f)
 
-filtered = {}
+def main() -> None:
+    output = Path(OUTPUT_PATH)
+    if output.exists():
+        print(f"エラー: {OUTPUT_PATH} は既に存在します。上書きを避けるため処理を中断します。")
+        sys.exit(1)
 
-for pokemon_id, pokemon_data in data.items():
-    new_data = {}
+    with open(INPUT_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
 
-    for key, value in pokemon_data.items():
-        if key not in KEEP_KEYS:
-            continue
+    filtered = {}
 
-        if key in FLOAT_KEYS and isinstance(value, str) and value != "":
-            if "," in value:
-                value = value.replace(",", "")
-            value = float(value)
+    for pokemon_id, pokemon_data in data.items():
+        new_data = {}
 
-        new_key = RENAME_DICT.get(key, key)
-        new_data[new_key] = value
+        for key, value in pokemon_data.items():
+            if key not in KEEP_KEYS:
+                continue
 
-    filtered[pokemon_id] = new_data
+            if key in FLOAT_KEYS and isinstance(value, str) and value != "":
+                if "," in value:
+                    value = value.replace(",", "")
+                value = float(value)
 
-with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-    json.dump(filtered, f, ensure_ascii=False, indent=4)
+            new_key = RENAME_DICT.get(key, key)
+            new_data[new_key] = value
+
+        filtered[pokemon_id] = new_data
+
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(filtered, f, ensure_ascii=False, indent=4)
+
+    print(f"{OUTPUT_PATH} を生成しました。")
+
+
+if __name__ == "__main__":
+    main()

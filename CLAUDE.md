@@ -107,6 +107,11 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 1. `docs/progress/<category>.md` の該当行を更新する（実装済みフラグ・件数）
 
+## ループディスパッチャー
+
+`/loop <name>` を受け取ったとき、`.claude/loop/<name>.md` が存在する場合は **その指示書を Read して内容に従って実行する**。
+ループの開始時に `.claude/loop/instructions.md` を Read してフロー一覧を確認すること。
+
 ## 開発ルール
 
 - **対象はポケモンチャンピオンズシングルバトルのみ**
