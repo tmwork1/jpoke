@@ -39,7 +39,6 @@ _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "たくわえる",
 })
 
-
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
@@ -47,7 +46,6 @@ def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRetu
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
-
 
 def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
@@ -334,6 +332,14 @@ def おにび_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
+def オーロラベール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
+    side = battle.get_side(ctx.attacker)
+    if not side.apply("オーロラベール", 5, source=ctx.attacker):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベールの使用条件チェック: 天気が「ゆき」でない場合は失敗する。"""
     if battle.weather.name != "ゆき":
@@ -345,17 +351,14 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def オーロラベール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
-    side = battle.get_side(ctx.attacker)
-    if not side.apply("オーロラベール", 5, source=ctx.attacker):
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def かいでんぱ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """相手の特攻を2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spa": -2})
+
+
+def かいふくふうじ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かいふくふうじの効果: 相手に「かいふくふうじ」状態を付与する（5 ターン）。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="かいふくふうじ", count=5)
 
 
 def かえんのまもり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

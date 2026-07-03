@@ -1403,7 +1403,11 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=15,
         accuracy=100,
-        handlers={},  # TODO : かいふくふうじを付与する効果を実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.かいふくふうじ_apply,
+            ),
+        }
     ),
     "かいりき": MoveData(
         type="ノーマル",
