@@ -5392,7 +5392,11 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.なかよくする_modify_defender_stats,
+            )
+        }
     ),
     "なきごえ": MoveData(
         type="ノーマル",
