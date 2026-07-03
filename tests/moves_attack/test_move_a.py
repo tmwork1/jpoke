@@ -140,6 +140,30 @@ def test_アクアテール_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_アクセルブレイク_効果抜群のとき威力が4_3倍になる():
+    """アクセルブレイク: 効果抜群（ノーマルに2倍）のとき威力が4/3倍（100→133）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["アクセルブレイク"])],
+        team1=[Pokemon("カビゴン")],   # ノーマル: かくとう2倍
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 133
+
+
+def test_アクセルブレイク_等倍のとき威力倍率なし():
+    """アクセルブレイク: 等倍（でんきに1倍）のときは威力補正なし（100のまま）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["アクセルブレイク"])],
+        team1=[Pokemon("ピカチュウ")],   # でんき: かくとう等倍
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
+
+
 def test_アクセルロック_相手にダメージを与える():
     """アクセルロック: 優先度+1の先制物理技で相手にダメージを与える。"""
     battle = t.start_battle(
@@ -454,6 +478,30 @@ def test_いてつくしせん_こおりが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "こおり"
+
+
+def test_イナズマドライブ_効果抜群のとき威力が4_3倍になる():
+    """イナズマドライブ: 効果抜群（みずに2倍）のとき威力が4/3倍（100→133）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", move_names=["イナズマドライブ"])],
+        team1=[Pokemon("カメックス")],   # みず: でんき2倍
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 133
+
+
+def test_イナズマドライブ_等倍のとき威力倍率なし():
+    """イナズマドライブ: 等倍（ノーマルに1倍）のときは威力補正なし（100のまま）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", move_names=["イナズマドライブ"])],
+        team1=[Pokemon("カビゴン")],   # ノーマル: でんき等倍
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
 
 
 def test_いにしえのうた_ねむりが発動しない():
