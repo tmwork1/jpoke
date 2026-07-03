@@ -951,7 +951,11 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # TODO: 防御側のやけどを治す効果を実装
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.うたかたのアリア_cure_defender_burn,
+            )
+        },
     ),
     "うちおとす": MoveData(
         type="いわ",
@@ -959,7 +963,11 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=50,
         accuracy=100,
-        handlers={},  # TODO: うちおとす状態を付与する効果を実装
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.うちおとす_apply_grounded,
+            )
+        },
     ),
     "ウッドハンマー": MoveData(
         type="くさ",

@@ -251,6 +251,25 @@ def ウェーブタックル_recoil(battle: Battle, ctx: AttackContext, value: A
     return _recoil(battle, ctx, value, 1/3)
 
 
+def うたかたのアリア_cure_defender_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """うたかたのアリア: 命中時に防御側のやけどを治す。
+
+    やけど以外の状態異常は治さない。
+    """
+    mon = ctx.defender
+    if mon.ailment.name == "やけど":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
+def うちおとす_apply_grounded(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """うちおとす: 命中時に相手にうちおとす揮発性状態を付与する。
+
+    ひこうタイプ・ふゆう特性による浮遊状態を無効化する。
+    """
+    return apply_volatile_to_defender(battle, ctx, value, volatile="うちおとす")
+
+
 def ウッドハンマー_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _recoil(battle, ctx, value, 1/3)
 
