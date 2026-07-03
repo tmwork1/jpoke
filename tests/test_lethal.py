@@ -259,6 +259,27 @@ def test_オボンのみ_乱数2発():
     assert results[-1].lethal_probability == pytest.approx(0.0585, abs=0.001)
 
 
+def test_おやこあい_2ヒット目ダメージ加算():
+    """おやこあい: 単発攻撃技の命中後、2ヒット目（1/4ダメージ、最低1）が加算される"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス", ability_name="おやこあい")],
+        team1=[Pokemon("カイリュー")],
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=1)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=1)
+
+    # baseline: 20~24
+    assert results_without[0].min_damage == 20
+    assert results_without[0].max_damage == 24
+    # おやこあい: 2ヒット目（1/4）加算 → 20+5=25, 24+6=30
+    assert results_with[0].min_damage == 25
+    assert results_with[0].max_damage == 30
+
+
 def test_オレンのみ_HP2分の1以下で10回復():
     """オレンのみ所持時、HP が 1/2 以下になると 10 固定回復する。
 
@@ -288,6 +309,46 @@ def test_オーバーヒート_とくこうダウン():
     )
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("オーバーヒート"), max_attack=2)
     assert results[1].min_damage < results[0].min_damage
+
+
+def test_かんそうはだ_あめで回復():
+    """かんそうはだ: あめ天気のターン終了時に最大HPの1/8を回復する"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="かんそうはだ")],
+        weather=("あめ", 5),
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        weather=("あめ", 5),
+    )
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ability.actives[1].max_hp
+    heal = max(1, max_hp // 8)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
+def test_かんそうはだ_はれでダメージ():
+    """かんそうはだ: はれ天気のターン終了時に最大HPの1/8ダメージを受ける"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="かんそうはだ")],
+        weather=("はれ", 5),
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        weather=("はれ", 5),
+    )
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ability.actives[1].max_hp
+    damage = max(1, max_hp // 8)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 
 def test_キラースピン_どく付与_secondary有り():

@@ -80,7 +80,9 @@
     {"name": "りんごさん", "type": "move"},
     {"name": "ルミナコリジョン", "type": "move"},
     {"name": "れんごく", "type": "move"},
-    {"name": "リーフストーム", "type": "move"}
+    {"name": "リーフストーム", "type": "move"},
+    {"name": "おやこあい", "type": "ability"},
+    {"name": "かんそうはだ", "type": "ability"}
   ],
   "failed":    []
 }

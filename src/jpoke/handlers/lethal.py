@@ -240,6 +240,23 @@ def オボンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/4, threshold_rate=1/2, heal_with="item", consume=True)
 
 
+def おやこあい_boost_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """おやこあい: 単発攻撃技のダメージに2ヒット目（1/4ダメージ、最低1）を加算する。"""
+    if not (ctx.move.is_attack and ctx.move.max_hits == 1):
+        return hp_dist
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in ctx.damage_dist.items():
+        second_hit = max(1, state.value // 4) if state.value > 0 else 0
+        new_state = State(
+            state.value + second_hit,
+            ability_enabled=state.ability_enabled,
+            item_enabled=state.item_enabled,
+        )
+        new_dist[new_state] += freq
+    ctx.damage_dist = dict(new_dist)
+    return hp_dist
+
+
 def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オレンのみ: HP が 1/2 以下になると 10 固定回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, v=10, threshold_rate=1/2, heal_with="item", consume=True)
@@ -254,6 +271,16 @@ def オーバーヒート_lower_spa(battle: Battle, ctx: LethalContext, hp_dist:
 def カシブのみ_resist_ghost(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """カシブのみ: ゴーストタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ゴースト")
+
+
+def かんそうはだ_weather_hp(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """かんそうはだ: あめ・おおあめのとき1/8回復、はれ・おおひでりのとき1/8ダメージ。"""
+    weather = battle.weather_for(ctx.defender)
+    if weather.rainy:
+        return _heal(hp_dist, ctx.defender, r=1/8)
+    if weather.sunny:
+        return _damage(hp_dist, max(1, ctx.defender.max_hp // 8))
+    return hp_dist
 
 
 def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

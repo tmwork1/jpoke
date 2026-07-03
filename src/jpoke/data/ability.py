@@ -353,6 +353,9 @@ ABILITIES: dict[str, AbilityData] = {
                 h.おやこあい_reduce_second_damage,
                 subject_spec="attacker:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(l.おやこあい_boost_damage, subject="attacker")
         }
     ),
     "おわりのだいち": AbilityData(
@@ -559,6 +562,9 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
                 priority=30,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(l.かんそうはだ_weather_hp, subject="defender")
         }
     ),
     "かんつうドリル": AbilityData(
