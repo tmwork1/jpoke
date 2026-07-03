@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from collections import defaultdict
-from jpoke.utils.lethal_dist import State, add_dist
+from jpoke.utils.lethal_dist import State, add_dist, to_dist
 
 def _heal(hp_dist: StateDist,
           target: Pokemon,
@@ -82,6 +82,13 @@ def _heal_at_pinch(hp_dist: StateDist,
     return new_dist
 
 
+def アイスボディ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """アイスボディ: ゆき天気のとき、ターン終了時に最大HPの1/16を回復する。"""
+    if battle.weather.name != "ゆき":
+        return hp_dist
+    return _heal(hp_dist, ctx.defender, r=1/16)
+
+
 def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アッキのみ: 物理技を受けた直後にぼうぎょ+1して消費する。
 
@@ -114,6 +121,13 @@ def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: State
         else:
             new_dist[state] += freq
     return dict(new_dist)
+
+
+def あめうけざら_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """あめうけざら: あめ・おおあめのとき、ターン終了時に最大HPの1/16を回復する。"""
+    if not battle.weather_for(ctx.defender).rainy:
+        return hp_dist
+    return _heal(hp_dist, ctx.defender, r=1/16)
 
 
 def イアのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -209,9 +223,22 @@ def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_
     return dict(new_dist)
 
 
+def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """サンパワー: はれ・おおひでりのとき攻撃側が1/8ダメージ（攻撃者HP未追跡のためスタブ）。"""
+    return hp_dist
+
+
 def シュカのみ_resist_ground(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """シュカのみ: じめんタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "じめん")
+
+
+def じきゅうりょく_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """じきゅうりょく: 攻撃を受けるとぼうぎょが1段階上がる。"""
+    if ctx.defender.rank["def"] >= 6:
+        return hp_dist
+    ctx.defender.rank["def"] = min(6, ctx.defender.rank["def"] + 1)
+    return hp_dist
 
 
 def ソクノのみ_resist_electric(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -274,12 +301,22 @@ def ハバンのみ_resist_dragon(battle: Battle, ctx: LethalContext, hp_dist: S
 
 
 def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """ばけのかわ: 1回だけダメージを無効化する。"""
+    """ばけのかわ: 攻撃を無効化し、変身解除ダメージ(max_hp/8)を与える。
+
+    ON_BEFORE_HIT で発火する。ctx.damage_dist をゼロに上書きして subtract_dist による
+    攻撃ダメージをキャンセルし、代わりに変身解除ダメージ(max_hp/8)を与える。
+    """
+    if not any(state.ability_enabled for state in hp_dist):
+        return hp_dist
+
+    # 攻撃ダメージをゼロにして無効化する（subtract_dist が何も引かないようにする）
+    ctx.damage_dist = to_dist(0)
+
+    # 変身解除ダメージを与えて ability_enabled を False にする
+    damage = max(1, int(ctx.defender.max_hp / 8))
     new_dist: StateDist = defaultdict(int)
     for state, freq in hp_dist.items():
         if state.ability_enabled:
-            # ばけのかわが有効な状態ではダメージを無効化し、HPを1/8消費する
-            damage = max(1, int(ctx.defender.max_hp / 8))
             new_state = State(
                 value=max(0, state.value - damage),
                 ability_enabled=False,
@@ -287,7 +324,6 @@ def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: St
             )
             new_dist[new_state] += freq
         else:
-            # ばけのかわが無効な状態はそのまま維持
             new_dist[state] += freq
     return dict(new_dist)
 
@@ -315,6 +351,13 @@ def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
 def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ホズのみ: ノーマルタイプの技のダメージを1/2にして消費する（抜群不要）。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ノーマル", super_effective_only=False)
+
+
+def ポイズンヒール_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ポイズンヒール: どく・もうどく状態のとき、ターン終了時に最大HPの1/8を回復する。"""
+    if ctx.defender.ailment.name not in ("どく", "もうどく"):
+        return hp_dist
+    return _heal(hp_dist, ctx.defender, r=1/8)
 
 
 def マゴのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

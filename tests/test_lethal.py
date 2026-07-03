@@ -29,6 +29,27 @@ from jpoke import Pokemon, Move
 from . import test_utils as t
 
 
+def test_アイスボディ_ゆき天気でターン終了時回復():
+    """アイスボディ所持時、ゆき天気のターン終了時に最大HPの1/16を回復する"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="アイスボディ")],
+        weather=("ゆき", 5),
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        weather=("ゆき", 5),
+    )
+
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ability.actives[1].max_hp
+    heal = max(1, max_hp // 16)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
 def test_アッキのみ_消費後は発動しない():
     """アッキのみは1回だけ発動し、2発目以降は効果がない（2発目と3発目のダメージが同じ）"""
     battle = t.start_battle(
@@ -78,6 +99,27 @@ def test_アッキのみ_特殊技では発動しない():
     # ランクが変わらないため1発目と2発目のダメージが同じ
     assert results[0].min_damage == results[1].min_damage
     assert results[0].max_damage == results[1].max_damage
+
+
+def test_あめうけざら_あめ天気でターン終了時回復():
+    """あめうけざら所持時、あめ天気のターン終了時に最大HPの1/16を回復する"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="あめうけざら")],
+        weather=("あめ", 5),
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        weather=("あめ", 5),
+    )
+
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ability.actives[1].max_hp
+    heal = max(1, max_hp // 16)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
 
 
 def test_イアのみ_HP4分の1以下で回復():
@@ -194,6 +236,22 @@ def test_くろいヘドロ_非どくタイプは毎ターンダメージ():
     )
 
 
+def test_じきゅうりょく_物理技受けるとぼうぎょ上昇():
+    """じきゅうりょく: 物理技を受けるたびにぼうぎょが+1され、2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="じきゅうりょく")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=2)
+
+    # 1発目: B rank 0
+    assert results[0].min_damage == 90
+    assert results[0].max_damage == 108
+    # 2発目: ぼうぎょ+1（rank +1: ×3/2補正）でダメージが減少
+    assert results[1].min_damage == 62
+    assert results[1].max_damage == 74
+
+
 @pytest.mark.parametrize("item_name, move_name, defender_name, dmg1_min, dmg1_max, dmg2_min, dmg2_max", [
     # オッカのみ（ほのお）: フシギダネ（くさ/どく） → ほのお2倍
     ("オッカのみ", "かえんほうしゃ", "フシギダネ", 40, 48, 80, 96),
@@ -307,6 +365,45 @@ def test_ナモのみ_非抜群では発動しない():
     assert results[0].max_damage == results[1].max_damage
 
 
+def test_ばけのかわ_2発目は通常ダメージ():
+    """ばけのかわ: 1発目後はability_enabledがFalseになり、2発目以降は通常ダメージ"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("ミミッキュ", ability_name="ばけのかわ")],
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("ミミッキュ")],
+    )
+
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=5)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=5)
+
+    # 2発目以降は通常ダメージと同じ
+    assert results_with[1].min_damage == results_without[0].min_damage
+    assert results_with[1].max_damage == results_without[0].max_damage
+
+
+def test_ばけのかわ_初回攻撃を無効化():
+    """ばけのかわ: 初回攻撃を無効化し、変身解除ダメージ(max_hp/8)のみ受ける"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("ミミッキュ", ability_name="ばけのかわ")],
+    )
+    max_hp = battle.actives[1].max_hp
+    disguise_damage = max(1, max_hp // 8)
+
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=5)
+
+    # 1発目: ダメージ分布が0（攻撃は無効化される）
+    assert results[0].min_damage == 0
+    assert results[0].max_damage == 0
+    # 1発目後のHP = max_hp - 変身解除ダメージのみ
+    assert max(results[0].hp_counter) == max_hp - disguise_damage
+    # 1発目後: 全状態でability_enabledがFalseになる
+    assert all(not state.ability_enabled for state in results[0].hp_dist)
+
+
 def test_ホズのみ_ノーマル技ダメージ半減():
     """ホズのみ: ノーマルタイプ技のダメージが半減され（抜群不要）、2発目は通常ダメージになる"""
     with_item = t.start_battle(
@@ -330,6 +427,26 @@ def test_ホズのみ_ノーマル技ダメージ半減():
     # ホズのみなしと同じ通常ダメージ
     assert r_with[1].min_damage == r_without[1].min_damage
     assert r_with[1].max_damage == r_without[1].max_damage
+
+
+def test_ポイズンヒール_どく状態でターン終了時回復():
+    """ポイズンヒール所持のどく状態ポケモンは、ターン終了時に最大HPの1/8を回復する"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="ポイズンヒール")],
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    t.apply_ailment(with_ability, active_index=1, ailment_name="どく")
+
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ability.actives[1].max_hp
+    heal = max(1, max_hp // 8)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
 
 
 def test_マルチスケイル_ダメージ半減():

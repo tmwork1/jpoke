@@ -69,6 +69,12 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
                 priority=30,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.アイスボディ_heal,
+                subject="defender",
+            )
         }
     ),
     "あくしゅう": AbilityData(
@@ -124,6 +130,12 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
                 priority=30,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.あめうけざら_heal,
+                subject="defender",
+            )
         }
     ),
     "あめふらし": AbilityData(
@@ -964,6 +976,12 @@ ABILITIES: dict[str, AbilityData] = {
                 subject_spec="source:self",
                 priority=30,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.サンパワー_take_sun_damage,
+                subject="attacker",
+            )
         }
     ),
     "サーフテール": AbilityData(
@@ -1098,6 +1116,12 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.じきゅうりょく_boost_B_on_hit,
                 subject_spec="defender:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(
+                func=l.じきゅうりょく_boost_def,
+                subject="defender",
             )
         }
     ),
@@ -2187,7 +2211,7 @@ ABILITIES: dict[str, AbilityData] = {
             )
         },
         lethal_handlers={
-            LethalEvent.ON_HIT: LethalHandler(
+            LethalEvent.ON_BEFORE_HIT: LethalHandler(
                 func=l.ばけのかわ_block_damage,
                 subject="defender",
             )
@@ -2722,6 +2746,12 @@ ABILITIES: dict[str, AbilityData] = {
             Event.ON_MODIFY_POISON_DAMAGE: h.AbilityHandler(
                 h.ポイズンヒール_modify_poison_damage,
                 subject_spec="target:self",
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_TURN_END: LethalHandler(
+                func=l.ポイズンヒール_heal,
+                subject="defender",
             )
         }
     ),

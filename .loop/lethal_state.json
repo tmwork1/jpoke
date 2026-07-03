@@ -41,7 +41,12 @@
     {"name": "オッカのみ", "type": "item"},
     {"name": "イトケのみ", "type": "item"},
     {"name": "タンガのみ", "type": "item"},
-    {"name": "ばけのかわ", "type": "ability"}
+    {"name": "ばけのかわ", "type": "ability"},
+    {"name": "アイスボディ", "type": "ability"},
+    {"name": "あめうけざら", "type": "ability"},
+    {"name": "サンパワー", "type": "ability"},
+    {"name": "じきゅうりょく", "type": "ability"},
+    {"name": "ポイズンヒール", "type": "ability"}
   ],
   "failed":    []
 }
