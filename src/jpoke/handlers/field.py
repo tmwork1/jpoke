@@ -8,7 +8,6 @@ from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, 
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 
-
 class FieldHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -21,13 +20,11 @@ class FieldHandler(Handler):
             priority=priority,
         )
 
-
 def tick_weather(battle: Battle, ctx: EventContext, value: Any):
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
         battle.weather_manager.tick_down()
     return HandlerReturn(value=value)
-
 
 def tick_terrain(battle: Battle, ctx: EventContext, value: Any):
     # 1P側でのみカウントダウンを実行
@@ -35,13 +32,11 @@ def tick_terrain(battle: Battle, ctx: EventContext, value: Any):
         battle.terrain_manager.tick_down()
     return HandlerReturn(value=value)
 
-
 def _tick_global_field(battle: Battle, ctx: EventContext, value: Any, name: GlobalFieldName) -> HandlerReturn:
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
         battle.global_manager.tick_down(name)
     return HandlerReturn(value=value)
-
 
 def _tick_side_field(battle: Battle, ctx: EventContext, value: Any, name: SideFieldName) -> HandlerReturn:
     player = battle.get_player(ctx.source)
@@ -265,14 +260,6 @@ def しんぴのまもり_tick(battle: Battle, ctx: EventContext, value: Any) ->
     return _tick_side_field(battle, ctx, value, name="しんぴのまもり")
 
 
-def じゅうりょく_remove_volatiles(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """じゅうりょく発動時にそらをとぶ・でんじふゆう揮発性状態を解除する"""
-    mon = ctx.source
-    for volatile_name in ["そらをとぶ", "でんじふゆう"]:
-        battle.volatile_manager.remove(mon, volatile_name)
-    return HandlerReturn(value=value)
-
-
 def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """じゅうりょく中は全ポケモンを地面に接地扱いにする"""
     return HandlerReturn(value=False, stop_event=True)
@@ -281,6 +268,14 @@ def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -
 def じゅうりょく_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）"""
     return HandlerReturn(value=apply_fixed_modifier(value, 6840))
+
+
+def じゅうりょく_remove_volatiles(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じゅうりょく発動時にそらをとぶ・でんじふゆう揮発性状態を解除する"""
+    mon = ctx.source
+    for volatile_name in ["そらをとぶ", "でんじふゆう"]:
+        battle.volatile_manager.remove(mon, volatile_name)
+    return HandlerReturn(value=value)
 
 
 def じゅうりょく_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -385,6 +380,19 @@ def ねばねばネット_reduce_spe(battle: Battle, ctx: EventContext, value: A
     # 素早さランクを1段階下げる (相手由来と判定される)
     battle.modify_stats(ctx.source, {"spe": -1}, source=battle.foe(ctx.source))
     return HandlerReturn(value=value)
+
+
+def はめつのねがい_damage(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
+    """はめつのねがい: フィールド解除時に相手のポケモンへ蓄積ダメージを適用する。"""
+    if not ctx.source.alive:
+        return HandlerReturn(value=value)
+    battle.modify_hp(ctx.source, v=-value.damage, reason="move_damage")
+    return HandlerReturn(value=value)
+
+
+def はめつのねがい_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """はめつのねがい: ターン終了時にカウントを減算する。"""
+    return _tick_side_field(battle, ctx, value, name="はめつのねがい")
 
 
 def はれ_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -492,6 +500,19 @@ def ミストフィールド_prevent_confusion(battle: Battle, ctx: EventContext
     ):
         return HandlerReturn(value="", stop_event=True)  # 防いでイベント停止
     return HandlerReturn(value=value)  # 防がない
+
+
+def みらいよち_damage(battle: Battle, ctx: EventContext, value: Field) -> HandlerReturn:
+    """みらいよち: フィールド解除時に相手のポケモンへ蓄積ダメージを適用する。"""
+    if not ctx.source.alive:
+        return HandlerReturn(value=value)
+    battle.modify_hp(ctx.source, v=-value.damage, reason="move_damage")
+    return HandlerReturn(value=value)
+
+
+def みらいよち_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """みらいよち: ターン終了時にカウントを減算する。"""
+    return _tick_side_field(battle, ctx, value, name="みらいよち")
 
 
 def ゆき_boost_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

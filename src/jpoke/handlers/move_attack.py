@@ -1561,6 +1561,39 @@ def はっけい_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
+def はめつのねがい_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はめつのねがいの溜め処理。
+
+    相手側にまだフィールドが存在しない場合、ダメージを計算して「はめつのねがい」
+    サイドフィールドを相手陣営に設置し、即時攻撃を抑制する。
+    すでに存在する場合は通過して ON_TRY_MOVE_1 の失敗チェックに委ねる。
+    """
+    foe_side = battle.get_side(ctx.defender)
+    field = foe_side.get("はめつのねがい")
+    if not field.is_active:
+        damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
+        foe_side.activate("はめつのねがい", 2)
+        field.damage = damage
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def はめつのねがい_fail_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はめつのねがいの失敗チェック: 相手陣営にすでに「はめつのねがい」が存在する場合に失敗する。
+
+    ON_MOVE_CHARGE ですでに存在する場合のみ ON_TRY_MOVE_1 へ流れるため、
+    このハンドラはほぼ常に失敗を返す。
+    """
+    foe_side = battle.get_side(ctx.defender)
+    if foe_side.get("はめつのねがい").is_active:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "はめつのねがい"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def はめつのひかり_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _recoil(battle, ctx, value, 1/2)
 
@@ -2084,6 +2117,39 @@ def みずあめボム_apply_volatile_to_defender(battle: Battle, ctx: AttackCon
 def みずのはどう_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """みずのはどうの追加効果: 20%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.2)
+
+
+def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みらいよちの溜め処理。
+
+    相手側にまだフィールドが存在しない場合、ダメージを計算して「みらいよち」
+    サイドフィールドを相手陣営に設置し、即時攻撃を抑制する。
+    すでに存在する場合は通過して ON_TRY_MOVE_1 の失敗チェックに委ねる。
+    """
+    foe_side = battle.get_side(ctx.defender)
+    field = foe_side.get("みらいよち")
+    if not field.is_active:
+        damage = battle.roll_damage(ctx.attacker, ctx.defender, ctx.move)
+        foe_side.activate("みらいよち", 2)
+        field.damage = damage
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def みらいよち_fail_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みらいよちの失敗チェック: 相手陣営にすでに「みらいよち」が存在する場合に失敗する。
+
+    ON_MOVE_CHARGE ですでに存在する場合のみ ON_TRY_MOVE_1 へ流れるため、
+    このハンドラはほぼ常に失敗を返す。
+    """
+    foe_side = battle.get_side(ctx.defender)
+    if foe_side.get("みらいよち").is_active:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "みらいよち"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def ミラーコート_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

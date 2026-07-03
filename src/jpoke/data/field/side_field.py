@@ -108,6 +108,32 @@ SIDE_FIELD: dict[str, FieldData] = {
             ),
         },
     ),
+    "みらいよち": FieldData(
+        handlers={
+            Event.ON_TURN_END: h.FieldHandler(
+                h.みらいよち_tick,
+                subject_spec="source:self",
+                priority=40,
+            ),
+            Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
+                h.みらいよち_damage,
+                subject_spec="source:self",
+            ),
+        },
+    ),
+    "はめつのねがい": FieldData(
+        handlers={
+            Event.ON_TURN_END: h.FieldHandler(
+                h.はめつのねがい_tick,
+                subject_spec="source:self",
+                priority=40,
+            ),
+            Event.ON_FIELD_DEACTIVATE: h.FieldHandler(
+                h.はめつのねがい_damage,
+                subject_spec="source:self",
+            ),
+        },
+    ),
     "まきびし": FieldData(
         max_count=3,
         handlers={

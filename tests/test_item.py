@@ -8,7 +8,6 @@ from jpoke.model import Move
 from jpoke.types import Type
 from . import test_utils as t
 
-
 def _dummy_move(type_name: str) -> Move:
     """指定タイプの技オブジェクトを返す（たいあたりのデータをコピーしてタイプを上書き）。"""
     t_name = cast(Type, type_name)
@@ -88,6 +87,19 @@ def test_あかいいと_アイテム消費されない():
     assert mon0.item.name == "あかいいと"
 
 
+def test_あかいいと_アロマベール持ちには付与されない():
+    """あかいいと: 相手がアロマベールならメロメロを付与しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="あかいいと", gender="female")],
+        team1=[Pokemon("カビゴン", ability_name="アロマベール", gender="male")],
+    )
+    mon0 = battle.actives[0]
+    foe = battle.actives[1]
+    battle.volatile_manager.apply(mon0, "メロメロ", source=foe)
+    assert mon0.has_volatile("メロメロ")
+    assert not foe.has_volatile("メロメロ")
+
+
 def test_あかいいと_どんかん持ちには付与されない():
     """あかいいと: 相手がどんかんならメロメロを付与しない"""
     battle = t.start_battle(
@@ -125,6 +137,34 @@ def test_あかいいと_他の揮発状態では発動しない():
     battle.volatile_manager.apply(mon0, "こんらん", source=foe)
     assert mon0.has_volatile("こんらん")
     assert not foe.has_volatile("メロメロ")
+
+
+def test_アッキのみ_あまのじゃくによる下降はしろいきりで防げない():
+    """アッキのみ: あまのじゃくで反転した下降は自発的な変化とみなされ、しろいきりでも防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ゼニガメ", item_name="アッキのみ", ability_name="あまのじゃく")],
+        accuracy=100,
+        side1={"しろいきり": 1},
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["def"] == -1
+    assert not foe.has_item()
+
+
+def test_アッキのみ_ぼうぎょランクが最大のとき発動しない():
+    """アッキのみ: すでにぼうぎょランクが最大まで上がっているときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ゼニガメ", item_name="アッキのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["def"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["def"] == 6
+    assert foe.has_item()
 
 
 def test_アッキのみ_物理技でB上昇():

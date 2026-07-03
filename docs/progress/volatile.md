@@ -1,54 +1,54 @@
-揮発状態	仕様書	計画書	実装	テスト	レビュー	リーサル実装	リーサルテスト
-アクアリング	x	x	x	x	x	x	x
-あくむ	保留	保留	保留	保留	保留	n/a	n/a
-あなをほる	x	x	x	x	x	n/a	n/a
-あばれる	x	x	x	x	x	n/a	n/a
-あめまみれ	x	x	x	x	x	n/a	n/a
-アンコール	x	x	x	x	x	n/a	n/a
-いちゃもん	x	x	x	x	x	n/a	n/a
-うちおとす	x	x	x	x	x	n/a	n/a
-おんねん	x	x	x	x	x	n/a	n/a
-かいふくふうじ	x	x	x	x	x	n/a	n/a
-かえんのまもり	x	x	x	x	x	n/a	n/a
-かなしばり	x	x	x	x	x	n/a	n/a
-きゅうしょアップ	x	x	x	x	x	n/a	n/a
-キングシールド	x	x	x	x	x	n/a	n/a
-こだわり	x	x	x	x	x	n/a	n/a
-こんらん	x	x	x	x	x	n/a	n/a
-さしおさえ	保留	保留	保留	保留	保留	n/a	n/a
-さわがしい	x	x	x	x	x	n/a	n/a
-さわぐ	x	x	x	x	x	n/a	n/a
-しおづけ	x	x	x	x	x	x	x
-じごくづき	x	x	x	x	x	n/a	n/a
-シャドーダイブ	x	x	x	x	x	n/a	n/a
-じゅうでん	x	x	x	x	x	n/a	n/a
-スレッドトラップ	x	x	x	x	x	n/a	n/a
-そうでん	保留	保留	保留	保留	保留	n/a	n/a
-そらをとぶ	x	x	x	x	x	n/a	n/a
-タールショット	x	x	x	x	x	n/a	n/a
-ダイビング	x	x	x	x	x	n/a	n/a
-たくわえる	x	x	x	x	x	n/a	n/a
-たこがため	保留	保留	保留	保留	保留	n/a	n/a
-ちいさくなる	x	x	x	x	x	n/a	n/a
-ちょうはつ	x	x	x	x	x	n/a	n/a
-テレキネシス	保留	保留	保留	保留	保留	n/a	n/a
-でんじふゆう	x	x	x	x	x	n/a	n/a
-トーチカ	x	x	x	x	x	n/a	n/a
-とくせいなし	x	x	x	x	x	n/a	n/a
-にげられない	x	x	x	x	x	n/a	n/a
-ねむけ	x	x	x	x	x	n/a	n/a
-ねをはる	x	x	x	x	x	x	x
-のろい	x	x	x	x	x	x	x
-バインド	x	x	x	x	x	x	x
-ひるみ	x	x	x	x	x	n/a	n/a
-ふういん	x	x	x	x	x	n/a	n/a
-へんしん	保留	保留	保留	保留	保留	n/a	n/a
-ほろびのうた	x	x	x	x	x	n/a	n/a
-マジックコート	x	x	x	x	x	n/a	n/a
-まもる	x	x	x	x	x	n/a	n/a
-まるくなる	x	x	x	x	x	n/a	n/a
-みがわり	x	x	x	x	x	保留	保留
-みちづれ	x	x	x	x	x	n/a	n/a
-メロメロ	x	x	x	x	x	n/a	n/a
-やどりぎのタネ	x	x	x	x	x	x	x
-ロックオン	x	x	x	x	x	n/a	n/a
+揮発状態	仕様書	計画書	実装	テスト	リーサル実装	リーサルテスト	レビュー	効果
+アクアリング	x	x	x	x	x	x	x	?
+あくむ	保留	保留	保留	保留	n/a	n/a	保留	?
+あなをほる	x	x	x	x	n/a	n/a	x	?
+あばれる	x	x	x	x	n/a	n/a	x	?
+あめまみれ	x	x	x	x	n/a	n/a	x	?
+アンコール	x	x	x	x	n/a	n/a	x	?
+いちゃもん	x	x	x	x	n/a	n/a	x	?
+うちおとす	x	x	x	x	n/a	n/a	x	?
+おんねん	x	x	x	x	n/a	n/a	x	?
+かいふくふうじ	x	x	x	x	n/a	n/a	x	?
+かえんのまもり	x	x	x	x	n/a	n/a	x	?
+かなしばり	x	x	x	x	n/a	n/a	x	?
+きゅうしょアップ	x	x	x	x	n/a	n/a	x	?
+キングシールド	x	x	x	x	n/a	n/a	x	?
+こだわり	x	x	x	x	n/a	n/a	x	?
+こんらん	x	x	x	x	n/a	n/a	x	?
+さしおさえ	保留	保留	保留	保留	n/a	n/a	保留	?
+さわがしい	x	x	x	x	n/a	n/a	x	?
+さわぐ	x	x	x	x	n/a	n/a	x	?
+しおづけ	x	x	x	x	x	x	x	?
+じごくづき	x	x	x	x	n/a	n/a	x	?
+シャドーダイブ	x	x	x	x	n/a	n/a	x	?
+じゅうでん	x	x	x	x	n/a	n/a	x	?
+スレッドトラップ	x	x	x	x	n/a	n/a	x	?
+そうでん	保留	保留	保留	保留	n/a	n/a	保留	?
+そらをとぶ	x	x	x	x	n/a	n/a	x	?
+タールショット	x	x	x	x	n/a	n/a	x	?
+ダイビング	x	x	x	x	n/a	n/a	x	?
+たくわえる	x	x	x	x	n/a	n/a	x	?
+たこがため	保留	保留	保留	保留	n/a	n/a	保留	?
+ちいさくなる	x	x	x	x	n/a	n/a	x	?
+ちょうはつ	x	x	x	x	n/a	n/a	x	?
+テレキネシス	保留	保留	保留	保留	n/a	n/a	保留	?
+でんじふゆう	x	x	x	x	n/a	n/a	x	?
+トーチカ	x	x	x	x	n/a	n/a	x	?
+とくせいなし	x	x	x	x	n/a	n/a	x	?
+にげられない	x	x	x	x	n/a	n/a	x	?
+ねむけ	x	x	x	x	n/a	n/a	x	?
+ねをはる	x	x	x	x	x	x	x	?
+のろい	x	x	x	x	x	x	x	?
+バインド	x	x	x	x	x	x	x	?
+ひるみ	x	x	x	x	n/a	n/a	x	?
+ふういん	x	x	x	x	n/a	n/a	x	?
+へんしん	保留	保留	保留	保留	n/a	n/a	保留	?
+ほろびのうた	x	x	x	x	n/a	n/a	x	?
+マジックコート	x	x	x	x	n/a	n/a	x	?
+まもる	x	x	x	x	n/a	n/a	x	?
+まるくなる	x	x	x	x	n/a	n/a	x	?
+みがわり	x	x	x	x	保留	保留	x	?
+みちづれ	x	x	x	x	n/a	n/a	x	?
+メロメロ	x	x	x	x	n/a	n/a	x	?
+やどりぎのタネ	x	x	x	x	x	x	x	?
+ロックオン	x	x	x	x	n/a	n/a	x	?

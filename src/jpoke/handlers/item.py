@@ -22,7 +22,6 @@ _HAS_EVOLUTION: frozenset[str] = frozenset(
     d.pre_evolution for d in POKEDEX.values() if d.pre_evolution
 )
 
-
 class ItemHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -37,11 +36,9 @@ class ItemHandler(Handler):
             once=once,
         )
 
-
 def announce_item_triggered(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     _announce_item_triggered(battle, ctx.source)
     return HandlerReturn(value=value)
-
 
 def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
     mon.item.revealed = True
@@ -50,11 +47,9 @@ def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
         payload={"item": mon.item.name}
     )
 
-
 def _announce_and_consume_item(battle: Battle, mon: Pokemon) -> None:
     _announce_item_triggered(battle, mon)
     battle.item_manager.consume_item(mon)
-
 
 def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """メガストーン: メガシンカコマンドを追加する。"""
@@ -68,7 +63,6 @@ def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[C
 
     return HandlerReturn(value=value)
 
-
 def _modify_power_by_type(move: Move,
                           value: Any,
                           type_: Type,
@@ -76,7 +70,6 @@ def _modify_power_by_type(move: Move,
     if move.type == type_:
         value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
-
 
 def _modify_super_effective_damage(battle: Battle,
                                    ctx: AttackContext,
@@ -91,7 +84,6 @@ def _modify_super_effective_damage(battle: Battle,
         value = int(value * modifier)
     return HandlerReturn(value=value)
 
-
 def _resolve_field_count(value: list,
                          *fields: WeatherName | TerrainName | SideFieldName,
                          additonal_count: int) -> HandlerReturn:
@@ -99,7 +91,6 @@ def _resolve_field_count(value: list,
     if value[0] in fields:
         value[1] += additonal_count
     return HandlerReturn(value=value)
-
 
 def _terrain_seed_boost(battle: Battle, ctx: EventContext, value: Any,
                         terrain: TerrainName, stat: Stat) -> HandlerReturn:
@@ -109,7 +100,6 @@ def _terrain_seed_boost(battle: Battle, ctx: EventContext, value: Any,
         battle.modify_stats(mon, {stat: +1})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
-
 
 def _apply_contact_item_chip(battle: Battle,
                              ctx: AttackContext,
@@ -124,7 +114,6 @@ def _apply_contact_item_chip(battle: Battle,
         v = battle.modify_hp(ctx.attacker, r=-ratio)
         return bool(v)
     return False
-
 
 def _heal_berry(battle: Battle,
                 ctx: EventContext,
@@ -144,14 +133,12 @@ def _heal_berry(battle: Battle,
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
-
 def _apply_ailment_from_item(battle: Battle, ctx: EventContext, value: Any, ailment: AilmentName) -> HandlerReturn:
     mon = ctx.source
     assert mon is not None
     if battle.ailment_manager.apply(mon, ailment, source=mon):
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
-
 
 def _cure_ailment_berry(battle: Battle,
                         ctx: EventContext,
@@ -163,7 +150,6 @@ def _cure_ailment_berry(battle: Battle,
     if condition and battle.ailment_manager.remove(mon):
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
-
 
 def _cure_ailment_berry_on_apply(battle: Battle,
                                  ctx: EventContext,
@@ -177,11 +163,9 @@ def _cure_ailment_berry_on_apply(battle: Battle,
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
-
 def heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     # _heal_on_hp_dropを外部からも参照する関数にすれば、この関数は不要
     return _heal_berry(battle, ctx, value, denominator=4, heal_r=1/3)
-
 
 def _boost_on_quarter_hp(battle: Battle,
                          ctx: EventContext,
@@ -199,21 +183,24 @@ def _boost_on_quarter_hp(battle: Battle,
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
-
 def _boost_on_attack_category(battle: Battle,
                               ctx: AttackContext,
                               value: Any,
                               category: MoveCategory,
                               stat: Stat,
                               amount: int) -> HandlerReturn:
-    """指定カテゴリの技でダメージを受けたとき能力を上昇させる共通処理。"""
+    """指定カテゴリの技でダメージを受けたとき能力を上昇させる共通処理。
+
+    source=mon（自発的な変化）として扱うことで、あまのじゃくにより変化量が
+    反転して下降になった場合でもしろいきり・フラワーベールで防がれないようにする。
+    また、ランクがすでに上限/下限で実際に変化しなかった場合はアイテムを消費しない。
+    """
     mon = ctx.defender
     assert mon is not None
     if ctx.move.category == category:
-        battle.modify_stats(mon, {stat: amount})
-        _announce_and_consume_item(battle, mon)
+        if battle.modify_stats(mon, {stat: amount}, source=mon):
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
-
 
 def _retaliate_on_category(battle: Battle,
                            ctx: AttackContext,
@@ -226,7 +213,6 @@ def _retaliate_on_category(battle: Battle,
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
-
 def _dedicated_item_form_change(battle: Battle,
                                 ctx: EventContext,
                                 value: Any,
@@ -236,7 +222,6 @@ def _dedicated_item_form_change(battle: Battle,
     if mon is not None and mon.name == base_form:
         mon.set_form(origin_form)
     return HandlerReturn(value=value)
-
 
 def _dedicated_item_modify_power(ctx: AttackContext,
                                  value: Any,
@@ -248,7 +233,6 @@ def _dedicated_item_modify_power(ctx: AttackContext,
     ):
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
-
 
 def _boost_stat_on_type_hit(battle: Battle,
                             ctx: AttackContext,

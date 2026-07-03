@@ -36,6 +36,7 @@ class Field(GameEffect):
         self.owners: tuple[Player, ...] = owners
         self.count: int = count
         self.heal: int = 0  # ねがいごと用
+        self.damage: int = 0  # みらいよち・はめつのねがい用
         self.revealed = True
 
         self.data: FieldData  # IDE hint

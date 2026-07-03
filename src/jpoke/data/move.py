@@ -6095,7 +6095,15 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                ha.はめつのねがい_charge,
+            ),
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.はめつのねがい_fail_check,
+                priority=30,
+            ),
+        },
     ),
     "はめつのひかり": MoveData(
         type="ゴースト",
@@ -7814,7 +7822,15 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=120,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                ha.みらいよち_charge,
+            ),
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.みらいよち_fail_check,
+                priority=30,
+            ),
+        },
     ),
     "ミラーコート": MoveData(
         type="エスパー",
