@@ -80,6 +80,33 @@ def test_なかまづくり_相手の特性が使用者の特性に変わる():
     assert defender.ability.name == "せいでんき"
 
 
+def test_なかよくする_こうげきが2段階下がる():
+    """なかよくする: 使用すると相手のこうげきが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なかよくする"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_なかよくする_こうげきが最低値のとき変化なし():
+    """なかよくする: こうげきランクがすでに-6のときはランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なかよくする"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"atk": -6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -6
+
+
 def test_なまける_HPが2分の1回復する():
     """なまける: 使用すると最大HPの1/2を回復する"""
     battle = t.start_battle(
