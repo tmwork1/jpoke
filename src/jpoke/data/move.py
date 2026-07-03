@@ -6439,7 +6439,11 @@ MOVES: dict[str, MoveData] = {
         power=65,
         accuracy=90,
         flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.ひけん・ちえなみ_set_spikes,
+            ),
+        },
     ),
     "ひっかく": MoveData(
         type="ノーマル",

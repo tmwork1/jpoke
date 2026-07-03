@@ -1696,6 +1696,13 @@ def パラボラチャージ_drain(battle: Battle, ctx: AttackContext, value: in
     return HandlerReturn(value=value)
 
 
+def ひけん・ちえなみ_set_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ひけん・ちえなみ: 命中後、相手陣営に「まきびし」を1層設置する（最大3層）。"""
+    side = battle.get_side(ctx.defender)
+    side.activate("まきびし", 1)
+    return HandlerReturn(value=value)
+
+
 def ひっさつまえば_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
