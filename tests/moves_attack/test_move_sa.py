@@ -29,6 +29,17 @@ def test_10まんボルト_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_Gのちから_じゅうりょくなしでは通常威力():
+    """Gのちから: じゅうりょくがない場合は威力補正が1.0倍（4096）のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["Gのちから"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_Gのちから_ぼうぎょ1段階低下が発動する():
     """Gのちから: 100%の確率で相手のぼうぎょを1段階下げる。"""
     battle = t.start_battle(

@@ -9,10 +9,6 @@ GLOBAL_FIELD: dict[str, FieldData] = {
                 h.じゅうりょく_remove_volatiles,
                 subject_spec="source:self",
             ),
-            Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
-                h.じゅうりょく_g_power_modifier,
-                subject_spec="attacker:self",
-            ),
             Event.ON_MODIFY_ACCURACY: h.FieldHandler(
                 h.じゅうりょく_modify_accuracy,
                 subject_spec="attacker:self",

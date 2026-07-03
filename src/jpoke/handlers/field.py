@@ -273,14 +273,6 @@ def じゅうりょく_remove_volatiles(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=value)
 
 
-def じゅうりょく_g_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じゅうりょく中にGのちからの威力が1.5倍になる"""
-    # TODO : Gのちからのハンドラに移譲する
-    if ctx.move.name == "Gのちから":
-        return HandlerReturn(value=apply_fixed_modifier(value, 6144))  # 1.5倍
-    return HandlerReturn(value=value)
-
-
 def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """じゅうりょく中は全ポケモンを地面に接地扱いにする"""
     return HandlerReturn(value=False, stop_event=True)

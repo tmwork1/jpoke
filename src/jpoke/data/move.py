@@ -105,6 +105,10 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.Gのちから_gravity_boost,
+                subject_spec="attacker:self",
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.Gのちから_lower_defender_def,
             )
