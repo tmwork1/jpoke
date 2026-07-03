@@ -5176,7 +5176,11 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=150,
         accuracy=100,
-        handlers={},  # TODO : 効果実装 (しおふきと同じ)
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.しおふき_calc_power,
+            ),
+        }
     ),
     "ドラゴンエール": MoveData(
         type="ドラゴン",
