@@ -5854,7 +5854,11 @@ MOVES: dict[str, MoveData] = {
         power=80,
         accuracy=100,
         flags={"thaw"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ハイドロスチーム_power_modifier,
+            ),
+        },
     ),
     "ハイドロポンプ": MoveData(
         type="みず",

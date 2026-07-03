@@ -1500,6 +1500,25 @@ def のしかかり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
+def ハイドロスチーム_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ハイドロスチーム: 晴れ下で水タイプ弱体化を受けず、代わりに1.5倍になる。
+
+    通常、晴れ（にほんばれ・おおひでり）下では水タイプ技の威力が0.5倍になるが、
+    ハイドロスチームはその弱体化を受けない。さらに晴れ下では1.5倍の威力になる。
+
+    実装:
+    天候フィールドハンドラ（はれ_power_modifier）が先に0.5倍を適用するため、
+    その後に3倍（12288/4096）を乗算して最終的に1.5倍とする。
+    ばんのうがさを持つ防御側には天候効果が無効のため、ctx.defender で判定する
+    （天候フィールドハンドラと同じ判定方法）。
+    """
+    if not battle.weather_for(ctx.defender).sunny:
+        return HandlerReturn(value=value)
+    # フィールドハンドラの0.5倍をキャンセルし、1.5倍にするため3倍補正を適用
+    value = apply_fixed_modifier(value, 12288)
+    return HandlerReturn(value=value)
+
+
 def はいよるいちげき_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
 
