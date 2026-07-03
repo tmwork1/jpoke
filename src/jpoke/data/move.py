@@ -5825,7 +5825,15 @@ MOVES: dict[str, MoveData] = {
         type="かくとう",
         category="status",
         pp=5,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                hs.はいすいのじん_can_apply,
+                priority=30,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.はいすいのじん_apply,
+            ),
+        },
     ),
     "ハイドロカノン": MoveData(
         type="みず",

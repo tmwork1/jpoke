@@ -1354,6 +1354,46 @@ def のろい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     return HandlerReturn(value=value)
 
 
+def はいすいのじん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はいすいのじんの効果: すべての能力を1段階ずつ上げる。
+
+    すでに他の要因でにげられない状態の場合は、にげられない付与をスキップする。
+    """
+    mon = ctx.attacker
+    # すべての能力（こうげき・ぼうぎょ・とくこう・とくぼう・すばやさ）を1段階ずつ上げる
+    battle.modify_stats(mon, {"atk": 1, "def": 1, "spa": 1, "spd": 1, "spe": 1}, source=mon)
+    # にげられない状態でない場合のみ付与（はいすいのじん起因をmove_nameで記録）
+    if not mon.has_volatile("にげられない"):
+        battle.volatile_manager.apply(mon, "にげられない", source=mon, move_name="はいすいのじん")
+    return HandlerReturn(value=value)
+
+
+def はいすいのじん_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はいすいのじんの失敗条件チェック（ON_TRY_MOVE_1 priority=30）。
+
+    下記のいずれかに該当する場合は失敗する:
+    1. すでにはいすいのじんによってにげられない状態になっている
+    2. すべての能力ランクがすでに+6
+    """
+    mon = ctx.attacker
+    # はいすいのじん起因でにげられない状態の場合は失敗
+    if (mon.has_volatile("にげられない")
+            and mon.volatiles["にげられない"].move_name == "はいすいのじん"):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "はいすいのじん_すでに状態変化"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    # すべての能力ランクがすでに+6の場合は失敗
+    if all(mon.rank[stat] >= 6 for stat in ("atk", "def", "spa", "spd", "spe")):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "はいすいのじん_すでに状態変化"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def はきだす_apply_after(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はきだすのヒット後処理（ON_HIT）: たくわえ状態をリセットし、上がったランクを戻す。"""
     mon = ctx.attacker
