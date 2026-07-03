@@ -2,7 +2,7 @@
 はれ	x	x	x	x	x	n/a	n/a
 あめ	x	x	x	x	x	n/a	n/a
 すなあらし	x	x	x	x	x	x	x
-ゆき	-	-	x	x	-	n/a	n/a
+ゆき	x	x	x	x	x	n/a	n/a
 おおひでり	x	x	x	x	x	n/a	n/a
 おおあめ	x	x	x	x	x	n/a	n/a
 らんきりゅう	x	x	x	x	x	n/a	n/a

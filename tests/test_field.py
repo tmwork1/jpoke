@@ -577,6 +577,17 @@ def test_すなあらし_いわ特防強化():
     assert 6144 == battle.damage_calculator.def_modifier
 
 
+def test_すなあらし_エアロックでいわ特防強化が無効化される():
+    """すなあらし: エアロックで天候効果が無効化されている間はいわ特防1.5倍が適用されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスター"])],
+        team1=[Pokemon("イシツブテ", ability_name="エアロック")],
+        weather=("すなあらし", 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
 @pytest.mark.parametrize("pokemon_name", ["イシツブテ", "サンドパン", "コイル"])
 def test_すなあらし_タイプ免疫(pokemon_name: str):
     """すなあらし: いわ・じめん・はがねタイプはダメージを受けない"""
@@ -1170,6 +1181,17 @@ def test_ミストフィールド_非接地は状態異常防止されない():
     target = battle.actives[0]
     assert battle.ailment_manager.apply(target, "どく")
     assert target.ailment.is_active
+
+
+def test_ゆき_エアロックでこおり防御強化が無効化される():
+    """ゆき: エアロックで天候効果が無効化されている間はこおり防御1.5倍が適用されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ユキワラシ", ability_name="エアロック")],
+        weather=("ゆき", 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
 
 
 def test_ゆき_こおり防御強化():

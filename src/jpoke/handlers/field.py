@@ -307,9 +307,10 @@ def ステルスロック_damage(battle: Battle, ctx: EventContext, value: Any) 
 
 
 def すなあらし_boost_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """砂嵐時のいわタイプ特防1.5倍"""
+    """砂嵐時のいわタイプ特防1.5倍。エアロック・ノーてんきで天候が無効化されている場合は適用しない。"""
     if (
-        ctx.defender.has_type("いわ")
+        battle.weather.name == "すなあらし"
+        and ctx.defender.has_type("いわ")
         and ctx.move.category == "special"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
@@ -494,9 +495,10 @@ def ミストフィールド_prevent_confusion(battle: Battle, ctx: EventContext
 
 
 def ゆき_boost_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """雪時のこおりタイプ防御1.5倍"""
+    """雪時のこおりタイプ防御1.5倍。エアロック・ノーてんきで天候が無効化されている場合は適用しない。"""
     if (
-        ctx.defender.has_type("こおり")
+        battle.weather.name == "ゆき"
+        and ctx.defender.has_type("こおり")
         and ctx.move.category == "physical"
     ):
         value = apply_fixed_modifier(value, 6144)  # 1.5倍
