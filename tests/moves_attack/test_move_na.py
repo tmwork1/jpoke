@@ -25,6 +25,83 @@ def test_ナイトヘッド_与ダメージは使用者レベル固定():
     assert before_hp - battle.actives[1].hp == 50
 
 
+def test_なげつける_fling_powerゼロで失敗しアイテムを消費しない():
+    """なげつける: fling_power=0のアイテムでは技が失敗し、アイテムが消費されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="こんごうだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert attacker.has_item()
+
+
+def test_なげつける_アイテムなしで失敗する():
+    """なげつける: アイテムを持っていない場合に技が失敗し、相手にダメージを与えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_なげつける_かえんだまでやけどを付与する():
+    """なげつける: かえんだまを投げると命中後に相手にやけどを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="かえんだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "やけど"
+
+
+def test_なげつける_ダメージを与えアイテムを消費する():
+    """なげつける: アイテムありで攻撃が成功し、アイテムが消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="いのちのたま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_item()
+
+
+def test_なげつける_でんきだまでまひを付与する():
+    """なげつける: でんきだまを投げると命中後に相手にまひを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="でんきだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
+def test_なげつける_外れてもアイテムを消費する():
+    """なげつける: 命中しなかった場合でもON_MOVE_ENDが発火してアイテムが消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="いのちのたま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_item()
+
+
 def test_なみのり_相手にダメージを与える():
     """なみのり: 追加効果なしの特殊みず技で相手にダメージを与える。"""
     battle = t.start_battle(
