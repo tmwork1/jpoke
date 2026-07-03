@@ -1470,7 +1470,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かえんのまもり_apply,
             ),
@@ -3677,7 +3681,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.スレッドトラップ_apply,
             ),
@@ -5018,7 +5026,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.トーチカ_apply,
             ),

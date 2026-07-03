@@ -42,6 +42,115 @@ def test_まきびし_相手陣営に設置される():
     assert side.fields["まきびし"].is_active
 
 
+def test_まもる系_2ターン目は失敗する():
+    """まもる: 2ターン連続で使用すると2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: まもる成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("まもる")
+
+    # ターン終了でまもるvolatileが解除されるが executed_move は残る
+    t.end_turn(battle)
+    assert not attacker.has_volatile("まもる")
+
+    # 2ターン目: まもる失敗（連続使用）
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("まもる")
+
+
+def test_まもる系_2ターン目失敗後3ターン目は再使用できる():
+    """まもる: 2ターン目に失敗した後、3ターン目は再び成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: まもる成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    t.end_turn(battle)
+
+    # 2ターン目: まもる失敗（連続使用）→ executed_move が None にリセットされる
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    t.end_turn(battle)
+
+    # 3ターン目: まもる再び成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("まもる")
+
+
+def test_まもる系_キングシールドとニードルガードでも相互に失敗する():
+    """キングシールド→ニードルガード: 守る系は種類が違っても連続使用で2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["キングシールド", "ニードルガード"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: キングシールド成功
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("キングシールド")
+    t.end_turn(battle)
+
+    # 2ターン目: ニードルガード失敗（直前にprotectフラグ技を使ったため）
+    t.run_move(battle, 0, 1)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("ニードルガード")
+
+
+def test_まもる系_別技をはさむと再使用できる():
+    """まもる: 間に別技を使うと次のターンに守る系を再び使える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる", "でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: まもる成功
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.move_success
+    t.end_turn(battle)
+
+    # 2ターン目: でんきショックを使う（protect フラグなし）
+    t.run_move(battle, 0, 1)
+    t.end_turn(battle)
+
+    # 3ターン目: まもる再び成功（executed_move が守る系でないため）
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("まもる")
+
+
+def test_まもる系_異種の守る系技でも2ターン目は失敗する():
+    """まもる→みきり: 異なる守る系技でも2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる", "みきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: まもる成功
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.move_success
+    t.end_turn(battle)
+
+    # 2ターン目: みきり失敗（直前にprotectフラグ技を使ったため）
+    t.run_move(battle, 0, 1)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("まもる")
+
+
 def test_まわしげり_ひるみが発動する():
     """まわしげり: 30%でひるみを付与する。"""
     battle = t.start_battle(
