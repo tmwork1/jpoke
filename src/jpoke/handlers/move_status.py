@@ -1608,6 +1608,23 @@ def ひかりのかべ_set_side_field(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
+def ひっくりかえす_invert_ranks(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ひっくりかえすの効果: 相手の全能力ランク変化を反転させる。
+
+    全ランクが0の場合は技が失敗する。
+    """
+    mon = ctx.defender
+    if all(v == 0 for v in mon.rank.values()):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "能力ランクに変化がない"},
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    for stat in mon.rank:
+        mon.rank[stat] = -mon.rank[stat]
+    return HandlerReturn(value=value)
+
+
 def ビルドアップ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1})
 

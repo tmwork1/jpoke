@@ -6459,7 +6459,11 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=20,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ひっくりかえす_invert_ranks,
+            ),
+        },
     ),
     "ひっさつまえば": MoveData(
         type="ノーマル",
