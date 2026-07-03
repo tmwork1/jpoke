@@ -807,6 +807,53 @@ def test_ひかりのかべ_自陣営に5ターン設置される():
     assert side.fields["ひかりのかべ"].count == 5
 
 
+def test_ひっくりかえす_こうげきプラスが反転する():
+    """ひっくりかえす: こうげき+2の相手に使用するとこうげきが-2になること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_全ランク0なら失敗する():
+    """ひっくりかえす: 全ランクが0の場合は技が失敗してランクが変化しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # ランクはすべてデフォルト0
+    t.run_move(battle, 0)
+
+    for v in defender.rank.values():
+        assert v == 0
+
+
+def test_ひっくりかえす_複数ランクが全て反転する():
+    """ひっくりかえす: 複数のランク変化がある場合にすべて反転すること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 3
+    defender.rank["def"] = -2
+    defender.rank["spe"] = 1
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -3
+    assert defender.rank["def"] == 2
+    assert defender.rank["spe"] == -1
+
+
 def test_ひっさつまえば_ひるみが発動する():
     """ひっさつまえば: 10%でひるみを付与する。"""
     battle = t.start_battle(
