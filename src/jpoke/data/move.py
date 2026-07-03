@@ -294,7 +294,11 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # TODO : 効果抜群のときに4/3倍になる効果を実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.効果抜群時威力ブースト,
+            )
+        },
     ),
     "アクセルロック": MoveData(
         type="いわ",
@@ -712,7 +716,11 @@ MOVES: dict[str, MoveData] = {
         power=100,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # TODO : 効果抜群のときに4/3倍になる効果を実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.効果抜群時威力ブースト,
+            )
+        },
     ),
     "いにしえのうた": MoveData(
         type="ノーマル",

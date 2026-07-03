@@ -689,6 +689,19 @@ def こうそくスピン_clear_field(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
+def 効果抜群時威力ブースト(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """効果抜群のとき威力が4/3倍（5461/4096）になる。
+
+    アクセルブレイク（かくとう）・イナズマドライブ（でんき）が使用する。
+    らんきりゅう等の ON_CALC_DEF_TYPE_MODIFIER ハンドラを経由した実効タイプ相性を参照し、
+    > 4096（1.0倍超）のとき威力に 5461/4096 ≈ 4/3 をかける。
+    """
+    type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
+    if type_modifier > 4096:
+        value = apply_fixed_modifier(value, 5461)
+    return HandlerReturn(value=value)
+
+
 def こおりのキバ_apply_flinch_or_freeze(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こおりのキバの追加効果: 5%でこおり、5%でひるみを付与する。
 
