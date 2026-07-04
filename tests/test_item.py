@@ -2392,6 +2392,19 @@ def test_たべのこし():
     assert mon.hp == 1 + mon.max_hp // 16
 
 
+def test_たべのこし_かいふくふうじ中は回復しない():
+    """たべのこし: かいふくふうじ状態のときは回復しない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", item_name="たべのこし")],
+        volatile0={"かいふくふうじ": 1},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
 def test_タラプのみ_物理技では発動しない():
     """タラプのみ: 物理技では発動しない"""
     battle = t.start_battle(
