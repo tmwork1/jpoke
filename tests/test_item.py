@@ -1406,6 +1406,19 @@ def test_こうかくレンズ_非所持では命中率が変化しない():
     assert battle.move_executor.accuracy == move.accuracy
 
 
+def test_こうこうのしっぽ_クイックドロウ発動時は道具の効果が無視される():
+    """こうこうのしっぽ: 特性クイックドロウが発動した場合、道具の効果は無視されて先攻になる"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "コイル", ability_name="クイックドロウ", item_name="こうこうのしっぽ", move_names=["たいあたり"]
+        )],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    t.fix_random(battle, 0.0)  # クイックドロウを必ず発動させる
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]  # こうこうのしっぽ所持でもクイックドロウ発動で先攻
+
+
 def test_こうこうのしっぽ_行動が後になる():
     """こうこうのしっぽ: 行動順を1段階後ろにする"""
     battle = t.start_battle(

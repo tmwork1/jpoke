@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Move
 
 from jpoke.types import RoleSpec, Type, Stat, WeatherName, TerrainName, \
-    AilmentName, VolatileName, ItemDisabledReason, MoveFlag, AbilityName
+    AilmentName, VolatileName, ItemDisabledReason, MoveFlag, AbilityName, ItemName
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
@@ -1155,13 +1155,19 @@ def ぎょぐん_update_form(battle: Battle, ctx: EventContext, value: Any) -> H
 
 
 def クイックドロウ_maybe_fast_attack(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """クイックドロウ特性: 攻撃技選択時に 30% の確率で先攻化する（後攻ティア +1）。"""
+    """クイックドロウ特性: 攻撃技選択時に 30% の確率で先攻化する（後攻ティア +1）。
+
+    こうこうのしっぽ所持時は発動すると道具の効果（後攻ティア-1）が無視されるため、
+    道具側の補正分を打ち消すように+2する（順序に依存せず正味+1になる）。
+    """
     if (
         not ctx.move.is_attack
         or not battle.random.random() < 0.3
     ):
         return HandlerReturn(value=value)
     _announce_ability_triggered(battle, ctx.attacker)
+    if ctx.attacker.item.name == "こうこうのしっぽ":
+        return HandlerReturn(value=value + 2)
     return HandlerReturn(value=value + 1)
 
 
@@ -3343,12 +3349,12 @@ def わざわいのうつわ_reduce_C(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def _apply_multitype(mon: Pokemon, item_table: dict[str, Type]) -> None:
+def _apply_multitype(mon: Pokemon, item_table: dict[ItemName, Type]) -> None:
     """道具に応じてポケモンのタイプを変更する共通ロジック。"""
     item_name = mon.item.name if mon.has_item() else ""
     mon.ability_override_type = item_table.get(item_name)
 
-def _block_item_change(mon: Pokemon, unchangable_items: list[str]) -> HandlerReturn:
+def _block_item_change(mon: Pokemon, unchangable_items: list[ItemName]) -> HandlerReturn:
     """道具の奪取・交換を防ぐ共通ロジック。"""
     item_name = mon.item.name if mon.has_item() else ""
     if item_name in unchangable_items:
