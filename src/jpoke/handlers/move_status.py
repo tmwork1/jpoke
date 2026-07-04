@@ -1768,6 +1768,25 @@ def マジックルーム_activate_global_field(battle: Battle, ctx: AttackConte
     return HandlerReturn(value=manager.activate("マジックルーム", 5))
 
 
+def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まねっこの失敗条件: バトル中にまだ技が使われていない場合は失敗する。"""
+    if not battle.last_used_move_name:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "まねっこ_使用技なし"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def まねっこ_execute(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まねっこの効果: バトルで最後に使われた技をそのまま使用する。"""
+    from jpoke.model import Move
+    copied_move = Move(battle.last_used_move_name)
+    battle.run_move(ctx.attacker, copied_move)
+    return HandlerReturn(value=value)
+
+
 def まもる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_attacker(battle, ctx, value, volatile="まもる")
 

@@ -7083,7 +7083,11 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=0,
         accuracy=90,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(ha.プレゼント_roll_outcome),
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(ha.プレゼント_check_heal_full),
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(ha.プレゼント_apply_heal),
+        },
     ),
     "ヘドロウェーブ": MoveData(
         type="どく",
@@ -7632,7 +7636,10 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=20,
         flags={"non_negoto"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
+            Event.ON_STATUS_HIT: h.MoveHandler(hs.まねっこ_execute),
+        },
     ),
     "まほうのこな": MoveData(
         type="エスパー",
@@ -8107,7 +8114,9 @@ MOVES: dict[str, MoveData] = {
         power=90,
         accuracy=100,
         flags={"dance"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(ha.めざめるダンス_modify_type),
+        },
     ),
     "メタルクロー": MoveData(
         type="はがね",

@@ -2009,6 +2009,46 @@ def ブレイブバード_recoil(battle: Battle, ctx: AttackContext, value: Any)
     return _recoil(battle, ctx, value, 1/3)
 
 
+def プレゼント_apply_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """プレゼントの回復効果: 相手のHPを1/4回復する。"""
+    if ctx.move.power:
+        return HandlerReturn(value=value)
+    battle.modify_hp(ctx.defender, r=0.25)
+    return HandlerReturn(value=0)
+
+
+def プレゼント_check_heal_full(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """プレゼントの回復効果: 相手のHPが満タンの場合は失敗する。"""
+    if ctx.move.power:
+        return HandlerReturn(value=value)
+    if ctx.defender.hp >= ctx.defender.max_hp:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "プレゼント_HP満タン"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def プレゼント_roll_outcome(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """プレゼントのランダム効果を決定する。
+
+    40%: 威力40の攻撃
+    30%: 威力80の攻撃
+    10%: 威力120の攻撃
+    20%: 相手のHPを1/4回復（power=0のまま）
+    """
+    roll = battle.random.random()
+    if roll < 0.40:
+        ctx.move.power = 40
+    elif roll < 0.70:
+        ctx.move.power = 80
+    elif roll < 0.80:
+        ctx.move.power = 120
+    # 残り20%: 回復。powerは0のまま
+    return HandlerReturn(value=value)
+
+
 def ヘドロウェーブ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
@@ -2292,6 +2332,17 @@ def ムーンフォース_lower_spa_C(battle: Battle, ctx: AttackContext, value:
 
 def メガドレイン_drain(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     _drain_hp(battle, ctx, value, heal_ratio=0.5)
+    return HandlerReturn(value=value)
+
+
+def めざめるダンス_modify_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """めざめるダンス: 使用者の現在のタイプ1と同じタイプになる。
+
+    テラスタル時はテラスタイプ、ステラテラスタル時は元のタイプ1を使用する。
+    """
+    types = ctx.attacker.types
+    if types:
+        return HandlerReturn(value=types[0])
     return HandlerReturn(value=value)
 
 

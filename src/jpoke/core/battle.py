@@ -111,6 +111,7 @@ class Battle:
         self.turn: int = -1
         self.phase: BattlePhase = ""
         self.winner: Player | None = None
+        self.last_used_move_name: str = ""
 
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
 
