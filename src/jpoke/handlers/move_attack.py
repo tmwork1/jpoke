@@ -1445,10 +1445,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
             battle.volatile_manager.remove(defender, volatile_name)
     elif item_name == "ラムのみ":
         defender = ctx.defender
-        if defender.ailment.is_active:
-            battle.ailment_manager.remove(defender)
-        if defender.has_volatile("こんらん"):
-            battle.volatile_manager.remove(defender, "こんらん")
+        battle.ailment_manager.remove(defender)
+        battle.volatile_manager.remove(defender, "こんらん")
     # TODO: その他のきのみ・追加効果アイテム
     return HandlerReturn(value=value)
 
