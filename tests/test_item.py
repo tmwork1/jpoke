@@ -3566,6 +3566,38 @@ def test_はっきんだま_対象外タイプの技には効果がない():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+def test_バンジのみ_それ以外の性格ではこんらんしない():
+    """バンジのみ: にがい味が嫌いでない性格では発動してもこんらんしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="バンジのみ", nature="まじめ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert not mon.has_volatile("こんらん")
+
+
+@pytest.mark.parametrize(
+    "nature",
+    ["やんちゃ", "のうてんき", "うっかりや", "むじゃき"]
+)
+def test_バンジのみ_とくぼうが上がりにくい性格でこんらんする(nature):
+    """バンジのみ: にがい味が嫌いな性格（とくぼうが上がりにくい）は発動と同時にこんらんする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="バンジのみ", nature=nature)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
 def test_ばんのうがさ_あさのひざしが晴れでも半分回復():
     """ばんのうがさ使用者: 晴れ状態でもあさのひざしの回復量が最大HPの1/2になる"""
     battle = t.start_battle(
@@ -3769,6 +3801,90 @@ def test_パンチグローブ_パンチ技の接触判定を無効化():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.hp == attacker.max_hp
+
+
+def test_ひかりごけ_あまのじゃくでDランクが最小のとき発動しない():
+    """ひかりごけ: あまのじゃく所持者はとくぼうランクがすでに最小のとき発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりごけ", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["spd"] = -6
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == -6
+    assert foe.has_item()
+
+
+def test_ひかりごけ_あまのじゃくでD下降():
+    """ひかりごけ: あまのじゃく所持者はとくぼうが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりごけ", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == -1
+    assert not foe.has_item()
+
+
+def test_ひかりごけ_かたやぶりのみず技はたんじゅん・あまのじゃくでもD上昇():
+    """ひかりごけ: かたやぶりの効果があるみず技に対してはたんじゅん・あまのじゃくは発動せず通常通り+1される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりごけ", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == 1
+    assert not foe.has_item()
+
+
+def test_ひかりごけ_たんじゅんでD2段階上昇():
+    """ひかりごけ: たんじゅん所持者はとくぼうが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりごけ", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == 2
+    assert not foe.has_item()
+
+
+def test_ひかりごけ_とくぼうランクが最大のとき発動しない():
+    """ひかりごけ: すでにとくぼうランクが最大まで上がっているときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりごけ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["spd"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == 6
+    assert foe.has_item()
+
+
+def test_ひかりごけ_マジシャンより先に発動して奪われない():
+    """ひかりごけ: 特性マジシャンのみず技を受けても、ひかりごけが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずひかりごけが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりごけ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == 1
+    assert not foe.has_item()
+    assert not attacker.has_item()
 
 
 def test_ひかりごけ_みず以外では発動しない():

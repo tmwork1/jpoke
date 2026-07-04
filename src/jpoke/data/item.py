@@ -1401,7 +1401,7 @@ ITEMS: dict[ItemName, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.heal_on_quarter_hp,
+                h.バンジのみ_heal_on_quarter_hp,
                 subject_spec="target:self",
             )
         },
@@ -1446,6 +1446,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ひかりごけ_boost_spdef_on_water_hit,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「きあいのハチマキ/きあいのタスキ/ゴツゴツメット/
+                # じゃくてんほけん/じゅうでんち/ゆきだま/きゅうこん/ひかりごけ/ふうせんの効果が発動する場合、
+                # マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)より確実に先に
+                # 発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
