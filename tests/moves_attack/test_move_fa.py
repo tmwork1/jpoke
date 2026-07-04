@@ -90,3 +90,54 @@ def test_ふくろだたき_選出3体健康ならば3ヒット():
     )
     move.unregister_handlers(battle.events, attacker)
     assert hit_count == 3
+
+
+def test_ふんどのこぶし_仲間0体ひんしで威力50():
+    """ふんどのこぶし: 選出全員健康のとき威力は基礎値50のまま。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ゲンガー", move_names=["ふんどのこぶし"]),
+            Pokemon("ピカチュウ"),
+            Pokemon("カビゴン"),
+        ],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 50
+
+
+def test_ふんどのこぶし_仲間1体ひんしで威力100():
+    """ふんどのこぶし: 選出1体ひんしのとき威力は100（基礎値+50）。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ゲンガー", move_names=["ふんどのこぶし"]),
+            Pokemon("ピカチュウ"),
+            Pokemon("カビゴン"),
+        ],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    battle.player_states[player].bench[0].hp = 0  # 控え1体をひんし状態にする
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_ふんどのこぶし_仲間2体ひんしで威力150():
+    """ふんどのこぶし: 選出2体ひんしのとき威力は150（基礎値+100）。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ゲンガー", move_names=["ふんどのこぶし"]),
+            Pokemon("ピカチュウ"),
+            Pokemon("カビゴン"),
+        ],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    bench = battle.player_states[player].bench
+    bench[0].hp = 0  # 控え1体目をひんし状態にする
+    bench[1].hp = 0  # 控え2体目をひんし状態にする
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 150
