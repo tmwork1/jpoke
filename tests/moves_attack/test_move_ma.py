@@ -47,6 +47,47 @@ def test_ついばむ_きのみを奪って攻撃者がHP回復する():
     assert not defender.has_item()
 
 
+def test_マグマストーム_ダメージを与える():
+    """マグマストーム: 命中時に相手にダメージを与える特殊ほのお技。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒードラン", move_names=["マグマストーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_マグマストーム_バインド中はターン終了時にダメージを受ける():
+    """マグマストーム: バインド状態のターン終了時に相手が最大HPの1/8のダメージを受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒードラン", move_names=["マグマストーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    hp_after_attack = defender.hp
+    t.end_turn(battle)
+    expected_damage = defender.max_hp // 8
+    assert defender.hp == hp_after_attack - expected_damage
+
+
+def test_マグマストーム_命中後にバインド状態になる():
+    """マグマストーム: 命中時に相手がバインド揮発状態になり交代不能になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒードラン", move_names=["マグマストーム"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+    assert not t.can_switch(battle, 1)
+
+
 def test_マジカルアクセル_こんらんが発動する():
     """マジカルアクセル: 30%でこんらんを付与する。"""
     battle = t.start_battle(

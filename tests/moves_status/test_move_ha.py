@@ -1228,3 +1228,25 @@ def test_ほろびのうた_自分だけ状態なら相手に付与できる():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("ほろびのうた")
+
+
+def test_ぼうぎょしれい_とくぼうが1段階上がる():
+    """ぼうぎょしれい: 使用後に自分のとくぼうランクが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ビークイン", move_names=["ぼうぎょしれい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["spd"] == 1
+
+
+def test_ぼうぎょしれい_ぼうぎょが1段階上がる():
+    """ぼうぎょしれい: 使用後に自分のぼうぎょランクが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ビークイン", move_names=["ぼうぎょしれい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["def"] == 1
