@@ -2,7 +2,7 @@ from typing import Literal
 
 
 ItemName = Literal[
-    # 自動生成: python scripts/generate_item_literal.py で更新（元: src/jpoke/data/item.py）
+    # 自動生成: python scripts/generate_literals/generate_item_literal.py で更新（元: src/jpoke/data/item.py）
     "",
     "あかいいと",
     "アッキのみ",

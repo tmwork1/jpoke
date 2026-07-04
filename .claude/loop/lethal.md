@@ -70,7 +70,7 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
    - subject は "attacker" / "defender" / None から選ぶ
 4. ソートを実行する:
    python scripts/sort_handlers.py src/jpoke/handlers/lethal.py
-   （data ファイルを変更した場合は sort_abilities.py / sort_items.py / sort_moves.py も実行）
+   （data ファイルを変更した場合は scripts/sort_data/sort_abilities.py / scripts/sort_data/sort_items.py / scripts/sort_data/sort_moves.py も実行）
 5. tests/test_lethal.py にテストを追加する（t.calc_lethal を使用）
 6. python scripts/sort_tests.py tests/test_lethal.py を実行する
 7. python scripts/generate_test_list.py を実行する

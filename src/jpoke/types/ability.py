@@ -2,7 +2,7 @@ from typing import Literal
 
 
 AbilityName = Literal[
-    # 自動生成: python scripts/generate_ability_literal.py で更新（元: src/jpoke/data/ability.py）
+    # 自動生成: python scripts/generate_literals/generate_ability_literal.py で更新（元: src/jpoke/data/ability.py）
     "",
     "ARシステム",
     "アイスフェイス",

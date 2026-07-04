@@ -2,7 +2,7 @@
 """ItemName の Literal 定義を data/item.py の ITEMS 辞書から自動生成するスクリプト。
 
 使い方:
-    python scripts/generate_item_literal.py
+    python scripts/generate_literals/generate_item_literal.py
 
 処理内容:
 - src/jpoke/data/item.py を AST 解析し、ITEMS 辞書のトップレベルキーを
@@ -19,13 +19,13 @@ import ast
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 ITEM_PY = ROOT / "src/jpoke/data/item.py"
 MEGAEVOL_PY = ROOT / "src/jpoke/data/megaevol.py"
 TYPE_DEFS_PY = ROOT / "src/jpoke/types/item.py"
 
 GENERATED_COMMENT = (
-    "    # 自動生成: python scripts/generate_item_literal.py で更新"
+    "    # 自動生成: python scripts/generate_literals/generate_item_literal.py で更新"
     "（元: src/jpoke/data/item.py）"
 )
 

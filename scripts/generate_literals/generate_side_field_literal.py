@@ -2,7 +2,7 @@
 """SideFieldName の Literal 定義を data/field/side_field.py の SIDE_FIELD 辞書から自動生成するスクリプト。
 
 使い方:
-    python scripts/generate_side_field_literal.py
+    python scripts/generate_literals/generate_side_field_literal.py
 
 処理内容:
 - src/jpoke/data/field/side_field.py を AST 解析し、SIDE_FIELD 辞書のトップレベルキーを
@@ -15,12 +15,12 @@ import ast
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 SIDE_FIELD_PY = ROOT / "src/jpoke/data/field/side_field.py"
 TYPE_DEFS_PY = ROOT / "src/jpoke/types/side_field.py"
 
 GENERATED_COMMENT = (
-    "# 自動生成: python scripts/generate_side_field_literal.py で更新"
+    "# 自動生成: python scripts/generate_literals/generate_side_field_literal.py で更新"
     "（元: src/jpoke/data/field/side_field.py）"
 )
 

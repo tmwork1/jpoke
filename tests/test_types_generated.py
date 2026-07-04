@@ -1,5 +1,5 @@
 """AbilityName・ItemName・MoveName・PokemonName の Literal 定義、および
-それらを生成する scripts/generate_*_literal.py に関するテスト。
+それらを生成する scripts/generate_literals/generate_*_literal.py に関するテスト。
 
 Note:
     これらは Literal 型（実行時の型ヒント）であり、typing.get_args() で
@@ -43,7 +43,7 @@ def test_abilityname_既知の特性名を含む():
 @pytest.mark.parametrize("script_name, type_file", GENERATE_SCRIPTS)
 def test_generateliteralスクリプト_再実行しても差分が出ない(script_name, type_file):
     """生成スクリプトが冪等であることを確認する（既に最新化済みの状態を前提とする）。"""
-    script_path = ROOT / "scripts" / script_name
+    script_path = ROOT / "scripts" / "generate_literals" / script_name
     target_path = ROOT / type_file
     before = target_path.read_text(encoding="utf-8")
 

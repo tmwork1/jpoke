@@ -80,7 +80,7 @@ jpoke {config.category} 再レビュータスク: {entry}
    誤り・欠落があれば修正する。
    handlers を修正した場合は python scripts/sort_handlers.py src/jpoke/handlers/<category>.py を実行する。
    data/ability.py・data/item.py・data/move.py を修正した場合、対応するスクリプト
-   （sort_abilities.py / sort_items.py / sort_moves.py）を実行する。
+   （scripts/sort_data/sort_abilities.py / scripts/sort_data/sort_items.py / scripts/sort_data/sort_moves.py）を実行する。
 
 5. テストのレビュー・修正
    {config.test_files} のテストを実装と照合する。

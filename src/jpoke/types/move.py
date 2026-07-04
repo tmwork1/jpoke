@@ -2,7 +2,7 @@ from typing import Literal
 
 
 MoveName = Literal[
-    # 自動生成: python scripts/generate_move_literal.py で更新（元: src/jpoke/data/move.py）
+    # 自動生成: python scripts/generate_literals/generate_move_literal.py で更新（元: src/jpoke/data/move.py）
     "わるあがき",
     "_こんらん",
     "10まんばりき",

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""ITEMS辞書の定義を五十音順に並び替えるスクリプト。
+"""ABILITIES辞書の定義を五十音順に並び替えるスクリプト。
 
 使い方:
-    python scripts/sort_items.py
+    python scripts/sort_data/sort_abilities.py
 
 処理内容:
-- ITEMS辞書の各エントリ（key: ItemData(...)）を抽出する
+- ABILITIES辞書の各エントリ（key: AbilityData(...)）を抽出する
 - 特殊エントリ（空文字キー""）を先頭に固定する
 - 通常エントリを五十音順（カタカナ＝ひらがな同一視）にソートする
-- 各ItemData定義内の空行を除去する
-- ITEMS辞書の範囲のみを書き換え、それ以外はそのまま保持する
+- 各AbilityData定義内の空行を除去する
+- ABILITIES辞書の範囲のみを書き換え、それ以外はそのまま保持する
 """
 import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
-ITEM_PY = ROOT / "src/jpoke/data/item.py"
+ROOT = Path(__file__).parent.parent.parent
+ABILITY_PY = ROOT / "src/jpoke/data/ability.py"
 
 # カタカナのコードポイント範囲
 _KATAKANA_START = 0x30A1  # ァ
@@ -50,18 +50,18 @@ def sort_key(name: str) -> tuple:
 def parse_entries(
     lines: list[str], start: int, end: int
 ) -> list[tuple[str, list[str]]]:
-    """ITEMS辞書本体からエントリを抽出する。
+    """ABILITIES辞書本体からエントリを抽出する。
 
     Args:
         lines: ファイル全行（0-indexed、改行なし）
-        start: ITEMS = { 行の次の行インデックス（0-indexed）
+        start: ABILITIES = { 行の次の行インデックス（0-indexed）
         end: } 行のインデックス（0-indexed、exclusive）
 
     Returns:
         list of (key, entry_lines) タプルのリスト
     """
     entries = []
-    entry_pattern = re.compile(r'^    "([^"]*)": ItemData\(')
+    entry_pattern = re.compile(r'^    "([^"]*)": AbilityData\(')
     i = start
 
     while i < end:
@@ -91,37 +91,32 @@ def remove_blank_lines(entry_lines: list[str]) -> list[str]:
     return [line for line in entry_lines if line.strip() != ""]
 
 
-def sort_items(target: Path) -> None:
-    """ITEMS辞書を五十音順に並び替えてファイルを書き換える。
-
-    Note:
-        ITEMS辞書にはメガストーンが common_setup() 実行時に動的追加されるため、
-        静的定義（ファイル上のエントリ）のみを並び替え対象とする。
-    """
+def sort_abilities(target: Path) -> None:
+    """ABILITIES辞書を五十音順に並び替えてファイルを書き換える。"""
     content = target.read_text(encoding="utf-8")
     lines = content.splitlines(keepends=False)
 
-    # ITEMS辞書の開始行を探す（0-indexed）
+    # ABILITIES辞書の開始行を探す（0-indexed）
     dict_start = -1
     for i, line in enumerate(lines):
-        if line.startswith("ITEMS: dict[") and line.rstrip().endswith("ItemData] = {"):
+        if line.startswith("ABILITIES: dict[") and line.rstrip().endswith("AbilityData] = {"):
             dict_start = i
             break
     if dict_start == -1:
-        print("エラー: ITEMS辞書が見つかりません", file=sys.stderr)
+        print("エラー: ABILITIES辞書が見つかりません", file=sys.stderr)
         sys.exit(1)
 
-    # ITEMS辞書の終了行を探す（インデントなしの '}' 行）
+    # ABILITIES辞書の終了行を探す（インデントなしの '}' 行）
     dict_end = -1
     for i in range(dict_start + 1, len(lines)):
         if lines[i] == "}":
             dict_end = i
             break
     if dict_end == -1:
-        print("エラー: ITEMS辞書の終端が見つかりません", file=sys.stderr)
+        print("エラー: ABILITIES辞書の終端が見つかりません", file=sys.stderr)
         sys.exit(1)
 
-    print(f"ITEMS辞書: 行 {dict_start + 1} 〜 {dict_end + 1} ({dict_end - dict_start - 1} 行)")
+    print(f"ABILITIES辞書: 行 {dict_start + 1} 〜 {dict_end + 1} ({dict_end - dict_start - 1} 行)")
 
     # エントリを抽出
     entries = parse_entries(lines, dict_start + 1, dict_end)
@@ -140,7 +135,7 @@ def sort_items(target: Path) -> None:
     # 五十音順にソート
     entries.sort(key=lambda x: sort_key(x[0]))
 
-    # ITEMS辞書本体を再構築
+    # ABILITIES辞書本体を再構築
     dict_body_lines: list[str] = []
     for _key, entry_lines in entries:
         dict_body_lines.extend(entry_lines)
@@ -157,7 +152,7 @@ def sort_items(target: Path) -> None:
 
 
 def main() -> None:
-    sort_items(ITEM_PY)
+    sort_abilities(ABILITY_PY)
 
 
 if __name__ == "__main__":

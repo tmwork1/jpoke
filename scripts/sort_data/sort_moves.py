@@ -2,7 +2,7 @@
 """MOVES辞書の定義を五十音順に並び替えるスクリプト。
 
 使い方:
-    python scripts/sort_moves.py
+    python scripts/sort_data/sort_moves.py
 
 処理内容:
 - MOVES辞書の各エントリ（key: MoveData(...)）を抽出する
@@ -15,7 +15,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 MOVE_PY = ROOT / "src/jpoke/data/move.py"
 
 # カタカナのコードポイント範囲

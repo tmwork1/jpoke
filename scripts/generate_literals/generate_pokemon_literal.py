@@ -2,7 +2,7 @@
 """PokemonName の Literal 定義を data/pokedex.json から自動生成するスクリプト。
 
 使い方:
-    python scripts/generate_pokemon_literal.py
+    python scripts/generate_literals/generate_pokemon_literal.py
 
 処理内容:
 - src/jpoke/data/pokedex.json を json.load で読み込み、各エントリの
@@ -15,12 +15,12 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 POKEDEX_JSON = ROOT / "src/jpoke/data/pokedex.json"
 TYPE_DEFS_PY = ROOT / "src/jpoke/types/pokemon.py"
 
 GENERATED_COMMENT = (
-    "    # 自動生成: python scripts/generate_pokemon_literal.py で更新"
+    "    # 自動生成: python scripts/generate_literals/generate_pokemon_literal.py で更新"
     "（元: src/jpoke/data/pokedex.json）"
 )
 
