@@ -6,10 +6,6 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "review-test (ライジングボルト+ワイドフォース+ワイドガード: コミット875dc4e6)",
-    "review-test (れんぞくぎり: ミス時リセット未対応の確認込み)",
-    "review-test (まねっこ+プレゼント+めざめるダンス: コミットbfbb7124)",
-    "PokemonName, AbilityName, ItemName, MoveName もスクリプトで自動生成する",
     "ポケモン名の型ヒントをstrからPokemonNameに移行",
     "特性名の型ヒントをstrからAbilityNameに移行",
     "アイテム名の型ヒントをstrからItemNameに移行",
@@ -33,6 +29,10 @@
     "scripts/sort_data/のようなサブディレクトリにまとめ、指示書に反映する"
   ],
   "completed": [
+    "PokemonName, AbilityName, ItemName, MoveName もスクリプトで自動生成する",
+    "review-test (まねっこ+プレゼント+めざめるダンス: コミットbfbb7124)",
+    "review-test (れんぞくぎり: ミス時リセット未対応の確認込み)",
+    "review-test (ライジングボルト+ワイドフォース+ワイドガード: コミット875dc4e6)",
     "import文はなるべくモジュールの先頭に配置する。指示書にも明記する。",
     "LethalEvent.ON_EVERY_EVENTはemitするたびにハンドラを取得する必要は現状ない。_emitの外で取得して引数でhandlersを渡すとよい。",
     "技ハンドラとして実装する",

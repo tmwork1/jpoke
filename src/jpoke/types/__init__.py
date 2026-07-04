@@ -21,14 +21,17 @@ from .literals import (
     StatChangeReason,
     Type,
 )
+from .ability import AbilityName
 from .ailment import AilmentName
 from .global_field import GlobalFieldName
+from .item import ItemName
+from .move import MoveName
+from .pokemon import PokemonName
 from .side_field import SideFieldName
 from .terrain import TerrainName
 from .volatile import VolatileName
 from .weather import WeatherName
 
-# TODO : PokemonName, AbilityName, ItemName, MoveName もスクリプトで自動生成する
 # TODO : ポケモン名の型ヒントをstrからPokemonNameに移行
 # TODO : 特性名の型ヒントをstrからAbilityNameに移行
 # TODO : アイテム名の型ヒントをstrからItemNameに移行
@@ -37,6 +40,7 @@ from .weather import WeatherName
 __all__ = [
     "AbilityDisabledReason",
     "AbilityFlag",
+    "AbilityName",
     "AbilityState",
     "AilmentName",
     "BattlePhase",
@@ -48,11 +52,14 @@ __all__ = [
     "HandlerSource",
     "HPChangeReason",
     "ItemDisabledReason",
+    "ItemName",
     "LethalSubject",
     "MoveCategory",
     "MoveFlag",
+    "MoveName",
     "MoveTarget",
     "Nature",
+    "PokemonName",
     "RoleSpec",
     "Side",
     "SideFieldName",
