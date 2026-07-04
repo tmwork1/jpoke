@@ -1565,6 +1565,35 @@ def test_こんごうだま_対象外タイプの技には効果がない():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+@pytest.mark.parametrize("ability_name", ["さめはだ", "てつのトゲ"])
+def test_ゴツゴツメット_さめはだ等特性と併用すると合計ダメージになる(ability_name):
+    """ゴツゴツメット: さめはだ/てつのトゲと併用すると特性ダメージの後にアイテムダメージが発生し、
+    合計で最大HPの7/24分のダメージとなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name=ability_name, item_name="ゴツゴツメット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    ability_chip = min(-1, int(max_hp * -(1 / 8)))
+    item_chip = min(-1, int(max_hp * -(1 / 6)))
+    t.run_move(battle, 0)
+    assert attacker.hp == max_hp + ability_chip + item_chip
+
+
+def test_ゴツゴツメット_マジックガードには発動しない():
+    """ゴツゴツメット: 攻撃してきた相手がマジックガード持ちの場合はダメージを与えない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"], ability_name="マジックガード")],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+
+
 def test_ゴツゴツメット_接触攻撃で反撃ダメージ():
     """ゴツゴツメット: 接触技で攻撃してきた相手に1/6ダメージ"""
     battle = t.start_battle(
@@ -1575,6 +1604,49 @@ def test_ゴツゴツメット_接触攻撃で反撃ダメージ():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.hp == attacker.max_hp - attacker.max_hp // 6
+
+
+def test_ゴツゴツメット_攻撃側のみがわりを貫通してダメージを与える():
+    """ゴツゴツメット: 攻撃側がみがわり状態でも、みがわりを貫通して本体にダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "みがわり", hp=100)
+    hp_before = attacker.hp
+    expected_chip = min(-1, int(attacker.max_hp * -(1 / 6)))
+    t.run_move(battle, 0)
+    assert attacker.hp == hp_before + expected_chip
+
+
+def test_ゴツゴツメット_自分のみがわりで防いだときは発動しない():
+    """ゴツゴツメット: 自身がみがわり状態で攻撃を防いだときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=100)
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+
+
+def test_ゴツゴツメット_連続攻撃技ではヒットごとに発動する():
+    """ゴツゴツメット: 連続攻撃技を受けた場合、1発ダメージを受けるたびに発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ダブルアタック"])],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    single_chip = min(-1, int(max_hp * -(1 / 6)))
+    t.run_move(battle, 0)
+    assert attacker.hp == max_hp + single_chip * 2
 
 
 def test_ゴツゴツメット_非接触技では発動しない():
