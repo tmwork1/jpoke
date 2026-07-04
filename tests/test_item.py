@@ -1528,6 +1528,43 @@ def test_こだわり系_火力補正(item_name, move_name, expected):
     assert battle.damage_calculator.atk_modifier == expected
 
 
+def test_こんごうだま_ディアルガ以外が持っても効果がない():
+    """こんごうだま: ディアルガ以外が持っていてもドラゴン・はがね技に補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("パルキア", item_name="こんごうだま", move_names=["ドラゴンクロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_こんごうだま_なげつけるで威力60になる():
+    """こんごうだま: 通常の道具でありなげつけるで使用でき、威力60でダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="こんごうだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_item()
+
+
+def test_こんごうだま_対象外タイプの技には効果がない():
+    """こんごうだま: ディアルガが持っていてもドラゴン・はがね以外の技には補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアルガ", item_name="こんごうだま", move_names=["はかいこうせん"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_ゴツゴツメット_接触攻撃で反撃ダメージ():
     """ゴツゴツメット: 接触技で攻撃してきた相手に1/6ダメージ"""
     battle = t.start_battle(

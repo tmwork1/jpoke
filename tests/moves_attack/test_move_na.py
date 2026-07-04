@@ -28,7 +28,7 @@ def test_ナイトヘッド_与ダメージは使用者レベル固定():
 def test_なげつける_fling_powerゼロで失敗しアイテムを消費しない():
     """なげつける: fling_power=0のアイテムでは技が失敗し、アイテムが消費されない。"""
     battle = t.start_battle(
-        team0=[Pokemon("カビゴン", item_name="こんごうだま", move_names=["なげつける"])],
+        team0=[Pokemon("カビゴン", item_name="だいこんごうだま", move_names=["なげつける"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
