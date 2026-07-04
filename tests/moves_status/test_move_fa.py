@@ -99,3 +99,30 @@ def test_フラワーヒール_相手のHPを半分回復する():
     t.run_move(battle, 0)
 
     assert defender.hp == 1 + int(defender.max_hp * 1 / 2)
+
+
+def test_ふるいたてる_こうげきが上限でもとくこうは上がる():
+    """ふるいたてる: こうげきがすでに+6でも、とくこうは上昇する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふるいたてる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["spa"] == 1
+
+
+def test_ふるいたてる_こうげきとくこうが上がる():
+    """ふるいたてる: 使用すると自分のこうげきとくこうランクが1段階ずつ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふるいたてる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 1
