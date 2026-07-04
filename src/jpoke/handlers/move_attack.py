@@ -1450,7 +1450,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
 def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なげつける: 使用者のアイテムを確認し、威力を設定する。
 
-    アイテムを持っていない場合、またはfling_power=0の対象外アイテムの場合は失敗する。
+    アイテムを持っていない場合、fling_power=0の対象外アイテムの場合、
+    またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合は失敗する。
     成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
     """
     attacker = ctx.attacker
@@ -1461,15 +1462,15 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    fling_power = attacker.item.data.fling_power
-    if fling_power == 0:
+    item_data = attacker.item.data
+    if item_data.fling_power == 0 or item_data.no_fling:
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload={"reason": "なげつける_対象外アイテム"}
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    ctx.move.power = fling_power
+    ctx.move.power = item_data.fling_power
     return HandlerReturn(value=value)
 
 

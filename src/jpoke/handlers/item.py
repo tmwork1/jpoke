@@ -1246,8 +1246,9 @@ def のろいのおふだ_modify_power_by_type(battle: Battle, ctx: AttackContex
 
 
 def ノーマルジュエル_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ノーマルジュエル: ノーマルタイプの攻撃技威力を1.3倍(5325/4096倍)にして消費する。"""
     if ctx.move.type == "ノーマル":
-        value = apply_fixed_modifier(value, 6144)
+        value = apply_fixed_modifier(value, 5325)
         _announce_and_consume_item(battle, ctx.attacker)
     return HandlerReturn(value=value)
 

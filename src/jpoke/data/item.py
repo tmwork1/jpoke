@@ -1350,6 +1350,7 @@ ITEMS: dict[ItemName, ItemData] = {
     ),
     "ノーマルジュエル": ItemData(
         fling_power=30,
+        no_fling=True,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ノーマルジュエル_modify_power_by_type,

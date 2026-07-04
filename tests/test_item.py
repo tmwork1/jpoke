@@ -3399,8 +3399,23 @@ def test_のどスプレー_音技使用後にC上昇():
     assert not mon.has_item()
 
 
-def test_ノーマルジュエル_ノーマル技威力1_5倍():
-    """ノーマルジュエル: ノーマル技の威力を1.5倍にする（消費）"""
+def test_ノーマルジュエル_なげつけるが失敗しアイテムを消費しない():
+    """ノーマルジュエル: なげつけるを使用しても失敗し、アイテムを消費しない（投げられないアイテム）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ノーマルジュエル", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert mon.has_item()
+
+
+def test_ノーマルジュエル_ノーマル技威力1_3倍():
+    """ノーマルジュエル: ノーマル技の威力を1.3倍（5325/4096倍）にする（消費）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="ノーマルジュエル", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
@@ -3408,7 +3423,7 @@ def test_ノーマルジュエル_ノーマル技威力1_5倍():
     )
     mon = battle.actives[0]
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.power_modifier == 5325
     assert not mon.has_item()
 
 

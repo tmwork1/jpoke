@@ -35,6 +35,7 @@ class AbilityData:
 class ItemData:
     removable: bool = True
     fling_power: int = 0
+    no_fling: bool = False
     power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     mega_evolve: tuple[PokemonName, ...] | None = None
