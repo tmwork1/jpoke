@@ -2586,6 +2586,127 @@ def test_だっしゅつパック_0ターン目にいかくで交代():
     assert not ejected_mon.has_item()
 
 
+def test_だっしゅつパック_すばやさが一番高いポケモンのみ発動する():
+    """だっしゅつパック: 複数のポケモンが同時にランクを下げられた場合、すばやさが一番高いポケモンのみ発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いかく", item_name="だっしゅつパック", nature="ようき"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", ability_name="いかく", item_name="だっしゅつパック"), Pokemon("ゲンガー")],
+    )
+    state0 = battle._player_states[0]
+    state1 = battle._player_states[1]
+    # ピカチュウ（すばやさが高い）のだっしゅつパックのみ発動して交代する
+    assert state0.active_index == 1
+    assert not state0.team[0].has_item()
+    # カビゴン（すばやさが低い）は場に残り、だっしゅつパックも消費されない
+    assert state1.active_index == 0
+    assert state1.team[0].has_item("だっしゅつパック")
+    assert state1.team[0].rank["atk"] == -1
+
+
+def test_だっしゅつパック_とらわれ状態でも交代できる():
+    """だっしゅつパック: ねをはるなどのとらわれ状態を無視して発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", item_name="だっしゅつパック", move_names=["ねをはる"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["Gのちから"])],
+        accuracy=100,
+    )
+    battle.step()
+    state0 = battle._player_states[0]
+    ejected_mon = state0.team[0]
+    assert state0.active_index == 1
+    assert ejected_mon.item.revealed
+    assert not ejected_mon.has_item()
+
+
+def test_だっしゅつパック_バトンタッチで引き継いだランクでは発動しない():
+    """だっしゅつパック: バトンタッチで引き継いだランク低下では発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["バトンタッチ"]), Pokemon("ライチュウ", item_name="だっしゅつパック")],
+        team1=[Pokemon("カビゴン", ability_name="いかく")],
+    )
+    assert battle.actives[0].rank["atk"] == -1
+    battle.step()
+    state0 = battle._player_states[0]
+    new_mon = state0.team[1]
+    assert state0.active_index == 1
+    assert new_mon.rank["atk"] == -1
+    assert new_mon.has_item("だっしゅつパック")
+
+
+def test_だっしゅつパック_まけんきで直後にランクを打ち消しても発動する():
+    """だっしゅつパック: まけんきで下がったランクを直後に打ち消した場合も発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="まけんき", item_name="だっしゅつパック"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    state = battle._player_states[0]
+    ejected_mon = state.team[0]
+    assert state.active_index == 1
+    assert ejected_mon.item.revealed
+    assert not ejected_mon.has_item()
+
+
+def test_だっしゅつパック_ミラーアーマーで跳ね返しても発動する():
+    """だっしゅつパック: ミラーアーマーで能力低下を跳ね返した場合でも、実際のランクは変化しないが発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ミラーアーマー", item_name="だっしゅつパック"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    state = battle._player_states[0]
+    ejected_mon = state.team[0]
+    assert state.active_index == 1
+    assert ejected_mon.item.revealed
+    assert not ejected_mon.has_item()
+    assert ejected_mon.rank["atk"] == 0
+
+
+def test_だっしゅつパック_ランクが下限に達しなくても発動する():
+    """だっしゅつパック: +2から+1になるなど、ランクがマイナスにならなかった場合でも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["Gのちから"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", item_name="だっしゅつパック"), Pokemon("イーブイ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"def": 2})
+    assert defender.rank["def"] == 2
+    battle.step()
+    state1 = battle._player_states[1]
+    ejected_mon = state1.team[0]
+    # ランクが-1にならず+2→+1になっただけでも発動する
+    assert state1.active_index == 1
+    assert ejected_mon.item.revealed
+    assert not ejected_mon.has_item()
+
+
+def test_だっしゅつパック_わるいてぐせに奪われた場合は発動しない():
+    """だっしゅつパック: 自分の能力を下げる直接攻撃でわるいてぐせに奪われた場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="だっしゅつパック", move_names=["アームハンマー"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="わるいてぐせ")],
+        accuracy=100,
+    )
+    battle.step()
+    state0 = battle._player_states[0]
+    mon = state0.team[0]
+    assert state0.active_index == 0
+    assert not mon.has_item()
+    assert battle._player_states[1].team[0].has_item("だっしゅつパック")
+
+
+def test_だっしゅつパック_交代できるポケモンがいないときは発動しない():
+    """だっしゅつパック: 交代できる残りポケモンがいないときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="だっしゅつパック")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    state = battle._player_states[0]
+    mon = state.team[0]
+    assert state.active_index == 0
+    assert not mon.item.revealed
+    assert mon.has_item()
+
+
 def test_だっしゅつパック_能力上昇では発動しない():
     """だっしゅつパック: 能力上昇では発動しない"""
     battle = t.start_battle(
@@ -2598,6 +2719,21 @@ def test_だっしゅつパック_能力上昇では発動しない():
     assert state.active_index == 0
     assert not mon.item.revealed
     assert mon.has_item()
+
+
+def test_だっしゅつパック_自分の技の自傷効果でも発動する():
+    """だっしゅつパック: 自分の技で能力が下がった場合も発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="だっしゅつパック", move_names=["アーマーキャノン"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.step()
+    state0 = battle._player_states[0]
+    ejected_mon = state0.team[0]
+    assert state0.active_index == 1
+    assert ejected_mon.item.revealed
+    assert not ejected_mon.has_item()
 
 
 def test_だっしゅつボタン():

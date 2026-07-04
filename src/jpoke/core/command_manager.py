@@ -35,12 +35,17 @@ class CommandManager:
         """交代可能なコマンドのリストを取得する。
 
         Note:
-            バトンタッチによる PIVOT 交代中はとらわれ状態チェックをスキップし、
-            控えに生きているポケモンがいれば交代可能とする。
+            バトンタッチによる PIVOT 交代中や、だっしゅつパックによる交代中は
+            とらわれ状態チェックをスキップし、控えに生きているポケモンがいれば
+            交代可能とする（にげられない・バインド・ねをはる・フェアリーロックや
+            特性かげふみ・ありじごく・じりょくを無視して発動するため）。
         """
         state = self.battle.player_states[player]
-        # PIVOT（バトンタッチ等）中はとらわれ状態に関わらず交代可能
-        if state.interrupt != Interrupt.PIVOT:
+        # PIVOT（バトンタッチ等）・だっしゅつパック発動中はとらわれ状態に関わらず交代可能
+        if (
+            state.interrupt != Interrupt.PIVOT
+            and not state.interrupt.name.startswith("EJECTPACK")
+        ):
             if not self.battle.query.can_switch(player):
                 return []
         bench_alive = any(

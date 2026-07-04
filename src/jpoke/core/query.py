@@ -194,6 +194,22 @@ class PokemonQuery:
             return False
         return True
 
+    def has_available_bench(self, player: Player) -> bool:
+        """プレイヤーの控えに瀕死でないポケモンが残っているかを判定する。
+
+        だっしゅつパックなど、とらわれ状態（にげられない・バインド・ねをはる・
+        フェアリーロックや特性かげふみ・ありじごく・じりょくなど）を無視して
+        強制的に交代させる効果の判定に使う。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool: 交代先が残っている場合True
+        """
+        state = self.battle.player_states[player]
+        return any(not mon.fainted for mon in state.bench)
+
     def get_volatile_duration(self, ctx: AttackContext, name: str, count: int) -> int:
         """ON_MODIFY_DURATION を発火して揮発性状態の持続ターン数を返す。
 

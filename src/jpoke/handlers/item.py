@@ -1074,10 +1074,13 @@ def だいはっきんだま_prevent_transfer_to_base_form(battle: Battle, ctx: 
 
 def だっしゅつパック_reserve_switch(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     # valueは{stat: change}の辞書
+    # にげられない・バインド・ねをはる・フェアリーロックや特性かげふみ・ありじごく・
+    # じりょくなどのとらわれ状態も無視して発動するため、can_switch ではなく
+    # 交代先の有無のみを見る has_available_bench を使う。
     player = battle.get_player(ctx.target)
     if (
         any(v < 0 for v in value.values())
-        and battle.query.can_switch(player)
+        and battle.query.has_available_bench(player)
     ):
         battle.player_states[player].interrupt = Interrupt.EJECTPACK_REQUESTED
     return HandlerReturn(value=value)

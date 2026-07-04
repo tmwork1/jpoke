@@ -151,6 +151,12 @@ class SwitchManager:
 
             # 消費アイテムによる交代の場合はアイテムを消費させる
             if flag.requires_item_consumption():
+                required_item = flag.required_item_name()
+                if required_item and state.active.item.name != required_item:
+                    # 発動条件を満たした後、交代する前にマジシャン・わるいてぐせなどで
+                    # アイテムを失っていた場合は交代しない
+                    state.interrupt = Interrupt.NONE
+                    continue
                 self.battle.item_manager.consume_item(state.active)
 
             if state.command_reserved() and state.next_command.is_switch():
@@ -253,17 +259,25 @@ class SwitchManager:
         """割り込みフラグを上書き。
 
         EJECTPACK_REQUESTED状態のプレイヤーに対して、指定したフラグを設定する。
-        素早さ順に処理され、最初に見つかったプレイヤーのフラグが更新される。
+        素早さ順に処理され、最初に見つかったプレイヤー（すばやさが一番高いポケモン）
+        のフラグのみが更新される。複数のポケモンが同時にだっしゅつパックの発動条件を
+        満たしていた場合、それ以外のプレイヤーの発動条件は破棄する
+        （すばやさが一番高いポケモンのだっしゅつパックのみが発動する仕様のため）。
 
         Args:
             flag: 設定する割り込みフラグ
         """
+        winner_decided = False
         for mon in self.battle.resolve_speed_order():
             player = self.battle.get_player(mon)
             state = self.battle.player_states[player]
-            if state.interrupt == Interrupt.EJECTPACK_REQUESTED:
+            if state.interrupt != Interrupt.EJECTPACK_REQUESTED:
+                continue
+            if not winner_decided:
                 state.interrupt = flag
-                return
+                winner_decided = True
+            else:
+                state.interrupt = Interrupt.NONE
 
     def _register_handlers_on_switch_in(self, mon: Pokemon):
         """特性とアイテムのハンドラをバトルに登録する。

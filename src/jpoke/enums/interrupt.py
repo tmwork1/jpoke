@@ -36,6 +36,18 @@ class Interrupt(Enum):
             Interrupt.EJECTPACK_ON_TURN_END,
         }
 
+    def required_item_name(self) -> str:
+        """この割り込みの発動に必要なアイテム名を返す（不要な場合は空文字列）。
+
+        発動条件を満たした後、交代を実行するより前にマジシャン・わるいてぐせなどで
+        アイテムを奪われた／失った場合、交代自体が発生しないようにするための判定に使う。
+        """
+        if self == Interrupt.EJECTBUTTON:
+            return "だっしゅつボタン"
+        if self.name.startswith("EJECTPACK"):
+            return "だっしゅつパック"
+        return ""
+
     @classmethod
     def ejectpack_on_switch(cls, idx: int):
         """交代時のだっしゅつパック発動を取得

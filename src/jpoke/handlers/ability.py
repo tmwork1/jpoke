@@ -3031,6 +3031,13 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
         battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
         # 自分側の低下分を除去（上昇分は残す）
         value = {stat: v for stat, v in value.items() if v > 0}
+
+        # だっしゅつパック: 自身のランクは実際には変化しないが、跳ね返した時点で発動する
+        mon = ctx.target
+        if mon.item.name == "だっしゅつパック":
+            player = battle.get_player(mon)
+            if battle.query.has_available_bench(player):
+                battle.player_states[player].interrupt = Interrupt.EJECTPACK_REQUESTED
     return HandlerReturn(value=value)
 
 
