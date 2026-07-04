@@ -8667,6 +8667,10 @@ MOVES: dict[str, MoveData] = {
                 ha.れんぞくぎり_apply_count,
                 subject_spec="attacker:self",
             ),
+            Event.ON_MISS: h.MoveHandler(
+                ha.れんぞくぎり_reset_on_miss,
+                subject_spec="attacker:self",
+            ),
         },
     ),
     "ロックオン": MoveData(

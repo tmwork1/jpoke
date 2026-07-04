@@ -2595,6 +2595,12 @@ def れんぞくぎり_calc_power(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
+def れんぞくぎり_reset_on_miss(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """れんぞくぎり: 技が外れた場合、連続使用カウントをリセットする（揮発状態を解除する）。"""
+    battle.volatile_manager.remove(ctx.attacker, "れんぞくぎり")
+    return HandlerReturn(value=value)
+
+
 def ロッククライム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ロッククライムの追加効果: 20%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.2)

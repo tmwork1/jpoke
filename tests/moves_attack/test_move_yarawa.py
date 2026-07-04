@@ -328,6 +328,95 @@ def test_れんごく_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_れんぞくぎり_初回は通常威力():
+    """れんぞくぎり: 揮発状態がない初回使用時は威力補正なし（power_modifier=4096）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["れんぞくぎり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_れんぞくぎり_別の技を挟むとカウントがリセットされる():
+    """れんぞくぎり: 別の技を使用した次のターンには連続使用カウントがリセットされる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["れんぞくぎり", "ひっかく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: れんぞくぎり命中 → count=1の揮発状態が付与される
+    t.run_move(battle, 0, move_idx=0)
+    assert attacker.volatiles["れんぞくぎり"].count == 1
+    t.end_turn(battle)
+
+    # 2ターン目: 別の技を使用 → ターン終了時に揮発状態が解除される
+    t.run_move(battle, 0, move_idx=1)
+    t.end_turn(battle)
+    assert "れんぞくぎり" not in attacker.volatiles
+
+    # 3ターン目: れんぞくぎりを再度使用 → 通常威力に戻っている
+    t.run_move(battle, 0, move_idx=0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_れんぞくぎり_外れた場合カウントがリセットされる():
+    """れんぞくぎり: 技が外れた場合は連続使用カウントがリセットされ、
+    次に命中したときは通常威力に戻る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["れんぞくぎり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: 命中してcount=1の揮発状態が付与される
+    t.run_move(battle, 0)
+    assert attacker.volatiles["れんぞくぎり"].count == 1
+    t.end_turn(battle)
+
+    # 2ターン目: 外れる → 揮発状態が解除される
+    battle.test_option.accuracy = 0
+    t.run_move(battle, 0)
+    assert "れんぞくぎり" not in attacker.volatiles
+    t.end_turn(battle)
+
+    # 3ターン目: 命中 → 通常威力に戻っている（前回の威力倍率が引き継がれない）
+    battle.test_option.accuracy = 100
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_れんぞくぎり_連続ヒットで威力が2倍から4倍に上昇する():
+    """れんぞくぎり: 連続ヒットさせるとcount=1で2倍、count=2以上で4倍（上限）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["れんぞくぎり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: 命中してcount=1の揮発状態が付与される
+    t.run_move(battle, 0)
+    assert attacker.volatiles["れんぞくぎり"].count == 1
+    t.end_turn(battle)
+
+    # 2ターン目: count=1のため威力2倍(8192)、命中後count=2に増加する
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+    assert attacker.volatiles["れんぞくぎり"].count == 2
+    t.end_turn(battle)
+
+    # 3ターン目: count=2以上のため威力4倍(16384、上限)になる
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 16384
+    assert attacker.volatiles["れんぞくぎり"].count == 3
+
+
 def test_ロッククライム_こんらんが発動する():
     """ロッククライム: 20%でこんらんを付与する。"""
     battle = t.start_battle(
