@@ -557,6 +557,80 @@ def test_ミルクのみ_HP不満のとき最大HPの半分回復する():
     assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
+def test_みをけずる_HPがちょうど半分なら失敗する():
+    """みをけずる: HPがちょうど最大HPの半分のとき失敗し、能力・HPともに変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みをけずる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 2
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spa"] == 0
+    assert attacker.rank["spe"] == 0
+    assert attacker.hp == hp_before
+    assert battle.move_executor.move_applied is False
+
+
+def test_みをけずる_HPが半分未満なら失敗する():
+    """みをけずる: HPが最大HPの半分未満のとき失敗し、能力・HPともに変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みをけずる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spa"] == 0
+    assert attacker.rank["spe"] == 0
+    assert attacker.hp == 1
+    assert battle.move_executor.move_applied is False
+
+
+def test_みをけずる_HP半分超なら能力上昇しHPが半分減る():
+    """みをけずる: HPが最大HPの半分を超えているとき、こうげき・とくこう・すばやさが+2され、
+    最大HPの半分（切り捨て）が消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みをけずる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 2
+    assert attacker.rank["spa"] == 2
+    assert attacker.rank["spe"] == 2
+    assert attacker.hp == max_hp - (max_hp // 2)
+    assert battle.move_executor.move_applied is True
+
+
+def test_みをけずる_ランクが上限でも技自体は成功しHPが減る():
+    """みをけずる: こうげき・とくこう・すばやさが既に+6でも、はらだいことは異なり
+    ランク上限を理由に技が失敗することはなく、HPは消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みをけずる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 6
+    attacker.rank["spa"] = 6
+    attacker.rank["spe"] = 6
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["spa"] == 6
+    assert attacker.rank["spe"] == 6
+    assert attacker.hp == max_hp - (max_hp // 2)
+    assert battle.move_executor.move_applied is True
+
+
 @pytest.mark.parametrize(
     "spa_init,spd_init,spa_exp,spd_exp",
     [
