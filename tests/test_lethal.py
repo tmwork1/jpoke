@@ -390,7 +390,7 @@ def test_くろいヘドロ_どくタイプは毎ターン回復():
 
 
 def test_くろいヘドロ_非どくタイプは毎ターンダメージ():
-    """くろいヘドロ所持の非どくタイプポケモンは、ターン終了時に最大HPの1/16のダメージを受ける。"""
+    """くろいヘドロ所持の非どくタイプポケモンは、ターン終了時に最大HPの1/8のダメージを受ける。"""
     with_item = t.start_battle(
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー", item_name="くろいヘドロ")],
@@ -403,7 +403,7 @@ def test_くろいヘドロ_非どくタイプは毎ターンダメージ():
     results_with = t.calc_lethal(with_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
     results_without = t.calc_lethal(without_item, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
 
-    damage = with_item.actives[1].max_hp // 16
+    damage = with_item.actives[1].max_hp // 8
     assert (
         max(results_without[1].hp_counter) - max(results_with[1].hp_counter)
         == damage * 2

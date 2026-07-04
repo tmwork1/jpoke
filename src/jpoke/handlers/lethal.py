@@ -296,20 +296,12 @@ def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist:
 
 
 def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """くろいヘドロ: どくタイプは1/16回復、それ以外は1/16ダメージ。"""
+    """くろいヘドロ: どくタイプは1/16回復、それ以外は1/8ダメージ。"""
     if "どく" in ctx.defender.types:
         return _heal(hp_dist, ctx.defender, r=1/16)
-    # 1/16ダメージ（最低1、HP は 0 未満にならない）
-    amount = max(1, int(ctx.defender.max_hp / 16))
-    new_dist: StateDist = defaultdict(int)
-    for state, freq in hp_dist.items():
-        new_state = State(
-            max(0, state.value - amount),
-            ability_enabled=state.ability_enabled,
-            item_enabled=state.item_enabled,
-        )
-        new_dist[new_state] += freq
-    return dict(new_dist)
+    # 1/8ダメージ（最低1、HP は 0 未満にならない）
+    amount = max(1, int(ctx.defender.max_hp / 8))
+    return _damage(hp_dist, amount)
 
 
 def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

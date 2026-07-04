@@ -602,7 +602,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_TURN_END: h.ItemHandler(
                 h.くろいヘドロ_heal_or_damage,
                 subject_spec="source:self",
-                priority=50,
+                priority=60,
             )
         },
         lethal_handlers={
