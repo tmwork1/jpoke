@@ -241,6 +241,49 @@ def test_まわしげり_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_みかづきのいのり_HPが4分の1回復する():
+    """みかづきのいのり: 最大HPの1/4を回復する(小数点以下切り捨て)"""
+    battle = t.start_battle(
+        team0=[Pokemon("クレセリア", move_names=["みかづきのいのり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 4)
+
+
+def test_みかづきのいのり_HP満タンかつ無状態異常でも失敗しない():
+    """みかづきのいのり: HPが満タンかつ状態異常がなくても技は失敗しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("クレセリア", move_names=["みかづきのいのり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    assert not attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_success is True
+
+
+@pytest.mark.parametrize("ailment_name", ["どく", "まひ", "やけど"])
+def test_みかづきのいのり_状態異常を治す(ailment_name):
+    """みかづきのいのり: 使用者の状態異常を治す"""
+    battle = t.start_battle(
+        team0=[Pokemon("クレセリア", move_names=["みかづきのいのり"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=(ailment_name, None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    battle.test_option.trigger_ailment = False
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
 def test_みずびたし_すでにみずタイプのみなら失敗():
     """みずびたし: 相手がすでにみずタイプのみなら失敗する"""
     battle = t.start_battle(

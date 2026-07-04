@@ -1852,7 +1852,7 @@ def まるくなる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def みかづきのいのり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """みかづきのいのり: 自分のHPを最大HPの1/4回復し、状態異常を治す。"""
     mon = ctx.attacker
-    battle.modify_hp(mon, mon.max_hp // 4)
+    battle.modify_hp(mon, r=1 / 4)
     battle.ailment_manager.remove(mon)
     return HandlerReturn(value=value)
 
