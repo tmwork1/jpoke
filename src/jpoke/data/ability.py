@@ -241,6 +241,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
+    "うなぎのぼり": AbilityData(),
     "うのミサイル": AbilityData(
         flags={
             "uncopyable",
@@ -2702,6 +2703,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
+    "ほのおのたてがみ": AbilityData(),
     "ほろびのボディ": AbilityData(
         handlers={
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
