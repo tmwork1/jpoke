@@ -1413,6 +1413,111 @@ def test_ブラストバーン_次ターン行動不能になる():
     assert defender.hp == defender_hp_after_t1
 
 
+def test_ブラッドムーン_2ターン後は再び選択可能():
+    """ブラッドムーン: 使用から2ターン後は揮発状態が解除されてブラッドムーンを再び選択できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ブラッドムーン", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    # ブラッドムーン使用
+    t.run_move(battle, 0)
+    # ターン終了（count: 2→1）
+    t.end_turn(battle)
+    assert attacker.has_volatile("ブラッドムーン")
+    # もう1ターン終了（count: 1→0 → 揮発解除）
+    t.end_turn(battle)
+    assert not attacker.has_volatile("ブラッドムーン")
+    # ブラッドムーンが再び選択可能
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "ブラッドムーン" in move_names
+
+
+def test_ブラッドムーン_デカハンマー使用後もブラッドムーンは選択可能():
+    """ブラッドムーン: デカハンマーの揮発状態とは独立しており、デカハンマー使用後でもブラッドムーンは選択できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["デカハンマー", "ブラッドムーン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    # デカハンマー使用
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("デカハンマー")
+    # ターン終了（count: 2→1）
+    t.end_turn(battle)
+    # ブラッドムーンは選択可能
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "ブラッドムーン" in move_names
+    assert "デカハンマー" not in move_names
+
+
+def test_ブラッドムーン_まもるで防がれた場合も次のターンは選択不可():
+    """ブラッドムーン: まもるで防がれてもPP消費済みなので次のターンは選択不可。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ブラッドムーン", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手にまもるを付与した状態でブラッドムーンを使用（防がれる）
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    t.run_move(battle, 0)
+    # まもるで防がれてもブラッドムーン揮発が付与される
+    assert attacker.has_volatile("ブラッドムーン")
+    # ターン終了（count: 2→1）
+    t.end_turn(battle)
+    # 次ターンの選択肢にブラッドムーンが含まれない
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "ブラッドムーン" not in move_names
+
+
+def test_ブラッドムーン_使用後は次のターンに選択不可():
+    """ブラッドムーン: 使用したターンの次のターン、コマンド選択肢にブラッドムーンが現れない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ブラッドムーン", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    # ブラッドムーン使用 → 揮発状態が付与される
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ブラッドムーン")
+    # ターン終了（count: 2→1）
+    t.end_turn(battle)
+    assert attacker.has_volatile("ブラッドムーン")
+    # 次ターンのコマンドにブラッドムーンが含まれない
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "ブラッドムーン" not in move_names
+
+
+def test_ブラッドムーン_通常使用でダメージを与える():
+    """ブラッドムーン: 威力140の特殊ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ブラッドムーン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ブレイズキック_やけどが発動する():
     """ブレイズキック: 10%でやけどを付与する。"""
     battle = t.start_battle(
