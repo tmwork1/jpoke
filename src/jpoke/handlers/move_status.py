@@ -1027,6 +1027,10 @@ def ドわすれ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value
     return modify_attacker_stats(battle, ctx, value, stats={"spd": 2})
 
 
+def ないしょばなし_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
+
+
 def なかまづくり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なかまづくりの失敗条件チェック。
 

@@ -5359,7 +5359,11 @@ MOVES: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         flags={"sound"},
-        handlers={},  # TODO : 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ないしょばなし_modify_defender_stats,
+            )
+        }
     ),
     "ナイトバースト": MoveData(
         type="あく",
