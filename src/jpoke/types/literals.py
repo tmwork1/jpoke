@@ -8,7 +8,7 @@ CommandType = Literal["any", "move", "switch"]
 LethalSubject = Literal["attacker", "defender"]
 
 AbilityDisabledReason = Literal[
-    "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし",
+    "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし", "メテオドライブ",
 ]
 
 ItemDisabledReason = Literal[
@@ -96,6 +96,7 @@ MoveFlag = Literal[
     "dance",  # おどり技。おどりこ等の対象判定に使う。
     "gravity_restricted",  # じゅうりょく中に使用・選択不可になる技（はねる・そらをとぶ・でんじふゆう等）。
     "heal",  # 回復技。かいふくふうじ等の対象判定に使う。
+    "ignore_ability",  # 相手の特性を無視して攻撃する技（分類用。実際の無効化はON_BEGIN_MOVE/ON_END_MOVEハンドラで行う）。
     "non_copycat",  # まねっこで選ばれない技（スターモービル専用アクセル技）。
     "non_encore",  # アンコールで固定できない技。
     "non_negoto",  # ねごとで選ばれない技。

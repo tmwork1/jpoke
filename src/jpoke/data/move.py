@@ -8190,7 +8190,14 @@ MOVES: dict[MoveName, MoveData] = {
         power=100,
         accuracy=100,
         flags={"contact", "ignore_ability"},
-        handlers={},
+        handlers={
+            Event.ON_BEGIN_MOVE: h.MoveHandler(
+                ha.メテオドライブ_disable_defender_ability,
+            ),
+            Event.ON_END_MOVE: h.MoveHandler(
+                ha.メテオドライブ_restore_defender_ability,
+            ),
+        },
     ),
     "メテオビーム": MoveData(
         type="いわ",

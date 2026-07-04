@@ -530,6 +530,29 @@ def test_めざめるダンス_使用者のタイプ1と同じタイプになる
     assert battle.move_executor.move_type == "くさ"
 
 
+def test_メテオドライブ_もふもふのダメージ軽減を無視する():
+    """メテオドライブ: 相手の特性を無視するため、もふもふによる接触技の被ダメ半減が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハッサム", move_names=["メテオドライブ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="もふもふ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+
+
+def test_メテオドライブ_攻撃後に相手の特性が有効に戻る():
+    """メテオドライブ: 攻撃終了後は相手の特性の無効化が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハッサム", move_names=["メテオドライブ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="もふもふ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.ability.enabled is True
+
+
 def test_メテオビーム_1ターン目にとくこうが上昇する():
     """メテオビーム: 1ターン目にとくこうが1段階上昇する（追加効果ではないため必ず発動）。"""
     battle = t.start_battle(

@@ -2396,6 +2396,20 @@ def メタルバースト_modify_damage(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=int(ctx.attacker.last_damage_received * 1.5))
 
 
+def メテオドライブ_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """メテオドライブ: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
+    mon = ctx.defender
+    if mon.ability.has_flag("mold_breaker_ignorable"):
+        battle.add_ability_disabled_reason(mon, "メテオドライブ")
+    return HandlerReturn(value=value)
+
+
+def メテオドライブ_restore_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """メテオドライブ: 攻撃終了後に相手の特性の無効化を解除する。"""
+    battle.remove_ability_disabled_reason(ctx.defender, "メテオドライブ")
+    return HandlerReturn(value=value)
+
+
 def メテオビーム_boost_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """メテオビーム: とくこうを1段階上げる（追加効果ではないため必ず発動）。
 
