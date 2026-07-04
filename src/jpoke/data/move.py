@@ -3282,7 +3282,12 @@ MOVES: dict[MoveName, MoveData] = {
         power=75,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.じだんだ_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "じならし": MoveData(
         type="じめん",
@@ -8328,7 +8333,12 @@ MOVES: dict[MoveName, MoveData] = {
         power=75,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.やけっぱち_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "やどりぎのタネ": MoveData(
         type="くさ",

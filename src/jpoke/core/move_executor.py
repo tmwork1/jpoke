@@ -52,6 +52,7 @@ class MoveExecutor:
         self.action_success: bool | None = None
         self.move_success: bool | None = None
         self.move_applied: bool | None = None
+        self.move_missed: bool = False
         self.move_type: Type | None = None
         self.critical_rank: int | None = None
         self.critical: bool | None = None
@@ -62,6 +63,7 @@ class MoveExecutor:
         self.action_success = None
         self.move_success = None
         self.move_applied = None
+        self.move_missed = False
         self.move_type = None
         self.critical_rank = None
         self.critical = None
@@ -283,6 +285,15 @@ class MoveExecutor:
             # 技の状態をリセットする（タイプや威力の変更を元に戻す）
             ctx.move.reset()
 
+            # 今回の行動が総合的に成功したかを記録する（やけっぱち・じだんだ用）
+            overall_success = (
+                self.action_success is not False
+                and self.move_success is not False
+                and self.move_applied is not False
+                and not self.move_missed
+            )
+            ctx.attacker.failed_or_immobile_last_turn = not overall_success
+
             # かやたぶりを解除する
             self._events.emit(Event.ON_END_MOVE, ctx)
 
@@ -390,6 +401,7 @@ class MoveExecutor:
             )
 
             if need_hit_check and not self._check_hit(ctx):
+                self.move_missed = True
                 self.battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
                 self._events.emit(Event.ON_MISS, ctx)
                 break

@@ -115,6 +115,7 @@ class Pokemon:
         self.ate_berry: bool = False  # 今バトル中にきのみを食べたかどうか（ゲップの使用条件）
         self.stat_lowered_this_turn: bool = False  # このターン中にランクが下がったか（うっぷんばらし用）
         self.stat_raised_this_turn: bool = False  # このターン中にランクが上がったか（みわくのボイス・しっとのほのお用）
+        self.failed_or_immobile_last_turn: bool = False  # 前のターンに行動不能または技が失敗したか（やけっぱち・じだんだ用）
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -131,6 +132,7 @@ class Pokemon:
 
     def reset_on_switch_in(self):
         self.revealed = True
+        self.failed_or_immobile_last_turn = False
 
     def reset_on_switch_out(self):
         self.active_turn = 0

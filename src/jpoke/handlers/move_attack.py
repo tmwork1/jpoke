@@ -950,6 +950,13 @@ def じたばた_calc_power(battle: Battle, ctx: AttackContext, value: int) -> H
     return HandlerReturn(value=_hp_low_to_power(ctx.attacker.hp, ctx.attacker.max_hp) * 4096)
 
 
+def じだんだ_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じだんだ: 自分が前のターンで動けなかったとき、または使った技が失敗していたとき、威力が2倍になる。"""
+    if ctx.attacker.failed_or_immobile_last_turn:
+        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+    return HandlerReturn(value=value)
+
+
 def じならし_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
 
@@ -2486,6 +2493,13 @@ def やきつくす_remove_berry(battle: Battle, ctx: AttackContext, value: Any)
     """やきつくすのきのみ焼却効果。"""
     if ctx.defender.item.is_berry():
         battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
+def やけっぱち_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """やけっぱち: 自分が前のターンで動けなかったとき、または使った技が失敗していたとき、威力が2倍になる。"""
+    if ctx.attacker.failed_or_immobile_last_turn:
+        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
     return HandlerReturn(value=value)
 
 
