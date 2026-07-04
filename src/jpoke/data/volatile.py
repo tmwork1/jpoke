@@ -699,6 +699,14 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "れんぞくぎり": VolatileData(
+        handlers={
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.れんぞくぎり_reset_on_turn_end,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ロックオン": VolatileData(
         handlers={
             Event.ON_MODIFY_ACCURACY: h.VolatileHandler(

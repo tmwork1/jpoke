@@ -8649,7 +8649,16 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=95,
         flags={"contact", "slash"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.れんぞくぎり_calc_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.れんぞくぎり_apply_count,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "ロックオン": MoveData(
         type="ノーマル",

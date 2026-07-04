@@ -2515,6 +2515,35 @@ def れんごく_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
+def れんぞくぎり_apply_count(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """れんぞくぎり: 命中後に連続使用カウントを増加する。
+
+    揮発状態がなければ count=1 で初回付与し、あれば count を最大 3 まで増加する。
+    """
+    mon = ctx.attacker
+    if "れんぞくぎり" in mon.volatiles:
+        v = mon.volatiles["れんぞくぎり"]
+        if v.count is not None:
+            v.count = min(v.count + 1, 3)
+        return HandlerReturn(value=value)
+    # 初回: count=1 で volatile を付与
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="れんぞくぎり", count=1)
+
+
+def れんぞくぎり_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """れんぞくぎり: 連続使用回数に応じて威力を倍増する（最大4倍=160）。
+
+    count=1 → 2倍(80), count=2以上 → 4倍(160)。
+    ON_CALC_POWER_MODIFIER は 4096 = 1.0 倍基準。
+    """
+    mon = ctx.attacker
+    if "れんぞくぎり" in mon.volatiles:
+        count = mon.volatiles["れんぞくぎり"].count or 0
+        multiplier = 4096 * (2 ** min(count, 2))
+        return HandlerReturn(value=apply_fixed_modifier(value, multiplier))
+    return HandlerReturn(value=value)
+
+
 def ロッククライム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ロッククライムの追加効果: 20%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.2)
