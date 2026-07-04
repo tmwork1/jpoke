@@ -1963,6 +1963,14 @@ def ふんか_calc_power(battle: Battle, ctx: AttackContext, value: int) -> Hand
     return HandlerReturn(value=modifier)
 
 
+def ふんどのこぶし_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふんどのこぶし: 倒れた選出ポケモン数だけ威力が+50される。"""
+    player = battle.get_player(ctx.attacker)
+    state = battle.player_states[player]
+    fainted = sum(1 for mon in state.selection if not mon.alive)
+    return HandlerReturn(value=value * (1 + fainted))
+
+
 def Vジェネレート_reduce_defender_spd_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1, "spe": -1})
 

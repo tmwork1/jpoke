@@ -6845,7 +6845,11 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="status",
         pp=30,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ふるいたてる_modify_attacker_stats,
+            ),
+        }
     ),
     "フルールカノン": MoveData(
         type="フェアリー",
@@ -6936,7 +6940,11 @@ MOVES: dict[str, MoveData] = {
         power=50,
         accuracy=100,
         flags={"contact", "punch"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ふんどのこぶし_calc_power,
+            ),
+        }
     ),
     "ぶきみなじゅもん": MoveData(
         type="エスパー",
