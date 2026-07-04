@@ -36,6 +36,29 @@ def test_フォトンゲイザー_とくこう高い場合特殊技のまま():
     move.unregister_handlers(battle.events, attacker)
 
 
+def test_フォトンゲイザー_ハードロックの効果抜群軽減を無視する():
+    """フォトンゲイザー: 相手の特性を無視するため、ハードロックによる効果抜群ダメージ軽減が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["フォトンゲイザー"])],
+        team1=[Pokemon("カイリキー", ability_name="ハードロック")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+
+
+def test_フォトンゲイザー_攻撃後に相手の特性が有効に戻る():
+    """フォトンゲイザー: 攻撃終了後は相手の特性の無効化が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["フォトンゲイザー"])],
+        team1=[Pokemon("カイリキー", ability_name="ハードロック")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.ability.enabled is True
+
+
 def test_ふくろだたき_威力は基礎こうげきから計算される():
     """ふくろだたき: 各ヒットの威力 = 基礎こうげき種族値 / 10 + 5（ガブリアスA=130 → 威力18）。"""
     battle = t.start_battle(
