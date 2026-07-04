@@ -1080,6 +1080,16 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.だいしらたま_modify_power,
                 subject_spec="attacker:self",
             ),
+            Event.ON_CHECK_ITEM_CHANGE: [
+                h.ItemHandler(
+                    h.だいしらたま_prevent_item_change,
+                    subject_spec="target:self",
+                ),
+                h.ItemHandler(
+                    h.だいしらたま_prevent_transfer_to_base_form,
+                    subject_spec="target:foe",
+                ),
+            ],
         }
     ),
     "だいはっきんだま": ItemData(

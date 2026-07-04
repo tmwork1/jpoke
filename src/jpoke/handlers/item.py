@@ -1036,6 +1036,19 @@ def だいしらたま_modify_power(battle: Battle, ctx: AttackContext, value: A
     return _dedicated_item_modify_power(ctx, value, frozenset({"パルキア(オリジン)"}), ("ドラゴン", "みず"))
 
 
+def だいしらたま_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """だいしらたま: パルキアが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    パルキア以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    return _dedicated_item_prevent_item_change(ctx, value, "パルキア")
+
+
+def だいしらたま_prevent_transfer_to_base_form(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """だいしらたま: 通常の姿のパルキアへトリック・すりかえ等で渡すことを防ぐ。"""
+    return _dedicated_item_prevent_transfer_to_base_form(ctx, value, "パルキア")
+
+
 def だいはっきんだま_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """だいはっきんだま: ギラティナ(アナザー)をオリジンフォルムにフォルムチェンジする。"""
     return _dedicated_item_form_change(battle, ctx, value, "ギラティナ(アナザー)", "ギラティナ(オリジン)")
