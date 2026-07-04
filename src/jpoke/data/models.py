@@ -6,7 +6,8 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 
-from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName, AbilityName, MoveName
+from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName, AbilityName, MoveName, \
+    ItemName
 
 
 class PokemonData:
@@ -39,7 +40,7 @@ class ItemData:
     mega_evolve: tuple[PokemonName, ...] | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
-    name: str = ""
+    name: ItemName = ""
 
 
 class MultiHit(TypedDict):

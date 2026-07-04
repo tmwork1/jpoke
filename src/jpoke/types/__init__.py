@@ -32,8 +32,6 @@ from .terrain import TerrainName
 from .volatile import VolatileName
 from .weather import WeatherName
 
-# TODO : アイテム名の型ヒントをstrからItemNameに移行
-
 __all__ = [
     "AbilityDisabledReason",
     "AbilityFlag",

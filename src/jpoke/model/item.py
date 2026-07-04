@@ -3,7 +3,7 @@ from typing import Literal
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
 from jpoke.data.models import ItemData
-from jpoke.types import PokemonName, MoveName
+from jpoke.types import PokemonName, MoveName, ItemName
 
 from .effect import GameEffect
 
@@ -15,7 +15,7 @@ class Item(GameEffect):
     特定の条件下で消費されたりする。
     """
 
-    def __init__(self, name: str = "") -> None:
+    def __init__(self, name: ItemName = "") -> None:
         """アイテムを初期化する。
 
         Args:

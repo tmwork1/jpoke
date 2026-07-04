@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from .event_manager import EventManager
 
 from jpoke.utils import fast_copy
-from jpoke.types import ItemDisabledReason
+from jpoke.types import ItemDisabledReason, ItemName
 from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Item
 
@@ -100,7 +100,7 @@ class ItemManager:
             True
         )
 
-    def _change_item(self, mon: Pokemon, name: str) -> None:
+    def _change_item(self, mon: Pokemon, name: ItemName) -> None:
         """ポケモンのアイテムを更新し、ハンドラ登録も同期する。
 
         Args:
@@ -138,7 +138,7 @@ class ItemManager:
             mon.item.register_handlers(self._events, mon)
             self._events.emit(Event.ON_ITEM_GAINED, ctx)
 
-    def gain_item(self, target: Pokemon, name: str) -> bool:
+    def gain_item(self, target: Pokemon, name: ItemName) -> bool:
         """対象のポケモンがアイテムを得る。
 
         Args:

@@ -7,6 +7,7 @@ from jpoke.enums import Event, DomainEvent, LethalEvent
 from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import item as h, lethal as l
 from jpoke.data.models import ItemData
+from jpoke.types import ItemName
 
 from .megaevol import MEGA_STONES
 
@@ -19,7 +20,7 @@ def common_setup():
         ITEMS[name].name = name
 
 
-def _add_mega_stones(items: dict[str, ItemData]):
+def _add_mega_stones(items: dict[ItemName, ItemData]):
     """メガストーンをITEMS辞書に追加する。"""
     for name, forms in MEGA_STONES.items():
         items[name] = ItemData(
@@ -35,7 +36,7 @@ def _add_mega_stones(items: dict[str, ItemData]):
         )
 
 
-ITEMS: dict[str, ItemData] = {
+ITEMS: dict[ItemName, ItemData] = {
     "": ItemData(name=""),
     "あかいいと": ItemData(
         fling_power=10,
