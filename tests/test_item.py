@@ -1435,6 +1435,60 @@ def test_こうかくレンズ_非所持では命中率が変化しない():
     assert battle.move_executor.accuracy == move.accuracy
 
 
+def test_フォーカスレンズ_後攻なら命中率が1_2倍になる():
+    """フォーカスレンズ: すでに行動している相手に対して使う技の命中率が1.2倍になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="フォーカスレンズ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    battle.step()
+    move = battle.actives[0].moves[0]
+    assert battle.move_executor.accuracy == move.accuracy * 4915 // 4096
+
+
+def test_フォーカスレンズ_先攻なら命中率が変化しない():
+    """フォーカスレンズ: 相手がまだそのターンに行動していない場合は命中率が変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="フォーカスレンズ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+def test_フォーカスレンズ_一撃必殺技には適用されない():
+    """フォーカスレンズ: 一撃必殺技の命中率には影響しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="フォーカスレンズ", move_names=["つのドリル"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    battle.step()
+    assert battle.move_executor.accuracy == 30
+
+
+def test_フォーカスレンズ_交代直後の相手には効果がない():
+    """フォーカスレンズ: そのターンに交代してきたばかりで技を未使用の相手には効果がない（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="フォーカスレンズ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("ピカチュウ"), Pokemon("コイル")],
+    )
+    t.reserve_command(battle, command0=Command.MOVE_0, command1=Command.SWITCH_1)
+    battle.step()
+    move = battle.actives[0].moves[0]
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+def test_フォーカスレンズ_非所持では命中率が変化しない():
+    """フォーカスレンズ: 持っていない場合は命中率が変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    battle.step()
+    move = battle.actives[0].moves[0]
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 def test_こうこうのしっぽ_クイックドロウ発動時は道具の効果が無視される():
     """こうこうのしっぽ: 特性クイックドロウが発動した場合、道具の効果は無視されて先攻になる"""
     battle = t.start_battle(
