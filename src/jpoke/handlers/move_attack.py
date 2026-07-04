@@ -943,6 +943,20 @@ def シャドーボーン_lower_defender_def(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.2)
 
 
+def シャドーレイ_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """シャドーレイ: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
+    mon = ctx.defender
+    if mon.ability.has_flag("mold_breaker_ignorable"):
+        battle.add_ability_disabled_reason(mon, "シャドーレイ")
+    return HandlerReturn(value=value)
+
+
+def シャドーレイ_restore_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """シャドーレイ: 攻撃終了後に相手の特性の無効化を解除する。"""
+    battle.remove_ability_disabled_reason(ctx.defender, "シャドーレイ")
+    return HandlerReturn(value=value)
+
+
 def しんぴのちから_boost_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1})
 

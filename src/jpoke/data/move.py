@@ -3105,7 +3105,15 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"ignore_ability"},
+        handlers={
+            Event.ON_BEGIN_MOVE: h.MoveHandler(
+                ha.シャドーレイ_disable_defender_ability,
+            ),
+            Event.ON_END_MOVE: h.MoveHandler(
+                ha.シャドーレイ_restore_defender_ability,
+            ),
+        },
     ),
     "しょうりのまい": MoveData(
         type="かくとう",
