@@ -3323,6 +3323,18 @@ def test_ナゾのみ_等倍では発動しない():
     assert foe.has_item()
 
 
+def test_ナナシのみ_こおり付与直後に即時回復する():
+    """ナナシのみ: こおり付与直後（ON_APPLY_AILMENT）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン", item_name="ナナシのみ")],
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり", source=battle.actives[0])
+    assert not defender.ailment.is_active
+    assert not defender.has_item()
+
+
 def test_ねばりのかぎづめ_なしでは通常ターン():
     """ねばりのかぎづめなし: まきつくでバインド状態の継続ターンが4か5になる"""
     battle = t.start_battle(
