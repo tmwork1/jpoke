@@ -218,9 +218,15 @@ def _boost_on_quarter_hp(battle: Battle,
     """
     mon = ctx.target
     assert mon is not None
-    if mon.hp * 4 <= mon.max_hp or value >= mon.max_hp:
-        if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
-            _announce_and_consume_item(battle, mon)
+    forced = value >= mon.max_hp
+    if not forced:
+        # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
+        if ctx.hp_change_reason == "self_attack":
+            return HandlerReturn(value=value)
+        if mon.hp * 4 > mon.max_hp:
+            return HandlerReturn(value=value)
+    if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
+        _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 def _boost_on_attack_category(battle: Battle,
@@ -894,13 +900,26 @@ def じゅうでんち_boost_atk_on_electric_hit(battle: Battle, ctx: AttackCont
 
 
 def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """スターのみ: HP1/4以下でランダムな能力+2。"""
+    """スターのみ: HP1/4以下でこうげき・ぼうぎょ・とくこう・とくぼう・すばやさの
+    うちランダムな1つ（ランクが最大でないもの）+2。
+
+    value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    """
     mon = ctx.target
     assert mon is not None
-    if mon.hp <= mon.max_hp // 4:
-        stat = battle.random.choice(["atk", "def", "spa", "spd", "spe"])
-        battle.modify_stats(mon, {stat: +2})
-        _announce_and_consume_item(battle, mon)
+    forced = value >= mon.max_hp
+    if not forced:
+        # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
+        if ctx.hp_change_reason == "self_attack":
+            return HandlerReturn(value=value)
+        if mon.hp * 4 > mon.max_hp:
+            return HandlerReturn(value=value)
+    # すでにランクが最大の能力は選ばれない（5箇所全て最大なら発動しない）
+    candidates: list[Stat] = [s for s in ("atk", "def", "spa", "spd", "spe") if mon.rank[s] < 6]
+    if candidates:
+        stat = battle.random.choice(candidates)
+        if battle.modify_stats(mon, {stat: +2}):
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 

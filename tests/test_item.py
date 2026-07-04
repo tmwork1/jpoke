@@ -2148,6 +2148,72 @@ def test_スターのみ_HP25以下でランダム能力上昇():
     assert not mon.has_item()
 
 
+def test_スターのみ_こんらんの自傷では発動しない():
+    """スターのみ: こんらんの自傷ダメージ(reason=self_attack)でHPが1/4以下になっても発動しない
+    （第五世代以降の仕様）。その後、自傷以外のダメージを受けると発動する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="スターのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1, reason="self_attack")
+    assert mon.hp == mon.max_hp // 4
+    assert mon.has_item(), "こんらんの自傷ダメージでスターのみが消費された"
+
+    battle.random.choice = lambda seq: seq[0]  # A が選ばれる
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["atk"] == 2
+    assert not mon.has_item()
+
+
+def test_スターのみ_すでに最大のランクは選ばれない():
+    """スターのみ: ランクが最大(+6)の能力は選択候補から除外される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="スターのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    for stat in ("atk", "def", "spa", "spd"):
+        mon.rank[stat] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.random.choice = lambda seq: seq[0]  # 候補が1つ（すばやさ）のみになる
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["spe"] == 2
+    assert not mon.has_item()
+
+
+def test_スターのみ_ほおばるでHPに関わらず発動する():
+    """スターのみ: ほおばるで消費するときは残りHPに関わらず発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="スターのみ", move_names=["ほおばる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    battle.random.choice = lambda seq: seq[0]  # A が選ばれる
+    t.run_move(battle, 0)
+    assert mon.rank["atk"] == 2
+    assert not mon.has_item()
+
+
+def test_スターのみ_全ての能力が最大なら発動しない():
+    """スターのみ: 5箇所の能力全てがすでに最大になっているときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="スターのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    for stat in ("atk", "def", "spa", "spd", "spe"):
+        mon.rank[stat] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert all(mon.rank[stat] == 6 for stat in ("atk", "def", "spa", "spd", "spe"))
+    assert mon.has_item()
+
+
 def test_するどいツメ_急所ランク加算():
     """するどいツメ: 急所ランクを+1する"""
     battle = t.start_battle(
