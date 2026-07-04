@@ -8189,7 +8189,8 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        flags={"contact", "ignore_ability"},
+        handlers={},
     ),
     "メテオビーム": MoveData(
         type="いわ",
