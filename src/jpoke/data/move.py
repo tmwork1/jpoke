@@ -6600,7 +6600,16 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=15,
         priority=3,
-        handlers={},  # TODO: 効果実装
+        target="self",
+        flags={"protect"},
+        handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ファストガード_apply,
+            ),
+        }
     ),
     "ふいうち": MoveData(
         type="あく",

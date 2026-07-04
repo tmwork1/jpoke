@@ -781,6 +781,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ファストガード": VolatileData(
+        handlers={
+            Event.ON_TRY_MOVE_1: h.VolatileHandler(
+                h.ファストガード_protect,
+                subject_spec="defender:self",
+                priority=100,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.ファストガード_remove_volatile,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ハロウィン": VolatileData(
         handlers={
             Event.ON_VOLATILE_START: h.VolatileHandler(

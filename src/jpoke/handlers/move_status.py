@@ -1629,6 +1629,10 @@ def ビルドアップ_modify_attacker_stats(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1})
 
 
+def ファストガード_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="ファストガード")
+
+
 def ふういん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_attacker(battle, ctx, value, volatile="ふういん")
 

@@ -20,7 +20,6 @@ HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
     "シャドーダイブ": [],
 }
 
-
 class VolatileHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -35,12 +34,10 @@ class VolatileHandler(Handler):
             once=once
         )
 
-
 def check_trapped_not_ghost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ゴーストタイプでなければ交代を禁止する。"""
     source = ctx.source
     return HandlerReturn(value=source is not None and not source.has_type("ゴースト"))
-
 
 def tick_volatile(battle: Battle,
                   ctx: EventContext,
@@ -57,7 +54,6 @@ def tick_volatile(battle: Battle,
     mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
     battle.volatile_manager.tick(mon, volatile)
     return HandlerReturn(value=value)
-
 
 def remove_volatile(battle: Battle,
                     ctx: EventContext,
@@ -82,7 +78,6 @@ def remove_volatile(battle: Battle,
         )
     return HandlerReturn(value=value)
 
-
 def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """強制コマンドを返すハンドラーの共通処理
 
@@ -95,7 +90,6 @@ def force_command(battle: Battle, ctx: EventContext, value: list[Command]) -> Ha
         HandlerReturn: 常にCommand.FORCEDを返す
     """
     return HandlerReturn(value=[Command.FORCED], stop_event=True)
-
 
 def can_hit_hidden_target(battle: Battle,
                           ctx: EventContext,
@@ -116,7 +110,6 @@ def can_hit_hidden_target(battle: Battle,
         battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
-
 
 def restrict_commands(battle: Battle,
                       ctx: EventContext,
@@ -955,6 +948,60 @@ def ひるみ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> 
     return remove_volatile(battle, ctx, value, volatile="ひるみ")
 
 
+def _check_protect_success(battle: Battle, ctx: EventContext, protect_non_attack: bool) -> bool:
+    if (
+        (not protect_non_attack and not ctx.move.is_attack)
+        or not ctx.move.is_blocked_by_protect
+    ):
+        return False
+    return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
+
+def _run_protect(battle: Battle,
+                 ctx: EventContext,
+                 value: Any,
+                 stats_change_on_contact: dict[Stat, int] | None = None,
+                 ailment_on_contact: AilmentName | None = None,
+                 chip_on_contact: float | None = None,
+                 protect_non_attack: bool = True) -> HandlerReturn:
+    """protect系の共通骨格。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値
+        stats_change_on_contact: 接触時に攻撃者に与えるランク変化（例: {"atk": -1}）
+        ailment_on_contact: 接触時に攻撃者に付与する状態異常名
+        chip_on_contact: 接触時に攻撃者の最大HPから削る割合（例: 1/8）
+        protect_non_attack: False の場合、変化技を保護しない
+    """
+    if not _check_protect_success(battle, ctx, protect_non_attack):
+        battle.add_event_log(ctx.defender, LogCode.PROTECT_FAILED)
+        return HandlerReturn(value=value)
+
+    battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCEEDED)
+
+    if battle.query.is_contact(ctx):
+        if stats_change_on_contact:
+            battle.modify_stats(ctx.attacker, stats_change_on_contact, source=ctx.defender)
+        if ailment_on_contact:
+            battle.ailment_manager.apply(ctx.attacker, ailment_on_contact, source=ctx.defender)
+        if chip_on_contact is not None:
+            battle.modify_hp(ctx.attacker, r=-chip_on_contact, reason="")
+
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def ファストガード_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ファストガードの保護判定。priority≥1の先制技のみブロックする。"""
+    if ctx.move.priority < 1:
+        return HandlerReturn(value=value)
+    return _run_protect(battle, ctx, value)
+
+
+def ファストガード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return remove_volatile(battle, ctx, value, volatile="ファストガード")
+
+
 def ふういん_try_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふういん状態のポケモンと共通する技を相手が使えないようにする。"""
     if ctx.defender.has_move(ctx.move.name):
@@ -990,50 +1037,6 @@ def マジックコート_reflect(battle: Battle, ctx: AttackContext, value: Any
 def マジックコート_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """マジックコート状態のターン終了時解除"""
     return remove_volatile(battle, ctx, value, volatile="マジックコート")
-
-
-def _check_protect_success(battle: Battle, ctx: EventContext, protect_non_attack: bool) -> bool:
-    if (
-        (not protect_non_attack and not ctx.move.is_attack)
-        or not ctx.move.is_blocked_by_protect
-    ):
-        return False
-    return battle.events.emit(Event.ON_CHECK_PROTECT, ctx, True)
-
-
-def _run_protect(battle: Battle,
-                 ctx: EventContext,
-                 value: Any,
-                 stats_change_on_contact: dict[Stat, int] | None = None,
-                 ailment_on_contact: AilmentName | None = None,
-                 chip_on_contact: float | None = None,
-                 protect_non_attack: bool = True) -> HandlerReturn:
-    """protect系の共通骨格。
-
-    Args:
-        battle: バトルインスタンス
-        ctx: コンテキスト
-        value: イベント値
-        stats_change_on_contact: 接触時に攻撃者に与えるランク変化（例: {"atk": -1}）
-        ailment_on_contact: 接触時に攻撃者に付与する状態異常名
-        chip_on_contact: 接触時に攻撃者の最大HPから削る割合（例: 1/8）
-        protect_non_attack: False の場合、変化技を保護しない
-    """
-    if not _check_protect_success(battle, ctx, protect_non_attack):
-        battle.add_event_log(ctx.defender, LogCode.PROTECT_FAILED)
-        return HandlerReturn(value=value)
-
-    battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCEEDED)
-
-    if battle.query.is_contact(ctx):
-        if stats_change_on_contact:
-            battle.modify_stats(ctx.attacker, stats_change_on_contact, source=ctx.defender)
-        if ailment_on_contact:
-            battle.ailment_manager.apply(ctx.attacker, ailment_on_contact, source=ctx.defender)
-        if chip_on_contact is not None:
-            battle.modify_hp(ctx.attacker, r=-chip_on_contact, reason="")
-
-    return HandlerReturn(value=False, stop_event=True)
 
 
 def まもる_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
