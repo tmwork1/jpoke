@@ -1,5 +1,3 @@
-# TODO : 純粋な状態異常付与系のメソッド名を ..._apply_<ailment name>_to_attacker(or defender)に統一する
-
 """攻撃技関連のイベントハンドラ関数を提供するモジュール。
 
 物理・特殊攻撃技の実行に関連するハンドラ関数を提供します。
@@ -175,7 +173,7 @@ def いじげんラッシュ_lower_attacker_def(battle: Battle, ctx: AttackConte
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1})
 
 
-def いてつくしせん_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いてつくしせん_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
@@ -183,7 +181,7 @@ def いてつくしせん_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1}, chance=0.1)
 
 
-def いにしえのうた_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いにしえのうた_apply_sleep_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いにしえのうたの追加効果: 10%の確率で相手をねむり状態にする。"""
     return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり", chance=0.1)
 
@@ -423,19 +421,19 @@ def カウンター_modify_damage(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=ctx.attacker.last_physical_damage_received * 2)
 
 
-def かえんぐるま_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かえんぐるま_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
-def かえんだん_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かえんだん_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
-def かえんほうしゃ_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かえんほうしゃ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
-def かえんボール_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かえんボール_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -471,27 +469,27 @@ def かみなり_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 # 10まんボルトは数字始まりのためプライベート関数として定義する
-def _10まんボルト_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def _10まんボルト_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
-def かみなり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かみなり_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
-def かみなりあらし_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かみなりあらし_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.2)
-
-
-def かみなりのキバ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
 def かみなりのキバ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
 
-def かみなりパンチ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かみなりのキバ_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
+
+
+def かみなりパンチ_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
@@ -604,7 +602,7 @@ def きゅうけつ_drain(battle: Battle, ctx: AttackContext, value: int) -> Han
     return HandlerReturn(value=value)
 
 
-def キラースピン_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def キラースピン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
 
 
@@ -687,7 +685,7 @@ def くちばしキャノン_burn_contact_hitter(battle: Battle, ctx: AttackCont
     return HandlerReturn(value=value)
 
 
-def クロスポイズン_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
 
@@ -778,7 +776,7 @@ def こごえるせかい_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
 
 
-def こなゆき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def こなゆき_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
@@ -786,7 +784,7 @@ def コメットパンチ_boost_attacker_A(battle: Battle, ctx: AttackContext, v
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1}, chance=0.2)
 
 
-def コールドフレア_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def コールドフレア_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
@@ -845,7 +843,7 @@ def サンダーダイブ_crash(battle: Battle, ctx: AttackContext, value: Any) 
     return HandlerReturn(value=value)
 
 
-def シェルアームズ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def シェルアームズ_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.2)
 
 
@@ -882,11 +880,11 @@ def シグナルビーム_apply_confusion_to_defender(battle: Battle, ctx: Attac
     return apply_confusion_to_defender(battle, ctx, value, chance=0.1)
 
 
-def したでなめる_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def したでなめる_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
-def しっとのほのお_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def しっとのほのお_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """しっとのほのおの追加効果: そのターンにランクが上がった相手をやけど状態にする。"""
     if not ctx.defender.stat_raised_this_turn:
         return HandlerReturn(value=value)
@@ -905,7 +903,7 @@ def しねんのずつき_apply_flinch(battle: Battle, ctx: AttackContext, value
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
 
-def シャカシャカほう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def シャカシャカほう_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.2)
 
 
@@ -971,7 +969,7 @@ def ジャイロボール_calc_power(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=power * 4096)
 
 
-def じゃどくのくさり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def じゃどくのくさり_apply_toxic_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="もうどく", chance=0.5)
 
 
@@ -1001,7 +999,7 @@ def スケイルノイズ_lower_attacker_def(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1})
 
 
-def スチームバースト_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def スチームバースト_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
@@ -1009,11 +1007,11 @@ def すてみタックル_recoil(battle: Battle, ctx: AttackContext, value: Any)
     return _recoil(battle, ctx, value, 1/3)
 
 
-def スパーク_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def スパーク_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
-def スモッグ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def スモッグ_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.4)
 
 
@@ -1031,7 +1029,7 @@ def せいなるつるぎ_ignore_def_rank(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=1)
 
 
-def せいなるほのお_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def せいなるほのお_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.5)
 
 
@@ -1134,7 +1132,7 @@ def だいばくはつ_pay_hp(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def だいもんじ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def だいもんじ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -1146,11 +1144,11 @@ def だくりゅう_lower_acc(battle: Battle, ctx: AttackContext, value: Any) ->
     return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.3)
 
 
-def ダストシュート_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ダストシュート_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def ダブルニードル_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ダブルニードル_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.2)
 
 
@@ -1165,7 +1163,7 @@ def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def ダークファイア_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ダークファイア_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -1245,11 +1243,11 @@ def デスウイング_drain(battle: Battle, ctx: AttackContext, value: int) -> 
     return HandlerReturn(value=value)
 
 
-def でんきショック_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def でんきショック_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
-def でんじほう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def でんじほう_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
@@ -1278,7 +1276,7 @@ def とびつく_lower_defender_atk(battle: Battle, ctx: AttackContext, value: A
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
 
-def とびはねる_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def とびはねる_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
@@ -1337,19 +1335,19 @@ def トロピカルキック_lower_defender_atk(battle: Battle, ctx: AttackConte
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
 
-def どくづき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def どくづき_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def どくどくのキバ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def どくどくのキバ_apply_toxic_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="もうどく", chance=0.5)
 
 
-def どくばり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def どくばり_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def どくばりセンボン_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def どくばりセンボン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.5)
 
 
@@ -1473,19 +1471,19 @@ def ねこだまし_apply_flinch(battle: Battle, ctx: AttackContext, value: Any)
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ")
 
 
-def ねっさのあらし_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ねっさのあらし_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.2)
 
 
-def ねっさのだいち_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ねっさのだいち_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
-def ねっとう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ねっとう_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
-def ねっぷう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ねっぷう_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -1494,7 +1492,7 @@ def ねんりき_apply_confusion_to_defender(battle: Battle, ctx: AttackContext,
     return apply_confusion_to_defender(battle, ctx, value, chance=0.1)
 
 
-def のしかかり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def のしかかり_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
@@ -1562,7 +1560,7 @@ def はたきおとす_remove_item(battle: Battle, ctx: AttackContext, value: An
     return HandlerReturn(value=value)
 
 
-def はっけい_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def はっけい_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
@@ -1691,7 +1689,7 @@ def バークアウト_lower_spa_C(battle: Battle, ctx: AttackContext, value: An
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
 
 
-def バーンアクセル_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def バーンアクセル_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
@@ -1736,11 +1734,11 @@ def _weight_ratio_to_power(attacker_weight: float, defender_weight: float) -> in
         return 40
 
 
-def ひのこ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ひのこ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
-def ひゃっきやこう_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ひゃっきやこう_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
@@ -1899,7 +1897,7 @@ def ふぶき_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def ふぶき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ふぶき_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
@@ -1920,7 +1918,7 @@ def フライングプレス_add_flying_type(battle: Battle, ctx: AttackContext,
     return HandlerReturn(value=value)
 
 
-def フリーズドライ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def フリーズドライ_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
@@ -1933,7 +1931,7 @@ def フリーズドライ_water_effectiveness(battle: Battle, ctx: AttackContext
     return HandlerReturn(value=value)
 
 
-def フリーズボルト_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def フリーズボルト_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
@@ -1945,7 +1943,7 @@ def フレアソング_boost_spa_C(battle: Battle, ctx: AttackContext, value: An
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1})
 
 
-def フレアドライブ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def フレアドライブ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -1957,7 +1955,7 @@ def ふわふわフォール_apply_flinch(battle: Battle, ctx: AttackContext, va
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def ふんえん_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ふんえん_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
@@ -2006,7 +2004,7 @@ def ブレイククロー_lower_defender_def(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.5)
 
 
-def ブレイズキック_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ブレイズキック_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -2054,15 +2052,15 @@ def プレゼント_roll_outcome(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def ヘドロウェーブ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ヘドロウェーブ_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
 
-def ヘドロこうげき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ヘドロこうげき_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def ヘドロばくだん_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ヘドロばくだん_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
@@ -2088,7 +2086,7 @@ def ホイールスピン_sharply_lower_attacker_spe(battle: Battle, ctx: Attack
     return modify_attacker_stats(battle, ctx, value, stats={"spe": -2})
 
 
-def ほうでん_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ほうでん_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
@@ -2111,7 +2109,7 @@ def ほうふく_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=int(ctx.attacker.last_damage_received * 1.5))
 
 
-def ほっぺすりすり_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ほっぺすりすり_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
@@ -2137,7 +2135,7 @@ def ほのおのキバ_apply_flinch_or_burn(battle: Battle, ctx: AttackContext, 
     return HandlerReturn(value=value)
 
 
-def ほのおのパンチ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ほのおのパンチ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
@@ -2166,7 +2164,7 @@ def ぼうふう_apply_confusion_to_defender(battle: Battle, ctx: AttackContext,
     return apply_confusion_to_defender(battle, ctx, value, chance=0.3)
 
 
-def ボルテッカー_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ボルテッカー_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
@@ -2174,11 +2172,11 @@ def ボルテッカー_recoil(battle: Battle, ctx: AttackContext, value: Any) ->
     return _recoil(battle, ctx, value, 1/3)
 
 
-def ポイズンアクセル_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ポイズンアクセル_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def ポイズンテール_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ポイズンテール_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
 
@@ -2472,7 +2470,7 @@ def ようかいえき_lower_defender_spd(battle: Battle, ctx: AttackContext, va
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.1)
 
 
-def らいげき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def らいげき_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.2)
 
 
@@ -2511,7 +2509,7 @@ def りゅうせいぐん_sharply_lower_spa_C(battle: Battle, ctx: AttackContext
     return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
 
-def りゅうのいぶき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def りゅうのいぶき_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
@@ -2559,15 +2557,15 @@ def レイジングブル_modify_move_type(battle: Battle, ctx: AttackContext, v
     return HandlerReturn(value=value)
 
 
-def れいとうパンチ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def れいとうパンチ_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
-def れいとうビーム_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def れいとうビーム_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
 
 
-def れんごく_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def れんごく_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 

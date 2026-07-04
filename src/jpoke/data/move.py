@@ -66,7 +66,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha._10まんボルト_apply_ailment_to_defender,
+                ha._10まんボルト_apply_paralysis_to_defender,
             )
         }
     ),
@@ -699,7 +699,7 @@ MOVES: dict[MoveName, MoveData] = {
                     ha.いてつくしせん_lower_defender_spd,
                 ),
                 h.MoveHandler(
-                    ha.いてつくしせん_apply_ailment_to_defender,
+                    ha.いてつくしせん_apply_freeze_to_defender,
                 ),
             ]
         }
@@ -737,7 +737,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"sound", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.いにしえのうた_apply_ailment_to_defender,
+                ha.いにしえのうた_apply_sleep_to_defender,
             )
         }
     ),
@@ -1453,7 +1453,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かえんぐるま_apply_burn,
+                ha.かえんぐるま_apply_burn_to_defender,
             )
         }
     ),
@@ -1466,7 +1466,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かえんだん_apply_burn,
+                ha.かえんだん_apply_burn_to_defender,
             )
         }
     ),
@@ -1495,7 +1495,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かえんほうしゃ_apply_burn,
+                ha.かえんほうしゃ_apply_burn_to_defender,
             )
         }
     ),
@@ -1508,7 +1508,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かえんボール_apply_burn,
+                ha.かえんボール_apply_burn_to_defender,
             )
         }
     ),
@@ -1661,7 +1661,7 @@ MOVES: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self"
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かみなり_apply_ailment_to_defender,
+                ha.かみなり_apply_paralysis_to_defender,
             ),
         }
     ),
@@ -1674,7 +1674,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かみなりあらし_apply_ailment_to_defender,
+                ha.かみなりあらし_apply_paralysis_to_defender,
             )
         }
     ),
@@ -1687,7 +1687,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bite", "contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: [
-                h.MoveHandler(ha.かみなりのキバ_apply_ailment_to_defender),
+                h.MoveHandler(ha.かみなりのキバ_apply_paralysis_to_defender),
                 h.MoveHandler(ha.かみなりのキバ_apply_flinch),
             ]
         }
@@ -1701,7 +1701,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.かみなりパンチ_apply_ailment_to_defender,
+                ha.かみなりパンチ_apply_paralysis_to_defender,
             )
         }
     ),
@@ -1978,7 +1978,7 @@ MOVES: dict[MoveName, MoveData] = {
                 priority=100,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.キラースピン_apply_ailment_to_defender,
+                ha.キラースピン_apply_poison_to_defender,
             )
         },
         lethal_handlers={
@@ -2237,7 +2237,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "slash", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.クロスポイズン_apply_ailment_to_defender,
+                ha.クロスポイズン_apply_poison_to_defender,
             )
         }
     ),
@@ -2497,7 +2497,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.こなゆき_apply_ailment_to_defender,
+                ha.こなゆき_apply_freeze_to_defender,
             )
         }
     ),
@@ -2592,7 +2592,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.コールドフレア_apply_ailment_to_defender,
+                ha.コールドフレア_apply_burn_to_defender,
             )
         }
     ),
@@ -2841,7 +2841,7 @@ MOVES: dict[MoveName, MoveData] = {
                 ha.シェルアームズ_modify_move_category,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シェルアームズ_apply_ailment_to_defender,
+                ha.シェルアームズ_apply_poison_to_defender,
             )
         }
     ),
@@ -2925,7 +2925,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.したでなめる_apply_ailment_to_defender,
+                ha.したでなめる_apply_paralysis_to_defender,
             )
         }
     ),
@@ -2938,7 +2938,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.しっとのほのお_apply_ailment_to_defender,
+                ha.しっとのほのお_apply_burn_to_defender,
             )
         }
     ),
@@ -3029,7 +3029,7 @@ MOVES: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_drain, priority=20),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シャカシャカほう_apply_ailment_to_defender,
+                ha.シャカシャカほう_apply_burn_to_defender,
             )
         }
     ),
@@ -3340,7 +3340,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.じゃどくのくさり_apply_ailment_to_defender,
+                ha.じゃどくのくさり_apply_toxic_to_defender,
             )
         }
     ),
@@ -3526,7 +3526,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.スチームバースト_apply_ailment_to_defender,
+                ha.スチームバースト_apply_burn_to_defender,
             )
         }
     ),
@@ -3627,7 +3627,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.スパーク_apply_ailment_to_defender,
+                ha.スパーク_apply_paralysis_to_defender,
             )
         }
     ),
@@ -3667,7 +3667,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.スモッグ_apply_ailment_to_defender,
+                ha.スモッグ_apply_poison_to_defender,
             )
         }
     ),
@@ -3744,7 +3744,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.せいなるほのお_apply_ailment_to_defender,
+                ha.せいなるほのお_apply_burn_to_defender,
             )
         }
     ),
@@ -4065,7 +4065,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.だいもんじ_apply_ailment_to_defender,
+                ha.だいもんじ_apply_burn_to_defender,
             )
         }
     ),
@@ -4104,7 +4104,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ダストシュート_apply_ailment_to_defender,
+                ha.ダストシュート_apply_poison_to_defender,
             )
         }
     ),
@@ -4147,7 +4147,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ダブルニードル_apply_ailment_to_defender,
+                ha.ダブルニードル_apply_poison_to_defender,
             )
         }
     ),
@@ -4194,7 +4194,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ダークファイア_apply_ailment_to_defender,
+                ha.ダークファイア_apply_burn_to_defender,
             )
         }
     ),
@@ -4640,7 +4640,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.でんきショック_apply_ailment_to_defender,
+                ha.でんきショック_apply_paralysis_to_defender,
             )
         }
     ),
@@ -4707,7 +4707,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.でんじほう_apply_ailment_to_defender,
+                ha.でんじほう_apply_paralysis_to_defender,
             ),
         }
     ),
@@ -4855,7 +4855,7 @@ MOVES: dict[MoveName, MoveData] = {
                 priority=30,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.とびはねる_apply_ailment_to_defender,
+                ha.とびはねる_apply_paralysis_to_defender,
             )
         }
     ),
@@ -5061,7 +5061,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.どくづき_apply_ailment_to_defender,
+                ha.どくづき_apply_poison_to_defender,
             )
         }
     ),
@@ -5085,7 +5085,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bite", "contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.どくどくのキバ_apply_ailment_to_defender,
+                ha.どくどくのキバ_apply_toxic_to_defender,
             )
         }
     ),
@@ -5121,7 +5121,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.どくばり_apply_ailment_to_defender,
+                ha.どくばり_apply_poison_to_defender,
             )
         }
     ),
@@ -5134,7 +5134,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.どくばりセンボン_apply_ailment_to_defender,
+                ha.どくばりセンボン_apply_poison_to_defender,
             )
         }
     ),
@@ -5665,7 +5665,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ねっさのあらし_apply_ailment_to_defender,
+                ha.ねっさのあらし_apply_burn_to_defender,
             )
         }
     ),
@@ -5678,7 +5678,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ねっさのだいち_apply_ailment_to_defender,
+                ha.ねっさのだいち_apply_burn_to_defender,
             )
         }
     ),
@@ -5691,7 +5691,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ねっとう_apply_ailment_to_defender,
+                ha.ねっとう_apply_burn_to_defender,
             )
         }
     ),
@@ -5704,7 +5704,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ねっぷう_apply_ailment_to_defender,
+                ha.ねっぷう_apply_burn_to_defender,
             )
         }
     ),
@@ -5791,7 +5791,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"minimize", "contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.のしかかり_apply_ailment_to_defender,
+                ha.のしかかり_apply_paralysis_to_defender,
             )
         }
     ),
@@ -6004,7 +6004,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.はっけい_apply_ailment_to_defender,
+                ha.はっけい_apply_paralysis_to_defender,
             )
         }
     ),
@@ -6352,7 +6352,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "non_copycat", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.バーンアクセル_apply_ailment_to_defender,
+                ha.バーンアクセル_apply_burn_to_defender,
             )
         }
     ),
@@ -6492,7 +6492,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ひのこ_apply_ailment_to_defender,
+                ha.ひのこ_apply_burn_to_defender,
             )
         }
     ),
@@ -6508,7 +6508,7 @@ MOVES: dict[MoveName, MoveData] = {
                 ha.ひゃっきやこう_double_power_when_ailment,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ひゃっきやこう_apply_ailment_to_defender,
+                ha.ひゃっきやこう_apply_burn_to_defender,
             )
         }
     ),
@@ -6759,7 +6759,7 @@ MOVES: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self"
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ふぶき_apply_ailment_to_defender,
+                ha.ふぶき_apply_freeze_to_defender,
             )
         }
     ),
@@ -6829,7 +6829,7 @@ MOVES: dict[MoveName, MoveData] = {
                 ha.フリーズドライ_water_effectiveness,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.フリーズドライ_apply_ailment_to_defender,
+                ha.フリーズドライ_apply_freeze_to_defender,
             )
         }
     ),
@@ -6842,7 +6842,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.フリーズボルト_apply_ailment_to_defender,
+                ha.フリーズボルト_apply_paralysis_to_defender,
             )
         }
     ),
@@ -6896,7 +6896,7 @@ MOVES: dict[MoveName, MoveData] = {
                 ha.フレアドライブ_recoil,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.フレアドライブ_apply_ailment_to_defender,
+                ha.フレアドライブ_apply_burn_to_defender,
             ),
         }
     ),
@@ -6922,7 +6922,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ふんえん_apply_ailment_to_defender,
+                ha.ふんえん_apply_burn_to_defender,
             )
         }
     ),
@@ -7034,7 +7034,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ブレイズキック_apply_ailment_to_defender,
+                ha.ブレイズキック_apply_burn_to_defender,
             )
         }
     ),
@@ -7099,7 +7099,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ヘドロウェーブ_apply_ailment_to_defender,
+                ha.ヘドロウェーブ_apply_poison_to_defender,
             )
         }
     ),
@@ -7112,7 +7112,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ヘドロこうげき_apply_ailment_to_defender,
+                ha.ヘドロこうげき_apply_poison_to_defender,
             )
         }
     ),
@@ -7125,7 +7125,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ヘドロばくだん_apply_ailment_to_defender,
+                ha.ヘドロばくだん_apply_poison_to_defender,
             )
         }
     ),
@@ -7195,7 +7195,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ほうでん_apply_ailment_to_defender,
+                ha.ほうでん_apply_paralysis_to_defender,
             )
         }
     ),
@@ -7282,7 +7282,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ほっぺすりすり_apply_ailment_to_defender,
+                ha.ほっぺすりすり_apply_paralysis_to_defender,
             ),
         }
     ),
@@ -7342,7 +7342,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ほのおのパンチ_apply_ailment_to_defender,
+                ha.ほのおのパンチ_apply_burn_to_defender,
             )
         }
     ),
@@ -7438,7 +7438,7 @@ MOVES: dict[MoveName, MoveData] = {
                 ha.ボルテッカー_recoil,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ボルテッカー_apply_ailment_to_defender,
+                ha.ボルテッカー_apply_paralysis_to_defender,
             )
         }
     ),
@@ -7475,7 +7475,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "non_copycat", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ポイズンアクセル_apply_ailment_to_defender,
+                ha.ポイズンアクセル_apply_poison_to_defender,
             )
         }
     ),
@@ -7489,7 +7489,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ポイズンテール_apply_ailment_to_defender,
+                ha.ポイズンテール_apply_poison_to_defender,
             )
         }
     ),
@@ -8392,7 +8392,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.らいげき_apply_ailment_to_defender,
+                ha.らいげき_apply_paralysis_to_defender,
             )
         }
     ),
@@ -8505,7 +8505,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.りゅうのいぶき_apply_ailment_to_defender,
+                ha.りゅうのいぶき_apply_paralysis_to_defender,
             )
         }
     ),
@@ -8619,7 +8619,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.れいとうパンチ_apply_ailment_to_defender,
+                ha.れいとうパンチ_apply_freeze_to_defender,
             )
         }
     ),
@@ -8632,7 +8632,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.れいとうビーム_apply_ailment_to_defender,
+                ha.れいとうビーム_apply_freeze_to_defender,
             )
         }
     ),
@@ -8645,7 +8645,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.れんごく_apply_ailment_to_defender,
+                ha.れんごく_apply_burn_to_defender,
             )
         },
         lethal_handlers={
