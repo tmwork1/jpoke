@@ -1476,7 +1476,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     オレンのみ → HP10回復、オボンのみ → HP1/4回復、
     フィラ/ウイ/マゴ/バンジ/イアのみ → HP1/3回復＋性格によってはこんらん付与、
     チイラ/リュガ・アッキ/カムラ/ヤタピ/ズア・タラプのみ → 対応する能力ランク+1、
-    サンのみ → きゅうしょアップ付与、スターのみ → ランダムな能力ランク+2。
+    サンのみ → きゅうしょアップ付与、スターのみ → ランダムな能力ランク+2、
+    ミクルのみ → 次の技の命中率を1.2倍にする。
     """
     item_name = ctx.attacker.item.base_name
     if item_name == "でんきだま":
@@ -1582,7 +1583,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         if candidates:
             stat = battle.random.choice(candidates)
             battle.modify_stats(defender, {stat: 2}, source=ctx.attacker)
-    # TODO: ミクルのみ → 相手の次の技の命中率を1.2倍にする（新規揮発性状態が必要）
+    elif item_name == "ミクルのみ":
+        battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 

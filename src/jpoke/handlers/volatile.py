@@ -12,6 +12,7 @@ from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName, MoveName
 
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
+from jpoke.utils.math import apply_fixed_modifier
 
 HIDDEN_MOVE_ALLOWED_MOVES: dict[VolatileName, list[MoveName]] = {
     "あなをほる": ["じしん", "マグニチュード"],
@@ -1159,6 +1160,13 @@ def みちづれ_faint(battle: Battle, ctx: EventContext, value: Any) -> Handler
 def みちづれ_remove(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """みちづれ状態の解除（自身の行動時に解除）。"""
     return remove_volatile(battle, ctx, value, volatile="みちづれ")
+
+
+def めいちゅうアップ_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """めいちゅうアップ: 次の技の命中率を1.2倍にし、効果を消費する。"""
+    mon = ctx.attacker
+    battle.volatile_manager.remove(mon, "めいちゅうアップ")
+    return HandlerReturn(value=apply_fixed_modifier(value, 4915))
 
 
 def メテオビーム_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
