@@ -1,4 +1,3 @@
-# TODO : クラスとして実装する意義があるか検討する。関数モジュールとして実装するほうがシンプルで良いかもしれない。
 """特性の有効/無効状態管理モジュール。"""
 from __future__ import annotations
 from typing import TYPE_CHECKING
