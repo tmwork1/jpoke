@@ -2387,13 +2387,13 @@ def test_せんせいのツメ_非発動時は通常の順番():
     ("ビアーのみ", "どく", "プリン"),
     ("ヨプのみ", "かくとう", "カビゴン"),
     ("ヤチェのみ", "こおり", "ミニリュウ"),
-    ("リリバのみ", "はがね", "マリル"),
+    ("リリバのみ", "はがね", "ピッピ"),
     ("ナモのみ", "あく", "エーフィ"),
     ("ハバンのみ", "ドラゴン", "ミニリュウ"),
     ("ロゼルのみ", "フェアリー", "ミニリュウ"),
 ])
 def test_タイプ半減実(item_name, type_name, defender_name):
-    """タイプ半減実: 対応タイプの弱点ダメージを半減する"""
+    """タイプ半減実: 対応タイプの弱点ダメージを半減して消費する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
         team1=[Pokemon(defender_name, item_name=item_name)],
@@ -2401,6 +2401,7 @@ def test_タイプ半減実(item_name, type_name, defender_name):
     battle.actives[0].moves[0] = _dummy_move(type_name)  # テスト用に内部変数を直接変更
     t.run_move(battle, 0)
     assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()  # 1度使うと消費される
 
 
 @pytest.mark.parametrize("item_name, type_name", [
@@ -3388,6 +3389,33 @@ def test_ナナシのみ_こおり付与直後に即時回復する():
     battle.ailment_manager.apply(defender, "こおり", source=battle.actives[0])
     assert not defender.ailment.is_active
     assert not defender.has_item()
+
+
+def test_ナモのみ_どろぼうから奪われない():
+    """ナモのみ: 効果バツグンのどろぼうを受けた場合、先に消費されるため奪われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どろぼう"])],
+        team1=[Pokemon("エーフィ", item_name="ナモのみ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not defender.has_item()  # ナモのみの効果で消費済み
+    assert not attacker.has_item()  # どろぼうでの奪取は失敗する
+
+
+def test_ナモのみ_はたきおとすで威力補正を保ったままダメージ半減():
+    """ナモのみ: 効果抜群のはたきおとすを受けても威力1.5倍は維持されたままダメージが半減する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("エーフィ", item_name="ナモのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144  # 威力1.5倍は維持される
+    assert battle.damage_calculator.damage_modifier == 2048  # ダメージは半減される
+    assert not defender.has_item()  # ナモのみの効果で消費済み（はたきおとすの除去は不発）
 
 
 def test_ねばりのかぎづめ_なしでは通常ターン():

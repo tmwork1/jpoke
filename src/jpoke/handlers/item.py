@@ -103,13 +103,24 @@ def _modify_super_effective_damage(battle: Battle,
                                    ctx: AttackContext,
                                    value: Any,
                                    type_: Type,
-                                   modifier: float) -> HandlerReturn:
-    # ON_CALC_DAMAGE_MODIFIER
-    if (
-        ctx.move.type == type_ and
-        battle.damage_calculator.calc_def_type_modifier(ctx) > 1
-    ):
+                                   modifier: float,
+                                   super_effective_only: bool = True) -> HandlerReturn:
+    """タイプ半減きのみの共通処理（ON_CALC_DAMAGE_MODIFIER）。
+
+    super_effective_only=True  : 17種の通常タイプ半減きのみ。効果バツグン時のみ発動する。
+    super_effective_only=False : ホズのみ用。ノーマルタイプ技全般で発動する
+                                 （ノーマルは抜群にならないため super_effective 判定を省く）。
+    """
+    if ctx.move.type != type_:
+        return HandlerReturn(value=value)
+    def_type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
+    if super_effective_only:
+        triggers = def_type_modifier > 4096
+    else:
+        triggers = def_type_modifier > 0
+    if triggers:
         value = int(value * modifier)
+        _announce_and_consume_item(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 def _resolve_field_count(value: list,
@@ -1502,7 +1513,10 @@ def ブーストエナジー_refresh_paradox_charge(battle: Battle, ctx: EventCo
 
 
 def ホズのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_super_effective_damage(battle, ctx, value, type_="ノーマル", modifier=2048/4096)
+    """ホズのみ: ノーマルタイプの技のダメージを1/2にして消費する（抜群不要）。"""
+    return _modify_super_effective_damage(
+        battle, ctx, value, type_="ノーマル", modifier=2048/4096, super_effective_only=False
+    )
 
 
 def ぼうごパット_block_contact_reaction(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:

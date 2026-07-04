@@ -1,6 +1,6 @@
 # test_item
 
-テスト数: 550
+テスト数: 552
 
 - [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=atk, amount=1)
 - [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=spe, amount=1)
@@ -229,7 +229,7 @@
 - [x] タイプ半減実(item_name=ビアーのみ, type_name=どく, defender_name=プリン)
 - [x] タイプ半減実(item_name=ヨプのみ, type_name=かくとう, defender_name=カビゴン)
 - [x] タイプ半減実(item_name=ヤチェのみ, type_name=こおり, defender_name=ミニリュウ)
-- [x] タイプ半減実(item_name=リリバのみ, type_name=はがね, defender_name=マリル)
+- [x] タイプ半減実(item_name=リリバのみ, type_name=はがね, defender_name=ピッピ)
 - [x] タイプ半減実(item_name=ナモのみ, type_name=あく, defender_name=エーフィ)
 - [x] タイプ半減実(item_name=ハバンのみ, type_name=ドラゴン, defender_name=ミニリュウ)
 - [x] タイプ半減実(item_name=ロゼルのみ, type_name=フェアリー, defender_name=ミニリュウ)
@@ -325,6 +325,8 @@
 - [x] ナゾのみ_効果抜群でHP回復
 - [x] ナゾのみ_等倍では発動しない
 - [x] ナナシのみ_こおり付与直後に即時回復する
+- [x] ナモのみ_どろぼうから奪われない
+- [x] ナモのみ_はたきおとすで威力補正を保ったままダメージ半減
 - [x] ねばりのかぎづめ_なしでは通常ターン
 - [x] ねばりのかぎづめ_バインドターン固定
 - [x] ねらいのまと_タイプ免疫を無効化
