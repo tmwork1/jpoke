@@ -440,6 +440,33 @@ def test_みちづれ_発動条件を満たせば両者ひんし():
     assert battle.judge_winner() is battle.players[0]
 
 
+def test_めいちゅうアップ_命中率が1_2倍になり消費される():
+    """めいちゅうアップ: 次の技の命中率が1.2倍になり、発動後は状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン")],
+        team1=[Pokemon("ピカチュウ", move_names=["ハイドロポンプ"])],
+        volatile1={"めいちゅうアップ": None},
+    )
+    mon = battle.actives[1]
+    move = t.run_move(battle, 1)
+    assert battle.move_executor.accuracy == move.accuracy * 4915 // 4096
+    assert not mon.has_volatile("めいちゅうアップ")
+
+
+def test_めいちゅうアップ_外れても消費される():
+    """めいちゅうアップ: 技が外れた場合でも効果は消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン")],
+        team1=[Pokemon("ピカチュウ", move_names=["ハイドロポンプ"])],
+        volatile1={"めいちゅうアップ": None},
+    )
+    mon = battle.actives[1]
+    t.fix_random(battle, 0.97)  # 補正後命中率95に対し97で外れる
+    t.run_move(battle, 1)
+    assert battle.move_executor.move_missed
+    assert not mon.has_volatile("めいちゅうアップ")
+
+
 def test_メロメロ_同性に効かない():
     """メロメロ技: 同性ポケモンには効かない"""
     battle = t.start_battle(
