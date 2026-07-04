@@ -7056,6 +7056,7 @@ MOVES: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=15,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ブレイブチャージ_apply,

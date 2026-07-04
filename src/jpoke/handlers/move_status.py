@@ -1685,8 +1685,7 @@ def ブレイブチャージ_apply(battle: Battle, ctx: AttackContext, value: An
     ランク上限・状態異常なしのいずれの場合でも技自体は失敗しない。
     """
     modify_attacker_stats(battle, ctx, value, stats={"spa": 1, "spd": 1})
-    if ctx.attacker.ailment.is_active:
-        battle.ailment_manager.remove(ctx.attacker)
+    battle.ailment_manager.remove(ctx.attacker)
     return HandlerReturn(value=value)
 
 
