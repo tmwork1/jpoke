@@ -1666,6 +1666,11 @@ def フラワーヒール_heal_defender(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
+def ふるいたてる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふるいたてるの効果: 自分のこうげき・とくこうを1段階ずつ上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spa": 1})
+
+
 def へびにらみ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
@@ -1741,6 +1746,11 @@ def ほろびのうた_can_apply(battle: Battle, ctx: AttackContext, value: Any)
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
+
+def ぼうぎょしれい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぼうぎょしれいの効果: 自分のぼうぎょ・とくぼうを1段階ずつ上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
 
 
 def まきびし_set_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

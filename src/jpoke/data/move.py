@@ -3394,6 +3394,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.ohko_damage,
+                priority=90,
             ),
         }
     ),
@@ -3756,6 +3757,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.ohko_damage,
+                priority=90,
             ),
         }
     ),
@@ -4396,6 +4398,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.ohko_damage,
+                priority=90,
             ),
         }
     ),
@@ -5953,6 +5956,7 @@ MOVES: dict[str, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.ohko_damage,
+                priority=90,
             ),
         }
     ),
@@ -7385,7 +7389,11 @@ MOVES: dict[str, MoveData] = {
         type="むし",
         category="status",
         pp=10,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ぼうぎょしれい_modify_attacker_stats,
+            ),
+        }
     ),
     "ぼうふう": MoveData(
         type="ひこう",
@@ -7519,7 +7527,12 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=75,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
+        }
     ),
     "マジカルアクセル": MoveData(
         type="エスパー",
