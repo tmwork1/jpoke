@@ -189,8 +189,8 @@ def _type_resist_berry(battle: Battle, ctx: LethalContext, hp_dist: StateDist,
     """タイプ半減きのみの共通処理。
 
     通常ハンドラ（ON_CALC_DAMAGE_MODIFIER）の `_modify_super_effective_damage` は
-    `calc_def_type_modifier(ctx) > 1`（免疫以外で発火）なので、タイプ一致かつ非免疫であれば
-    calc_damages 内でダメージを半減している。よってこのlethalハンドラでは
+    `calc_def_type_modifier(ctx) > 4096`（効果バツグン時のみ発火）なので、タイプ一致かつ
+    効果バツグンであれば calc_damages 内でダメージを半減している。よってこのlethalハンドラでは
     ctx.damage_dist は変更せず、アイテム消費と item_enabled 更新のみ行う。
 
     super_effective_only=True  : 17種の通常タイプ半減きのみ。効果バツグン時のみ発動する。
