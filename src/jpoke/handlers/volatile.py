@@ -123,8 +123,8 @@ def restrict_commands(battle: Battle,
     new_options = []
     for cmd in value:
         if (
-            mon.moves[cmd.index].name == fixed_move_name
-            or (can_switch and cmd.is_type("switch"))
+            (can_switch and cmd.is_type("switch"))
+            or (cmd.is_type("move") and mon.moves[cmd.index].name == fixed_move_name)
         ):
             new_options.append(cmd)
     return HandlerReturn(value=new_options)
