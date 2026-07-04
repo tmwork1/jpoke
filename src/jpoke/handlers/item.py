@@ -1430,9 +1430,26 @@ def ふうせん_pop_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> H
 
 
 def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """フォーカスレンズ: 後攻のとき命中率を1.2倍にする。"""
+    """フォーカスレンズ: そのターンにすでに行動している相手に対して使う技の命中率を1.2倍にする。
+
+    - 一撃必殺技には効果がない。
+    - 交代してきたばかりで技を未使用の相手には効果がない（第五世代以降の仕様）。
+    """
+    if ctx.move.has_flag("ohko"):
+        return HandlerReturn(value=value)
+
+    defender = ctx.defender
+    assert defender is not None
+    defender_player = battle.get_player(defender)
+    if battle.player_states[defender_player].has_switched:
+        return HandlerReturn(value=value)
+
     attacker_player = battle.get_player(ctx.attacker)
-    if battle.query.is_second_actor(attacker_player):
+    is_second = battle.query.is_second_actor(attacker_player)
+    if is_second is None:
+        is_second = defender.executed_move is not None
+
+    if is_second:
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
