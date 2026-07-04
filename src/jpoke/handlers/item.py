@@ -206,10 +206,6 @@ def _cure_ailment_berry_on_apply(battle: Battle,
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
-def heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    # _heal_on_hp_dropを外部からも参照する関数にすれば、この関数は不要
-    return _heal_berry(battle, ctx, value, denominator=4, heal_r=1/3)
-
 def _boost_on_quarter_hp(battle: Battle,
                          ctx: EventContext,
                          value: Any,
@@ -1523,6 +1519,17 @@ def ぼうじんゴーグル_block_weather_damage(_battle: Battle, ctx: Any, val
 
 def まがったスプーン_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="エスパー", modifier=4915)
+
+
+def マゴのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """マゴのみ: HPが1/4以下になった瞬間に最大HPの1/3を回復するが、
+    はやさが上がりにくい性格（ゆうかん・れいせい・のんき・なまいき）は
+    あまい味を嫌うためこんらんする。
+    """
+    return _heal_berry(
+        battle, ctx, value, denominator=4, heal_r=1/3,
+        confuse_natures=("ゆうかん", "れいせい", "のんき", "なまいき"),
+    )
 
 
 def ミクルのみ_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

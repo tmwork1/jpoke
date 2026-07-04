@@ -4616,6 +4616,38 @@ def test_ぼうじんゴーグル_粉技を無効化():
     assert battle.actives[1].ailment.name != "ねむり"
 
 
+def test_マゴのみ_それ以外の性格ではこんらんしない():
+    """マゴのみ: あまい味が嫌いでない性格では発動してもこんらんしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="マゴのみ", nature="まじめ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert not mon.has_volatile("こんらん")
+
+
+@pytest.mark.parametrize(
+    "nature",
+    ["ゆうかん", "れいせい", "のんき", "なまいき"]
+)
+def test_マゴのみ_はやさが上がりにくい性格でこんらんする(nature):
+    """マゴのみ: あまい味が嫌いな性格（はやさが上がりにくい）は発動と同時にこんらんする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="マゴのみ", nature=nature)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
 def test_メトロノーム_別技でリセット():
     """メトロノーム: 違う技を使うとカウントリセット"""
     battle = t.start_battle(
