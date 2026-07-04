@@ -1742,13 +1742,32 @@ def リンドのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
     return _modify_super_effective_damage(battle, ctx, value, type_="くさ", modifier=2048/4096)
 
 
+def _ルームサービス_try_trigger(battle: Battle, mon: Pokemon) -> None:
+    """ルームサービス: すばやさ-1を試み、実際にランクが変化した場合のみ発動を通知して消費する。
+
+    source=mon を明示することで、所持者自身によるランク低下として扱い、
+    まけんき・かちきなど「相手による低下」を条件とする効果を誤発動させない。
+    """
+    changes = battle.modify_stats(mon, {"spe": -1}, source=mon)
+    if changes:  # すでにランクが下限（あまのじゃくの場合は上限）の場合は不発・消費しない
+        _announce_and_consume_item(battle, mon)
+
+
+def ルームサービス_drop_speed_on_switch_in(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ルームサービス: トリックルーム状態の場に繰り出したときすばやさ-1。"""
+    mon = ctx.source
+    assert mon is not None
+    if battle.get_global_field("トリックルーム").is_active:
+        _ルームサービス_try_trigger(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ルームサービス_drop_speed_on_trick_room(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ルームサービス: トリックルーム発動時にすばやさ-1。"""
     mon = ctx.source
     assert mon is not None
     if value.name == "トリックルーム":
-        battle.modify_stats(mon, {"spe": -1})
-        _announce_and_consume_item(battle, mon)
+        _ルームサービス_try_trigger(battle, mon)
     return HandlerReturn(value=value)
 
 

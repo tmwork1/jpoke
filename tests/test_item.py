@@ -5134,6 +5134,19 @@ def test_リュガのみ_ぼうぎょランクが最大のとき発動しない(
     assert mon.has_item()
 
 
+def test_ルームサービス_すばやさが下限のときは発動しない():
+    """ルームサービス: すでにすばやさランクが下限のときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ルームサービス")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリックルーム"])],
+    )
+    mon = battle.actives[0]
+    mon.rank["spe"] = -6
+    t.run_move(battle, 1)
+    assert mon.rank["spe"] == -6
+    assert mon.has_item()
+
+
 def test_ルームサービス_トリックルームでS低下():
     """ルームサービス: トリックルーム発動時にすばやさ-1"""
     battle = t.start_battle(
@@ -5143,6 +5156,33 @@ def test_ルームサービス_トリックルームでS低下():
     t.run_move(battle, 1)
     mon = battle.actives[0]
     assert mon.rank["spe"] == -1
+    assert not mon.has_item()
+
+
+def test_ルームサービス_トリックルーム中に交代で場に出るとS低下():
+    """ルームサービス: トリックルーム状態の場に繰り出したときもすばやさ-1が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ"), Pokemon("ピカチュウ", item_name="ルームサービス")],
+        team1=[Pokemon("ピカチュウ")],
+        field={"トリックルーム": 5},
+    )
+    t.run_switch(battle, 0, 1)
+    mon = battle.actives[0]
+    assert mon.rank["spe"] == -1
+    assert not mon.has_item()
+
+
+def test_ルームサービス_相手のトリックルームでもまけんきは発動しない():
+    """ルームサービス: 相手が発動させたトリックルームによる低下では、まけんきなどの
+    「相手による能力低下」を条件とする効果は発動しない（所持者自身の低下として扱われる）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="まけんき", item_name="ルームサービス")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリックルーム"])],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.rank["spe"] == -1
+    assert mon.rank["atk"] == 0
     assert not mon.has_item()
 
 

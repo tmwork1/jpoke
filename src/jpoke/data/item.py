@@ -1920,7 +1920,12 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_FIELD_ACTIVATE: h.ItemHandler(
                 h.ルームサービス_drop_speed_on_trick_room,
                 subject_spec="source:self",
-            )
+            ),
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.ルームサービス_drop_speed_on_switch_in,
+                subject_spec="source:self",
+                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 ルームサービスの発動」
+            ),
         }
     ),
     "レッドカード": ItemData(
