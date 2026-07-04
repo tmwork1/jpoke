@@ -1651,12 +1651,14 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_HP_CHANGED: h.ItemHandler(
                 h.ミクルのみ_set_accuracy_flag,
                 subject_spec="target:self",
-                priority=100,
             ),
             Event.ON_MODIFY_ACCURACY: h.ItemHandler(
                 h.ミクルのみ_boost_accuracy,
                 subject_spec="attacker:self",
-                priority=100,
+            ),
+            Event.ON_END_MOVE: h.ItemHandler(
+                h.ミクルのみ_clear_flag_after_move,
+                subject_spec="attacker:self",
             ),
         }
     ),

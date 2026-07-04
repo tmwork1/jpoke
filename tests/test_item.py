@@ -5294,6 +5294,136 @@ def test_マゴのみ_はやさが上がりにくい性格でこんらんする(
     assert mon.has_volatile("こんらん")
 
 
+def test_ミクルのみ_HP25以下でなければフラグが立たない():
+    """HP が 25% より多い状態で減っただけではフラグは立たない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 0
+    assert mon.has_item()
+
+
+def test_ミクルのみ_HP25以下でフラグが立つ():
+    """HP が 25% 超から 25% 以下に下がった瞬間にフラグが立ちアイテムが revealed になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+    assert mon.item.revealed is True
+    assert mon.has_item()  # 消費は次の技使用時
+
+
+def test_ミクルのみ_こんらんの自傷では発動しない():
+    """ミクルのみ: こんらんの自傷ダメージ(reason=self_attack)でHPが1/4以下になっても
+    フラグが立たない（第五世代以降の仕様）。その後、自傷以外のダメージで改めて1/4以下に
+    なるとフラグが立つ。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1, reason="self_attack")
+    assert mon.item.count == 0
+    assert mon.has_item(), "こんらんの自傷ダメージでアイテムが消費された"
+
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+
+
+def test_ミクルのみ_一撃必殺技には倍率が適用されないが消費される():
+    """ミクルのみ: 一撃必殺技には命中率倍率が適用されないが、効果自体は消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ミクルのみ", move_names=["じわれ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+    assert not mon.has_item()
+
+
+def test_ミクルのみ_命中判定のない変化技を使うと消費される():
+    """ミクルのみ: 命中率がNone(必中)の変化技を使った場合、ON_MODIFY_ACCURACYが
+    発火しないため通常は消費判定が行われないが、行動完了時に効果が消費される。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ", move_names=["つるぎのまい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+    t.run_move(battle, 0)
+    assert not mon.has_item()
+
+
+def test_ミクルのみ_技が外れても消費される():
+    """ミクルのみ: 技が外れた場合でも効果は消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ", move_names=["ハイドロポンプ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    t.fix_random(battle, 0.97)  # 補正後命中率95に対し97で外れる
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_missed
+    assert not mon.has_item()
+
+
+def test_ミクルのみ_次の技の命中率が1_2倍になり消費される():
+    """ミクルのみ: フラグが立った状態で技を使うと命中率が1.2倍になり消費される。
+    2回目の技では通常の命中率に戻ることも合わせて確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ", move_names=["ハイドロポンプ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy * 4915 // 4096
+    assert not mon.has_item()
+
+    # 消費済みのため2回目の技では通常の命中率に戻る
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+def test_ミクルのみ_行動不能のときは効果が持続する():
+    """ミクルのみ: ねむり等で行動できなかった場合、効果は消費されず持続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+    t.apply_ailment(battle, active_index=0, ailment_name="ねむり", count=3)
+    t.run_move(battle, 0)
+    assert mon.item.count == 1
+    assert mon.has_item()
+
+
 def test_メトロノーム_タイプ相性で無効化されるとリセット():
     """メトロノーム: タイプ相性により無効化された場合カウントは0にリセットされる"""
     battle = t.start_battle(

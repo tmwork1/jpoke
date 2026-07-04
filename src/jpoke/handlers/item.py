@@ -1593,18 +1593,50 @@ def マゴのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: An
 
 
 def ミクルのみ_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ミクルのみ: 命中率フラグが立っているとき次の技の命中率を1.2倍にする。"""
+    """ミクルのみ: 命中率フラグが立っているとき次の技の命中率を1.2倍にする。
+
+    一撃必殺技は命中率が固定式（レベル差依存）のため倍率は適用されないが、
+    効果自体は消費される。
+    """
     mon = ctx.attacker
     if mon.item.count == 1:
         battle.item_manager.consume_item(mon)
-        return HandlerReturn(value=apply_fixed_modifier(value, 4915))
+        if not ctx.move.has_flag("ohko"):
+            return HandlerReturn(value=apply_fixed_modifier(value, 4915))
+    return HandlerReturn(value=value)
+
+
+def ミクルのみ_clear_flag_after_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ミクルのみ: 命中判定のない技（命中率None）を使ったときなど、
+    ON_MODIFY_ACCURACYで消費されなかった場合でも行動完了時に効果を消す。
+
+    行動不能（状態異常・ひるみ等）や溜め技の溜めターンでは効果を維持する。
+    """
+    mon = ctx.attacker
+    if mon.item.count != 1:
+        return HandlerReturn(value=value)
+    executor = battle.move_executor
+    if executor.action_success is False:
+        return HandlerReturn(value=value)
+    if (
+        executor.move_success is None
+        and executor.move_applied is None
+        and not executor.move_missed
+    ):
+        return HandlerReturn(value=value)
+    battle.item_manager.consume_item(mon)
     return HandlerReturn(value=value)
 
 
 def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ミクルのみ: HP1/4以下に下がった瞬間に命中率アップフラグを立てる。"""
+    """ミクルのみ: HP1/4以下に下がった瞬間に命中率アップフラグを立てる。
+
+    こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）。
+    """
     mon = ctx.target
     assert mon is not None
+    if ctx.hp_change_reason == "self_attack":
+        return HandlerReturn(value=value)
     hp_after = mon.hp
     hp_before = hp_after + value
     if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
