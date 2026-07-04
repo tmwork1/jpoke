@@ -4857,6 +4857,20 @@ def test_ものまねハーブ_相手のランク上昇をコピー():
     assert not mon.has_item()
 
 
+def test_ヤタピのみ_とくこうランクが最大のとき発動しない():
+    """ヤタピのみ: すでにとくこうランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ヤタピのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spa"] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["spa"] == 6
+    assert mon.has_item()
+
+
 def test_ゆきだま_こおり以外では発動しない():
     """ゆきだま: こおり以外の技では発動しない"""
     battle = t.start_battle(
