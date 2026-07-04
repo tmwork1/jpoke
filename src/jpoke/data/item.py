@@ -1931,9 +1931,23 @@ ITEMS: dict[ItemName, ItemData] = {
     "レッドカード": ItemData(
         fling_power=10,
         handlers={
+            # 実HPダメージ(>0)を受けたときの通常ケース。ゴツゴツメット等の反動処理より後、
+            # いのちのたまの反動より先に発動させるため、docs/spec/turn.md ON_DAMAGE:
+            # 「150 レッドカードの発動・交代」に合わせて priority=150 を指定する。
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.レッドカード_force_switch,
                 subject_spec="defender:self",
+                priority=150,
+            ),
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため、ばけのかわ/
+            # アイスフェイスの肩代わりやこらえるでHP1のまま耐えたとき（実HPダメージ0）も
+            # 発動する仕様（docs/spec/items/レッドカード.md 詳細な仕様）を満たすため、
+            # いのちのたま・だっしゅつボタンと同様に常に発火する Event.ON_HIT でも
+            # 実HPダメージ0のケースのみを処理する（handlers/item.py 参照）。
+            Event.ON_HIT: h.ItemHandler(
+                h.レッドカード_force_switch_on_zero_damage,
+                subject_spec="defender:self",
+                priority=150,
             )
         }
     ),

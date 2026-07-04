@@ -1771,20 +1771,76 @@ def ルームサービス_drop_speed_on_trick_room(battle: Battle, ctx: EventCon
     return HandlerReturn(value=value)
 
 
-def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """レッドカード: ダメージを受けたとき攻撃者を強制交代させる。"""
+def _レッドカード_should_trigger(ctx: AttackContext) -> bool:
+    """レッドカード: 発動条件（持たせたポケモン・攻撃者側の状態）を判定する共通ロジック。"""
+    mon = ctx.defender
+    assert mon is not None
+    return not (
+        mon.fainted
+        or ctx.substitute_damage
+        or ctx.hit_index != ctx.hit_count
+        or ctx.attacker.fainted
+        or (
+            ctx.attacker.ability.name == "ちからずく"
+            and ctx.move.has_flag("secondary_effect")
+        )
+    )
+
+def _レッドカード_try_force_switch(battle: Battle, ctx: AttackContext) -> None:
+    """レッドカード: 攻撃者をランダムな控えポケモンと強制交代させる共通ロジック。
+
+    にげられない・バインド・フェアリーロックや特性かげふみ・ありじごく・じりょくなどの
+    とらわれ状態は無視して発動するため、can_switch は使わず控えの生存有無のみを見る。
+    """
     mon = ctx.defender
     assert mon is not None
     foe = ctx.attacker
     opponent = battle.get_player(foe)
+    state = battle.player_states[opponent]
+    commands = [
+        Command.get_switch_command(i)
+        for i, m in enumerate(state.team)
+        if m is not state.active and m.alive
+    ]
+    if not commands:
+        return
 
-    if battle.query.can_switch(opponent):
-        _announce_and_consume_item(battle, mon)
-        commands = battle.command_manager.get_available_switch_commands(opponent)
-        command = battle.random.choice(commands)
-        new_mon = battle.player_states[opponent].team[command.index]
-        battle.run_switch(opponent, new_mon)
+    _announce_and_consume_item(battle, mon)
 
+    # ねをはる状態・特性きゅうばん/ばんけんの相手は交代させられないが、アイテムは消費される。
+    if foe.has_volatile("ねをはる") or foe.ability.name in ("きゅうばん", "ばんけん"):
+        return
+
+    command = battle.random.choice(commands)
+    battle.run_switch(opponent, state.team[command.index])
+
+
+def レッドカード_force_switch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """レッドカード: 実HPダメージ(>0)を受けたとき、攻撃者をランダムな控えポケモンと
+    強制交代させる。
+
+    みがわりに阻まれた場合・特性ちからずくの効果が発動した技を受けた場合は発動しない。
+    連続攻撃技は最後のヒットでのみ判定する。持たせたポケモンが既にひんしの場合や、
+    攻撃者が反動・自滅技によって既にひんしになっている場合は発動しない。
+    実HPダメージが0の場合（ばけのかわ/アイスフェイスの肩代わり、こらえる等）は
+    Event.ON_DAMAGE_HIT が発火しないため、レッドカード_force_switch_on_zero_damage
+    （Event.ON_HIT）側で処理する。
+    """
+    if _レッドカード_should_trigger(ctx):
+        _レッドカード_try_force_switch(battle, ctx)
+    return HandlerReturn(value=value)
+
+
+def レッドカード_force_switch_on_zero_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """レッドカード: 実HPダメージが0だった場合（ばけのかわ/アイスフェイスの肩代わり、
+    こらえる等で耐えた場合）に発動する。
+
+    Event.ON_DAMAGE_HIT は実HPダメージが0のとき発火しないため、常に発火する
+    Event.ON_HIT 側でこのケース（value<=0）のみを処理する。実HPダメージが正の場合は
+    レッドカード_force_switch（Event.ON_DAMAGE_HIT）側で処理するため、ここでは何もしない。
+    """
+    if value <= 0 and _レッドカード_should_trigger(ctx):
+        _レッドカード_try_force_switch(battle, ctx)
     return HandlerReturn(value=value)
 
 
