@@ -118,6 +118,27 @@ class PokemonQuery:
             ctx.move.has_flag("contact")
         )
 
+    def is_contact_reaction(self, ctx: AttackContext) -> bool:
+        """相手の直接攻撃を受けたことに反応する効果（さめはだ・ゴツゴツメット等）が
+        発動対象となる接触かどうかを判定する。
+
+        Note:
+            かたいツメ/どくしゅ/ふかしのこぶしのように「自分の技が接触技であること」
+            に由来する効果や、もふもふ/わるいてぐせのようにぼうごパットの対象外となる
+            効果を判定する場合は、こちらではなく is_contact() を使う。
+
+        Args:
+            ctx: AttackContextインスタンス
+
+        Returns:
+            技が接触技であり、かつぼうごパット等で反応効果が防がれていない場合True
+        """
+        return self._events.emit(
+            Event.ON_CHECK_CONTACT_REACTION,
+            ctx,
+            self.is_contact(ctx),
+        )
+
     def resolve_move_category(self, attacker: Pokemon, move: Move) -> MoveCategory:
         """実際の技カテゴリを判定する（MoveExecutorへの委譲）。
 

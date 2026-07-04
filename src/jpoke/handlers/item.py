@@ -139,7 +139,7 @@ def _apply_contact_item_chip(battle: Battle,
     Returns:
         bool: ダメージが適用された場合True
     """
-    if battle.query.is_contact(ctx):
+    if battle.query.is_contact_reaction(ctx):
         v = battle.modify_hp(ctx.attacker, r=-ratio)
         return bool(v)
     return False
@@ -1418,14 +1418,21 @@ def フィラのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value:
 
 
 def ふうせん_check_floating(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
+    """ふうせん: 持たせたポケモンを地面にいない（浮いている）扱いにする。"""
     return HandlerReturn(value=True)
 
 
 def ふうせん_pop_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふうせん: 攻撃技が有効だった場合に割れて消費される。
+
+    ON_HITはダメージ量に関わらず（みがわりに肩代わりさせた場合やばけのかわ・
+    アイスフェイスで肩代わりした場合、ダメージ量が補正で0になった場合を含む）
+    攻撃技が無効化されずに命中した時点で発火するため、これらのケースでも
+    正しくふうせんが割れる。
+    """
     mon = ctx.defender
     assert mon is not None
-    battle.item_manager.consume_item(mon)
-    _announce_item_triggered(battle, mon)
+    _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 
@@ -1490,8 +1497,13 @@ def ホズのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContex
     return _modify_super_effective_damage(battle, ctx, value, type_="ノーマル", modifier=2048/4096)
 
 
-def ぼうごパット_negate_contact(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
-    """ぼうごパット: 攻撃技の接触判定を無効にする。"""
+def ぼうごパット_block_contact_reaction(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
+    """ぼうごパット: 相手が自分の接触を受けたことに反応する効果（ゴツゴツメット・さめはだ等）を防ぐ。
+
+    Note:
+        技自体は接触技のままであり、かたいツメ/どくしゅ/ふかしのこぶしのように
+        自分の技が接触技であることに由来する効果や、もふもふ/わるいてぐせの効果は防がない。
+    """
     return HandlerReturn(value=False, stop_event=True)
 
 

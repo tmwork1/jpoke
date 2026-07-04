@@ -137,7 +137,7 @@ def _apply_contact_counter_ailment(battle: Battle,
     """接触被弾時カウンターの状態異常付与を試行する。"""
     assert ctx.defender is not None
     if (
-        battle.query.is_contact(ctx)
+        battle.query.is_contact_reaction(ctx)
         and battle.random.random() < chance
     ):
         battle.ailment_manager.apply(
@@ -153,7 +153,7 @@ def _apply_contact_counter_chip(battle: Battle,
                                 ratio: float) -> HandlerReturn:
     """接触被弾時カウンターの固定割合ダメージを適用する。"""
     assert ctx.defender is not None
-    if battle.query.is_contact(ctx):
+    if battle.query.is_contact_reaction(ctx):
         v = battle.modify_hp(ctx.attacker, r=-ratio, reason="")
         if v:
             _announce_ability_triggered(battle, ctx.defender)
@@ -945,7 +945,7 @@ def かんろなミツ_lower_foe_evasion(battle: Battle, ctx: EventContext, valu
 def カーリーヘアー_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """カーリーヘアー特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
     attacker = ctx.attacker
-    if attacker is not None and battle.query.is_contact(ctx):
+    if attacker is not None and battle.query.is_contact_reaction(ctx):
         battle.modify_stats(attacker, {"spe": -1}, source=ctx.defender)
     return HandlerReturn(value=value)
 
@@ -1274,7 +1274,7 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
     attacker = ctx.attacker
     defender = ctx.defender
     if (
-        not battle.query.is_contact(ctx)
+        not battle.query.is_contact_reaction(ctx)
         or attacker is None
         or attacker.fainted
         or attacker.ability.has_flag("protected")
@@ -2187,7 +2187,7 @@ def なまけ_try_action(battle: Battle, ctx: AttackContext, value: Any) -> Hand
 
 def ぬめぬめ_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ぬめぬめ特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
-    if battle.query.is_contact(ctx):
+    if battle.query.is_contact_reaction(ctx):
         _announce_ability_triggered(battle, ctx.defender)
         battle.modify_stats(ctx.attacker, {"spe": -1}, source=ctx.defender)
     return HandlerReturn(value=value)
@@ -2226,7 +2226,7 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: EventContext, value
 
 def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """のろわれボディ特性: 直接攻撃を受けたとき30%の確率で攻撃技をかなしばりにする。"""
-    if not battle.query.is_contact(ctx) or ctx.attacker is None:
+    if not battle.query.is_contact_reaction(ctx) or ctx.attacker is None:
         return HandlerReturn(value=value)
     if battle.random.random() < 0.3:
         battle.volatile_manager.apply(
@@ -2814,7 +2814,7 @@ def へんしょく_copy_move_type(battle: Battle, ctx: AttackContext, value: An
 
 def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。"""
-    if not battle.query.is_contact(ctx):
+    if not battle.query.is_contact_reaction(ctx):
         return HandlerReturn(value=value)
     r = battle.random.random()
     ailment: AilmentName | None = next((a for threshold, a in _EFFECT_SPORE_AILMENTS if r < threshold), None)
@@ -2833,7 +2833,7 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
     """ほろびのボディ特性: 直接攻撃を受けると自分と攻撃者の双方にほろびのうたを付与する。"""
     attacker = ctx.attacker
     if (
-        not battle.query.is_contact(ctx)
+        not battle.query.is_contact_reaction(ctx)
         or attacker is None
         or attacker.fainted
     ):
@@ -2979,7 +2979,7 @@ def _overwrite_ability_on_contact(battle: Battle,
         書き換えに成功した場合True
     """
     attacker = ctx.attacker
-    if not battle.query.is_contact(ctx):
+    if not battle.query.is_contact_reaction(ctx):
         return False
     if attacker.ability.has_flag("uncopyable"):
         return False
@@ -3122,7 +3122,7 @@ def メガランチャー_modify_power(battle: Battle, ctx: AttackContext, value
 
 def メロメロボディ_maybe_infatuate_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """メロメロボディ特性: 直接攻撃を受けたとき30%の確率で攻撃者をメロメロにする。"""
-    if battle.query.is_contact(ctx) and battle.random.random() < 0.3:
+    if battle.query.is_contact_reaction(ctx) and battle.random.random() < 0.3:
         battle.volatile_manager.apply(
             ctx.attacker, "メロメロ", source=ctx.defender,
         )
@@ -3215,7 +3215,7 @@ def ゆうばく_damage_attacker_on_ko(battle: Battle, ctx: AttackContext, value
     """ゆうばく特性: 直接攻撃でひんしになったとき攻撃者に最大HPの1/4ダメージを与える。"""
     attacker = ctx.attacker
     if (
-        not battle.query.is_contact(ctx)
+        not battle.query.is_contact_reaction(ctx)
         or attacker.fainted
     ):
         return HandlerReturn(value=value)

@@ -464,7 +464,8 @@ class MoveExecutor:
             ctx.defender.last_special_damage_received += actual_damage
 
         # 接触技ヒット時に攻撃者を記録する（くちばしキャノン等の判定用）
-        if self.battle.query.is_contact(ctx):
+        # ぼうごパットで反応効果が防がれる場合は記録しない
+        if self.battle.query.is_contact_reaction(ctx):
             ctx.defender.contact_hitter = ctx.attacker
 
         self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)

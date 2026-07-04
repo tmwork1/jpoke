@@ -1536,7 +1536,10 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.ふうせん_check_floating,
                 subject_spec="source:self",
             ),
-            Event.ON_DAMAGE_HIT: h.ItemHandler(
+            # ON_HITはみがわり肩代わり・ばけのかわ/アイスフェイス肩代わり・
+            # ダメージ0補正のケースでも発火するため、これらでも正しく割れる
+            # （docs/spec/turn.md の Event.ON_HIT 参照）
+            Event.ON_HIT: h.ItemHandler(
                 h.ふうせん_pop_on_hit,
                 subject_spec="defender:self",
             ),
@@ -1590,8 +1593,8 @@ ITEMS: dict[ItemName, ItemData] = {
     "ぼうごパット": ItemData(
         fling_power=30,
         handlers={
-            Event.ON_CHECK_CONTACT: h.ItemHandler(
-                h.ぼうごパット_negate_contact,
+            Event.ON_CHECK_CONTACT_REACTION: h.ItemHandler(
+                h.ぼうごパット_block_contact_reaction,
                 subject_spec="attacker:self",
             )
         }

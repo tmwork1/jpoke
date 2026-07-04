@@ -398,7 +398,7 @@ def キングシールド_remove_volatile(battle: Battle, ctx: EventContext, val
 
 def くちばしキャノン_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """くちばしキャノン状態のポケモンが直接攻撃を受けたとき、攻撃者をやけど状態にする。"""
-    if not battle.query.is_contact(ctx):
+    if not battle.query.is_contact_reaction(ctx):
         return HandlerReturn(value=value)
     battle.ailment_manager.apply(
         ctx.attacker, "やけど", source=ctx.defender, ctx=ctx
@@ -987,7 +987,7 @@ def _run_protect(battle: Battle,
 
     battle.add_event_log(ctx.defender, LogCode.PROTECT_SUCCEEDED)
 
-    if battle.query.is_contact(ctx):
+    if battle.query.is_contact_reaction(ctx):
         if stats_change_on_contact:
             battle.modify_stats(ctx.attacker, stats_change_on_contact, source=ctx.defender)
         if ailment_on_contact:
