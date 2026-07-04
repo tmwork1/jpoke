@@ -30,6 +30,109 @@ def test_もえあがるいかり_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_やけっぱち_まひで行動不能だった場合威力2倍になる():
+    """やけっぱち: 前のターンにまひで行動できなかった場合、威力が2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["やけっぱち"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("まひ", None),
+        accuracy=100,
+    )
+    battle.test_option.trigger_ailment = True
+    t.run_move(battle, 0)
+    assert battle.move_executor.action_success is False
+    t.end_turn(battle)
+
+    battle.test_option.trigger_ailment = False
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_やけっぱち_まもるで防がれた場合威力2倍になる():
+    """やけっぱち: 前のターンに相手のまもるで防がれた場合、威力が2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["やけっぱち"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+    t.end_turn(battle)
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_やけっぱち_交代直後は前のターンの失敗を引き継がない():
+    """やけっぱち: 交代して控えに下がった後、再度出てきたときは前の失敗状態を引き継がない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["やけっぱち"]), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.failed_or_immobile_last_turn
+    t.end_turn(battle)
+
+    # 控えに下がってから、再度出す
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+    assert not attacker.failed_or_immobile_last_turn
+
+    battle.test_option.accuracy = 100
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_やけっぱち_技が外れた場合威力2倍になる():
+    """やけっぱち: 前のターンに技が外れた場合、威力が2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["やけっぱち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_missed
+    t.end_turn(battle)
+
+    battle.test_option.accuracy = 100
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_やけっぱち_特性で無効化された場合威力2倍になる():
+    """やけっぱち: 前のターンに相手の特性(もらいび)で技が無効化された場合も、威力が2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["やけっぱち"])],
+        team1=[Pokemon("ウインディ", ability_name="もらいび"), Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_applied is False
+    t.end_turn(battle)
+
+    # 無効化されないポケモンに交代してから、やけっぱちを再度使用
+    t.run_switch(battle, 1, 1)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_やけっぱち_通常成功時は次のターン威力2倍にならない():
+    """やけっぱち: 前のターンに技が通常通り成功した場合、威力補正はかからない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["やけっぱち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    t.end_turn(battle)
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_やまあらし_確定急所():
     """やまあらし: 急所ランク3のため乱数によらず常に急所が発生する。"""
     battle = t.start_battle(

@@ -47,7 +47,8 @@ class MoveExecutor:
     def __init__(self, battle: Battle):
         self.battle = battle
 
-        # デバッグ用
+        # デバッグ用（action_success/move_success/move_applied/move_missedは
+        # やけっぱち・じだんだの成否判定にも使用する）
         self.accuracy: int | None = None
         self.action_success: bool | None = None
         self.move_success: bool | None = None
@@ -286,13 +287,15 @@ class MoveExecutor:
             ctx.move.reset()
 
             # 今回の行動が総合的に成功したかを記録する（やけっぱち・じだんだ用）
+            # マジックコート等でctx.attackerが入れ替わる場合があるため、
+            # 実際に行動したポケモン（引数のattacker）に対して記録する
             overall_success = (
                 self.action_success is not False
                 and self.move_success is not False
                 and self.move_applied is not False
                 and not self.move_missed
             )
-            ctx.attacker.failed_or_immobile_last_turn = not overall_success
+            attacker.failed_or_immobile_last_turn = not overall_success
 
             # かやたぶりを解除する
             self._events.emit(Event.ON_END_MOVE, ctx)
@@ -349,6 +352,8 @@ class MoveExecutor:
 
         # 攻撃技のタイプ相性判定
         if ctx.move.is_attack and not self._check_hit_by_type(ctx):
+            # タイプ相性による無効化も「技が失敗した」ことになる（やけっぱち・じだんだ用）
+            self.move_success = False
             return
 
         # 発動成功判定(2): priority=110 のハンドラ群（ぼうじんゴーグル等）
