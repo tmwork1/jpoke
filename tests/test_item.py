@@ -5133,6 +5133,29 @@ def test_ようせいのハネ_なげつけるで威力30になる():
     assert not attacker.has_item()
 
 
+def test_ヨプのみ_フライングプレスのひこう複合相性が抜群なら発動する():
+    """ヨプのみ: くさ単タイプがフライングプレス（かくとう等倍×ひこう2倍=抜群）を受けたとき発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["フライングプレス"])],
+        team1=[Pokemon("キモリ", item_name="ヨプのみ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()
+
+
+def test_ヨプのみ_フライングプレスのひこう複合相性が等倍なら発動しない():
+    """ヨプのみ: はがね単タイプがフライングプレス（かくとう2倍×ひこう0.5倍=等倍）を受けても発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["フライングプレス"])],
+        team1=[Pokemon("ギアル", item_name="ヨプのみ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_item()
+
+
 def test_ラムのみ_こんらん付与直後に即時回復する():
     """ラムのみ: こんらん付与直後（ON_VOLATILE_START）にターン終了を待たず即座に回復し消費される"""
     battle = t.start_battle(
