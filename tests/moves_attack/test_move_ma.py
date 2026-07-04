@@ -423,6 +423,28 @@ def test_むしくい_きのみ以外のアイテムは奪わない():
     assert defender.has_item("シルクのスカーフ")
 
 
+def test_むしくい_タンガのみを効果抜群で受けた場合ダメージ半減が優先されきのみを奪えない():
+    """むしくい: defenderがタンガのみを持ち効果抜群で受ける場合、ダメージ計算時にタンガのみが
+    先に消費されてダメージが半減し、命中後のきのみ強奪効果は不発になる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カイロス", move_names=["むしくい"])],
+        team1=[Pokemon("エーフィ", item_name="タンガのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    # タンガのみの効果でダメージが半減している
+    assert battle.damage_calculator.damage_modifier == 2048
+    # タンガのみは既に消費されており、むしくいには奪われない
+    assert not defender.has_item()
+    # attackerはきのみを得ておらずHPも回復していない
+    assert not attacker.has_item()
+    assert attacker.hp == 1
+
+
 def test_むしくい_ねんちゃく持ちから奪えない():
     """むしくい: defenderがねんちゃく持ちのとき奪取が失敗し、attackerのHPは回復しない。"""
     battle = t.start_battle(
