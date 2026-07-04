@@ -6,7 +6,6 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "効果実装 (がんせきアックス)",
     "効果実装 (どくガス)",
     "効果実装 (ないしょばなし)",
     "効果実装 (ブレイブチャージ)",
@@ -22,6 +21,7 @@
     "なげつける: その他のきのみ・追加効果アイテム"
   ],
   "completed": [
+    "効果実装 (がんせきアックス)",
     "純粋な状態異常付与系のメソッド名を ..._apply_<ailment name>_to_attacker(or defender)に統一する",
     "純粋な能力変動系のメソッド名を ..._boost_attacker_spa, lower_defender_spe の計s機に統一する",
     "scripts/generate_literals/とscripts/sort_data/のサブディレクトリにまとめ、指示書(CLAUDE.md・.claude/loop等)に反映する",

@@ -1761,6 +1761,43 @@ def test_しめつけバンド_付与後の喪失では減少しない():
     assert foe.hp == hp_before - foe.max_hp // 6
 
 
+def test_しらたま_なげつけるで威力60になる():
+    """しらたま: 通常の道具でありなげつけるで使用でき、威力60でダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="しらたま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_item()
+
+
+def test_しらたま_パルキア以外が持っても効果がない():
+    """しらたま: パルキア以外が持っていてもドラゴン・みず技に補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアルガ", item_name="しらたま", move_names=["ドラゴンクロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_しらたま_対象外タイプの技には効果がない():
+    """しらたま: パルキアが持っていてもドラゴン・みず以外の技には補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("パルキア", item_name="しらたま", move_names=["はかいこうせん"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_しろいハーブ_2回目の能力低下はキャンセルされない():
     """しろいハーブ: 1回消費後は能力低下をキャンセルしない"""
     battle = t.start_battle(
