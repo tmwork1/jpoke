@@ -1799,7 +1799,7 @@ ITEMS: dict[ItemName, ItemData] = {
         }
     ),
     "ようせいのハネ": ItemData(
-        fling_power=20,
+        fling_power=30,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.ようせいのハネ_modify_power_by_type,

@@ -5089,6 +5089,22 @@ def test_ゆきだま_ランク上限で発動しない():
     assert foe.has_item()
 
 
+def test_ようせいのハネ_なげつけるで威力30になる():
+    """ようせいのハネ: なげつけるで使用すると威力30になる（フェアリー以外の技のためタイプ補正は乗らない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="ようせいのハネ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 30
+    assert defender.hp < hp_before
+    assert not attacker.has_item()
+
+
 def test_ラムのみ_こんらん付与直後に即時回復する():
     """ラムのみ: こんらん付与直後（ON_VOLATILE_START）にターン終了を待たず即座に回復し消費される"""
     battle = t.start_battle(
