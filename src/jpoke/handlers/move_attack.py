@@ -1,4 +1,3 @@
-# TODO : 複数処理を内包しているメソッド名は ..._apply でよい
 # TODO : 純粋な能力変動系のメソッド名を ..._boost_attacker_spa, lower_defender_spe の計s機に統一する
 # TODO : 純粋な状態異常付与系のメソッド名を ..._apply_<ailment name>_to_attacker(or defender)に統一する
 
