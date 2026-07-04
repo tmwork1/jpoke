@@ -903,6 +903,7 @@ def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: An
     assert ctx.defender is not None
     # 相手のこうげきランク補正込みの実数値分だけ自分のHPを回復（ランク変更前に取得）
     recover_amount = ctx.defender.ranked_stats["atk"]
+    recover_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, recover_amount)
     battle.modify_hp(ctx.attacker, v=recover_amount)
     # 相手のこうげきを1段階下げる（失敗しても回復は発動済み）
     battle.modify_stats(ctx.defender, {"atk": -1}, source=ctx.attacker)
@@ -1651,6 +1652,18 @@ def フラフラダンス_apply(battle: Battle, ctx: AttackContext, value: Any) 
     return HandlerReturn(value=battle.volatile_manager.apply_confusion(
         ctx.defender, source=ctx.attacker
     ))
+
+
+def フラワーヒール_heal_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """フラワーヒール: 相手のHPを回復させる。HPが満タンの場合は失敗する。
+    グラスフィールド中は最大HPの2/3、通常時は最大HPの1/2を回復する。
+    """
+    mon = ctx.defender
+    if mon.hp == mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
+    r = 2/3 if battle.terrain.name == "グラスフィールド" else 1/2
+    battle.modify_hp(mon, r=r)
+    return HandlerReturn(value=value)
 
 
 def へびにらみ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

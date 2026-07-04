@@ -6806,7 +6806,11 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=10,
         flags={"heal"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.フラワーヒール_heal_defender,
+            ),
+        }
     ),
     "フリーズドライ": MoveData(
         type="こおり",
