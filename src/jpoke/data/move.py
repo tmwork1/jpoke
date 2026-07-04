@@ -417,11 +417,11 @@ MOVES: dict[MoveName, MoveData] = {
         handlers={},  # 追加効果なし
     ),
     "あてみなげ": MoveData(
-        type="ノーマル",
+        type="かくとう",
         category="physical",
-        pp=20,
-        power=50,
-        accuracy=100,
+        pp=10,
+        power=70,
+        accuracy=None,
         priority=-1,
         flags={"contact"},
         handlers={},  # 追加効果なし

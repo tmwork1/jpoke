@@ -329,6 +329,29 @@ def test_アシストパワー_ランク低下はカウントしない():
     assert battle.damage_calculator.final_power == 20
 
 
+def test_あてみなげ_優先度がマイナス1のため素早さが低い相手より後攻になる():
+    """あてみなげ: 優先度-1のため、すばやさが低い相手より後に行動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["あてみなげ"])],
+        team1=[Pokemon("ヤドン", move_names=["たいあたり"])],
+    )
+    order = t.get_action_order(battle)
+    assert order[-1] == battle.actives[0]
+
+
+def test_あてみなげ_相手の回避率が高くても必ず命中する():
+    """あてみなげ: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["あてみなげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_あなをほる_1ターン目は地中に潜りHPが変わらない():
     """あなをほる: 1ターン目はチャージ（あなをほる揮発状態）になり、相手へのダメージはない。"""
     battle = t.start_battle(
