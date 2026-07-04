@@ -135,8 +135,15 @@ def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: State
     """アッキのみ: 物理技を受けた直後にぼうぎょ+1して消費する。
 
     ぼうぎょランクが+6のとき、またはitem_enabledがFalseのときは発動しない。
+    特性ちからずくの対象技（追加効果あり技）を受けたときも発動しない。
     """
     if ctx.move.category != "physical":
+        return hp_dist
+
+    if (
+        ctx.attacker.ability.name == "ちからずく"
+        and ctx.move.has_flag("secondary_effect")
+    ):
         return hp_dist
 
     # item_enabled=True の state があるか確認
@@ -373,8 +380,15 @@ def タラプのみ_boost_spd(battle: Battle, ctx: LethalContext, hp_dist: State
     """タラプのみ: 特殊技を受けた直後にとくぼう+1して消費する。
 
     とくぼうランクが+6のとき、またはitem_enabledがFalseのときは発動しない。
+    特性ちからずくの対象技（追加効果あり技）を受けたときも発動しない。
     """
     if ctx.move.category != "special":
+        return hp_dist
+
+    if (
+        ctx.attacker.ability.name == "ちからずく"
+        and ctx.move.has_flag("secondary_effect")
+    ):
         return hp_dist
 
     # item_enabled=True の state があるか確認

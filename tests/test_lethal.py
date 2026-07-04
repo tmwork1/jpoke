@@ -100,6 +100,21 @@ def test_アシッドボム_とくぼうダウン():
     assert results[1].min_damage > results[0].min_damage
 
 
+def test_アッキのみ_ちからずくの対象技では発動しない():
+    """ちからずく所持者の追加効果あり物理技を受けてもアッキのみは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", ability_name="ちからずく")],
+        team1=[Pokemon("カイリュー", item_name="アッキのみ")],
+    )
+    # かみなりパンチ（物理・追加効果あり）で2回攻撃
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("かみなりパンチ"), 1)], max_attack=2)
+
+    assert len(results) == 2
+    # ランクが変わらないため1発目と2発目のダメージが同じ
+    assert results[0].min_damage == results[1].min_damage
+    assert results[0].max_damage == results[1].max_damage
+
+
 def test_アッキのみ_消費後は発動しない():
     """アッキのみは1回だけ発動し、2発目以降は効果がない（2発目と3発目のダメージが同じ）"""
     battle = t.start_battle(
@@ -553,6 +568,20 @@ def test_たべのこし_ターン終了時に回復():
         max(results_with_item[1].hp_counter) - max(results_without_item[1].hp_counter)
         == leftover_heal * 2
     )
+
+
+def test_タラプのみ_ちからずくの対象技では発動しない():
+    """ちからずく所持者の追加効果あり特殊技を受けてもタラプのみは発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", ability_name="ちからずく")],
+        team1=[Pokemon("カイリュー", item_name="タラプのみ")],
+    )
+    # でんきショック（特殊・追加効果あり）で2回攻撃
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("でんきショック"), 1)], max_attack=2)
+
+    # ランクが変わらないため1発目と2発目のダメージが同じ
+    assert results[0].min_damage == results[1].min_damage
+    assert results[0].max_damage == results[1].max_damage
 
 
 def test_タラプのみ_物理技では発動しない():

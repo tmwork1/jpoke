@@ -240,9 +240,15 @@ def _boost_on_attack_category(battle: Battle,
     source=mon（自発的な変化）として扱うことで、あまのじゃくにより変化量が
     反転して下降になった場合でもしろいきり・フラワーベールで防がれないようにする。
     また、ランクがすでに上限/下限で実際に変化しなかった場合はアイテムを消費しない。
+    特性ちからずくの対象技（追加効果あり技）を受けたときは発動しない。
     """
     mon = ctx.defender
     assert mon is not None
+    if (
+        ctx.attacker.ability.name == "ちからずく"
+        and ctx.move.has_flag("secondary_effect")
+    ):
+        return HandlerReturn(value=value)
     if ctx.move.category == category:
         if battle.modify_stats(mon, {stat: amount}, source=mon):
             _announce_and_consume_item(battle, mon)

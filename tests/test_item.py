@@ -2433,6 +2433,50 @@ def test_たべのこし_かいふくふうじ中は回復しない():
     assert mon.hp == 1
 
 
+def test_タラプのみ_あまのじゃくによる下降はしろいきりで防げない():
+    """タラプのみ: あまのじゃくで反転した下降は自発的な変化とみなされ、しろいきりでも防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="タラプのみ", ability_name="あまのじゃく")],
+        accuracy=100,
+        side1={"しろいきり": 1},
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == -1
+    assert not foe.has_item()
+
+
+def test_タラプのみ_ちからずくの対象技では発動しない():
+    """タラプのみ: ちからずく所持者が追加効果ありの特殊技を使った場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ニドキング", ability_name="ちからずく",
+            move_names=["でんきショック"],
+        )],
+        team1=[Pokemon("ゼニガメ", item_name="タラプのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == 0
+    assert foe.has_item()
+
+
+def test_タラプのみ_とくぼうランクが最大のとき発動しない():
+    """タラプのみ: すでにとくぼうランクが最大まで上がっているときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="タラプのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["spd"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["spd"] == 6
+    assert foe.has_item()
+
+
 def test_タラプのみ_物理技では発動しない():
     """タラプのみ: 物理技では発動しない"""
     battle = t.start_battle(
