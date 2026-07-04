@@ -39,13 +39,18 @@ class CommandManager:
             よる交代中はとらわれ状態チェックをスキップし、控えに生きているポケモンが
             いれば交代可能とする（にげられない・バインド・ねをはる・フェアリーロックや
             特性かげふみ・ありじごく・じりょくを無視して発動するため）。
+            瀕死による交代（FAINTED）も同様にスキップする。瀕死になったポケモンは
+            退場処理（バインドなどの揮発性状態解除）より前に交代コマンドを解決するため、
+            とらわれ状態の判定に瀕死ポケモン自身のバインド等が残っていても交代を
+            妨げてはならない。
         """
         state = self.battle.player_states[player]
-        # PIVOT（バトンタッチ等）・だっしゅつパック・だっしゅつボタン発動中は
+        # PIVOT（バトンタッチ等）・だっしゅつパック・だっしゅつボタン・瀕死交代発動中は
         # とらわれ状態に関わらず交代可能
         if (
             state.interrupt != Interrupt.PIVOT
             and state.interrupt != Interrupt.EJECTBUTTON
+            and state.interrupt != Interrupt.FAINTED
             and not state.interrupt.name.startswith("EJECTPACK")
         ):
             if not self.battle.query.can_switch(player):
