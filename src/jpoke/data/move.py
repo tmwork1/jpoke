@@ -8023,7 +8023,15 @@ MOVES: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=10,
-        handlers={},  # TODO: 効果実装
+        target="self",
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.みをけずる_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.みをけずる_apply,
+            ),
+        }
     ),
     "むしくい": MoveData(
         type="むし",

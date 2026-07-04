@@ -1968,6 +1968,25 @@ def ミルクのみ_self_heal(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
+def みをけずる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みをけずるの効果: こうげき・とくこう・すばやさを2段階ずつ上げ、HPを最大HPの半分消費する。"""
+    result = modify_attacker_stats(battle, ctx, value, stats={"atk": 2, "spa": 2, "spe": 2})
+    battle.modify_hp(ctx.attacker, r=-0.5)
+    return result
+
+
+def みをけずる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みをけずるの使用条件チェック: HPが最大HPの半分以下ならば失敗する。"""
+    mon = ctx.attacker
+    if mon.hp <= mon.max_hp // 2:
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "みをけずる"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def めいそう_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1, "spd": 1})
 
