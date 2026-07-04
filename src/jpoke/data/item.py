@@ -1251,7 +1251,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_TURN_END: h.ItemHandler(
                 h.どくどくだま_apply_poison,
                 subject_spec="source:self",
-                priority=90,
+                priority=150,
             )
         }
     ),

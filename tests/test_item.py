@@ -3076,6 +3076,70 @@ def test_とつげきチョッキ_特殊技にとくぼう1_5倍():
     assert battle.damage_calculator.def_modifier == 6144
 
 
+def test_どくどくだま_どくタイプとはがねタイプには発動しない():
+    """どくどくだま: どくタイプ・はがねタイプのポケモンにはもうどくが付与されない"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("フシギダネ", item_name="どくどくだま"),  # くさ/どくタイプ
+            Pokemon("コイル", item_name="どくどくだま"),  # でんき/はがねタイプ
+        ],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert not mon.ailment.is_active
+
+    t.run_switch(battle, 0, 1)
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert not mon.ailment.is_active
+
+
+def test_どくどくだま_ねむけと重なった場合ねむり優先():
+    """どくどくだま: ねむけからねむり状態になるターンと発動ターンが重なった場合、
+    ねむけ(priority110)が先に処理されるためねむり状態が優先されもうどくは付与されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="どくどくだま")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ねむけ": 1},
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.ailment.name == "ねむり"
+
+
+def test_どくどくだま_ミストフィールド解除ターンから発動():
+    """どくどくだま: ミストフィールドはもうどくの付与を防ぐが、
+    フィールドの継続終了(priority140)がどくどくだまの発動(priority150)より先に処理されるため、
+    ミストフィールドが解除されたそのターンからどくどくだまが発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="どくどくだま")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("ミストフィールド", 1),
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert battle.terrain.name != "ミストフィールド"
+    assert mon.ailment.name == "もうどく"
+
+
+def test_どくどくだま_発動するターンにどくダメージは受けない():
+    """どくどくだま: priority150でどく・もうどくダメージ(90)より後に発動するため、
+    発動したそのターンにもうどくダメージは発生しない（翌ターンから発生する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="どくどくだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    hp_before = mon.hp
+    t.end_turn(battle)
+    assert mon.ailment.name == "もうどく"
+    assert mon.hp == hp_before  # このターンはもうどくダメージを受けない
+
+    t.end_turn(battle)
+    assert mon.hp == hp_before - hp_before // 16  # 翌ターンからもうどくダメージを受ける（1ターン目）
+
+
 def test_ナゾのみ_効果抜群でHP回復():
     """ナゾのみ: 効果抜群のダメージを受けたときHPを25%回復する"""
     battle = t.start_battle(
