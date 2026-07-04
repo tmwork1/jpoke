@@ -1548,8 +1548,14 @@ def はがねのつばさ_boost_defender_B(battle: Battle, ctx: AttackContext, v
 
 
 def はたきおとす_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はたきおとすのアイテム所持時1.5倍補正。"""
-    if ctx.defender.has_item():
+    """はたきおとすのアイテム所持時1.5倍補正。
+
+    奪う/落とすことができないアイテム（だいこんごうだま等の専用道具）の場合は補正なし。
+    """
+    if (
+        ctx.defender.has_item()
+        and battle.item_manager.can_change_item(ctx.defender, source=ctx.attacker)
+    ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 

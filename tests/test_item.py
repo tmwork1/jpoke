@@ -2417,6 +2417,58 @@ def test_タラプのみ_特殊技被弾でD上昇():
     assert not foe.has_item()
 
 
+@pytest.mark.parametrize("move_name", ["はたきおとす", "どろぼう"])
+def test_だいこんごうだま_ディアルガから奪えない(move_name):
+    """だいこんごうだま: ディアルガ(オリジン)が持っている間ははたきおとす・どろぼう等で奪われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ディアルガ", item_name="だいこんごうだま")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_item("だいこんごうだま")
+
+
+def test_だいこんごうだま_トリックで交換されない():
+    """だいこんごうだま: ディアルガ(オリジン)が持っている間はトリック・すりかえで交換されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("ディアルガ", item_name="だいこんごうだま")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "たべのこし"
+    assert defender.item.name == "だいこんごうだま"
+
+
+def test_だいこんごうだま_フォルムチェンジ():
+    """だいこんごうだま: ディアルガが持って登場するとオリジンフォルムになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアルガ", item_name="だいこんごうだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ディアルガ(オリジン)"
+
+
+def test_だいこんごうだま_通常のディアルガへ渡せない():
+    """だいこんごうだま: 通常の姿のディアルガへはトリック等で渡すことができない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="だいこんごうだま")],
+        team1=[Pokemon("ディアルガ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "だいこんごうだま"
+    assert not defender.has_item()
+    assert defender.name == "ディアルガ"
+
+
 def test_だっしゅつパック_0ターン目にいかくで交代():
     """だっしゅつパック: 能力ダウンで交代"""
     battle = t.start_battle(

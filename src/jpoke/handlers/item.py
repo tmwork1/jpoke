@@ -285,6 +285,26 @@ def _dedicated_item_modify_power(ctx: AttackContext,
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
+def _dedicated_item_prevent_item_change(ctx: EventContext,
+                                        value: bool,
+                                        name_prefix: str) -> HandlerReturn:
+    """専用道具: 対象のポケモンが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    """
+    mon = ctx.target
+    if mon is not None and mon.name.startswith(name_prefix):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+def _dedicated_item_prevent_transfer_to_base_form(ctx: EventContext,
+                                                  value: bool,
+                                                  base_form: str) -> HandlerReturn:
+    """専用道具: 通常の姿へトリック・すりかえ等で渡すことを防ぐ。"""
+    mon = ctx.target
+    if mon is not None and mon.name == base_form:
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
 def _boost_stat_on_type_hit(battle: Battle,
                             ctx: AttackContext,
                             value: Any,
@@ -991,6 +1011,19 @@ def だいこんごうだま_form_change(battle: Battle, ctx: EventContext, valu
 def だいこんごうだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """だいこんごうだま: ディアルガ(オリジン)持ちのドラゴン・はがね技1.2倍。"""
     return _dedicated_item_modify_power(ctx, value, frozenset({"ディアルガ(オリジン)"}), ("ドラゴン", "はがね"))
+
+
+def だいこんごうだま_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """だいこんごうだま: ディアルガが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    ディアルガ以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    return _dedicated_item_prevent_item_change(ctx, value, "ディアルガ")
+
+
+def だいこんごうだま_prevent_transfer_to_base_form(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """だいこんごうだま: 通常の姿のディアルガへトリック・すりかえ等で渡すことを防ぐ。"""
+    return _dedicated_item_prevent_transfer_to_base_form(ctx, value, "ディアルガ")
 
 
 def だいしらたま_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

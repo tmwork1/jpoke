@@ -261,6 +261,20 @@ def test_はがねのつばさ_防御1段階上昇が発動する():
     assert attacker.rank["def"] == 1
 
 
+def test_はたきおとす_奪えない専用道具は威力補正なし():
+    """はたきおとす: だいこんごうだま等の奪えない専用道具を持つ相手には威力補正がかからず、
+    アイテムも失われない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("ディアルガ", item_name="だいこんごうだま")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert defender.has_item("だいこんごうだま")
+
+
 def test_はたきおとす_相手のアイテムがないとき威力補正なし():
     """はたきおとす: 相手がアイテムを持っていない場合は威力1倍のまま。"""
     battle_no_item = t.start_battle(
