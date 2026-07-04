@@ -637,6 +637,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.グラスシード_boost_defense,
                 subject_spec="source:self",
+                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 グラスシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.グラスシード_boost_defense,

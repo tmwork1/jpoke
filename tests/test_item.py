@@ -1338,6 +1338,19 @@ def test_くろいヘドロ_非どくタイプはダメージ():
     assert mon.hp == initial_hp - initial_hp // 8
 
 
+def test_グラスシード_展開済みグラスフィールドに登場して発動():
+    """グラスシード: すでにグラスフィールドが展開されている場に登場（交代）してもぼうぎょ+1して消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", item_name="グラスシード")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("グラスフィールド", 5),
+    )
+    raichu = battle._player_states[0].team[1]
+    t.run_switch(battle, 0, 1)
+    assert raichu.rank["def"] == 1
+    assert not raichu.has_item()
+
+
 @pytest.mark.parametrize("terrain", ["エレキフィールド", "グラスフィールド", "ミストフィールド", "サイコフィールド"])
 def test_グランドコート_フィールドを8ターンに延長(terrain):
     """グランドコート: 4種フィールドを展開すると持続ターンが8になる"""
