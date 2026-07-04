@@ -1379,6 +1379,28 @@ def test_くろいヘドロ_非どくタイプはダメージ():
     assert mon.hp == initial_hp - initial_hp // 8
 
 
+def test_くろいメガネ_イカサマでも威力補正がかかる():
+    """くろいメガネ: 所有者が使用するイカサマにも威力補正がかかる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="くろいメガネ", move_names=["イカサマ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4915
+
+
+def test_くろいメガネ_イカサマを受けるときは補正なし():
+    """くろいメガネ: 所有者がイカサマを受ける場合は補正がかからない（威力補正は攻撃側の持ち物にのみ依存）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="くろいメガネ")],
+        team1=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_グラスシード_展開済みグラスフィールドに登場して発動():
     """グラスシード: すでにグラスフィールドが展開されている場に登場（交代）してもぼうぎょ+1して消費される"""
     battle = t.start_battle(
