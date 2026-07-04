@@ -1556,6 +1556,35 @@ def test_ぶんまわす_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_プリズムレーザー_命中後にリチャージ状態が付与される():
+    """プリズムレーザー: 命中後に使用者にリチャージ揮発状態が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["プリズムレーザー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("リチャージ")
+
+
+def test_プリズムレーザー_次ターン行動不能になる():
+    """プリズムレーザー: 次のターンはリチャージ状態により行動不能になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["プリズムレーザー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.step()
+    assert attacker.has_volatile("リチャージ")
+    defender_hp_after_t1 = defender.hp
+    battle.step()
+    assert not attacker.has_volatile("リチャージ")
+    assert defender.hp == defender_hp_after_t1
+
+
 def test_ヘドロウェーブ_どくが発動する():
     """ヘドロウェーブ: 10%でどくを付与する。"""
     battle = t.start_battle(
