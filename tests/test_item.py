@@ -883,6 +883,26 @@ def test_かいがらのすず_与ダメージの1割8回復():
     assert attacker.hp == 1 + 80 // 8
 
 
+def test_かいがらのすず_命中後に自分のランクを下げる技でも回復する():
+    """かいがらのすず: アーマーキャノンのように命中後に自分のランクを下げるON_HITハンドラを
+    持つ技でも、ランク変化ハンドラの戻り値（dict）に汚染されずダメージ量から正しく回復する
+    （fuzzで発見されたTypeErrorの回帰テスト）"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", item_name="かいがらのすず", move_names=["アーマーキャノン"],
+        )],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.fix_damage(battle, 80)
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 80 // 8
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+
+
 def test_かいがらのすず_連続攻撃技は合計ダメージから最後にまとめて回復する():
     """かいがらのすず: 連続攻撃技（ダブルアタック=2回固定）は最後のヒットの後に合計ダメージの1/8がまとめて回復する"""
     battle = t.start_battle(

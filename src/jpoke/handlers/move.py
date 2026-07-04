@@ -44,11 +44,21 @@ def modify_attacker_stats(battle: Battle,
                           value: Any,
                           stats: dict[Stat, int],
                           chance: float = 1) -> HandlerReturn:
-    """攻撃側の能力ランクを変化させる。"""
+    """攻撃側の能力ランクを変化させる。
+
+    ON_HIT（攻撃技、value=実際のダメージ量）では value をそのまま次のハンドラへ
+    引き継ぐ必要があるため、ランク変化の結果を value に反映させない。
+    ON_STATUS_HIT（変化技、value=bool の成否フラグ）では、ランク変化が完全に
+    阻まれた（結果が空の dict）場合に技を失敗させるため、従来通り
+    battle.modify_stats() の戻り値を value として返す。
+    """
     chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
-    return HandlerReturn(value=battle.modify_stats(ctx.attacker, stats, source=ctx.attacker))
+    result = battle.modify_stats(ctx.attacker, stats, source=ctx.attacker)
+    if isinstance(value, bool):
+        return HandlerReturn(value=result)
+    return HandlerReturn(value=value)
 
 
 def modify_defender_stats(battle: Battle,
@@ -56,11 +66,18 @@ def modify_defender_stats(battle: Battle,
                           value: Any,
                           stats: dict[Stat, int],
                           chance: float = 1) -> HandlerReturn:
-    """防御側の能力ランクを変化させる。"""
+    """防御側の能力ランクを変化させる。
+
+    modify_attacker_stats と同様、value の型（bool か否か）でON_STATUS_HITと
+    ON_HITを区別し、ON_HITでは value（実際のダメージ量）を保持したまま返す。
+    """
     chance = battle.resolve_secondary_chance(ctx, chance)
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
-    return HandlerReturn(value=battle.modify_stats(ctx.defender, stats, source=ctx.attacker))
+    result = battle.modify_stats(ctx.defender, stats, source=ctx.attacker)
+    if isinstance(value, bool):
+        return HandlerReturn(value=result)
+    return HandlerReturn(value=value)
 
 
 def apply_ailment_to_defender(battle: Battle,
