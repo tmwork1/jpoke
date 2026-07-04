@@ -952,7 +952,7 @@ ITEMS: dict[ItemName, ItemData] = {
         }
     ),
     "せいれいプレート": ItemData(
-        fling_power=30,
+        fling_power=90,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.せいれいプレート_modify_power_by_type,

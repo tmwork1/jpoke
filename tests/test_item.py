@@ -2307,6 +2307,22 @@ def test_ズアのみ_とくぼうランクが最大のとき発動しない():
     assert mon.has_item()
 
 
+def test_せいれいプレート_なげつけるで威力90になる():
+    """せいれいプレート: なげつけるで使用すると威力90になる（フェアリー以外の技のためタイプ補正は乗らない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="せいれいプレート", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 90
+    assert defender.hp < hp_before
+    assert not attacker.has_item()
+
+
 def test_せんせいのツメ_きんしのちからでも攻撃技選択時は発動する():
     """せんせいのツメ: 所有者の特性がきんしのちからでも攻撃技を選んだ場合は発動し得る"""
     battle = t.start_battle(
