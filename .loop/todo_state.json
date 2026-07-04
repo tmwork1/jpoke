@@ -6,7 +6,6 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "特性名の型ヒントをstrからAbilityNameに移行",
     "アイテム名の型ヒントをstrからItemNameに移行",
     "技名の型ヒントをstrからMoveNameに移行",
     "クラスとして実装する意義があるか検討する。関数モジュールとして実装するほうがシンプルで良いかもしれない。",
@@ -28,6 +27,7 @@
     "scripts/sort_data/のようなサブディレクトリにまとめ、指示書に反映する"
   ],
   "completed": [
+    "特性名の型ヒントをstrからAbilityNameに移行",
     "ポケモン名の型ヒントをstrからPokemonNameに移行",
     "PokemonName, AbilityName, ItemName, MoveName もスクリプトで自動生成する",
     "review-test (まねっこ+プレゼント+めざめるダンス: コミットbfbb7124)",
