@@ -8,7 +8,7 @@ CommandType = Literal["any", "move", "switch"]
 LethalSubject = Literal["attacker", "defender"]
 
 AbilityDisabledReason = Literal[
-    "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし", "メテオドライブ",
+    "consumed", "かがくへんかガス", "かたやぶり", "とくせいなし", "フォトンゲイザー", "メテオドライブ",
 ]
 
 ItemDisabledReason = Literal[

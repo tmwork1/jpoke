@@ -2028,11 +2028,25 @@ def フェイント_remove_protect(battle: Battle, ctx: AttackContext, value: An
     return HandlerReturn(value=value)
 
 
+def フォトンゲイザー_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """フォトンゲイザー: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
+    mon = ctx.defender
+    if mon.ability.has_flag("mold_breaker_ignorable"):
+        battle.add_ability_disabled_reason(mon, "フォトンゲイザー")
+    return HandlerReturn(value=value)
+
+
 def フォトンゲイザー_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フォトンゲイザー: 補正込みAがCより高い場合は物理技として計算する。"""
     mon = ctx.attacker
     if mon.ranked_stats["atk"] > mon.ranked_stats["spa"]:
         return HandlerReturn(value="physical")
+    return HandlerReturn(value=value)
+
+
+def フォトンゲイザー_restore_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """フォトンゲイザー: 攻撃終了後に相手の特性の無効化を解除する。"""
+    battle.remove_ability_disabled_reason(ctx.defender, "フォトンゲイザー")
     return HandlerReturn(value=value)
 
 
