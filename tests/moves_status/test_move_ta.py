@@ -458,6 +458,45 @@ def test_とける_ぼうぎょ2段階上がる():
     assert attacker.rank["def"] == 2
 
 
+def test_どくガス_どくタイプには無効():
+    """どくガス: どくタイプの相手には効果がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくガス"])],
+        team1=[Pokemon("ベトベトン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("どく")
+
+
+def test_どくガス_どく状態にする():
+    """どくガス: 命中すると相手を『どく』状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくガス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("どく")
+
+
+def test_どくガス_命中率90で外れることがある():
+    """どくガス: 命中率90のため外れる場合がある"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくガス"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.fix_random(battle, 0.95)
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("どく")
+
+
 def test_どくのいと_すでにどく状態ならS下げのみ():
     """どくのいと: 相手がすでにどく状態でもすばやさは下がる"""
     battle = t.start_battle(

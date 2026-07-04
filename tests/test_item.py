@@ -2160,6 +2160,20 @@ def test_するどいツメ_急所ランク加算():
     assert battle.move_executor.critical_rank == 1
 
 
+def test_ズアのみ_とくぼうランクが最大のとき発動しない():
+    """ズアのみ: すでにとくぼうランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ズアのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spd"] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["spd"] == 6
+    assert mon.has_item()
+
+
 def test_せんせいのツメ_先制確率で先攻():
     """せんせいのツメ: 23.4%の確率で行動順が1段階早くなる"""
     battle = t.start_battle(
