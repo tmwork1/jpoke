@@ -127,7 +127,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.Vジェネレート_reduce_defender_spd_spe,
+                ha.Vジェネレート_lower_defender_spd_spe,
             )
         }
     ),
@@ -201,7 +201,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.アイスハンマー_reduce_attacker_spe,
+                ha.アイスハンマー_lower_attacker_spe,
             )
         }
     ),
@@ -391,7 +391,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.アシッドボム_sharply_reduce_defender_spd,
+                ha.アシッドボム_sharply_lower_defender_spd,
             )
         },
         lethal_handlers={
@@ -539,7 +539,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.あわ_reduce_defender_spd,
+                ha.あわ_lower_defender_spd,
             )
         }
     ),
@@ -576,7 +576,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.アーマーキャノン_reduce_attacker_stats,
+                ha.アーマーキャノン_lower_attacker_stats,
             )
         }
     ),
@@ -589,7 +589,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "punch", "secondary_effect"},
         handlers={
              Event.ON_HIT: h.MoveHandler(
-                 ha.アームハンマー_reduce_attacker_spe,
+                 ha.アームハンマー_lower_attacker_spe,
              )
         }
     ),
@@ -653,7 +653,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.いじげんラッシュ_reduce_attacker_def,
+                ha.いじげんラッシュ_lower_attacker_def,
             )
         }
     ),
@@ -696,7 +696,7 @@ MOVES: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: [
                 h.MoveHandler(
-                    ha.いてつくしせん_reduce_defender_spd,
+                    ha.いてつくしせん_lower_defender_spd,
                 ),
                 h.MoveHandler(
                     ha.いてつくしせん_apply_ailment_to_defender,
@@ -881,7 +881,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.インファイト_reduce_defender_stats,
+                ha.インファイト_lower_defender_stats,
             )
         }
     ),
@@ -1042,7 +1042,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.うらみつらみ_reduce_defender_atk,
+                ha.うらみつらみ_lower_defender_atk,
             )
         }
     ),
@@ -1106,7 +1106,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.エナジーボール_reduce_defender_spd,
+                ha.エナジーボール_lower_defender_spd,
             )
         }
     ),
@@ -1118,7 +1118,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.エレキネット_reduce_defender_spd,
+                ha.エレキネット_lower_defender_spd,
             )
         }
     ),
@@ -1226,7 +1226,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.オクタンほう_reduce_acc,
+                ha.オクタンほう_lower_acc,
             )
         }
     ),
@@ -1374,7 +1374,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.オーロラビーム_reduce_defender_atk,
+                ha.オーロラビーム_lower_defender_atk,
             )
         }
     ),
@@ -1741,7 +1741,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.からみつく_reduce_defender_spd,
+                ha.からみつく_lower_defender_spd,
             )
         }
     ),
@@ -1791,7 +1791,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ガリョウテンセイ_reduce_defender_spd,
+                ha.ガリョウテンセイ_lower_defender_spd,
             )
         }
     ),
@@ -1812,7 +1812,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.がんせきふうじ_reduce_defender_spd,
+                ha.がんせきふうじ_lower_defender_spd,
             )
         }
     ),
@@ -1860,7 +1860,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.きあいだま_reduce_defender_spd,
+                ha.きあいだま_lower_defender_spd,
             )
         }
     ),
@@ -2284,7 +2284,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.グラスミキサー_reduce_acc,
+                ha.グラスミキサー_lower_acc,
             )
         }
     ),
@@ -2439,7 +2439,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.こがらしあらし_reduce_defender_spd,
+                ha.こがらしあらし_lower_defender_spd,
             )
         }
     ),
@@ -2452,7 +2452,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"wind"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.こごえるかぜ_reduce_defender_spd,
+                ha.こごえるかぜ_lower_defender_spd,
             )
         }
     ),
@@ -2464,7 +2464,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.こごえるせかい_reduce_defender_spd,
+                ha.こごえるせかい_lower_defender_spd,
             )
         }
     ),
@@ -2670,7 +2670,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.サイコキネシス_reduce_defender_spd,
+                ha.サイコキネシス_lower_defender_spd,
             )
         }
     ),
@@ -3073,7 +3073,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シャドーボール_reduce_defender_spd,
+                ha.シャドーボール_lower_defender_spd,
             )
         }
     ),
@@ -3187,7 +3187,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シードフレア_sharply_reduce_defender_spd,
+                ha.シードフレア_sharply_lower_defender_spd,
             )
         }
     ),
@@ -3287,7 +3287,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.じならし_reduce_defender_spd,
+                ha.じならし_lower_defender_spd,
             )
         }
     ),
@@ -3353,7 +3353,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.じゃれつく_reduce_defender_atk,
+                ha.じゃれつく_lower_defender_atk,
             )
         }
     ),
@@ -3505,7 +3505,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"sound"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.スケイルノイズ_reduce_attacker_def,
+                ha.スケイルノイズ_lower_attacker_def,
             )
         }
     ),
@@ -3988,7 +3988,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.だいちのちから_reduce_defender_spd,
+                ha.だいちのちから_lower_defender_spd,
             )
         }
     ),
@@ -4091,7 +4091,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.だくりゅう_reduce_acc,
+                ha.だくりゅう_lower_acc,
             )
         }
     ),
@@ -4806,7 +4806,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.とびかかる_reduce_defender_atk,
+                ha.とびかかる_lower_defender_atk,
             )
         }
     ),
@@ -4837,7 +4837,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.とびつく_reduce_defender_atk,
+                ha.とびつく_lower_defender_atk,
             )
         }
     ),
@@ -5012,7 +5012,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.トロピカルキック_reduce_defender_atk,
+                ha.トロピカルキック_lower_defender_atk,
             )
         }
     ),
@@ -5251,7 +5251,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ドラムアタック_reduce_defender_spd,
+                ha.ドラムアタック_lower_defender_spd,
             )
         }
     ),
@@ -5305,7 +5305,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.どろかけ_reduce_acc,
+                ha.どろかけ_lower_acc,
             )
         }
     ),
@@ -5318,7 +5318,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.どろばくだん_reduce_acc,
+                ha.どろばくだん_lower_acc,
             )
         }
     ),
@@ -5361,7 +5361,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ナイトバースト_reduce_acc,
+                ha.ナイトバースト_lower_acc,
             )
         }
     ),
@@ -6162,7 +6162,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.はるのあらし_reduce_defender_atk,
+                ha.はるのあらし_lower_defender_atk,
             )
         }
     ),
@@ -6251,7 +6251,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ばかぢから_reduce_attacker_def,
+                ha.ばかぢから_lower_attacker_def,
             )
         },
         lethal_handlers={
@@ -6303,7 +6303,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.バブルこうせん_reduce_defender_spd,
+                ha.バブルこうせん_lower_defender_spd,
             )
         }
     ),
@@ -6520,7 +6520,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ひやみず_reduce_defender_atk,
+                ha.ひやみず_lower_defender_atk,
             )
         }
     ),
@@ -6973,7 +6973,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "punch", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ぶちかまし_reduce_defender_spd,
+                ha.ぶちかまし_lower_defender_spd,
             )
         }
     ),
@@ -7182,7 +7182,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ホイールスピン_sharply_reduce_attacker_spe,
+                ha.ホイールスピン_sharply_lower_attacker_spe,
             )
         }
     ),
@@ -7604,7 +7604,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.マッドショット_reduce_defender_spd,
+                ha.マッドショット_lower_defender_spd,
             )
         }
     ),
@@ -7952,7 +7952,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ミラーショット_reduce_acc,
+                ha.ミラーショット_lower_acc,
             )
         }
     ),
@@ -8020,7 +8020,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"sound"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.むしのさざめき_reduce_defender_spd,
+                ha.むしのさざめき_lower_defender_spd,
             )
         }
     ),
@@ -8370,7 +8370,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ようかいえき_reduce_defender_spd,
+                ha.ようかいえき_lower_defender_spd,
             )
         }
     ),
@@ -8430,7 +8430,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ラスターカノン_reduce_defender_spd,
+                ha.ラスターカノン_lower_defender_spd,
             )
         }
     ),
@@ -8442,7 +8442,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ラスターパージ_reduce_defender_spd,
+                ha.ラスターパージ_lower_defender_spd,
             )
         }
     ),
@@ -8538,7 +8538,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.りんごさん_reduce_defender_spd,
+                ha.りんごさん_lower_defender_spd,
             )
         },
         lethal_handlers={
@@ -8587,7 +8587,7 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ルミナコリジョン_sharply_reduce_defender_spd,
+                ha.ルミナコリジョン_sharply_lower_defender_spd,
             )
         },
         lethal_handlers={
@@ -8731,7 +8731,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ローキック_reduce_defender_spd,
+                ha.ローキック_lower_defender_spd,
             )
         }
     ),
@@ -8764,7 +8764,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ワイドブレイカー_reduce_defender_atk,
+                ha.ワイドブレイカー_lower_defender_atk,
             )
         }
     ),
