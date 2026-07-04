@@ -876,6 +876,22 @@ def test_カゴのみ_ねむり付与直後に即時回復する():
     assert not defender.has_item()
 
 
+def test_カシブのみ_ポルターガイストは成功しダメージ半減():
+    """カシブのみ: ポルターガイストのアイテム所持チェックはダメージ計算より先に行われるため、
+    効果バツグンで受けてもポルターガイストは成功し、カシブのみでダメージが半減する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ポルターガイスト"])],
+        team1=[Pokemon("エーフィ", item_name="カシブのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before  # 技は成功する
+    assert battle.damage_calculator.damage_modifier == 2048  # ダメージ半減
+    assert not defender.has_item()  # カシブのみは消費される
+
+
 def test_カムラのみ_すばやさランクが最大のとき発動しない():
     """カムラのみ: すでにすばやさランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
     battle = t.start_battle(
