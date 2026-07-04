@@ -1087,7 +1087,28 @@ def だっしゅつパック_reserve_switch(battle: Battle, ctx: EventContext, v
 
 
 def だっしゅつボタン_reserve_switch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    player = battle.get_player(ctx.defender)
+    """だっしゅつボタン: 攻撃技を受けると控えのポケモンに交代する（自由選択）。
+
+    実HPダメージが0でも（ばけのかわ/アイスフェイスの肩代わり、こらえる等で耐えた場合）
+    発動するが、みがわりに阻まれた場合や特性ちからずくの効果が発動した技を受けた場合は
+    発動しない。受けた攻撃でひんしになったときや、交代先の控えがいないときも発動しない。
+    にげられない・バインド・ねをはる・フェアリーロックや特性かげふみ・ありじごく・
+    じりょくなどのとらわれ状態も無視して発動するため、can_switch ではなく
+    交代先の有無のみを見る has_available_bench を使う。
+    """
+    mon = ctx.defender
+    if (
+        mon.fainted
+        or ctx.substitute_damage
+        or (
+            ctx.attacker.ability.name == "ちからずく"
+            and ctx.move.has_flag("secondary_effect")
+        )
+    ):
+        return HandlerReturn(value=value)
+    player = battle.get_player(mon)
+    if not battle.query.has_available_bench(player):
+        return HandlerReturn(value=value)
     battle.player_states[player].interrupt = Interrupt.EJECTBUTTON
     return HandlerReturn(value=value)
 

@@ -2764,6 +2764,125 @@ def test_だっしゅつボタン():
     assert not ejected_mon.has_item()
 
 
+def test_だっしゅつボタン_こらえるでHP1のまま耐えたときも発動する():
+    """だっしゅつボタン: こらえるでHP1のまま耐えた（実ダメージ0）ときも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", item_name="だっしゅつボタン"), Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    battle.step()
+
+    state1 = battle._player_states[1]
+    assert defender.hp == 1
+    assert not defender.fainted
+    assert state1.active_index == 1
+    assert defender.item.revealed
+    assert not defender.has_item()
+
+
+def test_だっしゅつボタン_ちからずくの効果が発動した技を受けたときは発動しない():
+    """だっしゅつボタン: 特性ちからずくの効果が発動した追加効果あり技を受けたときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニドキング", ability_name="ちからずく", move_names=["Gのちから"])],
+        team1=[Pokemon("ピカチュウ", item_name="だっしゅつボタン"), Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    battle.step()
+    state1 = battle._player_states[1]
+    defender = state1.team[0]
+    assert state1.active_index == 0
+    assert defender.has_item("だっしゅつボタン")
+
+
+def test_だっしゅつボタン_とらわれ状態でも交代できる():
+    """だっしゅつボタン: ねをはるなどのとらわれ状態を無視して発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", item_name="だっしゅつボタン", move_names=["ねをはる"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["Gのちから"])],
+        accuracy=100,
+    )
+    battle.step()
+    state0 = battle._player_states[0]
+    ejected_mon = state0.team[0]
+    assert state0.active_index == 1
+    assert ejected_mon.item.revealed
+    assert not ejected_mon.has_item()
+
+
+def test_だっしゅつボタン_ばけのかわで肩代わりしたときも発動する():
+    """だっしゅつボタン: 特性ばけのかわでダメージを肩代わりした場合（実ダメージ0）でも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ばけのかわ", item_name="だっしゅつボタン"), Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.fix_damage(battle, 30)
+
+    battle.step()
+
+    state1 = battle._player_states[1]
+    assert defender.ability.enabled is False
+    assert state1.active_index == 1
+    assert defender.item.revealed
+    assert not defender.has_item()
+
+
+def test_だっしゅつボタン_ひんしになったときは発動しない():
+    """だっしゅつボタン: 相手の攻撃でひんしになったときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じしん"])],
+        team1=[Pokemon("ピカチュウ", item_name="だっしゅつボタン"), Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    fainted_mon = battle.actives[1]
+    t.fix_damage(battle, 9999)
+
+    battle.step()
+
+    state1 = battle._player_states[1]
+    assert fainted_mon.fainted
+    assert state1.active_index == 1
+    assert fainted_mon.has_item("だっしゅつボタン")
+
+
+def test_だっしゅつボタン_みがわりに阻まれたときは発動しない():
+    """だっしゅつボタン: みがわりに攻撃を防がれたとき（実ダメージ0）は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", item_name="だっしゅつボタン"), Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+
+    battle.step()
+
+    state1 = battle._player_states[1]
+    assert state1.active_index == 0
+    assert defender.has_item("だっしゅつボタン")
+
+
+def test_だっしゅつボタン_控えがいないと発動しない():
+    """だっしゅつボタン: 交代先の控えがいないときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="だっしゅつボタン")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.step()
+    state0 = battle._player_states[0]
+    assert state0.active_index == 0
+    assert mon.has_item("だっしゅつボタン")
+
+
 def test_ちからのハチマキ_物理技1_1倍():
     """ちからのハチマキ: 物理技の威力を1.1倍にする"""
     battle = t.start_battle(

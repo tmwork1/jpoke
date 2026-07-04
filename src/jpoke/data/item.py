@@ -1132,7 +1132,13 @@ ITEMS: dict[ItemName, ItemData] = {
     "だっしゅつボタン": ItemData(
         fling_power=30,
         handlers={
-            Event.ON_DAMAGE_HIT: h.ItemHandler(
+            # turn.md には「だっしゅつボタン」自体の priority 行はなく、Interrupt注記
+            # （ON_DAMAGE 節の末尾）としてのみ言及されている。ON_DAMAGE_HIT は
+            # actual_damage<=0 のとき発火しないため採用しない。ばけのかわ/アイスフェイスの
+            # 肩代わりやこらえるでHP1のまま耐えたとき（実HPダメージ0）も発動する仕様
+            # （docs/spec/items/だっしゅつボタン.md 詳細な仕様）を満たすため、いのちのたま
+            # と同様に常に発火する Event.ON_HIT を使用する（priority は既定値のまま）。
+            Event.ON_HIT: h.ItemHandler(
                 h.だっしゅつボタン_reserve_switch,
                 subject_spec="defender:self",
             )
