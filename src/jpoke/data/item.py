@@ -813,8 +813,7 @@ ITEMS: dict[ItemName, ItemData] = {
         }
     ),
     "しらたま": ItemData(
-        removable=False,
-        fling_power=0,
+        fling_power=60,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.ItemHandler(
                 h.しらたま_modify_power,
