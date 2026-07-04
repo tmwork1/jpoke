@@ -1508,6 +1508,52 @@ def test_くっつきバリ_ターン終了にダメージ():
     assert mon.hp == mon.max_hp - mon.max_hp // 8
 
 
+def test_くっつきバリ_どろぼうで攻撃者がアイテム持ちのとき転送も奪取もしない():
+    """くっつきバリ: 攻撃者がすでにアイテムを持っている場合は転送されず、
+    どろぼうの効果も発動しない（攻撃者がアイテムを持っているため奪取自体が失敗する）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="きあいのタスキ", move_names=["どろぼう"])],
+        team1=[Pokemon("カビゴン", item_name="くっつきバリ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "きあいのタスキ"
+    assert defender.item.name == "くっつきバリ"
+
+
+def test_くっつきバリ_はたきおとすで攻撃者がアイテム持ちのとき通常通りはたき落とされる():
+    """くっつきバリ: 攻撃者がすでにアイテムを持っている場合は転送されず、
+    はたきおとすの効果が通常通り発動して落とされる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="きあいのタスキ", move_names=["はたきおとす"])],
+        team1=[Pokemon("カビゴン", item_name="くっつきバリ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "きあいのタスキ"
+    assert not defender.has_item()
+
+
+@pytest.mark.parametrize("move_name", ["はたきおとす", "どろぼう"])
+def test_くっつきバリ_はたきおとす等でアイテムなしの攻撃者に転送される(move_name):
+    """くっつきバリ: はたきおとす・どろぼうの判定より先に転送が行われ、
+    アイテムなしの攻撃者に渡ったあとは技の効果自体が発動しない（何も落とされない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("カビゴン", item_name="くっつきバリ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "くっつきバリ"
+    assert not defender.has_item()
+
+
 def test_くっつきバリ_接触技でアイテム転送():
     """くっつきバリ: 接触技で攻撃した相手がアイテムなしのとき転送する"""
     battle = t.start_battle(

@@ -5368,7 +5368,9 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
+            # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.どろぼう_steal_item,
             )
         }
@@ -6024,7 +6026,9 @@ MOVES: dict[MoveName, MoveData] = {
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.はたきおとす_power,
             ),
-            Event.ON_HIT: h.MoveHandler(
+            # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
+            # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.はたきおとす_remove_item,
             )
         }
@@ -7312,7 +7316,9 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
+            # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.どろぼう_steal_item,
             )
         }

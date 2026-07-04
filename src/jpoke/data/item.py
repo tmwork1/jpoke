@@ -551,6 +551,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.くっつきバリ_transfer_on_contact,
                 subject_spec="defender:self",
+                priority=30,  # docs/spec/turn.md ON_DAMAGE: 「30 くっつきバリが攻撃側に渡る」
             ),
         }
     ),
