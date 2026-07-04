@@ -501,8 +501,8 @@ MOVES: dict[MoveName, MoveData] = {
     "あやしいかぜ": MoveData(
         type="ゴースト",
         category="special",
-        pp=15,
-        power=40,
+        pp=5,
+        power=60,
         accuracy=100,
         flags={"wind", "secondary_effect"},
         handlers={
