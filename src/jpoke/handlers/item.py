@@ -1287,10 +1287,8 @@ def ノーマルジュエル_modify_power_by_type(battle: Battle, ctx: AttackCon
 
 
 def はっきんだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はっきんだま: ギラティナ(アナザー/オリジン問わず)持ちのドラゴン・ゴースト技1.2倍。"""
-    return _dedicated_item_modify_power(
-        ctx, value, frozenset({"ギラティナ(アナザー)", "ギラティナ(オリジン)"}), ("ドラゴン", "ゴースト")
-    )
+    """はっきんだま: ギラティナ持ちのドラゴン・ゴースト技1.2倍。"""
+    return _dedicated_item_modify_power(ctx, value, {"ギラティナ(アナザー)"}, ("ドラゴン", "ゴースト"))
 
 
 def ハバンのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1302,18 +1300,9 @@ def バコウのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
 
 
 def パワフルハーブ_skip_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """パワフルハーブ: 溜め技の溜めターンをスキップする。
-
-    溜めをスキップした結果、おおひでり下のダイビングのように技自体が
-    天候によって無効化される場合（ON_TRY_MOVE_1 で判定）は、アイテムを消費しない。
-    """
+    """パワフルハーブ: 溜め技の溜めターンをスキップする。"""
     mon = ctx.attacker
-    weather_blocks_move = (
-        (battle.weather.name == "おおひでり" and ctx.move.type == "みず")
-        or (battle.weather.name == "おおあめ" and ctx.move.type == "ほのお")
-    )
-    if not weather_blocks_move:
-        _announce_and_consume_item(battle, mon)
+    _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=True, stop_event=True)
 
 
