@@ -1503,14 +1503,15 @@ def ぼうごパット_block_contact_reaction(_battle: Battle, _ctx: AttackConte
     return HandlerReturn(value=False, stop_event=True)
 
 
-def ぼうじんゴーグル_block_powder_move(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ぼうじんゴーグル_block_powder_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ぼうじんゴーグル: 粉技を無効化する。"""
     if ctx.move.has_flag("powder"):
+        _announce_item_triggered(battle, ctx.defender)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
-def ぼうじんゴーグル_block_weather_damage(_battle: Battle, ctx: Any, value: Any) -> HandlerReturn:
+def ぼうじんゴーグル_block_weather_damage(_battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ぼうじんゴーグル: 天候によるターン終了ダメージを無効化する。"""
     if ctx.hp_change_reason == "sandstorm":
         return HandlerReturn(value=0, stop_event=True)

@@ -4605,6 +4605,31 @@ def test_ぼうじんゴーグル_天候ダメージを無効化():
     assert mon.hp == initial_hp
 
 
+def test_ぼうじんゴーグル_特性ほうしによる状態異常を無効化():
+    """ぼうじんゴーグル: 接触した相手の特性ほうし(Effect Spore)による状態異常を無効化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほうし")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"], item_name="ぼうじんゴーグル")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_ぼうじんゴーグル_特性ぼうじんと同時に持つ場合は特性側が優先():
+    """ぼうじんゴーグル: 特性ぼうじんを併せ持つ場合、特性側の無効化が優先されアイテムは公開されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["ねむりごな"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ぼうじん", item_name="ぼうじんゴーグル")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.ailment.name != "ねむり"
+    assert not defender.item.revealed
+
+
 def test_ぼうじんゴーグル_粉技を無効化():
     """ぼうじんゴーグル: 粉技（ねむりごな等）を無効化する"""
     battle = t.start_battle(
@@ -4614,6 +4639,19 @@ def test_ぼうじんゴーグル_粉技を無効化():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name != "ねむり"
+
+
+def test_ぼうじんゴーグル_粉技を無効化した際にアイテムが公開される():
+    """ぼうじんゴーグル: 粉技を無効化した際にアイテムが公開される"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["ねむりごな"])],
+        team1=[Pokemon("ピカチュウ", item_name="ぼうじんゴーグル")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert not defender.item.revealed
+    t.run_move(battle, 0)
+    assert defender.item.revealed
 
 
 def test_マゴのみ_それ以外の性格ではこんらんしない():

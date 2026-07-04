@@ -2813,8 +2813,15 @@ def へんしょく_copy_move_type(battle: Battle, ctx: AttackContext, value: An
 
 
 def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。"""
-    if not battle.query.is_contact_reaction(ctx):
+    """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。
+
+    Note:
+        攻撃側がぼうじんゴーグルを持っている場合は無効（ぼうじんゴーグルの仕様）。
+    """
+    if (
+        not battle.query.is_contact_reaction(ctx)
+        or ctx.attacker.has_item("ぼうじんゴーグル")
+    ):
         return HandlerReturn(value=value)
     r = battle.random.random()
     ailment: AilmentName | None = next((a for threshold, a in _EFFECT_SPORE_AILMENTS if r < threshold), None)
