@@ -5,10 +5,9 @@
     "test_files": ["tests/"],
     "review_extra": ""
   },
-  "todo_queue": [
-    "純粋な状態異常付与系のメソッド名を ..._apply_<ailment name>_to_attacker(or defender)に統一する"
-  ],
+  "todo_queue": [],
   "completed": [
+    "純粋な状態異常付与系のメソッド名を ..._apply_<ailment name>_to_attacker(or defender)に統一する",
     "純粋な能力変動系のメソッド名を ..._boost_attacker_spa, lower_defender_spe の計s機に統一する",
     "scripts/generate_literals/とscripts/sort_data/のサブディレクトリにまとめ、指示書(CLAUDE.md・.claude/loop等)に反映する",
     "複数処理を内包しているメソッド名は ..._apply でよい",
