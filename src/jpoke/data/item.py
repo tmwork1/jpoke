@@ -750,6 +750,7 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.サイコシード_boost_spdef,
                 subject_spec="source:self",
+                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 サイコシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.サイコシード_boost_spdef,

@@ -1553,6 +1553,19 @@ def test_ゴツゴツメット_非接触技では発動しない():
     assert attacker.hp == initial_hp
 
 
+def test_サイコシード_展開済みサイコフィールドに登場して発動():
+    """サイコシード: すでにサイコフィールドが展開されている場に登場（交代）してもとくぼう+1して消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ", item_name="サイコシード")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("サイコフィールド", 5),
+    )
+    raichu = battle._player_states[0].team[1]
+    t.run_switch(battle, 0, 1)
+    assert raichu.rank["spd"] == 1
+    assert not raichu.has_item()
+
+
 def test_サンのみ_HP25以下できゅうしょアップ状態():
     """サンのみ: HP1/4以下になった瞬間にきゅうしょアップ状態になる"""
     battle = t.start_battle(
