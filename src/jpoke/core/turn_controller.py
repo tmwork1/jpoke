@@ -238,6 +238,16 @@ class TurnController:
             state = self.battle.player_states[player]
 
             if state.has_switched:
+                # ききかいひ・だっしゅつパックなどの割り込み交代によって、この
+                # ターンの本来の行動コマンド（例: MOVE_x）が一度も
+                # pop_command() されないまま予約リストに残っていることがある
+                # （交代が優先されて技コマンドの実行がスキップされるため）。
+                # 残しておくと次のターンの新しいコマンドの手前に古いコマンドが
+                # 残留し、交代後のポケモンに対して不正なインデックスの技コマンド
+                # が誤って使われてしまう（IndexError の原因）。そのためここで
+                # 使われなかったコマンドを破棄しておく。
+                if self.battle.is_new_turn() and state.command_reserved():
+                    state.pop_command()
                 continue
 
             if self.battle.is_new_turn():

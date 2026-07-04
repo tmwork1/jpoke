@@ -3332,6 +3332,8 @@ def リミットシールド_revert_form(battle: Battle, ctx: EventContext, valu
 def リミットシールド_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """リミットシールド特性: ターン終了時にHPに応じてフォルムを切り替える。"""
     mon = ctx.source
+    if mon.name not in (METEONO_CORE, METEONO_METEOR):
+        return HandlerReturn(value=value)
     if mon.hp * 2 > mon.max_hp:
         if mon.set_form(METEONO_METEOR):
             _announce_ability_triggered(battle, mon)

@@ -9,6 +9,50 @@ from jpoke.enums import Command
 from . import test_utils as t
 
 
+def test_ききかいひ_割り込み交代で使われなかった行動コマンドが次のターンに誤って使われない():
+    """seed=214 (IndexError@command_manager.py:resolve_move_from_command:133) の回帰テスト。
+
+    ききかいひ・だっしゅつパックなどの割り込み交代が、対象プレイヤー自身の行動順が
+    来る前に発動すると、そのプレイヤーが元々予約していた行動コマンド（交代前の
+    ポケモン用の技コマンド）がpop_command()されないまま予約リストに残ってしまう。
+    次のターンに新しく選択されたコマンドがFIFOの末尾に積まれるため、古い（交代前の
+    ポケモン用の）コマンドが先に使われ、交代後の（技が少ない）ポケモンのmovesに
+    対して範囲外アクセスしIndexErrorになっていた。
+
+    交代後のポケモンが技を1つしか持たない状態で、交代前に予約していた2番目の技
+    コマンド（index=1）が破棄され、次のターンの行動順解決でIndexErrorが発生しない
+    ことを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[
+            Pokemon(
+                "カビゴン", ability_name="ききかいひ",
+                move_names=["まるくなる", "たいあたり"],
+            ),
+            Pokemon("コラッタ", move_names=["たいあたり"]),
+        ],
+    )
+    player0, player1 = battle.players
+    defender = battle.actives[1]
+    defender.hp = defender.max_hp // 2 + 1
+    t.fix_damage(battle, 1)
+
+    # Turn1: ピカチュウが先制して攻撃し、カビゴンのHPが半分以下になってききかいひが
+    # 発動する。この時点でカビゴンが元々予約していたMOVE_1（たいあたり）は
+    # 使われないまま予約リストに残ってしまう箇所が今回のバグの原因。
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_1})
+
+    assert battle.actives[1].name == "コラッタ"
+
+    # Turn2: 交代後のコラッタは技を1つ（index=0）しか持たない。
+    # 修正前は残留したMOVE_1（index=1）が誤って使われ、
+    # command_manager.resolve_move_from_commandでIndexErrorが発生していた。
+    battle.step()
+
+    assert battle.turn == 2  # 例外なく2ターン目が完了したことを確認
+
+
 def test_こだわり_技を4つ持つ状態で控えが5匹以上いてもコマンド取得でIndexErrorが発生しない():
     """seed=109 (IndexError@volatile.py:restrict_commands:126) の回帰テスト。
 
