@@ -27,13 +27,15 @@ class ItemHandler(Handler):
                  func: Callable,
                  subject_spec: RoleSpec,
                  priority: int = 100,
-                 once: bool = False) -> None:
+                 once: bool = False,
+                 ignored_disable_reasons: frozenset[str] = frozenset()) -> None:
         super().__init__(
             func=func,
             source="item",
             subject_spec=subject_spec,
             priority=priority,
             once=once,
+            ignored_disable_reasons=ignored_disable_reasons,
         )
 
 def announce_item_triggered(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1158,8 +1160,9 @@ def でんきだま_boost_atk(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def とくせいガード_check_ability_disable(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
-    """とくせいガード: 特性の無効化を防ぐ。"""
+def とくせいガード_check_ability_disable(battle: Battle, ctx: EventContext, _value: Any) -> HandlerReturn:
+    """とくせいガード: 特性の変更・無効化を防ぐ。"""
+    _announce_item_triggered(battle, ctx.source)
     return HandlerReturn(value=True, stop_event=True)
 
 

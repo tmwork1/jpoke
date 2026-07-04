@@ -666,9 +666,13 @@ def しんぴのまもり_set_side_field(battle: Battle, ctx: AttackContext, val
 def シンプルビーム_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """シンプルビームの失敗条件チェック。
 
-    対象の特性が protected フラグを持つ場合は失敗する。
+    対象の特性が protected フラグを持つ場合、
+    または対象の特性変更がとくせいガード等で防がれる場合は失敗する。
     """
-    if ctx.defender.ability.has_flag("protected"):
+    if (
+        ctx.defender.ability.has_flag("protected")
+        or battle.ability_manager.is_change_blocked(ctx.defender)
+    ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "シンプルビーム"}
@@ -739,11 +743,14 @@ def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: A
 
     使用者または対象の特性が protected フラグを持つ場合は失敗する。
     かたやぶりを持っていても、この失敗条件は回避できない。
+    使用者または対象がとくせいガードを持ち特性の変更が防がれる場合も失敗する。
     """
     assert ctx.defender is not None
     if (
         ctx.attacker.ability.has_flag("protected")
         or ctx.defender.ability.has_flag("protected")
+        or battle.ability_manager.is_change_blocked(ctx.attacker)
+        or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -1039,6 +1046,7 @@ def なかまづくり_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     - 対象の特性が protected フラグを持つ（上書きできない特性）
     - 使用者の特性が uncopyable フラグを持つ（コピーできない特性）
     - 使用者と対象が同じ特性である
+    - 対象の特性変更がとくせいガード等で防がれる
     """
     assert ctx.defender is not None
     attacker_ability = ctx.attacker.ability.base_name
@@ -1048,6 +1056,7 @@ def なかまづくり_can_apply(battle: Battle, ctx: AttackContext, value: Any)
         or ctx.defender.ability.has_flag("protected")
         or ctx.attacker.ability.has_flag("uncopyable")
         or attacker_ability == defender_ability
+        or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -1091,12 +1100,14 @@ def なやみのタネ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
 
     対象の特性が protected フラグを持つ場合、
     または「ふみん」「なまけ」の場合は失敗する。
+    対象の特性変更がとくせいガード等で防がれる場合も失敗する。
     """
     assert ctx.defender is not None
     ability = ctx.defender.ability
     if (
         ability.has_flag("protected")
         or ability.name in ("ふみん", "なまけ")
+        or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -1118,8 +1129,12 @@ def なりきり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
     対象の特性が uncopyable フラグを持つ場合は失敗する
     （ふしぎなまもり・かわりものなど固有の特性）。
+    使用者自身の特性変更がとくせいガード等で防がれる場合も失敗する。
     """
-    if ctx.defender.ability.has_flag("uncopyable"):
+    if (
+        ctx.defender.ability.has_flag("uncopyable")
+        or battle.ability_manager.is_change_blocked(ctx.attacker)
+    ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "なりきり"}

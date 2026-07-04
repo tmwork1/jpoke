@@ -71,6 +71,17 @@ class GameEffect:
         """
         return not self._disabled_reasons
 
+    def enabled_ignoring(self, reasons: frozenset[str]) -> bool:
+        """指定した無効化理由を除いたうえで、効果が有効かどうかを判定する。
+
+        Args:
+            reasons: 無視する無効化理由の集合
+
+        Returns:
+            指定理由を除いた無効化理由が存在しなければTrue
+        """
+        return not (self._disabled_reasons - reasons)
+
     @property
     def consumed(self) -> bool:
         """効果が自己無効化されているかを判定する。

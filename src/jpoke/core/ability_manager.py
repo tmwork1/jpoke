@@ -57,6 +57,18 @@ class AbilityManager:
         """
         mon.ability.unregister_handlers(self._events, mon)
 
+    def is_change_blocked(self, mon: Pokemon) -> bool:
+        """特性の変更・入れ替えがとくせいガード等により防がれるかどうかを判定する。
+
+        Args:
+            mon: 特性を変更しようとしているポケモン
+
+        Returns:
+            変更が防がれる場合はTrue
+        """
+        ctx = EventContext(source=mon)
+        return self._events.emit(Event.ON_CHECK_ABILITY_DISABLE, ctx, False)
+
     def change_ability(self, mon: Pokemon, ability: AbilityName) -> None:
         """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。
         Args:
@@ -64,6 +76,9 @@ class AbilityManager:
             ability: 新しい特性の名前
         """
         if mon.ability.base_name == ability:
+            return
+
+        if self.is_change_blocked(mon):
             return
 
         ctx = EventContext(source=mon)
@@ -86,10 +101,16 @@ class AbilityManager:
     def swap_ability(self, mon1: Pokemon, mon2: Pokemon) -> None:
         """2体のポケモンの特性を入れ替える。
 
+        どちらかの特性の変更がとくせいガード等により防がれる場合、
+        入れ替えは行われない（片方だけ入れ替わることはない）。
+
         Args:
             mon1: 1体目のポケモン
             mon2: 2体目のポケモン
         """
+        if self.is_change_blocked(mon1) or self.is_change_blocked(mon2):
+            return
+
         ability1 = mon1.ability.base_name
         ability2 = mon2.ability.base_name
 

@@ -47,6 +47,7 @@ class Handler:
     priority: int = 100
     once: bool = False
     skip_subject_check: bool = False  # ハンドラの主体の照合をスキップするか
+    ignored_disable_reasons: frozenset[str] = field(default_factory=frozenset)  # 無効化理由のうち無視するもの（例: とくせいガードはぶきように影響されない）
     role: ContextRole = field(init=False)
     side: Side = field(init=False)
 

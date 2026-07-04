@@ -1216,6 +1216,8 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.とくせいガード_check_ability_disable,
                 subject_spec="source:self",
                 priority=200,
+                # 所持者の特性がぶきようであっても道具の効果は発動する
+                ignored_disable_reasons=frozenset({"ぶきよう"}),
             ),
         }
     ),

@@ -200,7 +200,7 @@ class EventManager:
                 if not subject.ability.enabled:
                     return False
             case "item":
-                if not subject.item.enabled:
+                if not subject.item.enabled_ignoring(rh.handler.ignored_disable_reasons):
                     return False
             case "ailment":
                 if not subject.ailment.is_active:
