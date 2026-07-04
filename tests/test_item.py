@@ -1688,6 +1688,33 @@ def test_サンのみ_HP25以下できゅうしょアップ状態():
     assert not mon.has_item()
 
 
+def test_サンのみ_すでにきゅうしょアップ状態のときは発動しない():
+    """サンのみ: すでにきゅうしょアップ状態のときはHPが1/4以下でも発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="サンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2)
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.has_item()
+
+
+def test_サンのみ_ほおばるでHPに関わらず発動する():
+    """サンのみ: ほおばるで消費するときは残りHPに関わらず発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="サンのみ", move_names=["ほおばる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.hp == mon.max_hp
+    t.run_move(battle, 0)
+    assert mon.has_volatile("きゅうしょアップ")
+    assert not mon.has_item()
+
+
 def test_しめつけバンド_バインドダメージ増加():
     """しめつけバンド: バインドダメージを最大HPの1/6に増加する"""
     battle = t.start_battle(
