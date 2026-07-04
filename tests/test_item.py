@@ -4941,6 +4941,46 @@ def test_ヤタピのみ_とくこうランクが最大のとき発動しない(
     assert mon.has_item()
 
 
+def test_ゆきだま_あまのじゃくでA最小のとき発動しない():
+    """ゆきだま: あまのじゃく所持者のこうげきランクが最小のとき発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
+        team1=[Pokemon("カビゴン", item_name="ゆきだま", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["atk"] = -6
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == -6
+    assert foe.has_item()
+
+
+def test_ゆきだま_あまのじゃくで下降():
+    """ゆきだま: あまのじゃく所持者はこうげきランクが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
+        team1=[Pokemon("カビゴン", item_name="ゆきだま", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == -1
+    assert not foe.has_item()
+
+
+def test_ゆきだま_かたやぶりのこおり技であまのじゃくでも上昇():
+    """ゆきだま: かたやぶりの効果があるこおり技に対してはあまのじゃくでもこうげきランクが1段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["こなゆき"])],
+        team1=[Pokemon("ピカチュウ", item_name="ゆきだま", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 1
+    assert not foe.has_item()
+
+
 def test_ゆきだま_こおり以外では発動しない():
     """ゆきだま: こおり以外の技では発動しない"""
     battle = t.start_battle(
@@ -4950,12 +4990,12 @@ def test_ゆきだま_こおり以外では発動しない():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["def"] == 0
+    assert foe.rank["atk"] == 0
     assert foe.has_item()
 
 
-def test_ゆきだま_こおり被弾でB上昇():
-    """ゆきだま: こおり技でダメージを受けたときぼうぎょ+1"""
+def test_ゆきだま_こおり被弾でA上昇():
+    """ゆきだま: こおり技でダメージを受けたときこうげき+1"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
         team1=[Pokemon("カビゴン", item_name="ゆきだま")],
@@ -4963,8 +5003,35 @@ def test_ゆきだま_こおり被弾でB上昇():
     )
     foe = battle.actives[1]
     t.run_move(battle, 0)
-    assert foe.rank["def"] == 1
+    assert foe.rank["atk"] == 1
     assert not foe.has_item()
+
+
+def test_ゆきだま_たんじゅんで2段階上昇():
+    """ゆきだま: たんじゅん所持者はこうげきランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
+        team1=[Pokemon("カビゴン", item_name="ゆきだま", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 2
+    assert not foe.has_item()
+
+
+def test_ゆきだま_ランク上限で発動しない():
+    """ゆきだま: こうげきランクが最大のとき発動しない（アイテムも消費されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こなゆき"])],
+        team1=[Pokemon("カビゴン", item_name="ゆきだま")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["atk"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 6
+    assert foe.has_item()
 
 
 def test_ラムのみ_ターン終了で状態異常回復():

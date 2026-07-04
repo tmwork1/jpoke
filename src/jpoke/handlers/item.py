@@ -1667,9 +1667,9 @@ def やわらかいすな_modify_power_by_type(battle: Battle, ctx: AttackContex
     return _modify_power_by_type(ctx.move, value, type_="じめん", modifier=4915)
 
 
-def ゆきだま_boost_defense_on_ice_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ゆきだま: こおり技でダメージを受けたときぼうぎょ+1。"""
-    return _boost_stat_on_type_hit(battle, ctx, value, type_="こおり", stats={"def": +1})
+def ゆきだま_boost_attack_on_ice_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ゆきだま: こおり技でダメージを受けたときこうげき+1。"""
+    return _boost_stat_on_type_hit(battle, ctx, value, type_="こおり", stats={"atk": +1})
 
 
 def ようせいのハネ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

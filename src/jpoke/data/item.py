@@ -1789,7 +1789,7 @@ ITEMS: dict[ItemName, ItemData] = {
         fling_power=30,
         handlers={
             Event.ON_DAMAGE_HIT: h.ItemHandler(
-                h.ゆきだま_boost_defense_on_ice_hit,
+                h.ゆきだま_boost_attack_on_ice_hit,
                 subject_spec="defender:self",
             )
         }
