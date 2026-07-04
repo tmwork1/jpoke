@@ -2011,6 +2011,10 @@ def リフレッシュ_cure_ailment(battle: Battle, ctx: AttackContext, value: A
     """
     mon = ctx.attacker
     if not mon.ailment.is_active:
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload={"reason": "リフレッシュ_状態異常なし"},
+        )
         return HandlerReturn(value=False, stop_event=True)
     battle.ailment_manager.remove(mon)
     return HandlerReturn(value=value)

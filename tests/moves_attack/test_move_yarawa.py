@@ -42,6 +42,49 @@ def test_やまあらし_確定急所():
     assert battle.move_executor.critical is True
 
 
+def test_ゆきなだれ_ダメージを受けていない場合通常威力():
+    """ゆきなだれ: そのターン相手からダメージを受けていない場合、威力補正なし（power_modifier=4096）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ゆきなだれ_物理ダメージを受けた場合威力が2倍():
+    """ゆきなだれ: そのターン相手から物理ダメージを受けた場合、威力が2倍（power_modifier=8192）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
+        team1=[Pokemon("カビゴン", move_names=["ひっかく"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 先に相手の物理技でダメージを受ける
+    t.run_move(battle, 1)
+    assert attacker.last_physical_damage_received > 0
+    # ゆきなだれ実行: 物理被ダメあり → 威力2倍
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_ゆきなだれ_特殊ダメージを受けた場合も威力が2倍():
+    """ゆきなだれ: そのターン相手から特殊ダメージを受けた場合も、威力が2倍（power_modifier=8192）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ゆきなだれ"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    # 先に相手の特殊技でダメージを受ける
+    t.run_move(battle, 1)
+    assert attacker.last_special_damage_received > 0
+    # ゆきなだれ実行: 特殊被ダメあり → 威力2倍
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
 def test_ゆめくい_ねむり状態でない相手には失敗する():
     """ゆめくい: 相手がねむり状態でない場合は失敗し、攻撃者のHPは変化しない。"""
     battle = t.start_battle(
