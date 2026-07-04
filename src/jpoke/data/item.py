@@ -890,6 +890,10 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.ジャポのみ_retaliate_physical,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
+                # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
+                # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
@@ -1934,6 +1938,10 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.レンブのみ_retaliate_special,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「弱点半減のきのみ/ナゾのみ/ジャポのみ/
+                # レンブのみはマジシャンより先に発動する」。マジシャン特性ハンドラ(priority=100)
+                # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),

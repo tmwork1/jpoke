@@ -2031,6 +2031,23 @@ def test_じゃくてんほけん_等倍では発動しない():
     assert foe.has_item()
 
 
+def test_ジャポのみ_マジシャンより先に発動して奪われない():
+    """ジャポのみ: 特性マジシャンの物理技を受けても、ジャポのみが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずジャポのみが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="ジャポのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.hp < attacker.max_hp
+    assert not foe.has_item()
+    assert not attacker.has_item()
+
+
 def test_ジャポのみ_マジックガードには発動しない():
     """ジャポのみ: 攻撃してきた相手がマジックガード持ちの場合はダメージを与えず消費もされない"""
     battle = t.start_battle(
@@ -5151,6 +5168,36 @@ def test_レッドカード_攻撃側を強制交代():
     t.run_move(battle, 1)
     assert battle.actives[1].name == "ライチュウ"
     assert not battle.actives[0].has_item()
+
+
+def test_レンブのみ_マジシャンより先に発動して奪われない():
+    """レンブのみ: 特性マジシャンの特殊技を受けても、レンブのみが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずレンブのみが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="レンブのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.hp < attacker.max_hp
+    assert not foe.has_item()
+    assert not attacker.has_item()
+
+
+def test_レンブのみ_マジックガードには発動しない():
+    """レンブのみ: 攻撃してきた相手がマジックガード持ちの場合はダメージを与えず消費もされない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"], ability_name="マジックガード")],
+        team1=[Pokemon("カビゴン", item_name="レンブのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+    assert battle.actives[1].has_item()
 
 
 def test_レンブのみ_特殊被弾で攻撃者にダメージ():
