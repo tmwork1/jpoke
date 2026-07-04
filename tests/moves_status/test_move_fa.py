@@ -1,0 +1,61 @@
+"""変化技ハンドラの単体テスト（ふぁ行）。"""
+
+import pytest
+
+from jpoke import Pokemon
+from .. import test_utils as t
+
+
+def test_ファストガード_priority0技は通過する():
+    """ファストガード: priority=0 の通常技は防がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile0={"ファストガード": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    hp_before = defender.hp
+    t.run_move(battle, 1)  # カビゴンがたいあたり（priority=0）を使う
+
+    # ファストガードはpriority=0の技を防がないこと
+    assert defender.hp < hp_before
+
+
+def test_ファストガード_priority1技を防ぐ():
+    """ファストガード: priority=1 のでんこうせっかを防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["でんこうせっか"])],
+        volatile0={"ファストガード": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    hp_before = defender.hp
+    t.run_move(battle, 1)  # カビゴンがでんこうせっかを使う
+
+    # ファストガードがpriority=1の技を防いでいること
+    assert defender.hp == hp_before
+
+
+def test_ファストガード_連続使用で失敗する():
+    """ファストガード: 2ターン連続で使用すると2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ファストガード"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: ファストガード成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("ファストガード")
+
+    # ターン終了でファストガードvolatileが解除される
+    t.end_turn(battle)
+    assert not attacker.has_volatile("ファストガード")
+
+    # 2ターン目: 連続使用で失敗
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("ファストガード")
