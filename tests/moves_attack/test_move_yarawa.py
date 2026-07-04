@@ -129,6 +129,50 @@ def test_らいげき_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_ライジングボルト_エレキフィールドかつ相手接地で威力2倍になる():
+    """ライジングボルト: エレキフィールド中かつ相手が接地している場合、威力が2倍になる。
+    さらにエレキフィールドのでんき技1.3倍ボーナスも別枠で乗るため、
+    power_modifier = 4096 * (8192/4096) * (5325/4096) = 10650。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ライジングボルト"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    # 8192(自己ボーナス) → 8192 * 5325 // 4096 = 10650(フィールドボーナス込み)
+    assert battle.damage_calculator.power_modifier == 10650
+
+
+def test_ライジングボルト_フィールドなしのとき威力補正なし():
+    """ライジングボルト: エレキフィールドが発動していない場合、威力補正はない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ライジングボルト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ライジングボルト_相手が浮遊している場合は威力2倍が乗らない():
+    """ライジングボルト: エレキフィールド中でも相手が浮いている場合、自己ボーナスの威力2倍は乗らない。
+    ただしエレキフィールドのでんき技1.3倍ボーナスは攻撃側の設置状況で判定するため乗る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ライジングボルト"])],
+        team1=[Pokemon("ピジョット")],
+        terrain=("エレキフィールド", 5),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 5325
+
+
 def test_りゅうのいぶき_まひが発動する():
     """りゅうのいぶき: 30%でまひを付与する。"""
     battle = t.start_battle(
@@ -307,6 +351,66 @@ def test_ロックブラスト_複数ヒットする():
         t.build_context(battle, atk_idx=0)
     )
     assert 2 <= hit_count <= 5
+
+
+def test_ワイドガード_シングルバトルでは相手の攻撃を防がない():
+    """ワイドガード: シングルバトルでは複数対象技が存在しないため、通常通り技を使用でき、
+    相手の攻撃を防ぐ効果は発生しない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ワイドガード"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    defender = battle.actives[0]
+    hp_before = defender.hp
+    t.run_move(battle, 1)
+    assert defender.hp < hp_before
+
+
+def test_ワイドフォース_サイコフィールドかつ自分接地で威力1_5倍になる():
+    """ワイドフォース: サイコフィールド中かつ自分が接地している場合、威力が1.5倍になる。
+    さらにサイコフィールドのエスパー技1.3倍ボーナスも別枠で乗るため、
+    power_modifier = 4096 * (6144/4096) * (5325/4096) = 7987。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ワイドフォース"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("サイコフィールド", 5),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    # 6144(自己ボーナス) → 6144 * 5325 // 4096 = 7987(フィールドボーナス込み)
+    assert battle.damage_calculator.power_modifier == 7987
+
+
+def test_ワイドフォース_フィールドなしのとき威力補正なし():
+    """ワイドフォース: サイコフィールドが発動していない場合、威力補正はない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ワイドフォース"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ワイドフォース_自分が浮遊している場合は威力補正が乗らない():
+    """ワイドフォース: サイコフィールド中でも自分が浮いている場合、自己ボーナス・
+    フィールドボーナスのいずれも判定は自分の接地状況で行うため、どちらも乗らない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ロトム", ability_name="ふゆう", move_names=["ワイドフォース"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("サイコフィールド", 5),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
 
 
 def test_ワイルドボルト_使用後に攻撃者が反動ダメージを受ける():
