@@ -1339,6 +1339,38 @@ def test_ふんか_HP満タンのとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_ぶきみなじゅもん_相手が技未使用ならPP変化なし():
+    """ぶきみなじゅもん: 相手の executed_move が None の場合はPPを変化させない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    pp_before = move.pp
+    # カビゴンはまだ技を使っていない（executed_move=None）
+    t.run_move(battle, 0)
+    assert move.pp == pp_before
+
+
+def test_ぶきみなじゅもん_相手の直前技PPが3減る():
+    """ぶきみなじゅもん: 相手が前のターンに使った技のPPが3減る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンに技を使わせて executed_move を設定する
+    t.run_move(battle, 1)
+    pp_after_use = move.pp
+    # ぶきみなじゅもんを使う
+    t.run_move(battle, 0)
+    assert move.pp == pp_after_use - 3
+
+
 def test_ぶちかまし_防御と特防が各1段階低下する():
     """ぶちかまし: 命中時に使用者のBとDが各1段階低下する（確率100%）。"""
     battle = t.start_battle(
