@@ -5,6 +5,34 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_ないしょばなし_とくこうが1段階下がる():
+    """ないしょばなし: 命中すると相手のとくこうが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ないしょばなし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["spa"] == -1
+
+
+def test_ないしょばなし_みがわりを貫通してとくこうが下がる():
+    """ないしょばなし: soundラベルを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ないしょばなし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["spa"] == -1
+    assert defender.volatiles["みがわり"].hp == 999
+
+
 def test_なかまづくり_uncopyableフラグ持ちを使用者が持つと失敗():
     """なかまづくり: 使用者がイリュージョン（uncopyableフラグ持ち）なら失敗する"""
     battle = t.start_battle(
