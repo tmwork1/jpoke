@@ -128,11 +128,11 @@ MOVES: dict[MoveName, MoveData] = {
         category="physical",
         pp=5,
         power=180,
-        accuracy=80,
+        accuracy=95,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.Vジェネレート_lower_defender_spd_spe,
+                ha.Vジェネレート_lower_attacker_def_spd_spe,
             )
         }
     ),

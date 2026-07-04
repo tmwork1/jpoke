@@ -2180,7 +2180,7 @@ def ふんどのこぶし_calc_power(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value * (1 + fainted))
 
 
-def Vジェネレート_lower_defender_spd_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def Vジェネレート_lower_attacker_def_spd_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1, "spe": -1})
 
 
