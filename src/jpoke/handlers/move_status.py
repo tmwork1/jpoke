@@ -1679,6 +1679,17 @@ def ふるいたてる_modify_attacker_stats(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spa": 1})
 
 
+def ブレイブチャージ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ブレイブチャージ: 自分のとくこう・とくぼうを1段階ずつ上げ、状態異常を回復する。
+
+    ランク上限・状態異常なしのいずれの場合でも技自体は失敗しない。
+    """
+    modify_attacker_stats(battle, ctx, value, stats={"spa": 1, "spd": 1})
+    if ctx.attacker.ailment.is_active:
+        battle.ailment_manager.remove(ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def へびにらみ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 

@@ -7056,7 +7056,11 @@ MOVES: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=15,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ブレイブチャージ_apply,
+            ),
+        },
     ),
     "ブレイブバード": MoveData(
         type="ひこう",
