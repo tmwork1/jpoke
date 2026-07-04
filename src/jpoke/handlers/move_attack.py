@@ -92,6 +92,10 @@ def アイスハンマー_lower_attacker_spe(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"spe": -1})
 
 
+def あおいほのお_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.2)
+
+
 def アクアステップ_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 

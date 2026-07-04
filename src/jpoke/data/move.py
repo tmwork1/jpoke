@@ -216,7 +216,12 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=130,
         accuracy=85,
-        handlers={},  # 追加効果なし
+        flags={"secondary_effect"},
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.あおいほのお_apply_burn_to_defender,
+            )
+        }
     ),
     "アクアカッター": MoveData(
         type="みず",
