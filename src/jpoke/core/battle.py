@@ -15,7 +15,7 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, AbilityDisabledReason
+    HPChangeReason, AbilityDisabledReason, AbilityName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
 
@@ -470,7 +470,7 @@ class Battle:
         """
         self.move_executor.run_move(attacker, move)
 
-    def change_ability(self, mon: Pokemon, ability: str) -> None:
+    def change_ability(self, mon: Pokemon, ability: AbilityName) -> None:
         """ポケモンの特性を更新する（AbilityManagerへの委譲）。"""
         self.ability_manager.change_ability(mon, ability)
 

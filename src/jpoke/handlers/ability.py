@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Move
 
 from jpoke.types import RoleSpec, Type, Stat, WeatherName, TerrainName, \
-    AilmentName, VolatileName, ItemDisabledReason, MoveFlag
+    AilmentName, VolatileName, ItemDisabledReason, MoveFlag, AbilityName
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
 from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
@@ -2966,7 +2966,7 @@ def マルチタイプ_block_item_change(battle: Battle, ctx: EventContext, valu
 def _overwrite_ability_on_contact(battle: Battle,
                                   ctx: AttackContext,
                                   *,
-                                  new_ability: str) -> bool:
+                                  new_ability: AbilityName) -> bool:
     """直接攻撃でダメージを受けたとき攻撃者の特性を書き換える共通処理。
 
     Returns:

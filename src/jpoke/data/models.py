@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 
-from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName
+from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName, AbilityName
 
 
 class PokemonData:
@@ -15,7 +15,7 @@ class PokemonData:
         self.pre_evolution: PokemonName | Literal[""] = data.get("pre_evolution", "")
         self.weight: float = data["weight"]
         self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
-        self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
+        self.abilities: list[AbilityName] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
         self.base: list[int] = [data[s] for s in ["H", "A", "B", "C", "D", "S"]]
 
         if not self.abilities:
@@ -27,7 +27,7 @@ class AbilityData:
     flags: set[AbilityFlag] = field(default_factory=set)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
-    name: str = ""
+    name: AbilityName = ""
 
 
 @dataclass

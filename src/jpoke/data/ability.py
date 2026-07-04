@@ -9,6 +9,7 @@ from jpoke.core import LethalHandler
 from jpoke.handlers import ability as h
 from jpoke.handlers import ability_paradox as paradox
 from jpoke.handlers import lethal as l
+from jpoke.types import AbilityName
 
 from .models import AbilityData
 
@@ -19,7 +20,7 @@ def common_setup():
         ABILITIES[name].name = name
 
 
-ABILITIES: dict[str, AbilityData] = {
+ABILITIES: dict[AbilityName, AbilityData] = {
     "": AbilityData(name=""),
     "ARシステム": AbilityData(
         flags={

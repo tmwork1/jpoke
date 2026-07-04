@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
 from jpoke.types import Nature, Type, Stat, Gender, \
-    AilmentName, VolatileName, BoostSource, PokemonName
+    AilmentName, VolatileName, BoostSource, PokemonName, AbilityName
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
@@ -51,7 +51,7 @@ class Pokemon:
                  gender: Gender = "",
                  nature: Nature = "まじめ",
                  level: int = 50,
-                 ability_name: str = "",
+                 ability_name: AbilityName = "",
                  item_name: str = "",
                  move_names: list[str] = ["はねる"],
                  tera_type: Type | None = None) -> None:
@@ -75,7 +75,7 @@ class Pokemon:
         self.tera_type: Type = tera_type or self.base_types[0]
 
         self.ability: Ability = Ability(ability_name)
-        self.base_ability_name: str = ability_name
+        self.base_ability_name: AbilityName = ability_name
 
         self.item = Item(item_name)
         self.last_lost_item_name: str = ""

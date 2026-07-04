@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.data import ABILITIES
-from jpoke.types import AbilityState
+from jpoke.types import AbilityState, AbilityName
 
 from .effect import GameEffect
 
@@ -21,7 +21,7 @@ class Ability(GameEffect):
         state: 特性の状態を表す文字列。必要に応じて Literal を拡張する。
     """
 
-    def __init__(self, name: str = "") -> None:
+    def __init__(self, name: AbilityName = "") -> None:
         """特性を初期化する。
 
         Args:

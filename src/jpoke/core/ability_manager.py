@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.utils import fast_copy
-from jpoke.types import AbilityDisabledReason
+from jpoke.types import AbilityDisabledReason, AbilityName
 from jpoke.enums import Event
 from jpoke.model import Ability
 from .context import EventContext
@@ -58,7 +58,7 @@ class AbilityManager:
         """
         mon.ability.unregister_handlers(self._events, mon)
 
-    def change_ability(self, mon: Pokemon, ability: str) -> None:
+    def change_ability(self, mon: Pokemon, ability: AbilityName) -> None:
         """ポケモンの特性を更新し、ハンドラの登録/解除やイベントの発火を行う。
         Args:
             mon: 特性を変更するポケモン
