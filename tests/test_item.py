@@ -441,6 +441,46 @@ def test_イバンのみ_HP25以下でフラグが立つ():
     assert mon.has_item()  # 消費は次の攻撃時
 
 
+def test_イバンのみ_きんちょうかんの相手がいると消費されない():
+    """イバンのみ: 相手が特性きんちょうかんを持つときはフラグが立ってもアイテムが消費されず、
+    行動順も変わらない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="イバンのみ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="きんちょうかん", move_names=["たいあたり"])],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1  # フラグは立つ
+
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[1]  # きんちょうかんの影響で通常通りピカチュウが先攻
+    assert mon.has_item()  # アイテムは消費されない
+
+
+def test_イバンのみ_こんらんの自傷では発動しない():
+    """イバンのみ: こんらんの自傷ダメージ(reason=self_attack)でHPが1/4以下になってもフラグが
+    立たない（第五世代以降の仕様）。その後、自傷以外のダメージで改めてHPが1/4以下になると
+    フラグが立つ。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="イバンのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1, reason="self_attack")
+    assert mon.hp == mon.max_hp // 4
+    assert mon.item.count == 0
+    assert mon.has_item(), "こんらんの自傷ダメージでアイテムが消費された"
+
+    # HPをthreshold超に戻し、通常ダメージで改めて1/4以下に下げるとフラグが立つ
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+
+
 def test_イバンのみ_先制で行動する():
     """イバンのみ: フラグが立った後は相手より遅くても先に行動できる。"""
     # カビゴン（遅い）にイバンのみを持たせ、ピカチュウ（速い）より先に行動することを確認
