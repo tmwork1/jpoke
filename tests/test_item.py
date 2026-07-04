@@ -2521,6 +2521,58 @@ def test_だいしらたま_通常のパルキアへ渡せない():
     assert defender.name == "パルキア"
 
 
+@pytest.mark.parametrize("move_name", ["はたきおとす", "どろぼう"])
+def test_だいはっきんだま_ギラティナから奪えない(move_name):
+    """だいはっきんだま: ギラティナ(オリジン)が持っている間ははたきおとす・どろぼう等で奪われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("ギラティナ(アナザー)", item_name="だいはっきんだま")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_item("だいはっきんだま")
+
+
+def test_だいはっきんだま_トリックで交換されない():
+    """だいはっきんだま: ギラティナ(オリジン)が持っている間はトリック・すりかえで交換されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("ギラティナ(アナザー)", item_name="だいはっきんだま")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "たべのこし"
+    assert defender.item.name == "だいはっきんだま"
+
+
+def test_だいはっきんだま_フォルムチェンジ():
+    """だいはっきんだま: ギラティナ(アナザー)が持って登場するとオリジンフォルムになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギラティナ(アナザー)", item_name="だいはっきんだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ギラティナ(オリジン)"
+
+
+def test_だいはっきんだま_通常のギラティナへ渡せない():
+    """だいはっきんだま: アナザーフォルムのギラティナへはトリック等で渡すことができない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="だいはっきんだま")],
+        team1=[Pokemon("ギラティナ(アナザー)")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "だいはっきんだま"
+    assert not defender.has_item()
+    assert defender.name == "ギラティナ(アナザー)"
+
+
 def test_だっしゅつパック_0ターン目にいかくで交代():
     """だっしゅつパック: 能力ダウンで交代"""
     battle = t.start_battle(

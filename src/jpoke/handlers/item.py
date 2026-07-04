@@ -1059,6 +1059,19 @@ def だいはっきんだま_modify_power(battle: Battle, ctx: AttackContext, va
     return _dedicated_item_modify_power(ctx, value, frozenset({"ギラティナ(オリジン)"}), ("ドラゴン", "ゴースト"))
 
 
+def だいはっきんだま_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """だいはっきんだま: ギラティナが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    ギラティナ以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    return _dedicated_item_prevent_item_change(ctx, value, "ギラティナ")
+
+
+def だいはっきんだま_prevent_transfer_to_base_form(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """だいはっきんだま: アナザーフォルムのギラティナへトリック・すりかえ等で渡すことを防ぐ。"""
+    return _dedicated_item_prevent_transfer_to_base_form(ctx, value, "ギラティナ(アナザー)")
+
+
 def だっしゅつパック_reserve_switch(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     # valueは{stat: change}の辞書
     player = battle.get_player(ctx.target)
