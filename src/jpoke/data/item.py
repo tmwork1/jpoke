@@ -837,6 +837,15 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.しろいハーブ_cancel_stat_drop,
                 subject_spec="target:self",
             ),
+            Event.ON_SWITCH_IN: h.ItemHandler(
+                h.しろいハーブ_reset_if_already_lowered,
+                subject_spec="source:self",
+                priority=160,  # docs/spec/turn.md ON_SWITCH_IN: 「160 しろいハーブの発動」
+            ),
+            Event.ON_ITEM_GAINED: h.ItemHandler(
+                h.しろいハーブ_reset_if_already_lowered,
+                subject_spec="source:self",
+            ),
         }
     ),
     "しんかのきせき": ItemData(

@@ -1418,7 +1418,18 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         battle.ailment_manager.apply(ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx)
     elif item_name in ("おうじゃのしるし", "するどいキバ"):
         battle.volatile_manager.apply(ctx.defender, "ひるみ", source=ctx.attacker)
-    # TODO: しろいハーブ → 相手の下がったランクを0に戻す
+    elif item_name == "しろいハーブ":
+        # 相手の下がった能力ランクを全て0に戻す（対象がしろいハーブを持っている訳ではないため
+        # アイテムの発動宣言・消費は行わない）。
+        defender = ctx.defender
+        changed = {s: -v for s, v in defender.rank.items() if v < 0}
+        if changed:
+            for s in changed:
+                defender.rank[s] = 0
+            battle.add_event_log(
+                defender, LogCode.STAT_CHANGED,
+                payload={"stats": changed, "reason": "しろいハーブ"},
+            )
     # TODO: メンタルハーブ → 相手のメンタル系状態を回復
     # TODO: ラムのみ → 相手の状態異常・こんらんを回復
     # TODO: その他のきのみ・追加効果アイテム

@@ -51,6 +51,31 @@ def _announce_and_consume_item(battle: Battle, mon: Pokemon) -> None:
     _announce_item_triggered(battle, mon)
     battle.item_manager.consume_item(mon)
 
+def _reset_negative_ranks(battle: Battle, mon: Pokemon, reason: str) -> bool:
+    """能力ランクがマイナスのステータスを全て0に戻す（しろいハーブ・くろいきり等で使用）。
+
+    Event.ON_MODIFY_STAT を経由せず直接ランクを書き換えることで、この復元自体が
+    他の特性・アイテム（かちき・びんじょう等）を再度反応させないようにする。
+
+    Args:
+        battle: バトルインスタンス
+        mon: 対象のポケモン
+        reason: ログ記録用の理由文字列
+
+    Returns:
+        いずれかのランクが変化した場合True
+    """
+    changed = {s: -v for s, v in mon.rank.items() if v < 0}
+    if not changed:
+        return False
+    for s in changed:
+        mon.rank[s] = 0
+    battle.add_event_log(
+        mon, LogCode.STAT_CHANGED,
+        payload={"stats": changed, "reason": reason},
+    )
+    return True
+
 def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """メガストーン: メガシンカコマンドを追加する。"""
     mon = ctx.source
@@ -800,14 +825,29 @@ def シルクのスカーフ_modify_power_by_type(battle: Battle, ctx: AttackCon
 
 
 def しろいハーブ_cancel_stat_drop(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """しろいハーブ: 能力ランクが下がった結果マイナスになったとき、下がった能力を全て0に戻す。
+
+    2段階上がっている能力を2段階下げられた場合など、結果のランクが+0以上の場合は発動しない。
+    発動時はこの変化以外で既にマイナスになっている能力もまとめてリセットする。
+    """
     # value は actual_changes ({stat: 変化量})。今回の変化で負になったランクがあるか確認する。
     mon = ctx.target
     assert mon is not None
     triggered = any(v < 0 and mon.rank[s] < 0 for s, v in value.items())
-    if triggered:
-        for s in list(mon.rank.keys()):
-            if mon.rank[s] < 0:
-                mon.rank[s] = 0
+    if triggered and _reset_negative_ranks(battle, mon, reason="しろいハーブ"):
+        _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def しろいハーブ_reset_if_already_lowered(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """しろいハーブ: 場に出た時・アイテムを入手した時点で既に能力がマイナスの場合、即座に発動する。
+
+    バトンタッチで下がった能力を引き継いだ場合や、トリック等で入手した時点で
+    既に能力が下がっている場合に対応する。
+    """
+    mon = ctx.source
+    assert mon is not None
+    if _reset_negative_ranks(battle, mon, reason="しろいハーブ"):
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 

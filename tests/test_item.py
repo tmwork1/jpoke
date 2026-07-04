@@ -4,6 +4,7 @@ import math
 from typing import cast
 import pytest
 from jpoke import Pokemon
+from jpoke.enums import Interrupt
 from jpoke.model import Move
 from jpoke.types import Type
 from . import test_utils as t
@@ -1809,6 +1810,55 @@ def test_しろいハーブ_2回目の能力低下はキャンセルされない
     t.run_move(battle, 0)
     t.run_move(battle, 0)
     assert mon.rank["spa"] == -2
+
+
+def test_しろいハーブ_すでに能力が下がっている状態でアイテムを入手すると即座にリセットする():
+    """しろいハーブ: 既に能力が下がっている状態でアイテムを入手すると即座に発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["atk"] = -2
+    t.change_item(battle, mon, "しろいハーブ")
+    assert mon.rank["atk"] == 0
+    assert not mon.has_item()
+
+
+def test_しろいハーブ_なげつけると相手の下がった能力をリセットする():
+    """しろいハーブ: なげつけるで相手に投げつけると相手の下がった能力ランクをリセットする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="しろいハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    foe.rank["atk"] = -2
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 0
+    assert not attacker.has_item()
+
+
+def test_しろいハーブ_バトンタッチで引き継いだ下降ランクを場に出た瞬間にリセットする():
+    """しろいハーブ: バトンタッチで下がった能力を引き継いだ場合、場に出た瞬間に発動する"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", move_names=["バトンタッチ"]),
+            Pokemon("ライチュウ", item_name="しろいハーブ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = -2
+
+    t.run_move(battle, 0)
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+
+    new_mon = battle.actives[0]
+    assert new_mon.rank["atk"] == 0
+    assert not new_mon.has_item()
 
 
 def test_しろいハーブ_能力低下を1度だけキャンセル():
