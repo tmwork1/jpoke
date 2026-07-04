@@ -313,6 +313,9 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MODIFY_MOVE_TYPE: h.VolatileHandler(
                 h.そうでん_move_type,
                 subject_spec="attacker:self",
+                # めざめるダンス等、使用者のタイプを参照して技タイプを決定する効果よりも
+                # 後に評価し、でんきタイプへの変換を確実に優先させる。
+                priority=110,
             ),
             Event.ON_TURN_END: h.VolatileHandler(
                 h.そうでん_turn_end,

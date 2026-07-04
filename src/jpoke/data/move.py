@@ -6348,7 +6348,7 @@ MOVES: dict[str, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "non_copycat", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.バーンアクセル_apply_ailment_to_defender,
@@ -7471,7 +7471,7 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "non_copycat", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ポイズンアクセル_apply_ailment_to_defender,
@@ -7549,7 +7549,7 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"non_copycat", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マジカルアクセル_apply_confusion_to_defender,

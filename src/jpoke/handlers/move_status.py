@@ -1769,11 +1769,22 @@ def マジックルーム_activate_global_field(battle: Battle, ctx: AttackConte
 
 
 def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """まねっこの失敗条件: バトル中にまだ技が使われていない場合は失敗する。"""
+    """まねっこの失敗条件。
+
+    - バトル中にまだ技が使われていない場合は失敗する。
+    - 最後に使われた技が non_copycat フラグを持つ技（スターモービル専用アクセル技等）の場合は失敗する。
+    """
+    from jpoke.model import Move
     if not battle.last_used_move_name:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload={"reason": "まねっこ_使用技なし"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    if Move(battle.last_used_move_name).has_flag("non_copycat"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "まねっこ_コピー不可技"}
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

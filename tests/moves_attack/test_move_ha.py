@@ -1585,6 +1585,77 @@ def test_プリズムレーザー_次ターン行動不能になる():
     assert defender.hp == defender_hp_after_t1
 
 
+def test_プレゼント_乱数0_0から0_39は威力40の攻撃になる():
+    """プレゼント: 乱数が0.40未満のとき威力40の攻撃になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("デリバード", move_names=["プレゼント"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_プレゼント_乱数0_4から0_69は威力80の攻撃になる():
+    """プレゼント: 乱数が0.40以上0.70未満のとき威力80の攻撃になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("デリバード", move_names=["プレゼント"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_プレゼント_乱数0_7から0_79は威力120の攻撃になる():
+    """プレゼント: 乱数が0.70以上0.80未満のとき威力120の攻撃になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("デリバード", move_names=["プレゼント"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.75)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 120
+
+
+def test_プレゼント_乱数0_8以上は相手のHPを1_4回復させる():
+    """プレゼント: 乱数が0.80以上のとき攻撃せず相手のHPを最大HPの1/4回復させる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("デリバード", move_names=["プレゼント"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_hp(defender, v=-(defender.max_hp // 2))
+    hp_before = defender.hp
+    expected_heal = defender.max_hp // 4
+
+    t.fix_random(battle, 0.9)
+    t.run_move(battle, 0)
+
+    assert defender.hp == hp_before + expected_heal
+
+
+def test_プレゼント_回復効果でも相手のHPが満タンだと失敗する():
+    """プレゼント: 回復効果が選ばれても相手のHPが満タンの場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("デリバード", move_names=["プレゼント"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert defender.hp == defender.max_hp
+
+    t.fix_random(battle, 0.9)
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_applied
+    assert defender.hp == defender.max_hp
+
+
 def test_ヘドロウェーブ_どくが発動する():
     """ヘドロウェーブ: 10%でどくを付与する。"""
     battle = t.start_battle(

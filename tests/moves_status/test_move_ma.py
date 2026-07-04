@@ -42,6 +42,84 @@ def test_まきびし_相手陣営に設置される():
     assert side.fields["まきびし"].is_active
 
 
+def test_まねっこ_PPはまねっこ自身のみ消費されコピー技は消費されない():
+    """まねっこ: コピーした技のPPは消費されず、まねっこ自身のPPのみ1消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("コラッタ", move_names=["でんこうせっか"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    t.run_move(battle, 1)  # コラッタ: でんこうせっか（自身のPPを1消費）
+    defender_move_pp_after_own_use = defender.moves[0].pp
+
+    manekko_pp_before = attacker.moves[0].pp
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ（でんこうせっかをコピー）
+
+    assert attacker.moves[0].pp == manekko_pp_before - 1
+    assert defender.moves[0].pp == defender_move_pp_after_own_use
+
+
+def test_まねっこ_スターモービル専用技はコピーできない():
+    """まねっこ: 直前の技がスターモービル専用技（アクセル技）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("コラッタ", move_names=["バーンアクセル"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # コラッタ: バーンアクセル
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
+def test_まねっこ_使用技がまだない場合は失敗する():
+    """まねっこ: バトル開始以降、誰も技を使っていない場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_applied
+
+
+def test_まねっこ_相手が最後に使用した技をコピーして実行する():
+    """まねっこ: 相手が最後に使用した技をコピーして相手に与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("コラッタ", move_names=["でんこうせっか"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+
+    t.run_move(battle, 1)  # コラッタ: でんこうせっか（ピカチュウにダメージ）
+    hp_before_copy = defender.hp
+
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ（でんこうせっかをコピーしコラッタへ）
+
+    assert defender.hp < hp_before_copy
+
+
+def test_まねっこ_自分が使った技もコピー対象になる():
+    """まねっこ: 直前に自分自身が使用した技もコピー対象になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "まねっこ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+
+    t.run_move(battle, 0, 0)  # でんこうせっか
+    hp_after_first_hit = defender.hp
+
+    t.run_move(battle, 0, 1)  # まねっこ（でんこうせっかをコピー）
+
+    assert defender.hp < hp_after_first_hit
+
+
 def test_まもる系_2ターン目は失敗する():
     """まもる: 2ターン連続で使用すると2ターン目は失敗する"""
     battle = t.start_battle(

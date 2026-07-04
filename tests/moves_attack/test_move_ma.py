@@ -493,6 +493,43 @@ def test_メガホーン_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_めざめるダンス_ステラテラスタル中は元のタイプ1を参照する():
+    """めざめるダンス: ステラタイプにテラスタルしている場合は元のタイプ1を参照する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", tera_type="ステラ", move_names=["めざめるダンス"])],
+        team1=[Pokemon("コダック")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.terastallize()
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "くさ"
+
+
+def test_めざめるダンス_テラスタル中はテラスタイプを参照する():
+    """めざめるダンス: テラスタル中はその時のタイプ1（テラスタイプ）を参照する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", tera_type="ほのお", move_names=["めざめるダンス"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.terastallize()
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ほのお"
+
+
+def test_めざめるダンス_使用者のタイプ1と同じタイプになる():
+    """めざめるダンス: 使用者のタイプ1と同じタイプの技になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["めざめるダンス"])],  # タイプ1=くさ
+        team1=[Pokemon("コダック")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "くさ"
+
+
 def test_メテオビーム_1ターン目にとくこうが上昇する():
     """メテオビーム: 1ターン目にとくこうが1段階上昇する（追加効果ではないため必ず発動）。"""
     battle = t.start_battle(

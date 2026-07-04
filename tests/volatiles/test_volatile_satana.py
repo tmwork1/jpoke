@@ -282,6 +282,20 @@ def test_そうでん_ターン終了時に状態が解除される():
     assert not attacker.has_volatile("そうでん")
 
 
+def test_そうでん_めざめるダンスに対してもでんきタイプが優先される():
+    """そうでん: 使用者のタイプを参照するめざめるダンスに対しても、でんきタイプ変換が優先される"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["めざめるダンス"])],  # タイプ1=くさ
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "そうでん")
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_type == "でんき"
+
+
 def test_そうでん_わるあがきはでんきタイプに変換されない():
     """そうでん: そうでん状態でもわるあがきはでんきタイプに変換されない（タイプは空文字のまま）"""
     battle = t.start_battle(
