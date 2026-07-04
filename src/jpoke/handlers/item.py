@@ -759,10 +759,13 @@ def さらさらいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, 
 
 
 def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """サンのみ: HP1/4以下できゅうしょアップ状態になる。"""
+    """サンのみ: HP1/4以下できゅうしょアップ状態になる。
+
+    value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    """
     mon = ctx.target
     assert mon is not None
-    if mon.hp <= mon.max_hp // 4:
+    if mon.hp * 4 <= mon.max_hp or value >= mon.max_hp:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)

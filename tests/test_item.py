@@ -1691,12 +1691,44 @@ def test_サンのみ_HP25以下できゅうしょアップ状態():
 def test_しめつけバンド_バインドダメージ増加():
     """しめつけバンド: バインドダメージを最大HPの1/6に増加する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", item_name="しめつけバンド")],
+        team0=[Pokemon("ピカチュウ", item_name="しめつけバンド", move_names=["まきつく"])],
         team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    hp_before = foe.hp
+    t.end_turn(battle)
+    assert foe.hp == hp_before - foe.max_hp // 6
+
+
+def test_しめつけバンド_付与後の入手では増加しない():
+    """しめつけバンド: バインド付与後に入手してもダメージ倍率は増加しない（付与時に確定）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
     )
     mon = battle.actives[0]
     foe = battle.actives[1]
-    battle.volatile_manager.apply(foe, "バインド", count=3, source=mon)
+    t.run_move(battle, 0)
+    t.change_item(battle, mon, "しめつけバンド")
+    hp_before = foe.hp
+    t.end_turn(battle)
+    assert foe.hp == hp_before - foe.max_hp // 8
+
+
+def test_しめつけバンド_付与後の喪失では減少しない():
+    """しめつけバンド: バインド付与後にアイテムを失ってもダメージ倍率は減少しない（付与時に確定）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="しめつけバンド", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    t.change_item(battle, mon, "")
     hp_before = foe.hp
     t.end_turn(battle)
     assert foe.hp == hp_before - foe.max_hp // 6
