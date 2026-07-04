@@ -284,6 +284,45 @@ def test_みかづきのいのり_状態異常を治す(ailment_name):
     assert not attacker.ailment.is_active
 
 
+def test_みかづきのまい_使用者がひんしになりサイドフィールドが設置される():
+    """みかづきのまい: 使用後に使用者がひんし状態になり、自陣営にサイドフィールドが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("クレセリア", move_names=["みかづきのまい"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+    side = battle.get_side(attacker)
+    assert side.get("みかづきのまい").is_active
+
+
+def test_みかづきのまい_死に出しポケモンのHPと状態異常とPPが全回復する():
+    """みかづきのまい: 死に出しのポケモンのHPと状態異常が全回復し、全ての技のPPも全回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("クレセリア", move_names=["みかづきのまい"]), Pokemon("カビゴン", move_names=["たいあたり", "はらだいこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    bench = battle.player_states[battle.players[0]].team[1]
+    bench.hp = 1
+    battle.ailment_manager.apply(bench, "まひ")
+    bench.moves[0].pp = 0
+    bench.moves[1].pp = 1
+    assert bench.ailment.is_active
+
+    battle.switch_manager.run_faint_switch()
+
+    assert bench.hp == bench.max_hp
+    assert not bench.ailment.is_active
+    assert bench.moves[0].pp == bench.moves[0].data.pp
+    assert bench.moves[1].pp == bench.moves[1].data.pp
+    side = battle.get_side(bench)
+    assert not side.get("みかづきのまい").is_active
+
+
 def test_みずびたし_すでにみずタイプのみなら失敗():
     """みずびたし: 相手がすでにみずタイプのみなら失敗する"""
     battle = t.start_battle(

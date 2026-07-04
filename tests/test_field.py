@@ -1122,6 +1122,38 @@ def test_マジックルーム_道具効果無効化():
     assert mon.hp == 1
 
 
+def test_みかづきのまい_全快ポケモンの交代では消費されず次の回復対象で発動する():
+    """みかづきのまい: HP・状態異常・PPすべて満タンのポケモンが交代してきても
+    フィールドは保留され続け、回復対象を持つ次のポケモンが出た時に発動する"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("クレセリア"),
+            Pokemon("ピカチュウ"),
+            Pokemon("カビゴン", move_names=["たいあたり"]),
+        ],
+        team1=[Pokemon("カビゴン")],
+        side0={"みかづきのまい": 1},
+    )
+    full_bench = battle.player_states[battle.players[0]].team[1]
+    assert full_bench.hp == full_bench.max_hp
+    assert not full_bench.ailment.is_active
+
+    active = t.run_switch(battle, 0, 1)
+
+    assert active is full_bench
+    # HP・状態異常・PPすべて満タンなので消費されずフィールドは保留され続ける
+    assert battle.get_side(active).get("みかづきのまい").is_active
+
+    heal_target = battle.player_states[battle.players[0]].team[2]
+    heal_target.moves[0].pp = 0
+
+    active = t.run_switch(battle, 0, 2)
+
+    assert active is heal_target
+    assert active.moves[0].pp == active.moves[0].data.pp
+    assert not battle.get_side(active).get("みかづきのまい").is_active
+
+
 def test_ミストフィールド_ねむる失敗():
     """ミストフィールド: 接地ポケモンのねむるは失敗しHPも回復しない"""
     battle = t.start_battle(
