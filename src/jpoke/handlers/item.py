@@ -23,6 +23,10 @@ _HAS_EVOLUTION: frozenset[str] = frozenset(
     d.pre_evolution for d in POKEDEX.values() if d.pre_evolution
 )
 
+# メルタン: メルメタルへの進化手段（アメ400個）が通常の進化データと異なるため、
+# 内部的には「進化の余地がある」と判定されず、しんかのきせきの効果を得られない例外。
+_EVIOLITE_NO_EFFECT: frozenset[str] = frozenset({"メルタン"})
+
 class ItemHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -925,8 +929,14 @@ def しろいハーブ_reset_if_already_lowered(battle: Battle, ctx: EventContex
 
 
 def しんかのきせき_boost_defenses(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """しんかのきせき: 未進化ポケモンのぼうぎょ・とくぼうを1.5倍にする。"""
-    if ctx.defender.name in _HAS_EVOLUTION:
+    """しんかのきせき: 未進化ポケモンのぼうぎょ・とくぼうを1.5倍にする。
+
+    メルタンは進化先（メルメタル）を持つが、通常と異なる進化手段のため例外的に効果が無い。
+    """
+    if (
+        ctx.defender.name in _HAS_EVOLUTION
+        and ctx.defender.name not in _EVIOLITE_NO_EFFECT
+    ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -1234,9 +1244,14 @@ def どくバリ_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
 
 
 def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ナゾのみ: 効果抜群のダメージを受けたときHPを最大HPの25%回復する。"""
+    """ナゾのみ: 効果抜群のダメージを受けたときHPを最大HPの25%回復する。
+
+    ダメージ固定技（一撃必殺技を除く）はタイプ相性上は抜群でも発動しない。
+    """
     mon = ctx.defender
     assert mon is not None
+    if ctx.move.has_flag("fixed_damage"):
+        return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
         battle.modify_hp(mon, r=1/4)
         _announce_and_consume_item(battle, mon)
