@@ -143,9 +143,24 @@ class TurnController:
                 state.reset_turn_state()
 
     def _run_switch_phase(self):
-        """交代フェーズを実行する。"""
-        for attacker in self.battle.resolve_speed_order():
-            idx = self.battle.actives.index(attacker)
+        """交代フェーズを実行する。
+
+        Note:
+            対象プレイヤーは `resolve_speed_order()` の時点（このフェーズ開始時）で
+            決定し、以降はプレイヤー単位で処理する。ループの途中でいかく・
+            だっしゅつパックなどの割り込みにより一方のプレイヤーが先に交代すると、
+            `self.battle.actives` の中身が変化し、まだ処理していない側の元の
+            ポケモン参照が `actives` から消えてしまう。ループのたびに
+            `self.battle.actives.index(attacker)` で交代後の場を引き直すと
+            ValueError（値が見つからない）を起こすため、所属プレイヤーを
+            ポケモンの所有関係（`get_player`）から一度だけ解決し、以降は
+            プレイヤー・状態を使って処理する。
+        """
+        order = [
+            self.battle.players.index(self.battle.get_player(attacker))
+            for attacker in self.battle.resolve_speed_order()
+        ]
+        for idx in order:
             player = self.battle.players[idx]
             state = self.battle.player_states[player]
 
@@ -154,7 +169,20 @@ class TurnController:
 
             # 交代
             if self.battle.is_new_turn():
-                if state.next_command.is_type("switch"):
+                if state.has_switched:
+                    # いかく・だっしゅつパックなどの割り込みにより、この
+                    # プレイヤーの番がループで回ってくる前に既に交代済みに
+                    # なっていることがある。この場合、今ターン用に予約
+                    # されていたコマンド（例: MOVE_x や SWITCH_x）が
+                    # 一度も使われないまま予約リストに残っていることがある
+                    # （割り込み交代は別経路で解決されるため）。残しておくと
+                    # 次ターンの新しいコマンドの手前に古いコマンドが残留し、
+                    # 交代後のポケモンに対して不正なインデックスのコマンドが
+                    # 誤って使われてしまう（IndexError の原因）。そのため
+                    # ここで使われなかったコマンドを破棄しておく。
+                    if state.command_reserved():
+                        state.pop_command()
+                elif state.next_command.is_type("switch"):
                     # 行動順を記録
                     self.action_order.append(idx)
 

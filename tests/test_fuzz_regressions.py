@@ -9,6 +9,53 @@ from jpoke.enums import Command
 from . import test_utils as t
 
 
+def test_いかく_交代フェーズの割り込み連鎖でValueErrorや残留コマンドのIndexErrorが発生しない():
+    """seed=214 (IndexError@command_manager.py:resolve_move_from_command:133) の回帰テスト。
+
+    交代フェーズ（_run_switch_phase）で素早さの速いプレイヤーがいかく持ちに交代すると、
+    相手のだっしゅつパック持ちの攻撃ランクが下がり、その相手自身の行動順が交代フェーズの
+    ループに回ってくる前に割り込みで強制交代される。この場合、修正前は2つの不具合があった。
+
+    1. `self.battle.actives.index(attacker)` でループのたびに場を引き直していたため、
+       既に割り込みで交代してactivesから消えた元のポケモン参照に対してValueErrorが発生していた。
+    2. 相手（だっしゅつパック側）が元々予約していた技コマンド（MOVE_1）は、交代フェーズでも
+       技フェーズでも一度もpop_command()されないまま予約リストに残り続けていた。
+       次ターンに新しいコマンドが予約リストの末尾に積まれるため、残留したMOVE_1が先に使われ、
+       交代後の（技を1つしか持たない）ポケモンに対してcommand_manager.resolve_move_from_commandで
+       IndexErrorが発生していた。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", move_names=["でんきショック"]),
+            Pokemon("コラッタ", ability_name="いかく", move_names=["たいあたり"]),
+        ],
+        team1=[
+            Pokemon("カビゴン", item_name="だっしゅつパック", move_names=["まるくなる", "たいあたり"]),
+            Pokemon("ポッポ", move_names=["たいあたり"]),
+        ],
+    )
+    player0, player1 = battle.players
+
+    # Turn1: 通常ターンを進め、両者が交代コマンドを選べる状態にする。
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    # Turn2: 素早さの速いピカチュウ側がいかく持ちのコラッタに交代する。
+    # いかくでカビゴンのこうげきが下がり、だっしゅつパックの割り込み交代が発生する。
+    # この時点でカビゴンが予約していたMOVE_1（たいあたり）は一度も使われずに残る。
+    # 修正前はこのターンでValueErrorが発生していた。
+    battle.step(commands={player0: Command.SWITCH_1, player1: Command.MOVE_1})
+
+    assert battle.actives[0].name == "コラッタ"
+    # だっしゅつパックの割り込みでポッポに自動的に交代済み
+    assert battle.actives[1].name == "ポッポ"
+
+    # Turn3: 交代後のポッポは技を1つ（index=0）しか持たない。
+    # 修正前は残留したMOVE_1（index=1）が誤って使われ、IndexErrorが発生していた。
+    battle.step()
+
+    assert battle.turn == 3  # 例外なく3ターン目が完了したことを確認
+
+
 def test_ききかいひ_割り込み交代で使われなかった行動コマンドが次のターンに誤って使われない():
     """seed=214 (IndexError@command_manager.py:resolve_move_from_command:133) の回帰テスト。
 
