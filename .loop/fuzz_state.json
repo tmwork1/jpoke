@@ -1,13 +1,21 @@
 {
   "config": {
-    "n_selected": 3,
     "max_turns": 100,
     "n_pokemon": 6,
-    "n_moves": 4,
     "batch_size": 100
   },
-  "stats": {"total_battles": 0, "next_seed": 0},
-  "current_failure": null,
-  "completed_bugs": [],
+  "stats": {"total_battles": 200, "next_seed": 200},
+  "current_failure": {
+    "seed": 214,
+    "signature": "IndexError@command_manager.py:resolve_move_from_command:133",
+    "report_path": ".loop/fuzz_failures/seed_214.log"
+  },
+  "completed_bugs": [
+    {
+      "seed": 4,
+      "signature": "TypeError@item.py:かいがらのすず_drain_on_hit:553",
+      "summary": "modify_attacker_stats/modify_defender_statsがON_HITでもmodify_statsの戻り値(dict)をvalueとして返し、後続のかいがらのすず等int前提ハンドラでTypeErrorになっていた不具合を修正"
+    }
+  ],
   "failed_bugs": []
 }

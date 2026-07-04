@@ -6,7 +6,15 @@
 
 ---
 
-## 1. 努力値システムの変更
+## 1. 努力値システムの変更 【実装済み】
+
+`src/jpoke/model/stats.py` に変換関数 `chmp_to_sv_effort` を追加した。
+`PokemonStats.effort` / `Pokemon.effort` / `set_effort` は `indiv` と同様のplain public属性・
+メソッドとし、Champions形式（0〜32）のリストをそのまま保持する。SV等価値への変換は
+`update_stats` / `_calculate_effort_from_stat` が実数値を計算する際にその場で行うのみで、
+内部に別表現は保持しない。
+`scripts/fuzz_battle.py` の重複していた変換ロジックもこの共通関数に置き換えた。
+テストは `tests/test_stats.py` を参照。
 
 ### 仕様変更
 - SV: 0〜252（8n調整）

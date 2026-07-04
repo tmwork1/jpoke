@@ -24,6 +24,7 @@ class PlayerState:
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
         self.baton_pass_data: dict = {}  # バトンタッチの引き継ぎデータ
+        self.last_move_succeeded: bool | None = None  # このターンの技が成功したか（未実行ならNone）
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -35,6 +36,7 @@ class PlayerState:
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
         self.has_switched = False
+        self.last_move_succeeded = None
         self.active.reset_turn_state()
 
     @property

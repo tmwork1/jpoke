@@ -22,10 +22,8 @@
 ```json
 {
   "config": {
-    "n_selected": 3,
     "max_turns": 100,
     "n_pokemon": 6,
-    "n_moves": 4,
     "batch_size": 100
   },
   "stats": {"total_battles": 0, "next_seed": 0},
@@ -34,6 +32,10 @@
   "failed_bugs": [{"signature": "...", "attempts": 1, "last_seed": 123}]
 }
 ```
+
+ポケモン1匹ごとの性別・性格・レベル・テラスタイプ・個体値・努力値・技数（1〜10個）、
+および選出数（n_selected、1〜n_pokemon）は `scripts/fuzz_battle.py` 内で seed から
+自動的にランダム決定される（CLI 引数では渡さない＝seed だけで完全に再現できる）。
 
 ---
 
@@ -53,8 +55,7 @@
 ```
 PYTHONPATH=src python scripts/fuzz_battle.py --search \
   --start-seed {stats.next_seed} --count {config.batch_size} \
-  --n-selected {config.n_selected} --max-turns {config.max_turns} \
-  --n-pokemon {config.n_pokemon} --n-moves {config.n_moves}
+  --max-turns {config.max_turns} --n-pokemon {config.n_pokemon}
 ```
 
 exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポートパスが出力される）。
@@ -95,7 +96,7 @@ jpoke fuzz バグ修正タスク: seed={seed} (signature: {signature})
 
 ランダムバトルの自動テスト（fuzzer）が未捕捉例外を検出した。
 
-再現コマンド: PYTHONPATH=src python scripts/fuzz_battle.py --seed {seed} --n-selected {n_selected} --max-turns {max_turns} --n-pokemon {n_pokemon} --n-moves {n_moves}
+再現コマンド: PYTHONPATH=src python scripts/fuzz_battle.py --seed {seed} --max-turns {max_turns} --n-pokemon {n_pokemon}
 
 失敗レポート（両陣営のチーム構成・例外・traceback・全ターンのバトルログ）:
 {report_path の内容、またはパスを渡して Read させる}
@@ -127,7 +128,7 @@ jpoke fuzz バグ修正タスク: seed={seed} (signature: {signature}) のレビ
 作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
 
 impl エージェントが fuzzer 発見バグ（再現コマンド:
-PYTHONPATH=src python scripts/fuzz_battle.py --seed {seed} --n-selected {n_selected} --max-turns {max_turns} --n-pokemon {n_pokemon} --n-moves {n_moves}
+PYTHONPATH=src python scripts/fuzz_battle.py --seed {seed} --max-turns {max_turns} --n-pokemon {n_pokemon}
 ）を修正した。以下を順に実施すること:
 
 1. 修正内容をレビューする（{report_path} に元の例外・原因箇所の情報がある）

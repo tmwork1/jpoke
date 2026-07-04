@@ -535,6 +535,18 @@ def test_あやしいかぜ_全能力1段階上昇が発動する():
     assert attacker.rank["spe"] == 1
 
 
+def test_あわ_すばやさ低下が発動する():
+    """あわ: 10%で相手のすばやさを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["あわ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
 def test_いかりのまえば_最低1ダメージ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],

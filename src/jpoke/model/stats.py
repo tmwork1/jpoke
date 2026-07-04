@@ -39,6 +39,18 @@ def calc_stat(level: int, base: int, indiv: int, effort: int, nc: float) -> int:
     return int((((base*2 + indiv + effort//4) * level) // 100 + 5) * nc)
 
 
+def chmp_to_legacy_effort(effort_chmp: int) -> int:
+    """Champions努力値（0〜32）をレガシー努力値（0〜252）に変換する。
+
+    Args:
+        effort_chmp: Champions形式の努力値（0〜32）
+
+    Returns:
+        レガシー努力値（0, 4, 12, ..., 252）
+    """
+    return 0 if effort_chmp == 0 else 8*effort_chmp - 4
+
+
 class PokemonStats:
     """ポケモンのステータス計算を管理するクラス。
 
@@ -47,15 +59,15 @@ class PokemonStats:
 
     Attributes:
         _stats: 実数値のリスト [HP, 攻撃, 防御, 特攻, 特防, 素早さ]
-        _indiv: 個体値のリスト
-        _effort: 努力値のリスト
+        indiv: 個体値のリスト
+        effort: 努力値のリスト（Champions形式、0〜32）
     """
 
     def __init__(self):
         """ステータス計算マネージャーを初期化する。"""
         self._stats: list[int] = [100]*6
-        self._indiv: list[int] = [31]*6
-        self._effort: list[int] = [0]*6
+        self.indiv: list[int] = [31]*6
+        self.effort: list[int] = [0]*6
 
     @property
     def stats(self) -> list[int]:
@@ -76,42 +88,6 @@ class PokemonStats:
         labels = STATS[:6]
         return {s: v for s, v in zip(labels, self._stats)}
 
-    @property
-    def indiv(self) -> list[int]:
-        """個体値を取得する。
-
-        Returns:
-            個体値のリスト
-        """
-        return self._indiv
-
-    @indiv.setter
-    def indiv(self, indiv: list[int]):
-        """個体値を設定する。
-
-        Args:
-            indiv: 個体値のリスト
-        """
-        self._indiv = indiv
-
-    @property
-    def effort(self) -> list[int]:
-        """努力値を取得する。
-
-        Returns:
-            努力値のリスト
-        """
-        return self._effort
-
-    @effort.setter
-    def effort(self, effort: list[int]):
-        """努力値を設定する。
-
-        Args:
-            effort: 努力値のリスト
-        """
-        self._effort = effort
-
     def update_stats(self, level: int, base: list[int], nature: Nature):
         """ステータスを再計算する。
 
@@ -127,7 +103,7 @@ class PokemonStats:
         # HP計算
         self._stats[0] = calc_hp(
             level, base[0],
-            self._indiv[0], self._effort[0]
+            self.indiv[0], chmp_to_legacy_effort(self.effort[0])
         )
 
         # その他のステータス計算
@@ -135,7 +111,7 @@ class PokemonStats:
         for i in range(1, 6):
             self._stats[i] = calc_stat(
                 level, base[i],
-                self._indiv[i], self._effort[i], nc[i]
+                self.indiv[i], chmp_to_legacy_effort(self.effort[i]), nc[i]
             )
 
     def set_stats_from_value(self, idx: int, value: int, level: int, base: list[int], nature: Nature) -> bool:
@@ -152,15 +128,6 @@ class PokemonStats:
             設定に成功した場合True、失敗した場合False
         """
         return self._calculate_effort_from_stat(idx, value, level, base, nature)
-
-    def set_effort_at(self, idx: int, value: int):
-        """指定インデックスの努力値を設定する。
-
-        Args:
-            idx: ステータスのインデックス
-            value: 設定する努力値
-        """
-        self._effort[idx] = value
 
     def set_stats_from_dict(self, stats: dict[Stat, int], level: int, base: list[int], nature: Nature):
         """実数値から努力値を逆算して設定する。
@@ -189,21 +156,20 @@ class PokemonStats:
             逆算に成功した場合True、失敗した場合False
 
         Note:
-            レベル50の8n調整（252, 244, 236..., 4, 0）を前提とした逆算を行う。
+            Champions努力値（0〜32）に対応するSV等価値を前提とした逆算を行う。
             該当する努力値が見つからない場合は失敗する。
         """
         nc = NATURE_MODIFIER[nature]
-        # レベル50の8n調整（252, 244, 236, ..., 4, 0）
-        efforts_50 = [0] + [4 + 8*i for i in range(32)]
 
-        for eff in efforts_50:
+        for chmp in range(33):
+            eff = chmp_to_legacy_effort(chmp)
             if idx == 0:
-                v = calc_hp(level, base[idx], self._indiv[idx], eff)
+                v = calc_hp(level, base[idx], self.indiv[idx], eff)
             else:
-                v = calc_stat(level, base[idx], self._indiv[idx], eff, nc[idx])
+                v = calc_stat(level, base[idx], self.indiv[idx], eff, nc[idx])
 
             if v == value:
-                self._effort[idx] = eff
+                self.effort[idx] = chmp
                 self._stats[idx] = v
                 return True
 

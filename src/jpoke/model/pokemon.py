@@ -452,19 +452,19 @@ class Pokemon:
 
     @property
     def effort(self) -> list[int]:
-        """努力値を取得する。
+        """努力値をChampions形式（0〜32）で取得する。
 
         Returns:
-            努力値のリスト
+            Champions形式の努力値のリスト
         """
         return self._stats_manager.effort
 
     @effort.setter
     def effort(self, effort: list[int]):
-        """努力値を設定する。
+        """努力値をChampions形式（0〜32）で設定する。
 
         Args:
-            effort: 努力値のリスト
+            effort: Champions形式の努力値のリスト（各値0〜32）
 
         Note:
             努力値変更時にステータスを自動再計算する。
@@ -578,16 +578,16 @@ class Pokemon:
         )
 
     def set_effort(self, idx: int, value: int):
-        """指定インデックスの努力値を設定する。
+        """指定インデックスの努力値をChampions形式（0〜32）で設定する。
 
         Args:
             idx: ステータスのインデックス
-            value: 設定する努力値
+            value: 設定するChampions形式の努力値（0〜32）
 
         Note:
             設定後、ステータスを自動再計算する。
         """
-        self._stats_manager.set_effort_at(idx, value)
+        self._stats_manager.effort[idx] = value
         self.update_stats()
 
     def modify_hp(self, v: int) -> int:
