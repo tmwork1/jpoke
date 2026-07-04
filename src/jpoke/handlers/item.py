@@ -1571,8 +1571,32 @@ def メトロノーム_boost_power(battle: Battle, ctx: AttackContext, value: An
 
 
 def メトロノーム_update_count(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メトロノーム: 技使用後に連続カウントを更新する。"""
+    """メトロノーム: 技使用後に連続カウントを更新する。
+
+    ON_END_MOVEは行動不能時（状態異常・ひるみなど）や溜め技の溜めターンも含めて
+    必ず発火するため、以下のように場合分けする。
+    - 技を出そうとすらしなかった場合（action_success is False）: カウントを維持
+    - 溜め技の溜めターンなど、実際に攻撃を試みていない場合: カウントを維持
+    - 技が無効化・失敗・ミスした場合: カウントを0にリセット
+    - 技が成功した場合: 通常通りカウントを更新
+    """
+    executor = battle.move_executor
     item = ctx.attacker.item
+    if executor.action_success is False:
+        return HandlerReturn(value=value)
+    if (
+        executor.move_success is None
+        and executor.move_applied is None
+        and not executor.move_missed
+    ):
+        return HandlerReturn(value=value)
+    if (
+        executor.move_success is False
+        or executor.move_applied is False
+        or executor.move_missed
+    ):
+        item.count = 0
+        return HandlerReturn(value=value)
     if item.move_name == ctx.move.name:
         item.count = min(item.count + 1, 5)
     else:
@@ -1585,7 +1609,7 @@ def メンタルハーブ_cure_mental_volatile(battle: Battle, ctx: EventContext
     """メンタルハーブ: 特定の揮発性状態が付与されたとき即解除する。"""
     mon = ctx.source
     assert mon is not None
-    if value in {"いちゃもん", "アンコール", "かなしばり", "ちょうはつ"}:
+    if value in {"メロメロ", "アンコール", "いちゃもん", "かなしばり", "ちょうはつ", "かいふくふうじ"}:
         battle.volatile_manager.remove(mon, value)
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)

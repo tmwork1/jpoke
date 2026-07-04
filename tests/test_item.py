@@ -4686,6 +4686,65 @@ def test_マゴのみ_はやさが上がりにくい性格でこんらんする(
     assert mon.has_volatile("こんらん")
 
 
+def test_メトロノーム_タイプ相性で無効化されるとリセット():
+    """メトロノーム: タイプ相性により無効化された場合カウントは0にリセットされる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
+        team1=[Pokemon("ゲンガー")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.item.count = 3
+    mon.item.move_name = "たいあたり"
+    t.run_move(battle, 0)
+    assert mon.item.count == 0
+
+
+def test_メトロノーム_ねむり中は行動できずカウント維持():
+    """メトロノーム: ねむりなどで技が出せなかったときはカウントを維持する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.item.count = 3
+    mon.item.move_name = "たいあたり"
+    t.apply_ailment(battle, active_index=0, ailment_name="ねむり", count=3)
+    t.run_move(battle, 0)
+    assert mon.item.count == 3
+    assert mon.item.move_name == "たいあたり"
+
+
+def test_メトロノーム_まもるで防がれるとリセット():
+    """メトロノーム: まもるで防がれた場合カウントは0にリセットされる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.item.count = 3
+    mon.item.move_name = "たいあたり"
+    t.run_move(battle, 0)
+    assert mon.item.count == 0
+
+
+def test_メトロノーム_ミスするとリセット():
+    """メトロノーム: 技が命中しなかった場合カウントは0にリセットされる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="メトロノーム", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    mon = battle.actives[0]
+    mon.item.count = 3
+    mon.item.move_name = "たいあたり"
+    t.run_move(battle, 0)
+    assert mon.item.count == 0
+
+
 def test_メトロノーム_別技でリセット():
     """メトロノーム: 違う技を使うとカウントリセット"""
     battle = t.start_battle(

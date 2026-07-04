@@ -1685,7 +1685,7 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.メトロノーム_boost_power,
                 subject_spec="attacker:self",
             ),
-            Event.ON_MOVE_END: h.ItemHandler(
+            Event.ON_END_MOVE: h.ItemHandler(
                 h.メトロノーム_update_count,
                 subject_spec="attacker:self",
             ),
