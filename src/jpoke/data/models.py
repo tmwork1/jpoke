@@ -1,18 +1,18 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, TypedDict, Callable
+from typing import TYPE_CHECKING, TypedDict, Callable, Literal
 if TYPE_CHECKING:
     from jpoke.enums import Event, DomainEvent, LethalEvent
     from jpoke.core import Handler, LethalHandler
 
 from dataclasses import dataclass, field
 
-from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag
+from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName
 
 
 class PokemonData:
     def __init__(self, data) -> None:
-        self.name: str = data["name"]
-        self.pre_evolution: str = data.get("pre_evolution", "")
+        self.name: PokemonName = data["name"]
+        self.pre_evolution: PokemonName | Literal[""] = data.get("pre_evolution", "")
         self.weight: float = data["weight"]
         self.types: list[Type] = [data[f"type-{i+1}"] for i in range(2) if data[f"type-{i+1}"]]
         self.abilities: list[str] = [data[f"ability-{i+1}"] for i in range(3) if data[f"ability-{i+1}"]]
@@ -36,7 +36,7 @@ class ItemData:
     fling_power: int = 0
     power_modifier_by_type: dict[Type, float] = field(default_factory=dict)
     damage_modifier_by_type: dict[Type, float] = field(default_factory=dict)
-    mega_evolve: tuple[str, ...] | None = None
+    mega_evolve: tuple[PokemonName, ...] | None = None
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
     name: str = ""

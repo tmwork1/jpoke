@@ -1,6 +1,7 @@
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
 from jpoke.data.models import ItemData
+from jpoke.types import PokemonName
 
 from .effect import GameEffect
 
@@ -52,14 +53,14 @@ class Item(GameEffect):
         return self.name.endswith("のみ")
 
     @property
-    def mega_evol_before(self) -> str | None:
+    def mega_evol_before(self) -> PokemonName | None:
         """メガシンカ前のポケモンの名前を返すプロパティ。"""
         if self.data.mega_evolve is not None:
             return self.data.mega_evolve[0]
         return None
 
     @property
-    def mega_evol_after(self) -> str | None:
+    def mega_evol_after(self) -> PokemonName | None:
         """メガシンカ後のポケモンの名前を返すプロパティ。"""
         if self.data.mega_evolve is not None:
             return self.data.mega_evolve[1]

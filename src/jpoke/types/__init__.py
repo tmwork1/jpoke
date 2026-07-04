@@ -32,7 +32,6 @@ from .terrain import TerrainName
 from .volatile import VolatileName
 from .weather import WeatherName
 
-# TODO : ポケモン名の型ヒントをstrからPokemonNameに移行
 # TODO : 特性名の型ヒントをstrからAbilityNameに移行
 # TODO : アイテム名の型ヒントをstrからItemNameに移行
 # TODO : 技名の型ヒントをstrからMoveNameに移行

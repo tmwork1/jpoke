@@ -1,4 +1,6 @@
-MEGA_STONES: dict[str, tuple[str, ...]] = {
+from jpoke.types import PokemonName
+
+MEGA_STONES: dict[str, tuple[PokemonName, ...]] = {
     "フシギバナイト": ("フシギバナ", "メガフシギバナ"),
     "リザードナイトX": ("リザードン", "メガリザードンX"),
     "リザードナイトY": ("リザードン", "メガリザードンY"),

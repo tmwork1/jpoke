@@ -4,12 +4,12 @@
 ランク変化など、バトル中のポケモンの全状態を管理します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
 from jpoke.types import Nature, Type, Stat, Gender, \
-    AilmentName, VolatileName, BoostSource
+    AilmentName, VolatileName, BoostSource, PokemonName
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
@@ -47,7 +47,7 @@ class Pokemon:
     # ── 初期化・コピー ──────────────────────────────────────────
 
     def __init__(self,
-                 name: str,
+                 name: PokemonName,
                  gender: Gender = "",
                  nature: Nature = "まじめ",
                  level: int = 50,
@@ -173,7 +173,7 @@ class Pokemon:
     # ── 基本情報 ────────────────────────────────────────────────
 
     @property
-    def name(self) -> str:
+    def name(self) -> PokemonName:
         """ポケモンの名前を取得する。
 
         Returns:
@@ -182,7 +182,7 @@ class Pokemon:
         return self.data.name
 
     @property
-    def pre_evolution(self) -> str:
+    def pre_evolution(self) -> PokemonName | Literal[""]:
         """1段階進化前のポケモン名を取得する。
 
         Returns:
@@ -333,7 +333,7 @@ class Pokemon:
     # ── フォルム変化・テラスタル・メガシンカ ────────────────────
 
     def set_form(self,
-                 name: str,
+                 name: PokemonName,
                  keep_damage: bool = True,
                  set_default_ability: bool = False) -> bool:
         """ポケモンのフォルムをエイリアス指定で切り替える。

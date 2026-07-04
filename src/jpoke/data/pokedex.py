@@ -1,6 +1,7 @@
 import json
 from importlib import resources
 from jpoke.data.models import PokemonData
+from jpoke.types import PokemonName
 
 
 def resource_path(*path_parts: str) -> str:
@@ -15,6 +16,6 @@ file = resource_path('data', "pokedex.json")
 with open(file, encoding='utf-8') as f:
     data = json.load(f)
 
-POKEDEX: dict[str, PokemonData] = {
+POKEDEX: dict[PokemonName, PokemonData] = {
     d["name"]: PokemonData(d) for d in data.values()
 }
