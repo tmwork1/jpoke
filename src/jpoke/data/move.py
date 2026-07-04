@@ -6715,10 +6715,20 @@ MOVES: dict[str, MoveData] = {
     "ふくろだたき": MoveData(
         type="あく",
         category="physical",
-        pp=10,
-        power=0,
+        pp=12,
+        power=1,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        multi_hit={"min": 1, "max": 6, "check_hit_each_time": False, "power_sequence": ()},
+        handlers={
+            Event.ON_MODIFY_HIT_COUNT: h.MoveHandler(
+                ha.ふくろだたき_hit_count,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ふくろだたき_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "ふしょくガス": MoveData(
         type="どく",

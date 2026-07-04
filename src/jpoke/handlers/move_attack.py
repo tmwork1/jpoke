@@ -1866,6 +1866,20 @@ def フォトンゲイザー_modify_move_category(battle: Battle, ctx: AttackCon
     return HandlerReturn(value=value)
 
 
+def ふくろだたき_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふくろだたき: 各ヒットの威力 = 使用者の基礎こうげき種族値 / 10 + 5。"""
+    power = ctx.attacker.data.base[1] // 10 + 5
+    return HandlerReturn(value=power * 4096)
+
+
+def ふくろだたき_hit_count(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふくろだたき: ひんしや状態異常でない選出ポケモン数がヒット回数。"""
+    player = battle.get_player(ctx.attacker)
+    state = battle.player_states[player]
+    count = sum(1 for mon in state.selection if mon.alive and not mon.ailment.is_active)
+    return HandlerReturn(value=max(1, count))
+
+
 def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふしょくガスのアイテム除去効果。"""
     battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
