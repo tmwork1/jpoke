@@ -116,4 +116,5 @@ MoveFlag = Literal[
     "explosion",  # 爆発技。しめりけ等の対象判定に使う。
     "check_hit_each_time",  # 連続技で、毎回命中判定を行う技。
     "secondary_effect",  # 追加効果の有無。ちからずく・てんのめぐみ等の判定に使う。
+    "fixed_damage",  # タイプ相性に関わらず固定ダメージを与える技（一撃必殺技を除く）。じゃくてんほけん等の判定に使う。
 ]

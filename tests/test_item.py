@@ -1798,6 +1798,82 @@ def test_しんかのきせき_未進化ポケモンの防御1_5倍():
     assert battle.damage_calculator.def_modifier == 6144
 
 
+def test_じゃくてんほけん_ACランク共に最大のとき発動しない():
+    """じゃくてんほけん: こうげき・とくこうランクが共に最大のときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="じゃくてんほけん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["atk"] = 6
+    foe.rank["spa"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 6
+    assert foe.rank["spa"] == 6
+    assert foe.has_item()
+
+
+def test_じゃくてんほけん_ダメージ固定技では発動しない():
+    """じゃくてんほけん: タイプ相性上は弱点でもダメージ固定技（一撃必殺技を除く）では発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ちきゅうなげ"])],
+        team1=[Pokemon("カビゴン", item_name="じゃくてんほけん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 0
+    assert foe.rank["spa"] == 0
+    assert foe.has_item()
+
+
+def test_じゃくてんほけん_まもるで防いだ場合は発動しない():
+    """じゃくてんほけん: まもるでダメージを無効化された場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="じゃくてんほけん")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 0
+    assert foe.rank["spa"] == 0
+    assert foe.has_item()
+
+
+def test_じゃくてんほけん_みがわりで防いだ場合は発動しない():
+    """じゃくてんほけん: みがわりで攻撃を防いだ場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="じゃくてんほけん")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 0
+    assert foe.rank["spa"] == 0
+    assert foe.has_item()
+
+
+def test_じゃくてんほけん_一撃必殺技を耐えたときは発動する():
+    """じゃくてんほけん: 弱点タイプの一撃必殺技をこらえるで耐えた場合は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゴース", move_names=["じわれ"])],
+        team1=[Pokemon("ピカチュウ", item_name="じゃくてんほけん")],
+        volatile1={"こらえる": 1},
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.hp == 1
+    assert foe.rank["atk"] == 2
+    assert foe.rank["spa"] == 2
+    assert not foe.has_item()
+
+
 def test_じゃくてんほけん_効果抜群でAC上昇():
     """じゃくてんほけん: 効果抜群の攻撃を受けたときA・C+2"""
     battle = t.start_battle(
@@ -1808,6 +1884,21 @@ def test_じゃくてんほけん_効果抜群でAC上昇():
     foe = battle.actives[1]
     t.run_move(battle, 0)
     assert foe.rank["atk"] == 2
+    assert foe.rank["spa"] == 2
+    assert not foe.has_item()
+
+
+def test_じゃくてんほけん_片方のランクのみ最大のときもう片方が上昇する():
+    """じゃくてんほけん: 片方のランクのみ最大の場合はもう片方だけ上昇し、アイテムは消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="じゃくてんほけん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["atk"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 6
     assert foe.rank["spa"] == 2
     assert not foe.has_item()
 

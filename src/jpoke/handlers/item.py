@@ -827,14 +827,18 @@ def じしゃく_modify_power_by_type(battle: Battle, ctx: AttackContext, value:
 
 
 def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じゃくてんほけん: 効果抜群のダメージを受けたときA・Cを+2。"""
+    """じゃくてんほけん: 効果抜群のダメージを受けたときA・Cを+2。
+
+    ダメージ固定技（一撃必殺技を除く）はタイプ相性上は抜群でも発動しない。
+    """
     mon = ctx.defender
     assert mon is not None
-    if not mon.alive:
+    if ctx.move.has_flag("fixed_damage"):
         return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
-        _announce_and_consume_item(battle, mon)
-        battle.modify_stats(mon, {"atk": +2, "spa": +2})
+        changes = battle.modify_stats(mon, {"atk": +2, "spa": +2})
+        if changes:  # ランク上限などで不発の場合は消費しない
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 

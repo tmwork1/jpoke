@@ -628,7 +628,7 @@ MOVES: dict[MoveName, MoveData] = {
         category="physical",
         pp=10,
         accuracy=90,
-        flags={"contact"},
+        flags={"contact", "fixed_damage"},
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.half_damage,
@@ -1590,6 +1590,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=0,
         accuracy=90,
+        flags={"fixed_damage"},
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.half_damage,
@@ -1802,7 +1803,11 @@ MOVES: dict[MoveName, MoveData] = {
         power=65,
         accuracy=90,
         flags={"contact", "slash"},
-        handlers={},  # TODO :
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.がんせきアックス_set_stealth_rock,
+            ),
+        },
     ),
     "がんせきふうじ": MoveData(
         type="いわ",
@@ -4236,7 +4241,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=20,
         power=0,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "fixed_damage"},
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.level_fixed_damage,
@@ -5371,6 +5376,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=15,
         power=0,
         accuracy=100,
+        flags={"fixed_damage"},
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.level_fixed_damage,

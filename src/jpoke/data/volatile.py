@@ -198,7 +198,7 @@ VOLATILES: dict[str, VolatileData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.VolatileHandler(
                 h.こらえる_endure,
                 subject_spec="defender:self",
-                priority=60,
+                priority=95,
             ),
             Event.ON_TURN_END: h.VolatileHandler(
                 h.こらえる_remove_volatile,
