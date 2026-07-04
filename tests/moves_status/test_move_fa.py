@@ -59,3 +59,43 @@ def test_ファストガード_連続使用で失敗する():
     t.run_move(battle, 0)
     assert not battle.move_executor.move_success
     assert not attacker.has_volatile("ファストガード")
+
+
+def test_フラワーヒール_グラスフィールドで2_3回復する():
+    """フラワーヒール: グラスフィールド展開中は相手のHPを最大HPの2/3回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フラワーヒール"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("グラスフィールド", 5),
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1 + int(defender.max_hp * 2 / 3)
+
+
+def test_フラワーヒール_満タンなら失敗する():
+    """フラワーヒール: 相手のHPが満タンの場合は技が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フラワーヒール"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    assert defender.hp == defender.max_hp
+    t.run_move(battle, 0)
+
+    assert defender.hp == defender.max_hp
+
+
+def test_フラワーヒール_相手のHPを半分回復する():
+    """フラワーヒール: 通常時、相手のHPを最大HPの1/2回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フラワーヒール"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1 + int(defender.max_hp * 1 / 2)
