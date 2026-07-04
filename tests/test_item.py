@@ -1181,6 +1181,116 @@ def test_きあいのハチマキ_確率外は耐えない():
     assert mon.hp == 0
 
 
+def test_きゅうこん_あまのじゃくでCランクが最小のとき発動しない():
+    """きゅうこん: あまのじゃく所持者はとくこうランクがすでに最小のとき発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["spa"] = -6
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == -6
+    assert foe.has_item()
+
+
+def test_きゅうこん_あまのじゃくでC下降():
+    """きゅうこん: あまのじゃく所持者はとくこうが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == -1
+    assert not foe.has_item()
+
+
+def test_きゅうこん_かたやぶりのみず技はたんじゅん・あまのじゃくでもC上昇():
+    """きゅうこん: かたやぶりの効果があるみず技に対してはたんじゅん・あまのじゃくは発動せず通常通り+1される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == 1
+    assert not foe.has_item()
+
+
+def test_きゅうこん_たんじゅんでC2段階上昇():
+    """きゅうこん: たんじゅん所持者はとくこうが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == 2
+    assert not foe.has_item()
+
+
+def test_きゅうこん_とくこうランクが最大のとき発動しない():
+    """きゅうこん: すでにとくこうランクが最大まで上がっているときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["spa"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == 6
+    assert foe.has_item()
+
+
+def test_きゅうこん_マジシャンより先に発動して奪われない():
+    """きゅうこん: 特性マジシャンのみず技を受けても、きゅうこんが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずきゅうこんが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == 1
+    assert not foe.has_item()
+    assert not attacker.has_item()
+
+
+def test_きゅうこん_みず以外では発動しない():
+    """きゅうこん: みず以外の技では発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", item_name="きゅうこん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == 0
+    assert foe.has_item()
+
+
+def test_きゅうこん_みず被弾でC上昇():
+    """きゅうこん: みず技でダメージを受けたときとくこう+1"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なみのり"])],
+        team1=[Pokemon("カビゴン", item_name="きゅうこん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["spa"] == 1
+    assert not foe.has_item()
+
+
 def test_きれいなぬけがら():
     """きれいなぬけがら: 交代防止無効"""
     battle = t.start_battle(

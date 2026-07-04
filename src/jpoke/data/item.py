@@ -442,6 +442,10 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_DAMAGE_HIT: h.ItemHandler(
                 h.きゅうこん_boost_spatk_on_water_hit,
                 subject_spec="defender:self",
+                # docs/spec/abilities/マジシャン.md: 「じゅうでんち/ゆきだま/きゅうこん/ひかりごけ等の
+                # 効果が発動する場合、マジシャンで奪う前に発動する」。マジシャン特性ハンドラ(priority=100)
+                # より確実に先に発動させるため、素早さに依存しないpriority=90を指定する。
+                priority=90,
             )
         }
     ),
