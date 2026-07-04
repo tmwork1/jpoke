@@ -3913,6 +3913,36 @@ def test_ひかりごけ_みず被弾でD上昇():
     assert not foe.has_item()
 
 
+def test_ひかりのこな_一撃必殺技には適用されない():
+    """ひかりのこな: 一撃必殺技の命中率には影響しない（第三世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つのドリル"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりのこな")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 30
+
+
+def test_ひかりのこな_命中率が0_9倍になる():
+    """ひかりのこな: 持たせた側に対する技の命中率が0.9倍になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("カビゴン", item_name="ひかりのこな")],
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy * 3686 // 4096
+
+
+def test_ひかりのこな_非所持では命中率が変化しない():
+    """ひかりのこな: 持っていない場合は命中率が変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 def test_ひかりのねんど_スクリーン8ターンに延長():
     """ひかりのねんど: リフレクターを8ターンに延長する"""
     battle = t.start_battle(

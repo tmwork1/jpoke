@@ -1347,9 +1347,10 @@ def ひかりごけ_boost_spdef_on_water_hit(battle: Battle, ctx: AttackContext,
     return _boost_stat_on_type_hit(battle, ctx, value, type_="みず", stats={"spd": +1})
 
 
-def ひかりのこな_reduce_accuracy(_battle: Battle, _ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ひかりのこな: 命中率を0.9倍にする。"""
-    value = apply_fixed_modifier(value, 3686)
+def ひかりのこな_reduce_accuracy(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ひかりのこな: 命中率を0.9倍にする（一撃必殺技を除く）。"""
+    if not ctx.move.has_flag("ohko"):
+        value = apply_fixed_modifier(value, 3686)
     return HandlerReturn(value=value)
 
 
