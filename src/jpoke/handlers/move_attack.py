@@ -1987,6 +1987,16 @@ def ぶちかまし_reduce_defender_spd(battle: Battle, ctx: AttackContext, valu
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
+def ブラッドムーン_apply_reuse_block(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ブラッドムーン: PP消費確定後に「ブラッドムーン」揮発状態を自分に付与する。
+
+    count=2 で付与することで、ターン終了後（count: 2→1）も揮発が残り、
+    次のターンの ON_MODIFY_COMMAND_OPTIONS で選択を制限できる。
+    ターンT+1 の終了時（count: 1→0）に volatile_manager が自動解除する。
+    """
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="ブラッドムーン", count=2)
+
+
 def ブレイククロー_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.5)
 

@@ -595,6 +595,18 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ブラッドムーン": VolatileData(
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.ブラッドムーン_modify_command_options,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.ブラッドムーン_tick_volatile,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ほろびのうた": VolatileData(
         handlers={
             Event.ON_TURN_END: h.VolatileHandler(

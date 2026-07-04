@@ -6990,7 +6990,13 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=140,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.ブラッドムーン_apply_reuse_block,
+                subject_spec="attacker:self",
+                priority=50,
+            ),
+        }
     ),
     "ブリザードランス": MoveData(
         type="こおり",

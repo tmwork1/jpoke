@@ -133,6 +133,7 @@ def アクアリング_self_heal(battle: Battle, ctx: EventContext, value: Any) 
     """アクアリング状態のターン終了時回復（最大HPの1/16、最小1）。"""
     mon = ctx.source
     heal = max(1, mon.max_hp // 16)
+    heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal)
     return HandlerReturn(value=battle.modify_hp(mon, v=heal, source=mon))
 
 
@@ -837,7 +838,9 @@ def ねをはる_self_heal(battle: Battle, ctx: EventContext, value: Any) -> Han
 
     かいふくふうじ状態では ON_MODIFY_HEAL 経由でブロックされる。
     """
-    return HandlerReturn(value=battle.modify_hp(ctx.source, r=1/16, source=ctx.source))
+    heal = max(1, ctx.source.max_hp // 16)
+    heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal)
+    return HandlerReturn(value=battle.modify_hp(ctx.source, v=heal, source=ctx.source))
 
 
 def のろい_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1011,6 +1014,26 @@ def ふういん_try_action(battle: Battle, ctx: AttackContext, value: Any) -> H
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
+
+def ブラッドムーン_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
+    """ブラッドムーン揮発状態: 前のターンにブラッドムーンのPPを消費していた場合、
+    コマンド選択肢からブラッドムーンを除外する。
+    """
+    mon = ctx.source
+    new_options = []
+    for cmd in value:
+        if (
+            not cmd.is_type("move")
+            or mon.moves[cmd.index].name != "ブラッドムーン"
+        ):
+            new_options.append(cmd)
+    return HandlerReturn(value=new_options)
+
+
+def ブラッドムーン_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ブラッドムーン揮発状態のターン経過処理（count: 2→1→0 で自動解除）。"""
+    return tick_volatile(battle, ctx, value, volatile="ブラッドムーン")
 
 
 def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1191,7 +1214,9 @@ def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any
     to_mon = battle.foe(from_mon)
     damage = battle.modify_hp(from_mon, r=-1/8, reason="drain")
     if damage:
-        battle.modify_hp(to_mon, -damage, reason="drain")
+        # 回復量へのおおきなねっこ補正は、回復するポケモン（to_mon）の所持アイテムで判定する
+        heal = battle.events.emit(Event.ON_CALC_DRAIN, ctx.derive(source=to_mon), -damage)
+        battle.modify_hp(to_mon, v=heal, reason="drain")
     return HandlerReturn(value=damage)
 
 
