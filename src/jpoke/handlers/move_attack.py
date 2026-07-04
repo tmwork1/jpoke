@@ -537,6 +537,13 @@ def ガリョウテンセイ_lower_defender_spd(battle: Battle, ctx: AttackConte
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
+def がんせきアックス_set_stealth_rock(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """がんせきアックス: 命中後、相手陣営にステルスロックを設置する。"""
+    side = battle.get_side(ctx.defender)
+    side.activate("ステルスロック", 1)
+    return HandlerReturn(value=value)
+
+
 def がんせきふうじ_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
 
