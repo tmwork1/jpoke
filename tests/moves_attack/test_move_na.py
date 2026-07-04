@@ -207,6 +207,28 @@ def test_なげつける_でんきだまでまひを付与する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_なげつける_どくどくだまでもうどくを付与する():
+    """なげつける: どくどくだまを投げると命中後に相手にもうどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="どくどくだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "もうどく"
+
+
+def test_なげつける_どくバリでどくを付与する():
+    """なげつける: どくバリを投げると命中後に相手にどくを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="どくバリ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "どく"
+
+
 @pytest.mark.parametrize("mon_name", ["ギラティナ(アナザー)", "ギラティナ(オリジン)"])
 def test_なげつける_はっきんだまをギラティナが使うと失敗する(mon_name):
     """なげつける: はっきんだまはギラティナ(アナザー/オリジン問わず)が使用すると失敗し、アイテムを消費しない。"""
