@@ -3846,6 +3846,36 @@ def test_ねばりのかぎづめ_バインドターン固定():
     assert foe.volatiles["バインド"].count == 7
 
 
+def test_ねばりのかぎづめ_付与後の入手では延びない():
+    """ねばりのかぎづめ: バインド付与後に入手しても継続ターンは延びない（付与時に確定）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    t.change_item(battle, mon, "ねばりのかぎづめ")
+    assert foe.has_volatile("バインド")
+    assert foe.volatiles["バインド"].count in {4, 5}
+
+
+def test_ねばりのかぎづめ_付与後の喪失では減らない():
+    """ねばりのかぎづめ: バインド付与後にアイテムを失っても継続ターンは減らない（付与時に確定）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まきつく"], item_name="ねばりのかぎづめ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    t.change_item(battle, mon, "")
+    assert foe.has_volatile("バインド")
+    assert foe.volatiles["バインド"].count == 7
+
+
 def test_ねらいのまと_タイプ免疫を無効化():
     """ねらいのまと: タイプ相性による免疫（0倍）を無効化する"""
     battle = t.start_battle(
