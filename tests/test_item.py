@@ -1386,6 +1386,26 @@ def test_グランドコート_非所持ではフィールドが5ターンのま
     assert battle.terrain.count == 5
 
 
+def test_こうかくレンズ_命中率が1_1倍になる():
+    """こうかくレンズ: 使う技の命中率が1.1倍になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="こうかくレンズ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy * 4506 // 4096
+
+
+def test_こうかくレンズ_非所持では命中率が変化しない():
+    """こうかくレンズ: 持っていない場合は命中率が変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいみんじゅつ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 def test_こうこうのしっぽ_行動が後になる():
     """こうこうのしっぽ: 行動順を1段階後ろにする"""
     battle = t.start_battle(
