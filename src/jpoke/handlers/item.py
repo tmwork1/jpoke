@@ -425,18 +425,27 @@ def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) ->
 
 
 def イバンのみ_boost_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """イバンのみ: 先制フラグが立っているとき行動ティアを+1する。"""
+    """イバンのみ: 先制フラグが立っているとき行動ティアを+1する。
+
+    相手のきんちょうかん・じんばいったいの影響下では消費・発動しない
+    （フラグは持ち越され、その効果が無くなったターンで発動する）。
+    """
     mon = ctx.attacker
-    if mon.item.count == 1:
+    if mon.item.count == 1 and not battle.query.is_nervous(mon):
         battle.item_manager.consume_item(mon)
         return HandlerReturn(value=value + 1)
     return HandlerReturn(value=value)
 
 
 def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """イバンのみ: HPが1/4以下に下がった瞬間に先制フラグを立てる。"""
+    """イバンのみ: HPが1/4以下に下がった瞬間に先制フラグを立てる。
+
+    こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）。
+    """
     mon = ctx.target
     assert mon is not None
+    if ctx.hp_change_reason == "self_attack":
+        return HandlerReturn(value=value)
     hp_after = mon.hp
     hp_before = hp_after + value
     if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
@@ -586,11 +595,20 @@ def カムラのみ_boost_speed(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def からぶりほけん_boost_speed_on_miss(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """からぶりほけん: 技が外れたときすばやさ+2。"""
+    """からぶりほけん: 技が外れたときすばやさ+2。
+
+    一撃必殺技を外したときは発動しない。
+    連続技は最初の1発が外れたときのみ発動する（2発目以降の命中判定失敗では発動しない）。
+    """
     mon = ctx.attacker
     assert mon is not None
-    battle.modify_stats(mon, {"spe": +2})
-    _announce_and_consume_item(battle, mon)
+    if ctx.move.has_flag("ohko"):
+        return HandlerReturn(value=value)
+    if ctx.hit_index != 1:
+        return HandlerReturn(value=value)
+    changes = battle.modify_stats(mon, {"spe": +2})
+    if changes:  # ランク上限などで不発の場合は消費しない
+        _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 

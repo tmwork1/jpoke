@@ -945,6 +945,33 @@ def test_カムラのみ_すばやさランクが最大のとき発動しない(
     assert mon.has_item()
 
 
+def test_からぶりほけん_すばやさランクが最大のときは発動しない():
+    """からぶりほけん: すでにすばやさランクが最大(+6)のときは発動しない（アイテムも消費されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="からぶりほけん", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    mon = battle.actives[0]
+    mon.rank["spe"] = 6
+    t.run_move(battle, 0)
+    assert mon.rank["spe"] == 6
+    assert mon.has_item()
+
+
+def test_からぶりほけん_一撃必殺技を外したときは発動しない():
+    """からぶりほけん: 一撃必殺技を外したときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="からぶりほけん", move_names=["じわれ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["spe"] == 0
+    assert mon.has_item()
+
+
 def test_からぶりほけん_技が命中したときは発動しない():
     """からぶりほけん: 技が命中したときは発動しない"""
     battle = t.start_battle(
@@ -969,6 +996,33 @@ def test_からぶりほけん_技が外れたときS上昇():
     t.run_move(battle, 0)
     assert mon.rank["spe"] == 2
     assert not mon.has_item()
+
+
+def test_からぶりほけん_連続技は1発目が外れると発動する():
+    """からぶりほけん: check_hit_each_time技は最初の1発が外れたときは発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", item_name="からぶりほけん", move_names=["トリプルキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["spe"] == 2
+    assert not mon.has_item()
+
+
+def test_からぶりほけん_連続技は2発目以降が外れても発動しない():
+    """からぶりほけん: check_hit_each_time技は最初の1発が外れたときのみ発動する。
+    1発目が命中し2発目以降が外れても発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", item_name="からぶりほけん", move_names=["トリプルキック"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    battle.move_executor._check_hit = lambda ctx: ctx.hit_index == 1
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.rank["spe"] == 0
+    assert mon.has_item()
 
 
 def test_かるいし_体重の最低値は0_1kg():
