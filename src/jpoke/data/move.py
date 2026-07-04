@@ -7067,7 +7067,11 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=160,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.リチャージ_apply,
+            )
+        }
     ),
     "プレゼント": MoveData(
         type="ノーマル",
