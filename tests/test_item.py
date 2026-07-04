@@ -623,6 +623,45 @@ def test_おおきなねっこ_吸収技の回復量増加():
     assert attacker.hp == expected_hp
 
 
+def test_オッカのみ_あついしぼうの影響下でも発動する():
+    """オッカのみ: あついしぼうはタイプ相性を変えないため発動に影響しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["だいもんじ"])],
+        team1=[Pokemon("フシギダネ", item_name="オッカのみ", ability_name="あついしぼう")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == 8192  # 効果抜群のまま
+    assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()  # 発動して消費される
+
+
+def test_オッカのみ_タールショットで抜群になったほのお技でも発動する():
+    """オッカのみ: タールショットの効果で抜群になったほのお技を受けたときも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", item_name="オッカのみ")],  # でんきタイプはほのお等倍
+        volatile1={"タールショット": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)  # ゼニガメがひのこで攻撃
+    assert battle.damage_calculator.def_type_modifier == 8192  # タールショットで効果抜群に
+    assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()  # 発動して消費される
+
+
+def test_オッカのみ_やきつくすを抜群で受けてもダメージが半減する():
+    """オッカのみ: やきつくすを抜群で受けた場合、技の効果よりオッカのみの効果が優先されダメージを半減できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒトカゲ", move_names=["やきつくす"])],
+        team1=[Pokemon("フシギダネ", item_name="オッカのみ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()  # オッカのみの効果で消費される
+
+
 def test_オボンのみ_HP50以下で回復():
     """オボンのみ: HP1/2以下になった瞬間に最大HPの1/4を回復する"""
     battle = t.start_battle(
