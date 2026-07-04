@@ -1383,14 +1383,20 @@ def ビアーのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
 
 
 def ビビリだま_boost_speed_on_intimidate(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ビビリだま: いかくによってこうげきが下がったときすばやさ+1。"""
+    """ビビリだま: いかくでこうげきが変化したときすばやさ+1。
+
+    あまのじゃく所持者はいかくで逆にこうげきが上昇するが、その場合も発動する
+    （実際にこうげきが最小/最大まで変化せず不発だった場合は value に "atk" が含まれない）。
+    すばやさが既に最大（あまのじゃく所持者ならすばやさが既に最小）で
+    battle.modify_stats が不発だった場合は発動・消費しない。
+    """
     mon = ctx.target
     assert mon is not None
     if (
-        value.get("atk", 0) < 0
+        "atk" in value
         and ctx.stat_change_reason == "いかく"
+        and battle.modify_stats(mon, {"spe": +1})
     ):
-        battle.modify_stats(mon, {"spe": +1})
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 

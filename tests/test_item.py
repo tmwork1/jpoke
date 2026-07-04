@@ -4137,6 +4137,18 @@ def test_ひるみ付与アイテム_変化技では発動しない(item_name):
     assert not battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ビビリだま_あまのじゃく所持者はこうげき上昇時にすばやさが下がる():
+    """ビビリだま: あまのじゃく所持者はいかくでこうげきが上昇し、ビビリだまの効果も反転してすばやさが下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく", item_name="ビビリだま")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["atk"] == 1
+    assert mon.rank["spe"] == -1
+    assert not mon.has_item()
+
+
 def test_ビビリだま_いかくでS上昇():
     """ビビリだま: いかくによってこうげきが下がったときすばやさ+1"""
     battle = t.start_battle(
@@ -4147,6 +4159,34 @@ def test_ビビリだま_いかくでS上昇():
     assert mon.rank["spe"] == 1
     assert mon.rank["atk"] == -1
     assert not mon.has_item()
+
+
+def test_ビビリだま_こうげきが最低ランクで変化しない場合は発動しない():
+    """ビビリだま: こうげきが既に最低ランクでいかくが不発だった場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ビビリだま")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("コラッタ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    mon.rank["atk"] = -6
+    t.run_switch(battle, 1, 1)
+    assert mon.rank["atk"] == -6
+    assert mon.rank["spe"] == 0
+    assert mon.has_item()
+
+
+def test_ビビリだま_すばやさが最大ランクの場合は発動しない():
+    """ビビリだま: すばやさが既に最大ランクの場合は発動・消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ビビリだま")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("コラッタ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spe"] = 6
+    t.run_switch(battle, 1, 1)
+    assert mon.rank["atk"] == -1
+    assert mon.rank["spe"] == 6
+    assert mon.has_item()
 
 
 def test_ピントレンズ_急所ランク加算():
