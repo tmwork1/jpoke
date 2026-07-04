@@ -475,6 +475,25 @@ def マジックルーム_tick(battle: Battle, ctx: EventContext, value: Any) ->
     return _tick_global_field(battle, ctx, value, name="マジックルーム")
 
 
+def みかづきのまい_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """みかづきのまい: 場に出たポケモンの HP を全回復し、状態異常を回復し、全ての技の PP を全回復する。
+
+    HP 満タン・状態異常なし・全ての技の PP が満タンの場合には発動せず、フィールドは保留される。
+    いずれかに変化があった場合のみフィールドを解除する。
+    """
+    mon = ctx.source
+    side = battle.get_side(mon)
+    pp_full = all(m.pp == m.data.pp for m in mon.moves)
+    if mon.hp == mon.max_hp and not mon.ailment.is_active and pp_full:
+        return HandlerReturn(value=value)
+    battle.modify_hp(mon, v=mon.max_hp - mon.hp)
+    battle.ailment_manager.remove(mon)
+    for move in mon.moves:
+        move.reset(reset_pp=True)
+    side.deactivate("みかづきのまい")
+    return HandlerReturn(value=value)
+
+
 def ミストフィールド_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ミストフィールドでのドラゴン技威力0.5倍"""
     if (

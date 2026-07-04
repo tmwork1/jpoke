@@ -1857,6 +1857,18 @@ def みかづきのいのり_apply(battle: Battle, ctx: AttackContext, value: An
     return HandlerReturn(value=value)
 
 
+def みかづきのまい_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みかづきのまい: 使用者をひんしにし、自陣営に「みかづきのまい」フィールドを設置する。
+
+    次に場に出たポケモンの HP が全回復し、状態異常が回復し、全ての技の PP も全回復する。
+    """
+    mon = ctx.attacker
+    side = battle.get_side(mon)
+    side.activate("みかづきのまい", 1)
+    battle.faint(mon)
+    return HandlerReturn(value=value)
+
+
 def みがわり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """みがわりの効果を発動する。"""
     mon = ctx.attacker

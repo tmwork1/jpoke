@@ -7721,8 +7721,11 @@ MOVES: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=10,
+        target="self",
         flags={"dance", "heal"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(hs.みかづきのまい_apply),
+        },
     ),
     "みがわり": MoveData(
         type="ノーマル",

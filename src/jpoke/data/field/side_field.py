@@ -82,6 +82,15 @@ SIDE_FIELD: dict[str, FieldData] = {
             ),
         },
     ),
+    "みかづきのまい": FieldData(
+        handlers={
+            Event.ON_SWITCH_IN: h.FieldHandler(
+                h.みかづきのまい_heal,
+                subject_spec="source:self",
+                priority=100,
+            ),
+        },
+    ),
     "おいかぜ": FieldData(
         handlers={
             DomainEvent.ON_CALC_SPEED: h.FieldHandler(
