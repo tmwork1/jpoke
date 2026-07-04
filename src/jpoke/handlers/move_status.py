@@ -996,6 +996,10 @@ def トーチカ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return apply_volatile_to_attacker(battle, ctx, value, volatile="トーチカ")
 
 
+def どくガス_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
+
+
 def どくどく_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="もうどく")
 

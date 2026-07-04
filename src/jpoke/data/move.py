@@ -5055,7 +5055,11 @@ MOVES: dict[MoveName, MoveData] = {
         category="status",
         pp=40,
         accuracy=90,
-        handlers={},  # TODO : 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.どくガス_apply_ailment_to_defender,
+            ),
+        }
     ),
     "どくづき": MoveData(
         type="どく",
