@@ -104,7 +104,7 @@ def sort_items(target: Path) -> None:
     # ITEMS辞書の開始行を探す（0-indexed）
     dict_start = -1
     for i, line in enumerate(lines):
-        if line.startswith("ITEMS: dict[str, ItemData] = {"):
+        if line.startswith("ITEMS: dict[") and line.rstrip().endswith("ItemData] = {"):
             dict_start = i
             break
     if dict_start == -1:

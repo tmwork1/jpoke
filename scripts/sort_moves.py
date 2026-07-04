@@ -102,7 +102,7 @@ def sort_moves(target: Path) -> None:
     # MOVES辞書の開始行を探す（0-indexed）
     dict_start = -1
     for i, line in enumerate(lines):
-        if line.startswith("MOVES: dict[str, MoveData] = {"):
+        if line.startswith("MOVES: dict[") and line.rstrip().endswith("MoveData] = {"):
             dict_start = i
             break
     if dict_start == -1:

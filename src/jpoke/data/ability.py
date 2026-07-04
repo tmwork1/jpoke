@@ -2918,6 +2918,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.ミラーアーマー_reflect_stat_drop,
                 subject_spec="target:self",
+                # クリアチャームを持っている場合はアイテムの無効化が先に発動し
+                # 反射できなくなるため、アイテムの既定優先度(100)より後に実行する
+                priority=110,
             )
         }
     ),

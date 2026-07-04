@@ -1279,6 +1279,18 @@ def test_クリアチャーム_いかくを防ぐ():
     assert mon.rank["atk"] == 0
 
 
+def test_クリアチャーム_ミラーアーマーとの併用では反射されない():
+    """クリアチャーム: 特性ミラーアーマーを持っていても、クリアチャームの無効化が先に発動し反射できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー", item_name="クリアチャーム")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    assert mon.rank["atk"] == 0
+    assert foe.rank["atk"] == 0
+
+
 def test_クリアチャーム_自分の技の低下は防げない():
     """クリアチャーム: 自分の技によるランク低下（リーフストームのC-2）は防げない"""
     battle = t.start_battle(
