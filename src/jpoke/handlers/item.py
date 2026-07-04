@@ -1301,6 +1301,17 @@ def バコウのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
     return _modify_super_effective_damage(battle, ctx, value, type_="ひこう", modifier=2048/4096)
 
 
+def バンジのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """バンジのみ: HPが1/4以下になった瞬間に最大HPの1/3を回復するが、
+    とくぼうが上がりにくい性格（やんちゃ・のうてんき・うっかりや・むじゃき）は
+    にがい味を嫌うためこんらんする。
+    """
+    return _heal_berry(
+        battle, ctx, value, denominator=4, heal_r=1/3,
+        confuse_natures=("やんちゃ", "のうてんき", "うっかりや", "むじゃき"),
+    )
+
+
 def パワフルハーブ_skip_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """パワフルハーブ: 溜め技の溜めターンをスキップする。
 
