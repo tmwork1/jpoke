@@ -1518,7 +1518,7 @@ ITEMS: dict[ItemName, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.heal_on_quarter_hp,
+                h.フィラのみ_heal_on_quarter_hp,
                 subject_spec="target:self",
             )
         },

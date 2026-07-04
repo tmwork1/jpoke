@@ -4201,6 +4201,38 @@ def test_ピントレンズ_急所ランク加算():
     assert battle.move_executor.critical_rank == 1
 
 
+@pytest.mark.parametrize(
+    "nature",
+    ["ずぶとい", "ひかえめ", "おだやか", "おくびょう"]
+)
+def test_フィラのみ_こうげきが上がりにくい性格でこんらんする(nature):
+    """フィラのみ: からい味が嫌いな性格（こうげきが上がりにくい）は発動と同時にこんらんする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="フィラのみ", nature=nature)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
+def test_フィラのみ_それ以外の性格ではこんらんしない():
+    """フィラのみ: からい味が嫌いでない性格では発動してもこんらんしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="フィラのみ", nature="まじめ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert not mon.has_volatile("こんらん")
+
+
 @pytest.mark.parametrize("item_name", ["エレキシード", "グラスシード", "サイコシード", "ミストシード"])
 def test_フィールドシード_フィールドなしでは発動しない(item_name):
     """フィールドシード系: 対応フィールドがないとき発動しない"""

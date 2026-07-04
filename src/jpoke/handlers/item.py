@@ -1406,6 +1406,17 @@ def ピントレンズ_boost_critical_rank(battle: Battle, ctx: AttackContext, v
     return HandlerReturn(value=value + 1)
 
 
+def フィラのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """フィラのみ: HPが1/4以下になった瞬間に最大HPの1/3を回復するが、
+    こうげきが上がりにくい性格（ずぶとい・ひかえめ・おだやか・おくびょう）は
+    からい味を嫌うためこんらんする。
+    """
+    return _heal_berry(
+        battle, ctx, value, denominator=4, heal_r=1/3,
+        confuse_natures=("ずぶとい", "ひかえめ", "おだやか", "おくびょう"),
+    )
+
+
 def ふうせん_check_floating(_battle: Battle, _ctx: EventContext, _value: Any) -> HandlerReturn:
     return HandlerReturn(value=True)
 
