@@ -941,8 +941,16 @@ def せいれいプレート_modify_power_by_type(battle: Battle, ctx: AttackCon
     return _modify_power_by_type(ctx.move, value, type_="フェアリー", modifier=4915)
 
 
-def せんせいのツメ_priority_boost(battle: Battle, _ctx: AttackContext, value: int) -> HandlerReturn:
-    """せんせいのツメ: 20%の確率で先制ティアを+1する。"""
+def せんせいのツメ_priority_boost(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """せんせいのツメ: 20%の確率で先制ティアを+1する。
+
+    所有者の特性がきんしのちからで変化技を選んだ場合は発動しない。
+    """
+    if (
+        ctx.attacker.ability.name == "きんしのちから"
+        and not ctx.move.is_attack
+    ):
+        return HandlerReturn(value=value)
     if battle.random.random() < 0.2:
         return HandlerReturn(value=value + 1)
     return HandlerReturn(value=value)

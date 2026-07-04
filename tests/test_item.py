@@ -2240,13 +2240,41 @@ def test_ズアのみ_とくぼうランクが最大のとき発動しない():
     assert mon.has_item()
 
 
+def test_せんせいのツメ_きんしのちからでも攻撃技選択時は発動する():
+    """せんせいのツメ: 所有者の特性がきんしのちからでも攻撃技を選んだ場合は発動し得る"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "カビゴン", ability_name="きんしのちから", item_name="せんせいのツメ",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    t.fix_random(battle, 0.0)  # < 0.2 → 先制
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]  # カビゴンが先攻
+
+
+def test_せんせいのツメ_きんしのちからで変化技選択時は発動しない():
+    """せんせいのツメ: 所有者の特性がきんしのちからで変化技を選んだ場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "カビゴン", ability_name="きんしのちから", item_name="せんせいのツメ",
+            move_names=["なきごえ"],
+        )],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    t.fix_random(battle, 0.0)  # 発動条件を満たしても無効
+    order = t.get_action_order(battle)
+    assert order[-1] == battle.actives[0]  # カビゴンは変化技選択できんしのちからにより最後に行動
+
+
 def test_せんせいのツメ_先制確率で先攻():
-    """せんせいのツメ: 23.4%の確率で行動順が1段階早くなる"""
+    """せんせいのツメ: 20%の確率で行動順が1段階早くなる"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", item_name="せんせいのツメ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
-    t.fix_random(battle, 0.0)  # < 0.234 → 先制
+    t.fix_random(battle, 0.0)  # < 0.2 → 先制
     order = t.get_action_order(battle)
     assert order[0] == battle.actives[0]  # カビゴンが先攻
 
@@ -2257,7 +2285,7 @@ def test_せんせいのツメ_非発動時は通常の順番():
         team0=[Pokemon("カビゴン", item_name="せんせいのツメ", move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
     )
-    t.fix_random(battle, 0.5)  # >= 0.234 → 発動しない
+    t.fix_random(battle, 0.5)  # >= 0.2 → 発動しない
     order = t.get_action_order(battle)
     assert order[0] == battle.actives[1]  # ピカチュウが先攻（素早さ優位）
 
