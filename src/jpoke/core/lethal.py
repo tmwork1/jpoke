@@ -25,7 +25,7 @@ from collections import defaultdict
 
 from jpoke.types import Stat, AilmentName, LethalSubject
 from jpoke.enums import LethalEvent
-from jpoke.utils.lethal_dist import StateDist, State, to_dist, to_dist, subtract_dist
+from jpoke.utils.lethal_dist import StateDist, State, to_dist, to_dist, subtract_dist, add_dist
 
 
 @dataclass(frozen=True)
@@ -76,7 +76,6 @@ class LethalPokemonState:
 
 @dataclass
 class LethalResult:
-    # TODO : LethalResultどうしの和をとることで加算ダメージ計算できるように演算を定義する
     """1ヒット時点の致死率計算結果。
 
     Attributes:
@@ -94,6 +93,24 @@ class LethalResult:
     damage_dist: StateDist
     attacker: LethalPokemonState = field(default_factory=LethalPokemonState)
     defender: LethalPokemonState = field(default_factory=LethalPokemonState)
+
+    def __add__(self, other: LethalResult) -> LethalResult:
+        """2つのLethalResultのdamage_distを合算(畳み込み)した新しいLethalResultを返す。
+
+        n_attack/hit/move/hp_dist/attacker/defenderには数学的に自然な「和」が存在しないため、
+        合成後はother側の値をそのまま引き継ぐ。damage_distのみadd_distで畳み込み合成する。
+        """
+        if not isinstance(other, LethalResult):
+            return NotImplemented
+        return LethalResult(
+            n_attack=other.n_attack,
+            move=other.move,
+            hit=other.hit,
+            hp_dist=other.hp_dist,
+            damage_dist=add_dist(self.damage_dist, other.damage_dist),
+            attacker=other.attacker,
+            defender=other.defender,
+        )
 
     def _counter(self, dist: StateDist) -> dict[int, int]:
         """分布の HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
