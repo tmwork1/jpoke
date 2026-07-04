@@ -1412,7 +1412,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     """なげつける: アイテムに応じた追加効果を命中時に適用する。
 
     対象のアイテムはこの時点ではまだ消費されていない（ON_MOVE_ENDで消費）。
-    でんきだま → まひ、かえんだま → やけど、どくバリ → どく、どくどくだま → もうどく。
+    でんきだま → まひ、かえんだま → やけど、どくバリ → どく、どくどくだま → もうどく、
+    メンタルハーブ → いちゃもん・アンコール・かなしばり・ちょうはつを解除。
     """
     item_name = ctx.attacker.item.base_name
     if item_name == "でんきだま":
@@ -1437,7 +1438,10 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
                 defender, LogCode.STAT_CHANGED,
                 payload={"stats": changed, "reason": "しろいハーブ"},
             )
-    # TODO: メンタルハーブ → 相手のメンタル系状態を回復
+    elif item_name == "メンタルハーブ":
+        defender = ctx.defender
+        for volatile_name in ("いちゃもん", "アンコール", "かなしばり", "ちょうはつ"):
+            battle.volatile_manager.remove(defender, volatile_name)
     # TODO: ラムのみ → 相手の状態異常・こんらんを回復
     # TODO: その他のきのみ・追加効果アイテム
     return HandlerReturn(value=value)
