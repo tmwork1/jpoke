@@ -3004,6 +3004,32 @@ def test_チーゴのみ_やけど付与直後に即時回復する():
     assert not defender.has_item()
 
 
+def test_でんきだま_こんらん自傷ダメージには補正なし():
+    """でんきだま: こんらんの自傷ダメージには攻撃補正がかからない（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="でんきだま")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
+@pytest.mark.parametrize("mon_name", ["ピチュー", "ライチュウ"])
+def test_でんきだま_ピチューライチュウには効果なし(mon_name):
+    """でんきだま: ピチュー・ライチュウが持っても攻撃補正はかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon(mon_name, item_name="でんきだま", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
 def test_とくせいガード_かたやぶりによる特性無効化をブロック():
     """とくせいガード: add_disabled_reasonによる特性無効化をブロックする"""
     battle = t.start_battle(
@@ -3843,6 +3869,7 @@ def test_天候延長アイテム(item_name, weather):
     ("かまどのめん", "オーガポン(かまど)", "たいあたり", 4915),
     ("でんきだま", "ピカチュウ", "たいあたり", 8192),
     ("でんきだま", "ピカチュウ", "でんきショック", 8192),
+    ("でんきだま", "ピカチュウ(キョダイ)", "たいあたり", 8192),
     ("いしずえのめん", "オーガポン(いしずえ)", "エナジーボール", 4915),
     ("いどのめん", "オーガポン(いど)", "エナジーボール", 4915),
     ("かまどのめん", "オーガポン(かまど)", "エナジーボール", 4915),

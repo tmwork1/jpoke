@@ -1,6 +1,6 @@
 # test_item
 
-テスト数: 410
+テスト数: 414
 
 - [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=atk, amount=1)
 - [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=spe, amount=1)
@@ -295,6 +295,9 @@
 - [x] ちからのハチマキ_物理技1_1倍
 - [x] ちからのハチマキ_特殊技には補正なし
 - [x] チーゴのみ_やけど付与直後に即時回復する
+- [x] でんきだま_こんらん自傷ダメージには補正なし
+- [x] でんきだま_ピチューライチュウには効果なし(mon_name=ピチュー)
+- [x] でんきだま_ピチューライチュウには効果なし(mon_name=ライチュウ)
 - [x] とくせいガード_かたやぶりによる特性無効化をブロック
 - [x] とくせいガード_なしの場合は特性が無効化される
 - [x] とつげきチョッキ_物理技には防御補正なし
@@ -384,6 +387,7 @@
 - [x] 専用アイテム攻撃補正(item_name=かまどのめん, mon_name=オーガポン(かまど), move_name=たいあたり, expected_modifier=4915)
 - [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ, move_name=たいあたり, expected_modifier=8192)
 - [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ, move_name=でんきショック, expected_modifier=8192)
+- [x] 専用アイテム攻撃補正(item_name=でんきだま, mon_name=ピカチュウ(キョダイ), move_name=たいあたり, expected_modifier=8192)
 - [x] 専用アイテム攻撃補正(item_name=いしずえのめん, mon_name=オーガポン(いしずえ), move_name=エナジーボール, expected_modifier=4915)
 - [x] 専用アイテム攻撃補正(item_name=いどのめん, mon_name=オーガポン(いど), move_name=エナジーボール, expected_modifier=4915)
 - [x] 専用アイテム攻撃補正(item_name=かまどのめん, mon_name=オーガポン(かまど), move_name=エナジーボール, expected_modifier=4915)

@@ -1145,8 +1145,15 @@ def つめたいいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, 
 
 
 def でんきだま_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """でんきだま: ピカチュウ持ちの攻撃技こうげき・とくこう2倍。"""
-    if ctx.attacker.name in {"ピカチュウ"}:
+    """でんきだま: ピカチュウ持ちの攻撃技こうげき・とくこう2倍。キョダイマックスするピカチュウも対象。
+
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない
+    （Champions仕様＝第五世代以降の仕様に準拠）。
+    """
+    if (
+        ctx.attacker.name in {"ピカチュウ", "ピカチュウ(キョダイ)"}
+        and ctx.move.name != "_こんらん"
+    ):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
