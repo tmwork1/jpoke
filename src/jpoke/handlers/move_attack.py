@@ -1595,6 +1595,8 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
     またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合は失敗する。
     はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみ失敗する
     （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
+    ブーストエナジーはこだいかっせい/クォークチャージ持ちが使用した場合のみ失敗する
+    （それ以外のポケモンが使用した場合は通常通り威力30で成功する）。
     成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
     """
     attacker = ctx.attacker
@@ -1610,6 +1612,10 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
         item_data.fling_power == 0
         or item_data.no_fling
         or (attacker.item.base_name == "はっきんだま" and attacker.name.startswith("ギラティナ"))
+        or (
+            attacker.item.base_name == "ブーストエナジー"
+            and attacker.ability.name in ("こだいかっせい", "クォークチャージ")
+        )
     ):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,

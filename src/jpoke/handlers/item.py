@@ -1437,6 +1437,33 @@ def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackCo
     return HandlerReturn(value=value)
 
 
+def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """ブーストエナジー: こだいかっせい/クォークチャージ持ちが絡む奪取/交換を防ぐ。
+
+    - 保持者自身がこだいかっせい/クォークチャージ持ちの場合、
+      トリック・すりかえ・はたきおとす・どろぼう等による外部からの授受を防ぐ
+      （渡す/奪われる双方）。ただし、ブースト発動に伴う自己消費（source が自分自身）は防がない。
+    - 保持者がそうでない場合でも、トリック・すりかえ・どろぼう等の交換相手
+      （source未指定で判定される場合の相手側）がこだいかっせい/クォークチャージ持ちなら、
+      その相手にブーストエナジーが渡ることを防ぐ。
+      はたきおとす等source指定済みの単純消失処理では相手側の判定を行わない。
+    """
+    mon = ctx.target
+    if mon is None:
+        return HandlerReturn(value=value)
+
+    paradox_abilities = ("こだいかっせい", "クォークチャージ")
+    if mon.ability.name in paradox_abilities and ctx.source is not mon:
+        return HandlerReturn(value=False, stop_event=True)
+
+    if ctx.source is None:
+        foe = battle.foe(mon)
+        if foe is not None and foe.ability.name in paradox_abilities:
+            return HandlerReturn(value=False, stop_event=True)
+
+    return HandlerReturn(value=value)
+
+
 def ブーストエナジー_refresh_paradox_charge(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ブーストエナジー: アイテム有効化・取得時にパラドックスブーストを再判定する。"""
     return paradox.refresh_paradox_charge_state(battle, ctx, value)

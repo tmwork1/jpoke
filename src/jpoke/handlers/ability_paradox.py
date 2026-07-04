@@ -49,9 +49,17 @@ def _activate_paradox_boost(battle: Battle,
 
 
 def refresh_paradox_charge_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """こだいかっせい/クォークチャージの補正状態を更新する。"""
+    """こだいかっせい/クォークチャージの補正状態を更新する。
+
+    アイテム側（ON_ITEM_ENABLED/ON_ITEM_GAINED）からも呼ばれるため、
+    こだいかっせい/クォークチャージを持たないポケモンに対しては何もしない
+    （ブーストエナジーを持たせても効果が無いことに対応）。
+    """
     mon = ctx.source
     if mon is None:
+        return HandlerReturn(value=value)
+
+    if mon.ability.name not in ("こだいかっせい", "クォークチャージ"):
         return HandlerReturn(value=value)
 
     # 能力ごとに参照する場の状態が異なる。

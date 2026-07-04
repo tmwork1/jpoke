@@ -1566,6 +1566,10 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.ブーストエナジー_refresh_paradox_charge,
                 subject_spec="source:self",
             ),
+            Event.ON_CHECK_ITEM_CHANGE: h.ItemHandler(
+                h.ブーストエナジー_prevent_item_change,
+                subject_spec="target:self",
+            ),
         }
     ),
     "ホズのみ": ItemData(

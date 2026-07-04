@@ -4335,6 +4335,78 @@ def test_ブーストエナジー_こだいかっせい登場時に発動():
     assert not mon.has_item()
 
 
+def test_ブーストエナジー_バトル中に取得すると即座に発動する():
+    """ブーストエナジー: バトル中にアイテムを新たに取得すると即座にブーストが発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("コライドン", ability_name="こだいかっせい")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_stat is None
+    battle.item_manager.gain_item(mon, "ブーストエナジー")
+    assert mon.paradox_boost_stat is not None
+    assert mon.paradox_boost_source == "item"
+    assert not mon.has_item()
+
+
+def test_ブーストエナジー_パラドックス特性を持たないポケモンが取得しても発動しない():
+    """ブーストエナジー: こだいかっせい/クォークチャージを持たないポケモンが取得しても何も起きない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.gain_item(mon, "ブーストエナジー")
+    assert mon.paradox_boost_stat is None
+    assert mon.has_item("ブーストエナジー")
+
+
+def test_ブーストエナジー_パラドックス特性持ちからトリックで奪えない():
+    """ブーストエナジー: こだいかっせい/クォークチャージ持ちが持っている間はトリック・すりかえで交換されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="エレキメイカー", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", ability_name="クォークチャージ", item_name="ブーストエナジー")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    assert defender.has_item("ブーストエナジー")
+    t.run_move(battle, 0)
+    assert attacker.item.name == "たべのこし"
+    assert defender.item.name == "ブーストエナジー"
+
+
+@pytest.mark.parametrize("move_name", ["はたきおとす", "どろぼう"])
+def test_ブーストエナジー_パラドックス特性持ちから奪えない(move_name):
+    """ブーストエナジー: こだいかっせい/クォークチャージ持ちが持っている間ははたきおとす・どろぼう等で奪われない。
+    エレキメイカーは登場時優先度がクォークチャージの判定より先に発動するため、
+    同時に登場させることでエレキフィールドを発動源にし、アイテムを未消費のまま維持できる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="エレキメイカー", move_names=[move_name])],
+        team1=[Pokemon("カビゴン", ability_name="クォークチャージ", item_name="ブーストエナジー")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert defender.has_item("ブーストエナジー")
+    t.run_move(battle, 0)
+    assert defender.has_item("ブーストエナジー")
+
+
+def test_ブーストエナジー_パラドックス特性持ちへトリックで渡せない():
+    """ブーストエナジー: こだいかっせい/クォークチャージ持ちへはトリック等で渡すことができない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="ブーストエナジー")],
+        team1=[Pokemon("カビゴン", ability_name="クォークチャージ", item_name="たべのこし")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "ブーストエナジー"
+    assert defender.item.name == "たべのこし"
+
+
 def test_ぼうごパット_接触判定を無効化():
     """ぼうごパット: 攻撃技の接触判定を無効化する"""
     battle = t.start_battle(
