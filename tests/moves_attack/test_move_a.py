@@ -18,6 +18,42 @@ def test_3ぼんのや_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_3ぼんのや_ぼうぎょ低下が発動する():
+    """3ぼんのや: 50%で相手のぼうぎょを1段階下げる（ひるみとは独立判定）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["3ぼんのや"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == -1
+
+
+def test_3ぼんのや_急所ランクが1():
+    """3ぼんのや: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["3ぼんのや"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_3ぼんのや_急所ランクが1_乱数大で急所なし():
+    """3ぼんのや: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["3ぼんのや"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
 def test_アイアンヘッド_ひるみが発動する():
     """アイアンヘッド: 20%でひるみを付与する。"""
     battle = t.start_battle(

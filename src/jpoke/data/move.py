@@ -79,9 +79,14 @@ MOVES: dict[MoveName, MoveData] = {
         critical_rank=1,
         flags={"secondary_effect"},
         handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha._3ぼんのや_apply_flinch,
-            )
+            Event.ON_DAMAGE_HIT: [
+                h.MoveHandler(
+                    ha._3ぼんのや_lower_defender_def,
+                ),
+                h.MoveHandler(
+                    ha._3ぼんのや_apply_flinch,
+                ),
+            ]
         }
     ),
     "DDラリアット": MoveData(

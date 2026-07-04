@@ -57,6 +57,9 @@ def アイアンテール_lower_defender_def(battle: Battle, ctx: AttackContext,
 def _3ぼんのや_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
+def _3ぼんのや_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.5)
+
 
 def アイアンヘッド_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
