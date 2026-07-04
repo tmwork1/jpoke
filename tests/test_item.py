@@ -4980,6 +4980,20 @@ def test_ラムのみ_ターン終了で状態異常回復():
     assert not mon.has_item()
 
 
+def test_リュガのみ_ぼうぎょランクが最大のとき発動しない():
+    """リュガのみ: すでにぼうぎょランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="リュガのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["def"] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["def"] == 6
+    assert mon.has_item()
+
+
 def test_ルームサービス_トリックルームでS低下():
     """ルームサービス: トリックルーム発動時にすばやさ-1"""
     battle = t.start_battle(
