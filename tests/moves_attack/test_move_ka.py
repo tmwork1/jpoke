@@ -451,6 +451,49 @@ def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defe
     assert defender.hp == defender_hp - expected_damage
 
 
+def test_がんせきアックス_ステルスロック設置済みのとき攻撃は成功する():
+    """がんせきアックス: 相手陣営がステルスロック設置済みでも攻撃は成功する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシヘンジン", move_names=["がんせきアックス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        side1={"ステルスロック": 1},
+    )
+    defender = battle.actives[1]
+    side = battle.get_side(defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # 攻撃は成功してダメージを与える
+    assert defender.hp < hp_before
+    # ステルスロックは設置済みのまま
+    assert side.fields["ステルスロック"].is_active
+
+
+def test_がんせきアックス_命中後にダメージを与える():
+    """がんせきアックス: 命中すると相手に通常通りダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシヘンジン", move_names=["がんせきアックス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_がんせきアックス_命中後に相手陣営がステルスロック状態になる():
+    """がんせきアックス: 命中後に相手陣営がステルスロック状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシヘンジン", move_names=["がんせきアックス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    side = battle.get_side(battle.actives[1])
+    t.run_move(battle, 0)
+    assert side.fields["ステルスロック"].is_active
+
+
 def test_がんせきほう_まもるで防がれた場合はリチャージ状態にならない():
     """がんせきほう: まもるで防がれた場合はリチャージ揮発状態が付与されない。"""
     battle = t.start_battle(
