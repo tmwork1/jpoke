@@ -2022,6 +2022,33 @@ def test_ポイズンテール_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_ポルターガイスト_アイテムあり_ダメージを与える():
+    """ポルターガイスト: 相手がアイテムを持っているとき通常通りダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ポルターガイスト"])],
+        team1=[Pokemon("ピカチュウ", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_ポルターガイスト_アイテムなし_失敗しダメージなし():
+    """ポルターガイスト: 相手がアイテムを持っていないとき技が失敗してダメージを与えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ポルターガイスト"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.move_executor.move_applied is False
+
+
 def test_ミサイルばり_複数ヒットする():
     """ミサイルばり: 2～5回連続でヒットする複数ヒット技である。"""
     battle = t.start_battle(

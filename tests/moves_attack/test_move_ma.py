@@ -253,6 +253,33 @@ def test_みずのはどう_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_みねうち_HP1のとき_ダメージが0になる():
+    """みねうち: 相手のHPがすでに1のとき、ダメージ0で倒さない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["みねうち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.hp == 1
+
+
+def test_みねうち_HP1以上の相手に使うと必ずHP1を残す():
+    """みねうち: 与えるダメージを defender.hp - 1 に制限して必ずHP1を残す。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["みねうち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # 大きなダメージを固定して、実際にはHP-1に抑えられることを確認
+    t.fix_damage(battle, defender.max_hp * 10)
+    t.run_move(battle, 0)
+    assert defender.hp == 1
+
+
 def test_みらいよち_2ターン後に相手にダメージが入る():
     """みらいよち: 使用から2ターン後のターン終了時に相手へダメージが発生する。"""
     battle = t.start_battle(
