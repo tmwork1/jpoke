@@ -5040,6 +5040,32 @@ def test_ヤタピのみ_とくこうランクが最大のとき発動しない(
     assert mon.has_item()
 
 
+def test_ヤチェのみ_あついしぼうの影響下でも発動する():
+    """ヤチェのみ: あついしぼうはタイプ相性を変えないため発動に影響しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["ふぶき"])],
+        team1=[Pokemon("フシギダネ", item_name="ヤチェのみ", ability_name="あついしぼう")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == 8192  # 効果抜群のまま
+    assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()  # 発動して消費される
+
+
+def test_ヤチェのみ_フリーズドライのみずタイプに対する効果抜群でも発動する():
+    """ヤチェのみ: フリーズドライがみずタイプに抜群のときも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["フリーズドライ"])],
+        team1=[Pokemon("カメックス", item_name="ヤチェのみ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == 8192  # みずタイプへの効果抜群
+    assert battle.damage_calculator.damage_modifier == 2048
+    assert not battle.actives[1].has_item()  # 発動して消費される
+
+
 def test_ゆきだま_あまのじゃくでA最小のとき発動しない():
     """ゆきだま: あまのじゃく所持者のこうげきランクが最小のとき発動しない"""
     battle = t.start_battle(
