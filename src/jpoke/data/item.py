@@ -873,7 +873,7 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.じしゃく_modify_power_by_type,
                 subject_spec="attacker:self",
             )
-        }
+        },
     ),
     "じゃくてんほけん": ItemData(
         fling_power=80,
