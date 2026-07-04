@@ -41,6 +41,34 @@ def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
     assert not mon.has_item()
 
 
+@pytest.mark.parametrize("item_name, stat, amount",
+                         [
+                             ("チイラのみ", "atk", 1),
+                             ("カムラのみ", "spe", 1),
+                             ("ヤタピのみ", "spa", 1),
+                             ("リュガのみ", "def", 1),
+                             ("ズアのみ", "spd", 1),
+                         ]
+                         )
+def test_HP25以下でランク上昇するきのみ_こんらんの自傷では発動しない(item_name, stat, amount):
+    """こんらんの自傷ダメージ(reason=self_attack)でHPが1/4以下になっても発動しない
+    （第五世代以降の仕様）。その後、自傷以外のダメージを受けると発動する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1, reason="self_attack")
+    assert mon.hp == mon.max_hp // 4
+    assert mon.has_item(), "こんらんの自傷ダメージでアイテムが消費された"
+
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank[stat] == amount
+    assert not mon.has_item()
+
+
 @pytest.mark.parametrize(
     "item_name",
     ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"]
@@ -2883,6 +2911,20 @@ def test_だっしゅつボタン_控えがいないと発動しない():
     assert mon.has_item("だっしゅつボタン")
 
 
+def test_チイラのみ_こうげきランクが最大のとき発動しない():
+    """チイラのみ: すでにこうげきランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="チイラのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["atk"] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["atk"] == 6
+    assert mon.has_item()
+
+
 def test_ちからのハチマキ_物理技1_1倍():
     """ちからのハチマキ: 物理技の威力を1.1倍にする"""
     battle = t.start_battle(
@@ -2903,6 +2945,19 @@ def test_ちからのハチマキ_特殊技には補正なし():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_チーゴのみ_やけど付与直後に即時回復する():
+    """チーゴのみ: やけど付与直後（ON_APPLY_AILMENT）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おにび"])],
+        team1=[Pokemon("カビゴン", item_name="チーゴのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert not defender.has_item()
 
 
 def test_とくせいガード_かたやぶりによる特性無効化をブロック():
