@@ -6,7 +6,6 @@
     "review_extra": ""
   },
   "todo_queue": [
-    "LethalResultどうしの和をとることで加算ダメージ計算できるように演算を定義する",
     "複数処理を内包しているメソッド名は ..._apply でよい",
     "純粋な能力変動系のメソッド名を ..._boost_attacker_spa, lower_defender_spe の計s機に統一する",
     "純粋な状態異常付与系のメソッド名を ..._apply_<ailment name>_to_attacker(or defender)に統一する",
@@ -14,6 +13,7 @@
     "scripts/sort_data/のようなサブディレクトリにまとめ、指示書に反映する"
   ],
   "completed": [
+    "LethalResultどうしの和をとることで加算ダメージ計算できるように演算を定義する",
     "将来的な拡張も見据えて、attacker/defenderの状態の記録方法を構造化する",
     "定数化すべきものをコード全体から切り出す",
     "クラスとして実装する意義があるか検討する。関数モジュールとして実装するほうがシンプルで良いかもしれない。(8ファイル分+関連1件、docs/plan/managers_class_vs_function.mdに検討記録)",
