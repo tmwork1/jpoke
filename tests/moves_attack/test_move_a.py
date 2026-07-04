@@ -547,6 +547,18 @@ def test_あわ_すばやさ低下が発動する():
     assert battle.actives[1].rank["spe"] == -1
 
 
+def test_あんこくきょうだ_確定急所():
+    """あんこくきょうだ: 急所ランク3のため乱数によらず常に急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウーラオス(いちげき)", move_names=["あんこくきょうだ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、急所は確定ランク3で必ず発生
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
 def test_いかりのまえば_最低1ダメージ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["いかりのまえば"])],
