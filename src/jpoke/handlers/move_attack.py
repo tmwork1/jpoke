@@ -1975,6 +1975,14 @@ def Vジェネレート_reduce_defender_spd_spe(battle: Battle, ctx: AttackConte
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1, "spe": -1})
 
 
+def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぶきみなじゅもん: 相手の最後に使った技のPPを3減らす。"""
+    mon = ctx.defender
+    if mon.executed_move is not None:
+        mon.executed_move.modify_pp(-3)
+    return HandlerReturn(value=value)
+
+
 def ぶちかまし_reduce_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 

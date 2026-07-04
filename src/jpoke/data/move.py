@@ -6949,11 +6949,15 @@ MOVES: dict[str, MoveData] = {
     "ぶきみなじゅもん": MoveData(
         type="エスパー",
         category="special",
-        pp=5,
+        pp=8,
         power=80,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.ぶきみなじゅもん_reduce_defender_pp,
+            )
+        }
     ),
     "ぶちかまし": MoveData(
         type="じめん",
