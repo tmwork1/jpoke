@@ -1413,8 +1413,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
     elif item_name == "どくどくだま":
         battle.ailment_manager.apply(ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx)
-    # TODO: おうじゃのしるし → ひるみ
-    # TODO: するどいキバ → ひるみ
+    elif item_name in ("おうじゃのしるし", "するどいキバ"):
+        battle.volatile_manager.apply(ctx.defender, "ひるみ", source=ctx.attacker)
     # TODO: しろいハーブ → 相手の下がったランクを0に戻す
     # TODO: メンタルハーブ → 相手のメンタル系状態を回復
     # TODO: ラムのみ → 相手の状態異常・こんらんを回復
@@ -1855,6 +1855,14 @@ def フェイント_remove_protect(battle: Battle, ctx: AttackContext, value: An
                 LogCode.VOLATILE_REMOVED,
                 payload={"volatile": volatile, "reason": "フェイント"}
             )
+    return HandlerReturn(value=value)
+
+
+def フォトンゲイザー_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """フォトンゲイザー: 補正込みAがCより高い場合は物理技として計算する。"""
+    mon = ctx.attacker
+    if mon.ranked_stats["atk"] > mon.ranked_stats["spa"]:
+        return HandlerReturn(value="physical")
     return HandlerReturn(value=value)
 
 

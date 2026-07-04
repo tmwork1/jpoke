@@ -6691,7 +6691,12 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        flags={"ignore_ability"},
+        handlers={
+            Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
+                ha.フォトンゲイザー_modify_move_category,
+            ),
+        },
     ),
     "ふきとばし": MoveData(
         type="ノーマル",
