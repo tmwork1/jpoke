@@ -680,7 +680,6 @@ def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: 
 
 def おやこあい_reduce_second_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """おやこあい特性: 2ヒット目のダメージを減衰させる。"""
-    print(vars(ctx))
     if ctx.hit_index == 2:
         value //= 4
     return HandlerReturn(value=value)
@@ -2156,7 +2155,6 @@ def ナイトメア_damage_sleeping_foe(battle: Battle, ctx: EventContext, value
     """ナイトメア特性: 相手がねむり状態のとき毎ターン最大HPの1/8を削る。"""
     mon = ctx.source
     foe = battle.foe(mon)
-    print(f"{foe.ailment.is_sleep=}")
     if (
         foe.ailment.is_sleep
         and battle.modify_hp(foe, r=-1/8)

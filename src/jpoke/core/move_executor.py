@@ -146,7 +146,6 @@ class MoveExecutor:
         """
         # テストオプションによる命中率の上書き
         if self.battle.test_option.accuracy is not None:
-            print(f"Test option override: accuracy set to {self.battle.test_option.accuracy}")
             self.accuracy = self.battle.test_option.accuracy
             return 100 * self.battle.random.random() < self.accuracy
 
