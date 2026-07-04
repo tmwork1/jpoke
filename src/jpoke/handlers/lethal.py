@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 from collections import defaultdict
 from jpoke.utils.lethal_dist import State, add_dist, to_dist
+from jpoke.utils.math import clamp_stats
 
 
 def _damage(hp_dist: StateDist, v: int) -> StateDist:
@@ -120,13 +121,13 @@ def アクアリング_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDi
 def Gのちから_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """Gのちから: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["def"] = max(-6, ctx.defender.rank["def"] - 1)
+        ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] - 1)
     return hp_dist
 
 
 def アシッドボム_reduce_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """アシッドボム: 命中後、防御側のとくぼうを2段階下げる。"""
-    ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 2)
+    ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 2)
     return hp_dist
 
 
@@ -147,7 +148,7 @@ def アッキのみ_boost_def(battle: Battle, ctx: LethalContext, hp_dist: State
         return hp_dist
 
     # ぼうぎょランクを+1（一度だけ）
-    ctx.defender.rank["def"] = min(6, ctx.defender.rank["def"] + 1)
+    ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] + 1)
 
     # item_enabled=True の state を消費済みに更新して新しい StateDist を返す
     new_dist: StateDist = defaultdict(int)
@@ -230,7 +231,7 @@ def ウタンのみ_resist_psychic(battle: Battle, ctx: LethalContext, hp_dist: 
 def エレクトロビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """エレクトロビーム: チャージ時に追加効果有効なら攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = min(6, ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
     return hp_dist
 
 
@@ -268,7 +269,7 @@ def オレンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
 
 def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """オーバーヒート: 命中後、攻撃側のとくこうを2段階下げる。"""
-    ctx.attacker.rank["spa"] = max(-6, ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
     return hp_dist
 
 
@@ -342,7 +343,7 @@ def じきゅうりょく_boost_def(battle: Battle, ctx: LethalContext, hp_dist:
     """じきゅうりょく: 攻撃を受けるとぼうぎょが1段階上がる。"""
     if ctx.defender.rank["def"] >= 6:
         return hp_dist
-    ctx.defender.rank["def"] = min(6, ctx.defender.rank["def"] + 1)
+    ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] + 1)
     return hp_dist
 
 
@@ -385,7 +386,7 @@ def タラプのみ_boost_spd(battle: Battle, ctx: LethalContext, hp_dist: State
         return hp_dist
 
     # とくぼうランクを+1（一度だけ）
-    ctx.defender.rank["spd"] = min(6, ctx.defender.rank["spd"] + 1)
+    ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] + 1)
 
     # item_enabled=True の state を消費済みに更新して新しい StateDist を返す
     new_dist: StateDist = defaultdict(int)
@@ -450,7 +451,7 @@ def バインド_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) 
 
 def ばかぢから_lower_atk(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ばかぢから: 命中後、攻撃側のこうげきを1段階下げる。"""
-    ctx.attacker.rank["atk"] = max(-6, ctx.attacker.rank["atk"] - 1)
+    ctx.attacker.rank["atk"] = clamp_stats(ctx.attacker.rank["atk"] - 1)
     return hp_dist
 
 
@@ -505,7 +506,7 @@ def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
 def フレアソング_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """フレアソング: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
-        ctx.attacker.rank["spa"] = min(6, ctx.attacker.rank["spa"] + 1)
+        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
     return hp_dist
 
 
@@ -517,7 +518,7 @@ def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: Stat
 def ほのおのムチ_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ほのおのムチ: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["def"] = max(-6, ctx.defender.rank["def"] - 1)
+        ctx.defender.rank["def"] = clamp_stats(ctx.defender.rank["def"] - 1)
     return hp_dist
 
 
@@ -583,7 +584,7 @@ def ヨロギのみ_resist_rock(battle: Battle, ctx: LethalContext, hp_dist: Sta
 
 def りゅうせいぐん_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """りゅうせいぐん: 命中後、攻撃側のとくこうを2段階下げる。"""
-    ctx.attacker.rank["spa"] = max(-6, ctx.attacker.rank["spa"] - 2)
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
     return hp_dist
 
 
@@ -595,7 +596,7 @@ def リリバのみ_resist_steel(battle: Battle, ctx: LethalContext, hp_dist: St
 def りんごさん_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """りんごさん: 命中後、追加効果有効時に防御側のとくぼうを1段階下げる。"""
     if ctx.move_secondary:
-        ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 1)
+        ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 1)
     return hp_dist
 
 
@@ -606,7 +607,7 @@ def リンドのみ_resist_grass(battle: Battle, ctx: LethalContext, hp_dist: St
 
 def ルミナコリジョン_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ルミナコリジョン: 命中後、防御側のとくぼうを2段階下げる。"""
-    ctx.defender.rank["spd"] = max(-6, ctx.defender.rank["spd"] - 2)
+    ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 2)
     return hp_dist
 
 
