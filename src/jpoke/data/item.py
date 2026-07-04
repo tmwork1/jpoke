@@ -793,7 +793,7 @@ ITEMS: dict[ItemName, ItemData] = {
         handlers={
             Event.ON_MODIFY_BIND_DAMAGE: h.ItemHandler(
                 h.しめつけバンド_boost_bind_damage,
-                subject_spec="source:foe",
+                subject_spec="attacker:self",
             )
         }
     ),

@@ -892,6 +892,9 @@ def ハロウィン_remove_type(battle: Battle, ctx: EventContext, value: Any) -
 def バインド_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """バインド状態のターン終了時ダメージ
 
+    ダメージ倍率はバインド付与時に確定済み（`bind_damage_ratio`）のため、ここでは
+    しめつけバンド等の再判定は行わない。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -908,7 +911,7 @@ def バインド_damage(battle: Battle, ctx: EventContext, value: Any) -> Handle
         return HandlerReturn(value=value)
 
     # ダメージ適用
-    r = battle.events.emit(Event.ON_MODIFY_BIND_DAMAGE, ctx, mon.volatiles["バインド"].bind_damage_ratio)
+    r = mon.volatiles["バインド"].bind_damage_ratio
     battle.modify_hp(ctx.source, r=-r)
     return HandlerReturn(value=value)
 

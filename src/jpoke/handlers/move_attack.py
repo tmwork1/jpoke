@@ -1544,9 +1544,16 @@ def level_fixed_damage(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return HandlerReturn(value=ctx.attacker.level)
 
 def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """バインド系技: ランダムターン数でバインド状態を付与する。ねばりのかぎづめで7ターン固定。"""
+    """バインド系技: ランダムターン数でバインド状態を付与する。ねばりのかぎづめで7ターン固定。
+
+    しめつけバンドによるダメージ倍率は付与時（攻撃側の所持アイテム）で確定し、
+    以降のアイテム変化（入手・喪失）による増減はない。
+    """
     count = battle.query.get_volatile_duration(ctx, "バインド", battle.random.randint(4, 5))
-    battle.volatile_manager.apply(ctx.defender, "バインド", count=count, source=ctx.attacker)
+    bind_damage_ratio = battle.events.emit(Event.ON_MODIFY_BIND_DAMAGE, ctx, 1/8)
+    battle.volatile_manager.apply(
+        ctx.defender, "バインド", count=count, source=ctx.attacker, bind_damage_ratio=bind_damage_ratio
+    )
     return HandlerReturn(value=value)
 
 

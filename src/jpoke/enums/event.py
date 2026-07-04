@@ -363,8 +363,8 @@ class Event(Enum):
     # handle: data/ability.py（するどいめ等による回避ランク無視）
     ON_GET_STAT_RANK = auto()
 
-    # emit: 未実装（バインドダメージの倍率調整用に予約）
-    # handle: 未実装（しめつけバンド等によるダメージ増加を想定）
+    # emit: handlers/move_attack.py（バインド付与時、AttackContextで倍率を確定する）
+    # handle: data/item.py（しめつけバンドによるバインドダメージ増加）
     ON_MODIFY_BIND_DAMAGE = auto()
 
     # emit: core/move_executor.py（急所ランクを計算）
