@@ -4857,6 +4857,19 @@ def test_ものまねハーブ_相手のランク上昇をコピー():
     assert not mon.has_item()
 
 
+def test_モモンのみ_どく付与直後に即時回復する():
+    """モモンのみ: どく付与直後（ON_APPLY_AILMENT）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくガス"])],
+        team1=[Pokemon("カビゴン", item_name="モモンのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert not defender.has_item()
+
+
 def test_ヤタピのみ_とくこうランクが最大のとき発動しない():
     """ヤタピのみ: すでにとくこうランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
     battle = t.start_battle(
