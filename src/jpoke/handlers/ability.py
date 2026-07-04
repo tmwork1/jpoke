@@ -2530,7 +2530,12 @@ def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: 
 
 
 def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
-    """びんじょう特性: 相手のランク上昇をコピーする。"""
+    """びんじょう特性: 相手のランク上昇をコピーする。
+
+    相手のびんじょう・ものまねハーブによるコピーで上がった分は、再度のコピー対象にしない。
+    """
+    if ctx.stat_change_reason in ("びんじょう", "ものまねハーブ"):
+        return HandlerReturn(value=value)
     rises = {stat: v for stat, v in value.items() if v > 0}
     if not rises:
         return HandlerReturn(value=value)
@@ -2538,7 +2543,7 @@ def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dic
     self_mon = battle.foe(ctx.target)
     if self_mon is None:
         return HandlerReturn(value=value)
-    changed = battle.modify_stats(self_mon, rises, source=ctx.target)
+    changed = battle.modify_stats(self_mon, rises, source=ctx.target, reason="びんじょう")
     if changed:
         _announce_ability_triggered(battle, self_mon)
     return HandlerReturn(value=value)

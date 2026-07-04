@@ -1627,12 +1627,21 @@ def ものしりメガネ_boost_special(battle: Battle, ctx: AttackContext, valu
 
 
 def ものまねハーブ_copy_stat_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ものまねハーブ: 相手のランク上昇を+1でコピーする。"""
+    """ものまねハーブ: 相手のランク上昇を実際に上昇した分だけコピーする（1度きり）。
+
+    相手のびんじょう・ものまねハーブによるコピーで上がった分は、再度のコピー対象にしない。
+    また、コピーしても実際にランクが変化しなかった場合（自分のランクが既に最大等）は
+    アイテムを消費しない。
+    """
+    if ctx.stat_change_reason in ("びんじょう", "ものまねハーブ"):
+        return HandlerReturn(value=value)
     mon = battle.foe(ctx.target)
     boosts = {s: v for s, v in value.items() if v > 0}
-    if boosts:
+    if not boosts:
+        return HandlerReturn(value=value)
+    changed = battle.modify_stats(mon, boosts, source=ctx.target, reason="ものまねハーブ")
+    if changed:
         _announce_and_consume_item(battle, mon)
-        battle.modify_stats(mon, boosts)
     return HandlerReturn(value=value)
 
 

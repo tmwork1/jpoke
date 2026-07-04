@@ -4844,6 +4844,63 @@ def test_ものしりメガネ_特殊技1_1倍():
     assert battle.damage_calculator.power_modifier == 4505
 
 
+def test_ものまねハーブ_びんじょうでの上昇はコピーしない():
+    """ものまねハーブ: 相手のびんじょうによるコピーで上がった分は再度コピーしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ものまねハーブ")],
+        team1=[Pokemon("ピカチュウ", ability_name="びんじょう")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    # mon自身がランクを上げる → foeのびんじょうが発動してfoeも+2上がるが、
+    # そのびんじょうによる上昇をmonのものまねハーブが再度コピーしてはいけない
+    battle.modify_stats(mon, {"atk": +2})
+    assert mon.rank["atk"] == 2
+    assert foe.rank["atk"] == 2
+    assert mon.has_item()
+
+
+def test_ものまねハーブ_びんじょうで最大まで上がったときは発動しない():
+    """ものまねハーブ: びんじょうによるコピーで既に最大まで上がった場合はものまねハーブは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びんじょう", item_name="ものまねハーブ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    mon.rank["atk"] = 5
+    battle.modify_stats(foe, {"atk": +2})
+    assert mon.rank["atk"] == 6
+    assert mon.has_item()
+
+
+def test_ものまねハーブ_びんじょう所持者は2回上昇する():
+    """ものまねハーブ: 特性がびんじょうである場合、びんじょうの後にものまねハーブも発動して2回上昇する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びんじょう", item_name="ものまねハーブ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    battle.modify_stats(foe, {"atk": +1})
+    assert mon.rank["atk"] == 2
+    assert not mon.has_item()
+
+
+def test_ものまねハーブ_ランクが最大のとき発動しない():
+    """ものまねハーブ: 自分のランクが既に最大のときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ものまねハーブ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    mon.rank["atk"] = 6
+    battle.modify_stats(foe, {"atk": +2})
+    assert mon.rank["atk"] == 6
+    assert mon.has_item()
+
+
 def test_ものまねハーブ_相手のランク上昇をコピー():
     """ものまねハーブ: 相手のランク上昇をそのままコピーする"""
     battle = t.start_battle(
