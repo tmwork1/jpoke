@@ -1837,22 +1837,26 @@ ITEMS: dict[ItemName, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_TURN_END: h.ItemHandler(
-                h.ラムのみ_cure_ailment,
+                h.ラムのみ_cure_ailment_and_confusion,
                 subject_spec="source:self",
                 priority=50,
             ),
             Event.ON_APPLY_AILMENT: h.ItemHandler(
-                h.ラムのみ_cure_ailment_on_apply,
+                h.ラムのみ_cure_ailment_and_confusion_on_apply_ailment,
                 subject_spec="target:self",
                 priority=50,
             ),
+            Event.ON_VOLATILE_START: h.ItemHandler(
+                h.ラムのみ_cure_ailment_and_confusion_on_confuse,
+                subject_spec="source:self",
+            ),
             Event.ON_ITEM_ENABLED: h.ItemHandler(
-                h.ラムのみ_cure_ailment,
+                h.ラムのみ_cure_ailment_and_confusion,
                 subject_spec="source:self",
                 priority=50,
             ),
             Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
-                h.ラムのみ_cure_ailment,
+                h.ラムのみ_cure_ailment_and_confusion,
                 subject_spec="source:self",
                 priority=50,
             ),

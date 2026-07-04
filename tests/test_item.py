@@ -5034,6 +5034,19 @@ def test_ゆきだま_ランク上限で発動しない():
     assert foe.has_item()
 
 
+def test_ラムのみ_こんらん付与直後に即時回復する():
+    """ラムのみ: こんらん付与直後（ON_VOLATILE_START）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ラムのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    battle.volatile_manager.apply(mon, "こんらん", source=foe)
+    assert not mon.has_volatile("こんらん")
+    assert not mon.has_item()
+
+
 def test_ラムのみ_ターン終了で状態異常回復():
     """ラムのみ: ターン終了時に状態異常を回復する"""
     battle = t.start_battle(
@@ -5045,6 +5058,49 @@ def test_ラムのみ_ターン終了で状態異常回復():
     t.end_turn(battle)
     assert not mon.ailment.is_active
     assert not mon.has_item()
+
+
+def test_ラムのみ_状態異常とこんらんが重複しているとき同時に回復する():
+    """ラムのみ: 発動時点で状態異常とこんらんが重複していた場合、両方を同時に回復し消費は1回のみ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ラムのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    # アイテムを一時的に無効化した状態で状態異常とこんらんを付与する
+    battle.item_manager.add_disabled_reason(mon, "マジックルーム")
+    battle.ailment_manager.apply(mon, "まひ")
+    battle.volatile_manager.apply(mon, "こんらん", count=3)
+    assert mon.has_item()
+    # アイテムの無効化を解除すると、ON_ITEM_ENABLEDで両方まとめて回復する
+    battle.item_manager.remove_disabled_reason(mon, "マジックルーム")
+    assert not mon.ailment.is_active
+    assert not mon.has_volatile("こんらん")
+    assert not mon.has_item()
+
+
+def test_ラムのみ_状態異常もこんらんもないときは発動しない():
+    """ラムのみ: 状態異常・こんらんのいずれもないときはターン終了時に発動せず消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ラムのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.has_item()
+
+
+def test_ラムのみ_状態異常付与直後に即時回復する():
+    """ラムのみ: 状態異常付与直後（ON_APPLY_AILMENT）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン", item_name="ラムのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert not defender.has_item()
 
 
 def test_リュガのみ_ぼうぎょランクが最大のとき発動しない():

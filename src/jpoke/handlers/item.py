@@ -206,6 +206,18 @@ def _cure_ailment_berry_on_apply(battle: Battle,
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
+def _cure_ailment_and_confusion(battle: Battle, mon: Pokemon) -> bool:
+    """状態異常・こんらんの両方をチェックし、該当するものをまとめて回復する（ラムのみ用）。
+
+    発動時点で状態異常とこんらんが重複していた場合、両方を同時に回復する。
+
+    Returns:
+        いずれかを回復した場合True
+    """
+    cured_ailment = mon.ailment.is_active and battle.ailment_manager.remove(mon)
+    cured_confusion = mon.has_volatile("こんらん") and battle.volatile_manager.remove(mon, "こんらん")
+    return bool(cured_ailment or cured_confusion)
+
 def _boost_on_quarter_hp(battle: Battle,
                          ctx: EventContext,
                          value: Any,
@@ -1684,13 +1696,33 @@ def ヨロギのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
     return _modify_super_effective_damage(battle, ctx, value, type_="いわ", modifier=2048/4096)
 
 
-def ラムのみ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    return _cure_ailment_berry(battle, ctx, value)
+def ラムのみ_cure_ailment_and_confusion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ラムのみ: 状態異常・こんらんのいずれかがあれば回復する（ターン終了時等の保険的チェック用）。"""
+    mon = ctx.source
+    assert mon is not None
+    if _cure_ailment_and_confusion(battle, mon):
+        _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
 
 
-def ラムのみ_cure_ailment_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ラムのみ: 状態異常付与直後に治療して消費する。"""
-    return _cure_ailment_berry_on_apply(battle, ctx, value)
+def ラムのみ_cure_ailment_and_confusion_on_apply_ailment(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ラムのみ: 状態異常付与直後に、重複しているこんらんも含めて回復する。"""
+    mon = ctx.target
+    assert mon is not None
+    if _cure_ailment_and_confusion(battle, mon):
+        _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def ラムのみ_cure_ailment_and_confusion_on_confuse(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ラムのみ: こんらん付与直後に、重複している状態異常も含めて回復する。"""
+    mon = ctx.source
+    assert mon is not None
+    if value != "こんらん":
+        return HandlerReturn(value=value)
+    if _cure_ailment_and_confusion(battle, mon):
+        _announce_and_consume_item(battle, mon)
+    return HandlerReturn(value=value)
 
 
 def りゅうのキバ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
