@@ -7,35 +7,48 @@ poke-env（Pokémon Showdown クライアントライブラリ）との互換性
 
 差異の詳細は `docs/poke-env/compat_analysis.md` を参照。
 
+整理日: 2026-07-04（`docs/plan/poke_env_compat.md` から `docs/poke-env/compat_plan.md` へ移動。
+ファイルパスを現在のコード構成（`src/jpoke/types/literals.py`）に合わせて修正し、
+Phase 1 の完了状況と `Gender` → `PokemonGender` の改名漏れを反映）
+
 ---
 
 ## 実装フェーズ
 
-### Phase 1: Literal 型の英語化（分類 A-1、影響範囲最大）
+### Phase 1: Literal 値の英語化（分類 A-1、影響範囲最大） — **値の変更は対応済み**
 
-コードベース全体に影響するため最初に実施する。
+コードベース全体に影響するため最初に実施する想定だったが、`Stat` / `MoveCategory` / `Gender` の
+**値**は本計画に先行して `src/jpoke/types/literals.py` で英語化済み（2026-07-02 確認）。
 
-**対象: `utils/type_defs/type_defs.py`**
+**対象: `src/jpoke/types/literals.py`**
 
-| 型 | 変更前 | 変更後 |
+| 型 | 変更前 | 変更後（現状） |
 |---|---|---|
-| `Stat` | `"H", "A", "B", "C", "D", "S"` | `"hp", "atk", "def", "spa", "spd", "spe"` |
+| `Stat` | `"H", "A", "B", "C", "D", "S"` | `"hp", "atk", "def", "spa", "spd", "spe", "accuracy", "evasion"` |
 | `MoveCategory` | `"物理", "特殊", "変化"` | `"physical", "special", "status"` |
 | `Gender` | `"オス", "メス", ""` | `"male", "female", ""` |
 
-`Stat` 変更の影響範囲:
+`Stat` 変更の影響範囲（対応済み）:
 - `Pokemon.rank`, `Pokemon.stats` のキー
 - `battle.modify_stat(stat, ...)` の引数
 - ハンドラ内のすべての `Stat` 参照
 - テスト内のすべての `Stat` 参照
 
-変更後のすべてのテストを通すことを確認してからフェーズを進める。
+**残タスク**: 型名 `Gender` → `PokemonGender` への改名は未着手（値のみ先行済み）。
+Phase 2 の改名作業とあわせて実施する。
 
 ---
 
 ### Phase 2: 改名（分類 A-1）
+ユーザーコメント: 改名はユーザーが手動で行う
 
-Phase 1 完了後に実施。エイリアスは残さず呼び出し元を一括変更する。
+Phase 1（値の英語化）は完了済みのため、このフェーズから着手できる。エイリアスは残さず呼び出し元を一括変更する。
+
+**`types/literals.py`**
+
+| 変更前 | 変更後 |
+|---|---|
+| `Gender`（型名） | `PokemonGender` |　ユーザーコメント: Genderは変更しない。
 
 **`model/pokemon.py`**
 
@@ -173,10 +186,10 @@ def side_conditions(self) -> dict:
 
 ### Phase 4: 変換テーブルの追加（分類 B）
 
-新規ファイル `utils/type_defs/poke_env.py` を作成する。
+新規ファイル `src/jpoke/types/poke_env.py` を作成する。
 
 ```python
-# utils/type_defs/poke_env.py
+# src/jpoke/types/poke_env.py
 
 TYPE_MAP: dict[str, str] = {
     "Normal":   "ノーマル", "Fire":    "ほのお", "Water":   "みず",
@@ -233,6 +246,7 @@ STAT_INDEX: dict[str, int] = {
 }
 
 
+# ユーザーコメント: jpokeもatk, def, ...に変更済み
 def stats_from_poke_env(d: dict[str, int]) -> list[int]:
     """poke-env の {"hp":..., "atk":...} を jpoke の [H,A,B,C,D,S] リストに変換"""
     return [d.get(k, 0) for k in ("hp", "atk", "def", "spa", "spd", "spe")]
@@ -244,7 +258,7 @@ def stats_from_poke_env(d: dict[str, int]) -> list[int]:
 
 | フェーズ | 依存関係 | リスク |
 |---|---|---|
-| Phase 1 (Literal 英語化) | なし | コードベース全域への影響。テスト全通後に次フェーズへ |
+| Phase 1 (Literal 値の英語化) | なし | **対応済み**。`Gender` → `PokemonGender` の型名改名のみ Phase 2 に持ち越し |
 | Phase 2 (改名) | Phase 1 完了後 | 改名後の参照漏れ。grep で一括確認する |
 | Phase 3 (property 追加) | Phase 2 完了後 | 既存コードへの影響なし |
 | Phase 4 (変換テーブル) | 独立（いつでも可） | poke-env 依存なし |
