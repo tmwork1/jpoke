@@ -1,0 +1,2 @@
+実装確認: ハンドラ・登録ともに正しい。テスト2件追加・全件パス。
+progress/move.md: target defender→attacker修正、テスト・レビュー・効果列を更新。

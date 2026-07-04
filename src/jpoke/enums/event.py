@@ -430,6 +430,8 @@ class Event(Enum):
     # handle: ability.py（すりぬけ等）subject_spec="source:self"
     ON_CHECK_BYPASS_STATUS_GUARD = auto()
 
-    # emit: 未実装（吸収技のHP回収量計算用に予約）
-    # handle: 未実装（おおきなねっこ等による回収量増加を想定）
+    # emit: handlers/move_attack.py（吸収技の回収量）
+    #       handlers/move_status.py（ちからをすいとるの回復量）
+    #       handlers/volatile.py（アクアリング・ねをはる・やどりぎのタネの回復量）
+    # handle: item.py（おおきなねっこ）subject_spec="attacker:self" / "source:self"
     ON_CALC_DRAIN = auto()

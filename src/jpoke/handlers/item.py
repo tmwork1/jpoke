@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
     AilmentName, WeatherName, TerrainName, SideFieldName
-from jpoke.utils.math import apply_fixed_modifier
+from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
 from jpoke.data.pokedex import POKEDEX
@@ -97,8 +97,9 @@ def _terrain_seed_boost(battle: Battle, ctx: EventContext, value: Any,
     mon = ctx.source
     assert mon is not None
     if battle.terrain.name == terrain:
-        battle.modify_stats(mon, {stat: +1})
-        _announce_and_consume_item(battle, mon)
+        changes = battle.modify_stats(mon, {stat: +1})
+        if changes:  # すでにランクが最大の場合は不発・消費しない
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 def _apply_contact_item_chip(battle: Battle,
@@ -126,15 +127,25 @@ def _heal_berry(battle: Battle,
     mon = ctx.target
     assert mon is not None
     # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
-    if mon.hp * denominator <= mon.max_hp or value >= mon.max_hp:
+    forced = value >= mon.max_hp
+    if not forced:
+        # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
+        if ctx.hp_change_reason == "self_attack":
+            return HandlerReturn(value=value)
+        # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+        if battle.query.is_nervous(mon):
+            return HandlerReturn(value=value)
+    if forced or mon.hp * denominator <= mon.max_hp:
         if heal_r is not None:
-            battle.modify_hp(mon, r=heal_r)
+            healed = battle.modify_hp(mon, r=heal_r)
         else:
-            battle.modify_hp(mon, v=heal_v)
-        _announce_and_consume_item(battle, mon)
-        # 嫌いな味（性格でぼうぎょ等が下がりにくい/上がりにくい組）のときこんらんする
-        if confuse_natures is not None and mon.nature in confuse_natures:
-            battle.volatile_manager.apply_confusion(mon, source=mon)
+            healed = battle.modify_hp(mon, v=heal_v)
+        # かいふくふうじ等で回復が完全に無効化された場合は消費しない
+        if healed:
+            _announce_and_consume_item(battle, mon)
+            # 嫌いな味（性格でぼうぎょ等が下がりにくい/上がりにくい組）のときこんらんする
+            if confuse_natures is not None and mon.nature in confuse_natures:
+                battle.volatile_manager.apply_confusion(mon, source=mon)
     return HandlerReturn(value=value)
 
 def _apply_ailment_from_item(battle: Battle, ctx: EventContext, value: Any, ailment: AilmentName) -> HandlerReturn:
@@ -183,8 +194,8 @@ def _boost_on_quarter_hp(battle: Battle,
     mon = ctx.target
     assert mon is not None
     if mon.hp * 4 <= mon.max_hp or value >= mon.max_hp:
-        battle.modify_stats(mon, {stat: amount})
-        _announce_and_consume_item(battle, mon)
+        if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 def _boost_on_attack_category(battle: Battle,
@@ -311,8 +322,19 @@ def いのちのたま_boost_atk(_battle: Battle, ctx: AttackContext, value: Any
 
 
 def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    if ctx.move.is_attack:
-        battle.modify_hp(ctx.attacker, r=-1/8, source=ctx.attacker)
+    """いのちのたま: 攻撃技命中後、最大HPの1/10の反動ダメージを受ける。
+    連続攻撃技は最後のヒットでのみ発動。ちからずくの対象技（追加効果あり技）を
+    ちからずく所持者が使用した場合は反動が発生しない。
+    """
+    if (
+        ctx.move.is_attack
+        and ctx.hit_index == ctx.hit_count
+        and not (
+            ctx.attacker.ability.name == "ちからずく"
+            and ctx.move.has_flag("secondary_effect")
+        )
+    ):
+        battle.modify_hp(ctx.attacker, r=-1/10, source=ctx.attacker)
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -338,6 +360,17 @@ def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: 
     return HandlerReturn(value=value)
 
 
+def ウイのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ウイのみ: HPが1/4以下になった瞬間に最大HPの1/3を回復するが、
+    とくこうが上がりにくい性格（いじっぱり・わんぱく・ようき・しんちょう）は
+    しぶい味を嫌うためこんらんする。
+    """
+    return _heal_berry(
+        battle, ctx, value, denominator=4, heal_r=1/3,
+        confuse_natures=("いじっぱり", "わんぱく", "ようき", "しんちょう"),
+    )
+
+
 def ウタンのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_super_effective_damage(battle, ctx, value, type_="エスパー", modifier=2048/4096)
 
@@ -346,22 +379,39 @@ def エレキシード_boost_defense(battle: Battle, ctx: EventContext, value: A
     return _terrain_seed_boost(battle, ctx, value, "エレキフィールド", "def")
 
 
+# 元々ひるみの追加効果を持つ技名の集合。
+# 現行世代（第五世代以降）ではこれらの技におうじゃのしるし・するどいキバの効果は重複しない。
+_INNATE_FLINCH_MOVES: frozenset[str] = frozenset({
+    "3ぼんのや", "アイアンヘッド", "あくのはどう", "いびき", "いわなだれ", "エアスラッシュ",
+    "おどろかす", "かみつく", "かみなりのキバ", "こおりのキバ", "ゴッドバード", "しねんのずつき",
+    "じんつうりき", "ずつき", "たきのぼり", "たつまき", "ダブルパンツァー", "つららおとし",
+    "ドラゴンダイブ", "ニードルアーム", "ねこだまし", "はやてがえし", "ハートスタンプ",
+    "ハードローラー", "ひっさつまえば", "ひょうざんおろし", "びりびりちくちく", "ふみつけ",
+    "ふわふわフォール", "ホネこんぼう", "ほのおのキバ", "まわしげり", "もえあがるいかり",
+})
+
 def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """おうじゃのしるし、するどいキバ: ダメージ技命中時10%の確率で相手をひるませる。"""
+    """おうじゃのしるし、するどいキバ: ダメージ技命中時10%の確率で相手をひるませる。
+
+    元々ひるみの追加効果を持つ技（アイアンヘッド等）や一撃必殺技には効果が無い。
+    りんぷん（無効化）・てんのめぐみ（確率2倍）の影響を受ける。
+    """
     defender = ctx.defender
     if (
         ctx.move.is_attack
         and defender is not None
-        and battle.random.random() < 0.1
+        and not ctx.move.has_flag("ohko")
+        and ctx.move.name not in _INNATE_FLINCH_MOVES
     ):
-        battle.volatile_manager.apply(defender, "ひるみ", source=ctx.attacker)
+        chance = battle.resolve_secondary_chance(ctx, 0.1)
+        if battle.random.random() < chance:
+            battle.volatile_manager.apply(defender, "ひるみ", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
 def おおきなねっこ_boost_drain(_battle: Battle, _ctx: Any, value: int) -> HandlerReturn:
-    """おおきなねっこ: 吸収技のHP回収量を1.3倍にする。"""
-    value = apply_fixed_modifier(value, 5325)
-    return HandlerReturn(value=value)
+    """おおきなねっこ: HPを吸収する効果の回復量を1.3倍(5324/4096倍、五捨五超入)にする。"""
+    return HandlerReturn(value=round_half_down(value * 5324 / 4096))
 
 
 def オッカのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -377,8 +427,11 @@ def オレンのみ_heal_on_half_hp(battle: Battle, ctx: EventContext, value: An
 
 
 def おんみつマント_negate_secondary(_battle: Battle, _ctx: AttackContext, _value: Any) -> HandlerReturn:
-    """おんみつマント: 技の追加効果の確率を0にする。"""
-    return HandlerReturn(value=0)
+    """おんみつマント: 技の追加効果の確率を0にする。
+
+    りんぷん特性と同様に、他のハンドラに上書きされないよう stop_event=True で確定させる。
+    """
+    return HandlerReturn(value=0, stop_event=True)
 
 
 def オーガポンのめん_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -389,8 +442,32 @@ def オーガポンのめん_boost_atk(battle: Battle, ctx: AttackContext, value
 
 
 def かいがらのすず_drain_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """かいがらのすず: ダメージ技命中時に与ダメージの1/8を回復する。"""
-    heal_amount = value // 8
+    """かいがらのすず: 攻撃技命中後に与ダメージの1/8を回復する。
+
+    みがわりに阻まれた場合は、みがわりへの与ダメージから算出する（第五世代以降の仕様）。
+    特性ちからずくの対象技を使った場合は回復効果が無くなる。
+    連続攻撃技は最後のヒット（相手または自分がひんしになって中断した場合はその時点）の後に
+    まとめて発動し、回復量は全ヒットの合計ダメージから算出する。
+    """
+    if (
+        ctx.attacker.ability.name == "ちからずく"
+        and ctx.move.has_flag("secondary_effect")
+    ):
+        return HandlerReturn(value=value)
+
+    damage = value or ctx.substitute_damage
+    total_damage = getattr(ctx, "_shell_bell_total_damage", 0) + damage
+
+    is_last_hit = (
+        ctx.hit_index == ctx.hit_count
+        or ctx.defender.fainted
+        or ctx.attacker.fainted
+    )
+    if not is_last_hit:
+        ctx._shell_bell_total_damage = total_damage
+        return HandlerReturn(value=value)
+
+    heal_amount = total_damage // 8
     if heal_amount > 0 and battle.modify_hp(ctx.attacker, v=heal_amount):
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
@@ -443,10 +520,10 @@ def きあいのタスキ_survive_ohko(battle: Battle, ctx: AttackContext, value
 
 
 def きあいのハチマキ_survive_by_chance(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """きあいのハチマキ: ひんし以上のダメージを11.7%の確率でHP1で耐える。"""
+    """きあいのハチマキ: ひんし以上のダメージを10%の確率でHP1で耐える。"""
     mon = ctx.defender
     assert mon is not None
-    if value >= mon.hp and battle.random.random() < 0.117:
+    if value >= mon.hp and battle.random.random() < 0.1:
         value = mon.hp - 1
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -467,6 +544,7 @@ def きれいなぬけがら_check_trapped(_battle: Battle, _ctx: EventContext, 
 
 
 def キーのみ_cure_confusion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """キーのみ: こんらん状態を回復する。"""
     mon = ctx.source
     assert mon is not None
     if mon.has_volatile("こんらん"):
@@ -484,6 +562,25 @@ def くちたけん_form_change(battle: Battle, ctx: EventContext, value: Any) -
     mon = ctx.source
     if mon.name == "ザシアン(れきせん)":
         mon.set_form("ザシアン(けんのおう)")
+    return HandlerReturn(value=value)
+
+
+def くちたけん_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """くちたけん: ザシアンが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    ザシアン以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    mon = ctx.target
+    if mon is not None and mon.name.startswith("ザシアン"):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def くちたけん_prevent_transfer_to_hero(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """くちたけん: れきせんのゆうしゃザシアンへトリック・すりかえ等で渡すことを防ぐ。"""
+    mon = ctx.target
+    if mon is not None and mon.name == "ザシアン(れきせん)":
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 

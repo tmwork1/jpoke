@@ -327,9 +327,40 @@ def test_いのちのたま():
     )
     t.run_move(battle, 0)
     attacker = battle.actives[0]
-    assert attacker.hp == math.ceil(attacker.max_hp * 7/8)
+    assert attacker.hp == math.ceil(attacker.max_hp * 9/10)
     assert attacker.item.revealed
     assert battle.damage_calculator.atk_modifier == 5324
+
+
+def test_いのちのたま_ちからずくの対象技では反動が発生しない():
+    """いのちのたま: ちからずく所持者が追加効果ありの技を使うと反動が発生しない（威力上昇効果はそのまま）"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ニドキング", ability_name="ちからずく",
+            item_name="いのちのたま", move_names=["10まんボルト"],
+        )],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    assert battle.damage_calculator.atk_modifier == 5324  # 威力上昇効果は残る
+
+
+def test_いのちのたま_ちからずく所持でも対象外の技なら反動が発生する():
+    """いのちのたま: ちからずく所持者でも追加効果のない技を使えば通常通り反動が発生する"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ニドキング", ability_name="ちからずく",
+            item_name="いのちのたま", move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.hp == math.ceil(attacker.max_hp * 9/10)
 
 
 def test_いのちのたま_変化技では発動しない():
@@ -340,6 +371,18 @@ def test_いのちのたま_変化技では発動しない():
     )
     t.run_move(battle, 0)
     assert not battle.actives[0].item.revealed
+
+
+def test_いのちのたま_連続攻撃技は反動が1回だけ発生する():
+    """いのちのたま: 連続攻撃技（ダブルアタック=2回固定）を使用しても反動は最後の1回のみ発生する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="いのちのたま", move_names=["ダブルアタック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.hp == math.ceil(attacker.max_hp * 9/10)
 
 
 def test_イバンのみ_HP25以下でなければフラグが立たない():
@@ -409,6 +452,133 @@ def test_イバンのみ_先制後は通常行動順になる():
     assert order2[0] == battle.actives[1]  # ピカチュウが先攻
 
 
+def test_ウイのみ_それ以外の性格ではこんらんしない():
+    """ウイのみ: しぶい味が嫌いでない性格では発動してもこんらんしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ウイのみ", nature="まじめ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert not mon.has_volatile("こんらん")
+
+
+@pytest.mark.parametrize(
+    "nature",
+    ["いじっぱり", "わんぱく", "ようき", "しんちょう"]
+)
+def test_ウイのみ_とくこうが上がりにくい性格でこんらんする(nature):
+    """ウイのみ: しぶい味が嫌いな性格（とくこうが上がりにくい）は発動と同時にこんらんする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ウイのみ", nature=nature)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
+    assert not mon.has_item()
+    assert mon.has_volatile("こんらん")
+
+
+def test_おおきなねっこ_アクアリングの回復量増加():
+    """おおきなねっこ: アクアリング状態のターン終了時回復も1.3倍になる"""
+    from jpoke.utils.math import round_half_down
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="おおきなねっこ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"アクアリング": 1},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    heal_base = max(1, mon.max_hp // 16)
+    expected_heal = round_half_down(heal_base * 5324 / 4096)
+    t.end_turn(battle)
+    assert mon.hp == 1 + expected_heal
+
+
+def test_おおきなねっこ_ちからをすいとるの回復量増加():
+    """おおきなねっこ: ちからをすいとるの回復量も1.3倍になる"""
+    from jpoke.utils.math import round_half_down
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="おおきなねっこ", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    expected_recovery = round_half_down(defender.ranked_stats["atk"] * 5324 / 4096)
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + expected_recovery
+
+
+def test_おおきなねっこ_ねをはるの回復量増加():
+    """おおきなねっこ: ねをはる状態のターン終了時回復も1.3倍になる"""
+    from jpoke.utils.math import round_half_down
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="おおきなねっこ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ねをはる": 1},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    heal_base = max(1, mon.max_hp // 16)
+    expected_heal = round_half_down(heal_base * 5324 / 4096)
+    t.end_turn(battle)
+    assert mon.hp == 1 + expected_heal
+
+
+def test_おおきなねっこ_やどりぎのタネで回復側が持つと回復量増加():
+    """おおきなねっこ: やどりぎのタネによる回復量は、回復するポケモン自身の所持で1.3倍になる"""
+    from jpoke.utils.math import round_half_down
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", item_name="おおきなねっこ")],
+        volatile0={"やどりぎのタネ": 1},
+    )
+    from_mon, to_mon = battle.actives
+    to_mon.hp = 1
+    t.end_turn(battle)
+    damage = from_mon.max_hp - from_mon.hp
+    expected_heal = round_half_down(damage * 5324 / 4096)
+    assert to_mon.hp == 1 + expected_heal
+
+
+def test_おおきなねっこ_やどりぎのタネの使用者側だけが持っていても回復量は増えない():
+    """おおきなねっこ: やどりぎのタネを受けている側（設置された側）だけが持っていても影響しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="おおきなねっこ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"やどりぎのタネ": 1},
+    )
+    from_mon, to_mon = battle.actives
+    to_mon.hp = 1
+    t.end_turn(battle)
+    damage = from_mon.max_hp - from_mon.hp
+    assert to_mon.hp == 1 + damage
+
+
+def test_おおきなねっこ_吸収技の回復量の端数処理は五捨五超入かつ5324_4096倍():
+    """おおきなねっこ: 端数処理は切り捨てではなく五捨五超入。正確な倍率は5324/4096倍。
+
+    通常時の回収量32に対して、旧実装(int(32*1.3)=41 または floor(32*5325/4096)=41)
+    ではなく、round_half_down(32*5324/4096)=42 になることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", item_name="おおきなねっこ", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.fix_damage(battle, 64)  # 通常回収量 = 64 * 50% = 32
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 42
+
+
 def test_おおきなねっこ_吸収技の回復量増加():
     """おおきなねっこ: 吸収技の回収量を1.3倍にする"""
     battle = t.start_battle(
@@ -449,6 +619,52 @@ def test_オボンのみ_HP50超では発動しない():
     assert mon.has_item()
 
 
+def test_オボンのみ_かいふくふうじ中は発動せず消費されない():
+    """オボンのみ: かいふくふうじ状態のときは発動せず、アイテムも消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"かいふくふうじ": 3},
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 2
+    assert mon.has_item(), "かいふくふうじ状態でオボンのみが消費された"
+
+
+def test_オボンのみ_きんちょうかんの相手がいると発動しない():
+    """オボンのみ: 相手が特性きんちょうかんを持つときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ", ability_name="きんちょうかん")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 2
+    assert mon.has_item()
+
+
+def test_オボンのみ_こんらんの自傷では発動しない():
+    """オボンのみ: こんらんの自傷ダメージ(reason=self_attack)でHPが1/2以下になっても発動しない
+    （第五世代以降の仕様）。その後、自傷以外のダメージを受けると発動する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2 + 1
+    battle.modify_hp(mon, v=-1, reason="self_attack")
+    assert mon.hp == mon.max_hp // 2
+    assert mon.has_item(), "こんらんの自傷ダメージでオボンのみが消費された"
+
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == mon.max_hp // 2 - 1 + mon.max_hp // 4
+    assert not mon.has_item()
+
+
 def test_オレンのみ_HP50以下で10回復():
     """オレンのみ: HP1/2以下になった瞬間に10HP回復する"""
     battle = t.start_battle(
@@ -475,6 +691,30 @@ def test_オレンのみ_HP50超では発動しない():
     assert mon.has_item()
 
 
+def test_おんみつマント_あくしゅうのひるみを防ぐ():
+    """おんみつマント: 特性あくしゅうによるひるみ効果も防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あくしゅう", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
+def test_おんみつマント_どくしゅのどく状態を防ぐ():
+    """おんみつマント: 特性どくしゅによるどく状態も防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name != "どく"
+
+
 def test_おんみつマント_追加効果を無効化():
     """おんみつマント: 相手の技の追加効果を無効化する"""
     battle = t.start_battle(
@@ -485,6 +725,40 @@ def test_おんみつマント_追加効果を無効化():
     t.fix_random(battle, 0.0)
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name != "まひ"
+
+
+def test_かいがらのすず_ちからずくの対象技では回復しない():
+    """かいがらのすず: ちからずく所持者が追加効果ありの技を使った場合は回復効果が無くなる"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ニドキング", ability_name="ちからずく",
+            item_name="かいがらのすず", move_names=["10まんボルト"],
+        )],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.fix_damage(battle, 80)
+    t.run_move(battle, 0)
+    assert attacker.hp == 1
+
+
+def test_かいがらのすず_みがわりへの与ダメージでも回復する():
+    """かいがらのすず: みがわりに阻まれた場合、みがわりへの与ダメージから回復量を算出する（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="かいがらのすず", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.hp = 1
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_damage(battle, 50)
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 50 // 8
+    assert defender.hp == defender.max_hp
 
 
 def test_かいがらのすず_与ダメージの1割8回復():
@@ -499,6 +773,92 @@ def test_かいがらのすず_与ダメージの1割8回復():
     t.fix_damage(battle, 80)
     t.run_move(battle, 0)
     assert attacker.hp == 1 + 80 // 8
+
+
+def test_かいがらのすず_連続攻撃技は合計ダメージから最後にまとめて回復する():
+    """かいがらのすず: 連続攻撃技（ダブルアタック=2回固定）は最後のヒットの後に合計ダメージの1/8がまとめて回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="かいがらのすず", move_names=["ダブルアタック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.fix_damage(battle, 30)
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + (30 * 2) // 8
+
+
+def test_かえんだま_ねむけと重なった場合ねむり優先():
+    """かえんだま: ねむけからねむり状態になるターンと発動ターンが重なった場合、
+    ねむけ(priority110)が先に処理されるためねむり状態が優先されやけどは付与されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="かえんだま")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ねむけ": 1},
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.ailment.name == "ねむり"
+
+
+def test_かえんだま_ミストフィールド解除ターンから発動():
+    """かえんだま: ミストフィールドはやけどの付与を防ぐが、
+    フィールドの継続終了(priority140)がかえんだまの発動(priority150)より先に処理されるため、
+    ミストフィールドが解除されたそのターンからかえんだまが発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="かえんだま")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("ミストフィールド", 1),
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert battle.terrain.name != "ミストフィールド"
+    assert mon.ailment.name == "やけど"
+
+
+def test_かえんだま_発動するターンにやけどダメージは受けない():
+    """かえんだま: priority150でやけどダメージ(100)より後に発動するため、
+    発動したそのターンにやけどダメージは発生しない（翌ターンから発生する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="かえんだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    hp_before = mon.hp
+    t.end_turn(battle)
+    assert mon.ailment.name == "やけど"
+    assert mon.hp == hp_before  # このターンはやけどダメージを受けない
+
+    t.end_turn(battle)
+    assert mon.hp == hp_before - hp_before // 16  # 翌ターンからやけどダメージを受ける
+
+
+def test_カゴのみ_ねむり付与直後に即時回復する():
+    """カゴのみ: ねむり付与直後（ON_APPLY_AILMENT）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
+        team1=[Pokemon("カビゴン", item_name="カゴのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert not defender.has_item()
+
+
+def test_カムラのみ_すばやさランクが最大のとき発動しない():
+    """カムラのみ: すでにすばやさランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="カムラのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spe"] = 6
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["spe"] == 6
+    assert mon.has_item()
 
 
 def test_からぶりほけん_技が命中したときは発動しない():
@@ -527,6 +887,17 @@ def test_からぶりほけん_技が外れたときS上昇():
     assert not mon.has_item()
 
 
+def test_かるいし_体重の最低値は0_1kg():
+    """かるいし: 半減した結果0.1kgを下回る場合は0.1kgになる（ゴースは体重0.1kg）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゴース", item_name="かるいし")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.data.weight == pytest.approx(0.1)
+    assert mon.weight == pytest.approx(0.1)
+
+
 def test_かるいし_体重半減():
     """かるいし: 持ち主の体重を半分にする"""
     battle = t.start_battle(
@@ -535,6 +906,26 @@ def test_かるいし_体重半減():
     )
     mon = battle.actives[0]
     assert mon.weight == pytest.approx(mon.data.weight * 0.5, abs=0.1)
+
+
+def test_きあいのタスキ_一撃必殺技を耐える():
+    """きあいのタスキ: 一撃必殺技のダメージもHP1で耐える。
+
+    防御側（ピカチュウ、素早さ110）が攻撃側（カビゴン、素早さ50）より速いケースで検証する。
+    かつては ha.ohko_damage と本ハンドラが同一 priority=100 で登録されており、
+    ソート時のタイブレークが素早さ依存になっていたため、防御側が速いと
+    一撃必殺技の確定ダメージが未設定のまま判定されて発動しない不具合があった
+    （ha.ohko_damage の priority=90 化で修正、素早さに依存せず必ず発動する）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="きあいのタスキ")],
+        team1=[Pokemon("カビゴン", move_names=["じわれ"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.hp == 1
+    assert not mon.has_item()
 
 
 def test_きあいのタスキ_満タンからひんしにならない():
@@ -565,8 +956,8 @@ def test_きあいのタスキ_満タンでなければ無効():
     assert not mon.alive
 
 
-def test_きあいのハチマキ_確率でひんしにならない():
-    """きあいのハチマキ: 11.7%の確率でひんし以上のダメージをHP1で耐える"""
+def test_きあいのハチマキ_発動しても消費されない():
+    """きあいのハチマキ: きあいのタスキと異なり発動してもアイテムが消費されない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", item_name="きあいのハチマキ")],
         team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
@@ -575,7 +966,24 @@ def test_きあいのハチマキ_確率でひんしにならない():
     mon = battle.actives[0]
     mon.hp = 1
     t.fix_damage(battle, 1)
-    t.fix_random(battle, 0.0)  # < 0.117 → 発動
+    t.fix_random(battle, 0.0)  # < 0.1 → 発動
+    t.run_move(battle, 1)
+    assert mon.hp == 1
+    assert mon.has_item()
+    assert mon.item.name == "きあいのハチマキ"
+
+
+def test_きあいのハチマキ_確率でひんしにならない():
+    """きあいのハチマキ: 10%の確率でひんし以上のダメージをHP1で耐える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="きあいのハチマキ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)  # < 0.1 → 発動
     t.run_move(battle, 1)
     assert mon.hp == 1
 
@@ -590,7 +998,7 @@ def test_きあいのハチマキ_確率外は耐えない():
     mon = battle.actives[0]
     mon.hp = 1
     t.fix_damage(battle, 1)
-    t.fix_random(battle, 0.5)  # >= 0.117 → 発動しない
+    t.fix_random(battle, 0.5)  # >= 0.1 → 発動しない
     t.run_move(battle, 1)
     assert mon.hp == 0
 
@@ -604,6 +1012,29 @@ def test_きれいなぬけがら():
     assert battle.query.can_switch(battle.players[0])
 
 
+def test_きれいなぬけがら_自身のにげられない状態でも交代できる():
+    """きれいなぬけがら: くろいまなざし等による自身のにげられない状態も無視して交代できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="きれいなぬけがら"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"にげられない": 1},
+    )
+    assert battle.query.can_switch(battle.players[0])
+
+
+def test_キーのみ_こんらん付与直後に即時回復する():
+    """キーのみ: こんらん付与直後（ON_VOLATILE_START）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="キーのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    battle.volatile_manager.apply(mon, "こんらん", source=foe)
+    assert not mon.has_volatile("こんらん")
+    assert not mon.has_item()
+
+
 def test_キーのみ_ターン終了でこんらん回復():
     """キーのみ: ターン終了時にこんらんを回復する"""
     battle = t.start_battle(
@@ -615,6 +1046,61 @@ def test_キーのみ_ターン終了でこんらん回復():
     t.end_turn(battle)
     assert not mon.has_volatile("こんらん")
     assert not mon.has_item()
+
+
+@pytest.mark.parametrize("mon_name", ["ザシアン(れきせん)", "ザシアン(けんのおう)"])
+@pytest.mark.parametrize("move_name", ["はたきおとす", "どろぼう"])
+def test_くちたけん_ザシアンから奪えない(move_name, mon_name):
+    """くちたけん: ザシアンが持っている間ははたきおとす・どろぼう等で奪われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon(mon_name, item_name="くちたけん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_item("くちたけん")
+
+
+def test_くちたけん_ザシアン以外は奪われる():
+    """くちたけん: ザシアン以外が持っている場合ははたきおとす等で通常通り奪われる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("カビゴン", item_name="くちたけん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+
+
+def test_くちたけん_トリックでザシアンから奪えない():
+    """くちたけん: ザシアンが持っている間はトリック・すりかえで交換されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("ザシアン(けんのおう)", item_name="くちたけん")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "たべのこし"
+    assert defender.item.name == "くちたけん"
+
+
+def test_くちたけん_れきせんのゆうしゃザシアンへ渡せない():
+    """くちたけん: れきせんのゆうしゃザシアンへはトリック等で渡すことができない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="くちたけん")],
+        team1=[Pokemon("ザシアン(れきせん)")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "くちたけん"
+    assert not defender.has_item()
+    assert defender.name == "ザシアン(れきせん)"
 
 
 @pytest.mark.parametrize(
@@ -1614,6 +2100,44 @@ def test_ひかりのねんど_スクリーン8ターンに延長():
 
 
 @pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
+def test_ひるみ付与アイテム_てんのめぐみで確率2倍(item_name):
+    """おうじゃのしるし・するどいキバ: 特性てんのめぐみによりひるみ確率が2倍(20%)になる"""
+    without_megumi = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(without_megumi, 0.15)
+    t.run_move(without_megumi, 0)
+    assert not without_megumi.actives[1].has_volatile("ひるみ")
+
+    with_megumi = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", item_name=item_name, ability_name="てんのめぐみ",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(with_megumi, 0.15)
+    t.run_move(with_megumi, 0)
+    assert with_megumi.actives[1].has_volatile("ひるみ")
+
+
+@pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
+def test_ひるみ付与アイテム_なげつけるで確実にひるませる(item_name):
+    """おうじゃのしるし・するどいキバ: なげつけるで使用した場合、100%の確率で相手をひるませる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name, move_names=["なげつける"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.99)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+@pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
 def test_ひるみ付与アイテム_ひるまない確率(item_name):
     """おうじゃのしるし・するどいキバ: 乱数が0.1以上のときひるまない"""
     battle = t.start_battle(
@@ -1637,6 +2161,86 @@ def test_ひるみ付与アイテム_ひるみ付与(item_name):
     t.fix_random(battle, 0.0)
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+@pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
+def test_ひるみ付与アイテム_りんぷんで無効化(item_name):
+    """おうじゃのしるし・するどいキバ: 特性りんぷんにより効果が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ニャース", ability_name="りんぷん")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
+@pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
+def test_ひるみ付与アイテム_一撃必殺技には効果がない(item_name):
+    """おうじゃのしるし・するどいキバ: 一撃必殺技には効果が無い（追加の乱数判定が発生しないことで確認する）
+
+    きあいのタスキ等で耐えた場合の挙動を直接検証したいが、現状の実装では
+    一撃必殺技ときあいのタスキの組み合わせ自体に別の既知の不具合があり
+    HPが1で耐えられないため、ここでは耐えるかどうかに依存しない方法で確認する。
+    """
+    def count_random_calls(has_item: bool) -> int:
+        kwargs = {"item_name": item_name} if has_item else {}
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["じわれ"], **kwargs)],
+            team1=[Pokemon("ピカチュウ")],
+            accuracy=100,
+        )
+        count = 0
+
+        def counting_random() -> float:
+            nonlocal count
+            count += 1
+            return 0.5
+
+        battle.random.random = counting_random
+        t.run_move(battle, 0)
+        return count
+
+    assert count_random_calls(True) == count_random_calls(False)
+
+
+@pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
+def test_ひるみ付与アイテム_元々ひるみ効果がある技には重複しない(item_name):
+    """おうじゃのしるし・するどいキバ: 元々ひるみの追加効果がある技（エアスラッシュ等）には
+    重複して効果が発動しない（追加の乱数判定が発生しないことで確認する）"""
+    def count_random_calls(has_item: bool) -> int:
+        kwargs = {"item_name": item_name} if has_item else {}
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["エアスラッシュ"], **kwargs)],
+            team1=[Pokemon("ピカチュウ")],
+            accuracy=100,
+        )
+        count = 0
+
+        def counting_random() -> float:
+            nonlocal count
+            count += 1
+            return 0.5
+
+        battle.random.random = counting_random
+        t.run_move(battle, 0)
+        return count
+
+    assert count_random_calls(True) == count_random_calls(False)
+
+
+@pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
+def test_ひるみ付与アイテム_変化技では発動しない(item_name):
+    """おうじゃのしるし・するどいキバ: 変化技では発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name, move_names=["でんじは"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
 
 
 def test_ビビリだま_いかくでS上昇():
@@ -1673,6 +2277,25 @@ def test_フィールドシード_フィールドなしでは発動しない(ite
     mon = battle.actives[0]
     assert mon.rank["def"] == 0
     assert mon.rank["spd"] == 0
+    assert mon.has_item()
+
+
+@pytest.mark.parametrize("item_name, terrain, stat", [
+    ("エレキシード", "エレキフィールド", "def"),
+    ("グラスシード", "グラスフィールド", "def"),
+    ("サイコシード", "サイコフィールド", "spd"),
+    ("ミストシード", "ミストフィールド", "spd"),
+])
+def test_フィールドシード_ランク最大時は消費しない(item_name, terrain, stat):
+    """フィールドシード系: 対応能力ランクがすでに最大のときは発動せずアイテムも消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.modify_stats(mon, {stat: 6})
+    battle.terrain_manager.apply(terrain, 5)
+    assert mon.rank[stat] == 6
     assert mon.has_item()
 
 
@@ -1990,6 +2613,7 @@ def test_天候延長アイテム(item_name, weather):
     ("でんきだま", "ピカチュウ", "でんきショック", 8192),
     ("いしずえのめん", "オーガポン(いしずえ)", "エナジーボール", 4915),
     ("いどのめん", "オーガポン(いど)", "エナジーボール", 4915),
+    ("かまどのめん", "オーガポン(かまど)", "エナジーボール", 4915),
 ])
 def test_専用アイテム攻撃補正(item_name, mon_name, move_name, expected_modifier):
     """オーガポンのめん・でんきだま: 攻撃補正（atk_modifier）を上昇させる

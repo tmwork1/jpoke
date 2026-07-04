@@ -150,9 +150,16 @@ ITEMS: dict[str, ItemData] = {
                 h.いのちのたま_boost_atk,
                 subject_spec="attacker:self",
             ),
+            # turn.md では「いのちのたまの反動」は priority=160 で Event.ON_DAMAGE
+            # （実装上の Event.ON_DAMAGE_HIT に相当）に掲載されているが、
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。
+            # 0ダメージ時（HP1相手へのみねうち等）も反動が発生する仕様
+            # （docs/spec/items/いのちのたま.md 詳細な仕様）を満たすため、
+            # 常に発火する Event.ON_HIT を使用し、priority のみ turn.md の値に合わせる。
             Event.ON_HIT: h.ItemHandler(
                 h.いのちのたま_recoil,
                 subject_spec="attacker:self",
+                priority=160,
             )
         }
     ),
@@ -173,7 +180,7 @@ ITEMS: dict[str, ItemData] = {
         fling_power=10,
         handlers={
             Event.ON_HP_CHANGED: h.ItemHandler(
-                h.heal_on_quarter_hp,
+                h.ウイのみ_heal_on_quarter_hp,
                 subject_spec="target:self",
             )
         },
@@ -205,6 +212,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_SWITCH_IN: h.ItemHandler(
                 h.エレキシード_boost_defense,
                 subject_spec="source:self",
+                priority=120,  # docs/spec/turn.md ON_SWITCH_IN: 「120 エレキシードの発動」
             ),
             Event.ON_FIELD_CHANGE: h.ItemHandler(
                 h.エレキシード_boost_defense,
@@ -228,10 +236,16 @@ ITEMS: dict[str, ItemData] = {
     "おおきなねっこ": ItemData(
         fling_power=10,
         handlers={
-            Event.ON_CALC_DRAIN: h.ItemHandler(
-                h.おおきなねっこ_boost_drain,
-                subject_spec="attacker:self",
-            )
+            Event.ON_CALC_DRAIN: [
+                h.ItemHandler(
+                    h.おおきなねっこ_boost_drain,
+                    subject_spec="attacker:self",
+                ),
+                h.ItemHandler(
+                    h.おおきなねっこ_boost_drain,
+                    subject_spec="source:self",
+                ),
+            ]
         }
     ),
     "オッカのみ": ItemData(
@@ -291,9 +305,16 @@ ITEMS: dict[str, ItemData] = {
     "かいがらのすず": ItemData(
         fling_power=30,
         handlers={
-            Event.ON_DAMAGE_HIT: h.ItemHandler(
+            # turn.md では「かいがらのすずの回復」は priority=160 で Event.ON_DAMAGE
+            # （実装上の Event.ON_DAMAGE_HIT に相当）に掲載されているが、
+            # ON_DAMAGE_HIT はみがわりに阻まれた場合（実HPダメージ0）に発火しないため採用しない。
+            # 第五世代以降はみがわりへの与ダメージでも回復する仕様
+            # （docs/spec/items/かいがらのすず.md 詳細な仕様）を満たすため、
+            # 常に発火する Event.ON_HIT を使用し、priority のみ turn.md の値に合わせる。
+            Event.ON_HIT: h.ItemHandler(
                 h.かいがらのすず_drain_on_hit,
                 subject_spec="attacker:self",
+                priority=160,
             )
         }
     ),
@@ -303,7 +324,7 @@ ITEMS: dict[str, ItemData] = {
             Event.ON_TURN_END: h.ItemHandler(
                 h.かえんだま_apply_burn,
                 subject_spec="source:self",
-                priority=90,
+                priority=150,
             )
         }
     ),
@@ -441,6 +462,15 @@ ITEMS: dict[str, ItemData] = {
                 subject_spec="source:self",
                 priority=50,
             ),
+            Event.ON_VOLATILE_START: h.ItemHandler(
+                h.キーのみ_cure_confusion,
+                subject_spec="source:self",
+            ),
+            Event.ON_ITEM_ENABLED: h.ItemHandler(
+                h.キーのみ_cure_confusion,
+                subject_spec="source:self",
+                priority=50,
+            ),
             Event.ON_FORCE_BERRY_TRIGGER: h.ItemHandler(
                 h.キーのみ_cure_confusion,
                 subject_spec="source:self",
@@ -469,6 +499,16 @@ ITEMS: dict[str, ItemData] = {
                 h.くちたけん_form_change,
                 subject_spec="source:self",
             ),
+            Event.ON_CHECK_ITEM_CHANGE: [
+                h.ItemHandler(
+                    h.くちたけん_prevent_item_change,
+                    subject_spec="target:self",
+                ),
+                h.ItemHandler(
+                    h.くちたけん_prevent_transfer_to_hero,
+                    subject_spec="target:foe",
+                ),
+            ],
         }
     ),
     "くちたたて": ItemData(

@@ -1,0 +1,4 @@
+実装確認: 正常。last_physical/special_damage_received > 0 のとき apply_fixed_modifier(value, 8192) で威力2倍。
+テスト追加: 物理被ダメ時威力2倍・特殊被ダメ時威力2倍・被ダメなし通常威力の3ケース。
+progress/move.md: PP列 12→10 に修正、レビュー列をxに更新。
+全テスト2788件パス。

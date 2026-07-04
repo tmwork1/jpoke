@@ -253,7 +253,8 @@ class Pokemon:
                 w *= 2
         if self.has_item('かるいし', consider_enabled=True):
             w = int(w*0.5*10)/10
-        return w
+        # おもさの最低値は0.1kg
+        return max(w, 0.1)
 
     @property
     def base_types(self) -> list[Type]:
