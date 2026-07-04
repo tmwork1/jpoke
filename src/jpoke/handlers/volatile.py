@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
 
-from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
+from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName, MoveName
 
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
 
-HIDDEN_MOVE_ALLOWED_MOVES: dict[str, list[str]] = {
+HIDDEN_MOVE_ALLOWED_MOVES: dict[VolatileName, list[MoveName]] = {
     "あなをほる": ["じしん", "マグニチュード"],
     "そらをとぶ": ["かぜおこし", "たつまき", "かみなり", "ぼうふう"],
     "ダイビング": ["なみのり", "うずしお"],

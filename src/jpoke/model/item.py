@@ -1,7 +1,9 @@
+from typing import Literal
+
 from jpoke.utils import fast_copy
 from jpoke.data import ITEMS
 from jpoke.data.models import ItemData
-from jpoke.types import PokemonName
+from jpoke.types import PokemonName, MoveName
 
 from .effect import GameEffect
 
@@ -23,7 +25,7 @@ class Item(GameEffect):
 
         self.data: ItemData  # type hint
         self.count: int = 0
-        self.move_name: str = ""
+        self.move_name: MoveName | Literal[""] = ""
 
     def __deepcopy__(self, memo):
         """アイテムオブジェクトのディープコピーを作成する。"""

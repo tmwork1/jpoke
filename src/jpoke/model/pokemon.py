@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
 from jpoke.types import Nature, Type, Stat, Gender, \
-    AilmentName, VolatileName, BoostSource, PokemonName, AbilityName
+    AilmentName, VolatileName, BoostSource, PokemonName, AbilityName, MoveName
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
@@ -53,7 +53,7 @@ class Pokemon:
                  level: int = 50,
                  ability_name: AbilityName = "",
                  item_name: str = "",
-                 move_names: list[str] = ["はねる"],
+                 move_names: list[MoveName] = ["はねる"],
                  tera_type: Type | None = None) -> None:
         """ポケモンを初期化する。
 
@@ -659,7 +659,7 @@ class Pokemon:
 
     # ── 技 ──────────────────────────────────────────────────────
 
-    def set_moves(self, moves: list[str]):
+    def set_moves(self, moves: list[MoveName]):
         """技のリストを設定する。
 
         Args:
@@ -667,7 +667,7 @@ class Pokemon:
         """
         self.moves = [Move(name) for name in moves]
 
-    def get_move(self, move_name: str) -> Move | None:
+    def get_move(self, move_name: MoveName) -> Move | None:
         """技を検索する。
 
         Args:
@@ -681,7 +681,7 @@ class Pokemon:
                 return m
         return None
 
-    def has_move(self, move: str) -> bool:
+    def has_move(self, move: MoveName) -> bool:
         """指定された技を持っているか判定する。
 
         Args:

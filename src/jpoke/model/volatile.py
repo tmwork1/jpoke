@@ -1,11 +1,11 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from jpoke.core import EventManager
     from jpoke.model.pokemon import Pokemon
     from jpoke.data.volatile import VolatileData
 
-from jpoke.types import VolatileName
+from jpoke.types import VolatileName, MoveName
 from jpoke.utils import fast_copy
 from jpoke.data.volatile import VOLATILES
 
@@ -33,7 +33,7 @@ class Volatile(GameEffect):
     def __init__(self,
                  name: VolatileName,
                  count: int | None = None,
-                 move_name: str = "",
+                 move_name: MoveName | Literal[""] = "",
                  hp: int = 0,
                  bind_damage_ratio: float = 1/8):
         """揮発性状態を初期化する。
@@ -43,7 +43,7 @@ class Volatile(GameEffect):
         """
         super().__init__(VOLATILES[name])
         self.count: int | None = count
-        self.move_name: str = move_name
+        self.move_name: MoveName | Literal[""] = move_name
         self.hp: int = hp
         self.bind_damage_ratio: float = bind_damage_ratio  # バインドのダメージ比率
 

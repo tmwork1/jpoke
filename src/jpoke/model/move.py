@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.types import Type, MoveCategory, MoveFlag, MoveTarget
+    from jpoke.types import Type, MoveCategory, MoveFlag, MoveTarget, MoveName
 
 from jpoke.utils import fast_copy
 from jpoke.data import MOVES
@@ -20,7 +20,7 @@ class Move(GameEffect):
         _type: 技のタイプ（一部の効果で変更される可能性がある）
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: MoveName):
         """技を初期化する。
 
         Args:

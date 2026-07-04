@@ -4,7 +4,7 @@
 プレイヤー、ポケモン、技、場の状態などを一元管理し、バトルの進行を制御します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from .lethal import LethalResult
 
@@ -15,7 +15,7 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, AbilityDisabledReason, AbilityName
+    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
 
@@ -111,7 +111,7 @@ class Battle:
         self.turn: int = -1
         self.phase: BattlePhase = ""
         self.winner: Player | None = None
-        self.last_used_move_name: str = ""
+        self.last_used_move_name: MoveName | Literal[""] = ""
 
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
 
@@ -530,7 +530,7 @@ class Battle:
     def roll_damage(self,
                     attacker: Pokemon,
                     defender: Pokemon,
-                    move: Move | str,
+                    move: Move | MoveName,
                     critical: bool = False) -> int:
         """ダメージを計算してランダムに1つ選択する。
 
@@ -549,7 +549,7 @@ class Battle:
     def calc_damages(self,
                      attacker: Pokemon,
                      defender: Pokemon,
-                     move: Move | str,
+                     move: Move | MoveName,
                      critical: bool = False) -> list[int]:
         """可能なダメージ値のリストを計算する。
 

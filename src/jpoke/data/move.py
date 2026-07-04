@@ -5,6 +5,7 @@ Note:
 """
 from jpoke.enums import Event, LethalEvent
 from jpoke.core import LethalHandler
+from jpoke.types import MoveName
 
 from jpoke.handlers import move as h
 from jpoke.handlers import move_attack as ha
@@ -28,7 +29,7 @@ def common_setup() -> None:
         data.name = name
 
 
-MOVES: dict[str, MoveData] = {
+MOVES: dict[MoveName, MoveData] = {
     "わるあがき": MoveData(
         type="",
         category="physical",

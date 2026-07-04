@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass, field
 
-from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName, AbilityName
+from jpoke.types import AbilityFlag, Type, MoveCategory, MoveTarget, MoveFlag, PokemonName, AbilityName, MoveName
 
 
 class PokemonData:
@@ -63,7 +63,7 @@ class MoveData:
     flags: set[MoveFlag] = field(default_factory=set)
     handlers: dict[Event | DomainEvent, Handler | list[Handler]] = field(default_factory=dict)
     lethal_handlers: dict[LethalEvent, LethalHandler] = field(default_factory=dict)
-    name: str = ""
+    name: MoveName | Literal[""] = ""
 
 
 @dataclass
