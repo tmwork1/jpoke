@@ -1,6 +1,6 @@
 # test_item
 
-テスト数: 503
+テスト数: 508
 
 - [x] HP25以下でランク上昇するきのみ(item_name=チイラのみ, stat=atk, amount=1)
 - [x] HP25以下でランク上昇するきのみ(item_name=カムラのみ, stat=spe, amount=1)
@@ -456,6 +456,11 @@
 - [x] メトロノーム_連続使用_補正係数(uses=6, expected_modifier=8191)
 - [x] メトロノーム_連続使用_補正係数(uses=7, expected_modifier=8191)
 - [x] メンタルハーブ_いちゃもんを即解除
+- [x] メンタルハーブ_対象の揮発状態を即解除(volatile_name=メロメロ, kwargs={})
+- [x] メンタルハーブ_対象の揮発状態を即解除(volatile_name=アンコール, kwargs={'move_name': 'たいあたり'})
+- [x] メンタルハーブ_対象の揮発状態を即解除(volatile_name=かなしばり, kwargs={'move_name': 'たいあたり'})
+- [x] メンタルハーブ_対象の揮発状態を即解除(volatile_name=ちょうはつ, kwargs={})
+- [x] メンタルハーブ_対象の揮発状態を即解除(volatile_name=かいふくふうじ, kwargs={})
 - [x] メンタルハーブ_対象外の揮発状態には反応しない
 - [x] ものしりメガネ_物理技には補正なし
 - [x] ものしりメガネ_特殊技1_1倍

@@ -1469,7 +1469,7 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
 
     対象のアイテムはこの時点ではまだ消費されていない（ON_MOVE_ENDで消費）。
     でんきだま → まひ、かえんだま → やけど、どくバリ → どく、どくどくだま → もうどく、
-    メンタルハーブ → いちゃもん・アンコール・かなしばり・ちょうはつを解除、
+    メンタルハーブ → メロメロ・アンコール・いちゃもん・かなしばり・ちょうはつ・かいふくふうじを解除、
     ラムのみ → 状態異常・こんらんを解除。
     クラボのみ/カゴのみ/モモンのみ/チーゴのみ/ナナシのみ → 対応する状態異常を解除、
     キーのみ → こんらんを解除、ヒメリのみ → PPが0の技を回復、
@@ -1504,7 +1504,7 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
             )
     elif item_name == "メンタルハーブ":
         defender = ctx.defender
-        for volatile_name in ("いちゃもん", "アンコール", "かなしばり", "ちょうはつ"):
+        for volatile_name in ("メロメロ", "アンコール", "いちゃもん", "かなしばり", "ちょうはつ", "かいふくふうじ"):
             battle.volatile_manager.remove(defender, volatile_name)
     elif item_name == "ラムのみ":
         defender = ctx.defender

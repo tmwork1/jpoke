@@ -385,6 +385,19 @@ def test_なげつける_メンタルハーブでいちゃもんを解除する(
     assert not defender.has_volatile("いちゃもん")
 
 
+def test_なげつける_メンタルハーブでかいふくふうじを解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手のかいふくふうじを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "かいふくふうじ", source=battle.actives[0])
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("かいふくふうじ")
+
+
 def test_なげつける_メンタルハーブでかなしばりを解除する():
     """なげつける: メンタルハーブを投げると命中後に相手のかなしばりを解除する。"""
     battle = t.start_battle(
@@ -422,6 +435,19 @@ def test_なげつける_メンタルハーブでちょうはつを解除する(
     battle.volatile_manager.apply(defender, "ちょうはつ", count=3)
     t.run_move(battle, 0)
     assert not defender.has_volatile("ちょうはつ")
+
+
+def test_なげつける_メンタルハーブでメロメロを解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手のメロメロを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "メロメロ", source=battle.actives[0])
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("メロメロ")
 
 
 def test_なげつける_メンタルハーブで複数のメンタル系状態を同時に解除する():

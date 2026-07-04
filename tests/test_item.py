@@ -4791,6 +4791,25 @@ def test_メンタルハーブ_いちゃもんを即解除():
     assert not mon.has_item()
 
 
+@pytest.mark.parametrize("volatile_name, kwargs", [
+    ("メロメロ", {}),
+    ("アンコール", {"move_name": "たいあたり"}),
+    ("かなしばり", {"move_name": "たいあたり"}),
+    ("ちょうはつ", {}),
+    ("かいふくふうじ", {}),
+])
+def test_メンタルハーブ_対象の揮発状態を即解除(volatile_name, kwargs):
+    """メンタルハーブ: メロメロ・アンコール・かなしばり・ちょうはつ・かいふくふうじ付与時に即解除する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="メンタルハーブ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, volatile_name, source=battle.actives[1], **kwargs)
+    assert not mon.has_volatile(volatile_name)
+    assert not mon.has_item()
+
+
 def test_メンタルハーブ_対象外の揮発状態には反応しない():
     """メンタルハーブ: 対象外の揮発状態（こんらん等）では発動しない"""
     battle = t.start_battle(
