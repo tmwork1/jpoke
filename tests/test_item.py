@@ -3956,6 +3956,43 @@ def test_ひかりのねんど_スクリーン8ターンに延長():
     assert side.get("リフレクター").count == 8
 
 
+@pytest.mark.parametrize("field_name", ["リフレクター", "ひかりのかべ", "オーロラベール"])
+def test_ひかりのねんど_対象の壁を8ターンに延長(field_name):
+    """ひかりのねんど: リフレクター・ひかりのかべ・オーロラベールいずれも8ターンに延長する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    side = battle.get_side(mon)
+    side.apply(field_name, 5, source=mon)
+    assert side.get(field_name).count == 8
+
+
+def test_ひかりのねんど_対象外の場は延長されない():
+    """ひかりのねんど: リフレクター・ひかりのかべ・オーロラベール以外の場状態は延長されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ひかりのねんど")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    side = battle.get_side(mon)
+    side.apply("しんぴのまもり", 5, source=mon)
+    assert side.get("しんぴのまもり").count == 5
+
+
+def test_ひかりのねんど_非所持では5ターンのまま():
+    """ひかりのねんど: 所持していない場合はリフレクターが5ターンで終了する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    side = battle.get_side(mon)
+    side.apply("リフレクター", 5, source=mon)
+    assert side.get("リフレクター").count == 5
+
+
 @pytest.mark.parametrize("item_name", ["おうじゃのしるし", "するどいキバ"])
 def test_ひるみ付与アイテム_てんのめぐみで確率2倍(item_name):
     """おうじゃのしるし・するどいキバ: 特性てんのめぐみによりひるみ確率が2倍(20%)になる"""
