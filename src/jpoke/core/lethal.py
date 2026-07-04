@@ -60,8 +60,22 @@ class LethalContext:
 
 
 @dataclass
+class LethalPokemonState:
+    """致死率計算時点でのポケモン片側の状態スナップショット。
+
+    将来的に item/ability の有効状態など他のフィールドを追加しやすいように、
+    rank と ailment を1つのオブジェクトにまとめる。
+
+    Attributes:
+        rank: 計算時のランク補正
+        ailment: 計算時の状態異常
+    """
+    rank: dict[Stat, int] = field(default_factory=dict)
+    ailment: AilmentName = ""
+
+
+@dataclass
 class LethalResult:
-    # TODO : 将来的な拡張も見据えて、attacker/defenderの状態の記録方法を構造化する
     # TODO : LethalResultどうしの和をとることで加算ダメージ計算できるように演算を定義する
     """1ヒット時点の致死率計算結果。
 
@@ -71,25 +85,15 @@ class LethalResult:
         hit: 多段技の何ヒット目か（1始まり）
         hp_dist: ダメージ適用後のHP分布
         damage_dist: このヒットで与えたダメージの分布
-        attacker_rank / defender_rank: 計算時のランク補正
-        attacker_ailment / defender_ailment: 計算時の状態異常
+        attacker / defender: 計算時の攻撃側・防御側の状態スナップショット
     """
     n_attack: int
     move: Move
     hit: int
     hp_dist: StateDist
     damage_dist: StateDist
-    attacker_rank: dict[Stat, int] = field(default_factory=dict)
-    defender_rank: dict[Stat, int] = field(default_factory=dict)
-    attacker_ailment: AilmentName = ""
-    defender_ailment: AilmentName = ""
-
-    def update(self, hp_dist: StateDist, attacker: Pokemon, defender: Pokemon):
-        self.hp_dist = hp_dist
-        self.attacker_rank = attacker.rank.copy()
-        self.defender_rank = defender.rank.copy()
-        self.attacker_ailment = attacker.ailment.name
-        self.defender_ailment = defender.ailment.name
+    attacker: LethalPokemonState = field(default_factory=LethalPokemonState)
+    defender: LethalPokemonState = field(default_factory=LethalPokemonState)
 
     def _counter(self, dist: StateDist) -> dict[int, int]:
         """分布の HP値 → 出現頻度 の辞書を返す。ability_enabled / item_enabled は無視する。"""
@@ -219,7 +223,13 @@ def _lethal_loop(hp_dist: StateDist,
                 # 結果を記録（ハンドラ適用前の最終ダメージ分布を反映）
                 result = LethalResult(
                     n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
-                    hp_dist=hp_dist, damage_dist=ctx.damage_dist
+                    hp_dist=hp_dist, damage_dist=ctx.damage_dist,
+                    attacker=LethalPokemonState(
+                        rank=ctx.attacker.rank.copy(), ailment=ctx.attacker.ailment.name
+                    ),
+                    defender=LethalPokemonState(
+                        rank=ctx.defender.rank.copy(), ailment=ctx.defender.ailment.name
+                    ),
                 )
                 results.append(result)
 
