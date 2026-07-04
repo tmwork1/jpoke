@@ -8323,7 +8323,12 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         priority=-4,
         flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ゆきなだれ_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "ゆびをふる": MoveData(
         type="ノーマル",
@@ -8455,7 +8460,11 @@ MOVES: dict[str, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.リフレッシュ_cure_ailment,
+            ),
+        },
     ),
     "りゅうせいぐん": MoveData(
         type="ドラゴン",

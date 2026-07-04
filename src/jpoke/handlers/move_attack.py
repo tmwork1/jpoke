@@ -2397,6 +2397,15 @@ def やきつくす_remove_berry(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
+def ゆきなだれ_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ゆきなだれ: そのターンに相手からダメージを受けていた場合、威力が2倍になる。"""
+    attacker = ctx.attacker
+    if (attacker.last_physical_damage_received > 0
+            or attacker.last_special_damage_received > 0):
+        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+    return HandlerReturn(value=value)
+
+
 def ゆめくい_drain(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ゆめくいの回復量を計算する。"""
     _drain_hp(battle, ctx, value, heal_ratio=0.5)
