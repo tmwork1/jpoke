@@ -4,7 +4,7 @@ import math
 from typing import cast
 import pytest
 from jpoke import Pokemon
-from jpoke.enums import Interrupt
+from jpoke.enums import Command, Interrupt
 from jpoke.model import Move
 from jpoke.types import Type
 from . import test_utils as t
@@ -3052,6 +3052,45 @@ def test_とくせいガード_なしの場合は特性が無効化される():
     result = battle.add_ability_disabled_reason(defender, "かたやぶり")
     assert result
     assert not defender.ability.enabled
+
+
+def test_とつげきチョッキ_アンコールで変化技を強制されたターンは使用できる():
+    """とつげきチョッキ: 実行時ブロックは持たないため、アンコールで変化技を強制されたターンは正常に実行できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり", "なきごえ"], item_name="とつげきチョッキ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    battle.volatile_manager.apply(mon, "アンコール", move_name="なきごえ")
+    t.run_move(battle, 0, move_idx=0)
+    assert mon.executed_move.name == "なきごえ"
+    assert foe.rank["atk"] == -1
+
+
+def test_とつげきチョッキ_変化技しか持たない場合わるあがきのみ選択可能():
+    """とつげきチョッキ: 変化技しか持たないポケモンはわるあがきのみ選択可能になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なきごえ"], item_name="とつげきチョッキ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    player = battle.players[0]
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    assert commands == [Command.STRUGGLE]
+
+
+def test_とつげきチョッキ_変化技はコマンド選択肢から除外される():
+    """とつげきチョッキ: 変化技はコマンド選択肢から除外される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "なきごえ"], item_name="とつげきチョッキ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    player = battle.players[0]
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    assert Command.MOVE_1 not in commands
+    assert Command.MOVE_0 in commands
 
 
 def test_とつげきチョッキ_物理技には防御補正なし():

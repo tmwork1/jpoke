@@ -1235,10 +1235,6 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.とつげきチョッキ_modify_command_options,
                 subject_spec="source:self",
             ),
-            Event.ON_TRY_MOVE_1: h.ItemHandler(
-                h.とつげきチョッキ_block_status_move,
-                subject_spec="attacker:self",
-            ),
             Event.ON_CALC_DEF_MODIFIER: h.ItemHandler(
                 h.とつげきチョッキ_boost_spdef,
                 subject_spec="defender:self",

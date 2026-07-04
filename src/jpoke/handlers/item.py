@@ -1167,13 +1167,6 @@ def とけないこおり_modify_power_by_type(battle: Battle, ctx: AttackContex
     return _modify_power_by_type(ctx.move, value, type_="こおり", modifier=4915)
 
 
-def とつげきチョッキ_block_status_move(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とつげきチョッキ: 変化技の使用を禁止する。"""
-    if ctx.move.category == "status":
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def とつげきチョッキ_boost_spdef(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """とつげきチョッキ: 特殊技に対してとくぼうを1.5倍にする。"""
     if ctx.move.category == "special":
