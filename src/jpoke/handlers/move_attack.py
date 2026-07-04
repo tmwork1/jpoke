@@ -1457,6 +1457,12 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     でんきだま → まひ、かえんだま → やけど、どくバリ → どく、どくどくだま → もうどく、
     メンタルハーブ → いちゃもん・アンコール・かなしばり・ちょうはつを解除、
     ラムのみ → 状態異常・こんらんを解除。
+    クラボのみ/カゴのみ/モモンのみ/チーゴのみ/ナナシのみ → 対応する状態異常を解除、
+    キーのみ → こんらんを解除、ヒメリのみ → PPが0の技を回復、
+    オレンのみ → HP10回復、オボンのみ → HP1/4回復、
+    フィラ/ウイ/マゴ/バンジ/イアのみ → HP1/3回復＋性格によってはこんらん付与、
+    チイラ/リュガ・アッキ/カムラ/ヤタピ/ズア・タラプのみ → 対応する能力ランク+1、
+    サンのみ → きゅうしょアップ付与、スターのみ → ランダムな能力ランク+2。
     """
     item_name = ctx.attacker.item.base_name
     if item_name == "でんきだま":
@@ -1489,7 +1495,80 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         defender = ctx.defender
         battle.ailment_manager.remove(defender)
         battle.volatile_manager.remove(defender, "こんらん")
-    # TODO: その他のきのみ・追加効果アイテム
+    elif item_name == "クラボのみ":
+        defender = ctx.defender
+        if defender.ailment.name == "まひ":
+            battle.ailment_manager.remove(defender)
+    elif item_name == "カゴのみ":
+        defender = ctx.defender
+        if defender.ailment.name == "ねむり":
+            battle.ailment_manager.remove(defender)
+    elif item_name == "モモンのみ":
+        defender = ctx.defender
+        if defender.ailment.name in ("どく", "もうどく"):
+            battle.ailment_manager.remove(defender)
+    elif item_name == "チーゴのみ":
+        defender = ctx.defender
+        if defender.ailment.name == "やけど":
+            battle.ailment_manager.remove(defender)
+    elif item_name == "ナナシのみ":
+        defender = ctx.defender
+        if defender.ailment.name == "こおり":
+            battle.ailment_manager.remove(defender)
+    elif item_name == "キーのみ":
+        battle.volatile_manager.remove(ctx.defender, "こんらん")
+    elif item_name == "ヒメリのみ":
+        move = next((m for m in ctx.defender.moves if m.pp == 0), None)
+        if move is not None:
+            move.pp = min(10, move.data.pp)
+    elif item_name == "オレンのみ":
+        battle.modify_hp(ctx.defender, v=10)
+    elif item_name == "オボンのみ":
+        battle.modify_hp(ctx.defender, r=1/4)
+    elif item_name == "フィラのみ":
+        defender = ctx.defender
+        battle.modify_hp(defender, r=1/3)
+        if defender.nature in ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"):
+            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+    elif item_name == "ウイのみ":
+        defender = ctx.defender
+        battle.modify_hp(defender, r=1/3)
+        if defender.nature in ("いじっぱり", "わんぱく", "ようき", "しんちょう"):
+            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+    elif item_name == "マゴのみ":
+        defender = ctx.defender
+        battle.modify_hp(defender, r=1/3)
+        if defender.nature in ("ゆうかん", "のんき", "れいせい", "むじゃき"):
+            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+    elif item_name == "バンジのみ":
+        defender = ctx.defender
+        battle.modify_hp(defender, r=1/3)
+        if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "なまいき"):
+            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+    elif item_name == "イアのみ":
+        defender = ctx.defender
+        battle.modify_hp(defender, r=1/3)
+        if defender.nature in ("さみしがり", "おっとり", "おとなしい", "せっかち"):
+            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+    elif item_name == "チイラのみ":
+        battle.modify_stats(ctx.defender, {"atk": 1}, source=ctx.attacker)
+    elif item_name in ("リュガのみ", "アッキのみ"):
+        battle.modify_stats(ctx.defender, {"def": 1}, source=ctx.attacker)
+    elif item_name == "カムラのみ":
+        battle.modify_stats(ctx.defender, {"spe": 1}, source=ctx.attacker)
+    elif item_name == "ヤタピのみ":
+        battle.modify_stats(ctx.defender, {"spa": 1}, source=ctx.attacker)
+    elif item_name in ("ズアのみ", "タラプのみ"):
+        battle.modify_stats(ctx.defender, {"spd": 1}, source=ctx.attacker)
+    elif item_name == "サンのみ":
+        battle.volatile_manager.apply(ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker)
+    elif item_name == "スターのみ":
+        defender = ctx.defender
+        candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.rank[s] < 6]
+        if candidates:
+            stat = battle.random.choice(candidates)
+            battle.modify_stats(defender, {stat: 2}, source=ctx.attacker)
+    # TODO: ミクルのみ → 相手の次の技の命中率を1.2倍にする（新規揮発性状態が必要）
     return HandlerReturn(value=value)
 
 
