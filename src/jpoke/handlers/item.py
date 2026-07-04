@@ -720,8 +720,12 @@ def こだわりスカーフ_boost_speed(battle: Battle, ctx: EventContext, valu
 
 
 def こだわりハチマキ_boost_physical(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こだわりハチマキ: 物理技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "physical":
+    """こだわりハチマキ: 物理技の攻撃補正を1.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない
+    （Champions仕様＝第五世代以降の仕様に準拠）。
+    """
+    if ctx.move.category == "physical" and ctx.move.name != "_こんらん":
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 

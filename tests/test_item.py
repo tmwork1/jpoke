@@ -1440,6 +1440,42 @@ def test_こだわりスカーフ_素早さ強化():
     assert battle.speed_calculator.calc_effective_speed(mon) == base_speed * 6144 // 4096
 
 
+def test_こだわりハチマキ_イカサマで攻撃するときも1_5倍():
+    """こだわりハチマキ: イカサマ使用時も相手の攻撃実数値を1.5倍にしてダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="こだわりハチマキ", move_names=["イカサマ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 6144
+
+
+def test_こだわりハチマキ_イカサマを受けるときは補正なし():
+    """こだわりハチマキ: 所持者がイカサマを受ける場合は補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="こだわりハチマキ")],
+        team1=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
+def test_こだわりハチマキ_こんらん自傷ダメージには補正なし():
+    """こだわりハチマキ: こんらんの自傷ダメージには攻撃補正がかからない（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="こだわりハチマキ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
 @pytest.mark.parametrize(
     "item_name",
     ["こだわりスカーフ", "こだわりハチマキ", "こだわりメガネ"]
