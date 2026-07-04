@@ -263,8 +263,9 @@ def _boost_stat_on_type_hit(battle: Battle,
     mon = ctx.defender
     assert mon is not None
     if ctx.move.type == type_:
-        _announce_and_consume_item(battle, mon)
-        battle.modify_stats(mon, stats)
+        changes = battle.modify_stats(mon, stats)
+        if changes:  # ランク上限などで不発の場合は消費しない
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 

@@ -1991,6 +1991,73 @@ def test_ジャポのみ_特殊技では発動しない():
     assert attacker.hp == attacker.max_hp
 
 
+def test_じゅうでんち_あまのじゃくでAランクが最小のとき発動しない():
+    """じゅうでんち: あまのじゃく所持者はこうげきランクがすでに最小のとき発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="じゅうでんち", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["atk"] = -6
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == -6
+    assert foe.has_item()
+
+
+def test_じゅうでんち_あまのじゃくでA下降():
+    """じゅうでんち: あまのじゃく所持者はこうげきが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="じゅうでんち", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == -1
+    assert not foe.has_item()
+
+
+def test_じゅうでんち_かたやぶりの電気技はたんじゅん・あまのじゃくでもA上昇():
+    """じゅうでんち: かたやぶりの効果があるでんき技に対してはたんじゅん・あまのじゃくは発動せず通常通り+1される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="じゅうでんち", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 1
+    assert not foe.has_item()
+
+
+def test_じゅうでんち_こうげきランクが最大のとき発動しない():
+    """じゅうでんち: すでにこうげきランクが最大まで上がっているときは発動せず消費もしない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="じゅうでんち")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    foe.rank["atk"] = 6
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 6
+    assert foe.has_item()
+
+
+def test_じゅうでんち_たんじゅんでA2段階上昇():
+    """じゅうでんち: たんじゅん所持者はこうげきが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="じゅうでんち", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.rank["atk"] == 2
+    assert not foe.has_item()
+
+
 def test_じゅうでんち_でんき以外では発動しない():
     """じゅうでんち: でんき以外の技では発動しない"""
     battle = t.start_battle(
