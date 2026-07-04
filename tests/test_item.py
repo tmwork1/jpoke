@@ -1825,6 +1825,19 @@ def test_じゃくてんほけん_等倍では発動しない():
     assert foe.has_item()
 
 
+def test_ジャポのみ_マジックガードには発動しない():
+    """ジャポのみ: 攻撃してきた相手がマジックガード持ちの場合はダメージを与えず消費もされない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"], ability_name="マジックガード")],
+        team1=[Pokemon("ピカチュウ", item_name="ジャポのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+    assert battle.actives[1].has_item()
+
+
 def test_ジャポのみ_物理被弾で攻撃者にダメージ():
     """ジャポのみ: 物理技でダメージを受けたとき攻撃者に最大HPの1/8ダメージ"""
     battle = t.start_battle(

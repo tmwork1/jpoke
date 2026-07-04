@@ -221,11 +221,16 @@ def _retaliate_on_category(battle: Battle,
                            ctx: AttackContext,
                            value: Any,
                            category: MoveCategory) -> HandlerReturn:
+    """指定カテゴリの技でダメージを受けたとき攻撃者に反撃ダメージを与える共通処理。
+
+    マジックガードなどで実際にダメージが通らなかった場合（攻撃者がすでに
+    ひんしの場合を含む）は発動・消費しない。
+    """
     mon = ctx.defender
     assert mon is not None
     if ctx.move.category == category:
-        battle.modify_hp(ctx.attacker, r=-1/8)
-        _announce_and_consume_item(battle, mon)
+        if battle.modify_hp(ctx.attacker, r=-1/8):
+            _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
 def _dedicated_item_form_change(battle: Battle,
