@@ -90,6 +90,86 @@ def test_なげつける_でんきだまでまひを付与する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_なげつける_メンタルハーブでアンコールを解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手のアンコールを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "アンコール", move_name="たいあたり")
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("アンコール")
+
+
+def test_なげつける_メンタルハーブでいちゃもんを解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手のいちゃもんを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "いちゃもん", source=battle.actives[0])
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("いちゃもん")
+
+
+def test_なげつける_メンタルハーブでかなしばりを解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手のかなしばりを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "かなしばり", count=4, move_name="たいあたり")
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("かなしばり")
+
+
+def test_なげつける_メンタルハーブでこんらんは解除しない():
+    """なげつける: メンタルハーブを投げても対象外の揮発性状態（こんらん）は解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "こんらん", source=battle.actives[0])
+    t.run_move(battle, 0)
+    assert defender.has_volatile("こんらん")
+
+
+def test_なげつける_メンタルハーブでちょうはつを解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手のちょうはつを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "ちょうはつ", count=3)
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("ちょうはつ")
+
+
+def test_なげつける_メンタルハーブで複数のメンタル系状態を同時に解除する():
+    """なげつける: メンタルハーブを投げると命中後に相手の複数のメンタル系状態を同時に解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="メンタルハーブ", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "いちゃもん", source=battle.actives[0])
+    battle.volatile_manager.apply(defender, "ちょうはつ", count=3)
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("いちゃもん")
+    assert not defender.has_volatile("ちょうはつ")
+
+
 def test_なげつける_外れてもアイテムを消費する():
     """なげつける: 命中しなかった場合でもON_MOVE_ENDが発火してアイテムが消費される。"""
     battle = t.start_battle(
