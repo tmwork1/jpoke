@@ -14,6 +14,7 @@ from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
 from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
+from jpoke.data import TYPE_MODIFIER
 from jpoke.data.pokedex import POKEDEX
 from . import ability_paradox as paradox
 
@@ -1225,11 +1226,33 @@ def ねばりのかぎづめ_fix_bind_duration(_battle: Battle, _ctx: AttackCont
     return HandlerReturn(value=value)
 
 
-def ねらいのまと_negate_immunity(_battle: Battle, _ctx: AttackContext, value: int) -> HandlerReturn:
-    """ねらいのまと: タイプ相性による無効（0倍）を1倍に戻す。"""
-    if value == 0:
-        value = 4096
-    return HandlerReturn(value=value)
+def ねらいのまと_negate_immunity(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ねらいのまと: タイプ相性による無効（0倍）を1倍に補正する。
+
+    複数タイプを持つ相手の場合、無効化タイプ以外の相性補正（弱点・耐性）は
+    そのまま活かすため、タイプごとに0倍のみを1倍に置き換えてから掛け合わせる。
+    浮遊等によるじめん技無効化（フリーフォール）や特性による耐性には影響しない。
+    """
+    move_type = ctx.move.type
+    if move_type == "ステラ" and ctx.defender.terastallized:
+        # ステラ技のテラスタル相手への効果抜群は無効化ではないため対象外
+        return HandlerReturn(value=value)
+
+    type_chart = TYPE_MODIFIER.get(move_type, {})
+    if move_type == "じめん":
+        if battle.query.is_floating(ctx.defender):
+            # 浮遊による無効化（フリーフォール）はねらいのまとの対象外
+            return HandlerReturn(value=value)
+        type_chart = type_chart.copy()
+        type_chart["ひこう"] = 1.0
+
+    base = 4096
+    for def_type in ctx.defender.types:
+        rate = type_chart.get(def_type, 1.0)
+        if rate == 0.0:
+            rate = 1.0
+        base = int(base * rate)
+    return HandlerReturn(value=base)
 
 
 def のどスプレー_boost_spatk_on_sound(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

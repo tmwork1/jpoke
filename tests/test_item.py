@@ -3373,6 +3373,45 @@ def test_ねらいのまと_タイプ免疫を無効化():
     assert foe.hp < foe.max_hp
 
 
+def test_ねらいのまと_ぶきようで効果が無効化される():
+    """ねらいのまと: 特性ぶきようによりアイテム効果が失われ、通常どおり無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ゲンガー", item_name="ねらいのまと", ability_name="ぶきよう")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.hp == foe.max_hp
+
+
+def test_ねらいのまと_浮遊による無効化には効果がない():
+    """ねらいのまと: 浮遊（特性ふゆう）によるじめん技無効化（フリーフォール）には効果が及ばない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ダグトリオ", move_names=["じしん"])],
+        team1=[Pokemon("フワンテ", item_name="ねらいのまと", ability_name="ふゆう")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.hp == foe.max_hp
+
+
+def test_ねらいのまと_複合タイプで無効化以外の相性は維持される():
+    """ねらいのまと: 複合タイプの場合、無効化タイプ以外の相性補正（弱点等）はそのまま反映される
+
+    ノーマル・エスパータイプのキリンリキがゴーストタイプの技を受けた場合、
+    ゴースト→ノーマルの無効化はなくなるが、ゴースト→エスパーの効果抜群(2倍)はそのまま活きる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーボール"])],
+        team1=[Pokemon("キリンリキ", item_name="ねらいのまと")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == 4096 * 2
+
+
 def test_のどスプレー_非音技では発動しない():
     """のどスプレー: 音技以外では発動しない"""
     battle = t.start_battle(
