@@ -5,6 +5,19 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_10まんばりき_相手にダメージを与える():
+    """10まんばりき: 追加効果なしの物理じめん技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["10まんばりき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_10まんボルト_まひが発動しない():
     """10まんボルト: secondary_chanceが0のときまひを付与しない。"""
     battle = t.start_battle(
