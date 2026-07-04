@@ -1,5 +1,7 @@
 """攻撃技ハンドラの単体テスト（な行）。"""
 
+import pytest
+
 from jpoke import Pokemon
 from .. import test_utils as t
 
@@ -88,6 +90,22 @@ def test_なげつける_でんきだまでまひを付与する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "まひ"
+
+
+@pytest.mark.parametrize("mon_name", ["ギラティナ(アナザー)", "ギラティナ(オリジン)"])
+def test_なげつける_はっきんだまをギラティナが使うと失敗する(mon_name):
+    """なげつける: はっきんだまはギラティナ(アナザー/オリジン問わず)が使用すると失敗し、アイテムを消費しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon(mon_name, item_name="はっきんだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert attacker.has_item()
 
 
 def test_なげつける_メンタルハーブでアンコールを解除する():

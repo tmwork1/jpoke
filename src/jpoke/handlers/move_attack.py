@@ -1456,6 +1456,8 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
 
     アイテムを持っていない場合、fling_power=0の対象外アイテムの場合、
     またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合は失敗する。
+    はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみ失敗する
+    （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
     成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
     """
     attacker = ctx.attacker
@@ -1467,7 +1469,11 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
         return HandlerReturn(value=False, stop_event=True)
 
     item_data = attacker.item.data
-    if item_data.fling_power == 0 or item_data.no_fling:
+    if (
+        item_data.fling_power == 0
+        or item_data.no_fling
+        or (attacker.item.base_name == "はっきんだま" and attacker.name.startswith("ギラティナ"))
+    ):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload={"reason": "なげつける_対象外アイテム"}

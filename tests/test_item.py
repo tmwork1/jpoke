@@ -3506,6 +3506,66 @@ def test_ノーマルジュエル_ノーマル技威力1_3倍():
     assert not mon.has_item()
 
 
+def test_はっきんだま_ギラティナオリジンでも効果がある():
+    """はっきんだま: ギラティナ(オリジン)が持っていてもドラゴン・ゴースト技に補正がかかる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギラティナ(オリジン)", item_name="はっきんだま", move_names=["ドラゴンクロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4915
+
+
+def test_はっきんだま_ギラティナ以外が持っても効果がない():
+    """はっきんだま: ギラティナ以外が持っていてもドラゴン・ゴースト技に補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("パルキア", item_name="はっきんだま", move_names=["ドラゴンクロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_はっきんだま_なげつけるで威力60になる():
+    """はっきんだま: ギラティナ以外が持っている場合は通常の道具でありなげつけるで使用でき、威力60でダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="はっきんだま", move_names=["なげつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_item()
+
+
+def test_はっきんだま_はたきおとすで奪われる():
+    """はっきんだま: だいはっきんだまと異なり、ギラティナが持っていても通常通りはたきおとすで奪われる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("ギラティナ(オリジン)", item_name="はっきんだま")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+
+
+def test_はっきんだま_対象外タイプの技には効果がない():
+    """はっきんだま: ギラティナが持っていてもドラゴン・ゴースト以外の技には補正がかからない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギラティナ(アナザー)", item_name="はっきんだま", move_names=["はかいこうせん"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_ばんのうがさ_あさのひざしが晴れでも半分回復():
     """ばんのうがさ使用者: 晴れ状態でもあさのひざしの回復量が最大HPの1/2になる"""
     battle = t.start_battle(
@@ -3604,6 +3664,74 @@ def test_ばんのうがさ_雨のみず技強化が無効():
     t.run_move(battle, 0)
     # 天候補正なし (4096 = 等倍)
     assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_パワフルハーブ_あめ下のエレクトロビームは天候優先で消費されない():
+    """パワフルハーブ: あめによる溜めスキップが優先され、アイテムは消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="パワフルハーブ", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert mon.has_item()
+    assert foe.hp < foe.max_hp
+    assert mon.rank["spa"] == 1
+
+
+def test_パワフルハーブ_おおひでり下のダイビングが失敗しても消費されない():
+    """パワフルハーブ: おおひでりでダイビングが失敗したときはアイテムを消費しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", item_name="パワフルハーブ", move_names=["ダイビング"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("おおひでり", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert mon.has_item()
+    assert foe.hp == foe.max_hp
+
+
+def test_パワフルハーブ_にほんばれ下のソーラービームは天候優先で消費されない():
+    """パワフルハーブ: にほんばれによる溜めスキップが優先され、アイテムは消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", item_name="パワフルハーブ", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 99),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert mon.has_item()
+    assert foe.hp < foe.max_hp
+
+
+def test_パワフルハーブ_消費後は溜め技が2ターンかかる():
+    """パワフルハーブ: 消費後は溜め技が通常通り2ターンかかるようになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", item_name="パワフルハーブ", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+
+    # 1回目: パワフルハーブで即発動して消費される
+    t.run_move(battle, 0)
+    assert not mon.has_item()
+    hp_after_first = foe.hp
+    assert hp_after_first < foe.max_hp
+
+    # 2回目: アイテムがないため通常通り1ターン目は溜めるだけでダメージを与えない
+    t.run_move(battle, 0)
+    assert foe.hp == hp_after_first
+    assert mon.has_volatile("ソーラービーム")
 
 
 def test_パワフルハーブ_溜め技をスキップ():
