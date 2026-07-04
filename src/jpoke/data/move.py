@@ -8392,7 +8392,12 @@ MOVES: dict[str, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ライジングボルト_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "らいめいげり": MoveData(
         type="かくとう",
@@ -8712,7 +8717,7 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=10,
         priority=3,
-        handlers={},  # TODO: 効果実装
+        handlers={},  # シングルバトルでは効果なし（複数対象技が存在しない）
     ),
     "ワイドフォース": MoveData(
         type="エスパー",
@@ -8720,7 +8725,12 @@ MOVES: dict[str, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ワイドフォース_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "ワイドブレイカー": MoveData(
         type="ドラゴン",

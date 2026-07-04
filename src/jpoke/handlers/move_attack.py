@@ -2420,6 +2420,16 @@ def らいげき_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.2)
 
 
+def ライジングボルト_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ライジングボルト: エレキフィールド中かつ相手が接地している場合、威力が2倍になる。"""
+    if (
+        battle.terrain.name == "エレキフィールド"
+        and not battle.query.is_floating(ctx.defender)
+    ):
+        return HandlerReturn(value=apply_fixed_modifier(value, 8192))
+    return HandlerReturn(value=value)
+
+
 def らいめいげり_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"def": -1})
 
@@ -2512,6 +2522,20 @@ def ロッククライム_apply_confusion_to_defender(battle: Battle, ctx: Attac
 
 def ローキック_reduce_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
+
+
+def ワイドフォース_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ワイドフォース: サイコフィールド中かつ自分が接地している場合、威力が1.5倍になる。
+
+    サイコフィールド自体の1.3倍効果はフィールドハンドラが担当するため、
+    このハンドラは1.5倍のみ担当する。
+    """
+    if (
+        battle.terrain.name == "サイコフィールド"
+        and not battle.query.is_floating(ctx.attacker)
+    ):
+        return HandlerReturn(value=apply_fixed_modifier(value, 6144))
+    return HandlerReturn(value=value)
 
 
 def ワイドブレイカー_reduce_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
