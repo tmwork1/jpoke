@@ -361,6 +361,29 @@ def test_シャドーボーン_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].rank["def"] == -1
 
 
+def test_シャドーレイ_ハードロックの効果抜群軽減を無視する():
+    """シャドーレイ: 相手の特性を無視するため、ハードロックによる効果抜群ダメージ軽減が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーレイ"])],
+        team1=[Pokemon("ミュウツー", ability_name="ハードロック")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+
+
+def test_シャドーレイ_攻撃後に相手の特性が有効に戻る():
+    """シャドーレイ: 攻撃終了後は相手の特性の無効化が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーレイ"])],
+        team1=[Pokemon("ミュウツー", ability_name="ハードロック")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.ability.enabled is True
+
+
 def test_しんくうは_相手にダメージを与える():
     """しんくうは: 優先度+1の先制特殊技で相手にダメージを与える。"""
     battle = t.start_battle(
