@@ -523,6 +523,16 @@ ITEMS: dict[str, ItemData] = {
                 h.くちたたて_form_change,
                 subject_spec="source:self",
             ),
+            Event.ON_CHECK_ITEM_CHANGE: [
+                h.ItemHandler(
+                    h.くちたたて_prevent_item_change,
+                    subject_spec="target:self",
+                ),
+                h.ItemHandler(
+                    h.くちたたて_prevent_transfer_to_hero,
+                    subject_spec="target:foe",
+                ),
+            ],
         }
     ),
     "くっつきバリ": ItemData(

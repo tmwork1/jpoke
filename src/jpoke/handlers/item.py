@@ -592,6 +592,25 @@ def くちたたて_form_change(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def くちたたて_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """くちたたて: ザマゼンタが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    ザマゼンタ以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    mon = ctx.target
+    if mon is not None and mon.name.startswith("ザマゼンタ"):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def くちたたて_prevent_transfer_to_hero(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """くちたたて: れきせんのゆうしゃザマゼンタへトリック・すりかえ等で渡すことを防ぐ。"""
+    mon = ctx.target
+    if mon is not None and mon.name == "ザマゼンタ(れきせん)":
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def くっつきバリ_damage_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """くっつきバリ: ターン終了時に最大HPの1/8ダメージを受ける。"""
     mon = ctx.source
