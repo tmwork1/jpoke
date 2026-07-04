@@ -949,6 +949,25 @@ def test_エレクトロビーム_2ターンで攻撃する():
     assert not attacker.has_volatile("エレクトロビーム")
 
 
+def test_エレクトロビーム_あめとパワフルハーブ両方所持時は天候優先で消費されない():
+    """エレクトロビーム: あめによる溜めスキップがパワフルハーブの消費より優先される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="パワフルハーブ", move_names=["エレクトロビーム"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # あめによるスキップで1ターンで攻撃するが、パワフルハーブは消費されない
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert attacker.has_item()
+    assert attacker.rank["spa"] == 1
+
+
 def test_エレクトロビーム_あめ時1ターンで攻撃してとくこうが上昇する():
     """エレクトロビーム+あめ: 天気があめのとき溜めをスキップして1ターンで攻撃する。とくこうも+1される。"""
     battle = t.start_battle(

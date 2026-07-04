@@ -1159,6 +1159,10 @@ MOVES: dict[MoveName, MoveData] = {
                     priority=50,
                 ),
                 h.MoveHandler(
+                    ha.エレクトロビーム_weather_skip,
+                    priority=90,
+                ),
+                h.MoveHandler(
                     ha.エレクトロビーム_charge,
                 ),
             ],
@@ -3835,9 +3839,15 @@ MOVES: dict[MoveName, MoveData] = {
         power=120,
         accuracy=100,
         handlers={
-            Event.ON_MOVE_CHARGE: h.MoveHandler(
-                ha.ソーラービーム_charge,
-            ),
+            Event.ON_MOVE_CHARGE: [
+                h.MoveHandler(
+                    ha.ソーラービーム_weather_skip,
+                    priority=90,
+                ),
+                h.MoveHandler(
+                    ha.ソーラービーム_charge,
+                ),
+            ],
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ソーラービーム_halve_power,
             ),
@@ -3851,9 +3861,15 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact", "slash"},
         handlers={
-            Event.ON_MOVE_CHARGE: h.MoveHandler(
-                ha.ソーラーブレード_charge,
-            ),
+            Event.ON_MOVE_CHARGE: [
+                h.MoveHandler(
+                    ha.ソーラーブレード_weather_skip,
+                    priority=90,
+                ),
+                h.MoveHandler(
+                    ha.ソーラーブレード_charge,
+                ),
+            ],
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ソーラービーム_halve_power,
             ),

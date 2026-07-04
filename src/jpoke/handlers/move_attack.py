@@ -338,22 +338,37 @@ def エレクトロビーム_boost_spa(battle: Battle, ctx: AttackContext, value
 
 
 def エレクトロビーム_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """エレクトロビーム: 1ターン目に溜め状態へ移行、あめ/おおあめ時または2ターン目は通過する。
+    """エレクトロビーム: 1ターン目に溜め状態へ移行、2ターン目は通過する。
 
     仕様:
-    - 揮発状態なし + 非あめ天気（1ターン目）: 揮発状態を付与して攻撃を停止する。
-    - 揮発状態なし + あめ/おおあめ（1ターン目）: 溜めをスキップして攻撃に進む。
+    - あめ/おおあめによる自動スキップは エレクトロビーム_weather_skip（priority=90）で
+      先に判定されるため、ここに到達するのは非あめ天候（あるいは2ターン目）の場合のみ。
+    - 揮発状態なし（1ターン目）: 揮発状態を付与して攻撃を停止する
+      （パワフルハーブがあれば同priority内で先に消費され、即攻撃に切り替わる）。
     - 揮発状態あり（2ターン目）: そのまま通過して攻撃に進む。
     - とくこう上昇は エレクトロビーム_boost_spa（priority=50）で先に処理される。
-    - ばんのうがさを持つ場合は weather_for により あめ の恩恵を受けない。
     """
     attacker = ctx.attacker
     if not attacker.has_volatile("エレクトロビーム"):
-        # あめ/おおあめなら溜めをスキップ
-        if battle.weather_for(attacker).rainy:
-            return HandlerReturn(value=value)
         battle.volatile_manager.apply(attacker, "エレクトロビーム", count=1, source=attacker)
         return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def エレクトロビーム_weather_skip(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エレクトロビーム: あめ/おおあめ下では溜めずにそのターンに攻撃する。
+
+    仕様:
+    - 揮発状態なし + あめ/おおあめ（1ターン目）: 溜めをスキップして攻撃に進む
+      （stop_event=True で以降のハンドラ、特にパワフルハーブを実行させない）。
+    - ばんのうがさを持つ場合は weather_for により あめ の恩恵を受けない。
+    - priority=90 とし、パワフルハーブ（priority=100、item は先に登録されるため通常は
+      同priority内でも先に実行される）より先に判定することで、天候による自動スキップが
+      パワフルハーブの消費に優先されるようにする。
+    """
+    attacker = ctx.attacker
+    if not attacker.has_volatile("エレクトロビーム") and battle.weather_for(attacker).rainy:
+        return HandlerReturn(value=value, stop_event=True)
     return HandlerReturn(value=value)
 
 
@@ -1052,7 +1067,7 @@ def ソウルクラッシュ_lower_spa_C(battle: Battle, ctx: AttackContext, val
 
 
 def ソーラービーム_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ソーラービーム: 1ターン目に光を吸収して溜め、にほんばれ時はスキップ。"""
+    """ソーラービーム: 1ターン目に光を吸収して溜める（天候によるスキップは判定済み）。"""
     return ソーラービーム系_charge(battle, ctx, value, "ソーラービーム")
 
 
@@ -1069,29 +1084,56 @@ def ソーラービーム_halve_power(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
+def ソーラービーム_weather_skip(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ソーラービーム: にほんばれ/おおひでり下では溜めずにそのターンに攻撃する。"""
+    return ソーラービーム系_weather_skip(battle, ctx, value, "ソーラービーム")
+
+
 def ソーラービーム系_charge(
     battle: Battle, ctx: AttackContext, value: Any, volatile_name: str
 ) -> HandlerReturn:
-    """ソーラービーム・ソーラーブレード共通: にほんばれ/おおひでり時は溜めをスキップ、それ以外は溜め状態へ移行する。
+    """ソーラービーム・ソーラーブレード共通: 溜め状態へ移行する（2ターン目はそのまま通過）。
 
     仕様:
-    - 攻撃者がばんのうがさを持つ場合は にほんばれ でも溜める（weather_for による判定）
+    - にほんばれ/おおひでりによる自動スキップは ソーラービーム系_weather_skip（priority=90）
+      で先に判定されるため、ここに到達するのは非晴天候（あるいは2ターン目）の場合のみ
+    - 揮発状態なし（1ターン目）: 揮発状態を付与して攻撃を停止する
+      （パワフルハーブがあれば同priority内で先に消費され、即攻撃に切り替わる）
     - すでに溜め揮発状態にある場合（2ターン目）はそのまま通過する
     """
     attacker = ctx.attacker
     if not attacker.has_volatile(volatile_name):
-        # 天気がにほんばれ/おおひでりなら溜めをスキップ
-        if battle.weather_for(attacker).sunny:
-            return HandlerReturn(value=value)
-        # パワフルハーブが処理済みか確認（パワフルハーブは priority=100 で先に処理される）
         battle.volatile_manager.apply(attacker, volatile_name, count=1, source=attacker)
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
+def ソーラービーム系_weather_skip(
+    battle: Battle, ctx: AttackContext, value: Any, volatile_name: str
+) -> HandlerReturn:
+    """ソーラービーム・ソーラーブレード共通: にほんばれ/おおひでり下では溜めずにそのターンに攻撃する。
+
+    仕様:
+    - 攻撃者がばんのうがさを持つ場合は にほんばれ でも溜める（weather_for による判定）
+    - すでに溜め揮発状態にある場合（2ターン目）は何もしない
+    - priority=90 とし、パワフルハーブ（priority=100）より先に判定することで、
+      天候による自動スキップがパワフルハーブの消費に優先されるようにする
+      （stop_event=True で以降のハンドラを実行させない）
+    """
+    attacker = ctx.attacker
+    if not attacker.has_volatile(volatile_name) and battle.weather_for(attacker).sunny:
+        return HandlerReturn(value=value, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ソーラーブレード_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ソーラーブレード: 1ターン目に光を吸収して溜め、にほんばれ時はスキップ。"""
+    """ソーラーブレード: 1ターン目に光を吸収して溜める（天候によるスキップは判定済み）。"""
     return ソーラービーム系_charge(battle, ctx, value, "ソーラーブレード")
+
+
+def ソーラーブレード_weather_skip(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ソーラーブレード: にほんばれ/おおひでり下では溜めずにそのターンに攻撃する。"""
+    return ソーラービーム系_weather_skip(battle, ctx, value, "ソーラーブレード")
 
 
 def たきのぼり_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
