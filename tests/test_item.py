@@ -1103,6 +1103,61 @@ def test_くちたけん_れきせんのゆうしゃザシアンへ渡せない(
     assert defender.name == "ザシアン(れきせん)"
 
 
+@pytest.mark.parametrize("mon_name", ["ザマゼンタ(れきせん)", "ザマゼンタ(たてのおう)"])
+@pytest.mark.parametrize("move_name", ["はたきおとす", "どろぼう"])
+def test_くちたたて_ザマゼンタから奪えない(move_name, mon_name):
+    """くちたたて: ザマゼンタが持っている間ははたきおとす・どろぼう等で奪われない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon(mon_name, item_name="くちたたて")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_item("くちたたて")
+
+
+def test_くちたたて_ザマゼンタ以外は奪われる():
+    """くちたたて: ザマゼンタ以外が持っている場合ははたきおとす等で通常通り奪われる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("カビゴン", item_name="くちたたて")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+
+
+def test_くちたたて_トリックでザマゼンタから奪えない():
+    """くちたたて: ザマゼンタが持っている間はトリック・すりかえで交換されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("ザマゼンタ(たてのおう)", item_name="くちたたて")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "たべのこし"
+    assert defender.item.name == "くちたたて"
+
+
+def test_くちたたて_れきせんのゆうしゃザマゼンタへ渡せない():
+    """くちたたて: れきせんのゆうしゃザマゼンタへはトリック等で渡すことができない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="くちたたて")],
+        team1=[Pokemon("ザマゼンタ(れきせん)")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.item.name == "くちたたて"
+    assert not defender.has_item()
+    assert defender.name == "ザマゼンタ(れきせん)"
+
+
 @pytest.mark.parametrize(
     "item_name, mon_name, expected_name",
     [
@@ -1199,6 +1254,19 @@ def test_くっつきバリ_非接触技では転送しない():
     t.run_move(battle, 0)
     assert not attacker.has_item()
     assert defender.item.name == "くっつきバリ"
+
+
+def test_クラボのみ_まひ付与直後に即時回復する():
+    """クラボのみ: まひ付与直後（ON_APPLY_AILMENT）にターン終了を待たず即座に回復し消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン", item_name="クラボのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert not defender.has_item()
 
 
 def test_クリアチャーム_いかくを防ぐ():
