@@ -2137,6 +2137,17 @@ def ポイズンテール_apply_ailment_to_defender(battle: Battle, ctx: AttackC
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
 
+def ポルターガイスト_check_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ポルターガイストの使用条件チェック: 相手がアイテムを持っていない場合は失敗する。"""
+    if not ctx.defender.has_item():
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload={"reason": "ポルターガイスト_アイテムなし"}
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def マジカルアクセル_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジカルアクセルの追加効果: 30%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.3)
@@ -2172,6 +2183,13 @@ def みずあめボム_apply_volatile_to_defender(battle: Battle, ctx: AttackCon
 def みずのはどう_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """みずのはどうの追加効果: 20%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.2)
+
+
+def みねうち_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みねうち: このわざで相手を倒すことはできない。相手のHPを必ず1以上残す。"""
+    if ctx.defender.hp <= 1:
+        return HandlerReturn(value=0)
+    return HandlerReturn(value=min(value, ctx.defender.hp - 1))
 
 
 def みらいよち_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

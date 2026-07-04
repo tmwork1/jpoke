@@ -7494,7 +7494,12 @@ MOVES: dict[str, MoveData] = {
         pp=5,
         power=110,
         accuracy=90,
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                ha.ポルターガイスト_check_item,
+                priority=130,
+            ),
+        },
     ),
     "まきつく": MoveData(
         type="ノーマル",
@@ -7889,7 +7894,11 @@ MOVES: dict[str, MoveData] = {
         power=40,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
+                ha.みねうち_modify_damage,
+            ),
+        },
     ),
     "みらいよち": MoveData(
         type="エスパー",
@@ -7958,7 +7967,11 @@ MOVES: dict[str, MoveData] = {
         category="status",
         pp=5,
         flags={"heal"},
-        handlers={},  # TODO: 効果実装
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ミルクのみ_self_heal,
+            ),
+        },
     ),
     "みわくのボイス": MoveData(
         type="フェアリー",
@@ -8289,7 +8302,7 @@ MOVES: dict[str, MoveData] = {
         accuracy=100,
         critical_rank=3,
         flags={"contact"},
-        handlers={},  # TODO: 効果実装
+        handlers={},  # 常に急所に当たる（critical_rank=3）
     ),
     "ゆきげしき": MoveData(
         type="こおり",

@@ -1891,6 +1891,15 @@ def ミラータイプ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
+def ミルクのみ_self_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ミルクのみ: 自分のHPを最大HPの1/2回復する。HPが満タンの場合は失敗する。"""
+    mon = ctx.attacker
+    if mon.hp >= mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
+    battle.modify_hp(mon, r=1/2)
+    return HandlerReturn(value=value)
+
+
 def めいそう_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1, "spd": 1})
 
