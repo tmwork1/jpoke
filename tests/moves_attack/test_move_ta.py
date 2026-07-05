@@ -3,6 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
+from jpoke.enums import Interrupt
 from .. import test_utils as t
 
 
@@ -2152,6 +2153,94 @@ def test_トリプルキック_最大3回ヒットする():
     defender = battle.actives[1]
     t.run_move(battle, 0)
     assert defender.hits_taken == 3
+
+
+def test_とんぼがえり_ダメージを与える():
+    """とんぼがえり: 通常通りダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_とんぼがえり_まもるで防がれた場合は交代しない():
+    """とんぼがえり: まもるで防がれた場合、ダメージも交代も発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_とんぼがえり_命中しなかった場合は交代しない():
+    """とんぼがえり: 命中しなかった場合、交代は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_とんぼがえり_控えがいない場合は交代しない():
+    """とんぼがえり: 控えに戦えるポケモンがいない場合、ダメージは与えるが交代は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_とんぼがえり_攻撃後に交代可能状態になる():
+    """とんぼがえり: 攻撃後、控えがいれば PIVOT が設定され交代できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    t.run_move(battle, 0)
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+    assert battle.actives[0].name == "ライチュウ"
+
+
+def test_とんぼがえり_相手を倒した場合でも交代する():
+    """とんぼがえり: 相手を倒した場合でも、使用者は交代可能状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とんぼがえり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("コイキング")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    battle.actives[1].hp = 1
+    t.run_move(battle, 0)
+    assert battle.actives[1].fainted
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
 
 
 def test_どくづき_どくが発動する():
