@@ -4733,11 +4733,17 @@ MOVES: dict[MoveName, MoveData] = {
         type="むし",
         category="physical",
         pp=10,
-        power=90,
+        power=100,
         accuracy=100,
         priority=2,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.であいがしら_check_first_turn,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
+        },
     ),
     "デカハンマー": MoveData(
         type="はがね",

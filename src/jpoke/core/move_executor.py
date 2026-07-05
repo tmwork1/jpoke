@@ -306,6 +306,11 @@ class MoveExecutor:
             )
             attacker.failed_or_immobile_last_turn = not overall_success
 
+            # 場に出てから一度でも行動したことを記録する（であいがしら用）
+            # であいがしら自身の成否判定（ON_TRY_MOVE_1）はこの行動の途中で行われるため、
+            # 今回の行動を「行動済み」として反映するのはここ（行動完了後）でよい。
+            attacker.acted_since_switch_in = True
+
             # ユーザーがbattle.step()実行後に技の成否を確認できるようプレイヤー状態へ記録する
             player = self.battle.get_player(attacker)
             self.battle.player_states[player].last_move_succeeded = overall_success
