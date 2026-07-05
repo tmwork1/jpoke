@@ -1209,6 +1209,19 @@ def ねごと_select_and_execute(battle: Battle, ctx: AttackContext, value: Any)
     そのままバトルで実行する。
     選ばれた技の PP は消費しない（ねごと自体のみ消費）。
     候補技がすべて non_negoto の場合は value=False を返して失敗する。
+
+    ねごと自身の ON_TRY_ACTION（ねむりチェック）・ON_STATUS_HIT（本ハンドラ）は、
+    この呼び出しが完了するまでイベントマネージャーに登録されたままになる。
+    選ばれた技の実行中にも同じ攻撃者に対してこれらのイベントが発火するため、
+    登録されたままだと以下の問題が起きる。
+    - 選ばれた技が status 技の場合、その ON_STATUS_HIT でねごと_select_and_execute
+      が再度呼ばれ、実行するたびに再帰が繰り返されて無限ループになる。
+    - 選ばれた技の ON_TRY_ACTION でねごと_check_sleep が再度評価され、
+      ねごと自身の使用条件チェックが無関係な技に対して誤って行われる。
+    これを避けるため、選ばれた技の実行中はねごと自身の ON_TRY_ACTION /
+    ON_STATUS_HIT ハンドラのみを一時的に解除する
+    （ON_MODIFY_PP_CONSUMED は選ばれた技のPP消費を抑制するために実行中も
+    登録したままにする必要があるため対象外）。
     """
     attacker = ctx.attacker
     candidates = [m for m in attacker.moves if not m.has_flag("non_negoto")]
@@ -1223,9 +1236,23 @@ def ねごと_select_and_execute(battle: Battle, ctx: AttackContext, value: Any)
     # ねごとのON_MODIFY_PP_CONSUMEDハンドラがPP消費を0にするため、
     # ねむり状態でも選ばれた技が実行できるよう、サブ実行フラグを立てる
     attacker.sleep_talk_active = True
+    suppressed_events = (Event.ON_TRY_ACTION, Event.ON_STATUS_HIT)
+    handlers_data = ctx.move.data.handlers
+    for event in suppressed_events:
+        handler = handlers_data.get(event)
+        if handler is None:
+            continue
+        for h in (handler if isinstance(handler, list) else [handler]):
+            battle.events.off(event, h, ctx.attacker)
     try:
         battle.run_move(attacker, chosen)
     finally:
+        for event in suppressed_events:
+            handler = handlers_data.get(event)
+            if handler is None:
+                continue
+            for h in (handler if isinstance(handler, list) else [handler]):
+                battle.events.on(event, h, ctx.attacker)
         attacker.sleep_talk_active = False
     return HandlerReturn(value=value)
 
@@ -1831,10 +1858,23 @@ def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> Hand
 
 
 def まねっこ_execute(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """まねっこの効果: バトルで最後に使われた技をそのまま使用する。"""
+    """まねっこの効果: バトルで最後に使われた技をそのまま使用する。
+
+    まねっこ自身のハンドラ（ON_STATUS_HIT の本ハンドラ等）は、この呼び出しが
+    完了するまでイベントマネージャーに登録されたままになる。コピーした技が
+    変化技（status）だった場合、その技の実行中にも ON_STATUS_HIT が発火するため、
+    登録されたままだとまねっこ_execute が再度呼ばれてしまい、コピー技を実行する
+    たびに再帰が繰り返されて無限ループになる（コピー技が状態異常等で失敗し続ける
+    ケースを含む）。これを避けるため、コピー技の実行中はまねっこ自身のハンドラを
+    一時的に解除し、実行後に元に戻す。
+    """
     from jpoke.model import Move
     copied_move = Move(battle.last_used_move_name)
-    battle.run_move(ctx.attacker, copied_move)
+    ctx.move.unregister_handlers(battle.events, ctx.attacker)
+    try:
+        battle.run_move(ctx.attacker, copied_move)
+    finally:
+        ctx.move.register_handlers(battle.events, ctx.attacker)
     return HandlerReturn(value=value)
 
 

@@ -99,6 +99,30 @@ def test_まねっこ_使用技がまだない場合は失敗する():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_変化技をコピーしても無限再帰にならない():
+    """まねっこ: コピー対象が変化技（status技）の場合でも RecursionError 等を起こさず正常に実行される
+
+    まねっこ自身のON_STATUS_HITハンドラを解除せずにコピー技を実行すると、
+    ネストしたrun_move内で再度ON_STATUS_HITが発火した際にまねっこ_executeが
+    多重発火し無限再帰してしまう回帰を防ぐテスト。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("コラッタ", move_names=["なきごえ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+
+    t.run_move(battle, 1)  # コラッタ: なきごえ（ピカチュウのこうげきを下げる）
+    assert attacker.rank["atk"] == -1
+
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ（なきごえをコピーしコラッタへ）
+
+    assert battle.move_executor.move_applied
+    assert defender.rank["atk"] == -1  # コピーしたなきごえがコラッタのこうげきを下げる
+
+
 def test_まねっこ_相手が最後に使用した技をコピーして実行する():
     """まねっこ: 相手が最後に使用した技をコピーして相手に与える"""
     battle = t.start_battle(
