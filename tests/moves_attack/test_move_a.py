@@ -275,6 +275,20 @@ def test_あくのはどう_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_アシストパワー_ACCランク上昇もカウントする():
+    """アシストパワー: ACC+1も威力に影響する（命中率・回避率もランク合計の対象）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["アシストパワー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"accuracy": 1}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
 def test_アシストパワー_ランク上昇なしのとき基本威力20():
     """アシストパワー: ランク上昇がないとき基本威力20のまま。"""
     battle = t.start_battle(

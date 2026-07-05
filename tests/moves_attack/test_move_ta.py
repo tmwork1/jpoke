@@ -674,6 +674,21 @@ def test_ダークファイア_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_ちきゅうなげ_こらえるで1HP残る():
+    """ちきゅうなげ: 固定ダメージの計算がこらえるより先に行われ、瀕死を防げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちきゅうなげ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        volatile1={"こらえる": 1},
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(defender, -(defender.hp - 1))
+    t.run_move(battle, 0)
+    assert defender.hp == 1
+    assert not defender.fainted
+
+
 def test_ちきゅうなげ_ゴーストには無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ちきゅうなげ"])],
@@ -681,6 +696,33 @@ def test_ちきゅうなげ_ゴーストには無効():
     )
     battle.step()
     assert battle.actives[1].hp == battle.actives[1].max_hp
+
+
+def test_ちきゅうなげ_みがわりのHPを上限として肩代わりされる():
+    """ちきゅうなげ: みがわりの残りHPを上限として使用者レベル分のダメージが肩代わりされ、
+    超過分は本体に持ち越されない（本体HPは変化しない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちきゅうなげ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=30)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # 使用者レベル(50)分のダメージはみがわりのHP(30)を上回るため、みがわりが解除される
+    assert not defender.has_volatile("みがわり")
+    # 超過分は本体に持ち越されず、本体HPは変化しない
+    assert defender.hp == hp_before
+
+
+def test_ちきゅうなげ_与ダメージは使用者レベル固定():
+    battle = t.start_battle(team1=[Pokemon("ピカチュウ")],
+                            team0=[Pokemon("ピカチュウ", level=50, move_names=["ちきゅうなげ"])],
+                            )
+    before_hp = battle.actives[1].hp
+    battle.step()
+    assert before_hp - battle.actives[1].hp == 50
 
 
 def test_つけあがる_ACCランク上昇もカウントする():

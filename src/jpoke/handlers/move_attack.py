@@ -118,8 +118,8 @@ def アシストパワー_boost_power_by_rank(battle: Battle, ctx: AttackContext
     modifier = 4096 * (1 + rank_sum) を apply_fixed_modifier に渡す。
     """
     attacker = ctx.attacker
-    # 正のランク変化の合計を計算（A/B/C/D/S のみ対象、ACC/EVA を除く）
-    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k in ("atk", "def", "spa", "spd", "spe"))
+    # 正のランク変化の合計を計算（A/B/C/D/S/命中率/回避率が対象、HPは除く）
+    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k != "hp")
     if rank_sum > 0:
         modifier = 4096 * (1 + rank_sum)
         value = apply_fixed_modifier(value, modifier)
@@ -1550,11 +1550,11 @@ def つけあがる_calc_power(battle: Battle, ctx: AttackContext, value: int) -
     """つけあがる: 使用者の能力ランク上昇段階の合計1段階ごとに威力が20増加する（基本威力20）。
 
     基本威力 20 に対して (1 + rank_sum) 倍の modifier を掛ける。
-    A/B/C/D/S の正ランク合計を使う（ACC/EVA は対象外）。
+    A/B/C/D/S/命中率/回避率の正ランク合計を使う（HPは対象外）。
     アシストパワーと同様の計算。
     """
     attacker = ctx.attacker
-    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k in ("atk", "def", "spa", "spd", "spe"))
+    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k != "hp")
     return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + rank_sum)))
 
 
