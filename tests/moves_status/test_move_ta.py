@@ -5,18 +5,6 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
-def test_たきのぼり_ひるみが発動する():
-    """たきのぼり: 20%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("キングラー", move_names=["たきのぼり"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 @pytest.mark.parametrize("count", [1, 2, 3])
 def test_たくわえる_N回使用でカウントがNになる(count):
     """たくわえる: N回使用するとたくわえカウントがNになり、ぼうぎょとくぼうがN段階上がる"""

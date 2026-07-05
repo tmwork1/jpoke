@@ -62,6 +62,19 @@ def test_DDラリアット_相手のぼうぎょランク低下も無視する()
     assert damage_with_neg == damage_no_rank
 
 
+def test_たいあたり_相手にダメージを与える():
+    """たいあたり: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_たきのぼり_ひるみが発動する():
     """たきのぼり: 20%でひるみを付与する。"""
     battle = t.start_battle(
