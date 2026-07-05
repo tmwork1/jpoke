@@ -4817,7 +4817,18 @@ MOVES: dict[MoveName, MoveData] = {
         power=120,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.でんこうそうげき_fail_if_no_electric_type,
+                subject_spec="attacker:self",
+                priority=10,
+            ),
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.でんこうそうげき_remove_electric_type,
+                subject_spec="attacker:self",
+                priority=180,
+            ),
+        }
     ),
     "でんじは": MoveData(
         type="でんき",

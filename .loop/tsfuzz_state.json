@@ -1,0 +1,12 @@
+{
+  "config": {
+    "max_turns": 20,
+    "n_pokemon": 3,
+    "max_plies": 1,
+    "batch_size": 20
+  },
+  "stats": {"total_battles": 0, "next_seed": 0},
+  "current_failure": null,
+  "completed_bugs": [],
+  "failed_bugs": []
+}

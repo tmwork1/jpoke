@@ -1639,6 +1639,28 @@ def でんきショック_apply_paralysis_to_defender(battle: Battle, ctx: Attac
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
 
 
+def でんこうそうげき_fail_if_no_electric_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """でんこうそうげき: でんきタイプを持たない場合に失敗させる。"""
+    if not ctx.attacker.has_type("でんき"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="でんこうそうげき_でんきタイプなし")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def でんこうそうげき_remove_electric_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """でんこうそうげき: 命中後に自分のでんきタイプを除去する。
+
+    removed_types に追加することで、交代するまででんきタイプを持たない状態になる。
+    """
+    mon = ctx.attacker
+    if "でんき" not in mon.removed_types:
+        mon.removed_types.append("でんき")
+    return HandlerReturn(value=value)
+
+
 def でんじほう_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 

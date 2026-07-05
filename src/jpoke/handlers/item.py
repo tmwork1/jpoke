@@ -87,7 +87,7 @@ def _reset_negative_ranks(battle: Battle, mon: Pokemon, reason: str) -> bool:
 def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """メガストーン: メガシンカコマンドを追加する。"""
     mon = ctx.source
-    if not mon.can_megaevolve():
+    if not battle.option.mega_evolution or not mon.can_megaevolve():
         return HandlerReturn(value=value)
 
     for cmd in value:

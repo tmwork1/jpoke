@@ -1289,6 +1289,57 @@ def test_でんこうせっか_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_でんこうそうげき_テラスタルでんき中でも成功しタイプ除去が記録される():
+    """でんこうそうげき: テラスタル（でんき）中でも成功するが、タイプは消えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうそうげき"], tera_type="でんき")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.terastallize()
+    assert attacker.has_type("でんき")  # テラスタルででんきタイプを持つ
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # テラスタル中は成功してダメージあり、除去は記録されるがテラスタル中はタイプ消失が無視される
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+    assert "でんき" in attacker.removed_types
+    assert attacker.has_type("でんき")  # テラスタル中は消失処理が無視される
+
+
+def test_でんこうそうげき_でんきタイプでないポケモンが使うと技が失敗する():
+    """でんこうそうげき: でんきタイプを持たないポケモンが使うと技が失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうそうげき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_でんこうそうげき_でんきタイプのポケモンが使うと成功し攻撃後にでんきタイプでなくなる():
+    """でんこうそうげき: でんきタイプのポケモンが使うと成功し、攻撃後にでんきタイプが除去される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうそうげき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    assert attacker.has_type("でんき")
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+    assert not attacker.has_type("でんき")
+
+
 def test_とっしん_使用後に攻撃者が反動ダメージを受ける():
     """とっしん: 与えたダメージの1/4を攻撃者が反動として受ける。"""
     battle = t.start_battle(

@@ -9,5 +9,6 @@
 | todo | `.loop/todo_state.json` | `.claude/loop/todo.md` |
 | lethal | `.loop/lethal_state.json` | `.claude/loop/lethal.md` |
 | fuzz | `.loop/fuzz_state.json` | `.claude/loop/fuzz.md` |
+| tsfuzz | `.loop/tsfuzz_state.json` | `.claude/loop/tsfuzz.md` |
 
 フローの指定がない場合は `impl` とみなす。
