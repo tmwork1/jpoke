@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
 from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
-from jpoke.utils.math import apply_fixed_modifier
+from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.data import TYPE_MODIFIER
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from .move import (
@@ -817,8 +817,11 @@ def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
 
 def _recoil(battle: Battle, ctx: AttackContext, value: int, ratio: float) -> HandlerReturn:
-    """反動ダメージを与えるヘルパー関数。与ダメの ratio 分を攻撃側が受ける。"""
-    recoil = max(1, int(value * ratio))
+    """反動ダメージを与えるヘルパー関数。与ダメの ratio 分を攻撃側が受ける。
+
+    端数は五捨五超入（round_half_down）で丸める。第五世代以降の反動ダメージ計算仕様に合わせる。
+    """
+    recoil = max(1, round_half_down(value * ratio))
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
