@@ -3492,6 +3492,7 @@ MOVES: dict[MoveName, MoveData] = {
         type="じめん",
         category="physical",
         pp=5,
+        power=0,
         accuracy=30,
         flags={"ohko"},
         handlers={

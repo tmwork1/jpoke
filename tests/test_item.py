@@ -4630,15 +4630,13 @@ def test_ひるみ付与アイテム_りんぷんで無効化(item_name):
 def test_ひるみ付与アイテム_一撃必殺技には効果がない(item_name):
     """おうじゃのしるし・するどいキバ: 一撃必殺技には効果が無い（追加の乱数判定が発生しないことで確認する）
 
-    きあいのタスキ等で耐えた場合の挙動を直接検証したいが、現状の実装では
-    一撃必殺技ときあいのタスキの組み合わせ自体に別の既知の不具合があり
-    HPが1で耐えられないため、ここでは耐えるかどうかに依存しない方法で確認する。
+    きあいのタスキで耐えた場合の挙動も合わせて確認する。
     """
     def count_random_calls(has_item: bool) -> int:
         kwargs = {"item_name": item_name} if has_item else {}
         battle = t.start_battle(
             team0=[Pokemon("ピカチュウ", move_names=["じわれ"], **kwargs)],
-            team1=[Pokemon("ピカチュウ")],
+            team1=[Pokemon("ピカチュウ", item_name="きあいのタスキ")],
             accuracy=100,
         )
         count = 0
@@ -4650,6 +4648,7 @@ def test_ひるみ付与アイテム_一撃必殺技には効果がない(item_n
 
         battle.random.random = counting_random
         t.run_move(battle, 0)
+        assert battle.actives[1].hp == 1
         return count
 
     assert count_random_calls(True) == count_random_calls(False)
