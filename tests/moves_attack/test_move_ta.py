@@ -2365,6 +2365,29 @@ def test_どくばりセンボン_状態異常なしのとき通常威力():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+def test_どげざつき_威力命中率PPが仕様通り():
+    """どげざつき: あく物理80・命中は必中(accuracy=None)・PP10であること。"""
+    move_data = MOVES["どげざつき"]
+    assert move_data.type == "あく"
+    assert move_data.category == "physical"
+    assert move_data.power == 80
+    assert move_data.accuracy is None
+    assert move_data.pp == 10
+
+
+def test_どげざつき_相手の回避率が高くても必ず命中する():
+    """どげざつき: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オーロンゲ", move_names=["どげざつき"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ドラゴンアロー_2回ヒットする():
     """ドラゴンアロー: 必ず2回ヒットする固定2回攻撃技である。"""
     battle = t.start_battle(
