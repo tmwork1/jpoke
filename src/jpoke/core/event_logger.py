@@ -3,36 +3,125 @@
 バトル中の各種イベント、コマンド、ダメージ情報を記録します。
 ログは後で再生やデバッグ、戦略分析に使用できます。
 """
-from typing import TypedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field, asdict
 
-from jpoke.types import Stat, Type
+from jpoke.types import Stat, Type, HPChangeReason
 from jpoke.enums import LogCode
 from jpoke.utils import fast_copy
 
 
-class Payload(TypedDict, total=False):
-    """イベントの詳細情報を表す型定義。
+@dataclass(frozen=True)
+class LogPayload:
+    """全ログ共通の基底ペイロード。
 
-    イベントログに付随する追加情報を格納するための辞書構造。
-    例えば、技の名前、ダメージ量、状態異常の種類などが含まれる。
+    display_reason は render() の「末尾に [reason] を追加する」処理が
+    全 LogCode 共通で読む差し込み文言のため、サブクラスごとに重複定義せず
+    ここに1つだけ持たせる。使わないカテゴリ（HPChangePayload 等）は
+    単に設定しない（常に空文字）。
     """
-    reason: str | None
-    pokemon: str | None
-    ability: str | None
-    item: str | None
-    move: str | None
-    action_order: str | None
-    ailment: str | None
-    volatile: str | None
-    stats: dict[Stat, int] | None
-    type: Type | None
-    value: int | float | None
-    hp: int | None
-    max_hp: int | None
-    field: str | None
-    count: int | None
-    text: str | None
+    display_reason: str = ""  # 表示してよい理由テキスト（特性名・アイテム名など）
+
+
+@dataclass(frozen=True)
+class FailureLogPayload(LogPayload):
+    """MOVE_FAILED / MOVE_IMMUNED / ACTION_BLOCKED / HEAL_BLOCKED /
+    STAT_CHANGE_BLOCKED / MOVE_MISSED など「技が不発に終わった」ログ全般。
+    MOVE_MISSED では display_reason を設定しない運用とする
+    （命中判定による不発であり、特性等の「原因」を持たないため）。
+    """
+    move: str = ""  # 失敗/不発の原因となった技名（選択した技があれば）
+
+
+@dataclass(frozen=True)
+class HPChangePayload(LogPayload):
+    """display_reason は使わない（HP変化に「表示してよい理由」は無いため常に空）。
+    internal_reason は render() から一切参照しないことで
+    [move_damage] のような漏れを構造的に防ぐ。
+    """
+    pokemon: str = ""
+    value: int = 0
+    hp: int = 0
+    max_hp: int = 0
+    source: str | None = None             # 攻撃者名（あれば）
+    internal_reason: HPChangeReason = ""  # 表示しない内部判定コード
+
+
+@dataclass(frozen=True)
+class StatChangePayload(LogPayload):
+    """display_reason は基底のものをそのまま使う（いかく等）。"""
+    stats: dict[Stat, int] = field(default_factory=dict)
+    source: str | None = None
+
+
+@dataclass(frozen=True)
+class AilmentPayload(LogPayload):
+    """AILMENT_APPLIED/REMOVED は display_reason 未使用。
+    AILMENT_PREVENTED は特性名を display_reason に入れる。
+    """
+    ailment: str = ""
+    source: str | None = None
+
+
+@dataclass(frozen=True)
+class VolatilePayload(LogPayload):
+    """VOLATILE_APPLIED/IMMUNE/DISPLAY は display_reason 未使用。
+    VOLATILE_REMOVED・VOLATILE_PREVENTED は display_reason に理由（特性名等）を入れる。
+    """
+    volatile: str = ""
+    source: str | None = None
+
+
+@dataclass(frozen=True)
+class AbilityPayload(LogPayload):
+    ability: str = ""
+
+
+@dataclass(frozen=True)
+class ItemPayload(LogPayload):
+    item: str = ""
+
+
+@dataclass(frozen=True)
+class SwitchPayload(LogPayload):
+    """render() が pokemon を実際に読む唯一のカテゴリ。"""
+    pokemon: str = ""
+
+
+@dataclass(frozen=True)
+class FieldPayload(LogPayload):
+    field: str = ""
+    count: int | None = None
+
+
+@dataclass(frozen=True)
+class MoveActionPayload(LogPayload):
+    """PP_CONSUMED（move + value）、SUBSTITUTE_HIT・CRITICAL_HIT・
+    MOVE_REFLECTED・PROTECT_SUCCEEDED・PROTECT_FAILED（move のみ、
+    value は常に None）が対象。
+    """
+    move: str = ""
+    value: int | None = None
+
+
+@dataclass(frozen=True)
+class TerastalPayload(LogPayload):
+    """TERASALLIZED 専用。MEGA_EVOLVED はフィールドが異なる（pokemonのみ、
+    かつ render() 未使用）ため統合しない。MEGA_EVOLVED は payload=None のまま。
+    """
+    type: Type | None = None
+
+
+@dataclass(frozen=True)
+class TextPayload(LogPayload):
+    text: str = ""
+
+
+Payload = (
+    LogPayload | FailureLogPayload | HPChangePayload | StatChangePayload
+    | AilmentPayload | VolatilePayload | AbilityPayload | ItemPayload
+    | SwitchPayload | FieldPayload | MoveActionPayload | TerastalPayload
+    | TextPayload
+)
 
 
 @dataclass(frozen=True)
@@ -57,27 +146,27 @@ class EventLog:
         """ログエントリを辞書形式に変換。
 
         Returns:
-            ログデータを含む辞書
+            JSON-serializable なログデータを含む辞書
         """
-        return vars(self).copy()
+        return {
+            "turn": self.turn,
+            "idx": self.idx,
+            "log": self.log.name,
+            "payload": asdict(self.payload) if self.payload is not None else None,
+        }
 
     def render(self) -> str:
         """ログエントリをテキスト表現に変換。
 
         LogCode と Payload から人間が読める文字列を生成します。
-        reasonがある場合は"[基本記述]:[reason]"形式で統一します。
+        display_reasonがある場合は"[基本記述]:[display_reason]"形式で統一します。
 
         Returns:
             ログのテキスト表現
         """
-        # reasonを統一フォーマットで付与
         text = self._get_base_text()
-        if not self.payload:
-            return text
-
-        reason = self.payload.get("reason")
-        if reason:
-            text += f" [{reason}]"
+        if self.payload and self.payload.display_reason:
+            text += f" [{self.payload.display_reason}]"
         return text
 
     def _get_base_text(self) -> str:
@@ -86,7 +175,7 @@ class EventLog:
         Returns:
             基本的なテキスト表現
         """
-        payload = self.payload or {}
+        payload = self.payload
 
         # LogCode に応じた適切なテキスト変換
         match self.log:
@@ -100,15 +189,15 @@ class EventLog:
                 return "敗北"
 
             case LogCode.SWITCHED_IN:
-                pokemon = payload.get("pokemon", "ポケモン")
+                pokemon = payload.pokemon if isinstance(payload, SwitchPayload) else "ポケモン"
                 return f"{pokemon} 入場"
 
             case LogCode.SWITCHED_OUT:
-                pokemon = payload.get("pokemon", "ポケモン")
+                pokemon = payload.pokemon if isinstance(payload, SwitchPayload) else "ポケモン"
                 return f"{pokemon} 退場"
 
             case LogCode.TEXT_LOG:
-                return payload.get("text") or ""
+                return payload.text if isinstance(payload, TextPayload) else ""
 
             case LogCode.MOVE_FAILED:
                 return "技は失敗した"
@@ -120,55 +209,55 @@ class EventLog:
                 return "技が外れた"
 
             case LogCode.ABILITY_TRIGGERED:
-                ability = payload.get("ability", "特性")
+                ability = payload.ability if isinstance(payload, AbilityPayload) else "特性"
                 return f"{ability}が発動した"
 
             case LogCode.ITEM_TRIGGERED:
-                item = payload.get("item", "道具")
+                item = payload.item if isinstance(payload, ItemPayload) else "道具"
                 return f"{item}が発動した"
 
             case LogCode.ITEM_GAINED:
-                item = payload.get("item", "アイテム")
+                item = payload.item if isinstance(payload, ItemPayload) else "アイテム"
                 return f"{item}を得た"
 
             case LogCode.ITEM_LOST:
-                item = payload.get("item", "アイテム")
+                item = payload.item if isinstance(payload, ItemPayload) else "アイテム"
                 return f"{item}を失った"
 
             case LogCode.AILMENT_APPLIED:
-                ailment = payload.get("ailment", "状態異常")
+                ailment = payload.ailment if isinstance(payload, AilmentPayload) else "状態異常"
                 return f"{ailment}が付与された"
 
             case LogCode.AILMENT_REMOVED:
-                ailment = payload.get("ailment", "状態異常")
+                ailment = payload.ailment if isinstance(payload, AilmentPayload) else "状態異常"
                 return f"{ailment}が回復した"
 
             case LogCode.AILMENT_PREVENTED:
-                ailment = payload.get("ailment", "状態異常")
+                ailment = payload.ailment if isinstance(payload, AilmentPayload) else "状態異常"
                 return f"{ailment}の付与が無効化された"
 
             case LogCode.VOLATILE_IMMUNE:
-                volatile = payload.get("volatile", "揮発状態")
+                volatile = payload.volatile if isinstance(payload, VolatilePayload) else "揮発状態"
                 return f"{volatile}は効かなかった"
 
             case LogCode.VOLATILE_APPLIED:
-                volatile = payload.get("volatile", "揮発状態")
+                volatile = payload.volatile if isinstance(payload, VolatilePayload) else "揮発状態"
                 return f"{volatile}が付与された"
 
             case LogCode.VOLATILE_REMOVED:
-                volatile = payload.get("volatile", "揮発状態")
+                volatile = payload.volatile if isinstance(payload, VolatilePayload) else "揮発状態"
                 return f"{volatile}が解除された"
 
             case LogCode.VOLATILE_DISPLAY:
-                volatile = payload.get("volatile", "揮発状態")
+                volatile = payload.volatile if isinstance(payload, VolatilePayload) else "揮発状態"
                 return f"{volatile}の状態"
 
             case LogCode.VOLATILE_PREVENTED:
-                volatile = payload.get("volatile", "揮発状態")
+                volatile = payload.volatile if isinstance(payload, VolatilePayload) else "揮発状態"
                 return f"{volatile}の付与が無効化された"
 
             case LogCode.STAT_CHANGED:
-                stats = payload.get("stats", {})
+                stats = payload.stats if isinstance(payload, StatChangePayload) else {}
                 texts = []
                 for stat, value in stats.items():
                     texts.append(f"{stat}{'+' if value > 0 else ''}{value}")
@@ -178,9 +267,9 @@ class EventLog:
                 return "能力値は変化しなかった"
 
             case LogCode.HP_CHANGED:
-                value = payload.get("value", 0)
-                hp = payload.get("hp", "?")
-                max_hp = payload.get("max_hp", "?")
+                value = payload.value if isinstance(payload, HPChangePayload) else 0
+                hp = payload.hp if isinstance(payload, HPChangePayload) else "?"
+                max_hp = payload.max_hp if isinstance(payload, HPChangePayload) else "?"
                 return f"HP {'+' if value > 0 else ''}{value} ({hp}/{max_hp})"
 
             case LogCode.HEAL_BLOCKED:
@@ -190,8 +279,8 @@ class EventLog:
                 return "動けない"
 
             case LogCode.PP_CONSUMED:
-                move = payload.get("move", "技")
-                value = payload.get("value", "?")
+                move = payload.move if isinstance(payload, MoveActionPayload) else "技"
+                value = payload.value if isinstance(payload, MoveActionPayload) else "?"
                 return f"{move} PP -{value}"
 
             case LogCode.SUBSTITUTE_HIT:
@@ -204,19 +293,19 @@ class EventLog:
                 return "まもるは失敗した"
 
             case LogCode.MOVE_IMMUNED:
-                move = payload.get("move", "技")
+                move = payload.move if isinstance(payload, FailureLogPayload) else "技"
                 return f"{move} を無効化した"
 
             case LogCode.FIELD_STARTED:
-                field = payload.get("field", "場の状態")
-                return f"{field} が始まった"
+                field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
+                return f"{field_} が始まった"
 
             case LogCode.FIELD_ENDED:
-                field = payload.get("field", "場の状態")
-                return f"{field} が終わった"
+                field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
+                return f"{field_} が終わった"
 
             case LogCode.TERASALLIZED:
-                type_ = payload.get("type")
+                type_ = payload.type if isinstance(payload, TerastalPayload) else None
                 text = "テラスタル化した"
                 if type_:
                     return text + f"（タイプ: {type_}）"

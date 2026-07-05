@@ -2094,6 +2094,43 @@ def test_げんしのちから_全能力1段階上昇が発動する():
     assert attacker.rank["spe"] == 1
 
 
+def test_こうげきしれい_急所ランクが1():
+    """こうげきしれい: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["こうげきしれい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_こうげきしれい_急所ランクが1_乱数大で急所なし():
+    """こうげきしれい: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["こうげきしれい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_こうげきしれい_相手にダメージを与える():
+    """こうげきしれい: 追加効果なしの物理むし技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["こうげきしれい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_こうそくスピン_バインドを解除する():
     """こうそくスピン: 命中時に使用者のバインド状態を解除する。"""
     battle = t.start_battle(
