@@ -603,6 +603,62 @@ def test_しんぴのちから_特攻1段階上昇が発動する():
     assert attacker.rank["spa"] == 1
 
 
+def test_しんぴのつるぎ_相手のとくぼうランク変化の影響を受けない():
+    """しんぴのつるぎ: 相手の『とくぼう』ランクが上がっていてもダメージが変わらない。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["しんぴのつるぎ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.9
+    mon1 = battle1.actives[1]
+    battle1.modify_stats(mon1, {"spd": 6}, source=mon1)
+    hp_before = mon1.hp
+    t.run_move(battle1, 0)
+    damage_with_spd6 = hp_before - mon1.hp
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["しんぴのつるぎ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.9
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_no_rank = hp_before2 - mon2.hp
+
+    assert damage_with_spd6 == damage_no_rank
+
+
+def test_しんぴのつるぎ_相手のぼうぎょランク変化の影響を受ける():
+    """しんぴのつるぎ: 相手の『ぼうぎょ』ランクが上がっているとダメージが減る。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["しんぴのつるぎ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.9
+    mon1 = battle1.actives[1]
+    battle1.modify_stats(mon1, {"def": 6}, source=mon1)
+    hp_before = mon1.hp
+    t.run_move(battle1, 0)
+    damage_with_def6 = hp_before - mon1.hp
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["しんぴのつるぎ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.9
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_no_rank = hp_before2 - mon2.hp
+
+    assert damage_with_def6 < damage_no_rank
+
+
 def test_ジェットパンチ_相手にダメージを与える():
     """ジェットパンチ: 優先度+1の先制物理技で相手にダメージを与える。"""
     battle = t.start_battle(
@@ -675,6 +731,50 @@ def test_じごくづき_じごくづき状態の相手は音技を使えない(
     # カビゴンがハイパーボイス（音技）を使おうとするとブロックされる
     t.run_move(battle, 1)
     assert not battle.move_executor.action_success
+
+
+def test_じごくづき_ちからずくで威力が上がるがじごくづき状態にできない():
+    """じごくづき: 特性ちからずくで使用すると威力が1.3倍になるが、追加効果（じごくづき状態）が発動しない。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ゲンガー", ability_name="ちからずく", move_names=["じごくづき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.0
+    mon1 = battle1.actives[1]
+    hp_before1 = mon1.hp
+    t.run_move(battle1, 0)
+    damage_with_ちからずく = hp_before1 - mon1.hp
+    assert not mon1.has_volatile("じごくづき")
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["じごくづき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.0
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_without_ちからずく = hp_before2 - mon2.hp
+    assert mon2.has_volatile("じごくづき")
+
+    assert damage_with_ちからずく > damage_without_ちからずく
+
+
+def test_じごくづき_みがわりに防がれた場合じごくづき状態にできない():
+    """じごくづき: みがわりに防がれた場合、相手の本体はじごくづき状態にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["じごくづき"])],
+        team1=[Pokemon("カビゴン", move_names=["みがわり"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    t.end_turn(battle)
+    defender = battle.actives[1]
+    assert defender.has_volatile("みがわり")
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("じごくづき")
 
 
 def test_じごくづき_命中後にじごくづき揮発状態が付与される():
