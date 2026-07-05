@@ -9,7 +9,6 @@ from jpoke.enums import LogCode
 from jpoke.core import Handler, HandlerReturn
 from jpoke.core.event_logger import FailureLogPayload
 
-
 class AilmentHandler(Handler):
     def __init__(self,
                  func: Callable,
@@ -21,85 +20,6 @@ class AilmentHandler(Handler):
             subject_spec=subject_spec,
             priority=priority,
         )
-
-
-def どく_damage(battle: Battle, ctx: EventContext, value: Any):
-    """どく状態によるターン終了時ダメージ（最大HPの1/8、最小1）。"""
-    mon = ctx.source
-    damage = max(1, mon.max_hp // 8)
-    battle.modify_hp(mon, v=-damage, reason="poison")
-    return HandlerReturn(value=value)
-
-
-def もうどく_damage(battle: Battle, ctx: EventContext, value: Any):
-    """もうどく状態によるターン終了時ダメージ（経過ターンに比例して増加）。
-
-    ダメージ量: max(1, 最大HP × min(15, 経過ターン数) // 16)
-    経過ターン数の上限は15（最大ダメージは最大HP × 15/16）。
-    """
-    battle.ailment_manager.tick(ctx.source)
-    mon = ctx.source
-    turns = min(15, mon.ailment.elapsed_turns)
-    damage = max(1, mon.max_hp * turns // 16)
-    battle.modify_hp(mon, v=-damage, reason="poison")
-    return HandlerReturn(value=value)
-
-
-def まひ_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """まひ状態による素早さ半減"""
-    return HandlerReturn(value=value // 2)
-
-
-def まひ_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """まひ状態による行動不能チェック（12.5%確率）。
-
-    Champions仕様: 行動不能率は12.5%（SV以前の25%から変更）。
-    """
-    # テスト用に確率を固定できる
-    if battle.test_option.trigger_ailment is not None:
-        trigger = battle.test_option.trigger_ailment
-    else:
-        trigger = battle.random.random() < 0.125
-
-    if trigger:
-        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload=FailureLogPayload(move=ctx.move.name, display_reason="まひ"))
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=True)
-
-
-def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """やけど状態によるターン終了時ダメージ（最大HPの1/16、最小1）。"""
-    mon = ctx.source
-    damage = max(1, mon.max_hp // 16)
-    battle.modify_hp(mon, v=-damage, reason="burn")
-    return HandlerReturn(value=value)
-
-
-def やけど_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """やけど状態による物理技ダメージ半減"""
-    if battle.query.resolve_move_category(ctx.attacker, ctx.move) == "physical":
-        value = apply_fixed_modifier(value, 2048)
-    return HandlerReturn(value=value)
-
-
-def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ねむり状態による行動不能チェック"""
-    mon = ctx.attacker
-    battle.ailment_manager.tick(mon)
-    if not mon.has_ailment("ねむり"):
-        # 眠りから覚めた：ハンドラを解除して空の状態に
-        battle.ailment_manager.remove(mon)
-        return HandlerReturn(value=True)
-
-    if ctx.move.name in ["いびき", "ねごと"] or ctx.attacker.sleep_talk_active:
-        return HandlerReturn(value=True)
-
-    # まだ眠っている
-    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                         payload=FailureLogPayload(move=ctx.move.name, display_reason="ねむり"))
-
-    return HandlerReturn(value=False, stop_event=True)
 
 
 def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -137,7 +57,99 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
 
 def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """thawラベルを持つ技でダメージを受けたら解凍する。"""
-    if ctx.move.has_flag("thaw"):
-        battle.ailment_manager.remove(ctx.defender)
+    """thawラベルを持つ技でダメージを受けたら解凍する。
+
+    ほのおタイプ技による解凍はタイプ由来の効果であり追加効果に該当しないため、
+    ちからずくの影響を受けない。一方、シャカシャカほう/スチームバースト/
+    ねっさのだいち/ねっとう（第六世代以降）/ハイドロスチーム等、ほのお以外の
+    タイプでこの効果を持つ技は追加効果として扱われるため、使用者がちからずくの
+    場合はこの効果が発動しない（りんぷんの影響は受けない）。
+    """
+    if not ctx.move.has_flag("thaw"):
+        return HandlerReturn(value=value)
+    if (
+        ctx.move.type != "ほのお"
+        and ctx.attacker.ability.name == "ちからずく"
+    ):
+        return HandlerReturn(value=value)
+    battle.ailment_manager.remove(ctx.defender)
+    return HandlerReturn(value=value)
+
+
+def どく_damage(battle: Battle, ctx: EventContext, value: Any):
+    """どく状態によるターン終了時ダメージ（最大HPの1/8、最小1）。"""
+    mon = ctx.source
+    damage = max(1, mon.max_hp // 8)
+    battle.modify_hp(mon, v=-damage, reason="poison")
+    return HandlerReturn(value=value)
+
+
+def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねむり状態による行動不能チェック"""
+    mon = ctx.attacker
+    battle.ailment_manager.tick(mon)
+    if not mon.has_ailment("ねむり"):
+        # 眠りから覚めた：ハンドラを解除して空の状態に
+        battle.ailment_manager.remove(mon)
+        return HandlerReturn(value=True)
+
+    if ctx.move.name in ["いびき", "ねごと"] or ctx.attacker.sleep_talk_active:
+        return HandlerReturn(value=True)
+
+    # まだ眠っている
+    battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                         payload=FailureLogPayload(move=ctx.move.name, display_reason="ねむり"))
+
+    return HandlerReturn(value=False, stop_event=True)
+
+
+def まひ_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まひ状態による行動不能チェック（12.5%確率）。
+
+    Champions仕様: 行動不能率は12.5%（SV以前の25%から変更）。
+    """
+    # テスト用に確率を固定できる
+    if battle.test_option.trigger_ailment is not None:
+        trigger = battle.test_option.trigger_ailment
+    else:
+        trigger = battle.random.random() < 0.125
+
+    if trigger:
+        battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
+                             payload=FailureLogPayload(move=ctx.move.name, display_reason="まひ"))
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
+
+
+def まひ_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """まひ状態による素早さ半減"""
+    return HandlerReturn(value=value // 2)
+
+
+def もうどく_damage(battle: Battle, ctx: EventContext, value: Any):
+    """もうどく状態によるターン終了時ダメージ（経過ターンに比例して増加）。
+
+    ダメージ量: max(1, 最大HP × min(15, 経過ターン数) // 16)
+    経過ターン数の上限は15（最大ダメージは最大HP × 15/16）。
+    """
+    battle.ailment_manager.tick(ctx.source)
+    mon = ctx.source
+    turns = min(15, mon.ailment.elapsed_turns)
+    damage = max(1, mon.max_hp * turns // 16)
+    battle.modify_hp(mon, v=-damage, reason="poison")
+    return HandlerReturn(value=value)
+
+
+def やけど_damage(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """やけど状態によるターン終了時ダメージ（最大HPの1/16、最小1）。"""
+    mon = ctx.source
+    damage = max(1, mon.max_hp // 16)
+    battle.modify_hp(mon, v=-damage, reason="burn")
+    return HandlerReturn(value=value)
+
+
+def やけど_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """やけど状態による物理技ダメージ半減"""
+    if battle.query.resolve_move_category(ctx.attacker, ctx.move) == "physical":
+        value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
