@@ -5,8 +5,8 @@
     "max_plies": 1,
     "batch_size": 20
   },
-  "stats": {"total_battles": 0, "next_seed": 0},
-  "current_failure": null,
+  "stats": {"total_battles": 3, "next_seed": 20},
+  "current_failure": {"seed": 3, "signature": "RecursionError@copy_utils.py:fast_copy:22", "report_path": ".loop/tsfuzz_failures/seed_3.log"},
   "completed_bugs": [],
   "failed_bugs": []
 }

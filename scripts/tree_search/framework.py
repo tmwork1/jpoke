@@ -137,6 +137,26 @@ class TreeSearchPlayer(Player):
         worst = float("inf")
         for opp_cmd in opponent_commands:
             sim = battle.copy()
+            # battle が観測済み盤面（is_observation() が真）の場合、Battle.copy() は
+            # observer をそのまま引き継ぐ。sim.step() の内部で瀕死交代などの割り込みが
+            # 発生すると、エンジンは resolve_command() 経由で（self とは限らない）
+            # 任意のプレイヤーに対して build_observation() を呼び直すが、
+            # build_observation() は is_observation() が真の盤面ではマスク処理自体を
+            # スキップして単純にコピーを返すだけなので、引き継がれた古い observer
+            # （このターンの開始時点で self を観測者として構築されたもの）が
+            # そのまま残り続ける。get_available_commands() は
+            # `self.observer == self.opponent(player)` を「相手観測分岐」の判定に
+            # 使っているため、observer が新しいターンの実際の要求元と食い違うと
+            # 前のターンの stale な last_available_commands（例: まだ瀕死になる前の
+            # ポケモンへの SWITCH コマンド）を返してしまう。これを選び続けると
+            # 交代が一切進行せず、run_faint_switch() が同じ局面のまま無限に再帰する
+            # （テストで確認済みのバグ）。
+            # sim はこれから新しいターンを進める内部シミュレーション用の盤面であり、
+            # 前のターンの観測コンテキストを引き継ぐ意味がないため、ここで observer を
+            # 明示的にリセットし、ターン内で発生する各プレイヤーの意思決定が
+            # 常にその時点の正しい盤面から新しく（必要なら再マスクして）解決される
+            # ようにする。
+            sim.observer = None
             sim.step({self: my_cmd, opponent: opp_cmd})
             score = self._evaluate_node(sim, plies)
             worst = min(worst, score)
