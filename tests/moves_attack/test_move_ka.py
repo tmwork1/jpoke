@@ -1358,6 +1358,19 @@ def test_きょじゅうざん_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_きょじゅうだん_相手にダメージを与える():
+    """きょじゅうだん: 追加効果なしの物理はがね技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["きょじゅうだん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_キラースピン_ステルスロックを解除する():
     """キラースピン: 命中時に使用者のサイドのステルスロックを解除する。"""
     battle = t.start_battle(
@@ -1517,6 +1530,30 @@ def test_ぎんいろのかぜ_全能力1段階上昇が発動する():
     assert attacker.rank["spa"] == 1
     assert attacker.rank["spd"] == 1
     assert attacker.rank["spe"] == 1
+
+
+def test_くさのちかい_威力80():
+    """くさのちかい: 威力は80(第六世代以降)。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["くさのちかい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_くさのちかい_追加効果なしでダメージのみ():
+    """くさのちかい: 追加効果を持たず、通常通りダメージのみ与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["くさのちかい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_くさむすび_100kg以上200kg未満のとき威力100():
