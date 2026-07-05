@@ -5482,7 +5482,7 @@ MOVES: dict[MoveName, MoveData] = {
     "どろかけ": MoveData(
         type="じめん",
         category="special",
-        pp=10,
+        pp=12,
         power=20,
         accuracy=100,
         flags={"secondary_effect"},
@@ -7841,7 +7841,7 @@ MOVES: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
-        flags={"non_negoto"},
+        flags={"non_negoto", "non_copycat"},  # まねっこ自身はまねっこでコピー不可
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
             Event.ON_STATUS_HIT: h.MoveHandler(hs.まねっこ_execute),
