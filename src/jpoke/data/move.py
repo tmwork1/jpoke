@@ -3386,6 +3386,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=20,
         power=60,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.じならし_lower_defender_spd,
@@ -3434,11 +3435,11 @@ MOVES: dict[MoveName, MoveData] = {
     ),
     "じゃどくのくさり": MoveData(
         type="どく",
-        category="physical",
-        pp=10,
+        category="special",
+        pp=5,
         power=100,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.じゃどくのくさり_apply_toxic_to_defender,
