@@ -2973,7 +2973,11 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=65,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.しおみず_double_power_if_defender_hp_half_or_less,
+            ),
+        }
     ),
     "シグナルビーム": MoveData(
         type="むし",

@@ -1127,6 +1127,13 @@ def しおふき_calc_power(battle: Battle, ctx: AttackContext, value: int) -> H
     return HandlerReturn(value=modifier)
 
 
+def しおみず_double_power_if_defender_hp_half_or_less(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """しおみず: 対象の現在HPが最大HPの半分以下のとき威力が2倍になる。"""
+    if ctx.defender.hp * 2 <= ctx.defender.max_hp:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
 def シグナルビーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """シグナルビームの追加効果: 10%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.1)
