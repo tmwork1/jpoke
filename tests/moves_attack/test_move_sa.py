@@ -1447,6 +1447,26 @@ def test_せいなるつるぎ_相手の回避率ランクを無視する():
     assert battle.move_executor.accuracy == move.accuracy
 
 
+def test_せいなるほのお_こおり状態で使うと解凍されて攻撃できる():
+    """せいなるほのお: こおり状態でも使用でき、使うと解凍される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ビクティニ", move_names=["せいなるほのお"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # こおり状態を付与してから使用
+    t.apply_ailment(battle, 0, "こおり")
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # こおりが解除されてダメージを与えられる
+    assert not attacker.ailment.is_active
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+
+
 def test_せいなるほのお_やけどが発動する():
     """せいなるほのお: 50%でやけどを付与する。"""
     battle = t.start_battle(

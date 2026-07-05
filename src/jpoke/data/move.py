@@ -3855,9 +3855,13 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=95,
         flags={"secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.せいなるほのお_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.せいなるほのお_apply_burn_to_defender,
-            )
+            ),
         }
     ),
     "ぜったいれいど": MoveData(
