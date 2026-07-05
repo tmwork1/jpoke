@@ -87,6 +87,19 @@ def test_たきのぼり_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_たたきつける_相手にダメージを与える():
+    """たたきつける: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たたきつける"])],
+        team1=[Pokemon("カメックス")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_たたりめ_まひ状態でも威力2倍():
     """たたりめ: まひ状態の相手に対しても威力が2倍になる。
     ゴーストタイプはノーマルには無効のため、エスパータイプのミュウツーを対象とする。
@@ -220,6 +233,32 @@ def test_だいちのちから_とくぼう1段階低下が発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["spd"] == -1
+
+
+def test_だいちのちから_とくぼう1段階低下が発動しない():
+    """だいちのちから: 追加効果不発時はとくぼうランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["だいちのちから"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_だいちのちから_相手にダメージを与える():
+    """だいちのちから: 特殊じめん技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["だいちのちから"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_だいちのはどう_エレキフィールドでタイプがでんきに変化する():
