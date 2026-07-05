@@ -17,6 +17,21 @@ def test_じたばた_HP1のとき威力200():
     assert battle.damage_calculator.final_power == 200
 
 
+def test_じたばた_HP極少のとき威力150():
+    """じたばた: HP が極少（X=2）のとき威力150。
+    カビゴン max_hp=235, hp=10 → x=2 → 威力150。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じたばた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 10  # x = 10*48//235 = 2 → 威力150
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 150
+
+
 def test_じたばた_HP満タンのとき威力20():
     """じたばた: HPが満タン（X=48 ≥ 33）のとき威力20。"""
     battle = t.start_battle(
@@ -28,6 +43,51 @@ def test_じたばた_HP満タンのとき威力20():
     attacker.hp = attacker.max_hp  # 満タン
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 20
+
+
+def test_じたばた_HP約10パーセントのとき威力100():
+    """じたばた: HP 10% 付近（X=5）のとき威力100。
+    カビゴン max_hp=235, hp=26 → x=5 → 威力100（X=4になると威力150）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じたばた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 26  # x = 26*48//235 = 5 → 威力100
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_じたばた_HP約35パーセントのとき威力80():
+    """じたばた: HP 35% 付近（X=16）のとき威力80。
+    カビゴン max_hp=235, hp=82 → x=16 → 威力80。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じたばた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 82  # x = 82*48//235 = 16 → 威力80
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_じたばた_HP約68パーセントのとき威力40():
+    """じたばた: HP 68% 付近（X=32）のとき威力40。
+    カビゴン max_hp=235, hp=160 → x=32 → 威力40。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じたばた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 160  # x = 160*48//235 = 32 → 威力40
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
 
 
 def test_ついばむ_きのみを奪って攻撃者がHP回復する():
