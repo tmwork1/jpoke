@@ -919,6 +919,19 @@ def test_つららばり_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_つるのムチ_相手にダメージを与える():
+    """つるのムチ: 追加効果なしの物理くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["つるのムチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_てっていこうせん_HP消費が最大HPの半分である():
     """てっていこうせん: 使用前に自分の最大HPの1/2を消費する。"""
     battle = t.start_battle(
