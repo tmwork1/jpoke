@@ -601,6 +601,22 @@ def test_しおづけ技_しおづけ付与_secondary有り():
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
 
 
+def test_しめつける_バインド付与():
+    """しめつけるは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("しめつける"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("しめつける"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
 def test_じきゅうりょく_物理技受けるとぼうぎょ上昇():
     """じきゅうりょく: 物理技を受けるたびにぼうぎょが+1され、2発目のダメージが減少する"""
     battle = t.start_battle(
