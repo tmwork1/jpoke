@@ -2207,10 +2207,10 @@ MOVES: dict[MoveName, MoveData] = {
         priority=-3,
         flags={"bullet", "non_negoto"},
         handlers={
-            Event.ON_TRY_MOVE_1: h.MoveHandler(
+            Event.ON_TRY_ACTION: h.MoveHandler(
                 ha.くちばしキャノン_burn_contact_hitter,
                 subject_spec="attacker:self",
-                priority=100,
+                priority=5,
             ),
         }
     ),

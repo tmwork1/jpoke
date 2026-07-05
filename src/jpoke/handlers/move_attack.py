@@ -717,6 +717,13 @@ def きあいパンチ_check_move(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
+def きあいパンチ_suppress_pp_on_fail(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """きあいパンチ: 不発する場合はPPを消費しない（第五世代以降の仕様）。"""
+    if ctx.attacker.hits_taken > 0:
+        return HandlerReturn(value=0)
+    return HandlerReturn(value=value)
+
+
 def きしかいせい_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """きしかいせい: 自分の残りHPが少ないほど威力が高くなる。
 
@@ -758,6 +765,14 @@ def きゅうけつ_drain(battle: Battle, ctx: AttackContext, value: int) -> Han
     """きゅうけつの回復量を計算する。"""
     _drain_hp(battle, ctx, value, heal_ratio=0.5)
     return HandlerReturn(value=value)
+
+
+def きょけんとつげき_apply_self_volatile(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """きょけんとつげき成功時、自身に『きょけんとつげき』状態を付与する。
+
+    この状態は自身の次の行動が始まるタイミングで解除される。
+    """
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="きょけんとつげき")
 
 
 def キラースピン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -834,8 +849,10 @@ def くちばしキャノン_burn_contact_hitter(battle: Battle, ctx: AttackCont
     """くちばしキャノン発動前の判定: 接触技を受けていた場合は攻撃者をやけどにする。
 
     くちばしキャノンは優先度-3で必ず後攻となるため、技発動前に相手の接触技を受けることがある。
-    ON_TRY_MOVE_1 の時点で contact_hitter が記録されていれば、その攻撃者をやけど状態にする。
-    技自体はそのまま発動する。
+    この時点で contact_hitter が記録されていれば、その攻撃者をやけど状態にする。技自体はそのまま発動する。
+    ON_TRY_ACTION の中でも最も早い priority=5 で登録することで、まひ・ねむり・こおり・こんらん等により
+    使用者自身が行動できない場合でも「加熱」自体は必ず行われ、やけど付与が判定されるという仕様
+    （加熱状態については行動可否の判定と独立している）を再現する。
     """
     hitter = ctx.attacker.contact_hitter
     if hitter is not None:
@@ -2591,8 +2608,13 @@ def みずのはどう_apply_confusion_to_defender(battle: Battle, ctx: AttackCo
 
 
 def みねうち_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """みねうち: このわざで相手を倒すことはできない。相手のHPを必ず1以上残す。"""
+    """みねうち: このわざで相手を倒すことはできない。相手のHPを必ず1以上残す。
+
+    HPがすでに1のとき実際のダメージは0になるが、攻撃自体は命中しているため
+    「攻撃を無効化した」扱いにはならない（きあいパンチ不発の対象）。
+    """
     if ctx.defender.hp <= 1:
+        ctx.defender.hits_taken += 1
         return HandlerReturn(value=0)
     return HandlerReturn(value=min(value, ctx.defender.hp - 1))
 

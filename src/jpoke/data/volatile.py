@@ -172,16 +172,20 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
-    "くちばしキャノン": VolatileData(
+    "きょけんとつげき": VolatileData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.VolatileHandler(
-                h.くちばしキャノン_burn_attacker,
+            Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
+                h.きょけんとつげき_guaranteed_hit,
                 subject_spec="defender:self",
-                priority=10,
             ),
-            Event.ON_TURN_END: h.VolatileHandler(
-                h.くちばしキャノン_remove_volatile,
-                subject_spec="source:self",
+            Event.ON_CALC_DAMAGE_MODIFIER: h.VolatileHandler(
+                h.きょけんとつげき_double_damage,
+                subject_spec="defender:self",
+            ),
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.きょけんとつげき_remove,
+                subject_spec="attacker:self",
+                priority=10,
             ),
         }
     ),
