@@ -532,8 +532,17 @@ def かえんボール_thaw_attacker(battle: Battle, ctx: AttackContext, value: 
 
 
 def かかとおとし_apply_confusion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """かかとおとしの追加効果: 30%の確率で相手をこんらん状態にする。"""
-    return apply_confusion_to_defender(battle, ctx, value, chance=0.3)
+    """かかとおとしの追加効果: 30%の確率で相手をこんらん状態にする。
+
+    通常のこんらん付与技（2〜5ターン）と異なり、この技のこんらんは3〜5ターン継続する。
+    """
+    chance = battle.resolve_secondary_chance(ctx, 0.3)
+    if chance < 1 and battle.random.random() >= chance:
+        return HandlerReturn(value=value)
+    count = battle.random.randint(3, 5)
+    return HandlerReturn(value=battle.volatile_manager.apply(
+        ctx.defender, "こんらん", count=count, source=ctx.attacker
+    ))
 
 
 def かかとおとし_crash(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

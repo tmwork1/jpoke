@@ -1547,7 +1547,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=120,
         accuracy=90,
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "recoil", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かかとおとし_apply_confusion,

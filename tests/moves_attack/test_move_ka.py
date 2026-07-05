@@ -213,6 +213,20 @@ def test_かかとおとし_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+@pytest.mark.parametrize("roll, expected_count", [(3, 3), (5, 5)])
+def test_かかとおとし_こんらんの継続ターンは3から5ターン(roll: int, expected_count: int):
+    """かかとおとし: 通常のこんらん技(2〜5ターン)と異なり3〜5ターン継続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かかとおとし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    battle.random.randint = lambda a, b: roll
+    t.run_move(battle, 0)
+    assert battle.actives[1].volatiles["こんらん"].count == expected_count
+
+
 def test_かかとおとし_命中時は失敗反動ダメージを受けない():
     """かかとおとし: 命中したときはON_MISSが発火しないため失敗反動はない。"""
     battle = t.start_battle(
@@ -272,6 +286,53 @@ def test_かげうち_相手にダメージを与える():
     battle = t.start_battle(
         team0=[Pokemon("ゲンガー", move_names=["かげうち"])],
         team1=[Pokemon("ミュウツー")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_かげぬい_ちからずくで威力上昇しにげられない状態は付与されない():
+    """かげぬい: ちからずく使用時は威力が1.3倍になる代わりに、にげられない状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュナイパー", ability_name="ちからずく", move_names=["かげぬい"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert not battle.actives[1].has_volatile("にげられない")
+
+
+def test_かげぬい_にげられない状態を付与する():
+    """かげぬい: 追加効果として、相手をにげられない状態にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュナイパー", move_names=["かげぬい"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("にげられない")
+
+
+def test_かげぬい_りんぷんの相手にはにげられない状態が付与されない():
+    """かげぬい: 相手の特性がりんぷんの場合、にげられない状態は付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュナイパー", move_names=["かげぬい"])],
+        team1=[Pokemon("ピカチュウ", ability_name="りんぷん")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("にげられない")
+
+
+def test_かげぬい_相手にダメージを与える():
+    """かげぬい: 追加効果ありの物理ゴースト技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュナイパー", move_names=["かげぬい"])],
+        team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
     defender = battle.actives[1]
