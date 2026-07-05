@@ -3521,7 +3521,12 @@ MOVES: dict[MoveName, MoveData] = {
         power=70,
         accuracy=100,
         priority=1,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.じんらい_try_move,
+                priority=30,
+            ),
+        }
     ),
     "すいとる": MoveData(
         type="くさ",

@@ -1083,6 +1083,65 @@ def test_じんつうりき_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_じんらい_後攻時に相手が行動済みで失敗():
+    """じんらい: 相手がすでに行動済み（後攻）の場合は失敗する。
+
+    ゲンガー（素早さ130）がでんこうせっか（優先度+1）を使い、
+    タケルライコ（素早さ75）がじんらい（優先度+1）を使う場合、
+    同優先度でゲンガーが先行するため、ゲンガー行動後にじんらいを使うと失敗する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("タケルライコ", move_names=["じんらい"])],
+        team1=[Pokemon("ゲンガー", move_names=["でんこうせっか"])],
+        accuracy=100,
+    )
+    defender_hp_before = battle.actives[1].hp
+    battle.step()
+    # じんらいが失敗するためゲンガーにダメージはない
+    assert battle.actives[1].hp == defender_hp_before
+
+
+def test_じんらい_相手がねむり状態で攻撃技選択時に成功():
+    """じんらい: 相手がねむり状態でも攻撃技を選択していれば成功する。
+
+    ねむり状態では攻撃技が実行されない場合があるが、
+    コマンドが残っていれば攻撃技選択と判定されじんらいは成功する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("タケルライコ", move_names=["じんらい"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        ailment1=("ねむり", 3),
+        accuracy=100,
+    )
+    defender_hp_before = battle.actives[1].hp
+    battle.step()
+    assert battle.actives[1].hp < defender_hp_before
+
+
+def test_じんらい_相手が変化技選択時に失敗():
+    """じんらい: 相手が変化技を選択したターンは失敗してダメージを与えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タケルライコ", move_names=["じんらい"])],
+        team1=[Pokemon("カビゴン", move_names=["なきごえ"])],
+        accuracy=100,
+    )
+    defender_hp_before = battle.actives[1].hp
+    battle.step()
+    assert battle.actives[1].hp == defender_hp_before
+
+
+def test_じんらい_相手が攻撃技選択時に成功():
+    """じんらい: 相手が攻撃技を選択したターンはダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タケルライコ", move_names=["じんらい"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender_hp_before = battle.actives[1].hp
+    battle.step()
+    assert battle.actives[1].hp < defender_hp_before
+
+
 def test_すいとる_使用後に攻撃者のHPが回復する():
     """すいとる: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
     battle = t.start_battle(

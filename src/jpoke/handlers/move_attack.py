@@ -1269,6 +1269,22 @@ def じんつうりき_apply_flinch(battle: Battle, ctx: AttackContext, value: A
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
 
+def じんらい_try_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じんらいの発動条件を判定する。
+
+    タイプ・分類・接触判定を除けばふいうちと同様の効果を持つため、
+    判定ロジックを共有する（`_ふいうち系_can_apply`）。
+    対象が未行動かつ攻撃技を選択している時のみ成功する。
+    """
+    if not _ふいうち系_can_apply(battle, ctx):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="じんらい")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def すいとる_drain(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """すいとるの回復量を計算する。"""
     _drain_hp(battle, ctx, value, heal_ratio=0.5)
@@ -2221,8 +2237,8 @@ def ピヨピヨパンチ_apply_confusion_to_defender(battle: Battle, ctx: Attac
     return apply_confusion_to_defender(battle, ctx, value, chance=0.2)
 
 
-def _ふいうち_can_apply(battle: Battle, ctx: AttackContext) -> bool:
-    """ふいうちの発動条件を判定する。
+def _ふいうち系_can_apply(battle: Battle, ctx: AttackContext) -> bool:
+    """ふいうち・じんらいの発動条件を判定する。
 
     対象が未行動かつ攻撃技を選択している時のみ成功する。
     """
@@ -2249,7 +2265,7 @@ def ふいうち_try_move(battle: Battle, ctx: AttackContext, value: Any) -> Han
     対象が未行動かつ攻撃技を選択している時のみ成功する。
     交代・テラスタル・どうぐ使用など技以外の行動を選択している場合も失敗する。
     """
-    if not _ふいうち_can_apply(battle, ctx):
+    if not _ふいうち系_can_apply(battle, ctx):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ふいうち")
