@@ -1017,6 +1017,38 @@ def test_きあいだま_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_きあいパンチ_HP1でみねうちを受けると失敗():
+    """きあいパンチ: HPが1のときにみねうちを受けてダメージが0でも不発になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
+        team1=[Pokemon("カビゴン", move_names=["みねうち"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    before_foe_hp = battle.actives[1].hp
+
+    battle.step()
+
+    assert battle.actives[1].hp == before_foe_hp
+    assert attacker.hp == 1
+
+
+def test_きあいパンチ_ばけのかわで肩代わりすると失敗():
+    """きあいパンチ: ばけのかわで攻撃ダメージを肩代わりした場合も不発になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ばけのかわ", move_names=["きあいパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+    )
+    attacker = battle.actives[0]
+    before_foe_hp = battle.actives[1].hp
+
+    battle.step()
+
+    assert battle.actives[1].hp == before_foe_hp
+    assert attacker.ability.enabled is False
+
+
 def test_きあいパンチ_みがわりへの被弾では中断しない():
     """きあいパンチ: みがわりが被弾しても使用者は中断されない。"""
     battle = t.start_battle(
@@ -1031,6 +1063,20 @@ def test_きあいパンチ_みがわりへの被弾では中断しない():
 
     assert battle.actives[1].hp < before_foe_hp
     assert battle.actives[0].hp == before_ally_hp
+
+
+def test_きあいパンチ_不発時はPPを消費しない():
+    """きあいパンチ: 不発した場合、第五世代以降の仕様に従いPPを消費しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きあいパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
+    )
+    attacker = battle.actives[0]
+    pp_before = attacker.moves[0].pp
+
+    battle.step()
+
+    assert attacker.moves[0].pp == pp_before
 
 
 def test_きあいパンチ_攻撃ダメージを受けると失敗():
@@ -1183,6 +1229,120 @@ def test_きゅうけつ_使用後に攻撃者のHPが回復する():
     hp_before = attacker.hp
     t.run_move(battle, 0)
     assert attacker.hp > hp_before
+
+
+def test_きょけんとつげき_フェアリータイプに無効化されたとき状態は付与されない():
+    """きょけんとつげき: フェアリータイプに技が無効化された場合、状態は付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("セグレイブ", move_names=["きょけんとつげき"])],
+        team1=[Pokemon("ニンフィア")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("きょけんとつげき")
+
+
+def test_きょけんとつげき_まもるで防がれたとき状態は付与されない():
+    """きょけんとつげき: まもるで無効化された場合、状態は付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("セグレイブ", move_names=["きょけんとつげき"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("きょけんとつげき")
+
+
+def test_きょけんとつげき_命中時に自身へ状態を付与する():
+    """きょけんとつげき: 技が命中すると使用者に「きょけんとつげき」状態が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("セグレイブ", move_names=["きょけんとつげき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("きょけんとつげき")
+
+
+def test_きょけんとつげき_外れたとき状態は付与されない():
+    """きょけんとつげき: 技が外れた場合、状態は付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("セグレイブ", move_names=["きょけんとつげき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("きょけんとつげき")
+
+
+def test_きょけんとつげき状態_ダメージ固定技は2倍にならない():
+    """きょけんとつげき状態: いのちがけ等のダメージ固定技は威力計算を経由しないため2倍にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いのちがけ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"きょけんとつげき": None},
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 40
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - 40
+
+
+def test_きょけんとつげき状態_まひで行動不能になっても解除される():
+    """きょけんとつげき状態: まひ等で行動不能になった場合でも、自身の行動開始時に状態は解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"きょけんとつげき": None},
+    )
+    attacker = battle.actives[0]
+    battle.ailment_manager.apply(attacker, "まひ")
+    battle.test_option.trigger_ailment = True
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert not attacker.has_volatile("きょけんとつげき")
+
+
+def test_きょけんとつげき状態_次の行動開始時に解除される():
+    """きょけんとつげき状態: 自身の次の行動が始まると状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"きょけんとつげき": None},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("きょけんとつげき")
+
+
+def test_きょけんとつげき状態_相手の技が必中になる():
+    """きょけんとつげき状態: 相手からの技は回避ランクに関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"きょけんとつげき": None},
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy is None
+
+
+def test_きょけんとつげき状態_相手の技のダメージが2倍になる():
+    """きょけんとつげき状態: 相手から受ける技のダメージが2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"きょけんとつげき": None},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 8192
 
 
 def test_キラースピン_ステルスロックを解除する():
