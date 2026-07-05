@@ -4898,7 +4898,11 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=150,
         accuracy=90,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.リチャージ_apply,
+            )
+        }
     ),
     "とぐろをまく": MoveData(
         type="どく",
@@ -4962,7 +4966,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.とびかかる_lower_defender_atk,

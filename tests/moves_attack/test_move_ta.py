@@ -1361,6 +1361,76 @@ def test_でんじほう_必ず相手をまひ状態にする():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_ときのほうこう_まもるで防がれた場合はリチャージ状態にならない():
+    """ときのほうこう: まもるで防がれた場合はリチャージ揮発状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ときのほうこう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("リチャージ")
+
+
+def test_ときのほうこう_交代するとリチャージ状態が解除される():
+    """ときのほうこう: リチャージ状態中に交代するとリチャージ揮発状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ときのほうこう"]), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("リチャージ")
+    t.run_switch(battle, 0, 1)
+    assert not attacker.has_volatile("リチャージ")
+
+
+def test_ときのほうこう_命中後にリチャージ状態が付与される():
+    """ときのほうこう: 命中後に使用者にリチャージ揮発状態が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ときのほうこう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("リチャージ")
+
+
+def test_ときのほうこう_外れた場合はリチャージ状態にならない():
+    """ときのほうこう: 外れた場合はリチャージ揮発状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ときのほうこう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("リチャージ")
+
+
+def test_ときのほうこう_次ターン行動不能になる():
+    """ときのほうこう: 次のターンはリチャージ状態により行動不能になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ときのほうこう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 1ターン目: 技を使用してリチャージ状態を付与
+    battle.step()
+    assert attacker.has_volatile("リチャージ")
+    defender_hp_after_t1 = defender.hp
+    # 2ターン目: リチャージ状態で行動不能のため相手HPが変化しない
+    battle.step()
+    assert not attacker.has_volatile("リチャージ")
+    assert defender.hp == defender_hp_after_t1
+
+
 def test_とっしん_使用後に攻撃者が反動ダメージを受ける():
     """とっしん: 与えたダメージの1/4を攻撃者が反動として受ける。"""
     battle = t.start_battle(
@@ -1419,6 +1489,23 @@ def test_とどめばり_相手を倒したときこうげきが3段階上昇す
     t.run_move(battle, 0)
     assert not defender.alive
     assert attacker.rank["atk"] == 3
+
+
+def test_とびかかる_secondary_effectフラグを持つ():
+    """とびかかる: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["とびかかる"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_とびかかる_こうげき1段階低下が発動する():
+    """とびかかる: 100%の確率で相手のこうげきを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メガヤンマ", move_names=["とびかかる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
 
 
 def test_とびげり_命中時は失敗反動ダメージを受けない():
