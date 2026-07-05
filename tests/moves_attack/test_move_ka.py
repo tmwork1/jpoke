@@ -1409,6 +1409,19 @@ def test_キラースピン_バインドを解除する():
     assert not attacker.has_volatile("バインド")
 
 
+def test_キラースピン_やどりぎのタネを解除する():
+    """キラースピン: 命中時に使用者のやどりぎのタネ状態を解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["キラースピン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "やどりぎのタネ", source=battle.actives[1])
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("やどりぎのタネ")
+
+
 def test_きりさく_急所ランクが1():
     """きりさく: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(
@@ -2131,6 +2144,38 @@ def test_こうげきしれい_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_こうそくスピン_おんみつマントの相手でも素早さが上昇し場の状態を解除する():
+    """こうそくスピン: 相手がおんみつマントを持っていても解除・素早さ上昇は発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうそくスピン"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    side = battle.get_side(attacker)
+    side.apply("まきびし", count=1)
+    t.run_move(battle, 0)
+    assert not side.get("まきびし").is_active
+    assert attacker.rank["spe"] == 1
+
+
+def test_こうそくスピン_ちからずくでは場の状態解除も素早さ上昇も発動しない():
+    """こうそくスピン: 使用者がちからずくの場合、解除・素早さ上昇のいずれも発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["こうそくスピン"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    side = battle.get_side(attacker)
+    side.apply("まきびし", count=1)
+    battle.volatile_manager.apply(attacker, "バインド", count=4, source=battle.actives[1])
+    t.run_move(battle, 0)
+    assert side.get("まきびし").is_active
+    assert attacker.has_volatile("バインド")
+    assert attacker.rank["spe"] == 0
+
+
 def test_こうそくスピン_バインドを解除する():
     """こうそくスピン: 命中時に使用者のバインド状態を解除する。"""
     battle = t.start_battle(
@@ -2156,6 +2201,19 @@ def test_こうそくスピン_まきびしを解除する():
     side.apply("まきびし", count=1)
     t.run_move(battle, 0)
     assert not side.get("まきびし").is_active
+
+
+def test_こうそくスピン_やどりぎのタネを解除する():
+    """こうそくスピン: 命中時に使用者のやどりぎのタネ状態を解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうそくスピン"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "やどりぎのタネ", source=battle.actives[1])
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("やどりぎのタネ")
 
 
 def test_こうそくスピン_素早さ1段階上昇が発動する():

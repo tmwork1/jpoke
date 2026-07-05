@@ -780,14 +780,30 @@ def キラースピン_apply_poison_to_defender(battle: Battle, ctx: AttackConte
 
 
 def キラースピン_clear_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """キラースピン: バインドを解除し、自分のサイドの設置物を除去する。"""
+    """キラースピン: バインド・やどりぎのタネを解除し、自分のサイドの設置物を除去する。"""
     _clear_spin_effects(battle, ctx)
     return HandlerReturn(value=value)
 
 
+def _is_sheer_force_blocked(ctx: AttackContext) -> bool:
+    """ちからずく特性による追加効果無効化を判定する。
+
+    りんぷん・おんみつマントの影響を受けない効果（resolve_secondary_chance を
+    経由しない効果）でも、ちからずくの追加効果無効化だけは受けるケースで使う。
+    """
+    return ctx.attacker.ability.name == "ちからずく" and ctx.move.has_flag("secondary_effect")
+
 def _clear_spin_effects(battle: Battle, ctx: AttackContext) -> None:
-    """こうそくスピン・キラースピン共通: バインドと設置物を解除する。"""
+    """こうそくスピン・キラースピン共通: バインド・やどりぎのタネを解除し、設置物を除去する。
+
+    りんぷん・おんみつマントを持つ側がいても解除は発動するため
+    resolve_secondary_chance は経由しないが、使用者がちからずくの場合は
+    （威力1.3倍化と引き換えに）解除自体が発動しない。
+    """
+    if _is_sheer_force_blocked(ctx):
+        return
     battle.volatile_manager.remove(ctx.attacker, "バインド")
+    battle.volatile_manager.remove(ctx.attacker, "やどりぎのタネ")
     side = battle.get_side(ctx.attacker)
     for hazard in ("まきびし", "どくびし", "ステルスロック", "ねばねばネット"):
         side.deactivate(hazard)
@@ -919,11 +935,19 @@ def げんしのちから_boost_all_stats(battle: Battle, ctx: AttackContext, va
 
 
 def こうそくスピン_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
+    """こうそくスピン: 使用者のすばやさを1段階上げる。
+
+    りんぷん・おんみつマントを持つ側がいても発動するため resolve_secondary_chance
+    は経由せず battle.modify_stats を直接呼ぶ。使用者がちからずくの場合のみ発動しない。
+    """
+    if _is_sheer_force_blocked(ctx):
+        return HandlerReturn(value=value)
+    battle.modify_stats(ctx.attacker, {"spe": 1}, source=ctx.attacker)
+    return HandlerReturn(value=value)
 
 
 def こうそくスピン_clear_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こうそくスピン: バインドを解除し、自分のサイドの設置物を除去する。"""
+    """こうそくスピン: バインド・やどりぎのタネを解除し、自分のサイドの設置物を除去する。"""
     _clear_spin_effects(battle, ctx)
     return HandlerReturn(value=value)
 
