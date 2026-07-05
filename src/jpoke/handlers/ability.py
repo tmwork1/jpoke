@@ -16,6 +16,10 @@ from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
+from jpoke.core.event_logger import (
+    AbilityPayload, AilmentPayload, VolatilePayload, FailureLogPayload,
+    FieldPayload, TextPayload,
+)
 
 AEGISLASH_SHIELD = "ギルガルド(シールド)"
 AEGISLASH_BLADE = "ギルガルド(ブレード)"
@@ -109,7 +113,7 @@ def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
     battle.add_event_log(
         mon,
         LogCode.ABILITY_TRIGGERED,
-        payload={"ability": mon.ability.name}
+        payload=AbilityPayload(ability=mon.ability.name)
     )
 
 def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:
@@ -186,7 +190,7 @@ def _apply_type_absorb(battle: Battle,
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_IMMUNED,
-        payload={"reason": defender.ability.base_name}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason=defender.ability.base_name)
     )
 
     if heal_ratio > 0:
@@ -282,7 +286,7 @@ def _prevent_ailment(battle: Battle,
         battle.add_event_log(
             ctx.target,
             LogCode.AILMENT_PREVENTED,
-            payload={"ailment": value, "reason": ctx.target.ability.name}
+            payload=AilmentPayload(ailment=value, display_reason=ctx.target.ability.name)
         )
         return HandlerReturn(value="", stop_event=True)
     return HandlerReturn(value=value)
@@ -305,7 +309,7 @@ def _prevent_volatile(battle: Battle,
         battle.add_event_log(
             ctx.target,
             LogCode.VOLATILE_PREVENTED,
-            payload={"volatile": value, "reason": ctx.target.ability.name}
+            payload=VolatilePayload(volatile=value, display_reason=ctx.target.ability.name)
         )
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
@@ -514,7 +518,7 @@ def いたずらごころ_blocked_by_dark(battle: Battle, ctx: AttackContext, va
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_IMMUNED,
-            payload={"reason": "いたずらごころ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="いたずらごころ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -637,7 +641,7 @@ def おうごんのからだ_block_status_move(battle: Battle, ctx: AttackContex
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_IMMUNED,
-            payload={"reason": "おうごんのからだ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="おうごんのからだ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -654,7 +658,7 @@ def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: An
     battle.add_event_log(
         mon,
         LogCode.TEXT_LOG,
-        payload={"text": f"{mon.name}は{foe.name}の{foe.item.base_name}をお見通しだ！"}
+        payload=TextPayload(text=f"{mon.name}は{foe.name}の{foe.item.base_name}をお見通しだ！")
     )
     return HandlerReturn(value=value)
 
@@ -672,7 +676,12 @@ def おもかげやどし_boost_stat(battle: Battle, ctx: EventContext, value: A
 
 
 def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """おやこあい特性: 単発攻撃技を2ヒット化する。"""
+    """おやこあい特性: 単発攻撃技を2ヒット化する。
+
+    がむしゃらはHPの変動有無に関わらずいかなる状況でも連続攻撃にならないため対象外とする。
+    """
+    if ctx.move.name == "がむしゃら":
+        return HandlerReturn(value=value)
     if ctx.move.is_attack and ctx.move.max_hits == 1:
         value = 2
     return HandlerReturn(value=value)
@@ -758,7 +767,7 @@ def かぜのり_absorb_wind(battle: Battle, ctx: AttackContext, value: bool) ->
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_IMMUNED,
-        payload={"reason": defender.ability.base_name}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason=defender.ability.base_name)
     )
     battle.modify_stats(defender, {"atk": 1}, source=ctx.attacker)
     return HandlerReturn(value=False, stop_event=True)
@@ -954,7 +963,7 @@ def がんじょう_block_ohko(battle: Battle, ctx: AttackContext, value: Any) -
     if ctx.move.has_flag("ohko"):
         _announce_ability_triggered(battle, ctx.defender)
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
-                             payload={"reason": "がんじょう"})
+                             payload=FailureLogPayload(move=ctx.move.name, display_reason="がんじょう"))
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1336,7 +1345,7 @@ def しめりけ_block_explosion_foe(battle: Battle, ctx: AttackContext, value: 
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_FAILED,
-            payload={"reason": "しめりけ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="しめりけ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1348,7 +1357,7 @@ def しめりけ_block_explosion_self(battle: Battle, ctx: AttackContext, value:
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_FAILED,
-            payload={"reason": "しめりけ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="しめりけ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1496,7 +1505,7 @@ def じょおうのいげん_block_priority(battle: Battle, ctx: AttackContext, 
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_FAILED,
-        payload={"reason": "じょおうのいげん"}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="じょおうのいげん")
     )
     return HandlerReturn(value=False, stop_event=True)
 
@@ -1731,7 +1740,7 @@ def ぜったいねむり_switch_in(battle: Battle, ctx: EventContext, value: An
     assert mon is not None
     if not battle.ailment_manager.apply(mon, "ゆめうつつ"):
         # 既にゆめうつつ（2回目以降の登場）→ メッセージのみ出す
-        battle.add_event_log(mon, LogCode.AILMENT_APPLIED, payload={"ailment": "ゆめうつつ"})
+        battle.add_event_log(mon, LogCode.AILMENT_APPLIED, payload=AilmentPayload(ailment="ゆめうつつ"))
     return HandlerReturn(value=value)
 
 
@@ -2086,7 +2095,7 @@ def どくげしょう_set_toxic_spikes(battle: Battle, ctx: AttackContext, valu
         return HandlerReturn(value=value)
     if field.is_active:
         field.count += 1
-        battle.add_event_log(0, LogCode.FIELD_STARTED, payload={"field": "どくびし", "count": field.count})
+        battle.add_event_log(0, LogCode.FIELD_STARTED, payload=FieldPayload(field="どくびし", count=field.count))
     else:
         foe_side.activate("どくびし", 1)
     _announce_ability_triggered(battle, ctx.defender)
@@ -2176,7 +2185,7 @@ def なまけ_try_action(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     if state == "skip_next":
         # このターンはなまける
         mon.ability.state = "can_act"
-        battle.add_event_log(mon, LogCode.ACTION_BLOCKED, payload={"reason": "なまけ"})
+        battle.add_event_log(mon, LogCode.ACTION_BLOCKED, payload=FailureLogPayload(move=ctx.move.name, display_reason="なまけ"))
         return HandlerReturn(value=False, stop_event=True)
     # state == "can_act"
     mon.ability.state = "skip_next"
@@ -2867,7 +2876,7 @@ def ぼうおん_block_sound(battle: Battle, ctx: AttackContext, value: bool) ->
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_IMMUNED,
-        payload={"reason": "ぼうおん"}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="ぼうおん")
     )
     return HandlerReturn(value=False, stop_event=True)
 
@@ -2881,7 +2890,7 @@ def ぼうじん_block_powder(battle: Battle, ctx: AttackContext, value: bool) -
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_IMMUNED,
-        payload={"reason": "ぼうじん"}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="ぼうじん")
     )
     return HandlerReturn(value=False, stop_event=True)
 
@@ -2900,7 +2909,7 @@ def ぼうだん_block_bullet(battle: Battle, ctx: AttackContext, value: bool) -
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_IMMUNED,
-        payload={"reason": "ぼうだん"}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="ぼうだん")
     )
     return HandlerReturn(value=False, stop_event=True)
 
@@ -3175,7 +3184,7 @@ def もらいび_block_fire(battle: Battle, ctx: AttackContext, value: bool) -> 
     battle.add_event_log(
         ctx.attacker,
         LogCode.MOVE_IMMUNED,
-        payload={"reason": "もらいび"}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="もらいび")
     )
     return HandlerReturn(value=False, stop_event=True)
 
@@ -3286,7 +3295,7 @@ def よちむ_reveal_strongest_move(battle: Battle, ctx: EventContext, value: An
     battle.add_event_log(
         mon,
         LogCode.TEXT_LOG,
-        payload={"text": f"{foe.name}の{chosen.name}を読み取った！"}
+        payload=TextPayload(text=f"{foe.name}の{chosen.name}を読み取った！")
     )
     return HandlerReturn(value=value)
 

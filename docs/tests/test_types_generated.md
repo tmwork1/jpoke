@@ -1,9 +1,10 @@
 # test_types_generated
 
-テスト数: 9
+テスト数: 10
 
 - [x] abilityname_件数がABILITIES辞書と一致する
 - [x] abilityname_既知の特性名を含む
+- [x] generateliteralスクリプト_再実行しても差分が出ない
 - [x] itemname_メガストーン名を含む
 - [x] itemname_件数が実行時ITEMS辞書と一致する
 - [x] itemname_既知のアイテム名を含む

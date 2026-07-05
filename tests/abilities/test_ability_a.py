@@ -723,6 +723,20 @@ def test_おもかげやどし_特性再有効化時にも発動する():
     assert mon.rank["spe"] == 1
 
 
+def test_おやこあい_がむしゃらには適用しない():
+    """おやこあい: がむしゃらはHP変動の有無に関わらずいかなる状況でも連続攻撃にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["がむしゃら"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 30
+    defender.hp = 100
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 1
+    assert defender.hp == 100 - (100 - 30)
+
+
 def test_おやこあい_単発攻撃が2ヒットする():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],

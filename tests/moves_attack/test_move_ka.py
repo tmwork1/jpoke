@@ -787,14 +787,49 @@ def test_かわらわり_壁がなくても動作する():
     assert defender.hp < hp_before
 
 
+def test_がむしゃら_ゴーストタイプに無効():
+    """がむしゃら: ノーマル技のためゴーストタイプにはダメージを与えられない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["がむしゃら"])],
+        team1=[Pokemon("ゲンガー")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 30
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+@pytest.mark.parametrize(
+    ("attacker_hp", "defender_hp"),
+    [
+        (80, 60),  # 相手HP<自分HP
+        (50, 50),  # 相手HP=自分HP
+    ],
+)
+def test_がむしゃら_相手HPが自分以下の場合は失敗する(attacker_hp: int, defender_hp: int):
+    """がむしゃら: 相手の残りHPが自分の残りHP以下の場合、無効化されたときと同様に技が失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["がむしゃら"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    attacker.hp = attacker_hp
+    defender.hp = defender_hp
+    t.run_move(battle, 0)
+    assert defender.hp == defender_hp
+    assert attacker.failed_or_immobile_last_turn
+
+
 @pytest.mark.parametrize(
     ("attacker_hp", "defender_hp", "expected_damage"),
     [
         (30, 100, 70),
-        (80, 60, 0),
     ],
 )
 def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defender_hp: int, expected_damage: int):
+    """がむしゃら: 相手の残りHPから自分の残りHPを引いた分の固定ダメージを与える。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["がむしゃら"])],
         team1=[Pokemon("ピカチュウ")],

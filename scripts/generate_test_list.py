@@ -18,16 +18,29 @@ def extract_parametrize_cases(
     arg_names_node = decorator.args[0]
     values_node = decorator.args[1]
 
-    if not isinstance(arg_names_node, ast.Constant):
+    arg_names: list[str] | None = None
+
+    if isinstance(arg_names_node, ast.Constant) and isinstance(arg_names_node.value, str):
+        # "a, b, c" 形式
+        arg_names = [
+            s.strip()
+            for s in arg_names_node.value.split(",")
+        ]
+    elif isinstance(arg_names_node, (ast.Tuple, ast.List)):
+        # ("a", "b", "c") 形式
+        names = []
+        for elt in arg_names_node.elts:
+            if not (isinstance(elt, ast.Constant) and isinstance(elt.value, str)):
+                names = None
+                break
+            names.append(elt.value)
+        arg_names = names
+
+    if arg_names is None:
         return []
 
     if not isinstance(values_node, (ast.List, ast.Tuple)):
         return []
-
-    arg_names = [
-        s.strip()
-        for s in arg_names_node.value.split(",")
-    ]
 
     cases = []
 
@@ -66,6 +79,7 @@ def extract_test_names(path: Path) -> list[str]:
         base_name = node.name[5:]
 
         parametrized = False
+        found_case = False
 
         for dec in node.decorator_list:
             if not isinstance(dec, ast.Call):
@@ -77,16 +91,18 @@ def extract_test_names(path: Path) -> list[str]:
             ):
                 continue
 
+            parametrized = True
             cases = extract_parametrize_cases(dec)
 
             for case in cases:
                 names.append(
                     f"{base_name}({case})"
                 )
+                found_case = True
 
-            parametrized = True
-
-        if not parametrized:
+        # parametrize はあるがケースを解析できなかった場合も、
+        # テストが一覧から消えないようベース名を残す
+        if not parametrized or not found_case:
             names.append(base_name)
 
     return names

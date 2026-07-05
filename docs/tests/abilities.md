@@ -1,11 +1,13 @@
 # abilities
 
-テスト数: 686
+テスト数: 702
 
+- [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
 - [x] あめふらし_通常天候を上書きする(initial_weather=すなあらし)
 - [x] あめふらし_通常天候を上書きする(initial_weather=ゆき)
 - [x] おわりのだいち_らんきりゅうは上書きできない
+- [x] おわりのだいち_らんきりゅう以外上書きする
 - [x] オーラ系_相手の技の威力が1_33倍になる(ability_name=フェアリーオーラ, move_name=ムーンフォース)
 - [x] オーラ系_相手の技の威力が1_33倍になる(ability_name=ダークオーラ, move_name=あくのはどう)
 - [x] オーラ系_自分の技の威力が1_33倍になる(ability_name=フェアリーオーラ, move_name=ムーンフォース)
@@ -15,6 +17,8 @@
 - [x] クォークチャージ_最大ステータスがバフされる(name=フシギダネ, stat=spa)
 - [x] クォークチャージ_最大ステータスがバフされる(name=カメックス, stat=spd)
 - [x] クォークチャージ_最大ステータスがバフされる(name=ピカチュウ, stat=spe)
+- [x] スキン系_ノーマル技を対応タイプに変換する
+- [x] スキン系_変換した技の威力が4915倍になる
 - [x] タイプ半減系(ability_name=あついしぼう, move_name=ひのこ)
 - [x] タイプ半減系(ability_name=あついしぼう, move_name=れいとうビーム)
 - [x] タイプ半減系(ability_name=たいねつ, move_name=ひのこ)
@@ -54,6 +58,7 @@
 - [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=ふかしのこぶし, volatile_name=かえんのまもり)
 - [x] ふかしのこぶし_接触技でまもるを貫通(ability_name=かんつうドリル, volatile_name=まもる)
 - [x] ふかしのこぶし_非接触技はまもるを貫通しない
+- [x] らんきりゅう_すべての天候を上書きする
 - [x] 一度きりの能力上昇特性(ability_name=ふとうのけん, stat=atk)
 - [x] 一度きりの能力上昇特性(ability_name=ふくつのたて, stat=def)
 - [x] 交代抑制特性_param(ability_name=ありじごく, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=False)
@@ -77,6 +82,8 @@
 - [x] 先制技無効系_優先度ゼロの技は通る(ability_name=テイルアーマー)
 - [x] 先制技無効系_優先度プラスの技を無効化する(ability_name=じょおうのいげん)
 - [x] 先制技無効系_優先度プラスの技を無効化する(ability_name=テイルアーマー)
+- [x] 地形始動特性_同一地形が有効時は継続ターンを更新しない
+- [x] 地形始動特性_登場時に対応地形を展開する
 - [x] 天候がくれ系_かたやぶりで命中率補正なし(ability_name=ゆきがくれ, weather=ゆき)
 - [x] 天候がくれ系_かたやぶりで命中率補正なし(ability_name=すながくれ, weather=すなあらし)
 - [x] 天候がくれ系_対応天候で命中低下(ability_name=ゆきがくれ, weather=ゆき)
@@ -94,6 +101,7 @@
 - [x] 天候回復特性_対応天候中に回復(ability_name=あめうけざら, weather_name=あめ, weather_count=5)
 - [x] 天候回復特性_対応天候中に回復(ability_name=あめうけざら, weather_name=おおあめ, weather_count=999)
 - [x] 天候回復特性_対応天候中に回復(ability_name=アイスボディ, weather_name=ゆき, weather_count=5)
+- [x] 天候始動特性_登場時に発動
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=おわりのだいち, weather_name=おおひでり)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=はじまりのうみ, weather_name=おおあめ)
 - [x] 強天候始動特性_相手も同じ特性だと退場しても解除されない(ability_name=デルタストリーム, weather_name=らんきりゅう)
@@ -106,6 +114,8 @@
 - [x] 技カテゴリによる威力補正_param(ability_name=きれあじ, move_name=きりさく, expected_power=6144)
 - [x] 技カテゴリによる威力補正_param(ability_name=てつのこぶし, move_name=かみなりパンチ, expected_power=4915)
 - [x] 技カテゴリによる威力補正_param(ability_name=パンクロック, move_name=バークアウト, expected_power=5325)
+- [x] 接触時に状態異常付与_接触技で状態異常を付与する
+- [x] 接触時に状態異常付与_非接触技では発動しない
 - [x] 揮発状態耐性(ability=アロマベール, volatile=アンコール, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=いちゃもん, result=False)
 - [x] 揮発状態耐性(ability=アロマベール, volatile=かいふくふうじ, result=False)
@@ -146,6 +156,7 @@
 - [x] 音ラベル無効系_param(defender_ability=ぼうおん, attacker_ability=かたやぶり, move_name=バークアウト, should_block=False)
 - [x] 音ラベル無効系_param(defender_ability=ぼうだん, attacker_ability=, move_name=かえんボール, should_block=True)
 - [x] 音ラベル無効系_param(defender_ability=ぼうだん, attacker_ability=かたやぶり, move_name=かえんボール, should_block=False)
+- [x] ARシステム_メモリで対応タイプになる
 - [x] ARシステム_メモリなしでタイプ変更なし
 - [x] アイスフェイス_エアロック中はゆき変化でフォルムチェンジしない
 - [x] アイスフェイス_かたやぶりで物理技のダメージを防がない
@@ -188,6 +199,7 @@
 - [x] うるおいボディ_天候別に状態異常を回復する(weather_name=あめ, expected_recovered=True)
 - [x] うるおいボディ_天候別に状態異常を回復する(weather_name=はれ, expected_recovered=False)
 - [x] エアロック_すなあらしのターン終了ダメージが無効化される
+- [x] エアロック_天候と強天候を無効化する
 - [x] エレキメイカー_別フィールドを上書きする(initial_terrain=グラスフィールド)
 - [x] エレキメイカー_別フィールドを上書きする(initial_terrain=サイコフィールド)
 - [x] エレキメイカー_別フィールドを上書きする(initial_terrain=ミストフィールド)
@@ -208,6 +220,7 @@
 - [x] おもかげやどし_フォルムに対応した能力が1段上昇する(form_name=オーガポン(いしずえ), expected_stat=def)
 - [x] おもかげやどし_交代して再登場すると再発動する
 - [x] おもかげやどし_特性再有効化時にも発動する
+- [x] おやこあい_がむしゃらには適用しない
 - [x] おやこあい_単発攻撃が2ヒットする
 - [x] おやこあい_既存連続技には適用しない
 - [x] オーラブレイク_登場時に特性開示
@@ -385,6 +398,7 @@
 - [x] きゅうばん_吹き飛ばしを防ぐ
 - [x] きょううん_急所ランクが1上がる
 - [x] きよめのしお_ゴースト半減
+- [x] きよめのしお_状態異常無効
 - [x] きれあじ_きる技は威力補正1_5倍
 - [x] きれあじ_きる技以外は補正なし
 - [x] きんしのちから_変化技でクリアボディを無視できる
@@ -425,6 +439,7 @@
 - [x] マジックミラー_変化技を跳ね返す
 - [x] マルチスケイル_HP満タンのとき半減
 - [x] マルチスケイル_かたやぶりで無効
+- [x] マルチタイプ_プレートで対応タイプになる
 - [x] マルチタイプ_プレートなしでタイプ変更なし
 - [x] マルチタイプ_プレートの奪取を阻止する
 - [x] ミイラ_接触技で攻撃した相手の特性がミイラになる
@@ -582,6 +597,7 @@
 - [x] てつのこぶし_パンチ技以外は補正なし(move_name=でんきショック, expected_modifier=4096)
 - [x] テラスシェル_HP満タンでないと発動しない
 - [x] テラスシェル_かたやぶりで無効
+- [x] テラスシェル_等倍以上を半減
 - [x] テラスチェンジ_登場時にテラスタルフォルムになる
 - [x] てんきや_エアロック中はフォルムチェンジしない
 - [x] てんきや_フォルムチェンジ(weather=はれ, form=ポワルン(たいよう))
