@@ -395,6 +395,13 @@ def シュカのみ_resist_ground(battle: Battle, ctx: LethalContext, hp_dist: S
     return _type_resist_berry(battle, ctx, hp_dist, "じめん")
 
 
+def しんぴのちから_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """しんぴのちから: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+    return hp_dist
+
+
 def じきゅうりょく_boost_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """じきゅうりょく: 攻撃を受けるとぼうぎょが1段階上がる。"""
     if ctx.defender.rank["def"] >= 6:

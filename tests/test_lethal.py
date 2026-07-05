@@ -617,6 +617,26 @@ def test_しめつける_バインド付与():
     assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
+def test_しんぴのちから_とくこうアップ_secondary有り():
+    """しんぴのちから: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("しんぴのちから"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_しんぴのちから_とくこうアップ_secondary無し():
+    """しんぴのちから: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("しんぴのちから"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_じきゅうりょく_物理技受けるとぼうぎょ上昇():
     """じきゅうりょく: 物理技を受けるたびにぼうぎょが+1され、2発目のダメージが減少する"""
     battle = t.start_battle(
