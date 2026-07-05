@@ -9,6 +9,7 @@ LethalSubject = Literal["attacker", "defender"]
 
 AbilityDisabledReason = Literal[
     "consumed", "かがくへんかガス", "かたやぶり", "シャドーレイ", "とくせいなし", "フォトンゲイザー", "メテオドライブ",
+    "リーサル計算",
 ]
 
 ItemDisabledReason = Literal[
@@ -88,6 +89,7 @@ AbilityFlag = Literal[
     "per_battle_once",  # 対戦中に一度だけ成立する性質を持つ特性。
     "mold_breaker_ignorable",  # かたやぶり系特性で無視される対象特性。
     "gas_proof",  # かがくへんかガスで無効化されない特性。
+    "full_hp_damage_modifier",  # HP満タン時のみダメージ計算を変える特性（リーサル計算で分岐が必要）。
 ]
 
 MoveFlag = Literal[
@@ -99,7 +101,7 @@ MoveFlag = Literal[
     "gravity_restricted",  # じゅうりょく中に使用・選択不可になる技（はねる・そらをとぶ・でんじふゆう等）。
     "heal",  # 回復技。かいふくふうじ等の対象判定に使う。
     "ignore_ability",  # 相手の特性を無視して攻撃する技（分類用。実際の無効化はON_BEGIN_MOVE/ON_END_MOVEハンドラで行う）。
-    "non_copycat",  # まねっこで選ばれない技（スターモービル専用アクセル技）。
+    "non_copycat",  # まねっこで選ばれない技（スターモービル専用アクセル技、きょじゅうだん等）。
     "non_encore",  # アンコールで固定できない技。
     "non_negoto",  # ねごとで選ばれない技。
     "non_onnen",  # おんねんのPP消失対象外の技（わるあがき等）。

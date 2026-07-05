@@ -2025,7 +2025,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},  # まねっこでコピー不可
         handlers={},  # 追加効果なし
     ),
     "キラースピン": MoveData(
