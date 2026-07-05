@@ -1431,6 +1431,24 @@ def test_ときのほうこう_次ターン行動不能になる():
     assert defender.hp == defender_hp_after_t1
 
 
+def test_とっしん_みがわりへの与ダメージでも反動が発生する():
+    """とっしん: みがわりに阻まれた場合、みがわりへの与ダメージを基準に反動を算出する（第五世代以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["とっしん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_damage(battle, 100)
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    # max(1, int(100 * 1/4)) = 25
+    assert attacker.hp == hp_before - 25
+    assert defender.hp == defender.max_hp
+
+
 def test_とっしん_使用後に攻撃者が反動ダメージを受ける():
     """とっしん: 与えたダメージの1/4を攻撃者が反動として受ける。"""
     battle = t.start_battle(

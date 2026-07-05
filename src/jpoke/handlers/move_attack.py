@@ -820,8 +820,10 @@ def _recoil(battle: Battle, ctx: AttackContext, value: int, ratio: float) -> Han
     """反動ダメージを与えるヘルパー関数。与ダメの ratio 分を攻撃側が受ける。
 
     端数は五捨五超入（round_half_down）で丸める。第五世代以降の反動ダメージ計算仕様に合わせる。
+    みがわりに阻まれた場合は、みがわりへの与ダメージを基準に反動量を算出する。
     """
-    recoil = max(1, round_half_down(value * ratio))
+    damage = value or ctx.substitute_damage
+    recoil = max(1, round_half_down(damage * ratio))
     battle.modify_hp(ctx.attacker, v=-recoil, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
