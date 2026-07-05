@@ -643,6 +643,7 @@ MOVES: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.half_damage,
                 subject_spec="attacker:self",
+                priority=15,
             )
         }
     ),
@@ -653,18 +654,24 @@ MOVES: dict[MoveName, MoveData] = {
         power=80,
         accuracy=None,
         flags={"unprotectable", "bypass_substitute"},
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.いじげんホール_remove_protect,
+            )
+        }
     ),
     "いじげんラッシュ": MoveData(
         type="あく",
         category="physical",
         pp=5,
         power=100,
-        accuracy=100,
-        flags={"secondary_effect"},
+        accuracy=None,
+        flags={"unprotectable", "bypass_substitute"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
-                ha.いじげんラッシュ_lower_attacker_def,
-            )
+            Event.ON_HIT: [
+                h.MoveHandler(ha.いじげんラッシュ_remove_protect),
+                h.MoveHandler(ha.いじげんラッシュ_lower_attacker_def),
+            ]
         }
     ),
     "いたみわけ": MoveData(
@@ -694,7 +701,8 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"secondary_effect"},  # 追加効果自体は無いが、ちからずく対象技として扱われる（docs/spec/abilities/ちからずく.md参照）
+        handlers={},  # しれいとう連携のランクアップはダブル専用のため対象外（実装しない）
     ),
     "いてつくしせん": MoveData(
         type="エスパー",
@@ -704,14 +712,9 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"secondary_effect"},
         handlers={
-            Event.ON_DAMAGE_HIT: [
-                h.MoveHandler(
-                    ha.いてつくしせん_lower_defender_spd,
-                ),
-                h.MoveHandler(
-                    ha.いてつくしせん_apply_freeze_to_defender,
-                ),
-            ]
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.いてつくしせん_apply_freeze_to_defender,
+            ),
         }
     ),
     "いとをはく": MoveData(
@@ -757,11 +760,8 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=0,
         accuracy=100,
+        flags={"fixed_damage"},
         handlers={
-            Event.ON_PAY_HP: h.MoveHandler(
-                ha.いのちがけ_pay_hp,
-                subject_spec="attacker:self",
-            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.いのちがけ_modify_damage,
                 subject_spec="attacker:self",
@@ -798,6 +798,11 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"sound", "secondary_effect"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.いびき_check_sleep,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.いびき_apply_flinch,
             )
@@ -963,15 +968,18 @@ MOVES: dict[MoveName, MoveData] = {
     "うたかたのアリア": MoveData(
         type="みず",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
-        flags={"sound"},
+        flags={"sound", "secondary_effect"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.うたかたのアリア_cure_defender_burn,
             )
         },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.うたかたのアリア_cure_defender_burn)
+        }
     ),
     "うちおとす": MoveData(
         type="いわ",
@@ -1253,7 +1261,7 @@ MOVES: dict[MoveName, MoveData] = {
     "おしゃべり": MoveData(
         type="ひこう",
         category="special",
-        pp=15,
+        pp=20,
         power=65,
         accuracy=100,
         flags={"sound", "secondary_effect"},
@@ -1322,7 +1330,6 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=50,
         accuracy=100,
-        flags={"contact"},
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.おはかまいり_calc_power,
@@ -1466,18 +1473,22 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact", "secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.かえんぐるま_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんぐるま_apply_burn_to_defender,
-            )
+            ),
         }
     ),
     "かえんだん": MoveData(
         type="ほのお",
         category="special",
-        pp=15,
-        power=75,
+        pp=5,
+        power=100,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんだん_apply_burn_to_defender,
@@ -1503,10 +1514,10 @@ MOVES: dict[MoveName, MoveData] = {
     "かえんほうしゃ": MoveData(
         type="ほのお",
         category="special",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんほうしゃ_apply_burn_to_defender,
@@ -1521,6 +1532,10 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=90,
         flags={"bullet", "secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.かえんボール_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんボール_apply_burn_to_defender,
             )
@@ -1555,10 +1570,15 @@ MOVES: dict[MoveName, MoveData] = {
     "かげぬい": MoveData(
         type="ゴースト",
         category="physical",
-        pp=10,
-        power=80,
+        pp=12,
+        power=90,
         accuracy=100,
-        handlers={},  # 交代できない状態を付与する処理を実装
+        flags={"secondary_effect"},
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.かげぬい_apply_no_escape,
+            )
+        },
     ),
     "かげぶんしん": MoveData(
         type="ノーマル",

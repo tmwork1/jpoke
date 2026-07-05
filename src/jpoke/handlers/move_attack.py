@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
+from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.data import TYPE_MODIFIER
 from .move import (
@@ -70,7 +71,7 @@ def アイアンローラー_check_terrain(battle: Battle, ctx: AttackContext, v
     if not battle.terrain.is_active:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "アイアンローラー_フィールドなし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="アイアンローラー_フィールドなし")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -176,16 +177,41 @@ def アームハンマー_lower_attacker_spe(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"spe": -1})
 
 
+def いじげんホール_remove_protect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """いじげんホールの追加効果: 相手のまもる系揮発性状態を解除する。"""
+    defender = ctx.defender
+    for volatile in _FAINT_REMOVE_VOLATILES:
+        if defender.has_volatile(volatile):
+            battle.volatile_manager.remove(defender, volatile)
+            battle.add_event_log(
+                defender,
+                LogCode.VOLATILE_REMOVED,
+                payload=VolatilePayload(volatile=volatile, display_reason="いじげんホール")
+            )
+    return HandlerReturn(value=value)
+
+
 def いじげんラッシュ_lower_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1})
 
 
+def いじげんラッシュ_remove_protect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """いじげんラッシュの追加効果: 相手のまもる系揮発性状態を解除する。"""
+    defender = ctx.defender
+    for volatile in _FAINT_REMOVE_VOLATILES:
+        if defender.has_volatile(volatile):
+            battle.volatile_manager.remove(defender, volatile)
+            battle.add_event_log(
+                defender,
+                LogCode.VOLATILE_REMOVED,
+                payload=VolatilePayload(volatile=volatile, display_reason="いじげんラッシュ")
+            )
+    return HandlerReturn(value=value)
+
+
 def いてつくしせん_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """いてつくしせんの追加効果: 10%の確率で相手をこおり状態にする。"""
     return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
-
-
-def いてつくしせん_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"spe": -1}, chance=0.1)
 
 
 def いにしえのうた_apply_sleep_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -194,19 +220,29 @@ def いにしえのうた_apply_sleep_to_defender(battle: Battle, ctx: AttackCon
 
 
 def いのちがけ_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """いのちがけの固定ダメージを計算する（支払い前のHPを使用）。"""
-    return HandlerReturn(value=getattr(ctx, "hp_cost", 0))
+    """いのちがけ: 現在HPを固定ダメージとして与え、使用者のHPを0にする（命中時のみ発生）。
 
-
-def いのちがけ_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """いのちがけ発動前にHPを支払い、元のHPをコンテキストに保存する。"""
-    ctx.hp_cost = ctx.attacker.hp
-    battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost")
-    return HandlerReturn(value=value)
+    ON_MODIFY_MOVE_DAMAGE は命中判定・まもる等を通過した後にのみ発火するため、
+    技が外れた場合やまもるで防がれた場合はHPを消費しない。
+    """
+    hp_cost = ctx.attacker.hp
+    battle.modify_hp(ctx.attacker, v=-hp_cost, reason="self_cost", source=ctx.attacker)
+    return HandlerReturn(value=hp_cost)
 
 
 def いびき_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
+
+
+def いびき_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """いびきの発動条件チェック: 自分がねむり状態（ゆめうつつ含む）でない場合に失敗させる。"""
+    if not ctx.attacker.ailment.is_sleep:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="いびき_ねむり状態でない"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def いわくだき_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -255,10 +291,14 @@ def ウェーブタックル_recoil(battle: Battle, ctx: AttackContext, value: A
 
 
 def うたかたのアリア_cure_defender_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うたかたのアリア: 命中時に防御側のやけどを治す。
+    """うたかたのアリア: 追加効果として、命中時に防御側のやけどを治す。
 
-    やけど以外の状態異常は治さない。
+    やけど以外の状態異常は治さない。ちからずくで無効化され威力が上がる代わりに発動しなくなる。
+    りんぷん・おんみつマントを持つ相手には発動しない（`resolve_secondary_chance` 経由で判定）。
     """
+    chance = battle.resolve_secondary_chance(ctx, 1)
+    if chance < 1 and battle.random.random() >= chance:
+        return HandlerReturn(value=value)
     mon = ctx.defender
     if mon.ailment.name == "やけど":
         battle.ailment_manager.remove(mon)
@@ -269,8 +309,14 @@ def うちおとす_apply_grounded(battle: Battle, ctx: AttackContext, value: An
     """うちおとす: 命中時に相手にうちおとす揮発性状態を付与する。
 
     ひこうタイプ・ふゆう特性による浮遊状態を無効化する。
+    元々地面にいる相手には付与しない。
+    「追加効果」には該当しないため、ちからずく/りんぷん/おんみつマントの影響を受けない
+    （resolve_secondary_chance を経由しないよう volatile_manager.apply を直接呼ぶ）。
     """
-    return apply_volatile_to_defender(battle, ctx, value, volatile="うちおとす")
+    if not battle.query.is_floating(ctx.defender):
+        return HandlerReturn(value=value)
+    battle.volatile_manager.apply(ctx.defender, "うちおとす", source=ctx.attacker)
+    return HandlerReturn(value=value)
 
 
 def ウッドハンマー_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -432,7 +478,7 @@ def カウンター_can_use(battle: Battle, ctx: AttackContext, value: Any) -> H
     if ctx.attacker.last_physical_damage_received <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "カウンター"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="カウンター")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -447,6 +493,19 @@ def かえんぐるま_apply_burn_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
+def かえんぐるま_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かえんぐるま: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def かえんだん_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
@@ -459,6 +518,19 @@ def かえんボール_apply_burn_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
+def かえんボール_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かえんボール: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def かかとおとし_apply_confusion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かかとおとしの追加効果: 30%の確率で相手をこんらん状態にする。"""
     return apply_confusion_to_defender(battle, ctx, value, chance=0.3)
@@ -468,6 +540,16 @@ def かかとおとし_crash(battle: Battle, ctx: AttackContext, value: Any) -> 
     """かかとおとしが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。"""
     battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="self_cost", source=ctx.attacker)
     return HandlerReturn(value=value)
+
+
+def かげぬい_apply_no_escape(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かげぬいの追加効果: 相手をにげられない状態にする。
+
+    ゴーストタイプの相手はにげられない状態の効果を無視できる
+    （`にげられない`揮発性状態側のON_CHECK_TRAPPEDで判定するため、本ハンドラでの個別対応は不要）。
+    追加効果のため、`apply_volatile_to_defender` 経由でちからずく・りんぷんの影響を受ける。
+    """
+    return apply_volatile_to_defender(battle, ctx, value, volatile="にげられない")
 
 
 def かみくだく_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -582,7 +664,7 @@ def きあいパンチ_check_move(battle: Battle, ctx: AttackContext, value: Any
     if ctx.attacker.hits_taken > 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "きあいパンチ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="きあいパンチ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -743,7 +825,7 @@ def ゲップ_check_ate_berry(battle: Battle, ctx: AttackContext, value: Any) ->
     mon = ctx.attacker
     if not mon.ate_berry:
         battle.add_event_log(mon, LogCode.MOVE_FAILED,
-                             payload={"reason": "ゲップ_きのみ未食"})
+                             payload=FailureLogPayload(move=ctx.move.name, display_reason="ゲップ_きのみ未食"))
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1372,7 +1454,10 @@ def _force_switch_next(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     """
     result = battle.events.emit(Event.ON_TRY_BLOW, ctx, True)
     if not result:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED)
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_IMMUNED,
+            payload=FailureLogPayload(move=ctx.move.name)
+        )
         return HandlerReturn(value=value)
     player = battle.get_player(ctx.defender)
     state = battle.player_states[player]
@@ -1507,7 +1592,7 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
                 defender.rank[s] = 0
             battle.add_event_log(
                 defender, LogCode.STAT_CHANGED,
-                payload={"stats": changed, "reason": "しろいハーブ"},
+                payload=StatChangePayload(stats=changed, display_reason="しろいハーブ"),
             )
     elif item_name == "メンタルハーブ":
         defender = ctx.defender
@@ -1610,7 +1695,7 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
     if not attacker.has_item():
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "なげつける_アイテムなし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_アイテムなし")
         )
         return HandlerReturn(value=False, stop_event=True)
 
@@ -1626,7 +1711,7 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
     ):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "なげつける_対象外アイテム"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_対象外アイテム")
         )
         return HandlerReturn(value=False, stop_event=True)
 
@@ -1787,7 +1872,7 @@ def はめつのねがい_fail_check(battle: Battle, ctx: AttackContext, value: 
     if foe_side.get("はめつのねがい").is_active:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "はめつのねがい"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はめつのねがい"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1837,7 +1922,7 @@ def はやてがえし_try_move(battle: Battle, ctx: AttackContext, value: Any) 
     if not _はやてがえし_can_apply(battle, ctx):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "はやてがえし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はやてがえし")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2011,7 +2096,7 @@ def ふいうち_try_move(battle: Battle, ctx: AttackContext, value: Any) -> Han
     if not _ふいうち_can_apply(battle, ctx):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ふいうち"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ふいうち")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2052,7 +2137,7 @@ def フェイント_remove_protect(battle: Battle, ctx: AttackContext, value: An
             battle.add_event_log(
                 defender,
                 LogCode.VOLATILE_REMOVED,
-                payload={"volatile": volatile, "reason": "フェイント"}
+                payload=VolatilePayload(volatile=volatile, display_reason="フェイント")
             )
     return HandlerReturn(value=value)
 
@@ -2237,7 +2322,7 @@ def プレゼント_check_heal_full(battle: Battle, ctx: AttackContext, value: A
     if ctx.defender.hp >= ctx.defender.max_hp:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "プレゼント_HP満タン"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="プレゼント_HP満タン")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2308,7 +2393,7 @@ def ほうふく_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -
     if ctx.attacker.last_damage_received <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ほうふく"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ほうふく")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2395,7 +2480,7 @@ def ポルターガイスト_check_item(battle: Battle, ctx: AttackContext, valu
     if not ctx.defender.has_item():
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ポルターガイスト_アイテムなし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ポルターガイスト_アイテムなし")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2472,7 +2557,7 @@ def みらいよち_fail_check(battle: Battle, ctx: AttackContext, value: Any) -
     if foe_side.get("みらいよち").is_active:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "みらいよち"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="みらいよち"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2486,7 +2571,7 @@ def ミラーコート_check_can_use(battle: Battle, ctx: AttackContext, value: 
     if ctx.attacker.last_special_damage_received <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ミラーコート"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ミラーコート")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2571,7 +2656,7 @@ def メタルバースト_check_can_use(battle: Battle, ctx: AttackContext, valu
     if ctx.attacker.last_damage_received <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "メタルバースト"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="メタルバースト")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2634,7 +2719,7 @@ def もえつきる_fail_if_no_fire_type(battle: Battle, ctx: AttackContext, val
     if not ctx.attacker.has_type("ほのお"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "もえつきる_ほのおタイプなし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="もえつきる_ほのおタイプなし")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
