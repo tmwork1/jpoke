@@ -1563,9 +1563,12 @@ def つららおとし_apply_flinch(battle: Battle, ctx: AttackContext, value: A
 
 
 def てっていこうせん_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """てっていこうせん: 使用前に最大HPの1/2を消費する。"""
-    cost = max(1, ctx.attacker.max_hp // 2)
-    battle.modify_hp(ctx.attacker, v=-cost, reason="self_cost", source=ctx.attacker)
+    """てっていこうせん: 使用前に最大HPの1/2（切り上げ）を消費する。
+
+    マジックガードで防げるが、いしあたまでは防げない反動として扱う。
+    """
+    cost = max(1, (ctx.attacker.max_hp + 1) // 2)
+    battle.modify_hp(ctx.attacker, v=-cost, reason="fixed_recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -1599,6 +1602,20 @@ def テラバースト_stellar_stat_drop(battle: Battle, ctx: AttackContext, val
     mon = ctx.attacker
     if mon and mon.active_tera_type == 'ステラ':
         battle.modify_stats(mon, {"atk": -1, "spa": -1}, source=mon)
+    return HandlerReturn(value=value)
+
+
+def であいがしら_check_first_turn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """であいがしらの発動可否を判定する。
+
+    場に出てから最初の行動でなければ不発になる。
+    """
+    if ctx.attacker.acted_since_switch_in:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="であいがしら")
+        )
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 
