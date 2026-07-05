@@ -655,7 +655,8 @@ def かわらわり_break_screens(battle: Battle, ctx: AttackContext, value: Any
     """かわらわり: 相手側のリフレクター・ひかりのかべ・オーロラベールを解除する。
 
     壁解除は追加効果ではないため、りんぷん・おんみつマント・ちからずくの対象外。
-    技が無効化されなかった場合（ON_HITに到達した場合）のみ発動する。
+    ダメージ計算より前に解除する必要があるため Event.ON_BEFORE_APPLY_MOVE で発動する
+    （まもる・タイプ相性無効等で技自体がここまで到達しない場合は壁を解除しない）。
     """
     defender_side = battle.get_side(ctx.defender)
     for wall in ("リフレクター", "ひかりのかべ", "オーロラベール"):
@@ -663,8 +664,22 @@ def かわらわり_break_screens(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
+def がむしゃら_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """がむしゃらの使用可否を判定する。
+
+    相手の残りHPが自分の残りHP以下の場合、無効化されたときと同様に失敗する。
+    """
+    if ctx.defender.hp <= ctx.attacker.hp:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_IMMUNED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="がむしゃら")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def がむしゃら_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """がむしゃらのダメージを計算する。"""
+    """がむしゃらのダメージを計算する（相手の残りHP−自分の残りHP）。"""
     value = max(0, ctx.defender.hp - ctx.attacker.hp)
     return HandlerReturn(value=value)
 
