@@ -2417,6 +2417,32 @@ def test_こなゆき_こおりが発動する():
     assert battle.actives[1].ailment.name == "こおり"
 
 
+def test_このは_相手にダメージを与える():
+    """このは: 追加効果なしの物理くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["このは"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_こんげんのはどう_相手にダメージを与える():
+    """こんげんのはどう: 追加効果なしの特殊みず技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("グラードン", move_names=["こんげんのはどう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_こんらん_マイペース持ちには付与されない():
     """こんらん系追加効果: マイペース特性を持つ相手はこんらん状態にならない。"""
     battle = t.start_battle(
