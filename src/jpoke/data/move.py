@@ -1806,8 +1806,9 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 ha.かわらわり_break_screens,
+                priority=30,
             ),
         },
     ),
@@ -1817,8 +1818,13 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=0,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "fixed_damage"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.がむしゃら_can_use,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.がむしゃら_modify_damage,
                 subject_spec="attacker:self",
@@ -1857,6 +1863,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=15,
         power=60,
         accuracy=95,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.がんせきふうじ_lower_defender_spd,
