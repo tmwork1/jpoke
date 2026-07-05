@@ -2228,6 +2228,37 @@ def test_こうそくスピン_素早さ1段階上昇が発動する():
     assert attacker.rank["spe"] == 1
 
 
+def test_こがらしあらし_あめ中は必中になる():
+    """こがらしあらし: あめ天候中は命中率80でも通常なら外れる乱数で命中する。
+
+    こがらしあらしの命中率は80。random.random()=0.9 のとき 100*0.9=90>80 で本来は外れるが、
+    あめ中はON_MODIFY_ACCURACYでNoneが返り必中になるため、命中してHPが減る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("トルネロス", move_names=["こがらしあらし"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    # random.random()=0.9 は命中率80未満ではない（90>80）ので通常は外れる
+    battle.random.random = lambda: 0.9
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_こがらしあらし_すばやさが下がる():
+    """こがらしあらし: 30%で相手のすばやさランクを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("トルネロス", move_names=["こがらしあらし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
 def test_こおりのいぶき_確定急所():
     """こおりのいぶき: 急所ランク3のため乱数によらず常に急所が発生する。"""
     battle = t.start_battle(
@@ -2241,48 +2272,65 @@ def test_こおりのいぶき_確定急所():
 
 
 def test_こおりのキバ_こおりが発動する():
-    """こおりのキバ: 10%でこおりかひるみのどちらか一方を付与する。ランダム固定でこおりを選択。"""
+    """こおりのキバ: 10%でこおりを付与する（ひるみとは独立判定）。"""
     battle = t.start_battle(
         team0=[Pokemon("アルセウス", move_names=["こおりのキバ"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
         secondary_chance=1.0,
     )
-    # random.random() < 0.5 でこおり、>= 0.5 でひるみを選択するため、0.0 に固定してこおりを確定
-    battle.random.random = lambda: 0.0
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "こおり"
 
 
-def test_こおりのキバ_ひるみが発動する():
-    """こおりのキバ: 単一乱数で 0.5<=r<1.0 の場合はひるみを付与する（こおりとの排他制御）。"""
+def test_こおりのキバ_こおりとひるみが同時に発動する():
+    """こおりのキバ: 2つの追加効果はそれぞれ独立に判定されるため、同時に発動しうる。"""
     battle = t.start_battle(
         team0=[Pokemon("アルセウス", move_names=["こおりのキバ"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
         secondary_chance=1.0,
     )
-    # r=0.7 のとき base*0.5=0.5 を超えるのでこおりには進まず、r<base=1.0 でひるみを選択
-    battle.random.random = lambda: 0.7
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-    assert not battle.actives[1].ailment.is_active
-
-
-def test_こおりのキバ_同時発動しない():
-    """こおりのキバ: こおりとひるみは排他的で、同時に付与されることはない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("アルセウス", move_names=["こおりのキバ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    battle.random.random = lambda: 0.0
     t.run_move(battle, 0)
     defender = battle.actives[1]
-    # こおりが付いていればひるみはない
     assert defender.ailment.name == "こおり"
-    assert not defender.has_volatile("ひるみ")
+    assert defender.has_volatile("ひるみ")
+
+
+def test_こおりのキバ_ひるみが発動する():
+    """こおりのキバ: 10%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", move_names=["こおりのキバ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_こおりのつぶて_相手にダメージを与える():
+    """こおりのつぶて: 優先度+1の先制物理技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["こおりのつぶて"])],
+        team1=[Pokemon("フリーザー")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_こおりのつぶて_素早さが低い側でも優先度により先制する():
+    """こおりのつぶて: 優先度+1のため、素早さが低いポケモンでも先制して行動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["こおりのつぶて"])],
+        team1=[Pokemon("フリーザー", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]
 
 
 def test_こなゆき_こおりが発動する():

@@ -965,21 +965,21 @@ def 効果抜群時威力ブースト(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def こおりのキバ_apply_flinch_or_freeze(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こおりのキバの追加効果: 5%でこおり、5%でひるみを付与する。
+def こおりのキバ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
-    単一乱数で判定: r < base*0.5 → こおり、r < base → ひるみ。
+
+def こおりのキバ_apply_freeze(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
+
+
+def こがらしあらし_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """こがらしあらしの天候による命中率補正。あめのときのみ必中。
+    かみなりあらしと同様、にほんばれ時の命中率低下はない。
+    防御側がばんのうがさを持つ場合、あめでも必中にならない。
     """
-    base = battle.resolve_secondary_chance(ctx, 0.1)
-    r = battle.random.random()
-    if r < base * 0.5:
-        return HandlerReturn(value=battle.ailment_manager.apply(
-            ctx.defender, "こおり", source=ctx.attacker, ctx=ctx
-        ))
-    if r < base:
-        return HandlerReturn(value=battle.volatile_manager.apply(
-            ctx.defender, "ひるみ", source=ctx.attacker
-        ))
+    if battle.weather_for(ctx.defender).rainy:
+        return HandlerReturn(value=None)  # 必中
     return HandlerReturn(value=value)
 
 

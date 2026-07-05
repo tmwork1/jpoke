@@ -2483,9 +2483,10 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=95,
         flags={"bite", "contact", "secondary_effect"},
         handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.こおりのキバ_apply_flinch_or_freeze,
-            )
+            Event.ON_DAMAGE_HIT: [
+                h.MoveHandler(ha.こおりのキバ_apply_freeze),
+                h.MoveHandler(ha.こおりのキバ_apply_flinch),
+            ]
         }
     ),
     "こおりのつぶて": MoveData(
@@ -2505,6 +2506,10 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=80,
         flags={"wind", "secondary_effect"},
         handlers={
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
+                ha.こがらしあらし_accuracy,
+                subject_spec="attacker:self"
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こがらしあらし_lower_defender_spd,
             )
@@ -2513,10 +2518,10 @@ MOVES: dict[MoveName, MoveData] = {
     "こごえるかぜ": MoveData(
         type="こおり",
         category="special",
-        pp=15,
+        pp=16,
         power=55,
         accuracy=95,
-        flags={"wind"},
+        flags={"wind", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるかぜ_lower_defender_spd,
@@ -2529,6 +2534,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=65,
         accuracy=95,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるせかい_lower_defender_spd,
