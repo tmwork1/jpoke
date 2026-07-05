@@ -1707,8 +1707,8 @@ def とびげり_crash(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return HandlerReturn(value=value)
 
 
-def とびつく_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
+def とびつく_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
 
 
 def とびはねる_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
