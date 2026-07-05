@@ -4987,9 +4987,9 @@ MOVES: dict[MoveName, MoveData] = {
         type="かくとう",
         category="physical",
         pp=10,
-        power=85,
-        accuracy=90,
-        flags={"contact", "gravity_restricted"},
+        power=100,
+        accuracy=95,
+        flags={"contact", "gravity_restricted", "recoil"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.gravity_restricted_fail,
@@ -5007,10 +5007,10 @@ MOVES: dict[MoveName, MoveData] = {
         pp=20,
         power=50,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.とびつく_lower_defender_atk,
+                ha.とびつく_lower_defender_spd,
             )
         }
     ),
@@ -5027,6 +5027,9 @@ MOVES: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=30,
             ),
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "そらをとぶ"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.とびはねる_apply_paralysis_to_defender,
             )
@@ -5038,7 +5041,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=130,
         accuracy=90,
-        flags={"contact", "gravity_restricted"},
+        flags={"contact", "gravity_restricted", "recoil"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.gravity_restricted_fail,
