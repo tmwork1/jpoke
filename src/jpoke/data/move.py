@@ -4172,9 +4172,9 @@ MOVES: dict[MoveName, MoveData] = {
     ),
     "だいふんげき": MoveData(
         type="ほのお",
-        category="special",
+        category="physical",
         pp=10,
-        power=90,
+        power=120,
         accuracy=100,
         handlers={
             Event.ON_HIT: h.MoveHandler(
