@@ -100,6 +100,19 @@ def test_たたきつける_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_たたりめ_ぜったいねむりの相手には常に威力2倍():
+    """たたりめ: 特性『ぜったいねむり』を持つ相手（ゆめうつつ状態異常）にも威力2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["たたりめ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ぜったいねむり")],
+        accuracy=100,
+    )
+    assert battle.actives[1].ailment.name == "ゆめうつつ"
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
 def test_たたりめ_まひ状態でも威力2倍():
     """たたりめ: まひ状態の相手に対しても威力が2倍になる。
     ゴーストタイプはノーマルには無効のため、エスパータイプのミュウツーを対象とする。
@@ -223,18 +236,6 @@ def test_タネマシンガン_相手HP1で最初の1発で処理中断():
     assert defender.hp == 0
 
 
-def test_だいちのちから_とくぼう1段階低下が発動する():
-    """だいちのちから: 10%の確率で相手のとくぼうを1段階下げる。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フーディン", move_names=["だいちのちから"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].rank["spd"] == -1
-
-
 def test_だいちのちから_とくぼう1段階低下が発動しない():
     """だいちのちから: 追加効果不発時はとくぼうランクが変化しない。"""
     battle = t.start_battle(
@@ -245,6 +246,18 @@ def test_だいちのちから_とくぼう1段階低下が発動しない():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["spd"] == 0
+
+
+def test_だいちのちから_とくぼう1段階低下が発動する():
+    """だいちのちから: 10%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["だいちのちから"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
 
 
 def test_だいちのちから_相手にダメージを与える():

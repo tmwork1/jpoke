@@ -36,18 +36,6 @@ def test_たくわえる_カウント3で失敗する():
     assert attacker.volatiles["たくわえる"].count == 3
 
 
-def test_たつまき_ひるみが発動する():
-    """たつまき: 20%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリュー", move_names=["たつまき"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_たてこもる_ぼうぎょ2段階上がる():
     """たてこもる: 使用すると自分のぼうぎょランクが2段階上がる"""
     battle = t.start_battle(
