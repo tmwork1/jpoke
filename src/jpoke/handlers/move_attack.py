@@ -1853,7 +1853,8 @@ def ナイトバースト_lower_acc(battle: Battle, ctx: AttackContext, value: A
 def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なげつける: アイテムに応じた追加効果を命中時に適用する。
 
-    対象のアイテムはこの時点ではまだ消費されていない（ON_MOVE_ENDで消費）。
+    対象のアイテムはこの時点ではまだ消費されていない
+    （同じEvent.ON_HITのより高いpriorityでなげつける_consume_itemが後から発動する）。
     でんきだま → まひ、かえんだま → やけど、どくバリ → どく、どくどくだま → もうどく、
     メンタルハーブ → メロメロ・アンコール・いちゃもん・かなしばり・ちょうはつ・かいふくふうじを解除、
     ラムのみ → 状態異常・こんらんを解除。
@@ -1864,7 +1865,14 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     チイラ/リュガ・アッキ/カムラ/ヤタピ/ズア・タラプのみ → 対応する能力ランク+1、
     サンのみ → きゅうしょアップ付与、スターのみ → ランダムな能力ランク+2、
     ミクルのみ → 次の技の命中率を1.2倍にする。
+
+    対象の特性がりんぷん、または持ち物がおんみつマントの場合、これらの追加効果は
+    （きのみによる回復効果も含めて）一切発動しない。resolve_secondary_chance経由で
+    ON_MODIFY_SECONDARY_CHANCEを発火させ、確率0で無効化された場合はここで打ち切る。
     """
+    if battle.resolve_secondary_chance(ctx, 1.0) < 1:
+        return HandlerReturn(value=value)
+
     item_name = ctx.attacker.item.base_name
     if item_name == "でんきだま":
         battle.ailment_manager.apply(ctx.defender, "まひ", source=ctx.attacker, ctx=ctx)
@@ -1939,12 +1947,12 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     elif item_name == "マゴのみ":
         defender = ctx.defender
         battle.modify_hp(defender, r=1/3)
-        if defender.nature in ("ゆうかん", "のんき", "れいせい", "むじゃき"):
+        if defender.nature in ("ゆうかん", "のんき", "れいせい", "なまいき"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "バンジのみ":
         defender = ctx.defender
         battle.modify_hp(defender, r=1/3)
-        if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "なまいき"):
+        if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "イアのみ":
         defender = ctx.defender
@@ -1979,14 +1987,18 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
 
     アイテムを持っていない場合、fling_power=0の対象外アイテムの場合、
     またはno_fling=Trueの投げられないアイテム（ジュエル等）の場合は失敗する。
+    ぶきよう・マジックルームなどでアイテムが無効化されている場合も、
+    アイテムを持っていない場合と同様に失敗する。
     はっきんだまはギラティナ(アナザー/オリジン問わず)が使用した場合のみ失敗する
     （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
     ブーストエナジーはこだいかっせい/クォークチャージ持ちが使用した場合のみ失敗する
     （それ以外のポケモンが使用した場合は通常通り威力30で成功する）。
+    仮面（いしずえのめん・いどのめん・かまどのめん）はオーガポンが使用した場合のみ失敗する
+    （それ以外のポケモンが使用した場合は通常通り威力60で成功する）。
     成功した場合はアイテムのfling_powerをctx.move.powerに設定する。
     """
     attacker = ctx.attacker
-    if not attacker.has_item():
+    if not attacker.has_item(consider_enabled=True):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="なげつける_アイテムなし")
@@ -2002,6 +2014,10 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
             attacker.item.base_name == "ブーストエナジー"
             and attacker.ability.name in ("こだいかっせい", "クォークチャージ")
         )
+        or (
+            attacker.item.base_name in ("いしずえのめん", "いどのめん", "かまどのめん")
+            and attacker.name.startswith("オーガポン")
+        )
     ):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
@@ -2014,7 +2030,14 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
 
 
 def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なげつける: 命中可否に関わらず使用後にアイテムを消費する。"""
+    """なげつける: 命中可否に関わらず使用後にアイテムを消費する。
+
+    Event.ON_HIT（priority=100）とEvent.ON_MOVE_ENDの両方に登録される。
+    命中時はON_HITの時点で消費することで、いのちのたまの反動（priority=160）など
+    より優先度の低い同一攻撃側のON_HITハンドラより先にアイテムを手放させる。
+    remove_itemは対象がすでにアイテムを持っていない場合は何もしないため、
+    ON_HITで消費済みの場合にON_MOVE_ENDで再度呼び出しても副作用はない。
+    """
     battle.item_manager.remove_item(ctx.attacker, source=ctx.attacker)
     return HandlerReturn(value=value)
 

@@ -415,9 +415,16 @@ def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) ->
     """いのちのたま: 攻撃技命中後、最大HPの1/10の反動ダメージを受ける。
     連続攻撃技は最後のヒットでのみ発動。ちからずくの対象技（追加効果あり技）を
     ちからずく所持者が使用した場合は反動が発生しない。
+
+    なげつけるでいのちのたまを投げた場合、同じEvent.ON_HIT内でこのハンドラより先に
+    アイテムが消費されるが、イベント発火時にハンドラ一覧がスナップショットされる
+    仕様上、消費後もこのハンドラ自体は呼び出される。そのため、ここで改めて
+    いのちのたまを保持しているかを確認し、既に手放している場合は反動を発生させない
+    （ダメージ倍率は増えるが反動は受けない、という一次情報の仕様通り）。
     """
     if (
-        ctx.move.is_attack
+        ctx.attacker.has_item("いのちのたま")
+        and ctx.move.is_attack
         and ctx.hit_index == ctx.hit_count
         and not (
             ctx.attacker.ability.name == "ちからずく"

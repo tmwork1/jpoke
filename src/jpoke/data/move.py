@@ -5616,9 +5616,25 @@ MOVES: dict[MoveName, MoveData] = {
                 subject_spec="attacker:self",
                 priority=30,
             ),
-            Event.ON_HIT: h.MoveHandler(
-                ha.なげつける_apply_item_effect,
-            ),
+            Event.ON_HIT: [
+                # docs/spec/turn.md ON_HIT: 追加効果は明記された優先度がないため、
+                # 同一ハンドラであるアイテム消費(priority=100)より前に発動するよう
+                # priority=90を明示する（消費前にctx.attacker.item.base_nameを参照するため）。
+                h.MoveHandler(
+                    ha.なげつける_apply_item_effect,
+                    priority=90,
+                ),
+                # docs/spec/turn.md ON_HIT: 「100 なげつける使用者のアイテム消費」。
+                # いのちのたまの反動(priority=160)より前にアイテムを失わせることで、
+                # 一次情報の「いのちのたまを投げた際は反動を受けない」を再現する。
+                h.MoveHandler(
+                    ha.なげつける_consume_item,
+                    priority=100,
+                ),
+            ],
+            # 命中しなかった場合やまもる・特性による無効化などON_HITに到達しない
+            # 失敗パターンでも、一次情報の通りどうぐは消費されるため保険としてON_MOVE_ENDでも消費する
+            # （なげつける_consume_itemは冪等なため、ON_HITで既に消費済みの場合は何もしない）。
             Event.ON_MOVE_END: h.MoveHandler(
                 ha.なげつける_consume_item,
             ),
