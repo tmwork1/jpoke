@@ -1033,6 +1033,18 @@ def test_じゃどくのくさり_もうどくが発動する():
     assert battle.actives[1].ailment.name == "もうどく"
 
 
+def test_じゃれつく_こうげき1段階低下が発動しない():
+    """じゃれつく: 追加効果不発時はこうげきランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニンフィア", move_names=["じゃれつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == 0
+
+
 def test_じゃれつく_こうげき1段階低下が発動する():
     """じゃれつく: 10%の確率で相手のこうげきを1段階下げる。"""
     battle = t.start_battle(
@@ -1043,6 +1055,20 @@ def test_じゃれつく_こうげき1段階低下が発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["atk"] == -1
+
+
+def test_じゃれつく_相手にダメージを与える():
+    """じゃれつく: 物理フェアリー技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニンフィア", move_names=["じゃれつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_じんつうりき_ひるみが発動する():
