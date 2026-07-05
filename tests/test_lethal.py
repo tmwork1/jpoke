@@ -25,6 +25,9 @@
 import pytest
 
 from jpoke import Pokemon, Move
+from jpoke.core import lethal as core_lethal
+from jpoke.core.lethal import LethalContext
+from jpoke.utils.lethal_dist import State, to_dist
 
 from . import test_utils as t
 
@@ -226,6 +229,26 @@ def test_うずしお_バインド付与():
     assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
+def test_うたかたのアリア_やけど回復_secondary有り():
+    """うたかたのアリア: secondary=True のとき命中後にやけど状態を治し、以降ターン終了時ダメージが発生しなくなる"""
+    battle_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_no_secondary = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    t.apply_ailment(battle_secondary, active_index=1, ailment_name="やけど")
+    t.apply_ailment(battle_no_secondary, active_index=1, ailment_name="やけど")
+
+    results_with = t.calc_lethal(battle_secondary, atk_idx=0, moves=Move("うたかたのアリア"), max_attack=2, secondary=True)
+    results_without = t.calc_lethal(battle_no_secondary, atk_idx=0, moves=Move("うたかたのアリア"), max_attack=2, secondary=False)
+    max_hp = battle_secondary.actives[1].max_hp
+    burn_damage = max(1, max_hp // 16)
+    assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == burn_damage * 2
+
+
 def test_エレクトロビーム_とくこうアップ_secondary有り():
     """エレクトロビーム: secondary=True のときチャージ前にとくこうが1段階上がり、2発目のダメージが増加する"""
     battle = t.start_battle(
@@ -364,6 +387,102 @@ def test_かんそうはだ_はれでダメージ():
     max_hp = with_ability.actives[1].max_hp
     damage = max(1, max_hp // 8)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
+def test_がんじょう_リーサル計算全体で正しく発動する():
+    """calc_lethal 経由の一連の処理でも、がんじょうの登録（data/ability.py）が
+    正しく機能してHP1で耐えることを確認する（実戦形式の統合テスト）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス", level=100)],
+        team1=[Pokemon("トゲピー", level=1, ability_name="がんじょう")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("じしん"), max_attack=1)
+
+    assert results[0].lethal_probability == 0.0
+    assert min(results[0].hp_counter) == 1
+
+
+def test_がんじょう_満タンからHP1で耐える():
+    """がんじょう: HPが満タンの状態で一撃ひんしになるダメージを受けても、HP1で耐える。
+
+    _apply_damage を直接呼び出すホワイトボックステスト。ctx.damage_dist に致死量の
+    固定値を設定し、HP満タンの hp_dist を与えたときに ON_APPLY_DAMAGE ハンドラ
+    （がんじょう_survive_lethal）が正しく発動することを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="がんじょう")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    max_hp = defender.max_hp
+
+    ctx = LethalContext(attacker, defender, Move("たいあたり"))
+    ctx.damage_dist = to_dist(max_hp * 10)
+    hp_dist = to_dist(max_hp)
+
+    result = core_lethal._apply_damage(battle, ctx, hp_dist)
+
+    assert set(result) == {State(1)}
+
+
+def test_がんじょう_満タンでなければ発動しない():
+    """がんじょう: HPが満タンでない状態では、一撃ひんしになるダメージに対して発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="がんじょう")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    max_hp = defender.max_hp
+
+    ctx = LethalContext(attacker, defender, Move("たいあたり"))
+    ctx.damage_dist = to_dist(max_hp * 10)
+    hp_dist = to_dist(max_hp - 1)
+
+    result = core_lethal._apply_damage(battle, ctx, hp_dist)
+
+    assert set(result) == {State(0)}
+
+
+def test_がんじょうときあいのタスキ_がんじょうが優先():
+    """がんじょうときあいのタスキを両方持つ場合、がんじょうが先に発動し、
+    きあいのタスキは消費されない（item_enabled は True のまま）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="がんじょう", item_name="きあいのタスキ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    max_hp = defender.max_hp
+
+    ctx = LethalContext(attacker, defender, Move("たいあたり"))
+    ctx.damage_dist = to_dist(max_hp * 10)
+    hp_dist = to_dist(max_hp)
+
+    result = core_lethal._apply_damage(battle, ctx, hp_dist)
+
+    assert set(result) == {State(1)}
+
+
+def test_きあいのタスキ_満タンからHP1で耐えて消費():
+    """きあいのタスキ: HPが満タンの状態で一撃ひんしになるダメージをHP1で耐え、消費する
+    （item_enabled が False になる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", item_name="きあいのタスキ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    max_hp = defender.max_hp
+
+    ctx = LethalContext(attacker, defender, Move("たいあたり"))
+    ctx.damage_dist = to_dist(max_hp * 10)
+    hp_dist = to_dist(max_hp)
+
+    result = core_lethal._apply_damage(battle, ctx, hp_dist)
+
+    assert set(result) == {State(1, item_enabled=False)}
 
 
 def test_キラースピン_どく付与_secondary有り():
@@ -611,6 +730,21 @@ def test_タラプのみ_特殊技受けた後とくぼう上昇():
     # 2発目: とくぼう+1 (D120→D180相当) でダメージ減少
     assert results[1].min_damage == 54
     assert results[1].max_damage == 66
+
+
+def test_テラスシェル_満タン時タイプ相性を等倍に丸める():
+    """テラスシェル: HPが満タンのとき、等倍以上の相性の技を受けると相性が等倍(1x)に丸められ
+    ダメージが半減する。HPが満タンでなければ通常通りのダメージを受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="テラスシェル")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=[(Move("たいあたり"), 1)], max_attack=2)
+
+    assert results[0].min_damage == 10
+    assert results[0].max_damage == 12
+    assert results[1].min_damage == 20
+    assert results[1].max_damage == 24
 
 
 def test_どく_ターン終了時ダメージ():
@@ -873,6 +1007,43 @@ def test_マルチスケイル_ダメージ半減():
     assert results[1].min_damage == 90
     assert results[1].max_damage == 108
     assert results[2].lethal_probability == 1.0
+
+
+def test_マルチスケイル_満タン非満タン混在時も枝ごとに正しく半減():
+    """満タン枝と非満タン枝が混在する hp_dist でも、_update_hp（最小値代表）に依存せず
+    枝ごとにマルチスケイルの半減が正しく適用されることを確認する回帰テスト。
+
+    参考値（ファイル冒頭のコメント参照）: たいあたり 20~24（半減後 10~12）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="マルチスケイル")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    max_hp = defender.max_hp
+
+    ctx = LethalContext(attacker, defender, Move("たいあたり"))
+    hp_dist = {
+        State(max_hp): 1,      # 満タン枝: マルチスケイルが発動し半減する
+        State(max_hp - 1): 1,  # 非満タン枝: 発動せず通常通りのダメージを受ける
+    }
+
+    core_lethal._calc_damage_dist(battle, ctx, hp_dist)
+
+    # 満タン枝用のダメージ分布のみ半減されている
+    assert ctx.damage_dist_full is not None
+    assert min(s.value for s in ctx.damage_dist_full) == 10
+    assert max(s.value for s in ctx.damage_dist_full) == 12
+    assert min(s.value for s in ctx.damage_dist) == 20
+    assert max(s.value for s in ctx.damage_dist) == 24
+
+    # 枝ごとに正しいダメージ分布が適用されて hp_dist に反映される
+    result = core_lethal._apply_damage(battle, ctx, hp_dist)
+    result_values = {s.value for s in result}
+    expected_full = {max_hp - d for d in range(10, 13)}
+    expected_other = {(max_hp - 1) - d for d in range(20, 25)}
+    assert result_values == expected_full | expected_other
 
 
 def test_もうどく_増加ダメージ():

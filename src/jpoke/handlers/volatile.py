@@ -439,6 +439,26 @@ def こらえる_remove_volatile(battle: Battle, ctx: EventContext, value: Any) 
     return remove_volatile(battle, ctx, value, volatile="こらえる")
 
 
+def ころがる_boost_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ころがる状態: これまでの連続命中回数に応じて威力を2^count倍にする（30→60→120→240→480）。"""
+    volatile = ctx.attacker.volatiles.get("ころがる")
+    if volatile is not None:
+        value *= 2 ** volatile.count
+    return HandlerReturn(value=value)
+
+
+def ころがる_check_interrupt(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ころがる状態: このターンの行動が失敗していた場合、強制行動を中断する。
+
+    外れ・まもるによる無効化・状態異常等での不発など、いずれの場合も
+    Pokemon.failed_or_immobile_last_turn が True になるため、これを判定基準にする。
+    """
+    mon = ctx.source
+    if mon.failed_or_immobile_last_turn:
+        return remove_volatile(battle, ctx, value, volatile="ころがる", reason="ミス・行動失敗")
+    return HandlerReturn(value=value)
+
+
 def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """こんらん状態による自傷ダメージ判定（33%確率）
 

@@ -737,6 +737,19 @@ def test_おやこあい_がむしゃらには適用しない():
     assert defender.hp == 100 - (100 - 30)
 
 
+def test_おやこあい_ころがるには適用しない():
+    """おやこあい: ころがるは数ターン継続する強制行動技のため、連続攻撃にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", ability_name="おやこあい", move_names=["ころがる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 1
+    assert attacker.volatiles["ころがる"].count == 1
+
+
 def test_おやこあい_単発攻撃が2ヒットする():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],

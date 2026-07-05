@@ -15,9 +15,10 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName
+    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode
 from jpoke.enums import Event, Command, LogCode
 from jpoke.utils import fast_copy
+from jpoke.utils.math import round_half_down
 
 from jpoke.model import Pokemon, Move, Field
 
@@ -61,6 +62,26 @@ class TestOption:
     secondary_chance: float | None = None
 
 
+@dataclass
+class BattleOption:
+    """対戦全体のルールオプション設定クラス。
+
+    Attributes:
+        mega_evolution: メガシンカを許可するか
+        terastal: テラスタルを許可するか
+        critical_mode: 急所判定モード（"通常" / "確定のみ"）
+        damage_roll: ダメージ乱数モード（"通常" / "平均" / "最大" / "最小"）
+        accuracy_fix_threshold: この値以上の命中率を100%固定にする（Noneなら無効）
+        effect_chance_threshold: この値未満の追加効果確率を0%（発生しない）にする（Noneなら無効）
+    """
+    mega_evolution: bool = True
+    terastal: bool = True
+    critical_mode: CriticalMode = "通常"
+    damage_roll: DamageRollMode = "通常"
+    accuracy_fix_threshold: int | None = None
+    effect_chance_threshold: float | None = None
+
+
 class Battle:
     """ポケモンバトルの状態と処理を管理するメインクラス。
 
@@ -84,19 +105,32 @@ class Battle:
         terrain_manager: 地形管理
         global_manager: グローバル場の状態管理
         side_managers: 各プレイヤー側の場の状態管理
+        option: 対戦全体のルールオプション設定
         test_option: テスト用オプション設定
     """
 
     def __init__(self,
                  players: tuple[Player, ...],
                  n_selected: int = 3,
-                 seed: int | None = None) -> None:
+                 seed: int | None = None,
+                 mega_evolution: bool = True,
+                 terastal: bool = True,
+                 critical_mode: CriticalMode = "通常",
+                 damage_roll: DamageRollMode = "通常",
+                 accuracy_fix_threshold: int | None = None,
+                 effect_chance_threshold: float | None = None) -> None:
         """Battleインスタンスを初期化する。
 
         Args:
             players: 参加プレイヤーのタプル（通常2人）
             n_selected: 選出可能なポケモンの数（デフォルトは3）
             seed: 乱数シード値（Noneの場合は現在時刻を使用）
+            mega_evolution: メガシンカを許可するか（デフォルトTrue）
+            terastal: テラスタルを許可するか（デフォルトTrue）
+            critical_mode: 急所判定モード（"通常" / "確定のみ"、デフォルト"通常"）
+            damage_roll: ダメージ乱数モード（"通常" / "平均" / "最大" / "最小"、デフォルト"通常"）
+            accuracy_fix_threshold: この値以上の命中率を100%固定にする（Noneなら無効）
+            effect_chance_threshold: この値未満の追加効果確率を0%にする（Noneなら無効）
         """
 
         self.players: tuple[Player, ...] = players
@@ -136,6 +170,14 @@ class Battle:
             SideFieldManager(self, ply) for ply in self.players
         ]
 
+        self.option: BattleOption = BattleOption(
+            mega_evolution=mega_evolution,
+            terastal=terastal,
+            critical_mode=critical_mode,
+            damage_roll=damage_roll,
+            accuracy_fix_threshold=accuracy_fix_threshold,
+            effect_chance_threshold=effect_chance_threshold,
+        )
         self.test_option: TestOption = TestOption()
 
     def __deepcopy__(self, memo):
@@ -544,7 +586,15 @@ class Battle:
             int: 計算されたダメージ値
         """
         damages = self.calc_damages(attacker, defender, move, critical)
-        return self.random.choice(damages)
+        match self.option.damage_roll:
+            case "平均":
+                return round_half_down(sum(damages) / len(damages))
+            case "最大":
+                return max(damages)
+            case "最小":
+                return min(damages)
+            case _:
+                return self.random.choice(damages)
 
     def calc_damages(self,
                      attacker: Pokemon,
@@ -611,10 +661,6 @@ class Battle:
             idx = source
         else:
             idx = self._get_player_index(source)
-        if isinstance(source, Pokemon) and payload is not None and "pokemon" not in payload:
-            payload = {"pokemon": source.name, **payload}
-        elif isinstance(source, Pokemon) and payload is None:
-            payload = {"pokemon": source.name}
         self.event_logger.add(self.turn, idx, log, payload)
 
     def get_event_logs(self, turn: int | None = None) -> dict[Player, list]:
@@ -643,7 +689,11 @@ class Battle:
         """追加効果補正後の実効確率を返す。"""
         if self.test_option.secondary_chance is not None:
             return self.test_option.secondary_chance
-        return self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
+        chance = self.events.emit(Event.ON_MODIFY_SECONDARY_CHANCE, ctx, chance)
+        threshold = self.option.effect_chance_threshold
+        if threshold is not None and chance < threshold:
+            return 0.0
+        return chance
 
     def print_logs(self, turn: int | None = None):
         """指定したターンのログを整形して出力。
@@ -657,7 +707,7 @@ class Battle:
         event_logs = [log for log in self.event_logger.logs if log.turn == turn]
         for log in event_logs:
             player = self.players[log.idx]
-            pokemon = log.payload.get("pokemon", "") if log.payload else ""
+            pokemon = getattr(log.payload, "pokemon", "") if log.payload else ""
             print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
 
     def remove_all_volatiles(self, mon: Pokemon):

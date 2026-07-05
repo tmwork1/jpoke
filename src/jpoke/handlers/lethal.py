@@ -14,7 +14,6 @@ from collections import defaultdict
 from jpoke.utils.lethal_dist import State, add_dist, to_dist
 from jpoke.utils.math import clamp_stats
 
-
 def _damage(hp_dist: StateDist, v: int) -> StateDist:
     """全状態に固定ダメージを与える（HP は 0 未満にならない）。"""
     new_dist: StateDist = defaultdict(int)
@@ -26,7 +25,6 @@ def _damage(hp_dist: StateDist, v: int) -> StateDist:
         )
         new_dist[new_state] += freq
     return dict(new_dist)
-
 
 def _heal(hp_dist: StateDist,
           target: Pokemon,
@@ -43,7 +41,6 @@ def _heal(hp_dist: StateDist,
     else:
         heal = v
     return add_dist(hp_dist, heal, maximum=max_hp)
-
 
 def _heal_at_pinch(hp_dist: StateDist,
                    target: Pokemon,
@@ -97,13 +94,32 @@ def _heal_at_pinch(hp_dist: StateDist,
 
     return new_dist
 
-
 def _apply_bind(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """バインド状態を付与する（未付与の場合のみ）。バインドダメージはON_TURN_ENDで処理される。"""
     if "バインド" not in ctx.defender.volatiles:
         from jpoke.model.volatile import Volatile
         ctx.defender.volatiles["バインド"] = Volatile("バインド", count=4)
     return hp_dist
+
+def _survive_at_full_hp(hp_dist: StateDist, consume: Literal["ability", "item"]) -> StateDist:
+    """満タン枝でHPが0になった状態をHP1に補正する（がんじょう/きあいのタスキ共通処理）。
+
+    呼び出し側で hp_dist は「満タン枝のみ・ダメージ適用後」に絞られているため、
+    ここでは value == 0 かどうかだけを見ればよい。
+    consume="item" のときは補正と同時に item_enabled を False にする（きあいのタスキの消費）。
+    consume="ability" のときは何度でも発動する（がんじょうは消費しない）。
+    """
+    new_dist: StateDist = defaultdict(int)
+    for state, freq in hp_dist.items():
+        flag = state.ability_enabled if consume == "ability" else state.item_enabled
+        if state.value == 0 and flag:
+            state = State(
+                1,
+                ability_enabled=state.ability_enabled,
+                item_enabled=False if consume == "item" else state.item_enabled,
+            )
+        new_dist[state] += freq
+    return dict(new_dist)
 
 
 def アイスボディ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -230,6 +246,14 @@ def ウイのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) ->
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def うたかたのアリア_cure_defender_burn(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """うたかたのアリア: 命中後、追加効果有効時に防御側のやけど状態を治す。"""
+    if ctx.move_secondary and ctx.defender.ailment.name == "やけど":
+        from jpoke.model.ailment import Ailment
+        ctx.defender.ailment = Ailment()
+    return hp_dist
+
+
 def ウタンのみ_resist_psychic(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ウタンのみ: エスパータイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "エスパー")
@@ -252,12 +276,10 @@ def オボンのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/4, threshold_rate=1/2, heal_with="item", consume=True)
 
 
-def おやこあい_boost_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """おやこあい: 単発攻撃技のダメージに2ヒット目（1/4ダメージ、最低1）を加算する。"""
-    if not (ctx.move.is_attack and ctx.move.max_hits == 1):
-        return hp_dist
+def _add_second_hit(dist: StateDist) -> StateDist:
+    """おやこあいの2ヒット目（1/4ダメージ、最低1）をダメージ分布に加算する。"""
     new_dist: StateDist = defaultdict(int)
-    for state, freq in ctx.damage_dist.items():
+    for state, freq in dist.items():
         second_hit = max(1, state.value // 4) if state.value > 0 else 0
         new_state = State(
             state.value + second_hit,
@@ -265,7 +287,16 @@ def おやこあい_boost_damage(battle: Battle, ctx: LethalContext, hp_dist: St
             item_enabled=state.item_enabled,
         )
         new_dist[new_state] += freq
-    ctx.damage_dist = dict(new_dist)
+    return dict(new_dist)
+
+
+def おやこあい_boost_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """おやこあい: 単発攻撃技のダメージに2ヒット目（1/4ダメージ、最低1）を加算する。"""
+    if not (ctx.move.is_attack and ctx.move.max_hits == 1):
+        return hp_dist
+    ctx.damage_dist = _add_second_hit(ctx.damage_dist)
+    if ctx.damage_dist_full is not None:
+        ctx.damage_dist_full = _add_second_hit(ctx.damage_dist_full)
     return hp_dist
 
 
@@ -293,6 +324,24 @@ def かんそうはだ_weather_hp(battle: Battle, ctx: LethalContext, hp_dist: S
     if weather.sunny:
         return _damage(hp_dist, max(1, ctx.defender.max_hp // 8))
     return hp_dist
+
+
+def がんじょう_survive_lethal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """がんじょう: 満タン状態から瀕死になった場合、HP1で耐える。(ON_APPLY_DAMAGE / subject="defender")
+
+    何度でも発動する。docs/spec/abilities/がんじょう.md 参照。
+    """
+    return _survive_at_full_hp(hp_dist, consume="ability")
+
+
+def きあいのタスキ_survive_ohko(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """きあいのタスキ: 満タン状態から瀕死になった場合、HP1で耐えて消費する。
+    (ON_APPLY_DAMAGE / subject="defender")
+
+    docs/spec/items/きあいのタスキ.md 参照。多段技の2発目以降は item_enabled=False
+    により発動しない。
+    """
+    return _survive_at_full_hp(hp_dist, consume="item")
 
 
 def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -480,6 +529,8 @@ def ばけのかわ_block_damage(battle: Battle, ctx: LethalContext, hp_dist: St
 
     # 攻撃ダメージをゼロにして無効化する（subtract_dist が何も引かないようにする）
     ctx.damage_dist = to_dist(0)
+    if ctx.damage_dist_full is not None:
+        ctx.damage_dist_full = to_dist(0)
 
     # 変身解除ダメージを与えて ability_enabled を False にする
     damage = max(1, int(ctx.defender.max_hp / 8))

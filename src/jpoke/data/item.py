@@ -416,6 +416,12 @@ ITEMS: dict[ItemName, ItemData] = {
                 h.きあいのタスキ_survive_ohko,
                 subject_spec="defender:self",
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_APPLY_DAMAGE: LethalHandler(
+                l.きあいのタスキ_survive_ohko,
+                subject="defender",
+            )
         }
     ),
     "きあいのハチマキ": ItemData(

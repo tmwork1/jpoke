@@ -1,48 +1,10 @@
 """
-行動選択の方策関数で木探索を行うテスト
+行動選択の方策関数で木探索を行う例（framework.TreeSearchPlayer の最小利用例）
 """
 
-from itertools import product
-
 from jpoke import Battle, Player, Pokemon
-from jpoke.enums import Command
 
-
-class SearchPlayer(Player):
-    def choose_command(self, battle: Battle) -> Command:
-        print(f"[depth={battle.copy_depth}] Choosing action command")
-
-        if battle.copy_depth > 1:
-            raise ValueError("木探索の深さが2を超えています。")
-
-        self_state = battle.player_states[self]
-        opponent = battle.opponent(self)
-        opponent_state = battle.player_states[opponent]
-
-        assert self_state.required_command_type == "any"
-        assert opponent_state.required_command_type == "any"
-        assert not opponent_state.reserved_commands
-
-        my_commands = battle.get_available_commands(self)
-        opponent_commands = battle.get_available_commands(opponent)
-
-        print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
-        print(f"- Rival moves: {[m.name for m in opponent_state.active.moves]}")
-
-        # コマンドの組み合わせを総当たりで評価する
-        print("-"*20)
-        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
-            print(f"<< Simulation {my_cmd} vs {opponent_cmd} >>")
-            commands = {self: my_cmd, opponent: opponent_cmd}
-            sim = battle.copy()
-            sim.step(commands)
-            sim.print_logs()
-            print()
-            # break
-        print(f"{'-'*20}")
-
-        return my_commands[0]
+from framework import TreeSearchPlayer
 
 
 def play_game(seed: int | None = None,
@@ -56,8 +18,8 @@ def play_game(seed: int | None = None,
     Returns:
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
-    # Player 1
-    player1 = SearchPlayer(name="SearchPlayer")
+    # Player 1（1手先の総当たり探索）
+    player1 = TreeSearchPlayer(name="SearchPlayer")
     player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),

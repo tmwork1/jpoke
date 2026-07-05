@@ -14,6 +14,7 @@ from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
 from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
+from jpoke.core.event_logger import ItemPayload, StatChangePayload
 from jpoke.data import TYPE_MODIFIER
 from jpoke.data.pokedex import POKEDEX
 from . import ability_paradox as paradox
@@ -51,7 +52,7 @@ def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
     mon.item.revealed = True
     battle.add_event_log(
         mon, LogCode.ITEM_TRIGGERED,
-        payload={"item": mon.item.name}
+        payload=ItemPayload(item=mon.item.name)
     )
 
 def _announce_and_consume_item(battle: Battle, mon: Pokemon) -> None:
@@ -79,7 +80,7 @@ def _reset_negative_ranks(battle: Battle, mon: Pokemon, reason: str) -> bool:
         mon.rank[s] = 0
     battle.add_event_log(
         mon, LogCode.STAT_CHANGED,
-        payload={"stats": changed, "reason": reason},
+        payload=StatChangePayload(stats=changed, display_reason=reason),
     )
     return True
 

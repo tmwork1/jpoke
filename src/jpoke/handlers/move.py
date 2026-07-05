@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.core import Handler, HandlerReturn
+from jpoke.core.event_logger import FailureLogPayload
 from jpoke.enums import LogCode
 
 
@@ -146,7 +147,7 @@ def gravity_restricted_fail(battle: Battle, ctx: AttackContext, value: Any) -> H
     if battle.get_global_field("じゅうりょく").is_active:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "じゅうりょく"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="じゅうりょく")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

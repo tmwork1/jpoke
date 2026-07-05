@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.enums import Command
 from .. import test_utils as t
 
 
@@ -2428,6 +2429,101 @@ def test_このは_相手にダメージを与える():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp < hp_before
+
+
+def test_ころがる_5回目の命中で強制行動が終了する():
+    """ころがる: countが4の状態で命中すると揮発状態が解除され、強制行動が終了する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "ころがる", count=4, source=attacker, move_name="ころがる")
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("ころがる")
+
+
+def test_ころがる_おやこあいでは連続攻撃にならない():
+    """ころがる: おやこあいを持っていても2ヒットにならず、揮発状態のcountは1のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", ability_name="おやこあい", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 1
+    assert attacker.volatiles["ころがる"].count == 1
+
+
+def test_ころがる_初回命中時にころがる揮発状態が付与される():
+    """ころがる: 初回命中時にころがる揮発状態（強制行動・count=1）が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ころがる")
+    assert attacker.volatiles["ころがる"].count == 1
+
+
+def test_ころがる_命中するたびに威力が2倍になる():
+    """ころがる: 揮発状態のcountに応じて威力補正が2^count倍になる（count=2なら4倍）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "ころがる", count=2, source=attacker, move_name="ころがる")
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096 * 4
+
+
+def test_ころがる_外れると強制行動が解除される():
+    """ころがる: 継続中に技が外れると、ターン終了時に強制行動状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "ころがる", count=2, source=attacker, move_name="ころがる")
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ころがる")  # ミス直後は揮発状態が残っている
+    t.end_turn(battle)
+    assert not attacker.has_volatile("ころがる")
+
+
+def test_ころがる_技固定():
+    """ころがる: 強制行動中はCommand.FORCEDが返り、解決後の技がころがるになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "ころがる", count=1, source=attacker, move_name="ころがる")
+    with battle.phase_context("action"):
+        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+    move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
+    assert move.name == "ころがる"
+
+
+def test_ころがる_継続中の命中でcountが増加する():
+    """ころがる: 揮発状態がある状態で命中すると、countが+1される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イシツブテ", move_names=["ころがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "ころがる", count=1, source=attacker, move_name="ころがる")
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ころがる")
+    assert attacker.volatiles["ころがる"].count == 2
 
 
 def test_こんげんのはどう_相手にダメージを与える():

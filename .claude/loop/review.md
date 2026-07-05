@@ -82,15 +82,33 @@ jpoke {config.category} 再レビュータスク: {entry}
    data/ability.py・data/item.py・data/move.py を修正した場合、対応するスクリプト
    （scripts/sort_data/sort_abilities.py / scripts/sort_data/sort_items.py / scripts/sort_data/sort_moves.py）を実行する。
 
-5. テストのレビュー・修正
+5. リーサル計算のレビュー・実装
+   `{config.progress_file}` の {entry} 行の「リーサル実装」列を確認する。
+   - `n/a` または `保留` → 対象外なのでスキップする
+   - `x` → handlers/lethal.py の既存ハンドラを仕様書・実装（handlers/ / data/）と照合し、
+     誤り・欠落があれば修正する
+   - `-` → 仕様書をもとに新規にリーサル計算ハンドラを実装する
+     - handlers/lethal.py の既存パターン（`_heal`, `_heal_at_pinch` など）を参照する
+     - シグネチャ: `(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist`
+     - {entry} の種別に対応する data ファイルの `lethal_handlers` にエントリを追加する
+       （move → data/move.py, item → data/item.py, ability → data/ability.py,
+       ailment → data/ailment.py, volatile → data/volatile.py, global_field → data/field.py）
+     - イベントは `LethalEvent.ON_BEFORE_HIT` / `ON_HIT` / `ON_TURN_END` / `ON_EVERY_EVENT` から選ぶ
+     - subject は `"attacker"` / `"defender"` / `None` から選ぶ
+   handlers/lethal.py を修正した場合は python scripts/sort_handlers.py src/jpoke/handlers/lethal.py を実行する。
+   data/*.py を修正した場合は対応する sort スクリプトを実行する。
+
+6. テストのレビュー・修正
    {config.test_files} のテストを実装と照合する。
    誤り・過不足があれば修正する。
-   python scripts/sort_tests.py {config.test_files をスペース区切り} でソート後、
+   手順5でリーサル計算ハンドラを新規実装・修正した場合は tests/test_lethal.py にも
+   `t.calc_lethal` を使ったテストを追加・修正する。
+   python scripts/sort_tests.py {config.test_files をスペース区切り}（リーサルを触った場合は tests/test_lethal.py も追加）でソート後、
    python scripts/generate_test_list.py でテスト一覧を更新し、
    python -m pytest tests/ -v でテストを実行し、結果を .loop/test_logs/{entry}.log に保存する。
    全テストが通ることを確認する。
 
-6. 修正内容を書き出す
+7. 修正内容を書き出す
    `{config.review_dir}{entry}.md` を Write で作成し、以下の形式で記録する:
 
    ```markdown
@@ -105,16 +123,21 @@ jpoke {config.category} 再レビュータスク: {entry}
    ## 実装（handlers/ / data/）
    - （変更なし / 修正した内容を箇条書き）
 
+   ## リーサル計算
+   - （対象外 / 変更なし / 新規実装 / 修正した内容を箇条書き）
+
    ## テスト
    - （変更なし / 追加・修正した内容を箇条書き）
    ```
 
-   修正がなかった項目は「変更なし」と記載する。
+   修正がなかった項目は「変更なし」、対象外の場合は「対象外」と記載する。
 
-7. 進捗ファイルを更新する
+8. 進捗ファイルを更新する
    `{config.progress_file}` の {entry} 該当行のテスト済みマークを更新する。
+   手順5でリーサル計算を新規実装・修正した場合は「リーサル実装」「リーサルテスト」列も
+   `x` に更新する（対象外だった場合は変更しない）。
 
-8. 結果を記録する
+9. 結果を記録する
    成功: `.loop/review_results/{entry}.ok` を Write で作成（内容は空でよい）
    失敗: `.loop/review_results/{entry}.fail` を Write で作成（失敗理由を記述）
 ```

@@ -172,4 +172,12 @@ def _mask_command(battle: Battle, player: Player):
             new_cmd = cmd.change_index(observed_index)
             commands.append(new_cmd)
 
+    # 公開状況だけでなく required_command_type でも絞り込む。ここを飛ばすと、
+    # 木探索が相手の合法手を総当たりした際に「相手がまだ提出していないはずの
+    # コマンド種別」が混入し、sim.step() の validate_command() に弾かれて
+    # ValueError になる（例: switch フェーズで後攻の相手に対して SWITCH_x を渡してしまう）。
+    required = state.required_command_type
+    if required not in (None, "any"):
+        commands = [cmd for cmd in commands if cmd.is_type(required)]
+
     state.last_available_commands = commands

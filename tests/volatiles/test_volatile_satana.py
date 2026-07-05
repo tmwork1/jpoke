@@ -325,6 +325,19 @@ def test_そうでん_状態中の攻撃技がでんきタイプになる():
     assert battle.move_executor.move_type == "でんき"
 
 
+def test_そらをとぶ_うちおとすが命中する():
+    """そらをとぶ状態でもうちおとすは命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["うちおとす"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "そらをとぶ", count=1)
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+
+
 @pytest.mark.parametrize("boost_move_name", ["かぜおこし", "たつまき"])
 def test_そらをとぶ_かぜおこしたつまきの威力が2倍になる(boost_move_name):
     """そらをとぶ状態の相手にかぜおこし・たつまきを使うと威力補正が2倍（8192）になる"""

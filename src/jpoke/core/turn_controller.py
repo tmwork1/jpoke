@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.core import EventContext
+from jpoke.core.event_logger import TerastalPayload
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy
 
@@ -227,7 +228,7 @@ class TurnController:
                 mon.terastallize()
                 self.battle.add_event_log(
                     mon, LogCode.TERASALLIZED,
-                    payload={"type": mon.tera_type}
+                    payload=TerastalPayload(type=mon.tera_type)
                 )
                 self._events.emit(Event.ON_TERASTALLIZE, EventContext(source=mon))
 
@@ -250,11 +251,7 @@ class TurnController:
                 mon.ability.unregister_handlers(self._events, mon)
                 mon.megaevolve()
                 mon.ability.register_handlers(self._events, mon)
-                self.battle.add_event_log(
-                    mon,
-                    LogCode.MEGA_EVOLVED,
-                    payload={"pokemon": mon.name}
-                )
+                self.battle.add_event_log(mon, LogCode.MEGA_EVOLVED)
 
                 # メガシンカ後の特性が発動するイベントを追加
                 self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))

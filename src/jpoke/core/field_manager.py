@@ -15,6 +15,7 @@ from jpoke.data import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
 from jpoke.model import Field
 from jpoke.core import EventContext
+from .event_logger import FieldPayload
 
 T = TypeVar("T")
 
@@ -96,7 +97,7 @@ class BaseFieldManager(Generic[T]):
             field.register_handlers(self._events, player)
         self.battle.add_event_log(
             0, LogCode.FIELD_STARTED,
-            payload={"field": field.name, "count": count}
+            payload=FieldPayload(field=field.name, count=count)
         )
         self._events.emit(Event.ON_FIELD_ACTIVATE, value=field)
 
@@ -106,7 +107,7 @@ class BaseFieldManager(Generic[T]):
         field.count = 0
         self.battle.add_event_log(
             0, LogCode.FIELD_ENDED,
-            payload={"field": field_name}
+            payload=FieldPayload(field=field_name)
         )
         self._events.emit(Event.ON_FIELD_DEACTIVATE, value=field)
         for player in field.owners:

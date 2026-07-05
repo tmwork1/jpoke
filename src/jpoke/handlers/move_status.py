@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 from jpoke.types import Stat, Type
 
 from jpoke.enums import Event, Interrupt, LogCode
+from jpoke.core.event_logger import FailureLogPayload, StatChangePayload
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
 _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
@@ -43,7 +44,10 @@ def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRetu
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
     if not value:
-        battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED)
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_IMMUNED,
+            payload=FailureLogPayload(move=ctx.move.name)
+        )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -84,7 +88,7 @@ def あくび_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     if mon.has_volatile("ねむけ") or mon.ailment.is_active:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "すでに状態異常になっている"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="すでに状態異常になっている"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -165,7 +169,7 @@ def アンコール_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if not move or move.has_flag("non_encore"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "アンコール失敗"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="アンコール失敗")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -184,7 +188,7 @@ def いえき_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     if ctx.defender.ability.has_flag("protected"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "保護された特性"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="保護された特性")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -280,7 +284,7 @@ def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     if ctx.defender.executed_move is None:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "うらみ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="うらみ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -360,7 +364,7 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
     if battle.weather.name != "ゆき":
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "オーロラベール"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="オーロラベール")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -410,7 +414,7 @@ def かなしばり_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "かなしばり"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="かなしばり")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -517,7 +521,9 @@ def くろいきり_reset_all_ranks(battle: Battle, ctx: AttackContext, value: A
                 mon.rank[s] = 0
             battle.add_event_log(
                 mon, LogCode.STAT_CHANGED,
-                payload={"stats": {s: -v for s, v in changed.items()}, "reason": "くろいきり"},
+                payload=StatChangePayload(
+                    stats={s: -v for s, v in changed.items()}, display_reason="くろいきり"
+                ),
             )
     return HandlerReturn(value=value)
 
@@ -624,7 +630,7 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
     if mon.has_volatile("みがわり"):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "しっぽきり_みがわり中"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="しっぽきり_みがわり中")
         )
         return HandlerReturn(value=False, stop_event=True)
 
@@ -632,14 +638,14 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
     if mon.hp <= (mon.max_hp + 1) // 2:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "しっぽきり_HP不足"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="しっぽきり_HP不足")
         )
         return HandlerReturn(value=False, stop_event=True)
 
     if not battle.query.can_switch(player):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "しっぽきり_交代不可"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="しっぽきり_交代不可")
         )
         return HandlerReturn(value=False, stop_event=True)
 
@@ -675,7 +681,7 @@ def シンプルビーム_can_apply(battle: Battle, ctx: AttackContext, value: A
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "シンプルビーム"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="シンプルビーム")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -715,7 +721,7 @@ def じばそうさ_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if ctx.attacker.ability.name not in ("プラス", "マイナス"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "じばそうさ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="じばそうさ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -754,7 +760,7 @@ def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: A
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "スキルスワップ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="スキルスワップ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -844,7 +850,7 @@ def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> 
     if mon.hp <= mon.max_hp // 3:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "ソウルビート_HP不足"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ソウルビート_HP不足")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -876,7 +882,7 @@ def たくわえる_check_can_use(battle: Battle, ctx: AttackContext, value: Any
     if mon.has_volatile("たくわえる") and (mon.volatiles["たくわえる"].count or 0) >= 3:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "たくわえる"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="たくわえる")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -923,7 +929,7 @@ def ちからをすいとる_can_apply(battle: Battle, ctx: AttackContext, value
     if ctx.defender.rank["atk"] == -6:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "こうげき最低"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="こうげき最低"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1060,7 +1066,7 @@ def なかまづくり_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "なかまづくり"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なかまづくり")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1111,7 +1117,7 @@ def なやみのタネ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "なやみのタネ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なやみのタネ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1137,7 +1143,7 @@ def なりきり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "なりきり"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="なりきり")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1168,7 +1174,7 @@ def ねがいごと_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if side.get("ねがいごと").is_active:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ねがいごと"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ねがいごと")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1189,7 +1195,7 @@ def ねごと_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> Han
     if not ctx.attacker.has_ailment("ねむり"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ねごと_ねむり状態でない"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ねごと_ねむり状態でない"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1209,7 +1215,7 @@ def ねごと_select_and_execute(battle: Battle, ctx: AttackContext, value: Any)
         battle.add_event_log(
             attacker,
             LogCode.MOVE_FAILED,
-            payload={"reason": "ねごと_候補技なし"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ねごと_候補技なし"),
         )
         return HandlerReturn(value=False, stop_event=True)
     chosen = battle.random.choice(candidates)
@@ -1276,7 +1282,7 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     if mon.hp == mon.max_hp or mon.has_ailment("ねむり"):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "ねむる"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ねむる"),
         )
         return HandlerReturn(value=False, stop_event=True)
     # エレキフィールド下で接地しているポケモンのねむるは失敗する
@@ -1286,7 +1292,7 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "エレキフィールド"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="エレキフィールド"),
         )
         return HandlerReturn(value=False, stop_event=True)
     # ミストフィールド下で接地しているポケモンのねむるは失敗する
@@ -1296,7 +1302,7 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "ミストフィールド"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ミストフィールド"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1338,7 +1344,7 @@ def のみこむ_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "のみこむ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="のみこむ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1372,7 +1378,7 @@ def のろい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_FAILED,
-            payload={"reason": "のろい_すでに状態変化"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="のろい_すでに状態変化"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1405,14 +1411,14 @@ def はいすいのじん_can_apply(battle: Battle, ctx: AttackContext, value: A
             and mon.volatiles["にげられない"].move_name == "はいすいのじん"):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "はいすいのじん_すでに状態変化"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はいすいのじん_すでに状態変化"),
         )
         return HandlerReturn(value=False, stop_event=True)
     # すべての能力ランクがすでに+6の場合は失敗
     if all(mon.rank[stat] >= 6 for stat in ("atk", "def", "spa", "spd", "spe")):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "はいすいのじん_すでに状態変化"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はいすいのじん_すでに状態変化"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1437,7 +1443,7 @@ def はきだす_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "はきだす"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はきだす")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1499,7 +1505,7 @@ def はらだいこ_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if mon.rank["atk"] >= 6 or mon.hp <= mon.max_hp // 2:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "はらだいこ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はらだいこ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1515,7 +1521,7 @@ def ハロウィン_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if ctx.defender.has_type("ゴースト"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ハロウィン"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ハロウィン")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1578,7 +1584,7 @@ def バトンタッチ_check(battle: Battle, ctx: AttackContext, value: Any) -> 
     if not any(m.alive for m in state.bench):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "バトンタッチ_交代不可"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="バトンタッチ_交代不可"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1641,7 +1647,7 @@ def ひっくりかえす_invert_ranks(battle: Battle, ctx: AttackContext, value
     if all(v == 0 for v in mon.rank.values()):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "能力ランクに変化がない"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="能力ランクに変化がない"),
         )
         return HandlerReturn(value=False, stop_event=True)
     for stat in mon.rank:
@@ -1719,7 +1725,7 @@ def ほおばる_check_defense_max(battle: Battle, ctx: AttackContext, value: An
     if mon.rank["def"] >= 6:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "ほおばる_ぼうぎょ最大"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ほおばる_ぼうぎょ最大")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1730,7 +1736,7 @@ def ほおばる_check_has_berry(battle: Battle, ctx: AttackContext, value: Any)
     mon = ctx.attacker
     if not mon.item.is_berry():
         battle.add_event_log(mon, LogCode.MOVE_FAILED,
-                             payload={"reason": "ほおばる_きのみなし"})
+                             payload=FailureLogPayload(move=ctx.move.name, display_reason="ほおばる_きのみなし"))
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1775,7 +1781,7 @@ def ほろびのうた_can_apply(battle: Battle, ctx: AttackContext, value: Any)
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_FAILED,
-            payload={"reason": "ほろびのうた_すでに状態"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ほろびのうた_すでに状態"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1811,13 +1817,13 @@ def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     if not battle.last_used_move_name:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "まねっこ_使用技なし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="まねっこ_使用技なし")
         )
         return HandlerReturn(value=False, stop_event=True)
     if Move(battle.last_used_move_name).has_flag("non_copycat"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "まねっこ_コピー不可技"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="まねっこ_コピー不可技")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1849,7 +1855,7 @@ def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackConte
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "まもる系_連続使用"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="まもる系_連続使用")
         )
         mon.executed_move = None
         return HandlerReturn(value=False, stop_event=True)
@@ -1900,7 +1906,7 @@ def みがわり_check(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "みがわり"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="みがわり")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1925,7 +1931,7 @@ def みずびたし_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if ctx.defender.types == ["みず"]:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "みずびたし"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="みずびたし")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1968,7 +1974,7 @@ def ミラータイプ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     if sorted(attacker.types) == sorted(target_types):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ミラータイプ_タイプ同じ"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ミラータイプ_タイプ同じ"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -1996,7 +2002,7 @@ def みをけずる_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if mon.hp <= mon.max_hp // 2:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "みをけずる"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="みをけずる")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2021,7 +2027,7 @@ def メロメロ_check_gender(battle: Battle, ctx: AttackContext, value: Any) ->
             or attacker.gender == defender.gender):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "メロメロ_性別不一致"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="メロメロ_性別不一致")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2037,7 +2043,7 @@ def もりののろい_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     if ctx.defender.has_type("くさ"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "もりののろい"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="もりののろい")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2053,7 +2059,7 @@ def やどりぎのタネ_can_apply(battle: Battle, ctx: AttackContext, value: A
     if ctx.defender.has_type("くさ"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "やどりぎのタネ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="やどりぎのタネ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2068,7 +2074,7 @@ def ゆめくい_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> 
     if not ctx.defender.has_ailment("ねむり"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "ゆめくい_ねむり状態でない"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ゆめくい_ねむり状態でない"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2085,7 +2091,7 @@ def リサイクル_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     if mon.has_item() or not mon.last_lost_item_name:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "リサイクル"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="リサイクル"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -2115,7 +2121,7 @@ def リフレッシュ_cure_ailment(battle: Battle, ctx: AttackContext, value: A
     if not mon.ailment.is_active:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload={"reason": "リフレッシュ_状態異常なし"},
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="リフレッシュ_状態異常なし"),
         )
         return HandlerReturn(value=False, stop_event=True)
     battle.ailment_manager.remove(mon)

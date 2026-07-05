@@ -4,6 +4,9 @@ from typing import Literal
 BattlePhase = Literal["", "selection", "action", "switch"]
 CommandType = Literal["any", "move", "switch"]
 
+CriticalMode = Literal["通常", "確定のみ"]
+DamageRollMode = Literal["通常", "平均", "最大", "最小"]
+
 
 LethalSubject = Literal["attacker", "defender"]
 

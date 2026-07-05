@@ -11,6 +11,7 @@ from jpoke.model import Pokemon, Volatile
 from jpoke.types import VolatileName
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
+from .event_logger import VolatilePayload
 from jpoke.utils import fast_copy
 
 
@@ -79,14 +80,14 @@ class VolatileManager:
             self.battle.add_event_log(
                 target,
                 LogCode.VOLATILE_IMMUNE,
-                payload={"volatile": name}
+                payload=VolatilePayload(volatile=name)
             )
             return False
 
         self.battle.add_event_log(
             target,
             LogCode.VOLATILE_APPLIED,
-            payload={"volatile": resolved_name}
+            payload=VolatilePayload(volatile=resolved_name, source=source.name if source else None)
         )
         target.volatiles[resolved_name] = Volatile(resolved_name, count=count, **kwargs)
         target.volatiles[resolved_name].register_handlers(self._events, target)
@@ -128,7 +129,7 @@ class VolatileManager:
         self.battle.add_event_log(
             target,
             LogCode.VOLATILE_REMOVED,
-            payload={"volatile": name}
+            payload=VolatilePayload(volatile=name)
         )
 
         return True

@@ -14,6 +14,7 @@ from jpoke.enums import LogCode
 
 from .event_manager import Event
 from .context import AttackContext
+from .event_logger import FailureLogPayload, MoveActionPayload
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]
@@ -177,6 +178,10 @@ class MoveExecutor:
 
         self.accuracy = accuracy  # デバッグ用に保存
 
+        threshold = self.battle.option.accuracy_fix_threshold
+        if threshold is not None and accuracy >= threshold:
+            return True
+
         return 100 * self.battle.random.random() < accuracy
 
     def _check_critical(self, ctx: AttackContext) -> bool:
@@ -194,6 +199,11 @@ class MoveExecutor:
         Returns:
             bool: 急所に当たるかどうか
         """
+        if self.battle.option.critical_mode == "確定のみ":
+            critical_rank = clamp_critic(ctx.move.critical_rank)
+            self.critical_rank = critical_rank  # デバッグ用に保存
+            return self.battle.random.random() < CRIT_RATES[critical_rank]
+
         # 急所ランクの計算
         critical_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK,
@@ -314,7 +324,7 @@ class MoveExecutor:
             self.battle.add_event_log(
                 ctx.attacker,
                 LogCode.MOVE_IMMUNED,
-                payload={"reason": "タイプ無効"}
+                payload=FailureLogPayload(move=ctx.move.name, display_reason="タイプ無効")
             )
             return False
         return True
@@ -331,7 +341,7 @@ class MoveExecutor:
             self.battle.add_event_log(
                 ctx.attacker,
                 LogCode.MOVE_IMMUNED,
-                payload={"reason": "くさタイプ粉技無効"}
+                payload=FailureLogPayload(move=ctx.move.name, display_reason="くさタイプ粉技無効")
             )
             return False
         return True
@@ -380,7 +390,10 @@ class MoveExecutor:
 
         # 反射判定
         if self._events.emit(Event.ON_CHECK_REFLECT, ctx, False):
-            self.battle.add_event_log(ctx.defender, LogCode.MOVE_REFLECTED)
+            self.battle.add_event_log(
+                ctx.defender, LogCode.MOVE_REFLECTED,
+                payload=MoveActionPayload(move=ctx.move.name)
+            )
             ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
         # 連続技のヒット回数を決定
@@ -410,7 +423,10 @@ class MoveExecutor:
 
             if need_hit_check and not self._check_hit(ctx):
                 self.move_missed = True
-                self.battle.add_event_log(ctx.attacker, LogCode.MOVE_MISSED)
+                self.battle.add_event_log(
+                    ctx.attacker, LogCode.MOVE_MISSED,
+                    payload=FailureLogPayload(move=ctx.move.name)
+                )
                 self._events.emit(Event.ON_MISS, ctx)
                 break
 
@@ -442,7 +458,10 @@ class MoveExecutor:
 
         self.critical = self._check_critical(ctx)
         if self.critical:
-            self.battle.add_event_log(ctx.attacker, LogCode.CRITICAL_HIT)
+            self.battle.add_event_log(
+                ctx.attacker, LogCode.CRITICAL_HIT,
+                payload=MoveActionPayload(move=ctx.move.name)
+            )
         damage = self.battle.roll_damage(
             ctx.attacker, ctx.defender, ctx.move, critical=self.critical
         )
@@ -494,7 +513,7 @@ class MoveExecutor:
             self.battle.add_event_log(
                 ctx.attacker,
                 LogCode.MOVE_FAILED,
-                payload={"move": ctx.move.name}
+                payload=FailureLogPayload(move=ctx.move.name)
             )
 
     def resolve_move_type(self, attacker: Pokemon, move: Move) -> Type:
@@ -551,5 +570,5 @@ class MoveExecutor:
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,
-            payload={"move": move.name, "value": v}
+            payload=MoveActionPayload(move=move.name, value=v)
         )

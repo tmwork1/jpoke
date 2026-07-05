@@ -7,6 +7,7 @@ from jpoke.types import RoleSpec
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode
 from jpoke.core import Handler, HandlerReturn
+from jpoke.core.event_logger import FailureLogPayload
 
 
 class AilmentHandler(Handler):
@@ -62,7 +63,7 @@ def まひ_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRetu
 
     if trigger:
         battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                             payload={"reason": "まひ"})
+                             payload=FailureLogPayload(move=ctx.move.name, display_reason="まひ"))
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=True)
 
@@ -96,7 +97,7 @@ def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
     # まだ眠っている
     battle.add_event_log(ctx.attacker, LogCode.ACTION_BLOCKED,
-                         payload={"reason": "ねむり"})
+                         payload=FailureLogPayload(move=ctx.move.name, display_reason="ねむり"))
 
     return HandlerReturn(value=False, stop_event=True)
 
@@ -130,7 +131,7 @@ def こおり_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
     battle.ailment_manager.tick(mon)
     battle.add_event_log(
         ctx.attacker, LogCode.ACTION_BLOCKED,
-        payload={"reason": "こおり"}
+        payload=FailureLogPayload(move=ctx.move.name, display_reason="こおり")
     )
     return HandlerReturn(value=False, stop_event=True)
 

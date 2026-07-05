@@ -7,6 +7,7 @@ from jpoke.enums import LogCode
 from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
+from jpoke.core.event_logger import FailureLogPayload
 
 class FieldHandler(Handler):
     def __init__(self,
@@ -119,7 +120,7 @@ def おおあめ_block_fire_move(battle: Battle, ctx: AttackContext, value: Any)
     if ctx.move.type == "ほのお":
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "おおあめ"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="おおあめ")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -130,7 +131,7 @@ def おおひでり_block_water_move(battle: Battle, ctx: AttackContext, value: 
     if ctx.move.type == "みず":
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "おおひでり"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="おおひでり")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
@@ -197,7 +198,7 @@ def サイコフィールド_block_priority_move(battle: Battle, ctx: AttackCont
     ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload={"reason": "サイコフィールド"}
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="サイコフィールド")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

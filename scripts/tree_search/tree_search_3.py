@@ -1,48 +1,14 @@
 """
-同時に死に出しする場合の木探索の例
+同時に死に出しする場合の木探索の例（framework.TreeSearchPlayer の利用例）
+
+両者の先頭が同時に瀕死になるシナリオ。この場合 required_command_type は
+どちらの側も None（自分は switch、相手は「後攻」ではないため絞り込みが働かない）
+になる。
 """
 
-from itertools import product
-
 from jpoke import Battle, Player, Pokemon
-from jpoke.enums import Command
 
-
-class SearchPlayer(Player):
-    def choose_command(self, battle: Battle) -> Command:
-        print(f"[depth={battle.copy_depth}] Choosing switch command for {self.name}")
-
-        if battle.copy_depth > 1:
-            raise ValueError("木探索の深さが2を超えています。")
-
-        my_commands = battle.get_available_commands(self)
-        if battle.phase == "action":
-            return my_commands[0]
-
-        self_state = battle.player_states[self]
-        opponent = battle.opponent(self)
-        opponent_state = battle.player_states[opponent]
-
-        assert self_state.required_command_type == "switch"
-        assert opponent_state.required_command_type is None
-        assert not opponent_state.reserved_commands
-
-        opponent_commands = battle.get_available_commands(opponent)
-
-        print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
-
-        # コマンドの組み合わせを総当たりで評価する
-        print("-"*20)
-        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
-            print(f"\n<< Simulation {my_cmd} vs {opponent_cmd} >>")
-            sim = battle.copy()
-            commands = {self: my_cmd, opponent: opponent_cmd}
-            sim.step(commands)
-            sim.print_logs()
-        print(f"{'-'*20}")
-
-        return my_commands[0]
+from framework import TreeSearchPlayer
 
 
 def play_game(seed: int | None = None,
@@ -56,8 +22,8 @@ def play_game(seed: int | None = None,
     Returns:
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
-    # Player 1
-    player1 = SearchPlayer(name="SearchPlayer")
+    # Player 1（1手先の総当たり探索）
+    player1 = TreeSearchPlayer(name="SearchPlayer")
     player1.team = [
         Pokemon("ヒトカゲ", item_name="いのちのたま", move_names=["たいあたり"]),
         Pokemon("リザード", item_name="", move_names=["たいあたり"]),

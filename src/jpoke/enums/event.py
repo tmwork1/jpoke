@@ -10,6 +10,7 @@ class LethalEvent(Enum):
     """致死率計算専用の制御イベント。"""
     ON_BEFORE_MOVE = auto()
     ON_BEFORE_HIT = auto()
+    ON_APPLY_DAMAGE = auto()  # ダメージ適用時、HP満タン枝にのみ発火する（がんじょう・きあいのタスキ等のHP1耐え）
     ON_HIT = auto()
     ON_TURN_END = auto()
     ON_EVERY_EVENT = auto()  # イベント発火後に発火するイベント (きのみによる回復など)

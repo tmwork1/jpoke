@@ -13,6 +13,7 @@ from jpoke.enums import Interrupt, LogCode
 
 from .event_manager import Event
 from .context import EventContext
+from .event_logger import SwitchPayload
 from jpoke.utils import fast_copy
 
 
@@ -228,7 +229,7 @@ class SwitchManager:
         self.battle.add_event_log(
             mon,
             LogCode.SWITCHED_IN,
-            payload={"pokemon": mon.name}
+            payload=SwitchPayload(pokemon=mon.name)
         )
 
     def _switch_out(self, mon: Pokemon):
@@ -252,7 +253,7 @@ class SwitchManager:
 
         self.battle.add_event_log(
             mon, LogCode.SWITCHED_OUT,
-            payload={"pokemon": mon.name}
+            payload=SwitchPayload(pokemon=mon.name)
         )
 
     def override_ejectpack_interrupt(self, flag: Interrupt):

@@ -613,6 +613,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.がんじょう_block_ohko,
                 subject_spec="defender:self",
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_APPLY_DAMAGE: LethalHandler(
+                l.がんじょう_survive_lethal,
+                subject="defender",
+            )
         }
     ),
     "がんじょうあご": AbilityData(
@@ -1674,6 +1680,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         flags={
             "uncopyable",
             "mold_breaker_ignorable",
+            "full_hp_damage_modifier",
         },
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.AbilityHandler(
@@ -2386,6 +2393,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         }
     ),
     "ファントムガード": AbilityData(
+        flags={
+            "full_hp_damage_modifier",
+        },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(
                 h.マルチスケイル_reduce_damage,
@@ -2838,7 +2848,8 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "マルチスケイル": AbilityData(
         flags={
-            "mold_breaker_ignorable"
+            "mold_breaker_ignorable",
+            "full_hp_damage_modifier",
         },
         handlers={
             Event.ON_CALC_DAMAGE_MODIFIER: h.AbilityHandler(

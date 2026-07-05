@@ -12,6 +12,7 @@ from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Item
 
 from .context import EventContext
+from .event_logger import ItemPayload
 
 
 class ItemManager:
@@ -123,13 +124,13 @@ class ItemManager:
             self.battle.add_event_log(
                 mon,
                 LogCode.ITEM_GAINED,
-                payload={"item": mon.item.name}
+                payload=ItemPayload(item=mon.item.name)
             )
         else:
             self.battle.add_event_log(
                 mon,
                 LogCode.ITEM_LOST,
-                payload={"item": mon.last_lost_item_name}
+                payload=ItemPayload(item=mon.last_lost_item_name)
             )
 
         if is_active and name:

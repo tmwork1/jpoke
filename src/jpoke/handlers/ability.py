@@ -679,8 +679,9 @@ def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: 
     """おやこあい特性: 単発攻撃技を2ヒット化する。
 
     がむしゃらはHPの変動有無に関わらずいかなる状況でも連続攻撃にならないため対象外とする。
+    ころがる/アイスボールも連続攻撃にならない（数ターン継続する強制行動技のため）。
     """
-    if ctx.move.name == "がむしゃら":
+    if ctx.move.name in ("がむしゃら", "ころがる", "アイスボール"):
         return HandlerReturn(value=value)
     if ctx.move.is_attack and ctx.move.max_hits == 1:
         value = 2
@@ -2416,9 +2417,14 @@ def ハードロック_reduce_effective(battle: Battle, ctx: AttackContext, valu
 
 
 def ばけのかわ_block_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。"""
+    """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
+
+    実際のダメージは0になるが、ばけのかわの効果でHPが減少するため
+    「攻撃を無効化した」扱いにはならない（きあいパンチ不発の対象）。
+    """
     battle.add_ability_disabled_reason(ctx.defender, "consumed")
     battle.modify_hp(ctx.defender, r=-1/8)
+    ctx.defender.hits_taken += 1
     _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=0)
 

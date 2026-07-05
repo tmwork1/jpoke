@@ -1,40 +1,15 @@
 """
-一般的な木探索の例
+一般的な木探索の例（framework.TreeSearchPlayer で複数手先を探索する例）
+
+max_plies=2 を指定し、自分と相手それぞれ2手先まで総当たりで評価する。
+探索中にとんぼがえり等で割り込み交代が発生し choose_command() が再帰的に
+呼ばれた場合は、探索木には含めずフォールバック方策（既定ではランダム選択）で
+即決する。
 """
-import random
-from itertools import product
 
 from jpoke import Battle, Player, Pokemon
-from jpoke.enums import Command
 
-
-class SearchPlayer(Player):
-    def choose_command(self, battle: Battle) -> Command:
-        print(f"turn={battle.turn} [depth={battle.copy_depth}] Choosing command for {self.name}")
-
-        my_commands = battle.get_available_commands(self)
-
-        if battle.copy_depth > 1:
-            print(f"{battle.copy_depth=} : return random command")
-            return random.choice(my_commands)
-
-        opponent = battle.opponent(self)
-        opponent_commands = battle.get_available_commands(opponent)
-
-        print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
-
-        # コマンドの組み合わせを総当たりで評価する
-        print("-"*20)
-        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
-            print(f"\n<< Simulation {my_cmd} vs {opponent_cmd} >>")
-            sim = battle.copy()
-            commands = {self: my_cmd, opponent: opponent_cmd}
-            sim.step(commands)
-            sim.print_logs()
-        print(f"{'-'*20}")
-
-        return my_commands[0]
+from framework import TreeSearchPlayer
 
 
 def play_game(seed: int | None = None,
@@ -48,8 +23,8 @@ def play_game(seed: int | None = None,
     Returns:
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
-    # Player 1
-    player1 = SearchPlayer(name="SearchPlayer")
+    # Player 1（2手先までの総当たり探索）
+    player1 = TreeSearchPlayer(name="SearchPlayer", max_plies=2)
     player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
         Pokemon("リザードン", item_name="", move_names=["とんぼがえり"]),

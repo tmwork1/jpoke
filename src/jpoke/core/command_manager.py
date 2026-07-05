@@ -189,7 +189,8 @@ class CommandManager:
         """
         selection = state.selection
         return (
-            all(not mon.megaevolved for mon in selection)
+            self.battle.option.mega_evolution
+            and all(not mon.megaevolved for mon in selection)
             and state.active.can_megaevolve()
         )
 
@@ -203,6 +204,7 @@ class CommandManager:
         """
         selection = state.selection
         return (
-            all(not mon.terastallized for mon in selection)
+            self.battle.option.terastal
+            and all(not mon.terastallized for mon in selection)
             and state.active.can_terastallize()
         )

@@ -1,50 +1,18 @@
 """
-自分が先攻でとんぼがえりを使う場合の木探索の例
+自分が先攻でとんぼがえりを使う場合の木探索の例（framework.TreeSearchPlayer の利用例）
+
+CRIT-1（相手のベンチが公開済みの状態で switch フェーズに入ると、修正前は
+required_command_type でフィルタされない SWITCH コマンドが混入し sim.step() が
+ValueError で落ちていた）の回帰確認も兼ねる。相手チームのベンチ（カメックス）を
+あえて公開済みにしている。
 """
 
 import random
-from itertools import product
 
 from jpoke import Battle, Player, Pokemon
 from jpoke.enums import Command
 
-
-class SearchPlayer(Player):
-    def choose_command(self, battle: Battle) -> Command:
-        print(f"[depth={battle.copy_depth}] Choosing switch command for {self.name}")
-
-        if battle.copy_depth > 1:
-            raise ValueError("木探索の深さが2を超えています。")
-
-        my_commands = battle.get_available_commands(self)
-        if battle.phase == "action":
-            return my_commands[0]
-
-        self_state = battle.player_states[self]
-        opponent = battle.opponent(self)
-        opponent_state = battle.player_states[opponent]
-
-        assert self_state.required_command_type == "switch"
-        assert opponent_state.required_command_type == "move"
-        assert not opponent_state.reserved_commands
-
-        opponent_commands = battle.get_available_commands(opponent)
-
-        print(f"- Self available commands: {[cmd.name for cmd in my_commands]}")
-        print(f"- Rival available commands: {[cmd.name for cmd in opponent_commands]}")
-        print(f"{[m.name for m in opponent_state.active.moves]}")
-
-        # コマンドの組み合わせを総当たりで評価する
-        print("-"*20)
-        for my_cmd, opponent_cmd in product(my_commands, opponent_commands):
-            print(f"\n<< Simulation {my_cmd} vs {opponent_cmd} >>")
-            sim = battle.copy()
-            commands = {self: my_cmd, opponent: opponent_cmd}
-            sim.step(commands)
-            sim.print_logs()
-        print(f"{'-'*20}")
-
-        return my_commands[0]
+from framework import TreeSearchPlayer
 
 
 class RandomPlayer(Player):
@@ -64,8 +32,8 @@ def play_game(seed: int | None = None,
     Returns:
         (勝者のPlayerインスタンス または None（引き分け）, ターン数)
     """
-    # Player 1
-    player1 = SearchPlayer(name="SearchPlayer")
+    # Player 1（1手先の総当たり探索）
+    player1 = TreeSearchPlayer(name="SearchPlayer")
     player1.team = [
         Pokemon("ヒトカゲ", item_name="", move_names=["とんぼがえり"]),
         Pokemon("リザードン", item_name="", move_names=["たいあたり"]),
@@ -80,6 +48,9 @@ def play_game(seed: int | None = None,
     # 先頭以外の技を公開する
     for i in range(1, 3):
         player2.team[0].moves[i].revealed = True
+
+    # ベンチ（カメックス）を公開済みにする（CRIT-1の再現条件）
+    player2.team[1].revealed = True
 
     # バトルを作成・実行
     battle = Battle((player1, player2), n_selected=len(player1.team), seed=seed)

@@ -140,6 +140,18 @@ def test_ダルマモード_交代するとノーマルのすがたに戻る():
     assert mon.name == "ヒヒダルマ(ノーマル)"
 
 
+def test_ちからずく_いっちょうあがりは追加効果がなくても威力が1_3倍になる():
+    """いっちょうあがり: 追加効果は無いがちからずく対象フラグを持つため、威力が1.3倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["いっちょうあがり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert attacker.rank["atk"] == 0
+
+
 def test_ちからずく_追加効果が発動せず威力が1_3倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["アクアステップ"])],

@@ -11,6 +11,7 @@ from jpoke.model import Pokemon, Ailment
 from jpoke.types import AilmentName
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext, BaseContext
+from .event_logger import AilmentPayload
 from jpoke.utils import fast_copy
 
 
@@ -108,7 +109,7 @@ class AilmentManager:
         self.battle.add_event_log(
             target,
             LogCode.AILMENT_APPLIED,
-            payload={"ailment": resolved_name}
+            payload=AilmentPayload(ailment=resolved_name, source=source.name if source else None)
         )
         target.ailment = Ailment(resolved_name, count=count)
         target.ailment.register_handlers(self._events, target)
@@ -157,7 +158,7 @@ class AilmentManager:
         self.battle.add_event_log(
             target,
             LogCode.AILMENT_REMOVED,
-            payload={"ailment": target.ailment.name}
+            payload=AilmentPayload(ailment=target.ailment.name)
         )
         target.ailment.unregister_handlers(self._events, target)
         target.ailment = Ailment()

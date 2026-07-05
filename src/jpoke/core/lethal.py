@@ -25,7 +25,7 @@ from collections import defaultdict
 
 from jpoke.types import Stat, AilmentName, LethalSubject
 from jpoke.enums import LethalEvent
-from jpoke.utils.lethal_dist import StateDist, State, to_dist, to_dist, subtract_dist, add_dist
+from jpoke.utils.lethal_dist import StateDist, to_dist, to_dist, subtract_dist, add_dist
 
 
 @dataclass(frozen=True)
@@ -57,6 +57,9 @@ class LethalContext:
     hit: int = 1
     # このヒットで与えたダメージ分布。ハンドラはこれを参照・更新して良い。
     damage_dist: StateDist = field(default_factory=lambda: to_dist(0))
+    # HP満タン枝専用のダメージ分布。defender が full_hp_damage_modifier を持ち、
+    # 満タン時と非満タン時でダメージが異なる場合のみ設定される（それ以外は None）。
+    damage_dist_full: StateDist | None = None
 
 
 @dataclass
@@ -237,7 +240,7 @@ def _lethal_loop(hp_dist: StateDist,
                 # 技の適用
                 hp_dist = _run_move(battle, ctx, hp_dist, every_event_handlers)
 
-                # 結果を記録（ハンドラ適用前の最終ダメージ分布を反映）
+                # TODO: 関数に分離すべき - 結果を記録（ハンドラ適用前の最終ダメージ分布を反映）
                 result = LethalResult(
                     n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
                     hp_dist=hp_dist, damage_dist=ctx.damage_dist,
@@ -270,6 +273,84 @@ def _before_move(battle: Battle,
     return _emit(LethalEvent.ON_BEFORE_MOVE, battle, ctx, hp_dist, every_event_handlers)
 
 
+def _calc_damage_dist(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> None:
+    """技ダメージを計算し、ctx.damage_dist / ctx.damage_dist_full に格納する。
+
+    defender が "full_hp_damage_modifier" フラグを持つ特性（マルチスケイル等）を持ち、
+    hp_dist に満タン枝が存在する場合のみ、calc_damages を2回呼んで満タン枝用と
+    非満タン枝(ベースライン)用のダメージ分布を別々に求める。
+    非満タン枝用は特性を一時的に無効化することで、defender.hp の値に関係なく
+    確実に特性の効果を除いた値を得る。
+    """
+    max_hp = ctx.defender.max_hp
+    needs_full_hp_split = (
+        ctx.defender.ability.has_flag("full_hp_damage_modifier")
+        and any(state.value == max_hp for state in hp_dist)
+    )
+
+    if not needs_full_hp_split:
+        damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
+        ctx.damage_dist = to_dist(damages)
+        ctx.damage_dist_full = None
+        return
+
+    saved_hp = ctx.defender.hp
+    ctx.defender.hp = max_hp
+    full_damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
+    ctx.defender.hp = saved_hp
+
+    ctx.defender.ability.add_disable_reason("リーサル計算")
+    try:
+        damages = battle.calc_damages(ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical)
+    finally:
+        ctx.defender.ability.remove_disable_reason("リーサル計算")
+
+    ctx.damage_dist = to_dist(damages)
+    ctx.damage_dist_full = to_dist(full_damages) if full_damages != damages else None
+
+
+def _apply_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """満タン枝と非満タン枝でダメージ適用を分ける。
+
+    満タン枝には damage_dist_full（未設定なら damage_dist）を適用してから
+    ON_APPLY_DAMAGE ハンドラ（がんじょう・きあいのタスキ等のHP1耐え）を通す。
+    非満タン枝には damage_dist をそのまま適用する。
+    該当ハンドラが無ければ通常の subtract_dist(hp_dist, ctx.damage_dist) と完全に同じ結果になる。
+
+    処理後、LethalResult 等の記録用に ctx.damage_dist を「実際に適用されたダメージ分布」
+    に更新する（満タン枝のみなら damage_dist_full、両方混在するなら合算）。
+    """
+    max_hp = ctx.defender.max_hp
+    full_states = {s: f for s, f in hp_dist.items() if s.value == max_hp}
+    other_states = {s: f for s, f in hp_dist.items() if s.value != max_hp}
+
+    baseline_dmg = ctx.damage_dist
+    full_dmg = ctx.damage_dist_full if ctx.damage_dist_full is not None else baseline_dmg
+
+    result: StateDist = defaultdict(int)
+    if full_states:
+        full_result = subtract_dist(full_states, full_dmg, minimum=0)
+        for h in _get_handlers(LethalEvent.ON_APPLY_DAMAGE, battle, ctx):
+            full_result = h.func(battle, ctx, full_result)
+        for s, f in full_result.items():
+            result[s] += f
+    if other_states:
+        for s, f in subtract_dist(other_states, baseline_dmg, minimum=0).items():
+            result[s] += f
+
+    if full_states and other_states:
+        merged: StateDist = defaultdict(int)
+        for s, f in full_dmg.items():
+            merged[s] += f
+        for s, f in baseline_dmg.items():
+            merged[s] += f
+        ctx.damage_dist = dict(merged)
+    elif full_states:
+        ctx.damage_dist = full_dmg
+
+    return dict(result)
+
+
 def _run_move(battle: Battle,
               ctx: LethalContext,
               hp_dist: StateDist,
@@ -279,16 +360,13 @@ def _run_move(battle: Battle,
     この関数はダメージ計算・ON_BEFORE_MOVE・ダメージ適用・ON_HITを順に実行する。
     """
     # 技ダメージを計算して ctx に格納する
-    damages = battle.calc_damages(
-        ctx.attacker, ctx.defender, ctx.move, critical=ctx.critical
-    )
-    ctx.damage_dist = to_dist(damages)
+    _calc_damage_dist(battle, ctx, hp_dist)
 
     # 技を適用する直前の処理（ハンドラは ctx.damage_dist を参照・更新する）
     hp_dist = _emit(LethalEvent.ON_BEFORE_HIT, battle, ctx, hp_dist, every_event_handlers)
 
-    # ダメージを適用する
-    hp_dist = subtract_dist(hp_dist, ctx.damage_dist, minimum=0)
+    # ダメージを適用する（満タン枝・非満タン枝を分けて処理する）
+    hp_dist = _apply_damage(battle, ctx, hp_dist)
     _update_hp(ctx.defender, hp_dist)
 
     # ヒット時のハンドラを適用（きのみ回復など）

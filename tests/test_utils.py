@@ -1,7 +1,8 @@
 from jpoke.core import Battle, Player, EventContext, AttackContext
 from jpoke.core.lethal import LethalResult
 from jpoke.model import Pokemon, Move
-from jpoke.types import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName
+from jpoke.types import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName, \
+    CriticalMode, DamageRollMode
 from jpoke.enums import Event, Command, LogCode
 
 
@@ -33,7 +34,13 @@ def start_battle(team0: list[Pokemon],
                  side0: dict[SideFieldName, int] | None = None,
                  side1: dict[SideFieldName, int] | None = None,
                  accuracy: int | None = None,
-                 secondary_chance: float | None = None) -> Battle:
+                 secondary_chance: float | None = None,
+                 mega_evolution: bool = True,
+                 terastal: bool = True,
+                 critical_mode: CriticalMode = "通常",
+                 damage_roll: DamageRollMode = "通常",
+                 accuracy_fix_threshold: int | None = None,
+                 effect_chance_threshold: float | None = None) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
@@ -50,6 +57,12 @@ def start_battle(team0: list[Pokemon],
         field: グローバルフィールドに設置する場の効果の辞書{名前: カウント}（Noneの場合は効果なし）
         accuracy: 固定命中率（Noneの場合は通常計算、デフォルト: None）
         secondary_chance: 追加効果確率の固定値（1.0=必ず発動, 0.0=発動しない, Noneの場合は通常計算）
+        mega_evolution: メガシンカを許可するか（デフォルトTrue）
+        terastal: テラスタルを許可するか（デフォルトTrue）
+        critical_mode: 急所判定モード（"通常" / "確定のみ"、デフォルト"通常"）
+        damage_roll: ダメージ乱数モード（"通常" / "平均" / "最大" / "最小"、デフォルト"通常"）
+        accuracy_fix_threshold: この値以上の命中率を100%固定にする（Noneなら無効）
+        effect_chance_threshold: この値未満の追加効果確率を0%にする（Noneなら無効）
 
     Returns:
         Battle: セットアップ済みのBattleインスタンス
@@ -65,7 +78,15 @@ def start_battle(team0: list[Pokemon],
         for mon in mons:
             player.team.append(mon)
 
-    battle = Battle(players)
+    battle = Battle(
+        players,
+        mega_evolution=mega_evolution,
+        terastal=terastal,
+        critical_mode=critical_mode,
+        damage_roll=damage_roll,
+        accuracy_fix_threshold=accuracy_fix_threshold,
+        effect_chance_threshold=effect_chance_threshold,
+    )
     battle.start()
 
     if ailment0 or ailment1:

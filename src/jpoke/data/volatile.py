@@ -197,6 +197,24 @@ VOLATILES: dict[str, VolatileData] = {
             )
         }
     ),
+    "ころがる": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.VolatileHandler(
+                h.ころがる_boost_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.ころがる_check_interrupt,
+                subject_spec="source:self",
+                priority=150,
+            ),
+        }
+    ),
     "こらえる": VolatileData(
         handlers={
             Event.ON_MODIFY_MOVE_DAMAGE: h.VolatileHandler(
