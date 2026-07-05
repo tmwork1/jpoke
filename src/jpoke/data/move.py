@@ -4376,6 +4376,7 @@ MOVES: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.level_fixed_damage,
                 subject_spec="attacker:self",
+                priority=15,
             )
         }
     ),
