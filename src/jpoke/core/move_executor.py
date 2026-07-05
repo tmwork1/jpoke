@@ -481,6 +481,10 @@ class MoveExecutor:
 
         # ダメージを与えた後の処理（actual_damage は正値=ダメージ量）
         if actual_damage <= 0:
+            # ばけのかわ等、フォルムチェンジの消費ダメージで既にひんしになっている場合がある。
+            # この場合も、相手を倒したことをトリガーとする効果（じしんかじょう等の特性）は発動する。
+            if ctx.defender.fainted:
+                self._events.emit(Event.ON_MOVE_KO, ctx, actual_damage)
             return
 
         ctx.defender.hits_taken += 1
@@ -572,6 +576,9 @@ class MoveExecutor:
         move.revealed = True
         v = self._events.emit(Event.ON_MODIFY_PP_CONSUMED, ctx, 1)
         move.pp = max(0, move.pp - v)
+        if v > 0:
+            # 実際にPPを消費した技として記録する（とっておき用）
+            ctx.attacker.pp_consumed_moves.add(move.name)
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,

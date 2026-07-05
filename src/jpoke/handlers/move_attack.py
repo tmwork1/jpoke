@@ -1671,10 +1671,29 @@ def とっしん_recoil(battle: Battle, ctx: AttackContext, value: Any) -> Handl
     return _recoil(battle, ctx, value, 1/4)
 
 
+def とっておき_check_used_all_moves(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """とっておきの発動条件チェック。
+
+    自分がとっておきを覚えていない場合(他の技が出る技経由での使用)は失敗する。
+    場に出てから、とっておき以外に覚えている技をすべて1回以上PP消費して使用して
+    いなければ失敗する。とっておき以外に覚えている技が無い場合も失敗する。
+    """
+    mon = ctx.attacker
+    if not battle.query.can_use_last_resort(mon):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="とっておき"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def とどめばり_boost_attacker_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とどめばりの追加効果: この技で相手を倒すとこうげきランクが3段階上がる。"""
-    if not ctx.defender.alive:
-        battle.modify_stats(ctx.attacker, {"atk": 3}, source=ctx.attacker)
+    """とどめばりの効果: この技で相手を倒すとこうげきランクが3段階上がる。
+
+    ON_MOVE_KOは相手をひんしにしたときのみ発火するため、ここでのひんし判定は不要。
+    """
+    battle.modify_stats(ctx.attacker, {"atk": 3}, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 

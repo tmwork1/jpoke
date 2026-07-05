@@ -1477,6 +1477,177 @@ def test_とっしん_反動ダメージが与ダメの4分の1になる():
     assert attacker.hp == hp_before - 25
 
 
+def test_とっておき_PPが消費できなかった技は使用したことにならない():
+    """とっておき: まひで行動不能になった技はPPが消費されないため、使用したことにならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうせっか", "とっておき"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("まひ", None),
+        accuracy=100,
+    )
+    battle.test_option.trigger_ailment = True
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.action_success is False
+
+    battle.test_option.trigger_ailment = False
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0, 1)
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_とっておき_とっておきを覚えていないポケモンが使用すると失敗する():
+    """とっておき: 他の技が出る技経由等でとっておきを覚えていないポケモンが使用した場合は失敗する。"""
+    from jpoke.model.move import Move
+
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうせっか"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0, 0)
+    hp_before = defender.hp
+    # とっておきを覚えていないポケモンが直接とっておきを実行する(未使用技無しの状態でも失敗する)
+    battle.run_move(attacker, Move("とっておき"))
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_とっておき_とっておき以外の技を覚えていない場合は失敗する():
+    """とっておき: とっておき以外に覚えている技が無い場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["とっておき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_とっておき_交代して戻ると再び未使用技が必要になる():
+    """とっておき: 一度控えに戻ると、次に場に出たとき再びとっておき以外の技を使う必要がある。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("カビゴン", move_names=["でんこうせっか", "とっておき"]),
+            Pokemon("ピカチュウ", move_names=["はねる"]),
+        ],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0, 0)
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0, 1)
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_とっておき_他の技をすべて使用済みならダメージを与える():
+    """とっておき: とっておき以外に覚えている技をすべて使用済みなら成功し、ダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうせっか", "とっておき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0, 0)
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0, 1)
+    assert battle.move_executor.move_success is not False
+    assert defender.hp < hp_before
+
+
+def test_とっておき_未使用技が残っている場合は失敗する():
+    """とっておき: とっておき以外に覚えている技のうち未使用のものがあれば失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうせっか", "みずでっぽう", "とっておき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0, 0)
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    # みずでっぽうは未使用のため、とっておきは失敗する
+    t.run_move(battle, 0, 2)
+    assert battle.move_executor.move_success is False
+    assert defender.hp == hp_before
+
+
+def test_とっておき_条件を満たしていない場合は選択肢に含まれない():
+    """とっておき: Champions では条件を満たしていない場合、コマンド選択肢自体に現れない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうせっか", "とっておき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "とっておき" not in move_names
+
+
+def test_とっておき_条件を満たしている場合は選択肢に含まれる():
+    """とっておき: とっておき以外の技をすべて使用済みならコマンド選択肢に現れる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["でんこうせっか", "とっておき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    t.run_move(battle, 0, 0)
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "とっておき" in move_names
+
+
+def test_とどめばり_ばけのかわのフォルムチェンジ消費ダメージで倒しても攻撃が上昇する():
+    """とどめばり: 技自体のダメージが0でも、ばけのかわのフォルムチェンジ消費ダメージで
+    相手を倒した場合はこうげきランクが3段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["とどめばり"])],
+        team1=[Pokemon("ミミッキュ", ability_name="ばけのかわ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # フォルムチェンジ消費ダメージ（最大HPの1/8）で倒れるようHPを1にする
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert not defender.alive
+    assert attacker.rank["atk"] == 3
+
+
+def test_とどめばり_相手のミイラで特性が変化した後に効果が発動する():
+    """とどめばり: 相手を倒すと同時に自分の特性がミイラに変化した場合、
+    変化後の特性でランク変化が適用される（変化前のあまのじゃくで反転しない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とどめばり"], ability_name="あまのじゃく")],
+        team1=[Pokemon("カビゴン", ability_name="ミイラ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert not defender.alive
+    assert attacker.ability.name == "ミイラ"
+    # あまのじゃくで反転していれば-3になるが、特性変化後なので+3のまま
+    assert attacker.rank["atk"] == 3
+
+
 def test_とどめばり_相手を倒さないときこうげきが上昇しない():
     """とどめばり: 相手を倒さなかった場合はこうげきランクが上昇しない。"""
     battle = t.start_battle(

@@ -968,6 +968,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.さまようたましい_swap_ability_on_contact,
                 subject_spec="defender:self",
+                priority=20,
             ),
         }
     ),
@@ -1843,6 +1844,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.とれないにおい_overwrite_attacker_ability,
                 subject_spec="defender:self",
+                priority=20,
             ),
         }
     ),
@@ -2880,6 +2882,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ミイラ_overwrite_attacker_ability,
                 subject_spec="defender:self",
+                priority=20,
             ),
         }
     ),

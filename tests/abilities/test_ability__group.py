@@ -499,6 +499,29 @@ def test_体重操作系(ability_name: str, expected_modifier: float):
         ("くろのいななき", "spa"),
     ],
 )
+def test_倒すと能力上昇系_ばけのかわのフォルムチェンジ消費ダメージで倒しても発動する(ability_name: str, stat: Stat):
+    """技自体のダメージが0でも、ばけのかわのフォルムチェンジ消費ダメージ（最大HPの1/8）で
+    相手を倒した場合は特性が発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team1=[Pokemon("コイキング", ability_name="ばけのかわ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank[stat] == 1
+
+
+@pytest.mark.parametrize(
+    "ability_name, stat",
+    [
+        ("じしんかじょう", "atk"),
+        ("しろのいななき", "atk"),
+        ("くろのいななき", "spa"),
+    ],
+)
 def test_倒すと能力上昇系_相手を倒すと指定ステータスが1段階上昇する(ability_name: str, stat: Stat):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],

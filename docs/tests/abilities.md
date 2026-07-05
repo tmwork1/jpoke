@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 703
+テスト数: 706
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -69,6 +69,9 @@
 - [x] 交代抑制特性_param(ability_name=じりょく, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=True)
 - [x] 体重操作系(ability_name=ライトメタル, expected_modifier=0.5)
 - [x] 体重操作系(ability_name=ヘヴィメタル, expected_modifier=2.0)
+- [x] 倒すと能力上昇系_ばけのかわのフォルムチェンジ消費ダメージで倒しても発動する(ability_name=じしんかじょう, stat=atk)
+- [x] 倒すと能力上昇系_ばけのかわのフォルムチェンジ消費ダメージで倒しても発動する(ability_name=しろのいななき, stat=atk)
+- [x] 倒すと能力上昇系_ばけのかわのフォルムチェンジ消費ダメージで倒しても発動する(ability_name=くろのいななき, stat=spa)
 - [x] 倒すと能力上昇系_相手を倒すと指定ステータスが1段階上昇する(ability_name=じしんかじょう, stat=atk)
 - [x] 倒すと能力上昇系_相手を倒すと指定ステータスが1段階上昇する(ability_name=しろのいななき, stat=atk)
 - [x] 倒すと能力上昇系_相手を倒すと指定ステータスが1段階上昇する(ability_name=くろのいななき, stat=spa)

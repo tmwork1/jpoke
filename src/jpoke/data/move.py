@@ -4944,7 +4944,13 @@ MOVES: dict[MoveName, MoveData] = {
         power=140,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.とっておき_check_used_all_moves,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
+        },
     ),
     "とどめばり": MoveData(
         type="むし",
@@ -4954,9 +4960,13 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
+            # ON_MOVE_KOは相手をひんしにしたときのみ発火するため、ばけのかわの
+            # フォルムチェンジ消費ダメージでひんしになった場合も効果が発動する。
+            # じしんかじょう等のKOトリガー特性（同じくON_MOVE_KOかつ優先度100）より
+            # 先にこの技の効果が発動するよう、優先度を低く設定する。
+            Event.ON_MOVE_KO: h.MoveHandler(
                 ha.とどめばり_boost_attacker_atk,
-                priority=100,
+                priority=50,
             )
         }
     ),
