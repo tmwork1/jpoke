@@ -5313,6 +5313,9 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.どくばりセンボン_double_power_when_poisoned,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.どくばりセンボン_apply_poison_to_defender,
             )

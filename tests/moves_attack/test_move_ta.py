@@ -2238,6 +2238,44 @@ def test_どくばりセンボン_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_どくばりセンボン_どく状態のとき威力2倍():
+    """どくばりセンボン: 対象がどく状態のとき威力が2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["どくばりセンボン"])],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("どく", None),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_どくばりセンボン_もうどく状態のとき威力2倍():
+    """どくばりセンボン: 対象がもうどく状態のとき威力が2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["どくばりセンボン"])],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("もうどく", None),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_どくばりセンボン_状態異常なしのとき通常威力():
+    """どくばりセンボン: 対象が状態異常でないとき威力補正なし。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["どくばりセンボン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_ドラゴンアロー_2回ヒットする():
     """ドラゴンアロー: 必ず2回ヒットする固定2回攻撃技である。"""
     battle = t.start_battle(

@@ -1800,6 +1800,13 @@ def どくばりセンボン_apply_poison_to_defender(battle: Battle, ctx: Attac
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.5)
 
 
+def どくばりセンボン_double_power_when_poisoned(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """どくばりセンボン: 対象がどく/もうどく状態のとき威力が2倍になる。"""
+    if ctx.defender.ailment.name in ("どく", "もうどく"):
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
 def ドラゴンダイブ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
