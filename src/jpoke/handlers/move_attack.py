@@ -1702,8 +1702,12 @@ def とびかかる_lower_defender_atk(battle: Battle, ctx: AttackContext, value
 
 
 def とびげり_crash(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびげりが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。"""
-    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="self_cost", source=ctx.attacker)
+    """とびげりが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。
+
+    マジックガードで防げるが、いしあたまでは防げない確定反動として扱う
+    （reason="fixed_recoil"。"self_cost" だとマジックガードで防げなくなってしまうため区別する）。
+    """
+    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="fixed_recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -1716,16 +1720,22 @@ def とびはねる_apply_paralysis_to_defender(battle: Battle, ctx: AttackConte
 
 
 def とびひざげり_crash(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびひざげりが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。"""
-    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="self_cost", source=ctx.attacker)
+    """とびひざげりが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。
+
+    マジックガードで防げるが、いしあたまでは防げない確定反動として扱う
+    （reason="fixed_recoil"。"self_cost" だとマジックガードで防げなくなってしまうため区別する）。
+    """
+    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="fixed_recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
-def _force_switch_next(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """攻撃技型の強制交代共通ロジック（次に控えているポケモンを選択）。
+def _force_switch_random(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """攻撃技型の強制交代共通ロジック（控えポケモンからランダムに選択）。
 
     きゅうばん・ねをはる等の無効化チェックを ON_TRY_BLOW 経由で行う。
-    交代先は控えポケモンのうち最初のポケモン（次の控え）。
+    にげられない・バインド・フェアリーロックや特性かげふみ・ありじごく・じりょく
+    による交代制限は無視して発動する（force=True）。
+    交代先は控えポケモンからランダムで選ばれる（ほえる・ふきとばしと同様）。
     控えポケモンが存在しない場合は交代処理をスキップする。
     """
     result = battle.events.emit(Event.ON_TRY_BLOW, ctx, True)
@@ -1737,16 +1747,16 @@ def _force_switch_next(battle: Battle, ctx: AttackContext, value: Any) -> Handle
         return HandlerReturn(value=value)
     player = battle.get_player(ctx.defender)
     state = battle.player_states[player]
-    commands = battle.command_manager.get_available_switch_commands(player)
+    commands = battle.command_manager.get_available_switch_commands(player, force=True)
     if commands:
-        command = commands[0]
+        command = battle.random.choice(commands)
         battle.run_switch(player, state.team[command.index])
     return HandlerReturn(value=value)
 
 
 def ともえなげ_force_switch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ともえなげ: ダメージ後に相手を強制交代させる（次に控えているポケモン）。"""
-    return _force_switch_next(battle, ctx, value)
+    """ともえなげ: ダメージ後に相手を強制交代させる（控えポケモンからランダムに選択）。"""
+    return _force_switch_random(battle, ctx, value)
 
 
 def トライアタック_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1794,8 +1804,8 @@ def ドラゴンダイブ_apply_flinch(battle: Battle, ctx: AttackContext, value
 
 
 def ドラゴンテール_force_switch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ドラゴンテール: ダメージ後に相手を強制交代させる（次に控えているポケモン）。"""
-    return _force_switch_next(battle, ctx, value)
+    """ドラゴンテール: ダメージ後に相手を強制交代させる（控えポケモンからランダムに選択）。"""
+    return _force_switch_random(battle, ctx, value)
 
 
 def ドラムアタック_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
