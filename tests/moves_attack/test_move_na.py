@@ -1097,6 +1097,40 @@ def test_ねっさのあらし_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_ねっさのだいち_こおり状態で使うと解凍されて攻撃できる():
+    """ねっさのだいち: こおり状態でも使用でき、使うと解凍される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ねっさのだいち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # こおり状態を付与してから使用
+    t.apply_ailment(battle, 0, "こおり")
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # こおりが解除されてダメージを与えられる
+    assert not attacker.ailment.is_active
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+
+
+def test_ねっさのだいち_こおり状態の相手に当てると解凍する():
+    """ねっさのだいち: じめんタイプだが、被弾した相手のこおりを解凍する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ねっさのだいち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
 def test_ねっさのだいち_やけどが発動する():
     """ねっさのだいち: 30%でやけどを付与する。"""
     battle = t.start_battle(
@@ -1131,6 +1165,58 @@ def test_ねっぷう_やけどが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "やけど"
+
+
+def test_ねらいうち_よびみずに直接使用すると無効化される():
+    """ねらいうち: 引き寄せ無効化はダブル専用で対象外だが、よびみずに直接使用した場合は
+    通常のみず技と同様に無効化されとくこうが上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ねらいうち"])],
+        team1=[Pokemon("ラプラス", ability_name="よびみず")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert defender.rank["spa"] == 1
+
+
+def test_ねらいうち_急所ランクが1():
+    """ねらいうち: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ねらいうち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_ねらいうち_急所ランクが1_乱数大で急所なし():
+    """ねらいうち: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ねらいうち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_ねらいうち_相手にダメージを与える():
+    """ねらいうち: 追加効果なしの特殊みず技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ねらいうち"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_ねんりき_こんらんが発動する():
