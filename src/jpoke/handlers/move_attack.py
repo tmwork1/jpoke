@@ -561,6 +561,15 @@ def かげぬい_apply_no_escape(battle: Battle, ctx: AttackContext, value: Any)
     return apply_volatile_to_defender(battle, ctx, value, volatile="にげられない")
 
 
+def かたきうち_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かたきうち: 味方が前のターンにひんしになっていた場合、威力が2倍になる。"""
+    player = battle.get_player(ctx.attacker)
+    state = battle.player_states[player]
+    if state.ally_fainted_turn == battle.turn - 1:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
 def かみくだく_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.2)
 

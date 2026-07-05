@@ -1606,7 +1606,11 @@ MOVES: dict[MoveName, MoveData] = {
         power=70,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.かたきうち_calc_power,
+            ),
+        }
     ),
     "かたくなる": MoveData(
         type="ノーマル",

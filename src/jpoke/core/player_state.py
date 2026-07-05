@@ -25,6 +25,7 @@ class PlayerState:
         self.has_switched: bool = False
         self.baton_pass_data: dict = {}  # バトンタッチの引き継ぎデータ
         self.last_move_succeeded: bool | None = None  # このターンの技が成功したか（未実行ならNone）
+        self.ally_fainted_turn: int | None = None  # 味方が直近にひんしになったターン（かたきうち用）
 
     def __deepcopy__(self, memo):
         cls = self.__class__

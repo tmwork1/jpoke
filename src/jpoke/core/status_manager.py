@@ -11,6 +11,7 @@ from jpoke.model import Pokemon
 from jpoke.types import Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
+from jpoke.core.event_logger import HPChangePayload, StatChangePayload
 from jpoke.utils import fast_copy
 
 
@@ -79,18 +80,22 @@ class StatusManager:
         if v != 0:
             self.battle.add_event_log(
                 target, LogCode.HP_CHANGED,
-                payload={
-                    "pokemon": target.name,
-                    "value": v,
-                    "hp": target.hp,
-                    "max_hp": target.max_hp,
-                    "reason": reason,
-                },
+                payload=HPChangePayload(
+                    pokemon=target.name,
+                    value=v,
+                    hp=target.hp,
+                    max_hp=target.max_hp,
+                    source=source.name if source else None,
+                    internal_reason=reason,
+                ),
             )
 
         if v < 0:
             if target.fainted:
                 self.battle.judge_winner()
+                # かたきうち用: 味方がひんしになったターンを記録する
+                player = self.battle.get_player(target)
+                self.battle.player_states[player].ally_fainted_turn = self.battle.turn
 
             self._events.emit(Event.ON_HP_CHANGED, ctx, -v)
 
@@ -139,7 +144,11 @@ class StatusManager:
                 target.stat_raised_this_turn = True
             self.battle.add_event_log(
                 target, LogCode.STAT_CHANGED,
-                payload={"stats": actual_changes, "reason": reason},
+                payload=StatChangePayload(
+                    stats=actual_changes,
+                    source=source.name if source else None,
+                    display_reason=reason,
+                ),
             )
             self._events.emit(Event.ON_MODIFY_STAT, ctx, actual_changes)
         else:
