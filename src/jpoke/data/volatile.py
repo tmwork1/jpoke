@@ -509,6 +509,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.check_trapped_not_ghost,
                 subject_spec="source:self",
             ),
+            Event.ON_SWITCH_OUT: h.VolatileHandler(
+                h.にげられない_remove_on_foe_switch,
+                subject_spec="source:foe",
+            ),
         }
     ),
     "ねむけ": VolatileData(

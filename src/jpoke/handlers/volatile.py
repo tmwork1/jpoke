@@ -792,6 +792,27 @@ def トーチカ_remove_volatile(battle: Battle, ctx: EventContext, value: Any) 
     return remove_volatile(battle, ctx, value, volatile="トーチカ")
 
 
+def にげられない_remove_on_foe_switch(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """にげられない状態の解除処理（にげられない状態を与えた相手が場を離れたときに解除する）
+
+    バインド状態の`バインド_remove`と同じパターン。シングルバトルでは「foe」が
+    常に対戦相手の場のポケモン1体のみを指すため、くらいつくの相互付与（自分・相手の
+    双方が『にげられない』状態を持つ場合）でも、片方が場を離れればもう片方の
+    『にげられない』状態が正しく解除される。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: 常にTrue
+    """
+    foe = battle.foe(ctx.source)
+    battle.volatile_manager.remove(foe, "にげられない")
+    return HandlerReturn(value=value)
+
+
 def ニードルガード_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ニードルガードの保護判定。接触した相手の最大HPの1/8ダメージを与える。"""
     return _run_protect(battle, ctx, value, chip_on_contact=1/8)

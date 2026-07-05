@@ -843,6 +843,26 @@ def くちばしキャノン_burn_contact_hitter(battle: Battle, ctx: AttackCont
     return HandlerReturn(value=value)
 
 
+def くらいつく_apply_no_escape(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """くらいつくの効果: 命中時、相手と自分の両方をにげられない状態にする。
+
+    追加効果とはみなされないため、apply_volatile_to_defender/attacker は使わず
+    battle.volatile_manager.apply を直接呼び出す（ちからずく・りんぷんの影響を受けない）。
+    片方でもゴーストタイプ、あるいは片方でもすでににげられない状態の場合は
+    双方とも付与しない。相手をひんしにした場合、使用者はにげられない状態にならない。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    if attacker.has_type("ゴースト") or defender.has_type("ゴースト"):
+        return HandlerReturn(value=value)
+    if attacker.has_volatile("にげられない") or defender.has_volatile("にげられない"):
+        return HandlerReturn(value=value)
+    battle.volatile_manager.apply(defender, "にげられない", source=attacker)
+    if not defender.fainted:
+        battle.volatile_manager.apply(attacker, "にげられない", source=defender)
+    return HandlerReturn(value=value)
+
+
 def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 

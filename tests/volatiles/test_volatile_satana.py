@@ -585,6 +585,17 @@ def test_にげられない_交代不可():
     assert not battle.query.can_switch(battle.players[0])
 
 
+def test_にげられない_発生源が交代すると解除():
+    """にげられない: 状態を与えた相手（発生源）が交代すると、自分のにげられない状態も解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("コラッタ")],
+        volatile1={"にげられない": 1},
+    )
+    t.run_switch(battle, 0, 1)
+    assert not battle.actives[1].has_volatile("にげられない")
+
+
 def test_ねむけ_ターン経過でねむりになる():
     """ねむけ: count=2 でターン終了×2回後にねむり状態になる"""
     n_turn = 2

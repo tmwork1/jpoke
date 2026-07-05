@@ -2221,7 +2221,11 @@ MOVES: dict[MoveName, MoveData] = {
         power=80,
         accuracy=100,
         flags={"bite", "contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.くらいつく_apply_no_escape,
+            )
+        },
     ),
     "クラブハンマー": MoveData(
         type="みず",
