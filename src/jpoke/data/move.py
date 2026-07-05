@@ -1654,8 +1654,8 @@ MOVES: dict[MoveName, MoveData] = {
         pp=15,
         power=90,
         accuracy=100,
-        flags={"bullet", "heal"},
-        handlers={},  # 追加効果なし
+        flags={"bullet"},
+        handlers={},  # 追加効果なし（シングルバトルでは味方が存在しないため常に相手が対象）
     ),
     "かみくだく": MoveData(
         type="あく",

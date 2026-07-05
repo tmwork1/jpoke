@@ -354,6 +354,76 @@ def test_かぜおこし_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_かたきうち_味方がひんしになっていない場合威力は上がらない():
+    """かたきうち: 味方が一度もひんしになっていない場合、威力は基本値70のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["かたきうち"]), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 70
+
+
+def test_かたきうち_味方がひんしになってから2ターン経過すると威力は上がらない():
+    """かたきうち: 味方がひんしになってから2ターン以上経過している場合、威力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["かたきうち"]), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player0 = battle.players[0]
+    bench = battle.player_states[player0].bench
+    battle.modify_hp(bench[0], v=-bench[0].max_hp)  # ピカチュウをひんしにする（このターン）
+    battle.turn += 2  # 2ターン進める
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 70
+
+
+def test_かたきうち_味方が前のターンにひんしになると威力が2倍になる():
+    """かたきうち: 味方が前のターンにひんしになっていた場合、威力が2倍(140)になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["かたきうち"]), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player0 = battle.players[0]
+    bench = battle.player_states[player0].bench
+    battle.modify_hp(bench[0], v=-bench[0].max_hp)  # ピカチュウをひんしにする（このターン）
+    battle.turn += 1  # 次のターンに進める
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 140
+
+
+def test_かたきうち_相手がひんしになっても威力は上がらない():
+    """かたきうち: 相手側のポケモンがひんしになっても、自分側の記録には影響しないため威力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["かたきうち"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    player1 = battle.players[1]
+    bench1 = battle.player_states[player1].bench
+    battle.modify_hp(bench1[0], v=-bench1[0].max_hp)  # 相手のピカチュウをひんしにする（このターン）
+    battle.turn += 1  # 次のターンに進める
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 70
+
+
+def test_かふんだんご_相手にダメージを与える():
+    """かふんだんご: シングルバトルには味方が存在しないため、常に相手を対象とした
+    追加効果なしの特殊むし技として扱われる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アブリボン", move_names=["かふんだんご"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_かみくだく_ぼうぎょ1段階低下が発動しない():
     """かみくだく: 追加効果不発時はぼうぎょランクが変化しない。"""
     battle = t.start_battle(
@@ -404,8 +474,45 @@ def test_かみつく_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_かみなり_あめ中は必中になる():
+    """かみなり: あめ天候中は命中率70でも通常なら外れる乱数で命中する。
+
+    かみなりの命中率は70。random.random()=0.85 のとき 100*0.85=85>70 で本来は外れるが、
+    あめ中はON_MODIFY_ACCURACYでNoneが返り必中になるため、命中してHPが減る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かみなり"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    # random.random()=0.85 は命中率70未満ではない（85>70）ので通常は外れる
+    battle.random.random = lambda: 0.85
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_かみなり_にほんばれ中は命中率が50になる():
+    """かみなり: にほんばれ（はれ）天候中は命中率が50になる。
+
+    random.random()=0.6 のとき 100*0.6=60 は通常の命中率70未満だが、
+    はれ中は命中率が50になるため60>50で外れる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かみなり"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    battle.random.random = lambda: 0.6
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
 def test_かみなり_まひが発動する():
-    """かみなり: 10%でまひを付与する。"""
+    """かみなり: 30%でまひを付与する。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["かみなり"])],
         team1=[Pokemon("カビゴン")],
