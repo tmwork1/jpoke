@@ -587,7 +587,7 @@ def _10まんボルト_apply_paralysis_to_defender(battle: Battle, ctx: AttackCo
 
 
 def かみなり_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.1)
+    return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
 def かみなりあらし_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
