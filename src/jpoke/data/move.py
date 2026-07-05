@@ -3068,7 +3068,7 @@ MOVES: dict[MoveName, MoveData] = {
     "しねんのずつき": MoveData(
         type="エスパー",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=90,
         flags={"contact", "secondary_effect"},

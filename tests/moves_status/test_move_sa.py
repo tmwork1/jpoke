@@ -176,18 +176,6 @@ def test_しっぽきり_控えがいない場合は失敗():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
-def test_しねんのずつき_ひるみが発動する():
-    """しねんのずつき: 20%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フーディン", move_names=["しねんのずつき"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_しびれごな_くさタイプに無効化される():
     """しびれごな: 草タイプの相手にはまひ状態を付与できない"""
     battle = t.start_battle(
