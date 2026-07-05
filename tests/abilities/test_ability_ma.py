@@ -403,6 +403,26 @@ def test_メロメロボディ_接触攻撃30パーセントでメロメロ():
     assert battle.actives[1].has_volatile("メロメロ")
 
 
+def test_ものひろい_どろぼうで奪われたアイテムは拾わない():
+    """ものひろい: take_item（どろぼう相当）で奪われた道具は場に存在し続けるため拾わない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ものひろい")],
+        team1=[Pokemon("ピカチュウ", item_name="オボンのみ")],
+    )
+    pickup_mon, foe = battle.actives
+    # どろぼう相当の奪取をtake_itemで再現する（pickup_monがfoeの道具を奪う）
+    battle.item_manager.take_item(foe)
+    assert pickup_mon.has_item("オボンのみ")
+    assert foe.last_lost_item_name == ""
+
+    # 奪った道具をpickup_monが手放す（既にアイテムを保持している間はものひろいが発動しないため）
+    battle.item_manager.remove_item(pickup_mon)
+    assert not pickup_mon.has_item()
+    t.end_turn(battle)
+    # foeのlast_lost_item_nameが空のため、ものひろいは発動しない
+    assert not pickup_mon.has_item()
+
+
 def test_ものひろい_相手がアイテムを消費していない場合は拾わない():
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="ものひろい")],

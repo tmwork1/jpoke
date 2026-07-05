@@ -99,20 +99,29 @@ class ItemManager:
             True
         )
 
-    def _change_item(self, mon: Pokemon, name: ItemName) -> None:
+    def _change_item(self,
+                     mon: Pokemon,
+                     name: ItemName,
+                     *,
+                     track_loss: bool = True) -> None:
         """ポケモンのアイテムを更新し、ハンドラ登録も同期する。
 
         Args:
             mon: アイテムを変更するポケモン
             name: 新しいアイテムの名前
+            track_loss: True の場合、アイテムを失ったときに last_lost_item_name を
+                更新する（リサイクル・しゅうかく・ものひろい等の復元/拾得対象になる）。
+                どろぼう・ほしがる・すりかえ等、道具が場に存在したまま相手に渡る場合は
+                False を指定し、復元/拾得の対象にしない。
         """
         is_active = self.battle.is_active(mon)
         ctx = EventContext(source=mon)
+        lost_item_name = mon.item.base_name if mon.has_item() else ""
 
         # アイテムを変更する前に、現在のアイテムのハンドラを解除してイベントを発火する
         if mon.has_item():
-            if not name:
-                mon.last_lost_item_name = mon.item.base_name
+            if not name and track_loss:
+                mon.last_lost_item_name = lost_item_name
             self._events.emit(Event.ON_ITEM_LOST, ctx)
             mon.item.unregister_handlers(self._events, mon)
 
@@ -130,7 +139,7 @@ class ItemManager:
             self.battle.add_event_log(
                 mon,
                 LogCode.ITEM_LOST,
-                payload=ItemPayload(item=mon.last_lost_item_name)
+                payload=ItemPayload(item=lost_item_name)
             )
 
         if is_active and name:
@@ -197,7 +206,9 @@ class ItemManager:
 
         for i, mon in enumerate(mons):
             new_name = names[1 - i]  # 入れ替え先のアイテム名
-            self._change_item(mon, new_name)
+            # 相手に渡った道具は場に存在し続けるため、リサイクル等の
+            # 復元対象にしない（track_loss=False）
+            self._change_item(mon, new_name, track_loss=False)
         return True
 
     def take_item(self,

@@ -111,6 +111,33 @@ def test_ねごと_候補技がすべてnon_negotoの場合は失敗():
     assert defender.hp == hp_before, "候補技なしの場合はダメージを与えない"
 
 
+def test_ねごと_変化技を選んでも無限再帰にならない():
+    """ねごと: 選ばれた技が変化技（status技）の場合でも RecursionError 等を起こさず正常に実行される
+
+    ねごと自身のON_STATUS_HITハンドラを解除せずに選んだ技を実行すると、
+    ネストしたrun_move内で再度ON_STATUS_HITが発火した際にねごと_select_and_execute
+    が多重発火し無限再帰してしまう回帰を防ぐテスト。
+    候補技を非攻撃技（なきごえ）のみにすることで選択結果を決定的にしている。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねごと", "なきごえ"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    negoto = mon.moves[0]
+    nakigoe = mon.moves[1]
+    defender = battle.actives[1]
+
+    t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（候補はなきごえのみ）
+
+    assert battle.move_executor.move_applied
+    assert defender.rank["atk"] == -1  # なきごえが実行されカビゴンのこうげきが下がる
+    assert negoto.pp == 9, "ねごとのPPは1消費される"
+    assert nakigoe.pp == 40, "選ばれた技のPPは消費されない"
+
+
 def test_ねごと_選ばれた技が実行されダメージを与える():
     """ねごと: ねむり中に選ばれた技が実際に実行されてダメージを与える"""
     battle = t.start_battle(
@@ -484,6 +511,27 @@ def test_リサイクル_すりかえ後はlast_lost_item_nameが設定されず
 
     # last_lost_item_name が空なので失敗 → アイテムは変化しない
     assert mon.item.name == "たべのこし"
+
+
+def test_リサイクル_どろぼうで奪われた道具は取り戻せない():
+    """リサイクル: take_item（どろぼう相当）で奪われた道具は場に存在し続けるため復元できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["リサイクル"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    # どろぼう相当の奪取をtake_itemで再現する（foeがmonの道具を奪う）
+    battle.item_manager.take_item(mon)
+    assert foe.item.name == "オボンのみ"
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.run_move(battle, 0)
+
+    # last_lost_item_name が空なので失敗 → monはアイテムを取り戻せない
+    assert not mon.has_item()
 
 
 def test_リサイクル_消費したきのみを取り戻す():
