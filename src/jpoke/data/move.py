@@ -5733,8 +5733,8 @@ MOVES: dict[MoveName, MoveData] = {
         multi_hit={
             "min": 2,
             "max": 2,
-            "check_hit_each_time": True,
-            "power_sequence": (30, 30),
+            "check_hit_each_time": False,
+            "power_sequence": (),
         },
         handlers={},  # 追加効果なし
     ),
@@ -5813,6 +5813,11 @@ MOVES: dict[MoveName, MoveData] = {
         priority=3,
         flags={"contact", "secondary_effect"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.ねこだまし_check_first_turn,
+                subject_spec="attacker:self",
+                priority=30,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねこだまし_apply_flinch,
             )
@@ -5870,6 +5875,10 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=80,
         flags={"wind", "secondary_effect"},
         handlers={
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
+                ha.ねっさのあらし_accuracy,
+                subject_spec="attacker:self"
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっさのあらし_apply_burn_to_defender,
             )

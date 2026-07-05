@@ -412,17 +412,6 @@ def test_ニードルガード_非接触技ではダメージなし():
     assert attacker.hp == attacker.max_hp
 
 
-def test_ねこだまし_ひるみが発動する():
-    """ねこだまし: 100%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("エルレイド", move_names=["ねこだまし"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ねばねばネット_すでに設置済みなら失敗():
     """ねばねばネット: すでにねばねばネットが有効なら失敗（再設置されない）"""
     battle = t.start_battle(

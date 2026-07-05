@@ -934,7 +934,7 @@ def test_なみのり_相手にダメージを与える():
 
 
 def test_にぎりつぶす_相手HP1のとき威力1():
-    """にぎりつぶす: 相手のHPが1のとき威力は最低1（max(1, floor(120*1/max_hp))）。"""
+    """にぎりつぶす: 相手のHPが1のとき威力は最低1（max(1, round_half_down(120*1/max_hp))）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["にぎりつぶす"])],
         team1=[Pokemon("カビゴン")],
@@ -946,9 +946,9 @@ def test_にぎりつぶす_相手HP1のとき威力1():
     assert battle.damage_calculator.final_power == 1
 
 
-def test_にぎりつぶす_相手HP半分のとき威力59():
-    """にぎりつぶす: 相手のHPが半分のとき威力が約59になる。
-    カビゴン max_hp=235, hp=117 → floor(120 * 117 / 235) = 59。
+def test_にぎりつぶす_相手HP半分のとき威力60():
+    """にぎりつぶす: 相手のHPが半分のとき威力が約60になる（端数は五捨五超入で丸める）。
+    カビゴン max_hp=235, hp=117 → round_half_down(120 * 117 / 235) = round_half_down(59.744...) = 60。
     """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["にぎりつぶす"])],
@@ -958,12 +958,12 @@ def test_にぎりつぶす_相手HP半分のとき威力59():
     defender = battle.actives[1]
     defender.hp = defender.max_hp // 2
     t.run_move(battle, 0)
-    assert battle.damage_calculator.final_power == 59
+    assert battle.damage_calculator.final_power == 60
 
 
 def test_にぎりつぶす_相手HP満タンのとき威力120():
     """にぎりつぶす: 相手のHPが満タンのとき威力120。
-    floor(120 * max_hp / max_hp) = 120。
+    round_half_down(120 * max_hp / max_hp) = 120。
     """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["にぎりつぶす"])],
@@ -1010,6 +1010,38 @@ def test_ねこだまし_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ねこだまし_交代後の最初の行動では成功する():
+    """ねこだまし: 交代で場に出た直後の最初の行動では成功する。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ヘラクロス", move_names=["たいあたり"]),
+            Pokemon("ニャース", move_names=["ねこだまし"]),
+        ],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    # 場に出ているポケモンの最初の行動を消費する
+    t.run_move(battle, 0, 0)
+    # 交代（ニャースにとっては場に出てから最初の行動）
+    t.run_switch(battle, 0, 1)
+    t.run_move(battle, 0, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ねこだまし_場に出てから最初の行動でなければ失敗する():
+    """ねこだまし: 場に出てから最初の行動でなければ失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニャース", move_names=["たいあたり", "ねこだまし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    # 場に出てから最初の行動として別の技を使用する
+    t.run_move(battle, 0, 0)
+    # 2回目の行動としてねこだましを使用 → 失敗する
+    t.run_move(battle, 0, 1)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
 def test_ネズミざん_命中率0で全て外れる():
     """ネズミざん: check_hit_each_time=Trueのため、命中率0では1発目から外れ、0回ヒットする。"""
     battle = t.start_battle(
@@ -1032,6 +1064,25 @@ def test_ネズミざん_最大10回ヒットする():
     defender = battle.actives[1]
     t.run_move(battle, 0)
     assert defender.hits_taken == 10
+
+
+def test_ねっさのあらし_あめ中は必中になる():
+    """ねっさのあらし: あめ天候中は命中率80でも通常なら外れる乱数で命中する。
+
+    ねっさのあらしの命中率は80。random.random()=0.9 のとき 100*0.9=90>80 で本来は外れるが、
+    あめ中はON_MODIFY_ACCURACYでNoneが返り必中になるため、命中してHPが減る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ねっさのあらし"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    # random.random()=0.9 は命中率80未満ではない（90>80）ので通常は外れる
+    battle.random.random = lambda: 0.9
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_ねっさのあらし_やけどが発動する():

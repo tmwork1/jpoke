@@ -2045,9 +2045,10 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
 def にぎりつぶす_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """にぎりつぶす: 対象の残りHP / 最大HP の比率で威力を決定する（最大120）。
 
-    威力 = max(1, floor(120 × 現在HP / 最大HP))
+    威力 = max(1, round_half_down(120 × 現在HP / 最大HP))
+    端数は五捨五超入で処理する（第五世代以降の仕様）。
     """
-    power = max(1, int(120 * ctx.defender.hp / ctx.defender.max_hp))
+    power = max(1, round_half_down(120 * ctx.defender.hp / ctx.defender.max_hp))
     return HandlerReturn(value=power * 4096)
 
 
@@ -2061,6 +2062,30 @@ def ニードルアーム_apply_flinch(battle: Battle, ctx: AttackContext, value
 
 def ねこだまし_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ")
+
+
+def ねこだまし_check_first_turn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねこだましの発動可否を判定する。
+
+    場に出てから最初の行動でなければ不発になる。
+    """
+    if ctx.attacker.acted_since_switch_in:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ねこだまし")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ねっさのあらし_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねっさのあらしの天候による命中率補正。あめのときのみ必中。
+    かみなりあらし・こがらしあらしと同様、にほんばれ時の命中率低下はない。
+    防御側がばんのうがさを持つ場合、あめでも必中にならない。
+    """
+    if battle.weather_for(ctx.defender).rainy:
+        return HandlerReturn(value=None)  # 必中
+    return HandlerReturn(value=value)
 
 
 def ねっさのあらし_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
