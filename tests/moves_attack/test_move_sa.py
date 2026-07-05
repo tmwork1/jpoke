@@ -221,7 +221,7 @@ def test_しおづけ_しおづけ揮発状態が付与される():
 
 
 def test_しおづけ_ターン終了後にダメージを受ける():
-    """しおづけ: しおづけ状態のポケモンはターン終了時に最大HPの1/8のダメージを受ける。"""
+    """しおづけ: しおづけ状態付与後、ターン終了時に最大HPの1/16のダメージを受ける（カビゴンはみず・はがねタイプではない）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["しおづけ"])],
         team1=[Pokemon("カビゴン")],
@@ -230,9 +230,10 @@ def test_しおづけ_ターン終了後にダメージを受ける():
     defender = battle.actives[1]
     max_hp = defender.max_hp
     t.run_move(battle, 0)
+    hp_after_hit = defender.hp
     # しおづけ状態付与後、ターン終了時ダメージが発生する
     t.end_turn(battle)
-    assert defender.hp < max_hp - max_hp // 8
+    assert hp_after_hit - defender.hp == max_hp // 16
 
 
 def test_しおふき_HP半分のとき威力約75():
