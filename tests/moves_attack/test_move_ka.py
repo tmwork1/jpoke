@@ -5,6 +5,19 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_かいりき_相手にダメージを与える():
+    """かいりき: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["かいりき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_カウンター_みがわりに当たったダメージは参照されない():
     """カウンター: みがわりが被弾したダメージは物理ダメージとして記録されない。"""
     battle = t.start_battle(
@@ -72,6 +85,26 @@ def test_カウンター_特殊ダメージのみ受けたとき失敗する():
     assert defender.hp == hp_before
 
 
+def test_かえんぐるま_こおり状態で使うと解凍されて攻撃できる():
+    """かえんぐるま: こおり状態でも使用でき、使うと解凍される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["かえんぐるま"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # こおり状態を付与してから使用
+    t.apply_ailment(battle, 0, "こおり")
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # こおりが解除されてダメージを与えられる
+    assert not attacker.ailment.is_active
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+
+
 def test_かえんぐるま_やけどが発動する():
     """かえんぐるま: 10%でやけどを付与する。"""
     battle = t.start_battle(
@@ -96,6 +129,20 @@ def test_かえんだん_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_かえんほうしゃ_こおり状態の相手に当てると解凍する():
+    """かえんほうしゃ: ほのおタイプの攻撃技のため、被弾した相手のこおりを解凍する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
 def test_かえんほうしゃ_やけどが発動する():
     """かえんほうしゃ: 10%でやけどを付与する。"""
     battle = t.start_battle(
@@ -106,6 +153,26 @@ def test_かえんほうしゃ_やけどが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "やけど"
+
+
+def test_かえんボール_こおり状態で使うと解凍されて攻撃できる():
+    """かえんボール: こおり状態でも使用でき、使うと解凍される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["かえんボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # こおり状態を付与してから使用
+    t.apply_ailment(battle, 0, "こおり")
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # こおりが解除されてダメージを与えられる
+    assert not attacker.ailment.is_active
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
 
 
 def test_かえんボール_やけどが発動する():
@@ -205,6 +272,19 @@ def test_かげうち_相手にダメージを与える():
     battle = t.start_battle(
         team0=[Pokemon("ゲンガー", move_names=["かげうち"])],
         team1=[Pokemon("ミュウツー")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_かぜおこし_相手にダメージを与える():
+    """かぜおこし: 追加効果なしの特殊ひこう技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", move_names=["かぜおこし"])],
+        team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     defender = battle.actives[1]
