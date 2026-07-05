@@ -71,7 +71,13 @@ class CommandManager:
         """行動時に使用可能なコマンドを取得する。"""
         state = self.battle.player_states[player]
         active = state.active
-        move_indexes = [i for i, move in enumerate(active.moves) if move.pp > 0]
+        move_indexes = [
+            i for i, move in enumerate(active.moves)
+            if move.pp > 0 and (
+                move.name != "とっておき"
+                or self.battle.query.can_use_last_resort(active)
+            )
+        ]
 
         # 通常技
         commands = [Command.get_move_command(i) for i in move_indexes]

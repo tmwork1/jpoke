@@ -53,6 +53,20 @@ class PokemonQuery:
                 return volatile.move_name
         return None
 
+    def can_use_last_resort(self, pokemon: Pokemon) -> bool:
+        """とっておきの発動条件を満たしているか判定する。
+
+        自身がとっておきを覚えており、かつとっておき以外に覚えている技を
+        すべて場に出てから1回以上PP消費して使用していれば True を返す。
+        Champions では条件を満たしていない場合、とっておき自体を選択できない。
+        """
+        if not pokemon.has_move("とっておき"):
+            return False
+        other_move_names = [m.name for m in pokemon.moves if m.name != "とっておき"]
+        if not other_move_names:
+            return False
+        return all(name in pokemon.pp_consumed_moves for name in other_move_names)
+
     def is_floating(self, pokemon: Pokemon) -> bool:
         """浮いている状態か判定する。
 
