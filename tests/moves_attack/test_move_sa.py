@@ -103,6 +103,40 @@ def test_サイコファング_リフレクターを解除する():
     assert not battle.side_managers[1].fields["リフレクター"].is_active
 
 
+def test_さばきのつぶて_せいれいプレートでフェアリータイプになる():
+    """さばきのつぶて: せいれいプレートを持っているとき技のタイプがフェアリーになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", item_name="せいれいプレート", move_names=["さばきのつぶて"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "フェアリー"
+
+
+def test_さばきのつぶて_プレートなしはノーマルタイプのまま():
+    """さばきのつぶて: プレートを持っていないとき技のタイプはノーマルのまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", move_names=["さばきのつぶて"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ノーマル"
+
+
+def test_さばきのつぶて_マジックルーム中はプレートを持っていてもノーマルタイプになる():
+    """さばきのつぶて: マジックルーム状態でアイテムが無効化されている間はノーマルタイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", item_name="せいれいプレート", move_names=["さばきのつぶて"])],
+        team1=[Pokemon("カビゴン")],
+        field={"マジックルーム": 5},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ノーマル"
+
+
 def test_サンダーダイブ_命中時は失敗反動ダメージを受けない():
     """サンダーダイブ: 命中したときはON_MISSが発火しないため失敗反動はない。"""
     battle = t.start_battle(

@@ -15,6 +15,7 @@ from jpoke.core import HandlerReturn
 from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.data import TYPE_MODIFIER
+from jpoke.data.signature_items import PLATE_TO_TYPE
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -1003,6 +1004,25 @@ def コメットパンチ_boost_attacker_A(battle: Battle, ctx: AttackContext, v
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1}, chance=0.2)
 
 
+def ころがる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ころがる: 命中時に揮発性状態を更新する。
+
+    初回命中時は揮発性状態（count=1）を付与して強制行動を開始する。
+    継続中の命中の場合は count を+1し、5回目の命中で強制行動を終了する。
+    """
+    attacker = ctx.attacker
+    if attacker.has_volatile("ころがる"):
+        volatile = attacker.volatiles["ころがる"]
+        volatile.count += 1
+        if volatile.count >= 5:
+            battle.volatile_manager.remove(attacker, "ころがる")
+    else:
+        battle.volatile_manager.apply(
+            attacker, "ころがる", count=1, source=attacker, move_name=ctx.move.name
+        )
+    return HandlerReturn(value=value)
+
+
 def コールドフレア_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
@@ -1038,6 +1058,19 @@ def サイコファング_break_screens(battle: Battle, ctx: AttackContext, valu
 
 def サイコブースト_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
+
+
+def さばきのつぶて_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さばきのつぶて: 持っているプレートに応じてタイプが変わる（プレートがない場合はノーマル固定）。
+
+    さしおさえ・マジックルームなどでアイテムが無効化されている場合、
+    `item.name` が空文字を返すためノーマルタイプのままになる。
+    """
+    plate_name = ctx.attacker.item.name if ctx.attacker.has_item() else ""
+    new_type = PLATE_TO_TYPE.get(plate_name)
+    if new_type is not None:
+        value = new_type
+    return HandlerReturn(value=value)
 
 
 def さわぐ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

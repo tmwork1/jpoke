@@ -2621,7 +2621,11 @@ MOVES: dict[MoveName, MoveData] = {
         power=30,
         accuracy=90,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.ころがる_apply,
+            ),
+        }
     ),
     "こわいかお": MoveData(
         type="ノーマル",
@@ -2853,7 +2857,11 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
+                ha.さばきのつぶて_modify_move_type,
+            ),
+        },
     ),
     "さむいギャグ": MoveData(
         type="こおり",
