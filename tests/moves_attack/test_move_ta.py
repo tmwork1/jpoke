@@ -830,6 +830,45 @@ def test_つっぱり_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_つつく_相手にダメージを与える():
+    """つつく: 追加効果なしの物理ひこう技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", move_names=["つつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_つのでつく_相手にダメージを与える():
+    """つのでつく: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["つのでつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_つばさでうつ_相手にダメージを与える():
+    """つばさでうつ: 追加効果なしの物理ひこう技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", move_names=["つばさでうつ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_つららおとし_ひるみが発動する():
     """つららおとし: 30%でひるみを付与する。"""
     battle = t.start_battle(
