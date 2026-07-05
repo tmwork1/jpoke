@@ -6147,7 +6147,7 @@ MOVES: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.はがねのつばさ_boost_defender_B,
+                ha.はがねのつばさ_boost_attacker_B,
             )
         }
     ),
