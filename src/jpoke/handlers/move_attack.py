@@ -599,6 +599,16 @@ def かみなり_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext,
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
+def かみなりあらし_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かみなりあらしの天候による命中率補正。あめのときのみ必中。
+    かみなりと異なり、にほんばれ時の命中率低下はない。
+    防御側がばんのうがさを持つ場合、あめでも必中にならない。
+    """
+    if battle.weather_for(ctx.defender).rainy:
+        return HandlerReturn(value=None)  # 必中
+    return HandlerReturn(value=value)
+
+
 def かみなりあらし_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.2)
 
@@ -616,8 +626,12 @@ def かみなりパンチ_apply_paralysis_to_defender(battle: Battle, ctx: Attac
 
 
 def からげんき_double_power_when_ailment(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """からげんき: 使用者が状態異常のとき威力が2倍になる。"""
-    if ctx.attacker.ailment.is_active:
+    """からげんき: 使用者が『どく』『もうどく』『まひ』『やけど』状態のとき威力が2倍になる。
+
+    『ねむり』『こおり』『ゆめうつつ』は対象外（ねごと経由の使用や、ぜったいねむりによる
+    ゆめうつつ状態でも威力は上がらない）。
+    """
+    if ctx.attacker.ailment.name in ("どく", "もうどく", "まひ", "やけど"):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 

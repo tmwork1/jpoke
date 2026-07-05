@@ -523,6 +523,25 @@ def test_かみなり_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_かみなりあらし_あめ中は必中になる():
+    """かみなりあらし: あめ天候中は命中率80でも通常なら外れる乱数で命中する。
+
+    かみなりあらしの命中率は80。random.random()=0.9 のとき 100*0.9=90>80 で本来は外れるが、
+    あめ中はON_MODIFY_ACCURACYでNoneが返り必中になるため、命中してHPが減る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かみなりあらし"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    # random.random()=0.9 は命中率80未満ではない（90>80）ので通常は外れる
+    battle.random.random = lambda: 0.9
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_かみなりあらし_まひが発動する():
     """かみなりあらし: 20%でまひを付与する。"""
     battle = t.start_battle(
@@ -571,6 +590,19 @@ def test_かみなりパンチ_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_からげんき_ねごと経由の使用では威力が上がらない():
+    """からげんき: ねむり状態でねごと経由に使用しても威力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ねごと", "からげんき"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_からげんき_まひ状態でも威力2倍():
     """からげんき: まひ状態（やけど以外の状態異常）でも威力2倍になる。"""
     battle = t.start_battle(
@@ -597,6 +629,19 @@ def test_からげんき_やけどの攻撃半減を無効化する():
     assert battle.damage_calculator.burn_modifier == 4096
 
 
+def test_からげんき_ゆめうつつ状態では威力が上がらない():
+    """からげんき: ゆめうつつ状態（ぜったいねむり相当）では威力が上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["からげんき"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ゆめうつつ", None),
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_からげんき_状態異常なしのとき通常威力():
     """からげんき: 使用者が状態異常でないとき威力補正なし。"""
     battle = t.start_battle(
@@ -620,6 +665,18 @@ def test_からげんき_状態異常のとき威力2倍():
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_からみつく_すばやさ低下が発動する():
+    """からみつく: 10%で相手のすばやさを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["からみつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
 
 
 def test_かわらわり_オーロラベールを解除する():
