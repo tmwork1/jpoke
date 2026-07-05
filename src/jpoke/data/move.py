@@ -3235,6 +3235,9 @@ MOVES: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.しんぴのちから_boost_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.しんぴのちから_boost_spa)
         }
     ),
     "しんぴのつるぎ": MoveData(
@@ -3243,7 +3246,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=10,
         power=85,
         accuracy=100,
-        flags={"slash"},
+        flags={"slash", "physical_damage"},
         handlers={},  # 追加効果なし
     ),
     "しんぴのまもり": MoveData(
@@ -3319,7 +3322,7 @@ MOVES: dict[MoveName, MoveData] = {
     "じごくぐるま": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=20,
         power=80,
         accuracy=80,
         flags={"contact", "recoil"},
@@ -3335,9 +3338,9 @@ MOVES: dict[MoveName, MoveData] = {
         pp=15,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.じごくづき_apply_volatile_to_defender,
             )
         }
