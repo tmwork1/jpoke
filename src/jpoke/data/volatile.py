@@ -565,6 +565,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.ねをはる_check_floating,
                 subject_spec="source:self",
             ),
+            Event.ON_TRY_BLOW: h.VolatileHandler(
+                h.ねをはる_block_blow,
+                subject_spec="defender:self",
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_TURN_END: LethalHandler(func=l.ねをはる_heal, subject="defender")

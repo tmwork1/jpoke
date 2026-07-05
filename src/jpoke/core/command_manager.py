@@ -31,8 +31,17 @@ class CommandManager:
     def update_reference(self, battle: Battle):
         self.battle = battle
 
-    def get_available_switch_commands(self, player: Player) -> list[Command]:
+    def get_available_switch_commands(self, player: Player, force: bool = False) -> list[Command]:
         """交代可能なコマンドのリストを取得する。
+
+        Args:
+            player: 対象プレイヤー
+            force: True の場合、とらわれ状態チェックを無視する。
+                ほえる・ふきとばし・ともえなげ・ドラゴンテール等、相手を強制的に
+                交代させる技から呼び出す際に使う（にげられない・バインド・
+                フェアリーロックや特性かげふみ・ありじごく・じりょくを無視して
+                発動するため）。ねをはる状態のみ `Event.ON_TRY_BLOW` 経由で
+                別途無効化されるため、ここでは考慮しない。
 
         Note:
             バトンタッチによる PIVOT 交代中や、だっしゅつパック・だっしゅつボタンに
@@ -45,10 +54,11 @@ class CommandManager:
             妨げてはならない。
         """
         state = self.battle.player_states[player]
-        # PIVOT（バトンタッチ等）・だっしゅつパック・だっしゅつボタン・瀕死交代発動中は
-        # とらわれ状態に関わらず交代可能
+        # PIVOT（バトンタッチ等）・だっしゅつパック・だっしゅつボタン・瀕死交代発動中や
+        # 強制交代技（force=True）はとらわれ状態に関わらず交代可能
         if (
-            state.interrupt != Interrupt.PIVOT
+            not force
+            and state.interrupt != Interrupt.PIVOT
             and state.interrupt != Interrupt.EJECTBUTTON
             and state.interrupt != Interrupt.FAINTED
             and not state.interrupt.name.startswith("EJECTPACK")

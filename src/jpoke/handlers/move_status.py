@@ -10,6 +10,7 @@ from .move import (
     apply_ailment_to_defender,
     apply_volatile_to_attacker,
     apply_volatile_to_defender,
+    get_forced_switch_commands,
     modify_attacker_stats,
     modify_defender_stats,
 )
@@ -66,7 +67,7 @@ def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """
     player = battle.get_player(ctx.defender)
     state = battle.player_states[player]
-    commands = battle.command_manager.get_available_switch_commands(player)
+    commands = get_forced_switch_commands(battle, player)
     if commands:
         command = battle.random.choice(commands)
         battle.run_switch(player, state.team[command.index])

@@ -21,6 +21,7 @@ from .move import (
     apply_confusion_to_defender,
     apply_volatile_to_attacker,
     apply_volatile_to_defender,
+    get_forced_switch_commands,
     modify_attacker_stats,
     modify_defender_stats,
 )
@@ -1734,7 +1735,7 @@ def _force_switch_random(battle: Battle, ctx: AttackContext, value: Any) -> Hand
 
     きゅうばん・ねをはる等の無効化チェックを ON_TRY_BLOW 経由で行う。
     にげられない・バインド・フェアリーロックや特性かげふみ・ありじごく・じりょく
-    による交代制限は無視して発動する（force=True）。
+    による交代制限は無視して発動する（`get_forced_switch_commands` を使用）。
     交代先は控えポケモンからランダムで選ばれる（ほえる・ふきとばしと同様）。
     控えポケモンが存在しない場合は交代処理をスキップする。
     """
@@ -1747,7 +1748,7 @@ def _force_switch_random(battle: Battle, ctx: AttackContext, value: Any) -> Hand
         return HandlerReturn(value=value)
     player = battle.get_player(ctx.defender)
     state = battle.player_states[player]
-    commands = battle.command_manager.get_available_switch_commands(player, force=True)
+    commands = get_forced_switch_commands(battle, player)
     if commands:
         command = battle.random.choice(commands)
         battle.run_switch(player, state.team[command.index])

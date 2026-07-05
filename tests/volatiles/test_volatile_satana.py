@@ -693,6 +693,19 @@ def test_ねをはる_回復():
     assert mon.hp == 1 + mon.max_hp // 16
 
 
+def test_ねをはる_強制交代技を防ぐ():
+    """ねをはる: ほえる等の強制交代技（ON_TRY_BLOW）を防ぐ。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["ほえる"])],
+        volatile0={"ねをはる": 1},
+        accuracy=100,
+    )
+    defender_before = battle.actives[0]
+    t.run_move(battle, 1)
+    assert battle.actives[0] is defender_before
+
+
 def test_ねをはる_浮遊無効():
     """ねをはる: 浮遊しているポケモンでも地面にいる扱いになる"""
     battle = t.start_battle(

@@ -879,6 +879,11 @@ def ねむけ_tick_volatile(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return tick_volatile(battle, ctx, value, volatile="ねむけ")
 
 
+def ねをはる_block_blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ねをはる状態: 強制交代技（ほえる・ふきとばし・ともえなげ・ドラゴンテール等）の効果を防ぐ。"""
+    return HandlerReturn(value=False, stop_event=True)
+
+
 def ねをはる_check_floating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ねをはる状態では浮遊しない（地面に根を張っているため）"""
     return HandlerReturn(value=False, stop_event=True)
