@@ -354,6 +354,18 @@ def test_かぜおこし_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_かみくだく_ぼうぎょ1段階低下が発動しない():
+    """かみくだく: 追加効果不発時はぼうぎょランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["かみくだく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == 0
+
+
 def test_かみくだく_ぼうぎょ1段階低下が発動する():
     """かみくだく: 20%の確率で相手のぼうぎょを1段階下げる。"""
     battle = t.start_battle(
@@ -364,6 +376,20 @@ def test_かみくだく_ぼうぎょ1段階低下が発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["def"] == -1
+
+
+def test_かみくだく_相手にダメージを与える():
+    """かみくだく: 物理あく技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["かみくだく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_かみつく_ひるみが発動する():
