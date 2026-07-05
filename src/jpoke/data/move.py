@@ -3841,6 +3841,10 @@ MOVES: dict[MoveName, MoveData] = {
                 ha.せいなるつるぎ_ignore_def_rank,
                 subject_spec="attacker:self",
             ),
+            Event.ON_GET_STAT_RANK: h.MoveHandler(
+                ha.せいなるつるぎ_ignore_evasion,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "せいなるほのお": MoveData(

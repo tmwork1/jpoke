@@ -1336,6 +1336,12 @@ def せいなるつるぎ_ignore_def_rank(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=1)
 
 
+def せいなるつるぎ_ignore_evasion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """せいなるつるぎ: 相手の回避率ランク変化を無視して命中判定する。"""
+    value["evasion"] = 0
+    return HandlerReturn(value=value)
+
+
 def せいなるほのお_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.5)
 
