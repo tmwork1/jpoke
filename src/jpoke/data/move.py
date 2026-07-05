@@ -1712,6 +1712,10 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=80,
         flags={"wind", "secondary_effect"},
         handlers={
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
+                ha.かみなりあらし_accuracy,
+                subject_spec="attacker:self"
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かみなりあらし_apply_paralysis_to_defender,
             )
@@ -1772,10 +1776,10 @@ MOVES: dict[MoveName, MoveData] = {
         }
     ),
     "からみつく": MoveData(
-        type="むし",
-        category="special",
-        pp=20,
-        power=55,
+        type="ノーマル",
+        category="physical",
+        pp=35,
+        power=10,
         accuracy=100,
         flags={"secondary_effect"},
         handlers={
