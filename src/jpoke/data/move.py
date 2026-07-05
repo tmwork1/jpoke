@@ -1937,9 +1937,14 @@ MOVES: dict[MoveName, MoveData] = {
         priority=-3,
         flags={"contact", "non_negoto", "punch"},
         handlers={
+            Event.ON_MODIFY_PP_CONSUMED: h.MoveHandler(
+                ha.きあいパンチ_suppress_pp_on_fail,
+                subject_spec="attacker:self",
+            ),
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.きあいパンチ_check_move,
                 subject_spec="attacker:self",
+                priority=30,
             ),
         },
     ),
@@ -1999,7 +2004,11 @@ MOVES: dict[MoveName, MoveData] = {
         power=120,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_HIT: h.MoveHandler(
+                ha.きょけんとつげき_apply_self_volatile,
+            ),
+        }
     ),
     "きょじゅうざん": MoveData(
         type="はがね",
@@ -2121,7 +2130,7 @@ MOVES: dict[MoveName, MoveData] = {
         }
     ),
     "ぎんいろのかぜ": MoveData(
-        type="こおり",
+        type="むし",
         category="special",
         pp=5,
         power=60,

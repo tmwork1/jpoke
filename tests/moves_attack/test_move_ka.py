@@ -1345,6 +1345,19 @@ def test_きょけんとつげき状態_相手の技のダメージが2倍にな
     assert battle.damage_calculator.damage_modifier == 8192
 
 
+def test_きょじゅうざん_相手にダメージを与える():
+    """きょじゅうざん: 追加効果なしの物理はがね技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["きょじゅうざん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_キラースピン_ステルスロックを解除する():
     """キラースピン: 命中時に使用者のサイドのステルスロックを解除する。"""
     battle = t.start_battle(
@@ -1381,6 +1394,43 @@ def test_キラースピン_バインドを解除する():
     battle.volatile_manager.apply(attacker, "バインド", count=4, source=battle.actives[1])
     t.run_move(battle, 0)
     assert not attacker.has_volatile("バインド")
+
+
+def test_きりさく_急所ランクが1():
+    """きりさく: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["きりさく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_きりさく_急所ランクが1_乱数大で急所なし():
+    """きりさく: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["きりさく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_きりさく_相手にダメージを与える():
+    """きりさく: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["きりさく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_ギガインパクト_命中後にリチャージ状態が付与される():
