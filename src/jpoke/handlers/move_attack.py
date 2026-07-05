@@ -1151,7 +1151,15 @@ def しっとのほのお_apply_burn_to_defender(battle: Battle, ctx: AttackCont
 
 
 def しっぺがえし_double_power_when_second(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """しっぺがえし: 同ターン後攻で行動する場合、威力が2倍になる。"""
+    """しっぺがえし: 相手（対象）がそのターンにすでに行動していると威力が2倍になる。
+
+    そのターンに交代してきたばかりで技を未使用の相手には威力補正が乗らない
+    （第五世代以降の仕様）。
+    """
+    defender_player = battle.get_player(ctx.defender)
+    if battle.player_states[defender_player].has_switched:
+        return HandlerReturn(value=value)
+
     attacker_player = battle.get_player(ctx.attacker)
     if battle.query.is_second_actor(attacker_player):
         value = apply_fixed_modifier(value, 8192)
