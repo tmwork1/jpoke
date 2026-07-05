@@ -683,8 +683,8 @@ def test_ちきゅうなげ_ゴーストには無効():
     assert battle.actives[1].hp == battle.actives[1].max_hp
 
 
-def test_つけあがる_ACCランク上昇はカウントしない():
-    """つけあがる: ACC+1があっても威力に影響しない（ACC/EVAはランク合計の対象外）。"""
+def test_つけあがる_ACCランク上昇もカウントする():
+    """つけあがる: ACC+1も威力に影響する（命中率・回避率もランク合計の対象）。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["つけあがる"])],
         team1=[Pokemon("カビゴン")],
@@ -694,7 +694,7 @@ def test_つけあがる_ACCランク上昇はカウントしない():
     battle.modify_stats(attacker, {"accuracy": 1}, source=attacker)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
-    assert battle.damage_calculator.final_power == 20
+    assert battle.damage_calculator.final_power == 40
 
 
 def test_つけあがる_こうげきランク上昇1段階で威力40():
@@ -773,6 +773,19 @@ def test_つじぎり_急所ランクが1_乱数大で急所なし():
     t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
     t.run_move(battle, 0)
     assert battle.move_executor.critical is False
+
+
+def test_つっぱり_複数ヒットする():
+    """つっぱり: 2~5回連続でヒットする複数ヒット技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["つっぱり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    hit_count = battle.move_executor._resolve_hit_count(
+        t.build_context(battle, atk_idx=0)
+    )
+    assert 2 <= hit_count <= 5
 
 
 def test_つららおとし_ひるみが発動する():

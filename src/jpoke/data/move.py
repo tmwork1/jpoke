@@ -4504,6 +4504,12 @@ MOVES: dict[MoveName, MoveData] = {
         power=15,
         accuracy=100,
         flags={"contact"},
+        multi_hit={
+            "min": 2,
+            "max": 5,
+            "check_hit_each_time": False,
+            "power_sequence": (),
+        },
         handlers={},  # 追加効果なし
     ),
     "つつく": MoveData(
