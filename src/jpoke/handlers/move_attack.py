@@ -1359,6 +1359,28 @@ def せいなるほのお_thaw_attacker(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
+def ぜったいれいど_check_ice_immunity(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぜったいれいど: 対象がこおりタイプの場合、技を無効化する。
+
+    通常のタイプ相性表ではこおり技はこおりタイプに対して0.5倍でしかないため、
+    本技専用の判定処理として実装する。
+    """
+    if ctx.defender.has_type("こおり"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_IMMUNED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ぜったいれいど_こおりタイプ")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def ぜったいれいど_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ぜったいれいど: 使用者がこおりタイプでない場合、基礎命中率を20に下げる。"""
+    if not ctx.attacker.has_type("こおり"):
+        return HandlerReturn(value=20)
+    return HandlerReturn(value=value)
+
+
 def ソウルクラッシュ_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
 

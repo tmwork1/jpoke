@@ -1479,6 +1479,49 @@ def test_せいなるほのお_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_ぜったいれいど_こおりタイプでない使用者は命中率が20になる():
+    """ぜったいれいど: 使用者がこおりタイプでない場合、基礎命中率が20に下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぜったいれいど"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 20
+
+
+def test_ぜったいれいど_こおりタイプの使用者は命中率が30のまま():
+    """ぜったいれいど: 使用者がこおりタイプの場合、基礎命中率は30のまま下がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["ぜったいれいど"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == 30
+
+
+def test_ぜったいれいど_こおりタイプの相手には無効():
+    """ぜったいれいど: 対象がこおりタイプの場合、通常のタイプ相性表では無効にならないが本技専用の判定で無効化される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぜったいれいど"])],
+        team1=[Pokemon("ジュゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+    assert battle.actives[1].hp == battle.actives[1].max_hp
+
+
+def test_ぜったいれいど_命中時は相手を一撃で倒す():
+    """ぜったいれいど: 命中した場合、対象のHPを0にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["ぜったいれいど"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].hp == 0
+
+
 def test_そらをとぶ_2ターンで攻撃する():
     """そらをとぶ: 1ターン目はダメージを与えず揮発状態を付与し、2ターン目にダメージを与えて揮発状態を解除する。"""
     battle = t.start_battle(

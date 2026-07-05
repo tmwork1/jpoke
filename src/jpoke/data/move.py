@@ -3872,6 +3872,13 @@ MOVES: dict[MoveName, MoveData] = {
         accuracy=30,
         flags={"ohko"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                ha.ぜったいれいど_check_ice_immunity,
+                priority=120,
+            ),
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
+                ha.ぜったいれいど_modify_accuracy,
+            ),
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.ohko_damage,
                 priority=90,
