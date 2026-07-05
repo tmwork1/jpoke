@@ -4197,7 +4197,7 @@ MOVES: dict[MoveName, MoveData] = {
         pp=5,
         power=110,
         accuracy=85,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.だいもんじ_apply_burn_to_defender,
