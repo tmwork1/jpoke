@@ -1,6 +1,6 @@
 # test_lethal
 
-テスト数: 76
+テスト数: 77
 
 - [x] Gのちから_ぼうぎょダウン_secondary有り
 - [x] Gのちから_ぼうぎょダウン_secondary無し
@@ -40,6 +40,7 @@
 - [x] しんぴのちから_とくこうアップ_secondary無し
 - [x] じきゅうりょく_物理技受けるとぼうぎょ上昇
 - [x] すなあらし_非いわじめんはがねタイプにダメージ
+- [x] すなじごく_バインド付与
 - [x] タイプ半減きのみ_代表種(item_name=オッカのみ, move_name=かえんほうしゃ, defender_name=フシギダネ, dmg1_min=40, dmg1_max=48, dmg2_min=80, dmg2_max=96)
 - [x] タイプ半減きのみ_代表種(item_name=ヤチェのみ, move_name=こおりのつぶて, defender_name=ミニリュウ, dmg1_min=35, dmg1_max=42, dmg2_min=70, dmg2_max=84)
 - [x] タイプ半減きのみ_代表種(item_name=ロゼルのみ, move_name=マジカルシャイン, defender_name=ミニリュウ, dmg1_min=44, dmg1_max=52, dmg2_min=88, dmg2_max=104)
