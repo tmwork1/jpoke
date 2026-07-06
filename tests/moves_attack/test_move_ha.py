@@ -553,6 +553,30 @@ def test_はっけい_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_はっぱカッター_急所ランクが1():
+    """はっぱカッター: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["はっぱカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_はっぱカッター_急所ランクが1_乱数大で急所なし():
+    """はっぱカッター: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["はっぱカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
 def test_はなびらのまい_カウント終了後にこんらんが付与される():
     """はなびらのまい: カウントが0になった後にこんらん状態が付与される。"""
     battle = t.start_battle(
