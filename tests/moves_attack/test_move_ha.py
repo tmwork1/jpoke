@@ -812,6 +812,38 @@ def test_はやてがえし_通常攻撃技には失敗():
     assert battle.actives[0].hp < before_ally_hp
 
 
+def test_はるのあらし_secondary_effectフラグを持つ():
+    """はるのあらし: ちからずく等との相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["はるのあらし"]
+    assert "wind" in move_data.flags
+    assert "secondary_effect" in move_data.flags
+
+
+def test_はるのあらし_こうげき1段階低下が発動する():
+    """はるのあらし: 30%の確率で相手のこうげきランクを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラブトロス(けしん)", move_names=["はるのあらし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
+
+
+def test_はるのあらし_相手にダメージを与える():
+    """はるのあらし: 特殊フェアリー技として相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラブトロス(けしん)", move_names=["はるのあらし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ハートスタンプ_ひるみが発動する():
     """ハートスタンプ: 30%でひるみを付与する。"""
     battle = t.start_battle(
