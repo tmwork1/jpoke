@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon, Move
 
 from jpoke.enums import Event
+from jpoke.types import Stat
 from jpoke.utils import fast_copy
 from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import round_half_down
@@ -220,6 +221,7 @@ class DamageCalculator:
         Returns:
             int: タイプ相性補正（4096が1.0倍、2048が0.5倍、8192が2.0倍など）
         """
+        assert ctx.defender is not None
         move_type = ctx.move.type
 
         # テラスタル状態の相手にステラ技が効果抜群になる
@@ -308,6 +310,7 @@ class DamageCalculator:
         Returns:
             int: 補正後の最終攻撃力
         """
+        assert ctx.defender is not None
         attacker = ctx.attacker
         defender = ctx.defender
         move = ctx.move
@@ -317,6 +320,7 @@ class DamageCalculator:
             final_attack = defender.stats["atk"]
             r_rank = defender.rank_modifier("atk")
         else:
+            stat: Stat
             if move.name == 'ボディプレス':
                 stat = "def"
             elif move.category == "physical":
@@ -356,11 +360,13 @@ class DamageCalculator:
         Returns:
             int: 補正後の最終防御力
         """
+        assert ctx.defender is not None
         attacker = ctx.attacker
         defender = ctx.defender
         move = ctx.move
 
         # ステータス
+        stat: Stat
         if self.battle.query.deals_physical_damage(attacker, move):
             stat = "def"
         else:

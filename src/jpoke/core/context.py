@@ -53,6 +53,10 @@ class BaseContext:
         if spec is None:
             return None
         role, side = spec.split(":")
+        if role not in ("source", "target", "attacker", "defender"):
+            raise ValueError(f"不正なロール指定: {spec}")
+        # コンテキスト型に存在しないロール（例: EventContext に 'attacker'）は
+        # None を返し、呼び出し側でハンドラをスキップさせる
         mon = getattr(self, role, None)
         if mon is not None and side == "foe":
             mon = battle.foe(mon)

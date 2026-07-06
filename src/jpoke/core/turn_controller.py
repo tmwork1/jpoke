@@ -7,7 +7,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player
-    from jpoke.model import Pokemon
 
 from jpoke.core import EventContext
 from jpoke.core.event_logger import TerastalPayload

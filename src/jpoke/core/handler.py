@@ -52,7 +52,18 @@ class Handler:
     side: Side = field(init=False)
 
     def __post_init__(self):
-        role, side = self.subject_spec.split(":")
+        parts = self.subject_spec.split(":")
+        if (
+            len(parts) != 2
+            or parts[0] not in ("source", "target", "attacker", "defender")
+            or parts[1] not in ("self", "foe")
+        ):
+            func_name = getattr(self.func, "__qualname__", repr(self.func))
+            raise ValueError(
+                f"不正な subject_spec '{self.subject_spec}' (handler: {func_name})。"
+                "'role:side' 形式（例: 'source:self'）で指定してください。"
+            )
+        role, side = parts
         object.__setattr__(self, "role", role)
         object.__setattr__(self, "side", side)
 
@@ -91,13 +102,14 @@ class RegisteredHandler:
         team_index = old_state.team.index(self.registered_subject)
         self.registered_subject = new.player_states[player].team[team_index]
 
-    def get_subject(self, battle: Battle) -> Pokemon:
+    def get_subject(self, battle: Battle) -> Pokemon | None:
         """ハンドラの主体となるポケモンを取得する。
 
         Playerの場合は現在場に出ているポケモンを返す。
 
         Returns:
-            Pokemon: ハンドラの主体となるポケモン
+            Pokemon | None: ハンドラの主体となるポケモン。
+                主体がPlayerで場が空いている場合は None
         """
         if isinstance(self.registered_subject, Player):
             return battle.get_active(self.registered_subject)

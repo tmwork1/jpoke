@@ -4,7 +4,7 @@
 バトル中の場の状態を管理します。排他的な効果とスタック可能な効果を適切に処理します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, get_args, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, get_args, Generic, TypeVar, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player, EventManager
     from jpoke.model import Pokemon
@@ -124,13 +124,15 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         current: 現在有効なフィールド
     """
 
-    def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: type[T]):
+    def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: Any):
         """ExclusiveFieldManagerを初期化する。
 
         Args:
             battle: Battleインスタンス
             owners: フィールド効果の所有者リスト
-            kind: フィールドタイプ（Weather, Terrainなど）
+            kind: フィールドタイプ（Weather, Terrainなど）。
+                実体はクラスではなく `Literal[...]` の型エイリアスで、
+                get_args() で列挙値を取り出すためだけに使う（type[T] は型として不正確なため Any にしている）
         """
         names = get_args(kind)
         if "" not in names:
@@ -199,9 +201,14 @@ class ExclusiveFieldManager(BaseFieldManager[T]):
         self._events.emit(Event.ON_FIELD_CHANGE)
         return True
 
-    def tick_down(self) -> None:
-        """現在のフィールド効果のカウントを1減らす。"""
-        super().tick_down(self.current_name)
+    def tick_down_current(self) -> None:
+        """現在のフィールド効果のカウントを1減らす。
+
+        Notes:
+            基底の tick_down(name) とは引数の有無が異なるため、
+            LSP 違反（mypy override エラー）を避けるために別名にしている。
+        """
+        self.tick_down(self.current_name)
 
 
 class StackableFieldManager(BaseFieldManager[T]):
@@ -210,13 +217,15 @@ class StackableFieldManager(BaseFieldManager[T]):
     複数の効果が同時に有効になれます（例：リフレクター、ひかりのかべ、まきびしなど）。
     """
 
-    def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: type[T]):
+    def __init__(self, battle: Battle, owners: tuple[Player, ...], kind: Any):
         """StackableFieldManagerを初期化する。
 
         Args:
             battle: Battleインスタンス
             owners: フィールド効果の所有者リスト
-            kind: フィールドタイプ（GlobalField, SideFieldなど）
+            kind: フィールドタイプ（GlobalField, SideFieldなど）。
+                実体はクラスではなく `Literal[...]` の型エイリアスで、
+                get_args() で列挙値を取り出すためだけに使う（type[T] は型として不正確なため Any にしている）
         """
         names = get_args(kind)
         fields = {name: Field(name, owners) for name in names}

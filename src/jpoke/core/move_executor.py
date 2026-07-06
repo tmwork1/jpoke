@@ -3,11 +3,11 @@
 技の発動、命中判定、ダメージ適用などの処理を担当。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
-from jpoke.types import Type, MoveCategory
+from jpoke.types import Type, MoveCategory, MoveName
 from jpoke.utils.math import clamp_stats, clamp_critic
 from jpoke.model import Pokemon, Move
 from jpoke.enums import LogCode
@@ -56,6 +56,8 @@ class MoveExecutor:
         self.move_applied: bool | None = None
         self.move_missed: bool = False
         self.move_type: Type | None = None
+        self.move_category: MoveCategory | None = None
+        self.move_power: int | None = None
         self.critical_rank: int | None = None
         self.critical: bool | None = None
 
@@ -67,6 +69,8 @@ class MoveExecutor:
         self.move_applied = None
         self.move_missed = False
         self.move_type = None
+        self.move_category = None
+        self.move_power = None
         self.critical_rank = None
         self.critical = None
 
@@ -150,6 +154,7 @@ class MoveExecutor:
             self.accuracy = self.battle.test_option.accuracy
             return 100 * self.battle.random.random() < self.accuracy
 
+        assert ctx.defender is not None
         attacker = ctx.attacker
         defender = ctx.defender
         move = ctx.move
@@ -236,7 +241,9 @@ class MoveExecutor:
             return False
         if ctx.move.has_flag("bypass_substitute"):
             return False
-        # 音技はみがわりを貫通する（第六世代以降の仕様）
+        # 音技はみがわりを貫通する（第六世代以降の仕様）。
+        # 特定の技ではなく sound フラグから導出される汎用ルールのため、
+        # 個別技へのハンドラ登録ではなく意図的にコア側で判定する。
         if ctx.move.has_flag("sound"):
             return False
         return self._events.emit(Event.ON_CHECK_HIT_SUBSTITUTE, ctx, True)
@@ -285,7 +292,7 @@ class MoveExecutor:
                 # PP消費
                 self._consume_pp(ctx)
 
-                # かやたぶりを適用する
+                # かたやぶりを適用する
                 self._events.emit(Event.ON_BEGIN_MOVE, ctx)
 
                 # 技の実行
@@ -315,7 +322,7 @@ class MoveExecutor:
             player = self.battle.get_player(attacker)
             self.battle.player_states[player].last_move_succeeded = overall_success
 
-            # かやたぶりを解除する
+            # かたやぶりを解除する
             self._events.emit(Event.ON_END_MOVE, ctx)
 
             # 技のハンドラを解除
@@ -338,7 +345,10 @@ class MoveExecutor:
         """くさタイプへの粉技無効化チェック (ON_TRY_MOVE_2, priority=120)。
 
         くさタイプの防御側に powder ラベルを持つ技を使うと無効化される。
+        特定の技ではなく powder フラグから導出される汎用ルールのため、
+        個別技へのハンドラ登録ではなく意図的にコア側で判定する。
         """
+        assert ctx.defender is not None
         if (
             ctx.move.has_flag("powder")
             and ctx.defender.has_type("くさ")
@@ -359,6 +369,7 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
+        assert ctx.defender is not None
         # 溜め技の準備
         if not self._events.emit(Event.ON_MOVE_CHARGE, ctx, True):
             return
@@ -388,7 +399,7 @@ class MoveExecutor:
         ctx.attacker.executed_move = ctx.move
         # non_negotoでない技のみバトル全体の最後使用技として記録する
         if not ctx.move.has_flag("non_negoto"):
-            self.battle.last_used_move_name = ctx.move.name
+            self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
 
         # HPコストの支払い
         self._events.emit(Event.ON_PAY_HP, ctx)
@@ -456,6 +467,7 @@ class MoveExecutor:
         Args:
             ctx: 技実行中のバトルコンテキスト
         """
+        assert ctx.defender is not None
         # 変化技の処理はダメージ処理とは別に行う
         if ctx.move.category == "status":
             self._execute_status_hit(ctx)
@@ -578,7 +590,7 @@ class MoveExecutor:
         move.pp = max(0, move.pp - v)
         if v > 0:
             # 実際にPPを消費した技として記録する（とっておき用）
-            ctx.attacker.pp_consumed_moves.add(move.name)
+            ctx.attacker.pp_consumed_moves.add(cast(MoveName, move.name))
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,

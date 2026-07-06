@@ -7,7 +7,6 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.core import HandlerReturn
-from jpoke.enums import LogCode
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.types import BoostSource, Stat
 

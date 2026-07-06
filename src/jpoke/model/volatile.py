@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
-    from jpoke.core import EventManager
-    from jpoke.model.pokemon import Pokemon
     from jpoke.data.volatile import VolatileData
 
 from jpoke.types import VolatileName, MoveName

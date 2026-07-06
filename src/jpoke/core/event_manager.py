@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.enums import DomainEvent, Event
 from jpoke.utils import fast_copy
 
-from .context import BaseContext, EventContext, AttackContext
+from .context import BaseContext, EventContext
 from .handler import HandlerReturn, RegisteredHandler
 
 
@@ -66,7 +66,7 @@ class EventManager:
         # Battle への参照を更新する
         self.battle = new
 
-    def _resolve_subject(self, rh: RegisteredHandler) -> Pokemon:
+    def _resolve_subject(self, rh: RegisteredHandler) -> Pokemon | None:
         return rh.get_subject(self.battle)
 
     def on(self,
@@ -121,12 +121,11 @@ class EventManager:
         Returns:
             Any: 全ハンドラ実行後の最終値
         """
-        initial_value = value
-
         # ソート時にドメインイベントを発火して素早さ計算を行うため、
         # ドメインイベントはソートせずに発火して再帰を防ぐ
+        # （ハンドラ内での on/off に耐えるようコピーをイテレートする）
         if isinstance(event, DomainEvent):
-            handlers = self.handlers.get(event, [])
+            handlers = list(self.handlers.get(event, []))
         else:
             handlers = self._sort_handlers(self.handlers.get(event, []))
 
@@ -152,13 +151,13 @@ class EventManager:
             if result.stop_event:
                 return value
 
-        # print(f"\t{event} {initial_value} -> {value}")
         return value
 
     def _build_context(self, rh: RegisteredHandler) -> BaseContext:
         """ハンドラに対応するコンテキストを構築"""
         mon = self._resolve_subject(rh)
         if rh.handler.side == "foe":
+            assert mon is not None
             mon = self.battle.foe(mon)
         role = rh.handler.role
         if role == "target":
@@ -179,6 +178,7 @@ class EventManager:
 
         def key(rh: RegisteredHandler):
             subject = self._resolve_subject(rh)
+            assert subject is not None
             speed = self.battle.speed_calculator.calc_effective_speed(subject)
             return (rh.handler.priority, -speed)
 
@@ -197,12 +197,15 @@ class EventManager:
         # ハンドラの発生源が無効化されている場合はスキップ
         match rh.handler.source:
             case "ability":
+                assert subject is not None
                 if not subject.ability.enabled:
                     return False
             case "item":
+                assert subject is not None
                 if not subject.item.enabled_ignoring(rh.handler.ignored_disable_reasons):
                     return False
             case "ailment":
+                assert subject is not None
                 if not subject.ailment.is_active:
                     return False
 

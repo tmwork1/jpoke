@@ -21,7 +21,8 @@ class State:
     item_enabled: bool = True
 
 
-type StateDist = dict[State, int]
+# requires-python (>=3.10) 互換のため `type` エイリアス文（3.12+）は使わない
+StateDist = dict[State, int]
 
 
 def to_dist(x: int | list[int] | StateDist,

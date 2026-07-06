@@ -125,19 +125,22 @@ class SpeedCalculator:
         Returns:
             素早さの速い順にソートされたポケモンのリスト
         """
-        speeds = [self.calc_speed_order_key(p) for p in self.battle.actives]
-        if speeds[0] == speeds[1]:
+        actives = self.battle.actives.copy()
+        if len(actives) <= 1:
+            return actives
+
+        speeds = [self.calc_speed_order_key(p) for p in actives]
+        if len(set(speeds)) == 1:
             # 同速の場合はランダムに順序を決定
-            actives = self.battle.actives.copy()
             self.battle.random.shuffle(actives)
         else:
             # 素早さ順にソート
             paired = sorted(
-                zip(speeds, self.battle.actives),
+                zip(speeds, actives),
                 key=lambda pair: pair[0],
                 reverse=True
             )
-            _, actives = zip(*paired)
+            actives = [mon for _, mon in paired]
         return actives
 
     def resolve_action_order(self) -> list[Pokemon]:

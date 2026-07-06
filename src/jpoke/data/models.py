@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, TypedDict, Callable, Literal
+from typing import TYPE_CHECKING, TypedDict, Literal
 if TYPE_CHECKING:
     from jpoke.enums import Event, DomainEvent, LethalEvent
     from jpoke.core import Handler, LethalHandler

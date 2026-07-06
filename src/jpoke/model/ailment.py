@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
-    from jpoke.model.pokemon import Pokemon
     from jpoke.data.models import AilmentData
 
 from jpoke.types import AilmentName

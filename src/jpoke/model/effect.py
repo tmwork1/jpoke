@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Protocol, Any
+from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from jpoke.core import EventManager, Handler, Player
     from jpoke.model import Pokemon

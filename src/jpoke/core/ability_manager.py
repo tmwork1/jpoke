@@ -1,6 +1,6 @@
 """特性の有効/無効状態管理モジュール。"""
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from .battle import Battle
     from jpoke.model import Pokemon
@@ -119,7 +119,7 @@ class AbilityManager:
 
         for mon, ability in ((mon1, ability2), (mon2, ability1)):
             self._unregister_ability_handlers(mon)
-            mon.ability = Ability(ability)
+            mon.ability = Ability(cast(AbilityName, ability))
             self._register_ability_handlers(mon)
 
         # 両者の特性の有効化イベントをまとめて発火する

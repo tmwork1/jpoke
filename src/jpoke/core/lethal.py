@@ -14,7 +14,7 @@ Battle に依存しないため `jpoke.utils.lethal_dist` に置く。
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, SideFieldManager
     from jpoke.model import Pokemon, Move
@@ -25,7 +25,7 @@ from collections import defaultdict
 
 from jpoke.types import Stat, AilmentName, LethalSubject
 from jpoke.enums import LethalEvent
-from jpoke.utils.lethal_dist import StateDist, to_dist, to_dist, subtract_dist, add_dist
+from jpoke.utils.lethal_dist import StateDist, to_dist, subtract_dist, add_dist
 
 
 @dataclass(frozen=True)
@@ -245,10 +245,10 @@ def _lethal_loop(hp_dist: StateDist,
                     n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
                     hp_dist=hp_dist, damage_dist=ctx.damage_dist,
                     attacker=LethalPokemonState(
-                        rank=ctx.attacker.rank.copy(), ailment=ctx.attacker.ailment.name
+                        rank=ctx.attacker.rank.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
                     ),
                     defender=LethalPokemonState(
-                        rank=ctx.defender.rank.copy(), ailment=ctx.defender.ailment.name
+                        rank=ctx.defender.rank.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
                     ),
                 )
                 results.append(result)

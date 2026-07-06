@@ -1372,6 +1372,16 @@ def バンジのみ_heal_on_quarter_hp(battle: Battle, ctx: EventContext, value:
     )
 
 
+def ばんのうがさ_weather_immune(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ばんのうがさ: はれ・あめ系の天候の影響を受けない。
+
+    battle.weather_for() から ON_CHECK_WEATHER_IMMUNE 経由で参照される。
+    """
+    if battle.weather.name in ("はれ", "あめ", "おおひでり", "おおあめ"):
+        return HandlerReturn(True)
+    return HandlerReturn(value)
+
+
 def パワフルハーブ_skip_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """パワフルハーブ: 溜め技の溜めターンをスキップする。
 

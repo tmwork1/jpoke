@@ -7,7 +7,6 @@ from dataclasses import dataclass, field, asdict
 
 from jpoke.types import Stat, Type, HPChangeReason
 from jpoke.enums import LogCode
-from jpoke.utils import fast_copy
 
 
 @dataclass(frozen=True)
@@ -280,8 +279,8 @@ class EventLog:
 
             case LogCode.PP_CONSUMED:
                 move = payload.move if isinstance(payload, MoveActionPayload) else "技"
-                value = payload.value if isinstance(payload, MoveActionPayload) else "?"
-                return f"{move} PP -{value}"
+                pp_value = payload.value if isinstance(payload, MoveActionPayload) else "?"
+                return f"{move} PP -{pp_value}"
 
             case LogCode.SUBSTITUTE_HIT:
                 return "みがわりにヒット"

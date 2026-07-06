@@ -2172,6 +2172,46 @@ def はがねのつばさ_boost_attacker_B(battle: Battle, ctx: AttackContext, v
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1}, chance=0.1)
 
 
+def はきだす_apply_after(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだすのヒット後処理（ON_HIT）: たくわえ状態をリセットし、上がったランクを戻す。
+
+    特性おやこあいで2ヒット化された場合でもランク低下は1回のみ発生するため、
+    1ヒット目以外では何もしない。
+    """
+    if ctx.hit_index != 1:
+        return HandlerReturn(value=value)
+    mon = ctx.attacker
+    count = mon.volatiles["たくわえる"].count or 0
+    # ランクをたくわえた回数分だけ逆方向へ
+    battle.modify_stats(mon, {"def": -count, "spd": -count}, source=mon)
+    battle.volatile_manager.remove(mon, "たくわえる")
+    return HandlerReturn(value=value)
+
+
+def はきだす_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだすの使用条件チェック: たくわえた回数が0なら失敗する。"""
+    mon = ctx.attacker
+    if (
+        not mon.has_volatile("たくわえる")
+        or mon.volatiles["たくわえる"].count == 0
+    ):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="はきだす")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def はきだす_set_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """はきだすの効果（ON_TRY_MOVE_1）: たくわえ回数に応じて威力を設定する。"""
+    mon = ctx.attacker
+    count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
+    power = count * 100  # 1回=100, 2回=200, 3回=300
+    ctx.move.power = power
+    return HandlerReturn(value=value)
+
+
 def はたきおとす_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """はたきおとすのアイテム所持時1.5倍補正。
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle, Player
+    from jpoke.core import Player
 
 from jpoke.utils import fast_copy
 from jpoke.data.field import FIELDS

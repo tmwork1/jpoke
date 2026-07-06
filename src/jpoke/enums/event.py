@@ -308,6 +308,10 @@ class Event(Enum):
     # handle: ability.py（エアロック・ノーてんき で天候効果を無効化）
     ON_CHECK_WEATHER_ENABLED = auto()
 
+    # emit: core/battle.py（weather_for: 対象ポケモン個体が天候の影響を受けないかを判定）
+    # handle: item.py（ばんのうがさ: はれ・あめ系天候の影響を無効化）subject_spec="source:self"
+    ON_CHECK_WEATHER_IMMUNE = auto()
+
     # emit: core/pokemon_state.py（地面技の着地確認等）
     # handle: volatile.py（マグネットライズ・テレキネシス等で浮遊判定を返す）
     #          data/field.py（じゅうりょく発動中は全ポケモンを接地扱いにする）

@@ -1,14 +1,14 @@
 """コマンド関連ロジックを扱うマネージャー。"""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from .battle import Battle
     from .player import Player
     from .player_state import PlayerState
 
 from jpoke.utils import fast_copy
-from jpoke.types import BattlePhase
+from jpoke.types import BattlePhase, MoveName
 from jpoke.enums import Event, Command, Interrupt
 from jpoke.model import Move
 
@@ -130,6 +130,7 @@ class CommandManager:
             Move: コマンドに対応する技。わるあがきや強制行動も含む
         """
         attacker = self.battle.get_active(player)
+        assert attacker is not None
         if command == Command.STRUGGLE:
             return Move("わるあがき")
 
@@ -137,7 +138,7 @@ class CommandManager:
         if command == Command.FORCED:
             move_name = self.battle.query.get_forced_move_name(attacker)
             if move_name:
-                return Move(move_name)
+                return Move(cast(MoveName, move_name))
             return Move("わるあがき")
 
         if command.is_gigamax:

@@ -17,6 +17,7 @@ from copy import deepcopy
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode
 from jpoke.enums import Event, Command, LogCode
+from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
 from jpoke.utils.math import round_half_down
 
@@ -88,6 +89,12 @@ class Battle:
     バトル全体の状態、ターン管理、イベントシステム、ログ記録、
     各種マネージャークラスを統括します。
 
+    API 方針:
+        外部からの利用（テスト・bot・探索コード）は Battle の公開メソッドを入口とする。
+        マネージャーの直接呼び出し（battle.move_executor.run_move() 等）は
+        jpoke 内部実装（core/ handlers/）に限る。
+        run_move や modify_stats などの委譲メソッドはこの方針のための公式 API である。
+
     Attributes:
         players: 参加プレイヤーのリスト（通常2人）
         seed: 乱数シード値
@@ -135,11 +142,12 @@ class Battle:
 
         self.players: tuple[Player, ...] = players
         self.n_selected: int = n_selected
-        self.seed: int = seed or int(time.time())
+        self.seed: int = seed if seed is not None else int(time.time())
 
         self.random = Random(self.seed)
 
         self.copy_depth: int = 0
+        self._reseed_count: int = 0
         self.observer: Player | None = None
 
         self.turn: int = -1
@@ -148,6 +156,7 @@ class Battle:
         self.last_used_move_name: MoveName | Literal[""] = ""
 
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
+        self._player_states_map: dict[Player, PlayerState] = dict(zip(players, self._player_states))
 
         self.events = EventManager(self)
         self.event_logger = EventLogger()
@@ -180,6 +189,35 @@ class Battle:
         )
         self.test_option: TestOption = TestOption()
 
+    # update_reference を持たないが deepcopy が必要な可変状態。
+    # マネージャー類は _deepcopy_keys() が自動検出するため、ここに列挙するのは
+    # 「マネージャーでない可変オブジェクト」のみ。
+    _EXTRA_DEEPCOPY_KEYS: tuple[str, ...] = (
+        "random",
+        "_player_states",
+        "event_logger",
+        "option",
+        "test_option",
+    )
+
+    def _deepcopy_keys(self) -> list[str]:
+        """deepcopy 対象の属性キーを列挙する。
+
+        `update_reference` を持つ属性（マネージャー）とそのリストを自動検出するため、
+        新しいマネージャーを追加してもここを更新する必要はない。
+        """
+        keys = list(self._EXTRA_DEEPCOPY_KEYS)
+        for key, value in vars(self).items():
+            if hasattr(value, "update_reference"):
+                keys.append(key)
+            elif (
+                isinstance(value, list)
+                and value
+                and all(hasattr(item, "update_reference") for item in value)
+            ):
+                keys.append(key)
+        return keys
+
     def __deepcopy__(self, memo):
         """Battleインスタンスのディープコピーを作成する。
 
@@ -193,31 +231,22 @@ class Battle:
         new = cls.__new__(cls)
         memo[id(self)] = new
 
-        fast_copy(
-            self, new,
-            keys_to_deepcopy=[
-                "random",
-                "_player_states",
-                "events",
-                "event_logger",
-                "turn_controller",
-                "speed_calculator",
-                "switch_manager",
-                "move_executor",
-                "damage_calculator",
-                "ailment_manager",
-                "volatile_manager",
-                "query",
-                "status_manager",
-                "item_manager",
-                "command_manager",
-                "ability_manager",
-                "weather_manager",
-                "terrain_manager",
-                "global_manager",
-                "side_managers",
-            ]
-        )
+        fast_copy(self, new, keys_to_deepcopy=self._deepcopy_keys())
+
+        # player_states のキャッシュを複製後の PlayerState で再構築する
+        new._player_states_map = dict(zip(new.players, new._player_states))
+
+        # ポケモンが持つ他ポケモンへの参照（contact_hitter 等）を複製後の個体に付け替える
+        mon_map = {
+            id(old_mon): new_mon
+            for old_state, new_state in zip(self._player_states, new._player_states)
+            for old_mon, new_mon in zip(old_state.team, new_state.team)
+        }
+        for state in new._player_states:
+            for mon in state.team:
+                for key, val in vars(mon).items():
+                    if isinstance(val, Pokemon):
+                        setattr(mon, key, mon_map.get(id(val), val))
 
         # 複製したBattleインスタンスへの参照を各マネージャークラスに更新
         new._update_reference()
@@ -228,28 +257,35 @@ class Battle:
         return new
 
     def _update_reference(self):
-        """ディープコピー後のBattleインスタンスへの参照を各マネージャークラスに更新する。"""
-        self.events.update_reference(self)
-        self.turn_controller.update_reference(self)
-        self.speed_calculator.update_reference(self)
-        self.switch_manager.update_reference(self)
-        self.move_executor.update_reference(self)
-        self.damage_calculator.update_reference(self)
-        self.ailment_manager.update_reference(self)
-        self.volatile_manager.update_reference(self)
-        self.query.update_reference(self)
-        self.status_manager.update_reference(self)
-        self.command_manager.update_reference(self)
-        self.ability_manager.update_reference(self)
-        self.item_manager.update_reference(self)
-        self.weather_manager.update_reference(self)
-        self.terrain_manager.update_reference(self)
-        self.global_manager.update_reference(self)
-        for side in self.side_managers:
-            side.update_reference(self)
+        """ディープコピー後のBattleインスタンスへの参照を各マネージャークラスに更新する。
 
-    def copy(self) -> Battle:
-        return deepcopy(self)
+        `update_reference` を持つ属性（マネージャー）とそのリスト要素を自動検出して呼び出す。
+        EventManager はハンドラ主体の再解決に旧 Battle への参照を使うため、
+        属性定義順（events が先頭）のまま処理される必要がある。
+        """
+        for value in vars(self).values():
+            if hasattr(value, "update_reference"):
+                value.update_reference(self)
+            elif isinstance(value, list):
+                for item in value:
+                    if hasattr(item, "update_reference"):
+                        item.update_reference(self)
+
+    def copy(self, reseed: bool = False) -> Battle:
+        """Battleの複製を作成する。
+
+        Args:
+            reseed: Trueの場合、複製側の乱数生成器を派生シードで初期化する。
+                木探索で複数の枝が同一の乱数系列を引いて相関するのを避けたいときに使う。
+                派生シードは元のシードと派生回数から決定的に生成されるため、
+                元の乱数系列は消費されず再現性も保たれる。
+        """
+        new = deepcopy(self)
+        if reseed:
+            self._reseed_count += 1
+            new.seed = hash((self.seed, self._reseed_count)) & 0xFFFFFFFF
+            new.random = Random(new.seed)
+        return new
 
     @contextmanager
     def phase_context(self, phase: BattlePhase):
@@ -297,7 +333,7 @@ class Battle:
     @property
     def player_states(self) -> dict[Player, PlayerState]:
         """プレイヤーごとの状態を管理する辞書を返す。"""
-        return {ply: state for ply, state in zip(self.players, self._player_states)}
+        return self._player_states_map
 
     @property
     def actives(self) -> list[Pokemon]:
@@ -308,14 +344,15 @@ class Battle:
         """
         return [state.active for state in self.player_states.values() if state.active is not None]
 
-    def get_active(self, player: Player) -> Pokemon:
+    def get_active(self, player: Player) -> Pokemon | None:
         """指定したプレイヤーの現在場に出ているポケモンを取得。
 
         Args:
             player: プレイヤー
 
         Returns:
-            Pokemon: 指定したプレイヤーの場のポケモン
+            Pokemon | None: 指定したプレイヤーの場のポケモン。
+                交代中などで場が空いている場合は None
         """
         if player in self.player_states:
             return self.player_states[player].active
@@ -338,9 +375,8 @@ class Battle:
     def weather_for(self, mon: Pokemon) -> Field:
         """指定したポケモンに対して有効な天候を返す。
 
-        ばんのうがさを持つポケモンにはにほんばれ・あめの影響を受けないため、
-        天候が晴れ/雨系の場合は「なし」天候を返す。
-        エアロック・ノーてんきで天候が無効の場合も「なし」天候を返す。
+        ON_CHECK_WEATHER_IMMUNE ハンドラ（ばんのうがさ等）が True を返した場合は
+        「なし」天候を返す。エアロック・ノーてんきで天候が無効の場合も「なし」天候を返す。
 
         Args:
             mon: 対象のポケモン
@@ -348,11 +384,7 @@ class Battle:
         Returns:
             Field: 対象ポケモンに有効な天候
         """
-        if (
-            mon.item.enabled
-            and mon.item.name == "ばんのうがさ"
-            and self.weather.name in {"はれ", "あめ", "おおひでり", "おおあめ"}
-        ):
+        if self.events.emit(Event.ON_CHECK_WEATHER_IMMUNE, EventContext(source=mon), False):
             return self.weather_manager.inactive
         return self.weather
 
@@ -432,8 +464,14 @@ class Battle:
 
         Returns:
             Pokemon: 対戦相手のポケモン
+
+        Raises:
+            ValueError: 引数のポケモンが場に出ていない場合
         """
-        return self.actives[1 - self.actives.index(active)]
+        actives = self.actives
+        if active not in actives:
+            raise ValueError(f"{active.name} は場に出ていないため、相手のポケモンを特定できません。")
+        return actives[1 - actives.index(active)]
 
     def get_available_commands(self, player: Player) -> list[Command]:
         """指定したプレイヤーが現在使用可能なコマンドのリストを取得する。
@@ -454,7 +492,7 @@ class Battle:
             case "switch":
                 return self.command_manager.get_available_switch_commands(player)
 
-        raise ValueError(f"Invalid phase: {self.phase}")
+        raise InvalidPhaseError(f"Invalid phase: {self.phase}")
 
     def resolve_speed_order(self) -> list[Pokemon]:
         """素早さ順序を解決（SpeedCalculatorへの委譲）。
@@ -493,13 +531,15 @@ class Battle:
             # is_new_turn()だけで判定すると、行動コマンド選択時の木探索でresolve_action_commands()が再帰的に呼ばれてしまうため、command is Noneのガードが必要。
             commands = self.resolve_command("action")
         else:
+            if commands is None:
+                raise InvalidCommandError("No commands provided for step().")
             for player in self.players:
                 command = commands.get(player)
                 if not self.command_manager.validate_command(player, command):
-                    raise ValueError(f"Invalid command type for {player.name}: {command}.")
+                    raise InvalidCommandError(f"Invalid command type for {player.name}: {command}.")
 
         if not commands:
-            raise ValueError("No commands provided for step().")
+            raise InvalidCommandError("No commands provided for step().")
 
         self.turn_controller.step(commands)
 
@@ -539,13 +579,20 @@ class Battle:
         Args:
             target: 対象のポケモン
             v: 変更する固定HP量
-            r: 最大HPに対する割合（-1.0～1.0）。v と同時指定時は r が優先される。r !=0 なら v も有限
+            r: 最大HPに対する割合（-1.0～1.0）。v との同時指定は不可
             source: ダメージ源のポケモン
             reason: 変更の理由
 
         Returns:
             実際に変化したHP量（正=回復、負=ダメージ）
+
+        Raises:
+            ValueError: v と r を同時に指定した場合、または r が範囲外の場合
         """
+        if v and r:
+            raise ValueError("modify_hp では v と r を同時に指定できません。")
+        if r and not -1.0 <= r <= 1.0:
+            raise ValueError(f"modify_hp の r は -1.0～1.0 で指定してください: {r}")
         if r:
             raw = int(target.max_hp * r)
             if r > 0:
@@ -695,20 +742,37 @@ class Battle:
             return 0.0
         return chance
 
-    def print_logs(self, turn: int | None = None):
-        """指定したターンのログを整形して出力。
+    def get_log_lines(self, turn: int | None = None) -> list[str]:
+        """指定したターンのログを整形した文字列のリストとして返す。
+
+        出力先（print / logging / GUI 等）を呼び出し側に委ねるための API。
+        `print_logs` はこのメソッドの結果を print するだけの薄いラッパー。
 
         Args:
             turn: ターン番号（Noneの場合は現在のターン）
+
+        Returns:
+            list[str]: 整形済みログ行のリスト
         """
         if turn is None:
             turn = self.turn
 
         event_logs = [log for log in self.event_logger.logs if log.turn == turn]
+        lines = []
         for log in event_logs:
             player = self.players[log.idx]
             pokemon = getattr(log.payload, "pokemon", "") if log.payload else ""
-            print(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
+            lines.append(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
+        return lines
+
+    def print_logs(self, turn: int | None = None):
+        """指定したターンのログを整形して出力する（`get_log_lines` の互換ラッパー）。
+
+        Args:
+            turn: ターン番号（Noneの場合は現在のターン）
+        """
+        for line in self.get_log_lines(turn):
+            print(line)
 
     def remove_all_volatiles(self, mon: Pokemon):
         """対象のポケモンからすべての揮発性状態を解除する（VolatileManagerへの委譲）。"""

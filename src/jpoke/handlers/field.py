@@ -2,9 +2,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
+    from jpoke.model import Field
 
 from jpoke.enums import LogCode
-from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName, AbilityDisabledReason
+from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
 from jpoke.core.event_logger import FailureLogPayload
@@ -24,13 +25,13 @@ class FieldHandler(Handler):
 def tick_weather(battle: Battle, ctx: EventContext, value: Any):
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
-        battle.weather_manager.tick_down()
+        battle.weather_manager.tick_down_current()
     return HandlerReturn(value=value)
 
 def tick_terrain(battle: Battle, ctx: EventContext, value: Any):
     # 1P側でのみカウントダウンを実行
     if battle.get_player(ctx.source) is battle.players[0]:
-        battle.terrain_manager.tick_down()
+        battle.terrain_manager.tick_down_current()
     return HandlerReturn(value=value)
 
 def _tick_global_field(battle: Battle, ctx: EventContext, value: Any, name: GlobalFieldName) -> HandlerReturn:

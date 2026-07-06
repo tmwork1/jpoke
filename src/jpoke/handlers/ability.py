@@ -32,6 +32,8 @@ CRAMORANT_GULPING = "ウッウ(うのみ)"
 CRAMORANT_GORGING = "ウッウ(まるのみ)"
 WISHIWASHI_SOLO = "ヨワシ(たんどく)"
 WISHIWASHI_SCHOOL = "ヨワシ(むれ)"
+ZYGARDE_50 = "ジガルデ(50%)"
+ZYGARDE_10 = "ジガルデ(10%)"
 ZYGARDE_PERFECT = "ジガルデ(パーフェクト)"
 METEONO_METEOR = "メテノ(りゅうせい)"
 METEONO_CORE = "メテノ(コア)"
@@ -1140,6 +1142,8 @@ def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, 
 def ぎょぐん_enter_school_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ぎょぐん特性: 登場時にレベル20以上かつHP1/4超ならむれたすがたへフォルムチェンジする。"""
     mon = ctx.source
+    if mon.name not in (WISHIWASHI_SOLO, WISHIWASHI_SCHOOL):
+        return HandlerReturn(value=value)
     if mon.level < 20:
         return HandlerReturn(value=value)
     if mon.hp * 4 > mon.max_hp:
@@ -1151,6 +1155,8 @@ def ぎょぐん_enter_school_form(battle: Battle, ctx: EventContext, value: Any
 def ぎょぐん_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ぎょぐん特性: ターン終了時にHPに応じてフォルムを切り替える。"""
     mon = ctx.source
+    if mon.name not in (WISHIWASHI_SOLO, WISHIWASHI_SCHOOL):
+        return HandlerReturn(value=value)
     if mon.level < 20:
         return HandlerReturn(value=value)
 
@@ -1700,7 +1706,7 @@ def スロースタート_tick(battle: Battle, ctx: EventContext, value: Any) ->
 def スワームチェンジ_form_change_on_low_hp(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """スワームチェンジ特性: ターン終了時にHP1/2以下ならパーフェクトフォルムへフォルムチェンジする。"""
     mon = ctx.source
-    if mon.name == ZYGARDE_PERFECT:
+    if mon.name not in (ZYGARDE_50, ZYGARDE_10):
         return HandlerReturn(value=value)
     if mon.hp * 2 <= mon.max_hp:
         mon.set_form(ZYGARDE_PERFECT)
@@ -1959,6 +1965,8 @@ def テラスチェンジ_form_change_on_entry(battle: Battle, ctx: EventContext
 def てんきや_sync_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """てんきや特性: 現在の天気に合わせたフォルムへフォルムチェンジする。ノーてんき/エアロック中は通常フォルムに戻す。"""
     mon = ctx.source
+    if mon.name not in (CASTFORM_NORMAL, CASTFORM_SUNNY, CASTFORM_RAINY, CASTFORM_SNOWY):
+        return HandlerReturn(value=value)
     if not battle.is_active(mon):
         return HandlerReturn(value=value)
     weather_name = battle.weather.name

@@ -1,7 +1,7 @@
 """アイテム操作ロジックを扱うマネージャー。"""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 if TYPE_CHECKING:
     from .battle import Battle
     from .event_manager import EventManager
@@ -121,7 +121,7 @@ class ItemManager:
         # アイテムを変更する前に、現在のアイテムのハンドラを解除してイベントを発火する
         if mon.has_item():
             if not name and track_loss:
-                mon.last_lost_item_name = lost_item_name
+                mon.last_lost_item_name = cast(ItemName, lost_item_name)
             self._events.emit(Event.ON_ITEM_LOST, ctx)
             mon.item.unregister_handlers(self._events, mon)
 
@@ -208,7 +208,7 @@ class ItemManager:
             new_name = names[1 - i]  # 入れ替え先のアイテム名
             # 相手に渡った道具は場に存在し続けるため、リサイクル等の
             # 復元対象にしない（track_loss=False）
-            self._change_item(mon, new_name, track_loss=False)
+            self._change_item(mon, cast(ItemName, new_name), track_loss=False)
         return True
 
     def take_item(self,

@@ -38,5 +38,8 @@ def recursive_copy(obj):
         return [recursive_copy(item) for item in obj]
     elif isinstance(obj, dict):
         return {k: recursive_copy(v) for k, v in obj.items()}
+    elif isinstance(obj, set):
+        # frozenset は不変なので共有してよい（isinstance(frozenset(), set) は False）
+        return {recursive_copy(item) for item in obj}
     else:
         return obj

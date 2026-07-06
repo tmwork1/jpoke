@@ -16,7 +16,7 @@ def common_setup():
     """共通のセットアップ処理"""
     _add_mega_stones(ITEMS)
 
-    for name, data in ITEMS.items():
+    for name in ITEMS:
         ITEMS[name].name = name
 
 
@@ -1428,10 +1428,17 @@ ITEMS: dict[ItemName, ItemData] = {
         }
     ),
     "ばんのうがさ": ItemData(
-        fling_power=60
+        fling_power=60,
         # 効果: 持たせたポケモンはにほんばれ・あめ状態の影響を受けなくなる。
-        # 実装方法: battle.weather_for(mon) を用いて各ハンドラ内で個別判定する。
+        # 実装方法: battle.weather_for(mon) が ON_CHECK_WEATHER_IMMUNE を発火する。
+        #           天候参照側は weather_for(mon) を使うことで自動的に反映される。
         # 未実装技のばんのうがさ対応: ウェザーボール・エレクトロビーム・ハイドロスチーム
+        handlers={
+            Event.ON_CHECK_WEATHER_IMMUNE: h.ItemHandler(
+                h.ばんのうがさ_weather_immune,
+                subject_spec="source:self",
+            )
+        }
     ),
     "パワフルハーブ": ItemData(
         fling_power=10,

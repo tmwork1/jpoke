@@ -4,7 +4,7 @@
 ランク変化など、バトル中のポケモンの全状態を管理します。
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
@@ -53,7 +53,7 @@ class Pokemon:
                  level: int = 50,
                  ability_name: AbilityName = "",
                  item_name: ItemName = "",
-                 move_names: list[MoveName] = ["はねる"],
+                 move_names: list[MoveName] | None = None,
                  tera_type: Type | None = None) -> None:
         """ポケモンを初期化する。
 
@@ -80,7 +80,7 @@ class Pokemon:
         self.item = Item(item_name)
         self.last_lost_item_name: ItemName = ""
 
-        self.set_moves(move_names)
+        self.set_moves(move_names if move_names is not None else ["はねる"])
 
         # ステータス計算マネージャー
         self._stats_manager = PokemonStats()
@@ -112,12 +112,12 @@ class Pokemon:
         self.move_override_types: list[Type] | None = None
         self.volatile_override_type: Type | None = None
         self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
-        self.ate_berry: bool = False  # 今バトル中にきのみを食べたかどうか（ゲップの使用条件）
-        self.stat_lowered_this_turn: bool = False  # このターン中にランクが下がったか（うっぷんばらし用）
-        self.stat_raised_this_turn: bool = False  # このターン中にランクが上がったか（みわくのボイス・しっとのほのお用）
-        self.failed_or_immobile_last_turn: bool = False  # 前のターンに行動不能または技が失敗したか（やけっぱち・じだんだ用）
-        self.acted_since_switch_in: bool = False  # 場に出てから一度でも行動したか（であいがしら用）
-        self.pp_consumed_moves: set[MoveName] = set()  # 場に出てからPPを消費して使用した技名の集合（とっておき用）
+
+        # スコープ付きメモリ。技・特性個別のフラグはここに保存し、
+        # リセットはスコープ単位（turn: ターン開始 / switch: 登場時 / battle: リセットなし）
+        # で一括して行う。新しいフラグを追加してもリセット処理の追記は不要。
+        # 代表的なフラグへのアクセスは下部のプロパティ（スコープ付きメモリ節）を参照。
+        self.memory: dict[str, dict[str, Any]] = {"turn": {}, "switch": {}, "battle": {}}
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -125,7 +125,7 @@ class Pokemon:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'executed_move', 'pp_consumed_moves',
+            'executed_move',
             '_stats_manager',
         ])
         return new
@@ -134,9 +134,7 @@ class Pokemon:
 
     def reset_on_switch_in(self):
         self.revealed = True
-        self.failed_or_immobile_last_turn = False
-        self.acted_since_switch_in = False
-        self.pp_consumed_moves = set()
+        self.memory["switch"] = {}
 
     def reset_on_switch_out(self):
         self.active_turn = 0
@@ -173,8 +171,65 @@ class Pokemon:
         self.last_special_damage_received = 0
         self.last_damage_received = 0
         self.contact_hitter = None
-        self.stat_lowered_this_turn = False
-        self.stat_raised_this_turn = False
+        self.memory["turn"] = {}
+
+    # ── スコープ付きメモリ ──────────────────────────────────────
+    # 技・特性個別のフラグへのアクセサ。実体は memory の各スコープに保存され、
+    # reset_turn_state / reset_on_switch_in でスコープごと一括クリアされる。
+
+    @property
+    def stat_lowered_this_turn(self) -> bool:
+        """このターン中にランクが下がったか（うっぷんばらし用）。"""
+        return self.memory["turn"].get("stat_lowered", False)
+
+    @stat_lowered_this_turn.setter
+    def stat_lowered_this_turn(self, value: bool):
+        self.memory["turn"]["stat_lowered"] = value
+
+    @property
+    def stat_raised_this_turn(self) -> bool:
+        """このターン中にランクが上がったか（みわくのボイス・しっとのほのお用）。"""
+        return self.memory["turn"].get("stat_raised", False)
+
+    @stat_raised_this_turn.setter
+    def stat_raised_this_turn(self, value: bool):
+        self.memory["turn"]["stat_raised"] = value
+
+    @property
+    def failed_or_immobile_last_turn(self) -> bool:
+        """前のターンに行動不能または技が失敗したか（やけっぱち・じだんだ用）。"""
+        return self.memory["switch"].get("failed_or_immobile", False)
+
+    @failed_or_immobile_last_turn.setter
+    def failed_or_immobile_last_turn(self, value: bool):
+        self.memory["switch"]["failed_or_immobile"] = value
+
+    @property
+    def acted_since_switch_in(self) -> bool:
+        """場に出てから一度でも行動したか（であいがしら用）。"""
+        return self.memory["switch"].get("acted", False)
+
+    @acted_since_switch_in.setter
+    def acted_since_switch_in(self, value: bool):
+        self.memory["switch"]["acted"] = value
+
+    @property
+    def pp_consumed_moves(self) -> set[MoveName]:
+        """場に出てからPPを消費して使用した技名の集合（とっておき用）。"""
+        return self.memory["switch"].setdefault("pp_consumed_moves", set())
+
+    @pp_consumed_moves.setter
+    def pp_consumed_moves(self, value: set[MoveName]):
+        self.memory["switch"]["pp_consumed_moves"] = value
+
+    @property
+    def ate_berry(self) -> bool:
+        """今バトル中にきのみを食べたかどうか（ゲップの使用条件）。"""
+        return self.memory["battle"].get("ate_berry", False)
+
+    @ate_berry.setter
+    def ate_berry(self, value: bool):
+        self.memory["battle"]["ate_berry"] = value
 
     # ── 基本情報 ────────────────────────────────────────────────
 
@@ -682,9 +737,9 @@ class Pokemon:
         Returns:
             見つかった場合はMoveオブジェクト、見つからなければNone
         """
-        for m in self.moves:
-            if m.name == move_name:
-                return m
+        for mv in self.moves:
+            if mv.name == move_name:
+                return mv
         return None
 
     def has_move(self, move: MoveName) -> bool:
@@ -788,8 +843,12 @@ class Pokemon:
 
     # ── ユーティリティ ──────────────────────────────────────────
 
-    def show(self):
-        """ポケモンの情報を文字列化して表示する。"""
+    def render_info(self) -> str:
+        """ポケモンの情報を整形した文字列として返す。
+
+        出力先（print / logging 等）を呼び出し側に委ねるための API。
+        `show` はこのメソッドの結果を print するだけの薄いラッパー。
+        """
         sep = '\n\t'
         s = f"{self.name}{sep}"
         s += f"HP {self.hp}/{self.max_hp} ({self.hp_ratio*100:.0f}%){sep}"
@@ -804,7 +863,11 @@ class Pokemon:
             s += f"{st}({ef})-" if ef else f"{st}-"
         s = s[:-1] + sep
         s += "/".join(move.name for move in self.moves)
-        print(s)
+        return s
+
+    def show(self):
+        """ポケモンの情報を文字列化して表示する（`render_info` の互換ラッパー）。"""
+        print(self.render_info())
 
     def to_dict(self) -> dict:
         """ポケモンの情報を辞書形式で返す。

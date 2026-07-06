@@ -15,3 +15,6 @@ CRITICAL_RANK_MAX = 3
 
 # 固定小数点補正の基準値
 FIXED_POINT_BASE = 4096
+
+# PP消費の概念がない技（わるあがき・_こんらん等）に設定する番兵値
+PP_INFINITE = 99999
