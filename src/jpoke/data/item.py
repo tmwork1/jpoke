@@ -32,6 +32,10 @@ def _add_mega_stones(items: dict[ItemName, ItemData]):
                     h.mega_modify_command_options,
                     subject_spec="source:self"
                 ),
+                Event.ON_CHECK_ITEM_CHANGE: h.ItemHandler(
+                    h.mega_prevent_item_change,
+                    subject_spec="target:self",
+                ),
             }
         )
 
@@ -116,7 +120,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
                 h.オーガポンのめん_boost_atk,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_CHECK_ITEM_CHANGE: h.ItemHandler(
+                h.オーガポンのめん_prevent_item_change,
+                subject_spec="target:self",
+            ),
         }
     ),
     "イトケのみ": ItemData(
@@ -141,7 +149,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
                 h.オーガポンのめん_boost_atk,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_CHECK_ITEM_CHANGE: h.ItemHandler(
+                h.オーガポンのめん_prevent_item_change,
+                subject_spec="target:self",
+            ),
         }
     ),
     "いのちのたま": ItemData(
@@ -385,7 +397,11 @@ ITEMS: dict[ItemName, ItemData] = {
             Event.ON_CALC_ATK_MODIFIER: h.ItemHandler(
                 h.オーガポンのめん_boost_atk,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_CHECK_ITEM_CHANGE: h.ItemHandler(
+                h.オーガポンのめん_prevent_item_change,
+                subject_spec="target:self",
+            ),
         }
     ),
     "カムラのみ": ItemData(

@@ -2224,10 +2224,12 @@ def はたきおとす_power(battle: Battle, ctx: AttackContext, value: int) -> 
     """はたきおとすのアイテム所持時1.5倍補正。
 
     奪う/落とすことができないアイテム（だいこんごうだま等の専用道具）の場合は補正なし。
+    ねんちゃく等、除去のみを防ぐ特性の場合は威力補正の対象になるため、
+    dry_run=True で実際の除去を伴わない判定として問い合わせる。
     """
     if (
         ctx.defender.has_item()
-        and battle.item_manager.can_change_item(ctx.defender, source=ctx.attacker)
+        and battle.item_manager.can_change_item(ctx.defender, source=ctx.attacker, dry_run=True)
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)

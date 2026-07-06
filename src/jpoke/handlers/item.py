@@ -16,6 +16,7 @@ from jpoke.enums import Interrupt, LogCode, Command
 from jpoke.core import HandlerReturn, Handler
 from jpoke.core.event_logger import ItemPayload, StatChangePayload
 from jpoke.data import TYPE_MODIFIER
+from jpoke.data.megaevol import MEGA_STONES
 from jpoke.data.pokedex import POKEDEX
 from . import ability_paradox as paradox
 
@@ -94,6 +95,20 @@ def mega_modify_command_options(battle: Battle, ctx: EventContext, value: list[C
         if cmd.is_regular_move:
             value.append(Command.get_megaevol_command(cmd.index))
 
+    return HandlerReturn(value=value)
+
+def mega_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """メガストーン: 対応する種族（メガシンカ前後どちらも含む）が持っている間は
+    トリック・すりかえ・ほしがる・どろぼう・特性マジシャン・わるいてぐせ・
+    ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    対応する種族以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    mon = ctx.target
+    if mon is None:
+        return HandlerReturn(value=value)
+    forms = MEGA_STONES.get(mon.item.name)
+    if forms is not None and mon.name in forms:
+        return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
 def _modify_power_by_type(move: Move,
@@ -545,6 +560,14 @@ def オーガポンのめん_boost_atk(battle: Battle, ctx: AttackContext, value
     if ctx.move.is_attack:
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
+
+
+def オーガポンのめん_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
+    """オーガポンのめん共通: オーガポンが持っている間はトリック・すりかえ・ほしがる・どろぼう・
+    特性マジシャン・わるいてぐせ・ふしょくガス・はたきおとすによる奪取/交換/除去を防ぐ。
+    オーガポン以外が持っている場合は通常通り奪取/交換/除去できる。
+    """
+    return _dedicated_item_prevent_item_change(ctx, value, "オーガポン")
 
 
 def かいがらのすず_drain_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

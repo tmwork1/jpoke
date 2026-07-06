@@ -2233,7 +2233,13 @@ def ねつぼうそう_modify_power(battle: Battle, ctx: AttackContext, value: i
 
 
 def ねんちゃく_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """ねんちゃく特性: 相手から受けるアイテム交換・奪取・除去を防ぐ。"""
+    """ねんちゃく特性: 相手から受けるアイテム交換・奪取・除去を防ぐ。
+
+    はたきおとすの威力補正判定（dry_run=True）では、除去自体は行われないため
+    特性を発動・表示させず、威力補正の対象として扱う（除去は別途阻止される）。
+    """
+    if ctx.dry_run:
+        return HandlerReturn(value=value)
     if ctx.source != ctx.target:
         _announce_ability_triggered(battle, ctx.target)
         return HandlerReturn(value=False, stop_event=True)

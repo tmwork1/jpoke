@@ -83,19 +83,24 @@ class ItemManager:
 
     def can_change_item(self,
                         target: Pokemon,
-                        source: Pokemon | None = None) -> bool:
+                        source: Pokemon | None = None,
+                        *,
+                        dry_run: bool = False) -> bool:
         """アイテム変更が許可されるかを共通イベントで判定する。
 
         Args:
             target: アイテムを変更するポケモン
             source: 変更の発生源となるポケモン
+            dry_run: True の場合、実際に変更を試みるわけではない判定のみの呼び出しとして扱う
+                （例: はたきおとすの威力補正判定）。ねんちゃく等、実除去は防ぐが判定のみの
+                呼び出しでは特性発動を表に出さない特性の分岐に使う。
 
         Returns:
             変更可能な場合はTrue
         """
         return self._events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
-            EventContext(target=target, source=source),
+            EventContext(target=target, source=source, dry_run=dry_run),
             True
         )
 

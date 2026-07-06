@@ -439,6 +439,46 @@ def test_はさむ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_はたきおとす_オーガポンのめんは奪えず威力補正もない():
+    """はたきおとす: オーガポンが持つめんは奪えず、威力補正もかからない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("オーガポン(いしずえ)", item_name="いしずえのめん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert defender.has_item("いしずえのめん")
+
+
+def test_はたきおとす_ねんちゃく持ちは奪えないが威力補正はかかる():
+    """はたきおとす: ねんちゃく持ちの相手からは道具を奪えないが、
+    相手が道具を持っているため威力は1.5倍になる（第六世代以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("マタドガス", ability_name="ねんちゃく", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+    assert defender.has_item("たべのこし")
+
+
+def test_はたきおとす_メガストーンは奪えず威力補正もない():
+    """はたきおとす: 対応する種族が持つメガストーンは奪えず、威力補正もかからない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はたきおとす"])],
+        team1=[Pokemon("ガルーラ", item_name="ガルーラナイト")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert defender.has_item("ガルーラナイト")
+
+
 def test_はたきおとす_奪えない専用道具は威力補正なし():
     """はたきおとす: だいこんごうだま等の奪えない専用道具を持つ相手には威力補正がかからず、
     アイテムも失われない。"""

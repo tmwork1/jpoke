@@ -68,6 +68,10 @@ class EventContext(BaseContext):
     """汎用イベントコンテキスト。攻撃フロー以外のイベントで使用する。"""
     source: Pokemon | None = None
     target: Pokemon | None = None
+    dry_run: bool = False
+    """実際にアイテムを変更せず判定のみ行う呼び出しかどうか（例: はたきおとすの威力判定）。
+    ねんちゃく等、実際の除去は防ぐが判定のみの呼び出しでは発動（発表）しない特性の分岐に使う。
+    """
 
     def is_foe_target(self) -> bool:
         """source と target が異なるポケモンかを返す。"""
