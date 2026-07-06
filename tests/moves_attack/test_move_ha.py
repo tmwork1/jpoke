@@ -1181,6 +1181,20 @@ def test_ひっかく_追加効果が発生しない():
     assert defender.rank == {stat: 0 for stat in defender.rank}
 
 
+def test_ひのこ_こおり状態の相手に当てると解凍する():
+    """ひのこ: ほのおタイプの攻撃技のため、被弾した相手のこおりを解凍する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ひのこ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
 def test_ひのこ_やけどが発動する():
     """ひのこ: 10%でやけどを付与する。"""
     battle = t.start_battle(
