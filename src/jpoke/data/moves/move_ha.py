@@ -331,6 +331,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.はやてがえし_try_move,
+                priority=30,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.はやてがえし_apply_flinch,
