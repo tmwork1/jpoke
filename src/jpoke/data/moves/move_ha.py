@@ -308,11 +308,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
         },
     ),
     "はめつのひかり": MoveData(
-        type="ゴースト",
+        type="フェアリー",
         category="special",
         pp=5,
-        power=150,
-        accuracy=100,
+        power=140,
+        accuracy=90,
         flags={"recoil"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
