@@ -1,7 +1,8 @@
 # test_copy
 
-テスト数: 4
+テスト数: 5
 
+- [x] コピー後に可変状態が共有されない
 - [x] mon
 - [x] terrain
 - [x] weather
