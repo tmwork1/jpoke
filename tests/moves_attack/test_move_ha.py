@@ -940,6 +940,19 @@ def test_ハードローラー_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ばかぢから_自分のこうげきとぼうぎょが下がる():
+    """ばかぢから: 命中後、自分の『こうげき』『ぼうぎょ』ランクが1段階ずつ下がる（確定効果）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ばかぢから"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == -1
+    assert attacker.rank["def"] == -1
+
+
 def test_ばくおんぱ_みがわりを貫通して本体にダメージを与える():
     """ばくおんぱ: soundラベルを持つため、みがわり状態の相手の本体にダメージを与える。"""
     battle = t.start_battle(
