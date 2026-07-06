@@ -91,8 +91,8 @@ def remove_blank_lines(entry_lines: list[str]) -> list[str]:
     return [line for line in entry_lines if line.strip() != ""]
 
 
-def sort_items(target: Path) -> None:
-    """ITEMS辞書を五十音順に並び替えてファイルを書き換える。
+def build_sorted_content(target: Path) -> str:
+    """ITEMS辞書を五十音順に並び替えた新しいファイル内容を返す（書き込みはしない）。
 
     Note:
         ITEMS辞書にはメガストーンが common_setup() 実行時に動的追加されるため、
@@ -151,12 +151,32 @@ def sort_items(target: Path) -> None:
     footer = "\n".join(lines[dict_end:])
 
     new_content = header + "\n" + body + "\n" + footer + "\n"
+    return new_content
 
+
+def sort_items(target: Path) -> None:
+    """ITEMS辞書を五十音順に並び替えてファイルを書き換える。"""
+    new_content = build_sorted_content(target)
     target.write_text(new_content, encoding="utf-8")
-    print(f"完了: {len(entries)} エントリを並び替え → {target}")
+    print(f"完了: 並び替え → {target}")
+
+
+def check_items(target: Path) -> bool:
+    """並びが崩れていないかを判定する（ファイルは変更しない）。"""
+    original = target.read_text(encoding="utf-8")
+    new_content = build_sorted_content(target)
+    return new_content == original
 
 
 def main() -> None:
+    if "--check" in sys.argv[1:]:
+        if check_items(ITEM_PY):
+            print(f"OK: 整列済み → {ITEM_PY}")
+        else:
+            print(f"未整列: {ITEM_PY}", file=sys.stderr)
+            sys.exit(1)
+        return
+
     sort_items(ITEM_PY)
 
 

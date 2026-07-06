@@ -37,8 +37,11 @@ def sort_key(func_name: str) -> str:
     return katakana_to_hiragana(func_name.removeprefix("test_"))
 
 
-def sort_file(target: Path) -> None:
-    source = target.read_text(encoding="utf-8")
+def build_sorted_content(source: str) -> str | None:
+    """ソート済みのソースコード文字列を返す。
+
+    ソート対象の test_ 関数が見つからない場合は None を返す（呼び出し側でスキップ扱いにする）。
+    """
     lines = source.splitlines(keepends=True)
 
     tree = ast.parse(source)
@@ -58,8 +61,7 @@ def sort_file(target: Path) -> None:
         test_funcs.append((node.name, start_0, end_0))
 
     if not test_funcs:
-        print(f"スキップ: test_ 関数が見つかりません → {target}")
-        return
+        return None
 
     test_funcs.sort(key=lambda x: x[1])
 
@@ -132,19 +134,58 @@ def sort_file(target: Path) -> None:
     else:
         parts.append("\n")
 
-    target.write_text("".join(parts), encoding="utf-8")
-    print(f"並び替え完了: {len(func_chunks)} 関数 → {target}")
+    return "".join(parts)
+
+
+def sort_file(target: Path) -> None:
+    """ファイルを並び替えて上書きする。"""
+    source = target.read_text(encoding="utf-8")
+    content = build_sorted_content(source)
+    if content is None:
+        print(f"スキップ: test_ 関数が見つかりません → {target}")
+        return
+    target.write_text(content, encoding="utf-8")
+    print(f"並び替え完了: {target}")
+
+
+def check_file(target: Path) -> bool:
+    """並びが崩れていないかを判定する（ファイルは変更しない）。
+
+    Returns:
+        bool: 既に正しく並んでいる（または対象関数が無い）場合True
+    """
+    source = target.read_text(encoding="utf-8")
+    content = build_sorted_content(source)
+    if content is None:
+        return True
+    return content == source
 
 
 def main() -> None:
     args = sys.argv[1:]
+    check = "--check" in args
+    args = [a for a in args if a != "--check"]
+
     targets = [Path(a) for a in args] if args else [ROOT / "tests" / "test_ability.py"]
+    resolved: list[Path] = []
     for t in targets:
         if not t.is_absolute():
             t = ROOT / t
         if not t.exists():
             print(f"エラー: ファイルが見つかりません → {t}", file=sys.stderr)
             sys.exit(1)
+        resolved.append(t)
+
+    if check:
+        unsorted_files = [t for t in resolved if not check_file(t)]
+        if unsorted_files:
+            for t in unsorted_files:
+                print(f"未整列: {t}")
+            sys.exit(1)
+        print(f"OK: {len(resolved)} ファイルとも整列済み")
+        return
+
+    for t in resolved:
         sort_file(t)
 
 

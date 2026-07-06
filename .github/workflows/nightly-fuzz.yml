@@ -1,0 +1,61 @@
+name: nightly-fuzz
+
+on:
+  schedule:
+    # 毎日 18:00 UTC（日本時間 3:00）に実行
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Pick start seed for the day
+        id: seed
+        run: echo "start_seed=$(( $(date +%s) / 86400 * 100000 ))" >> "$GITHUB_OUTPUT"
+
+      - name: Run fuzz_battle.py (random player)
+        id: fuzz
+        continue-on-error: true
+        timeout-minutes: 15
+        run: >
+          python scripts/fuzz_battle.py --search
+          --start-seed ${{ steps.seed.outputs.start_seed }}
+          --count 500
+
+      - name: Run tsfuzz_battle.py (tree-search player)
+        id: tsfuzz
+        continue-on-error: true
+        timeout-minutes: 15
+        run: >
+          python scripts/tsfuzz_battle.py --search
+          --start-seed ${{ steps.seed.outputs.start_seed }}
+          --count 100
+
+      - name: Upload failure reports
+        if: steps.fuzz.outcome == 'failure' || steps.tsfuzz.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-failures-${{ github.run_id }}
+          path: |
+            .loop/fuzz_failures/
+            .loop/tsfuzz_failures/
+          if-no-files-found: ignore
+
+      - name: Fail job if any fuzz run found a regression
+        if: steps.fuzz.outcome == 'failure' || steps.tsfuzz.outcome == 'failure'
+        run: |
+          echo "fuzz_battle.py or tsfuzz_battle.py found a failing seed. See uploaded artifact for the report."
+          exit 1

@@ -1,0 +1,57 @@
+# pre-commit フック設定。
+#
+# 外部リポジトリ（ruff-pre-commit 等）に依存せず、リポジトリ内の既存ツール
+# （python -m ruff / scripts/sort_*.py --check）をそのまま local フックとして呼び出す。
+# 使い方:
+#   pip install pre-commit
+#   pre-commit install
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        description: "ruff check src/ tests/ scripts/"
+        entry: python -m ruff check src/ tests/ scripts/
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: sort-handlers-check
+        name: sort_handlers.py --check
+        description: "handlers/ 内の公開関数が五十音順に並んでいるか確認する"
+        entry: python scripts/sort_handlers.py --check
+        language: system
+        pass_filenames: true
+        files: ^src/jpoke/handlers/(ability|item|move_status|move_attack|volatile)\.py$
+
+      - id: sort-abilities-check
+        name: sort_abilities.py --check
+        description: "ABILITIES 辞書が五十音順に並んでいるか確認する"
+        entry: python scripts/sort_data/sort_abilities.py --check
+        language: system
+        pass_filenames: false
+        files: ^src/jpoke/data/ability\.py$
+
+      - id: sort-items-check
+        name: sort_items.py --check
+        description: "ITEMS 辞書が五十音順に並んでいるか確認する"
+        entry: python scripts/sort_data/sort_items.py --check
+        language: system
+        pass_filenames: false
+        files: ^src/jpoke/data/item\.py$
+
+      - id: sort-moves-check
+        name: sort_moves.py --check
+        description: "MOVES 辞書が五十音順に並んでいるか確認する"
+        entry: python scripts/sort_data/sort_moves.py --check
+        language: system
+        pass_filenames: false
+        files: ^src/jpoke/data/move(s/.*)?\.py$
+
+      - id: sort-tests-check
+        name: sort_tests.py --check
+        description: "テストファイルの test_ 関数が五十音順に並んでいるか確認する"
+        entry: python scripts/sort_tests.py --check
+        language: system
+        pass_filenames: true
+        files: ^tests/.*/?test_.*\.py$

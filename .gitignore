@@ -139,3 +139,6 @@ dmypy.json
 
 # Ignore generated wiki directory
 docs/wiki/
+
+# .loop の使い捨てマーカー（レビュー完了印）は追跡しない
+.loop/review_results/
