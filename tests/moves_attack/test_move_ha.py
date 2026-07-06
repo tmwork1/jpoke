@@ -1099,6 +1099,30 @@ def test_パワーウィップ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ひけん・ちえなみ_きれあじで威力1_5倍():
+    """ひけん・ちえなみ: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きれあじ", move_names=["ひけん・ちえなみ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_ひけん・ちえなみ_ちからずくで威力上昇しまきびしは設置されない():
+    """ひけん・ちえなみ: ちからずく使用時は威力が1.3倍になる代わりにまきびしが設置されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ちからずく", move_names=["ひけん・ちえなみ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    side = battle.get_side(battle.actives[1])
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 5325
+    assert not side.fields["まきびし"].is_active
+
+
 def test_ひけん・ちえなみ_まきびし3層のとき設置されず攻撃は成功する():
     """ひけん・ちえなみ: まきびしが3層でも攻撃は成功し、設置数は増えない。"""
     battle = t.start_battle(

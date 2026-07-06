@@ -2399,7 +2399,14 @@ def パラボラチャージ_drain(battle: Battle, ctx: AttackContext, value: in
 
 
 def ひけん・ちえなみ_set_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ひけん・ちえなみ: 命中後、相手陣営に「まきびし」を1層設置する（最大3層）。"""
+    """ひけん・ちえなみ: 命中後、相手陣営に「まきびし」を1層設置する（最大3層）。
+
+    追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。
+    りんぷん・おんみつマントは対象個体ではなく場を変化させる効果のため影響を受けない
+    （resolve_secondary_chance は経由しない）。
+    """
+    if _is_sheer_force_blocked(ctx):
+        return HandlerReturn(value=value)
     side = battle.get_side(ctx.defender)
     side.activate("まきびし", 1)
     return HandlerReturn(value=value)
