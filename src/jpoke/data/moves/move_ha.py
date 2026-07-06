@@ -668,19 +668,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         },
     ),
-    "ひっさつまえば": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=5,
-        power=120,
-        accuracy=90,
-        flags={"bite", "contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ひっさつまえば_apply_flinch,
-            )
-        }
-    ),
     "ひのこ": MoveData(
         type="ほのお",
         category="special",

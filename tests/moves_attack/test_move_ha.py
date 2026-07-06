@@ -1181,18 +1181,6 @@ def test_ひっかく_追加効果が発生しない():
     assert defender.rank == {stat: 0 for stat in defender.rank}
 
 
-def test_ひっさつまえば_ひるみが発動する():
-    """ひっさつまえば: 10%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ひっさつまえば"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ひのこ_やけどが発動する():
     """ひのこ: 10%でやけどを付与する。"""
     battle = t.start_battle(

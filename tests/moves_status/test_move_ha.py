@@ -805,18 +805,6 @@ def test_ひっくりかえす_複数ランクが全て反転する():
     assert defender.rank["spe"] == -1
 
 
-def test_ひっさつまえば_ひるみが発動する():
-    """ひっさつまえば: 10%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ガブリアス", move_names=["ひっさつまえば"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ひょうざんおろし_ひるみが発動する():
     """ひょうざんおろし: 30%でひるみを付与する。"""
     battle = t.start_battle(

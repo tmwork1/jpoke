@@ -2412,10 +2412,6 @@ def ひけん・ちえなみ_set_spikes(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def ひっさつまえば_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
-
-
 def _weight_ratio_to_power(attacker_weight: float, defender_weight: float) -> int:
     """体重比率（自分 / 相手）から威力を算出する共通関数。
 
