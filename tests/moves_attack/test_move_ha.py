@@ -426,6 +426,19 @@ def test_はきだす_外れてもランクが低下する():
     assert attacker.rank["spd"] == 0
 
 
+def test_はさむ_相手にダメージを与える():
+    """はさむ: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["はさむ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_はたきおとす_奪えない専用道具は威力補正なし():
     """はたきおとす: だいこんごうだま等の奪えない専用道具を持つ相手には威力補正がかからず、
     アイテムも失われない。"""
