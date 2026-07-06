@@ -703,6 +703,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=20,
         power=50,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ひやみず_lower_defender_atk,

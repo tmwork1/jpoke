@@ -1240,6 +1240,23 @@ def test_ひゃっきやこう_状態異常のとき威力2倍():
     assert battle_ailment.damage_calculator.power_modifier == 8192
 
 
+def test_ひやみず_secondary_effectフラグを持つ():
+    """ひやみず: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["ひやみず"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_ひやみず_こうげき1段階低下が発動する():
+    """ひやみず: 100%の確率で相手のこうげきを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["ひやみず"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
+
+
 def test_ひょうざんおろし_ひるみが発動する():
     """ひょうざんおろし: 30%でひるみを付与する。"""
     battle = t.start_battle(
