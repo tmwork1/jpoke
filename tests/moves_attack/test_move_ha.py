@@ -1154,6 +1154,33 @@ def test_ひけん・ちえなみ_命中後まきびしが1層設置される():
     assert side.fields["まきびし"].count == 1
 
 
+def test_ひっかく_相手にダメージを与える():
+    """ひっかく: 通常攻撃技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ひっかく"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_ひっかく_追加効果が発生しない():
+    """ひっかく: 追加効果なしのため、状態異常や能力ランク変化が発生しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ひっかく"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.ailment.name == ""
+    assert defender.rank == {stat: 0 for stat in defender.rank}
+
+
 def test_ひっさつまえば_ひるみが発動する():
     """ひっさつまえば: 10%でひるみを付与する。"""
     battle = t.start_battle(
