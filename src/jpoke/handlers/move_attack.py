@@ -2173,15 +2173,23 @@ def はがねのつばさ_boost_attacker_B(battle: Battle, ctx: AttackContext, v
 
 
 def はきだす_apply_after(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はきだすのヒット後処理（ON_HIT）: たくわえ状態をリセットし、上がったランクを戻す。
+    """はきだすの後処理（ON_END_MOVE）: たくわえ状態をリセットし、上がったランクを戻す。
 
-    特性おやこあいで2ヒット化された場合でもランク低下は1回のみ発生するため、
-    1ヒット目以外では何もしない。
+    ON_END_MOVE は行動が実行された場合、命中判定・タイプ相性による無効化の有無に
+    関わらず必ず発火するため、外した場合や効果がないゴーストタイプに使用した場合でも
+    たくわえるで上がった分のランクは低下する。
+    麻痺・ひるみ等で行動自体ができなかった場合（action_success is False）は対象外。
+    また、ヒット回数に関わらず一度しか発火しないため、特性おやこあいで2ヒット化されても
+    ランク低下は自然に1回のみになる。
     """
-    if ctx.hit_index != 1:
+    if battle.move_executor.action_success is False:
         return HandlerReturn(value=value)
     mon = ctx.attacker
+    if not mon.has_volatile("たくわえる"):
+        return HandlerReturn(value=value)
     count = mon.volatiles["たくわえる"].count or 0
+    if count == 0:
+        return HandlerReturn(value=value)
     # ランクをたくわえた回数分だけ逆方向へ
     battle.modify_stats(mon, {"def": -count, "spd": -count}, source=mon)
     battle.volatile_manager.remove(mon, "たくわえる")

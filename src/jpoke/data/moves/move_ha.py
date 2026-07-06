@@ -136,7 +136,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
                     ha.はきだす_set_power,
                 ),
             ],
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_END_MOVE: h.MoveHandler(
                 ha.はきだす_apply_after,
             ),
         }
