@@ -2,14 +2,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    pass
 
 import pytest
 
 from jpoke import Pokemon
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import PLATE_TO_TYPE
-from jpoke.types import HPChangeReason
 
 from .. import test_utils as t
 

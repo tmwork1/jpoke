@@ -41,6 +41,8 @@ def test_リフレッシュ_まひを治す():
     attacker = battle.actives[0]
     t.apply_ailment(battle, 0, "まひ", by_foe=True)
     assert attacker.ailment.name == "まひ"
+    # まひによる行動不能（12.5%）で技が不発になるとテストがフレーキーになるため固定する
+    battle.test_option.trigger_ailment = False
     t.run_move(battle, 0)
     assert not attacker.ailment.is_active
 

@@ -1,6 +1,6 @@
 """揮発性状態ハンドラの単体テスト（ハ〜ワ行）"""
 import pytest
-from jpoke import Move, Pokemon
+from jpoke import Pokemon
 from jpoke.enums import Command
 from .. import test_utils as t
 
@@ -16,7 +16,6 @@ def test_バインド_ゴーストタイプは交代可能():
 
 
 def test_バインド_ターン経過でダメージ():
-    n_turn = 2
     battle = t.start_battle(
         team1=[Pokemon("ピカチュウ")],
         team0=[Pokemon("ピカチュウ")],

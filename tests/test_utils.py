@@ -1,9 +1,9 @@
-from jpoke.core import Battle, Player, EventContext, AttackContext
+from jpoke.core import Battle, Player, AttackContext
 from jpoke.core.lethal import LethalResult
 from jpoke.model import Pokemon, Move
 from jpoke.types import AilmentName, VolatileName, WeatherName, TerrainName, GlobalFieldName, SideFieldName, \
     CriticalMode, DamageRollMode
-from jpoke.enums import Event, Command, LogCode
+from jpoke.enums import Event, Command
 
 
 class CustomPlayer(Player):

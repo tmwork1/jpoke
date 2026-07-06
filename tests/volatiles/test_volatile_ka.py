@@ -1,6 +1,6 @@
 """揮発性状態ハンドラの単体テスト（カ〜コ行）"""
 import pytest
-from jpoke import Move, Pokemon
+from jpoke import Pokemon
 from jpoke.enums import Command
 from .. import test_utils as t
 

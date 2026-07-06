@@ -1017,7 +1017,7 @@ def test_テラバースト_ステラ():
     )
     attacker = battle.actives[0]
     attacker.terastallize()
-    move = t.run_move(battle, 0)
+    t.run_move(battle, 0)
 
     assert battle.move_executor.move_type == "ステラ"
     assert battle.damage_calculator.final_power == 100

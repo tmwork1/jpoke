@@ -100,55 +100,6 @@ def test_はいすいのじん_全5能力が最大のとき失敗する():
         assert mon.rank[stat] == 6
 
 
-def test_はきだす_カウント0で失敗する():
-    """はきだす: たくわえていない（カウント0）なら失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-
-    assert defender.hp == hp_before
-
-
-@pytest.mark.parametrize("count", [1, 2, 3])
-def test_はきだす_各カウントでダメージを与える(count):
-    """はきだす: たくわえカウント1~3のいずれでも相手にダメージを与える（威力100~300）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": count},
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-
-    assert defender.hp < hp_before
-
-
-def test_はきだす_命中後にたくわえる状態が消えランクが元に戻る():
-    """はきだす: 命中後にたくわえる揮発状態が解除され、たくわえた回数分だけぼうぎょとくぼうが下がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["はきだす"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"たくわえる": 2},
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    # たくわえカウント2相当のランクを事前に設定
-    attacker.rank["def"] = 2
-    attacker.rank["spd"] = 2
-    t.run_move(battle, 0)
-
-    assert not attacker.has_volatile("たくわえる")
-    assert attacker.rank["def"] == 0
-    assert attacker.rank["spd"] == 0
-
-
 def test_はねやすめ_HPが半分回復する():
     """はねやすめ: 使用後に最大HPの1/2が回復する"""
     battle = t.start_battle(

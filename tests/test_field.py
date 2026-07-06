@@ -1,6 +1,6 @@
 """フィールド効果ハンドラの単体テスト（天候・地形・サイドフィールド・グローバルフィールド）"""
 import pytest
-from jpoke import Battle, Pokemon
+from jpoke import Pokemon
 from jpoke.types import WeatherName, TerrainName, GlobalFieldName, SideFieldName
 from jpoke.core import AttackContext
 from . import test_utils as t

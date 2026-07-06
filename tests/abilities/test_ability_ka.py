@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    pass
 
 import pytest
 
@@ -536,6 +536,26 @@ def test_ぎょぐん_ターン終了時にHP1_4超ならむれたすがたを�
     mon = battle.actives[0]
     t.end_turn(battle)
     assert mon.name == "ヨワシ(むれ)"
+
+
+def test_ぎょぐん_ヨワシ以外はターン終了時にフォルムチェンジしない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぎょぐん")],
+        team1=[Pokemon("コラッタ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4
+    t.end_turn(battle)
+    assert mon.name == "ピカチュウ"
+
+
+def test_ぎょぐん_ヨワシ以外は登場時にフォルムチェンジしない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぎょぐん")],
+        team1=[Pokemon("コラッタ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ピカチュウ"
 
 
 def test_クイックドロウ_30パーセント発動しないとき通常行動順():

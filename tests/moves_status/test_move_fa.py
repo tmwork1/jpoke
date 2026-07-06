@@ -1,6 +1,5 @@
 """変化技ハンドラの単体テスト（ふぁ行）。"""
 
-import pytest
 
 from jpoke import Pokemon
 from .. import test_utils as t

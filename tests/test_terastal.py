@@ -3,7 +3,6 @@ import pytest
 
 from jpoke.types import Type
 from jpoke import Pokemon
-from jpoke.core import EventContext
 
 from . import test_utils as t
 

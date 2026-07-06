@@ -1,10 +1,117 @@
 """状態異常ハンドラの単体テスト"""
+import enum
+
 import pytest
 
+from jpoke.core.handler import Handler
+from jpoke.core.player import Player
 from jpoke.enums import Event, Interrupt
 from jpoke.model import Pokemon
 
 from . import test_utils as t
+
+# 共有されていても問題ない型（不変オブジェクト・設計上共有する参照）
+_ATOMIC_TYPES = (str, int, float, bool, bytes, type(None), frozenset, enum.Enum)
+
+
+def _is_shared_ok(obj) -> bool:
+    """コピー間で同一オブジェクトを共有してよいかを判定する。"""
+    if isinstance(obj, _ATOMIC_TYPES):
+        return True
+    if callable(obj) and not hasattr(obj, "__dict__"):
+        # 関数・メソッド・組み込み呼び出し可能オブジェクト
+        return True
+    cls = type(obj)
+    module = getattr(cls, "__module__", "")
+    # 図鑑・技・特性・アイテム等の静的データは共有が正
+    if module.startswith("jpoke.data"):
+        return True
+    # Player（およびそのサブクラス）と Handler 定義はコピー間で共有する設計
+    if isinstance(obj, (Player, Handler)):
+        return True
+    if callable(obj):
+        return True
+    return False
+
+
+def _find_shared_mutables(old, new, path="battle", seen=None, findings=None):
+    """コピー元とコピー先のオブジェクトグラフを並行に歩き、
+    可変オブジェクトが共有されているパスを列挙する。"""
+    if seen is None:
+        seen = set()
+    if findings is None:
+        findings = []
+
+    pair = (id(old), id(new))
+    if pair in seen:
+        return findings
+    seen.add(pair)
+
+    if old is None and new is None:
+        return findings
+
+    if old is new:
+        if not isinstance(old, tuple) and not _is_shared_ok(old):
+            findings.append(f"{path}: {type(old).__name__} が共有されている")
+            return findings
+        if not isinstance(old, tuple):
+            return findings
+        # 不変コンテナ（tuple）は中身を検査する
+
+    if isinstance(old, (list, tuple)):
+        if len(old) == len(new):
+            for i, (o, n) in enumerate(zip(old, new)):
+                _find_shared_mutables(o, n, f"{path}[{i}]", seen, findings)
+        else:
+            findings.append(f"{path}: 要素数が異なる ({len(old)} != {len(new)})")
+        return findings
+
+    if isinstance(old, dict):
+        if set(map(id, old)) == set(map(id, new)) or set(old) == set(new):
+            for key in old:
+                _find_shared_mutables(
+                    old[key], new[key], f"{path}[{key!r}]", seen, findings
+                )
+        return findings
+
+    if isinstance(old, (set, frozenset)) or _is_shared_ok(old):
+        return findings
+
+    # 通常のオブジェクト: __dict__ を並行に歩く
+    old_vars = getattr(old, "__dict__", None)
+    new_vars = getattr(new, "__dict__", None)
+    if old_vars and new_vars is not None:
+        for key in old_vars:
+            if key in new_vars:
+                _find_shared_mutables(
+                    old_vars[key], new_vars[key], f"{path}.{key}", seen, findings
+                )
+    return findings
+
+
+def test_コピー後に可変状態が共有されない():
+    """Battle.copy() 後、元と複製の間で可変オブジェクトが共有されないことを
+    オブジェクトグラフ走査で機械的に検証する（新規属性の追加にも自動追従する）。"""
+    old = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", item_name="たべのこし", move_names=["たいあたり"]),
+            Pokemon("ヒトカゲ"),
+        ],
+        team1=[Pokemon("フシギダネ", move_names=["やどりぎのタネ"])],
+        weather=("すなあらし", 3),
+        terrain=("グラスフィールド", 3),
+        accuracy=100,
+    )
+    t.run_move(old, 0)
+    # ターン途中相当の状態を再現する（接触技の被弾記録が相手ポケモンを参照した状態）
+    old.actives[1].contact_hitter = old.actives[0]
+
+    new = old.copy()
+
+    findings = _find_shared_mutables(old, new)
+    assert not findings, (
+        "コピー間で共有されている可変オブジェクト:\n" + "\n".join(findings)
+    )
 
 
 def test_mon():

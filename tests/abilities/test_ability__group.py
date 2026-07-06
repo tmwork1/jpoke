@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    pass
 
 import pytest
 
@@ -168,7 +168,7 @@ def test_スキン系_ノーマル技を対応タイプに変換する(
         team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
         team1=[Pokemon("ピカチュウ")],
     )
-    move = t.run_move(battle, 0)
+    t.run_move(battle, 0)
     assert battle.move_executor.move_type == expected_type
 
 

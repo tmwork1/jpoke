@@ -2,14 +2,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from jpoke.core import Battle
+    pass
 
 import pytest
 
 from jpoke import Pokemon
 from jpoke.enums import Command
 from jpoke.types import AilmentName, WeatherName, SideFieldName
-from jpoke.core import AttackContext
 
 from .. import test_utils as t
 
@@ -560,6 +559,17 @@ def test_スロースタート_登場5ターン未満は攻撃補正0_5倍():
 
     battle.step()
     assert 4096 == battle.damage_calculator.atk_modifier
+
+
+def test_スワームチェンジ_ジガルデ以外はHP1_2以下でもフォルムチェンジしない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="スワームチェンジ")],
+        team1=[Pokemon("コラッタ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 2
+    t.end_turn(battle)
+    assert mon.name == "ピカチュウ"
 
 
 def test_スワームチェンジ_ターン終了時にHP1_2以下ならフォルムチェンジ():

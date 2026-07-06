@@ -1551,7 +1551,6 @@ def test_そらをとぶ_かみなりは命中する():
         team1=[Pokemon("カビゴン", move_names=["そらをとぶ"])],
         accuracy=100,
     )
-    attacker = battle.actives[0]
     defender = battle.actives[1]
 
     # 1ターン目: defenderがそらをとぶ（揮発状態付与）

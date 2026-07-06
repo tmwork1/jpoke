@@ -2,9 +2,7 @@
 import pytest
 
 from jpoke.data import MEGA_STONES
-from jpoke.types import Type
 from jpoke.model import Pokemon
-from jpoke.core import EventContext
 from jpoke.enums import Command
 
 from . import test_utils as t
