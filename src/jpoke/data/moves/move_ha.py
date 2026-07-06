@@ -225,6 +225,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="special",
         pp=20,
         power=80,
+        accuracy=None,  # 必中
         flags={"bullet", "pulse"},
         handlers={},  # 追加効果なし
     ),

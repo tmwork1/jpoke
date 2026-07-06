@@ -577,6 +577,36 @@ def test_はっぱカッター_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_はどうだん_かくとうタイプの特殊技としてダメージを与える():
+    """はどうだん: かくとうタイプの特殊技として通常通りダメージを与える。追加効果なし。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はどうだん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    move = MOVES["はどうだん"]
+    assert move.type == "かくとう"
+    assert move.category == "special"
+    assert move.power == 80
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_はどうだん_相手の回避率が高くても必ず命中する():
+    """はどうだん: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はどうだん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_はなびらのまい_カウント終了後にこんらんが付与される():
     """はなびらのまい: カウントが0になった後にこんらん状態が付与される。"""
     battle = t.start_battle(
