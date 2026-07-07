@@ -775,13 +775,13 @@ MOVES_A: dict[MoveName, MoveData] = {
     "インファイト": MoveData(
         type="かくとう",
         category="physical",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.インファイト_lower_defender_stats,
+                ha.インファイト_lower_attacker_stats,
             )
         }
     ),

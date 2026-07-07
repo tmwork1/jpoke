@@ -269,7 +269,11 @@ def いわなだれ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any)
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def インファイト_lower_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def インファイト_lower_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """インファイト: 命中時に確定で自分の『ぼうぎょ』『とくぼう』ランクが1段階ずつ下がる。
+
+    自分自身のランクを下げる確定効果のため、ちからずくの対象外（secondary_effect フラグ非付与）。
+    """
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
