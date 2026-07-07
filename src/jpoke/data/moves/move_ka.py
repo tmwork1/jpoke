@@ -946,19 +946,6 @@ MOVES_KA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "グラスミキサー": MoveData(
-        type="くさ",
-        category="special",
-        pp=10,
-        power=60,
-        accuracy=55,
-        flags={"secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.グラスミキサー_lower_acc,
-            )
-        }
-    ),
     "グロウパンチ": MoveData(
         type="かくとう",
         category="physical",
