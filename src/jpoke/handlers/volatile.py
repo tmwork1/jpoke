@@ -498,6 +498,11 @@ def こんらん_try_action(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=False, stop_event=True)
 
 
+def コールドフレア_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """コールドフレア状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="コールドフレア")
+
+
 def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """さわぐ状態でねむりを防ぐ
 

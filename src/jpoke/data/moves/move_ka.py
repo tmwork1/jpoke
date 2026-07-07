@@ -1288,6 +1288,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         accuracy=90,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "コールドフレア"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.コールドフレア_apply_burn_to_defender,
             )

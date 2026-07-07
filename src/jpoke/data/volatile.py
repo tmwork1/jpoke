@@ -237,6 +237,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "コールドフレア": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.コールドフレア_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "さわぐ": VolatileData(
         forced=True,
         handlers={

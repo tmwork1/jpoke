@@ -3243,15 +3243,38 @@ def test_こんらん_ミストフィールド中は付与されない():
     assert not battle.actives[1].has_volatile("こんらん")
 
 
+def test_コールドフレア_2ターンで攻撃する():
+    """コールドフレア: 1ターン目はダメージなしで揮発状態を付与し、2ターン目にダメージを与えて揮発状態を解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("キュレム", move_names=["コールドフレア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert attacker.has_volatile("コールドフレア")
+
+    # 2ターン目: ダメージあり、揮発状態解除
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_volatile("コールドフレア")
+
+
 def test_コールドフレア_やけどが発動する():
-    """コールドフレア: 30%でやけどを付与する。"""
+    """コールドフレア: 2ターン目の攻撃命中時に30%でやけどを付与する。"""
     battle = t.start_battle(
         team0=[Pokemon("キュレム", move_names=["コールドフレア"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
         secondary_chance=1.0,
     )
-    t.run_move(battle, 0)
+    t.run_move(battle, 0)  # 1ターン目: 溜め
+    t.run_move(battle, 0)  # 2ターン目: 攻撃
     assert battle.actives[1].ailment.name == "やけど"
 
 
