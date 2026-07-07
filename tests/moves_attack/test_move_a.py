@@ -1534,6 +1534,44 @@ def test_えだづき_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_エナジーボール_とくぼう1段階低下が発動しない():
+    """エナジーボール: 追加効果不発時はとくぼうランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["エナジーボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_エナジーボール_とくぼう1段階低下が発動する():
+    """エナジーボール: 10%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["エナジーボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
+
+
+def test_エナジーボール_相手にダメージを与える():
+    """エナジーボール: 特殊くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["エナジーボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_エレキボール_比率0のとき威力40():
     """エレキボール: 攻撃者S // 防御者S が 0 のとき威力40。
     カビゴン(S=50) vs ピカチュウ(S=110) → 比率0 → 威力40。
