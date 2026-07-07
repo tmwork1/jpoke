@@ -80,13 +80,14 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコファング": MoveData(
         type="エスパー",
         category="physical",
-        pp=10,
+        pp=12,
         power=85,
         accuracy=100,
         flags={"bite", "contact"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 ha.サイコファング_break_screens,
+                priority=30,
             ),
         },
     ),
