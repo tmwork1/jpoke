@@ -1543,6 +1543,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.ほのおのまい_boost_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ほのおのまい_boost_spa)
         }
     ),
     "ほのおのムチ": MoveData(

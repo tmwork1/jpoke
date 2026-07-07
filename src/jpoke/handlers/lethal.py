@@ -587,6 +587,13 @@ def ホズのみ_resist_normal(battle: Battle, ctx: LethalContext, hp_dist: Stat
     return _type_resist_berry(battle, ctx, hp_dist, "ノーマル", super_effective_only=False)
 
 
+def ほのおのまい_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ほのおのまい: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+    return hp_dist
+
+
 def ほのおのムチ_lower_def(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ほのおのムチ: 命中後、追加効果有効時に防御側のぼうぎょを1段階下げる。"""
     if ctx.move_secondary:

@@ -1021,6 +1021,26 @@ def test_ほのおのうず_バインド付与():
     assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
+def test_ほのおのまい_とくこうアップ_secondary有り():
+    """ほのおのまい: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ほのおのまい"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_ほのおのまい_とくこうアップ_secondary無し():
+    """ほのおのまい: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ほのおのまい"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_ほのおのムチ_ぼうぎょダウン_secondary有り():
     """ほのおのムチ: secondary=True のとき相手のぼうぎょが1段階下がり、2発目のダメージが増加する"""
     battle = t.start_battle(
