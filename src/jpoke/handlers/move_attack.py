@@ -472,10 +472,6 @@ def エレクトロビーム_weather_skip(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=value)
 
 
-def オクタンほう_lower_acc(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.5)
-
-
 def おしゃべり_apply_confusion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おしゃべりの追加効果: 相手をこんらん状態にする（確率100%）。"""
     return apply_confusion_to_defender(battle, ctx, value)
