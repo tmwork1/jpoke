@@ -1154,18 +1154,6 @@ def test_シャカシャカほう_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
-def test_シャドーボーン_ぼうぎょ1段階低下が発動する():
-    """シャドーボーン: 20%の確率で相手のぼうぎょを1段階下げる。ゴーストタイプはエスパータイプに有効。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ゲンガー", move_names=["シャドーボーン"])],
-        team1=[Pokemon("ミュウツー")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].rank["def"] == -1
-
-
 def test_シャドーレイ_ハードロックの効果抜群軽減を無視する():
     """シャドーレイ: 相手の特性を無視するため、ハードロックによる効果抜群ダメージ軽減が発動しない。"""
     battle = t.start_battle(

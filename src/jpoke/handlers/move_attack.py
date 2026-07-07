@@ -1353,10 +1353,6 @@ def シャドーボール_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.2)
 
 
-def シャドーボーン_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.2)
-
-
 def シャドーレイ_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """シャドーレイ: 攻撃直前に相手の特性を無効化する（かたやぶりと同様の対象特性）。"""
     mon = ctx.defender

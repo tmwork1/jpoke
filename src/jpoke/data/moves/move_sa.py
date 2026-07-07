@@ -495,19 +495,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
             )
         }
     ),
-    "シャドーボーン": MoveData(
-        type="ゴースト",
-        category="physical",
-        pp=10,
-        power=85,
-        accuracy=100,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シャドーボーン_lower_defender_def,
-            )
-        }
-    ),
     "シャドーレイ": MoveData(
         type="ゴースト",
         category="special",
