@@ -182,7 +182,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りんしょう": MoveData(
         type="ノーマル",
         category="special",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=100,
         flags={"sound"},
