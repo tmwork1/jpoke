@@ -910,11 +910,15 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロスフレイム": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
         flags={"thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.クロスフレイム_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.クロスフレイム_calc_power,
                 subject_spec="attacker:self",

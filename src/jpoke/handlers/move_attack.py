@@ -1014,6 +1014,19 @@ def クロスフレイム_record_hit(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
+def クロスフレイム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスフレイム: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
