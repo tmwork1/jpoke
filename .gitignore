@@ -140,5 +140,6 @@ dmypy.json
 # Ignore generated wiki directory
 docs/wiki/
 
-# .loop の使い捨てマーカー（レビュー完了印）は追跡しない
-.loop/review_results/
+# .loop はループのローカルスクラッチ（状態・ログ・完了印）。git 管理外にする
+# （統合ブランチ方式では main / jpoke/ にコミットしないため状態を git に載せる必要がない）
+.loop/

@@ -1,9 +1,0 @@
-おおあめ レビュー完了
-
-- 仕様書作成: docs/spec/fields/おおあめ.md
-- 計画書作成: docs/plan/fields/おおあめ.md
-- 実装: 修正不要（handlers/field.py, data/field.py ともに正常）
-- テスト追加: test_おおあめ_こおりが付与される
-- レビュー記録: docs/review/fields/おおあめ.md
-- 進捗更新: docs/progress/global_field.md のおおあめ行を x に更新
-- テスト結果: おおあめ関連全パス（既存失敗3件はパンクロック関連・無関係）

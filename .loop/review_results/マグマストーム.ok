@@ -1,2 +1,0 @@
-実装確認: ON_DAMAGE_HIT: apply_bind_to_defender + lethal_handlers: _apply_bind が正しく登録済み。テスト3件追加・全件パス。
-progress/move.md: テスト・レビュー・リーサル実装/テスト・効果列を更新。
