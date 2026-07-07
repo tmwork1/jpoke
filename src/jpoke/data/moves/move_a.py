@@ -952,7 +952,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エアカッター": MoveData(
         type="ひこう",
         category="special",
-        pp=25,
+        pp=20,
         power=60,
         accuracy=95,
         critical_rank=1,
