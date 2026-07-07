@@ -485,10 +485,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シャドーボール": MoveData(
         type="ゴースト",
         category="special",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
-        flags={"bullet"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シャドーボール_lower_defender_spd,
