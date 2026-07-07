@@ -3110,6 +3110,32 @@ def test_このは_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_コメットパンチ_こうげき1段階上昇が発動する():
+    """コメットパンチ: 20%の確率で自分のこうげきを1段階上げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 1
+
+
+def test_コメットパンチ_こうげき1段階上昇が発動しない():
+    """コメットパンチ: 追加効果不発時はこうげきランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 0
+
+
 def test_ころがる_5回目の命中で強制行動が終了する():
     """ころがる: countが4の状態で命中すると揮発状態が解除され、強制行動が終了する。"""
     battle = t.start_battle(

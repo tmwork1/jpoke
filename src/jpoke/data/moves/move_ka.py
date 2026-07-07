@@ -1212,7 +1212,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "コメットパンチ": MoveData(
         type="はがね",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=90,
         flags={"contact", "punch", "secondary_effect"},
