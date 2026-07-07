@@ -857,6 +857,26 @@ def test_タラプのみ_特殊技受けた後とくぼう上昇():
     assert results[1].max_damage == 66
 
 
+def test_チャージビーム_とくこうアップ_secondary有り():
+    """チャージビーム: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("チャージビーム"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_チャージビーム_とくこうアップ_secondary無し():
+    """チャージビーム: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("チャージビーム"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_テラスシェル_満タン時タイプ相性を等倍に丸める():
     """テラスシェル: HPが満タンのとき、等倍以上の相性の技を受けると相性が等倍(1x)に丸められ
     ダメージが半減する。HPが満タンでなければ通常通りのダメージを受ける。"""
