@@ -734,7 +734,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ジャイロボール": MoveData(
         type="はがね",
         category="physical",
-        pp=5,
+        pp=8,
         power=1,
         accuracy=100,
         flags={"bullet", "contact"},
