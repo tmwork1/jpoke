@@ -13,17 +13,6 @@
     "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-reloop"
   },
   "review_queue": [
-    "むねんのつるぎ",
-    "もえあがるいかり",
-    "もえつきる",
-    "もろはのずつき",
-    "やきつくす",
-    "やまあらし",
-    "ゆめくい",
-    "ようかいえき",
-    "ようせいのかぜ",
-    "らいげき",
-    "らいめいげり",
     "りゅうせいぐん",
     "りゅうのいぶき",
     "りゅうのはどう",
@@ -264,13 +253,56 @@
     "ワンダースチーム"
   ],
   "in_progress": [
-    {"name": "みだれひっかき", "slot": 4, "branch": "reloop/みだれひっかき"},
-    {"name": "みねうち", "slot": 5, "branch": "reloop/みねうち"},
-    {"name": "みわくのボイス", "slot": 6, "branch": "reloop/みわくのボイス"},
-    {"name": "むしくい", "slot": 7, "branch": "reloop/むしくい"},
-    {"name": "むしのさざめき", "slot": 8, "branch": "reloop/むしのさざめき"},
-    {"name": "むしのていこう", "slot": 9, "branch": "reloop/むしのていこう"},
-    {"name": "むねんのつるぎ", "slot": 10, "branch": "reloop/むねんのつるぎ"}
+    {
+      "name": "もえあがるいかり",
+      "slot": 1,
+      "branch": "reloop/もえあがるいかり"
+    },
+    {
+      "name": "もえつきる",
+      "slot": 2,
+      "branch": "reloop/もえつきる"
+    },
+    {
+      "name": "もろはのずつき",
+      "slot": 3,
+      "branch": "reloop/もろはのずつき"
+    },
+    {
+      "name": "やきつくす",
+      "slot": 5,
+      "branch": "reloop/やきつくす"
+    },
+    {
+      "name": "やまあらし",
+      "slot": 6,
+      "branch": "reloop/やまあらし"
+    },
+    {
+      "name": "ゆめくい",
+      "slot": 7,
+      "branch": "reloop/ゆめくい"
+    },
+    {
+      "name": "ようかいえき",
+      "slot": 10,
+      "branch": "reloop/ようかいえき"
+    },
+    {
+      "name": "ようせいのかぜ",
+      "slot": 11,
+      "branch": "reloop/ようせいのかぜ"
+    },
+    {
+      "name": "らいげき",
+      "slot": 12,
+      "branch": "reloop/らいげき"
+    },
+    {
+      "name": "らいめいげり",
+      "slot": 13,
+      "branch": "reloop/らいめいげり"
+    }
   ],
   "completed": [
     "ほのおのキバ",
@@ -511,7 +543,27 @@
     "みずでっぽう",
     "みずのちかい",
     "みずしゅりけん",
-    "みずのはどう"
+    "みずのはどう",
+    "みねうち",
+    "みわくのボイス",
+    "むしくい",
+    "むねんのつるぎ"
   ],
-  "failed": []
+  "failed": [
+    {
+      "name": "みだれひっかき",
+      "slot": 4,
+      "branch": "reloop/みだれひっかき"
+    },
+    {
+      "name": "むしのさざめき",
+      "slot": 8,
+      "branch": "reloop/むしのさざめき"
+    },
+    {
+      "name": "むしのていこう",
+      "slot": 9,
+      "branch": "reloop/むしのていこう"
+    }
+  ]
 }
