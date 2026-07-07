@@ -844,10 +844,19 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クリアスモッグ": MoveData(
         type="どく",
         category="special",
-        pp=15,
+        pp=16,
         power=50,
         accuracy=None,
-        handlers={},  # 追加効果なし
+        handlers={
+            # docs/spec/turn.md の Event.ON_DAMAGE priority=10「クリアスモッグによるランクリセット」に対応
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.クリアスモッグ_reset_defender_rank,
+                priority=10,
+            ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.クリアスモッグ_reset_defender_rank)
+        }
     ),
     "くろいきり": MoveData(
         type="こおり",
