@@ -156,6 +156,35 @@ def test_クォークチャージ_最大ステータスがバフされる(name: 
     assert mon.paradox_boost_stat == stat
 
 
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_イカサマ使用時は使用者自身の攻撃補正が乗る(ability_name: str):
+    """クォークチャージ/こだいかっせい: イカサマは相手の実数値を攻撃として使うが、
+    パラドックス補正は通常の物理技と同様に使用者自身の攻撃強化状態にのみ依存する。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "スピアー", ability_name=ability_name, item_name="ブーストエナジー",
+            move_names=["イカサマ"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 5325
+
+
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_イカサマを受けるときは対象の攻撃補正は乗らない(ability_name: str):
+    """クォークチャージ/こだいかっせい: 対象（相手）自身の攻撃能力上昇は、
+    イカサマを受けたときのダメージに影響しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("スピアー", ability_name=ability_name, item_name="ブーストエナジー")],
+        team1=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
 @pytest.mark.parametrize(
     "ability_name, expected_type",
     SKIN_CASES

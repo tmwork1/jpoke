@@ -505,7 +505,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "イカサマ": MoveData(
         type="あく",
         category="physical",
-        pp=15,
+        pp=16,
         power=95,
         accuracy=100,
         flags={"contact"},
