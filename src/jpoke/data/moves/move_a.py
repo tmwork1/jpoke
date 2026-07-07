@@ -1008,10 +1008,10 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エナジーボール": MoveData(
         type="くさ",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
-        flags={"bullet"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.エナジーボール_lower_defender_spd,
