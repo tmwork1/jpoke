@@ -578,6 +578,20 @@ def test_れいとうビーム_こおりが発動する():
     assert battle.actives[1].ailment.name == "こおり"
 
 
+def test_れんごく_こおり状態の相手に当てると解凍する():
+    """れんごく: ほのおタイプの攻撃技のため、被弾した相手のこおりを解凍する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["れんごく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
 def test_れんごく_やけどが発動する():
     """れんごく: 100%でやけどを付与する。"""
     battle = t.start_battle(
