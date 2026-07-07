@@ -9,10 +9,9 @@
     "test_files": [
       "tests/moves_attack/"
     ],
-    "parallel_max": 1
+    "parallel_max": 2
   },
   "review_queue": [
-    "びりびりちくちく",
     "ふいうち",
     "ふぶき",
     "ふみつけ",
@@ -298,7 +297,8 @@
     "ワンダースチーム"
   ],
   "in_progress": [
-    "ひょうざんおろし"
+    "ひょうざんおろし",
+    "びりびりちくちく"
   ],
   "completed": [
     "10まんばりき",
