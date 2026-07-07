@@ -217,10 +217,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サンダーダイブ": MoveData(
         type="でんき",
         category="physical",
-        pp=15,
+        pp=16,
         power=100,
         accuracy=95,
-        flags={"minimize", "contact"},
+        flags={"minimize", "contact", "recoil"},
         handlers={
             Event.ON_MISS: h.MoveHandler(
                 ha.サンダーダイブ_crash,

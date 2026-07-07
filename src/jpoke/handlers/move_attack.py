@@ -1237,8 +1237,12 @@ def さわぐ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
 
 
 def サンダーダイブ_crash(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """サンダーダイブが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。"""
-    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="self_cost", source=ctx.attacker)
+    """サンダーダイブが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。
+
+    マジックガードで防げるが、いしあたまでは防げない確定反動として扱う
+    （reason="fixed_recoil"。"self_cost" だとマジックガードで防げなくなってしまうため区別する）。
+    """
+    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="fixed_recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
