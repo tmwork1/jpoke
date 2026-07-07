@@ -80,18 +80,6 @@ def test_タールショット_すばやさ1段階下がりタールショット
     assert defender.has_volatile("タールショット")
 
 
-def test_ダブルパンツァー_ひるみが発動する():
-    """ダブルパンツァー: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ハッサム", move_names=["ダブルパンツァー"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ちからをすいとる_クリアボディでランク低下阻止でもHP回復は発動():
     """ちからをすいとる: クリアボディでランク低下が阻まれても回復効果は発動する"""
     battle = t.start_battle(

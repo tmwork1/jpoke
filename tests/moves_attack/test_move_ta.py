@@ -735,18 +735,6 @@ def test_ダブルニードル_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
-def test_ダブルパンツァー_ひるみが発動する():
-    """ダブルパンツァー: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ハガネール", move_names=["ダブルパンツァー"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ダメおし_ダメージを受けていないとき通常威力():
     """ダメおし: 対象がそのターン中ダメージを受けていなければ威力補正なし。"""
     battle = t.start_battle(

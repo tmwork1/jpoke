@@ -1716,10 +1716,6 @@ def ダブルニードル_apply_poison_to_defender(battle: Battle, ctx: AttackCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.2)
 
 
-def ダブルパンツァー_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ダメおし: 同ターン中に対象が既にダメージを受けていたら威力が2倍になる。"""
     if ctx.defender.hits_taken > 0:
