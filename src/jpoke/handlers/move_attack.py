@@ -3006,15 +3006,19 @@ def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: Attac
 def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """むしくい・ついばむ: 相手のバトルに効果のあるきのみを奪って自分が消費する。
 
+    みがわりに防がれた場合はきのみを食べられない（実体への攻撃ではないため）。
     take_item はねんちゃくチェックを内包し、attacker がアイテムを
-    持っている場合は失敗して何もしない。
+    持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせた場合は
+    ねんちゃくによる阻止を無視して奪取できる（第五世代以降の仕様）。
     """
+    if ctx.substitute_damage > 0:
+        return HandlerReturn(value=value)
     defender = ctx.defender
     attacker = ctx.attacker
     if not defender.has_item() or not defender.item.is_berry():
         return HandlerReturn(value=value)
     # take_item でdefenderのきのみをattackerに移す（ねんちゃく等で失敗する場合あり）
-    if not battle.item_manager.take_item(defender):
+    if not battle.item_manager.take_item(defender, ignore_sticky_hold=defender.fainted):
         return HandlerReturn(value=value)
     # attackerがきのみを得たので効果を発動して消費する
     battle.item_manager.force_trigger_berry(attacker)
