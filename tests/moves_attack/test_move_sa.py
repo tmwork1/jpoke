@@ -1154,6 +1154,36 @@ def test_シャカシャカほう_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_シャドーパンチ_相手の回避率が高くても必ず命中する():
+    """シャドーパンチ: 自分の命中率、相手の回避率に関係なく必ず命中する。
+
+    ノーマルタイプはゴーストタイプの技を受けても無効化するため、
+    対象はゴースト技が通るポケモン（ピカチュウ）を使う。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーパンチ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_シャドーパンチ_タイプ分類威力が正しく反映される():
+    """シャドーパンチ: ゴースト・物理・威力60が正しく反映される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーパンチ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    move = t.run_move(battle, 0)
+    assert move.type == "ゴースト"
+    assert move.category == "physical"
+    assert move.power == 60
+
+
 def test_シャドーボーン_ぼうぎょ1段階低下が発動する():
     """シャドーボーン: 20%の確率で相手のぼうぎょを1段階下げる。ゴーストタイプはエスパータイプに有効。"""
     battle = t.start_battle(
