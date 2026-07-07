@@ -2169,6 +2169,28 @@ def test_スパーク_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_スマートホーン_はがねタイプの物理接触技である():
+    """スマートホーン: はがねタイプ・物理・威力70・contactラベルを持つ。"""
+    move_data = MOVES["スマートホーン"]
+    assert move_data.type == "はがね"
+    assert move_data.category == "physical"
+    assert move_data.power == 70
+    assert "contact" in move_data.flags
+
+
+def test_スマートホーン_相手の回避率が高くても必ず命中する():
+    """スマートホーン: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カミツルギ", move_names=["スマートホーン"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_スモッグ_どくが発動する():
     """スモッグ: 40%でどくを付与する。"""
     battle = t.start_battle(
