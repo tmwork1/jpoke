@@ -2595,6 +2595,25 @@ def test_ほのおのムチ_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].rank["def"] == -1
 
 
+def test_ぼうふう_あめ中は必中になる():
+    """ぼうふう: あめ天候中は命中率70でも通常なら外れる乱数で命中する。
+
+    ぼうふうの命中率は70。random.random()=0.85 のとき 100*0.85=85>70 で本来は外れるが、
+    あめ中はON_MODIFY_ACCURACYでNoneが返り必中になるため、命中してHPが減る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぼうふう"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    # random.random()=0.85 は命中率70未満ではない（85>70）ので通常は外れる
+    battle.random.random = lambda: 0.85
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ぼうふう_こんらんが発動する():
     """ぼうふう: 30%でこんらんを付与する。"""
     battle = t.start_battle(
@@ -2605,6 +2624,24 @@ def test_ぼうふう_こんらんが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("こんらん")
+
+
+def test_ぼうふう_にほんばれ中は命中率が50になる():
+    """ぼうふう: にほんばれ（はれ）天候中は命中率が50になる。
+
+    random.random()=0.6 のとき 100*0.6=60 は通常の命中率70未満だが、
+    はれ中は命中率が50になるため60>50で外れる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぼうふう"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    battle.random.random = lambda: 0.6
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
 
 
 def test_ボディプレス_防御ランク上昇でダメージ増加する():
