@@ -781,6 +781,46 @@ def test_シェルアームズ_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_シェルアームズ_相手の防御実数値も分類判定に影響する():
+    """シェルアームズ: 使用者の特攻が攻撃より高くても、相手の防御を大幅に下げ
+    特防を大幅に上げると、攻撃/防御の比が特攻/特防の比を上回り物理技になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["シェルアームズ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+    # 通常時（相手の防御・特防が変化なし）は特殊技のまま
+    assert battle.move_executor.resolve_move_category(attacker, move) == "special"
+    # 相手の防御を大幅に下げ特防を大幅に上げると、比較が逆転し物理技になる
+    battle.modify_stats(defender, {"def": -6, "spd": +6}, source=defender)
+    assert battle.move_executor.resolve_move_category(attacker, move) == "physical"
+    move.unregister_handlers(battle.events, attacker)
+
+
+@pytest.mark.parametrize(("attacker_name", "expect_contact"), [
+    ("カイリキー", True),
+    ("フーディン", False),
+])
+def test_シェルアームズ_物理技のときのみ直接攻撃になる(attacker_name: str, expect_contact: bool):
+    """シェルアームズ: 物理技のときのみ直接攻撃になり、さめはだ等の接触反応技が発動する。
+    特殊技のときは接触扱いにならず反動を受けない。"""
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, move_names=["シェルアームズ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="さめはだ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    if expect_contact:
+        assert attacker.hp < hp_before
+    else:
+        assert attacker.hp == hp_before
+
+
 def test_しおづけ_しおづけ揮発状態が付与される():
     """しおづけ: 100%の確率で相手をしおづけ揮発状態にする。"""
     battle = t.start_battle(
