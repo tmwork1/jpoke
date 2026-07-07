@@ -9,15 +9,10 @@
     "test_files": [
       "tests/moves_attack/"
     ],
-    "parallel_max": 5,
+    "parallel_max": 10,
     "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-reloop"
   },
   "review_queue": [
-    "みねうち",
-    "みわくのボイス",
-    "むしくい",
-    "むしのさざめき",
-    "むしのていこう",
     "むねんのつるぎ",
     "もえあがるいかり",
     "もえつきる",
@@ -269,10 +264,16 @@
     "ワンダースチーム"
   ],
   "in_progress": [
-    "ほのおのキバ",
-    "ほのおのパンチ",
-    "みだれづき",
-    "みだれひっかき"
+    {"name": "ほのおのキバ", "slot": 1, "branch": "reloop/ほのおのキバ"},
+    {"name": "ほのおのパンチ", "slot": 2, "branch": "reloop/ほのおのパンチ"},
+    {"name": "みだれづき", "slot": 3, "branch": "reloop/みだれづき"},
+    {"name": "みだれひっかき", "slot": 4, "branch": "reloop/みだれひっかき"},
+    {"name": "みねうち", "slot": 5, "branch": "reloop/みねうち"},
+    {"name": "みわくのボイス", "slot": 6, "branch": "reloop/みわくのボイス"},
+    {"name": "むしくい", "slot": 7, "branch": "reloop/むしくい"},
+    {"name": "むしのさざめき", "slot": 8, "branch": "reloop/むしのさざめき"},
+    {"name": "むしのていこう", "slot": 9, "branch": "reloop/むしのていこう"},
+    {"name": "むねんのつるぎ", "slot": 10, "branch": "reloop/むねんのつるぎ"}
   ],
   "completed": [
     "10まんばりき",
