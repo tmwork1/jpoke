@@ -121,13 +121,16 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコブースト": MoveData(
         type="エスパー",
         category="special",
-        pp=5,
+        pp=8,
         power=140,
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.サイコブースト_sharply_lower_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.サイコブースト_lower_spa)
         }
     ),
     "サイドチェンジ": MoveData(

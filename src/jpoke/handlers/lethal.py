@@ -381,6 +381,12 @@ def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_di
     return hp_dist
 
 
+def サイコブースト_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """サイコブースト: 命中後、攻撃側のとくこうを2段階下げる。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
 def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """サンパワー: はれ・おおひでりのとき攻撃側が1/8ダメージ（攻撃者HP未追跡のためスタブ）。"""
     return hp_dist

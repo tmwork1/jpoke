@@ -162,6 +162,17 @@ def test_サイコキネシス_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_サイコブースト_とくこう2段階低下が発動する():
+    """サイコブースト: 命中後、確定で自分の『とくこう』ランクが2段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("デオキシス(アタック)", move_names=["サイコブースト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spa"] == -2
+
+
 def test_サイコファング_まもるで防がれたとき壁を解除しない():
     """サイコファング: まもるで無効化された場合はリフレクターを解除しない。"""
     battle = t.start_battle(
