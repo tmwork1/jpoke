@@ -503,6 +503,11 @@ def コールドフレア_remove_volatile(battle: Battle, ctx: EventContext, val
     return remove_volatile(battle, ctx, value, volatile="コールドフレア")
 
 
+def ゴッドバード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ゴッドバード溜め状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="ゴッドバード")
+
+
 def さわぐ_prevent_sleep(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """さわぐ状態でねむりを防ぐ
 
@@ -685,11 +690,6 @@ def ソーラービーム_remove_volatile(battle: Battle, ctx: EventContext, val
 def ソーラーブレード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ソーラーブレード溜め状態の解除"""
     return remove_volatile(battle, ctx, value, volatile="ソーラーブレード")
-
-
-def ゴッドバード_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ゴッドバード溜め状態の解除"""
-    return remove_volatile(battle, ctx, value, volatile="ゴッドバード")
 
 
 def タールショット_boost_fire(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

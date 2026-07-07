@@ -311,12 +311,6 @@ def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: LethalContext,
     return hp_dist
 
 
-def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
-    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
-    return hp_dist
-
-
 def カシブのみ_resist_ghost(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """カシブのみ: ゴーストタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ゴースト")
@@ -379,6 +373,12 @@ def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: S
     if battle.query.is_floating(ctx.defender):
         return hp_dist
     return _heal(hp_dist, ctx.defender, r=1/16)
+
+
+def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
 
 
 def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

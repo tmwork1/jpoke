@@ -2634,18 +2634,6 @@ def test_グラススライダー_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
-def test_グロウパンチ_攻撃1段階上昇が発動する():
-    """グロウパンチ: 命中時に使用者のAが1段階上昇する（確率100%）。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", move_names=["グロウパンチ"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-    assert attacker.rank["atk"] == 1
-
-
 def test_グロウパンチ_タイプ威力命中PPが仕様通り():
     """グロウパンチ: かくとうタイプの物理直接攻撃技で、威力40・命中100・PP20を持つ。"""
     move_data = MOVES["グロウパンチ"]
@@ -2656,6 +2644,18 @@ def test_グロウパンチ_タイプ威力命中PPが仕様通り():
     assert move_data.pp == 20
     assert "contact" in move_data.flags
     assert "punch" in move_data.flags
+
+
+def test_グロウパンチ_攻撃1段階上昇が発動する():
+    """グロウパンチ: 命中時に使用者のAが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["グロウパンチ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 1
 
 
 def test_けたぐり_10kg未満のとき威力20():
@@ -3123,19 +3123,6 @@ def test_このは_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
-def test_コメットパンチ_こうげき1段階上昇が発動する():
-    """コメットパンチ: 20%の確率で自分のこうげきを1段階上げる。"""
-    battle = t.start_battle(
-        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-    assert attacker.rank["atk"] == 1
-
-
 def test_コメットパンチ_こうげき1段階上昇が発動しない():
     """コメットパンチ: 追加効果不発時はこうげきランクが変化しない。"""
     battle = t.start_battle(
@@ -3147,6 +3134,19 @@ def test_コメットパンチ_こうげき1段階上昇が発動しない():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["atk"] == 0
+
+
+def test_コメットパンチ_こうげき1段階上昇が発動する():
+    """コメットパンチ: 20%の確率で自分のこうげきを1段階上げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["コメットパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 1
 
 
 def test_ころがる_5回目の命中で強制行動が終了する():

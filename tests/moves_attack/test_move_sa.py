@@ -77,6 +77,17 @@ def test_サイケこうせん_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_サイコカッター_きれあじで威力1_5倍():
+    """サイコカッター: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", ability_name="きれあじ", move_names=["サイコカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
 def test_サイコカッター_急所ランクが1():
     """サイコカッター: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(
@@ -101,29 +112,16 @@ def test_サイコカッター_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
-def test_サイコカッター_きれあじで威力1_5倍():
-    """サイコカッター: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+def test_サイコキネシス_ちからずくで威力が上がり追加効果が発動しない():
+    """サイコキネシス: ちからずく所持時は威力1.3倍になり追加効果が無効化される。"""
     battle = t.start_battle(
-        team0=[Pokemon("フーディン", ability_name="きれあじ", move_names=["サイコカッター"])],
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"], ability_name="ちからずく")],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 6144
-
-
-def test_サイコキネシス_相手にダメージを与える():
-    """サイコキネシス: 特殊エスパー技で相手にダメージを与える。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フーディン", move_names=["サイコキネシス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=0.0,
-    )
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-    assert defender.hp < hp_before
+    assert battle.damage_calculator.power_modifier == 5325
+    assert battle.actives[1].rank["spd"] == 0
 
 
 def test_サイコキネシス_とくぼう1段階低下が発動しない():
@@ -150,16 +148,18 @@ def test_サイコキネシス_とくぼう1段階低下が発動する():
     assert battle.actives[1].rank["spd"] == -1
 
 
-def test_サイコキネシス_ちからずくで威力が上がり追加効果が発動しない():
-    """サイコキネシス: ちからずく所持時は威力1.3倍になり追加効果が無効化される。"""
+def test_サイコキネシス_相手にダメージを与える():
+    """サイコキネシス: 特殊エスパー技で相手にダメージを与える。"""
     battle = t.start_battle(
-        team0=[Pokemon("フーディン", move_names=["サイコキネシス"], ability_name="ちからずく")],
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
+        secondary_chance=0.0,
     )
+    defender = battle.actives[1]
+    hp_before = defender.hp
     t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 5325
-    assert battle.actives[1].rank["spd"] == 0
+    assert defender.hp < hp_before
 
 
 def test_サイコファング_まもるで防がれたとき壁を解除しない():

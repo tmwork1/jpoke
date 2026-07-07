@@ -737,5 +737,3 @@ def test_こらえる_致死ダメージを受けてもHP1残る():
 
     assert defender.hp == 1
     assert not defender.fainted
-
-
