@@ -640,7 +640,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つららばり": MoveData(
         type="こおり",
         category="physical",
-        pp=30,
+        pp=20,
         power=25,
         accuracy=100,
         multi_hit={
