@@ -72,11 +72,18 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコノイズ": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
-        flags={"sound"},
-        handlers={},  # 追加効果なし
+        flags={"sound", "secondary_effect"},
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.サイコノイズ_apply_volatile_to_defender,
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.サイコノイズ_apply_volatile)
+        }
     ),
     "サイコファング": MoveData(
         type="エスパー",
