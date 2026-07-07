@@ -1217,7 +1217,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=15,
         power=75,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ソウルクラッシュ_lower_spa_C,

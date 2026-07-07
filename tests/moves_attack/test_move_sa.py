@@ -2575,3 +2575,32 @@ def test_そらをとぶ_空中は通常技を回避する():
     # 相手のたいあたりはミスする
     t.run_move(battle, 1)
     assert attacker.hp == hp_before
+
+
+def test_ソウルクラッシュ_secondary_effectフラグを持つ():
+    """ソウルクラッシュ: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["ソウルクラッシュ"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_ソウルクラッシュ_とくこう1段階低下が発動する():
+    """ソウルクラッシュ: 100%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オーロンゲ", move_names=["ソウルクラッシュ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_ソウルクラッシュ_ちからずくで追加効果が発動せず威力が1_3倍():
+    """ソウルクラッシュ: ちからずく所持時は追加効果が無効化され、威力が1.3倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オーロンゲ", ability_name="ちからずく", move_names=["ソウルクラッシュ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == 0
+    assert 5325 == battle.damage_calculator.power_modifier
