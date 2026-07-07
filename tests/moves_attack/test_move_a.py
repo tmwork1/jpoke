@@ -249,6 +249,21 @@ def test_あくうせつだん_追加効果なしでダメージのみ():
     assert all(v == 0 for v in defender.rank.values())
 
 
+def test_アストラルビット_タイプ分類威力命中が正しく反映されダメージのみ与える():
+    """アストラルビット: ゴースト・特殊・威力120・命中100の追加効果なし攻撃技。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(こくば)", move_names=["アストラルビット"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert all(v == 0 for v in defender.rank.values())
+    assert defender.ailment.name == ""
+
+
 def test_アクセルブレイク_効果抜群のとき威力が4_3倍になる():
     """アクセルブレイク: 効果抜群（ノーマルに2倍）のとき威力が4/3倍（100→133）になる。"""
     battle = t.start_battle(

@@ -292,7 +292,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アストラルビット": MoveData(
         type="ゴースト",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
         handlers={},  # 追加効果なし
