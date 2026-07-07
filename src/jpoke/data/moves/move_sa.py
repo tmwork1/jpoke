@@ -918,7 +918,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スケイルノイズ": MoveData(
         type="ドラゴン",
         category="special",
-        pp=5,
+        pp=8,
         power=110,
         accuracy=100,
         flags={"sound"},

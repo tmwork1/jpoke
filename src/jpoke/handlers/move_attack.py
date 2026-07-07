@@ -1478,6 +1478,7 @@ def スケイルショット_apply_stat_change(battle: Battle, ctx: AttackContex
 
 
 def スケイルノイズ_lower_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スケイルノイズ: 命中後、攻撃側のぼうぎょを1段階下げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1})
 
 
