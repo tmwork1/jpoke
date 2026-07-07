@@ -612,7 +612,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "イナズマドライブ": MoveData(
         type="でんき",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
         flags={"contact"},
