@@ -1269,6 +1269,17 @@ def test_ひょうざんおろし_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ひょうざんおろし_威力は120():
+    """ひょうざんおろし: 威力はChampions準拠の120（SVまでは100）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["ひょうざんおろし"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 120
+
+
 def test_ヒートスタンプ_体重比2以上3未満のとき威力60():
     """ヒートスタンプ: 自分/相手の体重比が2以上3未満のとき威力60。
     バクフーン(79.5kg) vs マリルリ(28.5kg) → 比率2.79 → 威力60。
