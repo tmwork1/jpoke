@@ -131,6 +131,21 @@ def test_まねっこ_ダイマックスほうはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_テラクラスターはコピーできない():
+    """まねっこ: 直前の技がテラクラスター（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", tera_type="ステラ", move_names=["テラクラスター"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.terastallize()
+    t.run_move(battle, 1)  # カビゴン: テラクラスター
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_まねっこ_使用技がまだない場合は失敗する():
     """まねっこ: バトル開始以降、誰も技を使っていない場合は失敗する"""
     battle = t.start_battle(

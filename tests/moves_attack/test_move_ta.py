@@ -1121,6 +1121,88 @@ def test_てっていこうせん_マジックガードで反動を受けない(
     assert defender.hp < defender.max_hp
 
 
+def test_テラクラスター_ステラテラスタル時にタイプがステラタイプへ変化する():
+    """ステラテラスタル時のみタイプがステラタイプに変化する。威力は120のまま変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ステラ", move_names=["テラクラスター"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker.terastallize()
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_type == "ステラ"
+    assert battle.damage_calculator.final_power == 120
+    # テラバーストと異なり、命中後の能力ランクダウンは発生しない
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spa"] == 0
+
+
+@pytest.mark.parametrize(
+    ("tera_type", "expected_type"),
+    [
+        ("ステラ", "ステラ"),
+        ("ほのお", "ノーマル"),
+    ],
+)
+def test_テラクラスター_ステラ以外のテラスタルではタイプが変化しない(tera_type: str, expected_type: str):
+    """テラバーストと異なり、ステラ以外のテラスタイプではタイプ変化が起こらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type=tera_type, move_names=["テラクラスター"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+
+    assert battle.move_executor.resolve_move_type(attacker, move) == "ノーマル"
+
+    attacker.terastallize()
+    assert battle.move_executor.resolve_move_type(attacker, move) == expected_type
+
+    move.unregister_handlers(battle.events, attacker)
+
+
+@pytest.mark.parametrize(
+    ("attacker_name", "expected"),
+    [
+        ("カイリキー", "physical"),
+        ("フーディン", "special"),
+    ],
+)
+def test_テラクラスター_ステラテラスタル時に高い攻撃値の分類になる(attacker_name: str, expected: str):
+    """ステラテラスタル時、補正込みAがCより高ければ物理技として計算される。"""
+    battle = t.start_battle(
+        team0=[Pokemon(attacker_name, tera_type="ステラ", move_names=["テラクラスター"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+
+    assert battle.move_executor.resolve_move_category(attacker, move) == "special"
+    attacker.terastallize()
+    assert battle.move_executor.resolve_move_category(attacker, move) == expected
+
+    move.unregister_handlers(battle.events, attacker)
+
+
+def test_テラクラスター_ステラ以外のテラスタルでは分類が変化しない():
+    """こうげきがとくこうより高いポケモンでも、ステラ以外のテラスタイプでは分類が変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", tera_type="ほのお", move_names=["テラクラスター"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    move = attacker.moves[0]
+    move.register_handlers(battle.events, attacker)
+
+    attacker.terastallize()
+    assert battle.move_executor.resolve_move_category(attacker, move) == "special"
+
+    move.unregister_handlers(battle.events, attacker)
+
+
 def test_テラバースト_ステラ():
     """ステラタイプ"""
     battle = t.start_battle(

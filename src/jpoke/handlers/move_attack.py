@@ -1757,6 +1757,24 @@ def てっていこうせん_pay_hp(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
+def テラクラスター_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テラクラスター: ステラテラスタル時、補正込みAがCより高い場合は物理技として計算する。"""
+    mon = ctx.attacker
+    if mon.active_tera_type == "ステラ":
+        atk = mon.ranked_stats["atk"]
+        spa = mon.ranked_stats["spa"]
+        if atk > spa:
+            value = "physical"
+    return HandlerReturn(value=value)
+
+
+def テラクラスター_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テラクラスター: ステラテラスタル時、技タイプがステラタイプに変化する。"""
+    if ctx.attacker.active_tera_type == "ステラ":
+        value = "ステラ"
+    return HandlerReturn(value=value)
+
+
 def テラバースト_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
     mon = ctx.attacker
