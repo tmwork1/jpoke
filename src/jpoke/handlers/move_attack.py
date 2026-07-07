@@ -504,6 +504,10 @@ def オーラウイング_boost_attacker_spe(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
 
+def オーラぐるま_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
+
+
 def オーラぐるま_check_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーラぐるまのタイプを判定する。"""
     if ctx.attacker and ctx.attacker.ability.is_hangry:

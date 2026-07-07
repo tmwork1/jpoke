@@ -2056,3 +2056,56 @@ def test_オーラウイング_素早さ1段階上昇が発動する():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["spe"] == 1
+
+
+def test_オーラぐるま_ちからずくで威力上昇しすばやさ上昇は発動しないがタイプ変更は発動する():
+    """オーラぐるま: ちからずく使用時は威力が1.3倍になる代わりに、すばやさ上昇は発動しない。
+    フォルムによるタイプ変更はちからずくの影響を受けず発動する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("モルペコ", ability_name="ちからずく", move_names=["オーラぐるま"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.ability.is_hangry = True
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert attacker.rank["spe"] == 0
+    assert battle.move_executor.move_type == "あく"
+
+
+def test_オーラぐるま_すばやさ1段階上昇が発動する():
+    """オーラぐるま: 命中時に使用者のSが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルペコ", move_names=["オーラぐるま"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["spe"] == 1
+
+
+def test_オーラぐるま_はらぺこもようはあくタイプになる():
+    """オーラぐるま: モルペコが『はらぺこもよう』のとき、あくタイプの技になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルペコ", move_names=["オーラぐるま"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.ability.is_hangry = True
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "あく"
+
+
+def test_オーラぐるま_まんぷくもようはでんきタイプになる():
+    """オーラぐるま: モルペコが『まんぷくもよう』のとき、でんきタイプの技になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルペコ", move_names=["オーラぐるま"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "でんき"

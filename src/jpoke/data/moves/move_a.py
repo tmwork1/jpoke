@@ -1267,12 +1267,16 @@ MOVES_A: dict[MoveName, MoveData] = {
     "オーラぐるま": MoveData(
         type="でんき",
         category="physical",
-        pp=10,
+        pp=12,
         power=110,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
                 ha.オーラぐるま_check_move_type,
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.オーラぐるま_boost_attacker_spe,
             ),
         },
     ),
