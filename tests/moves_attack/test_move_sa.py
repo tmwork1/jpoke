@@ -2519,6 +2519,113 @@ def test_ぜったいれいど_命中時は相手を一撃で倒す():
     assert battle.actives[1].hp == 0
 
 
+def test_ソーラーブレード_2ターンで攻撃する():
+    """ソーラーブレード: 1ターン目はダメージを与えず揮発状態を付与し、2ターン目にダメージを与えて揮発状態を解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert attacker.has_volatile("ソーラーブレード")
+
+    # 2ターン目: ダメージあり、揮発状態解除
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_volatile("ソーラーブレード")
+
+
+def test_ソーラーブレード_にほんばれ下では1ターンで攻撃する():
+    """ソーラーブレード: 天気がはれ状態のとき、溜めずに1ターンで攻撃する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_volatile("ソーラーブレード")
+
+
+def test_ソーラーブレード_あめ下では威力が半減する():
+    """ソーラーブレード: 攻撃時の天気があめ状態だと威力が半分になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+        accuracy=100,
+    )
+    # 1ターン目は溜めのみ（天気があめのためスキップされない）
+    t.run_move(battle, 0)
+    # 2ターン目: 攻撃時に威力半減が適用される
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 2048
+
+
+def test_ソーラーブレード_すなあらし下では威力が半減する():
+    """ソーラーブレード: 攻撃時の天気がすなあらし状態だと威力が半分になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("すなあらし", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 2048
+
+
+def test_ソーラーブレード_ゆき下では威力が半減する():
+    """ソーラーブレード: 攻撃時の天気がゆき状態だと威力が半分になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("ゆき", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 2048
+
+
+def test_ソーラーブレード_きれあじで威力1_5倍():
+    """ソーラーブレード: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", ability_name="きれあじ", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_ソーラーブレード_パワフルハーブで1ターンで攻撃する():
+    """ソーラーブレード: パワフルハーブを持っていると溜めをスキップして即座に攻撃し、道具を消費する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラランテス", item_name="パワフルハーブ", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not attacker.has_item()
+    assert defender.hp < hp_before
+    assert not attacker.has_volatile("ソーラーブレード")
+
+
 def test_そらをとぶ_2ターンで攻撃する():
     """そらをとぶ: 1ターン目はダメージを与えず揮発状態を付与し、2ターン目にダメージを与えて揮発状態を解除する。"""
     battle = t.start_battle(

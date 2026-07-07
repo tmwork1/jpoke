@@ -1281,7 +1281,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ソーラーブレード": MoveData(
         type="くさ",
         category="physical",
-        pp=10,
+        pp=12,
         power=125,
         accuracy=100,
         flags={"contact", "slash"},
