@@ -17,7 +17,6 @@
 - [x] drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name=ドレインキッス, heal_ratio=0.75)
 - [x] drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name=ドレインパンチ, heal_ratio=0.5)
 - [x] drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name=パラボラチャージ, heal_ratio=0.5)
-- [x] drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name=むねんのつるぎ, heal_ratio=0.5)
 - [x] drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name=メガドレイン, heal_ratio=0.5)
 - [x] drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name=ゆめくい, heal_ratio=0.5)
 - [x] recoil技グループ_反動量が与ダメのrecoil_ratio倍になる
@@ -620,6 +619,7 @@
 - [x] むしくい_ねんちゃく持ちをひんしにさせた場合は奪える
 - [x] むしくい_みがわりに防がれた場合はきのみを食べられない
 - [x] むねんのつるぎ_使用後に攻撃者のHPが回復する
+- [x] むねんのつるぎ_回復量の端数は切り上げになる
 - [x] ムーンフォース_とくこう1段階低下が発動する
 - [x] メガドレイン_使用後に攻撃者のHPが回復する
 - [x] メガホーン_相手にダメージを与える

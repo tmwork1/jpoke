@@ -58,7 +58,6 @@ def test_crash技グループ_外れたとき最大HPの半分を失う(move_nam
     ("ドレインキッス",  0.75),
     ("ドレインパンチ",  0.5),
     ("パラボラチャージ", 0.5),
-    ("むねんのつるぎ",  0.5),
     ("メガドレイン",    0.5),
     ("ゆめくい",        0.5),
 ])
@@ -66,6 +65,8 @@ def test_drain技グループ_回復量が与ダメのheal_ratio倍になる(mov
     """drain技グループ: 回復量は int(与えたダメージ * heal_ratio) で計算される。
 
     ゆめくいは相手がねむり状態（ailment1）でないと失敗するため全技に ailment1 を設定している。
+    むねんのつるぎは回復量の端数を切り上げる点が他のドレイン技と異なるため、
+    このグループには含めず `tests/moves_attack/test_move_ma.py` に専用テストを分離済み。
     """
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=[move_name])],

@@ -741,6 +741,24 @@ def test_むねんのつるぎ_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_むねんのつるぎ_回復量の端数は切り上げになる():
+    """むねんのつるぎ: 他のドレイン技と異なり、回復量の端数は切り上げになる。
+
+    与ダメ101のとき、他のドレイン技なら int(101 * 0.5) = 50 だが、
+    むねんのつるぎは切り上げのため 51 になる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["むねんのつるぎ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_damage(battle, 101)
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 51
+
+
 def test_ムーンフォース_とくこう1段階低下が発動する():
     """ムーンフォース: 30%の確率で相手のとくこうを1段階下げる。"""
     battle = t.start_battle(
