@@ -912,6 +912,18 @@ def test_メテオビーム_パワフルハーブ使用時1ターンで攻撃し
     assert attacker.rank["spa"] == 1
 
 
+def test_もえあがるいかり_ひるみが発動する():
+    """もえあがるいかり: 20%でひるみを付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヘルガー", move_names=["もえあがるいかり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_もえつきる_こおり状態で使うと解凍されて攻撃できる():
     """もえつきる: こおり状態でも使用でき、使うと解凍される。"""
     battle = t.start_battle(
