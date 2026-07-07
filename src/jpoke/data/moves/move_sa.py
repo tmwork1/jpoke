@@ -312,19 +312,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "シグナルビーム": MoveData(
-        type="むし",
-        category="special",
-        pp=15,
-        power=75,
-        accuracy=100,
-        flags={"secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シグナルビーム_apply_confusion_to_defender,
-            )
-        }
-    ),
     "シザークロス": MoveData(
         type="むし",
         category="physical",

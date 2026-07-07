@@ -1303,11 +1303,6 @@ def しおみず_double_power_if_defender_hp_half_or_less(battle: Battle, ctx: A
     return HandlerReturn(value=value)
 
 
-def シグナルビーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シグナルビームの追加効果: 10%の確率で相手をこんらん状態にする。"""
-    return apply_confusion_to_defender(battle, ctx, value, chance=0.1)
-
-
 def したでなめる_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
