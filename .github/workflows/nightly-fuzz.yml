@@ -35,12 +35,12 @@ jobs:
           --start-seed ${{ steps.seed.outputs.start_seed }}
           --count 500
 
-      - name: Run tsfuzz_battle.py (tree-search player)
+      - name: Run fuzz_battle.py (tree-search player)
         id: tsfuzz
         continue-on-error: true
         timeout-minutes: 15
         run: >
-          python scripts/tsfuzz_battle.py --search
+          python scripts/fuzz_battle.py --search --player tree_search
           --start-seed ${{ steps.seed.outputs.start_seed }}
           --count 100
 
@@ -57,5 +57,5 @@ jobs:
       - name: Fail job if any fuzz run found a regression
         if: steps.fuzz.outcome == 'failure' || steps.tsfuzz.outcome == 'failure'
         run: |
-          echo "fuzz_battle.py or tsfuzz_battle.py found a failing seed. See uploaded artifact for the report."
+          echo "fuzz_battle.py (random or tree_search) found a failing seed. See uploaded artifact for the report."
           exit 1

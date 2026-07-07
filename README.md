@@ -165,8 +165,8 @@ python scripts/sort_tests.py --check tests/**/test_*.py
 ```
 
 CI（`.github/workflows/test.yml`）で push/PR ごとに Windows + Linux × Python 3.10/3.12 のマトリクスで
-テスト・lint・型チェックを実行する。`.github/workflows/nightly-fuzz.yml` が毎日 `scripts/fuzz_battle.py` /
-`scripts/tsfuzz_battle.py` を実行し、回帰シードを検出する。`.pre-commit-config.yaml` を使うと
+テスト・lint・型チェックを実行する。`.github/workflows/nightly-fuzz.yml` が毎日 `scripts/fuzz_battle.py`
+を random / tree_search の両プレイヤーモデル（`--player`）で実行し、回帰シードを検出する。`.pre-commit-config.yaml` を使うと
 コミット前にこれらのチェック（の一部）をローカルで実行できる。
 
 ## ライセンス

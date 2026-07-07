@@ -1,14 +1,15 @@
 # ループ ディスパッチャー
 
-フローに対応する状態ファイルを Read したあと、指示書を Read して内容に従う。
+1. **まず `.claude/loop/_common.md`（全フロー共通規約）を Read する。**
+2. フローに対応する状態ファイルを Read する。
+3. フローの指示書を Read し、`_common.md` の §共通N 参照を解決しながら内容に従う。
 
-| フロー | 状態ファイル | 指示書 |
-|---|---|---|
-| impl | `.loop/impl_state.json` | `.claude/loop/impl.md` |
-| review | `.loop/review_state.json` | `.claude/loop/review.md` |
-| todo | `.loop/todo_state.json` | `.claude/loop/todo.md` |
-| lethal | `.loop/lethal_state.json` | `.claude/loop/lethal.md` |
-| fuzz | `.loop/fuzz_state.json` | `.claude/loop/fuzz.md` |
-| tsfuzz | `.loop/tsfuzz_state.json` | `.claude/loop/tsfuzz.md` |
+| フロー | 方式 | 状態ファイル | 指示書 |
+|---|---|---|---|
+| impl | 統合ブランチ | `.loop/impl_state.json` | `.claude/loop/impl.md` |
+| review | 統合ブランチ | `.loop/review_state.json` | `.claude/loop/review.md` |
+| todo | 単一ブランチ | `.loop/todo_state.json` | `.claude/loop/todo.md` |
+| lethal | 単一ブランチ | `.loop/lethal_state.json` | `.claude/loop/lethal.md`（バックログ消化用・移行期。新規は impl が担当） |
+| fuzz | 単一ブランチ | `.loop/fuzz_state.json` | `.claude/loop/fuzz.md`（random / tree_search を `active_mode` で切替） |
 
 フローの指定がない場合は `impl` とみなす。

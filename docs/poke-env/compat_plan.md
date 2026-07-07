@@ -388,7 +388,7 @@ def battle_against(self, *opponents: "Player", n_battles: int = 1) -> None:
 - フィールド名 `n_won_battles` / `n_finished_battles` は Phase 2 の改名（`n_won` / `n_game`）後の名前
 - ターン上限で決着しないケースの扱い（上記 `MAX_TURNS` の値と、打ち切り時に `tod_score()` で
   勝者を決めるか未決着のまま戦績に数えないか）は実装時に確定する。
-  既存の `scripts/tsfuzz_battle.py` は外部の `max_turns` ガードで打ち切っている
+  既存の `scripts/fuzz_battle.py --player tree_search` は外部の `max_turns` ガードで打ち切っている
 - `Battle` 生成時のパラメータ（`n_selected`, `seed` 等）を渡したい場合に備え、
   キーワード引数の素通し（`**battle_kwargs`）を検討する（jpoke 独自拡張。poke-env にはない）
 - チームは poke-env のパックド文字列ではなく、事前に `player.team` へ `Pokemon` オブジェクトの
