@@ -711,6 +711,22 @@ def test_すなじごく_バインド付与():
     assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
+def test_サンダープリズン_バインド付与():
+    """サンダープリズンは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
 @pytest.mark.parametrize("item_name, move_name, defender_name, dmg1_min, dmg1_max, dmg2_min, dmg2_max", [
     # オッカのみ（ほのお）: フシギダネ（くさ/どく） → ほのお2倍
     ("オッカのみ", "かえんほうしゃ", "フシギダネ", 40, 48, 80, 96),
