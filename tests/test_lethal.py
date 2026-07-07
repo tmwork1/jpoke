@@ -1005,6 +1005,22 @@ def test_ホズのみ_ノーマル技ダメージ半減():
     assert r_with[1].max_damage == r_without[1].max_damage
 
 
+def test_ほのおのうず_バインド付与():
+    """ほのおのうずは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("ほのおのうず"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("ほのおのうず"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
 def test_ほのおのムチ_ぼうぎょダウン_secondary有り():
     """ほのおのムチ: secondary=True のとき相手のぼうぎょが1段階下がり、2発目のダメージが増加する"""
     battle = t.start_battle(
