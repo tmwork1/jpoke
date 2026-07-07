@@ -1498,6 +1498,21 @@ def test_きょじゅうだん_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_キラースピン_おんみつマントの相手にはどくを付与できないが場の状態は解除する():
+    """キラースピン: 相手がおんみつマントを持つ場合、どく付与は無効化されるが場の状態解除は発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["キラースピン"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    side = battle.get_side(attacker)
+    side.apply("まきびし", count=1)
+    t.run_move(battle, 0)
+    assert not side.get("まきびし").is_active
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_キラースピン_ステルスロックを解除する():
     """キラースピン: 命中時に使用者のサイドのステルスロックを解除する。"""
     battle = t.start_battle(
@@ -1510,6 +1525,23 @@ def test_キラースピン_ステルスロックを解除する():
     side.apply("ステルスロック", count=1)
     t.run_move(battle, 0)
     assert not side.get("ステルスロック").is_active
+
+
+def test_キラースピン_ちからずくでは場の状態解除もどく付与も発動しない():
+    """キラースピン: 使用者がちからずくの場合、場の状態解除・どく付与のいずれも発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["キラースピン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    side = battle.get_side(attacker)
+    side.apply("まきびし", count=1)
+    battle.volatile_manager.apply(attacker, "バインド", count=4, source=battle.actives[1])
+    t.run_move(battle, 0)
+    assert side.get("まきびし").is_active
+    assert attacker.has_volatile("バインド")
+    assert not battle.actives[1].ailment.is_active
 
 
 def test_キラースピン_どくが発動する():
@@ -1536,51 +1568,6 @@ def test_キラースピン_バインドを解除する():
     assert not attacker.has_volatile("バインド")
 
 
-def test_キラースピン_やどりぎのタネを解除する():
-    """キラースピン: 命中時に使用者のやどりぎのタネ状態を解除する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", move_names=["キラースピン"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    battle.volatile_manager.apply(attacker, "やどりぎのタネ", source=battle.actives[1])
-    t.run_move(battle, 0)
-    assert not attacker.has_volatile("やどりぎのタネ")
-
-
-def test_キラースピン_おんみつマントの相手にはどくを付与できないが場の状態は解除する():
-    """キラースピン: 相手がおんみつマントを持つ場合、どく付与は無効化されるが場の状態解除は発動する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", move_names=["キラースピン"])],
-        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    side = battle.get_side(attacker)
-    side.apply("まきびし", count=1)
-    t.run_move(battle, 0)
-    assert not side.get("まきびし").is_active
-    assert not battle.actives[1].ailment.is_active
-
-
-def test_キラースピン_ちからずくでは場の状態解除もどく付与も発動しない():
-    """キラースピン: 使用者がちからずくの場合、場の状態解除・どく付与のいずれも発動しない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["キラースピン"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    side = battle.get_side(attacker)
-    side.apply("まきびし", count=1)
-    battle.volatile_manager.apply(attacker, "バインド", count=4, source=battle.actives[1])
-    t.run_move(battle, 0)
-    assert side.get("まきびし").is_active
-    assert attacker.has_volatile("バインド")
-    assert not battle.actives[1].ailment.is_active
-
-
 def test_キラースピン_まきびしを解除する():
     """キラースピン: 命中時に使用者のサイドのまきびしを解除する。"""
     battle = t.start_battle(
@@ -1593,6 +1580,19 @@ def test_キラースピン_まきびしを解除する():
     side.apply("まきびし", count=1)
     t.run_move(battle, 0)
     assert not side.get("まきびし").is_active
+
+
+def test_キラースピン_やどりぎのタネを解除する():
+    """キラースピン: 命中時に使用者のやどりぎのタネ状態を解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["キラースピン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "やどりぎのタネ", source=battle.actives[1])
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("やどりぎのタネ")
 
 
 def test_きりさく_急所ランクが1():
