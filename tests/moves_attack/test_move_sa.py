@@ -2306,6 +2306,19 @@ def test_スパーク_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_スピードスター_相手の回避率が高くても必ず命中する():
+    """スピードスター: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスター"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_スモッグ_どくが発動する():
     """スモッグ: 40%でどくを付与する。"""
     battle = t.start_battle(
