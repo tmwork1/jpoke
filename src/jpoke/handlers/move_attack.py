@@ -1197,6 +1197,16 @@ def サイコブースト_sharply_lower_spa_C(battle: Battle, ctx: AttackContext
     return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
 
+def サイコブレイド_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """サイコブレイド: エレキフィールド中は威力が1.5倍になる。
+
+    ライジングボルト・ワイドフォースと異なり、使用者・対象の接地判定は行わない。
+    """
+    if battle.terrain.name == "エレキフィールド":
+        return HandlerReturn(value=apply_fixed_modifier(value, 6144))
+    return HandlerReturn(value=value)
+
+
 def さばきのつぶて_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """さばきのつぶて: 持っているプレートに応じてタイプが変わる（プレートがない場合はノーマル固定）。
 

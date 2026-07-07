@@ -122,11 +122,16 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコブレイド": MoveData(
         type="エスパー",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
-        flags={"contact"},
-        handlers={},  # 追加効果なし
+        flags={"contact", "slash"},
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.サイコブレイド_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "サイコブースト": MoveData(
         type="エスパー",
