@@ -77,6 +77,41 @@ def test_サイケこうせん_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_サイコカッター_急所ランクが1():
+    """サイコカッター: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_サイコカッター_急所ランクが1_乱数大で急所なし():
+    """サイコカッター: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_サイコカッター_きれあじで威力1_5倍():
+    """サイコカッター: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", ability_name="きれあじ", move_names=["サイコカッター"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
 def test_サイコファング_まもるで防がれたとき壁を解除しない():
     """サイコファング: まもるで無効化された場合はリフレクターを解除しない。"""
     battle = t.start_battle(
