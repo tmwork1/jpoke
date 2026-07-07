@@ -191,6 +191,16 @@ def グラスフィールド_power_modifier(battle: Battle, ctx: AttackContext, 
     return HandlerReturn(value=value)
 
 
+def グラスフィールド_boost_move_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """グラスフィールド: 接地している使用者のグラススライダーの優先度を+1する。"""
+    if (
+        ctx.move.name == "グラススライダー"
+        and not battle.query.is_floating(ctx.attacker)
+    ):
+        value += 1
+    return HandlerReturn(value=value)
+
+
 def サイコフィールド_block_priority_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコフィールドで先制技無効"""
     if (
