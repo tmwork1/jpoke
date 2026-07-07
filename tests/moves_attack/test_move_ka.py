@@ -2102,6 +2102,19 @@ def test_クラブハンマー_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_クラブハンマー_相手にダメージを与える():
+    """クラブハンマー: 追加効果なしの物理みず技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("キングラー", move_names=["クラブハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_クロスチョップ_急所ランクが1():
     """クロスチョップ: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(

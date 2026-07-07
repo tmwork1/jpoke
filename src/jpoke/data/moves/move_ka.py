@@ -834,9 +834,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クラブハンマー": MoveData(
         type="みず",
         category="physical",
-        pp=10,
+        pp=12,
         power=100,
-        accuracy=90,
+        accuracy=95,
         critical_rank=1,
         flags={"contact"},
         handlers={},  # 追加効果なし
