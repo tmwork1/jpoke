@@ -335,16 +335,6 @@ def test_いかりのつぼ_急所被弾でこうげき最大():
     assert defender.rank["atk"] == 6
 
 
-def test_いしあたま_反動技を使っても反動ダメージを受けない():
-    battle = t.start_battle(
-        team0=[Pokemon("ゴンベ", ability_name="いしあたま", move_names=["すてみタックル"])],
-        team1=[Pokemon("ヤドン")],
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-    assert attacker.hp == attacker.max_hp
-
-
 def test_いしあたま_わるあがきの反動ダメージは防げない():
     """いしあたま: わるあがきの反動は通常の反動技と異なる仕様のため無効化されない。"""
     battle = t.start_battle(
@@ -356,6 +346,16 @@ def test_いしあたま_わるあがきの反動ダメージは防げない():
     hp_before = attacker.hp
     t.run_move(battle, 0)
     assert attacker.hp < hp_before
+
+
+def test_いしあたま_反動技を使っても反動ダメージを受けない():
+    battle = t.start_battle(
+        team0=[Pokemon("ゴンベ", ability_name="いしあたま", move_names=["すてみタックル"])],
+        team1=[Pokemon("ヤドン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
 
 
 def test_いたずらごころ_あくタイプ相手には変化技が無効化される():
