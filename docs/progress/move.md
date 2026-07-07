@@ -556,7 +556,7 @@ Vジェネレート	-	-	x	x	保留	保留	✓	物理	ほのお	180	95	5	defender
 タマゴうみ	-	-	x	-	n/a	n/a	-	変化	ノーマル	-	-	5	defender	？
 タールショット	-	-	x	-	n/a	n/a	-	変化	いわ	-	100	15	defender	？
 ダイビング	x	x	x	x	n/a	n/a	-	物理	みず	80	100	12	defender	？
-ダイマックスほう	-	-	x	-	n/a	n/a	-	特殊	ドラゴン	100	100	5	defender	？
+ダイマックスほう	x	x	x	x	n/a	n/a	✓	特殊	ドラゴン	100	100	5	defender	追加効果なし
 ダイヤストーム	-	-	x	x	n/a	n/a	-	物理	?	?	?	?	?	？
 ダストシュート	-	-	x	x	n/a	n/a	-	物理	どく	120	80	8	defender	30%の確率で相手を『どく』状態にする。
 ダブルアタック	-	-	x	x	n/a	n/a	-	物理	ノーマル	35	90	12	defender	1ターンに2回連続で攻撃する。
