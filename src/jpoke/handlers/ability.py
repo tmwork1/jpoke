@@ -162,6 +162,9 @@ def _apply_contact_counter_chip(battle: Battle,
     if battle.query.is_contact_reaction(ctx):
         v = battle.modify_hp(ctx.attacker, r=-ratio, reason="")
         if v:
+            # ダメおし判定用: さめはだ/てつのトゲによるダメージも「そのターンに
+            # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            ctx.attacker.hits_taken += 1
             _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
@@ -328,10 +331,15 @@ def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value:
 
 
 def アイスフェイス_block_physical(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """アイスフェイス特性: 物理技のダメージを0にしてナイスフェイスにフォルムチェンジする。"""
+    """アイスフェイス特性: 物理技のダメージを0にしてナイスフェイスにフォルムチェンジする。
+
+    実際のダメージは0になるが、ダメージを肩代わりしているため「攻撃を無効化した」
+    扱いにはならない（ばけのかわと同様、ダメおし威力2倍の対象）。
+    """
     if ctx.move.category != "physical" or ctx.defender.name != EISCUE_ICE:
         return HandlerReturn(value=value)
     ctx.defender.set_form(EISCUE_NICE)
+    ctx.defender.hits_taken += 1
     _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=0)
 

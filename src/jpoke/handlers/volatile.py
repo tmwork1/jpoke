@@ -428,9 +428,13 @@ def こらえる_endure(battle: Battle, ctx: EventContext, value: int) -> Handle
     """こらえる状態: 致死ダメージを HP 1 残しに補正する。
 
     ダメージが防御側の現在 HP 以上の場合、ダメージを hp - 1 に抑えて HP 1 を残す。
+    すでに HP1 の場合は実際のダメージが0になるが、攻撃自体は命中しているため
+    「攻撃を無効化した」扱いにはならない（きあいパンチ不発・ダメおし威力2倍の対象）。
     """
     mon = ctx.defender
     if value >= mon.hp:
+        if mon.hp <= 1:
+            mon.hits_taken += 1
         value = mon.hp - 1
     return HandlerReturn(value=value)
 

@@ -329,7 +329,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ダメおし": MoveData(
         type="あく",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=100,
         flags={"contact"},

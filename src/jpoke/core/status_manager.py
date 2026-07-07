@@ -97,6 +97,13 @@ class StatusManager:
                 player = self.battle.get_player(target)
                 self.battle.player_states[player].ally_fainted_turn = self.battle.turn
 
+            # ダメおし・きあいパンチ判定用: 反動ダメージ（すてみタックル系・わるあがき系の
+            # 確定反動）も「そのターンに攻撃を受けた」扱いにする（一次情報:
+            # docs/wiki/moves/ダメおし.html 技の仕様節）。move_damage は
+            # core/move_executor.py 側で別途インクリメントするため、ここでは対象外。
+            if reason in ("recoil", "fixed_recoil"):
+                target.hits_taken += 1
+
             self._events.emit(Event.ON_HP_CHANGED, ctx, -v)
 
         return v
