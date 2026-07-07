@@ -962,7 +962,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エアスラッシュ": MoveData(
         type="ひこう",
         category="special",
-        pp=15,
+        pp=16,
         power=75,
         accuracy=95,
         flags={"slash", "secondary_effect"},
