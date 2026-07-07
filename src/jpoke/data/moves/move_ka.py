@@ -896,7 +896,14 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=100,
         accuracy=100,
         flags={"thaw"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.クロスフレイム_thaw_attacker,
+                priority=5,
+            ),
+        },
+        # 追加効果なし。クロスサンダーとの「デュアルクロス」威力2倍効果はダブル専用のため対象外
+        # （docs/spec/moves/クロスフレイム.md 参照）。
     ),
     "クロスポイズン": MoveData(
         type="どく",
