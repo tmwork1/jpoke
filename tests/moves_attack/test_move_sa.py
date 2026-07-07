@@ -2282,6 +2282,18 @@ def test_ストーンエッジ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_スパーク_まひが発動しない():
+    """スパーク: secondary_chanceが0のときまひを付与しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スパーク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_スパーク_まひが発動する():
     """スパーク: 30%でまひを付与する。"""
     battle = t.start_battle(
