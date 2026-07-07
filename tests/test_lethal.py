@@ -349,6 +349,16 @@ def test_オーバーヒート_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_ゴールドラッシュ_とくこうダウン():
+    """ゴールドラッシュ: 命中後にとくこうが2段階下がる（Champions基準）ため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ゴールドラッシュ"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
 def test_かんそうはだ_あめで回復():
     """かんそうはだ: あめ天気のターン終了時に最大HPの1/8を回復する"""
     with_ability = t.start_battle(

@@ -311,6 +311,12 @@ def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: LethalContext,
     return hp_dist
 
 
+def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
 def カシブのみ_resist_ghost(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """カシブのみ: ゴーストタイプの効果バツグン技のダメージを1/2にして消費する。"""
     return _type_resist_berry(battle, ctx, hp_dist, "ゴースト")
