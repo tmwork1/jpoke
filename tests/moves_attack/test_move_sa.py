@@ -189,6 +189,66 @@ def test_サイコファング_リフレクターを解除する():
     assert not battle.side_managers[1].fields["リフレクター"].is_active
 
 
+def test_サイコブレイド_エレキフィールドで威力1_5倍になる():
+    """サイコブレイド: エレキフィールド中は威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイド"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_サイコブレイド_フィールドなしのとき威力補正なし():
+    """サイコブレイド: エレキフィールドが発動していない場合、威力補正はない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイド"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_サイコブレイド_使用者が浮いていても威力補正が乗る():
+    """サイコブレイド: 他のフィールド依存技と異なり接地判定を行わないため、
+    使用者が浮遊している（ひこうタイプ等）場合でも威力1.5倍が乗る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", move_names=["サイコブレイド"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_サイコブレイド_対象が浮いていても威力補正が乗る():
+    """サイコブレイド: 対象が浮遊している（ひこうタイプ等）場合でも威力1.5倍が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイド"])],
+        team1=[Pokemon("ピジョット")],
+        terrain=("エレキフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_サイコブレイド_きれあじで威力1_5倍():
+    """サイコブレイド: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", ability_name="きれあじ", move_names=["サイコブレイド"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
 def test_さばきのつぶて_せいれいプレートでフェアリータイプになる():
     """さばきのつぶて: せいれいプレートを持っているとき技のタイプがフェアリーになる。"""
     battle = t.start_battle(
