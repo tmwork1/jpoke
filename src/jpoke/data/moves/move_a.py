@@ -340,7 +340,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アフロブレイク": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=15,
         power=120,
         accuracy=100,
         flags={"contact", "recoil"},
