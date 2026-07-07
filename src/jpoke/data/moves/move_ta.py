@@ -313,19 +313,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         },
         handlers={},  # 追加効果なし
     ),
-    "ダブルニードル": MoveData(
-        type="むし",
-        category="physical",
-        pp=20,
-        power=25,
-        accuracy=100,
-        flags={"secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ダブルニードル_apply_poison_to_defender,
-            )
-        }
-    ),
     "ダメおし": MoveData(
         type="あく",
         category="physical",
