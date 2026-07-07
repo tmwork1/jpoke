@@ -435,6 +435,17 @@ def test_らいめいげり_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].rank["def"] == -1
 
 
+def test_りゅうせいぐん_とくこう2段階低下が発動する():
+    """りゅうせいぐん: 命中後、確定で自分の『とくこう』ランクが2段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー", move_names=["りゅうせいぐん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spa"] == -2
+
+
 def test_りゅうのいぶき_まひが発動しない():
     """りゅうのいぶき: secondary_chanceが0のときまひを付与しない。"""
     battle = t.start_battle(

@@ -118,7 +118,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りゅうせいぐん": MoveData(
         type="ドラゴン",
         category="special",
-        pp=5,
+        pp=8,
         power=130,
         accuracy=90,
         handlers={
