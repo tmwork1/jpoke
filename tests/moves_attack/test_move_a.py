@@ -1659,6 +1659,85 @@ def test_エアロブラスト_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_エコーボイス_初回使用時は威力40のまま():
+    """エコーボイス: 初回使用時は基本威力40のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_エコーボイス_次のターンも連続使用すると威力が80になる():
+    """エコーボイス: 直前のターンから連続使用すると威力が40上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    battle.turn += 1
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_エコーボイス_別のポケモンが使用しても連続使用として引き継がれる():
+    """エコーボイス: 前のターンに使用したポケモンと異なるポケモンが使用しても、
+    連続使用として威力が引き継がれる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        team1=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    battle.turn += 1
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_エコーボイス_間のターンに使用しないと威力が40に戻る():
+    """エコーボイス: 使用が途切れると威力が基本値40にリセットされる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エコーボイス", "はたく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    battle.turn += 1
+    t.run_move(battle, 0, move_idx=1)  # 別の技を使用（連続使用が途切れる）
+    battle.turn += 1
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_エコーボイス_同じターン内で複数回使用されても威力上昇は1回分のみ():
+    """エコーボイス: 同じターン内で自分・相手の両方が使用しても、
+    どちらも同じ威力を参照し追加の上昇はしない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        team1=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 40
+
+
+def test_エコーボイス_威力の上限は200():
+    """エコーボイス: 連続使用を繰り返しても威力は200で頭打ちになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["エコーボイス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    for _ in range(6):
+        t.run_move(battle, 0)
+        battle.turn += 1
+    assert battle.damage_calculator.final_power == 200
+
+
 def test_えだづき_相手にダメージを与える():
     """えだづき: 追加効果なしの物理くさ技で相手にダメージを与える。"""
     battle = t.start_battle(

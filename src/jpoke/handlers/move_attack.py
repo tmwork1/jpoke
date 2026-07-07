@@ -373,6 +373,22 @@ def エアスラッシュ_apply_flinch(battle: Battle, ctx: AttackContext, value
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
+def エコーボイス_apply_chain_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エコーボイス: 直前のターンから連続で使用され続けていれば威力を40上昇させる
+    （最大200）。途切れていれば威力を40にリセットする。
+
+    無効化判定（まもる等）より前の ON_TRY_MOVE_1（priority=50）で威力を確定させるため、
+    技が外れた・まもるで防がれた場合でも「使われたこと」自体は次のターンに引き継がれる。
+    """
+    if battle.echoed_voice_last_turn == battle.turn - 1:
+        battle.echoed_voice_power = min(battle.echoed_voice_power + 40, 200)
+    elif battle.echoed_voice_last_turn != battle.turn:
+        battle.echoed_voice_power = 40
+    battle.echoed_voice_last_turn = battle.turn
+    ctx.move.power = battle.echoed_voice_power
+    return HandlerReturn(value=value)
+
+
 def エナジーボール_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.1)
 
