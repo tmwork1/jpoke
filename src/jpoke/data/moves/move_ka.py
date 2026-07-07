@@ -437,13 +437,13 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ガリョウテンセイ": MoveData(
         type="ひこう",
         category="physical",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ガリョウテンセイ_lower_defender_spd,
+                ha.ガリョウテンセイ_lower_attacker_stats,
             )
         }
     ),

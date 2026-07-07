@@ -864,6 +864,34 @@ def test_がむしゃら_相手HPとの差分ダメージ(attacker_hp: int, defe
     assert defender.hp == defender_hp - expected_damage
 
 
+def test_ガリョウテンセイ_ちからずくは無関係で発動する():
+    """ガリョウテンセイ: 自分のランクを下げる確定効果はちからずくの対象外のため、
+    ちからずく所持時も威力上昇なし・ぼうぎょととくぼうの低下は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("レックウザ", ability_name="ちからずく", move_names=["ガリョウテンセイ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ガリョウテンセイ_ぼうぎょととくぼう1段階低下が発動する():
+    """ガリョウテンセイ: 技が成功すると確定で自分の『ぼうぎょ』『とくぼう』ランクが1段階ずつ下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("レックウザ", move_names=["ガリョウテンセイ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+
+
 def test_がんせきアックス_ステルスロック設置済みのとき攻撃は成功する():
     """がんせきアックス: 相手陣営がステルスロック設置済みでも攻撃は成功する。"""
     battle = t.start_battle(
