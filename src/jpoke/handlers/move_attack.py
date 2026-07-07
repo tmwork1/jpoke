@@ -1465,8 +1465,13 @@ def すいとる_drain(battle: Battle, ctx: AttackContext, value: int) -> Handle
 
 
 def スケイルショット_apply_stat_change(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """スケイルショット: 最終ヒット後に攻撃側のぼうぎょ-1・すばやさ+1。"""
-    if ctx.hit_index != ctx.hit_count:
+    """スケイルショット: 全ヒット終了後に攻撃側のぼうぎょ-1・すばやさ+1。
+
+    「全ての攻撃が終了した後、当たった回数に関係なく」発動する効果のため、
+    予定されていた最大ヒット数（ctx.hit_count）に到達した場合だけでなく、
+    連続ヒットの途中で相手がひんしになり残りのヒットが行われなかった場合にも発動する。
+    """
+    if ctx.hit_index != ctx.hit_count and not ctx.defender.fainted:
         return HandlerReturn(value=value)
     battle.modify_stats(ctx.attacker, {"def": -1, "spe": 1}, source=ctx.attacker)
     return HandlerReturn(value=value)

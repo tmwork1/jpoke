@@ -2046,6 +2046,23 @@ def test_スケイルショット_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_スケイルショット_相手がひんしで連続ヒットが打ち切られてもランク変化する():
+    """スケイルショット: 連続ヒットの途中で相手がひんしになり残りのヒットが行われなくても、
+    「全ての攻撃が終了した後、当たった回数に関係なく」発動する仕様のため、
+    使用者のぼうぎょ低下・すばやさ上昇は発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["スケイルショット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spe"] == 1
+
+
 def test_スチームバースト_やけどが発動する():
     """スチームバースト: 30%でやけどを付与する。"""
     battle = t.start_battle(
