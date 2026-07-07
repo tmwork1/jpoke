@@ -988,7 +988,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ストーンエッジ": MoveData(
         type="いわ",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=80,
         critical_rank=1,
