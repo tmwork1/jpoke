@@ -77,6 +77,56 @@ def test_サイケこうせん_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_サイコキネシス_相手にダメージを与える():
+    """サイコキネシス: 特殊エスパー技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_サイコキネシス_とくぼう1段階低下が発動しない():
+    """サイコキネシス: 追加効果不発時はとくぼうランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_サイコキネシス_とくぼう1段階低下が発動する():
+    """サイコキネシス: 10%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
+
+
+def test_サイコキネシス_ちからずくで威力が上がり追加効果が発動しない():
+    """サイコキネシス: ちからずく所持時は威力1.3倍になり追加効果が無効化される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコキネシス"], ability_name="ちからずく")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 5325
+    assert battle.actives[1].rank["spd"] == 0
+
+
 def test_サイコファング_まもるで防がれたとき壁を解除しない():
     """サイコファング: まもるで無効化された場合はリフレクターを解除しない。"""
     battle = t.start_battle(

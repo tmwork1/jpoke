@@ -50,9 +50,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコキネシス": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.サイコキネシス_lower_defender_spd,
