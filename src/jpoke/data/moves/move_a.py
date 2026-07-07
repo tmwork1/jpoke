@@ -1021,9 +1021,10 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エレキネット": MoveData(
         type="でんき",
         category="special",
-        pp=15,
+        pp=16,
         power=55,
         accuracy=95,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.エレキネット_lower_defender_spd,
