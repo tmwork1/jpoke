@@ -1,6 +1,6 @@
 """
 fuzz_battle.py の派生版。行動選択にランダムプレイヤーの代わりに
-scripts/tree_search/framework.py の TreeSearchPlayer（1手先の総当たりミニマックス）
+jpoke.players.TreeSearchPlayer（1手先の総当たりミニマックス）
 を使い、より「実戦的」な行動選択のもとでのみ顕在化するバグ
 （見え方が変わるだけの通常の合法手網羅では踏まないコマンドの組み合わせ等）を検出する。
 
@@ -30,9 +30,8 @@ from pathlib import Path
 from random import Random
 
 from jpoke import Battle
-
-sys.path.insert(0, str(Path(__file__).resolve().parent / "tree_search"))
-from framework import TreeSearchPlayer, hp_ratio_evaluate  # noqa: E402
+from jpoke.enums import Command
+from jpoke.players import TreeSearchPlayer
 
 from fuzz_common import (
     FuzzResult,
@@ -54,19 +53,18 @@ DEFAULT_N_POKEMON = 3
 class TreeSearchFuzzPlayer(TreeSearchPlayer):
     """fuzzテスト用の TreeSearchPlayer。
 
-    選出と、探索中の割り込み交代（フォールバック）に専用の Random インスタンスを
-    使うことで、framework.default_fallback が使うグローバルな random モジュールに
-    依存せず、シードだけで完全に再現できるようにする。
+    選出と、探索中の割り込み交代（フォールバック）に、master シードから
+    独立に派生させた専用の Random インスタンスを使うことで、選出・木探索の
+    フォールバック・チーム構成それぞれの乱数系列を分離し、シードだけで
+    完全に再現できるようにする。
     """
 
     def __init__(self, name: str, rng: Random, max_plies: int = 1):
-        super().__init__(
-            name=name,
-            evaluate=hp_ratio_evaluate,
-            max_plies=max_plies,
-            fallback=lambda battle, player: rng.choice(battle.get_available_commands(player)),
-        )
+        super().__init__(name=name, max_plies=max_plies)
         self.rng = rng
+
+    def fallback(self, battle: Battle) -> Command:
+        return self.rng.choice(battle.get_available_commands(self))
 
     def choose_selection(self, battle: Battle) -> list[int]:
         n = min(battle.n_selected, len(self.team))

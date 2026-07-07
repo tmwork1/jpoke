@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 from jpoke.model import Pokemon
 from jpoke.enums import Interrupt, LogCode
+from jpoke.exceptions import InvalidCommandError
 
 from .event_manager import Event
 from .context import EventContext
@@ -184,11 +185,17 @@ class SwitchManager:
             if player in switched_players:
                 self._events.emit(Event.ON_SWITCH_IN, EventContext(source=mon))
 
-    def run_faint_switch(self):
+    def run_faint_switch(self, _depth: int = 0):
         """瀕死による交代を実行。
 
         HPが0になったポケモンを交代させる。
         再帰的に実行し、すべての死に出しが完了するまで処理する。
+
+        Args:
+            _depth: 内部専用の再帰深さカウンタ。方策関数が状況を進行させない
+                （瀕死ポケモンが交代後も active のままになる等の）コマンドを
+                返し続けると本来終了しない再帰になるため、非進行ガードとして使う。
+                呼び出し元は指定しないこと。
         """
         if self.battle.judge_winner():
             return
@@ -207,11 +214,21 @@ class SwitchManager:
         if not switch_players:
             return
 
+        # 非進行ガード: 両プレイヤーの総ポケモン数を超えて再帰した場合は、
+        # 方策関数が瀕死交代を進行させるコマンドを返せていないと判断し、
+        # 無限再帰（RecursionError）の代わりに診断可能な例外を送出する。
+        max_depth = sum(len(state.team) for state in self.battle.player_states.values())
+        if _depth > max_depth:
+            raise InvalidCommandError(
+                "瀕死交代が進行していません。方策関数が有効な交代コマンドを"
+                "返しているか確認してください。"
+            )
+
         # 交代
         self.run_interrupt_switch(Interrupt.FAINTED, False)
 
         # すべての死に出しが完了するまで再帰的に実行
-        self.run_faint_switch()
+        self.run_faint_switch(_depth + 1)
 
     def _switch_in(self, state: PlayerState, mon: Pokemon):
         """ポケモンの入場処理。

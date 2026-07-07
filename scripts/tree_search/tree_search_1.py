@@ -3,8 +3,7 @@
 """
 
 from jpoke import Battle, Player, Pokemon
-
-from framework import TreeSearchPlayer
+from jpoke.players import TreeSearchPlayer
 
 
 def play_game(seed: int | None = None,

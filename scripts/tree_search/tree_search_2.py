@@ -11,8 +11,7 @@ import random
 
 from jpoke import Battle, Player, Pokemon
 from jpoke.enums import Command
-
-from framework import TreeSearchPlayer
+from jpoke.players import TreeSearchPlayer
 
 
 class RandomPlayer(Player):

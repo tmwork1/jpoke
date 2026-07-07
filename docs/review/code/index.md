@@ -93,6 +93,12 @@
   `get_available_commands()`/`required_command_type` による木探索サポート機構の実態と、
   相手の合法手がコマンド種別でフィルタされず `sim.step()` が `ValueError` で落ちる
   新規バグ（CRIT-1）を含む指摘。
+- [tree_search_framework.md](tree_search_framework.md)（2026-07-07） —
+  実装済みの `TreeSearchPlayer`（`scripts/tree_search/framework.py`）を
+  利用者・開発者の両視点でレビュー。相手の手が未公開だと探索が無言で退化する問題
+  （FW-U1、動作確認済み）、`default_fallback` の再現性バグ（FW-U2）、
+  内部 API 直呼び3箇所への構造的依存（FW-D1）など。改善は
+  `src/jpoke/players/tree_search_player.py` への昇格（同ファイル4章）を土台に進める方針。
 
 ---
 

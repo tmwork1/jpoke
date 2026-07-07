@@ -176,7 +176,7 @@ def get_available_commands(self, player: Player) -> list[Command]:
 **対応**: `observation_builder._mask_command()` の末尾で `state.last_available_commands` を
 `required_command_type`（`None`/`"any"` 以外）でも絞り込むよう修正した（推奨対応1を採用）。
 回帰テスト: `tests/test_copy.py::test_木探索用の観測でswitchフェーズ中の相手コマンドがrequired_command_typeでフィルタされる`。
-詳細設計は `docs/plan/tree_search_framework.md` を参照。
+詳細設計は `docs/plan/archives/tree_search_framework.md` を参照。
 
 **ファイル**: `src/jpoke/core/battle.py:396-415`（`get_available_commands`）、
 `src/jpoke/core/observation_builder.py:134-176`（`_mask_command`）、
@@ -236,10 +236,11 @@ ValueError: Invalid command type for RandomPlayer: SWITCH_1.
 
 ### ISSUE-1（解消済み）: 参照実装4本のうち3本が `copy_depth > 1` で無条件 `raise` しており、中断的な交代が発生する盤面では実戦投入できない
 
-**対応**: `scripts/tree_search/framework.py` の `TreeSearchPlayer` に、`copy_depth` の
+**対応**: `src/jpoke/players/tree_search_player.py`（当時は `scripts/tree_search/framework.py`、
+その後 `src/jpoke/players/` へ昇格）の `TreeSearchPlayer` に、`copy_depth` の
 決め打ちの代わりに `_searching` インスタンスフラグ（`try/finally` で確実に解除）による
 再入検知を実装し、`tree_search_1〜4.py` を全てこのフレームワークを使う形に置き換えた。
-詳細は `docs/plan/tree_search_framework.md` を参照。
+詳細は `docs/plan/archives/tree_search_framework.md` を参照。
 
 **ファイル**: `scripts/tree_search/tree_search_1.py:15-16`,
 `scripts/tree_search/tree_search_2.py:16-17`,

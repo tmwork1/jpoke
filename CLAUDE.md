@@ -44,6 +44,7 @@ python -m pytest tests/abilities/ -k "ARシステム" -v
 | `model/` | `Pokemon`, `Move`, `Field` などのモデル |
 | `data/` | `ability.py`, `move.py`, `item.py` など — 各エンティティのデータ定義とハンドラ登録 |
 | `handlers/` | `ability.py`, `ability_paradox.py`, `ailment.py`, `field.py`, `item.py`, `lethal.py`, `move.py`, `move_attack.py`, `move_status.py`, `volatile.py` など — ハンドラ実装 |
+| `players/` | `Player` の派生方策実装（`tree_search_player.py` の `TreeSearchPlayer` など） |
 | `enums/` | `Event`, `Command`, `Interrupt`, `LogCode` |
 | `types/` | `Stat`, `Type`, `AilmentName`, `VolatileName` など Literal 型の定義 |
 
