@@ -1814,6 +1814,13 @@ def test_ぶきみなじゅもん_相手の直前技PPが3減る():
     assert move.pp == pp_after_use - 3
 
 
+def test_ぶちかまし_secondary_effectフラグを持たない():
+    """ぶちかまし: 自分の能力ランクダウンは追加効果に分類されないため、ちからずく等と
+    相互作用する secondary_effect フラグを持たない。"""
+    move_data = MOVES["ぶちかまし"]
+    assert "secondary_effect" not in move_data.flags
+
+
 def test_ぶちかまし_防御と特防が各1段階低下する():
     """ぶちかまし: 命中時に使用者のBとDが各1段階低下する（確率100%）。"""
     battle = t.start_battle(
