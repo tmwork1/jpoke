@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from .. import test_utils as t
 
 
@@ -51,6 +52,26 @@ def test_3ぼんのや_急所ランクが1_乱数大で急所なし():
     t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
     t.run_move(battle, 0)
     assert battle.move_executor.critical is False
+
+
+def test_アーマーキャノン_secondary_effectフラグを持たない():
+    """アーマーキャノン: 自分の能力ランクダウンは追加効果に分類されないため、ちからずく等と
+    相互作用する secondary_effect フラグを持たない。"""
+    move_data = MOVES["アーマーキャノン"]
+    assert "secondary_effect" not in move_data.flags
+
+
+def test_アーマーキャノン_防御と特防が各1段階低下する():
+    """アーマーキャノン: 命中時に使用者のBとDが各1段階低下する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("グレンアルマ", move_names=["アーマーキャノン"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
 
 
 def test_アイアンテール_ぼうぎょ1段階低下が発動しない():
