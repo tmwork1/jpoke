@@ -276,6 +276,17 @@ def test_ライジングボルト_相手が浮遊している場合は威力2倍
     assert battle.damage_calculator.power_modifier == 5325
 
 
+def test_らいめいげり_ぼうぎょ1段階低下が発動する():
+    """らいめいげり: 100%の確率で相手のぼうぎょを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("サンダー", move_names=["らいめいげり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == -1
+
+
 def test_りゅうのいぶき_まひが発動する():
     """りゅうのいぶき: 30%でまひを付与する。"""
     battle = t.start_battle(
