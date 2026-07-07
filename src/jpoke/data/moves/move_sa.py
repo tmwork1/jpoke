@@ -116,6 +116,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
+        flags={"physical_damage"},
         handlers={},  # 追加効果なし
     ),
     "サイコブレイド": MoveData(
