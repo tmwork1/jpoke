@@ -1890,6 +1890,23 @@ def test_エレキボール_比率4以上のとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_エレキボール_まひで実効素早さが半減すると威力が下がる():
+    """エレキボール: まひにより攻撃側の実効素早さが半減すると威力が下がる。
+
+    ジュカイン(S=140、まひ適用後実効S=70) vs ヤドン(S=35) → 比率2 → 威力80。
+    まひなし同組み合わせ(実効S=140) → 比率4 → 威力150。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ジュカイン", move_names=["エレキボール"])],
+        team1=[Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.apply_ailment(battle, 0, "まひ")
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
 def test_エレクトロビーム_1ターン目にとくこうが上昇する():
     """エレクトロビーム: 1ターン目にとくこうが1段階上昇する（追加効果ではないため必ず発動）。"""
     battle = t.start_battle(
