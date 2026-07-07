@@ -22,8 +22,13 @@ MOVES_YA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=100,
         handlers={
+            # docs/spec/turn.md では Event.ON_DAMAGE 優先度30に記載されているが、
+            # HP回復ピンチきのみ（オボンのみ等）はダメージ反映時のON_HP_CHANGEDで
+            # 発動判定されるため、それより前のEvent.ON_MODIFY_MOVE_DAMAGE
+            # （roll_damage後・modify_hp前）で焼却しないと燃やす前に回復してしまう。
+            # 詳細は docs/plan/moves/やきつくす.md を参照。
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
-                ha.やきつくす_remove_berry,
+                ha.やきつくす_burn_item,
                 subject_spec="attacker:self",
             )
         }
