@@ -2046,6 +2046,17 @@ def test_おはかまいり_味方ひんし2のとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_オーバーヒート_とくこう2段階低下が発動する():
+    """オーバーヒート: 命中後、確定で自分の『とくこう』ランクが2段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["オーバーヒート"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spa"] == -2
+
+
 def test_オーラウイング_素早さ1段階上昇が発動する():
     """オーラウイング: 命中時に使用者のSが1段階上昇する（確率100%）。"""
     battle = t.start_battle(
