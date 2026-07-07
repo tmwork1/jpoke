@@ -2237,8 +2237,10 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: EventContext, value
 
     はたきおとすの威力補正判定（dry_run=True）では、除去自体は行われないため
     特性を発動・表示させず、威力補正の対象として扱う（除去は別途阻止される）。
+    ignore_sticky_hold（むしくい・ついばむが対象をひんしにさせた場合等、
+    第五世代以降の仕様）が指定されている場合も阻止しない。
     """
-    if ctx.dry_run:
+    if ctx.dry_run or ctx.ignore_sticky_hold:
         return HandlerReturn(value=value)
     if ctx.source != ctx.target:
         _announce_ability_triggered(battle, ctx.target)

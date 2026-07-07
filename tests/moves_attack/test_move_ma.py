@@ -629,6 +629,47 @@ def test_むしくい_ねんちゃく持ちから奪えない():
     assert defender.has_item("オボンのみ")
 
 
+def test_むしくい_ねんちゃく持ちをひんしにさせた場合は奪える():
+    """むしくい: defenderがねんちゃく持ちでも、この技でひんしにさせた場合は奪取できる
+    （第五世代以降の仕様）。HP閾値に依存しないラムのみで検証する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カイロス", move_names=["むしくい"])],
+        team1=[Pokemon("カビゴン", ability_name="ねんちゃく", item_name="ラムのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(attacker, "まひ")
+    defender.hp = 1
+    t.run_move(battle, 0)
+    # defenderはこの技でひんしになり、ラムのみを奪われている
+    assert defender.fainted
+    assert not defender.has_item()
+    # attackerがラムのみを得て消費し、まひが回復している
+    assert not attacker.has_item()
+    assert attacker.ailment.name == ""
+
+
+def test_むしくい_みがわりに防がれた場合はきのみを食べられない():
+    """むしくい: defenderがみがわり状態のとき、実体のきのみを奪えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイロス", move_names=["むしくい"])],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    # defenderはオボンのみを保持したまま
+    assert defender.has_item("オボンのみ")
+    # attackerはきのみを得ておらずHPも回復していない
+    assert not attacker.has_item()
+    assert attacker.hp == 1
+
+
 def test_むねんのつるぎ_使用後に攻撃者のHPが回復する():
     """むねんのつるぎ: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
     battle = t.start_battle(

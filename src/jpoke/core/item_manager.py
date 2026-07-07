@@ -85,7 +85,8 @@ class ItemManager:
                         target: Pokemon,
                         source: Pokemon | None = None,
                         *,
-                        dry_run: bool = False) -> bool:
+                        dry_run: bool = False,
+                        ignore_sticky_hold: bool = False) -> bool:
         """アイテム変更が許可されるかを共通イベントで判定する。
 
         Args:
@@ -94,13 +95,19 @@ class ItemManager:
             dry_run: True の場合、実際に変更を試みるわけではない判定のみの呼び出しとして扱う
                 （例: はたきおとすの威力補正判定）。ねんちゃく等、実除去は防ぐが判定のみの
                 呼び出しでは特性発動を表に出さない特性の分岐に使う。
+            ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを無視する
+                （例: むしくい・ついばむが対象をひんしにさせた場合の第五世代以降の仕様）。
+                ねんちゃく以外のアイテム変更禁止効果（マルチタイプ等）は通常通り機能する。
 
         Returns:
             変更可能な場合はTrue
         """
         return self._events.emit(
             Event.ON_CHECK_ITEM_CHANGE,
-            EventContext(target=target, source=source, dry_run=dry_run),
+            EventContext(
+                target=target, source=source, dry_run=dry_run,
+                ignore_sticky_hold=ignore_sticky_hold,
+            ),
             True
         )
 
@@ -190,8 +197,12 @@ class ItemManager:
         self._change_item(target, "")
         return True
 
-    def swap_items(self) -> bool:
+    def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
         """2体のアイテムを入れ替える。
+
+        Args:
+            ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを無視する
+                （むしくい・ついばむが対象をひんしにさせた場合の第五世代以降の仕様）。
 
         Returns:
             入れ替えに成功した場合はTrue
@@ -205,7 +216,8 @@ class ItemManager:
 
         # アイテムの変更が禁止されている場合は失敗
         if not all(
-            self.can_change_item(target=mon) for mon in mons
+            self.can_change_item(target=mon, ignore_sticky_hold=ignore_sticky_hold)
+            for mon in mons
         ):
             return False
 
@@ -217,11 +229,15 @@ class ItemManager:
         return True
 
     def take_item(self,
-                  target: Pokemon) -> bool:
+                  target: Pokemon,
+                  *,
+                  ignore_sticky_hold: bool = False) -> bool:
         """対象のアイテムを奪う。
 
         Args:
             target: アイテムを奪われるポケモン
+            ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを無視する
+                （むしくい・ついばむが対象をひんしにさせた場合の第五世代以降の仕様）。
 
         Returns:
             奪取に成功した場合はTrue
@@ -234,7 +250,7 @@ class ItemManager:
             or source.has_item()
         ):
             return False
-        return self.swap_items()
+        return self.swap_items(ignore_sticky_hold=ignore_sticky_hold)
 
     def consume_item(self, mon: Pokemon) -> bool:
         """ポケモンの道具を消費する。
