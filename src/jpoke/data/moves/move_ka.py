@@ -1017,10 +1017,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゲップ": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=90,
-        flags={"non_negoto"},
+        flags={"non_negoto", "non_copycat"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.ゲップ_check_ate_berry,
