@@ -328,7 +328,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シザークロス": MoveData(
         type="むし",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"contact", "slash"},
