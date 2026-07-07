@@ -2270,6 +2270,26 @@ def test_ほうでん_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_ほうふく_タイプ相性の影響を受けない():
+    """ほうふく: 固定ダメージ技のため、あくを半減するフェアリータイプが相手でも
+    ダメージは半減されず、通常通り受けたダメージの1.5倍を返す。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほうふく"])],
+        team1=[Pokemon("ピクシー", move_names=["ひっかく"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手の物理技を受ける
+    t.run_move(battle, 1)
+    last_dmg = attacker.last_damage_received
+    assert last_dmg > 0
+    hp_before = defender.hp
+    # ほうふくで1.5倍返し（フェアリータイプによる半減は適用されない）
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - int(last_dmg * 1.5)
+
+
 def test_ほうふく_ダメージを受けていないとき失敗する():
     """ほうふく: そのターンダメージを受けていない場合は失敗する。"""
     battle = t.start_battle(
@@ -2375,6 +2395,38 @@ def test_ほしがる_防御者がアイテムを持っていないとき失敗(
     assert not attacker.has_item()
 
 
+def test_ほっぺすりすり_タイプと分類と威力と命中率とppが正しい():
+    """ほっぺすりすり: でんきタイプ・物理・威力20・命中100・PP20であることを確認する。"""
+    move_data = MOVES["ほっぺすりすり"]
+    assert move_data.type == "でんき"
+    assert move_data.category == "physical"
+    assert move_data.power == 20
+    assert move_data.accuracy == 100
+    assert move_data.pp == 20
+
+
+def test_ほっぺすりすり_でんきタイプにはまひが付与されない():
+    """ほっぺすりすり: でんきタイプの相手にはまひが付与されない（タイプ耐性）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほっぺすりすり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_ほっぺすりすり_必ず相手をまひ状態にする():
+    """ほっぺすりすり: 追加効果として100%の確率で相手をまひ状態にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほっぺすりすり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "まひ"
+
+
 def test_ホネこんぼう_ひるみが発動する():
     """ホネこんぼう: 10%でひるみを付与する。"""
     battle = t.start_battle(
@@ -2385,6 +2437,59 @@ def test_ホネこんぼう_ひるみが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ほのおのうず_バインド中は相手が交代できない():
+    """ほのおのうず: バインド状態の間、ゴーストタイプでない相手は交代できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほのおのうず"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("バインド")
+    assert not t.can_switch(battle, 1)
+
+
+def test_ほのおのうず_バインド中は相手が毎ターン最大HPの8分の1ダメージを受ける():
+    """ほのおのうず: バインド状態のターン終了時に相手が最大HPの1/8ダメージを受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほのおのうず"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    hp_after_attack = defender.hp
+    t.end_turn(battle)
+    expected_damage = defender.max_hp // 8
+    assert defender.hp == hp_after_attack - expected_damage
+
+
+def test_ほのおのうず_命中後にバインド状態になる():
+    """ほのおのうず: 命中時に相手がバインド揮発状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほのおのうず"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+
+
+def test_ほのおのうず_攻撃者が交代するとバインドが解除される():
+    """ほのおのうず: 技を使った側が交代するとバインド状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ほのおのうず"]), Pokemon("ヤドン")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+    t.run_switch(battle, 0, 1)
+    assert not defender.has_volatile("バインド")
 
 
 def test_ほのおのキバ_ひるみが選択される():
@@ -2428,6 +2533,30 @@ def test_ほのおのキバ_やけどが選択される():
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "やけど"
     assert not battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ほのおのちかい_威力80():
+    """ほのおのちかい: 威力は80(第六世代以降)。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ほのおのちかい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_ほのおのちかい_追加効果なしでダメージのみ():
+    """ほのおのちかい: 追加効果を持たず、通常通りダメージのみ与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ほのおのちかい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_ほのおのパンチ_やけどが発動する():
