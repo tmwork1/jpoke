@@ -706,6 +706,23 @@ def test_ダストシュート_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_ダブルウイング_タイプ分類威力命中PPが仕様通り():
+    """ダブルウイング: ひこうタイプ・物理・威力40・命中90・PP12・直接攻撃の固定2回攻撃技。"""
+    move_data = MOVES["ダブルウイング"]
+    assert move_data.type == "ひこう"
+    assert move_data.category == "physical"
+    assert move_data.power == 40
+    assert move_data.accuracy == 90
+    assert move_data.pp == 12
+    assert "contact" in move_data.flags
+    assert move_data.multi_hit == {
+        "min": 2,
+        "max": 2,
+        "check_hit_each_time": False,
+        "power_sequence": (),
+    }
+
+
 def test_ダブルニードル_どくが発動する():
     """ダブルニードル: 20%でどくを付与する。"""
     battle = t.start_battle(
