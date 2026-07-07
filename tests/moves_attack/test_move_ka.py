@@ -2102,6 +2102,114 @@ def test_クラブハンマー_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_クリアスモッグ_相手の上がったランクをリセットする():
+    """クリアスモッグ: ダメージを与えた相手の上がったランクを±0にリセットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    defender.rank["spe"] = 1
+    t.run_move(battle, 0)
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spe"] == 0
+
+
+def test_クリアスモッグ_相手の下がったランクをリセットする():
+    """クリアスモッグ: ダメージを与えた相手の下がったランクを±0にリセットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    defender.rank["def"] = -2
+    defender.rank["accuracy"] = -1
+    t.run_move(battle, 0)
+    assert defender.rank["def"] == 0
+    assert defender.rank["accuracy"] == 0
+
+
+def test_クリアスモッグ_自分のランクは変化しない():
+    """クリアスモッグ: くろいきりと異なり、使用者自身のランクはリセットされない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 2
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 2
+
+
+def test_クリアスモッグ_ダメージを与える():
+    """クリアスモッグ: どく特殊・威力50のダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_クリアスモッグ_まもるで防がれるとリセットされない():
+    """クリアスモッグ: まもるで防がれた場合、ダメージもランクリセットも発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert defender.rank["atk"] == 2
+
+
+def test_クリアスモッグ_みがわりに防がれるとリセットされない():
+    """クリアスモッグ: みがわりに防がれた場合、実ダメージが0のためランクリセットは発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=50)
+    defender.rank["atk"] = 2
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert defender.rank["atk"] == 2
+
+
+def test_クリアスモッグ_すりぬけならみがわりを貫通してリセットする():
+    """クリアスモッグ: 使用者がすりぬけ特性の場合、みがわりを無視してダメージとランクリセットが発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", ability_name="すりぬけ", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=50)
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+    assert defender.has_volatile("みがわり")
+    assert defender.rank["atk"] == 0
+
+
+def test_クリアスモッグ_クリアボディを無視してリセットする():
+    """クリアスモッグ: 相手の特性クリアボディ（ランク低下防止）を無視してリセットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["クリアスモッグ"])],
+        team1=[Pokemon("カビゴン", ability_name="クリアボディ")],
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+    assert defender.rank["atk"] == 0
+
+
 def test_クロスチョップ_急所ランクが1():
     """クロスチョップ: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(

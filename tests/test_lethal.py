@@ -502,6 +502,18 @@ def test_キラースピン_どく付与_secondary有り():
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == poison_damage * 2
 
 
+def test_クリアスモッグ_とくぼうリセットで2発目のダメージが増加する():
+    """クリアスモッグ: あらかじめ上がっていた相手のとくぼうが命中後にリセットされるため、
+    2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle.actives[1].rank["spd"] = 2
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("クリアスモッグ"), max_attack=2)
+    assert results[1].min_damage > results[0].min_damage
+
+
 def test_くろいヘドロ_どくタイプは毎ターン回復():
     """くろいヘドロ所持のどくタイプポケモンは、ターン終了時に最大HPの1/16を回復する。"""
     with_item = t.start_battle(

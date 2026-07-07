@@ -352,6 +352,13 @@ def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist:
     return hp_dist
 
 
+def クリアスモッグ_reset_defender_rank(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """クリアスモッグ: 命中後、防御側の能力ランク変化を全て±0にリセットする。"""
+    for stat in ctx.defender.rank:
+        ctx.defender.rank[stat] = 0
+    return hp_dist
+
+
 def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """くろいヘドロ: どくタイプは1/16回復、それ以外は1/8ダメージ。"""
     if "どく" in ctx.defender.types:

@@ -957,6 +957,29 @@ def くらいつく_apply_no_escape(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
+def クリアスモッグ_reset_defender_rank(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クリアスモッグの効果: ダメージを与えた相手の能力ランクを±0にリセットする。
+
+    くろいきりと同様、しろいきり状態やクリアボディ等のランク低下防止特性を無視して
+    リセットする（ON_BEFORE_MODIFY_STAT を経由しない直接リセット）。
+    あまのじゃく・たんじゅんの影響も受けない。追加効果ではないため、ちからずくで
+    威力は上がらず、りんぷん・おんみつマントの影響も受けない
+    （ON_MODIFY_SECONDARY_CHANCE を経由しないため自然に満たされる）。
+    """
+    defender = ctx.defender
+    changed = {s: v for s, v in defender.rank.items() if v != 0}
+    if changed:
+        for s in changed:
+            defender.rank[s] = 0
+        battle.add_event_log(
+            defender, LogCode.STAT_CHANGED,
+            payload=StatChangePayload(
+                stats={s: -v for s, v in changed.items()}, display_reason="クリアスモッグ"
+            ),
+        )
+    return HandlerReturn(value=value)
+
+
 def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
