@@ -273,7 +273,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "れんごく": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=50,
         flags={"secondary_effect", "thaw"},
