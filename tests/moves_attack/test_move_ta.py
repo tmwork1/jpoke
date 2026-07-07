@@ -76,6 +76,40 @@ def test_たいあたり_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_タキオンカッター_2回ヒットする():
+    """タキオンカッター: 必ず2回ヒットする固定2回攻撃技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["タキオンカッター"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 2
+
+
+def test_タキオンカッター_相手の回避率が高くても必ず命中する():
+    """タキオンカッター: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["タキオンカッター"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_タキオンカッター_きれあじ特性で威力補正1_5倍がかかる():
+    """タキオンカッター: 切る技（slashフラグ）のため、特性『きれあじ』の威力補正1.5倍が発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", ability_name="きれあじ", move_names=["タキオンカッター"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
+
+
 def test_たきのぼり_ひるみが発動する():
     """たきのぼり: 20%でひるみを付与する。"""
     battle = t.start_battle(

@@ -31,7 +31,14 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="special",
         pp=10,
         power=50,
-        accuracy=100,
+        accuracy=None,
+        flags={"slash"},
+        multi_hit={
+            "min": 2,
+            "max": 2,
+            "check_hit_each_time": False,
+            "power_sequence": (),
+        },
         handlers={},  # 追加効果なし
     ),
     "たきのぼり": MoveData(
