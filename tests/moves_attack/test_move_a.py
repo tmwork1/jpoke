@@ -1622,6 +1622,43 @@ def test_エアスラッシュ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_エアロブラスト_急所ランクが1():
+    """エアロブラスト: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルギア", move_names=["エアロブラスト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_エアロブラスト_急所ランクが1_乱数大で急所なし():
+    """エアロブラスト: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルギア", move_names=["エアロブラスト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_エアロブラスト_相手にダメージを与える():
+    """エアロブラスト: 追加効果なしの特殊ひこう技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルギア", move_names=["エアロブラスト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_えだづき_相手にダメージを与える():
     """えだづき: 追加効果なしの物理くさ技で相手にダメージを与える。"""
     battle = t.start_battle(
