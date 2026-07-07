@@ -881,7 +881,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "ウッドハンマー": MoveData(
         type="くさ",
         category="physical",
-        pp=15,
+        pp=16,
         power=120,
         accuracy=100,
         flags={"contact", "recoil"},
