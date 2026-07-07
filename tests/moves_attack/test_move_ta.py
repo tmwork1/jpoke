@@ -170,6 +170,16 @@ def test_たつまき_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_タネばくだん_くさタイプの物理弾技である():
+    """タネばくだん: くさタイプ・物理・威力80・PP16・bulletフラグを持つ。"""
+    move_data = MOVES["タネばくだん"]
+    assert move_data.type == "くさ"
+    assert move_data.category == "physical"
+    assert move_data.power == 80
+    assert move_data.pp == 16
+    assert "bullet" in move_data.flags
+
+
 def test_タネばくだん_相手にダメージを与える():
     """タネばくだん: 追加効果なしの物理くさ技で相手にダメージを与える。"""
     battle = t.start_battle(
