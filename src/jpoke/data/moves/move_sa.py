@@ -1260,7 +1260,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ソーラービーム": MoveData(
         type="くさ",
         category="special",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=100,
         handlers={
