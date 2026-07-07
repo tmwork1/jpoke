@@ -435,6 +435,18 @@ def test_らいめいげり_ぼうぎょ1段階低下が発動する():
     assert battle.actives[1].rank["def"] == -1
 
 
+def test_りゅうのいぶき_まひが発動しない():
+    """りゅうのいぶき: secondary_chanceが0のときまひを付与しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["りゅうのいぶき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_りゅうのいぶき_まひが発動する():
     """りゅうのいぶき: 30%でまひを付与する。"""
     battle = t.start_battle(
