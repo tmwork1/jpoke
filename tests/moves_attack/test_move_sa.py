@@ -2046,6 +2046,43 @@ def test_スケイルショット_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_スケイルノイズ_命中後にぼうぎょが1段階下がる():
+    """スケイルノイズ: 技が成功した後、使用者のぼうぎょランクが1段階下がる（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジャラランガ", move_names=["スケイルノイズ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["def"] == -1
+
+
+def test_スケイルノイズ_secondary_effectフラグを持たない():
+    """スケイルノイズ: 自分の能力ランクダウンは追加効果に分類されないため、ちからずく等と
+    相互作用する secondary_effect フラグを持たない。"""
+    move_data = MOVES["スケイルノイズ"]
+    assert "secondary_effect" not in move_data.flags
+
+
+def test_スケイルノイズ_みがわりを貫通して本体にダメージを与える():
+    """スケイルノイズ: soundフラグを持つため、みがわり状態の相手の本体にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジャラランガ", move_names=["スケイルノイズ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    # みがわりにHPを設定（貫通しなければこのHPが削られる）
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    # 音技はみがわりを無視して本体にダメージを与えるため、本体HPが減る
+    assert defender.hp < hp_before
+    # みがわりのHPは変化しない
+    assert defender.volatiles["みがわり"].hp == 999
+
+
 def test_スチームバースト_やけどが発動する():
     """スチームバースト: 30%でやけどを付与する。"""
     battle = t.start_battle(
