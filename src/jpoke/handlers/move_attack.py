@@ -1743,6 +1743,19 @@ def つけあがる_calc_power(battle: Battle, ctx: AttackContext, value: int) -
     return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + rank_sum)))
 
 
+def ツタこんぼう_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ツタこんぼう: 使用者がオーガポンの場合、かぶっている仮面（フォルム）に応じてタイプが変わる。
+
+    フォルムの基本タイプ（base_types）で判定するため、みずびたし等による現在タイプの変更や、
+    マジックルーム・ぶきよう等で仮面の威力補正が無効化されている場合でもタイプは変化しない。
+    オーガポン以外が使用した場合は常にくさタイプになる。
+    """
+    attacker = ctx.attacker
+    if not attacker.name.startswith("オーガポン"):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=attacker.base_types[-1])
+
+
 def つららおとし_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
