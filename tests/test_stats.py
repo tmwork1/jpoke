@@ -5,26 +5,64 @@ from jpoke import Pokemon
 from jpoke.model.stats import chmp_to_legacy_effort
 
 
-def test_努力値_effortプロパティで設定と取得():
+def test_努力値_keep_ratioを指定するとHP割合が維持される():
     mon = Pokemon("ピカチュウ")
-    mon.effort = [0, 32, 1, 2, 31, 16]
-    assert mon.effort == [0, 32, 1, 2, 31, 16]
+    max_hp_before = mon.max_hp
+    mon.hp = max_hp_before // 2  # このテストに限り直接代入で被ダメージ状態を作る
+    ratio_before = mon.hp / mon.max_hp
+
+    mon.set_effort([32, 0, 0, 0, 0, 0], hp_policy="keep_ratio")  # HP実数値が変わるように調整
+
+    assert mon.max_hp != max_hp_before
+    assert abs(mon.hp / mon.max_hp - ratio_before) < 0.01
 
 
-def test_努力値_set_effortで単一インデックス設定():
+def test_努力値_resetを指定すると被ダメージ状態でも満タンになる():
     mon = Pokemon("ピカチュウ")
-    mon.set_effort(1, 32)
+    mon.hp = mon.max_hp - 10  # このテストに限り直接代入で被ダメージ状態を作る
+
+    mon.set_effort([32, 0, 0, 0, 0, 0], hp_policy="reset")  # HP実数値が変わるように調整
+
+    assert mon.hp == mon.max_hp
+
+
+def test_努力値_set_effort_atで単一インデックス設定():
+    mon = Pokemon("ピカチュウ")
+    mon.set_effort_at(1, 32)
     assert mon.effort[1] == 32
+
+
+def test_努力値_set_effortで設定と取得():
+    mon = Pokemon("ピカチュウ")
+    mon.set_effort([0, 32, 1, 2, 31, 16])
+    assert mon.effort == [0, 32, 1, 2, 31, 16]
 
 
 def test_努力値_ステータス再計算に反映される():
     mon = Pokemon("ピカチュウ", nature="いじっぱり")
     hp_before = mon.stats["hp"]
     atk_before = mon.stats["atk"]
-    mon.set_effort(0, 32)
-    mon.set_effort(1, 32)
+    mon.set_effort_at(0, 32)
+    mon.set_effort_at(1, 32)
     assert mon.stats["hp"] > hp_before
     assert mon.stats["atk"] > atk_before
+
+
+def test_努力値_ダメージ中にset_effortすると被ダメージ絶対量が維持される():
+    mon = Pokemon("ピカチュウ")
+    max_hp_before = mon.max_hp
+    mon.hp = max_hp_before - 10  # このテストに限り直接代入で被ダメージ状態を作る
+    mon.set_effort([32, 0, 0, 0, 0, 0])  # HP実数値が変わるように調整
+
+    assert mon.max_hp != max_hp_before
+    assert mon.max_hp - mon.hp == 10
+
+
+def test_努力値_未ダメージ状態でset_effortしてもhpは満タンのまま():
+    """hp_policy既定のkeep_absoluteは被ダメージ0を保持するため、未使用ポケモンは常に満タンで再構築される。"""
+    mon = Pokemon("ピカチュウ")
+    mon.set_effort([32, 0, 0, 0, 0, 0])  # HP実数値が変わるように調整
+    assert mon.hp == mon.max_hp
 
 
 @pytest.mark.parametrize(

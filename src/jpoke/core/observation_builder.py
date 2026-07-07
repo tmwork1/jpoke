@@ -66,8 +66,10 @@ def _mask_pokemon(mon: Pokemon) -> Pokemon:
         mon: Pokemon インスタンス
     """
     # ステータス情報を隠蔽する
-    mon.nature = "まじめ"  # 無補正
-    mon.effort = [0] * 6
+    # 相手に見えるのはHP割合（HPバー）であって絶対量ではないため、
+    # マスキングによる最大HP変化でHP割合が歪まないよう keep_ratio で揃える。
+    mon.set_nature("まじめ", hp_policy="keep_ratio")  # 無補正
+    mon.set_effort([0] * 6, hp_policy="keep_ratio")
 
     # テラスタイプをベースタイプに上書きして隠蔽する
     if not mon.terastallized:

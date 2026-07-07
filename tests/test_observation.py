@@ -20,7 +20,7 @@ def _build_hidden_pokemon() -> Pokemon:
         move_names=["でんこうせっか", "10まんボルト"],
         tera_type="ほのお",          # 基本タイプ（でんき）と異なるテラスタイプ
     )
-    mon.set_effort(0, 10)  # HP努力値
+    mon.set_effort_at(0, 10)  # HP努力値
     return mon
 
 
@@ -37,6 +37,26 @@ def test_観測で相手の性格と努力値が隠蔽される():
 
     assert masked._nature == "まじめ"
     assert masked._stats_manager.effort == [0] * 6
+
+
+def test_観測で相手のHP割合が維持される():
+    """努力値マスキングで最大HPが変わっても、observerに見えるHP割合は実際の値と一致する（絶対量ではない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ")],
+        team1=[_build_hidden_pokemon()],
+    )
+    observer, _ = battle.players
+    opponent = battle.actives[1]
+    real_max_hp = opponent.max_hp
+    battle.modify_hp(opponent, v=-(real_max_hp // 3))
+    real_hp = opponent.hp
+
+    obs = battle.build_observation(observer)
+    masked = obs.player_states[obs.opponent(observer)].team[0]
+
+    assert masked.max_hp != real_max_hp  # 前提: 努力値マスキングで最大HPが変わる
+    assert masked.hp != real_hp  # 絶対量をそのまま維持すると割合がずれてしまう
+    assert abs(masked.hp / masked.max_hp - real_hp / real_max_hp) < 0.01
 
 
 def test_観測で相手の未テラスタルのテラスタイプが基本タイプに隠蔽される():

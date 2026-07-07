@@ -28,6 +28,7 @@ from .event_manager import EventManager
 from .context import EventContext
 from .player import Player
 from .event_logger import EventLogger, Payload
+from .replay import RecordedCommand, BattleReplayData
 from .damage import DamageCalculator
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager
 from .move_executor import MoveExecutor
@@ -158,6 +159,13 @@ class Battle:
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
         self._player_states_map: dict[Player, PlayerState] = dict(zip(players, self._player_states))
 
+        # リプレイ再現用の対戦開始前チームスナップショット（PlayerState 構築直後、
+        # 対戦の影響を一切受けていない状態で取得する）
+        self._team_snapshot: list[list[dict]] = [
+            [mon.to_dict() for mon in state.team] for state in self._player_states
+        ]
+        self.command_log: list[RecordedCommand] = []
+
         self.events = EventManager(self)
         self.event_logger = EventLogger()
         self.turn_controller: TurnController = TurnController(self)
@@ -198,6 +206,7 @@ class Battle:
         "event_logger",
         "option",
         "test_option",
+        "command_log",
     )
 
     def _deepcopy_keys(self) -> list[str]:
@@ -514,6 +523,24 @@ class Battle:
         """コマンドを解決する（CommandManagerへの委譲）。"""
         return self.command_manager.resolve_command(phase, player)
 
+    def build_replay_data(self) -> BattleReplayData:
+        """対戦を再現するためのリプレイデータを組み立てる。
+
+        対戦の途中でも呼べる（選出とコマンド列はその時点までのものになる）。
+        """
+        from dataclasses import asdict
+        return BattleReplayData(
+            seed=self.seed,
+            n_selected=self.n_selected,
+            battle_option=asdict(self.option),
+            teams=(self._team_snapshot[0], self._team_snapshot[1]),
+            selections=(
+                self.player_states[self.players[0]].selected_indexes,
+                self.player_states[self.players[1]].selected_indexes,
+            ),
+            commands=list(self.command_log),
+        )
+
     def start(self):
         """バトル開始処理を実行する（TurnControllerへの委譲）。
 
@@ -540,6 +567,18 @@ class Battle:
 
         if not commands:
             raise InvalidCommandError("No commands provided for step().")
+
+        # リプレイ再現用に行動コマンドを記録する。外部から commands を直接渡す経路と
+        # resolve_command() に解決させる経路の両方をここで一元的に捕捉する。
+        # turn は _begin_turn() でインクリメントされる前なので +1 補正が必要。
+        record_turn = self.turn + (1 if self.is_new_turn() else 0)
+        for player, command in commands.items():
+            self.command_log.append(RecordedCommand(
+                turn=record_turn,
+                player_idx=self.players.index(player),
+                phase="action",
+                command=command,
+            ))
 
         self.turn_controller.step(commands)
 

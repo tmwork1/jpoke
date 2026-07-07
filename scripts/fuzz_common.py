@@ -75,10 +75,8 @@ def build_team(spec: list[dict]) -> list[Pokemon]:
             move_names=s["moves"],
             tera_type=s["tera_type"],
         )
-        mon.indiv = s["indiv"]
-        mon.effort = s["effort"]
-        mon.update_stats()
-        mon.hp = mon.max_hp
+        mon.set_indiv(s["indiv"])
+        mon.set_effort(s["effort"], hp_policy="reset")  # 新規構築なので満タンにする
         team.append(mon)
     return team
 

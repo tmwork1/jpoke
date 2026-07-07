@@ -49,8 +49,8 @@ def make_hitmonchan() -> Pokemon:
         nature="いじっぱり",
         move_names=MOVES,
     )
-    mon.effort = [0, 0, 0, 0, 0, 0]
-    mon.indiv = [31, 31, 31, 31, 31, 31]
+    mon.set_effort([0, 0, 0, 0, 0, 0])
+    mon.set_indiv([31, 31, 31, 31, 31, 31], hp_policy="reset")  # 新規構築なので満タンにする
     return mon
 
 

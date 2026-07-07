@@ -4,5 +4,6 @@
 方策実装をここに置く。
 """
 from .tree_search_player import TreeSearchPlayer
+from .replay_player import ReplayPlayer, replay_battle
 
-__all__ = ["TreeSearchPlayer"]
+__all__ = ["TreeSearchPlayer", "ReplayPlayer", "replay_battle"]

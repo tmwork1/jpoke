@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from jpoke.data.models import PokemonData
 
-from jpoke.types import Nature, Type, Stat, Gender, \
+from jpoke.types import Nature, Type, Stat, Gender, HpPolicy, \
     AilmentName, VolatileName, BoostSource, PokemonName, AbilityName, MoveName, ItemName
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
@@ -85,8 +85,8 @@ class Pokemon:
         # ステータス計算マネージャー
         self._stats_manager = PokemonStats()
 
-        # 初期ステータス計算
-        self.update_stats()
+        # 初期ステータス計算（hp は未定義のため update_stats() の hp 追従処理は経由しない）
+        self._stats_manager.update_stats(self._level, self.data.base, self._nature)
 
         self.paradox_boost_stat: Stat | None = None
         self.paradox_boost_source: BoostSource = ""
@@ -260,18 +260,18 @@ class Pokemon:
         """
         return self._level
 
-    @level.setter
-    def level(self, level: int):
+    def set_level(self, level: int, hp_policy: HpPolicy = "keep_absolute"):
         """ポケモンのレベルを設定する。
 
         Args:
             level: レベル
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             レベル変更時にステータスを自動再計算する。
         """
         self._level = level
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def nature(self) -> str:
@@ -282,18 +282,18 @@ class Pokemon:
         """
         return self._nature
 
-    @nature.setter
-    def nature(self, nature: Nature):
+    def set_nature(self, nature: Nature, hp_policy: HpPolicy = "keep_absolute"):
         """ポケモンの性格を設定する。
 
         Args:
             nature: 性格名
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             性格変更時にステータスを自動再計算する。
         """
         self._nature = nature
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def weight(self) -> float:
@@ -395,20 +395,20 @@ class Pokemon:
 
     def set_form(self,
                  name: PokemonName,
-                 keep_damage: bool = True,
+                 hp_policy: HpPolicy = "keep_absolute",
                  set_default_ability: bool = False) -> bool:
         """ポケモンのフォルムをエイリアス指定で切り替える。
 
         Args:
             name: 変更先フォルムの図鑑エイリアス
-            keep_damage: Trueの場合、現在の被ダメージ量を維持する
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
             set_default_ability: Trueの場合、特性を変更先のデフォルト特性にリセットする
         """
         if self.name == name:
             return False
 
         self.data = POKEDEX[name]
-        self.update_stats(keep_damage=keep_damage)
+        self.update_stats(hp_policy)
 
         if set_default_ability:
             ability_name = self.data.abilities[0]
@@ -474,18 +474,18 @@ class Pokemon:
         """
         return self.data.base
 
-    @base.setter
-    def base(self, base: list[int]):
+    def set_base(self, base: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """種族値を設定する。
 
         Args:
             base: 種族値のリスト
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             種族値変更時にステータスを自動再計算する。
         """
         self.data.base = base
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def indiv(self) -> list[int]:
@@ -496,18 +496,18 @@ class Pokemon:
         """
         return self._stats_manager.indiv
 
-    @indiv.setter
-    def indiv(self, indiv: list[int]):
+    def set_indiv(self, indiv: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """個体値を設定する。
 
         Args:
             indiv: 個体値のリスト
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             個体値変更時にステータスを自動再計算する。
         """
         self._stats_manager.indiv = indiv
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def effort(self) -> list[int]:
@@ -518,18 +518,18 @@ class Pokemon:
         """
         return self._stats_manager.effort
 
-    @effort.setter
-    def effort(self, effort: list[int]):
+    def set_effort(self, effort: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """努力値をChampions形式（0〜32）で設定する。
 
         Args:
             effort: Champions形式の努力値のリスト（各値0〜32）
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             努力値変更時にステータスを自動再計算する。
         """
         self._stats_manager.effort = effort
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def stats(self) -> dict[Stat, int]:
@@ -540,18 +540,18 @@ class Pokemon:
         """
         return self._stats_manager.stats_dict
 
-    @stats.setter
-    def stats(self, stats: dict[Stat, int]):
+    def set_stats(self, stats: dict[Stat, int], hp_policy: HpPolicy = "keep_absolute"):
         """実数値から努力値を逆算して設定する。
 
         Args:
             stats: ステータス名をキー、実数値を値とする辞書
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             設定後、ステータスを自動再計算する。
         """
         self._stats_manager.set_stats_from_dict(stats, self._level, self.data.base, self._nature)
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     @property
     def ranked_stats(self) -> dict[Stat, int]:
@@ -597,34 +597,44 @@ class Pokemon:
         """パラドックス補正が有効かどうかを取得する。"""
         return self.paradox_boost_stat is not None
 
-    def update_stats(self, keep_damage: bool = False):
+    def _apply_hp_policy(self, old_max_hp: int, old_hp: int, hp_policy: HpPolicy):
+        """新しい最大HPに対してhpを追従させる（HpPolicy参照）。"""
+        if hp_policy == "reset":
+            self.hp = self.max_hp
+        elif hp_policy == "keep_ratio":
+            ratio = old_hp / old_max_hp if old_max_hp else 0.0
+            self.hp = max(0, min(self.max_hp, round(self.max_hp * ratio)))
+        else:
+            damage = old_max_hp - old_hp
+            self.hp = max(0, min(self.max_hp, self.max_hp - damage))
+
+    def update_stats(self, hp_policy: HpPolicy = "keep_absolute"):
         """ステータスを再計算する。
 
         Args:
-            keep_damage: Trueの場合、現在の被ダメージ量を保持する
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             レベル、性格、種族値、個体値、努力値に基づいて
             全ステータスを再計算する。レベルアップや性格変更時に使用。
         """
-        # 被ダメージ量を保持する場合
-        damage = self.max_hp - self.hp if keep_damage else 0
+        old_max_hp = self.max_hp
+        old_hp = self.hp
 
         # ステータスを再計算
         self._stats_manager.update_stats(
             self._level, self.data.base, self._nature
         )
 
-        # 被ダメージ量を復元
-        if keep_damage:
-            self.hp = self.max_hp - damage
+        self._apply_hp_policy(old_max_hp, old_hp, hp_policy)
 
-    def set_stats(self, idx: int, value: int) -> bool:
+    def set_stat(self, idx: int, value: int, hp_policy: HpPolicy = "keep_absolute") -> bool:
         """指定した実数値になるよう努力値を設定する。
 
         Args:
             idx: ステータスのインデックス(0=HP, 1=攻撃, 2=防御, ...)
             value: 目標の実数値
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照。idx=0の場合のみ関与する）
 
         Returns:
             設定に成功した場合True、失敗した場合False
@@ -632,22 +642,31 @@ class Pokemon:
         Note:
             内部的に PokemonStats に委譲する。
         """
-        return self._stats_manager.set_stats_from_value(
+        old_max_hp = self.max_hp
+        old_hp = self.hp
+
+        ok = self._stats_manager.set_stats_from_value(
             idx, value, self._level, self.data.base, self._nature
         )
 
-    def set_effort(self, idx: int, value: int):
+        if ok and idx == 0:
+            self._apply_hp_policy(old_max_hp, old_hp, hp_policy)
+
+        return ok
+
+    def set_effort_at(self, idx: int, value: int, hp_policy: HpPolicy = "keep_absolute"):
         """指定インデックスの努力値をChampions形式（0〜32）で設定する。
 
         Args:
             idx: ステータスのインデックス
             value: 設定するChampions形式の努力値（0〜32）
+            hp_policy: 最大HP変化時のhpの追従方法（HpPolicy参照）
 
         Note:
             設定後、ステータスを自動再計算する。
         """
         self._stats_manager.effort[idx] = value
-        self.update_stats()
+        self.update_stats(hp_policy)
 
     def modify_hp(self, v: int) -> int:
         """HPを増減させる。
@@ -887,3 +906,21 @@ class Pokemon:
             "effort": self._stats_manager.effort,
             "tera_type": self.tera_type,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "Pokemon":
+        """to_dict() が返す辞書からポケモンを再構築する。"""
+        mon = cls(
+            data["name"],
+            gender=data["gender"],
+            nature=data["nature"],
+            level=data["level"],
+            ability_name=data["ability"],
+            item_name=data["item"],
+            move_names=data["moves"],
+            tera_type=data["tera_type"],
+        )
+        mon.set_indiv(list(data["indiv"]))
+        # to_dict() は瀕死・被弾状態を保存しない（常に全回復状態の再構築を想定）ため reset を使う
+        mon.set_effort(list(data["effort"]), hp_policy="reset")
+        return mon
