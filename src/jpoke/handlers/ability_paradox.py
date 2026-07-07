@@ -103,21 +103,18 @@ def modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn
 
 
 def apply_atk_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """攻撃側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
+    """攻撃側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。
+
+    イカサマ（相手の実数値を借りる）やボディプレス（自分の『ぼうぎょ』を攻撃として使う）のように
+    ダメージ計算で参照する実数値が通常と異なる技でも、パラドックス特性の補正はあくまで
+    「使用者自身」の攻撃側スロット（物理技なら攻撃、特殊技なら特攻）に対してのみ適用される。
+    どの実数値が計算に使われているかは影響しない
+    （docs/spec/abilities/クォークチャージ.md 「特性の効果はランク補正上昇とは異なる」の項を参照）。
+    """
     attacker = ctx.attacker
-    defender = ctx.defender
+    stat = "atk" if ctx.move.category == "physical" else "spa"
 
-    if ctx.move.name == "イカサマ":
-        boost_mon = defender
-        stat = "atk"
-    elif ctx.move.name == "ボディプレス":
-        boost_mon = attacker
-        stat = "def"
-    else:
-        boost_mon = attacker
-        stat = "atk" if ctx.move.category == "physical" else "spa"
-
-    if boost_mon.paradox_boost_stat == stat:
+    if attacker.paradox_boost_stat == stat:
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 

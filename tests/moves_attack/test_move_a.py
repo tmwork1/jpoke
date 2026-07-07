@@ -596,6 +596,75 @@ def test_あんこくきょうだ_確定急所():
     assert battle.move_executor.critical is True
 
 
+def test_イカサマ_使用者自身の攻撃ランク上昇はダメージに影響しない():
+    """イカサマ: 使用者自身の攻撃ランクが上昇していてもダメージは変化しない。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.9
+    attacker1 = battle1.actives[0]
+    battle1.modify_stats(attacker1, {"atk": 2}, source=attacker1)
+    mon1 = battle1.actives[1]
+    hp_before1 = mon1.hp
+    t.run_move(battle1, 0)
+    damage_with_boost = hp_before1 - mon1.hp
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.9
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_no_boost = hp_before2 - mon2.hp
+
+    assert damage_with_boost == damage_no_boost
+
+
+def test_イカサマ_相手の攻撃実数値を攻撃として計算する():
+    """イカサマ: 自分の攻撃ではなく、相手の攻撃実数値を攻撃として計算する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_attack == defender.stats["atk"]
+
+
+def test_イカサマ_相手の攻撃ランク上昇でダメージ増加する():
+    """イカサマ: 相手の攻撃ランクが上昇しているとダメージが増加する。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.9
+    defender1 = battle1.actives[1]
+    battle1.modify_stats(defender1, {"atk": 2}, source=defender1)
+    hp_before1 = defender1.hp
+    t.run_move(battle1, 0)
+    damage_a_plus2 = hp_before1 - defender1.hp
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.9
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_no_rank = hp_before2 - mon2.hp
+
+    assert damage_a_plus2 > damage_no_rank
+
+
 def test_いかりのまえば_こらえるで1HP残る():
     """いかりのまえば: 固定ダメージの計算がこらえるより先に行われ、瀕死を防げる。"""
     battle = t.start_battle(
