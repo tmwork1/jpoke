@@ -162,6 +162,62 @@ def test_サイコキネシス_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_サイコブレイク_相手のとくぼうランク変化の影響を受けない():
+    """サイコブレイク: 相手の『とくぼう』ランクが上がっていてもダメージが変わらない。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.9
+    mon1 = battle1.actives[1]
+    battle1.modify_stats(mon1, {"spd": 6}, source=mon1)
+    hp_before = mon1.hp
+    t.run_move(battle1, 0)
+    damage_with_spd6 = hp_before - mon1.hp
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.9
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_no_rank = hp_before2 - mon2.hp
+
+    assert damage_with_spd6 == damage_no_rank
+
+
+def test_サイコブレイク_相手のぼうぎょランク変化の影響を受ける():
+    """サイコブレイク: 相手の『ぼうぎょ』ランクが上がっているとダメージが減る。"""
+    battle1 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle1.random.random = lambda: 0.9
+    mon1 = battle1.actives[1]
+    battle1.modify_stats(mon1, {"def": 6}, source=mon1)
+    hp_before = mon1.hp
+    t.run_move(battle1, 0)
+    damage_with_def6 = hp_before - mon1.hp
+
+    battle2 = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle2.random.random = lambda: 0.9
+    mon2 = battle2.actives[1]
+    hp_before2 = mon2.hp
+    t.run_move(battle2, 0)
+    damage_no_rank = hp_before2 - mon2.hp
+
+    assert damage_with_def6 < damage_no_rank
+
+
 def test_サイコファング_まもるで防がれたとき壁を解除しない():
     """サイコファング: まもるで無効化された場合はリフレクターを解除しない。"""
     battle = t.start_battle(
