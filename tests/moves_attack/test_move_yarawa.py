@@ -355,6 +355,19 @@ def test_ようかいえき_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ようせいのかぜ_相手にダメージを与える():
+    """ようせいのかぜ: 追加効果なしの特殊フェアリー技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピクシー", move_names=["ようせいのかぜ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_らいげき_まひが発動する():
     """らいげき: 20%でまひを付与する。"""
     battle = t.start_battle(
