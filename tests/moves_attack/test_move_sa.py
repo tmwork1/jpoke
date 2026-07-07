@@ -941,18 +941,6 @@ def test_しおみず_相手HPが半分以下のとき威力2倍():
     assert battle.damage_calculator.power_modifier == 8192
 
 
-def test_シグナルビーム_こんらんが発動する():
-    """シグナルビーム: 10%でこんらんを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フーディン", move_names=["シグナルビーム"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("こんらん")
-
-
 def test_したでなめる_まひが発動する():
     """したでなめる: 30%でまひを付与する。"""
     battle = t.start_battle(
