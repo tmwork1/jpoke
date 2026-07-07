@@ -721,7 +721,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ギガドレイン": MoveData(
         type="くさ",
         category="special",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"heal"},
