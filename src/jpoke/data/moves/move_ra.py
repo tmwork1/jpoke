@@ -260,7 +260,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "れいとうビーム": MoveData(
         type="こおり",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"secondary_effect"},
