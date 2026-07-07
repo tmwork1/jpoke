@@ -821,6 +821,44 @@ def test_シェルアームズ_物理技のときのみ直接攻撃になる(att
         assert attacker.hp == hp_before
 
 
+def test_シェルブレード_ぼうぎょ1段階低下が発動しない():
+    """シェルブレード: 追加効果不発時はぼうぎょランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("パルシェン", move_names=["シェルブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == 0
+
+
+def test_シェルブレード_ぼうぎょ1段階低下が発動する():
+    """シェルブレード: 50%の確率で相手のぼうぎょを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("パルシェン", move_names=["シェルブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == -1
+
+
+def test_シェルブレード_相手にダメージを与える():
+    """シェルブレード: 物理みず技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("パルシェン", move_names=["シェルブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_しおづけ_しおづけ揮発状態が付与される():
     """しおづけ: 100%の確率で相手をしおづけ揮発状態にする。"""
     battle = t.start_battle(
