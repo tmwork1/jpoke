@@ -263,7 +263,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アシストパワー": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=20,
         accuracy=100,
         handlers={
