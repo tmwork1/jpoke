@@ -542,6 +542,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=20,
         power=50,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.むしのていこう_lower_spa_C,

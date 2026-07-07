@@ -1,6 +1,7 @@
 """攻撃技ハンドラの単体テスト（ま行）。"""
 
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from .. import test_utils as t
 
 
@@ -627,6 +628,23 @@ def test_むしくい_ねんちゃく持ちから奪えない():
     assert attacker.hp == 1
     # defenderはオボンのみを保持している
     assert defender.has_item("オボンのみ")
+
+
+def test_むしのていこう_secondary_effectフラグを持つ():
+    """むしのていこう: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["むしのていこう"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_むしのていこう_とくこう1段階低下が発動する():
+    """むしのていこう: 100%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルフォン", move_names=["むしのていこう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
 
 
 def test_むねんのつるぎ_使用後に攻撃者のHPが回復する():
