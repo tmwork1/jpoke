@@ -1310,11 +1310,15 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゴーストダイブ": MoveData(
         type="ゴースト",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
-        flags={"contact"},
-        handlers={},  # 追加効果なし
+        flags={"contact", "unprotectable"},
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),
+            ),
+        }
     ),
     "ゴールドラッシュ": MoveData(
         type="はがね",

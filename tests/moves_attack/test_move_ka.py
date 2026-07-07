@@ -3267,6 +3267,47 @@ def test_ゴッドバード_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_ゴーストダイブ_2ターンで攻撃する():
+    """1ターン目はダメージを与えず、2ターン目にダメージを与えて揮発状態が解除される"""
+    battle = t.start_battle(
+        # ノーマルタイプはゴースト無効なのでどくタイプを使用
+        team0=[Pokemon("ゲンガー", move_names=["ゴーストダイブ"])],
+        team1=[Pokemon("ドガース")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.actives[0].has_volatile("シャドーダイブ")
+
+    # 2ターン目: ダメージあり、揮発状態解除
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not battle.actives[0].has_volatile("シャドーダイブ")
+
+
+def test_ゴーストダイブ_まもる中の相手にダメージを与えられる():
+    """ゴーストダイブはまもる状態を貫通する（unprotectable ラベル）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ゴーストダイブ"])],
+        team1=[Pokemon("ドガース")],
+    )
+    defender = battle.actives[1]
+    initial_hp = defender.hp
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    # 溜めターン
+    t.run_move(battle, 0)
+    assert battle.actives[0].has_volatile("シャドーダイブ")
+    # 攻撃ターン（まもる状態の相手に攻撃）
+    t.run_move(battle, 0)
+    assert not battle.actives[0].has_volatile("シャドーダイブ")
+    assert battle.move_executor.move_success
+    assert defender.hp < initial_hp
+
+
 def test_ゴールドラッシュ_特攻1段階低下が発動する():
     """ゴールドラッシュ: 命中時に使用者のCが1段階低下する（確率100%）。"""
     battle = t.start_battle(
