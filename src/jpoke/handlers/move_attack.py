@@ -2669,10 +2669,6 @@ def フレアドライブ_recoil(battle: Battle, ctx: AttackContext, value: Any)
     return _recoil(battle, ctx, value, 1/3)
 
 
-def ふわふわフォール_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ふんえん_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 

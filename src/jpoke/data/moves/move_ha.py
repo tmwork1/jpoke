@@ -1092,19 +1092,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "ふわふわフォール": MoveData(
-        type="フェアリー",
-        category="physical",
-        pp=15,
-        power=70,
-        accuracy=95,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ふわふわフォール_apply_flinch,
-            )
-        }
-    ),
     "ふんえん": MoveData(
         type="ほのお",
         category="special",
@@ -1162,7 +1149,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        flags={"contact", "punch", "secondary_effect"},
+        flags={"contact", "punch"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ぶちかまし_lower_defender_spd,

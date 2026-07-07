@@ -928,18 +928,6 @@ def test_フラフラダンス_すでにこんらん状態なら失敗():
     assert defender.volatiles["こんらん"].count == old_count
 
 
-def test_ふわふわフォール_ひるみが発動する():
-    """ふわふわフォール: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("トゲキッス", move_names=["ふわふわフォール"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ほえる_ねをはる状態の相手には失敗する():
     """ほえる: 相手がねをはる状態の場合、強制交代が無効化される"""
     battle = t.start_battle(
