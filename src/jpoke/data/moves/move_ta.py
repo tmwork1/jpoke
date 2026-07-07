@@ -273,7 +273,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ダストシュート": MoveData(
         type="どく",
         category="physical",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=80,
         flags={"secondary_effect"},
