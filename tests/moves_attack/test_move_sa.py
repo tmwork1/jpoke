@@ -2563,3 +2563,97 @@ def test_そらをとぶ_空中は通常技を回避する():
     # 相手のたいあたりはミスする
     t.run_move(battle, 1)
     assert attacker.hp == hp_before
+
+
+def test_ソーラービーム_1ターン目は溜めてダメージを与えない():
+    """ソーラービーム: 1ターン目は光を吸収して溜めるだけで、相手にダメージを与えない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ソーラービーム")
+    assert defender.hp == hp_before
+
+
+def test_ソーラービーム_2ターン目に攻撃して揮発状態が解除される():
+    """ソーラービーム: 2ターン目に攻撃が発動し、ダメージを与えて揮発状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)  # 1ターン目: 溜め
+    hp_before = defender.hp
+    t.run_move(battle, 0)  # 2ターン目: 攻撃
+    assert not attacker.has_volatile("ソーラービーム")
+    assert defender.hp < hp_before
+
+
+@pytest.mark.parametrize("weather_name", ["はれ", "おおひでり"])
+def test_ソーラービーム_はれ_おおひでり下では溜めずに1ターンで攻撃する(weather_name):
+    """ソーラービーム: にほんばれ/おおひでり状態のときは溜めずにそのターンに攻撃できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        weather=(weather_name, 5),
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("ソーラービーム")
+    assert defender.hp < hp_before
+
+
+@pytest.mark.parametrize("weather_name", ["あめ", "おおあめ", "すなあらし", "ゆき"])
+def test_ソーラービーム_あめ_おおあめ_すなあらし_ゆき下では威力が半減する(weather_name):
+    """ソーラービーム: あめ/おおあめ/すなあらし/ゆき状態のときは威力が半分になる。"""
+    def damage_with_weather(weather):
+        battle = t.start_battle(
+            team0=[Pokemon("カビゴン", move_names=["ソーラービーム"])],
+            team1=[Pokemon("カビゴン")],
+            weather=weather,
+            accuracy=100,
+            critical_mode="確定のみ",
+            damage_roll="最大",
+        )
+        defender = battle.actives[1]
+        hp_before = defender.hp
+        t.run_move(battle, 0)  # 1ターン目: 溜め
+        t.run_move(battle, 0)  # 2ターン目: 攻撃
+        return hp_before - defender.hp
+
+    damage_normal = damage_with_weather(None)
+    damage_halved = damage_with_weather((weather_name, 5))
+    assert damage_halved < damage_normal
+    assert damage_halved == pytest.approx(damage_normal / 2, rel=0.1)
+
+
+def test_ソーラービーム_らんきりゅう下では威力が変化しない():
+    """ソーラービーム: らんきりゅう状態は威力半減の対象外で、通常時と同じ威力になる。"""
+    def damage_with_weather(weather):
+        battle = t.start_battle(
+            team0=[Pokemon("カビゴン", move_names=["ソーラービーム"])],
+            team1=[Pokemon("カビゴン")],
+            weather=weather,
+            accuracy=100,
+            critical_mode="確定のみ",
+            damage_roll="最大",
+        )
+        defender = battle.actives[1]
+        hp_before = defender.hp
+        t.run_move(battle, 0)  # 1ターン目: 溜め
+        t.run_move(battle, 0)  # 2ターン目: 攻撃
+        return hp_before - defender.hp
+
+    damage_normal = damage_with_weather(None)
+    damage_gale = damage_with_weather(("らんきりゅう", 5))
+    assert damage_gale == damage_normal
