@@ -55,7 +55,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=0,
         accuracy=100,
         priority=-5,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},  # まねっこでコピー不可（第四世代以降）
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.カウンター_can_use,
