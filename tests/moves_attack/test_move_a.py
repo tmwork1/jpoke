@@ -53,6 +53,30 @@ def test_3ぼんのや_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_アイアンテール_ぼうぎょ1段階低下が発動しない():
+    """アイアンテール: 追加効果不発時はぼうぎょランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンテール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == 0
+
+
+def test_アイアンテール_ぼうぎょ1段階低下が発動する():
+    """アイアンテール: 30%の確率で相手のぼうぎょを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["アイアンテール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == -1
+
+
 def test_アイアンヘッド_ひるみが発動する():
     """アイアンヘッド: 20%でひるみを付与する。"""
     battle = t.start_battle(

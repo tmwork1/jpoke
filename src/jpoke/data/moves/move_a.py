@@ -20,7 +20,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アイアンテール": MoveData(
         type="はがね",
         category="physical",
-        pp=15,
+        pp=16,
         power=100,
         accuracy=75,
         flags={"contact", "secondary_effect"},
