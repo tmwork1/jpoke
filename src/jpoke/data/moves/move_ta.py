@@ -228,7 +228,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"non_encore", "non_negoto"},
+        flags={"non_copycat", "non_encore", "non_negoto"},
         handlers={},  # 追加効果なし
     ),
     "だいもんじ": MoveData(
