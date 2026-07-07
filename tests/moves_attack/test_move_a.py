@@ -298,6 +298,42 @@ def test_あくのはどう_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_アクロバット_マジックルーム中に道具を持っていれば威力2倍にならない():
+    """アクロバット: マジックルームで道具の効果が無効化されているだけでは、
+    物理的に道具を持っているため威力は2倍にならない（55のまま）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("チルタリス", item_name="たべのこし", move_names=["アクロバット"])],
+        team1=[Pokemon("カビゴン")],
+        field={"マジックルーム": 5},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 55
+
+
+def test_アクロバット_場に出た時点から道具がない場合も威力2倍になる():
+    """アクロバット: かるわざと異なり、元々道具を持っていなくても威力2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("チルタリス", move_names=["アクロバット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    assert not battle.actives[0].has_item()
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 110
+
+
+def test_アクロバット_道具を持っているとき威力は2倍にならない():
+    """アクロバット: 道具を持っているときは威力55のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("チルタリス", item_name="たべのこし", move_names=["アクロバット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 55
+
+
 def test_アシストパワー_ACCランク上昇もカウントする():
     """アシストパワー: ACC+1も威力に影響する（命中率・回避率もランク合計の対象）。"""
     battle = t.start_battle(

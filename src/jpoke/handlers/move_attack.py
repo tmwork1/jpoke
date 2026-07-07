@@ -111,6 +111,20 @@ def あくのはどう_apply_flinch(battle: Battle, ctx: AttackContext, value: A
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
 
+def アクロバット_double_power_when_no_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アクロバット: 自分が道具を持っていないとき威力が2倍になる。
+
+    `has_item()` のデフォルト（`consider_enabled=False`）は、道具の効果が
+    ぶきよう・さしおさえ・マジックルームなどで無効化されていても、物理的に
+    道具を持っていればTrueを返す。アクロバットの威力2倍判定は「道具を持っているか
+    どうか」のみで行うため（効果が発動できないだけでは対象外）、このデフォルト挙動を
+    そのまま利用する。
+    """
+    if not ctx.attacker.has_item():
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
 def アシストパワー_boost_power_by_rank(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アシストパワー: 使用者のランク上昇合計1段階ごとに威力が20増加する（基本威力20）。
 

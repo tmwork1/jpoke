@@ -243,11 +243,15 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アクロバット": MoveData(
         type="ひこう",
         category="physical",
-        pp=15,
+        pp=16,
         power=55,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.アクロバット_double_power_when_no_item,
+            ),
+        },
     ),
     "あさのひざし": MoveData(
         type="ノーマル",
