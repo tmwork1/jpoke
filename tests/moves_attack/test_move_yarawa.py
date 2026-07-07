@@ -30,6 +30,98 @@ def test_もえあがるいかり_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_やきつくす_HP回復ピンチきのみは発動せず燃やされる():
+    """やきつくす: オボンのみはダメージがHPへ反映される前に燃やされるため、
+    回復が発動せずにアイテムだけを失う。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = int(defender.max_hp * 0.6)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # HPはダメージ分だけ減少し、オボンのみによる回復は起きていない
+    assert defender.hp < hp_before
+    assert not defender.has_item()
+
+
+def test_やきつくす_きのみでもジュエルでもない道具は燃やされない():
+    """やきつくす: たべのこし等、きのみ・ノーマルジュエル以外の道具は燃やされない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_item("たべのこし")
+
+
+def test_やきつくす_ねんちゃく持ちのきのみは燃やせない():
+    """やきつくす: 特性ねんちゃくの相手が持つきのみは燃やせない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("マタドガス", ability_name="ねんちゃく", item_name="ラムのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_item("ラムのみ")
+
+
+def test_やきつくす_ノーマルジュエルを燃やす():
+    """やきつくす: 相手がノーマルジュエルを持っている場合、命中時に焼却して失わせる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("カビゴン", item_name="ノーマルジュエル")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+
+
+def test_やきつくす_みがわりに防がれた場合はきのみを燃やせない():
+    """やきつくす: defenderがみがわり状態のとき、実体の持ち物を燃やせない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("カビゴン", item_name="ラムのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    assert defender.has_item("ラムのみ")
+
+
+def test_やきつくす_相手がアイテムを持っていない場合は何も起きない():
+    """やきつくす: 相手がアイテムを持っていない場合でもエラーなく通常通りダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not defender.has_item()
+
+
+def test_やきつくす_相手のきのみを燃やす():
+    """やきつくす: 相手がきのみを持っている場合、命中時に焼却して失わせる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["やきつくす"])],
+        team1=[Pokemon("カビゴン", item_name="ラムのみ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_item()
+
+
 def test_やけっぱち_まひで行動不能だった場合威力2倍になる():
     """やけっぱち: 前のターンにまひで行動できなかった場合、威力が2倍になる。"""
     battle = t.start_battle(

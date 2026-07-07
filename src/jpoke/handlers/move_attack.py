@@ -3175,9 +3175,19 @@ def もろはのずつき_recoil(battle: Battle, ctx: AttackContext, value: Any)
     return _recoil(battle, ctx, value, 1/2)
 
 
-def やきつくす_remove_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """やきつくすのきのみ焼却効果。"""
-    if ctx.defender.item.is_berry():
+def やきつくす_burn_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """やきつくすのきのみ・ノーマルジュエル焼却効果。
+
+    みがわりに防がれた場合は実体の持ち物を燃やせない（実体への攻撃ではないため）。
+    タイプ半減きのみ（オッカのみ等）は本ハンドラより先に発火する
+    `Event.ON_CALC_DAMAGE_MODIFIER`で消費されるため、既に消費済みなら燃やす対象がなくなる。
+    remove_item はねんちゃく等のアイテム変更禁止判定を内包するため、
+    それらを持つ相手には効果がない。
+    """
+    if ctx.substitute_damage > 0:
+        return HandlerReturn(value=value)
+    item = ctx.defender.item
+    if item.is_berry() or item.name == "ノーマルジュエル":
         battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
     return HandlerReturn(value=value)
 
