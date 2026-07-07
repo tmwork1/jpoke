@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 722
+テスト数: 723
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -550,6 +550,7 @@
 - [x] すてみ_反動技の威力が1_2倍になる(move_name=かかとおとし, expected_modifier=4915)
 - [x] すてみ_反動技の威力が1_2倍になる(move_name=とびげり, expected_modifier=4915)
 - [x] すてみ_反動技の威力が1_2倍になる(move_name=とびひざげり, expected_modifier=4915)
+- [x] すてみ_反動技の威力が1_2倍になる(move_name=サンダーダイブ, expected_modifier=4915)
 - [x] すてみ_反動技の威力が1_2倍になる(move_name=たいあたり, expected_modifier=4096)
 - [x] スナイパー_急所時の最終ダメージを1_5倍
 - [x] すなのちから_すなあらし中に岩地面鋼技の威力が1_3倍になる(move_name=いわなだれ, expected=5325)
