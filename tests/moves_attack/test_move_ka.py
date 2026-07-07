@@ -70,6 +70,27 @@ def test_カウンター_物理技ダメージを2倍返しする():
     assert defender.hp == hp_before - phys_dmg * 2
 
 
+def test_カウンター_連続技を受けた場合は最後の1回分のダメージのみ参照する():
+    """カウンター: 連続技を受けた場合、合計ではなく最後の1回分のダメージを2倍にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["カウンター"])],
+        team1=[Pokemon("カビゴン", move_names=["ダブルアタック"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.fix_damage(battle, 10)
+    # 相手の連続技（2回攻撃）を受ける
+    t.run_move(battle, 1)
+    assert attacker.hits_taken == 2
+    # 合計(20)ではなく最後の1回分(10)のみが記録される
+    assert attacker.last_physical_damage_received == 10
+    hp_before = defender.hp
+    # カウンターは最後の1回分(10)の2倍=20だけを返す
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - 20
+
+
 def test_カウンター_特殊ダメージのみ受けたとき失敗する():
     """カウンター: そのターン特殊ダメージのみ受けた場合は失敗する。"""
     battle = t.start_battle(

@@ -102,8 +102,8 @@ class Pokemon:
         self.volatiles: dict[VolatileName, Volatile] = {}
         self.active_turn: int = 0
         self.hits_taken: int = 0
-        self.last_physical_damage_received: int = 0  # 今ターン受けた物理ダメージ合計
-        self.last_special_damage_received: int = 0   # 今ターン受けた特殊ダメージ合計
+        self.last_physical_damage_received: int = 0  # 今ターン最後に受けた物理ダメージ量（カウンター等の反射元）
+        self.last_special_damage_received: int = 0   # 今ターン最後に受けた特殊ダメージ量（ミラーコート等の反射元）
         self.last_damage_received: int = 0           # 今ターン最後に受けたダメージ量
         self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
