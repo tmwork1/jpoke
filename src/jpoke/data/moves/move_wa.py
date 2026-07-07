@@ -18,14 +18,14 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドガード": MoveData(
         type="いわ",
         category="status",
-        pp=10,
+        pp=12,
         priority=3,
         handlers={},  # シングルバトルでは効果なし（複数対象技が存在しない）
     ),
     "ワイドフォース": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         handlers={
@@ -38,7 +38,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドブレイカー": MoveData(
         type="ドラゴン",
         category="physical",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=100,
         flags={"contact"},
@@ -51,7 +51,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイルドボルト": MoveData(
         type="でんき",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         flags={"contact", "recoil"},
@@ -64,7 +64,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "わたほうし": MoveData(
         type="くさ",
         category="status",
-        pp=40,
+        pp=20,
         accuracy=100,
         flags={"powder"},
         handlers={
@@ -99,7 +99,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワンダールーム": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         flags=set(),
         handlers={

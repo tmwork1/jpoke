@@ -38,7 +38,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
     "10まんばりき": MoveData(
         type="じめん",
         category="physical",
-        pp=10,
+        pp=12,
         power=95,
         accuracy=95,
         flags={"contact"},
@@ -47,7 +47,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
     "10まんボルト": MoveData(
         type="でんき",
         category="special",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         flags={"secondary_effect"},
@@ -60,7 +60,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
     "3ぼんのや": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         critical_rank=1,
@@ -79,7 +79,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
     "DDラリアット": MoveData(
         type="あく",
         category="physical",
-        pp=10,
+        pp=12,
         power=85,
         accuracy=100,
         flags={"contact"},
@@ -93,7 +93,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
     "Gのちから": MoveData(
         type="くさ",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"secondary_effect"},

@@ -36,7 +36,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "やけっぱち": MoveData(
         type="ほのお",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"contact"},
@@ -50,7 +50,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "やどりぎのタネ": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=90,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -65,7 +65,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "やまあらし": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=100,
         critical_rank=3,
@@ -75,7 +75,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "ゆきげしき": MoveData(
         type="こおり",
         category="status",
-        pp=10,
+        pp=8,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -86,7 +86,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "ゆきなだれ": MoveData(
         type="こおり",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=100,
         priority=-4,

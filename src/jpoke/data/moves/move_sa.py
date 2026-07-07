@@ -50,7 +50,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコキネシス": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         handlers={
@@ -62,7 +62,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコショック": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         handlers={},  # 追加効果なし
@@ -70,7 +70,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコノイズ": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"sound"},
@@ -79,7 +79,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコファング": MoveData(
         type="エスパー",
         category="physical",
-        pp=10,
+        pp=12,
         power=85,
         accuracy=100,
         flags={"bite", "contact"},
@@ -92,7 +92,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコフィールド": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -132,14 +132,14 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイドチェンジ": MoveData(
         type="エスパー",
         category="status",
-        pp=15,
+        pp=16,
         priority=2,
         handlers={},  # 追加効果なし
     ),
     "さいはい": MoveData(
         type="エスパー",
         category="status",
-        pp=15,
+        pp=16,
         handlers={},  # 追加効果なし
     ),
     "さいみんじゅつ": MoveData(
@@ -156,7 +156,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "さきおくり": MoveData(
         type="あく",
         category="status",
-        pp=15,
+        pp=16,
         handlers={},  # 追加効果なし
     ),
     "さばきのつぶて": MoveData(
@@ -174,7 +174,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "さむいギャグ": MoveData(
         type="こおり",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -185,7 +185,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "さわぐ": MoveData(
         type="ノーマル",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"non_negoto", "sound"},
@@ -198,7 +198,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サンダーダイブ": MoveData(
         type="でんき",
         category="physical",
-        pp=15,
+        pp=16,
         power=100,
         accuracy=95,
         flags={"minimize", "contact"},
@@ -221,7 +221,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シェルアームズ": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"contact", "secondary_effect"},
@@ -237,7 +237,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シェルブレード": MoveData(
         type="みず",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=95,
         flags={"contact", "slash", "secondary_effect"},
@@ -250,7 +250,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しおづけ": MoveData(
         type="いわ",
         category="physical",
-        pp=15,
+        pp=16,
         power=40,
         accuracy=100,
         flags={"secondary_effect"},
@@ -266,7 +266,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しおふき": MoveData(
         type="みず",
         category="special",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=100,
         handlers={
@@ -303,7 +303,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シザークロス": MoveData(
         type="むし",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"contact", "slash"},
@@ -325,7 +325,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しっとのほのお": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=70,
         accuracy=100,
         flags={"secondary_effect"},
@@ -338,7 +338,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しっぺがえし": MoveData(
         type="あく",
         category="physical",
-        pp=10,
+        pp=12,
         power=50,
         accuracy=100,
         flags={"contact"},
@@ -351,7 +351,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しっぽきり": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.しっぽきり_check,
@@ -389,7 +389,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しびれごな": MoveData(
         type="くさ",
         category="status",
-        pp=30,
+        pp=20,
         accuracy=75,
         flags={"powder"},
         handlers={
@@ -415,7 +415,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シャカシャカほう": MoveData(
         type="くさ",
         category="special",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=90,
         flags={"heal", "secondary_effect", "thaw"},
@@ -429,7 +429,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シャドークロー": MoveData(
         type="ゴースト",
         category="physical",
-        pp=15,
+        pp=16,
         power=70,
         accuracy=100,
         critical_rank=1,
@@ -460,7 +460,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シャドーボール": MoveData(
         type="ゴースト",
         category="special",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"bullet"},
@@ -516,7 +516,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しんくうは": MoveData(
         type="かくとう",
         category="special",
-        pp=30,
+        pp=20,
         power=40,
         accuracy=100,
         priority=1,
@@ -525,7 +525,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しんそく": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=80,
         accuracy=100,
         priority=2,
@@ -560,7 +560,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しんぴのまもり": MoveData(
         type="ノーマル",
         category="status",
-        pp=25,
+        pp=20,
         target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -571,7 +571,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シンプルビーム": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -598,7 +598,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ジェットパンチ": MoveData(
         type="みず",
         category="physical",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=100,
         priority=1,
@@ -608,7 +608,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じこあんじ": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -619,7 +619,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じこさいせい": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -643,7 +643,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じごくづき": MoveData(
         type="あく",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"contact", "secondary_effect"},
@@ -656,7 +656,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じしん": MoveData(
         type="じめん",
         category="physical",
-        pp=10,
+        pp=12,
         power=100,
         accuracy=100,
         handlers={},  # 追加効果なし
@@ -664,7 +664,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じたばた": MoveData(
         type="ノーマル",
         category="physical",
-        pp=15,
+        pp=16,
         power=1,
         accuracy=100,
         flags={"contact"},
@@ -677,7 +677,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じだんだ": MoveData(
         type="じめん",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"contact"},
@@ -704,7 +704,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じばく": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=200,
         accuracy=100,
         flags={"explosion"},
@@ -731,7 +731,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ジャイロボール": MoveData(
         type="はがね",
         category="physical",
-        pp=5,
+        pp=8,
         power=1,
         accuracy=100,
         flags={"bullet", "contact"},
@@ -757,7 +757,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じゃれつく": MoveData(
         type="フェアリー",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=90,
         flags={"contact", "secondary_effect"},
@@ -788,7 +788,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じゅうりょく": MoveData(
         type="エスパー",
         category="status",
-        pp=5,
+        pp=8,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -799,7 +799,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じわれ": MoveData(
         type="じめん",
         category="physical",
-        pp=5,
+        pp=8,
         power=0,
         accuracy=30,
         flags={"ohko"},
@@ -867,7 +867,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スイープビンタ": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=25,
         accuracy=85,
         flags={"contact"},
@@ -882,7 +882,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スキルスワップ": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         flags={"bypass_substitute"},
         handlers={
@@ -915,7 +915,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スケイルノイズ": MoveData(
         type="ドラゴン",
         category="special",
-        pp=5,
+        pp=8,
         power=110,
         accuracy=100,
         flags={"sound"},
@@ -961,7 +961,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "すてみタックル": MoveData(
         type="ノーマル",
         category="physical",
-        pp=15,
+        pp=16,
         power=120,
         accuracy=100,
         flags={"contact", "recoil"},
@@ -985,7 +985,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ストーンエッジ": MoveData(
         type="いわ",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=80,
         critical_rank=1,
@@ -1001,7 +1001,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "すなあらし": MoveData(
         type="いわ",
         category="status",
-        pp=10,
+        pp=8,
         target="field",
         flags={"wind"},
         handlers={
@@ -1024,7 +1024,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "すなじごく": MoveData(
         type="じめん",
         category="physical",
-        pp=15,
+        pp=16,
         power=35,
         accuracy=85,
         handlers={
@@ -1058,7 +1058,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スピードスワップ": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1069,7 +1069,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スマートホーン": MoveData(
         type="はがね",
         category="physical",
-        pp=10,
+        pp=12,
         power=70,
         flags={"contact"},
         handlers={},  # 追加効果なし
@@ -1090,7 +1090,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "すりかえ": MoveData(
         type="あく",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1140,7 +1140,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "せいなるつるぎ": MoveData(
         type="かくとう",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         flags={"contact", "slash"},
@@ -1175,7 +1175,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ぜったいれいど": MoveData(
         type="こおり",
         category="special",
-        pp=5,
+        pp=8,
         power=0,
         accuracy=30,
         flags={"ohko"},
@@ -1219,7 +1219,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ソウルビート": MoveData(
         type="ドラゴン",
         category="status",
-        pp=5,
+        pp=8,
         flags={"dance", "sound"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -1234,7 +1234,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "そらをとぶ": MoveData(
         type="ひこう",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=95,
         flags={"contact", "gravity_restricted"},
@@ -1252,7 +1252,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ソーラービーム": MoveData(
         type="くさ",
         category="special",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=100,
         handlers={
@@ -1273,7 +1273,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ソーラーブレード": MoveData(
         type="くさ",
         category="physical",
-        pp=10,
+        pp=12,
         power=125,
         accuracy=100,
         flags={"contact", "slash"},

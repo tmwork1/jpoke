@@ -20,7 +20,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かいでんぱ": MoveData(
         type="でんき",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -147,7 +147,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かかとおとし": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=90,
         flags={"contact", "recoil", "secondary_effect"},
@@ -163,7 +163,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かげうち": MoveData(
         type="ゴースト",
         category="physical",
-        pp=30,
+        pp=20,
         power=40,
         accuracy=100,
         priority=1,
@@ -186,7 +186,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かげぶんしん": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かげぶんしん_boost_attacker_evasion,
@@ -258,7 +258,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かふんだんご": MoveData(
         type="むし",
         category="special",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         flags={"bullet"},
@@ -267,7 +267,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かみくだく": MoveData(
         type="あく",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"bite", "contact", "secondary_effect"},
@@ -280,7 +280,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かみつく": MoveData(
         type="あく",
         category="physical",
-        pp=25,
+        pp=20,
         power=60,
         accuracy=100,
         flags={"bite", "contact", "secondary_effect"},
@@ -293,7 +293,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かみなり": MoveData(
         type="でんき",
         category="special",
-        pp=10,
+        pp=12,
         power=110,
         accuracy=70,
         flags={"secondary_effect"},
@@ -327,7 +327,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かみなりのキバ": MoveData(
         type="でんき",
         category="physical",
-        pp=15,
+        pp=16,
         power=65,
         accuracy=95,
         flags={"bite", "contact", "secondary_effect"},
@@ -341,7 +341,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かみなりパンチ": MoveData(
         type="でんき",
         category="physical",
-        pp=15,
+        pp=16,
         power=75,
         accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
@@ -394,7 +394,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "からをやぶる": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.からをやぶる_modify_attacker_stats,
@@ -404,7 +404,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かわらわり": MoveData(
         type="かくとう",
         category="physical",
-        pp=15,
+        pp=16,
         power=75,
         accuracy=100,
         flags={"contact"},
@@ -418,7 +418,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "がむしゃら": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=0,
         accuracy=100,
         flags={"contact", "fixed_damage"},
@@ -450,7 +450,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "がんせきアックス": MoveData(
         type="いわ",
         category="physical",
-        pp=15,
+        pp=16,
         power=65,
         accuracy=90,
         flags={"contact", "slash"},
@@ -463,7 +463,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "がんせきふうじ": MoveData(
         type="いわ",
         category="physical",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=95,
         flags={"secondary_effect"},
@@ -476,7 +476,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "がんせきほう": MoveData(
         type="いわ",
         category="physical",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=90,
         flags={"bullet"},
@@ -489,7 +489,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ガードシェア": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -500,7 +500,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ガードスワップ": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -511,7 +511,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きあいだま": MoveData(
         type="かくとう",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=70,
         flags={"bullet", "secondary_effect"},
@@ -524,7 +524,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きあいだめ": MoveData(
         type="ノーマル",
         category="status",
-        pp=30,
+        pp=20,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きあいだめ_apply,
@@ -554,7 +554,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きしかいせい": MoveData(
         type="かくとう",
         category="physical",
-        pp=15,
+        pp=16,
         power=1,
         accuracy=100,
         flags={"contact"},
@@ -579,7 +579,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きまぐレーザー": MoveData(
         type="ドラゴン",
         category="special",
-        pp=5,
+        pp=8,
         power=80,
         accuracy=100,
         handlers={
@@ -592,7 +592,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きゅうけつ": MoveData(
         type="むし",
         category="physical",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         flags={"contact", "heal"},
@@ -634,7 +634,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "キラースピン": MoveData(
         type="どく",
         category="physical",
-        pp=15,
+        pp=16,
         power=30,
         accuracy=100,
         flags={"contact", "secondary_effect"},
@@ -664,7 +664,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きりばらい": MoveData(
         type="ひこう",
         category="status",
-        pp=15,
+        pp=16,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きりばらい_defog,
@@ -674,7 +674,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "キングシールド": MoveData(
         type="はがね",
         category="status",
-        pp=10,
+        pp=8,
         priority=4,
         target="self",
         flags={"protect"},
@@ -690,7 +690,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きんぞくおん": MoveData(
         type="はがね",
         category="status",
-        pp=40,
+        pp=20,
         accuracy=85,
         flags={"sound"},
         handlers={
@@ -708,7 +708,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ギガインパクト": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=90,
         flags={"contact"},
@@ -721,7 +721,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ギガドレイン": MoveData(
         type="くさ",
         category="special",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"heal"},
@@ -804,7 +804,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "くちばしキャノン": MoveData(
         type="ひこう",
         category="physical",
-        pp=15,
+        pp=8,
         power=120,
         accuracy=100,
         priority=-3,
@@ -833,7 +833,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クラブハンマー": MoveData(
         type="みず",
         category="physical",
-        pp=10,
+        pp=12,
         power=100,
         accuracy=90,
         critical_rank=1,
@@ -843,7 +843,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クリアスモッグ": MoveData(
         type="どく",
         category="special",
-        pp=15,
+        pp=16,
         power=50,
         accuracy=None,
         handlers={},  # 追加効果なし
@@ -851,7 +851,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "くろいきり": MoveData(
         type="こおり",
         category="status",
-        pp=30,
+        pp=20,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -862,7 +862,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "くろいまなざし": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -881,7 +881,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロスチョップ": MoveData(
         type="かくとう",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=80,
         critical_rank=1,
@@ -937,7 +937,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "グラスフィールド": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -987,7 +987,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "げきりん": MoveData(
         type="ドラゴン",
         category="physical",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=100,
         flags={"contact"},
@@ -1000,7 +1000,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゲップ": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=90,
         flags={"non_negoto"},
@@ -1015,7 +1015,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "げんしのちから": MoveData(
         type="いわ",
         category="special",
-        pp=5,
+        pp=8,
         power=60,
         accuracy=100,
         flags={"secondary_effect"},
@@ -1037,7 +1037,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こうごうせい": MoveData(
         type="くさ",
         category="status",
-        pp=5,
+        pp=8,
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1048,7 +1048,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こうそくいどう": MoveData(
         type="エスパー",
         category="status",
-        pp=30,
+        pp=20,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.こうそくいどう_modify_attacker_stats,
@@ -1058,7 +1058,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こうそくスピン": MoveData(
         type="ノーマル",
         category="physical",
-        pp=40,
+        pp=20,
         power=50,
         accuracy=100,
         flags={"contact", "secondary_effect"},
@@ -1072,7 +1072,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こおりのいぶき": MoveData(
         type="こおり",
         category="special",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=90,
         critical_rank=3,
@@ -1081,7 +1081,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こおりのキバ": MoveData(
         type="こおり",
         category="physical",
-        pp=15,
+        pp=16,
         power=65,
         accuracy=95,
         flags={"bite", "contact", "secondary_effect"},
@@ -1095,7 +1095,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こおりのつぶて": MoveData(
         type="こおり",
         category="physical",
-        pp=30,
+        pp=20,
         power=40,
         accuracy=100,
         priority=1,
@@ -1157,7 +1157,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "コットンガード": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.コットンガード_modify_attacker_stats,
@@ -1195,7 +1195,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "コメットパンチ": MoveData(
         type="はがね",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=90,
         flags={"contact", "punch", "secondary_effect"},
@@ -1208,7 +1208,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こらえる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         priority=4,
         target="self",
         handlers={
@@ -1233,7 +1233,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こわいかお": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1253,7 +1253,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "コーチング": MoveData(
         type="かくとう",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={},  # 追加効果なし
     ),
@@ -1279,7 +1279,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゴッドバード": MoveData(
         type="ひこう",
         category="physical",
-        pp=5,
+        pp=8,
         power=140,
         accuracy=90,
         critical_rank=1,
@@ -1293,7 +1293,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゴーストダイブ": MoveData(
         type="ゴースト",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"contact"},

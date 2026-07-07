@@ -59,7 +59,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ラスターカノン": MoveData(
         type="はがね",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         handlers={
@@ -83,7 +83,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "リサイクル": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.リサイクル_can_apply,
@@ -118,7 +118,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りゅうせいぐん": MoveData(
         type="ドラゴン",
         category="special",
-        pp=5,
+        pp=8,
         power=130,
         accuracy=90,
         handlers={
@@ -166,8 +166,8 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りんごさん": MoveData(
         type="くさ",
         category="special",
-        pp=10,
-        power=80,
+        pp=12,
+        power=90,
         accuracy=100,
         flags={"secondary_effect"},
         handlers={
@@ -182,7 +182,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りんしょう": MoveData(
         type="ノーマル",
         category="special",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=100,
         flags={"sound"},
@@ -191,7 +191,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "リーフストーム": MoveData(
         type="くさ",
         category="special",
-        pp=5,
+        pp=8,
         power=130,
         accuracy=90,
         handlers={
@@ -206,7 +206,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "リーフブレード": MoveData(
         type="くさ",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         critical_rank=1,
@@ -216,7 +216,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ルミナコリジョン": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         handlers={
@@ -231,7 +231,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "レイジングブル": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"contact"},
@@ -247,7 +247,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "れいとうパンチ": MoveData(
         type="こおり",
         category="physical",
-        pp=15,
+        pp=16,
         power=75,
         accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
@@ -260,7 +260,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "れいとうビーム": MoveData(
         type="こおり",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"secondary_effect"},
@@ -273,7 +273,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "れんごく": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=50,
         flags={"secondary_effect"},
@@ -311,7 +311,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ロックオン": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックオン_apply,
@@ -344,7 +344,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ロックブラスト": MoveData(
         type="いわ",
         category="physical",
-        pp=10,
+        pp=12,
         power=25,
         accuracy=90,
         flags={"bullet"},
