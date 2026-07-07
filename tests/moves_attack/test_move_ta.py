@@ -493,6 +493,17 @@ def test_だいばくはつ_使用後に攻撃者がひんしになる():
     assert not attacker.alive
 
 
+def test_ダイビング_タイプ威力命中PPが仕様通り():
+    """ダイビング: みずタイプの物理直接攻撃技で、威力80・命中100・PP12を持つ（PPはチャンピオンズ仕様）。"""
+    move_data = MOVES["ダイビング"]
+    assert move_data.type == "みず"
+    assert move_data.category == "physical"
+    assert move_data.power == 80
+    assert move_data.accuracy == 100
+    assert move_data.pp == 12
+    assert "contact" in move_data.flags
+
+
 def test_ダイビング_1ターン目は水中に潜りHPが変わらない():
     """ダイビング: 1ターン目はチャージターンのため相手にダメージを与えず、ダイビング揮発状態が付与される。"""
     battle = t.start_battle(
