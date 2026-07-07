@@ -788,7 +788,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "ウェザーボール": MoveData(
         type="ノーマル",
         category="special",
-        pp=10,
+        pp=12,
         power=50,
         accuracy=100,
         flags={"bullet"},

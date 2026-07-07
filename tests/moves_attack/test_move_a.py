@@ -1231,6 +1231,60 @@ def test_ウェザーボール_天候時威力が2倍になる():
     assert damage_yes > damage_no
 
 
+def test_ウェザーボール_エアロックで天候無効化中はノーマルタイプのまま():
+    """ウェザーボール: 場にエアロック持ちがいて天候が無効化されている場合、ノーマルタイプのまま威力も上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("ボーマンダ", ability_name="エアロック")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ノーマル"
+
+
+def test_ウェザーボール_らんきりゅう中はタイプも威力も変化しない():
+    """ウェザーボール: 天候がらんきりゅう（デルタストリーム）のとき、タイプ・威力いずれも変化しない。"""
+    battle_none = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender_none = battle_none.actives[1]
+    hp_before_none = defender_none.hp
+    t.fix_random(battle_none, 0.0)
+    t.run_move(battle_none, 0)
+    damage_none = hp_before_none - defender_none.hp
+
+    battle_turb = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("らんきりゅう", 5),
+        accuracy=100,
+    )
+    defender_turb = battle_turb.actives[1]
+    hp_before_turb = defender_turb.hp
+    t.fix_random(battle_turb, 0.0)
+    t.run_move(battle_turb, 0)
+    damage_turb = hp_before_turb - defender_turb.hp
+
+    assert battle_turb.move_executor.move_type == "ノーマル"
+    assert damage_turb == damage_none
+
+
+def test_ウェザーボール_そうでん状態では天候に関係なくでんきタイプになる():
+    """ウェザーボール: そうでん状態を受けている場合、天候に関係なくでんきタイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウェザーボール"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        volatile0={"そうでん": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "でんき"
+
+
 def test_ウェーブタックル_使用後に攻撃者が反動ダメージを受ける():
     """ウェーブタックル: 与えたダメージの1/3を攻撃者が反動として受ける。"""
     battle = t.start_battle(

@@ -277,31 +277,40 @@ def インファイト_lower_attacker_stats(battle: Battle, ctx: AttackContext, 
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
+WEATHERBALL_TYPE_MAP = {
+    "はれ": "ほのお",
+    "おおひでり": "ほのお",
+    "あめ": "みず",
+    "おおあめ": "みず",
+    "すなあらし": "いわ",
+    "ゆき": "こおり",
+}
+"""ウェザーボール: 天候名からタイプへの対応表。
+
+らんきりゅう（デルタストリーム）は対応する変化がないため含めない。
+"""
+
+
 def ウェザーボール_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ウェザーボール: 天候に応じてタイプを変化させる。
 
     天候が有効な場合（エアロック・ノーてんき・ばんのうがさで無効化されていない）、
-    天候ごとに対応するタイプに変換する。
+    天候ごとに対応するタイプに変換する。らんきりゅうの場合は変化しない。
     """
     weather = battle.weather_for(ctx.attacker)
-    type_map = {
-        "はれ": "ほのお",
-        "おおひでり": "ほのお",
-        "あめ": "みず",
-        "おおあめ": "みず",
-        "すなあらし": "いわ",
-        "ゆき": "こおり",
-    }
-    new_type = type_map.get(weather.name)
+    new_type = WEATHERBALL_TYPE_MAP.get(weather.name)
     if new_type is not None:
         value = new_type
     return HandlerReturn(value=value)
 
 
 def ウェザーボール_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ウェザーボール: 天候が有効なとき威力を2倍にする。"""
+    """ウェザーボール: タイプが変化する天候のとき威力を2倍にする。
+
+    らんきりゅうは対応するタイプ変化がないため威力も変化しない。
+    """
     weather = battle.weather_for(ctx.attacker)
-    if weather.name != "":
+    if weather.name in WEATHERBALL_TYPE_MAP:
         value = apply_fixed_modifier(value, 8192)  # ×2倍
     return HandlerReturn(value=value)
 
