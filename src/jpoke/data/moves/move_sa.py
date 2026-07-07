@@ -1076,8 +1076,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スマートホーン": MoveData(
         type="はがね",
         category="physical",
-        pp=10,
+        pp=12,
         power=70,
+        accuracy=None,  # 必中
         flags={"contact"},
         handlers={},  # 追加効果なし
     ),
