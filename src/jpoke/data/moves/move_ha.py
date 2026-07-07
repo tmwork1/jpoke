@@ -941,7 +941,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ふぶき": MoveData(
         type="こおり",
         category="special",
-        pp=5,
+        pp=8,
         power=110,
         accuracy=70,
         flags={"wind", "secondary_effect"},

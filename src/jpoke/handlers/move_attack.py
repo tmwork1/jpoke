@@ -2606,9 +2606,11 @@ def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: An
 
 
 def ふぶき_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふぶき: ゆき状態の時は必中になる補正。"""
-    weather = battle.weather_manager.current.name
-    if weather == "ゆき":
+    """ふぶき: ゆき状態の時は必中になる補正。
+    防御側がばんのうがさを持つ場合や、エアロック・ノーてんきで天候が無効化されている場合は
+    必中補正の対象外になる（`battle.weather_for` が天候無効化を考慮するため）。
+    """
+    if battle.weather_for(ctx.defender).name == "ゆき":
         return HandlerReturn(value=None)  # 必中
     return HandlerReturn(value=value)
 
