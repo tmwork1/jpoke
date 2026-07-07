@@ -1081,6 +1081,38 @@ def test_ポイズンヒール_どく状態でターン終了時回復():
     assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
 
 
+def test_まきつく_バインド付与():
+    """まきつくは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("まきつく"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("まきつく"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
+def test_まとわりつく_バインド付与():
+    """まとわりつくは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("まとわりつく"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("まとわりつく"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
 def test_マルチスケイル_ダメージ半減():
     """マルチスケイル所持時、HP満タンの1発目のみダメージが半減する"""
     battle = t.start_battle(

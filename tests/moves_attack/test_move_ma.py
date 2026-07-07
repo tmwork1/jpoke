@@ -107,6 +107,47 @@ def test_ついばむ_きのみを奪って攻撃者がHP回復する():
     assert not defender.has_item()
 
 
+def test_まきつく_ダメージを与える():
+    """まきつく: 命中時に相手にダメージを与える物理ノーマル技。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アーボック", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_まきつく_バインド中はターン終了時にダメージを受ける():
+    """まきつく: バインド状態のターン終了時に相手が最大HPの1/8のダメージを受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アーボック", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    hp_after_attack = defender.hp
+    t.end_turn(battle)
+    expected_damage = defender.max_hp // 8
+    assert defender.hp == hp_after_attack - expected_damage
+
+
+def test_まきつく_命中後にバインド状態になる():
+    """まきつく: 命中時に相手がバインド揮発状態になり交代不能になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アーボック", move_names=["まきつく"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+    assert not t.can_switch(battle, 1)
+
+
 def test_マグマストーム_ダメージを与える():
     """マグマストーム: 命中時に相手にダメージを与える特殊ほのお技。"""
     battle = t.start_battle(
@@ -196,6 +237,47 @@ def test_マッハパンチ_相手にダメージを与える():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp < hp_before
+
+
+def test_まとわりつく_ダメージを与える():
+    """まとわりつく: 命中時に相手にダメージを与える特殊むし技。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アリアドス", move_names=["まとわりつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_まとわりつく_バインド中はターン終了時にダメージを受ける():
+    """まとわりつく: バインド状態のターン終了時に相手が最大HPの1/8のダメージを受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アリアドス", move_names=["まとわりつく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    hp_after_attack = defender.hp
+    t.end_turn(battle)
+    expected_damage = defender.max_hp // 8
+    assert defender.hp == hp_after_attack - expected_damage
+
+
+def test_まとわりつく_命中後にバインド状態になる():
+    """まとわりつく: 命中時に相手がバインド揮発状態になり交代不能になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アリアドス", move_names=["まとわりつく"]), Pokemon("カビゴン")],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("バインド")
+    assert not t.can_switch(battle, 1)
 
 
 def test_まわしげり_ひるみが発動する():
