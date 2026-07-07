@@ -166,8 +166,8 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りんごさん": MoveData(
         type="くさ",
         category="special",
-        pp=10,
-        power=80,
+        pp=12,
+        power=90,
         accuracy=100,
         flags={"secondary_effect"},
         handlers={
