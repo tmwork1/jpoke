@@ -1184,7 +1184,8 @@ def サイコファング_break_screens(battle: Battle, ctx: AttackContext, valu
     """サイコファング: 相手側のリフレクター・ひかりのかべ・オーロラベールを解除する。
 
     壁解除は追加効果ではないため、りんぷん・おんみつマント・ちからずくの対象外。
-    技が無効化されなかった場合（ON_HITに到達した場合）のみ発動する。
+    ダメージ計算より前に解除する必要があるため Event.ON_BEFORE_APPLY_MOVE で発動する
+    （まもる・タイプ相性無効等で技自体がここまで到達しない場合は壁を解除しない）。
     """
     defender_side = battle.get_side(ctx.defender)
     for wall in ("リフレクター", "ひかりのかべ", "オーロラベール"):
