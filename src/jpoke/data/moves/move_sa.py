@@ -870,7 +870,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スイープビンタ": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=25,
         accuracy=85,
         flags={"contact"},
