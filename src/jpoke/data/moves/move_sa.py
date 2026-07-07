@@ -235,6 +235,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "シェルアームズ": MoveData(
