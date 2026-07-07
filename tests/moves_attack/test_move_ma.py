@@ -446,6 +446,32 @@ def test_みだれづき_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_みだれひっかき_相手にダメージを与える():
+    """みだれひっかき: ヒットした分だけ相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["みだれひっかき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_みだれひっかき_複数ヒットする():
+    """みだれひっかき: 2～5回連続でヒットする複数ヒット技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["みだれひっかき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    hit_count = battle.move_executor._resolve_hit_count(
+        t.build_context(battle, atk_idx=0)
+    )
+    assert 2 <= hit_count <= 5
+
+
 def test_みねうち_HP1のとき_ダメージが0になる():
     """みねうち: 相手のHPがすでに1のとき、ダメージ0で倒さない。"""
     battle = t.start_battle(
