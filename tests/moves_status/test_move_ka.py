@@ -739,13 +739,3 @@ def test_こらえる_致死ダメージを受けてもHP1残る():
     assert not defender.fainted
 
 
-def test_ゴッドバード_ひるみが発動する():
-    """ゴッドバード: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ファイアロー", move_names=["ゴッドバード"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")

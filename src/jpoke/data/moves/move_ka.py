@@ -1296,12 +1296,15 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゴッドバード": MoveData(
         type="ひこう",
         category="physical",
-        pp=5,
+        pp=8,
         power=140,
         accuracy=90,
         critical_rank=1,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "ゴッドバード"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ゴッドバード_apply_flinch,
             )

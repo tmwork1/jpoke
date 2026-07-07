@@ -3294,16 +3294,77 @@ def test_コールドフレア_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_ゴッドバード_1ターン目は溜めてダメージを与えない():
+    """ゴッドバード: 1ターン目はチャージ（ゴッドバード揮発状態）になり、相手へのダメージはない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["ゴッドバード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender_hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ゴッドバード")
+    assert defender.hp == defender_hp_before
+
+
+def test_ゴッドバード_2ターン目に攻撃して揮発状態が解除される():
+    """ゴッドバード: 2ターン目に攻撃が発動し、揮発状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["ゴッドバード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 1ターン目: チャージ
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("ゴッドバード")
+    hp_before = defender.hp
+    # 2ターン目: 攻撃
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("ゴッドバード")
+    assert defender.hp < hp_before
+
+
 def test_ゴッドバード_ひるみが発動する():
-    """ゴッドバード: 30%でひるみを付与する。"""
+    """ゴッドバード: 2ターン目の攻撃命中時に30%でひるみを付与する。"""
     battle = t.start_battle(
         team0=[Pokemon("ファイヤー", move_names=["ゴッドバード"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
         secondary_chance=1.0,
     )
-    t.run_move(battle, 0)
+    t.run_move(battle, 0)  # 1ターン目: チャージ
+    t.run_move(battle, 0)  # 2ターン目: 攻撃
     assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_ゴッドバード_急所ランクが1():
+    """ゴッドバード: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["ゴッドバード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)  # 1ターン目: チャージ
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)  # 2ターン目: 攻撃
+    assert battle.move_executor.critical is True
+
+
+def test_ゴッドバード_急所ランクが1_乱数大で急所なし():
+    """ゴッドバード: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ファイヤー", move_names=["ゴッドバード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)  # 1ターン目: チャージ
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 90）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)  # 2ターン目: 攻撃
+    assert battle.move_executor.critical is False
 
 
 def test_ゴールドラッシュ_特攻1段階低下が発動する():
