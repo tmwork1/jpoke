@@ -2102,6 +2102,67 @@ def test_クラブハンマー_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_クロスサンダー_直前にクロスフレイムが命中すると威力2倍になる():
+    """クロスサンダー: 同じターン中に直前でクロスフレイムが命中していた場合、威力が2倍(200)になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["クロスサンダー"])],
+        team1=[Pokemon("カビゴン", move_names=["クロスフレイム"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # 相手がクロスフレイムを命中させる
+    t.run_move(battle, 0)  # 自分がクロスサンダーを使用する
+    assert battle.damage_calculator.final_power == 200
+
+
+def test_クロスサンダー_直前に何も成功していない場合威力は上がらない():
+    """クロスサンダー: このターン中に何も技が成功していない場合、威力は基本値100のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["クロスサンダー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_クロスサンダー_直前がクロスフレイム以外の技の場合威力は上がらない():
+    """クロスサンダー: 直前に成功した技がクロスフレイムでない場合、威力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["クロスサンダー"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # 相手がたいあたりを使用する
+    t.run_move(battle, 0)  # 自分がクロスサンダーを使用する
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_クロスサンダー_クロスフレイムがまもるで防がれた場合威力は上がらない():
+    """クロスサンダー: 直前のクロスフレイムがまもるで防がれた場合、命中していないため威力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["クロスサンダー"])],
+        team1=[Pokemon("カビゴン", move_names=["クロスフレイム"])],
+        volatile0={"まもる": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # 相手のクロスフレイムはまもるで防がれる
+    t.run_move(battle, 0)  # 自分がクロスサンダーを使用する
+    assert battle.damage_calculator.final_power == 100
+
+
+def test_クロスサンダー_ターンをまたぐと効果は持続しない():
+    """クロスサンダー: 前のターンにクロスフレイムが命中していても、ターンをまたぐと威力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["クロスサンダー"])],
+        team1=[Pokemon("カビゴン", move_names=["クロスフレイム"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # 相手がクロスフレイムを命中させる（このターン）
+    battle.turn += 1  # 次のターンに進める
+    t.run_move(battle, 0)  # 自分がクロスサンダーを使用する
+    assert battle.damage_calculator.final_power == 100
+
+
 def test_クロスチョップ_急所ランクが1():
     """クロスチョップ: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(

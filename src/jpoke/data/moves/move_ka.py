@@ -874,10 +874,19 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロスサンダー": MoveData(
         type="でんき",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.クロスサンダー_calc_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.クロスサンダー_record_hit,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "クロスチョップ": MoveData(
         type="かくとう",
@@ -896,7 +905,16 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=100,
         accuracy=100,
         flags={"thaw"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.クロスフレイム_calc_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.クロスフレイム_record_hit,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "クロスポイズン": MoveData(
         type="どく",

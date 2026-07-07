@@ -957,6 +957,40 @@ def くらいつく_apply_no_escape(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
+def クロスサンダー_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスサンダー: 同じターン中に直前でクロスフレイムが命中していた場合、威力が2倍になる。
+
+    「命中していた」の判定はクロスフレイム側の ON_HIT ハンドラ（クロスフレイム_record_hit）が
+    記録する battle.fusion_flare_used_turn を参照する。まもる・タイプ相性・ちくでん等の特性で
+    無効化された場合や命中しなかった場合は ON_HIT 自体が発火しないため、記録されず倍化しない。
+    """
+    if battle.fusion_flare_used_turn == battle.turn:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
+def クロスサンダー_record_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスサンダー: 命中したターンを記録する（クロスフレイムとの威力2倍判定用）。"""
+    battle.fusion_bolt_used_turn = battle.turn
+    return HandlerReturn(value=value)
+
+
+def クロスフレイム_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスフレイム: 同じターン中に直前でクロスサンダーが命中していた場合、威力が2倍になる。
+
+    判定方法はクロスサンダー_calc_power と対になる（battle.fusion_bolt_used_turn を参照）。
+    """
+    if battle.fusion_bolt_used_turn == battle.turn:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
+def クロスフレイム_record_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスフレイム: 命中したターンを記録する（クロスサンダーとの威力2倍判定用）。"""
+    battle.fusion_flare_used_turn = battle.turn
+    return HandlerReturn(value=value)
+
+
 def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
