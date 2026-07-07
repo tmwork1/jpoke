@@ -2185,3 +2185,41 @@ def test_オーラぐるま_まんぷくもようはでんきタイプになる(
     )
     t.run_move(battle, 0)
     assert battle.move_executor.move_type == "でんき"
+
+
+def test_オーロラビーム_こうげき1段階低下が発動しない():
+    """オーロラビーム: 追加効果不発時は相手のこうげきランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュゴン", move_names=["オーロラビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == 0
+
+
+def test_オーロラビーム_こうげき1段階低下が発動する():
+    """オーロラビーム: 10%の確率で相手のこうげきランクを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュゴン", move_names=["オーロラビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
+
+
+def test_オーロラビーム_相手にダメージを与える():
+    """オーロラビーム: こおりタイプの特殊技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュゴン", move_names=["オーロラビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
