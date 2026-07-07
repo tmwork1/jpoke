@@ -70,6 +70,22 @@ def test_カウンター_物理技ダメージを2倍返しする():
     assert defender.hp == hp_before - phys_dmg * 2
 
 
+def test_カウンター_特殊ダメージのみ受けたとき失敗する():
+    """カウンター: そのターン特殊ダメージのみ受けた場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["カウンター"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # 相手の特殊技を受ける
+    t.run_move(battle, 1)
+    hp_before = defender.hp
+    # カウンターは失敗するはず
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
 def test_カウンター_連続技を受けた場合は最後の1回分のダメージのみ参照する():
     """カウンター: 連続技を受けた場合、合計ではなく最後の1回分のダメージを2倍にする。"""
     battle = t.start_battle(
@@ -89,22 +105,6 @@ def test_カウンター_連続技を受けた場合は最後の1回分のダメ
     # カウンターは最後の1回分(10)の2倍=20だけを返す
     t.run_move(battle, 0)
     assert defender.hp == hp_before - 20
-
-
-def test_カウンター_特殊ダメージのみ受けたとき失敗する():
-    """カウンター: そのターン特殊ダメージのみ受けた場合は失敗する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["カウンター"])],
-        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    # 相手の特殊技を受ける
-    t.run_move(battle, 1)
-    hp_before = defender.hp
-    # カウンターは失敗するはず
-    t.run_move(battle, 0)
-    assert defender.hp == hp_before
 
 
 def test_かえんぐるま_こおり状態で使うと解凍されて攻撃できる():
