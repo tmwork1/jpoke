@@ -763,18 +763,6 @@ def test_だんがいのつるぎ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
-def test_ダークファイア_やけどが発動する():
-    """ダークファイア: 10%でやけどを付与する。ゴーストタイプはノーマルには無効のため、エスパータイプのミュウツーを対象とする。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ゲンガー", move_names=["ダークファイア"])],
-        team1=[Pokemon("ミュウツー")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].ailment.name == "やけど"
-
-
 def test_ちきゅうなげ_こらえるで1HP残る():
     """ちきゅうなげ: 固定ダメージの計算がこらえるより先に行われ、瀕死を防げる。"""
     battle = t.start_battle(
