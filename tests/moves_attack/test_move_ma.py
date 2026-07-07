@@ -1024,6 +1024,28 @@ def test_もえあがるいかり_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_もえつきる_こおり状態でほのおタイプでないポケモンが使うと解凍されず行動もできない():
+    """もえつきる: ほのおタイプを持たないポケモンがこおり状態で使うと、
+    もえつきる自体のこおり解凍効果は発動せず、通常のこおり判定（未解凍なら行動不能）に従う。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["もえつきる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.apply_ailment(battle, 0, "こおり", count=None)  # count指定でtickによる自動解除を防ぐ
+    battle.test_option.trigger_ailment = False  # こおり_action側のランダム解凍を無効化
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # もえつきるのこおり解凍効果が誤発動しないため、こおり状態のまま行動できない
+    assert not battle.move_executor.action_success
+    assert attacker.ailment.name == "こおり"
+    assert defender.hp == hp_before
+
+
 def test_もえつきる_こおり状態で使うと解凍されて攻撃できる():
     """もえつきる: こおり状態でも使用でき、使うと解凍される。"""
     battle = t.start_battle(

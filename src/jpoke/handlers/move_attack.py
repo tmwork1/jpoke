@@ -3159,14 +3159,15 @@ def もえつきる_remove_fire_type(battle: Battle, ctx: AttackContext, value: 
 
 
 def もえつきる_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """もえつきる: こおり状態でも使用可能にし、こおりを解凍する。
+    """もえつきる: ほのおタイプを持つ場合のみ、こおり状態でも使用可能にし、こおりを解凍する。
 
+    自分がほのおタイプでない場合は技自体が失敗するため、こおり状態は解凍されない。
     こおり_action (priority=10) より先に発火させる (priority=5) ことで、
     ailment が除去された状態で こおり_action の validity check が走り、
     こおり_action がスキップされる。
     """
     mon = ctx.attacker
-    if mon.ailment.name == "こおり":
+    if mon.ailment.name == "こおり" and mon.has_type("ほのお"):
         battle.ailment_manager.remove(mon)
     return HandlerReturn(value=value)
 
