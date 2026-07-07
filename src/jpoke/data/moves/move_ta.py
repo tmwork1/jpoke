@@ -301,7 +301,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ダブルウイング": MoveData(
         type="ひこう",
         category="physical",
-        pp=10,
+        pp=12,
         power=40,
         accuracy=90,
         flags={"contact"},
