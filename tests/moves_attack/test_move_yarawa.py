@@ -188,6 +188,23 @@ def test_ゆきなだれ_特殊ダメージを受けた場合も威力が2倍():
     assert battle.damage_calculator.power_modifier == 8192
 
 
+def test_ゆめくい_ぜったいねむり特性の相手にも成功する():
+    """ゆめくい: 特性ぜったいねむり（ゆめうつつ状態）の相手にも、ねむり状態と同様に成功する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ゆめくい"])],
+        team1=[Pokemon("ネッコアラ", ability_name="ぜったいねむり")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.hp = 1
+    hp_before_attacker = attacker.hp
+    hp_before_defender = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before_defender
+    assert attacker.hp > hp_before_attacker
+
+
 def test_ゆめくい_ねむり状態でない相手には失敗する():
     """ゆめくい: 相手がねむり状態でない場合は失敗し、攻撃者のHPは変化しない。"""
     battle = t.start_battle(
