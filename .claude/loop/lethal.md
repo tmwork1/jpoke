@@ -1,17 +1,22 @@
 # リーサル計算ハンドラ 実装ループ 指示書
 
-**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`（状態ファイル読み書き・git 操作はここで行う）
+**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
+（Claude セッションの CWD。状態ファイル `.loop/` の読み書きと worktree 起動のみ。
+**`jpoke/` の作業ツリーには一切コミット・マージしない**）
 **実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/lethal`）
 
 ---
 
 ## フロー概要
 
-`impl.md` を簡略化したシングルエージェント実装ループ。
-計画書なし。進捗ファイルのリーサル列を読んで実装対象を決定し、
-永続 worktree 上のブランチ `loop/lethal` で1件ずつ実装・テスト・進捗更新・コミットを行い、
-成功したらメインの jpoke/ ディレクトリで main へ自動 merge する。
-これによりユーザーのメイン作業ディレクトリ（jpoke/）はループ稼働中も自由に使える状態を保つ。
+`impl.md` を簡略化したシングルエージェント実装ループ。計画書なし。
+進捗ファイルのリーサル列を読んで実装対象を決定し、永続 worktree 上のブランチ `loop/lethal` で
+1件ずつ実装・テスト・進捗更新・コミットを行う。
+
+> **統合ブランチ方式**: 成果は `loop/lethal` に蓄積し、**main へは自動マージしない**。
+> ユーザーの `jpoke/`(main) には一切触れないため、ループ稼働中でも待ち・競合が発生しない。
+> 完了分を main に取り込むのはユーザーが任意のタイミングで行う（末尾「main への反映」）。
+> `.loop/` は git 管理外のローカルスクラッチ（`.gitignore` 済み・コミット不要）。
 
 ---
 
@@ -24,7 +29,7 @@
     "spec_hint":      "docs/spec/ 以下の仕様書を参照",
     "test_files":     ["tests/test_lethal.py"],
     "progress_files": ["docs/progress/item.md", "docs/progress/ability.md", "..."],
-    "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-lethal"
+    "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
   "failed":    [{"name": "...", "type": "..."}]
@@ -39,7 +44,7 @@
 
 `.loop/lethal_state.json` を Read で読み込む。
 
-### 1.5. worktree を準備する
+### 1.5. worktree を準備する（冪等）
 
 （ディスパッチャー作業ディレクトリ jpoke/ で実行）
 
@@ -93,7 +98,7 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 6. python scripts/sort_tests.py tests/test_lethal.py を実行する
 7. python scripts/generate_test_list.py を実行する
 8. python -m pytest tests/ -v を実行し全テストが通ることを確認する
-9. 変更をすべてコミットする:
+9. 変更をすべてコミットする（作業は `loop/lethal` ブランチ上で行う）:
    git add src/ tests/ docs/
    git commit -m "impl: lethal/{name}"
 
@@ -108,37 +113,32 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 （`{config.worktree}` 配下の対応する progress_file を Edit ツールで直接修正し、
 worktree 内でコミットする: `git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"`）
 
-### 5. main へ反映する
+> **main へのマージは行わない**。コミットは `loop/lethal` に積むだけでよい。
 
-実装・テストが成功した場合のみ実施する。
-
-ディスパッチャー作業ディレクトリ（jpoke/）で `git status --porcelain` を確認する。
-- 出力が空（クリーン） → `git merge loop/lethal` を実行して main に取り込む
-- 出力がある（ユーザーの未コミット変更が残っている） → merge を見送り、次回ウェイクアップで再試行する
-  （`completed`/`failed` への記録・状態ファイル保存は通常どおり進めてよい。merge 未実施のまま
-  ループを継続してよく、次回のウェイクアップの手順 1.5 で `loop/lethal` に main を取り込んだ後、
-  改めてこの手順で merge を試みる）
-
-non-fast-forward で衝突が起きた場合は自動解決せず、`failed` に記録してユーザーに報告する。
-
-### 6. 状態ファイルを保存
+### 5. 状態ファイルを保存
 
 成功した場合: `completed` に `{"name": "{name}", "type": "{type}"}` を追加。
 失敗した場合: `failed` に追加。
 
-Write ツールで `.loop/lethal_state.json` を上書きし、ディスパッチャー作業ディレクトリ（jpoke/）で
-コミットする（`.loop/*.json` は git 管理下にあるため、コミットせず放置すると jpoke/ が常に
-dirty 判定になり手順 5 の merge が永久にブロックされる）:
-```bash
-git add .loop/lethal_state.json
-git commit -m "chore: リーサルループ状態更新（{name} {成功なら完了/失敗なら失敗}）"
-```
+Write ツールで `.loop/lethal_state.json` を上書きする。**`.loop/` は git 管理外なのでコミット不要**。
 
-### 7. 次のウェイクアップを予約
+### 6. 次のウェイクアップを予約
 
 ```
 ScheduleWakeup(delaySeconds=120, prompt="<<autonomous-loop-dynamic>>",
                reason="リーサルハンドラ 実装ループ: 次の件へ")
+```
+
+---
+
+## main への反映（ユーザーが任意のタイミングで実行）
+
+```bash
+# jpoke/ で:
+git switch main
+git merge --ff-only loop/lethal
+# FF 不可のときのみ:
+git merge --no-ff loop/lethal -m "Merge loop/lethal"
 ```
 
 ---

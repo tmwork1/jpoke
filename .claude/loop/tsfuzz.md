@@ -1,6 +1,8 @@
 # 継続的バグ出し（tsfuzz）ループ 指示書
 
-**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`（状態ファイル読み書き・git 操作はここで行う）
+**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
+（Claude セッションの CWD。状態ファイル `.loop/` の読み書きと worktree 起動のみ。
+**`jpoke/` の作業ツリーには一切コミット・マージしない**）
 **探索・実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/tsfuzz`）
 
 ---
@@ -13,9 +15,12 @@
 `fuzz`（`RandomPlayer` 版、`.claude/loop/fuzz.md`）の派生形で、進行フローは同一。
 バグを見つけたら `impl`（修正）→ `review-test`（回帰テスト追加・全体テスト・コミット）
 の2段階で自動修正する。
-永続 worktree（`{config.worktree}`、ブランチ `loop/tsfuzz`）上でバッチ探索・修正・コミットを行い、
-成功したらメインの jpoke/ ディレクトリで main へ自動 merge する。
-これによりユーザーのメイン作業ディレクトリ（jpoke/）はループ稼働中も自由に使える状態を保つ。
+永続 worktree（`{config.worktree}`、ブランチ `loop/tsfuzz`）上でバッチ探索・修正・コミットを行う。
+
+> **統合ブランチ方式**: 修正は `loop/tsfuzz` に蓄積し、**main へは自動マージしない**。
+> ユーザーの `jpoke/`(main) には一切触れないため、ループ稼働中でも待ち・競合が発生しない。
+> 完了分を main に取り込むのはユーザーが任意のタイミングで行う（末尾「main への反映」）。
+> `.loop/` は git 管理外のローカルスクラッチ（`.gitignore` 済み・コミット不要）。
 
 同一原因（signature）のバグに2回連続で自動修正が失敗した場合はループを中断し、
 ユーザーに手動確認を求める（ランダムシードは無限に新しい組み合わせを生むため、
@@ -37,7 +42,7 @@
     "n_pokemon": 3,
     "max_plies": 1,
     "batch_size": 20,
-    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-tsfuzz"
+    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\tsfuzz"
   },
   "stats": {"total_battles": 0, "next_seed": 0},
   "current_failure": null,
@@ -63,7 +68,7 @@
 `current_failure` が null でない場合、前回のウェイクアップが中断された状態。
 手順4（バグ対応）からやり直す。
 
-### 1.6. worktree を準備する
+### 1.6. worktree を準備する（冪等）
 
 （ディスパッチャー作業ディレクトリ jpoke/ で実行）
 
@@ -179,39 +184,25 @@ PYTHONPATH=src python scripts/tsfuzz_battle.py --seed {seed} --max-turns {max_tu
 3. python scripts/sort_tests.py <対象ファイル> を実行する
 4. python scripts/generate_test_list.py を実行する
 5. python -m pytest tests/ -v を実行し、全件パスすることを確認する
-6. 変更をコミットする:
+6. 変更をコミットする（作業は `loop/tsfuzz` ブランチ上で行う）:
    git add src/ tests/ docs/ scripts/
    git commit -m "fix: tsfuzz/seed{seed}_<バグの短い説明>"
 ```
 
 review-test 成功 →
 
-#### 4.6 main へ反映する
-
-ディスパッチャー作業ディレクトリ（jpoke/）で `git status --porcelain` を確認する。
-- 出力が空（クリーン） → `git merge loop/tsfuzz` を実行して main に取り込む
-- 出力がある（ユーザーの未コミット変更が残っている） → merge を見送り、次回ウェイクアップで再試行する
-  （`completed_bugs` への記録・状態ファイル保存は通常どおり進めてよい。次回ウェイクアップの
-  手順 1.6 で `loop/tsfuzz` に main を取り込んだ後、改めてこの手順で merge を試みる）
-
-non-fast-forward で衝突が起きた場合は自動解決せず、ループを中断してユーザーに報告する。
-
 `completed_bugs` に `{"seed": seed, "signature": signature, "summary": "<一言説明>"}` を追加。
 `failed_bugs` に同じ signature があれば削除する。
 `current_failure` をクリアして保存し、手順6へ。
+
+> **main へのマージは行わない**。修正コミットは `loop/tsfuzz` に積むだけでよい。
 
 review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新し、`current_failure` をクリアして
 保存し、手順6へ。
 
 ### 5. （手順4完了後）状態ファイルを保存
 
-Write ツールで `.loop/tsfuzz_state.json` を上書きし、ディスパッチャー作業ディレクトリ（jpoke/）で
-コミットする（`.loop/*.json` は git 管理下にあるため、コミットせず放置すると jpoke/ が常に
-dirty 判定になり手順 4.6 の merge が永久にブロックされる）:
-```bash
-git add .loop/tsfuzz_state.json
-git commit -m "chore: tsfuzzループ状態更新（次シード {stats.next_seed}）"
-```
+Write ツールで `.loop/tsfuzz_state.json` を上書きする。**`.loop/` は git 管理外なのでコミット不要**。
 
 ### 6. 次のウェイクアップを予約
 
@@ -220,6 +211,18 @@ git commit -m "chore: tsfuzzループ状態更新（次シード {stats.next_see
 ```
 ScheduleWakeup(delaySeconds=120, prompt="<<autonomous-loop-dynamic>>",
                reason="tsfuzzループ: 次バッチへ（次シード {stats.next_seed}）")
+```
+
+---
+
+## main への反映（ユーザーが任意のタイミングで実行）
+
+```bash
+# jpoke/ で:
+git switch main
+git merge --ff-only loop/tsfuzz
+# FF 不可のときのみ:
+git merge --no-ff loop/tsfuzz -m "Merge loop/tsfuzz"
 ```
 
 ---

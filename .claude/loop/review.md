@@ -3,15 +3,18 @@
 **ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
 （Claude セッションの CWD。ここでは **git コミット・マージを一切行わない**。状態ファイル `.loop/` の
 読み書きと、統合 worktree に対する `git -C` 操作の起点としてのみ使う）
-**統合 worktree**: `{config.worktree_base}\integration`（ブランチ `loop/{config.flow}`。
+**統合 worktree**: `{config.worktree_base}\integration`（ブランチ `loop/{config.flow}/integration`。
 ループの成果を集約する常設 worktree。マージ・整形・状態コミットはすべてここで行う）
 **レビュー作業ディレクトリ**: `{config.worktree_base}\slot{N}`（entry ごとの使い捨て worktree、
-ブランチ `loop/{config.flow}/{entry}`。統合ブランチ `loop/{config.flow}` から分岐する）
+ブランチ `loop/{config.flow}/{entry}`。統合ブランチ `loop/{config.flow}/integration` から分岐する）
 
 > **命名規約（フロー別・案B）**: worktree による作業分離は review 専用ではなく全ループ共通の仕組み。
-> ブランチ名前空間は `loop/{flow}` を基点にフローで分離する（`{flow}` は `config.flow`。例 `review`）。
-> - 統合ブランチ: `loop/{flow}`（例 `loop/review`）
+> ブランチ名前空間は `loop/{flow}/` 配下に集約する（`{flow}` は `config.flow`。例 `review`）。
+> - 統合ブランチ: `loop/{flow}/integration`（例 `loop/review/integration`）
 > - entry ブランチ: `loop/{flow}/{entry}`（例 `loop/review/みだれひっかき`）
+> - どちらも `refs/heads/loop/{flow}/` 配下の兄弟。統合を `loop/{flow}` にすると entry ブランチと
+>   ref の D/F 衝突（`loop/{flow}` ファイルと `loop/{flow}/{entry}` ディレクトリ）を起こすため、
+>   **必ず `loop/{flow}/integration` を使う**（entry 名に `integration` は使わない）。
 > - worktree ベース: `config.worktree_base`（フロー別に分離。例 `...\jpoke-loop\review`）
 >
 > これにより impl など別フローと並走してもブランチ・worktree が衝突しない。
@@ -22,18 +25,19 @@
 
 ```
 ユーザー jpoke/                          : main。ループは読み書きしない（完全に独立）
-統合 worktree {worktree_base}\integration : loop/{flow}。マージ・整形・状態集約 [ディスパッチャー所有]
+統合 worktree {worktree_base}\integration : loop/{flow}/integration。マージ・整形・状態集約 [ディスパッチャー所有]
 レビュー worktree {worktree_base}\slot1  : loop/{flow}/{entry} でレビュー・修正 [background]
 レビュー worktree {worktree_base}\slot2  : loop/{flow}/{entry} でレビュー・修正 [background]
 ...（parallel_max 個まで）
 ```
 
-- `loop/{flow}/{entry}` は **`loop/{flow}` から分岐**し、成功したら **`loop/{flow}` にマージ**する。
+- `loop/{flow}/{entry}` は **`loop/{flow}/integration` から分岐**し、成功したら
+  **`loop/{flow}/integration` にマージ**する。
 - ループは `main` にも `jpoke/` の作業ツリーにも一切触れない。したがって **ユーザーの未コミット変更が
   マージをブロックすることはなく、他セッションと index/ref を奪い合う待ちも発生しない**。
 - 完了分を `main` に取り込むのは **ユーザーが任意のタイミングで行う**（後述「main への反映」）。
 - 五十音ソート・テスト一覧生成などの **共有ファイルを丸ごと書き換える処理は slot では行わず、
-  マージ後にディスパッチャーが `loop/{flow}` 上で一括実行する**（コンフリクト回避）。
+  マージ後にディスパッチャーが `loop/{flow}/integration` 上で一括実行する**（コンフリクト回避）。
 
 ---
 
@@ -73,11 +77,12 @@
 
 ### 0. 統合 worktree を用意する（冪等）
 
-各ウェイクアップの冒頭で `loop/{config.flow}` の worktree が存在するか確認し、なければ作成する。
+各ウェイクアップの冒頭で `loop/{config.flow}/integration` の worktree が存在するか確認し、
+なければ作成する。
 
 ```bash
 INTG="{config.worktree_base}\integration"
-BR="loop/{config.flow}"
+BR="loop/{config.flow}/integration"
 if ! git worktree list --porcelain | grep -q "branch refs/heads/$BR$"; then
   if git show-ref --verify --quiet "refs/heads/$BR"; then
     git worktree add "$INTG" "$BR"          # ブランチはあるが worktree が無い
@@ -112,7 +117,7 @@ PRE=$(git -C "$INTG" rev-parse HEAD)
 各 entry（`{name, slot, branch}` オブジェクト）について:
 
 - `{name}.ok` が存在 →
-  1. `{branch}` を `loop/{config.flow}` にマージする（fast-forward 不可なら `--no-ff`）:
+  1. `{branch}` を統合ブランチにマージする（fast-forward 不可なら `--no-ff`）:
      ```bash
      git -C "$INTG" merge --no-ff {branch} -m "Merge {branch}"
      ```
@@ -147,7 +152,7 @@ non-fast-forward で衝突が起きた場合は自動解決せず、`git -C "$IN
 #### 3.3 バッチ後の一括整形・テスト一覧再生成（マージが 1 件でもあった場合）
 
 slot は五十音ソート・`generate_test_list.py`・テスト一覧更新を **行わない**（共有ファイルの
-コンフリクト回避）。代わりにディスパッチャーが `loop/{config.flow}` 上でまとめて 1 回実行する。
+コンフリクト回避）。代わりにディスパッチャーが統合ブランチ上でまとめて 1 回実行する。
 
 ```bash
 cd "$INTG"
@@ -176,10 +181,10 @@ git commit -m "chore: バッチ整形・テスト一覧再生成"
 `in_progress` が空で `review_queue` にエントリがある場合のみ実行：
 
 `review_queue` の先頭から最大 `parallel_max` 件を取り出し、1 から順にスロット番号（N）を割り当てる。
-各エントリについて worktree を作成する（**`loop/{config.flow}` の最新から分岐**）:
+各エントリについて worktree を作成する（**`loop/{config.flow}/integration` の最新から分岐**）:
 
 ```bash
-git -C "$INTG" worktree add -b "loop/{config.flow}/{entry}" "{config.worktree_base}\slot{N}" loop/{config.flow}
+git -C "$INTG" worktree add -b "loop/{config.flow}/{entry}" "{config.worktree_base}\slot{N}" loop/{config.flow}/integration
 ```
 
 `in_progress` に `{"name": entry, "slot": N, "branch": "loop/{config.flow}/{entry}"}` を追加する。
@@ -194,8 +199,8 @@ jpoke {config.category} 再レビュータスク: {entry}
 
 作業ディレクトリ: {config.worktree_base}\slot{N}
 
-このディレクトリは loop/{config.flow} から分岐した使い捨て worktree（ブランチ loop/{config.flow}/{entry}）。
-以下を順に実施すること:
+このディレクトリは loop/{config.flow}/integration から分岐した使い捨て worktree
+（ブランチ loop/{config.flow}/{entry}）。以下を順に実施すること:
 
 1. 一次情報の確認
    {config.wiki_hint} から {entry} に関する情報を読む。
@@ -295,15 +300,16 @@ ScheduleWakeup(delaySeconds=600, prompt="<<autonomous-loop-dynamic>>",
 
 ## main への反映（ユーザーが任意のタイミングで実行）
 
-`loop/{config.flow}`（例 `loop/review`）に溜まった完了分を `main` に取り込む。ループとは非同期でよい。
+`loop/{config.flow}/integration`（例 `loop/review/integration`）に溜まった完了分を `main` に取り込む。
+ループとは非同期でよい。
 
 ```bash
 # jpoke/ で:
 git switch main
-git merge --ff-only loop/review    # 通常はこれで一発（loop/review は main の子孫）
+git merge --ff-only loop/review/integration    # 通常はこれで一発（main の子孫）
 
 # main が独自に進んで FF できない場合のみ:
-git merge --no-ff loop/review -m "Merge loop/review"
+git merge --no-ff loop/review/integration -m "Merge loop/review/integration"
 ```
 
 FF 同期なら競合は起きない。ユーザーが main に独自コミットを重ねた場合だけ通常のマージになる。

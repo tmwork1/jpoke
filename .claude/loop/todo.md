@@ -1,9 +1,14 @@
 # TODO 直列処理 自律ループ 指示書
 
-**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`（状態ファイル読み書き・git 操作はここで行う）
+**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
+（Claude セッションの CWD。状態ファイル `.loop/` の読み書きと worktree 起動のみ。
+**`jpoke/` の作業ツリーには一切コミット・マージしない**）
 **実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/todo`）
 
-これによりユーザーのメイン作業ディレクトリ（jpoke/）はループ稼働中も自由に使える状態を保つ。
+> **統合ブランチ方式**: ループの成果は永続ブランチ `loop/todo` に蓄積し、**main へは自動マージしない**。
+> ユーザーの `jpoke/`(main) には一切触れないため、ループ稼働中でも待ち・競合が発生しない。
+> 完了分を main に取り込むのはユーザーが任意のタイミングで行う（末尾「main への反映」）。
+> `.loop/` は git 管理外のローカルスクラッチ（`.gitignore` 済み・コミット不要）。
 
 ---
 
@@ -16,7 +21,7 @@
     "scan_glob":     "**/*.py",  // .claude/ 除外、プロジェクト全体
     "test_files":    ["tests/"],
     "review_extra":  "",
-    "worktree":      "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-todo"
+    "worktree":      "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\todo"
   },
   "todo_queue": ["TODO コメントの文言をそのまま"],
   "completed":  ["..."],
@@ -61,7 +66,7 @@ Grep pattern="# TODO" glob="**/*.py" path="." output_mode="content"
 
 収集しても `todo_queue` が空のまま（プロジェクトに TODO がない）なら、完了と判断してループ終了。
 
-### 1.6. worktree を準備する
+### 1.6. worktree を準備する（冪等）
 
 （ディスパッチャー作業ディレクトリ jpoke/ で実行）
 
@@ -69,7 +74,8 @@ Grep pattern="# TODO" glob="**/*.py" path="." output_mode="content"
 ```bash
 git worktree add -b loop/todo "{config.worktree}" main
 ```
-既に存在する場合は main の最新変更を取り込む:
+既に存在する場合は main の最新変更を取り込む（`loop/todo` を main に追従させておくと、
+後でユーザーが main へ FF 反映しやすい）:
 ```bash
 git -C "{config.worktree}" checkout loop/todo
 git -C "{config.worktree}" merge main
@@ -122,7 +128,7 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 5. python -m pytest tests/ -v でテストを実行し、結果を docs/test/logs/<entry_slug>.log に保存する
    （entry_slug は entry の先頭20文字をファイル名として使用する）
    全テストが通ることを確認する
-6. 変更をすべてコミットする:
+6. 変更をすべてコミットする（作業は `loop/todo` ブランチ上で行う）:
    git add -A
    git commit -m "todo: {entry}"
 {config.review_extra}
@@ -130,33 +136,32 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 
 成功: `completed` に追加。失敗: `failed` に追加。
 
-### 5.5 main へ反映する
-
-impl・review-test が両方成功した場合のみ実施する。
-
-ディスパッチャー作業ディレクトリ（jpoke/）で `git status --porcelain` を確認する。
-- 出力が空（クリーン） → `git merge loop/todo` を実行して main に取り込む
-- 出力がある（ユーザーの未コミット変更が残っている） → merge を見送り、次回ウェイクアップで再試行する
-  （状態ファイル保存・次エントリへの進行は通常どおり進めてよい。次回ウェイクアップの手順 1.6 で
-  `loop/todo` に main を取り込んだ後、改めてこの手順で merge を試みる）
-
-non-fast-forward で衝突が起きた場合は自動解決せず、`failed` に記録してユーザーに報告する。
+> **main へのマージは行わない**。修正コミットは `loop/todo` に積むだけでよい。
+> non-fast-forward の心配も無い（main に触れないため）。
 
 ### 6. 状態ファイルを保存
 
-Write ツールで `.loop/todo_state.json` を上書きし、ディスパッチャー作業ディレクトリ（jpoke/）で
-コミットする（`.loop/*.json` は git 管理下にあるため、コミットせず放置すると jpoke/ が常に
-dirty 判定になり手順 5.5 の merge が永久にブロックされる）:
-```bash
-git add .loop/todo_state.json
-git commit -m "chore: TODOループ状態更新（{entry} 完了/失敗）"
-```
+Write ツールで `.loop/todo_state.json` を上書きする。**`.loop/` は git 管理外なのでコミット不要**。
 
 ### 7. 次のウェイクアップを予約
 
 ```
 ScheduleWakeup(delaySeconds=120, prompt="<<autonomous-loop-dynamic>>",
                reason="{config.category} TODO処理ループ: 次の件へ")
+```
+
+---
+
+## main への反映（ユーザーが任意のタイミングで実行）
+
+`loop/todo` に溜まった完了分を main に取り込む。ループとは非同期でよい。
+
+```bash
+# jpoke/ で:
+git switch main
+git merge --ff-only loop/todo    # loop/todo は main を取り込んで追従しているので通常 FF
+# main が独自に進んで FF 不可のときのみ:
+git merge --no-ff loop/todo -m "Merge loop/todo"
 ```
 
 ---
@@ -175,7 +180,8 @@ ScheduleWakeup(delaySeconds=120, prompt="<<autonomous-loop-dynamic>>",
   "config": {
     "category":     "TODO修正",
     "test_files":   ["tests/test_move.py"],
-    "review_extra": ""
+    "review_extra": "",
+    "worktree":     "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\todo"
   },
   "todo_queue": [
     "ひるみ確率の適用を実装する",
