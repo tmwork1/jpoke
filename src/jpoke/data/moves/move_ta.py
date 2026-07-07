@@ -471,7 +471,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ツインビーム": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=40,
         accuracy=100,
         multi_hit={

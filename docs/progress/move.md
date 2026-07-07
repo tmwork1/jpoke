@@ -567,7 +567,7 @@ Vジェネレート	-	-	x	x	保留	保留	✓	物理	ほのお	180	95	5	defender
 ダークホール	-	-	x	-	n/a	n/a	-	変化	あく	-	50	10	defender	？
 チャージビーム	-	-	x	-	n/a	n/a	-	特殊	でんき	50	90	12	defender	？
 チャームボイス	-	-	x	-	n/a	n/a	-	特殊	フェアリー	40	-	15	defender	？
-ツインビーム	-	-	x	x	n/a	n/a	-	特殊	エスパー	40	100	12	defender	？
+ツインビーム	-	-	x	x	n/a	n/a	✓	特殊	エスパー	40	100	12	defender	1ターンに2回連続で攻撃する。
 ツタこんぼう	-	-	x	-	-	-	-	物理	くさ	100	100	10	defender	？
 テクスチャー	-	-	x	-	n/a	n/a	-	変化	ノーマル	-	-	30	defender	？
 テクスチャー２	-	-	x	-	n/a	n/a	-	変化	ノーマル	-	-	30	defender	？
