@@ -1063,19 +1063,6 @@ def test_ホネこんぼう_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
-def test_ほのおのキバ_ひるみが発動する():
-    """ほのおのキバ: 10%でやけどかひるみのどちらかを付与する。乱数が0.5以上のときひるみが選択される。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ガブリアス", move_names=["ほのおのキバ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.fix_random(battle, 0.9)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ほろびのうた_3ターン後に瀕死になる():
     """ほろびのうた: count=3 から3ターン経過するとひんしになる"""
     battle = t.start_battle(

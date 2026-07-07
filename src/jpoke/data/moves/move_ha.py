@@ -1506,9 +1506,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         accuracy=95,
         flags={"bite", "contact", "secondary_effect"},
         handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ほのおのキバ_apply_flinch_or_burn,
-            )
+            Event.ON_DAMAGE_HIT: [
+                h.MoveHandler(ha.ほのおのキバ_apply_burn_to_defender),
+                h.MoveHandler(ha.ほのおのキバ_apply_flinch),
+            ]
         }
     ),
     "ほのおのちかい": MoveData(

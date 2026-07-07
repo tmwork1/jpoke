@@ -2831,22 +2831,12 @@ def ホネこんぼう_apply_flinch(battle: Battle, ctx: AttackContext, value: A
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
 
-def ほのおのキバ_apply_flinch_or_burn(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほのおのキバの追加効果: 5%でやけど、5%でひるみを付与する。
+def ほのおのキバ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
-    単一乱数で判定: r < base*0.5 → やけど、r < base → ひるみ。
-    """
-    base = battle.resolve_secondary_chance(ctx, 0.1)
-    r = battle.random.random()
-    if r < base * 0.5:
-        return HandlerReturn(value=battle.ailment_manager.apply(
-            ctx.defender, "やけど", source=ctx.attacker, ctx=ctx
-        ))
-    if r < base:
-        return HandlerReturn(value=battle.volatile_manager.apply(
-            ctx.defender, "ひるみ", source=ctx.attacker
-        ))
-    return HandlerReturn(value=value)
+
+def ほのおのキバ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
 
 def ほのおのパンチ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
