@@ -162,6 +162,95 @@ def test_サイコキネシス_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_サイコノイズ_命中後にかいふくふうじ状態が付与される():
+    """サイコノイズ: 命中後、相手が2ターンの間かいふくふうじ状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコノイズ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("かいふくふうじ")
+    assert defender.volatiles["かいふくふうじ"].count == 2
+
+
+def test_サイコノイズ_2ターン後にかいふくふうじ状態が解除される():
+    """サイコノイズ: 付与したかいふくふうじ揮発状態は2ターン後（count=2）に解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコノイズ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.has_volatile("かいふくふうじ")
+    # 1ターン終了後はまだ揮発状態が続く
+    t.end_turn(battle)
+    assert defender.has_volatile("かいふくふうじ")
+    # 2ターン終了後は揮発状態が解除される
+    t.end_turn(battle)
+    assert not defender.has_volatile("かいふくふうじ")
+
+
+def test_サイコノイズ_かいふくふうじ状態中はHP回復技が無効になる():
+    """サイコノイズ: 付与したかいふくふうじ状態中はじこさいせい等のHP回復技を使っても回復できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコノイズ"])],
+        team1=[Pokemon("カビゴン", move_names=["じこさいせい"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = defender.max_hp // 2
+
+    t.run_move(battle, 0)
+    assert defender.has_volatile("かいふくふうじ")
+    hp_before = defender.hp
+
+    t.run_move(battle, 1)
+    assert defender.hp == hp_before
+
+
+def test_サイコノイズ_ちからずくで威力が上がりかいふくふうじ状態にできない():
+    """サイコノイズ: 特性ちからずくで使用すると威力が1.3倍になるが、かいふくふうじ状態にできない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコノイズ"], ability_name="ちからずく")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 5325
+    assert not battle.actives[1].has_volatile("かいふくふうじ")
+
+
+def test_サイコノイズ_まもるで防がれた場合かいふくふうじ状態にできない():
+    """サイコノイズ: まもるで無効化された場合はかいふくふうじ状態を付与しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコノイズ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("かいふくふうじ")
+
+
+def test_サイコノイズ_みがわり状態でも貫通してかいふくふうじ状態を付与する():
+    """サイコノイズ: 音の技のためみがわりを貫通し、みがわり状態の相手にもかいふくふうじ状態を付与する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコノイズ"])],
+        team1=[Pokemon("カビゴン", move_names=["みがわり"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    t.end_turn(battle)
+    defender = battle.actives[1]
+    assert defender.has_volatile("みがわり")
+    t.run_move(battle, 0)
+    assert defender.has_volatile("かいふくふうじ")
+
+
 def test_サイコファング_まもるで防がれたとき壁を解除しない():
     """サイコファング: まもるで無効化された場合はリフレクターを解除しない。"""
     battle = t.start_battle(

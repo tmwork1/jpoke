@@ -1175,6 +1175,11 @@ def サイコキネシス_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.1)
 
 
+def サイコノイズ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """サイコノイズの追加効果: 100%の確率で、相手を2ターンの間『かいふくふうじ』状態にする。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="かいふくふうじ", count=2)
+
+
 def サイコファング_break_screens(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコファング: 相手側のリフレクター・ひかりのかべ・オーロラベールを解除する。
 

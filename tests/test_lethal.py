@@ -586,6 +586,31 @@ def test_ゴールドラッシュ_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_サイコノイズ_かいふくふうじでたべのこし回復がブロックされる():
+    """サイコノイズ: secondary=True で命中後にかいふくふうじを付与し、
+    たべのこしのターン終了回復がブロックされる。"""
+    battle_secondary = t.start_battle(
+        team0=[Pokemon("フーディン")],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+    )
+    battle_no_secondary = t.start_battle(
+        team0=[Pokemon("フーディン")],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+    )
+    results_with = t.calc_lethal(
+        battle_secondary, atk_idx=0, moves=Move("サイコノイズ"), max_attack=2, secondary=True,
+    )
+    results_without = t.calc_lethal(
+        battle_no_secondary, atk_idx=0, moves=Move("サイコノイズ"), max_attack=2, secondary=False,
+    )
+
+    leftover_heal = battle_secondary.actives[1].max_hp // 16
+    assert (
+        max(results_without[1].hp_counter) - max(results_with[1].hp_counter)
+        == leftover_heal * 2
+    )
+
+
 def test_しおづけ_ターン終了時ダメージ():
     """しおづけ状態の非みず・はがねタイプはターン終了時に最大HPの1/16ダメージを受ける"""
     with_volatile = t.start_battle(

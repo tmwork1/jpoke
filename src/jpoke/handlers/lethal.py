@@ -34,7 +34,11 @@ def _heal(hp_dist: StateDist,
 
     r が指定された場合は target.max_hp * r（切り捨て、最低1）を回復量とする。
     v と r を両方指定した場合は r が優先される。
+    target がかいふくふうじ状態の場合は回復せずそのまま返す
+    （いたみわけ・さいせいりょくはこのヘルパーを経由しないため対象外）。
     """
+    if "かいふくふうじ" in target.volatiles:
+        return hp_dist
     max_hp = target.max_hp
     if r:
         heal = max(1, int(max_hp * r))
@@ -59,7 +63,11 @@ def _heal_at_pinch(hp_dist: StateDist,
         threshold_rate: HP が max_hp × threshold_rate 以下の状態のみ回復する
         heal_with: 回復手段（"ability" / "item" / None）。対応フラグが False の状態は回復しない
         consume: True の場合、回復後に heal_with に対応するフラグを False にする
+
+    target がかいふくふうじ状態の場合は回復せずそのまま返す。
     """
+    if "かいふくふうじ" in target.volatiles:
+        return hp_dist
     max_hp = target.max_hp
     if r:
         heal = max(1, int(max_hp * r))
@@ -378,6 +386,14 @@ def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: S
 def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
     ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
+def サイコノイズ_apply_volatile(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """サイコノイズ: 命中後、追加効果有効時に相手にかいふくふうじ状態（2ターン）を付与する。"""
+    if ctx.move_secondary and "かいふくふうじ" not in ctx.defender.volatiles:
+        from jpoke.model.volatile import Volatile
+        ctx.defender.volatiles["かいふくふうじ"] = Volatile("かいふくふうじ", count=2)
     return hp_dist
 
 
