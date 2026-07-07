@@ -371,6 +371,19 @@ def test_みずしゅりけん_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_みずでっぽう_相手にダメージを与える():
+    """みずでっぽう: 追加効果のない通常攻撃技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_みずのはどう_こんらんが発動する():
     """みずのはどう: 20%でこんらんを付与する。"""
     battle = t.start_battle(
