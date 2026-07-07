@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from jpoke.enums import Command, Interrupt
 from .. import test_utils as t
 
@@ -2643,6 +2644,18 @@ def test_グロウパンチ_攻撃1段階上昇が発動する():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["atk"] == 1
+
+
+def test_グロウパンチ_タイプ威力命中PPが仕様通り():
+    """グロウパンチ: かくとうタイプの物理直接攻撃技で、威力40・命中100・PP20を持つ。"""
+    move_data = MOVES["グロウパンチ"]
+    assert move_data.type == "かくとう"
+    assert move_data.category == "physical"
+    assert move_data.power == 40
+    assert move_data.accuracy == 100
+    assert move_data.pp == 20
+    assert "contact" in move_data.flags
+    assert "punch" in move_data.flags
 
 
 def test_けたぐり_10kg未満のとき威力20():
