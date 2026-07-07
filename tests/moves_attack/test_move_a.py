@@ -2087,6 +2087,30 @@ def test_おはかまいり_味方ひんし2のとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_オーバードライブ_PPが12():
+    """オーバードライブ: champions側のPP変換によりPPは12（本家Gen9基準は10）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ストリンダー(ハイ)", move_names=["オーバードライブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.moves[0].pp == 12
+
+
+def test_オーバードライブ_相手にダメージを与える():
+    """オーバードライブ: 追加効果なしの特殊でんき技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ストリンダー(ハイ)", move_names=["オーバードライブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_オーラウイング_素早さ1段階上昇が発動する():
     """オーラウイング: 命中時に使用者のSが1段階上昇する（確率100%）。"""
     battle = t.start_battle(
