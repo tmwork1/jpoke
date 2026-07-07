@@ -3040,7 +3040,15 @@ def むしのていこう_lower_spa_C(battle: Battle, ctx: AttackContext, value:
 
 
 def むねんのつるぎ_drain(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    _drain_hp(battle, ctx, value, heal_ratio=0.5)
+    """むねんのつるぎの回復量を計算する。
+
+    他の多くのドレイン技（`_drain_hp`）は端数を切り捨てるが、むねんのつるぎは
+    公式仕様上、回復量の端数を切り上げる点が異なるため専用に実装する。
+    """
+    damage = value or ctx.substitute_damage
+    heal_amount = (damage + 1) // 2  # 端数切り上げ
+    heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
+    battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
     return HandlerReturn(value=value)
 
 
