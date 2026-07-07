@@ -247,7 +247,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "れいとうパンチ": MoveData(
         type="こおり",
         category="physical",
-        pp=15,
+        pp=16,
         power=75,
         accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
