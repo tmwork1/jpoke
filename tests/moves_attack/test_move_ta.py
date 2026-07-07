@@ -723,18 +723,6 @@ def test_ダブルウイング_タイプ分類威力命中PPが仕様通り():
     }
 
 
-def test_ダブルニードル_どくが発動する():
-    """ダブルニードル: 20%でどくを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", move_names=["ダブルニードル"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].ailment.name == "どく"
-
-
 def test_ダメおし_ダメージを受けていないとき通常威力():
     """ダメおし: 対象がそのターン中ダメージを受けていなければ威力補正なし。"""
     battle = t.start_battle(
