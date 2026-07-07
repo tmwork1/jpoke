@@ -162,6 +162,20 @@ def test_あめまみれ_3ターン後は解除される():
     assert not mon.has_volatile("あめまみれ")
 
 
+def test_あめまみれ_ミラーアーマーでも反射されず自分のSのみ下がる():
+    """あめまみれ: 自傷によるランク低下のため、ミラーアーマーを持っていても
+    相手へ反射されない（AttributeErrorの回帰テスト）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"あめまみれ": 2}
+    )
+    mon, foe = battle.actives
+    t.end_turn(battle)
+    assert mon.rank["spe"] == -1
+    assert foe.rank["spe"] == 0
+
+
 def test_アンコール():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり", "なきごえ"])],

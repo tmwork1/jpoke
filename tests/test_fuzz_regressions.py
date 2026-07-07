@@ -11,6 +11,37 @@ from jpoke.players import TreeSearchPlayer
 from . import test_utils as t
 
 
+def test_あめまみれ_ミラーアーマー所持者自身にかかった場合でもAttributeErrorが発生しない():
+    """seed=13 (AttributeError@status_manager.py:modify_stats:132) の回帰テスト。
+
+    handlers/volatile.py の あめまみれ_turn_end は、ターン終了時の自傷的な
+    すばやさ低下 (`battle.modify_stats(mon, {"spe": -1})`) を発生させる際に
+    source引数を渡していなかった。このコードベースの自傷効果（かえんだまの
+    自己やけど、ムラっけの自己ランク変化など）は source=自分自身 を明示する
+    規約になっており、省略するとEventContext.source=Noneになる。
+
+    あめまみれを受けたポケモンがミラーアーマーを持っていると、
+    handlers/ability.py の ミラーアーマー_reflect_stat_drop が
+    ctx.is_foe_target()（source != targetで判定）でNone != targetのため
+    真になってしまい、「相手由来のランク低下」と誤認識してctx.source（=None）
+    へ反射しようとし、None.modify_statでAttributeErrorになっていた。
+
+    修正後は source=mon が明示され、is_foe_target()がFalseになるため、
+    反射は発動せず自分自身のすばやさのみが下がることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"あめまみれ": 2},
+    )
+    mon, foe = battle.actives
+
+    battle.step()  # 修正前はここでAttributeErrorになっていた
+
+    assert mon.rank["spe"] == -1
+    assert foe.rank["spe"] == 0
+
+
 def test_いかく_交代フェーズの割り込み連鎖でValueErrorや残留コマンドのIndexErrorが発生しない():
     """seed=214 (IndexError@command_manager.py:resolve_move_from_command:133) の回帰テスト。
 

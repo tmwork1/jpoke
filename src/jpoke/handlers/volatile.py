@@ -194,7 +194,7 @@ def あめまみれ_turn_end(battle: Battle, ctx: EventContext, value: Any) -> H
         HandlerReturn:
     """
     mon = ctx.source
-    battle.modify_stats(mon, {"spe": -1}, reason="あめまみれ")
+    battle.modify_stats(mon, {"spe": -1}, source=mon, reason="あめまみれ")
     battle.volatile_manager.tick(mon, "あめまみれ")
     return HandlerReturn(value=value)
 
