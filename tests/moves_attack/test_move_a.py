@@ -1789,6 +1789,42 @@ def test_エナジーボール_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_エレキネット_すばやさが下がる():
+    """エレキネット: 100%の確率で相手のすばやさランクを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキネット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
+def test_エレキネット_ちからずくで威力上昇しすばやさダウンは発動しない():
+    """エレキネット: ちからずく使用時は威力が1.3倍になる代わりにすばやさダウンが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["エレキネット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spe"] == 0
+
+
+def test_エレキネット_相手にダメージを与える():
+    """エレキネット: 特殊でんき技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキネット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_エレキボール_比率0のとき威力40():
     """エレキボール: 攻撃者S // 防御者S が 0 のとき威力40。
     カビゴン(S=50) vs ピカチュウ(S=110) → 比率0 → 威力40。
