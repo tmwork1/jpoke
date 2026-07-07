@@ -349,6 +349,30 @@ def test_オーバーヒート_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_テラバースト_ステラでこうげきとくこうダウン():
+    """テラバースト: ステラタイプにテラスタルして命中すると、こうげき・とくこうが1段階ずつ下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ステラ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    battle.actives[0].terastallize()
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
+    assert results[0].attacker.rank["atk"] == -1
+    assert results[0].attacker.rank["spa"] == -1
+
+
+def test_テラバースト_ステラ以外はランクが下がらない():
+    """テラバースト: ステラ以外のタイプにテラスタルした場合はランクが下がらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="でんき")],
+        team1=[Pokemon("カビゴン")],
+    )
+    battle.actives[0].terastallize()
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
+    assert results[0].attacker.rank["atk"] == 0
+    assert results[0].attacker.rank["spa"] == 0
+
+
 def test_かんそうはだ_あめで回復():
     """かんそうはだ: あめ天気のターン終了時に最大HPの1/8を回復する"""
     with_ability = t.start_battle(

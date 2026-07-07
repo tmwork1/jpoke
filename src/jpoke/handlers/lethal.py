@@ -513,6 +513,15 @@ def タンガのみ_resist_bug(battle: Battle, ctx: LethalContext, hp_dist: Stat
     return _type_resist_berry(battle, ctx, hp_dist, "むし")
 
 
+def テラバースト_lower_attacker_atk_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """テラバースト: ステラタイプにテラスタルして命中した場合、こうげき・とくこうを1段階ずつ下げる。"""
+    if ctx.attacker.active_tera_type != "ステラ":
+        return hp_dist
+    ctx.attacker.rank["atk"] = clamp_stats(ctx.attacker.rank["atk"] - 1)
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 1)
+    return hp_dist
+
+
 def どく_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """どく: ターン終了時に最大HPの1/8ダメージを受ける。
 

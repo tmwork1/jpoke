@@ -736,6 +736,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(
                 ha.テラバースト_stellar_stat_drop,
             ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.テラバースト_lower_attacker_atk_spa)
         }
     ),
     "テレポート": MoveData(
