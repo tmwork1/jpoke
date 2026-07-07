@@ -10,7 +10,8 @@
       "docs/progress/volatile.md",
       "docs/progress/global_field.md",
       "docs/progress/move.md"
-    ]
+    ],
+    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-lethal"
   },
   "completed": [
     {"name": "アッキのみ", "type": "item"},

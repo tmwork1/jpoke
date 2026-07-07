@@ -9,7 +9,8 @@
     "test_files": [
       "tests/moves_attack/"
     ],
-    "parallel_max": 5
+    "parallel_max": 5,
+    "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-reloop"
   },
   "review_queue": [
     "みねうち",

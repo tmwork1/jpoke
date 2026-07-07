@@ -1,6 +1,7 @@
 # 継続的バグ出し（fuzz）ループ 指示書
 
-**作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
+**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`（状態ファイル読み書き・git 操作はここで行う）
+**探索・実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/fuzz`）
 
 ---
 
@@ -8,8 +9,10 @@
 
 `scripts/fuzz_battle.py` で完全ランダムな6匹パーティ同士のバトルをシード付きで大量に実行し、
 未捕捉例外（エンジンのバグ）を検出する。バグを見つけたら `impl`（修正）→ `review-test`
-（回帰テスト追加・全体テスト・コミット）の2段階で自動修正する。todo.md と同じく
-ブランチ／worktree は使わず、main 上で直接コミットする。
+（回帰テスト追加・全体テスト・コミット）の2段階で自動修正する。
+永続 worktree（`{config.worktree}`、ブランチ `loop/fuzz`）上でバッチ探索・修正・コミットを行い、
+成功したらメインの jpoke/ ディレクトリで main へ自動 merge する。
+これによりユーザーのメイン作業ディレクトリ（jpoke/）はループ稼働中も自由に使える状態を保つ。
 
 同一原因（signature）のバグに2回連続で自動修正が失敗した場合はループを中断し、
 ユーザーに手動確認を求める（ランダムシードは無限に新しい組み合わせを生むため、
@@ -24,7 +27,8 @@
   "config": {
     "max_turns": 100,
     "n_pokemon": 6,
-    "batch_size": 100
+    "batch_size": 100,
+    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-fuzz"
   },
   "stats": {"total_battles": 0, "next_seed": 0},
   "current_failure": null,
@@ -50,15 +54,34 @@
 `current_failure` が null でない場合、前回のウェイクアップが中断された状態。
 手順4（バグ対応）からやり直す。
 
+### 1.6. worktree を準備する
+
+（ディスパッチャー作業ディレクトリ jpoke/ で実行）
+
+`{config.worktree}` が存在しなければ作成する:
+```bash
+git worktree add -b loop/fuzz "{config.worktree}" main
+```
+既に存在する場合は main の最新変更を取り込む:
+```bash
+git -C "{config.worktree}" checkout loop/fuzz
+git -C "{config.worktree}" merge main
+```
+
 ### 2. バッチ探索を実行
 
-```
-PYTHONPATH=src python scripts/fuzz_battle.py --search \
+`{config.worktree}` に cd してから実行する（fuzz_battle.py はスクリプト自身のパスから
+`.loop/fuzz_failures/` を解決するため、worktree 内で実行するとレポートも worktree 配下に
+書き込まれる）:
+
+```bash
+cd "{config.worktree}" && PYTHONPATH=src python scripts/fuzz_battle.py --search \
   --start-seed {stats.next_seed} --count {config.batch_size} \
   --max-turns {config.max_turns} --n-pokemon {config.n_pokemon}
 ```
 
-exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポートパスが出力される）。
+exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout に worktree 配下の絶対パスで
+レポートパスが出力される。以降の手順ではその絶対パスをそのまま使う）。
 
 ### 3. 統計を更新
 
@@ -72,8 +95,8 @@ exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポート
 
 #### 4.1 レポートを読んで signature を取得
 
-手順2の stdout に出力された `report:` のパス（`.loop/fuzz_failures/seed_{seed}.log`）を Read する。
-1行目付近に `signature: ...` がある。
+手順2の stdout に出力された `report:` のパス（`{config.worktree}\.loop\fuzz_failures\seed_{seed}.log`
+の形の絶対パス）を Read する。1行目付近に `signature: ...` がある。
 
 #### 4.2 重複チェック
 
@@ -92,7 +115,7 @@ exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポート
 ```
 jpoke fuzz バグ修正タスク: seed={seed} (signature: {signature})
 
-作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+作業ディレクトリ: {config.worktree}
 
 ランダムバトルの自動テスト（fuzzer）が未捕捉例外を検出した。
 
@@ -125,7 +148,7 @@ impl 成功後のみ実施:
 ```
 jpoke fuzz バグ修正タスク: seed={seed} (signature: {signature}) のレビュー・回帰テスト
 
-作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+作業ディレクトリ: {config.worktree}
 
 impl エージェントが fuzzer 発見バグ（再現コマンド:
 PYTHONPATH=src python scripts/fuzz_battle.py --seed {seed} --max-turns {max_turns} --n-pokemon {n_pokemon}
@@ -147,6 +170,17 @@ PYTHONPATH=src python scripts/fuzz_battle.py --seed {seed} --max-turns {max_turn
 ```
 
 review-test 成功 →
+
+#### 4.6 main へ反映する
+
+ディスパッチャー作業ディレクトリ（jpoke/）で `git status --porcelain` を確認する。
+- 出力が空（クリーン） → `git merge loop/fuzz` を実行して main に取り込む
+- 出力がある（ユーザーの未コミット変更が残っている） → merge を見送り、次回ウェイクアップで再試行する
+  （`completed_bugs` への記録・状態ファイル保存は通常どおり進めてよい。次回ウェイクアップの
+  手順 1.6 で `loop/fuzz` に main を取り込んだ後、改めてこの手順で merge を試みる）
+
+non-fast-forward で衝突が起きた場合は自動解決せず、ループを中断してユーザーに報告する。
+
 `completed_bugs` に `{"seed": seed, "signature": signature, "summary": "<一言説明>"}` を追加。
 `failed_bugs` に同じ signature があれば削除する。
 `current_failure` をクリアして保存し、手順6へ。
@@ -156,7 +190,13 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 ### 5. （手順4完了後）状態ファイルを保存
 
-Write ツールで `.loop/fuzz_state.json` を上書き。
+Write ツールで `.loop/fuzz_state.json` を上書きし、ディスパッチャー作業ディレクトリ（jpoke/）で
+コミットする（`.loop/*.json` は git 管理下にあるため、コミットせず放置すると jpoke/ が常に
+dirty 判定になり手順 4.6 の merge が永久にブロックされる）:
+```bash
+git add .loop/fuzz_state.json
+git commit -m "chore: fuzzループ状態更新（次シード {stats.next_seed}）"
+```
 
 ### 6. 次のウェイクアップを予約
 

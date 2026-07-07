@@ -1,6 +1,7 @@
 # 継続的バグ出し（tsfuzz）ループ 指示書
 
-**作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
+**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`（状態ファイル読み書き・git 操作はここで行う）
+**探索・実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/tsfuzz`）
 
 ---
 
@@ -11,8 +12,10 @@
 を使わせてシード付きで大量に対戦させ、未捕捉例外（エンジンのバグ）を検出する。
 `fuzz`（`RandomPlayer` 版、`.claude/loop/fuzz.md`）の派生形で、進行フローは同一。
 バグを見つけたら `impl`（修正）→ `review-test`（回帰テスト追加・全体テスト・コミット）
-の2段階で自動修正する。todo.md と同じくブランチ／worktree は使わず、main 上で
-直接コミットする。
+の2段階で自動修正する。
+永続 worktree（`{config.worktree}`、ブランチ `loop/tsfuzz`）上でバッチ探索・修正・コミットを行い、
+成功したらメインの jpoke/ ディレクトリで main へ自動 merge する。
+これによりユーザーのメイン作業ディレクトリ（jpoke/）はループ稼働中も自由に使える状態を保つ。
 
 同一原因（signature）のバグに2回連続で自動修正が失敗した場合はループを中断し、
 ユーザーに手動確認を求める（ランダムシードは無限に新しい組み合わせを生むため、
@@ -33,7 +36,8 @@
     "max_turns": 20,
     "n_pokemon": 3,
     "max_plies": 1,
-    "batch_size": 20
+    "batch_size": 20,
+    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-tsfuzz"
   },
   "stats": {"total_battles": 0, "next_seed": 0},
   "current_failure": null,
@@ -59,16 +63,35 @@
 `current_failure` が null でない場合、前回のウェイクアップが中断された状態。
 手順4（バグ対応）からやり直す。
 
+### 1.6. worktree を準備する
+
+（ディスパッチャー作業ディレクトリ jpoke/ で実行）
+
+`{config.worktree}` が存在しなければ作成する:
+```bash
+git worktree add -b loop/tsfuzz "{config.worktree}" main
+```
+既に存在する場合は main の最新変更を取り込む:
+```bash
+git -C "{config.worktree}" checkout loop/tsfuzz
+git -C "{config.worktree}" merge main
+```
+
 ### 2. バッチ探索を実行
 
-```
-PYTHONPATH=src python scripts/tsfuzz_battle.py --search \
+`{config.worktree}` に cd してから実行する（tsfuzz_battle.py はスクリプト自身のパスから
+`.loop/tsfuzz_failures/` を解決するため、worktree 内で実行するとレポートも worktree 配下に
+書き込まれる）:
+
+```bash
+cd "{config.worktree}" && PYTHONPATH=src python scripts/tsfuzz_battle.py --search \
   --start-seed {stats.next_seed} --count {config.batch_size} \
   --max-turns {config.max_turns} --n-pokemon {config.n_pokemon} \
   --max-plies {config.max_plies}
 ```
 
-exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポートパスが出力される）。
+exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout に worktree 配下の絶対パスで
+レポートパスが出力される。以降の手順ではその絶対パスをそのまま使う）。
 
 ### 3. 統計を更新
 
@@ -82,8 +105,8 @@ exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポート
 
 #### 4.1 レポートを読んで signature を取得
 
-手順2の stdout に出力された `report:` のパス（`.loop/tsfuzz_failures/seed_{seed}.log`）を Read する。
-1行目付近に `signature: ...` がある。
+手順2の stdout に出力された `report:` のパス（`{config.worktree}\.loop\tsfuzz_failures\seed_{seed}.log`
+の形の絶対パス）を Read する。1行目付近に `signature: ...` がある。
 
 #### 4.2 重複チェック
 
@@ -106,7 +129,7 @@ exit code 0 = 全件成功、exit code 1 = 失敗あり（stdout にレポート
 ```
 jpoke tsfuzz バグ修正タスク: seed={seed} (signature: {signature})
 
-作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+作業ディレクトリ: {config.worktree}
 
 木探索プレイヤー（TreeSearchPlayer）による自動対戦テスト（tsfuzz）が未捕捉例外を検出した。
 
@@ -140,7 +163,7 @@ impl 成功後のみ実施:
 ```
 jpoke tsfuzz バグ修正タスク: seed={seed} (signature: {signature}) のレビュー・回帰テスト
 
-作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+作業ディレクトリ: {config.worktree}
 
 impl エージェントが tsfuzz（木探索プレイヤーによる自動対戦テスト）発見バグ（再現コマンド:
 PYTHONPATH=src python scripts/tsfuzz_battle.py --seed {seed} --max-turns {max_turns} --n-pokemon {n_pokemon} --max-plies {max_plies}
@@ -162,6 +185,17 @@ PYTHONPATH=src python scripts/tsfuzz_battle.py --seed {seed} --max-turns {max_tu
 ```
 
 review-test 成功 →
+
+#### 4.6 main へ反映する
+
+ディスパッチャー作業ディレクトリ（jpoke/）で `git status --porcelain` を確認する。
+- 出力が空（クリーン） → `git merge loop/tsfuzz` を実行して main に取り込む
+- 出力がある（ユーザーの未コミット変更が残っている） → merge を見送り、次回ウェイクアップで再試行する
+  （`completed_bugs` への記録・状態ファイル保存は通常どおり進めてよい。次回ウェイクアップの
+  手順 1.6 で `loop/tsfuzz` に main を取り込んだ後、改めてこの手順で merge を試みる）
+
+non-fast-forward で衝突が起きた場合は自動解決せず、ループを中断してユーザーに報告する。
+
 `completed_bugs` に `{"seed": seed, "signature": signature, "summary": "<一言説明>"}` を追加。
 `failed_bugs` に同じ signature があれば削除する。
 `current_failure` をクリアして保存し、手順6へ。
@@ -171,7 +205,13 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 ### 5. （手順4完了後）状態ファイルを保存
 
-Write ツールで `.loop/tsfuzz_state.json` を上書き。
+Write ツールで `.loop/tsfuzz_state.json` を上書きし、ディスパッチャー作業ディレクトリ（jpoke/）で
+コミットする（`.loop/*.json` は git 管理下にあるため、コミットせず放置すると jpoke/ が常に
+dirty 判定になり手順 4.6 の merge が永久にブロックされる）:
+```bash
+git add .loop/tsfuzz_state.json
+git commit -m "chore: tsfuzzループ状態更新（次シード {stats.next_seed}）"
+```
 
 ### 6. 次のウェイクアップを予約
 

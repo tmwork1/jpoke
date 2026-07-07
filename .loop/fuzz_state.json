@@ -2,7 +2,8 @@
   "config": {
     "max_turns": 100,
     "n_pokemon": 6,
-    "batch_size": 100
+    "batch_size": 100,
+    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-fuzz"
   },
   "stats": {"total_battles": 300, "next_seed": 300},
   "current_failure": {

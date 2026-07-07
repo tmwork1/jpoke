@@ -3,7 +3,8 @@
     "max_turns": 20,
     "n_pokemon": 3,
     "max_plies": 1,
-    "batch_size": 20
+    "batch_size": 20,
+    "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-tsfuzz"
   },
   "stats": {"total_battles": 83, "next_seed": 120},
   "current_failure": null,

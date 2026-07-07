@@ -19,6 +19,7 @@
     "review_extra": "- テストは読みに対応するファイルに追加すること（あ行→test_move_a.py、か行→test_move_ka.py、さ行→test_move_sa.py、た行→test_move_ta.py、な行→test_move_na.py、は行→test_move_ha.py、ま行→test_move_ma.py、やらわ行→test_move_yarawa.py）\n- 複数の test_files に分散してテストを追加した場合は、全ファイルに対して sort_tests.py を実行すること",
     "planning_slots_max": 2,
     "review_parallel_max": 1,
+    "impl_worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-impl",
     "review_worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-review"
   },
   "plan_queue": [],

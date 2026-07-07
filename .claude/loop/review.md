@@ -1,6 +1,23 @@
 # 再レビュー 自律ループ 指示書
 
-**作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`
+**ディスパッチャー作業ディレクトリ**: `c:\Users\tmtmp\Documents\pokemon\jpoke`（状態ファイル読み書き・git merge・worktree の起動/削除はここで行う）
+**レビュー作業ディレクトリ**: `{config.worktree_base}\slot{N}`（entry ごとの使い捨て worktree、ブランチ `reloop/{entry}`）
+
+---
+
+## 並列実行モデル
+
+```
+ディスパッチャー jpoke/                 : 状態管理・git merge・worktree の起動/削除のみ（main 固定・編集しない）
+レビュー worktree {worktree_base}\slot1  : reloop/{entry} ブランチでレビュー・修正 [background]
+レビュー worktree {worktree_base}\slot2  : reloop/{entry} ブランチでレビュー・修正 [background]
+...（parallel_max 個まで）
+```
+
+`review_queue` から取り出したバッチ（最大 `parallel_max` 件）は、entry ごとに使い捨ての
+worktree + ブランチを割り当てて並列に background レビューする。成功したエントリは
+ディスパッチャーが main にマージして worktree・ブランチを削除する。
+ユーザーのメイン作業ディレクトリ（jpoke/）は常に main のままで、ループが直接編集することはない。
 
 ---
 
@@ -16,14 +33,21 @@
     "progress_file": "docs/progress/move.md",
     "review_dir":  "docs/review/moves/",
     "test_files":  ["tests/moves_status/"],
-    "parallel_max": 3
+    "parallel_max": 3,
+    "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-reloop"
   },
   "review_queue": ["..."],
   "in_progress":  [],
   "completed":    ["..."],
-  "failed":       ["..."]
+  "failed":       []
 }
 ```
+
+`in_progress` の要素は2種類ある:
+- **文字列**（旧形式。worktree 対応前に開始されたエントリ。そのまま収穫し worktree 操作はしない）
+- **オブジェクト** `{"name": "...", "slot": N, "branch": "reloop/{name}"}`（新形式。worktree で実行中）
+
+新規にバッチ投入するエントリは常に新形式で `in_progress` に追加する。
 
 ---
 
@@ -41,25 +65,74 @@
 ### 3. 収穫（Harvest）
 
 `.loop/review_results/` 内のファイルを確認し、`in_progress` の各 entry の結果を回収する。
+entry が文字列か `{name, slot, branch}` オブジェクトかで扱いを分ける。
 
-- `{entry}.ok` が存在 → `in_progress` から除き `completed` に追加、ファイルを削除
-- `{entry}.fail` が存在 → `in_progress` から除き `failed` に追加、ファイルを削除
+#### 3.1 旧形式（文字列 entry）
+
+- `{entry}.ok` が存在 → `in_progress` から除き `completed` に追加、結果ファイルを削除
+- `{entry}.fail` が存在 → `in_progress` から除き `failed` に追加、結果ファイルを削除
+- どちらも存在しない → 実行中のまま維持
+
+#### 3.2 新形式（オブジェクト entry、`name`/`slot`/`branch` を持つ）
+
+- `{name}.ok` が存在 →
+  1. ディスパッチャー作業ディレクトリ（jpoke/）で `git status --porcelain` を確認する。
+     出力がある（ユーザーの未コミット変更が残っている）場合は merge を見送り、`.ok` ファイル・
+     worktree・ブランチはそのまま残して次のウェイクアップで再試行する。
+  2. クリーンなら `{branch}` を main にマージ（fast-forward 不可なら `--no-ff`）:
+     ```bash
+     git merge --no-ff {branch} -m "Merge {branch}"
+     ```
+  3. worktree を削除:
+     ```bash
+     git worktree remove "{config.worktree_base}\slot{slot}" --force
+     ```
+  4. ブランチを削除:
+     ```bash
+     git branch -d {branch}
+     ```
+  5. `.ok` ファイルを削除
+  6. `in_progress` から除き `completed` に `name` を追加（文字列として追加し、既存の `completed` 配列と形式を揃える）
+- `{name}.fail` が存在 →
+  1. worktree を削除（存在する場合）:
+     ```bash
+     git worktree remove "{config.worktree_base}\slot{slot}" --force
+     ```
+  2. ブランチを削除:
+     ```bash
+     git branch -D {branch}
+     ```
+  3. `.fail` ファイルを削除
+  4. `in_progress` から除き `failed` に `name` を追加
+- どちらも存在しない → 実行中のまま維持
+
+non-fast-forward で衝突が起きた場合は自動解決せず、`failed` に記録してユーザーに報告する
+（worktree・ブランチは調査用に残す）。
 
 ### 4. バッチ取り出し
 
 `in_progress` が空で `review_queue` にエントリがある場合のみ実行：
 
-`review_queue` の先頭から最大 `parallel_max` 件を取り出し、`in_progress` に追加する。
+`review_queue` の先頭から最大 `parallel_max` 件を取り出し、1 から順にスロット番号（N）を割り当てる。
+各エントリについて worktree を作成する（main の最新コミットから分岐）:
+
+```bash
+git worktree add -b "reloop/{entry}" "{config.worktree_base}\slot{N}" main
+```
+
+`in_progress` に `{"name": entry, "slot": N, "branch": "reloop/{entry}"}` を追加する。
 
 ### 5. 並列レビュー
 
-`in_progress` の各 entry を **background** で review エージェントに同時に渡す（1 つのレスポンスで複数の Agent 呼び出し）。
+`in_progress` のうち今回新規に作成した entry を **background** で review エージェントに同時に渡す
+（1 つのレスポンスで複数の Agent 呼び出し）。
 
 ```
 jpoke {config.category} 再レビュータスク: {entry}
 
-作業ディレクトリ: c:\Users\tmtmp\Documents\pokemon\jpoke
+作業ディレクトリ: {config.worktree_base}\slot{N}
 
+このディレクトリは main から分岐した使い捨て worktree（ブランチ reloop/{entry}）。
 以下を順に実施すること:
 
 1. 一次情報の確認
@@ -137,14 +210,25 @@ jpoke {config.category} 再レビュータスク: {entry}
    手順5でリーサル計算を新規実装・修正した場合は「リーサル実装」「リーサルテスト」列も
    `x` に更新する（対象外だった場合は変更しない）。
 
-9. 結果を記録する
-   成功: `.loop/review_results/{entry}.ok` を Write で作成（内容は空でよい）
-   失敗: `.loop/review_results/{entry}.fail` を Write で作成（失敗理由を記述）
+9. 変更をすべてコミットする:
+   git add -A
+   git commit -m "review: {entry}"
+
+10. 結果を記録する
+   成功: {プロジェクトルート}\.loop\review_results\{entry}.ok を Write で作成（内容は空でよい、
+        パスは作業ディレクトリ外の絶対パス: C:\Users\tmtmp\Documents\pokemon\jpoke\.loop\review_results\{entry}.ok）
+   失敗: 同様に {entry}.fail を Write で作成（失敗理由を記述）
 ```
 
 ### 6. 状態ファイルを保存
 
-Write ツールで `.loop/review_state.json` を上書き。
+Write ツールで `.loop/review_state.json` を上書きし、ディスパッチャー作業ディレクトリ（jpoke/）で
+コミットする（`.loop/*.json` は git 管理下にあるため、コミットせず放置すると jpoke/ が常に
+dirty 判定になり手順 3.2 の merge が永久にブロックされる）:
+```bash
+git add .loop/review_state.json
+git commit -m "chore: レビューループ状態更新（...）"
+```
 
 ### 7. 次のウェイクアップを予約
 
@@ -159,6 +243,8 @@ ScheduleWakeup(delaySeconds=600, prompt="<<autonomous-loop-dynamic>>",
 
 - 同じ entry が `failed` に 2 回以上 → スキップして次へ
 - `in_progress` のエントリが前回のウェイクアップから残っている場合、結果ファイルがなければ再度エージェントを起動する（再試行扱い）
+- merge 時に jpoke/ がクリーンでない → merge を見送り次回再試行（`.ok` ファイル・worktree・ブランチはそのまま残す）
+- non-fast-forward で衝突 → 自動解決せず `failed` に記録して報告（worktree・ブランチは調査用に残す）
 
 ---
 
@@ -174,7 +260,8 @@ ScheduleWakeup(delaySeconds=600, prompt="<<autonomous-loop-dynamic>>",
     "progress_file": "docs/progress/move.md",
     "review_dir":    "docs/review/moves/",
     "test_files":  ["tests/moves_status/"],
-    "parallel_max": 3
+    "parallel_max": 3,
+    "worktree_base": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-reloop"
   },
   "review_queue": ["いえき", "いばる", "うたう"],
   "in_progress":  [],
