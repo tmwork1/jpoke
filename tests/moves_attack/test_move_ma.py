@@ -384,6 +384,30 @@ def test_みずでっぽう_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_みずのちかい_威力80():
+    """みずのちかい: 威力は80(第六世代以降)。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずのちかい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 80
+
+
+def test_みずのちかい_追加効果なしでダメージのみ():
+    """みずのちかい: 追加効果を持たず、通常通りダメージのみ与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", move_names=["みずのちかい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_みずのはどう_こんらんが発動する():
     """みずのはどう: 20%でこんらんを付与する。"""
     battle = t.start_battle(
