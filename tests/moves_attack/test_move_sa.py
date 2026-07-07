@@ -1154,6 +1154,28 @@ def test_シャカシャカほう_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_シャドーダイブ_2ターンで攻撃する():
+    """1ターン目はダメージを与えず、2ターン目にダメージを与えて揮発状態が解除される"""
+    battle = t.start_battle(
+        # ノーマルタイプはゴースト無効なのでどくタイプを使用
+        team0=[Pokemon("ゲンガー", move_names=["シャドーダイブ"])],
+        team1=[Pokemon("ドガース")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.actives[0].has_volatile("シャドーダイブ")
+
+    # 2ターン目: ダメージあり、揮発状態解除
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not battle.actives[0].has_volatile("シャドーダイブ")
+
+
 def test_シャドーボーン_ぼうぎょ1段階低下が発動する():
     """シャドーボーン: 20%の確率で相手のぼうぎょを1段階下げる。ゴーストタイプはエスパータイプに有効。"""
     battle = t.start_battle(
