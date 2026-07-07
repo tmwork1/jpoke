@@ -804,7 +804,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "ウェーブタックル": MoveData(
         type="みず",
         category="physical",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=100,
         flags={"contact", "recoil"},
