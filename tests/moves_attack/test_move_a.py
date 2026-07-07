@@ -1130,6 +1130,34 @@ def test_いわなだれ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_インファイト_ちからずくは無関係で発動する():
+    """インファイト: 自分のランクを下げる確定効果はちからずくの対象外のため、
+    ちからずく所持時も威力上昇なし・ぼうぎょととくぼうの低下は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["インファイト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_インファイト_ぼうぎょととくぼう1段階低下が発動する():
+    """インファイト: 技が成功すると確定で自分の『ぼうぎょ』『とくぼう』ランクが1段階ずつ下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["インファイト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    attacker = battle.actives[0]
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+
+
 def test_ウェザーボール_ばんのうがさ持ちははれでもノーマルタイプのまま():
     """ウェザーボール: 使用者がばんのうがさを持つ場合、はれ中でもノーマルタイプのまま。"""
     battle = t.start_battle(
