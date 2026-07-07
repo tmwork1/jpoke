@@ -349,6 +349,16 @@ def test_オーバーヒート_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_サイコブースト_とくこうダウン():
+    """サイコブースト: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("デオキシス(アタック)")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("サイコブースト"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
 def test_かんそうはだ_あめで回復():
     """かんそうはだ: あめ天気のターン終了時に最大HPの1/8を回復する"""
     with_ability = t.start_battle(
