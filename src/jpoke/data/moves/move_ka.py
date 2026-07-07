@@ -978,7 +978,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "グロウパンチ": MoveData(
         type="かくとう",
         category="physical",
-        pp=40,
+        pp=20,
         power=40,
         accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
