@@ -931,9 +931,8 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=20,
         power=55,
         accuracy=100,
-        priority=1,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={},  # 追加効果なし。優先度補正はグラスフィールド側で処理する（グラスフィールド_boost_move_priority）
     ),
     "グラスフィールド": MoveData(
         type="くさ",

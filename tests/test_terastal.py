@@ -48,6 +48,21 @@ def test_威力底上げ(move_name: str, tera_type: Type, expected: int):
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == expected
 
+def test_グラススライダー_テラスタルで威力60に底上げされる():
+    """グラススライダー: くさタイプにテラスタルすると威力60底上げ補正が適用される。
+    技自体の基本優先度は0（グラスフィールド下でのみ動的に+1される）であり、
+    でんこうせっかのような固定優先度+1の技とは異なり底上げ補正の除外対象にならない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ゴリランダー", tera_type="くさ", move_names=["グラススライダー"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    attacker.terastallize()
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 60
+
+
 # ──────────────────────────────────────────────────────────────────
 # ステラ
 # ──────────────────────────────────────────────────────────────────
