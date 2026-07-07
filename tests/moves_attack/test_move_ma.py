@@ -473,6 +473,37 @@ def test_みねうち_HP1以上の相手に使うと必ずHP1を残す():
     assert defender.hp == 1
 
 
+def test_みねうち_防御側が素早くてもがんじょうは発動しない():
+    """みねうち: HP満タンの相手をHP1にする際、みねうちの効果が優先されて
+    がんじょうは発動しない（防御側が攻撃側より素早い場合でも成立することを確認）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["みねうち"])],
+        team1=[Pokemon("サンダース", ability_name="がんじょう")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.fix_damage(battle, defender.max_hp * 10)
+    t.run_move(battle, 0)
+    assert defender.hp == 1
+    # がんじょうが発動していれば ability.revealed が True になる
+    assert not defender.ability.revealed
+
+
+def test_みねうち_防御側が素早くてもきあいのタスキは消費されない():
+    """みねうち: HP満タンの相手をHP1にする際、みねうちの効果が優先されて
+    きあいのタスキは消費されない（防御側が攻撃側より素早い場合でも成立することを確認）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["みねうち"])],
+        team1=[Pokemon("サンダース", item_name="きあいのタスキ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.fix_damage(battle, defender.max_hp * 10)
+    t.run_move(battle, 0)
+    assert defender.hp == 1
+    assert defender.item.name == "きあいのタスキ"
+
+
 def test_みらいよち_2ターン後に相手にダメージが入る():
     """みらいよち: 使用から2ターン後のターン終了時に相手へダメージが発生する。"""
     battle = t.start_battle(
