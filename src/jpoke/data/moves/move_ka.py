@@ -634,7 +634,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "キラースピン": MoveData(
         type="どく",
         category="physical",
-        pp=15,
+        pp=16,
         power=30,
         accuracy=100,
         flags={"contact", "secondary_effect"},
