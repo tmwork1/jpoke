@@ -1193,10 +1193,6 @@ def サイコファング_break_screens(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def サイコブースト_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
-
-
 def サイコブレイド_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコブレイド: エレキフィールド中は威力が1.5倍になる。
 
@@ -1205,6 +1201,10 @@ def サイコブレイド_calc_power(battle: Battle, ctx: AttackContext, value: 
     if battle.terrain.name == "エレキフィールド":
         return HandlerReturn(value=apply_fixed_modifier(value, 6144))
     return HandlerReturn(value=value)
+
+
+def サイコブースト_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
 
 def さばきのつぶて_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
