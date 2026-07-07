@@ -402,6 +402,17 @@ def test_アシストパワー_ランク低下はカウントしない():
     assert battle.damage_calculator.final_power == 20
 
 
+def test_アシッドボム_とくぼう2段階低下が発動する():
+    """アシッドボム: 100%の確率で相手のとくぼうランクを2段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ベトベトン", move_names=["アシッドボム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -2
+
+
 def test_あてみなげ_優先度がマイナス1のため素早さが低い相手より後攻になる():
     """あてみなげ: 優先度-1のため、すばやさが低い相手より後に行動する。"""
     battle = t.start_battle(
