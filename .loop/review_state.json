@@ -264,9 +264,6 @@
     "ワンダースチーム"
   ],
   "in_progress": [
-    {"name": "ほのおのキバ", "slot": 1, "branch": "reloop/ほのおのキバ"},
-    {"name": "ほのおのパンチ", "slot": 2, "branch": "reloop/ほのおのパンチ"},
-    {"name": "みだれづき", "slot": 3, "branch": "reloop/みだれづき"},
     {"name": "みだれひっかき", "slot": 4, "branch": "reloop/みだれひっかき"},
     {"name": "みねうち", "slot": 5, "branch": "reloop/みねうち"},
     {"name": "みわくのボイス", "slot": 6, "branch": "reloop/みわくのボイス"},
@@ -276,6 +273,9 @@
     {"name": "むねんのつるぎ", "slot": 10, "branch": "reloop/むねんのつるぎ"}
   ],
   "completed": [
+    "ほのおのキバ",
+    "ほのおのパンチ",
+    "みだれづき",
     "10まんばりき",
     "10まんボルト",
     "3ぼんのや",
