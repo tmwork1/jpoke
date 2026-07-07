@@ -420,6 +420,32 @@ def test_みずのはどう_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_みだれづき_相手にダメージを与える():
+    """みだれづき: 追加効果のない通常攻撃技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["みだれづき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_みだれづき_複数ヒットする():
+    """みだれづき: 2～5回連続でヒットする複数ヒット技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["みだれづき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    hit_count = battle.move_executor._resolve_hit_count(
+        t.build_context(battle, atk_idx=0)
+    )
+    assert 2 <= hit_count <= 5
+
+
 def test_みねうち_HP1のとき_ダメージが0になる():
     """みねうち: 相手のHPがすでに1のとき、ダメージ0で倒さない。"""
     battle = t.start_battle(
