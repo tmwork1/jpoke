@@ -146,7 +146,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "りゅうのはどう": MoveData(
         type="ドラゴン",
         category="special",
-        pp=10,
+        pp=12,
         power=85,
         accuracy=100,
         flags={"pulse"},
