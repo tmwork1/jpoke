@@ -985,11 +985,16 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エコーボイス": MoveData(
         type="ノーマル",
         category="special",
-        pp=15,
+        pp=16,
         power=40,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.エコーボイス_apply_chain_power,
+                priority=50,
+            ),
+        }
     ),
     "えだづき": MoveData(
         type="くさ",

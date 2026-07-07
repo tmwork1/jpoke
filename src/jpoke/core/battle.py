@@ -155,6 +155,8 @@ class Battle:
         self.winner: Player | None = None
         self.last_used_move_name: MoveName | Literal[""] = ""
         self.round_used_turn: int | None = None  # りんしょう: 直近に使われたターン番号
+        self.echoed_voice_power: int = 40  # エコーボイス: 現在の威力段階
+        self.echoed_voice_last_turn: int | None = None  # エコーボイス: 直近に成立したターン番号
 
         self._player_states: list[PlayerState] = [PlayerState(ply) for ply in players]
         self._player_states_map: dict[Player, PlayerState] = dict(zip(players, self._player_states))
