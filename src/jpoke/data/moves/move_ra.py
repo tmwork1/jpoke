@@ -186,7 +186,11 @@ MOVES_RA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_BEGIN_MOVE: h.MoveHandler(
+                ha.りんしょう_apply_chain_power,
+            ),
+        }
     ),
     "リーフストーム": MoveData(
         type="くさ",

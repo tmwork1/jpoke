@@ -471,6 +471,43 @@ def test_りんごさん_とくぼう1段階低下が発動する():
     assert battle.actives[1].rank["spd"] == -1
 
 
+def test_りんしょう_単独使用時は威力60のまま():
+    """りんしょう: 自分だけが使用した場合、威力は基本値60のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["りんしょう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 60
+
+
+def test_りんしょう_同じターンに相手が先に使うと威力が120になる():
+    """りんしょう: 同じターン中に相手が先に使用していた場合、後発の威力は120になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["りんしょう"])],
+        team1=[Pokemon("カビゴン", move_names=["りんしょう"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # 相手が先に使用
+    t.run_move(battle, 0)  # 自分が同じターン中に使用
+    assert battle.damage_calculator.final_power == 120
+
+
+def test_りんしょう_次のターンでは威力が60に戻る():
+    """りんしょう: ターンが変わると、前のターンの使用履歴は威力に影響しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["りんしょう"])],
+        team1=[Pokemon("カビゴン", move_names=["りんしょう"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    t.run_move(battle, 0)
+    battle.turn += 1  # 次のターンに進める
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 60
+
+
 def test_リーフブレード_急所ランクが1():
     """リーフブレード: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(
