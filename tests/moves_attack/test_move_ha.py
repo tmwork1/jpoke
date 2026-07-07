@@ -2321,6 +2321,60 @@ def test_ほうふく_特殊ダメージを受けた後も発動する():
     assert defender.hp == hp_before - int(last_dmg * 1.5)
 
 
+def test_ほしがる_タイプ威力命中PPが仕様通り():
+    """ほしがる: ノーマルタイプの物理接触技で、威力60・命中100・PP25を持つ。"""
+    move_data = MOVES["ほしがる"]
+    assert move_data.type == "ノーマル"
+    assert move_data.category == "physical"
+    assert move_data.power == 60
+    assert move_data.accuracy == 100
+    assert move_data.pp == 25
+    assert "contact" in move_data.flags
+
+
+def test_ほしがる_攻撃者がアイテムを得て防御者がアイテムを失う():
+    """ほしがる: どろぼうと同一の追加効果を持ち、命中するとattackerが相手のアイテムを奪う。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほしがる"])],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "たべのこし"
+    assert not defender.has_item()
+
+
+def test_ほしがる_攻撃者がアイテムを持っているとき失敗():
+    """ほしがる: 攻撃者がすでにアイテムを持っている場合は奪取しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほしがる"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "たべのこし"
+    assert defender.item.name == "オボンのみ"
+
+
+def test_ほしがる_防御者がアイテムを持っていないとき失敗():
+    """ほしがる: 相手がアイテムを持っていない場合は奪取しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほしがる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_item()
+
+
 def test_ホネこんぼう_ひるみが発動する():
     """ホネこんぼう: 10%でひるみを付与する。"""
     battle = t.start_battle(

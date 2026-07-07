@@ -1465,7 +1465,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=20,
         power=20,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ほっぺすりすり_apply_paralysis_to_defender,
