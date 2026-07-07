@@ -89,6 +89,22 @@ def test_まねっこ_きょじゅうだんはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_ゲップはコピーできない():
+    """まねっこ: 直前の技がゲップ（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", item_name="オレンのみ", move_names=["ゲップ"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.item_manager.consume_item(defender)  # きのみを食べてゲップの使用条件を満たす
+    t.run_move(battle, 1)  # カビゴン: ゲップ（成功して最後の使用技になる）
+    assert battle.move_executor.move_success is True
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_まねっこ_スターモービル専用技はコピーできない():
     """まねっこ: 直前の技がスターモービル専用技（アクセル技）の場合は失敗する"""
     battle = t.start_battle(
