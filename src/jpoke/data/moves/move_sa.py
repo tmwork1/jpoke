@@ -939,11 +939,15 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スチームバースト": MoveData(
         type="みず",
         category="special",
-        pp=5,
+        pp=8,
         power=110,
         accuracy=95,
         flags={"secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.スチームバースト_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.スチームバースト_apply_burn_to_defender,
             )

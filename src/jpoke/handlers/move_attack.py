@@ -1480,6 +1480,19 @@ def スチームバースト_apply_burn_to_defender(battle: Battle, ctx: AttackC
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
 
 
+def スチームバースト_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スチームバースト: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def すてみタックル_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _recoil(battle, ctx, value, 1/3)
 
