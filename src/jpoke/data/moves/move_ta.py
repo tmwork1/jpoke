@@ -124,7 +124,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "タネマシンガン": MoveData(
         type="くさ",
         category="physical",
-        pp=30,
+        pp=20,
         power=25,
         accuracy=100,
         flags={"bullet"},
