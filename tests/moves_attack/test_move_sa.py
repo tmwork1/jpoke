@@ -859,6 +859,55 @@ def test_シェルブレード_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_シードフレア_とくぼう2段階低下が発動しない():
+    """シードフレア: 追加効果不発時はとくぼうランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("シェイミ(ランド)", move_names=["シードフレア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_シードフレア_とくぼう2段階低下が発動する():
+    """シードフレア: 40%の確率で相手のとくぼうを2段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("シェイミ(ランド)", move_names=["シードフレア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -2
+
+
+def test_シードフレア_ちからずくで威力が上がり追加効果が発動しない():
+    """シードフレア: ちからずく使用時は威力が1.3倍になる代わりにとくぼうダウンが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("シェイミ(ランド)", ability_name="ちからずく", move_names=["シードフレア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_シードフレア_相手にダメージを与える():
+    """シードフレア: 特殊くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("シェイミ(ランド)", move_names=["シードフレア"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_しおづけ_しおづけ揮発状態が付与される():
     """しおづけ: 100%の確率で相手をしおづけ揮発状態にする。"""
     battle = t.start_battle(
