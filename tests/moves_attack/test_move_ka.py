@@ -2126,6 +2126,19 @@ def test_クロスチョップ_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_クロスチョップ_相手にダメージを与える():
+    """クロスチョップ: 追加効果なしの物理かくとう技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["クロスチョップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_クロスポイズン_どくが発動する():
     """クロスポイズン: 10%でどくを付与する。"""
     battle = t.start_battle(

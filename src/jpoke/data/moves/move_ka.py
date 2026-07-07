@@ -882,7 +882,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロスチョップ": MoveData(
         type="かくとう",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=80,
         critical_rank=1,
