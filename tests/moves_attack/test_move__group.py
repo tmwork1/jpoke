@@ -62,8 +62,11 @@ def test_crash技グループ_外れたとき最大HPの半分を失う(move_nam
     ("ゆめくい",        0.5),
 ])
 def test_drain技グループ_回復量が与ダメのheal_ratio倍になる(move_name: str, heal_ratio: float):
-    """drain技グループ: 回復量は int(与えたダメージ * heal_ratio) で計算される。
+    """drain技グループ: 回復量は round_half_up(与えたダメージ * heal_ratio) で計算される。
 
+    与ダメ100は heal_ratio=0.5/0.75 のいずれでも端数が出ないため、
+    四捨五入(round_half_up)と単純な切り捨て(int())の結果は一致する
+    （端数処理の違いを検出する専用テストは `test_ウッドホーン_回復量の端数は四捨五入で切り上げになる` を参照）。
     ゆめくいは相手がねむり状態（ailment1）でないと失敗するため全技に ailment1 を設定している。
     むねんのつるぎは回復量の端数を切り上げる点が他のドレイン技と異なるため、
     このグループには含めず `tests/moves_attack/test_move_ma.py` に専用テストを分離済み。

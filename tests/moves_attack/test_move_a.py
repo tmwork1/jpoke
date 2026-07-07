@@ -1497,7 +1497,7 @@ def test_ウッドホーン_使用後に攻撃者のHPが回復する():
 
 
 def test_ウッドホーン_回復量が与ダメの半分になる():
-    """ウッドホーン: 回復量は int(与えたダメージ * 0.5) で計算される。"""
+    """ウッドホーン: 回復量は round_half_up(与えたダメージ * 0.5) で計算される。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["ウッドホーン"])],
         team1=[Pokemon("カビゴン")],
@@ -1507,8 +1507,27 @@ def test_ウッドホーン_回復量が与ダメの半分になる():
     t.fix_damage(battle, 100)
     attacker.hp = 1
     t.run_move(battle, 0)
-    # int(100 * 0.5) = 50
+    # round_half_up(100 * 0.5) = 50
     assert attacker.hp == 1 + 50
+
+
+def test_ウッドホーン_回復量の端数は四捨五入で切り上げになる():
+    """ウッドホーン: 与ダメが奇数のとき、回復量の端数は四捨五入（0.5は切り上げ）になる。
+
+    第五世代以降の仕様（公式Wiki「技の仕様」節）に基づき、
+    与ダメ101のときは round_half_up(101 * 0.5) = 51 になる
+    （単純な切り捨て(int())なら50になってしまうバグを検出する）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ウッドホーン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_damage(battle, 101)
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 51
 
 
 def test_うっぷんばらし_ランクが下がったとき威力2倍():

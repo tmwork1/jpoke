@@ -894,7 +894,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "ウッドホーン": MoveData(
         type="くさ",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
         flags={"contact", "heal"},

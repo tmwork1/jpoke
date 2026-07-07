@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
 from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
-from jpoke.utils.math import apply_fixed_modifier, round_half_down
+from jpoke.utils.math import apply_fixed_modifier, round_half_down, round_half_up
 from jpoke.data import TYPE_MODIFIER
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from .move import (
@@ -838,9 +838,13 @@ def _clear_spin_effects(battle: Battle, ctx: AttackContext) -> None:
         side.deactivate(hazard)
 
 def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float) -> None:
-    """ドレイン回収(drain)で回復するHP量を計算する。"""
+    """ドレイン回収(drain)で回復するHP量を計算する。
+
+    端数は第五世代以降の仕様に合わせて四捨五入（round_half_up）で丸め、
+    最低1回復を保証する（`max(1, ...)`）。
+    """
     damage = damage or ctx.substitute_damage
-    heal_amount = int(damage * heal_ratio)
+    heal_amount = max(1, round_half_up(damage * heal_ratio))
     heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
 
