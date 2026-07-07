@@ -478,14 +478,14 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アームハンマー": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=100,
         accuracy=90,
-        flags={"contact", "punch", "secondary_effect"},
+        flags={"contact", "punch"},
         handlers={
-             Event.ON_HIT: h.MoveHandler(
-                 ha.アームハンマー_lower_attacker_spe,
-             )
+            Event.ON_HIT: h.MoveHandler(
+                ha.アームハンマー_lower_attacker_spe,
+            )
         }
     ),
     "いえき": MoveData(

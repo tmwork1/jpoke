@@ -74,6 +74,30 @@ def test_アーマーキャノン_防御と特防が各1段階低下する():
     assert attacker.rank["spd"] == -1
 
 
+def test_アームハンマー_すばやさ1段階低下が発動する():
+    """アームハンマー: 技が成功すると確定で自分の『すばやさ』ランクが1段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["アームハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spe"] == -1
+
+
+def test_アームハンマー_ちからずくは無関係で発動する():
+    """アームハンマー: 自分のランクを下げる確定効果はちからずくの対象外のため、
+    ちからずく所持時も威力上昇なし・すばやさ低下は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["アームハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spe"] == -1
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_アイアンテール_ぼうぎょ1段階低下が発動しない():
     """アイアンテール: 追加効果不発時はぼうぎょランクが変化しない。"""
     battle = t.start_battle(
