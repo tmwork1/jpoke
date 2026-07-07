@@ -63,9 +63,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイコショック": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
+        flags={"physical_damage"},
         handlers={},  # 追加効果なし
     ),
     "サイコノイズ": MoveData(
