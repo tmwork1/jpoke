@@ -731,7 +731,12 @@ def がむしゃら_modify_damage(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
-def ガリョウテンセイ_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ガリョウテンセイ_lower_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ガリョウテンセイ: 命中時に確定で自分の『ぼうぎょ』『とくぼう』ランクが1段階ずつ下がる。
+
+    インファイトのひこうタイプ版。自分自身のランクを下げる確定効果のため、
+    ちからずくの対象外（secondary_effect フラグ非付与）。
+    """
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
