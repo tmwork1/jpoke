@@ -1253,7 +1253,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "オーラウイング": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         critical_rank=1,
