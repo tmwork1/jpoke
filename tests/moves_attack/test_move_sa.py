@@ -1294,6 +1294,18 @@ def test_シャドーパンチ_タイプ分類威力が正しく反映される(
     assert move.power == 60
 
 
+def test_シャドーボール_とくぼう1段階低下が発動する():
+    """シャドーボール: 20%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドーボール"])],
+        team1=[Pokemon("ミュウツー")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
+
+
 def test_シャドーボーン_ぼうぎょ1段階低下が発動する():
     """シャドーボーン: 20%の確率で相手のぼうぎょを1段階下げる。ゴーストタイプはエスパータイプに有効。"""
     battle = t.start_battle(
