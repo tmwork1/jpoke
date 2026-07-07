@@ -462,7 +462,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アーマーキャノン": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
         handlers={
