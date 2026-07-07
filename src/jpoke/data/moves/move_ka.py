@@ -709,7 +709,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ギガインパクト": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=90,
         flags={"contact"},

@@ -1604,6 +1604,33 @@ def test_きりさく_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ギガインパクト_まもるで防がれた場合はリチャージ状態にならない():
+    """ギガインパクト: まもるで防がれた場合はリチャージ揮発状態が付与されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ギガインパクト"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("リチャージ")
+
+
+def test_ギガインパクト_交代するとリチャージ状態が解除される():
+    """ギガインパクト: リチャージ状態中に交代するとリチャージ揮発状態が解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ギガインパクト"]), Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("リチャージ")
+    t.run_switch(battle, 0, 1)
+    assert not attacker.has_volatile("リチャージ")
+
+
 def test_ギガインパクト_命中後にリチャージ状態が付与される():
     """ギガインパクト: 命中後に使用者にリチャージ揮発状態が付与される。"""
     battle = t.start_battle(
@@ -1643,6 +1670,21 @@ def test_ギガインパクト_次ターン行動不能になる():
     battle.step()
     assert not attacker.has_volatile("リチャージ")
     assert defender.hp == defender_hp_after_t1
+
+
+def test_ギガインパクト_相手をひんしにしてもリチャージ状態が付与される():
+    """ギガインパクト: 相手をひんしにした場合でもリチャージ揮発状態が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ギガインパクト"])],
+        team1=[Pokemon("ピッピ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.fix_damage(battle, defender.hp)
+    t.run_move(battle, 0)
+    assert not defender.alive
+    assert attacker.has_volatile("リチャージ")
 
 
 def test_ギガドレイン_使用後に攻撃者のHPが回復する():
