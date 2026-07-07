@@ -407,8 +407,13 @@ MOVES_MA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
+            # docs/spec/turn.md Event.ON_MODIFY_DAMAGE: 60番（みねうち・てかげん）。
+            # がんじょう/きあいのタスキ/きあいのハチマキ（いずれもpriority=100）より
+            # 先に発動させることで、みねうちのHP1残し効果が優先され、
+            # これらの特性・持ち物が誤って発動・消費されないようにする。
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.みねうち_modify_damage,
+                priority=60,
             ),
         },
     ),
