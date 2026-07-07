@@ -3385,7 +3385,16 @@ def ワイルドボルト_recoil(battle: Battle, ctx: AttackContext, value: Any)
 
 
 def わるあがき_self_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return HandlerReturn(value=battle.modify_hp(ctx.attacker, r=-1/4, reason="recoil", source=ctx.attacker))
+    """わるあがきの反動ダメージ: 自分の最大HPの1/4（五捨五超入で丸め、最低1）を受ける。
+
+    与えたダメージ量に依存しない固定割合の反動であり、特性いしあたま・マジックガード
+    のどちらでも無効化されない特殊な性質を持つため、reason="self_cost" を用いて
+    一般的な反動ダメージ（reason="recoil"）向けの無効化ハンドラの対象から外す。
+    """
+    recoil = max(1, round_half_down(ctx.attacker.max_hp / 4))
+    return HandlerReturn(
+        value=battle.modify_hp(ctx.attacker, v=-recoil, reason="self_cost", source=ctx.attacker)
+    )
 
 
 def ワンダースチーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
