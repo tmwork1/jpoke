@@ -398,14 +398,16 @@ def エレキネット_lower_defender_spd(battle: Battle, ctx: AttackContext, va
 
 
 def エレキボール_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """エレキボール: 自分の素早さ / 相手の素早さ の比率で威力を決定する。
+    """エレキボール: 自分の実効素早さ / 相手の実効素早さ の比率で威力を決定する。
 
-    比率 = floor(自分のすばやさ / 相手のすばやさ)
-    比率が 0 または相手の素早さが 0 の場合は威力 40。
+    比率 = floor(自分の実効素早さ / 相手の実効素早さ)
+    比率が 0 または相手の実効素早さが 0 の場合は威力 40。
     0: 40 / 1: 60 / 2: 80 / 3: 120 / 4以上: 150
+    実効素早さはランク補正・特性・もちもの・まひ・おいかぜ・しつげんの影響を含む
+    （トリックルームなどの行動順序補正は含まない）。
     """
-    atk_speed = ctx.attacker.stats["spe"]
-    def_speed = ctx.defender.stats["spe"]
+    atk_speed = battle.speed_calculator.calc_effective_speed(ctx.attacker)
+    def_speed = battle.speed_calculator.calc_effective_speed(ctx.defender)
     if def_speed <= 0:
         ratio = 0
     else:
