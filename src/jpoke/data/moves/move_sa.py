@@ -238,7 +238,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シェルブレード": MoveData(
         type="みず",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=95,
         flags={"contact", "slash", "secondary_effect"},
