@@ -326,19 +326,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
             )
         }
     ),
-    "ダブルパンツァー": MoveData(
-        type="はがね",
-        category="physical",
-        pp=10,
-        power=50,
-        accuracy=100,
-        flags={"contact", "punch", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ダブルパンツァー_apply_flinch,
-            )
-        }
-    ),
     "ダメおし": MoveData(
         type="あく",
         category="physical",
