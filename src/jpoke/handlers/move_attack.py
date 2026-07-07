@@ -3266,6 +3266,18 @@ def りんごさん_lower_defender_spd(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1})
 
 
+def りんしょう_apply_chain_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """りんしょう: 同じターン中に既に使われていれば威力を120にする。
+
+    先に使われたりんしょうがまもる・タイプ相性などで無効化されても後発の威力上昇は
+    成立するため、無効化判定より前の ON_BEGIN_MOVE の時点で判定・記録する。
+    """
+    if battle.round_used_turn == battle.turn:
+        ctx.move.power = 120
+    battle.round_used_turn = battle.turn
+    return HandlerReturn(value=value)
+
+
 def リーフストーム_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
