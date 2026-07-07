@@ -601,7 +601,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ジェットパンチ": MoveData(
         type="みず",
         category="physical",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=100,
         priority=1,
