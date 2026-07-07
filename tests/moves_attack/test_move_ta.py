@@ -630,6 +630,31 @@ def test_だいもんじ_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_ダイヤストーム_ちからずくで威力が上がり追加効果が発動しない():
+    """ダイヤストーム: ちからずく使用時は威力が1.3倍になる代わりにぼうぎょ上昇が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアンシー", ability_name="ちからずく", move_names=["ダイヤストーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["def"] == 0
+
+
+def test_ダイヤストーム_防御2段階上昇が発動しない():
+    """ダイヤストーム: 追加効果不発時は自分のぼうぎょランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアンシー", move_names=["ダイヤストーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["def"] == 0
+
+
 def test_ダイヤストーム_防御2段階上昇が発動する():
     """ダイヤストーム: 確率50%で使用者のBが2段階上昇する。"""
     battle = t.start_battle(
@@ -641,6 +666,20 @@ def test_ダイヤストーム_防御2段階上昇が発動する():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["def"] == 2
+
+
+def test_ダイヤストーム_相手にダメージを与える():
+    """ダイヤストーム: 物理いわ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ディアンシー", move_names=["ダイヤストーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_だくりゅう_命中率1段階低下が発動する():
