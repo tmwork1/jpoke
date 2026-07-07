@@ -1230,10 +1230,28 @@ def シェルアームズ_apply_poison_to_defender(battle: Battle, ctx: AttackCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.2)
 
 
+def シェルアームズ_check_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """シェルアームズ: 物理技のときのみ直接攻撃になる（特殊技のときは直接攻撃にならない）。"""
+    return HandlerReturn(value=ctx.move.category == "physical")
+
+
 def シェルアームズ_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シェルアームズ: 補正込みAがCより高い場合は物理技として計算する。"""
-    mon = ctx.attacker
-    if mon.ranked_stats["atk"] > mon.ranked_stats["spa"]:
+    """シェルアームズ: 攻撃/防御の比を特攻/特防の比と比較し、高い方の分類になる。
+
+    ダメージ計算式 (…×A/D)/50 に、A=攻撃・D=防御を代入した値の方が
+    A=特攻・D=特防を代入した値より高ければ物理技になる（ランク補正込み）。
+    比が等しい場合、実機では50%抽選で決まるが、resolve_move_category() は
+    query.deals_physical_damage() などから技実行中に複数回再評価されるため、
+    乱数を使うと呼び出しごとに結果がぶれる。再現性を優先し、テラバースト
+    （同点なら特殊技）と同様に同点時は value（デフォルトの特殊技）のままとする。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    atk = attacker.ranked_stats["atk"]
+    spa = attacker.ranked_stats["spa"]
+    de = defender.ranked_stats["def"]
+    spd = defender.ranked_stats["spd"]
+    if atk * spd > spa * de:
         return HandlerReturn(value="physical")
     return HandlerReturn(value=value)
 

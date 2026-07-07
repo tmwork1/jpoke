@@ -222,13 +222,16 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シェルアームズ": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 ha.シェルアームズ_modify_move_category,
+            ),
+            Event.ON_CHECK_CONTACT: h.MoveHandler(
+                ha.シェルアームズ_check_contact,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シェルアームズ_apply_poison_to_defender,
