@@ -1129,19 +1129,6 @@ MOVES_A: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "オクタンほう": MoveData(
-        type="みず",
-        category="special",
-        pp=10,
-        power=110,
-        accuracy=85,
-        flags={"bullet", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.オクタンほう_lower_acc,
-            )
-        }
-    ),
     "おさきにどうぞ": MoveData(
         type="ノーマル",
         category="status",

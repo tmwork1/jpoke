@@ -1968,18 +1968,6 @@ def test_エレクトロビーム_パワフルハーブ使用時1ターンで攻
     assert attacker.rank["spa"] == 1
 
 
-def test_オクタンほう_命中率1段階低下が発動する():
-    """オクタンほう: 50%の確率で相手の命中率を1段階下げる。"""
-    battle = t.start_battle(
-        team0=[Pokemon("オクタン", move_names=["オクタンほう"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].rank["accuracy"] == -1
-
-
 def test_おしゃべり_こんらんが発動する():
     """おしゃべり: 100%でこんらんを付与する。"""
     battle = t.start_battle(
