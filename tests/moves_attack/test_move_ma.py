@@ -280,18 +280,6 @@ def test_まとわりつく_命中後にバインド状態になる():
     assert not t.can_switch(battle, 1)
 
 
-def test_まわしげり_ひるみが発動する():
-    """まわしげり: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", move_names=["まわしげり"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ミストバースト_HP消費後も攻撃が相手に届く():
     """ミストバースト: ON_PAY_HPはヒット処理より前に発火するため、HP0でも攻撃が相手に届く。"""
     battle = t.start_battle(

@@ -266,18 +266,6 @@ def test_まもる系_異種の守る系技でも2ターン目は失敗する():
     assert not attacker.has_volatile("まもる")
 
 
-def test_まわしげり_ひるみが発動する():
-    """まわしげり: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ルカリオ", move_names=["まわしげり"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_みかづきのいのり_HPが4分の1回復する():
     """みかづきのいのり: 最大HPの1/4を回復する(小数点以下切り捨て)"""
     battle = t.start_battle(

@@ -186,19 +186,6 @@ MOVES_MA: dict[MoveName, MoveData] = {
             )
         }
     ),
-    "まわしげり": MoveData(
-        type="かくとう",
-        category="physical",
-        pp=10,
-        power=85,
-        accuracy=90,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.まわしげり_apply_flinch,
-            )
-        }
-    ),
     "みかづきのいのり": MoveData(
         type="エスパー",
         category="status",
@@ -306,8 +293,8 @@ MOVES_MA: dict[MoveName, MoveData] = {
         category="special",
         pp=10,
         power=60,
-        accuracy=85,
-        flags={"secondary_effect"},
+        accuracy=90,
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.みずあめボム_apply_volatile_to_defender,
