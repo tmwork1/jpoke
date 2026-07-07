@@ -529,7 +529,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=10,
         power=90,
         accuracy=100,
-        flags={"sound"},
+        flags={"sound", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.むしのさざめき_lower_defender_spd,

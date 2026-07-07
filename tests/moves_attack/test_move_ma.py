@@ -629,6 +629,62 @@ def test_むしくい_ねんちゃく持ちから奪えない():
     assert defender.has_item("オボンのみ")
 
 
+def test_むしのさざめき_とくぼう1段階低下が発動しない():
+    """むしのさざめき: 追加効果不発時はとくぼうランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルフォン", move_names=["むしのさざめき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_むしのさざめき_とくぼう1段階低下が発動する():
+    """むしのさざめき: 10%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルフォン", move_names=["むしのさざめき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
+
+
+def test_むしのさざめき_みがわりを貫通して本体にダメージを与える():
+    """むしのさざめき: soundフラグを持つため、みがわり状態の相手の本体にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルフォン", move_names=["むしのさざめき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    # みがわりにHPを設定（貫通しなければこのHPが削られる）
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    # 音技はみがわりを無視して本体にダメージを与えるため、本体HPが減る
+    assert defender.hp < hp_before
+    # みがわりのHPは変化しない
+    assert defender.volatiles["みがわり"].hp == 999
+
+
+def test_むしのさざめき_相手にダメージを与える():
+    """むしのさざめき: 特殊むし技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("モルフォン", move_names=["むしのさざめき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_むねんのつるぎ_使用後に攻撃者のHPが回復する():
     """むねんのつるぎ: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
     battle = t.start_battle(
