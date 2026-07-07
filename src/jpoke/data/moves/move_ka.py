@@ -946,13 +946,12 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロロブラスト": MoveData(
         type="くさ",
         category="special",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=95,
         handlers={
-            Event.ON_PAY_HP: h.MoveHandler(
-                ha.クロロブラスト_pay_hp,
-                subject_spec="attacker:self",
+            Event.ON_HIT: h.MoveHandler(
+                ha.クロロブラスト_recoil,
             ),
         }
     ),

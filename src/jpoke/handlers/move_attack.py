@@ -1031,10 +1031,15 @@ def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
 
-def クロロブラスト_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """クロロブラスト: 使用前に最大HPの1/2を消費する。"""
-    cost = max(1, ctx.attacker.max_hp // 2)
-    battle.modify_hp(ctx.attacker, v=-cost, reason="self_cost", source=ctx.attacker)
+def クロロブラスト_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロロブラスト: 命中時に自分の最大HPの1/2（切り上げ）を反動ダメージとして受ける。
+
+    ダメージ量に関わらず固定量。いしあたま・マジックガードの双方で防げる（reason="recoil"）。
+    Event.ON_HIT は実ダメージ0（こらえる等）でも発火するため0ダメージ成功時も反動を受ける仕様を
+    満たし、まもる・命中失敗・タイプ無効化時はそもそも発火しないため反動を受けない仕様も満たす。
+    """
+    cost = max(1, (ctx.attacker.max_hp + 1) // 2)
+    battle.modify_hp(ctx.attacker, v=-cost, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
