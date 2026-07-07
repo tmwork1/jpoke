@@ -2371,13 +2371,6 @@ def はやてのつばさ_modify_priority(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=value)
 
 
-def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """はらぺこスイッチ特性: オーラぐるまのタイプをフォルムで変える。"""
-    if ctx.move.name == "オーラぐるま":
-        value = "あく" if ctx.attacker.ability.is_hangry else "でんき"
-    return HandlerReturn(value=value)
-
-
 def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
     # テラスタル状態でなければ
