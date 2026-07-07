@@ -1319,14 +1319,16 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ゴールドラッシュ": MoveData(
         type="はがね",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
-        accuracy=100,
-        flags={"secondary_effect"},
+        accuracy=95,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ゴールドラッシュ_lower_spa_C,
+                ha.ゴールドラッシュ_sharply_lower_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ゴールドラッシュ_lower_spa)
         }
     ),
 }

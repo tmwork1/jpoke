@@ -3267,8 +3267,8 @@ def test_ゴッドバード_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
-def test_ゴールドラッシュ_特攻1段階低下が発動する():
-    """ゴールドラッシュ: 命中時に使用者のCが1段階低下する（確率100%）。"""
+def test_ゴールドラッシュ_特攻2段階低下が発動する():
+    """ゴールドラッシュ: 命中時に使用者のCが2段階低下する（Champions基準、確率100%）。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ゴールドラッシュ"])],
         team1=[Pokemon("ピカチュウ")],
@@ -3276,4 +3276,4 @@ def test_ゴールドラッシュ_特攻1段階低下が発動する():
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert attacker.rank["spa"] == -1
+    assert attacker.rank["spa"] == -2

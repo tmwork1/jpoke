@@ -1162,8 +1162,8 @@ def ゴッドバード_apply_flinch(battle: Battle, ctx: AttackContext, value: A
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def ゴールドラッシュ_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_attacker_stats(battle, ctx, value, stats={"spa": -1})
+def ゴールドラッシュ_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
 
 def サイケこうせん_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
