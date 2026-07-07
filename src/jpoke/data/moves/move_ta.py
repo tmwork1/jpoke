@@ -347,19 +347,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
         accuracy=85,
         handlers={},  # 追加効果なし
     ),
-    "ダークファイア": MoveData(
-        type="ゴースト",
-        category="special",
-        pp=5,
-        power=135,
-        accuracy=85,
-        flags={"secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ダークファイア_apply_burn_to_defender,
-            )
-        }
-    ),
     "ダークホール": MoveData(
         type="あく",
         category="status",

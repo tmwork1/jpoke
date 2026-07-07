@@ -1723,10 +1723,6 @@ def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def ダークファイア_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
-
-
 def チャージビーム_boost_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1}, chance=0.7)
 
