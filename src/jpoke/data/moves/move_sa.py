@@ -440,11 +440,15 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シャカシャカほう": MoveData(
         type="くさ",
         category="special",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=90,
         flags={"heal", "secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.シャカシャカほう_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_drain, priority=20),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シャカシャカほう_apply_burn_to_defender,
