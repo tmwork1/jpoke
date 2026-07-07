@@ -1154,6 +1154,59 @@ def test_シャカシャカほう_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_シャドークロー_相手にダメージを与える():
+    """シャドークロー: 追加効果なしの物理ゴースト技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドークロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_シャドークロー_急所ランクが1():
+    """シャドークロー: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドークロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_シャドークロー_急所ランクが1_乱数大で急所なし():
+    """シャドークロー: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["シャドークロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 100）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_シャドークロー_きれあじで威力1_5倍():
+    """シャドークロー: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", ability_name="きれあじ", move_names=["シャドークロー"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_シャドークロー_PPは16():
+    """シャドークロー: チャンピオンズでのPPは16（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["シャドークロー"].pp == 16
+
+
 def test_シャドーボーン_ぼうぎょ1段階低下が発動する():
     """シャドーボーン: 20%の確率で相手のぼうぎょを1段階下げる。ゴーストタイプはエスパータイプに有効。"""
     battle = t.start_battle(

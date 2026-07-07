@@ -454,11 +454,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シャドークロー": MoveData(
         type="ゴースト",
         category="physical",
-        pp=15,
+        pp=16,
         power=70,
         accuracy=100,
         critical_rank=1,
-        flags={"contact"},
+        flags={"contact", "slash"},
         handlers={},  # 追加効果なし
     ),
     "シャドーダイブ": MoveData(
