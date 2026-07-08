@@ -322,6 +322,30 @@ def かいふくふうじ_tick_volatile(battle: Battle, ctx: EventContext, value
     return tick_volatile(battle, ctx, value, volatile="かいふくふうじ")
 
 
+def かいふくふうじ_try_action(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かいふくふうじによる回復技・HP吸収技の使用禁止
+
+    第六世代以降、かいふくふうじ状態のポケモンは「heal」フラグを持つ技
+    （じこさいせい等の回復技、ドレインキッスやギガドレイン等のHP吸収技）を選択できない。
+    行動前にかいふくふうじ状態にされた場合もその技は失敗する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト
+        value: 使用しようとしている技（Move）
+
+    Returns:
+        HandlerReturn: heal フラグを持つ技の場合はvalue=False（使用禁止）、それ以外はTrue
+    """
+    if ctx.move.has_flag("heal"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.ACTION_BLOCKED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="かいふくふうじ")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=True)
+
+
 def かえんのまもり_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """かえんのまもりの保護判定。接触した相手をやけど状態にする"""
     return _run_protect(battle, ctx, value, ailment_on_contact="やけど", protect_non_attack=False)

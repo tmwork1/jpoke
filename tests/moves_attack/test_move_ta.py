@@ -3206,6 +3206,25 @@ def test_ドレインキッス_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_ドレインキッス_回復量の端数は四捨五入で切り上げになる():
+    """ドレインキッス: 与ダメが端数を持つとき、回復量の端数は四捨五入（0.5以上は切り上げ）になる。
+
+    第五世代以降の仕様（公式Wiki「技の仕様」節）に基づき、
+    与ダメ101のときは round_half_up(101 * 0.75) = 76 になる
+    （単純な切り捨て(int())なら75になってしまうバグを検出する）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ドレインキッス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.fix_damage(battle, 101)
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + 76
+
+
 def test_ドレインパンチ_使用後に攻撃者のHPが回復する():
     """ドレインパンチ: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
     battle = t.start_battle(
