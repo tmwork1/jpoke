@@ -184,12 +184,16 @@ def いえき_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
 def いえき_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いえきの失敗条件を判定する。
 
-    対象の特性が protected フラグを持つ場合は失敗させる。
+    対象の特性が protected フラグを持つ場合、
+    または対象の特性変更がとくせいガード等で防がれる場合は失敗する。
     """
-    if ctx.defender.ability.has_flag("protected"):
+    if (
+        ctx.defender.ability.has_flag("protected")
+        or battle.ability_manager.is_change_blocked(ctx.defender)
+    ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="保護された特性")
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="いえき")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

@@ -300,6 +300,21 @@ def test_いえき_protectedフラグ持ちに失敗():
     assert not defender.has_volatile("とくせいなし")
 
 
+def test_いえき_すでにとくせいなし状態の相手には失敗():
+    """いえき: すでに「とくせいなし」状態の相手には失敗する（volatile_manager内部で処理）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いえき"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"とくせいなし": 5},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("とくせいなし")
+    assert not defender.ability.enabled
+
+
 def test_いえき_通常特性を持つ相手に成功():
     """いえき: 通常特性（せいでんき等）の相手に使うと「とくせいなし」揮発状態が付与される"""
     battle = t.start_battle(
@@ -311,6 +326,7 @@ def test_いえき_通常特性を持つ相手に成功():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("とくせいなし")
+    assert not defender.ability.enabled
 
 
 def test_いとをはく_すばやさ2段階下がる():
