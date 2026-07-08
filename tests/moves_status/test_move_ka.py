@@ -187,6 +187,31 @@ def test_かみつく_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_からにこもる_まもるで防がれない():
+    """からにこもる: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["からにこもる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+
+
+def test_からにこもる_ぼうぎょが1段階上がる():
+    """からにこもる: 通常使用で自分のぼうぎょランクが+1になること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["からにこもる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+
+
 def test_からをやぶる_Bが最低でも他のランクは上昇する():
     """からをやぶる: ぼうぎょがすでに-6でも他のランク変化は通常通り発生する"""
     battle = t.start_battle(
