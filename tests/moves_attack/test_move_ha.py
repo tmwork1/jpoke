@@ -1108,6 +1108,19 @@ def test_バリアーラッシュ_防御1段階上昇が発動する():
     assert attacker.rank["def"] == 1
 
 
+def test_バレットパンチ_タイプ威力命中PP優先度が仕様通り():
+    """バレットパンチ: はがねタイプの物理接触技で、威力40・命中100・PP20・優先度+1を持つ。"""
+    move_data = MOVES["バレットパンチ"]
+    assert move_data.type == "はがね"
+    assert move_data.category == "physical"
+    assert move_data.power == 40
+    assert move_data.accuracy == 100
+    assert move_data.pp == 20
+    assert move_data.priority == 1
+    assert "contact" in move_data.flags
+    assert "punch" in move_data.flags
+
+
 def test_バレットパンチ_相手にダメージを与える():
     """バレットパンチ: 優先度+1の先制物理技で相手にダメージを与える。"""
     battle = t.start_battle(
@@ -1119,6 +1132,16 @@ def test_バレットパンチ_相手にダメージを与える():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp < hp_before
+
+
+def test_バレットパンチ_優先度がプラス1のためすばやさが高い相手より先制する():
+    """バレットパンチ: 優先度+1のため、すばやさが高い相手より先に行動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["バレットパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]
 
 
 def test_バーンアクセル_やけどが発動する():

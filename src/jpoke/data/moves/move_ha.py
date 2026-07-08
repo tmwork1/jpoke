@@ -525,7 +525,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "バレットパンチ": MoveData(
         type="はがね",
         category="physical",
-        pp=30,
+        pp=20,
         power=40,
         accuracy=100,
         priority=1,
