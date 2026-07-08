@@ -2338,6 +2338,46 @@ def test_ブレイズキック_やけどが発動する():
     assert battle.actives[1].ailment.name == "やけど"
 
 
+def test_ブレイズキック_急所ランクが1():
+    """ブレイズキック: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ブレイズキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_ブレイズキック_急所ランクが1_乱数大で急所なし():
+    """ブレイズキック: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ブレイズキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.fix_random(battle, 0.5)  # 命中は通過（50 < 90）、0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
+def test_ブレイズキック_こおり状態の相手に当てると解凍する():
+    """ブレイズキック: ほのおタイプの攻撃技のため、被弾した相手のこおりを解凍する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ブレイズキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
 def test_ブレイブバード_使用後に攻撃者が反動ダメージを受ける():
     """ブレイブバード: 与えたダメージの1/3を攻撃者が反動として受ける。"""
     battle = t.start_battle(
