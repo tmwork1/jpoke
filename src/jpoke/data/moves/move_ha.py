@@ -927,7 +927,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フライングプレス": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=100,
         accuracy=95,
         flags={"contact", "gravity_restricted", "minimize"},
