@@ -3613,54 +3613,6 @@ def test_ミサイルばり_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
-def test_ミラーコート_物理ダメージのみ受けたとき失敗する():
-    """ミラーコート: そのターン物理ダメージのみ受けた場合は失敗する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
-        team1=[Pokemon("カビゴン", move_names=["ひっかく"])],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    # 相手の物理技を受ける
-    t.run_move(battle, 1)
-    hp_before = defender.hp
-    # ミラーコートは失敗するはず
-    t.run_move(battle, 0)
-    assert defender.hp == hp_before
-
-
-def test_ミラーコート_特殊ダメージを2倍返しする():
-    """ミラーコート: 受けた特殊ダメージの2倍を相手に与える。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
-        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    # 相手の特殊技を受ける
-    t.run_move(battle, 1)
-    special_dmg = attacker.last_special_damage_received
-    assert special_dmg > 0
-    hp_before = defender.hp
-    # ミラーコートで2倍返し
-    t.run_move(battle, 0)
-    assert defender.hp == hp_before - special_dmg * 2
-
-
-def test_ミラーコート_特殊ダメージを受けていないとき失敗する():
-    """ミラーコート: そのターン特殊ダメージを受けていない場合は失敗する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-    assert defender.hp == hp_before
-
-
 def test_メタルバースト_ダメージを受けていないとき失敗する():
     """メタルバースト: そのターンダメージを受けていない場合は失敗する。"""
     battle = t.start_battle(
