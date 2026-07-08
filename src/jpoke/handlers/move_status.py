@@ -233,6 +233,18 @@ def いのちのしずく_heal(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=value)
 
 
+def いばる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """いばるの失敗条件: 相手のこうげきランクがすでに+6、かつすでにこんらん状態なら失敗する。"""
+    assert ctx.defender is not None
+    if ctx.defender.rank["atk"] == 6 and ctx.defender.has_volatile("こんらん"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="いばる")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def いばる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いばるの効果: 相手のこうげきを2段階上げ、相手をこんらん状態にする。"""
     battle.modify_stats(ctx.defender, {"atk": 2}, source=ctx.attacker)
