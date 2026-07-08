@@ -1,6 +1,6 @@
 # moves_status
 
-テスト数: 481
+テスト数: 485
 
 - [x] フィールド展開技_5ターン展開される(terrain_name=エレキフィールド, move_name=エレキフィールド)
 - [x] フィールド展開技_5ターン展開される(terrain_name=グラスフィールド, move_name=グラスフィールド)
@@ -19,7 +19,10 @@
 - [x] あくび_すでにねむけ状態なら失敗
 - [x] あくび_すでに状態異常なら失敗
 - [x] あくび_ねむけ付与
+- [x] あくび_使用後2回のターン終了でねむり状態になる
 - [x] あくまのキッス_ねむり付与
+- [x] あさのひざし_マジックコートで跳ね返されない
+- [x] あさのひざし_まもるで防がれない
 - [x] あさのひざし_まんたんなら失敗
 - [x] あさのひざし_天候別回復量(weather_arg=None, numerator=1, denominator=2)
 - [x] あさのひざし_天候別回復量(weather_arg=('あめ', 5), numerator=1, denominator=4)
@@ -28,6 +31,7 @@
 - [x] あさのひざし_天候別回復量(weather_arg=('すなあらし', 99), numerator=1, denominator=4)
 - [x] あさのひざし_天候別回復量(weather_arg=('はれ', 5), numerator=2, denominator=3)
 - [x] あさのひざし_天候別回復量(weather_arg=('ゆき', 5), numerator=1, denominator=4)
+- [x] あまいかおり_defenderの回避率が2段階下がる
 - [x] あまえる_defenderのこうげきが2段階下がる
 - [x] あまごい_天気があめになる
 - [x] あやしいひかり_こんらん付与

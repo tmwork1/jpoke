@@ -131,19 +131,6 @@ def test_あくまのキッス_ねむり付与():
     assert defender.has_ailment("ねむり")
 
 
-def test_あさのひざし_まもるで防がれない():
-    """あさのひざし: 自分を対象とする技のため、相手のまもるで防がれない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["あさのひざし"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"まもる": 1},
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    t.run_move(battle, 0)
-    assert attacker.hp > 1
-
-
 def test_あさのひざし_マジックコートで跳ね返されない():
     """あさのひざし: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
     battle = t.start_battle(
@@ -157,6 +144,19 @@ def test_あさのひざし_マジックコートで跳ね返されない():
     t.run_move(battle, 0)
     assert attacker.hp > 1
     assert defender.hp == defender_hp
+
+
+def test_あさのひざし_まもるで防がれない():
+    """あさのひざし: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あさのひざし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
 
 
 def test_あさのひざし_まんたんなら失敗():
