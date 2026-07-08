@@ -53,7 +53,10 @@
 
 ```bash
 WORK="{config.worktree_base}\work"
-git worktree list --porcelain | grep -q "$WORK" || git worktree add --detach "$WORK" "$BR"
+if ! git worktree list --porcelain | grep -q "$WORK"; then
+  git worktree add --detach "$WORK" "$BR"
+  # 新規作成時のみ §共通4.5（<worktree> = $WORK）
+fi
 ```
 
 以降のディスパッチャーの git 操作はすべて `git -C "<対象 worktree>" ...`。
@@ -76,12 +79,12 @@ git worktree list --porcelain | grep -q "$WORK" || git worktree add --detach "$W
   1. マージ: `git -C "$INTG" merge --no-ff "loop/impl/{entry}" -m "Merge loop/impl/{entry}"`（dirty チェック不要）
   2. `git -C "$INTG" worktree remove "{config.worktree_base}\review" --force`
   3. `git -C "$INTG" branch -d "loop/impl/{entry}"`
-  4. `.ok` ファイルを削除
+  4. `.ok` ファイルを削除（§共通9 のガード付き rm を使う）
   5. `review_in_progress` から除き `completed` に追加
 - `.fail` が存在 →
   1. レビュー worktree を削除（存在すれば、上と同じ）
   2. `git -C "$INTG" branch -D "loop/impl/{entry}"`
-  3. `.fail` ファイルを削除
+  3. `.fail` ファイルを削除（§共通9 のガード付き rm を使う）
   4. `review_in_progress` から除き `failed` に追加
 - どちらも存在しない → 実行中のまま維持
 
@@ -101,6 +104,7 @@ non-fast-forward 衝突時は §共通8 に従う。
    ```bash
    git -C "$INTG" worktree add "{config.worktree_base}\review" "loop/impl/{entry}"
    ```
+   作成後、§共通4.5 を適用する（`<worktree>` = `{config.worktree_base}\review`）。
 2. `review_in_progress` に追加
 3. **review-test エージェント（background）** を起動:
 

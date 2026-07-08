@@ -69,12 +69,12 @@ review エージェントが並列にレビュー・修正する。`loop/review/
      （統合 worktree はループ専用で常にクリーン。dirty チェック不要）
   2. worktree 削除: `git -C "$INTG" worktree remove "{config.worktree_base}\slot{slot}" --force`
   3. ブランチ削除: `git -C "$INTG" branch -d {branch}`
-  4. `.ok` ファイルを削除
+  4. `.ok` ファイルを削除（§共通9 のガード付き rm を使う）
   5. `in_progress` から除き `completed` に `name`（文字列）を追加
 - `{name}.fail` が存在 →
   1. worktree 削除（存在すれば、上と同じ）
   2. `git -C "$INTG" branch -D {branch}`
-  3. `.fail` ファイルを削除
+  3. `.fail` ファイルを削除（§共通9 のガード付き rm を使う）
   4. `in_progress` から除き `failed` に `name` を追加
 - どちらも存在しない → 実行中のまま維持
 
@@ -93,6 +93,8 @@ non-fast-forward 衝突時は §共通8 に従う。
 ```bash
 git -C "$INTG" worktree add -b "loop/review/{entry}" "{config.worktree_base}\slot{N}" loop/review/integration
 ```
+
+作成後、§共通4.5 を適用する（`<worktree>` = `{config.worktree_base}\slot{N}`）。
 
 `in_progress` に `{"name": entry, "slot": N, "branch": "loop/review/{entry}"}` を追加。
 
@@ -124,6 +126,12 @@ jpoke {config.category} 再レビュータスク: {entry}
 4. 実装のレビュー・修正
    handlers/ と data/ の実装を仕様書・計画書と照合し、誤り・欠落があれば修正する。
    ※ 五十音ソート（sort_handlers.py / sort_data/*.py）は実行しない（マージ後に一括整形）。
+   ※ 技のレビューの場合、PP値は必ず `docs/champions/move_list.txt` の値を正とする
+     （`docs/champions/changes_from_sv.md` により全技PPは8/12/16/20の4段階に統一されている）。
+     `data/moves/*.py` の実装がGen9本家基準の値になっている場合はそちらが移行漏れのバグであり、
+     champions側の値に修正すること。`docs/progress/move.md` のPP列とmove_list.txtが食い違う
+     場合も、move_list.txt を優先し進捗表の方を修正する（実装値に進捗表を合わせて
+     champions値を消してしまわないこと）。
 
 5. リーサル計算のレビュー・実装
    `{config.progress_file}` の {entry} 行の「リーサル実装」列を確認する。
