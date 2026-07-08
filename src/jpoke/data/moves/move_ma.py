@@ -658,7 +658,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "メタルバースト": MoveData(
         type="はがね",
         category="physical",
-        pp=10,
+        pp=12,
         power=0,
         accuracy=100,
         handlers={

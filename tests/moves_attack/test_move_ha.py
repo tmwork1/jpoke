@@ -3613,6 +3613,12 @@ def test_ミサイルばり_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_メタルバースト_Champions基準のPPを持つ():
+    """メタルバースト: Champions基準でPP12（docs/champions/move_list.txt参照。Gen9本家は10）。"""
+    move_data = MOVES["メタルバースト"]
+    assert move_data.pp == 12
+
+
 def test_メタルバースト_ダメージを受けていないとき失敗する():
     """メタルバースト: そのターンダメージを受けていない場合は失敗する。"""
     battle = t.start_battle(
@@ -3643,6 +3649,25 @@ def test_メタルバースト_受けたダメージの1_5倍を返す():
     # メタルバーストで1.5倍返し
     t.run_move(battle, 0)
     assert defender.hp == hp_before - int(last_dmg * 1.5)
+
+
+def test_メタルバースト_みがわりに当たったダメージは参照されない():
+    """メタルバースト: みがわりが被弾したダメージは反撃対象として記録されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["メタルバースト"])],
+        team1=[Pokemon("カビゴン", move_names=["ひっかく"])],
+        accuracy=100,
+        volatile0={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手の物理技をみがわりで受ける
+    t.run_move(battle, 1)
+    assert attacker.last_damage_received == 0
+    hp_before = defender.hp
+    # メタルバーストは失敗するはず
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
 
 
 def test_もろはのずつき_使用後に攻撃者が反動ダメージを受ける():
