@@ -1155,10 +1155,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ブレイククロー": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=95,
-        flags={"contact"},
+        flags={"contact", "secondary_effect", "slash"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ブレイククロー_lower_defender_def,
