@@ -280,8 +280,16 @@ def いやしのねがい_apply(battle: Battle, ctx: AttackContext, value: Any) 
 
     次に場に出たポケモンの HP が全回復し、状態異常が回復する。
     PP は回復しない（みかづきのまいとの違い）。
+    控えのポケモンがいない場合は失敗し、使用者はひんしにならない。
     """
     mon = ctx.attacker
+    player = battle.get_player(mon)
+    if not battle.query.can_switch(player):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="いやしのねがい_交代不可")
+        )
+        return HandlerReturn(value=False, stop_event=True)
     side = battle.get_side(mon)
     side.activate("いやしのねがい", 1)
     battle.faint(mon)
