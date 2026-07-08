@@ -1465,7 +1465,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ドリルライナー": MoveData(
         type="じめん",
         category="physical",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=95,
         critical_rank=1,
