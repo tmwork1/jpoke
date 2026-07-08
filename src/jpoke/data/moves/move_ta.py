@@ -1193,10 +1193,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トロピカルキック": MoveData(
         type="くさ",
         category="physical",
-        pp=15,
-        power=70,
+        pp=16,
+        power=85,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.トロピカルキック_lower_defender_atk,

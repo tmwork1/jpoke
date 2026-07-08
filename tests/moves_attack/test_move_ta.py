@@ -2618,6 +2618,23 @@ def test_トリプルキック_最大3回ヒットする():
     assert defender.hits_taken == 3
 
 
+def test_トロピカルキック_secondary_effectフラグを持つ():
+    """トロピカルキック: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["トロピカルキック"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_トロピカルキック_こうげき1段階低下が発動する():
+    """トロピカルキック: 100%の確率で相手のこうげきを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("アマージョ", move_names=["トロピカルキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
+
+
 def test_とんぼがえり_ダメージを与える():
     """とんぼがえり: 通常通りダメージを与える。"""
     battle = t.start_battle(
