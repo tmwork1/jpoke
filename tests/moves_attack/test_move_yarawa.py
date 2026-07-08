@@ -575,6 +575,17 @@ def test_りんしょう_次のターンでは威力が60に戻る():
     assert battle.damage_calculator.final_power == 60
 
 
+def test_リーフストーム_とくこう2段階低下が発動する():
+    """リーフストーム: 命中後、確定で自分の『とくこう』ランクが2段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["リーフストーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spa"] == -2
+
+
 def test_リーフブレード_急所ランクが1():
     """リーフブレード: 急所ランク+1のため乱数0で急所が発生する。"""
     battle = t.start_battle(
