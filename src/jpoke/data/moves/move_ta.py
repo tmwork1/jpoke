@@ -384,13 +384,17 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "チャージビーム": MoveData(
         type="でんき",
         category="special",
-        pp=10,
+        pp=12,
         power=50,
         accuracy=90,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.チャージビーム_boost_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.チャージビーム_boost_spa)
         }
     ),
     "チャームボイス": MoveData(

@@ -281,6 +281,37 @@ def test_タネマシンガン_相手HP1で最初の1発で処理中断():
     assert defender.hp == 0
 
 
+def test_チャージビーム_secondary_effectフラグを持つ():
+    """チャージビーム: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["チャージビーム"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_チャージビーム_とくこう1段階上昇が発動する():
+    """チャージビーム: 確率70%で使用者のCが1段階上昇する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["チャージビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["spa"] == 1
+
+
+def test_チャージビーム_ちからずくで威力が上がり追加効果が発動しない():
+    """チャージビーム: ちからずく使用時は威力が1.3倍になる代わりにとくこう上昇が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["チャージビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["spa"] == 0
+
+
 def test_だいちのちから_とくぼう1段階低下が発動しない():
     """だいちのちから: 追加効果不発時はとくぼうランクが変化しない。"""
     battle = t.start_battle(
