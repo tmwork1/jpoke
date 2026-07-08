@@ -2326,6 +2326,32 @@ def test_ブラッドムーン_通常使用でダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ブリザードランス_Champions基準のPPを持つ():
+    """ブリザードランス: Champions基準でPP8（本家Gen9のPP5から8/12/16/20の4段階に統一）。"""
+    move_data = MOVES["ブリザードランス"]
+    assert move_data.type == "こおり"
+    assert move_data.category == "physical"
+    assert move_data.power == 120
+    assert move_data.accuracy == 100
+    assert move_data.pp == 8
+    assert move_data.critical_rank == 0
+
+
+def test_ブリザードランス_タイプ分類威力命中が正しく反映されダメージのみ与える():
+    """ブリザードランス: こおり・物理・威力120・命中100の追加効果なし攻撃技。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(はくば)", move_names=["ブリザードランス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert all(v == 0 for v in defender.rank.values())
+    assert defender.ailment.name == ""
+
+
 def test_ブレイズキック_やけどが発動する():
     """ブレイズキック: 10%でやけどを付与する。"""
     battle = t.start_battle(

@@ -1141,7 +1141,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ブリザードランス": MoveData(
         type="こおり",
         category="physical",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
         handlers={},  # 追加効果なし
