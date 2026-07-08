@@ -20,7 +20,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かいでんぱ": MoveData(
         type="でんき",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
