@@ -479,6 +479,44 @@ def test_ラスターカノン_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ラスターパージ_とくぼう1段階低下が発動しない():
+    """ラスターパージ: 追加効果不発時はとくぼうランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ラスターパージ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_ラスターパージ_とくぼう1段階低下が発動する():
+    """ラスターパージ: 50%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ラスターパージ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
+
+
+def test_ラスターパージ_相手にダメージを与える():
+    """ラスターパージ: 特殊エスパー技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ラスターパージ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_りゅうせいぐん_とくこう2段階低下が発動する():
     """りゅうせいぐん: 命中後、確定で自分の『とくこう』ランクが2段階下がる。"""
     battle = t.start_battle(

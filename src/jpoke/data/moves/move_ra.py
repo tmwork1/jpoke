@@ -72,9 +72,10 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ラスターパージ": MoveData(
         type="エスパー",
         category="special",
-        pp=5,
+        pp=8,
         power=95,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ラスターパージ_lower_defender_spd,
