@@ -654,6 +654,49 @@ def test_いやしのすず_状態異常を回復する(ailment_name):
     assert not attacker.ailment.is_active
 
 
+def test_いやしのすず_控えの状態異常も回復する():
+    """いやしのすず: 選出チームの控えポケモンの状態異常も回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"]), Pokemon("コラッタ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    bench = battle.player_states[battle.players[0]].team[1]
+    battle.ailment_manager.apply(bench, "まひ")
+    assert bench.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not bench.ailment.is_active
+
+
+def test_いやしのすず_まもるで防がれない():
+    """いやしのすず: 味方全体を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("どく", None),
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
+def test_いやしのすず_相手のぼうおんの影響を受けない():
+    """いやしのすず: 相手を対象とする技ではないため、相手のぼうおんは無関係"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["いやしのすず"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ぼうおん")],
+        ailment0=("どく", None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
 def test_いやしのねがい_HP満タンかつ状態異常なしなら発動しない():
     """いやしのねがい: 死に出しポケモンのHPが満タンで状態異常もない場合、
     サイドフィールドは消えず（保留されたまま）ポケモンの状態に変化がない（第八世代以降仕様）"""
