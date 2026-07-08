@@ -626,6 +626,12 @@ def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist)
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
 
 
+def フルールカノン_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """フルールカノン: 命中後、攻撃側のとくこうを2段階下げる。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
 def フレアソング_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """フレアソング: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
     if ctx.move_secondary:
