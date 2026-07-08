@@ -836,11 +836,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フェイント": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=30,
         accuracy=100,
         priority=2,
-        flags={"unprotectable"},
+        flags={"unprotectable", "non_copycat"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.フェイント_remove_protect,

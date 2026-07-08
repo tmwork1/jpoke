@@ -76,6 +76,19 @@ def test_まねっこ_カウンターはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_フェイントはコピーできない():
+    """まねっこ: 直前の技がフェイント（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["フェイント"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: フェイント
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_まねっこ_きょじゅうだんはコピーできない():
     """まねっこ: 直前の技がきょじゅうだん（non_copycatフラグ持ち）の場合は失敗する"""
     battle = t.start_battle(
