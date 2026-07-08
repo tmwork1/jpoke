@@ -3119,6 +3119,20 @@ def マッドショット_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
 
 
+def ミストバースト_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ミストバースト: 使用者がミストフィールドの効果を受けている場合、威力が1.5倍になる。
+
+    使用者が地面にいなければ、場がミストフィールドであっても威力は上がらない。
+    防御側の設置状況は無関係。
+    """
+    if (
+        battle.terrain.name == "ミストフィールド"
+        and not battle.query.is_floating(ctx.attacker)
+    ):
+        return HandlerReturn(value=apply_fixed_modifier(value, 6144))
+    return HandlerReturn(value=value)
+
+
 def ミストバースト_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ミストバースト: 使用前に現在HPを全消費する。"""
     battle.modify_hp(ctx.attacker, v=-ctx.attacker.hp, reason="self_cost", source=ctx.attacker)

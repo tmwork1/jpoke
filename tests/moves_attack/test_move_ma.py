@@ -369,6 +369,41 @@ def test_ミストバースト_使用後に攻撃者がひんしになる():
     assert not attacker.alive
 
 
+def test_ミストバースト_ミストフィールドかつ自分接地で威力1_5倍になる():
+    """ミストバースト: 使用者がミストフィールドの効果を受けている場合、威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("ミストフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_ミストバースト_フィールドなしのとき威力補正なし():
+    """ミストバースト: ミストフィールドが発動していない場合、威力補正はない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ミストバースト_自分が浮遊している場合は威力補正が乗らない():
+    """ミストバースト: ミストフィールド中でも自分が浮いている場合、地面にいないため威力補正は乗らない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ロトム", ability_name="ふゆう", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("ミストフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_みずあめボム_あめまみれでターンごとに素早さが低下する():
     """みずあめボム: あめまみれ状態のポケモンはターン終了時に素早さが1段階下がる。"""
     battle = t.start_battle(
