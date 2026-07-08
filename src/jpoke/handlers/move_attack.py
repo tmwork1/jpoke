@@ -2751,7 +2751,7 @@ def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: Atta
 
 _FAINT_REMOVE_VOLATILES: tuple[str, ...] = (
     "まもる", "みきり", "トーチカ", "キングシールド",
-    "ニードルガード", "スレッドトラップ", "かえんのまもり",
+    "ニードルガード", "スレッドトラップ", "かえんのまもり", "ファストガード",
 )
 
 

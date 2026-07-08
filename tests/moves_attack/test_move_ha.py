@@ -1839,6 +1839,28 @@ def test_フェイタルクロー_きれあじで威力1_5倍():
     assert battle.damage_calculator.power_modifier == 6144
 
 
+def test_フェイント_Champions基準のPPを持つ():
+    """フェイント: Champions基準でPP12（docs/champions/move_list.txt参照。本家Gen5以降のPP10とは異なる）。"""
+    move_data = MOVES["フェイント"]
+    assert move_data.power == 30
+    assert move_data.pp == 12
+
+
+def test_フェイント_ゴーストタイプには無効化されまもる状態を解除できない():
+    """フェイント: タイプ相性で無効化された場合、ダメージを与えられずまもる状態も解除できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェイント"])],
+        team1=[Pokemon("ゲンガー")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.has_volatile("まもる")
+    assert defender.hp == hp_before
+
+
 def test_フェイント_ニードルガード状態を解除して攻撃する():
     """フェイント: ニードルガード状態の相手のニードルガード揮発状態を解除し、ダメージを与える。"""
     battle = t.start_battle(
@@ -1851,6 +1873,29 @@ def test_フェイント_ニードルガード状態を解除して攻撃する(
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert not defender.has_volatile("ニードルガード")
+    assert defender.hp < hp_before
+
+
+@pytest.mark.parametrize("volatile_name", [
+    "まもる", "トーチカ", "キングシールド",
+    "ニードルガード", "スレッドトラップ", "かえんのまもり", "ファストガード",
+])
+def test_フェイント_まもる系統の状態を解除して攻撃する(volatile_name):
+    """フェイント: まもる系統の揮発状態（ファストガード含む）を解除し、ダメージを与える。
+
+    みきりは「まもる」と同一の揮発状態を付与するため、ここでは対象外とする
+    （「まもる」のケースでカバー済み）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェイント"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={volatile_name: 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not defender.has_volatile(volatile_name)
     assert defender.hp < hp_before
 
 
@@ -1884,6 +1929,22 @@ def test_フェイント_まもる状態を解除して攻撃する():
     t.run_move(battle, 0)
     assert not defender.has_volatile("まもる")
     assert defender.hp < hp_before
+
+
+def test_フェイント_みがわり状態でもまもる状態を解除する():
+    """フェイント: みがわり状態の相手に対しても、まもる状態等を解除する効果がある
+    （みがわりへの被弾でも発動する）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェイント"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1, "みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("まもる")
+    assert not defender.has_volatile("みがわり")
 
 
 def test_ふぶき_こおりが発動する():
