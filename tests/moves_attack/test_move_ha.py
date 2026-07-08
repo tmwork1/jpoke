@@ -1200,16 +1200,44 @@ def test_バブルこうせん_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_バリアーラッシュ_secondary_effectフラグを持つ():
+    """バリアーラッシュ: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["バリアーラッシュ"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_バリアーラッシュ_Champions基準の威力とPPを持つ():
+    """バリアーラッシュ: Champions基準で威力90・PP12（docs/champions/move_list.txt参照）。"""
+    move_data = MOVES["バリアーラッシュ"]
+    assert move_data.power == 90
+    assert move_data.pp == 12
+
+
 def test_バリアーラッシュ_防御1段階上昇が発動する():
-    """バリアーラッシュ: 命中時に使用者のBが1段階上昇する（確率100%）。"""
+    """バリアーラッシュ: 命中時に使用者のBが1段階上昇する（確率100%）。相手のランクは変化しない。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["バリアーラッシュ"])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
     attacker = battle.actives[0]
+    defender = battle.actives[1]
     t.run_move(battle, 0)
     assert attacker.rank["def"] == 1
+    assert defender.rank["def"] == 0
+
+
+def test_バリアーラッシュ_相手にダメージを与える():
+    """バリアーラッシュ: 直接攻撃のエスパー物理技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["バリアーラッシュ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_バレットパンチ_相手にダメージを与える():

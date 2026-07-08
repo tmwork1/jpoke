@@ -486,13 +486,13 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "バリアーラッシュ": MoveData(
         type="エスパー",
         category="physical",
-        pp=10,
-        power=70,
+        pp=12,
+        power=90,
         accuracy=90,
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.バリアーラッシュ_boost_defender_B,
+                ha.バリアーラッシュ_boost_attacker_B,
             )
         }
     ),
