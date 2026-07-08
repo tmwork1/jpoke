@@ -669,9 +669,12 @@ MOVES_A: dict[MoveName, MoveData] = {
     "いばる": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=85,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.いばる_can_apply,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.いばる_apply,
             ),
