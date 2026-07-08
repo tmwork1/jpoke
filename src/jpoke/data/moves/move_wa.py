@@ -33,6 +33,9 @@ MOVES_WA: dict[MoveName, MoveData] = {
                 ha.ワイドフォース_calc_power,
                 subject_spec="attacker:self",
             ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         },
     ),
     "ワイドブレイカー": MoveData(
@@ -45,7 +48,10 @@ MOVES_WA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ワイドブレイカー_lower_defender_atk,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ワイルドボルト": MoveData(

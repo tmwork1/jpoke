@@ -95,7 +95,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かえんだん_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "かえんのまもり": MoveData(
@@ -322,7 +325,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.かみなりあらし_apply_paralysis_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "かみなりのキバ": MoveData(
@@ -646,7 +652,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.キラースピン_apply_poison_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_HIT: LethalHandler(l.キラースピン_apply_どく)
@@ -1132,7 +1141,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こがらしあらし_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "こごえるかぜ": MoveData(
@@ -1145,7 +1157,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるかぜ_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "こごえるせかい": MoveData(
@@ -1158,7 +1173,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こごえるせかい_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "コスモパワー": MoveData(
@@ -1191,7 +1209,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.こなゆき_apply_freeze_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "このは": MoveData(
@@ -1265,7 +1286,11 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=110,
         accuracy=85,
         flags={"pulse"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "コーチング": MoveData(
         type="かくとう",
@@ -1335,7 +1360,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ゴールドラッシュ_sharply_lower_spa_C,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_HIT: LethalHandler(l.ゴールドラッシュ_lower_spa)

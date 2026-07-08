@@ -99,7 +99,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.たつまき_apply_flinch,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "たてこもる": MoveData(
@@ -195,6 +198,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
                 ha.だいばくはつ_pay_hp,
                 subject_spec="attacker:self",
             ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ダイビング": MoveData(
@@ -254,7 +260,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ダイヤストーム_sharply_boost_defender_B,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "だくりゅう": MoveData(
@@ -267,7 +276,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.だくりゅう_lower_acc,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ダストシュート": MoveData(
@@ -332,7 +344,11 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=10,
         power=120,
         accuracy=85,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "ダークホール": MoveData(
         type="あく",
@@ -403,7 +419,11 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=16,
         power=40,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "ちょうおんぱ": MoveData(
         type="ノーマル",
@@ -704,6 +724,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
             ),
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 ha.テラクラスター_modify_move_category,
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.テラクラスター_reduce_damage,
             ),
         },
     ),
@@ -1241,6 +1264,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.どくガス_apply_ailment_to_defender,
             ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "どくづき": MoveData(
@@ -1384,6 +1410,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ドラゴンエナジー_calc_power,
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
             ),
         }
     ),

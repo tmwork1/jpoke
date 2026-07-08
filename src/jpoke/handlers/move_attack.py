@@ -52,6 +52,12 @@ def half_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn
     """対象の現在HPの半分を与える固定ダメージを計算する。"""
     return HandlerReturn(value=max(1, ctx.defender.hp // 2))
 
+def reduce_damage_in_double_battle(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """範囲攻撃技: ダブルバトルでは複数対象ヒットによりダメージ0.75倍になる。"""
+    if battle.option.double_battle:
+        value = apply_fixed_modifier(value, 3072)
+    return HandlerReturn(value=value)
+
 
 def アイアンテール_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.3)
@@ -1777,6 +1783,16 @@ def テラクラスター_modify_move_type(battle: Battle, ctx: AttackContext, v
     """テラクラスター: ステラテラスタル時、技タイプがステラタイプに変化する。"""
     if ctx.attacker.active_tera_type == "ステラ":
         value = "ステラ"
+    return HandlerReturn(value=value)
+
+
+def テラクラスター_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テラクラスター: 使用者がステラテラスタルの場合のみ、ダブルバトルで複数対象ヒットによりダメージ0.75倍になる。"""
+    if (
+        battle.option.double_battle
+        and ctx.attacker.active_tera_type == "ステラ"
+    ):
+        value = apply_fixed_modifier(value, 3072)
     return HandlerReturn(value=value)
 
 

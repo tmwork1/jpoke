@@ -8,6 +8,88 @@ from jpoke.enums import Command
 from . import test_utils as t
 
 
+def test_ダブルバトル_複数対象になり得る技はダメージ0_75倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハイパーボイス"])],
+        team1=[Pokemon("ピカチュウ")],
+        double_battle=True,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 3072
+
+
+def test_ダブルバトルでも単体技は複数対象補正なし():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        double_battle=True,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+
+
+def test_ダブルバトルで壁と複数対象補正が重複する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハイパーボイス"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"ひかりのかべ": 5},
+        double_battle=True,
+    )
+    t.run_move(battle, 0)
+    # 0.75倍(3072) と 2/3倍(2732) の重複補正
+    assert battle.damage_calculator.damage_modifier == 2049
+
+
+def test_ダブルバトルで壁の軽減率が2_3倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"リフレクター": 5},
+        double_battle=True,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 2732
+
+
+def test_ダブルバトルのテラクラスターはステラテラスタル時のみ複数対象補正():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ステラ", move_names=["テラクラスター"])],
+        team1=[Pokemon("ピカチュウ")],
+        double_battle=True,
+    )
+    attacker, defender = battle.actives
+
+    # テラスタル前は補正なし
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+
+    # ステラテラスタル後は0.75倍
+    attacker.terastallize()
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 3072
+
+
+def test_ダブルバトル無効なら壁の軽減率は従来通り1_2倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"リフレクター": 5},
+        double_battle=False,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 2048
+
+
+def test_ダブルバトル無効なら複数対象技も等倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハイパーボイス"])],
+        team1=[Pokemon("ピカチュウ")],
+        double_battle=False,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+
+
 @pytest.mark.parametrize(
     ("damage_roll",),
     [("平均",), ("最大",), ("最小",)],

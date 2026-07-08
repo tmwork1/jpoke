@@ -40,7 +40,8 @@ def start_battle(team0: list[Pokemon],
                  critical_mode: CriticalMode = "通常",
                  damage_roll: DamageRollMode = "通常",
                  accuracy_fix_threshold: int | None = None,
-                 effect_chance_threshold: float | None = None) -> Battle:
+                 effect_chance_threshold: float | None = None,
+                 double_battle: bool = False) -> Battle:
     """バトルを初期化し、指定された状態でセットアップする。
 
     Args:
@@ -63,6 +64,8 @@ def start_battle(team0: list[Pokemon],
         damage_roll: ダメージ乱数モード（"通常" / "平均" / "最大" / "最小"、デフォルト"通常"）
         accuracy_fix_threshold: この値以上の命中率を100%固定にする（Noneなら無効）
         effect_chance_threshold: この値未満の追加効果確率を0%にする（Noneなら無効）
+        double_battle: ダブルバトル向けのダメージ計算補正
+            （複数対象になり得る技のダメージ0.75倍・壁の軽減率2/3倍）を有効にするか（デフォルトFalse）
 
     Returns:
         Battle: セットアップ済みのBattleインスタンス
@@ -86,6 +89,7 @@ def start_battle(team0: list[Pokemon],
         damage_roll=damage_roll,
         accuracy_fix_threshold=accuracy_fix_threshold,
         effect_chance_threshold=effect_chance_threshold,
+        double_battle=double_battle,
     )
     battle.start()
 

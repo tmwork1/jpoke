@@ -298,6 +298,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.しおふき_calc_power,
             ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "しおみず": MoveData(
@@ -344,7 +347,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.しっとのほのお_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "しっぺがえし": MoveData(
@@ -439,7 +445,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_drain, priority=20),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シャカシャカほう_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "シャドークロー": MoveData(
@@ -662,7 +671,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=100,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "じたばた": MoveData(
         type="ノーマル",
@@ -701,7 +714,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.じならし_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "じばく": MoveData(
@@ -715,6 +731,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_PAY_HP: h.MoveHandler(
                 ha.じばく_pay_hp,
                 subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
             ),
         }
     ),
@@ -925,7 +944,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.スケイルノイズ_lower_attacker_def,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "スケッチ": MoveData(
@@ -1060,7 +1082,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=20,
         power=60,
         accuracy=None,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "スピードスワップ": MoveData(
         type="エスパー",

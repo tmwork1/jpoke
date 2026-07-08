@@ -74,7 +74,11 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "マジカルフレイム": MoveData(
         type="ほのお",
@@ -261,6 +265,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
             Event.ON_PAY_HP: h.MoveHandler(
                 ha.ミストバースト_pay_hp,
                 subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
             ),
         }
     ),
@@ -551,7 +558,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.むしのていこう_lower_spa_C,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "むねんのつるぎ": MoveData(
@@ -732,7 +742,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.もえあがるいかり_apply_flinch,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "もえつきる": MoveData(

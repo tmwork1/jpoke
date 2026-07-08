@@ -153,7 +153,11 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=16,
         power=90,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "なやみのタネ": MoveData(
         type="くさ",
@@ -354,7 +358,10 @@ MOVES_NA: dict[MoveName, MoveData] = {
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっさのあらし_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ねっさのだいち": MoveData(
@@ -401,7 +408,10 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ねっぷう_apply_burn_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ねばねばネット": MoveData(

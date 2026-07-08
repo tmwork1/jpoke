@@ -159,7 +159,8 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, valu
             and side.get("ひかりのかべ").is_active
         ):
             return HandlerReturn(value=value)
-        value = apply_fixed_modifier(value, 2048)
+        modifier = 2732 if battle.option.double_battle else 2048
+        value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
 
@@ -434,7 +435,8 @@ def ひかりのかべ_reduce_damage(battle: Battle, ctx: AttackContext, value: 
         and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "special"
     ):
-        value = apply_fixed_modifier(value, 2048)
+        modifier = 2732 if battle.option.double_battle else 2048
+        value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
 
@@ -574,7 +576,8 @@ def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: 
         and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "physical"
     ):
-        value = apply_fixed_modifier(value, 2048)
+        modifier = 2732 if battle.option.double_battle else 2048
+        value = apply_fixed_modifier(value, modifier)
     return HandlerReturn(value=value)
 
 

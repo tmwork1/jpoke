@@ -299,7 +299,11 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=8,
         power=120,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "あてみなげ": MoveData(
         type="かくとう",
@@ -435,7 +439,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.あわ_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "あんこくきょうだ": MoveData(
@@ -636,7 +643,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.いにしえのうた_apply_sleep_to_defender,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "いのちがけ": MoveData(
@@ -769,7 +779,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.いわなだれ_apply_flinch,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "インファイト": MoveData(
@@ -860,7 +873,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.うたかたのアリア_cure_defender_burn,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_HIT: LethalHandler(l.うたかたのアリア_cure_defender_burn)
@@ -957,7 +973,11 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=95,
         critical_rank=1,
         flags={"slash", "wind"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "エアスラッシュ": MoveData(
         type="ひこう",
@@ -1028,7 +1048,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.エレキネット_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "エレキフィールド": MoveData(
@@ -1221,7 +1244,11 @@ MOVES_A: dict[MoveName, MoveData] = {
         power=80,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            )
+        },
     ),
     "オーバーヒート": MoveData(
         type="ほのお",

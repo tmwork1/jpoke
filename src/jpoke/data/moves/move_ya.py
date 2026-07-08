@@ -30,7 +30,10 @@ MOVES_YA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.やきつくす_burn_item,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "やけっぱち": MoveData(
@@ -129,7 +132,10 @@ MOVES_YA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ようかいえき_lower_defender_spd,
-            )
+            ),
+            Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
+                ha.reduce_damage_in_double_battle,
+            ),
         }
     ),
     "ようせいのかぜ": MoveData(
