@@ -38,10 +38,10 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドブレイカー": MoveData(
         type="ドラゴン",
         category="physical",
-        pp=15,
+        pp=16,
         power=60,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ワイドブレイカー_lower_defender_atk,
