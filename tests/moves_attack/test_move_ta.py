@@ -2928,6 +2928,33 @@ def test_ドラゴンアロー_2回ヒットする():
     assert defender.hits_taken == 2
 
 
+def test_ドラゴンエナジー_HP半分のとき威力が低下する():
+    """ドラゴンエナジー: 使用者のHPが半分のとき威力が満タン時より低下する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("レジドラゴ", move_names=["ドラゴンエナジー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 2
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power < 150
+    assert battle.damage_calculator.final_power >= 1
+
+
+def test_ドラゴンエナジー_HP満タンのとき威力150():
+    """ドラゴンエナジー: 使用者のHPが満タンのとき威力150（modifier=4096）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("レジドラゴ", move_names=["ドラゴンエナジー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp  # 満タン
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 150
+
+
 def test_ドラゴンクロー_相手にダメージを与える():
     """ドラゴンクロー: 追加効果なしの物理ドラゴン技で相手にダメージを与える。"""
     battle = t.start_battle(

@@ -2012,6 +2012,17 @@ def どくばりセンボン_double_power_when_poisoned(battle: Battle, ctx: Att
     return HandlerReturn(value=value)
 
 
+def ドラゴンエナジー_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ドラゴンエナジー: 自分のHP比率に比例して威力が決まる（最大150）。しおふき・ふんかと同計算。
+
+    ON_CALC_POWER_MODIFIER では modifier = floor(HP比率 × 4096) を返す。
+    final_power = round_half_down(150 × modifier / 4096) = round_half_down(150 × HP比率)
+    """
+    modifier = int(ctx.attacker.hp * 4096 / ctx.attacker.max_hp)
+    modifier = max(1, modifier)  # 威力が最低1になるよう保証
+    return HandlerReturn(value=modifier)
+
+
 def ドラゴンダイブ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
 
