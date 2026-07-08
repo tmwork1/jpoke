@@ -53,7 +53,7 @@ Vジェネレート	-	-	x	x	保留	保留	✓	物理	ほのお	180	95	5	defender
 うらみ	-	-	x	x	n/a	n/a	-	変化	ゴースト	-	100	12	defender	？
 うらみつらみ	x	x	x	x	n/a	n/a	✓	特殊	ゴースト	75	100	12	defender	100%の確率で相手の『こうげき』ランクを1段階下げる。
 えだづき	x	x	x	x	n/a	n/a	✓	物理	くさ	40	100	40	defender	追加効果なし。
-えんまく	-	-	x	-	n/a	n/a	-	変化	ノーマル	-	100	20	defender	？
+えんまく	x	x	x	x	n/a	n/a	x	変化	ノーマル	-	100	20	defender	相手の『命中率』ランクを1段階下げる。
 おいかぜ	-	-	x	x	n/a	n/a	-	変化	ひこう	-	-	16	defender	？
 おいわい	-	-	x	-	n/a	n/a	-	変化	ノーマル	-	-	40	defender	？
 おかたづけ	-	-	x	x	n/a	n/a	-	変化	ノーマル	-	-	12	attacker	？
