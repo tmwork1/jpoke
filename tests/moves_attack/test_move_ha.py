@@ -1382,10 +1382,10 @@ def test_パワフルエッジ_まもる状態が解除されない():
     assert battle.actives[1].has_volatile("まもる")
 
 
-def test_パワージェム_相手にダメージを与える():
-    """パワージェム: 追加効果なしの特殊いわ技で相手にダメージを与える。"""
+def test_パワーウィップ_相手にダメージを与える():
+    """パワーウィップ: 追加効果なしの物理くさ技で相手にダメージを与える。"""
     battle = t.start_battle(
-        team0=[Pokemon("イワーク", move_names=["パワージェム"])],
+        team0=[Pokemon("フシギバナ", move_names=["パワーウィップ"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
@@ -1395,10 +1395,10 @@ def test_パワージェム_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
-def test_パワーウィップ_相手にダメージを与える():
-    """パワーウィップ: 追加効果なしの物理くさ技で相手にダメージを与える。"""
+def test_パワージェム_相手にダメージを与える():
+    """パワージェム: 追加効果なしの特殊いわ技で相手にダメージを与える。"""
     battle = t.start_battle(
-        team0=[Pokemon("フシギバナ", move_names=["パワーウィップ"])],
+        team0=[Pokemon("イワーク", move_names=["パワージェム"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
     )
@@ -1740,6 +1740,18 @@ def test_ふいうち_相手が攻撃技選択時に成功():
     assert battle.actives[1].hp < defender_hp_before
 
 
+def test_フェイタルクロー_きれあじで威力1_5倍():
+    """フェイタルクロー: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="きれあじ", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
 def test_フェイタルクロー_乱数によりどくが付与される():
     """フェイタルクロー: 乱数r < 1/3のとき(r=0.1)どくを付与する。"""
     battle = t.start_battle(
@@ -1827,18 +1839,6 @@ def test_フェイタルクロー_発動しない場合は状態異常なし():
     assert not battle.actives[1].ailment.is_active
 
 
-def test_フェイタルクロー_きれあじで威力1_5倍():
-    """フェイタルクロー: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", ability_name="きれあじ", move_names=["フェイタルクロー"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=0.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 6144
-
-
 def test_フェイント_Champions基準のPPを持つ():
     """フェイント: Champions基準でPP12（docs/champions/move_list.txt参照。本家Gen5以降のPP10とは異なる）。"""
     move_data = MOVES["フェイント"]
@@ -1876,29 +1876,6 @@ def test_フェイント_ニードルガード状態を解除して攻撃する(
     assert defender.hp < hp_before
 
 
-@pytest.mark.parametrize("volatile_name", [
-    "まもる", "トーチカ", "キングシールド",
-    "ニードルガード", "スレッドトラップ", "かえんのまもり", "ファストガード",
-])
-def test_フェイント_まもる系統の状態を解除して攻撃する(volatile_name):
-    """フェイント: まもる系統の揮発状態（ファストガード含む）を解除し、ダメージを与える。
-
-    みきりは「まもる」と同一の揮発状態を付与するため、ここでは対象外とする
-    （「まもる」のケースでカバー済み）。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェイント"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={volatile_name: 1},
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-    assert not defender.has_volatile(volatile_name)
-    assert defender.hp < hp_before
-
-
 def test_フェイント_まもる状態がない場合は通常攻撃する():
     """フェイント: まもる状態がない相手には通常通りダメージを与える。"""
     battle = t.start_battle(
@@ -1928,6 +1905,29 @@ def test_フェイント_まもる状態を解除して攻撃する():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert not defender.has_volatile("まもる")
+    assert defender.hp < hp_before
+
+
+@pytest.mark.parametrize("volatile_name", [
+    "まもる", "トーチカ", "キングシールド",
+    "ニードルガード", "スレッドトラップ", "かえんのまもり", "ファストガード",
+])
+def test_フェイント_まもる系統の状態を解除して攻撃する(volatile_name):
+    """フェイント: まもる系統の揮発状態（ファストガード含む）を解除し、ダメージを与える。
+
+    みきりは「まもる」と同一の揮発状態を付与するため、ここでは対象外とする
+    （「まもる」のケースでカバー済み）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェイント"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={volatile_name: 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not defender.has_volatile(volatile_name)
     assert defender.hp < hp_before
 
 
