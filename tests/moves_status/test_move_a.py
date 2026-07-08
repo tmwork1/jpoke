@@ -313,6 +313,51 @@ def test_いえき_通常特性を持つ相手に成功():
     assert defender.has_volatile("とくせいなし")
 
 
+def test_いたみわけ_HPを均等にする():
+    """いたみわけ: 自分と相手のHPを足して2で割った値に均等化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いたみわけ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(attacker, -(attacker.max_hp - 10))
+    defender_hp = defender.hp  # 満タン
+    expected_hp = (10 + defender_hp) // 2
+    t.run_move(battle, 0)
+
+    assert attacker.hp == expected_hp
+    assert defender.hp == expected_hp
+
+
+def test_いたみわけ_端数は切り捨てられる():
+    """いたみわけ: HPの合計を2で割った際の端数は切り捨てられる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いたみわけ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(attacker, -(attacker.max_hp - 11))
+    defender_hp = defender.hp  # 満タン
+    expected_hp = (11 + defender_hp) // 2
+    t.run_move(battle, 0)
+
+    assert attacker.hp == expected_hp
+    assert defender.hp == expected_hp
+
+
+def test_いたみわけ_最大HPを超えて回復しない():
+    """いたみわけ: 均等化後の値が最大HPを超える場合は最大HPで頭打ちになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピチュー", move_names=["いたみわけ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    assert (attacker.hp + defender.hp) // 2 > attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+
+
 def test_いとをはく_すばやさ2段階下がる():
     """いとをはく: 相手のすばやさランクが2段階下がる"""
     battle = t.start_battle(
