@@ -1195,8 +1195,13 @@ MOVES_A: dict[MoveName, MoveData] = {
     "おちゃかい": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
-        handlers={},  # 追加効果なし
+        pp=12,
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.おちゃかい_force_consume_berries,
+            ),
+        }
     ),
     "おどろかす": MoveData(
         type="ゴースト",
