@@ -756,19 +756,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "ピヨピヨパンチ": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=15,
-        power=70,
-        accuracy=100,
-        flags={"contact", "punch", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ピヨピヨパンチ_apply_confusion_to_defender,
-            )
-        }
-    ),
     "ファストガード": MoveData(
         type="かくとう",
         category="status",
