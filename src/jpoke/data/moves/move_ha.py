@@ -1289,7 +1289,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ヘビーボンバー": MoveData(
         type="はがね",
         category="physical",
-        pp=10,
+        pp=12,
         power=1,
         accuracy=100,
         flags={"minimize", "contact"},
