@@ -218,7 +218,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "あくび": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.あくび_can_apply,

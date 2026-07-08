@@ -95,6 +95,29 @@ def test_あくび_ねむけ付与():
     assert not defender.has_ailment("ねむり")
 
 
+def test_あくび_使用後2回のターン終了でねむり状態になる():
+    """あくび: 使用したターンではねむらず、次のターン終了時にねむり状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あくび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("ねむけ")
+    assert not defender.has_ailment("ねむり")
+
+    # 使用したターンの終了ではまだねむらない
+    t.end_turn(battle)
+    assert defender.has_volatile("ねむけ")
+    assert not defender.has_ailment("ねむり")
+
+    # 次のターンの終了でねむり状態になる
+    t.end_turn(battle)
+    assert not defender.has_volatile("ねむけ")
+    assert defender.has_ailment("ねむり")
+
+
 def test_あくまのキッス_ねむり付与():
     """あくまのキッス: 相手をねむり状態に直接する"""
     battle = t.start_battle(
