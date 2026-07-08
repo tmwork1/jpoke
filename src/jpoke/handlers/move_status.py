@@ -487,6 +487,7 @@ def かげぶんしん_boost_attacker_evasion(battle: Battle, ctx: AttackContext
 
 
 def かたくなる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かたくなるの効果: 自分の防御を1段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1})
 
 
