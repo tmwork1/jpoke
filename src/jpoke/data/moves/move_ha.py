@@ -1168,11 +1168,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ブレイズキック": MoveData(
         type="ほのお",
         category="physical",
-        pp=10,
+        pp=12,
         power=85,
         accuracy=90,
         critical_rank=1,
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ブレイズキック_apply_burn_to_defender,
