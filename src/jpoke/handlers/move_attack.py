@@ -3272,7 +3272,12 @@ def むねんのつるぎ_drain(battle: Battle, ctx: AttackContext, value: int) 
 
 
 def ムーンフォース_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"spa": -1}, chance=0.3)
+    """ムーンフォース: 相手の『とくこう』ランクを1段階下げる。
+
+    本家では発動確率30%だが、Championsでは10%に変更されている
+    （docs/spec/moves/ムーンフォース.md 参照）。
+    """
+    return modify_defender_stats(battle, ctx, value, stats={"spa": -1}, chance=0.1)
 
 
 def メガドレイン_drain(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
