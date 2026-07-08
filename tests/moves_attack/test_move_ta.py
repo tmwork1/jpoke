@@ -2928,6 +2928,34 @@ def test_ドラゴンアロー_2回ヒットする():
     assert defender.hits_taken == 2
 
 
+def test_ドラゴンアロー_2発とも威力が変わらない():
+    """ドラゴンアロー: power_sequence が空のため、1発目・2発目とも威力50のまま変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ドラゴンアロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_power == 50
+
+
+def test_ドラゴンアロー_タイプ威力PPが仕様通り():
+    """ドラゴンアロー: ドラゴンタイプの物理・非接触技で、威力50・PP12を持つ（PPはチャンピオンズ仕様）。"""
+    move_data = MOVES["ドラゴンアロー"]
+    assert move_data.type == "ドラゴン"
+    assert move_data.category == "physical"
+    assert move_data.power == 50
+    assert move_data.accuracy == 100
+    assert move_data.pp == 12
+    assert "contact" not in move_data.flags
+    assert move_data.multi_hit == {
+        "min": 2,
+        "max": 2,
+        "check_hit_each_time": False,
+        "power_sequence": (),
+    }
+
+
 def test_ドラゴンクロー_相手にダメージを与える():
     """ドラゴンクロー: 追加効果なしの物理ドラゴン技で相手にダメージを与える。"""
     battle = t.start_battle(
