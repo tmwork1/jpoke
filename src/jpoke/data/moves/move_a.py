@@ -841,7 +841,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.うそなき_reduce_defender_spe,
+                hs.うそなき_modify_defender_stats,
             )
         }
     ),

@@ -318,7 +318,8 @@ def いやなおと_lower_defender_def(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"def": -2})
 
 
-def うそなき_reduce_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def うそなき_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """うそなきの効果: 相手のとくぼうを2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spd": -2})
 
 
