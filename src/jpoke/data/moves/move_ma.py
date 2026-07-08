@@ -287,7 +287,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=5,
         power=95,
         accuracy=100,
-        flags={"bullet"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ミストボール_lower_spa_C,
