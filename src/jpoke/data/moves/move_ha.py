@@ -509,15 +509,20 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "バークアウト": MoveData(
         type="あく",
         category="special",
-        pp=15,
+        pp=16,
         power=55,
         accuracy=95,
-        flags={"sound"},
+        flags={"secondary_effect", "sound"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.バークアウト_lower_spa_C,
             )
         }
+        # リーサル計算は対象外（追加効果は defender の『とくこう』を下げるのみで、
+        # バークアウト自身は特殊技のためダメージ計算は defender の『とくぼう』を参照する。
+        # defender.rank["spa"] は calc_damages に一切影響しないため、Gのちから等と異なり
+        # lethal_handlers を実装しても後続ヒットのダメージ分布は変化しない。
+        # 同様の理由でひやみず・うらみつらみ・がんせきふうじ・だいちのちから等も n/a。
     ),
     "バーンアクセル": MoveData(
         type="ほのお",
