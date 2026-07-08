@@ -3,6 +3,7 @@
 import pytest
 
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from .. import test_utils as t
 
 
@@ -1122,6 +1123,11 @@ def test_ネコにこばん_追加効果が発生しない():
     t.run_move(battle, 0)
     assert defender.ailment.name == ""
     assert defender.rank == {stat: 0 for stat in defender.rank}
+
+
+def test_ネズミざん_PPは12():
+    """ネズミざん: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠。Gen9本家は10）。"""
+    assert MOVES["ネズミざん"].pp == 12
 
 
 def test_ネズミざん_命中率0で全て外れる():
