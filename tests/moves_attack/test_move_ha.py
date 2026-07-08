@@ -3253,6 +3253,36 @@ def test_ボディプレス_タイプ分類威力命中率PPが仕様通り():
     assert move_data.pp == 12
 
 
+def test_ボディプレス_てんねん相手には自分のぼうぎょランクが無視される():
+    """ボディプレス: 相手の特性がてんねんの場合、使用者自身の『ぼうぎょ』ランクは無視される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ナットレイ", move_names=["ボディプレス"])],
+        team1=[Pokemon("カビゴン", ability_name="てんねん")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": 2}, source=attacker)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_attack == attacker.stats["def"]
+
+
+def test_ボディプレス_パワートリック使用後は入れ替え後の実数値を攻撃として計算する():
+    """ボディプレス: パワートリックで『こうげき』『ぼうぎょ』実数値が入れ替わっている場合、
+    入れ替え後の『ぼうぎょ』実数値（＝元の『こうげき』実数値）を攻撃として計算する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ナットレイ", move_names=["パワートリック", "ボディプレス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    original_atk = attacker.stats["atk"]
+    t.run_move(battle, 0, 0)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0, 1)
+    assert battle.damage_calculator.final_attack == original_atk
+
+
 def test_ボディプレス_防御ランク上昇でダメージ増加する():
     """ボディプレス: ぼうぎょランクが上昇するとダメージが増加する。"""
     battle1 = t.start_battle(
@@ -3295,36 +3325,6 @@ def test_ボディプレス_防御実数値を攻撃として計算する():
     assert battle.damage_calculator.final_attack == attacker.stats["def"]
 
 
-def test_ボディプレス_パワートリック使用後は入れ替え後の実数値を攻撃として計算する():
-    """ボディプレス: パワートリックで『こうげき』『ぼうぎょ』実数値が入れ替わっている場合、
-    入れ替え後の『ぼうぎょ』実数値（＝元の『こうげき』実数値）を攻撃として計算する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ナットレイ", move_names=["パワートリック", "ボディプレス"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    original_atk = attacker.stats["atk"]
-    t.run_move(battle, 0, 0)
-    battle.random.random = lambda: 0.9
-    t.run_move(battle, 0, 1)
-    assert battle.damage_calculator.final_attack == original_atk
-
-
-def test_ボディプレス_てんねん相手には自分のぼうぎょランクが無視される():
-    """ボディプレス: 相手の特性がてんねんの場合、使用者自身の『ぼうぎょ』ランクは無視される。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ナットレイ", move_names=["ボディプレス"])],
-        team1=[Pokemon("カビゴン", ability_name="てんねん")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"def": 2}, source=attacker)
-    battle.random.random = lambda: 0.9
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.final_attack == attacker.stats["def"]
-
-
 def test_ボルテッカー_まひが発動する():
     """ボルテッカー: 10%でまひを付与する。"""
     battle = t.start_battle(
@@ -3335,6 +3335,26 @@ def test_ボルテッカー_まひが発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].ailment.name == "まひ"
+
+
+def test_ボルテッカー_みがわりへの与ダメージでも反動が発生する():
+    """ボルテッカー: みがわりに阻まれた場合、みがわりへの与ダメージを基準に反動を算出する（第五世代以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルテッカー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_damage(battle, 100)
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    # max(1, int(100 * 1/3)) = 33
+    assert attacker.hp == hp_before - 33
+    assert defender.hp == defender.max_hp
+    # みがわりに阻まれた場合、追加効果（まひ）は発動しない
+    assert defender.ailment.name == ""
 
 
 def test_ボルテッカー_使用後に攻撃者が反動ダメージを受ける():
@@ -3363,26 +3383,6 @@ def test_ボルテッカー_反動ダメージが与ダメの3分の1になる()
     t.run_move(battle, 0)
     # max(1, int(100 * 1/3)) = 33
     assert attacker.hp == hp_before - 33
-
-
-def test_ボルテッカー_みがわりへの与ダメージでも反動が発生する():
-    """ボルテッカー: みがわりに阻まれた場合、みがわりへの与ダメージを基準に反動を算出する（第五世代以降の仕様）。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ボルテッカー"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    battle.volatile_manager.apply(defender, "みがわり", hp=999)
-    t.fix_damage(battle, 100)
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-    # max(1, int(100 * 1/3)) = 33
-    assert attacker.hp == hp_before - 33
-    assert defender.hp == defender.max_hp
-    # みがわりに阻まれた場合、追加効果（まひ）は発動しない
-    assert defender.ailment.name == ""
 
 
 def test_ボーンラッシュ_複数ヒットする():
