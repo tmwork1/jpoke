@@ -17,6 +17,25 @@ def test_かいふくふうじ():
     assert mon.hp == 1
 
 
+def test_かいふくふうじ_HP吸収技は選択できず攻撃も失敗する():
+    """かいふくふうじ: heal フラグを持つHP吸収技（ドレインキッス）は失敗し、ダメージも与えられない。
+
+    第六世代以降の仕様（公式Wiki「技の仕様」節）に基づき、かいふくふうじ状態のポケモンは
+    HP吸収技を選択できず、行動前にかいふくふうじ状態にされた場合はダメージも発生せず失敗する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ドレインキッス"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"かいふくふうじ": 3},
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert defender.hp == hp_before
+
+
 def test_かいふくふうじ_いたみわけは防がない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["いたみわけ"])],

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
 from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
-from jpoke.utils.math import apply_fixed_modifier, round_half_down
+from jpoke.utils.math import apply_fixed_modifier, round_half_down, round_half_up
 from jpoke.data import TYPE_MODIFIER
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from .move import (
@@ -109,6 +109,20 @@ def アクアブレイク_lower_defender_def(battle: Battle, ctx: AttackContext,
 
 def あくのはどう_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.2)
+
+
+def アクロバット_double_power_when_no_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アクロバット: 自分が道具を持っていないとき威力が2倍になる。
+
+    `has_item()` のデフォルト（`consider_enabled=False`）は、道具の効果が
+    ぶきよう・さしおさえ・マジックルームなどで無効化されていても、物理的に
+    道具を持っていればTrueを返す。アクロバットの威力2倍判定は「道具を持っているか
+    どうか」のみで行うため（効果が発動できないだけでは対象外）、このデフォルト挙動を
+    そのまま利用する。
+    """
+    if not ctx.attacker.has_item():
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
 
 
 def アシストパワー_boost_power_by_rank(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -255,35 +269,48 @@ def いわなだれ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any)
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def インファイト_lower_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def インファイト_lower_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """インファイト: 命中時に確定で自分の『ぼうぎょ』『とくぼう』ランクが1段階ずつ下がる。
+
+    自分自身のランクを下げる確定効果のため、ちからずくの対象外（secondary_effect フラグ非付与）。
+    """
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
+
+
+WEATHERBALL_TYPE_MAP = {
+    "はれ": "ほのお",
+    "おおひでり": "ほのお",
+    "あめ": "みず",
+    "おおあめ": "みず",
+    "すなあらし": "いわ",
+    "ゆき": "こおり",
+}
+"""ウェザーボール: 天候名からタイプへの対応表。
+
+らんきりゅう（デルタストリーム）は対応する変化がないため含めない。
+"""
 
 
 def ウェザーボール_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ウェザーボール: 天候に応じてタイプを変化させる。
 
     天候が有効な場合（エアロック・ノーてんき・ばんのうがさで無効化されていない）、
-    天候ごとに対応するタイプに変換する。
+    天候ごとに対応するタイプに変換する。らんきりゅうの場合は変化しない。
     """
     weather = battle.weather_for(ctx.attacker)
-    type_map = {
-        "はれ": "ほのお",
-        "おおひでり": "ほのお",
-        "あめ": "みず",
-        "おおあめ": "みず",
-        "すなあらし": "いわ",
-        "ゆき": "こおり",
-    }
-    new_type = type_map.get(weather.name)
+    new_type = WEATHERBALL_TYPE_MAP.get(weather.name)
     if new_type is not None:
         value = new_type
     return HandlerReturn(value=value)
 
 
 def ウェザーボール_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ウェザーボール: 天候が有効なとき威力を2倍にする。"""
+    """ウェザーボール: タイプが変化する天候のとき威力を2倍にする。
+
+    らんきりゅうは対応するタイプ変化がないため威力も変化しない。
+    """
     weather = battle.weather_for(ctx.attacker)
-    if weather.name != "":
+    if weather.name in WEATHERBALL_TYPE_MAP:
         value = apply_fixed_modifier(value, 8192)  # ×2倍
     return HandlerReturn(value=value)
 
@@ -346,6 +373,22 @@ def エアスラッシュ_apply_flinch(battle: Battle, ctx: AttackContext, value
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
+def エコーボイス_apply_chain_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """エコーボイス: 直前のターンから連続で使用され続けていれば威力を40上昇させる
+    （最大200）。途切れていれば威力を40にリセットする。
+
+    無効化判定（まもる等）より前の ON_TRY_MOVE_1（priority=50）で威力を確定させるため、
+    技が外れた・まもるで防がれた場合でも「使われたこと」自体は次のターンに引き継がれる。
+    """
+    if battle.echoed_voice_last_turn == battle.turn - 1:
+        battle.echoed_voice_power = min(battle.echoed_voice_power + 40, 200)
+    elif battle.echoed_voice_last_turn != battle.turn:
+        battle.echoed_voice_power = 40
+    battle.echoed_voice_last_turn = battle.turn
+    ctx.move.power = battle.echoed_voice_power
+    return HandlerReturn(value=value)
+
+
 def エナジーボール_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.1)
 
@@ -355,14 +398,16 @@ def エレキネット_lower_defender_spd(battle: Battle, ctx: AttackContext, va
 
 
 def エレキボール_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """エレキボール: 自分の素早さ / 相手の素早さ の比率で威力を決定する。
+    """エレキボール: 自分の実効素早さ / 相手の実効素早さ の比率で威力を決定する。
 
-    比率 = floor(自分のすばやさ / 相手のすばやさ)
-    比率が 0 または相手の素早さが 0 の場合は威力 40。
+    比率 = floor(自分の実効素早さ / 相手の実効素早さ)
+    比率が 0 または相手の実効素早さが 0 の場合は威力 40。
     0: 40 / 1: 60 / 2: 80 / 3: 120 / 4以上: 150
+    実効素早さはランク補正・特性・もちもの・まひ・おいかぜ・しつげんの影響を含む
+    （トリックルームなどの行動順序補正は含まない）。
     """
-    atk_speed = ctx.attacker.stats["spe"]
-    def_speed = ctx.defender.stats["spe"]
+    atk_speed = battle.speed_calculator.calc_effective_speed(ctx.attacker)
+    def_speed = battle.speed_calculator.calc_effective_speed(ctx.defender)
     if def_speed <= 0:
         ratio = 0
     else:
@@ -427,10 +472,6 @@ def エレクトロビーム_weather_skip(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=value)
 
 
-def オクタンほう_lower_acc(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.5)
-
-
 def おしゃべり_apply_confusion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おしゃべりの追加効果: 相手をこんらん状態にする（確率100%）。"""
     return apply_confusion_to_defender(battle, ctx, value)
@@ -458,6 +499,10 @@ def オーバーヒート_lower_attacker_spa(battle: Battle, ctx: AttackContext,
 
 
 def オーラウイング_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
+
+
+def オーラぐるま_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
 
@@ -686,7 +731,12 @@ def がむしゃら_modify_damage(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
-def ガリョウテンセイ_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ガリョウテンセイ_lower_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ガリョウテンセイ: 命中時に確定で自分の『ぼうぎょ』『とくぼう』ランクが1段階ずつ下がる。
+
+    インファイトのひこうタイプ版。自分自身のランクを下げる確定効果のため、
+    ちからずくの対象外（secondary_effect フラグ非付与）。
+    """
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 
@@ -811,9 +861,13 @@ def _clear_spin_effects(battle: Battle, ctx: AttackContext) -> None:
         side.deactivate(hazard)
 
 def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float) -> None:
-    """ドレイン回収(drain)で回復するHP量を計算する。"""
+    """ドレイン回収(drain)で回復するHP量を計算する。
+
+    端数は第五世代以降の仕様に合わせて四捨五入（round_half_up）で丸め、
+    最低1回復を保証する（`max(1, ...)`）。
+    """
     damage = damage or ctx.substitute_damage
-    heal_amount = int(damage * heal_ratio)
+    heal_amount = max(1, round_half_up(damage * heal_ratio))
     heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
 
@@ -903,19 +957,90 @@ def くらいつく_apply_no_escape(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
+def クリアスモッグ_reset_defender_rank(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クリアスモッグの効果: ダメージを与えた相手の能力ランクを±0にリセットする。
+
+    くろいきりと同様、しろいきり状態やクリアボディ等のランク低下防止特性を無視して
+    リセットする（ON_BEFORE_MODIFY_STAT を経由しない直接リセット）。
+    あまのじゃく・たんじゅんの影響も受けない。追加効果ではないため、ちからずくで
+    威力は上がらず、りんぷん・おんみつマントの影響も受けない
+    （ON_MODIFY_SECONDARY_CHANCE を経由しないため自然に満たされる）。
+    """
+    defender = ctx.defender
+    changed = {s: v for s, v in defender.rank.items() if v != 0}
+    if changed:
+        for s in changed:
+            defender.rank[s] = 0
+        battle.add_event_log(
+            defender, LogCode.STAT_CHANGED,
+            payload=StatChangePayload(
+                stats={s: -v for s, v in changed.items()}, display_reason="クリアスモッグ"
+            ),
+        )
+    return HandlerReturn(value=value)
+
+
+def クロスサンダー_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスサンダー: 同じターン中に直前でクロスフレイムが命中していた場合、威力が2倍になる。
+
+    「命中していた」の判定はクロスフレイム側の ON_HIT ハンドラ（クロスフレイム_record_hit）が
+    記録する battle.fusion_flare_used_turn を参照する。まもる・タイプ相性・ちくでん等の特性で
+    無効化された場合や命中しなかった場合は ON_HIT 自体が発火しないため、記録されず倍化しない。
+    """
+    if battle.fusion_flare_used_turn == battle.turn:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
+def クロスサンダー_record_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスサンダー: 命中したターンを記録する（クロスフレイムとの威力2倍判定用）。"""
+    battle.fusion_bolt_used_turn = battle.turn
+    return HandlerReturn(value=value)
+
+
+def クロスフレイム_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスフレイム: 同じターン中に直前でクロスサンダーが命中していた場合、威力が2倍になる。
+
+    判定方法はクロスサンダー_calc_power と対になる（battle.fusion_bolt_used_turn を参照）。
+    """
+    if battle.fusion_bolt_used_turn == battle.turn:
+        value = apply_fixed_modifier(value, 8192)
+    return HandlerReturn(value=value)
+
+
+def クロスフレイム_record_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスフレイム: 命中したターンを記録する（クロスサンダーとの威力2倍判定用）。"""
+    battle.fusion_flare_used_turn = battle.turn
+    return HandlerReturn(value=value)
+
+
+def クロスフレイム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロスフレイム: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def クロスポイズン_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.1)
 
 
-def クロロブラスト_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """クロロブラスト: 使用前に最大HPの1/2を消費する。"""
-    cost = max(1, ctx.attacker.max_hp // 2)
-    battle.modify_hp(ctx.attacker, v=-cost, reason="self_cost", source=ctx.attacker)
+def クロロブラスト_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """クロロブラスト: 命中時に自分の最大HPの1/2（切り上げ）を反動ダメージとして受ける。
+
+    ダメージ量に関わらず固定量。いしあたま・マジックガードの双方で防げる（reason="recoil"）。
+    Event.ON_HIT は実ダメージ0（こらえる等）でも発火するため0ダメージ成功時も反動を受ける仕様を
+    満たし、まもる・命中失敗・タイプ無効化時はそもそも発火しないため反動を受けない仕様も満たす。
+    """
+    cost = max(1, (ctx.attacker.max_hp + 1) // 2)
+    battle.modify_hp(ctx.attacker, v=-cost, reason="recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
-
-
-def グラスミキサー_lower_acc(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.5)
 
 
 def グロウパンチ_boost_attacker_A(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1037,8 +1162,8 @@ def ゴッドバード_apply_flinch(battle: Battle, ctx: AttackContext, value: A
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def ゴールドラッシュ_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_attacker_stats(battle, ctx, value, stats={"spa": -1})
+def ゴールドラッシュ_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
 
 def サイケこうせん_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1050,15 +1175,31 @@ def サイコキネシス_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.1)
 
 
+def サイコノイズ_apply_volatile_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """サイコノイズの追加効果: 100%の確率で、相手を2ターンの間『かいふくふうじ』状態にする。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="かいふくふうじ", count=2)
+
+
 def サイコファング_break_screens(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコファング: 相手側のリフレクター・ひかりのかべ・オーロラベールを解除する。
 
     壁解除は追加効果ではないため、りんぷん・おんみつマント・ちからずくの対象外。
-    技が無効化されなかった場合（ON_HITに到達した場合）のみ発動する。
+    ダメージ計算より前に解除する必要があるため Event.ON_BEFORE_APPLY_MOVE で発動する
+    （まもる・タイプ相性無効等で技自体がここまで到達しない場合は壁を解除しない）。
     """
     defender_side = battle.get_side(ctx.defender)
     for wall in ("リフレクター", "ひかりのかべ", "オーロラベール"):
         defender_side.deactivate(wall)
+    return HandlerReturn(value=value)
+
+
+def サイコブレイド_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """サイコブレイド: エレキフィールド中は威力が1.5倍になる。
+
+    ライジングボルト・ワイドフォースと異なり、使用者・対象の接地判定は行わない。
+    """
+    if battle.terrain.name == "エレキフィールド":
+        return HandlerReturn(value=apply_fixed_modifier(value, 6144))
     return HandlerReturn(value=value)
 
 
@@ -1096,8 +1237,12 @@ def さわぐ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
 
 
 def サンダーダイブ_crash(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """サンダーダイブが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。"""
-    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="self_cost", source=ctx.attacker)
+    """サンダーダイブが外れた場合の失敗反動ダメージ。自分の最大HPの1/2を受ける。
+
+    マジックガードで防げるが、いしあたまでは防げない確定反動として扱う
+    （reason="fixed_recoil"。"self_cost" だとマジックガードで防げなくなってしまうため区別する）。
+    """
+    battle.modify_hp(ctx.attacker, v=-max(1, ctx.attacker.max_hp // 2), reason="fixed_recoil", source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
@@ -1105,10 +1250,28 @@ def シェルアームズ_apply_poison_to_defender(battle: Battle, ctx: AttackCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.2)
 
 
+def シェルアームズ_check_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """シェルアームズ: 物理技のときのみ直接攻撃になる（特殊技のときは直接攻撃にならない）。"""
+    return HandlerReturn(value=ctx.move.category == "physical")
+
+
 def シェルアームズ_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シェルアームズ: 補正込みAがCより高い場合は物理技として計算する。"""
-    mon = ctx.attacker
-    if mon.ranked_stats["atk"] > mon.ranked_stats["spa"]:
+    """シェルアームズ: 攻撃/防御の比を特攻/特防の比と比較し、高い方の分類になる。
+
+    ダメージ計算式 (…×A/D)/50 に、A=攻撃・D=防御を代入した値の方が
+    A=特攻・D=特防を代入した値より高ければ物理技になる（ランク補正込み）。
+    比が等しい場合、実機では50%抽選で決まるが、resolve_move_category() は
+    query.deals_physical_damage() などから技実行中に複数回再評価されるため、
+    乱数を使うと呼び出しごとに結果がぶれる。再現性を優先し、テラバースト
+    （同点なら特殊技）と同様に同点時は value（デフォルトの特殊技）のままとする。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    atk = attacker.ranked_stats["atk"]
+    spa = attacker.ranked_stats["spa"]
+    de = defender.ranked_stats["def"]
+    spd = defender.ranked_stats["spd"]
+    if atk * spd > spa * de:
         return HandlerReturn(value="physical")
     return HandlerReturn(value=value)
 
@@ -1138,11 +1301,6 @@ def しおみず_double_power_if_defender_hp_half_or_less(battle: Battle, ctx: A
     if ctx.defender.hp * 2 <= ctx.defender.max_hp:
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
-
-
-def シグナルビーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """シグナルビームの追加効果: 10%の確率で相手をこんらん状態にする。"""
-    return apply_confusion_to_defender(battle, ctx, value, chance=0.1)
 
 
 def したでなめる_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1186,12 +1344,21 @@ def シャカシャカほう_drain(battle: Battle, ctx: AttackContext, value: in
     return HandlerReturn(value=value)
 
 
+def シャカシャカほう_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """シャカシャカほう: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def シャドーボール_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1}, chance=0.2)
-
-
-def シャドーボーン_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"def": -1}, chance=0.2)
 
 
 def シャドーレイ_disable_defender_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1298,19 +1465,38 @@ def すいとる_drain(battle: Battle, ctx: AttackContext, value: int) -> Handle
 
 
 def スケイルショット_apply_stat_change(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """スケイルショット: 最終ヒット後に攻撃側のぼうぎょ-1・すばやさ+1。"""
-    if ctx.hit_index != ctx.hit_count:
+    """スケイルショット: 全ヒット終了後に攻撃側のぼうぎょ-1・すばやさ+1。
+
+    「全ての攻撃が終了した後、当たった回数に関係なく」発動する効果のため、
+    予定されていた最大ヒット数（ctx.hit_count）に到達した場合だけでなく、
+    連続ヒットの途中で相手がひんしになり残りのヒットが行われなかった場合にも発動する。
+    """
+    if ctx.hit_index != ctx.hit_count and not ctx.defender.fainted:
         return HandlerReturn(value=value)
     battle.modify_stats(ctx.attacker, {"def": -1, "spe": 1}, source=ctx.attacker)
     return HandlerReturn(value=value)
 
 
 def スケイルノイズ_lower_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スケイルノイズ: 命中後、攻撃側のぼうぎょを1段階下げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1})
 
 
 def スチームバースト_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.3)
+
+
+def スチームバースト_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """スチームバースト: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
 
 
 def すてみタックル_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1526,23 +1712,11 @@ def ダストシュート_apply_poison_to_defender(battle: Battle, ctx: AttackCo
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.3)
 
 
-def ダブルニードル_apply_poison_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="どく", chance=0.2)
-
-
-def ダブルパンツァー_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ダメおし_double_power_when_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ダメおし: 同ターン中に対象が既にダメージを受けていたら威力が2倍になる。"""
     if ctx.defender.hits_taken > 0:
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
-
-
-def ダークファイア_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
 def チャージビーム_boost_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1561,6 +1735,19 @@ def つけあがる_calc_power(battle: Battle, ctx: AttackContext, value: int) -
     return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + rank_sum)))
 
 
+def ツタこんぼう_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ツタこんぼう: 使用者がオーガポンの場合、かぶっている仮面（フォルム）に応じてタイプが変わる。
+
+    フォルムの基本タイプ（base_types）で判定するため、みずびたし等による現在タイプの変更や、
+    マジックルーム・ぶきよう等で仮面の威力補正が無効化されている場合でもタイプは変化しない。
+    オーガポン以外が使用した場合は常にくさタイプになる。
+    """
+    attacker = ctx.attacker
+    if not attacker.name.startswith("オーガポン"):
+        return HandlerReturn(value=value)
+    return HandlerReturn(value=attacker.base_types[-1])
+
+
 def つららおとし_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
@@ -1572,6 +1759,24 @@ def てっていこうせん_pay_hp(battle: Battle, ctx: AttackContext, value: A
     """
     cost = max(1, (ctx.attacker.max_hp + 1) // 2)
     battle.modify_hp(ctx.attacker, v=-cost, reason="fixed_recoil", source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
+def テラクラスター_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テラクラスター: ステラテラスタル時、補正込みAがCより高い場合は物理技として計算する。"""
+    mon = ctx.attacker
+    if mon.active_tera_type == "ステラ":
+        atk = mon.ranked_stats["atk"]
+        spa = mon.ranked_stats["spa"]
+        if atk > spa:
+            value = "physical"
+    return HandlerReturn(value=value)
+
+
+def テラクラスター_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テラクラスター: ステラテラスタル時、技タイプがステラタイプに変化する。"""
+    if ctx.attacker.active_tera_type == "ステラ":
+        value = "ステラ"
     return HandlerReturn(value=value)
 
 
@@ -1805,6 +2010,17 @@ def どくばりセンボン_double_power_when_poisoned(battle: Battle, ctx: Att
     if ctx.defender.ailment.name in ("どく", "もうどく"):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
+
+
+def ドラゴンエナジー_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ドラゴンエナジー: 自分のHP比率に比例して威力が決まる（最大150）。しおふき・ふんかと同計算。
+
+    ON_CALC_POWER_MODIFIER では modifier = floor(HP比率 × 4096) を返す。
+    final_power = round_half_down(150 × modifier / 4096) = round_half_down(150 × HP比率)
+    """
+    modifier = int(ctx.attacker.hp * 4096 / ctx.attacker.max_hp)
+    modifier = max(1, modifier)  # 威力が最低1になるよう保証
+    return HandlerReturn(value=modifier)
 
 
 def ドラゴンダイブ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2056,10 +2272,6 @@ def ニトロチャージ_boost_attacker_spe(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
 
-def ニードルアーム_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ねこだまし_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ")
 
@@ -2161,6 +2373,19 @@ def ハイドロスチーム_power_modifier(battle: Battle, ctx: AttackContext, 
     else:
         # 防御側ばんのうがさなし: フィールドハンドラの0.5倍をキャンセルし1.5倍にするため3倍補正を適用
         value = apply_fixed_modifier(value, 12288)
+    return HandlerReturn(value=value)
+
+
+def ハイドロスチーム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ハイドロスチーム: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
     return HandlerReturn(value=value)
 
 
@@ -2350,10 +2575,6 @@ def はるのあらし_lower_defender_atk(battle: Battle, ctx: AttackContext, va
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1}, chance=0.3)
 
 
-def ハートスタンプ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ハードプレス_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ハードプレス: 対象の残りHP / 最大HP の比率で威力を決定する（最大100）。
 
@@ -2361,10 +2582,6 @@ def ハードプレス_calc_power(battle: Battle, ctx: AttackContext, value: int
     """
     power = max(1, int(100 * ctx.defender.hp / ctx.defender.max_hp))
     return HandlerReturn(value=power * 4096)
-
-
-def ハードローラー_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
 def ばかぢから_lower_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2380,7 +2597,8 @@ def バブルこうせん_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1}, chance=0.1)
 
 
-def バリアーラッシュ_boost_defender_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def バリアーラッシュ_boost_attacker_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """バリアーラッシュ: 命中後、100%の確率で自分の『ぼうぎょ』ランクを1段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1})
 
 
@@ -2470,20 +2688,8 @@ def ヒートスタンプ_calc_power(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=_weight_ratio_to_power(ctx.attacker.weight, ctx.defender.weight) * 4096)
 
 
-def ビックリヘッド_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ビックリヘッド: 使用前に最大HPの1/2を消費する。"""
-    cost = max(1, ctx.attacker.max_hp // 2)
-    battle.modify_hp(ctx.attacker, v=-cost, reason="self_cost", source=ctx.attacker)
-    return HandlerReturn(value=value)
-
-
 def びりびりちくちく_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
-def ピヨピヨパンチ_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ピヨピヨパンチの追加効果: 20%の確率で相手をこんらん状態にする。"""
-    return apply_confusion_to_defender(battle, ctx, value, chance=0.2)
 
 
 def _ふいうち系_can_apply(battle: Battle, ctx: AttackContext) -> bool:
@@ -2526,9 +2732,9 @@ def ふいうち_try_move(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フェイタルクローの追加効果: 単一乱数で どく/まひ/ねむり のいずれかを付与する。
 
-    r < base/3 → どく、r < base*2/3 → まひ、r < base → ねむり（チャンピオンズ: 確率0.5）。
+    r < base/3 → どく、r < base*2/3 → まひ、r < base → ねむり（チャンピオンズ: 確率0.3）。
     """
-    base = battle.resolve_secondary_chance(ctx, 0.5)
+    base = battle.resolve_secondary_chance(ctx, 0.3)
     r = battle.random.random()
     if r < base / 3:
         ailment = "どく"
@@ -2545,7 +2751,7 @@ def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: Atta
 
 _FAINT_REMOVE_VOLATILES: tuple[str, ...] = (
     "まもる", "みきり", "トーチカ", "キングシールド",
-    "ニードルガード", "スレッドトラップ", "かえんのまもり",
+    "ニードルガード", "スレッドトラップ", "かえんのまもり", "ファストガード",
 )
 
 
@@ -2636,10 +2842,6 @@ def フライングプレス_add_flying_type(battle: Battle, ctx: AttackContext,
     return HandlerReturn(value=value)
 
 
-def フリーズドライ_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
-
-
 def フリーズドライ_water_effectiveness(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """フリーズドライ: みずタイプに対して効果抜群（2倍）になる。
     こおりタイプはみずに0.5倍のため、最終2倍になるよう4倍補正（16384）をかける。
@@ -2667,6 +2869,19 @@ def フレアドライブ_apply_burn_to_defender(battle: Battle, ctx: AttackCont
 
 def フレアドライブ_recoil(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _recoil(battle, ctx, value, 1/3)
+
+
+def フレアドライブ_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """フレアドライブ: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
 
 
 def ふんえん_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -2825,10 +3040,6 @@ def ほうふく_modify_damage(battle: Battle, ctx: AttackContext, value: Any) -
 
 def ほっぺすりすり_apply_paralysis_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
-
-
-def ホネこんぼう_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
 
 
 def ほのおのキバ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3266,6 +3477,18 @@ def りんごさん_lower_defender_spd(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"spd": -1})
 
 
+def りんしょう_apply_chain_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """りんしょう: 同じターン中に既に使われていれば威力を120にする。
+
+    先に使われたりんしょうがまもる・タイプ相性などで無効化されても後発の威力上昇は
+    成立するため、無効化判定より前の ON_BEGIN_MOVE の時点で判定・記録する。
+    """
+    if battle.round_used_turn == battle.turn:
+        ctx.move.power = 120
+    battle.round_used_turn = battle.turn
+    return HandlerReturn(value=value)
+
+
 def リーフストーム_sharply_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": -2})
 
@@ -3385,7 +3608,16 @@ def ワイルドボルト_recoil(battle: Battle, ctx: AttackContext, value: Any)
 
 
 def わるあがき_self_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return HandlerReturn(value=battle.modify_hp(ctx.attacker, r=-1/4, reason="recoil", source=ctx.attacker))
+    """わるあがきの反動ダメージ: 自分の最大HPの1/4（五捨五超入で丸め、最低1）を受ける。
+
+    与えたダメージ量に依存しない固定割合の反動であり、特性いしあたま・マジックガード
+    のどちらでも無効化されない特殊な性質を持つため、reason="self_cost" を用いて
+    一般的な反動ダメージ（reason="recoil"）向けの無効化ハンドラの対象から外す。
+    """
+    recoil = max(1, round_half_down(ctx.attacker.max_hp / 4))
+    return HandlerReturn(
+        value=battle.modify_hp(ctx.attacker, v=-recoil, reason="self_cost", source=ctx.attacker)
+    )
 
 
 def ワンダースチーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

@@ -53,6 +53,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=90,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.サイコキネシス_lower_defender_spd,
@@ -65,6 +66,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
+        flags={"physical_damage"},
         handlers={},  # 追加効果なし
     ),
     "サイコノイズ": MoveData(
@@ -73,8 +75,15 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=75,
         accuracy=100,
-        flags={"sound"},
-        handlers={},  # 追加効果なし
+        flags={"sound", "secondary_effect"},
+        handlers={
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.サイコノイズ_apply_volatile_to_defender,
+            )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.サイコノイズ_apply_volatile)
+        }
     ),
     "サイコファング": MoveData(
         type="エスパー",
@@ -84,8 +93,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"bite", "contact"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 ha.サイコファング_break_screens,
+                priority=30,
             ),
         },
     ),
@@ -106,27 +116,36 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=10,
         power=100,
         accuracy=100,
+        flags={"physical_damage"},
         handlers={},  # 追加効果なし
     ),
     "サイコブレイド": MoveData(
         type="エスパー",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
-        flags={"contact"},
-        handlers={},  # 追加効果なし
+        flags={"contact", "slash"},
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.サイコブレイド_calc_power,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "サイコブースト": MoveData(
         type="エスパー",
         category="special",
-        pp=5,
+        pp=8,
         power=140,
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.サイコブースト_sharply_lower_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.サイコブースト_lower_spa)
         }
     ),
     "サイドチェンジ": MoveData(
@@ -201,7 +220,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=16,
         power=100,
         accuracy=95,
-        flags={"minimize", "contact"},
+        flags={"minimize", "contact", "recoil"},
         handlers={
             Event.ON_MISS: h.MoveHandler(
                 ha.サンダーダイブ_crash,
@@ -216,6 +235,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l._apply_bind)
         }
     ),
     "シェルアームズ": MoveData(
@@ -228,6 +250,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 ha.シェルアームズ_modify_move_category,
+            ),
+            Event.ON_CHECK_CONTACT: h.MoveHandler(
+                ha.シェルアームズ_check_contact,
             ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シェルアームズ_apply_poison_to_defender,
@@ -285,19 +310,6 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.しおみず_double_power_if_defender_hp_half_or_less,
             ),
-        }
-    ),
-    "シグナルビーム": MoveData(
-        type="むし",
-        category="special",
-        pp=15,
-        power=75,
-        accuracy=100,
-        flags={"secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シグナルビーム_apply_confusion_to_defender,
-            )
         }
     ),
     "シザークロス": MoveData(
@@ -420,6 +432,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         accuracy=90,
         flags={"heal", "secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.シャカシャカほう_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_HIT: h.MoveHandler(ha.シャカシャカほう_drain, priority=20),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シャカシャカほう_apply_burn_to_defender,
@@ -433,7 +449,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         power=70,
         accuracy=100,
         critical_rank=1,
-        flags={"contact"},
+        flags={"contact", "slash"},
         handlers={},  # 追加効果なし
     ),
     "シャドーダイブ": MoveData(
@@ -463,23 +479,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=16,
         power=80,
         accuracy=100,
-        flags={"bullet"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.シャドーボール_lower_defender_spd,
-            )
-        }
-    ),
-    "シャドーボーン": MoveData(
-        type="ゴースト",
-        category="physical",
-        pp=10,
-        power=85,
-        accuracy=100,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.シャドーボーン_lower_defender_def,
             )
         }
     ),
@@ -936,11 +939,15 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スチームバースト": MoveData(
         type="みず",
         category="special",
-        pp=5,
+        pp=8,
         power=110,
         accuracy=95,
         flags={"secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.スチームバースト_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.スチームバースト_apply_burn_to_defender,
             )
@@ -1071,6 +1078,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         category="physical",
         pp=12,
         power=70,
+        accuracy=None,  # 必中
         flags={"contact"},
         handlers={},  # 追加効果なし
     ),
@@ -1209,7 +1217,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=15,
         power=75,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ソウルクラッシュ_lower_spa_C,

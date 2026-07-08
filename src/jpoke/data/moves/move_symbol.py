@@ -21,7 +21,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
         type="",
         category="physical",
         pp=PP_INFINITE,
-        power=40,
+        power=50,
         flags={"contact", "non_encore", "non_onnen"},
         handlers={
             Event.ON_HIT: h.MoveHandler(

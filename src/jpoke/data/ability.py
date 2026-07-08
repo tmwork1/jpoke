@@ -1261,7 +1261,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MODIFY_HIT_COUNT: h.AbilityHandler(
                 h.スキルリンク_modify_hit_count,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_MODIFY_HIT_CHECK_EACH_TIME: h.AbilityHandler(
+                h.スキルリンク_modify_hit_check_each_time,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "スクリューおびれ": AbilityData(),

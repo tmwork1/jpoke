@@ -1448,7 +1448,7 @@ ITEMS: dict[ItemName, ItemData] = {
         # 効果: 持たせたポケモンはにほんばれ・あめ状態の影響を受けなくなる。
         # 実装方法: battle.weather_for(mon) が ON_CHECK_WEATHER_IMMUNE を発火する。
         #           天候参照側は weather_for(mon) を使うことで自動的に反映される。
-        # 未実装技のばんのうがさ対応: ウェザーボール・エレクトロビーム・ハイドロスチーム
+        # ウェザーボール・エレクトロビーム・ハイドロスチームも weather_for 経由で対応済み。
         handlers={
             Event.ON_CHECK_WEATHER_IMMUNE: h.ItemHandler(
                 h.ばんのうがさ_weather_immune,

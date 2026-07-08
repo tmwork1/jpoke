@@ -139,6 +139,11 @@ VOLATILES: dict[str, VolatileData] = {
                 h.かいふくふうじ_block_heal,
                 subject_spec="target:self",
             ),
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.かいふくふうじ_try_action,
+                subject_spec="attacker:self",
+                priority=100
+            ),
             Event.ON_TURN_END: h.VolatileHandler(
                 h.かいふくふうじ_tick_volatile,
                 subject_spec="source:self",
@@ -234,6 +239,19 @@ VOLATILES: dict[str, VolatileData] = {
                 h.こんらん_try_action,
                 subject_spec="attacker:self",
                 priority=110
+            ),
+        }
+    ),
+    "コールドフレア": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.コールドフレア_remove_volatile,
+                subject_spec="attacker:self",
             ),
         }
     ),
@@ -394,6 +412,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
             Event.ON_HIT: h.VolatileHandler(
                 h.ソーラーブレード_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
+    "ゴッドバード": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.ゴッドバード_remove_volatile,
                 subject_spec="attacker:self",
             ),
         }
@@ -625,6 +656,19 @@ VOLATILES: dict[str, VolatileData] = {
                 h.ふういん_try_action,
                 subject_spec="defender:self",
                 priority=100,
+            ),
+        }
+    ),
+    "フリーズボルト": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.フリーズボルト_remove_volatile,
+                subject_spec="attacker:self",
             ),
         }
     ),

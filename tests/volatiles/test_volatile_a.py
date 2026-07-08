@@ -203,6 +203,19 @@ def test_アンコール_ターン経過で解除():
     assert not mon.has_volatile("アンコール")
 
 
+def test_アンコール_バーンアクセルを使った相手には失敗する():
+    """アンコール技: 相手がnon_encoreラベルを持つバーンアクセルを最後に使っていた場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["アンコール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.executed_move = Move("バーンアクセル")
+    t.run_move(battle, 0)
+    assert not defender.has_volatile("アンコール")
+
+
 def test_アンコール_実行時も技固定():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり", "なきごえ"])],

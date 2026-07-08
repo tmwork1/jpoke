@@ -247,7 +247,11 @@ MOVES_A: dict[MoveName, MoveData] = {
         power=55,
         accuracy=100,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.アクロバット_double_power_when_no_item,
+            ),
+        },
     ),
     "あさのひざし": MoveData(
         type="ノーマル",
@@ -292,7 +296,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アストラルビット": MoveData(
         type="ゴースト",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
         handlers={},  # 追加効果なし
@@ -336,7 +340,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アフロブレイク": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=15,
         power=120,
         accuracy=100,
         flags={"contact", "recoil"},
@@ -477,11 +481,11 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=100,
         accuracy=90,
-        flags={"contact", "punch", "secondary_effect"},
+        flags={"contact", "punch"},
         handlers={
-             Event.ON_HIT: h.MoveHandler(
-                 ha.アームハンマー_lower_attacker_spe,
-             )
+            Event.ON_HIT: h.MoveHandler(
+                ha.アームハンマー_lower_attacker_spe,
+            )
         }
     ),
     "いえき": MoveData(
@@ -612,7 +616,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "イナズマドライブ": MoveData(
         type="でんき",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
         flags={"contact"},
@@ -774,10 +778,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=8,
         power=120,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.インファイト_lower_defender_stats,
+                ha.インファイト_lower_attacker_stats,
             )
         }
     ),
@@ -981,11 +985,16 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エコーボイス": MoveData(
         type="ノーマル",
         category="special",
-        pp=15,
+        pp=16,
         power=40,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                ha.エコーボイス_apply_chain_power,
+                priority=50,
+            ),
+        }
     ),
     "えだづき": MoveData(
         type="くさ",
@@ -1002,7 +1011,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=90,
         accuracy=100,
-        flags={"bullet"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.エナジーボール_lower_defender_spd,
@@ -1015,6 +1024,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=16,
         power=55,
         accuracy=95,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.エレキネット_lower_defender_spd,
@@ -1120,19 +1130,6 @@ MOVES_A: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "オクタンほう": MoveData(
-        type="みず",
-        category="special",
-        pp=10,
-        power=110,
-        accuracy=85,
-        flags={"bullet", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.オクタンほう_lower_acc,
-            )
-        }
-    ),
     "おさきにどうぞ": MoveData(
         type="ノーマル",
         category="status",
@@ -1220,7 +1217,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "オーバードライブ": MoveData(
         type="でんき",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         flags={"sound"},
@@ -1244,7 +1241,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "オーラウイング": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         critical_rank=1,
@@ -1261,9 +1258,13 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=110,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
                 ha.オーラぐるま_check_move_type,
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.オーラぐるま_boost_attacker_spe,
             ),
         },
     ),

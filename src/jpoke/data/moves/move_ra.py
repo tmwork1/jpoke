@@ -186,7 +186,11 @@ MOVES_RA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=100,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_BEGIN_MOVE: h.MoveHandler(
+                ha.りんしょう_apply_chain_power,
+            ),
+        }
     ),
     "リーフストーム": MoveData(
         type="くさ",
@@ -276,7 +280,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         pp=8,
         power=100,
         accuracy=50,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "thaw"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.れんごく_apply_burn_to_defender,

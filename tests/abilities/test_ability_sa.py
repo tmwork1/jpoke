@@ -77,6 +77,7 @@ def test_さまようたましい_非直接攻撃では発動しない():
         ("さめはだ", "たいあたり", 1/8),
         ("さめはだ", "みずでっぽう", 0),
         ("さめはだ", "おはかまいり", 0),
+        ("さめはだ", "バーンアクセル", 0),
         ("てつのトゲ", "たいあたり", 1/8),
         ("てつのトゲ", "みずでっぽう", 0),
     ],
@@ -375,6 +376,23 @@ def test_スキルリンク_2から5連続技が最大ヒット数になる():
     assert battle.actives[1].hits_taken == 5
 
 
+@pytest.mark.parametrize("move_name", ["トリプルキック", "トリプルアクセル", "ネズミざん"])
+def test_スキルリンク_毎ヒット命中判定技は初回のみ判定(move_name):
+    """スキルリンク: トリプルキック等の毎ヒット命中判定技を初回ヒットのみの判定にする。
+    2発目以降は本来なら外れる状況を疑似的に発生させても、判定自体が行われず全ヒットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="スキルリンク", move_names=[move_name])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.fix_damage(battle, 1)
+    # 2発目以降で呼ばれたら外れる想定の命中判定（呼ばれなければヒットし続ける）
+    battle.move_executor._check_hit = lambda ctx: ctx.hit_index == 1
+    foe = battle.actives[1]
+    initial_hp = foe.max_hp
+    move = t.run_move(battle, 0)
+    assert foe.hp == initial_hp - move.max_hits
+
+
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [
@@ -382,6 +400,7 @@ def test_スキルリンク_2から5連続技が最大ヒット数になる():
         ("かかとおとし", 4915),  # 1.2倍（失敗反動技もrecoilフラグの対象）
         ("とびげり", 4915),  # 1.2倍（失敗反動技もrecoilフラグの対象）
         ("とびひざげり", 4915),  # 1.2倍（失敗反動技もrecoilフラグの対象）
+        ("サンダーダイブ", 4915),  # 1.2倍（失敗反動技もrecoilフラグの対象）
         ("たいあたり", 4096),  # 補正なし
     ]
 )

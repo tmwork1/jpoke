@@ -88,6 +88,19 @@ def test_マジックガード_どくダメージを受けない():
     assert mon.hp == mon.max_hp
 
 
+def test_マジックガード_わるあがきの反動ダメージは防げない():
+    """マジックガード: わるあがきの反動は通常の反動技と異なる仕様のため無効化されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード", move_names=["わるあがき"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert attacker.hp < hp_before
+
+
 def test_マジックガード_技ダメージを受ける():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],

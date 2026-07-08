@@ -322,6 +322,35 @@ def test_タイプ無効回復_かたやぶりで無効(ability, move):
     assert not defender.ability.revealed
 
 
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_イカサマを受けるときは対象の攻撃補正は乗らない(ability_name: str):
+    """クォークチャージ/こだいかっせい: 対象（相手）自身の攻撃能力上昇は、
+    イカサマを受けたときのダメージに影響しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("スピアー", ability_name=ability_name, item_name="ブーストエナジー")],
+        team1=[Pokemon("ピカチュウ", move_names=["イカサマ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_イカサマ使用時は使用者自身の攻撃補正が乗る(ability_name: str):
+    """クォークチャージ/こだいかっせい: イカサマは相手の実数値を攻撃として使うが、
+    パラドックス補正は通常の物理技と同様に使用者自身の攻撃強化状態にのみ依存する。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "スピアー", ability_name=ability_name, item_name="ブーストエナジー",
+            move_names=["イカサマ"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 5325
+
+
 def test_パラドックス特性_ブーストエナジーのみ_アイテムが発動源():
     # 場の条件なし → アイテムが発動源、アイテムは消費される
     battle = t.start_battle(
@@ -332,6 +361,42 @@ def test_パラドックス特性_ブーストエナジーのみ_アイテムが
     assert mon.paradox_boost_source == "item"
     assert mon.paradox_boost_active
     assert not mon.has_item("ブーストエナジー")
+
+
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_ボディプレス使用時に強化対象がぼうぎょでも補正は乗らない(ability_name: str):
+    """クォークチャージ/こだいかっせい: 強化対象が『ぼうぎょ』（ボディプレスが参照する実数値）でも、
+    技の分類（物理）に対応する『こうげき』スロットではないため補正は乗らない。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ゼニガメ", ability_name=ability_name, item_name="ブーストエナジー",
+            move_names=["ボディプレス"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_stat == "def"
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_ボディプレス使用時は使用者自身のこうげき強化で補正が乗る(ability_name: str):
+    """クォークチャージ/こだいかっせい: ボディプレスは自分の『ぼうぎょ』実数値を攻撃として使うが、
+    パラドックス補正は技の分類（物理）に対応する『こうげき』スロットが強化対象かどうかで判定される。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "スピアー", ability_name=ability_name, item_name="ブーストエナジー",
+            move_names=["ボディプレス"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_stat == "atk"
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 5325
 
 
 def test_パラドックス特性_地形優先_場消滅後アイテム発動():

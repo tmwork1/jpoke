@@ -55,7 +55,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=0,
         accuracy=100,
         priority=-5,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},  # まねっこでコピー不可（第四世代以降）
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.カウンター_can_use,
@@ -236,6 +236,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.half_damage,
                 subject_spec="attacker:self",
+                priority=15,
             )
         }
     ),
@@ -437,13 +438,13 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ガリョウテンセイ": MoveData(
         type="ひこう",
         category="physical",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ガリョウテンセイ_lower_defender_spd,
+                ha.ガリョウテンセイ_lower_attacker_stats,
             )
         }
     ),
@@ -835,7 +836,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         category="physical",
         pp=12,
         power=100,
-        accuracy=90,
+        accuracy=95,
         critical_rank=1,
         flags={"contact"},
         handlers={},  # 追加効果なし
@@ -846,7 +847,16 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=16,
         power=50,
         accuracy=None,
-        handlers={},  # 追加効果なし
+        handlers={
+            # docs/spec/turn.md の Event.ON_DAMAGE priority=10「クリアスモッグによるランクリセット」に対応
+            Event.ON_DAMAGE_HIT: h.MoveHandler(
+                ha.クリアスモッグ_reset_defender_rank,
+                priority=10,
+            ),
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.クリアスモッグ_reset_defender_rank)
+        }
     ),
     "くろいきり": MoveData(
         type="こおり",
@@ -873,10 +883,19 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロスサンダー": MoveData(
         type="でんき",
         category="physical",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.クロスサンダー_calc_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.クロスサンダー_record_hit,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "クロスチョップ": MoveData(
         type="かくとう",
@@ -891,11 +910,24 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロスフレイム": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
         flags={"thaw"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.クロスフレイム_thaw_attacker,
+                priority=5,
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.クロスフレイム_calc_power,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_HIT: h.MoveHandler(
+                ha.クロスフレイム_record_hit,
+                subject_spec="attacker:self",
+            ),
+        },
     ),
     "クロスポイズン": MoveData(
         type="どく",
@@ -914,13 +946,12 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "クロロブラスト": MoveData(
         type="くさ",
         category="special",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=95,
         handlers={
-            Event.ON_PAY_HP: h.MoveHandler(
-                ha.クロロブラスト_pay_hp,
-                subject_spec="attacker:self",
+            Event.ON_HIT: h.MoveHandler(
+                ha.クロロブラスト_recoil,
             ),
         }
     ),
@@ -930,9 +961,8 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=20,
         power=55,
         accuracy=100,
-        priority=1,
         flags={"contact"},
-        handlers={},  # 追加効果なし
+        handlers={},  # 追加効果なし。優先度補正はグラスフィールド側で処理する（グラスフィールド_boost_move_priority）
     ),
     "グラスフィールド": MoveData(
         type="くさ",
@@ -945,23 +975,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "グラスミキサー": MoveData(
-        type="くさ",
-        category="special",
-        pp=10,
-        power=60,
-        accuracy=55,
-        flags={"secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.グラスミキサー_lower_acc,
-            )
-        }
-    ),
     "グロウパンチ": MoveData(
         type="かくとう",
         category="physical",
-        pp=40,
+        pp=20,
         power=40,
         accuracy=100,
         flags={"contact", "punch", "secondary_effect"},
@@ -1003,7 +1020,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=12,
         power=120,
         accuracy=90,
-        flags={"non_negoto"},
+        flags={"non_negoto", "non_copycat"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 ha.ゲップ_check_ate_berry,
@@ -1271,6 +1288,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         accuracy=90,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "コールドフレア"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.コールドフレア_apply_burn_to_defender,
             )
@@ -1285,6 +1305,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         critical_rank=1,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "ゴッドバード"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ゴッドバード_apply_flinch,
             )
@@ -1296,20 +1319,26 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=12,
         power=90,
         accuracy=100,
-        flags={"contact"},
-        handlers={},  # 追加効果なし
+        flags={"contact", "unprotectable"},
+        handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),
+            ),
+        }
     ),
     "ゴールドラッシュ": MoveData(
         type="はがね",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
-        accuracy=100,
-        flags={"secondary_effect"},
+        accuracy=95,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ゴールドラッシュ_lower_spa_C,
+                ha.ゴールドラッシュ_sharply_lower_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.ゴールドラッシュ_lower_spa)
         }
     ),
 }

@@ -1,4 +1,4 @@
-from jpoke.enums import Event, LethalEvent
+from jpoke.enums import DomainEvent, Event, LethalEvent
 from jpoke.core import LethalHandler
 from jpoke.handlers import field as h
 from jpoke.handlers import lethal as l
@@ -30,6 +30,10 @@ TERRAIN: dict[str, FieldData] = {
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.FieldHandler(
                 h.グラスフィールド_power_modifier,
+                subject_spec="attacker:self",
+            ),
+            DomainEvent.ON_MODIFY_MOVE_PRIORITY: h.FieldHandler(
+                h.グラスフィールド_boost_move_priority,
                 subject_spec="attacker:self",
             ),
             Event.ON_TURN_END: [

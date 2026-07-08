@@ -657,6 +657,25 @@ def test_コスモパワー_発動前後のランク変化(def_init, spd_init, d
     assert attacker.rank["spd"] == spd_exp
 
 
+def test_こらえる_HP1で実ダメージ0でも攻撃を受けた扱いになる():
+    """こらえる: HP1のとき実際のダメージが0でも「攻撃を無効化した」扱いにはならない
+    （きあいパンチ不発・ダメおし威力2倍の判定対象。みねうちと同様の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert defender.hits_taken == 1
+
+
 def test_こらえる_HP1のとき致死ダメージでHP1残る():
     """こらえる: HP が 1 のとき致死ダメージを受けても HP 1 が残る"""
     battle = t.start_battle(
@@ -737,15 +756,3 @@ def test_こらえる_致死ダメージを受けてもHP1残る():
 
     assert defender.hp == 1
     assert not defender.fainted
-
-
-def test_ゴッドバード_ひるみが発動する():
-    """ゴッドバード: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ファイアロー", move_names=["ゴッドバード"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")

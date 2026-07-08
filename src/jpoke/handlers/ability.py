@@ -162,6 +162,9 @@ def _apply_contact_counter_chip(battle: Battle,
     if battle.query.is_contact_reaction(ctx):
         v = battle.modify_hp(ctx.attacker, r=-ratio, reason="")
         if v:
+            # ダメおし判定用: さめはだ/てつのトゲによるダメージも「そのターンに
+            # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            ctx.attacker.hits_taken += 1
             _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
@@ -328,10 +331,15 @@ def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value:
 
 
 def アイスフェイス_block_physical(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """アイスフェイス特性: 物理技のダメージを0にしてナイスフェイスにフォルムチェンジする。"""
+    """アイスフェイス特性: 物理技のダメージを0にしてナイスフェイスにフォルムチェンジする。
+
+    実際のダメージは0になるが、ダメージを肩代わりしているため「攻撃を無効化した」
+    扱いにはならない（ばけのかわと同様、ダメおし威力2倍の対象）。
+    """
     if ctx.move.category != "physical" or ctx.defender.name != EISCUE_ICE:
         return HandlerReturn(value=value)
     ctx.defender.set_form(EISCUE_NICE)
+    ctx.defender.hits_taken += 1
     _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=0)
 
@@ -1568,6 +1576,11 @@ def スカイスキン_modify_power(battle: Battle, ctx: AttackContext, value: i
     return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
 
 
+def スキルリンク_modify_hit_check_each_time(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """スキルリンク特性: トリプルキック等、毎ヒット命中判定する技を初回ヒットのみの判定にする。"""
+    return HandlerReturn(value=False)
+
+
 def スキルリンク_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """スキルリンク特性: 連続技のヒット数を最大にする。"""
     if ctx.move.max_hits > 1:
@@ -2368,13 +2381,6 @@ def はやてのつばさ_modify_priority(battle: Battle, ctx: AttackContext, va
         and mon.hp == mon.max_hp
     ):
         value += 1
-    return HandlerReturn(value=value)
-
-
-def はらぺこスイッチ_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """はらぺこスイッチ特性: オーラぐるまのタイプをフォルムで変える。"""
-    if ctx.move.name == "オーラぐるま":
-        value = "あく" if ctx.attacker.ability.is_hangry else "でんき"
     return HandlerReturn(value=value)
 
 

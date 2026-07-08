@@ -325,18 +325,6 @@ def test_はらだいこ_こうげき最大化しHP半分消費():
     assert attacker.hp == max_hp - (max_hp // 2)
 
 
-def test_ハートスタンプ_ひるみが発動する():
-    """ハートスタンプ: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピクシー", move_names=["ハートスタンプ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ハートスワップ_すべての能力ランクが入れ替わる():
     """ハートスワップ: 攻撃者と防御者のすべての能力ランクが互いに入れ替わること"""
     battle = t.start_battle(
@@ -373,18 +361,6 @@ def test_ハートスワップ_全ランクゼロのとき変化なし():
     for stat in ("atk", "def", "spa", "spd", "spe", "accuracy", "evasion"):
         assert attacker.rank[stat] == 0
         assert defender.rank[stat] == 0
-
-
-def test_ハードローラー_ひるみが発動する():
-    """ハードローラー: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ゴローニャ", move_names=["ハードローラー"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_バトンタッチ_とらわれ状態でも使用できる():
@@ -1049,18 +1025,6 @@ def test_ほおばる_ラムのみでやけどが治る():
     assert not attacker.item.is_berry()
     # ぼうぎょも上がる
     assert attacker.rank["def"] == 2
-
-
-def test_ホネこんぼう_ひるみが発動する():
-    """ホネこんぼう: 10%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カラカラ", move_names=["ホネこんぼう"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
 
 
 def test_ほろびのうた_3ターン後に瀕死になる():

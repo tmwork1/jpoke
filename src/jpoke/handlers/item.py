@@ -172,6 +172,10 @@ def _apply_contact_item_chip(battle: Battle,
     """
     if battle.query.is_contact_reaction(ctx):
         v = battle.modify_hp(ctx.attacker, r=-ratio)
+        if v:
+            # ダメおし判定用: ゴツゴツメット等によるダメージも「そのターンに攻撃を
+            # 受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            ctx.attacker.hits_taken += 1
         return bool(v)
     return False
 
@@ -309,6 +313,9 @@ def _retaliate_on_category(battle: Battle,
     assert mon is not None
     if ctx.move.category == category:
         if battle.modify_hp(ctx.attacker, r=-1/8):
+            # ダメおし判定用: ジャポのみ/レンブのみによるダメージも「そのターンに
+            # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+            ctx.attacker.hits_taken += 1
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -447,6 +454,9 @@ def いのちのたま_recoil(battle: Battle, ctx: AttackContext, value: Any) ->
         )
     ):
         battle.modify_hp(ctx.attacker, r=-1/10, source=ctx.attacker)
+        # ダメおし判定用: いのちのたまの反動ダメージも「そのターンに攻撃を受けた」
+        # 扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
+        ctx.attacker.hits_taken += 1
         _announce_item_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
 
@@ -505,10 +515,10 @@ def エレキシード_boost_defense(battle: Battle, ctx: EventContext, value: A
 _INNATE_FLINCH_MOVES: frozenset[str] = frozenset({
     "3ぼんのや", "アイアンヘッド", "あくのはどう", "いびき", "いわなだれ", "エアスラッシュ",
     "おどろかす", "かみつく", "かみなりのキバ", "こおりのキバ", "ゴッドバード", "しねんのずつき",
-    "じんつうりき", "ずつき", "たきのぼり", "たつまき", "ダブルパンツァー", "つららおとし",
-    "ドラゴンダイブ", "ニードルアーム", "ねこだまし", "はやてがえし", "ハートスタンプ",
-    "ハードローラー", "ひょうざんおろし", "びりびりちくちく", "ふみつけ",
-    "ホネこんぼう", "ほのおのキバ", "もえあがるいかり",
+    "じんつうりき", "ずつき", "たきのぼり", "たつまき", "つららおとし",
+    "ドラゴンダイブ", "ねこだまし", "はやてがえし",
+    "ひょうざんおろし", "びりびりちくちく", "ふみつけ",
+    "ほのおのキバ", "もえあがるいかり",
 })
 
 def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

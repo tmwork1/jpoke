@@ -34,7 +34,11 @@ def _heal(hp_dist: StateDist,
 
     r が指定された場合は target.max_hp * r（切り捨て、最低1）を回復量とする。
     v と r を両方指定した場合は r が優先される。
+    target がかいふくふうじ状態の場合は回復せずそのまま返す
+    （いたみわけ・さいせいりょくはこのヘルパーを経由しないため対象外）。
     """
+    if "かいふくふうじ" in target.volatiles:
+        return hp_dist
     max_hp = target.max_hp
     if r:
         heal = max(1, int(max_hp * r))
@@ -59,7 +63,11 @@ def _heal_at_pinch(hp_dist: StateDist,
         threshold_rate: HP が max_hp × threshold_rate 以下の状態のみ回復する
         heal_with: 回復手段（"ability" / "item" / None）。対応フラグが False の状態は回復しない
         consume: True の場合、回復後に heal_with に対応するフラグを False にする
+
+    target がかいふくふうじ状態の場合は回復せずそのまま返す。
     """
+    if "かいふくふうじ" in target.volatiles:
+        return hp_dist
     max_hp = target.max_hp
     if r:
         heal = max(1, int(max_hp * r))
@@ -352,6 +360,13 @@ def キラースピン_apply_どく(battle: Battle, ctx: LethalContext, hp_dist:
     return hp_dist
 
 
+def クリアスモッグ_reset_defender_rank(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """クリアスモッグ: 命中後、防御側の能力ランク変化を全て±0にリセットする。"""
+    for stat in ctx.defender.rank:
+        ctx.defender.rank[stat] = 0
+    return hp_dist
+
+
 def くろいヘドロ_recover_or_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """くろいヘドロ: どくタイプは1/16回復、それ以外は1/8ダメージ。"""
     if "どく" in ctx.defender.types:
@@ -366,6 +381,26 @@ def グラスフィールド_heal(battle: Battle, ctx: LethalContext, hp_dist: S
     if battle.query.is_floating(ctx.defender):
         return hp_dist
     return _heal(hp_dist, ctx.defender, r=1/16)
+
+
+def ゴールドラッシュ_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """ゴールドラッシュ: 命中後、攻撃側のとくこうを2段階下げる（Champions基準）。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
+
+
+def サイコノイズ_apply_volatile(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """サイコノイズ: 命中後、追加効果有効時に相手にかいふくふうじ状態（2ターン）を付与する。"""
+    if ctx.move_secondary and "かいふくふうじ" not in ctx.defender.volatiles:
+        from jpoke.model.volatile import Volatile
+        ctx.defender.volatiles["かいふくふうじ"] = Volatile("かいふくふうじ", count=2)
+    return hp_dist
+
+
+def サイコブースト_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """サイコブースト: 命中後、攻撃側のとくこうを2段階下げる。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
 
 
 def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
@@ -478,6 +513,22 @@ def タンガのみ_resist_bug(battle: Battle, ctx: LethalContext, hp_dist: Stat
     return _type_resist_berry(battle, ctx, hp_dist, "むし")
 
 
+def チャージビーム_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """チャージビーム: 命中後、追加効果有効時に攻撃側のとくこうを1段階上げる。"""
+    if ctx.move_secondary:
+        ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] + 1)
+    return hp_dist
+
+
+def テラバースト_lower_attacker_atk_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """テラバースト: ステラタイプにテラスタルして命中した場合、こうげき・とくこうを1段階ずつ下げる。"""
+    if ctx.attacker.active_tera_type != "ステラ":
+        return hp_dist
+    ctx.attacker.rank["atk"] = clamp_stats(ctx.attacker.rank["atk"] - 1)
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 1)
+    return hp_dist
+
+
 def どく_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """どく: ターン終了時に最大HPの1/8ダメージを受ける。
 
@@ -573,6 +624,12 @@ def ビアーのみ_resist_poison(battle: Battle, ctx: LethalContext, hp_dist: S
 def フィラのみ_heal(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
     """フィラのみ: HP が 1/4 以下になると max_hp の 1/3 回復し、消費する。"""
     return _heal_at_pinch(hp_dist, ctx.defender, r=1/3, threshold_rate=1/4, heal_with="item", consume=True)
+
+
+def フルールカノン_lower_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
+    """フルールカノン: 命中後、攻撃側のとくこうを2段階下げる。"""
+    ctx.attacker.rank["spa"] = clamp_stats(ctx.attacker.rank["spa"] - 2)
+    return hp_dist
 
 
 def フレアソング_boost_spa(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:

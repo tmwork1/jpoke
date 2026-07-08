@@ -502,6 +502,18 @@ def test_キラースピン_どく付与_secondary有り():
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == poison_damage * 2
 
 
+def test_クリアスモッグ_とくぼうリセットで2発目のダメージが増加する():
+    """クリアスモッグ: あらかじめ上がっていた相手のとくぼうが命中後にリセットされるため、
+    2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle.actives[1].rank["spd"] = 2
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("クリアスモッグ"), max_attack=2)
+    assert results[1].min_damage > results[0].min_damage
+
+
 def test_くろいヘドロ_どくタイプは毎ターン回復():
     """くろいヘドロ所持のどくタイプポケモンは、ターン終了時に最大HPの1/16を回復する。"""
     with_item = t.start_battle(
@@ -562,6 +574,67 @@ def test_グラスフィールド_接地ポケモンのターン終了時回復(
     max_hp = with_terrain.actives[1].max_hp
     heal = max(1, max_hp // 16)
     assert max(results_with[1].hp_counter) - max(results_without[1].hp_counter) == heal * 2
+
+
+def test_ゴールドラッシュ_とくこうダウン():
+    """ゴールドラッシュ: 命中後にとくこうが2段階下がる（Champions基準）ため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ゴールドラッシュ"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
+def test_サイコノイズ_かいふくふうじでたべのこし回復がブロックされる():
+    """サイコノイズ: secondary=True で命中後にかいふくふうじを付与し、
+    たべのこしのターン終了回復がブロックされる。"""
+    battle_secondary = t.start_battle(
+        team0=[Pokemon("フーディン")],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+    )
+    battle_no_secondary = t.start_battle(
+        team0=[Pokemon("フーディン")],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+    )
+    results_with = t.calc_lethal(
+        battle_secondary, atk_idx=0, moves=Move("サイコノイズ"), max_attack=2, secondary=True,
+    )
+    results_without = t.calc_lethal(
+        battle_no_secondary, atk_idx=0, moves=Move("サイコノイズ"), max_attack=2, secondary=False,
+    )
+
+    leftover_heal = battle_secondary.actives[1].max_hp // 16
+    assert (
+        max(results_without[1].hp_counter) - max(results_with[1].hp_counter)
+        == leftover_heal * 2
+    )
+
+
+def test_サイコブースト_とくこうダウン():
+    """サイコブースト: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("デオキシス(アタック)")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("サイコブースト"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
+def test_サンダープリズン_バインド付与():
+    """サンダープリズンは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
 def test_しおづけ_ターン終了時ダメージ():
@@ -784,6 +857,26 @@ def test_タラプのみ_特殊技受けた後とくぼう上昇():
     assert results[1].max_damage == 66
 
 
+def test_チャージビーム_とくこうアップ_secondary有り():
+    """チャージビーム: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("チャージビーム"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_チャージビーム_とくこうアップ_secondary無し():
+    """チャージビーム: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("チャージビーム"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_テラスシェル_満タン時タイプ相性を等倍に丸める():
     """テラスシェル: HPが満タンのとき、等倍以上の相性の技を受けると相性が等倍(1x)に丸められ
     ダメージが半減する。HPが満タンでなければ通常通りのダメージを受ける。"""
@@ -797,6 +890,46 @@ def test_テラスシェル_満タン時タイプ相性を等倍に丸める():
     assert results[0].max_damage == 12
     assert results[1].min_damage == 20
     assert results[1].max_damage == 24
+
+
+def test_テラバースト_ステラでこうげきとくこうダウン():
+    """テラバースト: ステラタイプにテラスタルして命中すると、こうげき・とくこうが1段階ずつ下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="ステラ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    battle.actives[0].terastallize()
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
+    assert results[0].attacker.rank["atk"] == -1
+    assert results[0].attacker.rank["spa"] == -1
+
+
+def test_テラバースト_ステラ以外はランクが下がらない():
+    """テラバースト: ステラ以外のタイプにテラスタルした場合はランクが下がらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", tera_type="でんき")],
+        team1=[Pokemon("カビゴン")],
+    )
+    battle.actives[0].terastallize()
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
+    assert results[0].attacker.rank["atk"] == 0
+    assert results[0].attacker.rank["spa"] == 0
+
+
+def test_トラバサミ_バインド付与():
+    """トラバサミは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("トラバサミ"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("トラバサミ"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
 def test_どく_ターン終了時ダメージ():
@@ -958,6 +1091,16 @@ def test_ばけのかわ_初回攻撃を無効化():
     assert max(results[0].hp_counter) == max_hp - disguise_damage
     # 1発目後: 全状態でability_enabledがFalseになる
     assert all(not state.ability_enabled for state in results[0].hp_dist)
+
+
+def test_フルールカノン_とくこうダウン():
+    """フルールカノン: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("マギアナ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("フルールカノン"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
 
 
 def test_フレアソング_とくこうアップ_secondary有り():

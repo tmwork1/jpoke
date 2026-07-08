@@ -167,6 +167,16 @@ def オーロラベール_tick(battle: Battle, ctx: EventContext, value: Any) ->
     return _tick_side_field(battle, ctx, value, name="オーロラベール")
 
 
+def グラスフィールド_boost_move_priority(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """グラスフィールド: 接地している使用者のグラススライダーの優先度を+1する。"""
+    if (
+        ctx.move.name == "グラススライダー"
+        and not battle.query.is_floating(ctx.attacker)
+    ):
+        value += 1
+    return HandlerReturn(value=value)
+
+
 def グラスフィールド_heal(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """グラスフィールドのターン終了時回復"""
     if not battle.query.is_floating(ctx.source):

@@ -50,6 +50,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.level_fixed_damage,
                 subject_spec="attacker:self",
+                priority=15,
             )
         }
     ),
@@ -201,7 +202,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=20,
         power=50,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ニトロチャージ_boost_attacker_spe,
@@ -242,19 +243,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.にらみつける_modify_defender_stats,
-            )
-        }
-    ),
-    "ニードルアーム": MoveData(
-        type="くさ",
-        category="physical",
-        pp=15,
-        power=60,
-        accuracy=100,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ニードルアーム_apply_flinch,
             )
         }
     ),
