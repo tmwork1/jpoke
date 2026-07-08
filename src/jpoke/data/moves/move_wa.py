@@ -51,7 +51,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイルドボルト": MoveData(
         type="でんき",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         flags={"contact", "recoil"},
