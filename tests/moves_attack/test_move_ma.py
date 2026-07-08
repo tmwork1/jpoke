@@ -636,6 +636,115 @@ def test_みらいよち_使用ターンには攻撃が発動しない():
     assert defender.hp == hp_before
 
 
+def test_ミラーコート_まねっこでコピーできる():
+    """ミラーコート: SVではまねっこでコピー可能（カウンターとは異なる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["10まんボルト", "まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # ピカチュウ: 10まんボルトでカビゴンに特殊ダメージ
+    t.run_move(battle, 0, move_idx=0)
+    # カビゴン: ミラーコートで反撃し、成功して最後の使用技になる（ピカチュウが特殊ダメージを受ける）
+    t.run_move(battle, 1)
+    assert attacker.last_special_damage_received > 0
+    hp_before = defender.hp
+    # ピカチュウ: まねっこ（ミラーコートをコピー）→ 成功するはず
+    t.run_move(battle, 0, move_idx=1)
+    assert battle.move_executor.move_applied
+    assert defender.hp < hp_before
+
+
+def test_ミラーコート_みがわりに当たったダメージは参照されない():
+    """ミラーコート: みがわりが被弾したダメージは特殊ダメージとして記録されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+        volatile0={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手の特殊技をみがわりで受ける
+    t.run_move(battle, 1)
+    assert attacker.last_special_damage_received == 0
+    hp_before = defender.hp
+    # ミラーコートは失敗するはず
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_ミラーコート_物理ダメージのみ受けたとき失敗する():
+    """ミラーコート: そのターン物理ダメージのみ受けた場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["ひっかく"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # 相手の物理技を受ける
+    t.run_move(battle, 1)
+    hp_before = defender.hp
+    # ミラーコートは失敗するはず
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_ミラーコート_特殊ダメージを2倍返しする():
+    """ミラーコート: 受けた特殊ダメージの2倍を相手に与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手の特殊技を受ける
+    t.run_move(battle, 1)
+    special_dmg = attacker.last_special_damage_received
+    assert special_dmg > 0
+    hp_before = defender.hp
+    # ミラーコートで2倍返し
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - special_dmg * 2
+
+
+def test_ミラーコート_特殊ダメージを受けていないとき失敗する():
+    """ミラーコート: そのターン特殊ダメージを受けていない場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_ミラーコート_連続技を受けた場合は最後の1回分のダメージのみ参照する():
+    """ミラーコート: 連続技を受けた場合、合計ではなく最後の1回分のダメージを2倍にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["ツインビーム"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.fix_damage(battle, 10)
+    # 相手の連続技（2回攻撃）を受ける
+    t.run_move(battle, 1)
+    assert attacker.hits_taken == 2
+    # 合計(20)ではなく最後の1回分(10)のみが記録される
+    assert attacker.last_special_damage_received == 10
+    hp_before = defender.hp
+    # ミラーコートは最後の1回分(10)の2倍=20だけを返す
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - 20
+
+
 def test_ミラーショット_命中率1段階低下が発動する():
     """ミラーショット: 30%の確率で相手の命中率を1段階下げる。"""
     battle = t.start_battle(
