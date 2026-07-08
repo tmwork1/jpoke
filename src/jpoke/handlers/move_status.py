@@ -204,7 +204,15 @@ def いたみわけ_equalize_hp(battle: Battle, ctx: AttackContext, value: Any) 
 
 
 def いちゃもん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="いちゃもん")
+    """いちゃもんの効果: 相手がいちゃもん状態になり、直前に選択した技を出せなくなる。
+
+    相手が場に出てから技を使用していない場合でも付与自体は成功する
+    （その場合は move_name="" となり、実質的に禁止技は発生しない）。
+    """
+    move = ctx.defender.executed_move
+    return apply_volatile_to_defender(
+        battle, ctx, value, volatile="いちゃもん", move_name=move.name if move else ""
+    )
 
 
 def いとをはく_reduce_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
