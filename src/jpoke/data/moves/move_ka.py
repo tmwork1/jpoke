@@ -246,14 +246,12 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=20,
         accuracy=100,
         handlers={
-            Event.ON_STATUS_HIT: [
-                h.MoveHandler(
-                    hs.かなしばり_can_apply,
-                ),
-                h.MoveHandler(
-                    hs.かなしばり_apply,
-                ),
-            ],
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.かなしばり_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.かなしばり_apply,
+            ),
         }
     ),
     "かふんだんご": MoveData(
