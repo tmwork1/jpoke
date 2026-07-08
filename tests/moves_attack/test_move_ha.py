@@ -1162,6 +1162,44 @@ def test_ばくれつパンチ_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_バブルこうせん_すばやさ1段階低下が発動しない():
+    """バブルこうせん: 追加効果不発時は相手のすばやさランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュゴン", move_names=["バブルこうせん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == 0
+
+
+def test_バブルこうせん_すばやさ1段階低下が発動する():
+    """バブルこうせん: 10%の確率で相手のすばやさランクを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュゴン", move_names=["バブルこうせん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
+def test_バブルこうせん_相手にダメージを与える():
+    """バブルこうせん: みずタイプの特殊技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュゴン", move_names=["バブルこうせん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_バリアーラッシュ_防御1段階上昇が発動する():
     """バリアーラッシュ: 命中時に使用者のBが1段階上昇する（確率100%）。"""
     battle = t.start_battle(
