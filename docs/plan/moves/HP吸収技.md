@@ -21,7 +21,7 @@
 | シャカシャカほう | 済 | 未 | ON_DAMAGE_HIT にやけど追加効果ハンドラはあり。ドレインは未登録 |
 | すいとる | 済 | 未 | `labels=["heal"]` |
 | デスウイング | 未 | 未 | 新規 MoveData 追加が必要 |
-| ドレインキッス | 済 | 未 | `labels=["contact", "heal"]` |
+| ドレインキッス | 済 | 済 | `flags={"contact", "heal"}` |
 | ドレインパンチ | 済 | 未 | `labels=["contact", "punch", "heal"]` |
 | パラボラチャージ | 済 | 未 | `labels=["heal"]` |
 | むねんのつるぎ | 済 | 未 | `labels=["contact", "slash", "heal"]` |

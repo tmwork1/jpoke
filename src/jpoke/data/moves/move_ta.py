@@ -1473,12 +1473,15 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ドレインキッス": MoveData(
         type="フェアリー",
         category="special",
-        pp=10,
+        pp=12,
         power=50,
         accuracy=100,
         flags={"contact", "heal"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.ドレインキッス_drain, priority=20)
+            Event.ON_HIT: h.MoveHandler(
+                ha.ドレインキッス_drain,
+                priority=20,  # turn.md: ON_HIT priority 20 (HP吸収技による回復)
+            )
         }
     ),
     "ドレインパンチ": MoveData(
