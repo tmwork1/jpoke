@@ -1129,7 +1129,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "おかたづけ": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(hs.おかたづけ_cleanup),

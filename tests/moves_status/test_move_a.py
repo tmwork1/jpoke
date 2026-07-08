@@ -1200,6 +1200,54 @@ def test_おかたづけ_みがわりを除去する():
     assert not defender.has_volatile("みがわり")
 
 
+def test_おかたづけ_自分のみがわりも除去する():
+    """おかたづけ: 使用者自身のみがわりも除去する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("みがわり")
+
+
+def test_おかたづけ_ランクが最大でもみがわりを除去する():
+    """おかたづけ: こうげき・すばやさがすでに最大でも、みがわりの除去効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.rank["atk"] = 6
+    attacker.rank["spe"] = 6
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("みがわり")
+
+
+@pytest.mark.parametrize("trap_name", [
+    "まきびし",
+    "どくびし",
+    "ステルスロック",
+    "ねばねばネット",
+])
+def test_おかたづけ_両陣営のトラップを除去する(trap_name):
+    """おかたづけ: 自陣・相手陣営双方のトラップを除去する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おかたづけ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={trap_name: 1},
+        side1={trap_name: 1},
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.side_managers[0].fields[trap_name].is_active
+    assert not battle.side_managers[1].fields[trap_name].is_active
+
+
 def test_おかたづけ_相手陣営のまきびしを除去する():
     """おかたづけ: 相手陣営のまきびしを除去する"""
     battle = t.start_battle(
