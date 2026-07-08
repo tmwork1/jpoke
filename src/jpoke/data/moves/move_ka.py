@@ -186,7 +186,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "かげぶんしん": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かげぶんしん_boost_attacker_evasion,
