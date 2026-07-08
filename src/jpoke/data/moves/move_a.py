@@ -1149,8 +1149,8 @@ MOVES_A: dict[MoveName, MoveData] = {
     "おさきにどうぞ": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
-        handlers={},  # 追加効果なし
+        pp=16,
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "おしゃべり": MoveData(
         type="ひこう",
