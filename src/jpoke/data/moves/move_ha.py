@@ -1310,7 +1310,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ベノムショック": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=65,
         accuracy=100,
         handlers={
