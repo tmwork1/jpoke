@@ -2052,15 +2052,38 @@ def test_フリーズドライ_みずタイプに効果抜群():
     assert battle.damage_calculator.def_type_modifier == 8192
 
 
+def test_フリーズボルト_2ターンで攻撃する():
+    """フリーズボルト: 1ターン目はダメージなしで揮発状態を付与し、2ターン目にダメージを与えて揮発状態を解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フリーザー", move_names=["フリーズボルト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+
+    # 1ターン目: 揮発状態付与のみ、ダメージなし
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert attacker.has_volatile("フリーズボルト")
+
+    # 2ターン目: ダメージあり、揮発状態解除
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert not attacker.has_volatile("フリーズボルト")
+
+
 def test_フリーズボルト_まひが発動する():
-    """フリーズボルト: 30%でまひを付与する。"""
+    """フリーズボルト: 2ターン目の攻撃命中時に30%でまひを付与する。"""
     battle = t.start_battle(
         team0=[Pokemon("フリーザー", move_names=["フリーズボルト"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
         secondary_chance=1.0,
     )
-    t.run_move(battle, 0)
+    t.run_move(battle, 0)  # 1ターン目: 溜め
+    t.run_move(battle, 0)  # 2ターン目: 攻撃
     assert battle.actives[1].ailment.name == "まひ"
 
 

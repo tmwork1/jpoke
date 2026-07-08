@@ -1119,6 +1119,11 @@ def ふういん_try_action(battle: Battle, ctx: AttackContext, value: Any) -> H
     return HandlerReturn(value=value)
 
 
+def フリーズボルト_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """フリーズボルト状態の解除"""
+    return remove_volatile(battle, ctx, value, volatile="フリーズボルト")
+
+
 def ブラッドムーン_modify_command_options(battle: Battle, ctx: EventContext, value: list[Command]) -> HandlerReturn:
     """ブラッドムーン揮発状態: 前のターンにブラッドムーンのPPを消費していた場合、
     コマンド選択肢からブラッドムーンを除外する。

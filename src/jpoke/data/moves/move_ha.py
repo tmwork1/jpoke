@@ -989,6 +989,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
         accuracy=90,
         flags={"secondary_effect"},
         handlers={
+            Event.ON_MOVE_CHARGE: h.MoveHandler(
+                lambda b, c, v: h.charge_into_volatile(b, c, v, "フリーズボルト"),
+            ),
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.フリーズボルト_apply_paralysis_to_defender,
             )
