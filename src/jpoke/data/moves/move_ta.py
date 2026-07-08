@@ -1400,7 +1400,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=16,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        critical_rank=1,
+        flags={"contact", "slash"},
         handlers={},  # 追加効果なし
     ),
     "ドラゴンダイブ": MoveData(
