@@ -2510,6 +2510,20 @@ def test_ブレイククロー_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ブレイズキック_こおり状態の相手に当てると解凍する():
+    """ブレイズキック: ほのおタイプの攻撃技のため、被弾した相手のこおりを解凍する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ブレイズキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+
+
 def test_ブレイズキック_やけどが発動する():
     """ブレイズキック: 10%でやけどを付与する。"""
     battle = t.start_battle(
@@ -2546,20 +2560,6 @@ def test_ブレイズキック_急所ランクが1_乱数大で急所なし():
     t.fix_random(battle, 0.5)  # 命中は通過（50 < 90）、0.5 >= 1/8 なので急所なし
     t.run_move(battle, 0)
     assert battle.move_executor.critical is False
-
-
-def test_ブレイズキック_こおり状態の相手に当てると解凍する():
-    """ブレイズキック: ほのおタイプの攻撃技のため、被弾した相手のこおりを解凍する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("リザードン", move_names=["ブレイズキック"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=0.0,
-    )
-    defender = battle.actives[1]
-    battle.ailment_manager.apply(defender, "こおり")
-    t.run_move(battle, 0)
-    assert not defender.ailment.is_active
 
 
 def test_ブレイブバード_使用後に攻撃者が反動ダメージを受ける():
