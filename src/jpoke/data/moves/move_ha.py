@@ -46,11 +46,15 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ハイドロスチーム": MoveData(
         type="みず",
         category="special",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
         flags={"thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.ハイドロスチーム_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
                 ha.ハイドロスチーム_power_modifier,
             ),

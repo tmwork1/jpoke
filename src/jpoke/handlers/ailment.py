@@ -61,14 +61,19 @@ def こおり_cure_by_thaw_move(battle: Battle, ctx: AttackContext, value: Any) 
 
     ほのおタイプ技による解凍はタイプ由来の効果であり追加効果に該当しないため、
     ちからずくの影響を受けない。一方、シャカシャカほう/スチームバースト/
-    ねっさのだいち/ねっとう（第六世代以降）/ハイドロスチーム等、ほのお以外の
-    タイプでこの効果を持つ技は追加効果として扱われるため、使用者がちからずくの
-    場合はこの効果が発動しない（りんぷんの影響は受けない）。
+    ねっさのだいち/ねっとう（第六世代以降）等、ほのお以外のタイプでこの効果を
+    持つ技のうち「secondary_effect」フラグを持つもの（＝ちからずく対象技）は
+    追加効果として扱われるため、使用者がちからずくの場合はこの効果が発動しない
+    （りんぷんの影響は受けない）。
+    ハイドロスチームは「secondary_effect」フラグを持たずちからずくの対象技
+    ではないため、使用者がちからずくでもこの効果は常に発動する
+    （docs/spec/moves/ハイドロスチーム.md参照）。
     """
     if not ctx.move.has_flag("thaw"):
         return HandlerReturn(value=value)
     if (
         ctx.move.type != "ほのお"
+        and ctx.move.has_flag("secondary_effect")
         and ctx.attacker.ability.name == "ちからずく"
     ):
         return HandlerReturn(value=value)
