@@ -1176,6 +1176,19 @@ def test_ムーンフォース_基準確率0_1で発動する():
     assert battle.actives[1].rank["spa"] == -1
 
 
+def test_メガトンキック_相手にダメージを与える():
+    """メガトンキック: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["メガトンキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_メガトンパンチ_相手にダメージを与える():
     """メガトンパンチ: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
     battle = t.start_battle(

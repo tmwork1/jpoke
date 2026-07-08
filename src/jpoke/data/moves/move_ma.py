@@ -597,7 +597,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "メガトンキック": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=75,
         flags={"contact"},
