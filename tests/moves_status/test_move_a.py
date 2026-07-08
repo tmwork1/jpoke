@@ -1256,6 +1256,21 @@ def test_おたけび_こうげきとくこう1段階ずつ下がる():
     assert defender.rank["spa"] == -1
 
 
+def test_おだてる_こんらん済みでもとくこう最大未満なら成功():
+    """おだてる: こんらん済みでもとくこうが+6未満であればとくこうアップのみ適用され技は成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おだてる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"こんらん": 3},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["spa"] == 1
+    assert battle.move_executor.move_applied is True
+
+
 def test_おだてる_すでにこんらんかつとくこう最大なら失敗():
     """おだてる: とくこうが+6かつこんらん済みなら技が失敗する"""
     battle = t.start_battle(
@@ -1270,6 +1285,7 @@ def test_おだてる_すでにこんらんかつとくこう最大なら失敗(
 
     # とくこうは変化せず、こんらんも新たに付与されない
     assert defender.rank["spa"] == 6
+    assert battle.move_executor.move_applied is False
 
 
 def test_おだてる_とくこう1段階上がりこんらん付与():
@@ -1284,6 +1300,7 @@ def test_おだてる_とくこう1段階上がりこんらん付与():
 
     assert defender.rank["spa"] == 1
     assert defender.has_volatile("こんらん")
+    assert battle.move_executor.move_applied is True
 
 
 def test_おだてる_とくこう最大でもこんらん未付与なら成功():
@@ -1299,6 +1316,7 @@ def test_おだてる_とくこう最大でもこんらん未付与なら成功(
 
     assert defender.rank["spa"] == 6
     assert defender.has_volatile("こんらん")
+    assert battle.move_executor.move_applied is True
 
 
 def test_おどろかす_ひるみが発動する():

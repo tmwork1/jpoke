@@ -425,6 +425,18 @@ def おたけび_modify_defender_stats(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
 
 
+def おだてる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """おだてるの失敗条件: 相手のとくこうランクがすでに+6、かつすでにこんらん状態なら失敗する。"""
+    assert ctx.defender is not None
+    if ctx.defender.rank["spa"] == 6 and ctx.defender.has_volatile("こんらん"):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="おだてる")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def おだてる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おだてるの効果: 相手のとくこうを1段階上げ、相手をこんらん状態にする。"""
     battle.modify_stats(ctx.defender, {"spa": 1}, source=ctx.attacker)
