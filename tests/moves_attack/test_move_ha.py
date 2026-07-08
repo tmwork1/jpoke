@@ -3303,6 +3303,26 @@ def test_ボルテッカー_反動ダメージが与ダメの3分の1になる()
     assert attacker.hp == hp_before - 33
 
 
+def test_ボルテッカー_みがわりへの与ダメージでも反動が発生する():
+    """ボルテッカー: みがわりに阻まれた場合、みがわりへの与ダメージを基準に反動を算出する（第五世代以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルテッカー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_damage(battle, 100)
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    # max(1, int(100 * 1/3)) = 33
+    assert attacker.hp == hp_before - 33
+    assert defender.hp == defender.max_hp
+    # みがわりに阻まれた場合、追加効果（まひ）は発動しない
+    assert defender.ailment.name == ""
+
+
 def test_ボーンラッシュ_複数ヒットする():
     """ボーンラッシュ: 2～5回連続でヒットする複数ヒット技である。"""
     battle = t.start_battle(
