@@ -1077,7 +1077,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ともえなげ": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=90,
         priority=-6,
@@ -1419,7 +1419,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ドラゴンテール": MoveData(
         type="ドラゴン",
         category="physical",
-        pp=10,
+        pp=12,
         power=60,
         accuracy=90,
         priority=-6,
