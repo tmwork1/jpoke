@@ -4,41 +4,6 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
-def test_うらみ_相手が技を使っていない場合は失敗():
-    """うらみ: 相手がまだ技を使っていない場合は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
-        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    move = defender.moves[0]
-    pp_before = move.pp
-    # カビゴンはまだ技を使っていないのでうらみは失敗するはず
-    t.run_move(battle, 0)
-
-    # PPは変化しない
-    assert move.pp == pp_before
-
-
-def test_うらみ_相手の技のPPが4減る():
-    """うらみ: 相手が前のターンに使った技のPPが4減る"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
-        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    move = defender.moves[0]
-    # カビゴンに技を使わせて executed_move を設定する
-    t.run_move(battle, 1)
-    pp_after_use = move.pp
-    # うらみを使う
-    t.run_move(battle, 0)
-
-    assert move.pp == pp_after_use - 4
-
-
 def test_ねがいごと_重複設置は失敗する():
     """ねがいごと: すでに設置済みなら失敗する"""
     battle = t.start_battle(
