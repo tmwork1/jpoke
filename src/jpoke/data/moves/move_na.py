@@ -202,7 +202,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=20,
         power=50,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ニトロチャージ_boost_attacker_spe,

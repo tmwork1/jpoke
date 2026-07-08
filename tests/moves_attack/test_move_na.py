@@ -1018,6 +1018,31 @@ def test_にぎりつぶす_相手HP満タンのとき威力120():
     assert battle.damage_calculator.final_power == 120
 
 
+def test_ニトロチャージ_すばやさ1段階上昇が発動する():
+    """ニトロチャージ: 命中時に使用者のSが1段階上昇する（確率100%）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウインディ", move_names=["ニトロチャージ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["spe"] == 1
+
+
+def test_ニトロチャージ_ちからずくで威力上昇しすばやさ上昇は発動しない():
+    """ニトロチャージ: ちからずく使用時は威力が1.3倍になる代わりに、すばやさ上昇は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウインディ", ability_name="ちからずく", move_names=["ニトロチャージ"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert attacker.rank["spe"] == 0
+
+
 def test_にどげり_命中判定1回で2回ヒットする():
     """にどげり: 命中判定は1回だけで、2ヒットする。"""
     battle = t.start_battle(
