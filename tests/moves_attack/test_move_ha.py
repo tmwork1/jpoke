@@ -1382,6 +1382,19 @@ def test_パワフルエッジ_まもる状態が解除されない():
     assert battle.actives[1].has_volatile("まもる")
 
 
+def test_パワージェム_相手にダメージを与える():
+    """パワージェム: 追加効果なしの特殊いわ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["パワージェム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_パワーウィップ_相手にダメージを与える():
     """パワーウィップ: 追加効果なしの物理くさ技で相手にダメージを与える。"""
     battle = t.start_battle(
