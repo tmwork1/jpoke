@@ -1378,12 +1378,12 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ドラゴンエナジー": MoveData(
         type="ドラゴン",
         category="special",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=100,
         handlers={
             Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
-                ha.しおふき_calc_power,
+                ha.ドラゴンエナジー_calc_power,
             ),
         }
     ),
