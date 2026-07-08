@@ -920,6 +920,19 @@ def test_ムーンフォース_とくこう1段階低下が発動する():
     assert battle.actives[1].rank["spa"] == -1
 
 
+def test_メガトンキック_相手にダメージを与える():
+    """メガトンキック: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["メガトンキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_メガドレイン_使用後に攻撃者のHPが回復する():
     """メガドレイン: 与えたダメージの半分だけ攻撃者のHPを回復する（heal_ratio=0.5）。"""
     battle = t.start_battle(
