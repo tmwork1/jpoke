@@ -369,7 +369,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ローキック_lower_defender_spd,

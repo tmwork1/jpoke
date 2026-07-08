@@ -986,6 +986,30 @@ def test_ロックブラスト_タイプ威力命中PPが仕様通り():
     }
 
 
+def test_ローキック_すばやさ1段階低下が発動する():
+    """ローキック: 100%の確率で相手のすばやさを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ローキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
+def test_ローキック_ちからずくで威力上昇しすばやさ低下は発動しない():
+    """ローキック: ちからずく使用時は威力が1.3倍になる代わりに、すばやさ低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="ちからずく", move_names=["ローキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spe"] == 0
+
+
 def test_ワイドガード_シングルバトルでは相手の攻撃を防がない():
     """ワイドガード: シングルバトルでは複数対象技が存在しないため、通常通り技を使用でき、
     相手の攻撃を防ぐ効果は発生しない。
