@@ -240,6 +240,30 @@ def test_マッハパンチ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_マッドショット_すばやさ低下が発動する():
+    """マッドショット: 100%の確率で相手のすばやさを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヌマクロー", move_names=["マッドショット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
+def test_マッドショット_ちからずくで威力上昇しすばやさ低下は発動しない():
+    """マッドショット: ちからずく使用時は威力が1.3倍になる代わりに、すばやさ低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヌマクロー", ability_name="ちからずく", move_names=["マッドショット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spe"] == 0
+
+
 def test_まとわりつく_ダメージを与える():
     """まとわりつく: 命中時に相手にダメージを与える特殊むし技。"""
     battle = t.start_battle(

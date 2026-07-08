@@ -110,9 +110,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "マッドショット": MoveData(
         type="じめん",
         category="special",
-        pp=15,
+        pp=16,
         power=55,
         accuracy=95,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マッドショット_lower_defender_spd,
