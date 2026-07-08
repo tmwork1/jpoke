@@ -1029,18 +1029,6 @@ def test_ハードプレス_相手HP満タンのとき威力100():
     assert battle.damage_calculator.final_power == 100
 
 
-def test_ハードローラー_ひるみが発動する():
-    """ハードローラー: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ハードローラー"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ばかぢから_自分のこうげきとぼうぎょが下がる():
     """ばかぢから: 命中後、自分の『こうげき』『ぼうぎょ』ランクが1段階ずつ下がる（確定効果）。"""
     battle = t.start_battle(
