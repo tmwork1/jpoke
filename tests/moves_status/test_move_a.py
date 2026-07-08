@@ -859,6 +859,34 @@ def test_いやしのはどう_メガランチャーで回復量が3_4になる(
     assert defender.hp == 1 + round_half_down(defender.max_hp * 3 / 4)
 
 
+def test_いやなおと_defenderのぼうぎょが2段階下がる():
+    """いやなおと: 相手（defender）のぼうぎょが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやなおと"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == -2
+
+
+def test_いやなおと_みがわりを貫通してぼうぎょが下がる():
+    """いやなおと: soundフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いやなおと"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == -2
+    assert defender.volatiles["みがわり"].hp == 999
+
+
 def test_いわなだれ_ひるみが発動する():
     """いわなだれ: 30%でひるみを付与する。"""
     battle = t.start_battle(
