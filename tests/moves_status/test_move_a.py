@@ -884,6 +884,96 @@ def test_うたう_ねむり付与():
     assert defender.has_ailment("ねむり")
 
 
+def test_うらみ_みがわり状態の相手にも効果がある():
+    """うらみ: みがわり状態の相手にも貫通して効果を発揮する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンに技を使わせて executed_move を設定する
+    t.run_move(battle, 1)
+    pp_after_use = move.pp
+    # うらみを使う（みがわりがあっても貫通する）
+    t.run_move(battle, 0)
+
+    assert move.pp == pp_after_use - 4
+
+
+def test_うらみ_相手が技を使っていない場合は失敗():
+    """うらみ: 相手がまだ技を使っていない場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    pp_before = move.pp
+    # カビゴンはまだ技を使っていないのでうらみは失敗するはず
+    t.run_move(battle, 0)
+
+    # PPは変化しない
+    assert move.pp == pp_before
+
+
+def test_うらみ_相手のPPがすでに0の技には失敗():
+    """うらみ: 相手の直前の技のPPがすでに0の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンに技を使わせて executed_move を設定したうえでPPを0にする
+    t.run_move(battle, 1)
+    move.modify_pp(-move.pp)
+    assert move.pp == 0
+
+    # うらみは失敗し、PPは0のまま変化しない
+    t.run_move(battle, 0)
+    assert move.pp == 0
+
+
+def test_うらみ_相手の技のPPが4減る():
+    """うらみ: 相手が前のターンに使った技のPPが4減る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンに技を使わせて executed_move を設定する
+    t.run_move(battle, 1)
+    pp_after_use = move.pp
+    # うらみを使う
+    t.run_move(battle, 0)
+
+    assert move.pp == pp_after_use - 4
+
+
+def test_うらみ_相手の直前の技がわるあがきの場合は失敗():
+    """うらみ: 相手の直前の技がわるあがきの場合は失敗する（PPが無限のため対象外）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
+        team1=[Pokemon("カビゴン", move_names=["わるあがき"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    assert defender.executed_move.name == "わるあがき"
+    pp_before = defender.executed_move.pp
+
+    # うらみは失敗する（わるあがきのPPは変化しない）
+    t.run_move(battle, 0)
+    assert defender.executed_move.pp == pp_before
+
+
 def test_エアスラッシュ_ひるみが発動する():
     """エアスラッシュ: 30%でひるみを付与する。"""
     battle = t.start_battle(

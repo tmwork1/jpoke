@@ -932,8 +932,9 @@ MOVES_A: dict[MoveName, MoveData] = {
     "うらみ": MoveData(
         type="ゴースト",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.うらみ_can_apply,

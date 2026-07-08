@@ -328,8 +328,15 @@ def うたう_apply_sleep(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うらみの失敗チェック: 相手が技を使っていない場合は失敗する。"""
-    if ctx.defender.executed_move is None:
+    """うらみの失敗チェック。
+
+    以下のいずれかに該当する場合は失敗する。
+    - 相手が技を使っていない（executed_move が None）
+    - 相手の直前の技が「わるあがき」（PPが概念上無限で対象にならない）
+    - 相手の直前の技のPPがすでに0（他の効果で0まで減っていた場合）
+    """
+    move = ctx.defender.executed_move
+    if move is None or move.name == "わるあがき" or move.pp <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="うらみ")
@@ -341,8 +348,6 @@ def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
 def うらみ_deplete_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うらみの効果: 相手が直前に使った技のPPを4減らす。"""
     move = ctx.defender.executed_move
-    if move is None:
-        return HandlerReturn(value=False, stop_event=True)
     move.modify_pp(-4)
     return HandlerReturn(value=value)
 
