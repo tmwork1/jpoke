@@ -1,6 +1,7 @@
 """攻撃技ハンドラの単体テスト（や行・ら行・わ行）。"""
 
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from jpoke.utils.math import round_half_down
 from .. import test_utils as t
 
@@ -434,6 +435,48 @@ def test_らいめいげり_ぼうぎょ1段階低下が発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["def"] == -1
+
+
+def test_ラスターカノン_PPは12():
+    """ラスターカノン: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["ラスターカノン"].pp == 12
+
+
+def test_ラスターカノン_相手にダメージを与える():
+    """ラスターカノン: 特殊はがね技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["ラスターカノン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_ラスターカノン_とくぼう低下が発動しない():
+    """ラスターカノン: secondary_chanceが0のときとくぼうを下げない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["ラスターカノン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == 0
+
+
+def test_ラスターカノン_とくぼう1段階低下が発動する():
+    """ラスターカノン: 10%の確率で相手のとくぼうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("メタグロス", move_names=["ラスターカノン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -1
 
 
 def test_りゅうせいぐん_とくこう2段階低下が発動する():

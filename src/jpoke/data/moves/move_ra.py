@@ -59,9 +59,10 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ラスターカノン": MoveData(
         type="はがね",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ラスターカノン_lower_defender_spd,
