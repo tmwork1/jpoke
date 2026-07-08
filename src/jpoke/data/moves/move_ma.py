@@ -693,7 +693,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "メテオビーム": MoveData(
         type="いわ",
         category="special",
-        pp=10,
+        pp=12,
         power=120,
         accuracy=90,
         handlers={

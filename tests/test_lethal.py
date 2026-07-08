@@ -269,6 +269,26 @@ def test_エレクトロビーム_とくこうアップ_secondary無し():
     assert results[1].min_damage == results[0].min_damage
 
 
+def test_メテオビーム_とくこうアップ_secondary有り():
+    """メテオビーム: secondary=True のときチャージ前にとくこうが1段階上がり、2発目のダメージが増加する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("メテオビーム"), max_attack=2, secondary=True)
+    assert results[1].min_damage > results[0].min_damage
+
+
+def test_メテオビーム_とくこうアップ_secondary無し():
+    """メテオビーム: secondary=False のときとくこうアップが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("メテオビーム"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
+
+
 def test_オボンのみ_スケイルショット5発_乱数1発():
     """オボンのみ所持時、多段技はヒットごとにHP半分以下判定・回復が発生するため
     5発目終了時点でも乱数1発 (80.31%) になる"""
