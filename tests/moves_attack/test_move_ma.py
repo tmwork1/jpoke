@@ -1280,6 +1280,38 @@ def test_メテオビーム_パワフルハーブ使用時1ターンで攻撃し
     assert attacker.rank["spa"] == 1
 
 
+def test_メテオビーム_ちからずくでも威力は上がらずとくこうは上昇する():
+    """メテオビーム: 追加効果に分類されないため、ちからずくを持っていても威力は上がらず、
+    とくこう上昇は通常通り発動する。"""
+    battle_with = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ちからずく", move_names=["メテオビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle_without = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["メテオビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker_with = battle_with.actives[0]
+    attacker_without = battle_without.actives[0]
+
+    # 1ターン目: とくこう+1 のみ（ちからずくの有無に関わらず発動）
+    t.run_move(battle_with, 0)
+    t.run_move(battle_without, 0)
+    assert attacker_with.rank["spa"] == 1
+    assert attacker_without.rank["spa"] == 1
+
+    # 2ターン目: ちからずくの有無でダメージ量が変わらない（威力補正なし）
+    hp_before_with = battle_with.actives[1].hp
+    hp_before_without = battle_without.actives[1].hp
+    t.run_move(battle_with, 0)
+    t.run_move(battle_without, 0)
+    damage_with = hp_before_with - battle_with.actives[1].hp
+    damage_without = hp_before_without - battle_without.actives[1].hp
+    assert damage_with == damage_without
+
+
 def test_もえあがるいかり_ひるみが発動する():
     """もえあがるいかり: 20%でひるみを付与する。"""
     battle = t.start_battle(
