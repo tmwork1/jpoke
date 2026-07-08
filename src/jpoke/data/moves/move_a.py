@@ -719,8 +719,8 @@ MOVES_A: dict[MoveName, MoveData] = {
     "いやしのはどう": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        flags={"heal"},
+        pp=12,
+        flags={"heal", "pulse"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.いやしのはどう_heal_defender,
