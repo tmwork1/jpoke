@@ -2351,19 +2351,6 @@ def のしかかり_apply_paralysis_to_defender(battle: Battle, ctx: AttackConte
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ", chance=0.3)
 
 
-def ハイドロスチーム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ハイドロスチーム: こおり状態でも使用可能にし、こおりを解凍する。
-
-    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
-    ailment が除去された状態で こおり_action の validity check が走り、
-    こおり_action がスキップされる。
-    """
-    mon = ctx.attacker
-    if mon.ailment.name == "こおり":
-        battle.ailment_manager.remove(mon)
-    return HandlerReturn(value=value)
-
-
 def ハイドロスチーム_power_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ハイドロスチーム: 晴れ下で水タイプ弱体化を受けず、代わりに1.5倍になる。
 
@@ -2386,6 +2373,19 @@ def ハイドロスチーム_power_modifier(battle: Battle, ctx: AttackContext, 
     else:
         # 防御側ばんのうがさなし: フィールドハンドラの0.5倍をキャンセルし1.5倍にするため3倍補正を適用
         value = apply_fixed_modifier(value, 12288)
+    return HandlerReturn(value=value)
+
+
+def ハイドロスチーム_thaw_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ハイドロスチーム: こおり状態でも使用可能にし、こおりを解凍する。
+
+    こおり_action (priority=10) より先に発火させる (priority=5) ことで、
+    ailment が除去された状態で こおり_action の validity check が走り、
+    こおり_action がスキップされる。
+    """
+    mon = ctx.attacker
+    if mon.ailment.name == "こおり":
+        battle.ailment_manager.remove(mon)
     return HandlerReturn(value=value)
 
 
