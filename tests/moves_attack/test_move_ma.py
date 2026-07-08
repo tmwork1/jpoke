@@ -1165,18 +1165,6 @@ def test_めざめるダンス_使用者のタイプ1と同じタイプになる
     assert battle.move_executor.move_type == "くさ"
 
 
-def test_メタルクロー_タイプ威力命中PPが仕様通り():
-    """メタルクロー: はがねタイプの物理直接攻撃技で、威力50・命中95・PP35を持つ。"""
-    move_data = MOVES["メタルクロー"]
-    assert move_data.type == "はがね"
-    assert move_data.category == "physical"
-    assert move_data.power == 50
-    assert move_data.accuracy == 95
-    assert move_data.pp == 35
-    assert "contact" in move_data.flags
-    assert "secondary_effect" in move_data.flags
-
-
 def test_メタルクロー_こうげき1段階上昇が発動しない():
     """メタルクロー: 追加効果不発時はこうげきランクが変化しない。"""
     battle = t.start_battle(
@@ -1201,6 +1189,18 @@ def test_メタルクロー_こうげき1段階上昇が発動する():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
     assert attacker.rank["atk"] == 1
+
+
+def test_メタルクロー_タイプ威力命中PPが仕様通り():
+    """メタルクロー: はがねタイプの物理直接攻撃技で、威力50・命中95・PP35を持つ。"""
+    move_data = MOVES["メタルクロー"]
+    assert move_data.type == "はがね"
+    assert move_data.category == "physical"
+    assert move_data.power == 50
+    assert move_data.accuracy == 95
+    assert move_data.pp == 35
+    assert "contact" in move_data.flags
+    assert "secondary_effect" in move_data.flags
 
 
 def test_メテオドライブ_もふもふのダメージ軽減を無視する():
