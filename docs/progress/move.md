@@ -690,9 +690,9 @@ Vジェネレート	-	-	x	x	保留	保留	✓	物理	ほのお	180	95	5	defender
 ムーンフォース	x	x	x	x	n/a	n/a	✓	特殊	フェアリー	95	100	16	defender	追加効果として、10%の確率で相手の『とくこう』ランクを1段階下げる（Championsで30%→10%に変更）。
 メガトンキック	x	x	x	x	n/a	n/a	✓	物理	ノーマル	120	75	8	defender	追加効果なし
 メガトンパンチ	x	x	x	x	n/a	n/a	✓	物理	ノーマル	80	85	20	defender	追加効果なし。特性『てつのこぶし』の時、威力が1.2倍になる。
-メガドレイン	-	-	x	x	n/a	n/a	-	特殊	ノーマル	120	75	8	defender	？
-メガホーン	-	-	x	x	n/a	n/a	✓	物理	むし	120	85	12	defender	追加効果なし
-メタルクロー	-	-	x	x	n/a	n/a	✓	物理	はがね	50	95	35	defender	追加効果として、10%の確率で自分の『こうげき』ランクを1段階上げる。
+メガドレイン	x	x	x	x	n/a	n/a	✓	特殊	くさ	40	100	15	defender	相手に与えたダメージの半分だけ自分のHPが回復する。
+メガホーン	x	x	x	x	n/a	n/a	✓	物理	むし	120	85	12	defender	追加効果なし
+メタルクロー	x	x	x	x	n/a	n/a	✓	物理	はがね	50	95	35	defender	追加効果として、10%の確率で自分の『こうげき』ランクを1段階上げる。
 メタルバースト	-	-	x	x	n/a	n/a	-	物理	はがね	-	100	12	defender	？
 メテオドライブ	x	x	x	x	n/a	n/a	✓	物理	はがね	100	100	5	defender	相手の特性を無視して攻撃する（かたやぶりと同様、mold_breaker_ignorableフラグを持つ特性が対象。攻撃前後でON_BEGIN_MOVE/ON_END_MOVEにより無効化・復元する）。追加効果なし。
 メテオビーム	x	x	x	x	x	x	-	特殊	いわ	120	90	12	defender	？
