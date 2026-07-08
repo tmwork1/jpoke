@@ -796,10 +796,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フェイタルクロー": MoveData(
         type="どく",
         category="physical",
-        pp=15,
+        pp=16,
         power=80,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"contact", "secondary_effect", "slash"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.フェイタルクロー_apply_ailment_to_defender,
