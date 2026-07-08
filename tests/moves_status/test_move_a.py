@@ -1420,6 +1420,17 @@ def test_おにび_すでに状態異常なら失敗():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_おにび_ほのおタイプには無効():
+    """おにび: 対象がほのおタイプの場合は失敗する（やけど無効）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おにび"])],
+        team1=[Pokemon("ヒトカゲ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_おにび_やけど付与():
     """おにび: 相手をやけど状態にする"""
     battle = t.start_battle(
