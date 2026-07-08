@@ -3504,6 +3504,12 @@ def test_ボルトチェンジ_相手を倒した場合でも交代する():
     assert battle.player_states[player].interrupt == Interrupt.PIVOT
 
 
+def test_ボーンラッシュ_PPと威力はChampions基準():
+    """ボーンラッシュ: チャンピオンズでのPPは12・威力は30（docs/champions/move_list.txt準拠。Gen9本家はPP10・威力25）。"""
+    assert MOVES["ボーンラッシュ"].pp == 12
+    assert MOVES["ボーンラッシュ"].power == 30
+
+
 def test_ボーンラッシュ_複数ヒットする():
     """ボーンラッシュ: 2～5回連続でヒットする複数ヒット技である。"""
     battle = t.start_battle(
@@ -3515,6 +3521,31 @@ def test_ボーンラッシュ_複数ヒットする():
         t.build_context(battle, atk_idx=0)
     )
     assert 2 <= hit_count <= 5
+
+
+def test_ボーンラッシュ_命中判定は1発目のみ():
+    """ボーンラッシュ: 命中率0では1発目から外れ、0回ヒットする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カラカラ", move_names=["ボーンラッシュ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 0
+
+
+def test_ボーンラッシュ_相手にダメージを与える():
+    """ボーンラッシュ: ヒットするたびに相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カラカラ", move_names=["ボーンラッシュ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_ポイズンアクセル_どくが発動する():
