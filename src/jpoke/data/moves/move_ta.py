@@ -768,7 +768,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "デカハンマー": MoveData(
         type="はがね",
         category="physical",
-        pp=5,
+        pp=8,
         power=160,
         accuracy=100,
         handlers={

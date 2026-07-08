@@ -1442,6 +1442,31 @@ def test_デカハンマー_2ターン後は再び選択可能():
     assert "デカハンマー" in move_names
 
 
+def test_デカハンマー_まひで行動不能だった場合はPP未消費で次のターンも選択可能():
+    """デカハンマー: まひで行動できずPPが消費されなかった場合、揮発状態は付与されず次のターンも選択できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハガネール", move_names=["デカハンマー", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    attacker = battle.actives[0]
+    battle.ailment_manager.apply(attacker, "まひ")
+    # 必ず行動不能になる設定
+    battle.test_option.trigger_ailment = True
+    pp_before = attacker.moves[0].pp
+    t.run_move(battle, 0)
+    assert not battle.move_executor.action_success
+    assert attacker.moves[0].pp == pp_before
+    assert not attacker.has_volatile("デカハンマー")
+    # 次ターンもデカハンマーを選択できる
+    t.end_turn(battle)
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(player)
+    move_names = [attacker.moves[cmd.index].name for cmd in commands if cmd.is_type("move")]
+    assert "デカハンマー" in move_names
+
+
 def test_デカハンマー_まもるで防がれた場合も次のターンは選択不可():
     """デカハンマー: まもるで防がれてもPP消費済みなので次のターンは選択不可。"""
     battle = t.start_battle(
