@@ -2110,6 +2110,26 @@ def test_フレアソング_特攻1段階上昇が発動する():
     assert attacker.rank["spa"] == 1
 
 
+def test_フレアドライブ_こおり状態で使うと解凍されて攻撃できる():
+    """フレアドライブ: こおり状態でも使用でき、使うと解凍される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["フレアドライブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # こおり状態を付与してから使用
+    t.apply_ailment(battle, 0, "こおり")
+    assert attacker.ailment.name == "こおり"
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # こおりが解除されてダメージを与えられる
+    assert not attacker.ailment.is_active
+    assert battle.move_executor.move_success is True
+    assert defender.hp < hp_before
+
+
 def test_フレアドライブ_やけどが発動する():
     """フレアドライブ: 10%でやけどを付与する。"""
     battle = t.start_battle(
