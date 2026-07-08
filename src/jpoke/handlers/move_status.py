@@ -219,7 +219,7 @@ def いちゃもん_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     )
 
 
-def いとをはく_reduce_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いとをはく_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いとをはくの効果: 相手のすばやさを 2 段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
