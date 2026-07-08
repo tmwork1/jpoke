@@ -1163,7 +1163,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トリプルキック": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=10,
         accuracy=90,
         flags={"contact", "check_hit_each_time"},
