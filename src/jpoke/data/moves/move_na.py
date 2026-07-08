@@ -246,19 +246,6 @@ MOVES_NA: dict[MoveName, MoveData] = {
             )
         }
     ),
-    "ニードルアーム": MoveData(
-        type="くさ",
-        category="physical",
-        pp=15,
-        power=60,
-        accuracy=100,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ニードルアーム_apply_flinch,
-            )
-        }
-    ),
     "ニードルガード": MoveData(
         type="くさ",
         category="status",

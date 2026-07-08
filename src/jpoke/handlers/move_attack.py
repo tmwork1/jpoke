@@ -2272,10 +2272,6 @@ def ニトロチャージ_boost_attacker_spe(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
 
-def ニードルアーム_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ねこだまし_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ")
 

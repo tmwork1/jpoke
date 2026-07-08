@@ -1054,18 +1054,6 @@ def test_にどげり_命中判定1回で2回ヒットする():
     assert defender.hits_taken == 2
 
 
-def test_ニードルアーム_ひるみが発動する():
-    """ニードルアーム: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フシギダネ", move_names=["ニードルアーム"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ねこだまし_ひるみが発動する():
     """ねこだまし: 100%でひるみを付与する。"""
     battle = t.start_battle(

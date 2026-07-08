@@ -324,18 +324,6 @@ def test_にほんばれ_天気がはれになる():
     assert battle.weather.count == 5
 
 
-def test_ニードルアーム_ひるみが発動する():
-    """ニードルアーム: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ハリーセン", move_names=["ニードルアーム"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ニードルガード_ターン終了で解除される():
     """ニードルガード: ターン終了時に揮発状態が解除される"""
     battle = t.start_battle(
