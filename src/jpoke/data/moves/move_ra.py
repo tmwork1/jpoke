@@ -210,7 +210,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "リーフブレード": MoveData(
         type="くさ",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         critical_rank=1,

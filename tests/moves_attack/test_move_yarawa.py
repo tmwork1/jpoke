@@ -556,6 +556,29 @@ def test_リーフブレード_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_リーフブレード_相手にダメージを与える():
+    """リーフブレード: 追加効果なしの物理くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジュカイン", move_names=["リーフブレード"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_リーフブレード_きれあじで威力1_5倍():
+    """リーフブレード: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きれあじ", move_names=["リーフブレード"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
+
+
 def test_レイジングブル_ケンタロスパルデア闘はかくとうタイプになる():
     """レイジングブル: ケンタロス（パルデア闘）が使用するとかくとうタイプになる。"""
     battle = t.start_battle(
