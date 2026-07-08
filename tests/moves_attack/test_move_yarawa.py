@@ -967,6 +967,25 @@ def test_ロックブラスト_複数ヒットする():
     assert 2 <= hit_count <= 5
 
 
+def test_ロックブラスト_タイプ威力命中PPが仕様通り():
+    """ロックブラスト: いわタイプの物理・非接触・弾の技で、威力25・命中90・PP12を持つ
+    （PPはチャンピオンズ仕様。第9世代本家基準は10）。"""
+    move_data = MOVES["ロックブラスト"]
+    assert move_data.type == "いわ"
+    assert move_data.category == "physical"
+    assert move_data.power == 25
+    assert move_data.accuracy == 90
+    assert move_data.pp == 12
+    assert "contact" not in move_data.flags
+    assert "bullet" in move_data.flags
+    assert move_data.multi_hit == {
+        "min": 2,
+        "max": 5,
+        "check_hit_each_time": False,
+        "power_sequence": (),
+    }
+
+
 def test_ワイドガード_シングルバトルでは相手の攻撃を防がない():
     """ワイドガード: シングルバトルでは複数対象技が存在しないため、通常通り技を使用でき、
     相手の攻撃を防ぐ効果は発生しない。
