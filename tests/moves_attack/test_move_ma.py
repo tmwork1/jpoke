@@ -227,6 +227,35 @@ def test_マジカルシャイン_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_マジカルフレイム_secondary_effectフラグを持つ():
+    """マジカルフレイム: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["マジカルフレイム"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_マジカルフレイム_とくこう1段階低下が発動する():
+    """マジカルフレイム: 100%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["マジカルフレイム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_マジカルフレイム_ちからずくで威力上昇しとくこう低下は発動しない():
+    """マジカルフレイム: ちからずく使用時は威力が1.3倍になる代わりに、とくこう低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", ability_name="ちからずく", move_names=["マジカルフレイム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spa"] == 0
+
+
 def test_マジカルリーフ_相手にダメージを与える():
     """マジカルリーフ: 追加効果なしの特殊くさ技で相手にダメージを与える。"""
     battle = t.start_battle(

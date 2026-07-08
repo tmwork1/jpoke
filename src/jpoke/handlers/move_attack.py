@@ -3112,6 +3112,7 @@ def マジカルアクセル_apply_confusion_to_defender(battle: Battle, ctx: At
 
 
 def マジカルフレイム_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """マジカルフレイムの追加効果: 100%の確率で相手のとくこうを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
 
 
