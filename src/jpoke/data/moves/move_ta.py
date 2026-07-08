@@ -1101,16 +1101,6 @@ MOVES_TA: dict[MoveName, MoveData] = {
             )
         }
     ),
-    "トラップシェル": MoveData(
-        type="はがね",
-        category="special",
-        pp=5,
-        power=150,
-        accuracy=100,
-        priority=-5,
-        flags={"non_negoto"},
-        handlers={},  # 追加効果なし
-    ),
     "トラバサミ": MoveData(
         type="はがね",
         category="physical",
