@@ -2605,7 +2605,8 @@ def バブルこうせん_lower_defender_spd(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1}, chance=0.1)
 
 
-def バリアーラッシュ_boost_defender_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def バリアーラッシュ_boost_attacker_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """バリアーラッシュ: 命中後、100%の確率で自分の『ぼうぎょ』ランクを1段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1})
 
 
