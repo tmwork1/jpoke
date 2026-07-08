@@ -648,7 +648,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=35,
         power=50,
         accuracy=95,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.メタルクロー_boost_attacker_A,
