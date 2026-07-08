@@ -56,12 +56,12 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "マジカルアクセル": MoveData(
-        type="エスパー",
-        category="special",
-        pp=10,
+        type="フェアリー",
+        category="physical",
+        pp=12,
         power=100,
         accuracy=100,
-        flags={"non_copycat", "secondary_effect"},
+        flags={"non_copycat", "non_encore", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マジカルアクセル_apply_confusion_to_defender,
