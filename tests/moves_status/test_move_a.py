@@ -924,6 +924,113 @@ def test_うたう_ねむり付与():
     assert defender.has_ailment("ねむり")
 
 
+def test_うつしえ_まもる状態の相手にも効果が発動する():
+    """うつしえ: unprotectableフラグを持つため、まもる状態の相手にも特性コピーが発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="あついしぼう")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "あついしぼう"
+
+
+def test_うつしえ_みがわり状態の相手には防がれる():
+    """うつしえ: みがわり状態の相手には効果が防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="あついしぼう")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "せいでんき"
+
+
+def test_うつしえ_使用者の特性がprotectedなら失敗():
+    """うつしえ: 使用者の特性がprotectedフラグ持ち（上書きできない特性）なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="アイスフェイス", move_names=["うつしえ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいでんき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "アイスフェイス"
+    assert defender.ability.name == "せいでんき"
+
+
+def test_うつしえ_使用者と対象の特性がすでに同じなら失敗():
+    """うつしえ: 使用者と対象の特性がすでに同じ場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="せいでんき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "せいでんき"
+
+
+def test_うつしえ_交代後に元の特性に戻る():
+    """うつしえ: 特性をコピーした使用者が交代すると元の特性に戻る"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"]),
+            Pokemon("ラッキー", ability_name="しぜんかいふく"),
+        ],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker_before = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker_before.ability.name == "めんえき"
+
+    # 交代後は元の特性に戻る
+    t.run_switch(battle, 0, 1)
+    assert attacker_before.ability.name == "せいでんき"
+
+
+@pytest.mark.parametrize("d_ability", ["アイスフェイス", "イリュージョン"])
+def test_うつしえ_対象がuncopyableフラグ持ちなら失敗(d_ability):
+    """うつしえ: 対象がuncopyableフラグ持ち（コピーできない特性）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # 使用者の特性は変化しない
+    assert attacker.ability.name == "せいでんき"
+
+
+def test_うつしえ_相手の特性が使用者にコピーされる():
+    """うつしえ: 使用すると使用者の特性が相手と同じ特性に変わる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "めんえき"
+    # 対象側の特性は変化しない
+    assert defender.ability.name == "めんえき"
+
+
 def test_エアスラッシュ_ひるみが発動する():
     """エアスラッシュ: 30%でひるみを付与する。"""
     battle = t.start_battle(

@@ -328,6 +328,37 @@ def うたう_apply_sleep(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
 
+def うつしえ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """うつしえの失敗条件チェック。
+
+    以下の場合は失敗する:
+    - 対象の特性が uncopyable フラグを持つ（コピーできない特性）
+    - 使用者の特性が protected フラグを持つ（上書きできない特性）
+    - 使用者と対象の特性がすでに同じである
+    - 使用者の特性変更がとくせいガード等で防がれる
+    """
+    assert ctx.defender is not None
+    if (
+        ctx.defender.ability.has_flag("uncopyable")
+        or ctx.attacker.ability.has_flag("protected")
+        or ctx.attacker.ability.base_name == ctx.defender.ability.base_name
+        or battle.ability_manager.is_change_blocked(ctx.attacker)
+    ):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="うつしえ")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def うつしえ_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """うつしえの効果: 使用者の特性を対象の特性と同じにする。"""
+    assert ctx.defender is not None
+    battle.change_ability(ctx.attacker, ctx.defender.ability.name)
+    return HandlerReturn(value=value)
+
+
 def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うらみの失敗チェック: 相手が技を使っていない場合は失敗する。"""
     if ctx.defender.executed_move is None:

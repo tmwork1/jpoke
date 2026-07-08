@@ -133,3 +133,16 @@ class Move(GameEffect):
             self.target == "foe"
             and not self.has_flag("unprotectable")
         )
+
+    @property
+    def is_reflectable(self) -> bool:
+        """技がマジックコート・マジックミラーで跳ね返されるかどうかを判定する。
+
+        Returns:
+            技が跳ね返される場合True
+        """
+        return (
+            self.category == "status"
+            and self.target in ("foe", "foe_side")
+            and not self.has_flag("unreflectable")
+        )

@@ -746,6 +746,30 @@ def test_でんきだま_ピチューライチュウには効果なし(mon_name)
     assert battle.damage_calculator.atk_modifier == 4096
 
 
+def test_とくせいガード_うつしえによる特性変更をブロック():
+    """とくせいガード: 所持者はうつしえを使用して自分の特性を変えることもできない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うつしえ"], ability_name="せいでんき", item_name="とくせいガード")],
+        team1=[Pokemon("カビゴン", ability_name="あついしぼう")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "せいでんき"
+
+
+def test_とくせいガード_所持者に対するうつしえによるコピーは防がれない():
+    """とくせいガード: 所持者に対するうつしえで、他のポケモンに特性をコピーされることはとくせいガードでは防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うつしえ"], ability_name="せいでんき")],
+        team1=[Pokemon("カビゴン", ability_name="あついしぼう", item_name="とくせいガード")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "あついしぼう"
+
+
 def test_とくせいガード_かたやぶりによる特性無効化をブロック():
     """とくせいガード: add_disabled_reasonによる特性無効化をブロックする"""
     battle = t.start_battle(
