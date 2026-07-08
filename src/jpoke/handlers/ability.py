@@ -2896,8 +2896,15 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
 
 
 def ぼうおん_block_sound(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """ぼうおん特性: 音技を無効化する。"""
-    if not ctx.move.has_flag("sound"):
+    """ぼうおん特性: 音技を無効化する。
+
+    自分や味方（自分自身も含む）を対象とする音技（例: いやしのすず）は、
+    相手のぼうおんとは無関係のため、相手を対象とする技（target="foe"）のみを無効化する。
+    """
+    if (
+        not ctx.move.has_flag("sound")
+        or ctx.move.target != "foe"
+    ):
         return HandlerReturn(value=value)
 
     _announce_ability_triggered(battle, ctx.defender)
