@@ -691,7 +691,7 @@ Vジェネレート	-	-	x	x	保留	保留	✓	物理	ほのお	180	95	5	defender
 メガトンキック	-	-	x	x	n/a	n/a	-	物理	?	?	?	?	?	?
 メガトンパンチ	-	-	x	x	n/a	n/a	✓	物理	ノーマル	80	85	20	defender	追加効果なし。特性『てつのこぶし』の時、威力が1.2倍になる。
 メガドレイン	-	-	x	x	n/a	n/a	-	特殊	ノーマル	120	75	8	defender	？
-メガホーン	-	-	x	x	n/a	n/a	-	物理	むし	120	85	12	defender	追加効果なし
+メガホーン	-	-	x	x	n/a	n/a	✓	物理	むし	120	85	12	defender	追加効果なし
 メタルクロー	-	-	x	-	n/a	n/a	-	物理	はがね	50	95	35	defender	？
 メタルバースト	-	-	x	x	n/a	n/a	-	物理	はがね	-	100	12	defender	？
 メテオドライブ	-	-	x	x	n/a	n/a	-	物理	はがね	100	100	5	defender	相手の特性を無視して攻撃する（かたやぶりと同様、mold_breaker_ignorableフラグを持つ特性が対象。攻撃前後でON_BEGIN_MOVE/ON_END_MOVEにより無効化・復元する）。追加効果なし。
