@@ -1681,18 +1681,6 @@ def test_びりびりちくちく_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
-def test_ピヨピヨパンチ_こんらんが発動する():
-    """ピヨピヨパンチ: 20%でこんらんを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カイリキー", move_names=["ピヨピヨパンチ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("こんらん")
-
-
 def test_ふいうち_後攻時に相手が行動済みで失敗():
     """ふいうち: 相手がすでに行動済み（後攻）の場合は失敗する。
 

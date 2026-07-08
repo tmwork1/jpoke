@@ -2692,11 +2692,6 @@ def びりびりちくちく_apply_flinch(battle: Battle, ctx: AttackContext, va
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
 
-def ピヨピヨパンチ_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ピヨピヨパンチの追加効果: 20%の確率で相手をこんらん状態にする。"""
-    return apply_confusion_to_defender(battle, ctx, value, chance=0.2)
-
-
 def _ふいうち系_can_apply(battle: Battle, ctx: AttackContext) -> bool:
     """ふいうち・じんらいの発動条件を判定する。
 
