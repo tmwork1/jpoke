@@ -2518,6 +2518,17 @@ def test_トリックフラワー_確定急所():
     assert battle.move_executor.critical is True
 
 
+def test_トリプルアクセル_タイプ威力命中PPが仕様通り():
+    """トリプルアクセル: こおりタイプの物理直接攻撃技で、威力20・命中90・PP12を持つ（PPはチャンピオンズ仕様）。"""
+    move_data = MOVES["トリプルアクセル"]
+    assert move_data.type == "こおり"
+    assert move_data.category == "physical"
+    assert move_data.power == 20
+    assert move_data.accuracy == 90
+    assert move_data.pp == 12
+    assert "contact" in move_data.flags
+
+
 def test_トリプルアクセル_威力が回数ごとに上昇する():
     """トリプルアクセル: 威力が1回目20→2回目40→3回目60と上昇する（power_sequence）。"""
     move_data = MOVES["トリプルアクセル"]

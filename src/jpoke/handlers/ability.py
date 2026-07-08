@@ -1576,6 +1576,11 @@ def スカイスキン_modify_power(battle: Battle, ctx: AttackContext, value: i
     return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
 
 
+def スキルリンク_modify_hit_check_each_time(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
+    """スキルリンク特性: トリプルキック等、毎ヒット命中判定する技を初回ヒットのみの判定にする。"""
+    return HandlerReturn(value=False)
+
+
 def スキルリンク_modify_hit_count(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """スキルリンク特性: 連続技のヒット数を最大にする。"""
     if ctx.move.max_hits > 1:
