@@ -1636,7 +1636,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ポルターガイスト": MoveData(
         type="ゴースト",
         category="physical",
-        pp=5,
+        pp=8,
         power=110,
         accuracy=90,
         handlers={
