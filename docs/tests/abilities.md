@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 727
+テスト数: 728
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -513,6 +513,7 @@
 - [x] さまようたましい_非直接攻撃では発動しない
 - [x] さめはだ_接触ダメージ(ability_name=さめはだ, move_name=みずでっぽう, damage_ratio=0)
 - [x] さめはだ_接触ダメージ(ability_name=さめはだ, move_name=おはかまいり, damage_ratio=0)
+- [x] さめはだ_接触ダメージ(ability_name=さめはだ, move_name=バーンアクセル, damage_ratio=0)
 - [x] さめはだ_接触ダメージ(ability_name=てつのトゲ, move_name=みずでっぽう, damage_ratio=0)
 - [x] サンパワー_はれ中にターン終了時1_8ダメージ
 - [x] サンパワー_はれ中に特殊技の特攻1_5倍(weather_name=はれ, weather_count=5)
