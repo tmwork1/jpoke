@@ -363,18 +363,6 @@ def test_ハートスワップ_全ランクゼロのとき変化なし():
         assert defender.rank[stat] == 0
 
 
-def test_ハードローラー_ひるみが発動する():
-    """ハードローラー: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ゴローニャ", move_names=["ハードローラー"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_バトンタッチ_とらわれ状態でも使用できる():
     """バトンタッチ: にげられない状態でも技が失敗せず PIVOT が設定される"""
     battle = t.start_battle(

@@ -418,19 +418,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "ハードローラー": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=10,
-        power=100,
-        accuracy=95,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ハードローラー_apply_flinch,
-            )
-        }
-    ),
     "ばかぢから": MoveData(
         type="かくとう",
         category="physical",
