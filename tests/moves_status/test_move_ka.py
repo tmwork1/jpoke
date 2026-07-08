@@ -505,6 +505,31 @@ def test_きりばらい_対象側の壁が解除される(wall_name):
     assert not battle.side_managers[1].fields[wall_name].is_active
 
 
+def test_きんぞくおん_defenderのとくぼうが2段階下がる():
+    """きんぞくおん: 相手（defender）のとくぼうが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きんぞくおん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spd"] == -2
+
+
+def test_きんぞくおん_まもるで防がれる():
+    """きんぞくおん: まもるで効果が防がれ、とくぼうランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きんぞくおん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spd"] == 0
+
+
 def test_くすぐる_こうげきが最低でもぼうぎょは下がる():
     """くすぐる: こうげきランクがすでに-6でも、ぼうぎょランクは-1下がる"""
     battle = t.start_battle(
