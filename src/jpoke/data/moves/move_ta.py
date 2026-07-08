@@ -1091,7 +1091,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トライアタック": MoveData(
         type="ノーマル",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         flags={"secondary_effect"},
