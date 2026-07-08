@@ -871,6 +871,18 @@ def test_いわなだれ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_うそなき_defenderのとくぼうが2段階下がる():
+    """うそなき: 相手（defender）のとくぼうが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うそなき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spd"] == -2
+
+
 def test_うたう_ねむり付与():
     """うたう: 相手をねむり状態にする（accuracy=100で固定）"""
     battle = t.start_battle(
