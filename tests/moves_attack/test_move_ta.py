@@ -2555,6 +2555,45 @@ def test_トリプルキック_威力が回数ごとに上昇する():
     assert move_data.multi_hit["power_sequence"] == (10, 20, 30)
 
 
+def test_トリプルダイブ_3回固定でヒットする():
+    """トリプルダイブ: 常に3回連続でヒットする固定回数の連続攻撃技である。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウミトリオ", move_names=["トリプルダイブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    hit_count = battle.move_executor._resolve_hit_count(
+        t.build_context(battle, atk_idx=0)
+    )
+    assert hit_count == 3
+
+
+def test_トリプルダイブ_命中判定は1発目のみで残りは必ず命中する():
+    """トリプルダイブ: check_hit_each_time=Falseのため、1発目が当たれば残り2発は命中判定を行わず必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウミトリオ", move_names=["トリプルダイブ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    # 1発目のみ命中、2発目以降は本来なら外れる条件にしても打ち切られないことを確認する
+    battle.move_executor._check_hit = lambda ctx: ctx.hit_index == 1
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hits_taken == 3
+
+
+def test_トリプルダイブ_相手にダメージを与える():
+    """トリプルダイブ: 3ヒットで相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウミトリオ", move_names=["トリプルダイブ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_トリプルキック_2発目が外れると打ち切られる():
     """トリプルキック: check_hit_each_time=Trueのため、2発目の命中判定に外れるとそこで打ち切られる。"""
     battle = t.start_battle(
