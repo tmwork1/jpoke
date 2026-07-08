@@ -1123,8 +1123,9 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=40,
-        flags={"non_negoto"},
-        handlers={},  # 追加効果なし
+        target="self",
+        flags={"non_negoto", "non_copycat"},  # まねっこでコピー不可
+        handlers={},  # 効果のないわざ（戦闘上の効果なし）
     ),
     "おかたづけ": MoveData(
         type="ノーマル",

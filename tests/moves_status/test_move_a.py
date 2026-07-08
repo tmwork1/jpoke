@@ -1174,6 +1174,53 @@ def test_おいかぜ_自陣営に4ターン設置される():
     assert side.fields["おいかぜ"].count == 4
 
 
+def test_おいわい_マジックコートで跳ね返されない():
+    """おいわい: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おいわい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker_hp = attacker.hp
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied
+    assert attacker.hp == attacker_hp
+    assert defender.hp == defender_hp
+
+
+def test_おいわい_まもるで防がれない():
+    """おいわい: 自分を対象とする技のため、相手のまもるに関係なく成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おいわい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied
+
+
+def test_おいわい_使用してもHPやランクなど戦闘状態が変化しない():
+    """おいわい: 効果のないわざのため、使用してもHP・ランクに一切変化がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おいわい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    attacker_hp = attacker.hp
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied
+    assert attacker.hp == attacker_hp
+    assert defender.hp == defender_hp
+    assert all(v == 0 for v in attacker.rank.values())
+    assert all(v == 0 for v in defender.rank.values())
+
+
 def test_おかたづけ_こうげきとすばやさが1段階ずつ上がる():
     """おかたづけ: 使用するとこうげきとすばやさが1段階ずつ上がる"""
     battle = t.start_battle(
