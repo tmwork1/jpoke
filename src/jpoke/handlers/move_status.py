@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
 
 from jpoke.types import Stat, Type
+from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core.event_logger import FailureLogPayload, StatChangePayload
@@ -225,11 +226,16 @@ def いとをはく_reduce_defender_spe(battle: Battle, ctx: AttackContext, valu
 
 
 def いのちのしずく_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """いのちのしずく: 最大HPの1/4を回復する。HPが満タンの場合は失敗する。"""
+    """いのちのしずく: 最大HPの1/4を回復する。HPが満タンの場合は失敗する。
+
+    端数は四捨五入で丸める（一次情報: docs/wiki/moves/いのちのしずく.html 技の仕様節）。
+    同じ1/4回復技でも `ジャングルヒール` `みかづきのいのり` は切り捨てのため、
+    本技のみ `round_half_up` を使う点に注意。
+    """
     mon = ctx.attacker
     if mon.hp == mon.max_hp:
         return HandlerReturn(value=False, stop_event=True)
-    battle.modify_hp(mon, r=1/4)
+    battle.modify_hp(mon, v=round_half_up(mon.max_hp / 4))
     return HandlerReturn(value=value)
 
 
