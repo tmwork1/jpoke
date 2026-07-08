@@ -518,7 +518,7 @@ _INNATE_FLINCH_MOVES: frozenset[str] = frozenset({
     "じんつうりき", "ずつき", "たきのぼり", "たつまき", "つららおとし",
     "ドラゴンダイブ", "ねこだまし", "はやてがえし",
     "ひょうざんおろし", "びりびりちくちく", "ふみつけ",
-    "ホネこんぼう", "ほのおのキバ", "もえあがるいかり",
+    "ほのおのキバ", "もえあがるいかり",
 })
 
 def flinch_on_hit_10pct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
