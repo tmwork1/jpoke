@@ -3449,6 +3449,38 @@ def test_ポルターガイスト_アイテムなし_失敗しダメージなし
     assert battle.move_executor.move_applied is False
 
 
+def test_ポルターガイスト_ぶきようで無効化されていても成功する():
+    """ポルターガイスト: 相手の特性がぶきようでアイテムが無効化されていても、
+    持ち物自体は所持しているため成功する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ポルターガイスト"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ぶきよう", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert not defender.item.enabled
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert battle.move_executor.move_applied is True
+
+
+def test_ポルターガイスト_マジックルームで無効化されていても成功する():
+    """ポルターガイスト: マジックルームでアイテムが無効化されていても、
+    持ち物自体は所持しているため成功する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["ポルターガイスト"])],
+        team1=[Pokemon("ピカチュウ", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.item_manager.add_disabled_reason(defender, "マジックルーム")
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert battle.move_executor.move_applied is True
+
+
 def test_ミサイルばり_複数ヒットする():
     """ミサイルばり: 2～5回連続でヒットする複数ヒット技である。"""
     battle = t.start_battle(
