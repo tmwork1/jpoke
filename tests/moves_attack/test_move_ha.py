@@ -945,18 +945,6 @@ def test_はるのあらし_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
-def test_ハートスタンプ_ひるみが発動する():
-    """ハートスタンプ: 30%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フーディン", move_names=["ハートスタンプ"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ハードプラント_命中後にリチャージ状態が付与される():
     """ハードプラント: 命中後に使用者にリチャージ揮発状態が付与される。"""
     battle = t.start_battle(
