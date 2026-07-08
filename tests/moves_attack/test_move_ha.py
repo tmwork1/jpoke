@@ -2027,8 +2027,8 @@ def test_フライングプレス_ノーマルタイプにかくとう2倍のみ
     assert battle.damage_calculator.def_type_modifier == 8192
 
 
-def test_フリーズドライ_こおりが発動する():
-    """フリーズドライ: 10%でこおりを付与する。"""
+def test_フリーズドライ_こおり付与効果はChampionsで削除されている():
+    """フリーズドライ: SVまではこおり付与の追加効果があったが、Championsでは削除されている。"""
     battle = t.start_battle(
         team0=[Pokemon("フリーザー", move_names=["フリーズドライ"])],
         team1=[Pokemon("カビゴン")],
@@ -2036,7 +2036,7 @@ def test_フリーズドライ_こおりが発動する():
         secondary_chance=1.0,
     )
     t.run_move(battle, 0)
-    assert battle.actives[1].ailment.name == "こおり"
+    assert battle.actives[1].ailment.name == ""
 
 
 def test_フリーズドライ_みずタイプに効果抜群():

@@ -2842,10 +2842,6 @@ def フライングプレス_add_flying_type(battle: Battle, ctx: AttackContext,
     return HandlerReturn(value=value)
 
 
-def フリーズドライ_apply_freeze_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_ailment_to_defender(battle, ctx, value, ailment="こおり", chance=0.1)
-
-
 def フリーズドライ_water_effectiveness(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """フリーズドライ: みずタイプに対して効果抜群（2倍）になる。
     こおりタイプはみずに0.5倍のため、最終2倍になるよう4倍補正（16384）をかける。
