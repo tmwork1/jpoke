@@ -148,7 +148,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ハサミギロチン": MoveData(
         type="ノーマル",
         category="physical",
-        pp=5,
+        pp=8,
         power=0,
         accuracy=30,
         flags={"ohko", "contact"},
