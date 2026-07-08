@@ -1560,7 +1560,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ボディプレス": MoveData(
         type="かくとう",
         category="physical",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         flags={"contact"},

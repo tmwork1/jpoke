@@ -3242,6 +3242,17 @@ def test_ぼうふう_にほんばれ中は命中率が50になる():
     assert defender.hp == hp_before
 
 
+def test_ボディプレス_タイプ分類威力命中率PPが仕様通り():
+    """ボディプレス: かくとうタイプ・物理・威力80・命中100・Champions基準PP12
+    （docs/champions/move_list.txt参照。本家基準のPP10とは異なる）。"""
+    move_data = MOVES["ボディプレス"]
+    assert move_data.type == "かくとう"
+    assert move_data.category == "physical"
+    assert move_data.power == 80
+    assert move_data.accuracy == 100
+    assert move_data.pp == 12
+
+
 def test_ボディプレス_防御ランク上昇でダメージ増加する():
     """ボディプレス: ぼうぎょランクが上昇するとダメージが増加する。"""
     battle1 = t.start_battle(
@@ -3279,6 +3290,36 @@ def test_ボディプレス_防御実数値を攻撃として計算する():
         accuracy=100,
     )
     attacker = battle.actives[0]
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_attack == attacker.stats["def"]
+
+
+def test_ボディプレス_パワートリック使用後は入れ替え後の実数値を攻撃として計算する():
+    """ボディプレス: パワートリックで『こうげき』『ぼうぎょ』実数値が入れ替わっている場合、
+    入れ替え後の『ぼうぎょ』実数値（＝元の『こうげき』実数値）を攻撃として計算する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ナットレイ", move_names=["パワートリック", "ボディプレス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    original_atk = attacker.stats["atk"]
+    t.run_move(battle, 0, 0)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 0, 1)
+    assert battle.damage_calculator.final_attack == original_atk
+
+
+def test_ボディプレス_てんねん相手には自分のぼうぎょランクが無視される():
+    """ボディプレス: 相手の特性がてんねんの場合、使用者自身の『ぼうぎょ』ランクは無視される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ナットレイ", move_names=["ボディプレス"])],
+        team1=[Pokemon("カビゴン", ability_name="てんねん")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": 2}, source=attacker)
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_attack == attacker.stats["def"]
