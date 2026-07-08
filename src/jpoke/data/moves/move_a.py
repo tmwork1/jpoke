@@ -927,7 +927,15 @@ MOVES_A: dict[MoveName, MoveData] = {
         category="status",
         pp=10,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"unprotectable", "unreflectable"},
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.うつしえ_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.うつしえ_change_ability,
+            ),
+        }
     ),
     "うらみ": MoveData(
         type="ゴースト",

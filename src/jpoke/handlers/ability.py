@@ -2995,10 +2995,7 @@ def マジックガード_ignore_damage(battle: Battle, ctx: EventContext, value
 
 def マジックミラー_reflect(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """マジックミラー特性: 反射対象の変化技を跳ね返す。"""
-    value = (
-        ctx.move.category == "status"
-        and ctx.move.target in {"foe", "foe_side"}
-    )
+    value = ctx.move.is_reflectable
     if value:
         _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)

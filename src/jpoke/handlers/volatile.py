@@ -1157,12 +1157,7 @@ def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: A
 
 def マジックコート_reflect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
-    value = (
-        ctx.move.category == "status"
-        and ctx.move.target in {"foe", "foe_side"}
-    )
-
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=ctx.move.is_reflectable)
 
 
 def マジックコート_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

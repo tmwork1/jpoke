@@ -252,6 +252,20 @@ def test_マジックコート_攻撃技は跳ね返さない():
     assert defender.hp < hp_before
 
 
+def test_マジックコート_unreflectableフラグを持つ技は跳ね返さない():
+    """マジックコート: unreflectableフラグを持つうつしえは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り相手の特性がコピーされる
+    assert attacker.ability.name == "めんえき"
+
+
 def test_まもる_みきりでもまもる状態になる():
     """みきり: 使用するとまもる揮発性状態が付与され、攻撃を防ぐ"""
     battle = t.start_battle(
