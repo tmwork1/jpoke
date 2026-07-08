@@ -1023,6 +1023,54 @@ def test_つじぎり_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_ドゲザン_タイプ威力PPが仕様通り():
+    """ドゲザン: あくタイプの物理直接攻撃技で、威力85・PP12を持つ（PPはチャンピオンズ仕様）。"""
+    move_data = MOVES["ドゲザン"]
+    assert move_data.type == "あく"
+    assert move_data.category == "physical"
+    assert move_data.power == 85
+    assert move_data.accuracy is None
+    assert move_data.pp == 12
+    assert move_data.critical_rank == 1
+    assert "contact" in move_data.flags
+    assert "slash" in move_data.flags
+
+
+def test_ドゲザン_相手の回避率が高くても必ず命中する():
+    """ドゲザン: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドドゲザン", move_names=["ドゲザン"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_ドゲザン_急所ランクが1():
+    """ドゲザン: 急所ランク+1のため乱数0で急所が発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドドゲザン", move_names=["ドゲザン"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is True
+
+
+def test_ドゲザン_急所ランクが1_乱数大で急所なし():
+    """ドゲザン: 乱数が急所閾値以上のとき急所にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドドゲザン", move_names=["ドゲザン"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.fix_random(battle, 0.5)  # 0.5 >= 1/8 なので急所なし
+    t.run_move(battle, 0)
+    assert battle.move_executor.critical is False
+
+
 @pytest.mark.parametrize("mon_name, item_name, expected_type", [
     ("オーガポン(みどり)", None, "くさ"),
     ("オーガポン(いど)", "いどのめん", "みず"),
