@@ -719,20 +719,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "ビックリヘッド": MoveData(
-        type="ノーマル",
-        category="physical",
-        pp=5,
-        power=130,
-        accuracy=100,
-        flags={"contact"},
-        handlers={
-            Event.ON_PAY_HP: h.MoveHandler(
-                ha.ビックリヘッド_pay_hp,
-                subject_spec="attacker:self",
-            ),
-        }
-    ),
     "びりびりちくちく": MoveData(
         type="でんき",
         category="physical",
