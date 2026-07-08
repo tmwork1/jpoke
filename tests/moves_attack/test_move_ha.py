@@ -2326,6 +2326,56 @@ def test_ブラッドムーン_通常使用でダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ブレイククロー_きれあじで威力1_5倍():
+    """ブレイククロー: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="きれあじ", move_names=["ブレイククロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
+def test_ブレイククロー_ぼうぎょ1段階低下が発動しない():
+    """ブレイククロー: 追加効果不発時はぼうぎょランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ブレイククロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == 0
+
+
+def test_ブレイククロー_ぼうぎょ1段階低下が発動する():
+    """ブレイククロー: 50%の確率で相手のぼうぎょを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ブレイククロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == -1
+
+
+def test_ブレイククロー_相手にダメージを与える():
+    """ブレイククロー: 物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ブレイククロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ブレイズキック_やけどが発動する():
     """ブレイズキック: 10%でやけどを付与する。"""
     battle = t.start_battle(
