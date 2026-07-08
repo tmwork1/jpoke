@@ -1035,11 +1035,15 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フレアドライブ": MoveData(
         type="ほのお",
         category="physical",
-        pp=15,
+        pp=16,
         power=120,
         accuracy=100,
         flags={"contact", "recoil", "secondary_effect", "thaw"},
         handlers={
+            Event.ON_TRY_ACTION: h.MoveHandler(
+                ha.フレアドライブ_thaw_attacker,
+                priority=5,
+            ),
             Event.ON_HIT: h.MoveHandler(
                 ha.フレアドライブ_recoil,
             ),
