@@ -848,7 +848,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "うたう": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=55,
         flags={"sound"},
         handlers={
