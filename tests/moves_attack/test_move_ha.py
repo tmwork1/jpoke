@@ -3386,19 +3386,6 @@ def test_ボルテッカー_反動ダメージが与ダメの3分の1になる()
     assert attacker.hp == hp_before - 33
 
 
-def test_ボルトチェンジ_ダメージを与える():
-    """ボルトチェンジ: 通常通りダメージを与える。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    hp_before = defender.hp
-    t.run_move(battle, 0)
-    assert defender.hp < hp_before
-
-
 def test_ボルトチェンジ_じめんタイプには無効():
     """ボルトチェンジ: でんきタイプなのでじめんタイプには無効で、ダメージも交代も発動しない。"""
     battle = t.start_battle(
@@ -3412,6 +3399,19 @@ def test_ボルトチェンジ_じめんタイプには無効():
     t.run_move(battle, 0)
     assert defender.hp == hp_before
     assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ボルトチェンジ_ダメージを与える():
+    """ボルトチェンジ: 通常通りダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_ボルトチェンジ_ひらいしんに吸収されると交代しない():
