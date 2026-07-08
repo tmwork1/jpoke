@@ -318,6 +318,28 @@ def test_マッハパンチ_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_マッハパンチ_素早さで劣っていても先制する():
+    """マッハパンチ: 優先度+1のため、素早さで劣っていても相手より先に行動できる。
+
+    カビゴン（素早さで劣る）がマッハパンチを使い、
+    ピカチュウ（素早さで勝る）が10まんボルトを使う場合、
+    優先度の高いマッハパンチが先に発動しHP1のピカチュウを先に倒すため、
+    ピカチュウは行動できずカビゴンはダメージを受けない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["マッハパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["10まんボルト"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.hp = 1
+    attacker_hp_before = attacker.hp
+    battle.step()
+    assert not defender.alive
+    assert attacker.hp == attacker_hp_before
+
+
 def test_まとわりつく_ダメージを与える():
     """まとわりつく: 命中時に相手にダメージを与える特殊むし技。"""
     battle = t.start_battle(

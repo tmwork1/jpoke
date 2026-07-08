@@ -124,7 +124,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "マッハパンチ": MoveData(
         type="かくとう",
         category="physical",
-        pp=30,
+        pp=20,
         power=40,
         accuracy=100,
         priority=1,
