@@ -220,9 +220,10 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ルミナコリジョン": MoveData(
         type="エスパー",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ルミナコリジョン_sharply_lower_defender_spd,

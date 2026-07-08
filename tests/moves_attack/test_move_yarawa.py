@@ -556,6 +556,29 @@ def test_リーフブレード_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_ルミナコリジョン_とくぼう2段階低下が発動する():
+    """ルミナコリジョン: 100%の確率で相手のとくぼうを2段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("クエスパトラ", move_names=["ルミナコリジョン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spd"] == -2
+
+
+def test_ルミナコリジョン_ちからずくで威力上昇しとくぼう低下は発動しない():
+    """ルミナコリジョン: ちからずく使用時は威力が1.3倍になる代わりに、とくぼう低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("クエスパトラ", ability_name="ちからずく", move_names=["ルミナコリジョン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spd"] == 0
+
+
 def test_レイジングブル_ケンタロスパルデア闘はかくとうタイプになる():
     """レイジングブル: ケンタロス（パルデア闘）が使用するとかくとうタイプになる。"""
     battle = t.start_battle(

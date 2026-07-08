@@ -1410,14 +1410,24 @@ def test_リーフストーム_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
-def test_ルミナコリジョン_とくぼうダウン():
-    """ルミナコリジョン: 命中後に相手のとくぼうが2段階下がるため2発目のダメージが増加する"""
+def test_ルミナコリジョン_とくぼうダウン_secondary有り():
+    """ルミナコリジョン: secondary=True のとき命中後に相手のとくぼうが2段階下がるため2発目のダメージが増加する"""
     battle = t.start_battle(
         team0=[Pokemon("カイリュー")],
         team1=[Pokemon("カビゴン")],
     )
-    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ルミナコリジョン"), max_attack=2)
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ルミナコリジョン"), max_attack=2, secondary=True)
     assert results[1].min_damage > results[0].min_damage
+
+
+def test_ルミナコリジョン_とくぼうダウン_secondary無し():
+    """ルミナコリジョン: secondary=False のときはとくぼうダウンが発動せず2発目のダメージが変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("ルミナコリジョン"), max_attack=2, secondary=False)
+    assert results[1].min_damage == results[0].min_damage
 
 
 def test_れんごく_やけど付与_secondary有り():
