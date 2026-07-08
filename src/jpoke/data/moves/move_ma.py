@@ -79,9 +79,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "マジカルフレイム": MoveData(
         type="ほのお",
         category="special",
-        pp=10,
+        pp=12,
         power=75,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マジカルフレイム_lower_spa_C,
