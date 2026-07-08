@@ -709,7 +709,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ヒートスタンプ": MoveData(
         type="ほのお",
         category="physical",
-        pp=10,
+        pp=12,
         power=1,
         accuracy=100,
         flags={"minimize", "contact"},
