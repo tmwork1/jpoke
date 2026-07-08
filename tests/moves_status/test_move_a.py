@@ -168,6 +168,18 @@ def test_あさのひざし_天候別回復量(weather_arg, numerator, denominat
     assert attacker.hp == 1 + int(attacker.max_hp * numerator / denominator)
 
 
+def test_あまいかおり_defenderの回避率が2段階下がる():
+    """あまいかおり: 相手（defender）の回避率が2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまいかおり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["evasion"] == -2
+
+
 def test_あまえる_defenderのこうげきが2段階下がる():
     """あまえる: 相手（defender）のこうげきが2段階下がる"""
     battle = t.start_battle(
