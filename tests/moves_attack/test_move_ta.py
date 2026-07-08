@@ -3036,6 +3036,19 @@ def test_ドラゴンクロー_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_ドラゴンハンマー_相手にダメージを与える():
+    """ドラゴンハンマー: 追加効果なしの物理ドラゴン技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ドラゴンハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ドラゴンダイブ_ひるみが発動する():
     """ドラゴンダイブ: 20%でひるみを付与する。"""
     battle = t.start_battle(
