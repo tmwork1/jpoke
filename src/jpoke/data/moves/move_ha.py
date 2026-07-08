@@ -1325,7 +1325,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        # 自分のランクを下げる確定効果はちからずくの対象外（アームハンマー等と同様）。
+        flags={"contact"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.ホイールスピン_sharply_lower_attacker_spe,
