@@ -136,6 +136,10 @@ git merge --no-ff {branch} -m "Merge {branch}"
 
 FF 同期なら競合は起きない。ユーザーが main に独自コミットを重ねた場合だけ通常マージになる。
 
+この main への直接マージは CLAUDE.md「ブランチ運用ルール」（手動作業のブランチ+PR義務化）の対象外
+である。ループ成果は §共通2 の設計上 main から隔離された専用ブランチに蓄積されるため、その反映は
+意図的にこの軽量な FF/マージで行う。
+
 ## §共通7: 状態保存と次ウェイクアップ予約
 
 - **状態保存**: Write で `.loop/{flow}_state.json` を上書きする（§共通3・コミット不要）。
@@ -171,3 +175,71 @@ fi
 
 worktree 削除（`git worktree remove`）やブランチ削除（`git branch -d/-D`）は git コマンドであり
 このフックの対象外なので、素の呼び出しで問題ない。ガードが必要なのは生の `rm` のみ。
+
+## §共通10: シードベース継続バグ出しループの共通骨格
+
+`fuzz.md` / `replay_fuzz.md` が参照する。両者とも「シード付きでランダムに大量実行 → 未捕捉例外や
+不整合を検出 → impl で修正 → review-test で回帰テスト」という同じ形の単一ブランチループのため、
+共通部分をここにまとめる。フロー固有の差分（調査観点・レポートパスパターン・モード管理等）は
+各指示書側に残す。
+
+### 再開ルール
+
+`current_failure` が null でない場合、前回のウェイクアップが中断された状態。手順4（バグ対応）から
+やり直す。
+
+### signature 重複チェック
+
+`failed_bugs` に同じ `signature` が **attempts >= 2** で存在する場合 → **ループを中断**
+（ScheduleWakeup を呼ばない）。「同一バグ（signature: {signature}）の自動修正が2回失敗したため、
+{flow}ループを停止しました。再現コマンドは {report内の再現コマンド} です。手動確認が必要です。」
+と報告して終了する。
+
+### impl エージェント（foreground）の共通ステップ
+
+1. 再現コマンドで再現することを確認する
+2. 原因を調査する（フロー固有の調査観点に従う）
+3. 原因を修正する（テストは書かない。review-test エージェントが担当）
+4. `handlers/` を変更した場合、`python scripts/sort_handlers.py src/jpoke/handlers/<category>.py` を実行する
+5. `data/ability.py` / `data/item.py` / `data/move.py` を変更した場合、対応する sort スクリプトを実行する
+6. 再度再現コマンドを実行し、解消したこと（`OK:` が出力されること）を確認する
+7. コミットはしない（review-test エージェントが担当）
+
+失敗（原因不明・修正できず）した場合: `failed_bugs` の該当 signature を探し、あれば `attempts += 1`、
+なければ新規エントリを追加する。`current_failure` をクリアして保存し、review-test はスキップする。
+
+### review-test エージェント（foreground）の共通ステップ
+
+impl 成功後のみ実施:
+
+1. 修正内容をレビューする（レポートに元の例外・原因箇所の情報がある）
+2. 原因箇所に応じた最小の決定的な回帰テストを追加する。**ランダムなfuzzシードをそのままテストに
+   しない**（乱数依存でエンジン変更のたびに壊れるため）
+3. `python scripts/sort_tests.py <対象ファイル>` を実行する
+4. `python scripts/generate_test_list.py` を実行する
+5. `python -m pytest tests/ -v` を実行し、全件パスすることを確認する
+6. 変更をコミットする（`{branch}` ブランチ上で行う）
+
+成功した場合: `completed_bugs` に追加し、`failed_bugs` に同じ signature があれば削除する。
+失敗した場合: impl 失敗時と同様に `failed_bugs` を更新する。いずれも `current_failure` をクリアして保存する。
+
+> このフローは単一ブランチ・単一エージェントのため、ソートはエージェント側で実行する
+> （§共通5「マージ後一括整形」は適用しない）。main へのマージも行わない（§共通2）。
+
+## §共通11: リーサル計算ハンドラの実装パターン
+
+`impl.md` / `review.md` / `lethal.md` が参照する。リーサル計算ハンドラ（`handlers/lethal.py`）を
+新規実装・修正する際は共通で以下に従う。各指示書側には「このパターンに該当するかどうかの判断」
+だけを残す。
+
+- シグネチャ: `(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist`
+- 既存パターン（`_heal`, `_heal_at_pinch`, `_survive_at_full_hp`, `_type_resist_berry` など）を参照して実装する
+- 種別に対応する data ファイルの `lethal_handlers` にエントリを追加する:
+  - `move` → `data/move.py`
+  - `item` → `data/item.py`
+  - `ability` → `data/ability.py`
+  - `ailment` → `data/ailment.py`
+  - `volatile` → `data/volatile.py`
+  - `global_field` → `data/field.py`
+- イベントは `LethalEvent.ON_BEFORE_HIT` / `ON_HIT` / `ON_TURN_END` / `ON_EVERY_EVENT` から選ぶ
+- subject は `"attacker"` / `"defender"` / `None` から選ぶ

@@ -62,13 +62,9 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 
 手順:
 1. docs/spec/ に仕様書があれば読む。なければ現状の実装（handlers/lethal.py・core/lethal.py）を調査する
-2. handlers/lethal.py の既存パターン（_heal, _heal_at_pinch など）を参照してハンドラ関数を実装する
-   - シグネチャ: (battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist
-3. type に対応する data ファイルの lethal_handlers にエントリを追加する
-   - item → data/item.py, ability → data/ability.py, ailment → data/ailment.py,
-     volatile → data/volatile.py, global_field → data/field.py, move → data/move.py
-   - イベントは LethalEvent.ON_BEFORE_HIT / ON_HIT / ON_TURN_END / ON_EVERY_EVENT から選ぶ
-   - subject は "attacker" / "defender" / None から選ぶ
+2. `.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」に従ってハンドラ関数を実装する
+   （この entry は progress ファイルで「影響する」と既に確定済みなので、影響有無の判断は不要）
+3. type に対応する data ファイルの lethal_handlers にエントリを追加する（§共通11 の routing table を参照）
 4. ソートを実行する:
    python scripts/sort_handlers.py src/jpoke/handlers/lethal.py
    （data ファイルを変更した場合は scripts/sort_data/sort_abilities.py / sort_items.py / sort_moves.py も実行）

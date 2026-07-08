@@ -137,14 +137,8 @@ jpoke {config.category} 再レビュータスク: {entry}
    `{config.progress_file}` の {entry} 行の「リーサル実装」列を確認する。
    - `n/a` または `保留` → 対象外なのでスキップする
    - `x` → handlers/lethal.py の既存ハンドラを仕様書・実装と照合し、誤り・欠落があれば修正する
-   - `-` → 仕様書をもとに新規にリーサル計算ハンドラを実装する
-     - handlers/lethal.py の既存パターン（`_heal`, `_heal_at_pinch` など）を参照する
-     - シグネチャ: `(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist`
-     - {entry} の種別に対応する data ファイルの `lethal_handlers` にエントリを追加する
-       （move → data/move.py, item → data/item.py, ability → data/ability.py,
-       ailment → data/ailment.py, volatile → data/volatile.py, global_field → data/field.py）
-     - イベントは `LethalEvent.ON_BEFORE_HIT` / `ON_HIT` / `ON_TURN_END` / `ON_EVERY_EVENT` から選ぶ
-     - subject は `"attacker"` / `"defender"` / `None` から選ぶ
+     （`.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」を基準にする）
+   - `-` → 仕様書をもとに §共通11 に従って新規にリーサル計算ハンドラを実装する
    ※ ここでも sort_handlers.py / sort_data/*.py は実行しない（マージ後に一括整形）。
 
 6. テストのレビュー・修正

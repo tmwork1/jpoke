@@ -164,14 +164,8 @@ jpoke {config.category} 実装タスク: {entry}
      みがわり貫通など）。
    - 影響しない（大半の攻撃技・変化技） → progress の「リーサル実装」「リーサルテスト」列を `n/a` にする
    - ダブル専用効果 → 両列を `ダブル専用` にする / 実装が複雑で今回見送る → 両列を `保留` にする
-   - 影響する → handlers/lethal.py の既存パターン（`_heal`, `_heal_at_pinch`,
-     `_survive_at_full_hp`, `_type_resist_berry` など）を参照してハンドラ関数を実装する
-     - シグネチャ: `(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist`
-     - {config.category} の種別に対応する data ファイルの `lethal_handlers` にエントリを追加する
-       （move → data/move.py, item → data/item.py, ability → data/ability.py,
-       ailment → data/ailment.py, volatile → data/volatile.py, global_field → data/field.py）
-     - イベントは `LethalEvent.ON_BEFORE_HIT` / `ON_HIT` / `ON_TURN_END` / `ON_EVERY_EVENT` から選ぶ
-     - subject は `"attacker"` / `"defender"` / `None` から選ぶ
+   - 影響する → `.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」に従って
+     {config.category} の種別に応じたハンドラ関数を実装する
      - progress の「リーサル実装」列を `x` にする（「リーサルテスト」列は review-test が更新する）
    ※ ここでも sort_handlers.py / sort_data/*.py は実行しない（マージ後に一括整形）
 4. テストは書かない（review-test エージェントが担当）
