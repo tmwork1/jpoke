@@ -807,6 +807,49 @@ def test_ダメおし_同ターンにダメージを受けていたら威力2倍
     assert battle.damage_calculator.power_modifier == 8192
 
 
+def test_ダメおし_相手が受けたゴツゴツメットの反射ダメージも同ターンのダメージとして扱われる():
+    """ダメおし: 対象が同ターン中にゴツゴツメット所持者への接触で反射ダメージを受けていれば威力2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット", move_names=["ダメおし"])],
+        accuracy=100,
+    )
+    # team0がteam1（ゴツゴツメット所持者）に接触技を当て、反射ダメージを受ける
+    t.run_move(battle, 0)
+    battle.random.random = lambda: 0.9
+    # team1のダメおしは、反射ダメージを受けたばかりのteam0を対象にする
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_ダメおし_相手のいのちのたま反動も同ターンのダメージとして扱われる():
+    """ダメおし: 対象が同ターン中にいのちのたまの反動ダメージを受けていれば威力2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="いのちのたま", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", move_names=["ダメおし"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_ダメおし_相手の反動ダメージも同ターンのダメージとして扱われる():
+    """ダメおし: 対象が同ターン中に自分の技の反動ダメージ（とっしん）を受けていれば威力2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["とっしん"])],
+        team1=[Pokemon("カビゴン", move_names=["ダメおし"])],
+        accuracy=100,
+    )
+    # team0（とっしんの使用者）が反動ダメージを受ける
+    t.run_move(battle, 0)
+    battle.random.random = lambda: 0.9
+    # team1（ダメおし）がその反動を受けたばかりのteam0を対象にする
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.power_modifier == 8192
+
+
 def test_だんがいのつるぎ_相手にダメージを与える():
     """だんがいのつるぎ: 追加効果なしの物理じめん技で相手にダメージを与える。"""
     battle = t.start_battle(

@@ -1162,6 +1162,22 @@ def test_きあいパンチ_HP1でみねうちを受けると失敗():
     assert attacker.hp == 1
 
 
+def test_きあいパンチ_アイスフェイスで肩代わりすると失敗():
+    """きあいパンチ: アイスフェイスで物理技のダメージを肩代わりした場合も不発になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コオリッポ(アイス)", ability_name="アイスフェイス", move_names=["きあいパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    before_foe_hp = battle.actives[1].hp
+
+    battle.step()
+
+    assert battle.actives[1].hp == before_foe_hp
+    assert attacker.name == "コオリッポ(ナイス)"
+
+
 def test_きあいパンチ_ばけのかわで肩代わりすると失敗():
     """きあいパンチ: ばけのかわで攻撃ダメージを肩代わりした場合も不発になる。"""
     battle = t.start_battle(
