@@ -42,7 +42,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ナイトヘッド": MoveData(
         type="ゴースト",
         category="special",
-        pp=15,
+        pp=16,
         power=0,
         accuracy=100,
         flags={"fixed_damage"},
@@ -50,6 +50,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
             Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
                 ha.level_fixed_damage,
                 subject_spec="attacker:self",
+                priority=15,
             )
         }
     ),
