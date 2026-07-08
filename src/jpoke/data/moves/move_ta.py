@@ -1137,7 +1137,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トリックフラワー": MoveData(
         type="くさ",
         category="physical",
-        pp=10,
+        pp=12,
         power=70,
         critical_rank=3,
         handlers={},  # 追加効果なし
