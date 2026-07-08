@@ -31,7 +31,7 @@ from pathlib import Path
 from random import Random
 
 from jpoke import Battle
-from jpoke.players import replay_battle
+from jpoke.core.replay import replay_battle
 
 from fuzz_battle import RandomPlayer
 from fuzz_common import (

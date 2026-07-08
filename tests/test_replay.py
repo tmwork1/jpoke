@@ -1,12 +1,12 @@
 """対戦ログ出力・リプレイ再生機能のテスト。"""
 import pytest
 
-from jpoke.core.replay import BattleReplayData, RecordedCommand
+from jpoke.core.replay import BattleReplayData, RecordedCommand, replay_battle
 from jpoke.enums import Command
 from jpoke.model import Pokemon
-from jpoke.players import ReplayPlayer, replay_battle
 
 from . import test_utils as t
+
 
 def _play_to_finish(battle, max_turns: int = 50):
     turns = 0
@@ -54,7 +54,7 @@ def test_pokemonのto_dictとfrom_dictの往復で同じ状態が復元される
 
 
 def test_recordedcommandのto_dictとfrom_dictの往復で同じ内容が復元される():
-    rec = RecordedCommand(turn=3, player_idx=1, phase="switch", command=Command.SWITCH_2)
+    rec = RecordedCommand(turn=3, player_index=1, phase="switch", command=Command.SWITCH_2)
     restored = RecordedCommand.from_dict(rec.to_dict())
     assert restored == rec
 

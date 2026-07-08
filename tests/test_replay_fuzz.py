@@ -16,8 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from fuzz_common import build_team, random_team_spec  # noqa: E402
 
 from jpoke import Battle, Player
+from jpoke.core.replay import replay_battle
 from jpoke.enums import Command
-from jpoke.players import replay_battle
 
 N_POKEMON = 3
 MAX_TURNS = 30

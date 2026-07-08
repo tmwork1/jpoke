@@ -1,21 +1,31 @@
-"""対戦のリプレイ再生に必要なデータ構造を定義するモジュール。
+"""対戦のリプレイ再生に必要なデータ構造・再生ロジックを提供するモジュール。
 
 対戦を完全に再現するために必要な「チーム＋シード＋選出＋コマンド列」を
-記録・シリアライズする。記録フックは `Battle` / `CommandManager` 側にあり、
-このモジュールはデータ構造のみを扱う。
+記録・シリアライズするデータ構造（`RecordedCommand`, `BattleReplayData`）と、
+それを使って記録済みの選出・コマンド列をそのまま払い出す `ReplayPlayer`、
+対戦を最後まで進める `replay_battle()` をまとめて扱う。
+記録フックは `Battle` / `CommandManager` 側にある。
 """
 from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .battle import Battle
+
+from collections import deque
 from dataclasses import dataclass, field
 
 from jpoke.types import BattlePhase
 from jpoke.enums import Command
+from jpoke.model import Pokemon
+
+from .player import Player
 
 
 @dataclass(frozen=True)
 class RecordedCommand:
     """記録された1件のコマンド（行動 / 交代）。"""
     turn: int
-    player_idx: int
+    player_idx: int  # TODO : コード全体で idx と index の表記ゆれを index に統一する
     phase: BattlePhase  # "action" | "switch"
     command: Command
 
@@ -67,3 +77,51 @@ class BattleReplayData:
             selections=tuple(data["selections"]),
             commands=[RecordedCommand.from_dict(c) for c in data["commands"]],
         )
+
+
+class ReplayPlayer(Player):
+    """記録済みの選出・コマンド列をそのまま再生するプレイヤー。
+
+    方策判断を一切行わず、記録された決定を発生順に払い出すだけなので、
+    盤面が記録時と完全に一致する限り常に正しい決定を返す。
+    """
+
+    def __init__(self, name: str, team_spec: list[dict],
+                 selection: list[int], commands: list[Command]):
+        super().__init__(name=name)
+        self.team = [Pokemon.from_dict(spec) for spec in team_spec]
+        self._selection = selection
+        self._queue: deque[Command] = deque(commands)
+
+    def choose_selection(self, battle: Battle) -> list[int]:
+        return self._selection
+
+    def choose_command(self, battle: Battle) -> Command:
+        if not self._queue:
+            raise RuntimeError("リプレイデータのコマンドが不足しています。記録漏れの可能性があります。")
+        return self._queue.popleft()
+
+
+def replay_battle(data: BattleReplayData, max_turns: int = 300) -> Battle:
+    """記録済みデータから対戦を再現する。
+
+    Returns:
+        再生し終えた Battle インスタンス（event_logger 等で経過を確認できる）。
+    """
+    from .battle import Battle  # battle.py -> replay.py の循環importを避けるための遅延import
+
+    commands_by_player: tuple[list[Command], list[Command]] = ([], [])
+    for rec in data.commands:
+        commands_by_player[rec.player_idx].append(rec.command)
+
+    players = (
+        ReplayPlayer("Player 1", data.teams[0], data.selections[0], commands_by_player[0]),
+        ReplayPlayer("Player 2", data.teams[1], data.selections[1], commands_by_player[1]),
+    )
+    battle = Battle(players, n_selected=data.n_selected, seed=data.seed, **data.battle_option)
+    battle.start()
+
+    while battle.judge_winner() is None and battle.turn < max_turns:
+        battle.step()
+
+    return battle
