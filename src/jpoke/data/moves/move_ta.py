@@ -694,10 +694,18 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "テラクラスター": MoveData(
         type="ノーマル",
         category="special",
-        pp=5,
+        pp=8,
         power=120,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"non_copycat"},  # まねっこ/ものまね/スケッチでコピー不可（ものまね/スケッチは未実装）
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
+                ha.テラクラスター_modify_move_type,
+            ),
+            Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
+                ha.テラクラスター_modify_move_category,
+            ),
+        },
     ),
     "テラバースト": MoveData(
         type="ノーマル",
