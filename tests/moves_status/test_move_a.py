@@ -1256,6 +1256,22 @@ def test_おたけび_こうげきとくこう1段階ずつ下がる():
     assert defender.rank["spa"] == -1
 
 
+def test_おたけび_みがわりを貫通してこうげきとくこうが下がる():
+    """おたけび: soundフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おたけび"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -1
+    assert defender.rank["spa"] == -1
+    assert defender.volatiles["みがわり"].hp == 999
+
+
 def test_おだてる_すでにこんらんかつとくこう最大なら失敗():
     """おだてる: とくこうが+6かつこんらん済みなら技が失敗する"""
     battle = t.start_battle(
