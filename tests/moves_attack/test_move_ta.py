@@ -2504,6 +2504,13 @@ def test_トリプルアクセル_最大3回ヒットする():
     assert defender.hits_taken == 3
 
 
+def test_トリプルキック_威力が回数ごとに上昇する():
+    """トリプルキック: 威力が1回目10→2回目20→3回目30と上昇する（power_sequence）。"""
+    move_data = MOVES["トリプルキック"]
+    assert move_data.multi_hit is not None
+    assert move_data.multi_hit["power_sequence"] == (10, 20, 30)
+
+
 def test_トリプルキック_2発目が外れると打ち切られる():
     """トリプルキック: check_hit_each_time=Trueのため、2発目の命中判定に外れるとそこで打ち切られる。"""
     battle = t.start_battle(
