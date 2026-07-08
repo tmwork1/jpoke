@@ -340,7 +340,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ネズミざん": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=20,
         accuracy=90,
         flags={"contact", "slash", "check_hit_each_time"},
