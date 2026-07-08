@@ -7,29 +7,6 @@ from .. import test_utils as t
 
 
 @pytest.mark.parametrize("move_name", [
-    "ビックリヘッド",
-])
-def test_HPコスト技グループ_最大HPの半分を消費する(move_name: str):
-    """HPコスト技グループ: 技使用前に自分の最大HPの1/2 を消費する。
-
-    てっていこうせんは切り上げ処理・特性相互作用（マジックガードのみで防げる）が異なるため
-    `tests/moves_attack/test_move_ta.py` に、クロロブラストは反動の発生タイミング（使用前の
-    無条件消費ではなく命中時のみ）・特性相互作用（いしあたま・マジックガード双方で防げる）が
-    異なるため `tests/moves_attack/test_move_ka.py` に、それぞれ専用テストを分離済み。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=[move_name])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    expected_cost = max(1, attacker.max_hp // 2)
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-    assert attacker.hp == hp_before - expected_cost
-
-
-@pytest.mark.parametrize("move_name", [
     "かかとおとし",
     "サンダーダイブ",
     "とびげり",

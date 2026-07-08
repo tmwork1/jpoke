@@ -2688,13 +2688,6 @@ def ヒートスタンプ_calc_power(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=_weight_ratio_to_power(ctx.attacker.weight, ctx.defender.weight) * 4096)
 
 
-def ビックリヘッド_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ビックリヘッド: 使用前に最大HPの1/2を消費する。"""
-    cost = max(1, ctx.attacker.max_hp // 2)
-    battle.modify_hp(ctx.attacker, v=-cost, reason="self_cost", source=ctx.attacker)
-    return HandlerReturn(value=value)
-
-
 def びりびりちくちく_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
 
