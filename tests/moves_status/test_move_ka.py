@@ -401,6 +401,19 @@ def test_きあいだめ_すでにきゅうしょアップなら失敗():
     assert attacker.volatiles["きゅうしょアップ"].count == old_count
 
 
+def test_きあいだめ_自分対象のためまもるで防がれない():
+    """きあいだめ: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きあいだめ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("きゅうしょアップ")
+
+
 def test_キノコのほうし_くさタイプには無効化される():
     """キノコのほうし: 草タイプのポケモンには無効化されてねむり状態にならない"""
     battle = t.start_battle(

@@ -524,7 +524,8 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きあいだめ": MoveData(
         type="ノーマル",
         category="status",
-        pp=30,
+        pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きあいだめ_apply,
