@@ -15,6 +15,7 @@ from .move import (
     modify_defender_stats,
 )
 from jpoke.core import HandlerReturn
+from jpoke.utils.math import round_half_down
 from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
@@ -297,11 +298,19 @@ def いやしのねがい_apply(battle: Battle, ctx: AttackContext, value: Any) 
 
 
 def いやしのはどう_heal_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """いやしのはどう: 相手の最大HPの1/2を回復する。HPが満タンの場合は失敗する。"""
+    """いやしのはどう: 相手の最大HPの1/2（メガランチャー所持時は3/4）を回復する。
+
+    通常時の端数は切り上げ、メガランチャー所持時は五捨五超入（round_half_down）で丸める。
+    HPが満タンの場合は失敗する。
+    """
     mon = ctx.defender
     if mon.hp == mon.max_hp:
         return HandlerReturn(value=False, stop_event=True)
-    battle.modify_hp(mon, r=1/2)
+    if ctx.attacker.ability.name == "メガランチャー":
+        heal = round_half_down(mon.max_hp * 3 / 4)
+    else:
+        heal = (mon.max_hp + 1) // 2
+    battle.modify_hp(mon, v=heal)
     return HandlerReturn(value=value)
 
 
