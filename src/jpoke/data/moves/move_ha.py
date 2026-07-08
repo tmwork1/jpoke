@@ -527,10 +527,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "バーンアクセル": MoveData(
         type="ほのお",
         category="physical",
-        pp=15,
+        pp=12,
         power=80,
         accuracy=100,
-        flags={"contact", "non_copycat", "secondary_effect"},
+        flags={"non_copycat", "non_encore", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.バーンアクセル_apply_burn_to_defender,
