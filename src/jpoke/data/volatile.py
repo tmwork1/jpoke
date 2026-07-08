@@ -659,6 +659,19 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "フリーズボルト": VolatileData(
+        forced=True,
+        handlers={
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
+                h.force_command,
+                subject_spec="source:self",
+            ),
+            Event.ON_HIT: h.VolatileHandler(
+                h.フリーズボルト_remove_volatile,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "ブラッドムーン": VolatileData(
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(
