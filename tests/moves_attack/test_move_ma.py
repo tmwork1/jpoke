@@ -227,6 +227,31 @@ def test_マジカルシャイン_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_マジカルリーフ_相手にダメージを与える():
+    """マジカルリーフ: 追加効果なしの特殊くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["マジカルリーフ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_マジカルリーフ_相手の回避率が高くても必ず命中する():
+    """マジカルリーフ: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["マジカルリーフ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_マッハパンチ_相手にダメージを与える():
     """マッハパンチ: 優先度+1の先制物理技で相手にダメージを与える。"""
     battle = t.start_battle(
