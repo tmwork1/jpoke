@@ -1093,6 +1093,16 @@ def test_ばけのかわ_初回攻撃を無効化():
     assert all(not state.ability_enabled for state in results[0].hp_dist)
 
 
+def test_フルールカノン_とくこうダウン():
+    """フルールカノン: 命中後にとくこうが2段階下がるため2発目のダメージが減少する"""
+    battle = t.start_battle(
+        team0=[Pokemon("マギアナ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    results = t.calc_lethal(battle, atk_idx=0, moves=Move("フルールカノン"), max_attack=2)
+    assert results[1].min_damage < results[0].min_damage
+
+
 def test_フレアソング_とくこうアップ_secondary有り():
     """フレアソング: secondary=True のとき命中後にとくこうが1段階上がり、2発目のダメージが増加する"""
     battle = t.start_battle(

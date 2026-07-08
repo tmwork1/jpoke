@@ -1007,13 +1007,16 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フルールカノン": MoveData(
         type="フェアリー",
         category="special",
-        pp=5,
+        pp=8,
         power=130,
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.フルールカノン_sharply_lower_spa_C,
             )
+        },
+        lethal_handlers={
+            LethalEvent.ON_HIT: LethalHandler(l.フルールカノン_lower_spa)
         }
     ),
     "フレアソング": MoveData(

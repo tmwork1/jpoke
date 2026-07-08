@@ -2064,6 +2064,17 @@ def test_フリーズボルト_まひが発動する():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_フルールカノン_とくこう2段階低下が発動する():
+    """フルールカノン: 命中後、確定で自分の『とくこう』ランクが2段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("マギアナ", move_names=["フルールカノン"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spa"] == -2
+
+
 def test_フレアソング_特攻1段階上昇が発動する():
     """フレアソング: 命中時に使用者のCが1段階上昇する（確率100%）。"""
     battle = t.start_battle(
