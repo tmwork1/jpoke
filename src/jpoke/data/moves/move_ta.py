@@ -286,7 +286,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ダブルアタック": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
         power=35,
         accuracy=90,
         flags={"contact"},
