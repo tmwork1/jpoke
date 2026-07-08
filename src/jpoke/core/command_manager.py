@@ -182,7 +182,7 @@ class CommandManager:
                     # 瀕死交代・だっしゅつパック等の割り込み交代のみを記録する。
                     battle.command_log.append(RecordedCommand(
                         turn=battle.turn,
-                        player_idx=battle.players.index(ply),
+                        player_index=battle.players.index(ply),
                         phase="switch",
                         command=commands[ply],
                     ))

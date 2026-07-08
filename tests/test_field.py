@@ -169,6 +169,7 @@ def test_オーロラベール_ひかりのかべとは重複しない():
         team1=[Pokemon("ピカチュウ")],
         side1={"オーロラベール": 5, "ひかりのかべ": 5},
     )
+    t.fix_random(battle, 0.99)  # 急所（1/24）による軽減無効化を避けるため固定
     t.run_move(battle, 0)
     # どちらか一方の壁だけが適用され、damage_modifier は 2048（1/2）のまま
     assert battle.damage_calculator.damage_modifier == 2048
@@ -181,6 +182,7 @@ def test_オーロラベール_リフレクターとは重複しない():
         team1=[Pokemon("ピカチュウ")],
         side1={"オーロラベール": 5, "リフレクター": 5},
     )
+    t.fix_random(battle, 0.99)  # 急所（1/24）による軽減無効化を避けるため固定
     t.run_move(battle, 0)
     # リフレクターが適用済みのため オーロラベール の追加軽減はなし（2048 のまま）
     assert battle.damage_calculator.damage_modifier == 2048

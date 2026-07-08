@@ -587,7 +587,7 @@ class Battle:
         for player, command in commands.items():
             self.command_log.append(RecordedCommand(
                 turn=record_turn,
-                player_idx=self.players.index(player),
+                player_index=self.players.index(player),
                 phase="action",
                 command=command,
             ))

@@ -25,14 +25,14 @@ from .player import Player
 class RecordedCommand:
     """記録された1件のコマンド（行動 / 交代）。"""
     turn: int
-    player_idx: int  # TODO : コード全体で idx と index の表記ゆれを index に統一する
+    player_index: int
     phase: BattlePhase  # "action" | "switch"
     command: Command
 
     def to_dict(self) -> dict:
         return {
             "turn": self.turn,
-            "player_idx": self.player_idx,
+            "player_index": self.player_index,
             "phase": self.phase,
             "command": self.command.name,
         }
@@ -41,7 +41,7 @@ class RecordedCommand:
     def from_dict(cls, data: dict) -> "RecordedCommand":
         return cls(
             turn=data["turn"],
-            player_idx=data["player_idx"],
+            player_index=data["player_index"],
             phase=data["phase"],
             command=Command[data["command"]],
         )
@@ -112,7 +112,7 @@ def replay_battle(data: BattleReplayData, max_turns: int = 300) -> Battle:
 
     commands_by_player: tuple[list[Command], list[Command]] = ([], [])
     for rec in data.commands:
-        commands_by_player[rec.player_idx].append(rec.command)
+        commands_by_player[rec.player_index].append(rec.command)
 
     players = (
         ReplayPlayer("Player 1", data.teams[0], data.selections[0], commands_by_player[0]),
