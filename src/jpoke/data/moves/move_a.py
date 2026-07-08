@@ -606,11 +606,11 @@ MOVES_A: dict[MoveName, MoveData] = {
     "いとをはく": MoveData(
         type="むし",
         category="status",
-        pp=40,
+        pp=20,
         accuracy=95,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.いとをはく_reduce_defender_spe,
+                hs.いとをはく_modify_defender_stats,
             ),
         }
     ),
