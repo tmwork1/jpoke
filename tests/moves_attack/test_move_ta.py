@@ -871,6 +871,47 @@ def test_ちきゅうなげ_与ダメージは使用者レベル固定():
     assert before_hp - battle.actives[1].hp == 50
 
 
+@pytest.mark.parametrize("mon_name, item_name, expected_type", [
+    ("オーガポン(みどり)", None, "くさ"),
+    ("オーガポン(いど)", "いどのめん", "みず"),
+    ("オーガポン(かまど)", "かまどのめん", "ほのお"),
+    ("オーガポン(いしずえ)", "いしずえのめん", "いわ"),
+])
+def test_ツタこんぼう_オーガポンのフォルムに応じてタイプが変わる(mon_name, item_name, expected_type):
+    """ツタこんぼう: オーガポンが使用した場合、フォルム（仮面）に応じて技タイプが変わる。"""
+    kwargs = {"item_name": item_name} if item_name is not None else {}
+    battle = t.start_battle(
+        team0=[Pokemon(mon_name, move_names=["ツタこんぼう"], **kwargs)],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == expected_type
+
+
+def test_ツタこんぼう_マジックルームでも仮面の威力補正が無効でもタイプは変わらない():
+    """ツタこんぼう: マジックルームで仮面の威力補正が無効化されていてもタイプはフォルム基準のまま。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オーガポン(いど)", item_name="いどのめん", move_names=["ツタこんぼう"])],
+        team1=[Pokemon("カビゴン")],
+        field={"マジックルーム": 5},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "みず"
+
+
+def test_ツタこんぼう_オーガポン以外が使用するとくさタイプ固定():
+    """ツタこんぼう: オーガポン以外が使用した場合は仮面を持っていても常にくさタイプ。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", item_name="いどのめん", move_names=["ツタこんぼう"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "くさ"
+
+
 def test_つけあがる_ACCランク上昇もカウントする():
     """つけあがる: ACC+1も威力に影響する（命中率・回避率もランク合計の対象）。"""
     battle = t.start_battle(

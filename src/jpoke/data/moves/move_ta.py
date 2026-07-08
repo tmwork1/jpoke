@@ -501,7 +501,11 @@ MOVES_TA: dict[MoveName, MoveData] = {
         power=100,
         accuracy=100,
         critical_rank=1,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_MODIFY_MOVE_TYPE: h.MoveHandler(
+                ha.ツタこんぼう_modify_move_type,
+            ),
+        },
     ),
     "つっぱり": MoveData(
         type="かくとう",
