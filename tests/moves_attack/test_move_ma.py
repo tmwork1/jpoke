@@ -1102,6 +1102,19 @@ def test_メガドレイン_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
+def test_メガトンパンチ_相手にダメージを与える():
+    """メガトンパンチ: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["メガトンパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_メガホーン_相手にダメージを与える():
     """メガホーン: 追加効果なしの物理むし技で相手にダメージを与える。"""
     battle = t.start_battle(
