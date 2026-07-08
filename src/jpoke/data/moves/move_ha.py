@@ -971,14 +971,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=20,
         power=70,
         accuracy=100,
-        flags={"secondary_effect"},
         handlers={
             Event.ON_CALC_DEF_TYPE_MODIFIER: h.MoveHandler(
                 ha.フリーズドライ_water_effectiveness,
             ),
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.フリーズドライ_apply_freeze_to_defender,
-            )
         }
     ),
     "フリーズボルト": MoveData(
