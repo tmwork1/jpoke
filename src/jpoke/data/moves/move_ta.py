@@ -1433,7 +1433,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ドラゴンハンマー": MoveData(
         type="ドラゴン",
         category="physical",
-        pp=15,
+        pp=16,
         power=90,
         accuracy=100,
         flags={"contact"},
