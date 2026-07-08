@@ -382,19 +382,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "ハートスタンプ": MoveData(
-        type="エスパー",
-        category="physical",
-        pp=25,
-        power=60,
-        accuracy=100,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ハートスタンプ_apply_flinch,
-            )
-        }
-    ),
     "ハートスワップ": MoveData(
         type="エスパー",
         category="status",

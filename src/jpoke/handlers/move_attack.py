@@ -2575,10 +2575,6 @@ def はるのあらし_lower_defender_atk(battle: Battle, ctx: AttackContext, va
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1}, chance=0.3)
 
 
-def ハートスタンプ_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.3)
-
-
 def ハードプレス_calc_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ハードプレス: 対象の残りHP / 最大HP の比率で威力を決定する（最大100）。
 
