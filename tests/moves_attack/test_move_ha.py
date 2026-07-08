@@ -1096,6 +1096,46 @@ def test_ばくれつパンチ_こんらんが発動する():
     assert battle.actives[1].has_volatile("こんらん")
 
 
+def test_バークアウト_とくこう1段階低下が発動する():
+    """バークアウト: 100%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゾロアーク", move_names=["バークアウト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_バークアウト_ちからずくで威力上昇しとくこう低下は発動しない():
+    """バークアウト: ちからずく使用時は威力が1.3倍になる代わりに、とくこう低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゾロアーク", ability_name="ちからずく", move_names=["バークアウト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spa"] == 0
+
+
+def test_バークアウト_みがわりを貫通して本体にダメージを与える():
+    """バークアウト: soundフラグを持つため、みがわり状態の相手の本体にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゾロアーク", move_names=["バークアウト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    # みがわりにHPを設定（貫通しなければこのHPが削られる）
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    # 音技はみがわりを無視して本体にダメージを与えるため、本体HPが減る
+    assert defender.hp < hp_before
+
+
 def test_バリアーラッシュ_防御1段階上昇が発動する():
     """バリアーラッシュ: 命中時に使用者のBが1段階上昇する（確率100%）。"""
     battle = t.start_battle(
