@@ -350,7 +350,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ロックブラスト": MoveData(
         type="いわ",
         category="physical",
-        pp=10,
+        pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
         power=25,
         accuracy=90,
         flags={"bullet"},
