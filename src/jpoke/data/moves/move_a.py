@@ -400,7 +400,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "あやしいひかり": MoveData(
         type="ゴースト",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
