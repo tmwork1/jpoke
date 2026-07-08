@@ -1583,8 +1583,12 @@ def test_デスウイング_使用後に攻撃者のHPが回復する():
     assert attacker.hp > hp_before
 
 
-def test_デスウイングとドレインキッスの回復量比較():
-    """heal_ratio=0.75のデスウイング/ドレインキッスは0.5技より多く回復する。"""
+def test_デスウイングとドレインパンチの回復量比較():
+    """heal_ratio=0.75のデスウイングは0.5技のドレインパンチより多く回復する（同じ与ダメで比較）。
+
+    デスウイングは特殊技・ドレインパンチは物理技で攻撃側／防御側のステータスが異なるため、
+    与ダメージを固定（fix_damage）した上で回復量のみを比較する。
+    """
     battle_death = t.start_battle(
         team0=[Pokemon("ファイヤー", move_names=["デスウイング"])],
         team1=[Pokemon("カビゴン")],
@@ -1597,10 +1601,11 @@ def test_デスウイングとドレインキッスの回復量比較():
     )
     for b in (battle_death, battle_drain):
         b.actives[0].hp = 1
+        t.fix_damage(b, 100)
     t.run_move(battle_death, 0)
     t.run_move(battle_drain, 0)
     # デスウイング（0.75）のほうがドレインパンチ（0.5）より多く回復しているはず
-    assert battle_death.actives[0].hp >= battle_drain.actives[0].hp
+    assert battle_death.actives[0].hp > battle_drain.actives[0].hp
 
 
 def test_でんきショック_まひが発動しない():

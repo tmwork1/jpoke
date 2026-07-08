@@ -788,14 +788,15 @@ MOVES_TA: dict[MoveName, MoveData] = {
     ),
     "デスウイング": MoveData(
         type="ひこう",
-        category="physical",
+        category="special",
         pp=10,
-        power=90,
+        power=80,
         accuracy=100,
-        flags={"contact", "heal"},
+        flags={"heal"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.デスウイング_drain,
+                priority=20,  # turn.md: ON_HIT priority 20 (HP吸収技による回復)
             )
         }
     ),
