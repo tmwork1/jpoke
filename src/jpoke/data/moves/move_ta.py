@@ -400,7 +400,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "チャームボイス": MoveData(
         type="フェアリー",
         category="special",
-        pp=15,
+        pp=16,
         power=40,
         flags={"sound"},
         handlers={},  # 追加効果なし
