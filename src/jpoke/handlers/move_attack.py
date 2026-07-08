@@ -2744,9 +2744,9 @@ def ふいうち_try_move(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フェイタルクローの追加効果: 単一乱数で どく/まひ/ねむり のいずれかを付与する。
 
-    r < base/3 → どく、r < base*2/3 → まひ、r < base → ねむり（チャンピオンズ: 確率0.5）。
+    r < base/3 → どく、r < base*2/3 → まひ、r < base → ねむり（チャンピオンズ: 確率0.3）。
     """
-    base = battle.resolve_secondary_chance(ctx, 0.5)
+    base = battle.resolve_secondary_chance(ctx, 0.3)
     r = battle.random.random()
     if r < base / 3:
         ailment = "どく"

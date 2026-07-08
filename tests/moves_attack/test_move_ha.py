@@ -1814,8 +1814,32 @@ def test_フェイタルクロー_乱数によりまひが付与される():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_フェイタルクロー_基準確率0_3で発動する():
+    """フェイタルクロー: チャンピオンズ基準の発動確率は0.3(=境界0.3未満で発動)。secondary_chanceを上書きせず既定値で判定する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.29)  # 0.29 < 0.3 → 発動(0.3*2/3=0.2 <= 0.29 < 0.3 → ねむり)
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "ねむり"
+
+
+def test_フェイタルクロー_基準確率0_3を超えると発動しない():
+    """フェイタルクロー: 乱数r >= 0.3(既定確率)のとき状態異常を付与しない。secondary_chanceを上書きしない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.31)  # 0.31 >= 0.3 → 不発
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_フェイタルクロー_状態異常が発動する():
-    """フェイタルクロー: 50%でどく/まひ/ねむりのいずれかを付与する。"""
+    """フェイタルクロー: secondary_chance上書き(1.0)でどく/まひ/ねむりのいずれかを付与する。"""
     battle = t.start_battle(
         team0=[Pokemon("カイリキー", move_names=["フェイタルクロー"])],
         team1=[Pokemon("カビゴン")],
@@ -1836,6 +1860,18 @@ def test_フェイタルクロー_発動しない場合は状態異常なし():
     )
     t.run_move(battle, 0)
     assert not battle.actives[1].ailment.is_active
+
+
+def test_フェイタルクロー_きれあじで威力1_5倍():
+    """フェイタルクロー: slashフラグを持つため、きれあじ特性のポケモンが使用すると威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="きれあじ", move_names=["フェイタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
 
 
 def test_フェイント_ニードルガード状態を解除して攻撃する():
