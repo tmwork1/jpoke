@@ -1434,19 +1434,6 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "ホネこんぼう": MoveData(
-        type="じめん",
-        category="physical",
-        pp=10,
-        power=100,
-        accuracy=85,
-        flags={"contact", "secondary_effect"},
-        handlers={
-            Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ホネこんぼう_apply_flinch,
-            )
-        }
-    ),
     "ほのおのうず": MoveData(
         type="ほのお",
         category="special",

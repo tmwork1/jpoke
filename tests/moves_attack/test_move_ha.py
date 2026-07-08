@@ -3009,18 +3009,6 @@ def test_ほっぺすりすり_必ず相手をまひ状態にする():
     assert battle.actives[1].ailment.name == "まひ"
 
 
-def test_ホネこんぼう_ひるみが発動する():
-    """ホネこんぼう: 10%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カラカラ", move_names=["ホネこんぼう"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-        secondary_chance=1.0,
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ほのおのうず_バインド中は相手が交代できない():
     """ほのおのうず: バインド状態の間、ゴーストタイプでない相手は交代できない。"""
     battle = t.start_battle(

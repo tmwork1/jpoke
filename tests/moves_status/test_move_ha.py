@@ -1027,18 +1027,6 @@ def test_ほおばる_ラムのみでやけどが治る():
     assert attacker.rank["def"] == 2
 
 
-def test_ホネこんぼう_ひるみが発動する():
-    """ホネこんぼう: 10%でひるみを付与する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カラカラ", move_names=["ホネこんぼう"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    t.fix_random(battle, 0.0)
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
 def test_ほろびのうた_3ターン後に瀕死になる():
     """ほろびのうた: count=3 から3ターン経過するとひんしになる"""
     battle = t.start_battle(

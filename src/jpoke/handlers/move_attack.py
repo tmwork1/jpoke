@@ -3042,10 +3042,6 @@ def ほっぺすりすり_apply_paralysis_to_defender(battle: Battle, ctx: Attac
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
-def ホネこんぼう_apply_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ひるみ", chance=0.1)
-
-
 def ほのおのキバ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
