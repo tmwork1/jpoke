@@ -1239,7 +1239,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ヘドロウェーブ": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=95,
         accuracy=100,
         flags={"secondary_effect"},
