@@ -29,8 +29,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ナイトバースト": MoveData(
         type="あく",
         category="special",
-        pp=10,
-        power=85,
+        pp=12,
+        power=90,
         accuracy=95,
         flags={"secondary_effect"},
         handlers={
