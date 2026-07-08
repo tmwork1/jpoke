@@ -2835,6 +2835,20 @@ def test_ベノムショック_状態異常なしのとき通常威力():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+def test_ホイールスピン_ちからずくは無関係で発動する():
+    """ホイールスピン: 自分のランクを下げる確定効果はちからずくの対象外のため、
+    ちからずく所持時も威力上昇なし・すばやさ低下は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドータクン", ability_name="ちからずく", move_names=["ホイールスピン"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["spe"] == -2
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 def test_ホイールスピン_素早さ2段階低下が発動する():
     """ホイールスピン: 命中時に使用者のSが2段階低下する（確率100%）。"""
     battle = t.start_battle(
