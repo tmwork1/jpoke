@@ -1115,7 +1115,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ブラストバーン": MoveData(
         type="ほのお",
         category="special",
-        pp=5,
+        pp=8,
         power=150,
         accuracy=90,
         handlers={
