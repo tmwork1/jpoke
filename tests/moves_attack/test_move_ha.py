@@ -3,6 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
+from jpoke.enums import Interrupt
 from .. import test_utils as t
 
 
@@ -3383,6 +3384,124 @@ def test_ボルテッカー_反動ダメージが与ダメの3分の1になる()
     t.run_move(battle, 0)
     # max(1, int(100 * 1/3)) = 33
     assert attacker.hp == hp_before - 33
+
+
+def test_ボルトチェンジ_ダメージを与える():
+    """ボルトチェンジ: 通常通りダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_ボルトチェンジ_じめんタイプには無効():
+    """ボルトチェンジ: でんきタイプなのでじめんタイプには無効で、ダメージも交代も発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("イシツブテ")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ボルトチェンジ_ひらいしんに吸収されると交代しない():
+    """ボルトチェンジ: 特性ひらいしんに吸収されると技が不発になり、交代も発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", ability_name="ひらいしん")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ボルトチェンジ_まもるで防がれた場合は交代しない():
+    """ボルトチェンジ: まもるで防がれた場合、ダメージも交代も発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ボルトチェンジ_命中しなかった場合は交代しない():
+    """ボルトチェンジ: 命中しなかった場合、交代は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ボルトチェンジ_控えがいない場合は交代しない():
+    """ボルトチェンジ: 控えに戦えるポケモンがいない場合、ダメージは与えるが交代は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ボルトチェンジ_攻撃後に交代可能状態になる():
+    """ボルトチェンジ: 攻撃後、控えがいれば PIVOT が設定され交代できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    t.run_move(battle, 0)
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+    assert battle.actives[0].name == "ライチュウ"
+
+
+def test_ボルトチェンジ_相手を倒した場合でも交代する():
+    """ボルトチェンジ: 相手を倒した場合でも、使用者は交代可能状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ボルトチェンジ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("コイキング")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    battle.actives[1].hp = 1
+    t.run_move(battle, 0)
+    assert battle.actives[1].fainted
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
 
 
 def test_ボーンラッシュ_複数ヒットする():
