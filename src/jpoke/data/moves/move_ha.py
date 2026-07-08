@@ -1193,7 +1193,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ブレイブバード": MoveData(
         type="ひこう",
         category="physical",
-        pp=15,
+        pp=16,
         power=120,
         accuracy=100,
         flags={"contact", "recoil"},
