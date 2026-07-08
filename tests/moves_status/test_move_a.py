@@ -1243,6 +1243,36 @@ def test_おきみやげ_使用者がひんしになる():
     assert defender.rank["spa"] == -2
 
 
+def test_おきみやげ_相手のランクが共に最低でも使用者はひんしになる():
+    """おきみやげ: 相手のこうげき・とくこうランクが共に-6でランク低下が起きなくても使用者はひんしになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    defender.rank["atk"] = -6
+    defender.rank["spa"] = -6
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+    assert defender.rank["atk"] == -6
+    assert defender.rank["spa"] == -6
+
+
+def test_おきみやげ_クリアボディでランク低下が防がれても使用者はひんしになる():
+    """おきみやげ: 相手がクリアボディでランク低下を防いでも使用者はひんしになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おきみやげ"])],
+        team1=[Pokemon("カビゴン", ability_name="クリアボディ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spa"] == 0
+
+
 def test_おたけび_こうげきとくこう1段階ずつ下がる():
     """おたけび: 相手のこうげきととくこうランクが1段階ずつ下がる"""
     battle = t.start_battle(
