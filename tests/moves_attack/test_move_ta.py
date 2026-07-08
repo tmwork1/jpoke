@@ -1154,6 +1154,23 @@ def test_てっていこうせん_マジックガードで反動を受けない(
     assert defender.hp < defender.max_hp
 
 
+def test_ツインビーム_タイプ分類威力命中PPが仕様通り():
+    """ツインビーム: エスパータイプ・特殊・威力40・命中100・PP12・非接触の固定2回攻撃技。"""
+    move_data = MOVES["ツインビーム"]
+    assert move_data.type == "エスパー"
+    assert move_data.category == "special"
+    assert move_data.power == 40
+    assert move_data.accuracy == 100
+    assert move_data.pp == 12
+    assert "contact" not in move_data.flags
+    assert move_data.multi_hit == {
+        "min": 2,
+        "max": 2,
+        "check_hit_each_time": False,
+        "power_sequence": (),
+    }
+
+
 def test_テラバースト_ステラ():
     """ステラタイプ"""
     battle = t.start_battle(
