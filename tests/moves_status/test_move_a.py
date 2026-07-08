@@ -896,6 +896,19 @@ def test_エアスラッシュ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_えんまく_相手の命中率1段階下がる():
+    """えんまく: 相手の命中率ランクが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["えんまく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["accuracy"] == -1
+
+
 def test_おいかぜ_すでにおいかぜなら失敗():
     """おいかぜ: すでにおいかぜが有効なら失敗（再設置されない）"""
     battle = t.start_battle(
