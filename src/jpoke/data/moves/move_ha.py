@@ -1021,7 +1021,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フレアソング": MoveData(
         type="ほのお",
         category="special",
-        pp=10,
+        pp=12,
         power=80,
         accuracy=100,
         flags={"sound", "secondary_effect"},
