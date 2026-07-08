@@ -1609,10 +1609,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ポイズンアクセル": MoveData(
         type="どく",
         category="physical",
-        pp=20,
-        power=70,
+        pp=12,
+        power=100,
         accuracy=100,
-        flags={"contact", "non_copycat", "secondary_effect"},
+        flags={"non_copycat", "non_encore", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ポイズンアクセル_apply_poison_to_defender,
