@@ -168,6 +168,21 @@ def test_ちからずく_ねっとうで相手のこおりを治せない():
     assert 5325 == battle.damage_calculator.power_modifier
 
 
+def test_ちからずく_ハイドロスチームでも相手のこおりを治せる():
+    """ちからずく: ハイドロスチームはちからずくの対象技ではないため、
+    ちからずく所持でも威力は上がらず、相手のこおりを治す効果は通常通り発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", ability_name="ちからずく", move_names=["ハイドロスチーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.ailment_manager.apply(defender, "こおり")
+    t.run_move(battle, 0)
+    assert not defender.ailment.is_active
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
 def test_ちからずく_追加効果が発動せず威力が1_3倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["アクアステップ"])],
