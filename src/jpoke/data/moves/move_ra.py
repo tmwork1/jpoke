@@ -235,7 +235,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "レイジングブル": MoveData(
         type="ノーマル",
         category="physical",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"contact"},

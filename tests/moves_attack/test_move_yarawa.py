@@ -556,6 +556,56 @@ def test_リーフブレード_急所ランクが1_乱数大で急所なし():
     assert battle.move_executor.critical is False
 
 
+def test_レイジングブル_オーロラベールを解除する():
+    """レイジングブル: 命中時に相手側のオーロラベールを解除する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア闘)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"オーロラベール": 1},
+        accuracy=100,
+    )
+    assert battle.side_managers[1].fields["オーロラベール"].is_active
+    t.run_move(battle, 0)
+    assert not battle.side_managers[1].fields["オーロラベール"].is_active
+
+
+def test_レイジングブル_ケンタロス通常はノーマルタイプになる():
+    """レイジングブル: ケンタロス（通常）が使用してもノーマルタイプのまま変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "ノーマル"
+
+
+def test_レイジングブル_まねっこでケンタロス以外が使用してもノーマルタイプになる():
+    """レイジングブル: ケンタロス以外がまねっこでコピーした場合はノーマルタイプになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("ケンタロス(パルデア闘)", move_names=["レイジングブル"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # ケンタロス（パルデア闘）: レイジングブル（かくとうタイプ）
+    t.run_move(battle, 0)  # ピカチュウ: まねっこでレイジングブルをコピー
+    assert battle.move_executor.move_type == "ノーマル"
+
+
+def test_レイジングブル_まもるで無効化されたときは壁を解除しない():
+    """レイジングブル: まもるで無効化された場合は壁を解除しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ケンタロス(パルデア闘)", move_names=["レイジングブル"])],
+        team1=[Pokemon("カビゴン", move_names=["まもる"])],
+        side1={"リフレクター": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: まもる
+    t.run_move(battle, 0)  # ケンタロス: レイジングブル → まもるで無効化される
+    assert not battle.move_executor.move_applied
+    assert battle.side_managers[1].fields["リフレクター"].is_active
+
+
 def test_レイジングブル_ケンタロスパルデア闘はかくとうタイプになる():
     """レイジングブル: ケンタロス（パルデア闘）が使用するとかくとうタイプになる。"""
     battle = t.start_battle(
