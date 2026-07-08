@@ -1595,8 +1595,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ボーンラッシュ": MoveData(
         type="じめん",
         category="physical",
-        pp=10,
-        power=25,
+        pp=12,
+        power=30,
         accuracy=90,
         multi_hit={
             "min": 2,
