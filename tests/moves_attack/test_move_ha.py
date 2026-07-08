@@ -2712,6 +2712,25 @@ def test_ヘドロこうげき_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_ヘドロばくだん_Champions基準のPPを持つ():
+    """ヘドロばくだん: Champions基準でPP12（docs/champions/move_list.txt参照。本家Gen9のPP10とは異なる）。"""
+    move_data = MOVES["ヘドロばくだん"]
+    assert move_data.power == 90
+    assert move_data.pp == 12
+
+
+def test_ヘドロばくだん_どくが発動しない():
+    """ヘドロばくだん: secondary_chanceが0のときどくを付与しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["ヘドロばくだん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_ヘドロばくだん_どくが発動する():
     """ヘドロばくだん: 30%でどくを付与する。"""
     battle = t.start_battle(

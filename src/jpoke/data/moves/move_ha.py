@@ -1265,7 +1265,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ヘドロばくだん": MoveData(
         type="どく",
         category="special",
-        pp=10,
+        pp=12,
         power=90,
         accuracy=100,
         flags={"bullet", "secondary_effect"},
