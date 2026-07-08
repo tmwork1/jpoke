@@ -18,6 +18,22 @@ def test_かいでんぱ_相手の特攻が2段階下がる():
     assert defender.rank["spa"] == -2
 
 
+def test_かいふくふうじ_すでにかいふくふうじ状態なら失敗():
+    """かいふくふうじ: 相手がすでにかいふくふうじ状態なら失敗する（重複付与されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かいふくふうじ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        volatile1={"かいふくふうじ": 2},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # カウントは変わらない（重複付与されない）
+    assert defender.has_volatile("かいふくふうじ")
+    assert defender.volatiles["かいふくふうじ"].count == 2
+
+
 def test_かいふくふうじ_使用で相手にかいふくふうじ状態が付与される():
     """かいふくふうじ: 技を使うと相手に「かいふくふうじ」揮発性状態が付与される（5ターン）"""
     battle = t.start_battle(
