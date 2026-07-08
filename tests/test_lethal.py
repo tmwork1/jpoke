@@ -916,6 +916,22 @@ def test_テラバースト_ステラ以外はランクが下がらない():
     assert results[0].attacker.rank["spa"] == 0
 
 
+def test_トラバサミ_バインド付与():
+    """トラバサミは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("トラバサミ"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("トラバサミ"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
 def test_どく_ターン終了時ダメージ():
     """どく状態のポケモンはターン終了時に最大HPの1/8ダメージを受ける"""
     with_ailment = t.start_battle(
