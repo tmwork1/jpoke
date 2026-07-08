@@ -1110,7 +1110,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "おいかぜ": MoveData(
         type="ひこう",
         category="status",
-        pp=15,
+        pp=16,
         target="own_side",
         flags={"wind"},
         handlers={
