@@ -369,6 +369,43 @@ def test_ミストバースト_使用後に攻撃者がひんしになる():
     assert not attacker.alive
 
 
+def test_ミストボール_とくこう低下が発動する():
+    """ミストボール: 50%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_ミストボール_ちからずくで威力上昇しとくこう低下は発動しない():
+    """ミストボール: ちからずく使用時は威力が1.3倍になる代わりに、とくこう低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", ability_name="ちからずく", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spa"] == 0
+
+
+def test_ミストボール_ぼうだん持ちには技が無効化される():
+    """ミストボール: 弾のわざのため、特性『ぼうだん』所持者には無効化される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうだん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
 def test_みずあめボム_あめまみれでターンごとに素早さが低下する():
     """みずあめボム: あめまみれ状態のポケモンはターン終了時に素早さが1段階下がる。"""
     battle = t.start_battle(
