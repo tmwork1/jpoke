@@ -254,13 +254,17 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ミストバースト": MoveData(
         type="フェアリー",
         category="special",
-        pp=5,
+        pp=8,
         power=100,
         accuracy=100,
         flags={"explosion"},
         handlers={
             Event.ON_PAY_HP: h.MoveHandler(
                 ha.ミストバースト_pay_hp,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ミストバースト_calc_power,
                 subject_spec="attacker:self",
             ),
         }
