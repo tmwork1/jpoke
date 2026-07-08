@@ -374,6 +374,75 @@ def test_いたみわけ_最大HPを超えて回復しない():
     assert attacker.hp == attacker.max_hp
 
 
+def test_いちゃもん_すでにいちゃもん状態の相手には失敗する():
+    """いちゃもん: 相手がすでにいちゃもん状態の場合は失敗し、move_nameは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いちゃもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり", "なきごえ"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    t.run_move(battle, 0)
+    assert defender.has_volatile("いちゃもん")
+    assert defender.volatiles["いちゃもん"].move_name == "たいあたり"
+
+    # なきごえを選択して使用する（たいあたりはいちゃもんで禁止されているため）
+    t.run_move(battle, 1, 1)
+    # 2回目のいちゃもんは失敗するため、move_nameは最初のまま
+    t.run_move(battle, 0)
+    assert defender.volatiles["いちゃもん"].move_name == "たいあたり"
+
+
+def test_いちゃもん_使用で相手にいちゃもん状態が付与される():
+    """いちゃもん: 相手が技を使った後に使うといちゃもん状態が付与され、直前に使用した技が記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いちゃもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    assert defender.executed_move.name == "たいあたり"
+
+    t.run_move(battle, 0)
+    assert defender.has_volatile("いちゃもん")
+    assert defender.volatiles["いちゃもん"].move_name == "たいあたり"
+
+
+def test_いちゃもん_直前に使用した技が選択肢から除外される():
+    """いちゃもん: 付与後、相手は直前に使用した技をコマンドとして選択できなくなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いちゃもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり", "なきごえ"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    t.run_move(battle, 0)
+    assert defender.has_volatile("いちゃもん")
+
+    with battle.phase_context("action"):
+        commands = battle.get_available_commands(battle.players[1])
+    move_indices = {cmd.index for cmd in commands if cmd.is_type("move")}
+    assert move_indices == {1}
+
+
+def test_いちゃもん_未行動の相手にも成功する():
+    """いちゃもん: 相手がまだ技を使っていない（executed_move が None）場合でも付与に成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いちゃもん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert defender.executed_move is None
+
+    t.run_move(battle, 0)
+    assert defender.has_volatile("いちゃもん")
+    assert defender.volatiles["いちゃもん"].move_name == ""
+
+
 def test_いとをはく_すばやさ2段階下がる():
     """いとをはく: 相手のすばやさランクが2段階下がる"""
     battle = t.start_battle(
