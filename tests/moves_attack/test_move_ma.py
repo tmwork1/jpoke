@@ -909,7 +909,7 @@ def test_むねんのつるぎ_回復量の端数は切り上げになる():
 
 
 def test_ムーンフォース_とくこう1段階低下が発動する():
-    """ムーンフォース: 30%の確率で相手のとくこうを1段階下げる。"""
+    """ムーンフォース: 10%の確率で相手のとくこうを1段階下げる（Championsで30%→10%に変更）。"""
     battle = t.start_battle(
         team0=[Pokemon("ニンフィア", move_names=["ムーンフォース"])],
         team1=[Pokemon("カビゴン")],
@@ -918,6 +918,30 @@ def test_ムーンフォース_とくこう1段階低下が発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["spa"] == -1
+
+
+def test_ムーンフォース_基準確率0_1で発動する():
+    """ムーンフォース: チャンピオンズ基準の発動確率は0.1(=境界0.1未満で発動)。secondary_chanceを上書きせず既定値で判定する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニンフィア", move_names=["ムーンフォース"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.09)  # 0.09 < 0.1 → 発動
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_ムーンフォース_基準確率0_1で発動しない():
+    """ムーンフォース: 乱数0.1は境界値0.1以上のため発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニンフィア", move_names=["ムーンフォース"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.1)  # 0.1 >= 0.1 → 発動しない
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == 0
 
 
 def test_メガドレイン_使用後に攻撃者のHPが回復する():
