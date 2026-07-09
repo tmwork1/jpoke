@@ -278,7 +278,9 @@ def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def じゅうりょく_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）"""
+    """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）。一撃必殺技は対象外。"""
+    if ctx.move.has_flag("ohko"):
+        return HandlerReturn(value=value)
     return HandlerReturn(value=apply_fixed_modifier(value, 6840))
 
 
