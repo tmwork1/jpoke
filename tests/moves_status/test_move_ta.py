@@ -93,6 +93,49 @@ def test_タールショット_すばやさ1段階下がりタールショット
     assert defender.has_volatile("タールショット")
 
 
+def test_ちいさくなる_回避率2段階上がりちいさくなる状態を付与する():
+    """ちいさくなる: 自分の回避率が2段階上がり、ちいさくなる状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちいさくなる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["evasion"] == 2
+    assert attacker.has_volatile("ちいさくなる")
+
+
+def test_ちいさくなる_まもるで防がれない():
+    """ちいさくなる: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちいさくなる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["evasion"] == 2
+    assert attacker.has_volatile("ちいさくなる")
+
+
+def test_ちいさくなる_マジックコートで跳ね返されない():
+    """ちいさくなる: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちいさくなる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["evasion"] == 2
+    assert attacker.has_volatile("ちいさくなる")
+    assert defender.rank["evasion"] == 0
+    assert not defender.has_volatile("ちいさくなる")
+
+
 def test_ちからをすいとる_クリアボディでランク低下阻止でもHP回復は発動():
     """ちからをすいとる: クリアボディでランク低下が阻まれても回復効果は発動する"""
     battle = t.start_battle(

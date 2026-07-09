@@ -345,7 +345,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ちいさくなる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ちいさくなる_apply,
