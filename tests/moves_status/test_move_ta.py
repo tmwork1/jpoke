@@ -315,6 +315,39 @@ def test_ちょうのまい_とくこうととくぼうとすばやさ1段階ず
     assert attacker.rank["spe"] == 1
 
 
+def test_ちょうのまい_マジックコートで跳ね返されない():
+    """ちょうのまい: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうのまい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["spd"] == 1
+    assert attacker.rank["spe"] == 1
+    assert defender.rank["spa"] == 0
+    assert defender.rank["spd"] == 0
+    assert defender.rank["spe"] == 0
+
+
+def test_ちょうのまい_自分対象のためまもるで防がれない():
+    """ちょうのまい: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうのまい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["spd"] == 1
+    assert attacker.rank["spe"] == 1
+
+
 def test_ちょうはつ_すでにちょうはつ状態なら失敗():
     """ちょうはつ: 相手がすでにちょうはつ状態なら失敗する"""
     battle = t.start_battle(
