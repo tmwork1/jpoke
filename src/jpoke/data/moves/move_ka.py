@@ -692,7 +692,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きんぞくおん": MoveData(
         type="はがね",
         category="status",
-        pp=40,
+        pp=20,
         accuracy=85,
         flags={"sound"},
         handlers={
