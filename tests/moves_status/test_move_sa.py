@@ -18,6 +18,106 @@ def test_３ぼんのや_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_さいはい_相手の直前の技をもう一度使わせる():
+    """さいはい: 相手が直前に使用した技を、相手のPPを消費してもう一度使わせる。
+
+    再実行された技の宛先はさいはいの使用者になるため、使用者が2回分のダメージを受ける。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいはい"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンにたいあたりを使わせてexecuted_moveを設定する
+    t.run_move(battle, 1)
+    pp_after_first_use = move.pp
+    hp_after_first_hit = attacker.hp
+
+    # さいはいで指示する
+    t.run_move(battle, 0)
+
+    # 相手（カビゴン）のPPがもう1消費される
+    assert move.pp == pp_after_first_use - 1
+    # さいはいの使用者（ピカチュウ）が再度ダメージを受ける
+    assert attacker.hp < hp_after_first_hit
+
+
+def test_さいはい_相手が技を使っていない場合は失敗():
+    """さいはい: 相手がまだ技を使っていない場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいはい"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    pp_before = move.pp
+
+    t.run_move(battle, 0)
+
+    assert move.pp == pp_before
+    assert defender.executed_move is None
+
+
+def test_さいはい_相手の技のPPがすでに0の場合は失敗():
+    """さいはい: 相手の直前の技のPPがすでに0の場合は失敗する（わるあがきに自動置換されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいはい"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    t.run_move(battle, 1)
+    move.modify_pp(-move.pp)
+    assert move.pp == 0
+
+    t.run_move(battle, 0)
+
+    assert move.pp == 0
+    assert defender.executed_move.name == "たいあたり"
+
+
+def test_さいはい_わるあがきは指示できない():
+    """さいはい: 相手の直前の技がわるあがきの場合は指示できず失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいはい"])],
+        team1=[Pokemon("カビゴン", move_names=["わるあがき"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    assert defender.executed_move.name == "わるあがき"
+    hp_after_first_hit = attacker.hp
+
+    t.run_move(battle, 0)
+
+    # さいはいは失敗し、わるあがきによる追加ダメージは発生しない
+    assert attacker.hp == hp_after_first_hit
+
+
+def test_さいはい_まもるで防がれる():
+    """さいはい: 対象がまもる状態のときは防がれ、相手のPPは消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいはい"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    t.run_move(battle, 1)
+    pp_after_first_use = move.pp
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+
+    t.run_move(battle, 0)
+
+    assert move.pp == pp_after_first_use
+
+
 def test_さいみんじゅつ_ねむり付与():
     """さいみんじゅつ: 相手をねむり状態にする（accuracy=100で固定）"""
     battle = t.start_battle(
