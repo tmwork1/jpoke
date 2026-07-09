@@ -49,6 +49,19 @@ def test_たてこもる_ぼうぎょ2段階上がる():
     assert attacker.rank["def"] == 2
 
 
+def test_たてこもる_自分対象のためまもるで防がれない():
+    """たてこもる: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たてこもる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+
+
 def test_タールショット_すでにタールショット状態でもSは下がる():
     """タールショット: 相手がすでにタールショット状態でもすばやさは1段階下がる"""
     battle = t.start_battle(

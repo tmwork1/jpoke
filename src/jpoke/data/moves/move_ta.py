@@ -105,7 +105,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "たてこもる": MoveData(
         type="はがね",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.たてこもる_modify_attacker_stats,
