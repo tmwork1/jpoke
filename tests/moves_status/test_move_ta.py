@@ -818,6 +818,32 @@ def test_とける_ぼうぎょ2段階上がる():
     assert attacker.rank["def"] == 2
 
 
+def test_とける_自分対象のためまもるで防がれない():
+    """とける: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とける"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+
+
+def test_とける_すでに最大なら失敗する():
+    """とける: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とける"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 6
+
+
 def test_どくガス_どくタイプには無効():
     """どくガス: どくタイプの相手には効果がない"""
     battle = t.start_battle(
