@@ -442,6 +442,62 @@ def test_つぼをつく_選ばれない能力のランクは変化しない():
     assert attacker.rank["evasion"] == 0
 
 
+def test_つめとぎ_こうげきと命中率が1段階ずつ上がる():
+    """つめとぎ: 使用すると自分のこうげき・命中率ランクがそれぞれ1段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つめとぎ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["accuracy"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["accuracy"] == 1
+
+
+def test_つめとぎ_相手のランクは変化しない():
+    """つめとぎ: 自分が対象のため相手の能力ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つめとぎ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 0
+    assert defender.rank["accuracy"] == 0
+
+
+def test_つめとぎ_相手のまもる状態に影響されず成功する():
+    """つめとぎ: 自分が対象の技のため、相手のまもる状態に関係なく成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つめとぎ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["accuracy"] == 1
+
+
+def test_つめとぎ_マジックコートで跳ね返されない():
+    """つめとぎ: 自分が対象の技のため、相手のマジックコート状態でも跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つめとぎ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["accuracy"] == 1
+
+
 def test_つららおとし_ひるみが発動する():
     """つららおとし: 30%でひるみを付与する。"""
     battle = t.start_battle(
