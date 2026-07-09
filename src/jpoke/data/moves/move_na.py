@@ -518,7 +518,9 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "のろい": MoveData(
         type="ゴースト",
         category="status",
-        pp=10,
+        pp=12,
+        # まもる・ダイウォールを無視し、マジックコートで跳ね返されず、みがわりを貫通する
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.のろい_can_apply,

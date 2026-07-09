@@ -946,3 +946,125 @@ def test_のみこむ_使用後にランクが元に戻る():
 
     assert attacker.rank["def"] == 0
     assert attacker.rank["spd"] == 0
+
+
+def test_のろい_ゴーストタイプは自分のHPを半分消費して相手をのろい状態にする():
+    """のろい: ゴーストタイプが使うと自分の最大HPの半分（切り捨て）を消費し、相手をのろい状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == max_hp - max_hp // 2
+    assert defender.has_volatile("のろい")
+
+
+def test_のろい_ゴーストタイプ以外はこうげきとぼうぎょが上がりすばやさが下がる():
+    """のろい: ゴーストタイプ以外が使うと自分のこうげき・ぼうぎょが1段階上がり、すばやさが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spe"] == -1
+    # HPは消費されず、相手にも状態変化は起きない
+    assert attacker.hp == max_hp
+    assert not defender.has_volatile("のろい")
+
+
+def test_のろい_呪いはまもるを無視して発動する():
+    """のろい: 呪い版はunprotectableフラグを持つため、まもる状態の相手にも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker, defender = battle.actives
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == max_hp - max_hp // 2
+    assert defender.has_volatile("のろい")
+
+
+def test_のろい_呪いはマジックコートで跳ね返されない():
+    """のろい: 呪い版はunreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、相手がのろい状態になる（使用者はのろい状態にならない）
+    assert attacker.hp == max_hp - max_hp // 2
+    assert defender.has_volatile("のろい")
+    assert not attacker.has_volatile("のろい")
+
+
+def test_のろい_呪いはみがわりを貫通してのろい状態にする():
+    """のろい: 呪い版はbypass_substituteフラグを持つため、みがわり状態の相手にものろい状態を付与する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    max_hp = attacker.max_hp
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert attacker.hp == max_hp - max_hp // 2
+    assert defender.has_volatile("のろい")
+    assert defender.volatiles["みがわり"].hp == 999
+
+
+def test_のろい_すでにのろい状態の相手には失敗しHPも消費されない():
+    """のろい: 対象がすでにのろい状態の場合は失敗し、使用者のHPも消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"のろい": 1},
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == max_hp
+
+
+def test_のろい_HPが半分以下でも成功しひんしになることがある():
+    """のろい: 使用者のHPが半分以下でも成功し、使用者はひんしになることがある"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.fainted
+    assert defender.has_volatile("のろい")
+
+
+def test_のろい_呪いはマジックガード所持でもHPが減る():
+    """のろい: 特性マジックガードを持つ使用者が呪いを使ってもHPは消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", ability_name="マジックガード", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == max_hp - max_hp // 2
+    assert defender.has_volatile("のろい")
