@@ -1413,6 +1413,34 @@ def てんしのキッス_apply(battle: Battle, ctx: AttackContext, value: Any) 
     ))
 
 
+def テレポート_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テレポートの効果: とらわれ状態を無視して控えのポケモンと交代する。
+
+    バトンタッチと異なり、能力ランクや揮発性状態の引き継ぎは行わない。
+    """
+    player = battle.get_player(ctx.attacker)
+    battle.player_states[player].interrupt = Interrupt.PIVOT
+    return HandlerReturn(value=value)
+
+
+def テレポート_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テレポートの失敗条件チェック: 控えに生きているポケモンがいない場合は失敗する。
+
+    とらわれ状態（にげられない・バインド・フェアリーロック等）でも交代可能なため、
+    トラップチェックを経由せず控えポケモンの生存のみを確認する（バトンタッチ_check と同様）。
+    """
+    mon = ctx.attacker
+    player = battle.get_player(mon)
+    state = battle.player_states[player]
+    if not any(m.alive for m in state.bench):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テレポート_交代不可"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def でんじは_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
