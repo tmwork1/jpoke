@@ -214,6 +214,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         target="self",
         flags={"dance", "heal"},
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.みかづきのまい_can_apply),
             Event.ON_STATUS_HIT: h.MoveHandler(hs.みかづきのまい_apply),
         },
     ),
