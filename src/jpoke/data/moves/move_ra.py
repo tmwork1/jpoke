@@ -158,6 +158,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         type="ドラゴン",
         category="status",
         pp=20,
+        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
