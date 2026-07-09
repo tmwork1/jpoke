@@ -1581,6 +1581,7 @@ def にほんばれ_activate_weather(battle: Battle, ctx: AttackContext, value: 
 
 
 def にらみつける_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """にらみつけるの効果: 相手のぼうぎょを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"def": -1})
 
 
