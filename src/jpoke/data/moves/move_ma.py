@@ -787,9 +787,13 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ものまね": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
-        flags={"non_encore", "non_negoto"},
-        handlers={},  # 実装保留
+        pp=10,  # champions/move_list.txtに記載なし。Gen9本家基準の値をそのまま採用
+                # （おしゃべり・テラクラスター・ダイマックスほう等、Championsに記載のない技と同様）。
+        flags={"non_encore", "non_negoto", "non_copycat", "unreflectable"},
+        # 実装保留: 相手が直前に使用した技を技スロットごと一時的にコピーし、交代/ひんし/
+        # バトル終了で元に戻す技コピー機構が必要なため対応を見送る。
+        # 詳細は docs/plan/moves/ものまね.md 参照（前例: へんしん・スケッチ・ゆびをふる）。
+        handlers={},
     ),
     "もりののろい": MoveData(
         type="くさ",
