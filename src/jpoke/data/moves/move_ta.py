@@ -141,9 +141,14 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "タマゴうみ": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.タマゴうみ_heal_self,
+            )
+        }
     ),
     "タールショット": MoveData(
         type="いわ",
