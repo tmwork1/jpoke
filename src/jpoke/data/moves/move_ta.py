@@ -346,7 +346,15 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=10,
         accuracy=50,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                hs.ダークホール_check_species,
+                priority=30,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ダークホール_apply_sleep,
+            ),
+        }
     ),
     "ちいさくなる": MoveData(
         type="ノーマル",

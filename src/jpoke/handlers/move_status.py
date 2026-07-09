@@ -1323,6 +1323,27 @@ def タールショット_apply(battle: Battle, ctx: AttackContext, value: Any) 
     return HandlerReturn(value=battle.modify_stats(ctx.defender, {"spe": -1}, source=ctx.attacker))
 
 
+def ダークホール_apply_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ダークホールの効果: 相手をねむり状態にする。"""
+    return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
+
+
+def ダークホール_check_species(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ダークホールの発動条件チェック。
+
+    第七世代以降、ダークライ以外が使用すると必ず失敗する（種族制限）。
+    マジックコートで跳ね返された場合はこのチェックを再度通らないため、
+    跳ね返す側は種族制限を受けずに成功する。
+    """
+    if ctx.attacker.name != "ダークライ":
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ちいさくなる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちいさくなるの効果を発動する。"""
     mon = ctx.attacker
