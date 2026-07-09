@@ -851,6 +851,111 @@ def test_じばそうさ_相手がみがわり状態でも効果がある():
     assert attacker.rank["spd"] == 1
 
 
+def test_ジャングルヒール_HPが4分の1回復する():
+    """ジャングルヒール: 最大HPの1/4を回復する(小数点以下切り捨て)"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 4)
+
+
+def test_ジャングルヒール_HP満タンかつ無状態異常だと失敗する():
+    """ジャングルヒール: HPが満タンかつ状態異常もない場合は技が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    assert not attacker.ailment.is_active
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_success is False
+
+
+def test_ジャングルヒール_HP満タンでも状態異常があれば成功する():
+    """ジャングルヒール: HPが満タンでも状態異常があれば技は成功し、状態異常のみ治す"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("まひ", None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    assert attacker.ailment.is_active
+    battle.test_option.trigger_ailment = False
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_success is True
+    assert not attacker.ailment.is_active
+    assert attacker.hp == attacker.max_hp
+
+
+def test_ジャングルヒール_かいふくふうじ中は回復が無効化される():
+    """ジャングルヒール: かいふくふうじ状態のとき回復が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"かいふくふうじ": 3},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1
+
+
+def test_ジャングルヒール_マジックコートで跳ね返されない():
+    """ジャングルヒール: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+def test_ジャングルヒール_まもるで防がれない():
+    """ジャングルヒール: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp > 1
+
+
+@pytest.mark.parametrize("ailment_name", ["どく", "まひ", "やけど"])
+def test_ジャングルヒール_状態異常を治す(ailment_name):
+    """ジャングルヒール: 使用者の状態異常を治す"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザルード", move_names=["ジャングルヒール"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=(ailment_name, None),
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    battle.test_option.trigger_ailment = False
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
 def test_じゅうでん_じゅうでん状態付与ととくぼう上昇():
     """じゅうでん: 自分にじゅうでん状態を付与し、とくぼうを1段階上げる"""
     battle = t.start_battle(

@@ -1067,6 +1067,19 @@ def じばそうさ_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
 
 
+def ジャングルヒール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ジャングルヒール: 自分のHPを最大HPの1/4回復し、状態異常を治す。
+
+    HPが満タンかつ状態異常もない場合は失敗する。端数は切り捨て。
+    """
+    mon = ctx.attacker
+    if mon.hp == mon.max_hp and not mon.ailment.is_active:
+        return HandlerReturn(value=False, stop_event=True)
+    battle.modify_hp(mon, r=1 / 4)
+    battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
+
+
 def じゅうでん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じゅうでんの効果: 自分にじゅうでん状態を付与し、とくぼうを1段階上げる。"""
     mon = ctx.attacker
