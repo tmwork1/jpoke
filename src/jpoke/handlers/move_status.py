@@ -710,6 +710,11 @@ def きんぞくおん_modify_defender_stats(battle: Battle, ctx: AttackContext,
     return modify_defender_stats(battle, ctx, value, stats={"spd": -2})
 
 
+def ギアチェンジ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ギアチェンジの効果: 自分のこうげきを1段階、すばやさを2段階上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spe": 2})
+
+
 def くすぐる_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """くすぐるの効果: 相手のこうげきとぼうぎょを 1 段階ずつ下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "def": -1})

@@ -713,7 +713,12 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="はがね",
         category="status",
         pp=10,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ギアチェンジ_modify_attacker_stats,
+            ),
+        }
     ),
     "ギガインパクト": MoveData(
         type="ノーマル",
