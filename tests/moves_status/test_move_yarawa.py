@@ -1,5 +1,7 @@
 """変化技ハンドラの単体テスト（や・ら・わ行）。"""
 
+import pytest
+
 from jpoke import Pokemon
 from .. import test_utils as t
 
@@ -162,6 +164,56 @@ def test_ねごと_選ばれた技が実行されダメージを与える():
     assert defender.hp < hp_before, "ねごとで選ばれた技がダメージを与える"
 
 
+def test_ねむる_相手のまもるで防がれない():
+    """ねむる: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_success
+    assert mon.hp > hp_before
+    assert mon.has_ailment("ねむり")
+
+
+def test_ねむる_相手のマジックコートで跳ね返されない():
+    """ねむる: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_success
+    assert mon.hp > hp_before
+    assert mon.has_ailment("ねむり")
+    assert not foe.has_ailment("ねむり")
+
+
+def test_ねむる_PPはchampions仕様で8():
+    """ねむる: championsルールによりPPは8（docs/champions/move_list.txt準拠）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.moves[0].pp == 8
+
+
 def test_ねむる_HP全回復する():
     """ねむる: 使用後に HP が最大HP になること"""
     battle = t.start_battle(
@@ -247,6 +299,104 @@ def test_ねむる_既存の状態異常が解除される():
 
     assert not mon.has_ailment("どく")
     assert mon.has_ailment("ねむり")
+
+
+@pytest.mark.parametrize("ability_name", ["やるき", "ふみん", "スイートベール", "きよめのしお"])
+def test_ねむる_ねむり無効特性では失敗しHPも回復しない(ability_name: str):
+    """ねむる: やるき/ふみん/スイートベール/きよめのしお等ねむり無効特性を持つ場合、
+    ねむり付与自体に失敗するため技全体が失敗し、HPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name=ability_name, move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_success
+    assert mon.hp == hp_before
+    assert not mon.has_ailment("ねむり")
+
+
+def test_ねむる_リミットシールドのりゅうせいのすがたでは失敗しHPも回復しない():
+    """ねむる: リミットシールドのりゅうせいのすがたでは状態異常にならないため、
+    ねむるは技全体が失敗しHPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("メテノ(コア)", ability_name="リミットシールド", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.name == "メテノ(りゅうせい)"
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_success
+    assert mon.hp == hp_before
+    assert not mon.has_ailment("ねむり")
+
+
+def test_ねむる_リーフガードのにほんばれ下では失敗しHPも回復しない():
+    """ねむる: リーフガード特性のポケモンがにほんばれ下で使用すると失敗し、HPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="リーフガード", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_success
+    assert mon.hp == hp_before
+    assert not mon.has_ailment("ねむり")
+
+
+def test_ねむる_ぜったいねむりのゆめうつつ状態では失敗しHPも回復しない():
+    """ねむる: 特性ぜったいねむりによるゆめうつつ状態（uncurable）は上書きできず、
+    技全体が失敗しHPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.ailment.name == "ゆめうつつ"
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_success
+    assert mon.hp == hp_before
+    assert mon.ailment.name == "ゆめうつつ"
+
+
+def test_ねむる_相手がさわぐ状態のときは失敗しHPも回復しない():
+    """ねむる: 場に（相手も含めて）さわぐ状態のポケモンがいるときは失敗し、HPも回復しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ねむる"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"さわぐ": 2},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_success
+    assert mon.hp == hp_before
+    assert not mon.has_ailment("ねむり")
 
 
 def test_のろい_ゴーストタイプ_HP1でも呪いは成功し相手にのろい付与():
