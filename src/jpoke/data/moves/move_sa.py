@@ -913,9 +913,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スキルスワップ": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        accuracy=100,
-        flags={"bypass_substitute"},
+        pp=12,
+        accuracy=None,  # 必中（命中判定自体が行われない）
+        # まもるで防がれ、みがわりを貫通し、マジックコートで跳ね返されない
+        flags={"bypass_substitute", "unreflectable"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.スキルスワップ_can_apply,
