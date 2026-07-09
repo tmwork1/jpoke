@@ -204,6 +204,24 @@ def test_ちからをすいとる_こうげきランク最低で失敗():
     assert defender.rank["atk"] == -6
 
 
+def test_ちからをすいとる_ヘドロえきで回復がダメージに変換される():
+    """ちからをすいとる: 相手がヘドロえき持ちの場合、回復の代わりに使用者がダメージを受ける
+    （reason="drain" を経由することでヘドロえきのドレイン反転処理が発動する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ヘドロえき")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    # 回復ではなくダメージを受ける
+    assert attacker.hp < hp_before
+    # こうげきランクは通常通り下がる
+    assert defender.rank["atk"] == -1
+
+
 def test_ちからをすいとる_相手のランク補正込みA実数値だけ回復してAを下げる():
     """ちからをすいとる: 相手のこうげきランクが+1のとき、回復量はranked_stats["atk"]（補正済み）になる"""
     battle = t.start_battle(
@@ -222,24 +240,6 @@ def test_ちからをすいとる_相手のランク補正込みA実数値だけ
 
     assert attacker.hp == hp_before + expected_recovery
     assert defender.rank["atk"] == 0
-
-
-def test_ちからをすいとる_ヘドロえきで回復がダメージに変換される():
-    """ちからをすいとる: 相手がヘドロえき持ちの場合、回復の代わりに使用者がダメージを受ける
-    （reason="drain" を経由することでヘドロえきのドレイン反転処理が発動する）"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["ちからをすいとる"])],
-        team1=[Pokemon("ピカチュウ", ability_name="ヘドロえき")],
-        accuracy=100,
-    )
-    attacker, defender = battle.actives
-    hp_before = attacker.hp
-    t.run_move(battle, 0)
-
-    # 回復ではなくダメージを受ける
-    assert attacker.hp < hp_before
-    # こうげきランクは通常通り下がる
-    assert defender.rank["atk"] == -1
 
 
 def test_ちょうおんぱ_こんらん状態を付与する():
@@ -477,44 +477,6 @@ def test_つぼをつく_PPは20():
     assert MOVES["つぼをつく"].pp == 20
 
 
-def test_つぼをつく_選ばれない能力のランクは変化しない():
-    """つぼをつく: ランダムで選ばれた1種類以外の能力ランクは変化しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.random.choice = lambda seq: "def"
-    t.run_move(battle, 0)
-
-    assert attacker.rank["def"] == 2
-    assert attacker.rank["atk"] == 0
-    assert attacker.rank["spa"] == 0
-    assert attacker.rank["spd"] == 0
-    assert attacker.rank["spe"] == 0
-    assert attacker.rank["accuracy"] == 0
-    assert attacker.rank["evasion"] == 0
-
-
-def test_つぼをつく_最大の能力は候補から除外される():
-    """つぼをつく: すでに+6の能力はランダム選択の候補から除外される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    attacker.rank["atk"] = 6
-
-    def choice(seq):
-        assert "atk" not in seq
-        return seq[0]
-
-    battle.random.choice = choice
-    t.run_move(battle, 0)
-
-    assert attacker.rank["atk"] == 6
-
-
 def test_つぼをつく_マジックコートで跳ね返されない():
     """つぼをつく: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
     battle = t.start_battle(
@@ -558,6 +520,44 @@ def test_つぼをつく_全ての能力が最大なら失敗する():
 
     for stat in ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]:
         assert attacker.rank[stat] == 6
+
+
+def test_つぼをつく_最大の能力は候補から除外される():
+    """つぼをつく: すでに+6の能力はランダム選択の候補から除外される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 6
+
+    def choice(seq):
+        assert "atk" not in seq
+        return seq[0]
+
+    battle.random.choice = choice
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+
+
+def test_つぼをつく_選ばれない能力のランクは変化しない():
+    """つぼをつく: ランダムで選ばれた1種類以外の能力ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "def"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spa"] == 0
+    assert attacker.rank["spd"] == 0
+    assert attacker.rank["spe"] == 0
+    assert attacker.rank["accuracy"] == 0
+    assert attacker.rank["evasion"] == 0
 
 
 def test_つららおとし_ひるみが発動する():

@@ -1341,6 +1341,38 @@ def test_スピードスワップ_双方すばやさ同値でも成功する():
     assert defender.stats["spe"] == a_spd_before
 
 
+def test_すりかえ_こだわり系アイテムを入手してもロックされない():
+    """すりかえ: 自身の効果でこだわり系アイテムを新たに入手しても、すりかえにロックされない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", item_name="こだわりハチマキ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "こだわりハチマキ"
+    assert not attacker.has_volatile("こだわり")
+
+
+def test_すりかえ_マジックコートで跳ね返されない():
+    """すりかえ: マジックコート・マジックミラーで跳ね返されない（トリックと同様の例外仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 跳ね返されていれば MOVE_REFLECTED ログが記録される
+    assert not any(log.log == LogCode.MOVE_REFLECTED for log in battle.event_logger.logs)
+    assert attacker.item.name == "オボンのみ"
+    assert defender.item.name == "たべのこし"
+
+
 def test_すりかえ_両者がアイテムを持っていないとき失敗():
     """すりかえ: 両者ともアイテムを持っていない場合は失敗する。"""
     battle = t.start_battle(
@@ -1371,6 +1403,23 @@ def test_すりかえ_両者のアイテムが入れ替わる():
     assert defender.item.name == "たべのこし"
 
 
+def test_すりかえ_既にロックされていた場合も解除される():
+    """すりかえ: 既にこだわりでロックされていた場合も、すりかえの使用でロックが解除される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="こだわりスカーフ")],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "こだわり", source=attacker, move_name="すりかえ")
+    assert attacker.has_volatile("こだわり")
+
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "たべのこし"
+    assert not attacker.has_volatile("こだわり")
+
+
 @pytest.mark.parametrize("a_item,d_item,expected_a,expected_d", [
     ("たべのこし", None, None, "たべのこし"),  # 使用者のみアイテム持ち
     (None, "オボンのみ", "オボンのみ", None),   # 相手のみアイテム持ち
@@ -1396,55 +1445,6 @@ def test_すりかえ_片方のみアイテムを持つとき入れ替わる(a_i
         assert not defender.has_item()
     else:
         assert defender.item.name == expected_d
-
-
-def test_すりかえ_マジックコートで跳ね返されない():
-    """すりかえ: マジックコート・マジックミラーで跳ね返されない（トリックと同様の例外仕様）。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
-        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
-        volatile1={"マジックコート": 1},
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    # 跳ね返されていれば MOVE_REFLECTED ログが記録される
-    assert not any(log.log == LogCode.MOVE_REFLECTED for log in battle.event_logger.logs)
-    assert attacker.item.name == "オボンのみ"
-    assert defender.item.name == "たべのこし"
-
-
-def test_すりかえ_こだわり系アイテムを入手してもロックされない():
-    """すりかえ: 自身の効果でこだわり系アイテムを新たに入手しても、すりかえにロックされない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="たべのこし")],
-        team1=[Pokemon("カビゴン", item_name="こだわりハチマキ")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert attacker.item.name == "こだわりハチマキ"
-    assert not attacker.has_volatile("こだわり")
-
-
-def test_すりかえ_既にロックされていた場合も解除される():
-    """すりかえ: 既にこだわりでロックされていた場合も、すりかえの使用でロックが解除される。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["すりかえ"], item_name="こだわりスカーフ")],
-        team1=[Pokemon("カビゴン", item_name="たべのこし")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    battle.volatile_manager.apply(attacker, "こだわり", source=attacker, move_name="すりかえ")
-    assert attacker.has_volatile("こだわり")
-
-    t.run_move(battle, 0)
-
-    assert attacker.item.name == "たべのこし"
-    assert not attacker.has_volatile("こだわり")
 
 
 def test_ずつき_ひるみが発動する():
