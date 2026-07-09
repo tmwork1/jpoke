@@ -1126,12 +1126,19 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トリック": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
+        flags={"unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.すりかえ_swap_items,
-            )
+            ),
+            # こだわり系アイテムの ON_MOVE_END ハンドラ（デフォルト優先度100）より
+            # 後に発動させ、自身の効果で入手したこだわり系アイテムによるロックを解除する。
+            Event.ON_MOVE_END: h.MoveHandler(
+                hs.すりかえ_release_choice_lock,
+                priority=110,
+            ),
         }
     ),
     "トリックフラワー": MoveData(
