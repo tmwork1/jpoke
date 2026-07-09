@@ -730,6 +730,20 @@ def test_くろいきり_双方のランクが同時にリセットされる():
     assert defender.rank["accuracy"] == 0
 
 
+def test_くろいきり_しろいきりを無視してリセットする():
+    """くろいきり: 相手側のしろいきり状態を無視してランクをリセットする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいきり"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"しろいきり": 1},
+    )
+    defender = battle.actives[1]
+    defender.rank["def"] = -2
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == 0
+
+
 def test_くろいまなざし_すでににげられない状態なら失敗():
     """くろいまなざし: 相手がすでににげられない状態なら失敗する"""
     battle = t.start_battle(

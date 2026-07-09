@@ -870,7 +870,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "くろいきり": MoveData(
         type="こおり",
         category="status",
-        pp=30,
+        pp=20,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
