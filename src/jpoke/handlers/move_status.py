@@ -615,25 +615,38 @@ def きりばらい_defog(battle: Battle, ctx: AttackContext, value: Any) -> Han
     フィールド:
         エレキフィールド・グラスフィールド・サイコフィールド・ミストフィールドを解除する。
 
-    みがわり状態でも場の効果解除は通常通り発動する（回避率下降のみ無効）。
+    みがわり状態では回避率変化のみ防がれ、場の効果解除は独立して発動する
+    （技自体は MoveData の bypass_substitute フラグでみがわりを貫通する）。
+    しろいきりも回避率変化を防いだ後に自身を含む場の効果を解除されるため、
+    回避率変化を場の効果解除より先に行う（一次情報: docs/wiki/moves/きりばらい.html
+    技の仕様節）。
     """
+    changed = False
+
+    # 対象の回避率を1段階下げる（みがわり状態では防がれる）
+    if not ctx.defender.has_volatile("みがわり"):
+        if battle.modify_stats(ctx.defender, {"evasion": -1}, source=ctx.attacker):
+            changed = True
+
     # 対象側の壁系を解除
     defender_side = battle.get_side(ctx.defender)
     wall_names = ["ひかりのかべ", "リフレクター", "オーロラベール", "しんぴのまもり", "しろいきり"]
     for wall in wall_names:
-        defender_side.deactivate(wall)
+        if defender_side.deactivate(wall):
+            changed = True
 
     # 両陣営のトラップを解除
     trap_names = ["まきびし", "どくびし", "ステルスロック", "ねばねばネット"]
     for side in battle.side_managers:
         for trap in trap_names:
-            side.deactivate(trap)
+            if side.deactivate(trap):
+                changed = True
 
     # フィールドを解除
-    battle.terrain_manager.remove()
+    if battle.terrain_manager.remove():
+        changed = True
 
-    # 対象の回避率を1段階下げる
-    return modify_defender_stats(battle, ctx, value, stats={"evasion": -1})
+    return HandlerReturn(value=changed)
 
 
 def キングシールド_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

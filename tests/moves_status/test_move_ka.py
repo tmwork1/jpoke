@@ -526,6 +526,8 @@ def test_キノコのほうし_相手がねむり状態になる():
 @pytest.mark.parametrize("terrain_name", [
     "エレキフィールド",
     "グラスフィールド",
+    "サイコフィールド",
+    "ミストフィールド",
 ])
 def test_きりばらい_フィールドが解除される(terrain_name):
     """きりばらい: フィールドが展開されている場合に使用するとフィールドが解除される"""
@@ -536,6 +538,42 @@ def test_きりばらい_フィールドが解除される(terrain_name):
     )
     t.run_move(battle, 0)
 
+    assert not battle.terrain.is_active
+
+
+def test_きりばらい_しろいきりが回避率変化を防いだ上で解除される():
+    """きりばらい: 対象側のしろいきりが回避率変化を防ぐが、しろいきり自体は解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"しろいきり": 5},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["evasion"] == 0
+    assert not battle.side_managers[1].fields["しろいきり"].is_active
+
+
+def test_きりばらい_みがわり状態でも場の効果は解除される():
+    """きりばらい: みがわり状態の相手には回避率変化のみ防がれ、場の効果解除は貫通する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        side0={"ひかりのかべ": 5},
+        side1={"まきびし": 1},
+        terrain=("エレキフィールド", 5),
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 回避率変化は防がれる
+    assert defender.rank["evasion"] == 0
+    # みがわりは維持される
+    assert defender.has_volatile("みがわり")
+    # 場の効果解除は貫通する
+    assert not battle.side_managers[1].fields["まきびし"].is_active
     assert not battle.terrain.is_active
 
 
@@ -586,6 +624,7 @@ def test_きりばらい_対象の回避率が1段階下がる():
 
 @pytest.mark.parametrize("wall_name", [
     "オーロラベール",
+    "しんぴのまもり",
     "ひかりのかべ",
     "リフレクター",
 ])

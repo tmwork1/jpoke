@@ -671,7 +671,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "きりばらい": MoveData(
         type="ひこう",
         category="status",
-        pp=15,
+        pp=16,
+        # みがわりに対して技自体は無効化されない（回避率変化のみ防がれ、
+        # 場の効果解除は独立して発動する。一次情報: docs/wiki/moves/きりばらい.html 技の仕様節）。
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きりばらい_defog,
