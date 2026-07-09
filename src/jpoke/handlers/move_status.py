@@ -2575,8 +2575,9 @@ def もりののろい_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
 
 
 def もりののろい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """もりののろいの使用条件チェック: 相手がすでにくさタイプなら失敗する。"""
-    if ctx.defender.has_type("くさ"):
+    """もりののろいの使用条件チェック: 相手がすでにくさタイプ、またはテラスタル中の場合は失敗する。"""
+    defender = ctx.defender
+    if defender.has_type("くさ") or defender.terastallized:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="もりののろい")
