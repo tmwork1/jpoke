@@ -1307,6 +1307,15 @@ def たてこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
 
 
+def タマゴうみ_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """タマゴうみ: 最大HPの1/2を回復する（じこさいせいと同一効果）。"""
+    mon = ctx.attacker
+    if mon.hp == mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
+    battle.modify_hp(mon, r=1/2)
+    return HandlerReturn(value=value)
+
+
 def タールショット_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """タールショットの効果: 相手にタールショット状態を付与し、すばやさを1段階下げる。"""
     assert ctx.defender is not None

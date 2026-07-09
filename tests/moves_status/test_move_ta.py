@@ -94,6 +94,58 @@ def test_たてこもる_自分対象のためまもるで防がれない():
     assert attacker.rank["def"] == 2
 
 
+def test_タマゴうみ_マジックコートで跳ね返されない():
+    """タマゴうみ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タマゴうみ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+def test_タマゴうみ_まもるで防がれない():
+    """タマゴうみ: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タマゴうみ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+
+
+def test_タマゴうみ_まんたんなら失敗():
+    """タマゴうみ: HPが最大値のときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タマゴうみ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+
+
+def test_タマゴうみ_最大HPの半分回復する():
+    """タマゴうみ: 自分のHPを最大HPの1/2分回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タマゴうみ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + attacker.max_hp // 2
+
+
 def test_タールショット_すでにタールショット状態でもSは下がる():
     """タールショット: 相手がすでにタールショット状態でもすばやさは1段階下がる"""
     battle = t.start_battle(
