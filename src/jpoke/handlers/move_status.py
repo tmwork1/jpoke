@@ -1504,6 +1504,7 @@ def なかよくする_modify_defender_stats(battle: Battle, ctx: AttackContext,
 
 
 def なきごえ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なきごえ: 相手のこうげきを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
 
