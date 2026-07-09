@@ -1744,6 +1744,11 @@ def test_ほおばる_ラムのみでやけどが治る():
     assert attacker.rank["def"] == 2
 
 
+def test_ほろびのうた_PPは8():
+    """ほろびのうた: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["ほろびのうた"].pp == 8
+
+
 def test_ほろびのうた_3ターン後に瀕死になる():
     """ほろびのうた: count=3 から3ターン経過するとひんしになる"""
     battle = t.start_battle(
@@ -1811,6 +1816,37 @@ def test_ほろびのうた_自分だけ状態なら相手に付与できる():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("ほろびのうた")
+
+
+def test_ほろびのうた_まもる状態の相手にも効果が発動する():
+    """ほろびのうた: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ほろびのうた")
+    assert defender.has_volatile("ほろびのうた")
+
+
+def test_ほろびのうた_みがわりを貫通して付与される():
+    """ほろびのうた: soundフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("ほろびのうた")
+    assert defender.volatiles["みがわり"].hp == 999
 
 
 @pytest.mark.parametrize(

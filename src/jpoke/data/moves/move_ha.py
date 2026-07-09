@@ -1535,8 +1535,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ほろびのうた": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
-        flags={"sound"},
+        pp=8,
+        flags={"sound", "unprotectable"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.ほろびのうた_can_apply,
