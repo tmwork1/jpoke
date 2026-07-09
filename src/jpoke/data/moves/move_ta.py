@@ -1282,9 +1282,13 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "どくどく": MoveData(
         type="どく",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=90,
         handlers={
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
+                hs.どくどく_accuracy,
+                subject_spec="attacker:self",
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.どくどく_apply_ailment_to_defender,
             ),
