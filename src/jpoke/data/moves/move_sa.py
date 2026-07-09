@@ -159,9 +159,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "サイドチェンジ": MoveData(
         type="エスパー",
         category="status",
-        pp=15,
+        pp=16,
         priority=2,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "さいはい": MoveData(
         type="エスパー",
