@@ -1036,7 +1036,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "すなあらし": MoveData(
         type="いわ",
         category="status",
-        pp=10,
+        pp=8,
         target="field",
         flags={"wind"},
         handlers={
