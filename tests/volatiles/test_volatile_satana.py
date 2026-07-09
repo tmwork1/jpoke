@@ -609,6 +609,24 @@ def test_にげられない_発生源が交代すると解除():
     assert not battle.actives[1].has_volatile("にげられない")
 
 
+def test_にげられない_はいすいのじん起因は相手が交代しても解除されない():
+    """にげられない: はいすいのじんによる自己付与の場合、相手が交代しても解除されない。
+
+    はいすいのじんは自分自身をにげられない状態にする（source=自分）ため、
+    とおせんぼう等の相手起因のにげられない状態とは異なり、相手が交代しても
+    にげられない状態は継続する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("コラッタ"), Pokemon("ズバット")],
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].has_volatile("にげられない")
+
+    t.run_switch(battle, 1, 1)
+    assert battle.actives[0].has_volatile("にげられない")
+
+
 def test_ねむけ_ターン経過でねむりになる():
     """ねむけ: count=2 でターン終了×2回後にねむり状態になる"""
     n_turn = 2

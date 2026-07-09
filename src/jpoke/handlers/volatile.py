@@ -867,6 +867,10 @@ def にげられない_remove_on_foe_switch(battle: Battle, ctx: EventContext, v
     双方が『にげられない』状態を持つ場合）でも、片方が場を離れればもう片方の
     『にげられない』状態が正しく解除される。
 
+    はいすいのじんによる自己付与（source=自分）の場合は、相手が場を離れても解除されない
+    （使用時に相手だったポケモンが場を離れても、この技によるにげられない状態は継続する）。
+    move_name で自己付与かどうかを判定する。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -876,6 +880,10 @@ def にげられない_remove_on_foe_switch(battle: Battle, ctx: EventContext, v
         HandlerReturn: 常にTrue
     """
     foe = battle.foe(ctx.source)
+    if not foe.has_volatile("にげられない"):
+        return HandlerReturn(value=value)
+    if foe.volatiles["にげられない"].move_name == "はいすいのじん":
+        return HandlerReturn(value=value)
     battle.volatile_manager.remove(foe, "にげられない")
     return HandlerReturn(value=value)
 

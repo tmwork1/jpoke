@@ -1869,11 +1869,16 @@ def のろい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
 def はいすいのじん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はいすいのじんの効果: すべての能力を1段階ずつ上げる。
 
+    すべての能力ランクがすでに+6で1つも上げられない場合は失敗する（他の複合ランク
+    変化技と同様、battle.modify_stats() の戻り値が空辞書になることで自動的に失敗
+    扱いになる）。
     すでに他の要因でにげられない状態の場合は、にげられない付与をスキップする。
     """
     mon = ctx.attacker
     # すべての能力（こうげき・ぼうぎょ・とくこう・とくぼう・すばやさ）を1段階ずつ上げる
-    battle.modify_stats(mon, {"atk": 1, "def": 1, "spa": 1, "spd": 1, "spe": 1}, source=mon)
+    result = battle.modify_stats(mon, {"atk": 1, "def": 1, "spa": 1, "spd": 1, "spe": 1}, source=mon)
+    if not result:
+        return HandlerReturn(value=False)
     # にげられない状態でない場合のみ付与（はいすいのじん起因をmove_nameで記録）
     if not mon.has_volatile("にげられない"):
         battle.volatile_manager.apply(mon, "にげられない", source=mon, move_name="はいすいのじん")
@@ -1883,21 +1888,12 @@ def はいすいのじん_apply(battle: Battle, ctx: AttackContext, value: Any) 
 def はいすいのじん_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はいすいのじんの失敗条件チェック（ON_TRY_MOVE_1 priority=30）。
 
-    下記のいずれかに該当する場合は失敗する:
-    1. すでにはいすいのじんによってにげられない状態になっている
-    2. すべての能力ランクがすでに+6
+    すでにはいすいのじんによってにげられない状態になっている場合は失敗する。
     """
     mon = ctx.attacker
     # はいすいのじん起因でにげられない状態の場合は失敗
     if (mon.has_volatile("にげられない")
             and mon.volatiles["にげられない"].move_name == "はいすいのじん"):
-        battle.add_event_log(
-            mon, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="はいすいのじん_すでに状態変化"),
-        )
-        return HandlerReturn(value=False, stop_event=True)
-    # すべての能力ランクがすでに+6の場合は失敗
-    if all(mon.rank[stat] >= 6 for stat in ("atk", "def", "spa", "spd", "spe")):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="はいすいのじん_すでに状態変化"),

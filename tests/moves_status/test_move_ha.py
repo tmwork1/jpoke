@@ -98,6 +98,27 @@ def test_はいすいのじん_全5能力が最大のとき失敗する():
     # 失敗のためランクは変化しない
     for stat in ("atk", "def", "spa", "spd", "spe"):
         assert mon.rank[stat] == 6
+    # 失敗のためにげられない状態も付与されない
+    assert not mon.has_volatile("にげられない")
+
+
+def test_はいすいのじん_マジックコートで跳ね返されない():
+    """はいすいのじん: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ルカリオ", move_names=["はいすいのじん"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+
+    t.run_move(battle, 0)
+
+    # 跳ね返されず自分の能力が上昇し、にげられない状態も自分に付与される
+    assert mon.rank["atk"] == 1
+    assert mon.has_volatile("にげられない")
+    assert foe.rank["atk"] == 0
+    assert not foe.has_volatile("にげられない")
 
 
 def test_はねやすめ_HPが半分回復する():
