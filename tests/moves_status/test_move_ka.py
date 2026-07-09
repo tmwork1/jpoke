@@ -665,6 +665,63 @@ def test_きんぞくおん_まもるで防がれる():
     assert defender.rank["spd"] == 0
 
 
+def test_ギアチェンジ_こうげき1段階すばやさ2段階上がる():
+    """ギアチェンジ: 使用すると自分のこうげきが1段階、すばやさが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ギアチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 2
+
+
+def test_ギアチェンジ_こうげき最大でもすばやさは上昇する():
+    """ギアチェンジ: こうげきがすでに+6でも、すばやさは上昇する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ギアチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["spe"] == 2
+
+
+def test_ギアチェンジ_マジックコートで跳ね返されない():
+    """ギアチェンジ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ギアチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 2
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spe"] == 0
+
+
+def test_ギアチェンジ_自分対象のためまもるで防がれない():
+    """ギアチェンジ: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ギアチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 2
+
+
 def test_くすぐる_こうげきが最低でもぼうぎょは下がる():
     """くすぐる: こうげきランクがすでに-6でも、ぼうぎょランクは-1下がる"""
     battle = t.start_battle(
