@@ -816,3 +816,28 @@ def test_わたほうし_相手のすばやさ2段階下がる():
     t.run_move(battle, 0)
 
     assert defender.rank["spe"] == -2
+
+
+def test_わるだくみ_とくこう2段階上がる():
+    """わるだくみ: 使用すると自分のとくこうランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["わるだくみ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 2
+
+
+def test_わるだくみ_とくこう最大なら失敗する():
+    """わるだくみ: とくこうがすでに+6の場合は技が失敗し、ランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["わるだくみ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["spa"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 6
