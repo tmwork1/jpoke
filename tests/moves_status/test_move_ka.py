@@ -70,17 +70,6 @@ def test_かいふくふうじ_状態中はHP回復技が無効になる():
     assert defender.hp == hp_before
 
 
-def test_かえんのまもり_技使用でかえんのまもり状態が付与される():
-    """かえんのまもり: 技を使うと自分にかえんのまもり揮発性状態が付与される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["かえんのまもり"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-    assert attacker.has_volatile("かえんのまもり")
-
-
 def test_かえんのまもり_そのターン最後の行動だと失敗する():
     """かえんのまもり: 優先度が同じ場合でも自分がそのターンの最後に行動する場合は失敗する"""
     battle = t.start_battle(
@@ -93,6 +82,17 @@ def test_かえんのまもり_そのターン最後の行動だと失敗する(
     # ピカチュウ(速い・まもる)が先に行動するため、カビゴン(遅い・かえんのまもり)は最後の行動になり失敗する
     assert not attacker.has_volatile("かえんのまもり")
     assert attacker.executed_move is None
+
+
+def test_かえんのまもり_技使用でかえんのまもり状態が付与される():
+    """かえんのまもり: 技を使うと自分にかえんのまもり揮発性状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かえんのまもり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("かえんのまもり")
 
 
 def test_かえんのまもり_最後の行動で失敗しても次ターンは連続使用扱いにならない():
@@ -253,19 +253,6 @@ def test_かみつく_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
-def test_からにこもる_まもるで防がれない():
-    """からにこもる: 自分を対象とする技のため、相手のまもるで防がれない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["からにこもる"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"まもる": 1},
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert attacker.rank["def"] == 1
-
-
 def test_からにこもる_ぼうぎょが1段階上がる():
     """からにこもる: 通常使用で自分のぼうぎょランクが+1になること"""
     battle = t.start_battle(
@@ -278,19 +265,17 @@ def test_からにこもる_ぼうぎょが1段階上がる():
     assert attacker.rank["def"] == 1
 
 
-def test_からをやぶる_Bが最低でも他のランクは上昇する():
-    """からをやぶる: ぼうぎょがすでに-6でも他のランク変化は通常通り発生する"""
+def test_からにこもる_まもるで防がれない():
+    """からにこもる: 自分を対象とする技のため、相手のまもるで防がれない"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["からをやぶる"])],
+        team0=[Pokemon("ピカチュウ", move_names=["からにこもる"])],
         team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"def": -6}, source=attacker)
     t.run_move(battle, 0)
 
-    assert attacker.rank["def"] == -6
-    assert attacker.rank["atk"] == 2
-    assert attacker.rank["spe"] == 2
+    assert attacker.rank["def"] == 1
 
 
 def test_からをやぶる_AとCとSが最高でもBとDは低下する():
@@ -308,6 +293,21 @@ def test_からをやぶる_AとCとSが最高でもBとDは低下する():
     assert attacker.rank["spe"] == 6
     assert attacker.rank["def"] == -1
     assert attacker.rank["spd"] == -1
+
+
+def test_からをやぶる_Bが最低でも他のランクは上昇する():
+    """からをやぶる: ぼうぎょがすでに-6でも他のランク変化は通常通り発生する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["からをやぶる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": -6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == -6
+    assert attacker.rank["atk"] == 2
+    assert attacker.rank["spe"] == 2
 
 
 def test_からをやぶる_BとDが下がりAとCとSが上がる():
@@ -523,6 +523,20 @@ def test_キノコのほうし_相手がねむり状態になる():
     assert defender.ailment.name == "ねむり"
 
 
+def test_きりばらい_しろいきりが回避率変化を防いだ上で解除される():
+    """きりばらい: 対象側のしろいきりが回避率変化を防ぐが、しろいきり自体は解除される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"しろいきり": 5},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["evasion"] == 0
+    assert not battle.side_managers[1].fields["しろいきり"].is_active
+
+
 @pytest.mark.parametrize("terrain_name", [
     "エレキフィールド",
     "グラスフィールド",
@@ -539,20 +553,6 @@ def test_きりばらい_フィールドが解除される(terrain_name):
     t.run_move(battle, 0)
 
     assert not battle.terrain.is_active
-
-
-def test_きりばらい_しろいきりが回避率変化を防いだ上で解除される():
-    """きりばらい: 対象側のしろいきりが回避率変化を防ぐが、しろいきり自体は解除される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["きりばらい"])],
-        team1=[Pokemon("カビゴン")],
-        side1={"しろいきり": 5},
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert defender.rank["evasion"] == 0
-    assert not battle.side_managers[1].fields["しろいきり"].is_active
 
 
 def test_きりばらい_みがわり状態でも場の効果は解除される():

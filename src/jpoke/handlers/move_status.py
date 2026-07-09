@@ -420,28 +420,6 @@ def おきみやげ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def おちゃかい_force_consume_berries(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """おちゃかい: 場の全ポケモン（使用者→相手の順）が持っているきのみを、
-    発動条件を無視して強制消費し、その効果を受けさせる。
-
-    姿を隠しているポケモン（そらをとぶ・あなをほる・ダイビング）は消費しない。
-    きのみを消費できるポケモンが1体もいなくても技自体は成功する
-    （失敗判定は行わない）。
-    """
-    hidden_volatiles = ("そらをとぶ", "あなをほる", "ダイビング")
-    attacker = ctx.attacker
-    targets = [attacker] + [mon for mon in battle.actives if mon is not attacker]
-
-    for mon in targets:
-        if any(mon.has_volatile(v) for v in hidden_volatiles):
-            continue
-        if not mon.item.is_berry():
-            continue
-        battle.item_manager.force_trigger_berry(mon)
-
-    return HandlerReturn(value=value)
-
-
 def おたけび_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おたけびの効果: 相手のこうげきととくこうを 1 段階ずつ下げる。音系の技のためみがわりを貫通する。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
@@ -463,6 +441,28 @@ def おだてる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
             payload=FailureLogPayload(move=ctx.move.name, display_reason="おだてる")
         )
         return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def おちゃかい_force_consume_berries(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """おちゃかい: 場の全ポケモン（使用者→相手の順）が持っているきのみを、
+    発動条件を無視して強制消費し、その効果を受けさせる。
+
+    姿を隠しているポケモン（そらをとぶ・あなをほる・ダイビング）は消費しない。
+    きのみを消費できるポケモンが1体もいなくても技自体は成功する
+    （失敗判定は行わない）。
+    """
+    hidden_volatiles = ("そらをとぶ", "あなをほる", "ダイビング")
+    attacker = ctx.attacker
+    targets = [attacker] + [mon for mon in battle.actives if mon is not attacker]
+
+    for mon in targets:
+        if any(mon.has_volatile(v) for v in hidden_volatiles):
+            continue
+        if not mon.item.is_berry():
+            continue
+        battle.item_manager.force_trigger_berry(mon)
+
     return HandlerReturn(value=value)
 
 
