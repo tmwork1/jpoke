@@ -515,8 +515,13 @@ MOVES_SA: dict[MoveName, MoveData] = {
         type="かくとう",
         category="status",
         pp=10,
+        target="self",
         flags={"dance"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.しょうりのまい_modify_attacker_stats,
+            ),
+        },
     ),
     "しろいきり": MoveData(
         type="こおり",

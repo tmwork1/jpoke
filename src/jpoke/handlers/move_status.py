@@ -846,6 +846,11 @@ def しびれごな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
+def しょうりのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """しょうりのまいの効果: 自分のこうげき・ぼうぎょ・すばやさを1段階ずつ上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1, "spe": 1})
+
+
 def しんぴのまもり_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """しんぴのまもり: 自陣営に「しんぴのまもり」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
