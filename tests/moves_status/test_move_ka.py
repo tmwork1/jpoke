@@ -751,7 +751,19 @@ def test_くろいまなざし_にげられない状態を付与する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["くろいまなざし"])],
         team1=[Pokemon("カビゴン")],
-        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("にげられない")
+
+
+def test_くろいまなざし_まもる状態の相手にも効果が発動する():
+    """くろいまなざし: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する（第六世代以降）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["くろいまなざし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
     )
     defender = battle.actives[1]
     t.run_move(battle, 0)
