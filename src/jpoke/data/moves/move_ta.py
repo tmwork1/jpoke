@@ -58,6 +58,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.たくわえる_check_can_use,
