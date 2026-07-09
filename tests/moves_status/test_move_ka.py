@@ -1020,6 +1020,72 @@ def test_コスモパワー_発動前後のランク変化(def_init, spd_init, d
     assert attacker.rank["spd"] == spd_exp
 
 
+def test_コットンガード_ぼうぎょが3段階上がる():
+    """コットンガード: 使用すると自分のぼうぎょランクが3段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コットンガード"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["def"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 3
+
+
+def test_コットンガード_ぼうぎょが上限のとき失敗する():
+    """コットンガード: ぼうぎょランクがすでに+6のときは失敗し、ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コットンガード"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["def"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 6
+
+
+def test_コットンガード_まもるで防がれない():
+    """コットンガード: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コットンガード"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 3
+
+
+def test_コットンガード_マジックコートで跳ね返されない():
+    """コットンガード: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コットンガード"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 3
+    assert defender.rank["def"] == 0
+
+
+def test_コットンガード_みがわりに防がれない():
+    """コットンガード: 自分を対象とする技のため、相手のみがわりで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コットンガード"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 3
+
+
 def test_こらえる_2ターン連続で使用すると2ターン目は失敗する():
     """こらえる: まもる系共通の連続使用失敗ルールが適用される"""
     battle = t.start_battle(
