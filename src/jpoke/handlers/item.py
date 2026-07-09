@@ -858,8 +858,15 @@ def こだわり_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     このハンドラでロックされた直後に `すりかえ_release_choice_lock`
     （`data/moves/move_sa.py` `data/moves/move_ta.py` に登録）がより遅い優先度で
     ロックを解除する。
+
+    ねごとのサブ実行中（sleep_talk_active）はロック対象としない。
+    第五世代以降、こだわり系アイテムはねごとで選ばれた技ではなく「ねごと」自体で
+    ロックされるため、サブ実行中に発火する ON_MOVE_END では何もせず、
+    ねごと自身の ON_MOVE_END でロックする。
     """
     mon = ctx.attacker
+    if mon.sleep_talk_active:
+        return HandlerReturn(value=value)
     if not mon.has_volatile("こだわり"):
         battle.volatile_manager.apply(
             mon, "こだわり", source=mon, move_name=ctx.move.name

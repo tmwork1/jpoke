@@ -269,7 +269,8 @@ class MoveExecutor:
             return
 
         # PPが0の技はわるあがきに置き換える
-        if move.pp == 0:
+        # （ねごとのサブ実行中は対象外。ねごとはPP0の技も選択でき、そのまま成功する）
+        if move.pp == 0 and not attacker.sleep_talk_active:
             move = Move("わるあがき")
 
         ctx.move = move

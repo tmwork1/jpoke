@@ -696,6 +696,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=120,
         accuracy=90,
+        flags={"non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: [
                 h.MoveHandler(

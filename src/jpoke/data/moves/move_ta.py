@@ -205,7 +205,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "ダイビング"),
@@ -1072,7 +1072,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=5,
         power=85,
         accuracy=85,
-        flags={"contact", "gravity_restricted", "secondary_effect"},
+        flags={"contact", "gravity_restricted", "secondary_effect", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.gravity_restricted_fail,

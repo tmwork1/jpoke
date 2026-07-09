@@ -318,7 +318,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=10,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "あなをほる"),
@@ -1077,6 +1077,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=130,
         accuracy=100,
+        flags={"non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: [
                 h.MoveHandler(

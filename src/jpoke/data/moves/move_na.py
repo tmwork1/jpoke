@@ -313,10 +313,10 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねごと": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         flags={"non_encore", "non_negoto"},
         handlers={
-            Event.ON_TRY_ACTION: h.MoveHandler(
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.ねごと_check_sleep,
                 subject_spec="attacker:self",
                 priority=30,

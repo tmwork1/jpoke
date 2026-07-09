@@ -1631,15 +1631,15 @@ def ねごと_select_and_execute(battle: Battle, ctx: AttackContext, value: Any)
     選ばれた技の PP は消費しない（ねごと自体のみ消費）。
     候補技がすべて non_negoto の場合は value=False を返して失敗する。
 
-    ねごと自身の ON_TRY_ACTION（ねむりチェック）・ON_STATUS_HIT（本ハンドラ）は、
+    ねごと自身の ON_TRY_MOVE_1（ねむりチェック）・ON_STATUS_HIT（本ハンドラ）は、
     この呼び出しが完了するまでイベントマネージャーに登録されたままになる。
     選ばれた技の実行中にも同じ攻撃者に対してこれらのイベントが発火するため、
     登録されたままだと以下の問題が起きる。
     - 選ばれた技が status 技の場合、その ON_STATUS_HIT でねごと_select_and_execute
       が再度呼ばれ、実行するたびに再帰が繰り返されて無限ループになる。
-    - 選ばれた技の ON_TRY_ACTION でねごと_check_sleep が再度評価され、
+    - 選ばれた技の ON_TRY_MOVE_1 でねごと_check_sleep が再度評価され、
       ねごと自身の使用条件チェックが無関係な技に対して誤って行われる。
-    これを避けるため、選ばれた技の実行中はねごと自身の ON_TRY_ACTION /
+    これを避けるため、選ばれた技の実行中はねごと自身の ON_TRY_MOVE_1 /
     ON_STATUS_HIT ハンドラのみを一時的に解除する
     （ON_MODIFY_PP_CONSUMED は選ばれた技のPP消費を抑制するために実行中も
     登録したままにする必要があるため対象外）。
@@ -1657,7 +1657,7 @@ def ねごと_select_and_execute(battle: Battle, ctx: AttackContext, value: Any)
     # ねごとのON_MODIFY_PP_CONSUMEDハンドラがPP消費を0にするため、
     # ねむり状態でも選ばれた技が実行できるよう、サブ実行フラグを立てる
     attacker.sleep_talk_active = True
-    suppressed_events = (Event.ON_TRY_ACTION, Event.ON_STATUS_HIT)
+    suppressed_events = (Event.ON_TRY_MOVE_1, Event.ON_STATUS_HIT)
     handlers_data = ctx.move.data.handlers
     for event in suppressed_events:
         handler = handlers_data.get(event)
