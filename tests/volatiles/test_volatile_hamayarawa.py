@@ -641,6 +641,33 @@ def test_やどりぎのタネ_回復先満タンでも対象のHPは減る():
     assert heal_mon.hp == heal_hp
 
 
+def test_やどりぎのタネ_回復側が交代すると新しい位置のポケモンが回復する():
+    """やどりぎのタネ: 回復先は「使用者がいた場所」であり、使用者自身の交代後は
+    その場所にいる新しいポケモンが回復する。"""
+    battle = t.start_battle(
+        team1=[Pokemon("ワンリキー"), Pokemon("マンキー")],
+        team0=[Pokemon("カビゴン")],
+        volatile0={"やどりぎのタネ": 1}
+    )
+    target_mon = battle.actives[0]
+    old_healer = battle.actives[1]
+    t.run_switch(battle, 1, 1)
+    new_healer = battle.actives[1]
+    assert new_healer is not old_healer
+    # 回復量を観測できるよう、あらかじめHPを減らしておく
+    new_healer.hp = new_healer.max_hp // 2
+    new_healer_hp_before = new_healer.hp
+
+    t.end_turn(battle)
+
+    damage = target_mon.max_hp // 8
+    assert target_mon.hp == target_mon.max_hp - damage
+    # 交代先（現在その場所にいるポケモン）が回復する
+    assert new_healer.hp == new_healer_hp_before + damage
+    # ベンチに退いた元の使用者は回復しない
+    assert old_healer.hp == old_healer.max_hp
+
+
 def test_ロックオン_ターン経過で解除():
     """ロックオン: count=1 でターン終了後に揮発状態が解除される"""
     battle = t.start_battle(
