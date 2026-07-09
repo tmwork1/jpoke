@@ -452,7 +452,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "アンコール": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
         accuracy=100,
         flags={"non_encore"},
         handlers={

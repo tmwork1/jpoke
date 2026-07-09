@@ -287,6 +287,41 @@ def test_アロマセラピー_状態異常なしでも失敗しない():
     assert not attacker.ailment.is_active
 
 
+def test_アンコール_成功してアンコール揮発状態が付与される():
+    """アンコール: 相手が技を使った後に使うとアンコール揮発状態が付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["アンコール"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    assert defender.executed_move.name == "たいあたり"
+
+    t.run_move(battle, 0)
+    assert defender.has_volatile("アンコール")
+    assert defender.volatiles["アンコール"].count == 3
+
+
+def test_アンコール_すでにアンコール状態の相手には失敗する():
+    """アンコール: 相手がすでにアンコール状態の場合は失敗する（重複付与不可）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["アンコール"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 1)
+    # 1回目: 成功
+    t.run_move(battle, 0)
+    assert defender.has_volatile("アンコール")
+    old_count = defender.volatiles["アンコール"].count
+
+    # 2回目: すでにアンコール状態なので失敗（count は変わらない）
+    t.run_move(battle, 0)
+    assert defender.volatiles["アンコール"].count == old_count
+
+
 def test_いえき_protectedフラグ持ちに失敗():
     """いえき: アイスフェイス（protectedフラグ持ち）の相手には失敗する"""
     battle = t.start_battle(
