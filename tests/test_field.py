@@ -474,6 +474,17 @@ def test_じゅうりょく_命中補正():
     assert battle.move_executor.accuracy == move.accuracy * 6840 // 4096
 
 
+def test_じゅうりょく_一撃必殺技は命中補正の対象外():
+    """じゅうりょく: 一撃必殺技（ohkoフラグ）の命中率は補正されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じわれ"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"じゅうりょく": 99}
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 def test_じゅうりょく_浮遊無効():
     """じゅうりょく: ひこうタイプポケモンが接地状態になる"""
     battle = t.start_battle(

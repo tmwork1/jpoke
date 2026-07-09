@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from jpoke.enums import Interrupt
 from .. import test_utils as t
 
@@ -666,6 +667,57 @@ def test_じばそうさ_プラス以外の特性では失敗する():
 
     assert attacker.rank["def"] == 0
     assert attacker.rank["spd"] == 0
+
+
+def test_じゅうりょく_PPは8():
+    """じゅうりょく: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["じゅうりょく"].pp == 8
+
+
+def test_じゅうりょく_場が発動する():
+    """じゅうりょく: 使用すると場が『じゅうりょく』状態になり、5ターン継続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じゅうりょく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    field = battle.get_global_field("じゅうりょく")
+    assert field.is_active
+    assert field.count == 5
+
+
+def test_じゅうりょく_すでに発動中なら失敗する():
+    """じゅうりょく: すでに場が『じゅうりょく』状態のときは再使用しても失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じゅうりょく"])],
+        team1=[Pokemon("カビゴン")],
+        field={"じゅうりょく": 3},
+    )
+    t.run_move(battle, 0)
+    field = battle.get_global_field("じゅうりょく")
+    assert field.count == 3
+
+
+def test_じゅうりょく_まもるで防がれない():
+    """じゅうりょく: 全体の場を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じゅうりょく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("じゅうりょく").is_active
+
+
+def test_じゅうりょく_マジックコートで跳ね返されない():
+    """じゅうりょく: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じゅうりょく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("じゅうりょく").is_active
 
 
 def test_じんつうりき_ひるみが発動する():

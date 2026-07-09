@@ -813,7 +813,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じゅうりょく": MoveData(
         type="エスパー",
         category="status",
-        pp=5,
+        pp=8,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
