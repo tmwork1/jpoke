@@ -266,6 +266,22 @@ def test_マジックコート_unreflectableフラグを持つ技は跳ね返さ
     assert attacker.ability.name == "めんえき"
 
 
+def test_マジックコート_unreflectableフラグを持つじこあんじは跳ね返さない():
+    """マジックコート: unreflectableフラグを持つじこあんじは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り自分のランクが相手のランクにコピーされる
+    assert attacker.rank["atk"] == 2
+
+
 def test_まもる_みきりでもまもる状態になる():
     """みきり: 使用するとまもる揮発性状態が付与され、攻撃を防ぐ"""
     battle = t.start_battle(

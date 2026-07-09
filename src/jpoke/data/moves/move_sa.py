@@ -627,8 +627,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "じこあんじ": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,
+        accuracy=None,
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.じこあんじ_copy_ranks,

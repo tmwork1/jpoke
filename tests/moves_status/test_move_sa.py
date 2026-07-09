@@ -569,6 +569,117 @@ def test_じこあんじ_相手のランク変化を自分にコピーする():
     assert attacker.rank["evasion"] == 2
 
 
+def test_じこあんじ_急所ランクをコピーする():
+    """じこあんじ: 相手のきゅうしょアップ状態（急所ランク）も第六世代以降コピーする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.critical_rank = 2
+    t.run_move(battle, 0)
+
+    assert attacker.critical_rank == 2
+    assert attacker.has_volatile("きゅうしょアップ")
+
+
+def test_じこあんじ_相手の急所ランクが0なら自分の急所ランクも消える():
+    """じこあんじ: 自分が事前にきゅうしょアップ状態でも、相手の急所ランクが0ならクリアされる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.critical_rank = 2
+    t.run_move(battle, 0)
+
+    assert attacker.critical_rank == 0
+    assert not attacker.has_volatile("きゅうしょアップ")
+
+
+def test_じこあんじ_しろいハーブでマイナスランクを打ち消す():
+    """じこあんじ: コピー結果に負のランクが含まれる場合、しろいハーブが発動してランクを0に戻す"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="しろいハーブ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.rank["atk"] = -2
+    defender.rank["spa"] = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spa"] == 1
+    assert not attacker.has_item()
+
+
+def test_じこあんじ_だっしゅつパックは発動しない():
+    """じこあんじ: 直接代入によりランクが下がっても、だっしゅつパックは発動しない"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", item_name="だっしゅつパック", move_names=["じこあんじ"]),
+            Pokemon("ライチュウ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = -2
+    state0 = battle._player_states[0]
+    t.run_move(battle, 0)
+
+    assert state0.active_index == 0
+    assert state0.team[0].has_item()
+
+
+def test_じこあんじ_まもる状態の相手にも効果が発動する():
+    """じこあんじ: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 2
+
+
+def test_じこあんじ_みがわり状態の相手にも効果が発動する():
+    """じこあんじ: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 2
+
+
+def test_じこあんじ_命中判定を行わず必ず命中する():
+    """じこあんじ: 必中技であり、命中判定自体を行わない（回避ランクの影響を受けない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.accuracy is None
+
+
 @pytest.mark.parametrize(
     "ability_name",
     ["プラス", "マイナス"]
