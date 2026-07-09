@@ -887,11 +887,11 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ふしょくガス": MoveData(
         type="どく",
         category="status",
-        pp=40,
+        pp=20,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                ha.ふしょくガス_remove_item,
+                hs.ふしょくガス_remove_item,
             )
         }
     ),

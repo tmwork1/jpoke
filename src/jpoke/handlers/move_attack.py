@@ -2805,12 +2805,6 @@ def ふくろだたき_hit_count(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=max(1, count))
 
 
-def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふしょくガスのアイテム除去効果。"""
-    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
-    return HandlerReturn(value=value)
-
-
 def ふぶき_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふぶき: ゆき状態の時は必中になる補正。
     防御側がばんのうがさを持つ場合や、エアロック・ノーてんきで天候が無効化されている場合は
