@@ -753,8 +753,36 @@ def test_みずびたし_すでにみずタイプのみなら失敗():
     assert not defender.has_volatile("みずびたし")
 
 
-def test_みずびたし_テラスタル中はタイプが変わらない():
-    """みずびたし: テラスタル中の相手には volatile が付与されてもタイプが変わらない"""
+def test_みずびたし_アルセウスには無効():
+    """みずびたし: アルセウスには持ち物の有無に関わらず無効"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("アルセウス")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("みずびたし")
+    assert defender.types == ["ノーマル"]
+
+
+def test_みずびたし_シルヴァディには無効():
+    """みずびたし: シルヴァディには持ち物の有無に関わらず無効"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
+        team1=[Pokemon("シルヴァディ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("みずびたし")
+    assert defender.types == ["ノーマル"]
+
+
+def test_みずびたし_テラスタル中の相手には失敗する():
+    """みずびたし: テラスタルしている相手には失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["みずびたし"])],
         team1=[Pokemon("カビゴン", tera_type="ほのお")],
@@ -766,8 +794,8 @@ def test_みずびたし_テラスタル中はタイプが変わらない():
     assert defender.active_tera_type == "ほのお"
     t.run_move(battle, 0)
 
-    # volatile は付与されるが、タイプはテラスタルタイプが優先される
-    assert defender.has_volatile("みずびたし")
+    # 技自体が失敗し、volatile は付与されない
+    assert not defender.has_volatile("みずびたし")
     assert defender.types == ["ほのお"]
 
 

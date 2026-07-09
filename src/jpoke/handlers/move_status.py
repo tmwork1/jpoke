@@ -2445,8 +2445,14 @@ def みずびたし_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def みずびたし_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """みずびたしの使用条件チェック: 相手がすでにみずタイプのみなら失敗する。"""
-    if ctx.defender.types == ["みず"]:
+    """みずびたしの使用条件チェック: 相手がすでにみずタイプのみ、テラスタル中、
+    またはアルセウス・シルヴァディの場合は失敗する。"""
+    defender = ctx.defender
+    if (
+        defender.types == ["みず"]
+        or defender.terastallized
+        or defender.name in ("アルセウス", "シルヴァディ")
+    ):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="みずびたし")
