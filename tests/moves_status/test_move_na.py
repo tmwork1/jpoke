@@ -426,6 +426,26 @@ def test_なやみのタネ_失敗条件(d_ability):
     assert defender.ability.name == d_ability
 
 
+@pytest.mark.parametrize("d_ability", ["なまけ", "ふみん"])
+def test_なやみのタネ_かたやぶりでもなまけ・ふみんの相手には失敗する(d_ability):
+    """なやみのタネ: なまけ・ふみんは上書きできない特性のため、使用者がかたやぶりでも失敗する
+
+    ふみんはmold_breaker_ignorableフラグを持ち技中は特性の効果自体が無効化されるが、
+    「相手の特性がすでにふみん/なまけか」の判定は特性の有効/無効状態に関わらない
+    元の特性名（base_name）で行われるべきであり、かたやぶりでは無視できない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なやみのタネ"])],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は変化しない
+    assert defender.ability.base_name == d_ability
+
+
 def test_なやみのタネ_相手の特性がふみんに変わる():
     """なやみのタネ: 使用すると相手の特性がふみんに変わる"""
     battle = t.start_battle(
@@ -437,6 +457,21 @@ def test_なやみのタネ_相手の特性がふみんに変わる():
     t.run_move(battle, 0)
 
     assert defender.ability.name == "ふみん"
+
+
+def test_なやみのタネ_すでにねむり状態の相手に使うと即座に回復する():
+    """なやみのタネ: すでにねむり状態の相手の特性をふみんに変えると、ねむり状態は回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なやみのタネ"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+        ailment1=("ねむり", 3),
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.ability.name == "ふみん"
+    assert not defender.ailment.is_active
 
 
 def test_なりきり_いえきで無効化された相手の特性はコピーすると空特性になる():

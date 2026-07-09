@@ -2729,6 +2729,21 @@ def ふとうのけん_boost_A(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
+def ふみん_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふみん特性: 特性が有効化された時点ですでにねむり状態なら即座に回復する。
+
+    なやみのタネ・なかまづくり等で特性がふみんに書き換わった場合や、
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合、
+    メガシンカで特性がふみんに変わった場合などに発動する。
+    """
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=value)
+    if mon.ailment.is_sleep and battle.ailment_manager.remove(mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ふみん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
