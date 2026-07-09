@@ -1423,6 +1423,44 @@ def つるぎのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 2})
 
 
+def テクスチャー_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テクスチャーの失敗チェック。
+
+    - 自分がテラスタルしているときは失敗する。
+    - 自分が覚えている技のうち一番上の技（moves[0]）のタイプが、自分の現在のタイプ
+      （added_types含む）のいずれかと同じ場合は失敗する。第六世代以降の仕様であり、
+      次の技へのフォールバックは行わない。
+    """
+    attacker = ctx.attacker
+    if attacker.terastallized:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_テラスタル")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    top_type = attacker.moves[0].data.type
+    if top_type in attacker.types:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_タイプ同じ")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def テクスチャー_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テクスチャーの効果: 自分が覚えている技のうち一番上の技と同じタイプに
+    自分のタイプを変更する（単一タイプになる）。
+
+    タイプ変更後は、もりののろい・ハロウィンによる追加タイプ（added_types）はリセットされる。
+    """
+    attacker = ctx.attacker
+    top_type = attacker.moves[0].data.type
+    attacker.move_override_types = [top_type]
+    attacker.added_types = []
+    return HandlerReturn(value=value)
+
+
 def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
 
