@@ -997,7 +997,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ふるいたてる": MoveData(
         type="ノーマル",
         category="status",
-        pp=30,
+        pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ふるいたてる_modify_attacker_stats,
