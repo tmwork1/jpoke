@@ -1,6 +1,5 @@
 """変化技ハンドラの単体テスト（ふぁ行）。"""
 
-
 from jpoke import Pokemon
 from .. import test_utils as t
 
@@ -100,6 +99,20 @@ def test_フラワーヒール_相手のHPを半分回復する():
     assert defender.hp == 1 + int(defender.max_hp * 1 / 2)
 
 
+def test_ふるいたてる_いたずらごころ持ちがあくタイプ相手でも成功する():
+    """ふるいたてる: 自己対象の変化技のため、いたずらごころのあくタイプ無効化を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いたずらごころ", move_names=["ふるいたてる"])],
+        team1=[Pokemon("ヘルガー")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied is True
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 1
+
+
 def test_ふるいたてる_こうげきが上限でもとくこうは上がる():
     """ふるいたてる: こうげきがすでに+6でも、とくこうは上昇する"""
     battle = t.start_battle(
@@ -123,20 +136,6 @@ def test_ふるいたてる_こうげきとくこうが上がる():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 1
-    assert attacker.rank["spa"] == 1
-
-
-def test_ふるいたてる_いたずらごころ持ちがあくタイプ相手でも成功する():
-    """ふるいたてる: 自己対象の変化技のため、いたずらごころのあくタイプ無効化を受けない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="いたずらごころ", move_names=["ふるいたてる"])],
-        team1=[Pokemon("ヘルガー")],
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert battle.move_executor.move_applied is True
     assert attacker.rank["atk"] == 1
     assert attacker.rank["spa"] == 1
 
