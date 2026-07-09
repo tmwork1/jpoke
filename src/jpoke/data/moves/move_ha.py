@@ -258,13 +258,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "はねやすめ": MoveData(
         type="ひこう",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
         handlers={
-            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
-                hs.はねやすめ_check,
-                subject_spec="attacker:self",
-            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.はねやすめ_heal_and_remove_flying,
                 subject_spec="attacker:self",

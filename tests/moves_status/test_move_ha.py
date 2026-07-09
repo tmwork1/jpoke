@@ -261,6 +261,42 @@ def test_はねやすめ_交代後にremoved_typesがリセットされる():
     assert not mon.has_volatile("はねやすめ")
 
 
+def test_はねやすめ_まもるで防がれない():
+    """はねやすめ: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ムクホーク", move_names=["はねやすめ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    mon = battle.actives[0]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+
+    assert mon.hp > hp_before
+    assert mon.has_volatile("はねやすめ")
+
+
+def test_はねやすめ_マジックコートで跳ね返されない():
+    """はねやすめ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ムクホーク", move_names=["はねやすめ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    battle.modify_hp(mon, v=-(mon.max_hp // 2))
+    hp_before = mon.hp
+    foe_hp_before = foe.hp
+
+    t.run_move(battle, 0)
+
+    assert mon.hp > hp_before
+    assert foe.hp == foe_hp_before
+
+
 @pytest.mark.parametrize(
     "atk_init,def_init,atk_exp,def_exp",
     [
