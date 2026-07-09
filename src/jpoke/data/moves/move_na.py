@@ -57,7 +57,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "なかまづくり": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
