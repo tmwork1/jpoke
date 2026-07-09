@@ -252,6 +252,23 @@ def test_からをやぶる_Bが最低でも他のランクは上昇する():
     assert attacker.rank["spe"] == 2
 
 
+def test_からをやぶる_AとCとSが最高でもBとDは低下する():
+    """からをやぶる: こうげき・とくこう・すばやさがすでに+6でもぼうぎょ・とくぼうの低下は通常通り発生する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["からをやぶる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"atk": 6, "spa": 6, "spe": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["spa"] == 6
+    assert attacker.rank["spe"] == 6
+    assert attacker.rank["def"] == -1
+    assert attacker.rank["spd"] == -1
+
+
 def test_からをやぶる_BとDが下がりAとCとSが上がる():
     """からをやぶる: ぼうぎょ・とくぼうが1段階ずつ下がり、こうげき・とくこう・すばやさが2段階ずつ上がる"""
     battle = t.start_battle(
