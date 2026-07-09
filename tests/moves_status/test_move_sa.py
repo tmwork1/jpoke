@@ -599,6 +599,34 @@ def test_じばそうさ_プラス以外の特性では失敗する():
     assert attacker.rank["spd"] == 0
 
 
+def test_じばそうさ_相手がちくでんでも無効化されない():
+    """じばそうさ: 自分自身が対象の技のため、相手のちくでん等でんき技吸収特性に影響されず発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じばそうさ"], ability_name="プラス")],
+        team1=[Pokemon("チョンチー", ability_name="ちくでん")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spd"] == 1
+
+
+def test_じばそうさ_相手がみがわり状態でも効果がある():
+    """じばそうさ: 自分自身が対象の技のため、相手のみがわり状態に影響されず発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じばそうさ"], ability_name="プラス")],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spd"] == 1
+
+
 def test_じんつうりき_ひるみが発動する():
     """じんつうりき: 10%でひるみを付与する。"""
     battle = t.start_battle(

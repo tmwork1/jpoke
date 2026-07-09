@@ -738,6 +738,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         type="でんき",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.じばそうさ_can_apply,
