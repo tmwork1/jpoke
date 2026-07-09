@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from .. import test_utils as t
 
 
@@ -457,6 +458,11 @@ def test_つぶらなひとみ_相手のこうげき1段階下がる():
     assert defender.rank["atk"] == -1
 
 
+def test_つぼをつく_PPは20():
+    """つぼをつく: チャンピオンズでのPPは20（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["つぼをつく"].pp == 20
+
+
 def test_つぼをつく_選ばれない能力のランクは変化しない():
     """つぼをつく: ランダムで選ばれた1種類以外の能力ランクは変化しない"""
     battle = t.start_battle(
@@ -474,6 +480,70 @@ def test_つぼをつく_選ばれない能力のランクは変化しない():
     assert attacker.rank["spe"] == 0
     assert attacker.rank["accuracy"] == 0
     assert attacker.rank["evasion"] == 0
+
+
+def test_つぼをつく_最大の能力は候補から除外される():
+    """つぼをつく: すでに+6の能力はランダム選択の候補から除外される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 6
+
+    def choice(seq):
+        assert "atk" not in seq
+        return seq[0]
+
+    battle.random.choice = choice
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+
+
+def test_つぼをつく_マジックコートで跳ね返されない():
+    """つぼをつく: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    battle.random.choice = lambda seq: "def"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+    assert defender.rank["def"] == 0
+
+
+def test_つぼをつく_まもるで防がれない():
+    """つぼをつく: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    battle.random.choice = lambda seq: "def"
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+
+
+def test_つぼをつく_全ての能力が最大なら失敗する():
+    """つぼをつく: 対象の全ての能力が最大まで上がっている場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つぼをつく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    for stat in ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]:
+        attacker.rank[stat] = 6
+
+    t.run_move(battle, 0)
+
+    for stat in ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]:
+        assert attacker.rank[stat] == 6
 
 
 def test_つららおとし_ひるみが発動する():
