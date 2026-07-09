@@ -534,8 +534,12 @@ MOVES_SA: dict[MoveName, MoveData] = {
         type="こおり",
         category="status",
         pp=30,
-        target="field",
-        handlers={},  # 追加効果なし
+        target="own_side",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.しろいきり_set_side_field,
+            ),
+        },
     ),
     "しんくうは": MoveData(
         type="かくとう",
