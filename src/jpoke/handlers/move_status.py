@@ -2526,9 +2526,12 @@ def ミルクのみ_self_heal(battle: Battle, ctx: AttackContext, value: Any) ->
 
 
 def みをけずる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """みをけずるの効果: こうげき・とくこう・すばやさを2段階ずつ上げ、HPを最大HPの半分消費する。"""
+    """みをけずるの効果: こうげき・とくこう・すばやさを2段階ずつ上げる。
+    いずれかのランクが実際に変化した場合のみ、最大HPの半分（切り捨て）を消費する。
+    3ランクすべてが上限で変化しなかった場合はHPを消費せず、技自体も失敗扱いになる。"""
     result = modify_attacker_stats(battle, ctx, value, stats={"atk": 2, "spa": 2, "spe": 2})
-    battle.modify_hp(ctx.attacker, r=-0.5)
+    if result.value:
+        battle.modify_hp(ctx.attacker, r=-0.5)
     return result
 
 
