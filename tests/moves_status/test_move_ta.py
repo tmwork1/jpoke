@@ -36,6 +36,37 @@ def test_たくわえる_カウント3で失敗する():
     assert attacker.volatiles["たくわえる"].count == 3
 
 
+def test_たくわえる_マジックコートで跳ね返されない():
+    """たくわえる: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("たくわえる")
+    assert attacker.volatiles["たくわえる"].count == 1
+    assert not defender.has_volatile("たくわえる")
+
+
+def test_たくわえる_まもるで防がれない():
+    """たくわえる: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たくわえる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("たくわえる")
+    assert attacker.volatiles["たくわえる"].count == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spd"] == 1
+
+
 def test_たてこもる_ぼうぎょ2段階上がる():
     """たてこもる: 使用すると自分のぼうぎょランクが2段階上がる"""
     battle = t.start_battle(
