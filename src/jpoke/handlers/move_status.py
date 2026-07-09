@@ -19,12 +19,14 @@ from jpoke.utils.math import round_half_down
 from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
+    from jpoke.model import Pokemon
 
-from jpoke.types import Stat, Type
+from jpoke.types import MoveName, Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core.event_logger import FailureLogPayload, ItemPayload, StatChangePayload
+from jpoke.data import TYPE_MODIFIER, TYPES
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
 # docs/spec/volatiles/じゅうでん.md: じゅうでんはバトンタッチで引き継がれない
@@ -1400,6 +1402,81 @@ def つめとぎ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value
 
 def つるぎのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 2})
+
+
+# テクスチャー2: 内部的な判定タイプがゲーム内バグにより実際の技タイプと異なる技。
+# フリーズドライ・フライングプレス・サウザンアローは技の効果（水4倍弱点付与・
+# ひこう複合弱点付与）を考慮せず、それぞれ固定のタイプとして扱われる。
+テクスチャー2_判定タイプ上書き: dict[MoveName, Type] = {
+    "フリーズドライ": "みず",
+    "フライングプレス": "むし",
+    "サウザンアロー": "ひこう",
+}
+
+
+def テクスチャー2_取得_変更候補タイプ(attacker: Pokemon, defender: Pokemon) -> list[Type]:
+    """テクスチャー2で変更可能なタイプ（相手の技を半減か無効にでき、
+    かつ自分が現在持っていないタイプ）の一覧を返す。"""
+    if defender.last_move_type is None:
+        return []
+    move_type = テクスチャー2_判定タイプ上書き.get(
+        cast(MoveName, defender.last_move_name), defender.last_move_type
+    )
+    type_chart = TYPE_MODIFIER.get(move_type, {})
+    current_types = set(attacker.types)
+    return [
+        t for t in TYPES
+        if t not in ("", "ステラ")
+        and type_chart.get(t, 1.0) < 1.0
+        and t not in current_types
+    ]
+
+
+def テクスチャー2_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テクスチャー2の効果: 自分のタイプを、相手が直前に使った技を半減か無効にする
+    タイプ（現在持っていないもの）にランダムに変更する。
+
+    候補が複数ある場合はランダムに1つ選ばれる。タイプを2つ持つポケモンが使った場合でも、
+    変更後のタイプは1つだけになる。変更後は、もりののろい・ハロウィンによる追加タイプ効果は
+    リセットされる（ミラータイプと同仕様）。
+    """
+    candidates = テクスチャー2_取得_変更候補タイプ(ctx.attacker, ctx.defender)
+    chosen = battle.random.choice(candidates)
+    ctx.attacker.move_override_types = [chosen]
+    ctx.attacker.added_types = []
+    return HandlerReturn(value=value)
+
+
+def テクスチャー2_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テクスチャー2の失敗条件を判定する。
+
+    - 自分がテラスタル中の場合は失敗する。
+    - 相手が場に出てからまだ技を使用していない場合は失敗する。
+    - 相手の技タイプを半減か無効にできるタイプのうち、自分が現在持っていないものが
+      存在しない場合は失敗する（わるあがき・ステラタイプ技等、抵抗できるタイプが
+      存在しない技を含む）。
+    """
+    attacker = ctx.attacker
+    defender = ctx.defender
+    if attacker.terastallized:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_テラスタル中"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    if defender.last_move_type is None:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_相手未行動"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    if not テクスチャー2_取得_変更候補タイプ(attacker, defender):
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_変更先タイプなし"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
 
 
 def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

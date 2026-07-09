@@ -725,6 +725,172 @@ def test_つるぎのまい_こうげき2段階上がる():
     assert attacker.rank["atk"] == 2
 
 
+def test_テクスチャー２_PPは30():
+    """テクスチャー２: move_list.txtに記載がないため、原作準拠のPP30を維持する。"""
+    assert MOVES["テクスチャー２"].pp == 30
+
+
+def test_テクスチャー２_フリーズドライに対してみずタイプとして判定される():
+    """テクスチャー２: フリーズドライは実際の技タイプ（こおり）ではなく、
+    みずタイプとして判定される（原作のバグ仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポリゴン２", move_names=["テクスチャー２"])],
+        team1=[Pokemon("カビゴン", move_names=["フリーズドライ"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 1)
+    assert defender.last_move_type == "こおり"
+
+    battle.random.choice = lambda seq: seq[0]
+    t.run_move(battle, 0)
+
+    # こおりタイプの抵抗候補（ほのお・みず・こおり・はがね）ではなく、
+    # みずタイプの抵抗候補（みず・くさ・ドラゴン）の先頭が選ばれる
+    assert attacker.types == ["みず"]
+
+
+def test_テクスチャー２_まもるを無視して成立する():
+    """テクスチャー２: 相手のまもる状態を無視して発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポリゴン２", move_names=["テクスチャー２"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+        volatile1={"まもる": 1},
+    )
+    attacker, defender = battle.actives
+    # まもる状態のためかえんほうしゃ自体は直接発動できないので、直近使用技を直接設定して検証する
+    defender.last_move_type = "ほのお"
+    defender.last_move_name = "かえんほうしゃ"
+    battle.random.choice = lambda seq: seq[0]
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied is True
+    assert attacker.types == ["ほのお"]
+
+
+def test_テクスチャー２_もりののろいで追加されたタイプがリセットされる():
+    """テクスチャー２: もりののろいで追加されたタイプは、タイプ変更成功時にリセットされる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["テクスチャー２"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        volatile0={"もりののろい": 0},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert "くさ" in attacker.types
+    t.run_move(battle, 1)
+    battle.random.choice = lambda seq: seq[0]
+    t.run_move(battle, 0)
+
+    assert attacker.types == ["ほのお"]
+
+
+def test_テクスチャー２_交代でタイプが元に戻る():
+    """テクスチャー２: 交代すると変更したタイプが元に戻る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポリゴン２", move_names=["テクスチャー２"]), Pokemon("コイキング")],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 1)
+    battle.random.choice = lambda seq: seq[0]
+    t.run_move(battle, 0)
+    assert attacker.types == ["ほのお"]
+
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+    assert attacker.types == ["ノーマル"]
+
+
+def test_テクスチャー２_変更候補タイプが存在しない場合失敗する():
+    """テクスチャー２: 相手の技を半減できるタイプをすべて現在持っている場合は失敗する。"""
+    # ゴースト技の抵抗タイプはノーマル・あくの2つのみ。ノーマル・あく複合のタチフサグマは
+    # 候補が0件になるため失敗する（うらみはゴーストタイプの変化技のためタイプ相性による
+    # 無効化を挟まず直近使用技として記録される）。
+    battle = t.start_battle(
+        team0=[Pokemon("タチフサグマ", move_names=["テクスチャー２"])],
+        team1=[Pokemon("ゲンガー", move_names=["うらみ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    before_types = list(attacker.types)
+    t.run_move(battle, 1)
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied is False
+    assert attacker.types == before_types
+
+
+def test_テクスチャー２_現在持っているタイプは候補から除外される():
+    """テクスチャー２: すでに持っているタイプは変更候補から除外される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["テクスチャー２"])],  # ほのお・ひこう
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 1)
+
+    def choice(seq):
+        # ほのお技の抵抗候補は ほのお・みず・いわ・ドラゴン。
+        # 現在のタイプ（ほのお・ひこう）のうち「ほのお」は候補から除外される
+        assert "ほのお" not in seq
+        return seq[0]
+
+    battle.random.choice = choice
+    t.run_move(battle, 0)
+
+    assert attacker.types == ["みず"]
+
+
+def test_テクスチャー２_相手が場に出てから技を使っていない場合失敗する():
+    """テクスチャー２: 相手が場に出てからまだ技を使用していない場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポリゴン２", move_names=["テクスチャー２"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied is False
+    assert attacker.types == ["ノーマル"]
+
+
+def test_テクスチャー２_相手の技タイプを半減できるタイプに変わる():
+    """テクスチャー２: 相手が直前に使った技のタイプを半減できるタイプに変わる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポリゴン２", move_names=["テクスチャー２"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 1)
+    battle.random.choice = lambda seq: seq[0]
+    t.run_move(battle, 0)
+
+    # ほのお技を半減できるタイプ（ほのお・みず・いわ・ドラゴン）のいずれかになる
+    assert attacker.types == ["ほのお"]
+
+
+def test_テクスチャー２_自分がテラスタル中の場合失敗する():
+    """テクスチャー２: 自分がテラスタル中の場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポリゴン２", move_names=["テクスチャー２"], tera_type="ほのお")],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 1)
+    attacker.terastallized = True
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied is False
+    assert attacker.types == ["ほのお"]
+
+
 def test_てっぺき_すでに最大なら失敗する():
     """てっぺき: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
     battle = t.start_battle(
