@@ -1319,7 +1319,7 @@ MOVES_A: dict[MoveName, MoveData] = {
                 priority=30,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.オーロラベール_apply,
+                hs.オーロラベール_set_side_field,
             ),
         }
     ),

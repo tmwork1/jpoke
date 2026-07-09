@@ -186,6 +186,21 @@ def test_オーロラベール_リフレクターとは重複しない():
     assert battle.damage_calculator.damage_modifier == 2048
 
 
+def test_オーロラベール_こんらん自傷ダメージは軽減されない():
+    """オーロラベール: こんらんの自傷ダメージは攻撃技扱いではないため軽減されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"オーロラベール": 5},
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
 def test_グラスフィールド_かいふくふうじで回復しない():
     """グラスフィールド: かいふくふうじ状態のポケモンはターン終了時に回復しない"""
     battle = t.start_battle(
