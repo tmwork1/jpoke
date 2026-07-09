@@ -1251,6 +1251,21 @@ def test_どくびし_相手陣営に設置される():
     assert side.fields["どくびし"].is_active
 
 
+def test_どくびし_マジックコートで跳ね返り使用者側に設置される():
+    """どくびし: マジックコートで跳ね返されると、使用者側の場にどくびしが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくびし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+
+    attacker_side = battle.get_side(battle.actives[0])
+    defender_side = battle.get_side(battle.actives[1])
+    assert attacker_side.fields["どくびし"].is_active
+    assert not defender_side.fields["どくびし"].is_active
+
+
 def test_ドラゴンダイブ_ひるみが発動する():
     """ドラゴンダイブ: 20%でひるみを付与する。"""
     battle = t.start_battle(
