@@ -1310,10 +1310,13 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "へんしん": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,  # champions基準（docs/champions/move_list.txt）。旧値10はSV本家基準の移行漏れ。
+        # accuracy省略=必中。潜伏中の相手への失敗はHIDDEN_MOVE_ALLOWED_MOVES側で処理される。
         flags={"non_encore"},
-        handlers={},  # 実装保留
+        # 実装保留: 相手の種族・実数値ステータス・特性・技をまるごとコピーし退場時に
+        # 完全復元する大規模な変身機構（特性かわりものと共有基盤）が必要なため対応を見送る。
+        # 詳細は docs/plan/moves/へんしん.md 参照（前例: スケッチ・ゆびをふる）。
+        handlers={},
     ),
     "ベノムショック": MoveData(
         type="どく",
