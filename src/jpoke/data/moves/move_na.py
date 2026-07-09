@@ -501,7 +501,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "のみこむ": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
