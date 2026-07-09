@@ -949,6 +949,17 @@ def test_すてゼリフ_控えがいない場合はランク低下のみ():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_すなあらし_天気がすなあらしになる():
+    """すなあらし: 使用後に天気がすなあらしになる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すなあらし"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.weather.name == "すなあらし"
+    assert battle.weather.count == 5
+
+
 def test_スピードスワップ_すばやさ実数値が入れ替わる():
     """スピードスワップ: 使用者と相手のすばやさ実数値が入れ替わる"""
     battle = t.start_battle(
