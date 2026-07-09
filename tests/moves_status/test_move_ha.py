@@ -1570,6 +1570,18 @@ def test_ふきとばし_相手が強制交代する():
     assert battle.actives[1] is not defender_before
 
 
+def test_ほえる_きゅうばんで無効化される():
+    """ほえる: 相手が特性きゅうばんの場合、強制交代が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
+        team1=[Pokemon("ピカチュウ", ability_name="きゅうばん"), Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender
+
+
 def test_ほえる_ねをはる状態の相手には失敗する():
     """ほえる: 相手がねをはる状態の場合、強制交代が無効化される"""
     battle = t.start_battle(
@@ -1582,6 +1594,45 @@ def test_ほえる_ねをはる状態の相手には失敗する():
 
     # ねをはる状態なので交代が発生しない
     assert battle.actives[1] is defender_before
+
+
+def test_ほえる_まもるを貫通する():
+    """ほえる: まもる状態の相手にも強制交代が発生する（まもるを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"まもる": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
+def test_ほえる_マジックコートで跳ね返り使用者が交代する():
+    """ほえる: マジックコートで跳ね返されると、使用者側が強制的に交代させられる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほえる"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker_before = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert battle.actives[0] is not attacker_before
+
+
+def test_ほえる_みがわりを貫通する():
+    """ほえる: みがわり状態の相手にも強制交代が発生する（音技のためみがわりを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"みがわり": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
 
 
 def test_ほえる_控えポケモンがいない場合は失敗する():
