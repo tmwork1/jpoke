@@ -1240,6 +1240,54 @@ def test_フェアリーロック_使用者側が交代できない():
     assert not t.can_switch(battle, 0)
 
 
+def test_ふういん_すでにふういん状態なら失敗する():
+    """ふういん: すでにふういん状態の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふういん"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"ふういん": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+
+
+def test_ふういん_使用者がふういん状態になる():
+    """ふういん: 使用すると自分がふういん状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふういん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.has_volatile("ふういん")
+
+
+def test_ふういん_まもるで防がれない():
+    """ふういん: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふういん"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.has_volatile("ふういん")
+
+
+def test_ふういん_マジックコートで跳ね返されない():
+    """ふういん: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふういん"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert mon.has_volatile("ふういん")
+    assert not foe.has_volatile("ふういん")
+
+
 def test_ふみつけ_ひるみが発動する():
     """ふみつけ: 30%でひるみを付与する。"""
     battle = t.start_battle(
