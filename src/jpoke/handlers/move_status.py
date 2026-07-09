@@ -128,6 +128,7 @@ def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
 
 
 def アクアリング_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """アクアリングの効果: 自分をアクアリング状態にする。"""
     return apply_volatile_to_attacker(battle, ctx, value, volatile="アクアリング")
 
 
