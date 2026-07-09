@@ -1438,6 +1438,76 @@ def test_せいちょう_通常時こうげきととくこう1段階上がる():
     assert attacker.rank["spa"] == 1
 
 
+def test_せいちょう_まもるで防がれない():
+    """せいちょう: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["せいちょう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 1
+
+
+def test_せいちょう_マジックコートで跳ね返されない():
+    """せいちょう: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["せいちょう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 1
+
+
+def test_せいちょう_ばんのうがさで晴れでも1段階のみ():
+    """せいちょう: 使用者がばんのうがさを持つ場合、にほんばれ状態でも1段階のみ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["せいちょう"], item_name="ばんのうがさ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 1
+
+
+def test_せいちょう_ノーてんきで晴れでも1段階のみ():
+    """せいちょう: 場にノーてんき持ちがいる場合、にほんばれ状態でも1段階のみ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["せいちょう"])],
+        team1=[Pokemon("カビゴン", ability_name="ノーてんき")],
+        weather=("はれ", 5),
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 1
+
+
+def test_せいちょう_たんじゅんで晴れ中4段階上がる():
+    """せいちょう: 使用者がたんじゅんの場合、にほんばれ状態ではランク変化量が2倍の4段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="たんじゅん", move_names=["せいちょう"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 4
+    assert attacker.rank["spa"] == 4
+
+
 def test_そうでん_そうでん状態が相手に付与される():
     """そうでん: 使用すると相手にそうでん揮発状態が付与される"""
     battle = t.start_battle(

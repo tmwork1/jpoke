@@ -1169,9 +1169,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
         }
     ),
     "せいちょう": MoveData(
-        type="ノーマル",
+        type="くさ",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.せいちょう_modify_attacker_stats,
