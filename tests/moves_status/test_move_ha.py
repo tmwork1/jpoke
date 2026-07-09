@@ -1469,6 +1469,107 @@ def test_へびにらみ_まひ付与():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_ふきとばし_かぜのりで無効化される():
+    """ふきとばし: 相手が特性かぜのりの場合、無効化されてこうげきが1段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("ピカチュウ", ability_name="かぜのり"), Pokemon("カビゴン")],
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender_before
+    assert defender_before.rank["atk"] == 1
+
+
+def test_ふきとばし_きゅうばんで無効化される():
+    """ふきとばし: 相手が特性きゅうばんの場合、強制交代が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("ピカチュウ", ability_name="きゅうばん"), Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender
+
+
+def test_ふきとばし_ねをはる状態の相手には失敗する():
+    """ふきとばし: 相手がねをはる状態の場合、強制交代が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"ねをはる": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender_before
+
+
+def test_ふきとばし_まもるを貫通する():
+    """ふきとばし: まもる状態の相手にも強制交代が発生する（まもるを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"まもる": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
+def test_ふきとばし_マジックコートで跳ね返り使用者が交代する():
+    """ふきとばし: マジックコートで跳ね返されると、使用者側が強制的に交代させられる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker_before = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert battle.actives[0] is not attacker_before
+
+
+def test_ふきとばし_みがわりを貫通する():
+    """ふきとばし: みがわり状態の相手にも強制交代が発生する（みがわりを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"みがわり": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
+def test_ふきとばし_控えポケモンがいない場合は失敗する():
+    """ふきとばし: 相手に控えポケモンがいない場合は技が失敗し、交代は発生しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender_before
+
+
+def test_ふきとばし_相手が強制交代する():
+    """ふきとばし: 相手に控えポケモンがいる場合、相手ポケモンがランダムに交代する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
 def test_ほえる_ねをはる状態の相手には失敗する():
     """ほえる: 相手がねをはる状態の場合、強制交代が無効化される"""
     battle = t.start_battle(

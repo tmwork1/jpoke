@@ -86,6 +86,23 @@ def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRetu
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
+def on_blow_check_switch_target(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """吹き飛ばし技の失敗判定を行う。
+
+    相手に交代できる控えポケモン（生存しているベンチポケモン）がいない場合、
+    技自体が失敗する（docs/spec/turn.md の Event.ON_APPLY_MOVE priority=100
+    「ほえる・ふきとばし: 交代不可・野生」に対応）。
+    """
+    player = battle.get_player(ctx.defender)
+    if not get_forced_switch_commands(battle, player):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="交代不可"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
 
