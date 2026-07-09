@@ -1713,23 +1713,28 @@ def ねむりごな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
 
 
 def ねむる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ねむるの効果: HP全回復・状態異常全回復・3ターンのねむり付与。
+    """ねむるの効果: 3ターンのねむり付与に成功した場合のみHPと状態異常を全回復する。
 
-    1. HP を最大HPまで回復する
-    2. 現在の状態異常を解除する
-    3. ねむり状態を付与する（count=3: Champions仕様固定）
+    さわぐ・特性（やるき・ふみん・スイートベール・きよめのしお・リミットシールド等）・
+    にほんばれ下のリーフガードなど、ON_BEFORE_APPLY_AILMENT で寝られないと判定される
+    ケースでは、状態異常の上書き付与自体が失敗する。その場合は技全体を失敗させ、
+    HPも回復しない（「ステータス無効化」時にHPだけ回復してしまう不具合を避けるため、
+    ねむり付与を先に試行してから回復するという順序にしている）。
 
     Notes:
         Champions仕様: ねむるのカウントは3固定（Wiki「ねむるによってねむり状態になったときは
         カウントは3で固定」）。説明文「技ねむるでは3度目まで回復しない」と一致。
     """
     mon = ctx.attacker
-    # HP全回復
+    # ねむり付与を先に試行（count=3固定、既存の状態異常は上書き）
+    if not battle.ailment_manager.apply(mon, "ねむり", count=3, source=mon, overwrite=True):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ねむる"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    # ねむり付与に成功した場合のみHP全回復
     battle.modify_hp(mon, v=mon.max_hp - mon.hp)
-    # 状態異常を解除（上書きフラグで強制解除）
-    battle.ailment_manager.remove(mon)
-    # ねむり付与（count=3: Champions仕様固定）
-    battle.ailment_manager.apply(mon, "ねむり", count=3, source=mon)
     return HandlerReturn(value=value)
 
 
@@ -1741,6 +1746,12 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     - すでにねむり状態
     - エレキフィールド下で接地している
     - ミストフィールド下で接地している
+    - さわぐ・さわがしい状態（場にさわぐ状態のポケモンがいる）
+
+    特性（やるき・ふみん・スイートベール・きよめのしお・リミットシールド等）や
+    にほんばれ下のリーフガードによる無効化は、ここでは判定せず ねむる_apply 内の
+    ailment_manager.apply（ON_BEFORE_APPLY_AILMENT）に委ねる
+    （かたやぶり等の無効化判定を含む正規の特性判定経路を再利用するため）。
     """
     mon = ctx.attacker
     if mon.hp == mon.max_hp or mon.has_ailment("ねむり"):
@@ -1767,6 +1778,13 @@ def ねむる_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ミストフィールド"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    # 場にさわぐ状態のポケモンがいるときのねむるは失敗する
+    if mon.has_volatile("さわぐ") or mon.has_volatile("さわがしい"):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="さわぐ"),
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

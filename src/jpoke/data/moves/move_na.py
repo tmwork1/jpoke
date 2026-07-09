@@ -437,7 +437,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねむる": MoveData(
         type="エスパー",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
