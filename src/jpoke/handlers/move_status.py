@@ -2354,8 +2354,15 @@ def まるくなる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def みかづきのいのり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """みかづきのいのり: 自分のHPを最大HPの1/4回復し、状態異常を治す。"""
+    """みかづきのいのり: 自分のHPを最大HPの1/4回復し、状態異常を治す。
+
+    HPが満タンかつ状態異常もない場合は失敗する（ジャングルヒールと同様の判定。
+    docs/spec/turn.md Event.ON_APPLY_MOVE「ジャングルヒール: HP満タン・状態異常無」参照）。
+    端数は切り捨て。
+    """
     mon = ctx.attacker
+    if mon.hp == mon.max_hp and not mon.ailment.is_active:
+        return HandlerReturn(value=False, stop_event=True)
     battle.modify_hp(mon, r=1 / 4)
     battle.ailment_manager.remove(mon)
     return HandlerReturn(value=value)
