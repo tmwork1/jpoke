@@ -4,6 +4,49 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_ねがいごと_かいふくふうじ状態では使用できない():
+    """ねがいごと: heal フラグを持つため、かいふくふうじ状態では使用（選択）できず失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねがいごと"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"かいふくふうじ": 3},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.action_success
+    assert not battle.get_side(mon).get("ねがいごと").is_active
+
+
+def test_ねがいごと_使用者の最大HPの半分を次のターン終了時に回復する():
+    """ねがいごと: 技を使用すると次のターン終了時に使用者の最大HPの半分（切り捨て）が回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねがいごと"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    max_hp = mon.max_hp
+    battle.modify_hp(mon, v=-(max_hp - 1))
+    hp_before = mon.hp
+
+    t.run_move(battle, 0)
+    field = battle.get_side(mon).get("ねがいごと")
+    assert field.is_active
+    assert field.heal == max_hp // 2
+
+    # 1ターン目（使用ターン）終了: まだ回復しない
+    t.end_turn(battle)
+    assert mon.hp == hp_before
+
+    # 2ターン目終了: 回復が発動しフィールドが解除される
+    t.end_turn(battle)
+    assert mon.hp == hp_before + max_hp // 2
+    assert not field.is_active
+
+
 def test_ねがいごと_重複設置は失敗する():
     """ねがいごと: すでに設置済みなら失敗する"""
     battle = t.start_battle(
