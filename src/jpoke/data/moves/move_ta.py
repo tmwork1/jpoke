@@ -835,9 +835,13 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "デコレーション": MoveData(
         type="フェアリー",
         category="status",
-        pp=15,
-        accuracy=100,
-        handlers={},  # 追加効果なし
+        pp=16,
+        flags={"unprotectable", "unreflectable"},
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.デコレーション_modify_defender_stats,
+            ),
+        }
     ),
     "デスウイング": MoveData(
         type="ひこう",

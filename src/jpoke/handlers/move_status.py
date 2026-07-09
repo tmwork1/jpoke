@@ -1610,6 +1610,11 @@ def でんじふゆう_check_can_use(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
+def デコレーション_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """デコレーションの効果: 相手のこうげき・とくこうを2段階ずつ上げる。"""
+    return modify_defender_stats(battle, ctx, value, stats={"atk": 2, "spa": 2})
+
+
 def とおせんぼう_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """とおせんぼうの効果: 相手をにげられない状態にする。"""
     return apply_volatile_to_defender(battle, ctx, value, volatile="にげられない")
