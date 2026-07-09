@@ -929,7 +929,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "とおぼえ": MoveData(
         type="ノーマル",
         category="status",
-        pp=40,
+        pp=20,
+        target="self",
         flags={"sound"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(

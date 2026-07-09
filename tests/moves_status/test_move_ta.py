@@ -865,6 +865,32 @@ def test_とおぼえ_こうげき1段階上がる():
     assert attacker.rank["atk"] == 1
 
 
+def test_とおぼえ_相手のまもる状態に影響されず成功する():
+    """とおぼえ: 自分が対象の技のため、相手のまもる状態に関係なく成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+
+
+def test_とおぼえ_マジックコートで跳ね返されない():
+    """とおぼえ: 自分が対象の技のため、相手のマジックコート状態でも跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+
+
 def test_とぐろをまく_1つでも上昇できれば成功():
     """とぐろをまく: こうげきが最大でも、ぼうぎょと命中率は上昇する"""
     battle = t.start_battle(
