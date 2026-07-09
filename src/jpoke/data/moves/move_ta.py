@@ -1273,7 +1273,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "どくガス": MoveData(
         type="どく",
         category="status",
-        pp=40,
+        pp=20,  # championsのPP圧縮則により導出（move_list.txtに単独項目なし）。Gen9本家は40
         accuracy=90,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(

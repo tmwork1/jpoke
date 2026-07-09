@@ -1037,6 +1037,12 @@ def test_とける_自分対象のためまもるで防がれない():
     assert attacker.rank["def"] == 2
 
 
+def test_どくガス_PPは20():
+    """どくガス: チャンピオンズでのPPは20（move_list.txtに単独項目はないが、PP圧縮則
+    〈SV基準PPが20以上の技は一律20に圧縮〉から導出。Gen9本家は40）。"""
+    assert MOVES["どくガス"].pp == 20
+
+
 def test_どくガス_どくタイプには無効():
     """どくガス: どくタイプの相手には効果がない"""
     battle = t.start_battle(
