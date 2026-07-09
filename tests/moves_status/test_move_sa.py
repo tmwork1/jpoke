@@ -1262,6 +1262,16 @@ def test_すなかけ_相手の命中率が1段階下がる():
     assert defender.rank["accuracy"] == -1
 
 
+def test_スピードスワップ_PPと必中フラグが正しい():
+    """スピードスワップ: PP=12（Championsの正）、accuracy=None（必中）、
+    unreflectable・bypass_substituteフラグを持つこと"""
+    move_data = MOVES["スピードスワップ"]
+    assert move_data.pp == 12
+    assert move_data.accuracy is None
+    assert "unreflectable" in move_data.flags
+    assert "bypass_substitute" in move_data.flags
+
+
 def test_スピードスワップ_すばやさ実数値が入れ替わる():
     """スピードスワップ: 使用者と相手のすばやさ実数値が入れ替わる"""
     battle = t.start_battle(
@@ -1276,6 +1286,65 @@ def test_スピードスワップ_すばやさ実数値が入れ替わる():
 
     t.run_move(battle, 0)
 
+    assert attacker.stats["spe"] == d_spd_before
+    assert defender.stats["spe"] == a_spd_before
+
+
+def test_スピードスワップ_マジックコートで跳ね返されない():
+    """スピードスワップ: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    a_spd_before = attacker.stats["spe"]
+    d_spd_before = defender.stats["spe"]
+
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、使用者側のすばやさが相手の値に変わる
+    assert attacker.stats["spe"] == d_spd_before
+    assert defender.stats["spe"] == a_spd_before
+
+
+def test_スピードスワップ_まもるで防がれる():
+    """スピードスワップ: まもる状態の相手には防がれ、すばやさは入れ替わらないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    a_spd_before = attacker.stats["spe"]
+    d_spd_before = defender.stats["spe"]
+
+    t.run_move(battle, 0)
+
+    assert attacker.stats["spe"] == a_spd_before
+    assert defender.stats["spe"] == d_spd_before
+
+
+def test_スピードスワップ_みがわり状態の相手にも効果が発動する():
+    """スピードスワップ: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    a_spd_before = attacker.stats["spe"]
+    d_spd_before = defender.stats["spe"]
+
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
     assert attacker.stats["spe"] == d_spd_before
     assert defender.stats["spe"] == a_spd_before
 
@@ -1337,6 +1406,24 @@ def test_スピードスワップ_双方すばやさ同値でも成功する():
     t.run_move(battle, 0)
 
     # 値は同じだが技は失敗していない（実数値は変化なし）
+    assert attacker.stats["spe"] == d_spd_before
+    assert defender.stats["spe"] == a_spd_before
+
+
+def test_スピードスワップ_相手の回避率が高くても必ず命中する():
+    """スピードスワップ: 必中技のため、相手の回避率ランクが高くても必ず命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スピードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    a_spd_before = attacker.stats["spe"]
+    d_spd_before = defender.stats["spe"]
+
+    t.run_move(battle, 0)
+
     assert attacker.stats["spe"] == d_spd_before
     assert defender.stats["spe"] == a_spd_before
 

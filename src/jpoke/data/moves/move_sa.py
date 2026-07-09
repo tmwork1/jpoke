@@ -1098,8 +1098,10 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "スピードスワップ": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,
+        accuracy=None,  # 必中
+        # マジックコートで跳ね返されず、みがわりを貫通する
+        flags={"unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.スピードスワップ_swap_speed,
