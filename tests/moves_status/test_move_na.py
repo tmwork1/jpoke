@@ -275,6 +275,50 @@ def test_なまける_まもるで防がれない():
     assert attacker.hp > 1
 
 
+def test_なみだめ_こうげきととくこうが1段階ずつ下がる():
+    """なみだめ: 使用すると相手のこうげき・とくこうがそれぞれ1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なみだめ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -1
+    assert defender.rank["spa"] == -1
+
+
+def test_なみだめ_まもる状態を無視してランクを下げる():
+    """なみだめ: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なみだめ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -1
+    assert defender.rank["spa"] == -1
+
+
+def test_なみだめ_みがわり状態の相手には防がれる():
+    """なみだめ: bypass_substituteフラグを持たないため、みがわり状態の相手には防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なみだめ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spa"] == 0
+
+
 def test_なやみのタネ_ふみん付与後はねむり系技が効かない():
     """なやみのタネ: ふみんに書き換えられた相手にはその後ねむり系技が効かない"""
     battle = t.start_battle(

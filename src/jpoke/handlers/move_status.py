@@ -1517,7 +1517,8 @@ def なまける_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def なみだめ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
+    """なみだめ: 相手のこうげき・とくこうをそれぞれ1段階下げる。"""
+    return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
 
 
 def なやみのタネ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
