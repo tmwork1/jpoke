@@ -375,6 +375,36 @@ def test_ちょうはつ_ちょうはつ状態を付与する():
     assert defender.has_volatile("ちょうはつ")
 
 
+def test_つきのひかり_マジックコートで跳ね返されない():
+    """つきのひかり: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つきのひかり"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+def test_つきのひかり_まもるで防がれない():
+    """つきのひかり: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つきのひかり"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp > 1
+
+
 def test_つきのひかり_まんたんなら失敗():
     """つきのひかり: HPが最大値のときは失敗する"""
     battle = t.start_battle(
@@ -389,12 +419,16 @@ def test_つきのひかり_まんたんなら失敗():
 
 
 @pytest.mark.parametrize("weather_arg,numerator,denominator", [
-    (None,          1, 2),  # 通常天候: 1/2 回復
-    (("あめ",  5), 1, 4),  # あめ: 1/4 回復
-    (("はれ",  5), 2, 3),  # はれ: 2/3 回復
+    (None,               1, 2),  # 通常天候: 1/2 回復
+    (("あめ",      5),  1, 4),  # あめ: 1/4 回復
+    (("おおあめ", 99),  1, 4),  # おおあめ: 1/4 回復
+    (("おおひでり", 99), 2, 3),  # おおひでり: 2/3 回復
+    (("すなあらし", 99), 1, 4),  # すなあらし: 1/4 回復
+    (("はれ",      5),  2, 3),  # はれ: 2/3 回復
+    (("ゆき",      5),  1, 4),  # ゆき: 1/4 回復
 ])
 def test_つきのひかり_天候別回復量(weather_arg, numerator, denominator):
-    """つきのひかり: 天候ごとに回復量が変わる（通常1/2, はれ2/3, あめ1/4）"""
+    """つきのひかり: 天候ごとに回復量が変わる（通常1/2, はれ/おおひでり2/3, それ以外1/4）"""
     kwargs = {}
     if weather_arg is not None:
         kwargs["weather"] = weather_arg

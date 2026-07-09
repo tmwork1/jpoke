@@ -471,7 +471,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つきのひかり": MoveData(
         type="フェアリー",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
