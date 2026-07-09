@@ -432,6 +432,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         accuracy=100,
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ちょうはつ_apply,
