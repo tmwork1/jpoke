@@ -31,12 +31,15 @@ from jpoke.core.event_logger import FailureLogPayload, ItemPayload, StatChangePa
 # docs/spec/volatiles/ちょうはつ.md: ちょうはつはバトンタッチで引き継がれない
 # （通常はちょうはつ状態の効果でバトンタッチ自体を使用できないため実質到達不能だが、
 # 原作Wikiの記載に合わせて明示的に除外している）
+# docs/spec/volatiles/ちいさくなる.md・docs/spec/volatiles/まるくなる.md:
+# ちいさくなる・まるくなるの揮発状態自体は第三世代以降バトンタッチで引き継がれない
+# （docs/wiki/moves/バトンタッチ.html「状態変化の引き継ぎ」表で第2世代のみ○、
+# 第3〜8世代は×。まるくなる・ちいさくなるで上がった防御・回避のランクは
+# 能力変化として別途引き継がれるため、揮発状態自体を対象外としても影響しない）
 _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "みがわり",
     "こんらん",
     "きゅうしょアップ",
-    "ちいさくなる",
-    "まるくなる",
     "アクアリング",
     "ねをはる",
     "やどりぎのタネ",

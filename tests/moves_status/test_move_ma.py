@@ -590,6 +590,49 @@ def test_まもる_まねっこでコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まるくなる_ぼうぎょが1段階上がりまるくなる状態を付与する():
+    """まるくなる: 自分のぼうぎょが1段階上がり、まるくなる状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まるくなる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+    assert attacker.has_volatile("まるくなる")
+
+
+def test_まるくなる_まもるで防がれない():
+    """まるくなる: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まるくなる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+    assert attacker.has_volatile("まるくなる")
+
+
+def test_まるくなる_マジックコートで跳ね返されない():
+    """まるくなる: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まるくなる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+    assert attacker.has_volatile("まるくなる")
+    assert defender.rank["def"] == 0
+    assert not defender.has_volatile("まるくなる")
+
+
 def test_みかづきのいのり_HPが4分の1回復する():
     """みかづきのいのり: 最大HPの1/4を回復する(小数点以下切り捨て)"""
     battle = t.start_battle(

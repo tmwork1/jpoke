@@ -190,6 +190,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=40,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.まるくなる_apply,
