@@ -175,8 +175,9 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "さきおくり": MoveData(
         type="あく",
         category="status",
-        pp=15,
-        handlers={},  # 追加効果なし
+        pp=16,
+        accuracy=100,
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "さばきのつぶて": MoveData(
         type="ノーマル",
