@@ -21,6 +21,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         type="かくとう",
         category="status",
         pp=5,
+        target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.はいすいのじん_can_apply,
