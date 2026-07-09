@@ -106,9 +106,14 @@ MOVES_KA: dict[MoveName, MoveData] = {
         target="self",
         flags={"protect"},
         handlers={
-            Event.ON_TRY_MOVE_2: h.MoveHandler(
-                hs.まもる系_連続使用失敗チェック,
-            ),
+            Event.ON_TRY_MOVE_2: [
+                h.MoveHandler(
+                    hs.まもる系_連続使用失敗チェック,
+                ),
+                h.MoveHandler(
+                    hs.かえんのまもり_check,
+                ),
+            ],
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かえんのまもり_apply,
             ),
