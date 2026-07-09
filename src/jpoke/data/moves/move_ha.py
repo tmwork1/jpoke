@@ -1378,12 +1378,18 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=-6,
-        flags={"sound"},
+        flags={"sound", "unprotectable"},
         handlers={
-            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
-                hs.on_blow_apply,
-                priority=30,
-            ),
+            Event.ON_BEFORE_APPLY_MOVE: [
+                h.MoveHandler(
+                    hs.on_blow_apply,
+                    priority=30,
+                ),
+                h.MoveHandler(
+                    hs.on_blow_check_switch_target,
+                    priority=100,
+                ),
+            ],
             Event.ON_STATUS_HIT: h.MoveHandler(hs.blow),
         }
     ),
