@@ -586,6 +586,58 @@ def test_じこあんじ_相手のランク変化を自分にコピーする():
     assert attacker.rank["evasion"] == 2
 
 
+def test_じこさいせい_最大HPの半分回復する():
+    """じこさいせい: 自分のHPを最大HPの1/2分回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこさいせい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + attacker.max_hp // 2
+
+
+def test_じこさいせい_まんたんなら失敗():
+    """じこさいせい: HPが最大値のときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこさいせい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+
+
+def test_じこさいせい_マジックコートで跳ね返されない():
+    """じこさいせい: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこさいせい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+def test_じこさいせい_まもるで防がれない():
+    """じこさいせい: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこさいせい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+
+
 @pytest.mark.parametrize(
     "ability_name",
     ["プラス", "マイナス"]
