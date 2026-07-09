@@ -984,11 +984,18 @@ def しんぴのまもり_set_side_field(battle: Battle, ctx: AttackContext, val
 def シンプルビーム_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """シンプルビームの失敗条件チェック。
 
-    対象の特性が protected フラグを持つ場合、
-    または対象の特性変更がとくせいガード等で防がれる場合は失敗する。
+    以下の場合は失敗する:
+    - 対象の特性が「なまけ」である（`なまけ` には `protected` フラグが
+      付与されていないため、`base_name` での個別チェックが必要）
+    - 対象の特性が「上書きできない特性」（`protected` フラグ）を持つ
+    - 対象の特性がすでに「たんじゅん」である
+    - 対象の特性変更がとくせいガード等で防がれる
     """
+    defender_ability = ctx.defender.ability.base_name
     if (
-        ctx.defender.ability.has_flag("protected")
+        defender_ability == "なまけ"
+        or ctx.defender.ability.has_flag("protected")
+        or defender_ability == "たんじゅん"
         or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
         battle.add_event_log(
