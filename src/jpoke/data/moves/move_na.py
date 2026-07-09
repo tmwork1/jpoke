@@ -162,7 +162,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "なやみのタネ": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(

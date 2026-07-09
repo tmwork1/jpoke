@@ -1526,12 +1526,17 @@ def なやみのタネ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     対象の特性が protected フラグを持つ場合、
     または「ふみん」「なまけ」の場合は失敗する。
     対象の特性変更がとくせいガード等で防がれる場合も失敗する。
+
+    「ふみん」「なまけ」の判定には base_name（かがくへんかガス・かたやぶり等による
+    無効化状態に関わらない元の特性名）を使う。特性ふみんは mold_breaker_ignorable
+    フラグを持つため、かたやぶりの効果中は ability.name が空文字になり判定を
+    すり抜けてしまうことを避けるため。
     """
     assert ctx.defender is not None
     ability = ctx.defender.ability
     if (
         ability.has_flag("protected")
-        or ability.name in ("ふみん", "なまけ")
+        or ability.base_name in ("ふみん", "なまけ")
         or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
         battle.add_event_log(

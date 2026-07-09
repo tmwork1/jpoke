@@ -2566,6 +2566,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ふみん_prevent_volatile,
                 "target:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ふみん_cure_sleep_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ふゆう": AbilityData(
