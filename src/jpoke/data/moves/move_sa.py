@@ -599,7 +599,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "シンプルビーム": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(

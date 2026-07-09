@@ -523,14 +523,6 @@ def おにび_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
-def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
-    side = battle.get_side(ctx.attacker)
-    if not side.apply("オーロラベール", 5, source=ctx.attacker):
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベールの使用条件チェック: 天気が「ゆき」でない場合は失敗する。"""
     if battle.weather.name != "ゆき":
@@ -538,6 +530,14 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="オーロラベール")
         )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
+    side = battle.get_side(ctx.attacker)
+    if not side.apply("オーロラベール", 5, source=ctx.attacker):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -984,11 +984,18 @@ def しんぴのまもり_set_side_field(battle: Battle, ctx: AttackContext, val
 def シンプルビーム_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """シンプルビームの失敗条件チェック。
 
-    対象の特性が protected フラグを持つ場合、
-    または対象の特性変更がとくせいガード等で防がれる場合は失敗する。
+    以下の場合は失敗する:
+    - 対象の特性が「なまけ」である（`なまけ` には `protected` フラグが
+      付与されていないため、`base_name` での個別チェックが必要）
+    - 対象の特性が「上書きできない特性」（`protected` フラグ）を持つ
+    - 対象の特性がすでに「たんじゅん」である
+    - 対象の特性変更がとくせいガード等で防がれる
     """
+    defender_ability = ctx.defender.ability.base_name
     if (
-        ctx.defender.ability.has_flag("protected")
+        defender_ability == "なまけ"
+        or ctx.defender.ability.has_flag("protected")
+        or defender_ability == "たんじゅん"
         or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
         battle.add_event_log(

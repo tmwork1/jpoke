@@ -537,6 +537,75 @@ def test_シンプルビーム_protectedフラグ持ちに失敗():
     assert defender.ability.name == "アイスフェイス"
 
 
+def test_シンプルビーム_すでにたんじゅんの場合は失敗():
+    """シンプルビーム: 対象の特性がすでに「たんじゅん」の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["シンプルビーム"])],
+        team1=[Pokemon("カビゴン", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert any(log.log == LogCode.MOVE_FAILED for log in battle.event_logger.logs)
+
+
+def test_シンプルビーム_なまけには失敗():
+    """シンプルビーム: 対象の特性が「なまけ」の場合は失敗する（protectedフラグを持たないため個別判定）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["シンプルビーム"])],
+        team1=[Pokemon("カビゴン", ability_name="なまけ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.ability.name == "なまけ"
+
+
+def test_シンプルビーム_マジックコートで跳ね返され使用者の特性が変わる():
+    """シンプルビーム: マジックコート状態の相手に使うと反射され、使用者の特性がたんじゅんに変わる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["シンプルビーム"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    # 反射され、使用者の特性がたんじゅんに書き換えられる。相手の特性は変化しない
+    assert attacker.ability.name == "たんじゅん"
+    assert defender.ability.name == "めんえき"
+
+
+def test_シンプルビーム_まもるで防がれる():
+    """シンプルビーム: 対象がまもる状態のときは防がれ、特性は変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["シンプルビーム"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.ability.name == "めんえき"
+
+
+def test_シンプルビーム_みがわり状態の相手には防がれる():
+    """シンプルビーム: 対象がみがわり状態のときは防がれ、特性は変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["シンプルビーム"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.ability.name == "めんえき"
+
+
 def test_シンプルビーム_交代後に元の特性に戻る():
     """シンプルビーム: 特性をたんじゅんに変えられた後に交代すると元の特性に戻る"""
     battle = t.start_battle(
