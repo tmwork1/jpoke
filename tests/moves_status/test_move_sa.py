@@ -710,6 +710,33 @@ def test_じばそうさ_プラス以外の特性では失敗する():
     assert attacker.rank["spd"] == 0
 
 
+def test_じゅうでん_じゅうでん状態付与ととくぼう上昇():
+    """じゅうでん: 自分にじゅうでん状態を付与し、とくぼうを1段階上げる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じゅうでん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("じゅうでん")
+    assert attacker.rank["spd"] == 1
+
+
+def test_じゅうでん_とくぼうランク最大でも状態は付与される():
+    """じゅうでん: とくぼうランクが最大でもじゅうでん状態は付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じゅうでん"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["spd"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("じゅうでん")
+    assert attacker.rank["spd"] == 6
+
+
 def test_じんつうりき_ひるみが発動する():
     """じんつうりき: 10%でひるみを付与する。"""
     battle = t.start_battle(
