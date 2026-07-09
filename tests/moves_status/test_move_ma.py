@@ -118,6 +118,19 @@ def test_まねっこ_ゲップはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_すりかえはコピーできない():
+    """まねっこ: 直前の技がすりかえ（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["すりかえ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: すりかえ
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_まねっこ_スターモービル専用技はコピーできない():
     """まねっこ: 直前の技がスターモービル専用技（アクセル技）の場合は失敗する"""
     battle = t.start_battle(
@@ -144,6 +157,19 @@ def test_まねっこ_ダイマックスほうはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_トリックはコピーできない():
+    """まねっこ: 直前の技がトリック（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["トリック"], item_name="いのちのたま")],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: トリック
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_まねっこ_テラクラスターはコピーできない():
     """まねっこ: 直前の技がテラクラスター（non_copycatフラグ持ち）の場合は失敗する"""
     battle = t.start_battle(
@@ -154,6 +180,23 @@ def test_まねっこ_テラクラスターはコピーできない():
     defender = battle.actives[1]
     defender.terastallize()
     t.run_move(battle, 1)  # カビゴン: テラクラスター
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
+def test_まねっこ_まもるはコピーできない():
+    """まねっこ: 直前の技がまもる（protectフラグ持ち）の場合は失敗する
+
+    「守る」系統の技は個別に non_copycat フラグを付与せず、既存の protect フラグを
+    まねっこ_can_use 側で確認することでコピー不可にしている。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["まもる"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: まもる
     t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
 
     assert not battle.move_executor.move_applied

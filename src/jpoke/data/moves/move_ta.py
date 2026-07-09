@@ -1112,7 +1112,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=90,
         priority=-6,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ともえなげ_force_switch,
@@ -1150,7 +1150,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=12,
         accuracy=100,
-        flags={"unreflectable"},
+        flags={"unreflectable", "non_copycat"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.すりかえ_swap_items,
@@ -1466,7 +1466,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=90,
         priority=-6,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ドラゴンテール_force_switch,
@@ -1568,10 +1568,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "どろぼう": MoveData(
         type="あく",
         category="physical",
-        pp=25,
+        pp=20,  # champions基準（docs/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
         power=60,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。

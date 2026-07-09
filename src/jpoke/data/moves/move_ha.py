@@ -857,7 +857,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=-6,
-        flags={"wind", "unprotectable", "bypass_substitute"},
+        flags={"wind", "unprotectable", "bypass_substitute", "non_copycat"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: [
                 h.MoveHandler(
@@ -1312,7 +1312,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="status",
         pp=12,  # champions基準（docs/champions/move_list.txt）。旧値10はSV本家基準の移行漏れ。
         # accuracy省略=必中。潜伏中の相手への失敗はHIDDEN_MOVE_ALLOWED_MOVES側で処理される。
-        flags={"non_encore"},
+        flags={"non_encore", "non_copycat"},
         # 実装保留: 相手の種族・実数値ステータス・特性・技をまるごとコピーし退場時に
         # 完全復元する大規模な変身機構（特性かわりものと共有基盤）が必要なため対応を見送る。
         # 詳細は docs/plan/moves/へんしん.md 参照（前例: スケッチ・ゆびをふる）。
@@ -1381,7 +1381,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=-6,
-        flags={"sound", "unprotectable"},
+        flags={"sound", "unprotectable", "non_copycat"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: [
                 h.MoveHandler(
@@ -1417,10 +1417,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ほしがる": MoveData(
         type="ノーマル",
         category="physical",
-        pp=25,
+        pp=20,  # champions基準（docs/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
         power=60,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。

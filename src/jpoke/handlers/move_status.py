@@ -2282,6 +2282,9 @@ def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> Hand
 
     - バトル中にまだ技が使われていない場合は失敗する。
     - 最後に使われた技が non_copycat フラグを持つ技（スターモービル専用アクセル技等）の場合は失敗する。
+    - 最後に使われた技が protect フラグを持つ技（まもる・みきり・こらえる・キングシールド等の
+      守る系技）の場合は失敗する。守る系技はコピー対象から一律除外されるため個別に
+      non_copycat フラグを付与せず、protect フラグを流用する。
     """
     from jpoke.model import Move
     if not battle.last_used_move_name:
@@ -2290,7 +2293,8 @@ def まねっこ_can_use(battle: Battle, ctx: AttackContext, value: Any) -> Hand
             payload=FailureLogPayload(move=ctx.move.name, display_reason="まねっこ_使用技なし")
         )
         return HandlerReturn(value=False, stop_event=True)
-    if Move(battle.last_used_move_name).has_flag("non_copycat"):
+    copied_move = Move(battle.last_used_move_name)
+    if copied_move.has_flag("non_copycat") or copied_move.has_flag("protect"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="まねっこ_コピー不可技")

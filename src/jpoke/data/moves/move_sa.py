@@ -1133,7 +1133,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         category="status",
         pp=12,
         accuracy=100,
-        flags={"unreflectable"},
+        flags={"unreflectable", "non_copycat"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.すりかえ_swap_items,
