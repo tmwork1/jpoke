@@ -713,6 +713,37 @@ def こわいかお_modify_defender_stats(battle: Battle, ctx: AttackContext, va
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
 
+def さいきのいのり_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さいきのいのりの失敗条件: ひんし状態の味方（控え）が1体もいない場合は失敗する。"""
+    player = battle.get_player(ctx.attacker)
+    state = battle.player_states[player]
+    if not any(mon.fainted for mon in state.bench):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="さいきのいのり_ひんしなし")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def さいきのいのり_revive(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さいきのいのりの効果: ひんし状態の味方を選出順で先頭から1体選び、
+    最大HPの1/2（切り捨て）を回復して復活させる。
+
+    実機では復活させる味方をプレイヤーが選ぶが、通信対戦で選択が時間切れに
+    なった場合は選出順で最初のひんし状態のポケモンが自動的に選ばれる
+    （一次情報: docs/wiki/moves/さいきのいのり.html 技の仕様節）。本プロジェクトは
+    復活対象選択のUIを持たないため、常にこの自動選択と同じ挙動（選出順で
+    最初にひんし状態の味方）を採用する。`さいきのいのり_check` が呼び出し前に
+    候補の存在を保証しているため、ここでは存在チェックを行わない。
+    """
+    player = battle.get_player(ctx.attacker)
+    state = battle.player_states[player]
+    target = next(mon for mon in state.bench if mon.fainted)
+    battle.modify_hp(target, v=max(1, target.max_hp // 2), source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def サイコフィールド_activate_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコフィールド: 地形をサイコフィールドにする。"""
     return HandlerReturn(value=battle.terrain_manager.apply("サイコフィールド", 5))

@@ -18,6 +18,56 @@ def test_３ぼんのや_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_さいきのいのり_ひんし状態の味方がいない場合は失敗する():
+    """さいきのいのり: ひんし状態の味方（控え）がいない場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいきのいのり"]), Pokemon("カビゴン")],
+        team1=[Pokemon("フシギバナ")],
+    )
+    ally = battle.player_states[battle.players[0]].team[1]
+
+    t.run_move(battle, 0)
+
+    assert ally.hp == ally.max_hp
+
+
+def test_さいきのいのり_ひんし状態の味方を最大HPの半分回復して復活させる():
+    """さいきのいのり: ひんし状態の味方（控え）を最大HPの1/2（切り捨て）回復して復活させる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["さいきのいのり"]), Pokemon("カビゴン")],
+        team1=[Pokemon("フシギバナ")],
+    )
+    ally = battle.player_states[battle.players[0]].team[1]
+    battle.faint(ally)
+    assert ally.hp == 0
+
+    t.run_move(battle, 0)
+
+    assert ally.hp == ally.max_hp // 2
+    assert ally.alive
+
+
+def test_さいきのいのり_複数ひんしがいる場合は選出順で最初の味方を復活させる():
+    """さいきのいのり: 複数のひんし状態の味方がいる場合、選出順で最初のポケモンを復活させる。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", move_names=["さいきのいのり"]),
+            Pokemon("カビゴン"),
+            Pokemon("ライチュウ"),
+        ],
+        team1=[Pokemon("フシギバナ")],
+    )
+    state = battle.player_states[battle.players[0]]
+    first_ally, second_ally = state.team[1], state.team[2]
+    battle.faint(first_ally)
+    battle.faint(second_ally)
+
+    t.run_move(battle, 0)
+
+    assert first_ally.alive
+    assert second_ally.hp == 0
+
+
 def test_さいみんじゅつ_ねむり付与():
     """さいみんじゅつ: 相手をねむり状態にする（accuracy=100で固定）"""
     battle = t.start_battle(
