@@ -1002,6 +1002,49 @@ def test_どくガス_命中率90で外れることがある():
     assert not defender.has_ailment("どく")
 
 
+def test_どくどく_どくタイプ使用時は必中になる():
+    """どくどく: 使用者がどくタイプの場合、命中率90を無視して必ず命中する。
+
+    random.random()=0.95 のとき 100*0.95=95>90 で本来は外れるが、
+    どくタイプが使用するとON_MODIFY_ACCURACYでNoneが返り必中になるため命中する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("マタドガス", move_names=["どくどく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.random.random = lambda: 0.95
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("もうどく")
+
+
+def test_どくどく_どくタイプでない場合は命中率90で外れることがある():
+    """どくどく: どくタイプでない使用者の場合、通常どおり命中率90で判定する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくどく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.fix_random(battle, 0.95)
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("もうどく")
+
+
+def test_どくどく_命中すると相手をもうどく状態にする():
+    """どくどく: 命中すると相手を『もうどく』状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくどく"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("もうどく")
+
+
 def test_どくのいと_すでにどく状態ならS下げのみ():
     """どくのいと: 相手がすでにどく状態でもすばやさは下がる"""
     battle = t.start_battle(

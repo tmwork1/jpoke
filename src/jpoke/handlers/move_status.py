@@ -1408,6 +1408,13 @@ def どくガス_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="どく")
 
 
+def どくどく_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """どくどくの命中率補正。使用者がどくタイプの場合は必中になる。"""
+    if "どく" in ctx.attacker.types:
+        return HandlerReturn(value=None)  # 必中
+    return HandlerReturn(value=value)
+
+
 def どくどく_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_ailment_to_defender(battle, ctx, value, ailment="もうどく")
 
