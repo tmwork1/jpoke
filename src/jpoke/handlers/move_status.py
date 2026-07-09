@@ -1155,6 +1155,22 @@ def そうでん_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return apply_volatile_to_defender(battle, ctx, value, volatile="そうでん")
 
 
+def そうでん_try_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """そうでんの発動条件を判定する。
+
+    相手（対象）がそのターンすでに行動済み（コマンド消費済み）の場合は失敗する。
+    """
+    def_player = battle.get_player(ctx.defender)
+    def_state = battle.player_states[def_player]
+    if not def_state.command_reserved():
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="そうでん")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ソウルビートの失敗条件: HPが最大HPの1/3以下の場合は失敗。"""
     mon = ctx.attacker

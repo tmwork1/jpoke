@@ -1341,17 +1341,63 @@ def test_せいちょう_通常時こうげきととくこう1段階上がる():
     assert attacker.rank["spa"] == 1
 
 
-def test_そうでん_そうでん状態が相手に付与される():
-    """そうでん: 使用すると相手にそうでん揮発状態が付与される"""
+def test_そうでん_そのターン相手の技がでんきタイプに変換される():
+    """そうでん: 命中した相手がそのターンに使う技がでんきタイプに変換される
+
+    そうでん状態はターン終了時に解除されるため battle.step() 後に揮発状態を
+    直接確認できない。そこで、じめんタイプ（でんきタイプ技を無効化）の
+    ドサイドンをそうでん使用者にし、相手のたいあたり（ノーマル）がでんきタイプに
+    変換されて無効化されることをHPの変化で確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ドサイドン", move_names=["そうでん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker_hp = attacker.hp
+    battle.step()
+
+    assert attacker.hp == attacker_hp
+
+
+def test_そうでん_マジックコートで跳ね返されない():
+    """そうでん: 変化技だが例外的にマジックコートで跳ね返されない
+
+    仮に跳ね返された場合、そうでんの使用者自身がそうでん状態になり
+    相手のたいあたり（ノーマル）はでんきタイプに変換されずダメージを受ける。
+    正しく跳ね返されなければ、使用者はじめんタイプのため、でんきタイプに
+    変換された相手のたいあたりを無効化してダメージを受けない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ドサイドン", move_names=["そうでん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker_hp = attacker.hp
+    battle.step()
+
+    assert attacker.hp == attacker_hp
+
+
+def test_そうでん_相手がすでに行動済みの場合は失敗する():
+    """そうでん: 相手がそうでんより先に行動していた場合は失敗する
+
+    ゲンガー（素早さ130）がでんこうせっか（優先度+1）を使い、
+    ピカチュウ（素早さ90）がそうでんを使う場合、ゲンガーが先行するため
+    ゲンガー行動後にそうでんを使うと失敗する。
+    """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["そうでん"])],
-        team1=[Pokemon("カビゴン")],
+        team1=[Pokemon("ゲンガー", move_names=["でんこうせっか"])],
         accuracy=100,
     )
     defender = battle.actives[1]
-    t.run_move(battle, 0)
+    battle.step()
 
-    assert defender.has_volatile("そうでん")
+    assert not defender.has_volatile("そうでん")
 
 
 def test_ソウルビート_全能力1段階上がりHP3分の1消費():

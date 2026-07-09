@@ -1233,7 +1233,12 @@ MOVES_SA: dict[MoveName, MoveData] = {
         type="でんき",
         category="status",
         pp=20,
+        flags={"unreflectable"},
         handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                hs.そうでん_try_move,
+                priority=30,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.そうでん_apply,
             ),
