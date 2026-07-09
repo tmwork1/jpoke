@@ -1248,12 +1248,16 @@ def そうでん_try_move(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ソウルビートの失敗条件: HPが最大HPの1/3以下の場合は失敗。"""
+    """ソウルビートの使用条件チェック: HPが最大HPの1/3以下、またはこうげき・ぼうぎょ・とくこう・とくぼう・すばやさが
+    すべて+6ならば失敗する。"""
     mon = ctx.attacker
-    if mon.hp <= mon.max_hp // 3:
+    if (
+        mon.hp <= mon.max_hp // 3
+        or all(mon.rank[stat] >= 6 for stat in ("atk", "def", "spa", "spd", "spe"))
+    ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="ソウルビート_HP不足")
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ソウルビート")
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)

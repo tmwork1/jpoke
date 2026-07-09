@@ -1277,7 +1277,8 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "ソウルビート": MoveData(
         type="ドラゴン",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"dance", "sound"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
