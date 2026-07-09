@@ -1781,6 +1781,54 @@ def test_すりかえ_片方のみアイテムを持つとき入れ替わる(a_i
         assert defender.item.name == expected_d
 
 
+def test_スレッドトラップ_使用した同ターンに相手の直接攻撃をブロックしてランクを下げる():
+    """スレッドトラップ: 実際に技を実行して付与した揮発状態が、同ターン内の相手の直接攻撃を
+    無効化しつつ、攻撃者の『すばやさ』ランクを1段階下げることを確認する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スレッドトラップ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    protected_mon = battle.actives[0]
+    attacker = battle.actives[1]
+    hp_before = protected_mon.hp
+
+    t.run_move(battle, 0)  # ピカチュウ: スレッドトラップ（先制）
+    assert battle.move_executor.move_success
+
+    t.run_move(battle, 1)  # カビゴン: たいあたり → スレッドトラップでブロックされる
+    assert not battle.move_executor.move_success
+    assert protected_mon.hp == hp_before
+    assert attacker.rank["spe"] == -1
+
+
+def test_スレッドトラップ_変化技は防がない():
+    """スレッドトラップ: 実際に技を実行して付与した揮発状態は、相手の変化技を防げない
+    （まもると異なり protect_non_attack=False のため）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スレッドトラップ"])],
+        team1=[Pokemon("カビゴン", move_names=["キノコのほうし"])],
+        accuracy=100,
+    )
+
+    t.run_move(battle, 0)  # ピカチュウ: スレッドトラップ（先制）
+    assert battle.move_executor.move_success
+
+    t.run_move(battle, 1)  # カビゴン: キノコのほうし → 防がれずに成功する
+    assert battle.move_executor.move_success
+    assert battle.actives[0].has_ailment("ねむり")
+
+
+def test_スレッドトラップ_技使用でスレッドトラップ状態が付与される():
+    """スレッドトラップ: 技を使うと自分にスレッドトラップ揮発性状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スレッドトラップ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.has_volatile("スレッドトラップ")
+
+
 def test_ずつき_ひるみが発動する():
     """ずつき: 30%でひるみを付与する。"""
     battle = t.start_battle(
