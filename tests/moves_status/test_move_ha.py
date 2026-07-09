@@ -1608,6 +1608,43 @@ def test_ほえる_控えポケモンがいる場合に交代が発生する():
     assert battle.actives[1] is not defender_before
 
 
+def test_ほおばる_あまのじゃくでぼうぎょ最小なら失敗する():
+    """ほおばる + あまのじゃく: ぼうぎょランクがすでに-6の場合、
+    あまのじゃくの反転効果で下降方向に上限があるため失敗しきのみも消費されない
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく",
+                       move_names=["ほおばる"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.rank["def"] = -6
+    t.run_move(battle, 0)
+
+    # 失敗のためランクは変化せず、きのみも消費されない
+    assert attacker.rank["def"] == -6
+    assert attacker.item.is_berry()
+
+
+def test_ほおばる_あまのじゃくでぼうぎょ最大でも成功する():
+    """ほおばる + あまのじゃく: ぼうぎょランクがすでに+6でも、
+    あまのじゃくの効果で上昇が下降に反転するため成功してきのみを消費しぼうぎょが下がる
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく",
+                       move_names=["ほおばる"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.rank["def"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 4
+    assert not attacker.item.is_berry()
+
+
 def test_ほおばる_きのみが消費される():
     """ほおばる: 使用後にきのみが消費されアイテムがなくなる"""
     battle = t.start_battle(
