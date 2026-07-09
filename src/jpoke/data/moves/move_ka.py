@@ -984,7 +984,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "グラスフィールド": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
