@@ -2456,6 +2456,27 @@ def みちづれ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return apply_volatile_to_attacker(battle, ctx, value, volatile="みちづれ")
 
 
+def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みちづれの連続使用失敗チェック（第七世代以降）。
+
+    直前の自分の行動で成功裏にみちづれを使用していた場合、今回のみちづれは失敗する
+    （まもる系_連続使用失敗チェックと同じパターン）。
+    失敗時は executed_move を None にリセットし、次回の使用は連続使用扱いにしない。
+    """
+    mon = ctx.attacker
+    if (
+        mon.executed_move is not None
+        and mon.executed_move.name == "みちづれ"
+    ):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="みちづれ_連続使用")
+        )
+        mon.executed_move = None
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def ミラータイプ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ミラータイプの効果: 使用者のタイプを対象のタイプに置換する。
 
