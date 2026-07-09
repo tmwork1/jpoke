@@ -24,7 +24,7 @@ from jpoke.types import Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
-from jpoke.core.event_logger import FailureLogPayload, StatChangePayload
+from jpoke.core.event_logger import FailureLogPayload, ItemPayload, StatChangePayload
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
 # docs/spec/volatiles/じゅうでん.md: じゅうでんはバトンタッチで引き継がれない
@@ -978,16 +978,39 @@ def シンプルビーム_change_ability(battle: Battle, ctx: AttackContext, val
 
 
 def じこあんじ_copy_ranks(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じこあんじ: 相手の能力ランク変化をすべて自分にコピーする。
+    """じこあんじ: 相手の能力ランク変化・急所ランクをすべて自分にコピーする。
 
     相手のランクは変化しない。direct代入により、たんじゅん・あまのじゃく・
-    クリアボディ等のランク変化ハンドラを経由しない。
+    クリアボディ・だっしゅつパック等のランク変化に反応する特性・アイテムを
+    経由しない。ただし、しろいハーブのみコピー直後にマイナスのランクを
+    打ち消す特例がある（一次情報: docs/wiki/moves/じこあんじ.html 技の仕様節）。
     """
     attacker = ctx.attacker
     defender = ctx.defender
-    rank_stats: list[str] = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
+    rank_stats: list[Stat] = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
     for stat in rank_stats:
         attacker.rank[stat] = defender.rank[stat]
+
+    # 急所ランクに関する効果（きゅうしょアップ状態）も第六世代以降コピー対象。
+    attacker.critical_rank = defender.critical_rank
+
+    # しろいハーブ: マイナスのランクをコピーした直後に発動する（じこあんじ固有の特例）。
+    if attacker.item.name == "しろいハーブ":
+        changed = {s: -v for s, v in attacker.rank.items() if v < 0}
+        if changed:
+            for s in changed:
+                attacker.rank[s] = 0
+            battle.add_event_log(
+                attacker, LogCode.STAT_CHANGED,
+                payload=StatChangePayload(stats=changed, display_reason="しろいハーブ"),
+            )
+            battle.add_event_log(
+                attacker, LogCode.ITEM_TRIGGERED,
+                payload=ItemPayload(item=attacker.item.name),
+            )
+            attacker.item.revealed = True
+            battle.item_manager.consume_item(attacker)
+
     return HandlerReturn(value=value)
 
 
