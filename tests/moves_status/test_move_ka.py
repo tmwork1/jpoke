@@ -456,6 +456,44 @@ def test_ガードスワップ_双方ともランク0のとき変化なし():
     assert defender.rank["spd"] == 0
 
 
+def test_ガードスワップ_みがわり状態の相手にも効果が発動する():
+    """ガードスワップ: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["def"] = 2
+    defender.rank["def"] = -1
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert attacker.rank["def"] == -1
+    assert defender.rank["def"] == 2
+
+
+def test_ガードスワップ_マジックコートで跳ね返されない():
+    """ガードスワップ: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["def"] = 2
+    defender.rank["def"] = -1
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、ランクが入れ替わる（使用者側のランクが変わる）
+    assert attacker.rank["def"] == -1
+    assert defender.rank["def"] == 2
+
+
 def test_きあいだめ_きゅうしょアップ付与():
     """きあいだめ: 使用すると自分にきゅうしょアップ揮発性状態が付与される"""
     battle = t.start_battle(
