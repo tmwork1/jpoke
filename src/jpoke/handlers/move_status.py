@@ -1132,6 +1132,23 @@ def スピードスワップ_swap_speed(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
+def すりかえ_release_choice_lock(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """すりかえ・トリックの使用後、こだわりロックを解除する。
+
+    自分自身の効果でこだわり系アイテムを新たに入手した場合、通常のこだわり系
+    アイテムの `ON_MOVE_END` ハンドラ（`こだわり_lock_move`）によりこの技に
+    ロックされてしまうが、すりかえ・トリックはその効果自体ではロックされない
+    （第五世代以降の仕様）。また、既にこだわりでロックされていた場合も、
+    このすりかえ・トリックの使用でロックが解除される。
+    優先度をこだわり系アイテムの `ON_MOVE_END` ハンドラ（デフォルト優先度100）
+    より遅く（110）することで、先に設定されたロックを確実に解除する。
+    """
+    mon = ctx.attacker
+    if mon.has_volatile("こだわり"):
+        battle.volatile_manager.remove(mon, "こだわり")
+    return HandlerReturn(value=value)
+
+
 def すりかえ_swap_items(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """すりかえ・トリックのアイテム交換効果。"""
     success = battle.item_manager.swap_items()

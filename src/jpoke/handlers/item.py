@@ -852,7 +852,13 @@ def こころのしずく_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def こだわり_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こだわりアイテム: 使用した技でロックする。"""
+    """こだわりアイテム: 使用した技でロックする。
+
+    トリック・すりかえ自身の使用によってこだわり系アイテムを新たに入手した場合は、
+    このハンドラでロックされた直後に `すりかえ_release_choice_lock`
+    （`data/moves/move_sa.py` `data/moves/move_ta.py` に登録）がより遅い優先度で
+    ロックを解除する。
+    """
     mon = ctx.attacker
     if not mon.has_volatile("こだわり"):
         battle.volatile_manager.apply(
