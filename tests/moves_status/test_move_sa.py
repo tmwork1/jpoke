@@ -949,6 +949,33 @@ def test_すてゼリフ_控えがいない場合はランク低下のみ():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_すなかけ_相手の命中率が1段階下がる():
+    """すなかけ: 相手の命中率ランクが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すなかけ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["accuracy"] == -1
+
+
+def test_すなかけ_まもるで防がれる():
+    """すなかけ: まもるで効果が防がれ、命中率ランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すなかけ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["accuracy"] == 0
+
+
 def test_スピードスワップ_すばやさ実数値が入れ替わる():
     """スピードスワップ: 使用者と相手のすばやさ実数値が入れ替わる"""
     battle = t.start_battle(
