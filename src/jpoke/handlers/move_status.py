@@ -1262,7 +1262,7 @@ def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: An
     # 相手のこうげきランク補正込みの実数値分だけ自分のHPを回復（ランク変更前に取得）
     recover_amount = ctx.defender.ranked_stats["atk"]
     recover_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, recover_amount)
-    battle.modify_hp(ctx.attacker, v=recover_amount)
+    battle.modify_hp(ctx.attacker, v=recover_amount, reason="drain")
     # 相手のこうげきを1段階下げる（失敗しても回復は発動済み）
     battle.modify_stats(ctx.defender, {"atk": -1}, source=ctx.attacker)
     return HandlerReturn(value=value)

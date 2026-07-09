@@ -223,6 +223,24 @@ def test_ちからをすいとる_相手のランク補正込みA実数値だけ
     assert defender.rank["atk"] == 0
 
 
+def test_ちからをすいとる_ヘドロえきで回復がダメージに変換される():
+    """ちからをすいとる: 相手がヘドロえき持ちの場合、回復の代わりに使用者がダメージを受ける
+    （reason="drain" を経由することでヘドロえきのドレイン反転処理が発動する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ちからをすいとる"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ヘドロえき")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    # 回復ではなくダメージを受ける
+    assert attacker.hp < hp_before
+    # こうげきランクは通常通り下がる
+    assert defender.rank["atk"] == -1
+
+
 def test_ちょうのまい_1つでも上昇できれば成功():
     """ちょうのまい: とくこうが最大でも、とくぼうとすばやさは上昇する"""
     battle = t.start_battle(

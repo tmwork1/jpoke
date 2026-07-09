@@ -357,7 +357,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ちからをすいとる": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=100,
         flags={"heal"},
         handlers={
