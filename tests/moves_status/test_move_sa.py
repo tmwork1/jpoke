@@ -1302,6 +1302,47 @@ def test_すてゼリフ_控えがいない場合はランク低下のみ():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_ステルスロック_すでに設置済みなら失敗():
+    """ステルスロック: すでにステルスロックが有効なら失敗（再設置されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ステルスロック"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"ステルスロック": 1},
+    )
+    side = battle.get_side(battle.actives[1])
+    t.run_move(battle, 0)
+
+    # 状態は継続（重複設置されない）
+    assert side.fields["ステルスロック"].is_active
+
+
+def test_ステルスロック_マジックコートで跳ね返り使用者側に設置される():
+    """ステルスロック: マジックコートで跳ね返されると、使用者側の場にステルスロックが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ステルスロック"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+
+    attacker_side = battle.get_side(battle.actives[0])
+    defender_side = battle.get_side(battle.actives[1])
+    assert attacker_side.fields["ステルスロック"].is_active
+    assert not defender_side.fields["ステルスロック"].is_active
+
+
+def test_ステルスロック_相手陣営に設置される():
+    """ステルスロック: 使用すると相手陣営にステルスロックが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ステルスロック"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    side = battle.get_side(battle.actives[1])
+    assert side.fields["ステルスロック"].is_active
+
+
 def test_すなあつめ_エアロックですなあらしが無効化されると半分回復になる():
     """すなあつめ: 場にエアロック持ちがいてすなあらしが無効化されている場合、回復量は1/2のまま"""
     battle = t.start_battle(
