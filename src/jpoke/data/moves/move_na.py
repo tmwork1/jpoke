@@ -466,6 +466,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ねをはる_apply,

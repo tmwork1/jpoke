@@ -840,11 +840,37 @@ def test_ねをはる_すでにねをはる状態なら失敗():
     assert attacker.volatiles["ねをはる"].count == old_count
 
 
+def test_ねをはる_かいふくふうじ状態でも使用できる():
+    """ねをはる: HP回復技には分類されないため、かいふくふうじ状態でも使用できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねをはる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"かいふくふうじ": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ねをはる")
+
+
 def test_ねをはる_ねをはる状態を付与する():
     """ねをはる: 使用すると自分をねをはる状態にする"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["ねをはる"])],
         team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ねをはる")
+
+
+def test_ねをはる_まもるで防がれない():
+    """ねをはる: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねをはる"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
