@@ -192,6 +192,33 @@ def test_しっぽきり_控えがいない場合は失敗():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_しっぽをふる_ぼうぎょが1段階下がる():
+    """しっぽをふる: 使用すると相手のぼうぎょが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["しっぽをふる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == -1
+
+
+def test_しっぽをふる_ぼうぎょが最低値のとき変化なし():
+    """しっぽをふる: ぼうぎょランクがすでに-6のときはランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["しっぽをふる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"def": -6}, source=battle.actives[0])
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == -6
+
+
 def test_しびれごな_くさタイプに無効化される():
     """しびれごな: 草タイプの相手にはまひ状態を付与できない"""
     battle = t.start_battle(
