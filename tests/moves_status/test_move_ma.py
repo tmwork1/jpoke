@@ -633,6 +633,110 @@ def test_まるくなる_マジックコートで跳ね返されない():
     assert not defender.has_volatile("まるくなる")
 
 
+def test_みきり_2ターン連続で使用すると2ターン目は失敗する():
+    """みきり: まもると同じくPP8・優先度+4で先制でき、2ターン連続で使用すると2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.moves[0].data.pp == 8
+    assert attacker.moves[0].data.priority == 4
+
+    # 1ターン目: みきり成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("まもる")
+    t.end_turn(battle)
+
+    # 2ターン目: みきり失敗（連続使用）
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("まもる")
+
+
+def test_みがわり_HPを消費してみがわり状態になる():
+    """みがわり: 最大HPの1/4（切り捨て）を消費し、同量のHPを持つみがわり状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    migawari_hp = max_hp // 4
+
+    t.run_move(battle, 0)
+
+    assert attacker.hp == max_hp - migawari_hp
+    assert attacker.has_volatile("みがわり")
+    assert attacker.volatiles["みがわり"].hp == migawari_hp
+    assert battle.move_executor.move_applied is True
+
+
+def test_みがわり_すでにみがわり状態なら失敗する():
+    """みがわり: すでにみがわり状態のときは失敗し、HPもみがわりHPも変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "みがわり", hp=1)
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+
+    assert attacker.hp == hp_before
+    assert attacker.volatiles["みがわり"].hp == 1
+    assert battle.move_executor.move_applied is False
+
+
+def test_みがわり_残りHPが最大HPの4分の1以下なら失敗する():
+    """みがわり: 残りHPが最大HPの1/4以下（ちょうど1/4を含む）のときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 4
+
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp // 4
+    assert not attacker.has_volatile("みがわり")
+    assert battle.move_executor.move_applied is False
+
+
+def test_みがわり_成功時に自分のバインド状態を解除する():
+    """みがわり: 技が成功すると自分のバインド状態を解除する（第三世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(attacker, "バインド", count=3, source=battle.actives[1], bind_damage_ratio=1 / 8)
+
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("バインド")
+    assert attacker.has_volatile("みがわり")
+
+
+def test_みがわり_相手のまもるを無視して成功する():
+    """みがわり: 自分対象の変化技のため、相手がまもる状態でも無視して成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("みがわり")
+    assert battle.move_executor.move_applied is True
+
+
 def test_みかづきのいのり_HPが4分の1回復する():
     """みかづきのいのり: 最大HPの1/4を回復する(小数点以下切り捨て)"""
     battle = t.start_battle(
