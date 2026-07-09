@@ -469,6 +469,26 @@ def かえんのまもり_apply(battle: Battle, ctx: AttackContext, value: Any) 
     return apply_volatile_to_attacker(battle, ctx, value, volatile="かえんのまもり")
 
 
+def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """かえんのまもりの効果: そのターンの最後に行動する場合は失敗する。
+
+    かえんのまもりはそのターンに自分より後に行動する相手の技から身を守るための
+    技であるため、自分がそのターンの最後に行動する場合は守る対象がなく失敗する
+    （シングルバトル想定）。
+    失敗時は executed_move を None にリセットし、まもる系の連続使用カウントも
+    リセットする（連続使用扱いにしない）。
+    """
+    attacker_player = battle.get_player(ctx.attacker)
+    if battle.query.is_second_actor(attacker_player):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="かえんのまもり_最終行動")
+        )
+        ctx.attacker.executed_move = None
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def かげぶんしん_boost_attacker_evasion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かげぶんしんの効果: 自分の回避率を 1 段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"evasion": 1})
