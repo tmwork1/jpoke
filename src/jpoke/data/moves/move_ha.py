@@ -272,6 +272,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=40,
+        target="self",
         flags={"gravity_restricted"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
