@@ -1720,6 +1720,56 @@ def test_トリック_片方のみアイテムを持つとき入れ替わる(a_i
         assert defender.item.name == expected_d
 
 
+def test_トリックルーム_PPは8():
+    """トリックルーム: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["トリックルーム"].pp == 8
+
+
+def test_トリックルーム_マジックコートで跳ね返されない():
+    """トリックルーム: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["トリックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("トリックルーム").is_active
+
+
+def test_トリックルーム_まもるで防がれない():
+    """トリックルーム: 全体の場を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["トリックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("トリックルーム").is_active
+
+
+def test_トリックルーム_場が発動する():
+    """トリックルーム: 使用すると場が『トリックルーム』状態になり、5ターン継続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["トリックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    field = battle.get_global_field("トリックルーム")
+    assert field.is_active
+    assert field.count == 5
+
+
+def test_トリックルーム_発動中に再使用すると解除される():
+    """トリックルーム: 発動中に再度使用すると即座にフィールドが解除される（トグル動作）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["トリックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"トリックルーム": 5},
+    )
+    t.run_move(battle, 0)
+    assert not battle.get_global_field("トリックルーム").is_active
+
+
 def test_どくガス_PPは20():
     """どくガス: チャンピオンズでのPPは20（move_list.txtに単独項目はないが、PP圧縮則
     〈SV基準PPが20以上の技は一律20に圧縮〉から導出。Gen9本家は40）。"""

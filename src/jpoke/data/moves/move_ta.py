@@ -1216,7 +1216,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トリックルーム": MoveData(
         type="エスパー",
         category="status",
-        pp=5,
+        pp=8,
         priority=-7,
         target="field",
         handlers={
