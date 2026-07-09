@@ -575,17 +575,18 @@ def test_つめとぎ_こうげきと命中率が1段階ずつ上がる():
     assert attacker.rank["accuracy"] == 1
 
 
-def test_つめとぎ_相手のランクは変化しない():
-    """つめとぎ: 自分が対象のため相手の能力ランクは変化しない"""
+def test_つめとぎ_マジックコートで跳ね返されない():
+    """つめとぎ: 自分が対象の技のため、相手のマジックコート状態でも跳ね返されない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["つめとぎ"])],
         team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
     )
-    defender = battle.actives[1]
+    attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert defender.rank["atk"] == 0
-    assert defender.rank["accuracy"] == 0
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["accuracy"] == 1
 
 
 def test_つめとぎ_相手のまもる状態に影響されず成功する():
@@ -602,18 +603,17 @@ def test_つめとぎ_相手のまもる状態に影響されず成功する():
     assert attacker.rank["accuracy"] == 1
 
 
-def test_つめとぎ_マジックコートで跳ね返されない():
-    """つめとぎ: 自分が対象の技のため、相手のマジックコート状態でも跳ね返されない"""
+def test_つめとぎ_相手のランクは変化しない():
+    """つめとぎ: 自分が対象のため相手の能力ランクは変化しない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["つめとぎ"])],
         team1=[Pokemon("カビゴン")],
-        volatile1={"マジックコート": 1},
     )
-    attacker = battle.actives[0]
+    defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 1
-    assert attacker.rank["accuracy"] == 1
+    assert defender.rank["atk"] == 0
+    assert defender.rank["accuracy"] == 0
 
 
 def test_つららおとし_ひるみが発動する():
@@ -641,6 +641,19 @@ def test_つるぎのまい_こうげき2段階上がる():
     assert attacker.rank["atk"] == 2
 
 
+def test_てっぺき_すでに最大なら失敗する():
+    """てっぺき: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["てっぺき"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 6
+
+
 def test_てっぺき_ぼうぎょ2段階上がる():
     """てっぺき: 使用すると自分のぼうぎょランクが2段階上がる"""
     battle = t.start_battle(
@@ -665,19 +678,6 @@ def test_てっぺき_自分対象のためまもるで防がれない():
     t.run_move(battle, 0)
 
     assert attacker.rank["def"] == 2
-
-
-def test_てっぺき_すでに最大なら失敗する():
-    """てっぺき: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["てっぺき"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"def": 6}, source=attacker)
-    t.run_move(battle, 0)
-
-    assert attacker.rank["def"] == 6
 
 
 def test_てんしのキッス_こんらん状態を付与する():
@@ -758,6 +758,37 @@ def test_でんじは_まひ付与():
     assert battle.actives[1].ailment.name == "まひ"
 
 
+def test_でんじふゆう_PPは12():
+    """でんじふゆう: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["でんじふゆう"].pp == 12
+
+
+def test_でんじふゆう_うちおとす状態なら失敗():
+    """でんじふゆう: うちおとす状態のポケモンが使うと失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"うちおとす": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("でんじふゆう")
+
+
+def test_でんじふゆう_じゅうりょく状態では失敗():
+    """でんじふゆう: 場がじゅうりょく状態のときは使えない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        field={"じゅうりょく": 3},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("でんじふゆう")
+
+
 def test_でんじふゆう_すでにでんじふゆう状態なら失敗():
     """でんじふゆう: すでにでんじふゆう状態なら失敗する"""
     battle = t.start_battle(
@@ -785,22 +816,17 @@ def test_でんじふゆう_でんじふゆう状態を付与する():
     assert attacker.has_volatile("でんじふゆう")
 
 
-def test_でんじふゆう_PPは12():
-    """でんじふゆう: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
-    assert MOVES["でんじふゆう"].pp == 12
-
-
-def test_でんじふゆう_まもるで防がれない():
-    """でんじふゆう: 自分を対象とする技のため、相手のまもるで防がれない"""
+def test_でんじふゆう_ねをはる状態なら失敗():
+    """でんじふゆう: ねをはる状態のポケモンが使うと失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
         team1=[Pokemon("カビゴン")],
-        volatile1={"まもる": 1},
+        volatile0={"ねをはる": 1},
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.has_volatile("でんじふゆう")
+    assert not attacker.has_volatile("でんじふゆう")
 
 
 def test_でんじふゆう_マジックコートで跳ね返されない():
@@ -817,43 +843,22 @@ def test_でんじふゆう_マジックコートで跳ね返されない():
     assert not defender.has_volatile("でんじふゆう")
 
 
-def test_でんじふゆう_ねをはる状態なら失敗():
-    """でんじふゆう: ねをはる状態のポケモンが使うと失敗する"""
+def test_でんじふゆう_まもるで防がれない():
+    """でんじふゆう: 自分を対象とする技のため、相手のまもるで防がれない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
         team1=[Pokemon("カビゴン")],
-        volatile0={"ねをはる": 1},
+        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert not attacker.has_volatile("でんじふゆう")
+    assert attacker.has_volatile("でんじふゆう")
 
 
-def test_でんじふゆう_うちおとす状態なら失敗():
-    """でんじふゆう: うちおとす状態のポケモンが使うと失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
-        team1=[Pokemon("カビゴン")],
-        volatile0={"うちおとす": 1},
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert not attacker.has_volatile("でんじふゆう")
-
-
-def test_でんじふゆう_じゅうりょく状態では失敗():
-    """でんじふゆう: 場がじゅうりょく状態のときは使えない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
-        team1=[Pokemon("カビゴン")],
-        field={"じゅうりょく": 3},
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert not attacker.has_volatile("でんじふゆう")
+def test_とおせんぼう_PPは8():
+    """とおせんぼう: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["とおせんぼう"].pp == 8
 
 
 def test_とおせんぼう_すでににげられない状態なら失敗():
@@ -896,29 +901,11 @@ def test_とおせんぼう_まもる状態の相手にも効果が発動する(
     assert defender.has_volatile("にげられない")
 
 
-def test_とおせんぼう_PPは8():
-    """とおせんぼう: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
-    assert MOVES["とおせんぼう"].pp == 8
-
-
 def test_とおぼえ_こうげき1段階上がる():
     """とおぼえ: 使用すると自分のこうげきランクが1段階上がる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
         team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert attacker.rank["atk"] == 1
-
-
-def test_とおぼえ_相手のまもる状態に影響されず成功する():
-    """とおぼえ: 自分が対象の技のため、相手のまもる状態に関係なく成功する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
@@ -932,6 +919,19 @@ def test_とおぼえ_マジックコートで跳ね返されない():
         team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
         team1=[Pokemon("カビゴン")],
         volatile1={"マジックコート": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+
+
+def test_とおぼえ_相手のまもる状態に影響されず成功する():
+    """とおぼえ: 自分が対象の技のため、相手のまもる状態に関係なく成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とおぼえ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
     t.run_move(battle, 0)
@@ -968,6 +968,21 @@ def test_とぐろをまく_こうげきとぼうぎょと命中率1段階ずつ
     assert attacker.rank["accuracy"] == 1
 
 
+def test_とぐろをまく_マジックコートで跳ね返されない():
+    """とぐろをまく: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とぐろをまく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["accuracy"] == 1
+
+
 def test_とぐろをまく_自分対象のためまもるで防がれない():
     """とぐろをまく: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
     battle = t.start_battle(
@@ -983,19 +998,17 @@ def test_とぐろをまく_自分対象のためまもるで防がれない():
     assert attacker.rank["accuracy"] == 1
 
 
-def test_とぐろをまく_マジックコートで跳ね返されない():
-    """とぐろをまく: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+def test_とける_すでに最大なら失敗する():
+    """とける: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["とぐろをまく"])],
+        team0=[Pokemon("ピカチュウ", move_names=["とける"])],
         team1=[Pokemon("カビゴン")],
-        volatile1={"マジックコート": 1},
     )
     attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": 6}, source=attacker)
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 1
-    assert attacker.rank["def"] == 1
-    assert attacker.rank["accuracy"] == 1
+    assert attacker.rank["def"] == 6
 
 
 def test_とける_ぼうぎょ2段階上がる():
@@ -1022,19 +1035,6 @@ def test_とける_自分対象のためまもるで防がれない():
     t.run_move(battle, 0)
 
     assert attacker.rank["def"] == 2
-
-
-def test_とける_すでに最大なら失敗する():
-    """とける: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["とける"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    battle.modify_stats(attacker, {"def": 6}, source=attacker)
-    t.run_move(battle, 0)
-
-    assert attacker.rank["def"] == 6
 
 
 def test_どくガス_どくタイプには無効():
@@ -1076,6 +1076,19 @@ def test_どくガス_命中率90で外れることがある():
     assert not defender.has_ailment("どく")
 
 
+def test_どくどく_どくタイプでない場合は命中率90で外れることがある():
+    """どくどく: どくタイプでない使用者の場合、通常どおり命中率90で判定する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくどく"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.fix_random(battle, 0.95)
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("もうどく")
+
+
 def test_どくどく_どくタイプ使用時は必中になる():
     """どくどく: 使用者がどくタイプの場合、命中率90を無視して必ず命中する。
 
@@ -1091,19 +1104,6 @@ def test_どくどく_どくタイプ使用時は必中になる():
     t.run_move(battle, 0)
 
     assert defender.has_ailment("もうどく")
-
-
-def test_どくどく_どくタイプでない場合は命中率90で外れることがある():
-    """どくどく: どくタイプでない使用者の場合、通常どおり命中率90で判定する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["どくどく"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    defender = battle.actives[1]
-    t.fix_random(battle, 0.95)
-    t.run_move(battle, 0)
-
-    assert not defender.has_ailment("もうどく")
 
 
 def test_どくどく_命中すると相手をもうどく状態にする():
