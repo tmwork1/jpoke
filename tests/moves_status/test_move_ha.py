@@ -1762,23 +1762,47 @@ def test_ほろびのうた_自分だけ状態なら相手に付与できる():
     assert defender.has_volatile("ほろびのうた")
 
 
-def test_ぼうぎょしれい_とくぼうが1段階上がる():
-    """ぼうぎょしれい: 使用後に自分のとくぼうランクが1段階上がる。"""
+@pytest.mark.parametrize(
+    "def_init,spd_init,def_exp,spd_exp",
+    [
+        # 通常: 防御+1、特防+1
+        (0, 0, 1, 1),
+        # 防御上限: 防御はキャップ、特防は+1
+        (6, 0, 6, 1),
+        # 特防上限: 特防はキャップ、防御は+1
+        (0, 6, 1, 6),
+        # 両方上限: どちらも変化できないので失敗（変化なし）
+        (6, 6, 6, 6),
+        # 両方上限まで1段階: どちらも上限ぴったりになる
+        (5, 5, 6, 6),
+        # 最低ランクから上昇
+        (-6, -6, -5, -5),
+    ],
+)
+def test_ぼうぎょしれい_発動前後のランク変化(def_init, spd_init, def_exp, spd_exp):
+    """ぼうぎょしれい: 発動前後のぼうぎょ・とくぼうランクの変化を網羅的に確認する"""
     battle = t.start_battle(
         team0=[Pokemon("ビークイン", move_names=["ぼうぎょしれい"])],
         team1=[Pokemon("カビゴン")],
     )
-    mon = battle.actives[0]
+    attacker = battle.actives[0]
+    attacker.rank["def"] = def_init
+    attacker.rank["spd"] = spd_init
     t.run_move(battle, 0)
-    assert mon.rank["spd"] == 1
+
+    assert attacker.rank["def"] == def_exp
+    assert attacker.rank["spd"] == spd_exp
 
 
-def test_ぼうぎょしれい_ぼうぎょが1段階上がる():
-    """ぼうぎょしれい: 使用後に自分のぼうぎょランクが1段階上がる。"""
+def test_ぼうぎょしれい_自分対象のためまもるで防がれない():
+    """ぼうぎょしれい: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
     battle = t.start_battle(
         team0=[Pokemon("ビークイン", move_names=["ぼうぎょしれい"])],
         team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
     )
-    mon = battle.actives[0]
+    attacker = battle.actives[0]
     t.run_move(battle, 0)
-    assert mon.rank["def"] == 1
+
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spd"] == 1
