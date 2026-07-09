@@ -1028,9 +1028,14 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "すなあつめ": MoveData(
         type="じめん",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.すなあつめ_heal_self,
+            )
+        }
     ),
     "すなあらし": MoveData(
         type="いわ",

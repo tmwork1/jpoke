@@ -1085,6 +1085,24 @@ def ステルスロック_set_field(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
+def すなあつめ_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """すなあつめ: 自分のHPを最大HPの1/2回復する。すなあらし状態のときは2732/4096(≒2/3)回復する。
+
+    天候の有効判定は battle.weather_for() に委譲する（エアロック・ノーてんき考慮済み）。
+    端数は五捨五超入（round_half_down）で丸める。HPが満タンの場合は失敗する。
+    """
+    mon = ctx.attacker
+    if mon.hp == mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
+    weather = battle.weather_for(mon)
+    if weather.name == "すなあらし":
+        heal = round_half_down(mon.max_hp * 2732 / 4096)
+    else:
+        heal = round_half_down(mon.max_hp / 2)
+    battle.modify_hp(mon, v=heal)
+    return HandlerReturn(value=value)
+
+
 def すなあらし_activate_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=battle.weather_manager.apply("すなあらし", 5, source=ctx.attacker))
 

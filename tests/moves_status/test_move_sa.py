@@ -3,6 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.enums import Interrupt
+from jpoke.utils.math import round_half_down
 from .. import test_utils as t
 
 
@@ -947,6 +948,102 @@ def test_すてゼリフ_控えがいない場合はランク低下のみ():
     assert defender.rank["atk"] == -1
     assert defender.rank["spa"] == -1
     assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_すなあつめ_まもるで防がれない():
+    """すなあつめ: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+
+
+def test_すなあつめ_マジックコートで跳ね返されない():
+    """すなあつめ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+def test_すなあつめ_まんたんなら失敗():
+    """すなあつめ: HPが最大値のときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+
+
+def test_すなあつめ_通常天候では最大HPの半分回復する():
+    """すなあつめ: 通常天候では最大HPの1/2回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
+
+
+@pytest.mark.parametrize("weather_arg", [
+    ("はれ", 5),
+    ("あめ", 5),
+    ("ゆき", 5),
+])
+def test_すなあつめ_すなあらし以外の天候では回復量が下がらない(weather_arg):
+    """すなあつめ: すなあらし以外の天候（はれ/あめ/ゆき）でも回復量は1/2のまま下がらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("カビゴン")],
+        weather=weather_arg,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
+
+
+def test_すなあつめ_すなあらしでは最大HPの2732_4096回復する():
+    """すなあつめ: すなあらし状態では最大HPの2732/4096(≒2/3)回復する（五捨五超入で丸め）"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("すなあらし", 5),
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + round_half_down(attacker.max_hp * 2732 / 4096)
+
+
+def test_すなあつめ_エアロックですなあらしが無効化されると半分回復になる():
+    """すなあつめ: 場にエアロック持ちがいてすなあらしが無効化されている場合、回復量は1/2のまま"""
+    battle = t.start_battle(
+        team0=[Pokemon("シロデスナ", move_names=["すなあつめ"])],
+        team1=[Pokemon("ボーマンダ", ability_name="エアロック")],
+        weather=("すなあらし", 5),
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
 def test_スピードスワップ_すばやさ実数値が入れ替わる():
