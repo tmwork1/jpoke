@@ -894,6 +894,36 @@ def test_とぐろをまく_こうげきとぼうぎょと命中率1段階ずつ
     assert attacker.rank["accuracy"] == 1
 
 
+def test_とぐろをまく_自分対象のためまもるで防がれない():
+    """とぐろをまく: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とぐろをまく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["accuracy"] == 1
+
+
+def test_とぐろをまく_マジックコートで跳ね返されない():
+    """とぐろをまく: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とぐろをまく"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["accuracy"] == 1
+
+
 def test_とける_ぼうぎょ2段階上がる():
     """とける: 使用すると自分のぼうぎょランクが2段階上がる"""
     battle = t.start_battle(
