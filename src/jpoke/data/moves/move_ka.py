@@ -686,7 +686,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "キングシールド": MoveData(
         type="はがね",
         category="status",
-        pp=10,
+        pp=8,
         priority=4,
         target="self",
         flags={"protect"},
