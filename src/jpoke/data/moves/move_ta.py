@@ -874,14 +874,22 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "でんじふゆう": MoveData(
         type="でんき",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         flags={"gravity_restricted"},
         handlers={
-            Event.ON_TRY_MOVE_1: h.MoveHandler(
-                h.gravity_restricted_fail,
-                subject_spec="attacker:self",
-                priority=30,
-            ),
+            Event.ON_TRY_MOVE_1: [
+                h.MoveHandler(
+                    h.gravity_restricted_fail,
+                    subject_spec="attacker:self",
+                    priority=30,
+                ),
+                h.MoveHandler(
+                    hs.でんじふゆう_check_can_use,
+                    subject_spec="attacker:self",
+                    priority=30,
+                ),
+            ],
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.でんじふゆう_apply,
             ),

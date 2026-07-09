@@ -1358,6 +1358,18 @@ def でんじふゆう_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     return apply_volatile_to_attacker(battle, ctx, value, volatile="でんじふゆう", count=5)
 
 
+def でんじふゆう_check_can_use(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """でんじふゆうの使用条件チェック: ねをはる・うちおとす状態のポケモンは失敗する。"""
+    mon = ctx.attacker
+    if mon.has_volatile("ねをはる") or mon.has_volatile("うちおとす"):
+        battle.add_event_log(
+            mon, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="でんじふゆう_接地状態")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def とおせんぼう_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """とおせんぼうの効果: 相手をにげられない状態にする。"""
     return apply_volatile_to_defender(battle, ctx, value, volatile="にげられない")

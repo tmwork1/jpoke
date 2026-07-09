@@ -642,6 +642,77 @@ def test_でんじふゆう_でんじふゆう状態を付与する():
     assert attacker.has_volatile("でんじふゆう")
 
 
+def test_でんじふゆう_PPは12():
+    """でんじふゆう: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["でんじふゆう"].pp == 12
+
+
+def test_でんじふゆう_まもるで防がれない():
+    """でんじふゆう: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("でんじふゆう")
+
+
+def test_でんじふゆう_マジックコートで跳ね返されない():
+    """でんじふゆう: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("でんじふゆう")
+    assert not defender.has_volatile("でんじふゆう")
+
+
+def test_でんじふゆう_ねをはる状態なら失敗():
+    """でんじふゆう: ねをはる状態のポケモンが使うと失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"ねをはる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("でんじふゆう")
+
+
+def test_でんじふゆう_うちおとす状態なら失敗():
+    """でんじふゆう: うちおとす状態のポケモンが使うと失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"うちおとす": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("でんじふゆう")
+
+
+def test_でんじふゆう_じゅうりょく状態では失敗():
+    """でんじふゆう: 場がじゅうりょく状態のときは使えない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじふゆう"])],
+        team1=[Pokemon("カビゴン")],
+        field={"じゅうりょく": 3},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("でんじふゆう")
+
+
 def test_とおせんぼう_すでににげられない状態なら失敗():
     """とおせんぼう: 相手がすでににげられない状態なら失敗する"""
     battle = t.start_battle(
