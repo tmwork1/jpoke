@@ -524,6 +524,47 @@ def test_にほんばれ_天気がはれになる():
     assert battle.weather.count == 5
 
 
+def test_にらみつける_ぼうぎょが1段階下がる():
+    """にらみつける: 使用すると相手のぼうぎょが1段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["にらみつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == -1
+
+
+def test_にらみつける_まもるで防がれる():
+    """にらみつける: unprotectableフラグを持たないため、まもる状態の相手には効果が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["にらみつける"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == 0
+
+
+def test_にらみつける_みがわりには効果がない():
+    """にらみつける: 音技ではないため、みがわり状態の相手には効果が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["にらみつける"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == 0
+
+
 def test_ニードルガード_ターン終了で解除される():
     """ニードルガード: ターン終了時に揮発状態が解除される"""
     battle = t.start_battle(
