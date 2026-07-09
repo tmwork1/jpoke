@@ -260,6 +260,22 @@ def test_アロマセラピー_使用者の状態異常が回復される(ailmen
     assert not attacker.ailment.is_active
 
 
+def test_アロマセラピー_まもるで防がれない():
+    """アロマセラピー: 味方全体を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["アロマセラピー"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("どく", None),
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    assert attacker.ailment.is_active
+    battle.test_option.trigger_ailment = False
+    t.run_move(battle, 0)
+
+    assert not attacker.ailment.is_active
+
+
 def test_アロマセラピー_控えの状態異常も回復される():
     """アロマセラピー: 控えのポケモンが状態異常でも、使用後に回復される。"""
     battle = t.start_battle(
@@ -274,16 +290,17 @@ def test_アロマセラピー_控えの状態異常も回復される():
     assert not bench.ailment.is_active
 
 
-def test_アロマセラピー_状態異常なしでも失敗しない():
-    """アロマセラピー: パーティ全員が状態異常でない場合でも技が失敗せず正常終了する。"""
+def test_アロマセラピー_状態異常なしなら失敗():
+    """アロマセラピー: チームに状態異常がいない場合は技が失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["アロマセラピー"])],
         team1=[Pokemon("ピカチュウ")],
     )
     attacker = battle.actives[0]
     assert not attacker.ailment.is_active
-    # 例外が発生せず正常完了することを確認する
     t.run_move(battle, 0)
+
+    # 状態異常なし → 技が失敗 → 状態に変化なし
     assert not attacker.ailment.is_active
 
 

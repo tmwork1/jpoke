@@ -412,10 +412,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=5,
-        target="self",
+        target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.アロマセラピー_apply,
+                hs.アロマセラピー_cure_team_ailment,
             ),
         },
     ),
