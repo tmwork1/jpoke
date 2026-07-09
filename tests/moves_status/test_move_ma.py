@@ -1400,6 +1400,24 @@ def test_もりののろい_すでにくさタイプなら失敗():
     assert not defender.has_volatile("もりののろい")
 
 
+def test_もりののろい_テラスタル中の相手には失敗する():
+    """もりののろい: テラスタルしている相手には失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["もりののろい"])],
+        team1=[Pokemon("カビゴン", tera_type="ほのお")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # テラスタル状態にする
+    defender.terastallized = True
+    assert defender.active_tera_type == "ほのお"
+    t.run_move(battle, 0)
+
+    # 技自体が失敗し、volatile は付与されない
+    assert not defender.has_volatile("もりののろい")
+    assert defender.types == ["ほのお"]
+
+
 def test_もりののろい_もりののろい状態を付与する():
     """もりののろい: 相手にもりののろい状態を付与する（くさタイプが追加される）"""
     battle = t.start_battle(
