@@ -402,7 +402,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しびれごな": MoveData(
         type="くさ",
         category="status",
-        pp=30,
+        pp=20,
         accuracy=75,
         flags={"powder"},
         handlers={
