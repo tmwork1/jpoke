@@ -412,7 +412,11 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=20,
         accuracy=55,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ちょうおんぱ_apply,
+            ),
+        }
     ),
     "ちょうのまい": MoveData(
         type="むし",

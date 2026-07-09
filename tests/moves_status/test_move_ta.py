@@ -149,6 +149,51 @@ def test_ちからをすいとる_相手のランク補正込みA実数値だけ
     assert defender.rank["atk"] == 0
 
 
+def test_ちょうおんぱ_こんらん状態を付与する():
+    """ちょうおんぱ: 相手をこんらん状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうおんぱ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("こんらん")
+
+
+def test_ちょうおんぱ_すでにこんらん状態なら失敗():
+    """ちょうおんぱ: 相手がすでにこんらん状態なら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうおんぱ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"こんらん": 3},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    old_count = defender.volatiles["こんらん"].count
+    t.run_move(battle, 0)
+
+    # カウントは変わらない（重複付与されない）
+    assert defender.has_volatile("こんらん")
+    assert defender.volatiles["こんらん"].count == old_count
+
+
+def test_ちょうおんぱ_みがわりを貫通する():
+    """ちょうおんぱ: 音技のため、みがわりを貫通してこんらん状態を付与する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうおんぱ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert defender.has_volatile("こんらん")
+
+
 def test_ちょうのまい_1つでも上昇できれば成功():
     """ちょうのまい: とくこうが最大でも、とくぼうとすばやさは上昇する"""
     battle = t.start_battle(
