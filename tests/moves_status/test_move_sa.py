@@ -242,6 +242,45 @@ def test_しっぽきり_控えがいない場合は失敗():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_しっぽきり_消費コストちょうどでも失敗する():
+    """しっぽきり: HPが消費コスト（最大HPの半分・切り上げ）ちょうどの場合、
+    支払うとHPが0になってしまうため失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    cost = (max_hp + 1) // 2
+    battle.modify_hp(attacker, -(attacker.hp - cost))
+    assert attacker.hp == cost
+    t.run_move(battle, 0)
+
+    # みがわりは生成されない
+    assert not attacker.has_volatile("みがわり")
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_しっぽきり_消費コストより1多いHPなら成功する():
+    """しっぽきり: HPが消費コストより1多い場合は成功し、HPが1残る"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["しっぽきり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    cost = (max_hp + 1) // 2
+    battle.modify_hp(attacker, -(attacker.hp - (cost + 1)))
+    assert attacker.hp == cost + 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1
+    assert attacker.has_volatile("みがわり")
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+
 def test_しびれごな_くさタイプに無効化される():
     """しびれごな: 草タイプの相手にはまひ状態を付与できない"""
     battle = t.start_battle(
