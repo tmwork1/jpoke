@@ -247,6 +247,34 @@ def test_なまける_まんたんなら失敗():
     assert attacker.hp == attacker.max_hp
 
 
+def test_なまける_マジックコートで跳ね返されない():
+    """なまける: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なまける"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+def test_なまける_まもるで防がれない():
+    """なまける: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なまける"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+
+
 def test_なやみのタネ_ふみん付与後はねむり系技が効かない():
     """なやみのタネ: ふみんに書き換えられた相手にはその後ねむり系技が効かない"""
     battle = t.start_battle(
