@@ -276,19 +276,6 @@ def test_なまける_HPが2分の1回復する():
     assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
-def test_なまける_まんたんなら失敗():
-    """なまける: HPが最大値のときは失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["なまける"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    attacker = battle.actives[0]
-    assert attacker.hp == attacker.max_hp
-    t.run_move(battle, 0)
-
-    assert attacker.hp == attacker.max_hp
-
-
 def test_なまける_マジックコートで跳ね返されない():
     """なまける: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
     battle = t.start_battle(
@@ -315,6 +302,19 @@ def test_なまける_まもるで防がれない():
     attacker.hp = 1
     t.run_move(battle, 0)
     assert attacker.hp > 1
+
+
+def test_なまける_まんたんなら失敗():
+    """なまける: HPが最大値のときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なまける"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.hp == attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
 
 
 def test_なみだめ_こうげきととくこうが1段階ずつ下がる():
