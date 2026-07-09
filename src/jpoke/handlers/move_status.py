@@ -1280,6 +1280,13 @@ def ちからをすいとる_can_apply(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
+def ちょうおんぱ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ちょうおんぱの効果: 相手をこんらん状態にする。"""
+    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
+        ctx.defender, source=ctx.attacker
+    ))
+
+
 def ちょうのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちょうのまいの効果: 自分のとくこう・とくぼう・すばやさを 1 段階ずつ上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1, "spd": 1, "spe": 1})
