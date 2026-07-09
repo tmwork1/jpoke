@@ -177,6 +177,38 @@ def test_タールショット_すばやさ1段階下がりタールショット
     assert defender.has_volatile("タールショット")
 
 
+def test_タールショット_マジックコートで跳ね返される():
+    """タールショット: マジックコートで跳ね返されると、使用者自身のすばやさが下がりタールショット状態になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タールショット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == -1
+    assert attacker.has_volatile("タールショット")
+    assert defender.rank["spe"] == 0
+    assert not defender.has_volatile("タールショット")
+
+
+def test_タールショット_まもるで防がれる():
+    """タールショット: 対象がまもる状態のときは防がれ、すばやさもタールショット状態も変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["タールショット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["spe"] == 0
+    assert not defender.has_volatile("タールショット")
+
+
 def test_ちいさくなる_マジックコートで跳ね返されない():
     """ちいさくなる: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
     battle = t.start_battle(

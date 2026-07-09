@@ -153,7 +153,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "タールショット": MoveData(
         type="いわ",
         category="status",
-        pp=15,
+        pp=20,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
