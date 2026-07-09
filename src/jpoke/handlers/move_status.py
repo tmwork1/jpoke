@@ -2217,6 +2217,7 @@ def ほおばる_consume_berry_and_boost(battle: Battle, ctx: AttackContext, val
 
 
 def ほたるび_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ほたるびの効果: 自分の『とくこう』ランクを3段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 3})
 
 
