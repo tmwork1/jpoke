@@ -840,6 +840,32 @@ def test_こおりのキバ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_こうそくいどう_すばやさが2段階上がる():
+    """こうそくいどう: 使用すると自分のすばやさランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうそくいどう"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["spe"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+
+
+def test_こうそくいどう_すばやさが上限のとき失敗する():
+    """こうそくいどう: すばやさランクがすでに+6のときは失敗し、ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうそくいどう"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["spe"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 6
+
+
 @pytest.mark.parametrize(
     "def_init,spd_init,def_exp,spd_exp",
     [

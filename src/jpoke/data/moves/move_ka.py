@@ -1074,7 +1074,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こうそくいどう": MoveData(
         type="エスパー",
         category="status",
-        pp=30,
+        pp=20,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.こうそくいどう_modify_attacker_stats,
