@@ -694,7 +694,15 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=30,
-        handlers={},  # 追加効果なし
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.テクスチャー2_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.テクスチャー2_apply,
+            ),
+        }
     ),
     "てだすけ": MoveData(
         type="ノーマル",
