@@ -307,6 +307,48 @@ def test_しびれごな_まひ付与():
     assert defender.has_ailment("まひ")
 
 
+def test_しろいきり_すでにアクティブなら失敗():
+    """しろいきり: すでにしろいきりが有効なら失敗（再設置されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["しろいきり"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"しろいきり": 4},
+    )
+    side = battle.get_side(battle.actives[0])
+    t.run_move(battle, 0)
+
+    # カウントは変わらない
+    assert side.fields["しろいきり"].is_active
+    assert side.fields["しろいきり"].count == 4
+
+
+def test_しろいきり_自陣営に5ターン設置される():
+    """しろいきり: 使用すると自陣営に5ターンのしろいきりが設置される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["しろいきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+
+    side = battle.get_side(battle.actives[0])
+    assert side.fields["しろいきり"].is_active
+    assert side.fields["しろいきり"].count == 5
+
+
+def test_しろいきり_設置後に相手の能力低下技を防ぐ():
+    """しろいきり: 使用後、相手の能力ランク低下技の効果を防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["しろいきり"])],
+        team1=[Pokemon("カビゴン", move_names=["なきごえ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    t.run_move(battle, 1)
+
+    assert attacker.rank["atk"] == 0
+
+
 def test_しんぴのまもり_すでにアクティブなら失敗():
     """しんぴのまもり: すでにしんぴのまもりが有効なら失敗（再設置されない）"""
     battle = t.start_battle(

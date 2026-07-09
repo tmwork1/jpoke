@@ -846,6 +846,14 @@ def しびれごな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
+def しろいきり_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """しろいきり: 自陣営に「しろいきり」を5ターン設定する。"""
+    side = battle.get_side(ctx.attacker)
+    if not side.apply("しろいきり", 5, source=ctx.attacker):
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def しんぴのまもり_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """しんぴのまもり: 自陣営に「しんぴのまもり」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
