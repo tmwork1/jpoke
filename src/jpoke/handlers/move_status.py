@@ -43,6 +43,36 @@ _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "たくわえる",
 })
 
+# さいはいで指示できない技の名前セット（docs/spec/moves/さいはい.md「さいはいが失敗する技」節）
+# 本プロジェクトの技データに存在しない技名（Zワザ・ダイマックス関連等）も
+# 将来の追加に備えて含めているが、現状は該当技が存在しないため実害はない。
+_INSTRUCT_BLOCKED_MOVES: frozenset[str] = frozenset({
+    # さいはい自身
+    "さいはい",
+    # 他の技が出る技
+    "オウムがえし", "さきどり", "しぜんのちから", "ねごと", "ねこのて", "まねっこ", "ゆびをふる",
+    # 他者の技を覚える技
+    "スケッチ", "ものまね", "へんしん",
+    # 反動で次のターン動けなくなる技
+    "がんせきほう", "ギガインパクト", "スターアサルト", "ときのほうこう",
+    "ハードプラント", "ハイドロカノン", "はかいこうせん", "ブラストバーン",
+    "プリズムレーザー", "ムゲンダイビーム",
+    # 溜め技（2ターン技）
+    "ソーラービーム", "ソーラーブレード", "そらをとぶ", "あなをほる", "ダイビング",
+    "ゴーストダイブ", "シャドーダイブ", "ゴッドバード", "メテオビーム", "エレクトロビーム",
+    "コールドフレア", "フリーズボルト", "ブラッドムーン", "デカハンマー",
+    # 数ターン行動する技
+    "あばれる", "げきりん", "はなびらのまい", "さわぐ", "アイスボール", "ころがる", "がまん",
+    # 前ターンの状況に依存する技・特殊な反動技
+    "きあいパンチ", "くちばしキャノン", "トラップシェル",
+    # 連続使用で成功率が下がるまもる系のうち、指示自体が失敗する技
+    "キングシールド", "ブロッキング",
+    # その他の指示不可技
+    "ゲップ", "わるあがき", "ダイマックスほう", "おいわい", "てをつなぐ",
+    # スターモービル専用技
+    "ダークアクセル", "バーンアクセル", "ファイトアクセル", "ポイズンアクセル", "マジカルアクセル",
+})
+
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
@@ -747,6 +777,62 @@ def さいきのいのり_revive(battle: Battle, ctx: AttackContext, value: Any)
 def サイコフィールド_activate_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """サイコフィールド: 地形をサイコフィールドにする。"""
     return HandlerReturn(value=battle.terrain_manager.apply("サイコフィールド", 5))
+
+
+def さいはい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さいはいの失敗条件を判定する。
+
+    - 相手が場に出てからPPを消費する行動を一度もしていない（executed_move が None）場合は失敗する
+    - 相手の直前の技が指示できない技（_INSTRUCT_BLOCKED_MOVES）の場合は失敗する
+    - 相手の直前の技のPPがすでに0の場合は失敗する
+      （0のまま battle.run_move に渡すと わるあがき に自動置換されてしまうため、ここで弾く）
+    """
+    move = ctx.defender.executed_move
+    if move is None or move.name in _INSTRUCT_BLOCKED_MOVES or move.pp <= 0:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="さいはい")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def さいはい_instruct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """さいはいの効果: 相手が直前に使用した技を、相手のPPを消費してもう一度使わせる。
+
+    battle.run_move(ctx.defender, move) により通常の技実行フローが走るため、
+    状態異常・状態変化による行動失敗判定やPP消費、ちょうはつ等による技封じは
+    通常の技実行と同様に処理される。
+
+    さいはい自身の ON_BEFORE_APPLY_MOVE / ON_STATUS_HIT ハンドラは、この呼び出しが完了するまで
+    イベントマネージャーに登録されたままになる。登録されたままだと、指示された技の実行中にも
+    さいはいの使用者（ctx.attacker）に対してこれらのイベントが発火し、さいはい_can_apply が
+    無関係な技（指示された技自身）に対して誤って再評価されてしまう
+    （この時点で ctx.attacker.executed_move はすでにさいはい自身に更新済みのため、
+    「さいはいはさいはいを指示できない」という自己参照チェックに誤って引っかかり、
+    指示した技のPPだけ消費されて不発になってしまう）。これを避けるため、
+    指示された技の実行中はさいはい自身の ON_BEFORE_APPLY_MOVE / ON_STATUS_HIT ハンドラを
+    一時的に解除する（ねごと_select_and_execute と同じパターン）。
+    """
+    move = ctx.defender.executed_move
+    suppressed_events = (Event.ON_BEFORE_APPLY_MOVE, Event.ON_STATUS_HIT)
+    handlers_data = ctx.move.data.handlers
+    for event in suppressed_events:
+        handler = handlers_data.get(event)
+        if handler is None:
+            continue
+        for h in (handler if isinstance(handler, list) else [handler]):
+            battle.events.off(event, h, ctx.attacker)
+    try:
+        battle.run_move(ctx.defender, move)
+    finally:
+        for event in suppressed_events:
+            handler = handlers_data.get(event)
+            if handler is None:
+                continue
+            for h in (handler if isinstance(handler, list) else [handler]):
+                battle.events.on(event, h, ctx.attacker)
+    return HandlerReturn(value=value)
 
 
 def さいみんじゅつ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

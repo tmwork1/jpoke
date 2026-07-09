@@ -166,8 +166,15 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "さいはい": MoveData(
         type="エスパー",
         category="status",
-        pp=15,
-        handlers={},  # 追加効果なし
+        pp=16,
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.さいはい_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.さいはい_instruct,
+            ),
+        }
     ),
     "さいみんじゅつ": MoveData(
         type="エスパー",
