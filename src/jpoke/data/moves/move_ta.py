@@ -1069,7 +1069,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "とびはねる": MoveData(
         type="ひこう",
         category="physical",
-        pp=5,
+        pp=8,
         power=85,
         accuracy=85,
         flags={"contact", "gravity_restricted", "secondary_effect", "non_negoto"},
