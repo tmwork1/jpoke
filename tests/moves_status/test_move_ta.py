@@ -764,6 +764,24 @@ def test_とおせんぼう_にげられない状態を付与する():
     assert defender.has_volatile("にげられない")
 
 
+def test_とおせんぼう_まもる状態の相手にも効果が発動する():
+    """とおせんぼう: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する（第六世代以降）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とおせんぼう"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("にげられない")
+
+
+def test_とおせんぼう_PPは8():
+    """とおせんぼう: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["とおせんぼう"].pp == 8
+
+
 def test_とおぼえ_こうげき1段階上がる():
     """とおぼえ: 使用すると自分のこうげきランクが1段階上がる"""
     battle = t.start_battle(
