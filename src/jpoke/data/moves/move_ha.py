@@ -983,7 +983,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=5,
         power=140,
         accuracy=90,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "フリーズボルト"),

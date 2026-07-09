@@ -474,7 +474,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=5,
         power=120,
         accuracy=100,
-        flags={"contact", "unprotectable"},
+        flags={"contact", "unprotectable", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),
@@ -1291,7 +1291,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=15,
         power=90,
         accuracy=95,
-        flags={"contact", "gravity_restricted"},
+        flags={"contact", "gravity_restricted", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.gravity_restricted_fail,
@@ -1309,6 +1309,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=120,
         accuracy=100,
+        flags={"non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: [
                 h.MoveHandler(
@@ -1330,7 +1331,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=125,
         accuracy=100,
-        flags={"contact", "slash"},
+        flags={"contact", "slash", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: [
                 h.MoveHandler(

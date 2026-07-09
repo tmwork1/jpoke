@@ -92,13 +92,18 @@ def どく_damage(battle: Battle, ctx: EventContext, value: Any):
 def ねむり_check_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ねむり状態による行動不能チェック"""
     mon = ctx.attacker
+    if mon.sleep_talk_active:
+        # ねごとのサブ実行中は、選ばれた技の ON_TRY_ACTION でも本ハンドラが
+        # 再度発火するが、ねむりのカウント消費は1ターンに1回のみで良いため
+        # （ねごと自身の ON_TRY_ACTION 時点ですでに消費済み）、ここでは何もしない。
+        return HandlerReturn(value=True)
     battle.ailment_manager.tick(mon)
     if not mon.has_ailment("ねむり"):
         # 眠りから覚めた：ハンドラを解除して空の状態に
         battle.ailment_manager.remove(mon)
         return HandlerReturn(value=True)
 
-    if ctx.move.name in ["いびき", "ねごと"] or ctx.attacker.sleep_talk_active:
+    if ctx.move.name in ["いびき", "ねごと"]:
         return HandlerReturn(value=True)
 
     # まだ眠っている
