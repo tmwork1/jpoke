@@ -2373,6 +2373,18 @@ def みかづきのまい_apply(battle: Battle, ctx: AttackContext, value: Any) 
     return HandlerReturn(value=value)
 
 
+def みかづきのまい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """みかづきのまいの失敗チェック: 控えのポケモンがいない場合は失敗し、使用者はひんしにならない。"""
+    player = battle.get_player(ctx.attacker)
+    if not battle.query.has_available_bench(player):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="みかづきのまい")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def みがわり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """みがわりの効果を発動する。"""
     mon = ctx.attacker
