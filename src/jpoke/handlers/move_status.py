@@ -1841,8 +1841,9 @@ def のろい_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
     mon = ctx.attacker
     if mon.has_type("ゴースト"):
         # 呪い: HP消費 → のろい状態付与
+        # reason="self_cost": マジックガードでも防げない自己HP消費として扱う
         cost = mon.max_hp // 2
-        battle.modify_hp(mon, v=-cost)
+        battle.modify_hp(mon, v=-cost, reason="self_cost", source=mon)
         return apply_volatile_to_defender(battle, ctx, value, volatile="のろい")
     else:
         # 鈍い: こうげき・ぼうぎょ上昇、すばやさ低下
