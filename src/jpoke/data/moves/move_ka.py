@@ -1192,7 +1192,8 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "コットンガード": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.コットンガード_modify_attacker_stats,
