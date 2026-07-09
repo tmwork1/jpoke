@@ -1185,6 +1185,31 @@ def test_エアスラッシュ_ひるみが発動する():
     assert battle.actives[1].has_volatile("ひるみ")
 
 
+def test_エレキフィールド_地形がエレキフィールドになる():
+    """エレキフィールド: 使用後に地形がエレキフィールドになり5ターン継続する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキフィールド"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.terrain.name == "エレキフィールド"
+    assert battle.terrain.count == 5
+
+
+def test_エレキフィールド_すでに同じ地形なら失敗():
+    """エレキフィールド: すでにエレキフィールドが有効なら失敗（再設置されない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["エレキフィールド"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 3),
+    )
+    t.run_move(battle, 0)
+
+    # カウントは変わらない
+    assert battle.terrain.name == "エレキフィールド"
+    assert battle.terrain.count == 3
+
+
 def test_えんまく_相手の命中率1段階下がる():
     """えんまく: 相手の命中率ランクが1段階下がる"""
     battle = t.start_battle(
