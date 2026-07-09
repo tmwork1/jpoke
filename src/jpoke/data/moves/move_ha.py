@@ -1399,7 +1399,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ほおばる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.ほおばる_check_has_berry,

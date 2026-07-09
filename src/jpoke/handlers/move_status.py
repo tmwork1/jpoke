@@ -2178,14 +2178,20 @@ def へびにらみ_apply_ailment_to_defender(battle: Battle, ctx: AttackContext
 
 
 def ほおばる_check_defense_max(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほおばるの失敗条件: ぼうぎょランクがすでに+6の場合に失敗させる。
+    """ほおばるの失敗条件: ぼうぎょランクがすでに上限の場合に失敗させる。
 
-    あまのじゃく持ちのポケモンは B ランクが -6 のときに失敗する。
+    通常はぼうぎょランク+6のときに失敗する。あまのじゃく持ちのポケモンは
+    ぼうぎょの上昇効果が下降に反転するため、ぼうぎょランク-6のときに失敗する
+    （docs/spec/abilities/あまのじゃく.md）。
     このチェックは battle.modify_stats の内部（ON_TRY_MOVE_2 の後）で
     行われるわけではないため、ここで明示的にガードする。
     """
     mon = ctx.attacker
-    if mon.rank["def"] >= 6:
+    if mon.ability.name == "あまのじゃく":
+        maxed = mon.rank["def"] <= -6
+    else:
+        maxed = mon.rank["def"] >= 6
+    if maxed:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ほおばる_ぼうぎょ最大")
