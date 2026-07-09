@@ -523,14 +523,6 @@ def おにび_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
-def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
-    side = battle.get_side(ctx.attacker)
-    if not side.apply("オーロラベール", 5, source=ctx.attacker):
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベールの使用条件チェック: 天気が「ゆき」でない場合は失敗する。"""
     if battle.weather.name != "ゆき":
@@ -538,6 +530,14 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="オーロラベール")
         )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
+    side = battle.get_side(ctx.attacker)
+    if not side.apply("オーロラベール", 5, source=ctx.attacker):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
