@@ -1288,6 +1288,107 @@ def test_フェアリーロック_使用者側が交代できない():
     assert not t.can_switch(battle, 0)
 
 
+def test_ふきとばし_かぜのりで無効化される():
+    """ふきとばし: 相手が特性かぜのりの場合、無効化されてこうげきが1段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("ピカチュウ", ability_name="かぜのり"), Pokemon("カビゴン")],
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender_before
+    assert defender_before.rank["atk"] == 1
+
+
+def test_ふきとばし_きゅうばんで無効化される():
+    """ふきとばし: 相手が特性きゅうばんの場合、強制交代が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("ピカチュウ", ability_name="きゅうばん"), Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender
+
+
+def test_ふきとばし_ねをはる状態の相手には失敗する():
+    """ふきとばし: 相手がねをはる状態の場合、強制交代が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"ねをはる": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender_before
+
+
+def test_ふきとばし_マジックコートで跳ね返り使用者が交代する():
+    """ふきとばし: マジックコートで跳ね返されると、使用者側が強制的に交代させられる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker_before = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert battle.actives[0] is not attacker_before
+
+
+def test_ふきとばし_まもるを貫通する():
+    """ふきとばし: まもる状態の相手にも強制交代が発生する（まもるを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"まもる": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
+def test_ふきとばし_みがわりを貫通する():
+    """ふきとばし: みがわり状態の相手にも強制交代が発生する（みがわりを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"みがわり": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
+def test_ふきとばし_控えポケモンがいない場合は失敗する():
+    """ふきとばし: 相手に控えポケモンがいない場合は技が失敗し、交代は発生しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is defender_before
+
+
+def test_ふきとばし_相手が強制交代する():
+    """ふきとばし: 相手に控えポケモンがいる場合、相手ポケモンがランダムに交代する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
+
+
 def test_ふしょくガス_かたやぶりならねんちゃく持ちからも消失させられる():
     """ふしょくガス: 使用者がかたやぶりの場合、ねんちゃく持ちの相手からも持ち物を消失させられる。"""
     battle = t.start_battle(
@@ -1469,107 +1570,6 @@ def test_へびにらみ_まひ付与():
     assert battle.actives[1].ailment.name == "まひ"
 
 
-def test_ふきとばし_かぜのりで無効化される():
-    """ふきとばし: 相手が特性かぜのりの場合、無効化されてこうげきが1段階上がる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("ピカチュウ", ability_name="かぜのり"), Pokemon("カビゴン")],
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is defender_before
-    assert defender_before.rank["atk"] == 1
-
-
-def test_ふきとばし_きゅうばんで無効化される():
-    """ふきとばし: 相手が特性きゅうばんの場合、強制交代が無効化される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("ピカチュウ", ability_name="きゅうばん"), Pokemon("カビゴン")],
-    )
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is defender
-
-
-def test_ふきとばし_ねをはる状態の相手には失敗する():
-    """ふきとばし: 相手がねをはる状態の場合、強制交代が無効化される"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        volatile1={"ねをはる": 1},
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is defender_before
-
-
-def test_ふきとばし_まもるを貫通する():
-    """ふきとばし: まもる状態の相手にも強制交代が発生する（まもるを貫通する）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        volatile1={"まもる": 1},
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is not defender_before
-
-
-def test_ふきとばし_マジックコートで跳ね返り使用者が交代する():
-    """ふきとばし: マジックコートで跳ね返されると、使用者側が強制的に交代させられる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"]), Pokemon("ライチュウ")],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"マジックコート": 1},
-    )
-    attacker_before = battle.actives[0]
-    t.run_move(battle, 0)
-
-    assert battle.actives[0] is not attacker_before
-
-
-def test_ふきとばし_みがわりを貫通する():
-    """ふきとばし: みがわり状態の相手にも強制交代が発生する（みがわりを貫通する）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        volatile1={"みがわり": 1},
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is not defender_before
-
-
-def test_ふきとばし_控えポケモンがいない場合は失敗する():
-    """ふきとばし: 相手に控えポケモンがいない場合は技が失敗し、交代は発生しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is defender_before
-
-
-def test_ふきとばし_相手が強制交代する():
-    """ふきとばし: 相手に控えポケモンがいる場合、相手ポケモンがランダムに交代する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ふきとばし"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is not defender_before
-
-
 def test_ほえる_きゅうばんで無効化される():
     """ほえる: 相手が特性きゅうばんの場合、強制交代が無効化される"""
     battle = t.start_battle(
@@ -1596,19 +1596,6 @@ def test_ほえる_ねをはる状態の相手には失敗する():
     assert battle.actives[1] is defender_before
 
 
-def test_ほえる_まもるを貫通する():
-    """ほえる: まもる状態の相手にも強制交代が発生する（まもるを貫通する）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        volatile1={"まもる": 1},
-    )
-    defender_before = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert battle.actives[1] is not defender_before
-
-
 def test_ほえる_マジックコートで跳ね返り使用者が交代する():
     """ほえる: マジックコートで跳ね返されると、使用者側が強制的に交代させられる"""
     battle = t.start_battle(
@@ -1620,6 +1607,19 @@ def test_ほえる_マジックコートで跳ね返り使用者が交代する(
     t.run_move(battle, 0)
 
     assert battle.actives[0] is not attacker_before
+
+
+def test_ほえる_まもるを貫通する():
+    """ほえる: まもる状態の相手にも強制交代が発生する（まもるを貫通する）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほえる"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        volatile1={"まもる": 1},
+    )
+    defender_before = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert battle.actives[1] is not defender_before
 
 
 def test_ほえる_みがわりを貫通する():
@@ -1659,6 +1659,24 @@ def test_ほえる_控えポケモンがいる場合に交代が発生する():
     assert battle.actives[1] is not defender_before
 
 
+def test_ほおばる_あまのじゃくでぼうぎょ最大でも成功する():
+    """ほおばる + あまのじゃく: ぼうぎょランクがすでに+6でも、
+    あまのじゃくの効果で上昇が下降に反転するため成功してきのみを消費しぼうぎょが下がる
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく",
+                       move_names=["ほおばる"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.rank["def"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 4
+    assert not attacker.item.is_berry()
+
+
 def test_ほおばる_あまのじゃくでぼうぎょ最小なら失敗する():
     """ほおばる + あまのじゃく: ぼうぎょランクがすでに-6の場合、
     あまのじゃくの反転効果で下降方向に上限があるため失敗しきのみも消費されない
@@ -1676,24 +1694,6 @@ def test_ほおばる_あまのじゃくでぼうぎょ最小なら失敗する(
     # 失敗のためランクは変化せず、きのみも消費されない
     assert attacker.rank["def"] == -6
     assert attacker.item.is_berry()
-
-
-def test_ほおばる_あまのじゃくでぼうぎょ最大でも成功する():
-    """ほおばる + あまのじゃく: ぼうぎょランクがすでに+6でも、
-    あまのじゃくの効果で上昇が下降に反転するため成功してきのみを消費しぼうぎょが下がる
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく",
-                       move_names=["ほおばる"], item_name="オボンのみ")],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    attacker.rank["def"] = 6
-    t.run_move(battle, 0)
-
-    assert attacker.rank["def"] == 4
-    assert not attacker.item.is_berry()
 
 
 def test_ほおばる_きのみが消費される():
@@ -1819,11 +1819,6 @@ def test_ほたるび_自分対象のためまもるで防がれない():
     assert attacker.rank["spa"] == 3
 
 
-def test_ほろびのうた_PPは8():
-    """ほろびのうた: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
-    assert MOVES["ほろびのうた"].pp == 8
-
-
 def test_ほろびのうた_3ターン後に瀕死になる():
     """ほろびのうた: count=3 から3ターン経過するとひんしになる"""
     battle = t.start_battle(
@@ -1842,6 +1837,42 @@ def test_ほろびのうた_3ターン後に瀕死になる():
 
     t.end_turn(battle)
     assert attacker.fainted
+
+
+def test_ほろびのうた_PPは8():
+    """ほろびのうた: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["ほろびのうた"].pp == 8
+
+
+def test_ほろびのうた_まもる状態の相手にも効果が発動する():
+    """ほろびのうた: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ほろびのうた")
+    assert defender.has_volatile("ほろびのうた")
+
+
+def test_ほろびのうた_みがわりを貫通して付与される():
+    """ほろびのうた: soundフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("ほろびのうた")
+    assert defender.volatiles["みがわり"].hp == 999
 
 
 def test_ほろびのうた_使用者と相手にvolatileが付与される():
@@ -1891,37 +1922,6 @@ def test_ほろびのうた_自分だけ状態なら相手に付与できる():
     t.run_move(battle, 0)
 
     assert defender.has_volatile("ほろびのうた")
-
-
-def test_ほろびのうた_まもる状態の相手にも効果が発動する():
-    """ほろびのうた: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"まもる": 1},
-        accuracy=100,
-    )
-    attacker = battle.actives[0]
-    defender = battle.actives[1]
-    t.run_move(battle, 0)
-
-    assert attacker.has_volatile("ほろびのうた")
-    assert defender.has_volatile("ほろびのうた")
-
-
-def test_ほろびのうた_みがわりを貫通して付与される():
-    """ほろびのうた: soundフラグを持つため、みがわり状態の相手にも効果が発動する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
-        team1=[Pokemon("カビゴン")],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    battle.volatile_manager.apply(defender, "みがわり", hp=999)
-    t.run_move(battle, 0)
-
-    assert defender.has_volatile("ほろびのうた")
-    assert defender.volatiles["みがわり"].hp == 999
 
 
 @pytest.mark.parametrize(

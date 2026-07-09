@@ -102,7 +102,6 @@ def on_blow_check_switch_target(battle: Battle, ctx: AttackContext, value: Any) 
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
-
 def blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を発動する。
 
