@@ -266,6 +266,20 @@ def test_マジックコート_unreflectableフラグを持つ技は跳ね返さ
     assert attacker.ability.name == "めんえき"
 
 
+def test_マジックコート_unreflectableフラグを持つなりきりは跳ね返さない():
+    """マジックコート: unreflectableフラグを持つなりきりは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り相手の特性がコピーされる
+    assert attacker.ability.name == "めんえき"
+
+
 def test_マジックコート_unreflectableフラグを持つじこあんじは跳ね返さない():
     """マジックコート: unreflectableフラグを持つじこあんじは跳ね返されない"""
     battle = t.start_battle(

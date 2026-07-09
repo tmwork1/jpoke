@@ -178,8 +178,9 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "なりきり": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,
+        accuracy=None,  # 必中
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.なりきり_can_apply,

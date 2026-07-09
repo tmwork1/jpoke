@@ -535,7 +535,7 @@ def test_なりきり_交代後に元の特性に戻る():
 
 @pytest.mark.parametrize("d_ability", ["アイスフェイス", "イリュージョン"])
 def test_なりきり_失敗条件(d_ability):
-    """なりきり: uncopyable/protectedフラグ持ちの相手には失敗する"""
+    """なりきり: uncopyableフラグ持ちの相手には失敗する"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
         team1=[Pokemon("カビゴン", ability_name=d_ability)],
@@ -546,6 +546,89 @@ def test_なりきり_失敗条件(d_ability):
 
     # 使用者の特性は変化しない
     assert attacker.ability.name == "せいでんき"
+
+
+def test_なりきり_うのミサイルはコピーできる():
+    """なりきり: うのミサイルはSV Ver.3.0.0以降コピー可能になったため成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="うのミサイル")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "うのミサイル"
+
+
+def test_なりきり_ふしぎなまもりはコピーできない():
+    """なりきり: ふしぎなまもりはuncopyableフラグを持たないがなりきりでは個別に失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("ヌケニン", ability_name="ふしぎなまもり")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # 使用者の特性は変化しない
+    assert attacker.ability.name == "せいでんき"
+
+
+def test_なりきり_使用者と対象の特性が同じ場合は失敗する():
+    """なりきり: 使用者と対象の特性がすでに同じ場合は失敗する（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="せいでんき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "せいでんき"
+
+
+def test_なりきり_使用者の特性が上書きできない場合は失敗する():
+    """なりきり: 使用者自身の特性がprotectedフラグを持つ場合（マルチタイプ等）は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # 使用者の特性は変化しない
+    assert attacker.ability.name == "マルチタイプ"
+
+
+def test_なりきり_まもる状態の相手にも成功する():
+    """なりきり: unprotectableフラグを持つためまもる状態の相手にも成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "めんえき"
+
+
+def test_なりきり_みがわり状態の相手にも成功する():
+    """なりきり: bypass_substituteフラグを持つためみがわり状態の相手にも成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "めんえき"
 
 
 def test_にほんばれ_天気がはれになる():

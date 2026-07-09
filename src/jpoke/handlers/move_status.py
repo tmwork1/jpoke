@@ -1559,12 +1559,22 @@ def なやみのタネ_change_ability(battle: Battle, ctx: AttackContext, value:
 def なりきり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なりきりの失敗条件チェック。
 
-    対象の特性が uncopyable フラグを持つ場合は失敗する
-    （ふしぎなまもり・かわりものなど固有の特性）。
-    使用者自身の特性変更がとくせいガード等で防がれる場合も失敗する。
+    以下の場合は失敗する:
+    - 対象の特性が uncopyable フラグを持つ場合（かわりもの・マルチタイプなど固有の特性）
+    - 対象の特性がふしぎなまもりの場合
+      （ふしぎなまもりはトレースでは有効だが、なりきりに対してのみ無効という
+        例外があるため uncopyable フラグとは別に個別判定する）
+    - 使用者自身の特性が protected フラグを持つ場合（上書きできない特性）
+    - 使用者と対象の特性が既に同じ場合
+    - 使用者自身の特性変更がとくせいガード等で防がれる場合
     """
+    attacker_ability = ctx.attacker.ability
+    defender_ability = ctx.defender.ability
     if (
-        ctx.defender.ability.has_flag("uncopyable")
+        defender_ability.has_flag("uncopyable")
+        or defender_ability.base_name == "ふしぎなまもり"
+        or attacker_ability.has_flag("protected")
+        or attacker_ability.base_name == defender_ability.base_name
         or battle.ability_manager.is_change_blocked(ctx.attacker)
     ):
         battle.add_event_log(
