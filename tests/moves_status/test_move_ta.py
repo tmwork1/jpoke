@@ -376,6 +376,20 @@ def test_ちょうはつ_ちょうはつ状態を付与する():
     assert defender.has_volatile("ちょうはつ")
 
 
+def test_ちょうはつ_みがわり状態の相手にも効果が発動する():
+    """ちょうはつ: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうはつ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("ちょうはつ")
+
+
 def test_つきのひかり_マジックコートで跳ね返されない():
     """つきのひかり: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
     battle = t.start_battle(
