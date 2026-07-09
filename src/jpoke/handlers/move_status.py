@@ -709,6 +709,7 @@ def こらえる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
 
 
 def こわいかお_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """こわいかおの効果: 相手のすばやさを2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
 

@@ -962,6 +962,31 @@ def test_こらえる_HP1のとき致死ダメージでHP1残る():
     assert not defender.fainted
 
 
+def test_こわいかお_defenderのすばやさが2段階下がる():
+    """こわいかお: 相手（defender）のすばやさが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こわいかお"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spe"] == -2
+
+
+def test_こわいかお_まもるで防がれる():
+    """こわいかお: まもるで効果が防がれ、すばやさランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こわいかお"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["spe"] == 0
+
+
 def test_こらえる_こらえる揮発状態が付与される():
     """こらえる: 使用すると自分にこらえる揮発状態が付与される"""
     battle = t.start_battle(
