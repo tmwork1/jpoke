@@ -802,8 +802,11 @@ MOVES_SA: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=10,
+        target="self",
         flags={"heal"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(hs.ジャングルヒール_apply),
+        },
     ),
     "じゅうでん": MoveData(
         type="でんき",

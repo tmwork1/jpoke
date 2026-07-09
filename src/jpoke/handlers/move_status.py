@@ -523,14 +523,6 @@ def おにび_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
-def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
-    side = battle.get_side(ctx.attacker)
-    if not side.apply("オーロラベール", 5, source=ctx.attacker):
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベールの使用条件チェック: 天気が「ゆき」でない場合は失敗する。"""
     if battle.weather.name != "ゆき":
@@ -538,6 +530,14 @@ def オーロラベール_check_weather(battle: Battle, ctx: AttackContext, valu
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="オーロラベール")
         )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
+    side = battle.get_side(ctx.attacker)
+    if not side.apply("オーロラベール", 5, source=ctx.attacker):
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -1065,6 +1065,19 @@ def じばそうさ_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
 def じばそうさ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じばそうさの効果: ぼうぎょ・とくぼうをそれぞれ1段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
+
+
+def ジャングルヒール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ジャングルヒール: 自分のHPを最大HPの1/4回復し、状態異常を治す。
+
+    HPが満タンかつ状態異常もない場合は失敗する。端数は切り捨て。
+    """
+    mon = ctx.attacker
+    if mon.hp == mon.max_hp and not mon.ailment.is_active:
+        return HandlerReturn(value=False, stop_event=True)
+    battle.modify_hp(mon, r=1 / 4)
+    battle.ailment_manager.remove(mon)
+    return HandlerReturn(value=value)
 
 
 def じゅうでん_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
