@@ -244,8 +244,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "うなぎのぼり": AbilityData(),
     "うのミサイル": AbilityData(
         flags={
-            "uncopyable",
-            "protected",
             "gas_proof",
         },
         handlers={
