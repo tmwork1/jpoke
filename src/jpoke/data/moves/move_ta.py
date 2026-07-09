@@ -583,7 +583,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つぶらなひとみ": MoveData(
         type="フェアリー",
         category="status",
-        pp=30,
+        pp=20,
         accuracy=100,
         priority=1,
         handlers={
