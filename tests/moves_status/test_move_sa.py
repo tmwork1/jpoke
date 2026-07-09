@@ -434,6 +434,23 @@ def test_しびれごな_まひ付与():
     assert defender.has_ailment("まひ")
 
 
+def test_しょうりのまい_こうげきぼうぎょすばやさが1段階ずつ上がる():
+    """しょうりのまい: 使用すると自分のこうげき・ぼうぎょ・すばやさランクが1段階ずつ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["しょうりのまい"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["def"] == 0
+    assert attacker.rank["spe"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spe"] == 1
+
+
 def test_しんぴのまもり_すでにアクティブなら失敗():
     """しんぴのまもり: すでにしんぴのまもりが有効なら失敗（再設置されない）"""
     battle = t.start_battle(
