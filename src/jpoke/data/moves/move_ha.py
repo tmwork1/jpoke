@@ -643,7 +643,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         type="あく",
         category="status",
         pp=20,
-        accuracy=100,
+        accuracy=None,  # 必中
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ひっくりかえす_invert_ranks,

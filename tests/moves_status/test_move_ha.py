@@ -950,6 +950,187 @@ def test_ひっくりかえす_複数ランクが全て反転する():
     assert defender.rank["spe"] == -1
 
 
+def test_ひっくりかえす_まもるで防がれる():
+    """ひっくりかえす: まもる状態の相手には防がれ、ランクは変化しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+
+
+def test_ひっくりかえす_みがわり状態の相手には防がれる():
+    """ひっくりかえす: みがわり状態の相手には防がれ、ランクは変化しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+
+
+def test_ひっくりかえす_マジックコートで反射される():
+    """ひっくりかえす: マジックコート状態の相手に使うと反射され、使用者のランクが反転すること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    # 反射され、使用者自身のランクが反転する。相手のランクは変化しない
+    assert attacker.rank["atk"] == -2
+    assert defender.rank["atk"] == 0
+
+
+@pytest.mark.parametrize("d_ability", ["クリアボディ", "ミラーアーマー"])
+def test_ひっくりかえす_能力低下防止特性でも防げない(d_ability: str):
+    """ひっくりかえす: クリアボディ/ミラーアーマーなどのランク低下防止特性でも防げないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_しろいきりでも防げない():
+    """ひっくりかえす: 相手側のしろいきり状態でもランク反転は防げないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        side1={"しろいきり": 5},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_クリアチャームでも防げない():
+    """ひっくりかえす: 持ち物クリアチャームでもランク反転は防げないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン", item_name="クリアチャーム")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_あまのじゃくの影響を受けない():
+    """ひっくりかえす: あまのじゃく特性の相手に使ってもランク変動の符号は反転処理されないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン", ability_name="あまのじゃく")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_たんじゅんの影響を受けない():
+    """ひっくりかえす: たんじゅん特性の相手に使ってもランク変動が2倍にならないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン", ability_name="たんじゅん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_まけんきが発動しない():
+    """ひっくりかえす: ランクが下がっても、まけんきによるこうげき上昇は発動しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン", ability_name="まけんき")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+
+
+def test_ひっくりかえす_だっしゅつパックが発動しない():
+    """ひっくりかえす: ランクが下がっても、だっしゅつパックによる交代は発動しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン", item_name="だっしゅつパック"), Pokemon("ゲンガー")],
+        accuracy=100,
+    )
+    state1 = battle._player_states[1]
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -2
+    assert state1.active_index == 0
+    assert defender.has_item("だっしゅつパック")
+
+
+def test_ひっくりかえす_びんじょうが発動しない():
+    """ひっくりかえす: 相手のランクが上がっても、使用者のびんじょうは発動しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びんじょう", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.rank["atk"] = -2
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+    assert attacker.rank["atk"] == 0
+
+
+def test_ひっくりかえす_ものまねハーブが発動しない():
+    """ひっくりかえす: 相手のランクが上がっても、使用者のものまねハーブは発動しないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ものまねハーブ", move_names=["ひっくりかえす"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.rank["def"] = -1
+    t.run_move(battle, 0)
+
+    assert defender.rank["def"] == 1
+    assert attacker.rank["def"] == 0
+    assert attacker.has_item("ものまねハーブ")
+
+
 def test_びりびりちくちく_ひるみが発動する():
     """びりびりちくちく: 30%でひるみを付与する。"""
     battle = t.start_battle(
