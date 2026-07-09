@@ -3,6 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
+from jpoke.enums import Interrupt
 from .. import test_utils as t
 
 
@@ -806,6 +807,79 @@ def test_てんしのキッス_すでにこんらん状態なら失敗():
     # カウントは変わらない（重複付与されない）
     assert defender.has_volatile("こんらん")
     assert defender.volatiles["こんらん"].count == old_count
+
+
+def test_テレポート_PPは20():
+    """テレポート: PPは20"""
+    assert MOVES["テレポート"].pp == 20
+
+
+def test_テレポート_優先度はマイナス6():
+    """テレポート: 優先度は-6"""
+    assert MOVES["テレポート"].priority == -6
+
+
+def test_テレポート_対象は自分():
+    """テレポート: 対象は自分自身（まもる・マジックコートの誤爆防止のため）"""
+    assert MOVES["テレポート"].target == "self"
+
+
+def test_テレポート_控えのポケモンと交代する():
+    """テレポート: 控えのポケモンと交代し、PIVOT が設定される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["テレポート"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    t.run_move(battle, 0)
+
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+
+def test_テレポート_控えがいない場合は失敗する():
+    """テレポート: 控えにポケモンがいない場合は技が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["テレポート"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    player = battle.players[0]
+    t.run_move(battle, 0)
+
+    # 控えがいないので失敗し、PIVOT は設定されない
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_テレポート_とらわれ状態でも使用できる():
+    """テレポート: にげられない状態でも技が失敗せず PIVOT が設定される（トレーナー戦の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["テレポート"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"にげられない": 3},
+        accuracy=100,
+    )
+    player = battle.players[0]
+    t.run_move(battle, 0)
+
+    # とらわれ状態でもテレポートは失敗しない
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+
+def test_テレポート_ランクは引き継がれない():
+    """テレポート: バトンタッチと異なり、能力ランクは交代先に引き継がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["テレポート"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = 2
+    t.run_move(battle, 0)
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+
+    new_mon = battle.actives[0]
+    assert new_mon.rank["atk"] == 0
 
 
 def test_でんじは_じめんタイプには無効():

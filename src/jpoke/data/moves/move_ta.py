@@ -764,7 +764,16 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=-6,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                hs.テレポート_check,
+                priority=30,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.テレポート_apply,
+            ),
+        },
     ),
     "てんしのキッス": MoveData(
         type="フェアリー",
