@@ -412,6 +412,12 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
         flags={"non_copycat"},
         handlers={
+            # 第七世代以降: みちづれを成功させた直後にもう一度使うと必ず失敗する
+            # （docs/spec/moves/みちづれ.md「第七世代以降」節）。
+            # まもる/みきりの連続使用失敗チェックと同じ ON_TRY_MOVE_2・優先度未指定パターン。
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.みちづれ_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.みちづれ_apply,
             ),
