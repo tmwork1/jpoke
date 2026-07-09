@@ -776,7 +776,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ふういん": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ふういん_apply,
