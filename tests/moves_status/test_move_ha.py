@@ -1744,6 +1744,44 @@ def test_ほおばる_ラムのみでやけどが治る():
     assert attacker.rank["def"] == 2
 
 
+def test_ほたるび_とくこうが3段階上がる():
+    """ほたるび: 自分の『とくこう』ランクが3段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほたるび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 3
+
+
+def test_ほたるび_とくこうが最大の場合は失敗する():
+    """ほたるび: とくこうランクがすでに+6の場合は変化せず失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほたるび"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["spa"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 6
+
+
+def test_ほたるび_自分対象のためまもるで防がれない():
+    """ほたるび: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほたるび"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spa"] == 3
+
+
 def test_ほろびのうた_PPは8():
     """ほろびのうた: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
     assert MOVES["ほろびのうた"].pp == 8

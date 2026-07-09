@@ -1433,6 +1433,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         type="むし",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ほたるび_modify_attacker_stats,
