@@ -1998,6 +1998,61 @@ def test_そうでん_相手がすでに行動済みの場合は失敗する():
     assert not defender.has_volatile("そうでん")
 
 
+def test_ソウルビート_HPが最大の3分の1以下なら失敗しHPも減らない():
+    """ソウルビート: 現在HPが最大HPの1/3以下（ちょうど1/3を含む）のときは失敗し、HPもランクも変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ソウルビート"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 3
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+
+    assert attacker.hp == hp_before
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spe"] == 0
+    assert battle.move_executor.move_applied is False
+
+
+def test_ソウルビート_すべてのランクが最大なら失敗しHPも減らない():
+    """ソウルビート: 対象5ランクすべてがすでに+6のときは失敗し、HPを消費しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ソウルビート"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"atk": 6, "def": 6, "spa": 6, "spd": 6, "spe": 6}, source=attacker)
+    hp_before = attacker.hp
+
+    t.run_move(battle, 0)
+
+    assert attacker.hp == hp_before
+    assert battle.move_executor.move_applied is False
+
+
+def test_ソウルビート_一部のランクのみ最大でも成功しHPを消費する():
+    """ソウルビート: 一部のランクのみ+6の場合は失敗せず、上げられるランクだけ上げてHPを消費する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ソウルビート"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    battle.modify_stats(attacker, {"atk": 6}, source=attacker)
+
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["spd"] == 1
+    assert attacker.rank["spe"] == 1
+    assert attacker.hp == max_hp - (max_hp // 3)
+    assert battle.move_executor.move_applied is True
+
+
 def test_ソウルビート_全能力1段階上がりHP3分の1消費():
     """ソウルビート: 使用すると全能力が1段階ずつ上がり最大HPの1/3が消費される"""
     battle = t.start_battle(
@@ -2014,3 +2069,19 @@ def test_ソウルビート_全能力1段階上がりHP3分の1消費():
     assert attacker.rank["spd"] == 1
     assert attacker.rank["spe"] == 1
     assert attacker.hp == max_hp - (max_hp // 3)
+
+
+def test_ソウルビート_相手のまもるを無視して成功する():
+    """ソウルビート: 自分対象の変化技のため、相手がまもる状態でも無視して成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ソウルビート"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert battle.move_executor.move_applied is True
