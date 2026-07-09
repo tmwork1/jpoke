@@ -75,7 +75,7 @@ MOVES_YA: dict[MoveName, MoveData] = {
     "ゆきげしき": MoveData(
         type="こおり",
         category="status",
-        pp=10,
+        pp=8,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
