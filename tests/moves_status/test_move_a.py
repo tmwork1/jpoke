@@ -244,13 +244,13 @@ def test_あやしいひかり_こんらん付与():
     assert defender.has_volatile("こんらん")
 
 
-@pytest.mark.parametrize("ailment_name", ["やけど", "まひ", "どく"])
-def test_アロマセラピー_使用者の状態異常が回復される(ailment_name):
-    """アロマセラピー: 使用者がやけど・まひ・どく等の状態異常のとき、使用後に回復される。"""
+def test_アロマセラピー_まもるで防がれない():
+    """アロマセラピー: 味方全体を対象とする技のため、相手のまもるで防がれない"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["アロマセラピー"])],
         team1=[Pokemon("ピカチュウ")],
-        ailment0=(ailment_name, None),
+        ailment0=("どく", None),
+        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
     assert attacker.ailment.is_active
@@ -260,13 +260,13 @@ def test_アロマセラピー_使用者の状態異常が回復される(ailmen
     assert not attacker.ailment.is_active
 
 
-def test_アロマセラピー_まもるで防がれない():
-    """アロマセラピー: 味方全体を対象とする技のため、相手のまもるで防がれない"""
+@pytest.mark.parametrize("ailment_name", ["やけど", "まひ", "どく"])
+def test_アロマセラピー_使用者の状態異常が回復される(ailment_name):
+    """アロマセラピー: 使用者がやけど・まひ・どく等の状態異常のとき、使用後に回復される。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", move_names=["アロマセラピー"])],
         team1=[Pokemon("ピカチュウ")],
-        ailment0=("どく", None),
-        volatile1={"まもる": 1},
+        ailment0=(ailment_name, None),
     )
     attacker = battle.actives[0]
     assert attacker.ailment.is_active

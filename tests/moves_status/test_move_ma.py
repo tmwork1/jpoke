@@ -172,19 +172,6 @@ def test_まねっこ_テラクラスターはコピーできない():
     assert not battle.move_executor.move_applied
 
 
-def test_まねっこ_ものまねはコピーできない():
-    """まねっこ: 直前の技がものまね（non_copycatフラグ持ち）の場合は失敗する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
-        team1=[Pokemon("カビゴン", move_names=["ものまね"])],
-        accuracy=100,
-    )
-    t.run_move(battle, 1)  # カビゴン: ものまね（実装保留のため空振りだが技自体は使用される）
-    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
-
-    assert not battle.move_executor.move_applied
-
-
 def test_まねっこ_トリックはコピーできない():
     """まねっこ: 直前の技がトリック（non_copycatフラグ持ち）の場合は失敗する"""
     battle = t.start_battle(
@@ -223,6 +210,19 @@ def test_まねっこ_まもるはコピーできない():
         accuracy=100,
     )
     t.run_move(battle, 1)  # カビゴン: まもる
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
+def test_まねっこ_ものまねはコピーできない():
+    """まねっこ: 直前の技がものまね（non_copycatフラグ持ち）の場合は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["ものまね"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: ものまね（実装保留のため空振りだが技自体は使用される）
     t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
 
     assert not battle.move_executor.move_applied
