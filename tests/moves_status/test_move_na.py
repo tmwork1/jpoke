@@ -785,6 +785,45 @@ def test_ねばねばネット_相手陣営に設置される():
     assert side.fields["ねばねばネット"].is_active
 
 
+def test_ねむりごな_くさタイプには無効():
+    """ねむりごな: 粉技のためくさタイプの相手には効果がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねむりごな"])],
+        team1=[Pokemon("キマワリ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("ねむり")
+
+
+def test_ねむりごな_命中率75で外れることがある():
+    """ねむりごな: 命中率75のため外れる場合がある"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねむりごな"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.fix_random(battle, 0.95)
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("ねむり")
+
+
+def test_ねむりごな_相手をねむり状態にする():
+    """ねむりごな: 命中すると相手を『ねむり』状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねむりごな"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("ねむり")
+
+
 def test_ねをはる_すでにねをはる状態なら失敗():
     """ねをはる: すでにねをはる状態なら失敗する"""
     battle = t.start_battle(

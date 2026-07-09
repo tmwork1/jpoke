@@ -425,7 +425,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねむりごな": MoveData(
         type="くさ",
         category="status",
-        pp=15,
+        pp=16,  # champions基準（move_list.txt）。Gen9本家は15
         accuracy=75,
         flags={"powder"},
         handlers={
