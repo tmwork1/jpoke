@@ -350,6 +350,37 @@ def test_まもる系_異種の守る系技でも2ターン目は失敗する():
     assert not attacker.has_volatile("まもる")
 
 
+def test_まもる_使用した同ターンに相手の攻撃技をブロックする():
+    """まもる: 技を実行して付与したまもる状態が、同ターン内の相手の攻撃を無効化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    protected_mon = battle.actives[0]  # まもるを使うピカチュウ（たいあたりの対象）
+    hp_before = protected_mon.hp
+
+    t.run_move(battle, 0)  # ピカチュウ: まもる成功
+    assert battle.move_executor.move_success
+
+    t.run_move(battle, 1)  # カビゴン: たいあたり → まもるでブロックされる
+    assert not battle.move_executor.move_success
+    assert protected_mon.hp == hp_before
+
+
+def test_まもる_まねっこでコピーできない():
+    """まもる: non_copycatフラグを持つため、まねっこでコピーできない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["まもる"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: まもる
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → 失敗するはず
+
+    assert not battle.move_executor.move_applied
+
+
 def test_みかづきのいのり_HPが4分の1回復する():
     """みかづきのいのり: 最大HPの1/4を回復する(小数点以下切り捨て)"""
     battle = t.start_battle(

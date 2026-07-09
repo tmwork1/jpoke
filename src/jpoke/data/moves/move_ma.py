@@ -165,10 +165,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "まもる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=8,
         priority=4,
         target="self",
-        flags={"protect"},
+        flags={"protect", "non_copycat"},  # まねっこでコピー不可
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
                 hs.まもる系_連続使用失敗チェック,
