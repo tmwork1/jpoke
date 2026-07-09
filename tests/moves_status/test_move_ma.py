@@ -393,6 +393,28 @@ def test_まもる系_異種の守る系技でも2ターン目は失敗する():
     assert not attacker.has_volatile("まもる")
 
 
+def test_みきり_2ターン連続で使用すると2ターン目は失敗する():
+    """みきり: まもると同じくPP8・優先度+4で先制でき、2ターン連続で使用すると2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みきり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.moves[0].data.pp == 8
+    assert attacker.moves[0].data.priority == 4
+
+    # 1ターン目: みきり成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("まもる")
+    t.end_turn(battle)
+
+    # 2ターン目: みきり失敗（連続使用）
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("まもる")
+
+
 def test_みがわり_HPを消費してみがわり状態になる():
     """みがわり: 最大HPの1/4（切り捨て）を消費し、同量のHPを持つみがわり状態になる"""
     battle = t.start_battle(

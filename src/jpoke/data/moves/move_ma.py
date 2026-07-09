@@ -226,7 +226,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みきり": MoveData(
         type="かくとう",
         category="status",
-        pp=5,
+        pp=8,
         priority=4,
         target="self",
         flags={"protect"},
