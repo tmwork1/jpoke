@@ -97,3 +97,33 @@ def test_りゅうのまい_こうげき最大でもすばやさは上昇する(
 
     assert attacker.rank["atk"] == 6
     assert attacker.rank["spe"] == 1
+
+
+def test_りゅうのまい_マジックコートで跳ね返されない():
+    """りゅうのまい: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["りゅうのまい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 1
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spe"] == 0
+
+
+def test_りゅうのまい_自分対象のためまもるで防がれない():
+    """りゅうのまい: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["りゅうのまい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 1
