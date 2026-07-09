@@ -140,6 +140,9 @@ class Pokemon:
         self.active_turn = 0
         self.hits_taken = 0
         self.rank = {k: 0 for k in STATS}
+        # ガードシェア・パワーシェア・パワートリックなどによる実数値の書き換えを
+        # 種族値ベースの値に再計算してリセットする（交代でリセットされる仕様）
+        self.update_stats()
         self.executed_move = None
         self.ability_override_type = None
         self.move_override_types = None

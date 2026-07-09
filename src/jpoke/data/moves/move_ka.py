@@ -495,8 +495,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "ガードシェア": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,
+        accuracy=None,  # 必中
+        # マジックコートで跳ね返されない
+        flags={"unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ガードシェア_equalize_stats,

@@ -394,6 +394,100 @@ def test_ガードシェア_ランク変化は変更されない():
     assert defender.rank["spd"] == 0
 
 
+def test_ガードシェア_相手の回避ランクが高くても必ず命中する():
+    """ガードシェア: 必中技のため、相手の回避ランクが高くても必ず命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    expected_b = (attacker._stats_manager.stats[2] + defender._stats_manager.stats[2]) // 2
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[2] == expected_b
+    assert defender._stats_manager.stats[2] == expected_b
+
+
+def test_ガードシェア_まもるで防がれる():
+    """ガードシェア: まもる状態の相手に使うと防がれ、実数値が変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    atk_b_before = attacker._stats_manager.stats[2]
+    def_b_before = defender._stats_manager.stats[2]
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[2] == atk_b_before
+    assert defender._stats_manager.stats[2] == def_b_before
+
+
+def test_ガードシェア_みがわり状態の相手には効果が発動しない():
+    """ガードシェア: bypass_substituteフラグを持たないため、みがわり状態の相手には防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    atk_b_before = attacker._stats_manager.stats[2]
+    def_b_before = defender._stats_manager.stats[2]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert attacker._stats_manager.stats[2] == atk_b_before
+    assert defender._stats_manager.stats[2] == def_b_before
+
+
+def test_ガードシェア_マジックコートで跳ね返されない():
+    """ガードシェア: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    expected_b = (attacker._stats_manager.stats[2] + defender._stats_manager.stats[2]) // 2
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、使用者側にも効果が発動する（平均化される）
+    assert attacker._stats_manager.stats[2] == expected_b
+    assert defender._stats_manager.stats[2] == expected_b
+
+
+def test_ガードシェア_交代すると実数値がリセットされる():
+    """ガードシェア: 実数値の変更は交代でリセットされ、種族値ベースの値に戻ること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ガードシェア"]), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    b_before = attacker._stats_manager.stats[2]
+    d_before = attacker._stats_manager.stats[4]
+    t.run_move(battle, 0)
+
+    # ガードシェアの効果で実数値が変化していることを確認
+    assert attacker._stats_manager.stats[2] != b_before
+    assert attacker._stats_manager.stats[4] != d_before
+
+    # 交代すると種族値ベースの実数値に戻る
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+
+    assert attacker._stats_manager.stats[2] == b_before
+    assert attacker._stats_manager.stats[4] == d_before
+
+
 def test_ガードスワップ_ACランクは変化しない():
     """ガードスワップ: こうげき・とくこうのランクは変化しないこと"""
     battle = t.start_battle(
