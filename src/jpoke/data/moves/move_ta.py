@@ -607,8 +607,13 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つめとぎ": MoveData(
         type="あく",
         category="status",
-        pp=15,
-        handlers={},  # 追加効果なし
+        pp=16,
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.つめとぎ_modify_attacker_stats,
+            ),
+        }
     ),
     "つららおとし": MoveData(
         type="こおり",

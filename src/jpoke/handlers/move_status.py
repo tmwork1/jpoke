@@ -1334,6 +1334,11 @@ def つぼをつく_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=battle.modify_stats(ctx.attacker, {stat: 2}, source=ctx.attacker))
 
 
+def つめとぎ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """つめとぎ: 自分のこうげき・命中率ランクをそれぞれ1段階上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "accuracy": 1})
+
+
 def つるぎのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 2})
 
