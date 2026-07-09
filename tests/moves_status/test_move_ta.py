@@ -725,6 +725,152 @@ def test_つるぎのまい_こうげき2段階上がる():
     assert attacker.rank["atk"] == 2
 
 
+def test_テクスチャー_PPは30():
+    """テクスチャー: PPは30（champions基準）"""
+    move_data = MOVES["テクスチャー"]
+    assert move_data.pp == 30
+
+
+def test_テクスチャー_一番上の技と同じタイプになる():
+    """テクスチャー: 一番上の技（moves[0]）と同じタイプに自分のタイプを変更する"""
+    battle = t.start_battle(
+        team0=[Pokemon("イーブイ", move_names=["みずでっぽう", "テクスチャー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["ノーマル"]
+    t.run_move(battle, 0, move_idx=1)
+
+    assert attacker.types == ["みず"]
+
+
+def test_テクスチャー_一番上の技が自分と同じタイプなら失敗する():
+    """テクスチャー: 一番上の技が自分の現在のタイプと同じなら失敗する（次の技へのフォールバックはしない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("イーブイ", move_names=["でんこうせっか", "テクスチャー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["ノーマル"]
+    t.run_move(battle, 0, move_idx=1)
+
+    # でんこうせっかはノーマルタイプで自分と同じため失敗し、タイプは変化しない
+    assert attacker.types == ["ノーマル"]
+
+
+def test_テクスチャー_複数タイプの場合いずれかと同じなら失敗する():
+    """テクスチャー: 複数タイプ所持時、一番上の技がそのいずれかと同じタイプなら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリュー", move_names=["ぼうふう", "テクスチャー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["ドラゴン", "ひこう"]
+    t.run_move(battle, 0, move_idx=1)
+
+    # ぼうふうはひこうタイプで自分の所持タイプ(ひこう)と同じため失敗する
+    assert attacker.types == ["ドラゴン", "ひこう"]
+
+
+def test_テクスチャー_自分自身も一番上なら選ばれる():
+    """テクスチャー: 第六世代以降はテクスチャー自身も『選ばれない技』から除外されず選ばれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["テクスチャー", "したでなめる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert attacker.types == ["ゴースト", "どく"]
+    t.run_move(battle, 0, move_idx=0)
+
+    # 一番上の技はテクスチャー自身（ノーマル）で、自分の現在タイプと異なるため成功する
+    assert attacker.types == ["ノーマル"]
+
+
+def test_テクスチャー_もりののろい等で追加されたタイプの効果が消える():
+    """テクスチャー: タイプ変更後はもりののろい・ハロウィンで追加されたタイプの効果が消える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "テクスチャー"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"ハロウィン": 0},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    assert "ゴースト" in attacker.types
+    t.run_move(battle, 0, move_idx=1)
+
+    # でんこうせっか（ノーマル）のみになり、追加されていたゴーストタイプは消える
+    assert attacker.types == ["ノーマル"]
+
+
+def test_テクスチャー_テラスタル中は失敗する():
+    """テクスチャー: 自分がテラスタルしているときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "テクスチャー"], tera_type="ほのお")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.terastallized = True
+    t.run_move(battle, 0, move_idx=1)
+
+    # テラスタル中は失敗するためタイプ変化なし（テラタイプのまま）
+    assert attacker.types == ["ほのお"]
+
+
+def test_テクスチャー_交代でタイプがリセットされる():
+    """テクスチャー: 交代後は変更されたタイプが元に戻る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "テクスチャー"]), Pokemon("カビゴン")],
+        team1=[Pokemon("ゲッコウガ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0, move_idx=1)
+    assert attacker.types == ["ノーマル"]
+
+    t.run_switch(battle, 0, 1)
+    # ピカチュウのタイプは元に戻る
+    assert attacker.types == ["でんき"]
+
+
+def test_テクスチャー_対象はself():
+    """テクスチャー: 対象は自分（target="self"）。foeのままだとまもる・マジックコートに誤って阻害される"""
+    move_data = MOVES["テクスチャー"]
+    assert move_data.target == "self"
+
+
+def test_テクスチャー_まもるで防がれない():
+    """テクスチャー: 自分が対象の技のため、相手のまもる状態に関係なく成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "テクスチャー"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0, move_idx=1)
+
+    assert attacker.types == ["ノーマル"]
+
+
+def test_テクスチャー_マジックコートで跳ね返されない():
+    """テクスチャー: 自分が対象の技のため、相手のマジックコート状態でも跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか", "テクスチャー"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0, move_idx=1)
+
+    assert attacker.types == ["ノーマル"]
+
+
 def test_てっぺき_すでに最大なら失敗する():
     """てっぺき: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
     battle = t.start_battle(
