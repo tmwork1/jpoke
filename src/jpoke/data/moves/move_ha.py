@@ -1279,7 +1279,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "へびにらみ": MoveData(
         type="ノーマル",
         category="status",
-        pp=30,
+        pp=20,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
