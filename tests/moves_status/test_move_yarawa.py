@@ -792,8 +792,21 @@ def test_リサイクル_消費したきのみを取り戻す():
     assert mon.last_lost_item_name == "オボンのみ"
 
 
-def test_わたほうし_相手のすばやさ1段階下がる():
-    """わたほうし: 使用すると相手のすばやさランクが1段階下がる"""
+def test_わたほうし_くさタイプには無効():
+    """わたほうし: 粉技のためくさタイプの相手には効果がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["わたほうし"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["spe"] == 0
+
+
+def test_わたほうし_相手のすばやさ2段階下がる():
+    """わたほうし: 使用すると相手のすばやさランクが2段階下がる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["わたほうし"])],
         team1=[Pokemon("カビゴン")],
