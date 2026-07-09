@@ -680,6 +680,16 @@ def test_ねをはる_交代不可():
     assert not battle.query.can_switch(battle.players[0])
 
 
+def test_ねをはる_ゴーストタイプは交代できる():
+    """ねをはる: ゴーストタイプはねをはる状態の効果を無視して交代できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"ねをはる": 1},
+    )
+    assert battle.query.can_switch(battle.players[0])
+
+
 def test_ねをはる_回復():
     """ねをはる: ターン終了時に最大HPの1/16回復する"""
     battle = t.start_battle(
