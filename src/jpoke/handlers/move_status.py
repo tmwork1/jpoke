@@ -523,7 +523,7 @@ def おにび_apply_burn(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど")
 
 
-def オーロラベール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """オーロラベール: 自陣営に「オーロラベール」を5ターン設定する。"""
     side = battle.get_side(ctx.attacker)
     if not side.apply("オーロラベール", 5, source=ctx.attacker):

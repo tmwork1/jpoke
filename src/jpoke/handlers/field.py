@@ -142,10 +142,12 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, valu
     """オーロラベールで物理・特殊技ダメージ軽減。
 
     リフレクター（物理技）またはひかりのかべ（特殊技）が同時に有効でも効果は重複しない。
+    こんらんの自傷ダメージ（"_こんらん"）は攻撃技扱いではないため軽減されない。
     """
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
+        and ctx.move.name != "_こんらん"
     ):
         side = battle.get_side(ctx.defender)
         # リフレクター/ひかりのかべと効果は重複しない
