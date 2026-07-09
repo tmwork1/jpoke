@@ -853,16 +853,22 @@ MOVES_HA: dict[MoveName, MoveData] = {
     ),
     "ふきとばし": MoveData(
         type="ノーマル",
-        category="special",
+        category="status",
         pp=20,
         priority=-6,
-        flags={"wind"},
+        flags={"wind", "unprotectable", "bypass_substitute"},
         handlers={
-            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
-                hs.on_blow_apply,
-                priority=30,
-            ),
-            Event.ON_HIT: h.MoveHandler(hs.blow),
+            Event.ON_BEFORE_APPLY_MOVE: [
+                h.MoveHandler(
+                    hs.on_blow_apply,
+                    priority=30,
+                ),
+                h.MoveHandler(
+                    hs.on_blow_check_switch_target,
+                    priority=100,
+                ),
+            ],
+            Event.ON_STATUS_HIT: h.MoveHandler(hs.blow),
         }
     ),
     "ふくろだたき": MoveData(
