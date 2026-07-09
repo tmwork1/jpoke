@@ -64,7 +64,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "わたほうし": MoveData(
         type="くさ",
         category="status",
-        pp=40,
+        pp=20,
         accuracy=100,
         flags={"powder"},
         handlers={
