@@ -27,6 +27,7 @@ from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core.event_logger import FailureLogPayload, StatChangePayload
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
+# docs/spec/volatiles/じゅうでん.md: じゅうでんはバトンタッチで引き継がれない
 _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "みがわり",
     "こんらん",
@@ -36,7 +37,6 @@ _BATON_PASS_VOLATILES: frozenset[str] = frozenset({
     "アクアリング",
     "ねをはる",
     "やどりぎのタネ",
-    "じゅうでん",
     "でんじふゆう",
     "ちょうはつ",
     "しおづけ",
