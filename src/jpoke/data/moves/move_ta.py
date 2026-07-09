@@ -673,9 +673,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
-        accuracy=100,
         priority=5,
-        handlers={},  # 追加効果なし
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "てっていこうせん": MoveData(
         type="はがね",
