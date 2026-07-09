@@ -342,7 +342,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "はらだいこ": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.はらだいこ_can_apply,
