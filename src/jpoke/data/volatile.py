@@ -930,6 +930,18 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "まほうのこな": VolatileData(
+        handlers={
+            Event.ON_VOLATILE_START: h.VolatileHandler(
+                h.まほうのこな_set_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.まほうのこな_clear_type,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "みずびたし": VolatileData(
         handlers={
             Event.ON_VOLATILE_START: h.VolatileHandler(

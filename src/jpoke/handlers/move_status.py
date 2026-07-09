@@ -2320,6 +2320,28 @@ def まねっこ_execute(battle: Battle, ctx: AttackContext, value: Any) -> Hand
     return HandlerReturn(value=value)
 
 
+def まほうのこな_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まほうのこなの効果: 相手にまほうのこな状態を付与してエスパー単タイプに変える。"""
+    return apply_volatile_to_defender(battle, ctx, value, volatile="まほうのこな")
+
+
+def まほうのこな_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """まほうのこなの使用条件チェック: 相手がすでにエスパー単タイプ、テラスタル中、
+    またはアルセウス・シルヴァディの場合は失敗する。"""
+    defender = ctx.defender
+    if (
+        defender.types == ["エスパー"]
+        or defender.terastallized
+        or defender.name in ("アルセウス", "シルヴァディ")
+    ):
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="まほうのこな")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def まもる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return apply_volatile_to_attacker(battle, ctx, value, volatile="まもる")
 

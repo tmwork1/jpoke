@@ -1173,6 +1173,19 @@ def マジックコート_turn_end(battle: Battle, ctx: EventContext, value: Any
     return remove_volatile(battle, ctx, value, volatile="マジックコート")
 
 
+def まほうのこな_clear_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """まほうのこな解除時: volatile_override_type を None に戻す。"""
+    ctx.source.volatile_override_type = None
+    return HandlerReturn(value=value)
+
+
+def まほうのこな_set_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """まほうのこな付与時: volatile_override_type をエスパーに設定し added_types をクリアする。"""
+    ctx.source.volatile_override_type = "エスパー"
+    ctx.source.added_types.clear()
+    return HandlerReturn(value=value)
+
+
 def まもる_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """まもるの保護判定"""
     return _run_protect(battle, ctx, value)
