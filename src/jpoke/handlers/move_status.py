@@ -1358,6 +1358,18 @@ def でんじは_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="まひ")
 
 
+def でんじは_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """でんじはの失敗条件: 変化技だが例外的にタイプ相性の影響を受け、
+    でんき技が無効なじめんタイプの相手には無効になる（ねらいのまと所持時は無効化解除）。"""
+    if battle.damage_calculator.calc_def_type_modifier(ctx) == 0:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_IMMUNED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="タイプ無効")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def でんじふゆう_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """でんじふゆうの効果: 自分をでんじふゆう状態にする（5ターン）。"""
     return apply_volatile_to_attacker(battle, ctx, value, volatile="でんじふゆう", count=5)
