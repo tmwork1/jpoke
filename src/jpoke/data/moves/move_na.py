@@ -272,8 +272,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねがいごと": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
-        target="field",
+        pp=12,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
