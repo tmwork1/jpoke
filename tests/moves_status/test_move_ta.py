@@ -641,6 +641,45 @@ def test_つるぎのまい_こうげき2段階上がる():
     assert attacker.rank["atk"] == 2
 
 
+def test_てっぺき_ぼうぎょ2段階上がる():
+    """てっぺき: 使用すると自分のぼうぎょランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["てっぺき"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["def"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+
+
+def test_てっぺき_自分対象のためまもるで防がれない():
+    """てっぺき: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["てっぺき"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 2
+
+
+def test_てっぺき_すでに最大なら失敗する():
+    """てっぺき: ぼうぎょランクがすでに+6の場合はランクが変化せず技は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["てっぺき"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    battle.modify_stats(attacker, {"def": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 6
+
+
 def test_てんしのキッス_こんらん状態を付与する():
     """てんしのキッス: 相手をこんらん状態にする"""
     battle = t.start_battle(
