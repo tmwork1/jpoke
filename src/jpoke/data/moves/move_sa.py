@@ -363,7 +363,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しっぽきり": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.しっぽきり_check,
