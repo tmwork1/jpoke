@@ -1055,6 +1055,9 @@ def すてゼリフ_modify_defender_stats_and_pivot(battle: Battle, ctx: AttackC
     ランク低下が成功した場合のみ交代が発動する。
     ランク低下が阻まれた（クリアボディ等）場合は交代も発動しない（第七世代以降）。
     控えポケモンがいない場合はランク低下のみ発動し交代は発生しない。
+    とらわれ状態（ありじごく・ねをはる・かげふみ・じりょく・バインド・にげられない・
+    フェアリーロック等）を無視して交代できるため、バトンタッチと同様に
+    `battle.query.can_switch` は使わず控えの生存だけを直接判定する。
     """
     result = modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
 
@@ -1063,8 +1066,9 @@ def すてゼリフ_modify_defender_stats_and_pivot(battle: Battle, ctx: AttackC
         return result
 
     player = battle.get_player(ctx.attacker)
-    if battle.query.can_switch(player):
-        battle.player_states[player].interrupt = Interrupt.PIVOT
+    state = battle.player_states[player]
+    if any(mon.alive for mon in state.bench):
+        state.interrupt = Interrupt.PIVOT
 
     return HandlerReturn(value=value)
 

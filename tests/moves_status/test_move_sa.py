@@ -852,6 +852,21 @@ def test_すてゼリフ_控えがいない場合はランク低下のみ():
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_すてゼリフ_とらわれ状態でも交代できる():
+    """すてゼリフ: にげられない状態でもとらわれを無視してPIVOTが設定される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すてゼリフ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"にげられない": 3},
+        accuracy=100,
+    )
+    player = battle.players[0]
+    t.run_move(battle, 0)
+
+    # とらわれ状態でも交代が発動する
+    assert battle.player_states[player].interrupt == Interrupt.PIVOT
+
+
 def test_スピードスワップ_すばやさ実数値が入れ替わる():
     """スピードスワップ: 使用者と相手のすばやさ実数値が入れ替わる"""
     battle = t.start_battle(
