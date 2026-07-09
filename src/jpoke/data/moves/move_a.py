@@ -517,6 +517,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=2,
+        flags={"non_copycat"},
         handlers={},  # 追加効果なし
     ),
     "いかりのまえば": MoveData(

@@ -398,7 +398,8 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みちづれ": MoveData(
         type="ゴースト",
         category="status",
-        pp=5,
+        pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
+        flags={"non_copycat"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.みちづれ_apply,

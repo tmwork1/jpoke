@@ -2958,13 +2958,13 @@ def test_ほうふく_特殊ダメージを受けた後も発動する():
 
 
 def test_ほしがる_タイプ威力命中PPが仕様通り():
-    """ほしがる: ノーマルタイプの物理接触技で、威力60・命中100・PP25を持つ。"""
+    """ほしがる: ノーマルタイプの物理接触技で、威力60・命中100・PP20を持つ。"""
     move_data = MOVES["ほしがる"]
     assert move_data.type == "ノーマル"
     assert move_data.category == "physical"
     assert move_data.power == 60
     assert move_data.accuracy == 100
-    assert move_data.pp == 25
+    assert move_data.pp == 20
     assert "contact" in move_data.flags
 
 

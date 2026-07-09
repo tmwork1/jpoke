@@ -626,7 +626,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"contact", "slash"},
+        flags={"contact", "slash", "non_copycat"},
         handlers={},  # 追加効果なし
     ),
     "きょじゅうだん": MoveData(
@@ -1218,6 +1218,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=2,
+        flags={"non_copycat"},
         handlers={},  # 追加効果なし
     ),
     "コメットパンチ": MoveData(
