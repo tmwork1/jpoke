@@ -925,6 +925,28 @@ def test_コスモパワー_発動前後のランク変化(def_init, spd_init, d
     assert attacker.rank["spd"] == spd_exp
 
 
+def test_こらえる_2ターン連続で使用すると2ターン目は失敗する():
+    """こらえる: まもる系共通の連続使用失敗ルールが適用される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: こらえる成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("こらえる")
+
+    t.end_turn(battle)
+    assert not attacker.has_volatile("こらえる")
+
+    # 2ターン目: こらえる失敗（連続使用）
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("こらえる")
+
+
 def test_こらえる_HP1で実ダメージ0でも攻撃を受けた扱いになる():
     """こらえる: HP1のとき実際のダメージが0でも「攻撃を無効化した」扱いにはならない
     （きあいパンチ不発・ダメおし威力2倍の判定対象。みねうちと同様の仕様）。"""
@@ -1005,6 +1027,41 @@ def test_こらえる_ターン経過ダメージには適用されない():
     t.end_turn(battle)
 
     assert mon.fainted
+
+
+def test_こらえる_まもると連続使用扱いで相互に失敗する():
+    """こらえる: まもる系は種類が違っても連続使用で2ターン目は失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まもる", "こらえる"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: まもる成功
+    t.run_move(battle, 0, 0)
+    assert battle.move_executor.move_success
+    t.end_turn(battle)
+
+    # 2ターン目: こらえる失敗（連続使用）
+    t.run_move(battle, 0, 1)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("こらえる")
+
+
+def test_こらえる_一撃必殺技を受けてもHP1残る():
+    """こらえる: 一撃必殺技を含むダメージ固定技も耐えることができる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゴース", move_names=["じわれ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["こらえる"])],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "こらえる")
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert not defender.fainted
 
 
 def test_こらえる_致死ダメージを受けてもHP1残る():

@@ -1236,10 +1236,14 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こらえる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.こらえる_apply,
             ),
