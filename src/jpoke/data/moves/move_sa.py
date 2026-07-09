@@ -20,9 +20,17 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "さいきのいのり": MoveData(
         type="ノーマル",
         category="status",
-        pp=0,
+        pp=1,
+        target="self",
         flags={"heal"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.さいきのいのり_check,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.さいきのいのり_revive,
+            ),
+        }
     ),
     "サイケこうせん": MoveData(
         type="エスパー",
