@@ -1888,21 +1888,16 @@ def はいすいのじん_can_apply(battle: Battle, ctx: AttackContext, value: A
     return HandlerReturn(value=value)
 
 
-def はねやすめ_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はねやすめの失敗チェック: HPが満タンの場合は失敗する。"""
-    mon = ctx.attacker
-    if mon.hp == mon.max_hp:
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
 def はねやすめ_heal_and_remove_flying(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はねやすめの効果: 最大HPの1/2を回復し、ひこうタイプを一時的に除去する。
 
+    HPが満タンの場合は失敗する。
     テラスタル中はタイプ除去を行わない。
     ひこうタイプを持たないポケモンはタイプ除去を行わない。
     """
     mon = ctx.attacker
+    if mon.hp == mon.max_hp:
+        return HandlerReturn(value=False, stop_event=True)
     battle.modify_hp(mon, r=1/2)
     # テラスタル中はタイプ変化しない
     if mon.active_tera_type:
