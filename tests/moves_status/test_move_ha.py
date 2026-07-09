@@ -1059,6 +1059,117 @@ def test_フェアリーロック_使用者側が交代できない():
     assert not t.can_switch(battle, 0)
 
 
+def test_ふしょくガス_相手の持ち物を消失させる():
+    """ふしょくガス: 命中すると相手の持ち物を消失させる。ダメージは発生しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+
+    assert not defender.has_item()
+    assert defender.hp == hp_before
+
+
+def test_ふしょくガス_相手が持ち物を持たない場合も技は成功扱いになる():
+    """ふしょくガス: 相手が持ち物を持たない場合でも、技自体は失敗にならない
+    （溶かせる持ち物がないだけで、技のPP消費・成否には影響しない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.actives[1].has_item()
+
+
+def test_ふしょくガス_ねんちゃく持ちの相手からは持ち物を消失させられない():
+    """ふしょくガス: 特性ねんちゃくの相手からは持ち物を消失させられない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("マタドガス", ability_name="ねんちゃく", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_item("たべのこし")
+
+
+def test_ふしょくガス_かたやぶりならねんちゃく持ちからも消失させられる():
+    """ふしょくガス: 使用者がかたやぶりの場合、ねんちゃく持ちの相手からも持ち物を消失させられる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ふしょくガス"])],
+        team1=[Pokemon("マタドガス", ability_name="ねんちゃく", item_name="たべのこし")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_item()
+
+
+def test_ふしょくガス_専用道具は消失させられない():
+    """ふしょくガス: ザシアンとくちたけんの組み合わせ等、種族+持ち物ロックされた
+    専用道具は消失させられない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("ザシアン(けんのおう)", item_name="くちたけん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_item("くちたけん")
+
+
+def test_ふしょくガス_みがわり状態の相手には無効():
+    """ふしょくガス: みがわり状態の相手には技自体が無効化され、持ち物は消失しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_item("たべのこし")
+
+
+def test_ふしょくガス_すりぬけならみがわり状態の相手にも効果を発揮する():
+    """ふしょくガス: 使用者がすりぬけの場合、みがわり状態の相手にも技が命中し
+    持ち物を消失させられる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", ability_name="すりぬけ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_item()
+
+
+def test_ふしょくガス_まもるで防がれる():
+    """ふしょくガス: まもる状態の相手には効果が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドククラゲ", move_names=["ふしょくガス"])],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_item("たべのこし")
+
+
 def test_ふみつけ_ひるみが発動する():
     """ふみつけ: 30%でひるみを付与する。"""
     battle = t.start_battle(

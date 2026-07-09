@@ -2116,6 +2116,12 @@ def フェザーダンス_modify_defender_stats(battle: Battle, ctx: AttackConte
     return modify_defender_stats(battle, ctx, value, stats={"atk": -2})
 
 
+def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ふしょくガスのアイテム除去効果。"""
+    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+    return HandlerReturn(value=value)
+
+
 def フラフラダンス_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フラフラダンスの効果: 相手をこんらん状態にする。"""
     return HandlerReturn(value=battle.volatile_manager.apply_confusion(
