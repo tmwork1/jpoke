@@ -1051,7 +1051,7 @@ MOVES_A: dict[MoveName, MoveData] = {
     "エレキフィールド": MoveData(
         type="でんき",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
