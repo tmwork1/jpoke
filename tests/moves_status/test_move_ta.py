@@ -209,6 +209,20 @@ def test_タールショット_まもるで防がれる():
     assert not defender.has_volatile("タールショット")
 
 
+def test_ダークホール_ダークライ以外が使用すると失敗する():
+    """ダークホール: 第七世代以降、ダークライ以外が使用すると必ず失敗する（種族制限）。
+    本プロジェクトのPOKEDEXにダークライが未収録のため、成功ケースはテストできない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ダークホール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("ねむり")
+
+
 def test_ちいさくなる_マジックコートで跳ね返されない():
     """ちいさくなる: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
     battle = t.start_battle(
