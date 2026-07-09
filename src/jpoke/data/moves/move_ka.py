@@ -1063,7 +1063,8 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "こうごうせい": MoveData(
         type="くさ",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(

@@ -759,34 +759,6 @@ def test_くろいまなざし_にげられない状態を付与する():
     assert defender.has_volatile("にげられない")
 
 
-def test_こうごうせい_あめで4分の1回復():
-    """こうごうせい: あめ中は最大HPの1/4を回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["こうごうせい"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("あめ", 5),
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    t.run_move(battle, 0)
-
-    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 4)
-
-
-def test_こうごうせい_はれで3分の2回復():
-    """こうごうせい: はれ中は最大HPの2/3を回復する"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["こうごうせい"])],
-        team1=[Pokemon("カビゴン")],
-        weather=("はれ", 5),
-    )
-    attacker = battle.actives[0]
-    attacker.hp = 1
-    t.run_move(battle, 0)
-
-    assert attacker.hp == 1 + int(attacker.max_hp * 2 / 3)
-
-
 def test_こうごうせい_まんたんなら失敗():
     """こうごうせい: HPが最大値のときは失敗する"""
     battle = t.start_battle(
@@ -800,17 +772,60 @@ def test_こうごうせい_まんたんなら失敗():
     assert attacker.hp == attacker.max_hp
 
 
-def test_こうごうせい_通常天候で2分の1回復():
-    """こうごうせい: 通常天候では最大HPの1/2を回復する"""
+def test_こうごうせい_まもるで防がれない():
+    """こうごうせい: 自分を対象とする技のため、相手のまもるで防がれない"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["こうごうせい"])],
         team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
     )
     attacker = battle.actives[0]
     attacker.hp = 1
     t.run_move(battle, 0)
 
-    assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
+    assert attacker.hp > 1
+
+
+def test_こうごうせい_マジックコートで跳ね返されない():
+    """こうごうせい: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうごうせい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
+@pytest.mark.parametrize("weather_arg,numerator,denominator", [
+    (None,               1, 2),  # 通常天候: 1/2 回復
+    (("あめ",      5),  1, 4),  # あめ: 1/4 回復
+    (("おおあめ", 99),  1, 4),  # おおあめ: 1/4 回復
+    (("おおひでり", 99), 2, 3),  # おおひでり: 2/3 回復
+    (("すなあらし", 99), 1, 4),  # すなあらし: 1/4 回復
+    (("はれ",      5),  2, 3),  # はれ: 2/3 回復
+    (("ゆき",      5),  1, 4),  # ゆき: 1/4 回復
+])
+def test_こうごうせい_天候別回復量(weather_arg, numerator, denominator):
+    """こうごうせい: 天候ごとに回復量が変わる（通常1/2, はれ/おおひでり2/3, それ以外1/4）"""
+    kwargs = {}
+    if weather_arg is not None:
+        kwargs["weather"] = weather_arg
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["こうごうせい"])],
+        team1=[Pokemon("カビゴン")],
+        **kwargs,
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.hp == 1 + int(attacker.max_hp * numerator / denominator)
 
 
 def test_こおりのキバ_ひるみが発動する():
