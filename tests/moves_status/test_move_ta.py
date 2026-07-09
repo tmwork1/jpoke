@@ -1130,12 +1130,12 @@ def test_どくのいと_すでにどく状態ならS下げのみ():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["spe"] == -1
+    assert defender.rank["spe"] == -2
     assert defender.has_ailment("どく")
 
 
-def test_どくのいと_すばやさ1段階下がりどく付与():
-    """どくのいと: 相手のすばやさが1段階下がり、どく状態になる"""
+def test_どくのいと_すばやさ2段階下がりどく付与():
+    """どくのいと: 相手のすばやさが2段階下がり、どく状態になる（Championsで1段階→2段階に変更）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["どくのいと"])],
         team1=[Pokemon("カビゴン")],
@@ -1144,8 +1144,37 @@ def test_どくのいと_すばやさ1段階下がりどく付与():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["spe"] == -1
+    assert defender.rank["spe"] == -2
     assert defender.has_ailment("どく")
+
+
+def test_どくのいと_すばやさもどくも失敗する場合は技全体が失敗する():
+    """どくのいと: すばやさが既に-6段階かつ相手がどくタイプの場合、両方失敗して技全体が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくのいと"])],
+        team1=[Pokemon("ベトベトン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"spe": -6})
+    t.run_move(battle, 0)
+
+    assert defender.rank["spe"] == -6
+    assert not defender.has_ailment("どく")
+
+
+def test_どくのいと_どくタイプにはどく無効だがS低下は有効():
+    """どくのいと: どくタイプの相手にはどく状態付与のみ無効になり、すばやさ低下は通常通り発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくのいと"])],
+        team1=[Pokemon("ベトベトン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["spe"] == -2
+    assert not defender.has_ailment("どく")
 
 
 @pytest.mark.parametrize("initial_count,expected_count", [

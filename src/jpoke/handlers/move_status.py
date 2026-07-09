@@ -1432,10 +1432,15 @@ def どくどく_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, v
 
 
 def どくのいと_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """どくのいとの効果: 相手をどく状態にし、すばやさを1段階下げる。"""
+    """どくのいとの効果: 相手のすばやさを2段階下げ、どく状態にする（Championsで1段階→2段階に変更）。
+
+    2つの効果は互いに独立している。すばやさを下げる効果の後にどく状態にする効果が発動する。
+    どちらか一方でも成功すれば技自体は成功扱いとなり、両方失敗した場合のみ技が失敗する。
+    """
     assert ctx.defender is not None
-    battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
-    return HandlerReturn(value=battle.modify_stats(ctx.defender, {"spe": -1}, source=ctx.attacker))
+    stat_changed = bool(battle.modify_stats(ctx.defender, {"spe": -2}, source=ctx.attacker))
+    ailment_applied = battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
+    return HandlerReturn(value=stat_changed or ailment_applied)
 
 
 def どくのこな_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
