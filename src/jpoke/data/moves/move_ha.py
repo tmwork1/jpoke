@@ -608,7 +608,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ひかりのかべ": MoveData(
         type="エスパー",
         category="status",
-        pp=30,
+        pp=20,
         target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(

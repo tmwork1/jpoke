@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from jpoke.enums import Event, Interrupt
 from .. import test_utils as t
 
@@ -823,6 +824,11 @@ def test_ひかりのかべ_すでにアクティブなら失敗():
     # カウントは変わらない
     assert side.fields["ひかりのかべ"].is_active
     assert side.fields["ひかりのかべ"].count == 4
+
+
+def test_ひかりのかべ_PPは20():
+    """ひかりのかべ: チャンピオンズでのPPは20（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["ひかりのかべ"].pp == 20
 
 
 def test_ひかりのかべ_自陣営に5ターン設置される():
