@@ -73,6 +73,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        accuracy=None,  # 必中
+        flags={"unprotectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.なかよくする_modify_defender_stats,

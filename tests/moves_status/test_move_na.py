@@ -166,8 +166,8 @@ def test_なかまづくり_相手の特性が使用者の特性に変わる():
     assert defender.ability.name == "せいでんき"
 
 
-def test_なかよくする_こうげきが2段階下がる():
-    """なかよくする: 使用すると相手のこうげきが2段階下がる"""
+def test_なかよくする_こうげきが1段階下がる():
+    """なかよくする: 使用すると相手のこうげきが1段階下がる"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なかよくする"])],
         team1=[Pokemon("カビゴン")],
@@ -176,7 +176,7 @@ def test_なかよくする_こうげきが2段階下がる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["atk"] == -2
+    assert defender.rank["atk"] == -1
 
 
 def test_なかよくする_こうげきが最低値のとき変化なし():
@@ -191,6 +191,34 @@ def test_なかよくする_こうげきが最低値のとき変化なし():
     t.run_move(battle, 0)
 
     assert defender.rank["atk"] == -6
+
+
+def test_なかよくする_まもる状態を無視してこうげきを下げる():
+    """なかよくする: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なかよくする"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -1
+
+
+def test_なかよくする_みがわりを貫通してこうげきを下げる():
+    """なかよくする: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なかよくする"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == -1
 
 
 def test_なまける_HPが2分の1回復する():

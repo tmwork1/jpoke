@@ -1499,8 +1499,8 @@ def なかまづくり_change_defender_ability(battle: Battle, ctx: AttackContex
 
 
 def なかよくする_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なかよくする: 相手のこうげきを2段階下げる。"""
-    return modify_defender_stats(battle, ctx, value, stats={"atk": -2})
+    """なかよくする: 相手のこうげきを1段階下げる。"""
+    return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
 
 def なきごえ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
