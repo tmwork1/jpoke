@@ -19,7 +19,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
-        flags={"sound"},
+        accuracy=None,  # 必中
+        flags={"sound", "unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ないしょばなし_modify_defender_stats,
