@@ -1336,7 +1336,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "どくのこな": MoveData(
         type="どく",
         category="status",
-        pp=35,
+        pp=20,
         accuracy=75,
         flags={"powder"},
         handlers={

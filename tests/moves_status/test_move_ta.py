@@ -1148,6 +1148,45 @@ def test_どくのいと_すばやさ1段階下がりどく付与():
     assert defender.has_ailment("どく")
 
 
+def test_どくのこな_どく状態にする():
+    """どくのこな: 命中すると相手を『どく』状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくのこな"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("どく")
+
+
+def test_どくのこな_命中率75で外れることがある():
+    """どくのこな: 命中率75のため外れる場合がある"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくのこな"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.fix_random(battle, 0.95)
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("どく")
+
+
+def test_どくのこな_くさタイプには無効():
+    """どくのこな: 粉技のためくさタイプの相手には効果がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["どくのこな"])],
+        team1=[Pokemon("キマワリ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_ailment("どく")
+
+
 @pytest.mark.parametrize("initial_count,expected_count", [
     (0, 1),  # 未設置 → 1層目
     (1, 2),  # 1層 → 2層（最大）
