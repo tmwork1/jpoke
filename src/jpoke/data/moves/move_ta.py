@@ -750,7 +750,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "てんしのキッス": MoveData(
         type="フェアリー",
         category="status",
-        pp=10,
+        pp=12,
         accuracy=75,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
