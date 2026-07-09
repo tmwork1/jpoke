@@ -615,6 +615,54 @@ def test_てんしのキッス_すでにこんらん状態なら失敗():
     assert defender.volatiles["こんらん"].count == old_count
 
 
+def test_でんじは_じめんタイプには無効():
+    """でんじは: 対象がじめんタイプの場合は無効になる（例外的にタイプ相性の影響を受ける）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("サンドパン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_でんじは_でんきタイプには無効():
+    """でんじは: 対象がでんきタイプの場合は無効になる（まひ無効）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_でんじは_ねらいのまとでじめんタイプへの無効化が解除される():
+    """でんじは: ねらいのまとを持つじめんタイプの相手にはタイプ無効が解除されまひが発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("サンドパン", item_name="ねらいのまと")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert battle.actives[1].ailment.name == "まひ"
+
+
+def test_でんじは_まひ付与():
+    """でんじは: 相手をまひ状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんじは"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert battle.actives[1].ailment.name == "まひ"
+
+
 def test_でんじふゆう_すでにでんじふゆう状態なら失敗():
     """でんじふゆう: すでにでんじふゆう状態なら失敗する"""
     battle = t.start_battle(

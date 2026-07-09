@@ -866,6 +866,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=20,
         accuracy=90,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.でんじは_can_apply,
+                priority=130,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.でんじは_apply_ailment_to_defender,
             ),
