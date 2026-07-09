@@ -284,6 +284,172 @@ def test_まねっこ_自分が使った技もコピー対象になる():
     assert defender.hp < hp_after_first_hit
 
 
+def test_まほうのこな_アルセウスには無効():
+    """まほうのこな: アルセウスには持ち物の有無に関わらず無効"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("アルセウス")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+    assert defender.types == ["ノーマル"]
+
+
+def test_まほうのこな_エスパー単タイプに変える():
+    """まほうのこな: 使用後に defender がエスパータイプのみになること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("ボルケニオン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert "みず" in defender.types
+    assert "ほのお" in defender.types
+    t.run_move(battle, 0)
+
+    assert defender.types == ["エスパー"]
+    assert defender.has_volatile("まほうのこな")
+
+
+def test_まほうのこな_くさタイプの相手には粉技として無効():
+    """まほうのこな: くさタイプの相手には粉技無効化ルールで無効になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("フシギダネ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+
+
+def test_まほうのこな_すでにエスパー単タイプなら失敗():
+    """まほうのこな: 相手がすでにエスパー単タイプのみなら失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("ケーシィ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert defender.types == ["エスパー"]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+
+
+def test_まほうのこな_シルヴァディには無効():
+    """まほうのこな: シルヴァディには持ち物の有無に関わらず無効"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("シルヴァディ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+    assert defender.types == ["ノーマル"]
+
+
+def test_まほうのこな_テラスタル中の相手には失敗する():
+    """まほうのこな: テラスタルしている相手には失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("カビゴン", tera_type="ほのお")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.terastallized = True
+    assert defender.active_tera_type == "ほのお"
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+    assert defender.types == ["ほのお"]
+
+
+def test_まほうのこな_道具ぼうじんゴーグルを持つ相手には無効():
+    """まほうのこな: ぼうじんゴーグルを持つ相手には粉技無効化ルールで無効になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("カビゴン", item_name="ぼうじんゴーグル")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+
+
+def test_まほうのこな_特性ぼうじんを持つ相手には無効():
+    """まほうのこな: 特性ぼうじんを持つ相手には粉技無効化ルールで無効になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうじん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+
+
+def test_まほうのこな_ハロウィン後の相手に使うとaddedTypesがクリアされエスパーのみになる():
+    """まほうのこな: ハロウィン後の相手に使うと added_types がクリアされてエスパータイプのみになること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"ハロウィン": 0},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # ハロウィン付与後はゴーストタイプが追加されている
+    assert defender.has_type("ゴースト")
+    t.run_move(battle, 0)
+
+    # まほうのこな後は added_types がクリアされてエスパーのみになること
+    assert defender.types == ["エスパー"]
+    assert not defender.has_type("ゴースト")
+
+
+def test_まほうのこな_もりののろいでくさタイプになった相手には効かない():
+    """まほうのこな: もりののろいでくさタイプが追加された相手には粉技無効化ルールで無効になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"もりののろい": 0},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    assert defender.has_type("くさ")
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("まほうのこな")
+    assert defender.has_type("くさ")
+
+
+def test_まほうのこな_交代すると元のタイプに戻る():
+    """まほうのこな: 交代後に volatile_override_type がリセットされること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まほうのこな"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドラン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.types == ["エスパー"]
+
+    # 交代後は元のタイプに戻ること
+    t.run_switch(battle, 1, 1)
+    assert not defender.has_volatile("まほうのこな")
+    assert defender.volatile_override_type is None
+    # カビゴンはノーマルタイプ
+    assert defender.types == ["ノーマル"]
+
+
 def test_まもる系_2ターン目は失敗する():
     """まもる: 2ターン連続で使用すると2ターン目は失敗する"""
     battle = t.start_battle(

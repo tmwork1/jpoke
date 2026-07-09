@@ -160,7 +160,15 @@ MOVES_MA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"powder"},
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.まほうのこな_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.まほうのこな_apply,
+            ),
+        }
     ),
     "まもる": MoveData(
         type="ノーマル",
