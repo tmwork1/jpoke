@@ -954,6 +954,99 @@ def test_でんじふゆう_まもるで防がれない():
     assert attacker.has_volatile("でんじふゆう")
 
 
+def test_デコレーション_PPは16():
+    """デコレーション: チャンピオンズでのPPは16（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["デコレーション"].pp == 16
+
+
+def test_デコレーション_こうげきとくこうが2段階ずつ上がる():
+    """デコレーション: 相手のこうげき・とくこうが2段階ずつ上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["デコレーション"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+    assert defender.rank["spa"] == 2
+    assert battle.move_executor.move_applied is True
+
+
+def test_デコレーション_まもる状態の相手にも効果が発動する():
+    """デコレーション: unprotectableフラグを持つため、まもる状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["デコレーション"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+    assert defender.rank["spa"] == 2
+
+
+def test_デコレーション_マジックコートで跳ね返されない():
+    """デコレーション: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["デコレーション"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+    assert defender.rank["spa"] == 2
+    assert attacker.rank["atk"] == 0
+    assert attacker.rank["spa"] == 0
+
+
+def test_デコレーション_みがわり状態の相手には防がれる():
+    """デコレーション: bypass_substituteフラグを持たないため、みがわり状態の相手には効果が防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["デコレーション"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spa"] == 0
+
+
+def test_デコレーション_こうげきとくこう両方最大なら失敗():
+    """デコレーション: こうげき・とくこうが両方すでに+6なら技全体が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["デコレーション"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_stats(defender, {"atk": 6, "spa": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 6
+    assert defender.rank["spa"] == 6
+    assert battle.move_executor.move_success is False
+
+
+def test_デコレーション_こうげきのみ最大でもとくこうは上がり成功():
+    """デコレーション: こうげきが+6でもとくこうが上がれば技は成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["デコレーション"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_stats(defender, {"atk": 6}, source=attacker)
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 6
+    assert defender.rank["spa"] == 2
+    assert battle.move_executor.move_applied is True
+
+
 def test_とおせんぼう_PPは8():
     """とおせんぼう: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。"""
     assert MOVES["とおせんぼう"].pp == 8
