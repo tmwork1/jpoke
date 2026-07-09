@@ -361,6 +361,51 @@ def test_はらだいこ_こうげき最大化しHP半分消費():
     assert attacker.hp == max_hp - (max_hp // 2)
 
 
+def test_はらだいこ_HPが最大HPの半分以下なら失敗():
+    """はらだいこ: 現在HPが最大HPの半分以下の場合は失敗し、HPもランクも変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はらだいこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp // 2  # ちょうど半分でも失敗する
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 0
+    assert attacker.hp == hp_before
+
+
+def test_はらだいこ_あまのじゃくならこうげきランクが最低まで下がる():
+    """はらだいこ: 特性あまのじゃくの場合はランク変化が反転し、こうげきランクが最低(-6)まで下がる。
+    このとき失敗せずHPは通常通り消費される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく", move_names=["はらだいこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == -6
+    assert attacker.hp == max_hp - (max_hp // 2)
+
+
+def test_はらだいこ_まもるで防がれない():
+    """はらだいこ: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["はらだいこ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.hp == max_hp - (max_hp // 2)
+
+
 def test_ハートスワップ_すべての能力ランクが入れ替わる():
     """ハートスワップ: 攻撃者と防御者のすべての能力ランクが互いに入れ替わること"""
     battle = t.start_battle(
