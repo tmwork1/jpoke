@@ -579,7 +579,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
     "しんぴのまもり": MoveData(
         type="ノーマル",
         category="status",
-        pp=25,
+        pp=20,
         target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
