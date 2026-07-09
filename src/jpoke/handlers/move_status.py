@@ -1303,8 +1303,15 @@ def つぶらなひとみ_modify_defender_stats(battle: Battle, ctx: AttackConte
 
 
 def つぼをつく_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """つぼをつく: 7種類の能力からランダムに1つ選んでランクを2段階上げる。"""
-    stat = cast(Stat, battle.random.choice(["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]))
+    """つぼをつく: ランクが最大でない能力からランダムに1つ選んでランクを2段階上げる。
+
+    すでに+6まで上がっている能力は候補から除外し、全能力が最大の場合は失敗する。
+    """
+    stats: list[Stat] = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
+    candidates = [s for s in stats if ctx.attacker.rank[s] < 6]
+    if not candidates:
+        return HandlerReturn(value=False)
+    stat = cast(Stat, battle.random.choice(candidates))
     return HandlerReturn(value=battle.modify_stats(ctx.attacker, {stat: 2}, source=ctx.attacker))
 
 

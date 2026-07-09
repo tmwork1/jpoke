@@ -594,7 +594,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つぼをつく": MoveData(
         type="ノーマル",
         category="status",
-        pp=30,
+        pp=20,
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
