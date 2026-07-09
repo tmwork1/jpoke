@@ -2381,9 +2381,16 @@ def みかづきのまい_apply(battle: Battle, ctx: AttackContext, value: Any) 
 
 
 def みがわり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """みがわりの効果を発動する。"""
+    """みがわりの効果を発動する。
+
+    最大HPの1/4（切り捨て）を消費し、消費量と同じHPのみがわりを生成する。
+    技の成功に伴い、自分のバインド状態を解除する（第三世代以降の仕様）。
+    """
     mon = ctx.attacker
-    battle.volatile_manager.apply(mon, "みがわり", hp=mon.max_hp // 4)
+    migawari_hp = mon.max_hp // 4
+    battle.modify_hp(mon, -migawari_hp)
+    battle.volatile_manager.apply(mon, "みがわり", hp=migawari_hp)
+    battle.volatile_manager.remove(mon, "バインド")
     return HandlerReturn(value=value)
 
 

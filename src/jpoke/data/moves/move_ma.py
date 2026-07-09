@@ -211,7 +211,8 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みがわり": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.みがわり_check,
