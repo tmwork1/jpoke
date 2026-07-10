@@ -1288,6 +1288,106 @@ def test_ミラータイプ_相手のタイプをコピーする():
     assert "あく" in attacker.types
 
 
+def test_ミラータイプ_PPは16():
+    """ミラータイプ: PPは16（champions基準）"""
+    move_data = MOVES["ミラータイプ"]
+    assert move_data.pp == 16
+
+
+def test_ミラータイプ_テラスタル中の使用者は失敗する():
+    """ミラータイプ: 自分がテラスタルしているときは失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"], tera_type="ほのお")],
+        team1=[Pokemon("ゲッコウガ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    attacker.terastallized = True
+    t.run_move(battle, 0)
+
+    # 失敗するためテラタイプのまま
+    assert attacker.types == ["ほのお"]
+
+
+def test_ミラータイプ_まもるで防がれる():
+    """ミラータイプ: 相手のまもる状態には防がれる（対象がfoeのため）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("ゲッコウガ")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    # まもるで防がれるためタイプ変化なし
+    assert attacker.types == ["でんき"]
+
+
+def test_ミラータイプ_マジックコートで跳ね返されない():
+    """ミラータイプ: unreflectableフラグを持つため、相手のマジックコート状態でも跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("ゲッコウガ")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert "みず" in attacker.types
+    assert "あく" in attacker.types
+
+
+def test_ミラータイプ_みがわりを貫通して成功する():
+    """ミラータイプ: bypass_substituteフラグを持つため、みがわり状態の相手にも成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("ゲッコウガ")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert "みず" in attacker.types
+    assert "あく" in attacker.types
+
+
+def test_ミラータイプ_相手のもりののろいで追加されたタイプもコピーする():
+    """ミラータイプ: 相手がもりののろい状態のときは、追加されたくさタイプも含めてコピーする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"もりののろい": 0},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    assert defender.types == ["ノーマル", "くさ"]
+    t.run_move(battle, 0)
+
+    assert attacker.types == ["ノーマル", "くさ"]
+
+
+def test_ミラータイプ_相手がひこう単タイプではねやすめでタイプを消している場合はノーマルをコピーする():
+    """ミラータイプ: 相手がひこう単タイプではねやすめ状態のときはノーマルタイプとして扱う"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミラータイプ"])],
+        team1=[Pokemon("トルネロス(けしん)")],
+        volatile1={"はねやすめ": 0},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    assert defender.types == []
+    t.run_move(battle, 0)
+
+    assert attacker.types == ["ノーマル"]
+
+
 def test_ミルクのみ_HPが満タンのとき失敗する():
     """ミルクのみ: HPが満タンのとき失敗してHP変化なし。"""
     battle = t.start_battle(
