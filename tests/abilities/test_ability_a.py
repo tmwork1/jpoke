@@ -360,6 +360,50 @@ def test_あめうけざら_あめ以外では発動しない():
     assert mon.hp == before
 
 
+def test_アロマベール_あくびは防がない():
+    """アロマベール: メンタル系以外の状態変化(あくびのねむけ)は防がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="アロマベール")],
+        team1=[Pokemon("カビゴン", move_names=["あくび"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].has_volatile("ねむけ")
+
+
+def test_アロマベール_かたやぶりで無効化されない():
+    """アロマベール: かたやぶりで狙われたメンタル攻撃は防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="アロマベール")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["ちょうはつ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].has_volatile("ちょうはつ")
+
+
+def test_アロマベール_のろわれボディの接触時付与を防ぐ():
+    """アロマベール: 特性のろわれボディによるかなしばり付与も防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="のろわれボディ")],
+        team1=[Pokemon("ピカチュウ", ability_name="アロマベール", move_names=["たいあたり"])],
+    )
+    battle.random.random = lambda: 0.0  # 確率操作
+    t.run_move(battle, 1)
+    assert not battle.actives[1].has_volatile("かなしばり")
+
+
+def test_アロマベール_メロメロボディの接触時付与を防ぐ():
+    """アロマベール: 特性メロメロボディによるメロメロ付与も防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メロメロボディ", gender="female")],
+        team1=[Pokemon("カビゴン", ability_name="アロマベール", move_names=["たいあたり"], gender="male")],
+    )
+    battle.random.random = lambda: 0.0  # 確率操作
+    t.run_move(battle, 1)
+    assert not battle.actives[1].has_volatile("メロメロ")
+
+
 def test_いかく_登場時に相手攻撃1段階ダウン():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
