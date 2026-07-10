@@ -138,9 +138,13 @@ def test_なかまづくり_同じ特性なら失敗():
     assert defender.ability.name == original_ability
 
 
-@pytest.mark.parametrize("d_ability", ["アイスフェイス", "なまけ"])
+@pytest.mark.parametrize("d_ability", ["アイスフェイス", "なまけ", "うのミサイル"])
 def test_なかまづくり_失敗条件(d_ability):
-    """なかまづくり: protectedフラグ持ちまたはなまけ特性の相手には失敗する"""
+    """なかまづくり: protectedフラグ持ちまたはなまけ特性の相手には失敗する
+
+    うのミサイルは「上書きできない」特性のためprotectedフラグを持ち、
+    なかまづくりでは失敗する（スキルスワップ/さまようたましいでの交換のみ例外）。
+    """
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なかまづくり"])],
         team1=[Pokemon("カビゴン", ability_name=d_ability)],
@@ -446,7 +450,7 @@ def test_なやみのタネ_交代後に元の特性に戻る():
     assert defender_before.ability.name == "めんえき"
 
 
-@pytest.mark.parametrize("d_ability", ["アイスフェイス", "なまけ", "ふみん"])
+@pytest.mark.parametrize("d_ability", ["アイスフェイス", "なまけ", "ふみん", "うのミサイル"])
 def test_なやみのタネ_失敗条件(d_ability):
     """なやみのタネ: protectedフラグ持ち・なまけ・すでにふみんの相手には失敗する"""
     battle = t.start_battle(

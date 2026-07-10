@@ -258,9 +258,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "うのミサイル": AbilityData(
         flags={
+            "protected",
             "gas_proof",
         },
         handlers={
+            Event.ON_MOVE_CHARGE: h.AbilityHandler(
+                h.うのミサイル_load_prey_on_charge,
+                subject_spec="attacker:self",
+                priority=90,
+            ),
             Event.ON_MOVE_END: h.AbilityHandler(
                 h.うのミサイル_load_prey,
                 subject_spec="attacker:self",
