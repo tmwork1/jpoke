@@ -1958,7 +1958,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.どんかん_block_intimidate,
+                subject_spec="target:self",
+            ),
         }
     ),
     "ナイトメア": AbilityData(
@@ -2818,7 +2822,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.マイペース_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.マイペース_block_intimidate,
+                subject_spec="target:self",
+            ),
         }
     ),
     "マグマのよろい": AbilityData(

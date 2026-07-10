@@ -1570,9 +1570,13 @@ ITEMS: dict[ItemName, ItemData] = {
     "ビビリだま": ItemData(
         fling_power=30,
         handlers={
-            Event.ON_MODIFY_STAT: h.ItemHandler(
+            # priority=50: しろいきり(130)やクリアボディ等の無効化ハンドラ(既定100)より先に
+            # 判定し、いかくが無効化された場合でも発動するようにする（一次情報:
+            # docs/wiki/abilities/いかく.html 特性の仕様#ランク低下効果 の発動順一覧 3.）。
+            Event.ON_BEFORE_MODIFY_STAT: h.ItemHandler(
                 h.ビビリだま_boost_speed_on_intimidate,
                 subject_spec="target:self",
+                priority=50,
             )
         }
     ),

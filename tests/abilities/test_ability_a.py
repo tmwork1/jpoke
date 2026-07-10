@@ -538,6 +538,16 @@ def test_いかく_登場時に相手攻撃1段階ダウン():
     assert battle.actives[0].rank["atk"] == -1
 
 
+def test_いかく_みがわり状態の相手には無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["みがわり"])],
+        team1=[Pokemon("コラッタ"), Pokemon("カビゴン", ability_name="いかく")],
+    )
+    t.run_move(battle, 0)
+    t.run_switch(battle, 1, 1)
+    assert battle.actives[0].rank["atk"] == 0
+
+
 def test_いかりのこうら_HP半分超から半分以下でACSアップBDダウン():
     """いかりのこうら: HPが半分を下回ったとき A/C/S↑1、B/D↓1。"""
     battle = t.start_battle(
