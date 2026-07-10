@@ -710,7 +710,42 @@ def test_いろめがね_いまひとつのダメージが2倍():
         team1=[Pokemon("ピジョン")],
     )
     t.run_move(battle, 0)
+    # むし技はひこうタイプに半減（いまひとつ）のため、いろめがねが発動しダメージ補正が2倍になる
+    assert battle.damage_calculator.def_type_modifier == 2048
     assert 8192 == battle.damage_calculator.damage_modifier
+
+
+def test_いろめがね_等倍のときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いろめがね", move_names=["むしのていこう"])],
+        team1=[Pokemon("ライチュウ")],
+    )
+    t.run_move(battle, 0)
+    # むし技はでんきタイプに等倍のため、いろめがねは発動しない
+    assert battle.damage_calculator.def_type_modifier == 4096
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_いろめがね_効果抜群のときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いろめがね", move_names=["むしのていこう"])],
+        team1=[Pokemon("ケーシィ")],
+    )
+    t.run_move(battle, 0)
+    # むし技はエスパータイプに抜群のため、いろめがねは発動しない
+    assert battle.damage_calculator.def_type_modifier == 8192
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_いろめがね_複合タイプで最終的に等倍になるときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いろめがね", move_names=["むしのていこう"])],
+        team1=[Pokemon("フシギダネ")],
+    )
+    t.run_move(battle, 0)
+    # むし技はくさタイプに抜群・どくタイプに半減で、最終的な相性は等倍になるため発動しない
+    assert battle.damage_calculator.def_type_modifier == 4096
+    assert 4096 == battle.damage_calculator.damage_modifier
 
 
 def test_うのミサイル_ウッウ以外では発動しない():
