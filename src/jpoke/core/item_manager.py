@@ -12,7 +12,7 @@ from jpoke.enums import Event, LogCode
 from jpoke.model import Pokemon, Item
 
 from .context import EventContext
-from .event_logger import ItemPayload
+from .log_payload import ItemPayload
 
 
 class ItemManager:

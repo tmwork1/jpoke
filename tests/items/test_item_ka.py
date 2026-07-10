@@ -397,7 +397,7 @@ def test_きゅうこん_あまのじゃくでC下降():
     assert not foe.has_item()
 
 
-def test_きゅうこん_かたやぶりのみず技はたんじゅん・あまのじゃくでもC上昇():
+def test_きゅうこん_かたやぶりのみず技はたんじゅんあまのじゃくでもC上昇():
     """きゅうこん: かたやぶりの効果があるみず技に対してはたんじゅん・あまのじゃくは発動せず通常通り+1される"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["みずでっぽう"])],

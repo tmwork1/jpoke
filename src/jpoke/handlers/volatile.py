@@ -12,7 +12,7 @@ from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName, MoveName
 
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
-from jpoke.core.event_logger import (
+from jpoke.core.log_payload import (
     VolatilePayload, TextPayload, FailureLogPayload, MoveActionPayload,
 )
 from jpoke.utils.math import apply_fixed_modifier

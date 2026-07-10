@@ -14,7 +14,6 @@ from jpoke.exceptions import InvalidCommandError
 
 from .event_manager import Event
 from .context import EventContext
-from .event_logger import SwitchPayload
 from jpoke.utils import fast_copy
 
 
@@ -254,11 +253,7 @@ class SwitchManager:
         mon.reset_on_switch_in()
         self._register_handlers_on_switch_in(mon)
 
-        self.battle.add_event_log(
-            mon,
-            LogCode.SWITCHED_IN,
-            payload=SwitchPayload(pokemon=mon.name)
-        )
+        self.battle.add_event_log(mon, LogCode.SWITCHED_IN)
 
     def _switch_out(self, mon: Pokemon):
         """ポケモンの退場処理。
@@ -279,10 +274,7 @@ class SwitchManager:
         mon.reset_on_switch_out()
         self._unregister_handlers_on_switch_out(mon)
 
-        self.battle.add_event_log(
-            mon, LogCode.SWITCHED_OUT,
-            payload=SwitchPayload(pokemon=mon.name)
-        )
+        self.battle.add_event_log(mon, LogCode.SWITCHED_OUT)
 
     def override_ejectpack_interrupt(self, flag: Interrupt):
         """割り込みフラグを上書き。

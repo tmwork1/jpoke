@@ -661,7 +661,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"contact", "slash", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ひけん・ちえなみ_set_spikes,
+                ha.ひけんちえなみ_set_spikes,
             ),
         },
     ),
