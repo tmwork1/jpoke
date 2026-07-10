@@ -418,6 +418,18 @@ def test_がんじょうあご_かみつき技で威力補正1_5倍():
     assert 6144 == battle.damage_calculator.power_modifier
 
 
+def test_がんじょうあご_いかりのまえばはかみつき技でないため威力補正がかからない():
+    """いかりのまえばは固定ダメージ技で通常の威力計算を経由しないため、
+    がんじょうあごを持っていても威力補正（power_modifier）自体が計算されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="がんじょうあご", move_names=["いかりのまえば"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier is None
+
+
 def test_ききかいひ_HPが半分以下になると交代():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ききかいひ"), Pokemon("ライチュウ")],
