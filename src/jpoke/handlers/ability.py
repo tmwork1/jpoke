@@ -967,40 +967,47 @@ def カブトアーマー_block_crit(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=0, stop_event=True)
 
 
-def かるわざ_init_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かるわざ特性: 入場時に発動可否の初期状態を記録する。"""
+def かるわざ_activate_on_item_lost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かるわざ特性: アイテムを失った瞬間に発動状態へ遷移する。
+
+    かがくへんかガス等で無効化されている間はこのハンドラ自体が発火しないため、
+    無効化中にアイテムを失っても発動状態へは移行しない
+    （無効化中に失ったアイテムはガス解除後もかるわざを発動させない仕様に対応）。
+    """
     mon = ctx.source
-    # "idle": 入場時にアイテムあり（消失で発動可能）
-    # "inactive": 入場時にアイテムなし（この在場中は発動しない）
-    mon.ability.state = "idle" if mon.has_item() else "inactive"
+    if mon.ability.state == "idle":
+        mon.ability.state = "active"
+    return HandlerReturn(value=value)
+
+
+def かるわざ_init_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """かるわざ特性: 入場時、または特性が有効化されたときに発動可否の初期状態を記録する。
+
+    交代での再入場時は必ず状態がリセット済み（state == ""）なので初期化される。
+    かがくへんかガスの解除等、同一の特性インスタンスが無効化から復帰しただけの
+    場合は既に発動可否が確定しているため、状態を保持し再判定しない
+    （発動中だった場合はガス解除後も発動状態が継続する仕様に対応）。
+    """
+    mon = ctx.source
+    if mon.ability.state == "":
+        # "idle": 入場時（有効化時）にアイテムあり（消失で発動可能）
+        # "inactive": 入場時（有効化時）にアイテムなし（この在場中は発動しない）
+        mon.ability.state = "idle" if mon.has_item() else "inactive"
     return HandlerReturn(value=value)
 
 
 def かるわざ_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """かるわざ特性: アイテム消失中は素早さを2倍にする。"""
+    """かるわざ特性: 発動状態のとき素早さを2倍にする。アイテムを再取得したら解除する。"""
     mon = ctx.source
-
-    # 入場時にアイテムがなかった個体は、この在場中は発動しない。
-    if mon.ability.state == "inactive":
+    if mon.ability.state != "active":
         return HandlerReturn(value=value)
 
     # 発動中にアイテムを再取得したら解除（再消費で再発動できる状態へ戻す）。
-    if mon.ability.state == "active" and mon.has_item():
+    if mon.has_item():
         mon.ability.state = "idle"
         return HandlerReturn(value=value)
 
-    # アイテムを失ったら発動状態へ遷移。
-    if mon.ability.state == "idle" and not mon.has_item():
-        mon.ability.state = "active"
-
-    if mon.ability.state == "active" and not mon.has_item():
-        value *= 2
-    return HandlerReturn(value=value)
-
-
-def かるわざ_reset_state(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かるわざ特性: 交代で状態を初期化する。"""
-    ctx.source.ability.state = ""
+    value *= 2
     return HandlerReturn(value=value)
 
 

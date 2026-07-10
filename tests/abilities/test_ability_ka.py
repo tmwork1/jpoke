@@ -300,6 +300,38 @@ def test_かるわざ_入場時にアイテムなしなら発動しない():
     assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
 
 
+def test_かるわざ_発動中にかがくへんかガスが発動しても解除後は発動状態を維持する():
+    """かるわざ: かがくへんかガスが発動している間は効果が止まるが、解除されれば再度発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かるわざ", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.consume_item(mon)
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * 2
+
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
+
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * 2
+
+
+def test_かるわざ_未発動時にかがくへんかガス中にアイテムを失うと解除後も発動しない():
+    """かるわざ: 未発動のときにかがくへんかガスが発動し、その間にアイテムを失った場合、
+    ガスが解除されてもかるわざは発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かるわざ", item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.item_manager.consume_item(mon)
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
+
+
 def test_かんろなミツ_入場時一度だけ発動():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かんろなミツ"), Pokemon("イーブイ")],
