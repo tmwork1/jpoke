@@ -2,7 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
-from jpoke.enums import Command
+from jpoke.enums import Command, LogCode
 from .. import test_utils as t
 
 
@@ -1410,3 +1410,136 @@ def test_こわいかお_まもるで防がれる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
     assert defender.rank["spe"] == 0
+
+
+def test_コートチェンジ_おいかぜが移動してもかぜのりふうりょくでんきは誤発動しない():
+    """コートチェンジ: おいかぜが移動しても、移動先・移動元のかぜのり/ふうりょくでんきは誤発動しない
+    （ON_FIELD_ACTIVATEを発火しないため）"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", ability_name="かぜのり", move_names=["コートチェンジ"]),
+        ],
+        team1=[Pokemon("カビゴン", ability_name="ふうりょくでんき")],
+        side1={"おいかぜ": 4},
+    )
+    attacker, defender = battle.actives
+    # side1 の初期セットアップ自体がON_FIELD_ACTIVATEを発火するため、
+    # セットアップ由来のじゅうでんをここで解除し、コートチェンジ由来かどうかを分離する
+    battle.volatile_manager.remove(defender, "じゅうでん")
+    t.run_move(battle, 0)
+
+    # おいかぜは相手側から自分側へ移動している
+    assert battle.get_side(attacker).get("おいかぜ").is_active
+    assert not battle.get_side(defender).get("おいかぜ").is_active
+    # かぜのり・ふうりょくでんきは発動しない
+    assert attacker.rank["atk"] == 0
+    assert not defender.has_volatile("じゅうでん")
+
+
+def test_コートチェンジ_どちらの陣営にも対象がない場合は失敗する():
+    """コートチェンジ: 入れ替える場の状態がどちらの陣営にも無い場合は技が失敗し、
+    リベロ所持者のタイプはノーマルに変化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リベロ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert any(log.log == LogCode.MOVE_FAILED for log in battle.event_logger.logs)
+    # 技は失敗するが、へんげんじざい系のタイプ変化自体は失敗判定より前に行われる
+    assert attacker.types == ["ノーマル"]
+
+
+def test_コートチェンジ_マジックコートで跳ね返されない():
+    """コートチェンジ: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"リフレクター": 5},
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert not battle.get_side(attacker).get("リフレクター").is_active
+    assert battle.get_side(defender).get("リフレクター").is_active
+
+
+def test_コートチェンジ_まもるで防がれない():
+    """コートチェンジ: 全体の場を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"リフレクター": 5},
+        volatile1={"まもる": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert not battle.get_side(attacker).get("リフレクター").is_active
+    assert battle.get_side(defender).get("リフレクター").is_active
+
+
+def test_コートチェンジ_天候は変化しない():
+    """コートチェンジ: 天候などの全体の場の状態は入れ替え対象外で変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"リフレクター": 5},
+        weather=("はれ", 5),
+    )
+    t.run_move(battle, 0)
+
+    assert battle.weather_manager.current_name == "はれ"
+
+
+def test_コートチェンジ_対象外の場は入れ替わらない():
+    """コートチェンジ: ねがいごとのような単体の場に発生する状態は入れ替え対象外で、
+    そのまま残る（対象となるリフレクターのみ入れ替わる）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"ねがいごと": 2},
+        side1={"リフレクター": 5},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    # 対象外のねがいごとは移動せず自陣営に残る
+    assert battle.get_side(attacker).get("ねがいごと").is_active
+    assert not battle.get_side(defender).get("ねがいごと").is_active
+    # 対象のリフレクターは入れ替わる
+    assert battle.get_side(attacker).get("リフレクター").is_active
+    assert not battle.get_side(defender).get("リフレクター").is_active
+
+
+def test_コートチェンジ_継続ターン数を保持したまま入れ替わる():
+    """コートチェンジ: 両陣営に継続ターン数の異なる同名の場の状態がある場合、
+    ターン数ごとそのまま入れ替わる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"リフレクター": 3},
+        side1={"リフレクター": 8},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert battle.get_side(attacker).get("リフレクター").count == 8
+    assert battle.get_side(defender).get("リフレクター").count == 3
+
+
+def test_コートチェンジ_自陣営の壁が相手陣営に移動する():
+    """コートチェンジ: 自陣営のみに壁が張られている状態で使用すると、
+    相手陣営に壁が移り自陣営からは消える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["コートチェンジ"])],
+        team1=[Pokemon("カビゴン")],
+        side0={"リフレクター": 5},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert not battle.get_side(attacker).get("リフレクター").is_active
+    assert battle.get_side(defender).get("リフレクター").is_active
