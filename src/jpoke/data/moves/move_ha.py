@@ -749,7 +749,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ファストガード": MoveData(
         type="かくとう",
         category="status",
-        pp=15,
+        pp=16,  # champions基準（docs/champions/move_list.txt）。Gen9本家は15
         priority=3,
         target="self",
         flags={"protect"},

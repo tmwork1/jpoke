@@ -36,6 +36,22 @@ def test_ファストガード_priority1技を防ぐ():
     assert defender.hp == hp_before
 
 
+def test_ファストガード_いたずらごころで優先度が上がった変化技も防ぐ():
+    """ファストガード: 技データ上は優先度0でも、いたずらごころ等で動的に優先度が
+    上がった変化技（でんじは）を防ぐことができる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン")],
+        team1=[Pokemon("ヘルガー", ability_name="いたずらごころ", move_names=["でんじは"])],
+        volatile0={"ファストガード": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    t.run_move(battle, 1)  # ヘルガーがいたずらごころででんじは(実効優先度+1)を使う
+
+    # ファストガードが実効優先度+1のでんじはを防いでいること
+    assert not defender.ailment.is_active
+
+
 def test_ファストガード_連続使用で失敗する():
     """ファストガード: 2ターン連続で使用すると2ターン目は失敗する"""
     battle = t.start_battle(
