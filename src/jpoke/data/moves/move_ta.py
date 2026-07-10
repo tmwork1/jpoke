@@ -1295,7 +1295,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トーチカ": MoveData(
         type="どく",
         category="status",
-        pp=10,
+        pp=8,  # champions基準（docs/champions/move_list.txt）。Gen9本家は10
         priority=4,
         target="self",
         flags={"protect"},

@@ -1627,6 +1627,91 @@ def test_トリック_片方のみアイテムを持つとき入れ替わる(a_i
         assert defender.item.name == expected_d
 
 
+def test_トーチカ_PPは8():
+    """トーチカ: チャンピオンズでのPPは8（docs/champions/move_list.txt準拠）。Gen9本家は10。"""
+    assert MOVES["トーチカ"].pp == 8
+
+
+def test_トーチカ_優先度は4():
+    """トーチカ: 優先度は+4（まもる等の守る系技と同じ）"""
+    assert MOVES["トーチカ"].priority == 4
+
+
+def test_トーチカ_使用した同ターンに相手の攻撃技をブロックしてどく状態にする():
+    """トーチカ: 使用した同ターンに接触技で攻撃してきた相手をどく状態にする"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トーチカ"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("トーチカ")
+
+    t.run_move(battle, 1)
+    assert not battle.move_executor.move_success
+    assert defender.has_ailment("どく")
+
+
+def test_トーチカ_技使用でトーチカ状態が付与される():
+    """トーチカ: 使用すると自分にトーチカ状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トーチカ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("トーチカ")
+
+
+def test_トーチカ_変化技も無効化する():
+    """トーチカ: 相手対象の変化技も無効化する（まもると同様）"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=["キノコのほうし"])],
+    )
+    battle.volatile_manager.apply(battle.actives[1], "トーチカ", count=1)
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.move_success
+
+
+def test_トーチカ_非接触技ではどく状態にならない():
+    """トーチカ: 非接触技を防いでもどく状態にはならない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+    )
+    battle.volatile_manager.apply(battle.actives[1], "トーチカ", count=1)
+    t.run_move(battle, 0)
+
+    assert not battle.actives[0].ailment.is_active
+
+
+def test_トーチカ_連続使用で失敗する():
+    """トーチカ: 直前ターンに守る系技を成功させていた場合、2ターン目は連続使用で失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["トーチカ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: トーチカ成功
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success
+    assert attacker.has_volatile("トーチカ")
+
+    # ターン終了でトーチカvolatileが解除される
+    t.end_turn(battle)
+    assert not attacker.has_volatile("トーチカ")
+
+    # 2ターン目: トーチカ失敗（連続使用）
+    t.run_move(battle, 0)
+    assert not battle.move_executor.move_success
+    assert not attacker.has_volatile("トーチカ")
+
+
 def test_どくガス_PPは20():
     """どくガス: チャンピオンズでのPPは20（move_list.txtに単独項目はないが、PP圧縮則
     〈SV基準PPが20以上の技は一律20に圧縮〉から導出。Gen9本家は40）。"""
