@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
     from jpoke.model import Pokemon
 
-from jpoke.types import MoveName, Stat, Type
+from jpoke.types import AbilityName, MoveName, Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
@@ -423,6 +423,20 @@ def うたう_apply_sleep(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
 
+def _ability_name_to_copy(mon: Pokemon) -> AbilityName:
+    """うつしえ・なりきりでコピーする際に参照する対象の特性名を返す。
+
+    とくせいなし状態（いえき・コアパニッシャー等）の場合、無効化された
+    特性の名前（空文字列）をそのままコピーする。
+    かがくへんかガス等、とくせいなし以外の理由で特性が抑制されている場合は
+    見た目の効果が発動していなくても内部的には元の特性が残っているため、
+    base_name（元の特性名）をコピーする。
+    """
+    if mon.has_volatile("とくせいなし"):
+        return mon.ability.name
+    return mon.ability.base_name
+
+
 def うつしえ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うつしえの失敗条件チェック。
 
@@ -448,9 +462,14 @@ def うつしえ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def うつしえ_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うつしえの効果: 使用者の特性を対象の特性と同じにする。"""
+    """うつしえの効果: 使用者の特性を対象の特性と同じにする。
+
+    対象がとくせいなし状態の場合は無効化された特性名（空文字列）を、
+    かがくへんかガス等それ以外の理由で抑制されている場合は元の特性名を
+    コピーする（`_ability_name_to_copy` 参照）。
+    """
     assert ctx.defender is not None
-    battle.change_ability(ctx.attacker, ctx.defender.ability.name)
+    battle.change_ability(ctx.attacker, _ability_name_to_copy(ctx.defender))
     return HandlerReturn(value=value)
 
 
@@ -1153,11 +1172,17 @@ def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: A
     例外: うのミサイルは上書き（いえき・なかまづくり等）には protected フラグで
     抵抗するが、SV Ver.3.0.0 以降はスキルスワップ/さまようたましいでの交換のみ
     可能になったため base_name で個別に除外する。
+
+    かがくへんかガスは protected フラグを持たない（いえき/コアパニッシャーで
+    とくせいなし状態になれるため）が、スキルスワップ/さまようたましいでの
+    交換だけは対象外のため base_name で個別に判定する。
     """
     assert ctx.defender is not None
     if (
         (ctx.attacker.ability.has_flag("protected") and ctx.attacker.ability.base_name != "うのミサイル")
         or (ctx.defender.ability.has_flag("protected") and ctx.defender.ability.base_name != "うのミサイル")
+        or ctx.attacker.ability.base_name == "かがくへんかガス"
+        or ctx.defender.ability.base_name == "かがくへんかガス"
         or battle.ability_manager.is_change_blocked(ctx.attacker)
         or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
@@ -1860,8 +1885,14 @@ def なりきり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def なりきり_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なりきりの効果: 自分の特性を相手の特性と同じにする。"""
-    battle.change_ability(ctx.attacker, ctx.defender.ability.name)
+    """なりきりの効果: 自分の特性を相手の特性と同じにする。
+
+    対象がとくせいなし状態の場合は無効化された特性名（空文字列）を、
+    かがくへんかガス等それ以外の理由で抑制されている場合は元の特性名を
+    コピーする（`_ability_name_to_copy` 参照）。
+    """
+    assert ctx.defender is not None
+    battle.change_ability(ctx.attacker, _ability_name_to_copy(ctx.defender))
     return HandlerReturn(value=value)
 
 

@@ -460,6 +460,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.かがくへんかガス_gas_deactivate,
                 subject_spec="source:self",
+                # とくせいなし状態になった直後にガスの解除処理自身が
+                # 無効化理由の判定でスキップされないようにする
+                # （このハンドラの主体自身が「とくせいなし」で無効化された結果として
+                # 発火するため、その理由だけは無視して発動させる必要がある）
+                ignored_disable_reasons=frozenset({"とくせいなし"}),
             )
         }
     ),
@@ -1216,7 +1221,8 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "じんばいったい": AbilityData(
         flags={
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
