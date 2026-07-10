@@ -1224,6 +1224,16 @@ def test_おみとおし_アイテムなしの相手には発動しない():
     assert not foe.item.revealed
 
 
+def test_おみとおし_ぶきようでアイテム無効化中でも公開される():
+    """おみとおし: ぶきようでアイテム効果が無効化されていても、持っている事実は公開される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="おみとおし")],
+        team1=[Pokemon("ピカチュウ", ability_name="ぶきよう", item_name="たべのこし")],
+    )
+    foe = battle.actives[1]
+    assert foe.item.revealed
+
+
 def test_おもかげやどし_オーガポン以外は発動しない():
     """おもかげやどし: オーガポン以外のポケモンには発動しない。"""
     battle = t.start_battle(
