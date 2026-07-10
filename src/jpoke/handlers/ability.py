@@ -80,13 +80,15 @@ class AbilityHandler(Handler):
                  func: Callable,
                  subject_spec: RoleSpec,
                  priority: int = 100,
-                 once: bool = False) -> None:
+                 once: bool = False,
+                 ignored_disable_reasons: frozenset[str] = frozenset()) -> None:
         super().__init__(
             func=func,
             source="ability",
             subject_spec=subject_spec,
             priority=priority,
             once=once,
+            ignored_disable_reasons=ignored_disable_reasons,
         )
 
 def announce_ability_triggered(battle: Battle,
@@ -1388,6 +1390,10 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
 
     例外: うのミサイルは protected フラグを持つが、SV Ver.3.0.0 以降は
     さまようたましいでの交換が可能になったため base_name で個別に除外する。
+
+    かがくへんかガスは protected フラグを持たないが、とくせいなし状態に
+    なっていてもさまようたましいでの交換は発動しないため base_name で
+    個別に判定する。
     """
     attacker = ctx.attacker
     defender = ctx.defender
@@ -1396,6 +1402,7 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
         or attacker is None
         or attacker.fainted
         or (attacker.ability.has_flag("protected") and attacker.ability.base_name != "うのミサイル")
+        or attacker.ability.base_name == "かがくへんかガス"
         or defender is None
     ):
         return HandlerReturn(value=value)

@@ -198,7 +198,7 @@ class EventManager:
         match rh.handler.source:
             case "ability":
                 assert subject is not None
-                if not subject.ability.enabled:
+                if not subject.ability.enabled_ignoring(rh.handler.ignored_disable_reasons):
                     return False
             case "item":
                 assert subject is not None

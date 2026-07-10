@@ -26,6 +26,20 @@ def test_かがくへんかガス_登場時に相手の特性を無効化():
     assert mon.rank["atk"] == 0
 
 
+def test_かがくへんかガス_いえきでとくせいなしになると相手の特性が再有効化される():
+    """かがくへんかガス: いえき等でガス保持者自身がとくせいなし状態になり
+    特性が無効化された直後に、ガスの効果自体が切れて相手の特性が再有効化される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス")],
+        team1=[Pokemon("ライチュウ", ability_name="せいでんき")],
+        volatile0={"とくせいなし": 3},
+    )
+    gas_mon = battle.actives[0]
+    foe = battle.actives[1]
+    assert not gas_mon.ability.enabled
+    assert foe.ability.enabled
+
+
 def test_かがくへんかガス_解除後は特性が再び有効化される():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス"), Pokemon("ライチュウ")],

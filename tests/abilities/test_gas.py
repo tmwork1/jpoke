@@ -19,6 +19,7 @@ from .. import test_utils as t
     ("うのミサイル",     True),
     ("かがくへんかガス", True),
     ("ぎょぐん",         True),
+    ("じんばいったい",   True),
     ("スワームチェンジ", True),
     ("ぜったいねむり",   True),
     ("ダルマモード",     True),
