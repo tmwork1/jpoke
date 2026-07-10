@@ -127,3 +127,56 @@ def test_りゅうのまい_自分対象のためまもるで防がれない():
 
     assert attacker.rank["atk"] == 1
     assert attacker.rank["spe"] == 1
+
+
+def test_ロックオン_自分にロックオン状態が付与される():
+    """ロックオン: 使用すると相手ではなく自分にロックオン状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ロックオン")
+    assert not defender.has_volatile("ロックオン")
+
+
+def test_ロックオン_すでにロックオン状態なら失敗する():
+    """ロックオン: すでに自分がロックオン状態の場合、再使用しても失敗する（カウントは変わらない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"ロックオン": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.volatiles["ロックオン"].count == 1
+
+
+def test_ロックオン_まもるで防がれる():
+    """ロックオン: まもる状態の相手に使うと防がれ、ロックオン状態が付与されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("ロックオン")
+
+
+def test_ロックオン_マジックコートで跳ね返されない():
+    """ロックオン: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ロックオン")
+    assert not defender.has_volatile("ロックオン")
