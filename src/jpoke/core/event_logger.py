@@ -28,6 +28,10 @@ class EventLog:
         pokemon: イベントの主体となったポケモン名（add_event_log の呼び出し元が
             Pokemon インスタンスを渡した場合のみ設定される。Payload クラスごとに
             同じ情報を別名（pokemon/source等）で持たせず、ここに一本化する）
+
+    プログラムでログを解析する場合は `render()` の文字列ではなく、
+    `log`/`pokemon`/`payload`（または `to_dict()`）を使う。
+    LogCode ごとの Payload 対応表は log_payload.py のモジュール docstring を参照。
     """
     turn: int
     idx: int
@@ -54,6 +58,8 @@ class EventLog:
 
         LogCode と Payload から人間が読める文字列を生成します。
         display_reasonがある場合は"[基本記述]:[display_reason]"形式で統一します。
+        この文字列は人間向け表示専用であり、LogCode ごとに文体が異なるため
+        プログラムでの解析には使わないこと（`to_dict()` を使う）。
 
         Returns:
             ログのテキスト表現

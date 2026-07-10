@@ -1,8 +1,47 @@
 """イベントログのペイロード（詳細情報）を定義するモジュール。
 
 LogCode ごとに必要な詳細情報を dataclass として定義する。
-どの LogCode がどの Payload を使うかは event_logger.py の
-EventLog._get_base_text() を参照。
+
+## プログラムでログを解析する場合の入口
+
+`EventLog.render()`（event_logger.py）が返す文字列は LogCode ごとに文体・
+省略ルールが異なる **人間向け表示専用のテキスト** であり、機械的なパース対象
+ではない。プログラムでログを解析・検証したい場合は代わりに以下を使う。
+
+- `EventLog.log`（LogCode enum）で種別を判定する
+- `EventLog.pokemon`（イベントの主体となったポケモン名。add_event_log() の
+  呼び出し元が Pokemon インスタンスを渡した場合のみ設定される）
+- `EventLog.payload`（下表の Payload dataclass。属性に直接アクセスする）
+- `EventLog.to_dict()`（上記を JSON-serializable な dict に変換したもの）
+
+## LogCode → Payload 対応表
+
+`payload=None` の行は詳細情報を持たない（LogCode 自体が情報のすべて）。
+`source` は「行為の原因となったポケモン名」（例: いかくを発動した相手）を指し、
+`EventLog.pokemon`（イベントの対象/主体）とは役割が異なる。
+
+| LogCode | Payload | 主なフィールドの意味 |
+|---|---|---|
+| GAME_STARTED / GAME_WON / GAME_LOST | None | — |
+| SWITCHED_IN / SWITCHED_OUT | None | 交代したポケモン名は `EventLog.pokemon` |
+| ACTION_BLOCKED / MOVE_FAILED / MOVE_MISSED / HEAL_BLOCKED / STAT_CHANGE_BLOCKED | `FailureLogPayload` | `move`=不発の原因となった技名。MOVE_MISSED は `display_reason` 未設定 |
+| MOVE_IMMUNED | `FailureLogPayload` | `move`=無効化された技名 |
+| PP_CONSUMED | `MoveActionPayload` | `move`=技名, `value`=消費PP量 |
+| MOVE_REFLECTED / SUBSTITUTE_HIT / PROTECT_SUCCEEDED / PROTECT_FAILED / CRITICAL_HIT | `MoveActionPayload` | `move`=関係する技名。`value` は常に None |
+| HP_CHANGED | `HPChangePayload` | `value`=増減量（符号付き）, `hp`/`max_hp`=変化後, `source`=攻撃者名, `internal_reason`=内部判定コード（表示しない）。対象ポケモン名は `EventLog.pokemon` |
+| STAT_CHANGED | `StatChangePayload` | `stats`=`{Stat: 増減段階}`, `source`=原因となったポケモン名。対象ポケモン名は `EventLog.pokemon` |
+| ABILITY_TRIGGERED | `AbilityPayload` | `ability`=発動した特性名。発動したポケモン名は `EventLog.pokemon` |
+| ITEM_TRIGGERED / ITEM_GAINED / ITEM_LOST | `ItemPayload` | `item`=対象アイテム名。対象ポケモン名は `EventLog.pokemon` |
+| AILMENT_APPLIED / AILMENT_REMOVED / AILMENT_PREVENTED | `AilmentPayload` | `ailment`=状態異常名, `source`=原因となったポケモン名（あれば）。AILMENT_PREVENTED は特性名を `display_reason` に持つ |
+| VOLATILE_IMMUNE / VOLATILE_APPLIED / VOLATILE_REMOVED / VOLATILE_DISPLAY / VOLATILE_PREVENTED | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因となったポケモン名（あれば）。REMOVED/PREVENTED は理由を `display_reason` に持つ |
+| FIELD_STARTED / FIELD_ENDED | `FieldPayload` | `field`=場の状態名, `count`=残りターン数（あれば） |
+| TERASALLIZED | `TerastalPayload` | `type`=テラスタイプ |
+| MEGA_EVOLVED | None | メガシンカしたポケモン名は `EventLog.pokemon` |
+| TEXT_LOG | `TextPayload` | `text`=呼び出し元が組み立てた完成文（構造化されない自由記述。新規の使用箇所は増やさず、可能な限り専用 LogCode/Payload を追加すること） |
+
+対応関係の実体は `EventLog._get_base_text()`（event_logger.py）の `match` 文。
+この docstring は解析用リファレンスであり、実装が変わった場合は両方を
+同時に更新する。
 """
 from dataclasses import dataclass, field
 

@@ -431,13 +431,19 @@ def test_てんきや_天候変化で即座にフォルムチェンジ():
     ]
 )
 def test_てんねん_攻撃側は防御ランク補正を無視する(move_name, stat):
-    """てんねん攻撃側: 防御ランク+2でも防御の実効値がランクなし（+0）と同じになる。"""
+    """てんねん攻撃側: 防御ランク+2でも防御の実効値がランクなし（+0）と同じになる。
+
+    急所は防御側の正ランク補正を無視するため、乱数を固定して急所を回避しないと
+    ランダムに急所が発生した際に defense_with_rank が偶然 defense_without_rank
+    と同値になり flaky になる。
+    """
     # てんねんなし: 防御ランク+2でfinal_defenseが上昇する
     without_ten = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    t.fix_random(without_ten, 0.9)
     without_ten.actives[1].rank[stat] = 2
     t.run_move(without_ten, 0)
     defense_with_rank = without_ten.damage_calculator.final_defense
@@ -448,6 +454,7 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    t.fix_random(without_rank, 0.9)
     t.run_move(without_rank, 0)
     defense_without_rank = without_rank.damage_calculator.final_defense
 
@@ -457,6 +464,7 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    t.fix_random(with_ten, 0.9)
     with_ten.actives[1].rank[stat] = 2
     t.run_move(with_ten, 0)
     defense_tennen = with_ten.damage_calculator.final_defense
