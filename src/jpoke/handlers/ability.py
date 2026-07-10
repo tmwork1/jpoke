@@ -711,11 +711,20 @@ def えんかく_nullify_contact(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=False, stop_event=True)
 
 
+# 自分含む全員が対象の技（使用者自身にも効果が及ぶ技）は、技全体を無効化すると
+# 使用者自身への効果まで防いでしまうため、通常の全体無効化の対象から除外する。
+# 対象ポケモンごとの免疫判定は各技のハンドラ側（handlers/move_status.py の
+# _blocked_by_ougon_no_karada）で行う（docs/spec/abilities/おうごんのからだ.md
+# 「自分含む全員が対象の技」）。
+_OUGON_NO_KARADA_EXCLUDED_MOVES: frozenset[str] = frozenset({"ほろびのうた"})
+
+
 def おうごんのからだ_block_status_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おうごんのからだ特性: 他のポケモンからの変化技を無効化する。"""
     if (
         ctx.move.category == "status"
         and ctx.move.target == "foe"
+        and ctx.move.name not in _OUGON_NO_KARADA_EXCLUDED_MOVES
     ):
         _announce_ability_triggered(battle, ctx.defender)
         battle.add_event_log(

@@ -25,7 +25,7 @@ from jpoke.types import MoveName, Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
-from jpoke.core.event_logger import FailureLogPayload, ItemPayload, StatChangePayload
+from jpoke.core.event_logger import AbilityPayload, FailureLogPayload, ItemPayload, StatChangePayload
 from jpoke.data import TYPE_MODIFIER, TYPES
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
@@ -97,6 +97,28 @@ _INSTRUCT_BLOCKED_MOVES: frozenset[str] = frozenset({
     # スターモービル専用技
     "ダークアクセル", "バーンアクセル", "ファイトアクセル", "ポイズンアクセル", "マジカルアクセル",
 })
+
+def _blocked_by_ougon_no_karada(battle: Battle, mon: Pokemon) -> bool:
+    """おうごんのからだ特性: 自分含む全員が対象の変化技（おちゃかい・ほろびのうたなど）に
+    おける、使用者以外への効果を防ぐ。
+
+    通常の変化技は Event.ON_BEFORE_APPLY_MOVE の時点で技全体が無効化されるが、
+    自分含む全員が対象の技は使用者自身にも効果が及ぶため一律には無効化できない。
+    そのため各技のハンドラ側で対象ポケモンごとに本関数を用いて免疫判定を行う
+    （docs/spec/abilities/おうごんのからだ.md「自分含む全員が対象の技」）。
+    呼び出し側で使用者自身は対象から除外すること
+    （自身が使用する技が自身の特性で防がれることはないため）。
+    """
+    if not (mon.ability.enabled and mon.ability.name == "おうごんのからだ"):
+        return False
+    mon.ability.revealed = True
+    battle.add_event_log(
+        mon,
+        LogCode.ABILITY_TRIGGERED,
+        payload=AbilityPayload(ability=mon.ability.name),
+    )
+    return True
+
 
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
@@ -533,6 +555,8 @@ def おちゃかい_force_consume_berries(battle: Battle, ctx: AttackContext, va
         if any(mon.has_volatile(v) for v in hidden_volatiles):
             continue
         if not mon.item.is_berry():
+            continue
+        if mon is not attacker and _blocked_by_ougon_no_karada(battle, mon):
             continue
         battle.item_manager.force_trigger_berry(mon)
 
@@ -2481,6 +2505,8 @@ def ほろびのうた_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     """
     triggered = False
     for mon in battle.actives:
+        if mon is not ctx.attacker and _blocked_by_ougon_no_karada(battle, mon):
+            continue
         if battle.volatile_manager.apply(
             mon,
             "ほろびのうた",
