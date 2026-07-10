@@ -1460,6 +1460,36 @@ def test_ビルドアップ_発動前後のランク変化(atk_init, def_init, a
     assert attacker.rank["def"] == def_exp
 
 
+def test_ビルドアップ_マジックコートで跳ね返されない():
+    """ビルドアップ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ビルドアップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+    assert defender.rank["atk"] == 0
+    assert defender.rank["def"] == 0
+
+
+def test_ビルドアップ_まもるで防がれない():
+    """ビルドアップ: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ビルドアップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 1
+
+
 def test_ふういん_すでにふういん状態なら失敗する():
     """ふういん: すでにふういん状態の場合は失敗する"""
     battle = t.start_battle(
