@@ -829,6 +829,123 @@ def test_リサイクル_消費したきのみを取り戻す():
     assert mon.last_lost_item_name == "オボンのみ"
 
 
+def test_リサイクル_はたきおとすで失った道具は復元できない():
+    """リサイクル: はたきおとすで失わせた道具は場に存在したまま消滅する扱いのため復元できない
+
+    きのみを持たせるとHPしきい値到達によるきのみの自動消費（ON_HP_CHANGED）が
+    はたきおとすの道具除去（ON_DAMAGE_HIT）より先に発火してしまい、この検証の
+    意図（はたきおとす自体による除去がtrack_loss=Falseになっているか）が
+    確認できなくなるため、HP変化に反応しない道具（こだわりハチマキ）を使う。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["リサイクル"], item_name="こだわりハチマキ")],
+        team1=[Pokemon("カビゴン", move_names=["はたきおとす"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.run_move(battle, 0)
+
+    # last_lost_item_name が空なので失敗 → 道具は戻らない
+    assert not mon.has_item()
+
+
+def test_リサイクル_やきつくすで焼却された道具は復元できない():
+    """リサイクル: やきつくすで焼却されたきのみは場に存在したまま消滅する扱いのため復元できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", move_names=["リサイクル"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン", move_names=["やきつくす"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.run_move(battle, 0)
+
+    assert not mon.has_item()
+
+
+def test_リサイクル_ふしょくガスで失った道具は復元できない():
+    """リサイクル: ふしょくガスで失わせた道具は場に存在したまま消滅する扱いのため復元できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["リサイクル"], item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン", move_names=["ふしょくガス"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.run_move(battle, 0)
+
+    assert not mon.has_item()
+
+
+def test_リサイクル_攻撃で割れたふうせんは復元できない():
+    """リサイクル: 攻撃を受けて割れたふうせんは、ものひろい・リサイクルの対象にならない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["リサイクル"], item_name="ふうせん")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.run_move(battle, 0)
+    assert not mon.has_item()
+
+
+def test_リサイクル_なげつけるで消費したふうせんは復元できる():
+    """リサイクル: なげつけるでふうせんを消費した場合は復元対象になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["なげつける", "リサイクル"], item_name="ふうせん")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0, move_idx=0)
+
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == "ふうせん"
+
+    t.run_move(battle, 0, move_idx=1)
+    assert mon.item.name == "ふうせん"
+
+
+def test_リサイクル_むしくいで奪って消費したきのみは復元できない():
+    """リサイクル: むしくいで相手から奪って消費したきのみは、自分の持ち物を失った扱いにならないため復元できない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["むしくい", "リサイクル"])],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0, move_idx=0)
+
+    # むしくいでオボンのみを奪って消費している（自分の持ち物にはならず消費して消える）
+    assert not mon.has_item()
+    assert not defender.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.run_move(battle, 0, move_idx=1)
+
+    # last_lost_item_name が空なので失敗 → アイテムを得られない
+    assert not mon.has_item()
+
+
 def test_わたほうし_くさタイプには無効():
     """わたほうし: 粉技のためくさタイプの相手には効果がない"""
     battle = t.start_battle(

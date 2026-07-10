@@ -2367,8 +2367,12 @@ def フェザーダンス_modify_defender_stats(battle: Battle, ctx: AttackConte
 
 
 def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふしょくガスのアイテム除去効果。"""
-    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+    """ふしょくガスのアイテム除去効果。
+
+    場に存在したまま消滅する扱いのため、技リサイクルや特性ものひろい・しゅうかくの
+    復元/拾得対象にしない（track_loss=False）。
+    """
+    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 
