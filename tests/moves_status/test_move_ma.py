@@ -3,6 +3,7 @@
 import pytest
 
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from .. import test_utils as t
 
 
@@ -40,6 +41,69 @@ def test_まきびし_相手陣営に設置される():
 
     side = battle.get_side(battle.actives[1])
     assert side.fields["まきびし"].is_active
+
+
+def test_マジックルーム_PPは12():
+    """マジックルーム: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["マジックルーム"].pp == 12
+
+
+def test_マジックルーム_マジックコートで跳ね返されない():
+    """マジックルーム: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("マジックルーム").is_active
+
+
+def test_マジックルーム_まもるで防がれない():
+    """マジックルーム: 全体の場を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("マジックルーム").is_active
+
+
+def test_マジックルーム_場が発動する():
+    """マジックルーム: 使用すると場が『マジックルーム』状態になり、5ターン継続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    field = battle.get_global_field("マジックルーム")
+    assert field.is_active
+    assert field.count == 5
+
+
+def test_マジックルーム_発動中に再使用すると解除される():
+    """マジックルーム: 発動中に再度使用すると即座にフィールドが解除される（トグル動作）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジックルーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"マジックルーム": 5},
+    )
+    t.run_move(battle, 0)
+    assert not battle.get_global_field("マジックルーム").is_active
+
+
+def test_マジックルーム_発動すると使用者のもちものも無効化される():
+    """マジックルーム: 使用した瞬間から自分自身のもちものも無効化される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["マジックルーム"], item_name="たべのこし")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
 
 
 def test_まねっこ_PPはまねっこ自身のみ消費されコピー技は消費されない():
