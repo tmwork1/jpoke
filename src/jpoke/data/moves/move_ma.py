@@ -492,11 +492,11 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ミラータイプ": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
+        flags={"unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.ミラータイプ_can_apply,
-                priority=130,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ミラータイプ_apply,

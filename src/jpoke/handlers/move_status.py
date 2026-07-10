@@ -2737,35 +2737,37 @@ def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackConte
 
 
 def ミラータイプ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ミラータイプの効果: 使用者のタイプを対象のタイプに置換する。
+    """ミラータイプの効果: 使用者のタイプを対象の現在のタイプに置換する。
 
-    - テラスタル中かつステラでない: テラスタイプをコピー
-    - テラスタル中かつステラ: 元のタイプ（data.types）をコピー
-    - テラスタルなし: 元のタイプ（data.types）をコピー
-    - タイプ置換後、もりののろい/ハロウィンによる added_types はリセットされる
+    - `defender.types`（テラスタル・特性等によるタイプ変更・追加/除去タイプを反映した
+      現在のタイプ）をそのままコピーする
+    - 対象のタイプが完全に無い場合（例: ひこう単タイプがはねやすめでタイプを消している場合）は
+      ノーマルタイプとして扱う
+    - タイプ置換後、もりののろい/ハロウィンによる自分の added_types はリセットされる
     """
     attacker = ctx.attacker
     defender = ctx.defender
-    target_types: list[Type]
-    if defender.terastallized and defender.tera_type != "ステラ":
-        target_types = [defender.tera_type]
-    else:
-        target_types = list(defender.data.types)
-    attacker.move_override_types = target_types
+    attacker.move_override_types = ミラータイプ_取得_対象タイプ(defender)
     # added_types（もりののろい・ハロウィン等の追加タイプ）をリセットする
     attacker.added_types = []
     return HandlerReturn(value=value)
 
 
 def ミラータイプ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ミラータイプの失敗チェック: 使用者と対象のタイプが一致する場合は失敗する。"""
+    """ミラータイプの失敗チェック。
+
+    - 使用者がテラスタル中の場合は失敗する
+    - 使用者と対象のタイプが一致する場合は失敗する
+    """
     attacker = ctx.attacker
     defender = ctx.defender
-    target_types: list[Type]
-    if defender.terastallized and defender.tera_type != "ステラ":
-        target_types = [defender.tera_type]
-    else:
-        target_types = list(defender.data.types)
+    if attacker.terastallized:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="ミラータイプ_テラスタル中"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    target_types = ミラータイプ_取得_対象タイプ(defender)
     if sorted(attacker.types) == sorted(target_types):
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
@@ -2773,6 +2775,16 @@ def ミラータイプ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
+
+def ミラータイプ_取得_対象タイプ(defender: Pokemon) -> list[Type]:
+    """ミラータイプでコピーする対象の現在のタイプを返す。
+
+    `defender.types` はテラスタル・特性によるタイプ変更・もりののろい/ハロウィンによる
+    追加タイプ・はねやすめ等による除去タイプをすべて反映済みのため、そのまま使用する。
+    対象のタイプが完全に無くなっている場合はノーマルタイプとして扱う。
+    """
+    return list(defender.types) or ["ノーマル"]
 
 
 def ミルクのみ_self_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
