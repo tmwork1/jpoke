@@ -2195,8 +2195,32 @@ def test_ふんか_HP満タンのとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_ぶきみなじゅもん_ねごと経由ではねごとのPPが減る():
+    """ぶきみなじゅもん: 相手がねごとでサブ技を実行した場合、減るのはサブ技ではなく
+    最後にPPを消費したねごと自身のPPである（サブ技はPPを消費しないため対象にならない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
+        team1=[Pokemon("カビゴン", move_names=["ねごと", "たいあたり"])],
+        ailment1=("ねむり", 3),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    negoto = defender.moves[0]
+    taiatari = defender.moves[1]
+
+    t.run_move(battle, 1, 0)  # カビゴン: ねごと（候補はたいあたりのみ）
+    assert negoto.pp == 11, "ねごと自身のPPは1消費される"
+    assert taiatari.pp == 35, "サブ技のPPは消費されない"
+
+    t.run_move(battle, 0)  # フーディン: ぶきみなじゅもん
+
+    assert negoto.pp == 11 - 3, "ぶきみなじゅもんで減るのはねごとのPP"
+    assert taiatari.pp == 35, "サブ技のPPは変化しない"
+
+
 def test_ぶきみなじゅもん_相手が技未使用ならPP変化なし():
-    """ぶきみなじゅもん: 相手の executed_move が None の場合はPPを変化させない。"""
+    """ぶきみなじゅもん: 相手の last_pp_consumed_move が None の場合はPPを変化させない
+    （ダメージは通常どおり与える）。"""
     battle = t.start_battle(
         team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
         team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
@@ -2205,13 +2229,15 @@ def test_ぶきみなじゅもん_相手が技未使用ならPP変化なし():
     defender = battle.actives[1]
     move = defender.moves[0]
     pp_before = move.pp
-    # カビゴンはまだ技を使っていない（executed_move=None）
+    hp_before = defender.hp
+    # カビゴンはまだPPを消費する行動をしていない（last_pp_consumed_move=None）
     t.run_move(battle, 0)
     assert move.pp == pp_before
+    assert defender.hp < hp_before, "PP減少がなくてもダメージは与える"
 
 
 def test_ぶきみなじゅもん_相手の直前技PPが3減る():
-    """ぶきみなじゅもん: 相手が前のターンに使った技のPPが3減る。"""
+    """ぶきみなじゅもん: 相手が前のターンにPPを消費して使った技のPPが3減る。"""
     battle = t.start_battle(
         team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
         team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
@@ -2219,7 +2245,7 @@ def test_ぶきみなじゅもん_相手の直前技PPが3減る():
     )
     defender = battle.actives[1]
     move = defender.moves[0]
-    # カビゴンに技を使わせて executed_move を設定する
+    # カビゴンに技を使わせて last_pp_consumed_move を設定する
     t.run_move(battle, 1)
     pp_after_use = move.pp
     # ぶきみなじゅもんを使う
