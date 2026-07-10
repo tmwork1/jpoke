@@ -1156,6 +1156,18 @@ def test_えんかく_直接攻撃でわるいてぐせが発動しない():
     assert attacker.has_item()
 
 
+def test_おうごんのからだ_おちゃかいは自分への効果のみ防ぐ():
+    """おちゃかい: おうごんのからだ所持者は自分のきのみの強制消費のみ防ぎ、使用者のきのみは通常通り消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["おちゃかい"], item_name="オボンのみ")],
+        team1=[Pokemon("サーフゴー", ability_name="おうごんのからだ", item_name="オボンのみ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not attacker.item.is_berry()
+    assert defender.item.is_berry()
+
+
 def test_おうごんのからだ_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
@@ -1163,6 +1175,19 @@ def test_おうごんのからだ_かたやぶりで無効():
     )
     t.run_move(battle, 0)
     assert battle.move_executor.move_applied is True
+
+
+def test_おうごんのからだ_ほろびのうたは自分への付与のみ防ぐ():
+    """ほろびのうた: おうごんのからだ所持者は自分への状態付与のみ防ぎ、使用者には通常通り付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("サーフゴー", ability_name="おうごんのからだ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_applied
+    assert attacker.has_volatile("ほろびのうた")
+    assert not defender.has_volatile("ほろびのうた")
 
 
 def test_おうごんのからだ_場が対象の技は無効化しない():
@@ -1192,6 +1217,18 @@ def test_おうごんのからだ_相手の変化技を無効化():
     t.run_move(battle, 0)
     assert not battle.move_executor.move_applied
     assert battle.actives[1].ability.revealed is True
+
+
+def test_おうごんのからだ_自分が使うおちゃかいは自分の特性で防がれない():
+    """おうごんのからだ所持ポケモン自身がおちゃかいを使った場合、自身のきのみは消費される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("サーフゴー", ability_name="おうごんのからだ", move_names=["おちゃかい"],
+                       item_name="オボンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert not attacker.item.is_berry()
 
 
 def test_おうごんのからだ_自分対象の変化技は無効化しない():
