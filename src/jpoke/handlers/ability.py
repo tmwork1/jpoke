@@ -321,6 +321,50 @@ def _prevent_volatile(battle: Battle,
         return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
+def _cure_ailment_on_enable(battle: Battle,
+                            ctx: EventContext,
+                            *,
+                            blocked_ailments: list[AilmentName]) -> HandlerReturn:
+    """特性が有効化された時点ですでに無効化対象の状態異常なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合や、
+    なやみのタネ等で特性が書き換わった場合などに発動する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_ABILITY_ENABLED)
+            - source: 特性が有効化されたポケモン
+        blocked_ailments: この特性が防ぐ状態異常のリスト
+    """
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=None)
+    if mon.ailment.name in blocked_ailments and battle.ailment_manager.remove(mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=None)
+
+def _cure_volatile_on_enable(battle: Battle,
+                             ctx: EventContext,
+                             *,
+                             blocked_volatiles: list[VolatileName]) -> HandlerReturn:
+    """特性が有効化された時点ですでに無効化対象の揮発性状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_ABILITY_ENABLED)
+            - source: 特性が有効化されたポケモン
+        blocked_volatiles: この特性が防ぐ揮発性状態のリスト
+    """
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=None)
+    for volatile_name in blocked_volatiles:
+        if mon.has_volatile(volatile_name) and battle.volatile_manager.remove(mon, volatile_name):
+            _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=None)
+
 def ARシステム_apply_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ARシステム特性: 登場時にメモリに合わせてタイプを変更する。"""
     _apply_multitype(ctx.source, MEMORY_TO_TYPE)
@@ -1610,6 +1654,14 @@ def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, val
     return HandlerReturn(value=value)
 
 
+def じゅうなん_cure_paralysis_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """じゅうなん特性: 特性が有効化された時点ですでにまひ状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["まひ"])
+
+
 def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じょうききかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。"""
     if ctx.move.type not in ("みず", "ほのお"):
@@ -1658,6 +1710,14 @@ def すいほう_reduce_fire(battle: Battle, ctx: AttackContext, value: int) -> 
     if ctx.move.type == "ほのお":
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
+
+
+def すいほう_cure_burn_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """すいほう特性: 特性が有効化された時点ですでにやけど状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["やけど"])
 
 
 def スイートベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -2298,6 +2358,14 @@ def どんかん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any)
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ちょうはつ", "メロメロ"])
 
 
+def どんかん_cure_volatile_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """どんかん特性: 特性が有効化された時点ですでにちょうはつ/メロメロ状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_volatile_on_enable(battle, ctx, blocked_volatiles=["ちょうはつ", "メロメロ"])
+
+
 def ナイトメア_damage_sleeping_foe(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """ナイトメア特性: 相手がねむり状態のとき毎ターン最大HPの1/8を削る。"""
     mon = ctx.source
@@ -2349,6 +2417,14 @@ def ねつこうかん_boost_atk_on_fire(battle: Battle, ctx: AttackContext, val
 
     _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
+
+
+def ねつこうかん_cure_burn_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ねつこうかん特性: 特性が有効化された時点ですでにやけど状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["やけど"])
 
 
 def ねつぼうそう_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -2611,6 +2687,14 @@ def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, valu
     if ctx.stat_change_reason != "いかく" or "atk" not in value:
         return HandlerReturn(value=value)
     return HandlerReturn(value={**value, "atk": 1})
+
+
+def パステルベール_cure_poison_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """パステルベール特性: 特性が有効化された時点ですでにどく/もうどく状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["どく", "もうどく"])
 
 
 def パンクロック_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -3103,6 +3187,22 @@ def マイペース_prevent_volatile(battle: Battle, ctx: EventContext, value: A
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["こんらん"])
 
 
+def マイペース_cure_confusion_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """マイペース特性: 特性が有効化された時点ですでにこんらん状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_volatile_on_enable(battle, ctx, blocked_volatiles=["こんらん"])
+
+
+def マグマのよろい_cure_freeze_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """マグマのよろい特性: 特性が有効化された時点ですでにこおり状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["こおり"])
+
+
 def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """まけんき特性: 敵から能力を下げられたときこうげきが2段階上昇する。"""
     if (
@@ -3194,6 +3294,14 @@ def みずがため_boost_B_on_water(battle: Battle, ctx: AttackContext, value: 
     if battle.modify_stats(mon, {"def": +2}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
+
+
+def みずのベール_cure_burn_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """みずのベール特性: 特性が有効化された時点ですでにやけど状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["やけど"])
 
 
 def ミラクルスキン_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3292,6 +3400,14 @@ def メガソーラー_deactivate(battle: Battle, ctx: AttackContext, value: Any
         wm.current_name = original_name
     mon.ability.state = ""
     return HandlerReturn(value=value)
+
+
+def めんえき_cure_poison_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """めんえき特性: 特性が有効化された時点ですでにどく/もうどく状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["どく", "もうどく"])
 
 
 def メガソーラー_force_weather_enabled(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
@@ -3395,6 +3511,14 @@ def もらいび_reserve_fire_boost(battle: Battle, ctx: AttackContext, value: b
 
 def やるき_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
+
+
+def やるき_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """やるき特性: 特性が有効化された時点ですでにねむり状態なら即座に回復する。
+
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    """
+    return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["ねむり"])
 
 
 def ゆうばく_damage_attacker_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

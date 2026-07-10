@@ -500,6 +500,28 @@ def test_ふみん_かたやぶりでねむり付与後は直後に回復する(
     assert not battle.actives[0].ailment.is_active
 
 
+def test_マイペース_かたやぶりでこんらん付与後は直後に回復する():
+    """マイペース: かたやぶりの効果でこんらん状態にされても、技終了直後に特性の効果で回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マイペース")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["あやしいひかり"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert not battle.actives[0].has_volatile("こんらん")
+
+
+def test_どんかん_かたやぶりでちょうはつ付与後は直後に回復する():
+    """どんかん: かたやぶりの効果でちょうはつ状態にされても、技終了直後に特性の効果で回復する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どんかん")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ちょうはつ"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert not battle.actives[0].has_volatile("ちょうはつ")
+
+
 @pytest.mark.parametrize(
     "weather_name",
     weathers
@@ -943,6 +965,7 @@ def test_揮発状態耐性(ability: str, volatile: VolatileName, result: bool):
         ("スイートベール", "ねむり"),
         ("みずのベール", "やけど"),
         ("マグマのよろい", "こおり"),
+        ("すいほう", "やけど"),
     ],
 )
 def test_状態異常無効(ability: str, ailment: AilmentName):
@@ -956,20 +979,24 @@ def test_状態異常無効(ability: str, ailment: AilmentName):
 
 
 @pytest.mark.parametrize(
-    "ability, ailment, move",
+    "ability, ailment, move, still_active",
     [
-        ("めんえき", "どく", "どくのこな"),
-        ("めんえき", "もうどく", "どくどく"),
-        ("パステルベール", "どく", "どくのこな"),
-        ("パステルベール", "もうどく", "どくどく"),
-        ("じゅうなん", "まひ", "でんじは"),
-        ("やるき", "ねむり", "ねむりごな"),
-        ("スイートベール", "ねむり", "ねむりごな"),
-        ("みずのベール", "やけど", "おにび"),
-        # ("マグマのよろい", "こおり", ""),
+        # めんえき/パステルベール/じゅうなん/やるき/みずのベールは、
+        # かたやぶりの技で状態異常にされても技終了直後に特性の効果で回復する
+        ("めんえき", "どく", "どくのこな", False),
+        ("めんえき", "もうどく", "どくどく", False),
+        ("パステルベール", "どく", "どくのこな", False),
+        ("パステルベール", "もうどく", "どくどく", False),
+        ("じゅうなん", "まひ", "でんじは", False),
+        ("やるき", "ねむり", "ねむりごな", False),
+        ("みずのベール", "やけど", "おにび", False),
+        ("すいほう", "やけど", "おにび", False),
+        # スイートベールは無視して状態異常にしても回復しない
+        ("スイートベール", "ねむり", "ねむりごな", True),
+        # ("マグマのよろい", "こおり", "", False),
     ],
 )
-def test_状態異常無効_かたやぶりで無効(ability: str, ailment: AilmentName, move: str):
+def test_状態異常無効_かたやぶりで無効(ability: str, ailment: AilmentName, move: str, still_active: bool):
     # カビゴン（ノーマル）はまひ・ねむり・やけど・どく全てのタイプ耐性を持たないため使用
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name=ability)],
@@ -977,7 +1004,7 @@ def test_状態異常無効_かたやぶりで無効(ability: str, ailment: Ailm
         accuracy=100,
     )
     t.run_move(battle, 1)
-    assert battle.actives[0].ailment.is_active
+    assert battle.actives[0].ailment.is_active == still_active
 
 
 @pytest.mark.parametrize(
