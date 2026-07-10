@@ -1608,6 +1608,18 @@ def test_ふういん_使用者がふういん状態になる():
     assert mon.has_volatile("ふういん")
 
 
+def test_フェアリーロック_ゴーストタイプも交代できない():
+    """フェアリーロック: 通常の交代禁止と異なりゴーストタイプも例外なく交代できなくなる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
+        team1=[Pokemon("ゲンガー"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not t.can_switch(battle, 1)
+
+
 def test_フェアリーロック_すでに有効なら失敗する():
     """フェアリーロック: すでにフェアリーロック状態なら失敗し、カウントは変わらない"""
     battle = t.start_battle(
@@ -1620,6 +1632,32 @@ def test_フェアリーロック_すでに有効なら失敗する():
     t.run_move(battle, 0)
 
     assert battle.global_manager.fields["フェアリーロック"].count == count_before
+
+
+def test_フェアリーロック_マジックコートで跳ね返されない():
+    """フェアリーロック: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert battle.global_manager.fields["フェアリーロック"].is_active
+
+
+def test_フェアリーロック_まもるで防がれない():
+    """フェアリーロック: 全体の場を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert battle.global_manager.fields["フェアリーロック"].is_active
 
 
 def test_フェアリーロック_使用後にグローバルフィールドが有効になる():
@@ -1644,6 +1682,18 @@ def test_フェアリーロック_使用者側が交代できない():
     t.run_move(battle, 0)
 
     assert not t.can_switch(battle, 0)
+
+
+def test_フェアリーロック_相手側も交代できない():
+    """フェアリーロック: 両陣営のポケモンが交代できなくなる（相手側も対象）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
+        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+
+    assert not t.can_switch(battle, 1)
 
 
 def test_フェザーダンス_PPは16():
@@ -1689,56 +1739,6 @@ def test_フェザーダンス_まもるで防がれる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
     assert defender.rank["atk"] == 0
-
-
-def test_フェアリーロック_相手側も交代できない():
-    """フェアリーロック: 両陣営のポケモンが交代できなくなる（相手側も対象）"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
-        team1=[Pokemon("カビゴン"), Pokemon("ヤドン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-
-    assert not t.can_switch(battle, 1)
-
-
-def test_フェアリーロック_ゴーストタイプも交代できない():
-    """フェアリーロック: 通常の交代禁止と異なりゴーストタイプも例外なく交代できなくなる"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
-        team1=[Pokemon("ゲンガー"), Pokemon("ヤドン")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-
-    assert not t.can_switch(battle, 1)
-
-
-def test_フェアリーロック_まもるで防がれない():
-    """フェアリーロック: 全体の場を対象とする技のため、相手のまもるで防がれない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"まもる": 1},
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-
-    assert battle.global_manager.fields["フェアリーロック"].is_active
-
-
-def test_フェアリーロック_マジックコートで跳ね返されない():
-    """フェアリーロック: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["フェアリーロック"])],
-        team1=[Pokemon("カビゴン")],
-        volatile1={"マジックコート": 1},
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-
-    assert battle.global_manager.fields["フェアリーロック"].is_active
 
 
 def test_ふきとばし_かぜのりで無効化される():
