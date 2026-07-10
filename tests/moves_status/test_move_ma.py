@@ -1438,6 +1438,21 @@ def test_めいそう_発動前後のランク変化(spa_init, spd_init, spa_exp
     assert attacker.rank["spd"] == spd_exp
 
 
+def test_メロメロ_みがわり状態の相手にも効果が発動する():
+    """メロメロ: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["メロメロ"], gender="male")],
+        team1=[Pokemon("カビゴン", gender="female")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert defender.has_volatile("メロメロ")
+
+
 def test_メロメロ_すでにメロメロ状態なら失敗():
     """メロメロ: 相手がすでにメロメロ状態なら失敗する"""
     battle = t.start_battle(
