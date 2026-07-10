@@ -2,6 +2,7 @@
 
 import pytest
 from jpoke import Pokemon
+from jpoke.core import AttackContext
 from jpoke.data.move import MOVES
 from jpoke.enums import Command
 from .. import test_utils as t
@@ -161,6 +162,26 @@ def test_サイコキネシス_相手にダメージを与える():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp < hp_before
+
+
+def test_サイコショック_ワンダールーム下ではとくぼう実数値とぼうぎょランクを参照する():
+    """サイコショック: physical_damage フラグにより、ワンダールーム下でも
+    物理技と同様に『とくぼう実数値×ぼうぎょランク補正』でダメージ計算される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", move_names=["サイコショック"])],
+        team1=[Pokemon("カビゴン")],
+        field={"ワンダールーム": 99},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    ctx = AttackContext(
+        attacker=battle.actives[0],
+        defender=defender,
+        move=battle.actives[0].moves[0],
+    )
+    expected = defender.stats["spd"]
+    actual = battle.damage_calculator._calc_final_defense(ctx)
+    assert actual == expected
 
 
 def test_サイコショック_相手にダメージを与える():

@@ -269,7 +269,8 @@ class MoveExecutor:
             return
 
         # PPが0の技はわるあがきに置き換える
-        if move.pp == 0:
+        # （ねごとのサブ実行中は対象外。ねごとはPP0の技も選択でき、そのまま成功する）
+        if move.pp == 0 and not attacker.sleep_talk_active:
             move = Move("わるあがき")
 
         ctx.move = move
@@ -397,6 +398,9 @@ class MoveExecutor:
 
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
+        # 直近で使用した技の実効タイプ・技名を記録する（テクスチャー2用）
+        ctx.attacker.last_move_type = ctx.move.type
+        ctx.attacker.last_move_name = cast(MoveName, ctx.move.name)
         # non_negotoでない技のみバトル全体の最後使用技として記録する
         if not ctx.move.has_flag("non_negoto"):
             self.battle.last_used_move_name = cast(MoveName, ctx.move.name)

@@ -791,5 +791,14 @@ def test_どくぼうそう_どく状態で特殊技の威力が1_5倍(move_name
     assert expected_modifier == battle.damage_calculator.power_modifier
 
 
+def test_どんかん_いかくを無効化する():
+    """どんかん: いかくによるこうげきランク低下を無効化する（第八世代以降）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どんかん")],
+        team1=[Pokemon("カビゴン", ability_name="いかく")],
+    )
+    assert battle.actives[0].rank["atk"] == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

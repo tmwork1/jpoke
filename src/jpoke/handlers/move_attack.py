@@ -2495,8 +2495,12 @@ def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def はたきおとす_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はたきおとすのアイテム除去効果。"""
-    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+    """はたきおとすのアイテム除去効果。
+
+    場に存在したまま消滅する扱いのため、技リサイクルや特性ものひろい・しゅうかくの
+    復元/拾得対象にしない（track_loss=False）。
+    """
+    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 
@@ -2821,12 +2825,6 @@ def ふくろだたき_hit_count(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=max(1, count))
 
 
-def ふしょくガス_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふしょくガスのアイテム除去効果。"""
-    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
-    return HandlerReturn(value=value)
-
-
 def ふぶき_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふぶき: ゆき状態の時は必中になる補正。
     防御側がばんのうがさを持つ場合や、エアロック・ノーてんきで天候が無効化されている場合は
@@ -3128,11 +3126,26 @@ def マジカルアクセル_apply_confusion_to_defender(battle: Battle, ctx: At
 
 
 def マジカルフレイム_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """マジカルフレイムの追加効果: 100%の確率で相手のとくこうを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
 
 
 def マッドショット_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spe": -1})
+
+
+def ミストバースト_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ミストバースト: 使用者がミストフィールドの効果を受けている場合、威力が1.5倍になる。
+
+    使用者が地面にいなければ、場がミストフィールドであっても威力は上がらない。
+    防御側の設置状況は無関係。
+    """
+    if (
+        battle.terrain.name == "ミストフィールド"
+        and not battle.query.is_floating(ctx.attacker)
+    ):
+        return HandlerReturn(value=apply_fixed_modifier(value, 6144))
+    return HandlerReturn(value=value)
 
 
 def ミストバースト_pay_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -3237,6 +3250,7 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     take_item はねんちゃくチェックを内包し、attacker がアイテムを
     持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせた場合は
     ねんちゃくによる阻止を無視して奪取できる（第五世代以降の仕様）。
+    奪って消費したきのみはリサイクルの復元対象にならないため track_loss=False を指定する。
     """
     if ctx.substitute_damage > 0:
         return HandlerReturn(value=value)
@@ -3248,7 +3262,7 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     if not battle.item_manager.take_item(defender, ignore_sticky_hold=defender.fainted):
         return HandlerReturn(value=value)
     # attackerがきのみを得たので効果を発動して消費する
-    battle.item_manager.force_trigger_berry(attacker)
+    battle.item_manager.force_trigger_berry(attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 
@@ -3274,7 +3288,12 @@ def むねんのつるぎ_drain(battle: Battle, ctx: AttackContext, value: int) 
 
 
 def ムーンフォース_lower_spa_C(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return modify_defender_stats(battle, ctx, value, stats={"spa": -1}, chance=0.3)
+    """ムーンフォース: 相手の『とくこう』ランクを1段階下げる。
+
+    本家では発動確率30%だが、Championsでは10%に変更されている
+    （docs/spec/moves/ムーンフォース.md 参照）。
+    """
+    return modify_defender_stats(battle, ctx, value, stats={"spa": -1}, chance=0.1)
 
 
 def メガドレイン_drain(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -3411,12 +3430,14 @@ def やきつくす_burn_item(battle: Battle, ctx: AttackContext, value: Any) ->
     `Event.ON_CALC_DAMAGE_MODIFIER`で消費されるため、既に消費済みなら燃やす対象がなくなる。
     remove_item はねんちゃく等のアイテム変更禁止判定を内包するため、
     それらを持つ相手には効果がない。
+    場に存在したまま消滅する扱いのため、技リサイクルや特性ものひろい・しゅうかくの
+    復元/拾得対象にしない（track_loss=False）。
     """
     if ctx.substitute_damage > 0:
         return HandlerReturn(value=value)
     item = ctx.defender.item
     if item.is_berry() or item.name == "ノーマルジュエル":
-        battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+        battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 

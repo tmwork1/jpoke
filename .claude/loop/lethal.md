@@ -26,17 +26,19 @@
     "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
-  "failed":    [{"name": "...", "type": "..."}]
+  "failed":    [{"name": "...", "type": "..."}],
+  "rate_limit_reset_at": null
 }
 ```
 
 ---
 
-## ウェイクアップ手順
+## 実行手順
 
 ### 1. 状態ファイルを読む
 
-`.loop/lethal_state.json` を Read で読み込む。
+`.loop/lethal_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
+未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
 
 ### 1.5. worktree を準備する
 
@@ -92,10 +94,10 @@ worktree 内でコミットする:
 git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"
 ```
 
-### 5. 状態保存・次ウェイクアップ
+### 5. 状態保存・終了
 
 成功: `completed` に `{"name": "{name}", "type": "{type}"}` を追加。失敗: `failed` に追加。
-§共通7 に従う（保存後 `delaySeconds=120` で予約。reason「リーサルハンドラ 実装ループ: 次の件へ」）。
+§共通7 に従う（続きはユーザーの `/loop lethal` 再実行で再開する）。
 
 ---
 
@@ -106,3 +108,4 @@ git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"
 ## エラーハンドリング
 
 §共通8 に従う（実装失敗 → `failed` に追加してループ継続）。
+エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。

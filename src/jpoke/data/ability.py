@@ -241,14 +241,32 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "うなぎのぼり": AbilityData(),
+    "うなぎのぼり": AbilityData(
+        flags={
+            "mold_breaker_ignorable",
+        },
+        handlers={
+            Event.ON_CHECK_FLOATING: h.AbilityHandler(
+                h.ふゆう_float,
+                subject_spec="source:self",
+            ),
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.ビーストブースト_boost_best_stat_on_ko,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "うのミサイル": AbilityData(
         flags={
-            "uncopyable",
             "protected",
             "gas_proof",
         },
         handlers={
+            Event.ON_MOVE_CHARGE: h.AbilityHandler(
+                h.うのミサイル_load_prey_on_charge,
+                subject_spec="attacker:self",
+                priority=90,
+            ),
             Event.ON_MOVE_END: h.AbilityHandler(
                 h.うのミサイル_load_prey,
                 subject_spec="attacker:self",
@@ -1946,7 +1964,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.どんかん_block_intimidate,
+                subject_spec="target:self",
+            ),
         }
     ),
     "ナイトメア": AbilityData(
@@ -2566,6 +2588,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ふみん_prevent_volatile,
                 "target:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ふみん_cure_sleep_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ふゆう": AbilityData(
@@ -2802,7 +2828,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.マイペース_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.マイペース_block_intimidate,
+                subject_spec="target:self",
+            ),
         }
     ),
     "マグマのよろい": AbilityData(

@@ -43,9 +43,29 @@ def test_フィールド展開技_すでに同じフィールドなら失敗(ter
     assert battle.terrain.count == 5
 
 
+@pytest.mark.parametrize("weather_name,move_name", [
+    ("はれ", "にほんばれ"),
+    ("あめ", "あまごい"),
+    ("すなあらし", "すなあらし"),
+])
+def test_天候始動技_すでに同じ天候なら失敗(weather_name, move_name):
+    """天候始動技: すでに同じ天候中は発動しない（失敗）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=[move_name])],
+        team1=[Pokemon("カビゴン")],
+        weather=(weather_name, 5),
+    )
+    t.run_move(battle, 0)
+
+    # カウントは変わらない（再発動されない）
+    assert battle.weather.name == weather_name
+    assert battle.weather.count == 5
+
+
 @pytest.mark.parametrize("move_name,blocking_weather", [
     ("にほんばれ", "おおあめ"),    # にほんばれはおおあめ中失敗
     ("あまごい", "おおひでり"),    # あまごいはおおひでり中失敗
+    ("すなあらし", "おおひでり"),  # すなあらしはおおひでり中失敗
 ])
 def test_天候始動技_強天候で失敗(move_name, blocking_weather):
     """天候始動技: 反対の強い天候が有効なときは失敗する"""

@@ -56,12 +56,12 @@ MOVES_MA: dict[MoveName, MoveData] = {
         }
     ),
     "マジカルアクセル": MoveData(
-        type="エスパー",
-        category="special",
-        pp=10,
+        type="フェアリー",
+        category="physical",
+        pp=12,
         power=100,
         accuracy=100,
-        flags={"non_copycat", "secondary_effect"},
+        flags={"non_copycat", "non_encore", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マジカルアクセル_apply_confusion_to_defender,
@@ -86,6 +86,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=75,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マジカルフレイム_lower_spa_C,
@@ -117,6 +118,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=16,
         power=55,
         accuracy=95,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.マッドショット_lower_defender_spd,
@@ -151,6 +153,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         flags={"non_negoto", "non_copycat"},  # まねっこ自身はまねっこでコピー不可
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
@@ -162,7 +165,15 @@ MOVES_MA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"powder"},
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.まほうのこな_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.まほうのこな_apply,
+            ),
+        }
     ),
     "まもる": MoveData(
         type="ノーマル",
@@ -170,7 +181,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=8,
         priority=4,
         target="self",
-        flags={"protect"},
+        flags={"protect", "non_copycat"},  # まねっこでコピー不可
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
                 hs.まもる系_連続使用失敗チェック,
@@ -184,6 +195,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=40,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.まるくなる_apply,
@@ -207,6 +219,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         target="self",
         flags={"dance", "heal"},
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.みかづきのまい_can_apply),
             Event.ON_STATUS_HIT: h.MoveHandler(hs.みかづきのまい_apply),
         },
     ),
@@ -214,6 +227,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.みがわり_check,
@@ -269,6 +283,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
             Event.ON_CALC_DAMAGE_MODIFIER: h.MoveHandler(
                 ha.reduce_damage_in_double_battle,
             ),
+            Event.ON_CALC_POWER_MODIFIER: h.MoveHandler(
+                ha.ミストバースト_calc_power,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "ミストフィールド": MoveData(
@@ -288,7 +306,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=5,
         power=95,
         accuracy=100,
-        flags={"bullet"},
+        flags={"bullet", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ミストボール_lower_spa_C,
@@ -399,8 +417,16 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みちづれ": MoveData(
         type="ゴースト",
         category="status",
-        pp=8,
+        pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
+        target="self",
+        flags={"non_copycat"},
         handlers={
+            # 第七世代以降: みちづれを成功させた直後にもう一度使うと必ず失敗する
+            # （docs/spec/moves/みちづれ.md「第七世代以降」節）。
+            # まもる/みきりの連続使用失敗チェックと同じ ON_TRY_MOVE_2・優先度未指定パターン。
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.みちづれ_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.みちづれ_apply,
             ),
@@ -430,6 +456,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=120,
         accuracy=100,
+        flags={"unprotectable"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 ha.みらいよち_charge,
@@ -476,10 +503,10 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=16,
+        flags={"unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.ミラータイプ_can_apply,
-                priority=130,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ミラータイプ_apply,
@@ -489,7 +516,8 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ミルクのみ": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -513,7 +541,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "みをけずる": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -592,6 +620,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.めいそう_modify_attacker_stats,
@@ -653,7 +682,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=35,
         power=50,
         accuracy=95,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.メタルクロー_boost_attacker_A,
@@ -700,6 +729,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=120,
         accuracy=90,
+        flags={"non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: [
                 h.MoveHandler(
@@ -722,6 +752,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         category="status",
         pp=16,
         accuracy=100,
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
                 hs.メロメロ_check_gender,
@@ -775,9 +806,13 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ものまね": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
-        flags={"non_encore", "non_negoto"},
-        handlers={},  # 実装保留
+        pp=10,  # champions/move_list.txtに記載なし。Gen9本家基準の値をそのまま採用
+                # （おしゃべり・テラクラスター・ダイマックスほう等、Championsに記載のない技と同様）。
+        flags={"non_encore", "non_negoto", "non_copycat", "unreflectable"},
+        # 実装保留: 相手が直前に使用した技を技スロットごと一時的にコピーし、交代/ひんし/
+        # バトル終了で元に戻す技コピー機構が必要なため対応を見送る。
+        # 詳細は docs/plan/moves/ものまね.md 参照（前例: へんしん・スケッチ・ゆびをふる）。
+        handlers={},
     ),
     "もりののろい": MoveData(
         type="くさ",

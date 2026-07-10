@@ -191,6 +191,66 @@ def test_ほろびのうた_交代で解除():
     assert not mon.has_volatile("ほろびのうた")
 
 
+def test_マジックコート_unreflectableフラグを持つじこあんじは跳ね返さない():
+    """マジックコート: unreflectableフラグを持つじこあんじは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じこあんじ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.rank["atk"] = 2
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り自分のランクが相手のランクにコピーされる
+    assert attacker.rank["atk"] == 2
+
+
+def test_マジックコート_unreflectableフラグを持つスキルスワップは跳ね返さない():
+    """マジックコート: unreflectableフラグを持つスキルスワップは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り特性が入れ替わる
+    assert attacker.ability.name == "めんえき"
+    assert defender.ability.name == "せいでんき"
+
+
+def test_マジックコート_unreflectableフラグを持つなりきりは跳ね返さない():
+    """マジックコート: unreflectableフラグを持つなりきりは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["なりきり"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り相手の特性がコピーされる
+    assert attacker.ability.name == "めんえき"
+
+
+def test_マジックコート_unreflectableフラグを持つ技は跳ね返さない():
+    """マジックコート: unreflectableフラグを持つうつしえは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り相手の特性がコピーされる
+    assert attacker.ability.name == "めんえき"
+
+
 def test_マジックコート_ターン終了で解除():
     """マジックコート: ターン終了時に解除される"""
     battle = t.start_battle(
@@ -582,6 +642,33 @@ def test_やどりぎのタネ_マジックガードでダメージ無効():
     assert from_mon.hp == from_mon.max_hp
     # 回復も発生しない
     assert to_mon.hp == to_hp_before
+
+
+def test_やどりぎのタネ_回復側が交代すると新しい位置のポケモンが回復する():
+    """やどりぎのタネ: 回復先は「使用者がいた場所」であり、使用者自身の交代後は
+    その場所にいる新しいポケモンが回復する。"""
+    battle = t.start_battle(
+        team1=[Pokemon("ワンリキー"), Pokemon("マンキー")],
+        team0=[Pokemon("カビゴン")],
+        volatile0={"やどりぎのタネ": 1}
+    )
+    target_mon = battle.actives[0]
+    old_healer = battle.actives[1]
+    t.run_switch(battle, 1, 1)
+    new_healer = battle.actives[1]
+    assert new_healer is not old_healer
+    # 回復量を観測できるよう、あらかじめHPを減らしておく
+    new_healer.hp = new_healer.max_hp // 2
+    new_healer_hp_before = new_healer.hp
+
+    t.end_turn(battle)
+
+    damage = target_mon.max_hp // 8
+    assert target_mon.hp == target_mon.max_hp - damage
+    # 交代先（現在その場所にいるポケモン）が回復する
+    assert new_healer.hp == new_healer_hp_before + damage
+    # ベンチに退いた元の使用者は回復しない
+    assert old_healer.hp == old_healer.max_hp
 
 
 def test_やどりぎのタネ_回復先満タンでも対象のHPは減る():

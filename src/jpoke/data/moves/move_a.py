@@ -257,6 +257,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -321,7 +322,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "あなをほる"),
@@ -415,10 +416,10 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=5,
-        target="self",
+        target="own_side",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.アロマセラピー_apply,
+                hs.アロマセラピー_cure_team_ailment,
             ),
         },
     ),
@@ -522,7 +523,9 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="むし",
         category="status",
         pp=20,
+        target="self",
         priority=2,
+        flags={"non_copycat"},
         handlers={},  # 追加効果なし
     ),
     "いかりのまえば": MoveData(
@@ -616,7 +619,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=95,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.いとをはく_reduce_defender_spe,
+                hs.いとをはく_modify_defender_stats,
             ),
         }
     ),
@@ -667,6 +670,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="みず",
         category="status",
         pp=12,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -680,6 +684,9 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=16,
         accuracy=85,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.いばる_can_apply,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.いばる_apply,
             ),
@@ -707,6 +714,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=8,
+        target="own_side",
         flags={"sound"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -718,6 +726,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=12,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -729,7 +738,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=12,
-        flags={"heal"},
+        flags={"heal", "pulse"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.いやしのはどう_heal_defender,
@@ -847,7 +856,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.うそなき_reduce_defender_spe,
+                hs.うそなき_modify_defender_stats,
             )
         }
     ),
@@ -936,13 +945,22 @@ MOVES_A: dict[MoveName, MoveData] = {
         category="status",
         pp=10,
         accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"unprotectable", "unreflectable"},
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.うつしえ_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.うつしえ_change_ability,
+            ),
+        }
     ),
     "うらみ": MoveData(
         type="ゴースト",
         category="status",
         pp=12,
         accuracy=100,
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.うらみ_can_apply,
@@ -1084,6 +1102,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=12,
         power=130,
         accuracy=100,
+        flags={"non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: [
                 h.MoveHandler(
@@ -1130,8 +1149,9 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=40,
-        flags={"non_negoto"},
-        handlers={},  # 追加効果なし
+        target="self",
+        flags={"non_negoto", "non_copycat"},  # まねっこでコピー不可
+        handlers={},  # 効果のないわざ（戦闘上の効果なし）
     ),
     "おかたづけ": MoveData(
         type="ノーマル",
@@ -1157,7 +1177,8 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=16,
-        handlers={},  # 追加効果なし
+        target="own_side",
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "おしゃべり": MoveData(
         type="ひこう",
@@ -1190,6 +1211,9 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=16,
         accuracy=100,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.おだてる_can_apply,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.おだてる_apply,
             ),
@@ -1199,7 +1223,12 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.おちゃかい_force_consume_berries,
+            ),
+        }
     ),
     "おどろかす": MoveData(
         type="ゴースト",
@@ -1319,7 +1348,7 @@ MOVES_A: dict[MoveName, MoveData] = {
                 priority=30,
             ),
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.オーロラベール_apply,
+                hs.オーロラベール_set_side_field,
             ),
         }
     ),

@@ -142,10 +142,12 @@ def オーロラベール_reduce_damage(battle: Battle, ctx: AttackContext, valu
     """オーロラベールで物理・特殊技ダメージ軽減。
 
     リフレクター（物理技）またはひかりのかべ（特殊技）が同時に有効でも効果は重複しない。
+    こんらんの自傷ダメージ（"_こんらん"）は攻撃技扱いではないため軽減されない。
     """
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
+        and ctx.move.name != "_こんらん"
     ):
         side = battle.get_side(ctx.defender)
         # リフレクター/ひかりのかべと効果は重複しない
@@ -279,7 +281,9 @@ def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def じゅうりょく_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）"""
+    """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）。一撃必殺技は対象外。"""
+    if ctx.move.has_flag("ohko"):
+        return HandlerReturn(value=value)
     return HandlerReturn(value=apply_fixed_modifier(value, 6840))
 
 
@@ -570,11 +574,15 @@ def らんきりゅう_type_modifier(battle: Battle, ctx: AttackContext, value: 
 
 
 def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """リフレクターで物理技ダメージ軽減"""
+    """リフレクターで物理技ダメージ軽減。
+
+    こんらんの自傷ダメージ（"_こんらん"）は物理カテゴリだが攻撃技扱いではないため軽減されない。
+    """
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "physical"
+        and ctx.move.name != "_こんらん"
     ):
         modifier = 2732 if battle.option.double_battle else 2048
         value = apply_fixed_modifier(value, modifier)
@@ -586,20 +594,17 @@ def リフレクター_tick(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def ワンダールーム_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ワンダールーム中は防御実数値参照を入れ替える。"""
+    """ワンダールーム中は防御実数値参照を入れ替える。
+
+    ランク補正は入れ替わらず、技の分類（物理/特殊）に対応する本来の
+    ランク値のまま据え置かれる（本家の既知の仕様）。実数値の比率のみを
+    ON_CALC_DEF_MODIFIER に掛けることで、実数値だけを入れ替えた計算結果になる。
+    """
     base_stat = "def" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "spd"
     swapped_stat = "spd" if base_stat == "def" else "def"
     base_value = max(1, ctx.defender.stats[base_stat])
     swap_value = max(1, ctx.defender.stats[swapped_stat])
     return HandlerReturn(value=value * swap_value // base_value)
-
-
-def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
-    """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
-    category_to_stat = {"physical": "spd", "special": "def"}
-    swapped_stat = category_to_stat.get(ctx.move.category)
-    value = ctx.defender.rank_modifier(swapped_stat)
-    return HandlerReturn(value=value)
 
 
 def ワンダールーム_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

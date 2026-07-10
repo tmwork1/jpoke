@@ -867,6 +867,10 @@ def にげられない_remove_on_foe_switch(battle: Battle, ctx: EventContext, v
     双方が『にげられない』状態を持つ場合）でも、片方が場を離れればもう片方の
     『にげられない』状態が正しく解除される。
 
+    はいすいのじんによる自己付与（source=自分）の場合は、相手が場を離れても解除されない
+    （使用時に相手だったポケモンが場を離れても、この技によるにげられない状態は継続する）。
+    move_name で自己付与かどうかを判定する。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -876,6 +880,10 @@ def にげられない_remove_on_foe_switch(battle: Battle, ctx: EventContext, v
         HandlerReturn: 常にTrue
     """
     foe = battle.foe(ctx.source)
+    if not foe.has_volatile("にげられない"):
+        return HandlerReturn(value=value)
+    if foe.volatiles["にげられない"].move_name == "はいすいのじん":
+        return HandlerReturn(value=value)
     battle.volatile_manager.remove(foe, "にげられない")
     return HandlerReturn(value=value)
 
@@ -1098,8 +1106,14 @@ def _run_protect(battle: Battle,
 
 
 def ファストガード_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ファストガードの保護判定。priority≥1の先制技のみブロックする。"""
-    if ctx.move.priority < 1:
+    """ファストガードの保護判定。priority≥1の先制技のみブロックする。
+
+    いたずらごころ・はやてのつばさ等による動的な優先度変化も考慮するため、
+    技データの静的な priority ではなく `speed_calculator.calc_move_priority` で
+    実効優先度を算出して判定する（`じょおうのいげん_block_priority` と同じパターン）。
+    """
+    effective_priority = battle.speed_calculator.calc_move_priority(ctx.attacker, ctx.move)
+    if effective_priority < 1:
         return HandlerReturn(value=value)
     return _run_protect(battle, ctx, value)
 
@@ -1145,8 +1159,16 @@ def ブラッドムーン_tick_volatile(battle: Battle, ctx: EventContext, value
 
 
 def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ほろびのうたでひんしになる処理。マジックガードでも防げない。"""
+    """ほろびのうたでひんしになる処理。マジックガードでも防げない。
+
+    ON_VOLATILE_END はカウント0による自然解除だけでなく、交代（remove_all_volatiles）
+    による強制解除でも発火する。交代退場処理中はひんしにせず、状態変化を消滅させるのみとする
+    （docs/spec/volatiles/ほろびのうた.md「交代によって解除される」「バトンタッチによって
+    引き継がれる」）。
+    """
     mon = ctx.source
+    if battle.switch_manager.switching_out_mon is mon:
+        return HandlerReturn(value=value)
     battle.modify_hp(mon, v=-mon.hp, reason="perish")
     return HandlerReturn(value=value)
 
@@ -1157,17 +1179,25 @@ def ほろびのうた_tick_volatile(battle: Battle, ctx: EventContext, value: A
 
 def マジックコート_reflect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """マジックコートによる変化技の跳ね返し"""
-    value = (
-        ctx.move.category == "status"
-        and ctx.move.target in {"foe", "foe_side"}
-    )
-
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=ctx.move.is_reflectable)
 
 
 def マジックコート_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """マジックコート状態のターン終了時解除"""
     return remove_volatile(battle, ctx, value, volatile="マジックコート")
+
+
+def まほうのこな_clear_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """まほうのこな解除時: volatile_override_type を None に戻す。"""
+    ctx.source.volatile_override_type = None
+    return HandlerReturn(value=value)
+
+
+def まほうのこな_set_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """まほうのこな付与時: volatile_override_type をエスパーに設定し added_types をクリアする。"""
+    ctx.source.volatile_override_type = "エスパー"
+    ctx.source.added_types.clear()
+    return HandlerReturn(value=value)
 
 
 def まもる_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

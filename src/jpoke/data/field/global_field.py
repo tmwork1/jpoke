@@ -73,10 +73,6 @@ GLOBAL_FIELD: dict[str, FieldData] = {
     ),
     "ワンダールーム": FieldData(
         handlers={
-            Event.ON_CALC_DEF_RANK_MODIFIER: h.FieldHandler(
-                h.ワンダールーム_def_rank_modifier,
-                subject_spec="defender:self",
-            ),
             Event.ON_CALC_DEF_MODIFIER: h.FieldHandler(
                 h.ワンダールーム_def_modifier,
                 subject_spec="defender:self",

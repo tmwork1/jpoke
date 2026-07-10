@@ -88,6 +88,17 @@ class SwitchManager:
                 new.rank[stat] = v
             # volatile 引き継ぎ
             for volatile_name, v_data in baton_data["volatiles"].items():
+                # とくせいなしは、バトン先の特性が protected フラグを持つ場合や
+                # とくせいガード等で特性変更がブロックされる場合、消える（付与しない）
+                # docs/spec/volatiles/とくせいなし.md 参照
+                if (
+                    volatile_name == "とくせいなし"
+                    and (
+                        new.ability.has_flag("protected")
+                        or self.battle.ability_manager.is_change_blocked(new)
+                    )
+                ):
+                    continue
                 count = v_data.get("count")
                 kwargs = {k: val for k, val in v_data.items() if k != "count"}
                 self.battle.volatile_manager.apply(new, volatile_name, count=count, **kwargs)

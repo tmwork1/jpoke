@@ -381,12 +381,12 @@ def test_バリアフリー_壁がない場合アナウンスなし():
     assert not battle.actives[0].ability.revealed
 
 
-def test_ばんけん_いかくでAが下がらない():
+def test_ばんけん_いかくで下がらずAが1段階上がる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ばんけん")],
         team1=[Pokemon("カビゴン", ability_name="いかく")],
     )
-    assert battle.actives[0].rank["atk"] == 0
+    assert battle.actives[0].rank["atk"] == 1
 
 
 def test_ばんけん_ほえるを無効化する():

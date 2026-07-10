@@ -56,9 +56,9 @@ def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
         payload=ItemPayload(item=mon.item.name)
     )
 
-def _announce_and_consume_item(battle: Battle, mon: Pokemon) -> None:
+def _announce_and_consume_item(battle: Battle, mon: Pokemon, *, track_loss: bool = True) -> None:
     _announce_item_triggered(battle, mon)
-    battle.item_manager.consume_item(mon)
+    battle.item_manager.consume_item(mon, track_loss=track_loss)
 
 def _reset_negative_ranks(battle: Battle, mon: Pokemon, reason: str) -> bool:
     """能力ランクがマイナスのステータスを全て0に戻す（しろいハーブ・くろいきり等で使用）。
@@ -852,8 +852,21 @@ def こころのしずく_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def こだわり_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こだわりアイテム: 使用した技でロックする。"""
+    """こだわりアイテム: 使用した技でロックする。
+
+    トリック・すりかえ自身の使用によってこだわり系アイテムを新たに入手した場合は、
+    このハンドラでロックされた直後に `すりかえ_release_choice_lock`
+    （`data/moves/move_sa.py` `data/moves/move_ta.py` に登録）がより遅い優先度で
+    ロックを解除する。
+
+    ねごとのサブ実行中（sleep_talk_active）はロック対象としない。
+    第五世代以降、こだわり系アイテムはねごとで選ばれた技ではなく「ねごと」自体で
+    ロックされるため、サブ実行中に発火する ON_MOVE_END では何もせず、
+    ねごと自身の ON_MOVE_END でロックする。
+    """
     mon = ctx.attacker
+    if mon.sleep_talk_active:
+        return HandlerReturn(value=value)
     if not mon.has_volatile("こだわり"):
         battle.volatile_manager.apply(
             mon, "こだわり", source=mon, move_name=ctx.move.name
@@ -1485,21 +1498,31 @@ def ビアーのみ_modify_super_effective_damage(battle: Battle, ctx: AttackCon
     return _modify_super_effective_damage(battle, ctx, value, type_="どく", modifier=2048/4096)
 
 
-def ビビリだま_boost_speed_on_intimidate(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ビビリだま: いかくでこうげきが変化したときすばやさ+1。
+def ビビリだま_boost_speed_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """ビビリだま: いかくでこうげきが変化するはずだったときすばやさ+1。
 
-    あまのじゃく所持者はいかくで逆にこうげきが上昇するが、その場合も発動する
-    （実際にこうげきが最小/最大まで変化せず不発だった場合は value に "atk" が含まれない）。
+    しろいきり・かいりきバサミ/クリアボディ/しろいけむり/メタルプロテクト/フラワーベール・
+    きもったま/せいしんりょく/どんかん/マイペースでいかくの効果が無効化された場合でも発動する
+    （ON_BEFORE_MODIFY_STAT の中で他の無効化ハンドラより先に判定するため）。
+    あまのじゃく/ばんけん所持者はいかくで逆にこうげきが上昇するが、その場合も発動する。
+    こうげきが既に最低ランク（あまのじゃく/ばんけん所持者は最大ランク）で
+    いかくが不発だった場合や、みがわり状態（いかく自体が発動しないため本ハンドラも呼ばれない）
+    では発動しない。
+    ミラーアーマー所持者自身がいかくを跳ね返した時点では発動しない。
     すばやさが既に最大（あまのじゃく所持者ならすばやさが既に最小）で
     battle.modify_stats が不発だった場合は発動・消費しない。
     """
     mon = ctx.target
     assert mon is not None
     if (
-        "atk" in value
-        and ctx.stat_change_reason == "いかく"
-        and battle.modify_stats(mon, {"spe": +1})
+        ctx.stat_change_reason != "いかく"
+        or "atk" not in value
+        or mon.ability.name == "ミラーアーマー"
     ):
+        return HandlerReturn(value=value)
+    reversed_direction = mon.ability.name in ("あまのじゃく", "ばんけん")
+    at_limit = mon.rank["atk"] >= 6 if reversed_direction else mon.rank["atk"] <= -6
+    if not at_limit and battle.modify_stats(mon, {"spe": +1}):
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1532,10 +1555,13 @@ def ふうせん_pop_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> H
     アイスフェイスで肩代わりした場合、ダメージ量が補正で0になった場合を含む）
     攻撃技が無効化されずに命中した時点で発火するため、これらのケースでも
     正しくふうせんが割れる。
+
+    割れたふうせんはものひろい・リサイクルの対象にならないため track_loss=False を指定する
+    （なげつけるでふうせんを消費した場合は別経路で処理され、対象になる）。
     """
     mon = ctx.defender
     assert mon is not None
-    _announce_and_consume_item(battle, mon)
+    _announce_and_consume_item(battle, mon, track_loss=False)
     return HandlerReturn(value=value)
 
 

@@ -222,6 +222,12 @@ VOLATILES: dict[str, VolatileData] = {
     ),
     "こらえる": VolatileData(
         handlers={
+            # docs/spec/turn.md の Event.ON_MODIFY_DAMAGE 表では60番と記載されているが、
+            # 一撃必殺技の確定ダメージ算出（ohko_damage, priority=90。turn.md未掲載）より後に
+            # 実行しないと、こらえるによる HP1 補正が ohko_damage の確定ダメージで
+            # 上書きされてしまう。がんじょう/きあいのタスキ/きあいのハチマキ（100）より前、
+            # ohko_damage（90）より後となる95を採用する
+            # （docs/plan/moves/こらえる.md「Priority根拠」参照）。
             Event.ON_MODIFY_MOVE_DAMAGE: h.VolatileHandler(
                 h.こらえる_endure,
                 subject_spec="defender:self",
@@ -921,6 +927,18 @@ VOLATILES: dict[str, VolatileData] = {
                 h.はねやすめ_restore_flying,
                 subject_spec="source:self",
                 priority=120,
+            ),
+        }
+    ),
+    "まほうのこな": VolatileData(
+        handlers={
+            Event.ON_VOLATILE_START: h.VolatileHandler(
+                h.まほうのこな_set_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_VOLATILE_END: h.VolatileHandler(
+                h.まほうのこな_clear_type,
+                subject_spec="source:self",
             ),
         }
     ),

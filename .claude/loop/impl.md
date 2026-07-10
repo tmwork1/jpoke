@@ -12,6 +12,10 @@
 同じ entry ブランチにコミットする。ディスパッチャーがその entry ブランチを
 `loop/impl/integration` にマージする（impl と review の両変更がまとめて入る）。
 
+**ローリング・ディスパッチ**: `review_in_progress` / `plan_queue` の全件完了を待たず、1 件完了する
+たびにその場で収穫し、空いた分だけ即座に補充する（§3・§4・§7）。常に `review_parallel_max` /
+`planning_slots_max` 件が稼働している状態を維持する。
+
 ---
 
 ## 状態ファイルのスキーマ
@@ -36,15 +40,20 @@
   "review_queue":        [],
   "review_in_progress":  [],
   "completed":           ["..."],
-  "failed":              ["..."]
+  "failed":              ["..."],
+  "unformatted_merges":  0,
+  "last_format_commit":  "...",
+  "rate_limit_reset_at": null
 }
 ```
 
 - `review_queue`: impl 完了・review-test 待ちの件 / `review_in_progress`: review-test が background 実行中の件。
+- `unformatted_merges` / `last_format_commit`: §共通5（10 件ごとの一括整形）で使う。統合 worktree を
+  初回作成した直後は `last_format_commit` をそのときの HEAD で初期化する。
 
 ---
 
-## ウェイクアップ手順
+## 実行手順
 
 ### 0. worktree を用意する
 
@@ -63,17 +72,19 @@ fi
 
 ### 1. 状態ファイルを読む
 
-`.loop/impl_state.json` を Read で読み込む。
+`.loop/impl_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
+未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
 
 ### 2. 終了チェック
 
-`plan_queue` / `impl_queue` / `review_queue` / `review_in_progress` がすべて空なら
+`plan_queue` / `impl_queue` / `review_queue` / `review_in_progress` がすべて空なら、
+`unformatted_merges > 0` の場合は §3.5 の整形を先に実行してから、
 「{config.category} 全件完了: {completed}」と報告してループ終了。
 
 ### 3. レビュー結果の回収（Review Harvest）
 
 `review_in_progress` の各 entry の結果ファイル（`{プロジェクトルート}/.loop/review_results/{entry}.ok`
-または `.fail`）を確認する。**マージ前に `PRE=$(git -C "$INTG" rev-parse HEAD)` を記録**（§共通5 の基点）。
+または `.fail`）を確認する。
 
 - `.ok` が存在 →
   1. マージ: `git -C "$INTG" merge --no-ff "loop/impl/{entry}" -m "Merge loop/impl/{entry}"`（dirty チェック不要）
@@ -81,6 +92,7 @@ fi
   3. `git -C "$INTG" branch -d "loop/impl/{entry}"`
   4. `.ok` ファイルを削除（§共通9 のガード付き rm を使う）
   5. `review_in_progress` から除き `completed` に追加
+  6. `unformatted_merges += 1`
 - `.fail` が存在 →
   1. レビュー worktree を削除（存在すれば、上と同じ）
   2. `git -C "$INTG" branch -D "loop/impl/{entry}"`
@@ -90,9 +102,10 @@ fi
 
 non-fast-forward 衝突時は §共通8 に従う。
 
-#### 3.5 バッチ後の一括整形（マージが 1 件でもあった場合）
+#### 3.5 一括整形（未整形マージが 10 件たまったら）
 
-§共通5 を適用する。`{フロー固有のテストファイル群}` = `{config.test_files をスペース区切り} tests/test_lethal.py`
+`unformatted_merges >= 10` の場合のみ実行する。§共通5 を適用する。
+`{フロー固有のテストファイル群}` = `{config.test_files をスペース区切り} tests/test_lethal.py`
 （リーサルハンドラを実装した entry があるため test_lethal.py も併せてソートする）。
 
 ### 4. バックグラウンド review-test の起動
@@ -199,9 +212,10 @@ jpoke {config.category} 計画書作成タスク: {entry}
 （計画書ファイルは作業ツリーに置くだけでよい。手順5の収穫で impl_queue に移り、impl コミットに含まれる）
 ```
 
-### 8. 状態保存・次ウェイクアップ
+### 8. 状態保存・終了
 
-§共通7 に従う（保存後 `delaySeconds=120` で予約。reason「{config.category} 実装ループ: 次の件へ」）。
+§共通7 に従う（続きは background エージェントの完了通知、またはユーザーの `/loop impl` 再実行で
+再開する）。
 
 ---
 
@@ -214,6 +228,7 @@ jpoke {config.category} 計画書作成タスク: {entry}
 §共通8 に加えて:
 - impl 失敗 → `failed` に追加してループ継続（work worktree 内でブランチを削除してから次へ）。
 - review-test 失敗 → `failed` に追加してループ継続（review worktree・ブランチを削除してから次へ）。
+- エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。
 
 ## 状態例
 
@@ -229,7 +244,9 @@ jpoke {config.category} 計画書作成タスク: {entry}
   },
   "plan_queue": ["からをやぶる", "ガードシェア"], "impl_queue": ["いばる"],
   "review_queue": ["あくまのキッス"], "review_in_progress": ["あくび"],
-  "completed": [], "failed": []
+  "completed": [], "failed": [],
+  "unformatted_merges": 4, "last_format_commit": "1df4c9e7...",
+  "rate_limit_reset_at": "2026-07-10 01:50 (Etc/GMT-9)"
 }
 ```
 

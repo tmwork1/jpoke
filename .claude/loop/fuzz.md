@@ -15,7 +15,7 @@
 
 行動選択の方策が異なる2モードを、同じスクリプト・ブランチ・worktree・バグ台帳の上で切り替えて回す
 （`--player` 引数だけが振る舞いの差）。両モードは**同時には走らせない**（エンジン修正を並列にやると
-共有コードで衝突するため）。`active_mode` を毎ウェイクアップで交互に切り替えて双方の探索を進める。
+共有コードで衝突するため）。`active_mode` を毎回の起動で交互に切り替えて双方の探索を進める。
 
 | モード | Player | 特徴 | 既定 n_pokemon / max_turns / batch |
 |---|---|---|---|
@@ -54,11 +54,12 @@
   },
   "current_failure": null,
   "completed_bugs": [{"player": "random", "seed": 123, "signature": "...", "summary": "..."}],
-  "failed_bugs": [{"player": "tree_search", "signature": "...", "attempts": 1, "last_seed": 123}]
+  "failed_bugs": [{"player": "tree_search", "signature": "...", "attempts": 1, "last_seed": 123}],
+  "rate_limit_reset_at": null
 }
 ```
 
-- `active_mode`: 今回のウェイクアップで探索するモード（`modes` のキー）。以下 `M = modes[active_mode]` と書く。
+- `active_mode`: 今回の起動で探索するモード（`modes` のキー）。以下 `M = modes[active_mode]` と書く。
 - ポケモン1匹ごとの性別・性格・レベル・テラスタイプ・個体値・努力値・技数（1〜10個）、および
   選出数（n_selected）は seed から自動決定される（CLI 引数では渡さない＝seed だけで完全に再現できる）。
 - バグ台帳（`completed_bugs` / `failed_bugs`）は両モード共通の1リスト。各エントリに `player` を付けて
@@ -66,11 +67,13 @@
 
 ---
 
-## ウェイクアップ手順
+## 実行手順
 
 ### 1. 状態ファイルを読む
 
-`.loop/fuzz_state.json` を Read で読み込む。`active_mode` と `M = modes[active_mode]` を確定する。
+`.loop/fuzz_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
+未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
+`active_mode` と `M = modes[active_mode]` を確定する。
 
 ### 1.5. 未処理の current_failure が残っていないか確認
 
@@ -186,14 +189,13 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 §共通7・§共通3 に従い Write で上書き（コミット不要）。
 
-### 6. モードを切り替えて次のウェイクアップを予約
+### 6. モードを切り替えて終了
 
 手順4.2で中断していない場合のみ:
 
 1. **モード切り替え**: `active_mode` をもう一方のモードに反転する（`random` ↔ `tree_search`）。
    両モードの探索を交互に進めるため。特定モードに集中したいときはこの反転を止めて固定する。
-2. §共通7 に従う（`delaySeconds=120`、
-   reason「fuzzループ: 次バッチへ（{反転後の active_mode} / 次シード {反転後モードの next_seed}）」）。
+2. §共通7 に従う（続きはユーザーの `/loop fuzz` 再実行で再開する）。
 
 ---
 
@@ -205,3 +207,4 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 - impl / review-test 失敗 → `failed_bugs` に記録してループ継続。
 - 同一 signature が `failed_bugs` で attempts >= 2 → ループ中断（手動確認）。
+- エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。
