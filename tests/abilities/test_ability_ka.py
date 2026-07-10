@@ -816,6 +816,31 @@ def test_きれあじ_きる技以外は補正なし():
     assert 4096 == battle.damage_calculator.power_modifier
 
 
+def test_きれあじ_連続技でとれないにおいにより2発目以降は補正なし():
+    """きれあじ: ネズミざんのような接触連続技をとれないにおい特性の相手に使用した場合、
+    1発目で特性が上書きされるため、2発目以降はきれあじの威力補正が適用されなくなる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", ability_name="きれあじ", move_names=["ネズミざん"])],
+        team1=[Pokemon("カビゴン", ability_name="とれないにおい")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    power_modifiers: list[int | None] = []
+    original_roll_damage = battle.roll_damage
+
+    def _tracking_roll_damage(*args, **kwargs):
+        damage = original_roll_damage(*args, **kwargs)
+        power_modifiers.append(battle.damage_calculator.power_modifier)
+        return damage
+
+    battle.roll_damage = _tracking_roll_damage
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "とれないにおい"
+    assert power_modifiers[0] == 6144
+    assert all(m == 4096 for m in power_modifiers[1:])
+    assert len(power_modifiers) > 1
+
+
 def test_きんしのちから_変化技でクリアボディを無視できる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="きんしのちから", move_names=["なきごえ"])],
