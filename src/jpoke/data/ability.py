@@ -1179,7 +1179,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_paralysis_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.じゅうなん_cure_paralysis_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "じゅくせい": AbilityData(),
@@ -1249,7 +1253,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                     h.すいほう_reduce_fire,
                     subject_spec="defender:self",
                 ),
-            ]
+            ],
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.prevent_burn_ailment,
+                "target:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.すいほう_cure_burn_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "スイートベール": AbilityData(
@@ -1974,6 +1986,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.どんかん_block_intimidate,
                 subject_spec="target:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.どんかん_cure_volatile_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ナイトメア": AbilityData(
@@ -2031,6 +2047,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ねつこうかん_boost_atk_on_fire,
                 subject_spec="defender:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ねつこうかん_cure_burn_on_enable,
+                subject_spec="source:self",
             ),
         }
     ),
@@ -2315,7 +2335,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_poison_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.パステルベール_cure_poison_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "パワースポット": AbilityData(),
@@ -2838,6 +2862,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.マイペース_block_intimidate,
                 subject_spec="target:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.マイペース_cure_confusion_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "マグマのよろい": AbilityData(
@@ -2848,7 +2876,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_freeze_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.マグマのよろい_cure_freeze_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "まけんき": AbilityData(
@@ -2950,7 +2982,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_burn_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.みずのベール_cure_burn_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "みつあつめ": AbilityData(),
@@ -3045,7 +3081,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_poison_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.めんえき_cure_poison_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "もうか": AbilityData(
@@ -3115,7 +3155,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.やるき_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.やるき_cure_sleep_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ゆうばく": AbilityData(
