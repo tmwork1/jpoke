@@ -61,6 +61,10 @@ class MoveExecutor:
         self.critical_rank: int | None = None
         self.critical: bool | None = None
 
+        # run_moveのネスト呼び出し深度（ねごと・さいはい等のサブ技実行を検出するため）。
+        # 深度が1（トップレベル実行）のときのみ selected_move を更新する。
+        self._run_move_depth: int = 0
+
     def reset_monitoring_flags(self):
         """技実行のモニタリング用フラグをリセットする。"""
         self.accuracy = None
@@ -278,6 +282,8 @@ class MoveExecutor:
         # 技のハンドラを登録
         ctx.move.register_handlers(self._events, ctx.attacker)
 
+        # run_moveのネスト呼び出し深度を記録する（ねごと・さいはい等のサブ技実行検出用）
+        self._run_move_depth += 1
         try:
             # 技タイプを評価する（可変技対応）
             ctx.move.type = self.resolve_move_type(ctx.attacker, ctx.move)
@@ -300,6 +306,8 @@ class MoveExecutor:
                 self._execute_move(ctx)
 
         finally:
+            self._run_move_depth -= 1
+
             # 技の状態をリセットする（タイプや威力の変更を元に戻す）
             ctx.move.reset()
 
@@ -398,6 +406,11 @@ class MoveExecutor:
 
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
+        # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
+        # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
+        # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
+        if self._run_move_depth == 1:
+            ctx.attacker.selected_move = ctx.move
         # 直近で使用した技の実効タイプ・技名を記録する（テクスチャー2用）
         ctx.attacker.last_move_type = ctx.move.type
         ctx.attacker.last_move_name = cast(MoveName, ctx.move.name)
@@ -597,6 +610,9 @@ class MoveExecutor:
         if v > 0:
             # 実際にPPを消費した技として記録する（とっておき用）
             ctx.attacker.pp_consumed_moves.add(cast(MoveName, move.name))
+            # 最後にPPを消費した技として記録する（かなしばり・うらみ・さいはい等の参照先）。
+            # ねごとのサブ技は ねごと_suppress_pp により v=0 となるためここには記録されない。
+            ctx.attacker.last_pp_consumed_move = move
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,

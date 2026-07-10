@@ -196,6 +196,26 @@ def test_かなしばり_すでにかなしばり中の相手には失敗する(
     assert defender.volatiles["かなしばり"].count == old_count
 
 
+def test_かなしばり_ねごと経由ではねごと自身が封じられる():
+    """かなしばり: 相手がねごとでサブ技を実行した場合、封じられるのはサブ技ではなく
+    最後にPPを消費したねごと自身である（サブ技はPPを消費しないため対象にならない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["かなしばり"])],
+        team1=[Pokemon("カビゴン", move_names=["ねごと", "たいあたり"])],
+        ailment1=("ねむり", 3),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+
+    t.run_move(battle, 1, 0)  # カビゴン: ねごと（候補はたいあたりのみ）
+    assert defender.executed_move.name == "たいあたり"
+
+    t.run_move(battle, 0)  # ピカチュウ: かなしばり
+
+    assert defender.has_volatile("かなしばり")
+    assert defender.volatiles["かなしばり"].move_name == "ねごと"
+
+
 def test_かなしばり_わるあがきを使った相手には失敗する():
     """かなしばり: 相手の直前使用技がわるあがきの場合は失敗する"""
     battle = t.start_battle(

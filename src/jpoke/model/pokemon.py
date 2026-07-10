@@ -108,6 +108,12 @@ class Pokemon:
         self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
+        # トップレベルで選択した技（ねごと・さいはい等のネスト実行では更新されない）。
+        # アンコール・いちゃもん等「選択した技」を参照すべき効果はこちらを使う。
+        self.selected_move: Move | None = None
+        # 最後に実際にPPを消費した技（ねごとのサブ技のように消費量0の実行では更新されない）。
+        # かなしばり・うらみ・さいはい等「最後にPPを消費した技」を参照すべき効果はこちらを使う。
+        self.last_pp_consumed_move: Move | None = None
         self.last_move_type: Type | None = None  # 直近で使用した技の実効タイプ（テクスチャー2用）
         self.last_move_name: MoveName | None = None  # 直近で使用した技名（テクスチャー2用）
         self.ability_override_type: Type | None = None
@@ -127,7 +133,7 @@ class Pokemon:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'executed_move',
+            'executed_move', 'selected_move', 'last_pp_consumed_move',
             '_stats_manager',
         ])
         return new
@@ -146,6 +152,8 @@ class Pokemon:
         # 種族値ベースの値に再計算してリセットする（交代でリセットされる仕様）
         self.update_stats()
         self.executed_move = None
+        self.selected_move = None
+        self.last_pp_consumed_move = None
         self.last_move_type = None
         self.last_move_name = None
         self.ability_override_type = None

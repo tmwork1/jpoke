@@ -2922,10 +2922,16 @@ def Vジェネレート_lower_attacker_def_spd_spe(battle: Battle, ctx: AttackCo
 
 
 def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ぶきみなじゅもん: 相手の最後に使った技のPPを3減らす。"""
+    """ぶきみなじゅもん: 相手が最後にPPを消費した技のPPを3減らす。
+
+    仕様（docs/spec/moves/ぶきみなじゅもん.md）の「最後にPPを消費した技」を対象と
+    するため、ねごとのサブ技（PP消費0）ではなくねごと自身のPPが減る。
+    相手がPPを消費する行動をしていない場合はPP減少のみスキップする
+    （ダメージは通常どおり与えられており、技自体は失敗しない）。
+    """
     mon = ctx.defender
-    if mon.executed_move is not None:
-        mon.executed_move.modify_pp(-3)
+    if mon.last_pp_consumed_move is not None:
+        mon.last_pp_consumed_move.modify_pp(-3)
     return HandlerReturn(value=value)
 
 
