@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
     from jpoke.model import Pokemon
 
-from jpoke.types import MoveName, Stat, Type
+from jpoke.types import MoveName, SideFieldName, Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
@@ -789,6 +789,51 @@ def こらえる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
 def こわいかお_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こわいかおの効果: 相手のすばやさを2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
+
+
+# コートチェンジで入れ替え対象となるサイドフィールド一覧。
+# 壁3種・設置技4種（まきびし/どくびし/ステルスロック/ねばねばネット）・
+# おいかぜ・しろいきり・しんぴのまもりのみが対象。
+# いやしのねがい/みかづきのまい/ねがいごと/みらいよち/はめつのねがいは
+# SideFieldName型には含まれるが「単体の場に発生する状態」のため対象外
+# （docs/spec/moves/コートチェンジ.md、docs/spec/fields/ねがいごと.md参照）。
+# ひのうみ/にじ/しつげん/キョダイ○○（キョダイマックス専用の場）は
+# 本プロジェクト（チャンピオンズ）で未実装のダイマックス関連要素のため対象外。
+_COURT_CHANGE_TARGET_FIELDS: tuple[SideFieldName, ...] = (
+    "リフレクター", "ひかりのかべ", "オーロラベール",
+    "まきびし", "どくびし", "ステルスロック", "ねばねばネット",
+    "おいかぜ", "しろいきり", "しんぴのまもり",
+)
+
+
+def コートチェンジ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """コートチェンジの失敗チェック: 入れ替える場の状態がどちらの陣営にも無い場合は失敗する。"""
+    attacker_side = battle.get_side(ctx.attacker)
+    defender_side = battle.get_side(ctx.defender)
+    has_target = any(
+        attacker_side.get(name).is_active or defender_side.get(name).is_active
+        for name in _COURT_CHANGE_TARGET_FIELDS
+    )
+    if not has_target:
+        battle.add_event_log(
+            ctx.attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="コートチェンジ_場の状態なし"),
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
+def コートチェンジ_swap_fields(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """コートチェンジの効果: お互いの場の状態（壁・設置技・おいかぜ・しろいきり・しんぴのまもり）を入れ替える。
+
+    継続ターン数（ひかりのねんどによる延長・まきびし等の層数を含む）はそのまま
+    入れ替わる。ON_FIELD_ACTIVATE/ON_FIELD_DEACTIVATE イベントは発火しないため、
+    おいかぜが移動してもかぜのり・ふうりょくでんきは誤発動しない。
+    """
+    attacker_side = battle.get_side(ctx.attacker)
+    defender_side = battle.get_side(ctx.defender)
+    attacker_side.swap_fields(defender_side, _COURT_CHANGE_TARGET_FIELDS)
+    return HandlerReturn(value=value)
 
 
 def さいきのいのり_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
