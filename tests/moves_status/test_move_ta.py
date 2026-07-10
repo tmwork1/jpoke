@@ -2005,6 +2005,46 @@ def test_どくびし_相手陣営に設置される():
     assert side.fields["どくびし"].is_active
 
 
+def test_ドわすれ_とくぼう2段階上がる():
+    """ドわすれ: 使用すると自分のとくぼうランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ドわすれ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["spd"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spd"] == 2
+
+
+def test_ドわすれ_自分対象のためまもるで防がれない():
+    """ドわすれ: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ドわすれ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spd"] == 2
+
+
+def test_ドわすれ_マジックコートで跳ね返されない():
+    """ドわすれ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ドわすれ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spd"] == 2
+    assert defender.rank["spd"] == 0
+
+
 def test_ドラゴンダイブ_ひるみが発動する():
     """ドラゴンダイブ: 20%でひるみを付与する。"""
     battle = t.start_battle(
