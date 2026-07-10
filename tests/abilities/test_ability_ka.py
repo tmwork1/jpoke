@@ -485,6 +485,52 @@ def test_がんじょう_HP満タン時の致死ダメージでHP1残る():
     assert defender.ability.revealed
 
 
+def test_がんじょう_こんらんの自傷ダメージでもHP1残る():
+    """こんらんの自傷ダメージ（ON_MODIFY_NON_MOVE_DAMAGE 経由）も、
+    HP満タン時はがんじょうでHP1残る（docs/spec/abilities/がんじょう.md 参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイル", ability_name="がんじょう")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    defender = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 0)
+    assert defender.hp == 1
+    assert defender.ability.revealed
+
+
+def test_がんじょう_連続技の1発目で発動すると2発目は不発():
+    """連続攻撃技を受けた場合、がんじょうが発動できるかは各攻撃ごとに判定される。
+    1発目を受けてHPが減少しているとき、2発目を受けるとがんじょうは発動しない
+    （docs/spec/abilities/がんじょう.md 参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイル", ability_name="がんじょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["ダブルアタック"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+    assert not defender.alive
+
+
+def test_がんじょう_きあいのタスキと併せ持つときはがんじょうが優先():
+    """がんじょうときあいのタスキを両方持つ場合、がんじょうが先に発動してHP1で耐え、
+    きあいのタスキは消費されない（実戦闘のイベント経路での確認。lethal計算側は
+    tests/test_lethal.py の同名テストで確認済み）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイル", ability_name="がんじょう", item_name="きあいのタスキ")],
+        team1=[Pokemon("ガブリアス", move_names=["じしん"])],
+    )
+    defender, _ = battle.actives
+    t.run_move(battle, 1)
+    assert defender.hp == 1
+    assert defender.ability.revealed
+    assert defender.has_item()
+
+
 def test_がんじょう_かたやぶりで一撃技が通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="がんじょう")],
@@ -511,7 +557,23 @@ def test_がんじょう_一撃必殺技を無効化する():
         accuracy=100,
     )
     t.run_move(battle, 1)
-    assert battle.move_executor.move_applied is False
+    assert battle.move_executor.move_success is False
+
+
+def test_がんじょう_一撃必殺技は命中判定前に無効化される():
+    """一撃必殺技を受けたときは、命中判定が行われる前にがんじょうで無効化される
+    （命中率30%のじわれが本来なら外れる乱数でも、がんじょうが先に発動してMISSにならない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="がんじょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["じわれ"])],
+    )
+    t.fix_random(battle, 0.99)
+    defender, _ = battle.actives
+    t.run_move(battle, 1)
+    assert battle.move_executor.move_success is False
+    assert battle.move_executor.move_missed is False
+    assert defender.hp == defender.max_hp
+    assert defender.ability.revealed
 
 
 def test_がんじょうあご_いかりのまえばはかみつき技でないため威力補正がかからない():
