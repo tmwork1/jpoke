@@ -826,6 +826,100 @@ def test_パワーシェア_ランク変化は変更されない():
     assert defender.rank["spa"] == 0
 
 
+def test_パワーシェア_マジックコートで跳ね返されない():
+    """パワーシェア: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    expected_a = (attacker._stats_manager.stats[1] + defender._stats_manager.stats[1]) // 2
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、使用者側にも効果が発動する（平均化される）
+    assert attacker._stats_manager.stats[1] == expected_a
+    assert defender._stats_manager.stats[1] == expected_a
+
+
+def test_パワーシェア_まもるで防がれる():
+    """パワーシェア: まもる状態の相手に使うと防がれ、実数値が変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    atk_a_before = attacker._stats_manager.stats[1]
+    def_a_before = defender._stats_manager.stats[1]
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[1] == atk_a_before
+    assert defender._stats_manager.stats[1] == def_a_before
+
+
+def test_パワーシェア_みがわり状態の相手には効果が発動しない():
+    """パワーシェア: bypass_substituteフラグを持たないため、みがわり状態の相手には防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    atk_a_before = attacker._stats_manager.stats[1]
+    def_a_before = defender._stats_manager.stats[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert attacker._stats_manager.stats[1] == atk_a_before
+    assert defender._stats_manager.stats[1] == def_a_before
+
+
+def test_パワーシェア_交代すると実数値がリセットされる():
+    """パワーシェア: 実数値の変更は交代でリセットされ、種族値ベースの値に戻ること"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"]), Pokemon("コラッタ")],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    a_before = attacker._stats_manager.stats[1]
+    c_before = attacker._stats_manager.stats[3]
+    t.run_move(battle, 0)
+
+    # パワーシェアの効果で実数値が変化していることを確認
+    assert attacker._stats_manager.stats[1] != a_before
+    assert attacker._stats_manager.stats[3] != c_before
+
+    # 交代すると種族値ベースの実数値に戻る
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+
+    assert attacker._stats_manager.stats[1] == a_before
+    assert attacker._stats_manager.stats[3] == c_before
+
+
+def test_パワーシェア_相手の回避ランクが高くても必ず命中する():
+    """パワーシェア: 必中技のため、相手の回避ランクが高くても必ず命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワーシェア"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    expected_a = (attacker._stats_manager.stats[1] + defender._stats_manager.stats[1]) // 2
+    t.run_move(battle, 0)
+
+    assert attacker._stats_manager.stats[1] == expected_a
+    assert defender._stats_manager.stats[1] == expected_a
+
+
 def test_パワースワップ_ACランクが双方で入れ替わる():
     """パワースワップ: 使用者と相手のこうげき・とくこうランクが互いに入れ替わること"""
     battle = t.start_battle(
