@@ -590,12 +590,14 @@ def test_いかりのこうら_被弾前HPが半分以下なら発動しない()
 
 
 def test_いかりのつぼ_A最大のとき急所被弾でも変化なし():
+    """いかりのつぼ: こうげきランクがすでに最大のときは急所被弾しても発動しない。"""
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="いかりのつぼ")],
         team1=[Pokemon("ピカチュウ", move_names=["トリックフラワー"])],
         accuracy=100,
     )
     defender = battle.actives[0]
+    defender.rank["atk"] = 6
     t.run_move(battle, 1)
 
     assert battle.move_executor.critical is True
