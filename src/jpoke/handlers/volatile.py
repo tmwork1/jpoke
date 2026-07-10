@@ -1106,8 +1106,14 @@ def _run_protect(battle: Battle,
 
 
 def ファストガード_protect(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ファストガードの保護判定。priority≥1の先制技のみブロックする。"""
-    if ctx.move.priority < 1:
+    """ファストガードの保護判定。priority≥1の先制技のみブロックする。
+
+    いたずらごころ・はやてのつばさ等による動的な優先度変化も考慮するため、
+    技データの静的な priority ではなく `speed_calculator.calc_move_priority` で
+    実効優先度を算出して判定する（`じょおうのいげん_block_priority` と同じパターン）。
+    """
+    effective_priority = battle.speed_calculator.calc_move_priority(ctx.attacker, ctx.move)
+    if effective_priority < 1:
         return HandlerReturn(value=value)
     return _run_protect(battle, ctx, value)
 
