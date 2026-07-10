@@ -829,7 +829,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フェザーダンス": MoveData(
         type="ひこう",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
         flags={"dance"},
         handlers={
