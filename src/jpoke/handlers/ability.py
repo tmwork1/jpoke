@@ -18,7 +18,7 @@ from jpoke.enums import LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
 from jpoke.core.log_payload import (
     AbilityPayload, AilmentPayload, VolatilePayload, FailureLogPayload,
-    FieldPayload, TextPayload,
+    FieldPayload, ItemRevealPayload, MoveRevealPayload,
 )
 
 AEGISLASH_SHIELD = "ギルガルド(シールド)"
@@ -737,8 +737,8 @@ def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: An
     _announce_ability_triggered(battle, mon)
     battle.add_event_log(
         mon,
-        LogCode.TEXT_LOG,
-        payload=TextPayload(text=f"{mon.name}は{foe.name}の{foe.item.base_name}をお見通しだ！")
+        LogCode.ITEM_REVEALED,
+        payload=ItemRevealPayload(target=foe.name, item=foe.item.base_name)
     )
     return HandlerReturn(value=value)
 
@@ -3426,8 +3426,8 @@ def よちむ_reveal_strongest_move(battle: Battle, ctx: EventContext, value: An
     _announce_ability_triggered(battle, mon)
     battle.add_event_log(
         mon,
-        LogCode.TEXT_LOG,
-        payload=TextPayload(text=f"{foe.name}の{chosen.name}を読み取った！")
+        LogCode.MOVE_REVEALED,
+        payload=MoveRevealPayload(target=foe.name, move=chosen.name)
     )
     return HandlerReturn(value=value)
 

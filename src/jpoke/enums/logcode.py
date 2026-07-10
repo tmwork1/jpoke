@@ -18,6 +18,7 @@ class LogCode(Enum):
     MOVE_REFLECTED = auto()  # 反射（マジックコート・リフレクター等）
     MOVE_MISSED = auto()  # 技が外れた
     MOVE_IMMUNED = auto()  # 技が無効化された
+    MOVE_REVEALED = auto()  # 相手の技を公開（よちむ等）
 
     CRITICAL_HIT = auto()  # 急所に当たった
 
@@ -36,6 +37,7 @@ class LogCode(Enum):
     ITEM_TRIGGERED = auto()  # アイテム発動
     ITEM_GAINED = auto()  # アイテム獲得
     ITEM_LOST = auto()  # アイテム喪失
+    ITEM_REVEALED = auto()  # 相手の持ち物を公開（おみとおし等）
 
     # 状態異常関連
     AILMENT_APPLIED = auto()  # 状態異常付与
@@ -60,6 +62,3 @@ class LogCode(Enum):
     # その他
     TERASALLIZED = auto()  # テラスタル化
     MEGA_EVOLVED = auto()  # メガシンカ
-
-    # 汎用ログ
-    TEXT_LOG = auto()  # 任意のテキストログ

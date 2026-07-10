@@ -13,7 +13,7 @@ from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName, MoveName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.core import Handler, HandlerReturn
 from jpoke.core.log_payload import (
-    VolatilePayload, TextPayload, FailureLogPayload, MoveActionPayload,
+    VolatilePayload, FailureLogPayload, MoveActionPayload,
 )
 from jpoke.utils.math import apply_fixed_modifier
 
@@ -283,11 +283,12 @@ def おんねん_deplete_attacking_move_pp(battle: Battle, ctx: EventContext, va
     """
     if ctx.move.pp == 0 or ctx.move.has_flag("non_onnen"):
         return HandlerReturn(value=value)
+    depleted_pp = ctx.move.pp
     ctx.move.pp = 0
     battle.add_event_log(
         ctx.attacker,
-        LogCode.TEXT_LOG,
-        payload=TextPayload(text=f"おんねんで{ctx.move.name}のPPを0にした")
+        LogCode.PP_CONSUMED,
+        payload=MoveActionPayload(move=ctx.move.name, value=depleted_pp, display_reason="おんねん")
     )
     return HandlerReturn(value=value)
 
