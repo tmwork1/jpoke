@@ -380,14 +380,31 @@ def アイスボディ_heal(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
+# 元々ひるみの追加効果を持つ技（アイアンヘッド等）。あくしゅうの効果は重複しない。
+# handlers/item.py の _INNATE_FLINCH_MOVES（おうじゃのしるし・するどいキバ）と同一。
+_INNATE_FLINCH_MOVES: frozenset[str] = frozenset({
+    "3ぼんのや", "アイアンヘッド", "あくのはどう", "いびき", "いわなだれ", "エアスラッシュ",
+    "おどろかす", "かみつく", "かみなりのキバ", "こおりのキバ", "ゴッドバード", "しねんのずつき",
+    "じんつうりき", "ずつき", "たきのぼり", "たつまき", "つららおとし",
+    "ドラゴンダイブ", "ねこだまし", "はやてがえし",
+    "ひょうざんおろし", "びりびりちくちく", "ふみつけ",
+    "ほのおのキバ", "もえあがるいかり",
+})
+
+
 def あくしゅう_maybe_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """あくしゅう特性: 攻撃技を命中させたとき10%の確率でひるみを付与する。
 
+    元々ひるみの追加効果を持つ技（アイアンヘッド等）や一撃必殺技には効果が無い。
     特性りんぷん・アイテムおんみつマントで防がれるため、確率は
     resolve_secondary_chance を経由して解決する。
     """
     defender = ctx.defender
-    if defender is None:
+    if (
+        defender is None
+        or ctx.move.has_flag("ohko")
+        or ctx.move.name in _INNATE_FLINCH_MOVES
+    ):
         return HandlerReturn(value=value)
     chance = battle.resolve_secondary_chance(ctx, 0.1)
     if battle.random.random() < chance:
