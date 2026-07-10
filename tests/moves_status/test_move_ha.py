@@ -419,6 +419,42 @@ def test_ハバネロエキス_発動前後のランク変化(atk_init, def_init
     assert defender.rank["def"] == def_exp
 
 
+def test_ハバネロエキス_こうげき最大かつぼうぎょ最小なら失敗():
+    """ハバネロエキス: こうげきが+6かつぼうぎょが-6の場合、技全体が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.rank["atk"] = 6
+    defender.rank["def"] = -6
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 6
+    assert defender.rank["def"] == -6
+    assert battle.move_executor.move_success is False
+
+
+def test_ハバネロエキス_必中で命中率に依存せず当たる():
+    """ハバネロエキス: 必中技のため、命中率0%環境でも必ず命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハバネロエキス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.rank["atk"] == 2
+    assert defender.rank["def"] == -2
+
+
+def test_ハバネロエキス_PPは16():
+    """ハバネロエキス: チャンピオンズでのPPは16（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["ハバネロエキス"].pp == 16
+
+
 def test_はらだいこ_HPが最大HPの半分以下なら失敗():
     """はらだいこ: 現在HPが最大HPの半分以下の場合は失敗し、HPもランクも変化しない"""
     battle = t.start_battle(

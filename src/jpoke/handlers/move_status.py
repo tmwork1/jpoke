@@ -2152,10 +2152,13 @@ def はねやすめ_heal_and_remove_flying(battle: Battle, ctx: AttackContext, v
 
 
 def ハバネロエキス_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ハバネロエキスの効果: 相手のこうげきを2段階上げ、ぼうぎょを2段階下げる。"""
-    battle.modify_stats(ctx.defender, {"atk": 2}, source=ctx.attacker)
-    battle.modify_stats(ctx.defender, {"def": -2}, source=ctx.attacker)
-    return HandlerReturn(value=value)
+    """ハバネロエキスの効果: 相手のこうげきを2段階上げ、ぼうぎょを2段階下げる。
+
+    2つのランク変化を1回のmodify_stats呼び出しにまとめることで、こうげき・ぼうぎょの
+    どちらも変化できない場合（こうげき+6かつぼうぎょ-6）に戻り値が空dict（偽値）になり、
+    技全体が失敗として扱われる。片方のみ変化可能な場合はそちらのみ適用され技は成功する。
+    """
+    return modify_defender_stats(battle, ctx, value, stats={"atk": 2, "def": -2})
 
 
 def はらだいこ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

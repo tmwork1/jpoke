@@ -286,8 +286,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "ハバネロエキス": MoveData(
         type="くさ",
         category="status",
-        pp=15,
-        accuracy=100,
+        pp=16,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ハバネロエキス_apply,
