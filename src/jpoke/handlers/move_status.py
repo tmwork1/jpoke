@@ -229,7 +229,7 @@ def アロマセラピー_cure_team_ailment(battle: Battle, ctx: AttackContext, 
 
 def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アンコールの効果を発動する。"""
-    move = ctx.defender.executed_move
+    move = ctx.defender.selected_move
     return apply_volatile_to_defender(
         battle, ctx, value, volatile="アンコール", count=3, move_name=move.name
     )
@@ -238,10 +238,11 @@ def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def アンコール_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アンコールの失敗条件を判定する。
 
-    - 相手がまだ技を使っていない（executed_move が None）場合は失敗する
-    - 相手の最後に使った技が non_encore ラベルを持つ場合は失敗する
+    - 相手がまだ技を選択していない（selected_move が None）場合は失敗する
+    - 相手が最後に選択した技（ねごと等でサブ技を実行した場合はねごと自身）が
+      non_encore ラベルを持つ場合は失敗する
     """
-    move = ctx.defender.executed_move
+    move = ctx.defender.selected_move
     if not move or move.has_flag("non_encore"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -288,7 +289,7 @@ def いちゃもん_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     相手が場に出てから技を使用していない場合でも付与自体は成功する
     （その場合は move_name="" となり、実質的に禁止技は発生しない）。
     """
-    move = ctx.defender.executed_move
+    move = ctx.defender.selected_move
     return apply_volatile_to_defender(
         battle, ctx, value, volatile="いちゃもん", move_name=move.name if move else ""
     )
@@ -582,8 +583,8 @@ def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) 
     かえんのまもりはそのターンに自分より後に行動する相手の技から身を守るための
     技であるため、自分がそのターンの最後に行動する場合は守る対象がなく失敗する
     （シングルバトル想定）。
-    失敗時は executed_move を None にリセットし、まもる系の連続使用カウントも
-    リセットする（連続使用扱いにしない）。
+    失敗時は executed_move / selected_move を None にリセットし、まもる系の
+    連続使用カウントもリセットする（連続使用扱いにしない）。
     """
     attacker_player = battle.get_player(ctx.attacker)
     if battle.query.is_second_actor(attacker_player):
@@ -592,6 +593,7 @@ def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) 
             payload=FailureLogPayload(move=ctx.move.name, display_reason="かえんのまもり_最終行動")
         )
         ctx.attacker.executed_move = None
+        ctx.attacker.selected_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2646,7 +2648,8 @@ def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackConte
 
     直前ターンに守る系の技（protect フラグを持つ技）を正常に使用していた場合、
     今ターンの守る系技を失敗させる。
-    失敗時は executed_move を None にリセットして次ターンは再度使えるようにする。
+    失敗時は executed_move / selected_move を None にリセットして次ターンは
+    再度使えるようにする。
     """
     mon = ctx.attacker
     if (
@@ -2658,6 +2661,7 @@ def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackConte
             payload=FailureLogPayload(move=ctx.move.name, display_reason="まもる系_連続使用")
         )
         mon.executed_move = None
+        mon.selected_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2778,7 +2782,8 @@ def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackConte
 
     直前の自分の行動で成功裏にみちづれを使用していた場合、今回のみちづれは失敗する
     （まもる系_連続使用失敗チェックと同じパターン）。
-    失敗時は executed_move を None にリセットし、次回の使用は連続使用扱いにしない。
+    失敗時は executed_move / selected_move を None にリセットし、次回の使用は
+    連続使用扱いにしない。
     """
     mon = ctx.attacker
     if (
@@ -2790,6 +2795,7 @@ def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackConte
             payload=FailureLogPayload(move=ctx.move.name, display_reason="みちづれ_連続使用")
         )
         mon.executed_move = None
+        mon.selected_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

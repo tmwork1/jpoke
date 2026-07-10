@@ -260,6 +260,26 @@ def test_ねごと_選ばれた技が実行されダメージを与える():
     assert defender.hp < hp_before, "ねごとで選ばれた技がダメージを与える"
 
 
+def test_ねごと_選択技と実行技が区別される():
+    """ねごと: selected_move はねごと自身、executed_move はサブ技になる
+
+    アンコール等「選択した技」を参照すべき効果のための区別を検証する回帰テスト。
+    候補技をたいあたりのみにすることで選択結果を決定的にしている。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねごと", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+
+    t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（候補はたいあたりのみ）
+
+    assert mon.selected_move.name == "ねごと"
+    assert mon.executed_move.name == "たいあたり"
+
+
 def test_ねむる_HP全回復する():
     """ねむる: 使用後に HP が最大HP になること"""
     battle = t.start_battle(
