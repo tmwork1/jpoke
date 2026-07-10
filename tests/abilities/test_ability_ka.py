@@ -177,6 +177,22 @@ def test_かたいツメ_接触技のみ威力補正1_3倍(move_name, expected_b
     assert expected_boost == battle_contact.damage_calculator.power_modifier
 
 
+def test_かたいツメ_パンチグローブ所持時はパンチ技に発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ",
+            ability_name="かたいツメ",
+            item_name="パンチグローブ",
+            move_names=["ほのおのパンチ"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # パンチグローブによる1.1倍（4506）のみが適用され、かたいツメの補正はかからない
+    assert battle.damage_calculator.power_modifier == 4506
+
+
 def test_かたやぶり_場に出たときに特性開示():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり")],
