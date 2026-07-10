@@ -222,8 +222,10 @@ def test_カーリーヘアー_直接攻撃で攻撃者のSが1段階下がる()
         team0=[Pokemon("ピカチュウ", ability_name="カーリーヘアー")],
         team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
     )
+    defender, attacker = battle.actives
     t.run_move(battle, 1)
-    assert battle.actives[1].rank["spe"] == -1
+    assert defender.ability.revealed
+    assert attacker.rank["spe"] == -1
 
 
 def test_カーリーヘアー_非接触技では発動しない():
@@ -231,8 +233,10 @@ def test_カーリーヘアー_非接触技では発動しない():
         team0=[Pokemon("ピカチュウ", ability_name="カーリーヘアー")],
         team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
     )
+    defender, attacker = battle.actives
     t.run_move(battle, 1)
-    assert battle.actives[1].rank["spe"] == 0
+    assert not defender.ability.revealed
+    assert attacker.rank["spe"] == 0
 
 
 def test_がんじょう_HP満タン時の致死ダメージでHP1残る():
