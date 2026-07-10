@@ -18,7 +18,8 @@
   },
   "todo_queue": ["TODO コメントの文言をそのまま"],
   "completed":  ["..."],
-  "failed":     ["..."]
+  "failed":     ["..."],
+  "rate_limit_reset_at": null
 }
 ```
 
@@ -27,11 +28,12 @@
 
 ---
 
-## ウェイクアップ手順
+## 実行手順
 
 ### 1. 状態ファイルを読む
 
-`.loop/todo_state.json` を Read で読み込む。
+`.loop/todo_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
+未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
 
 ### 1.5. キューが空なら TODO を収集する
 
@@ -105,9 +107,9 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 
 > main へのマージは行わない（§共通2）。コミットは `loop/todo` に積むだけでよい。
 
-### 6. 状態保存・次ウェイクアップ
+### 6. 状態保存・終了
 
-§共通7 に従う（状態保存後、`delaySeconds=120` で予約。reason 例「{config.category} TODO処理ループ: 次の件へ」）。
+§共通7 に従う（続きはユーザーの `/loop todo` 再実行で再開する）。
 
 ---
 
@@ -118,6 +120,7 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 ## エラーハンドリング
 
 §共通8 に従う（impl / review-test 失敗 → `failed` に追加してループ継続）。
+エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。
 
 ## 状態例
 
@@ -131,6 +134,7 @@ jpoke {config.category} レビュー・テストタスク: {entry}
   },
   "todo_queue": ["ひるみ確率の適用を実装する", "追加効果フラグを追加する"],
   "completed": [],
-  "failed":    []
+  "failed":    [],
+  "rate_limit_reset_at": null
 }
 ```
