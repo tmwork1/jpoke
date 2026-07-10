@@ -933,7 +933,11 @@ def かたやぶり_restore_foe_ability(battle: Battle, ctx: AttackContext, valu
 
 
 def かちき_boost_spa_on_stat_drop(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
-    """かちき特性: 能力が下がると特攻が2段階上昇する。
+    """かちき特性: 能力が下がると特攻が2段階上昇する。下がった能力の数だけ発動する。
+
+    くすぐる・おきみやげのように一度に複数の能力を下げる技を受けた場合、
+    下がった能力の数だけかちきが発動する（一次情報: docs/wiki/abilities/かちき.html
+    特性の仕様節）。
 
     Args:
         battle: バトルインスタンス
@@ -946,15 +950,13 @@ def かちき_boost_spa_on_stat_drop(battle: Battle, ctx: EventContext, value: d
         HandlerReturn: (処理実行フラグ)
             - 能力が下がり、自分以外が原因の場合は特攻上昇
     """
-    # いずれかの能力が下がったかチェック
-    has_negative = any(v < 0 for v in value.values())
-    # 自分以外が原因で能力が下がった場合、特攻を2段階上昇
-    if (
-        has_negative
-        and ctx.source != ctx.target
-        and battle.modify_stats(ctx.target, {"spa": +2}, source=ctx.source)
-    ):
-        _announce_ability_triggered(battle, ctx.target)
+    # 下がった能力の数を数える
+    negative_count = sum(1 for v in value.values() if v < 0)
+    # 自分以外が原因で能力が下がった場合、下がった数だけ特攻を2段階上昇
+    if negative_count and ctx.source != ctx.target:
+        for _ in range(negative_count):
+            if battle.modify_stats(ctx.target, {"spa": +2}, source=ctx.source):
+                _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
 
 

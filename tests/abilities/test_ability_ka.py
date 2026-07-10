@@ -201,6 +201,31 @@ def test_かたやぶり_場に出たときに特性開示():
     assert battle.actives[0].ability.revealed
 
 
+def test_かちき_特攻が最大のときはそれ以上上がらない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かちき")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spa"] = 6
+    battle.modify_stats(mon, {"atk": -1}, source=battle.actives[1])
+    assert mon.rank["spa"] == 6
+
+
+def test_かちき_複数能力低下技で下がった数だけ発動する():
+    # くすぐるはこうげき・ぼうぎょを1段階ずつ下げる技のため、かちきが2回発動して特攻が4段階上がる
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かちき")],
+        team1=[Pokemon("ピカチュウ", move_names=["くすぐる"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    mon = battle.actives[0]
+    assert mon.rank["atk"] == -1
+    assert mon.rank["def"] == -1
+    assert mon.rank["spa"] == 4
+
+
 def test_カブトアーマー_かたやぶりで無効化():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="カブトアーマー")],
