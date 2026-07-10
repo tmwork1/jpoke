@@ -1474,9 +1474,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ドラゴンエール": MoveData(
         type="ドラゴン",
         category="status",
-        pp=15,
-        accuracy=100,
-        handlers={},  # 追加効果なし
+        pp=16,
+        target="self",
+        flags={"sound"},
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "ドラゴンクロー": MoveData(
         type="ドラゴン",
