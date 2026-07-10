@@ -759,6 +759,71 @@ def test_ぎゃくじょう_被弾前HPが半分以下なら発動しない():
     assert defender.rank["spa"] == 0
 
 
+def test_ぎゃくじょう_とくこうランクが最大なら発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぎゃくじょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    defender.rank["spa"] = 6
+    t.run_move(battle, 1)
+
+    assert defender.rank["spa"] == 6
+
+
+def test_ぎゃくじょう_ひんし時は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぎゃくじょう"), Pokemon("コラッタ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert defender.rank["spa"] == 0
+
+
+def test_ぎゃくじょう_連続攻撃技は最終ヒット後にまとめて判定する():
+    """ぎゃくじょう: 連続攻撃技の途中でHPが半分を下回っても、全ヒットが終わるまで発動しない。
+
+    1発目を受ける前のHPを基準にまとめて判定されることを、2発目終了後のHPと
+    最終的なとくこうランクの両方から確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ぎゃくじょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリプルアクセル"])],
+        accuracy=100,
+        damage_roll="最大",
+    )
+    t.fix_random(battle, 0.99)  # 急所を回避する
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+    power_sequence = move.data.multi_hit["power_sequence"]
+
+    expected_damages = []
+    for power in power_sequence:
+        move.power = power
+        expected_damages.append(battle.roll_damage(attacker, defender, move, critical=False))
+
+    # 2発目終了時点でHPが半分を下回るように調整する。
+    half = defender.max_hp // 2
+    start_hp = half + expected_damages[0] + expected_damages[1] // 2 + 1
+    defender.hp = start_hp
+    assert (start_hp - expected_damages[0]) * 2 > defender.max_hp  # 1発目では下回らない
+    assert (start_hp - expected_damages[0] - expected_damages[1]) * 2 <= defender.max_hp  # 2発目で下回る
+
+    t.run_move(battle, 1)
+
+    assert defender.alive
+    assert defender.hp == start_hp - sum(expected_damages)
+    assert defender.rank["spa"] == 1
+
+
 def test_ぎょぐん_HP1_4超で登場するとむれたすがたになる():
     battle = t.start_battle(
         team0=[Pokemon("ヨワシ(たんどく)", ability_name="ぎょぐん")],

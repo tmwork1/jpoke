@@ -1280,11 +1280,24 @@ def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value
 
 
 def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
-    mon = ctx.defender
-    hp_after = mon.hp
-    hp_before = hp_after + value
+    """ぎゃくじょう特性: HPが最大HPの1/2超から1/2以下になったとき、とくこうが1段階上がる。
 
+    連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
+    1発目を受ける前のHPを基準にまとめて判定する（いかりのこうらと同じ idiom）。
+    """
+    mon = ctx.defender
+    if not mon.alive:
+        return HandlerReturn(value=value)
+
+    if ctx.hit_index == 1:
+        ctx._berserk_hp_before = mon.hp + value
+
+    is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
+    if not is_last_hit:
+        return HandlerReturn(value=value)
+
+    hp_before = ctx._berserk_hp_before
+    hp_after = mon.hp
     if (
         _crossed_half_hp(hp_before, hp_after, mon.max_hp)
         and battle.modify_stats(mon, {"spa": +1}, source=ctx.attacker, reason="ぎゃくじょう")
