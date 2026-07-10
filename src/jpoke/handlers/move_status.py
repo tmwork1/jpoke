@@ -1343,9 +1343,12 @@ def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> 
 
 
 def ソウルビート_pay_hp_and_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。"""
+    """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。
+
+    reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
+    """
     mon = ctx.attacker
-    battle.modify_hp(mon, r=-1/3)
+    battle.modify_hp(mon, r=-1/3, reason="self_cost", source=mon)
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1, "spa": 1, "spd": 1, "spe": 1})
 
 
@@ -2238,11 +2241,14 @@ def ハバネロエキス_apply(battle: Battle, ctx: AttackContext, value: Any) 
 
 
 def はらだいこ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はらだいこの効果: こうげきランクを最大まで上げ、HPを最大HPの半分消費する。"""
+    """はらだいこの効果: こうげきランクを最大まで上げ、HPを最大HPの半分消費する。
+
+    reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
+    """
     mon = ctx.attacker
     delta = 6 - mon.rank["atk"]
     battle.modify_stats(mon, {"atk": delta}, source=mon)
-    battle.modify_hp(mon, r=-0.5)
+    battle.modify_hp(mon, r=-0.5, reason="self_cost", source=mon)
     return HandlerReturn(value=value)
 
 
@@ -2725,10 +2731,11 @@ def みがわり_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
 
     最大HPの1/4（切り捨て）を消費し、消費量と同じHPのみがわりを生成する。
     技の成功に伴い、自分のバインド状態を解除する（第三世代以降の仕様）。
+    reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
     """
     mon = ctx.attacker
     migawari_hp = mon.max_hp // 4
-    battle.modify_hp(mon, -migawari_hp)
+    battle.modify_hp(mon, -migawari_hp, reason="self_cost", source=mon)
     battle.volatile_manager.apply(mon, "みがわり", hp=migawari_hp)
     battle.volatile_manager.remove(mon, "バインド")
     return HandlerReturn(value=value)
