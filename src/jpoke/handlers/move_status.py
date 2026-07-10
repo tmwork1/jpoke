@@ -2944,7 +2944,8 @@ def りゅうのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext,
 
 
 def ロックオン_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return apply_volatile_to_defender(battle, ctx, value, volatile="ロックオン", count=2)
+    """ロックオンの効果: 自分をロックオン状態にし、次のターンの自分の技を相手に必中させる。"""
+    return apply_volatile_to_attacker(battle, ctx, value, volatile="ロックオン", count=2)
 
 
 def ロックカット_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

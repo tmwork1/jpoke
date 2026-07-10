@@ -309,7 +309,9 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ロックオン": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
+        # マジックコートで跳ね返されない
+        flags={"unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックオン_apply,
