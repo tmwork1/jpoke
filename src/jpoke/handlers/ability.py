@@ -325,8 +325,14 @@ def ARシステム_apply_type(battle: Battle, ctx: EventContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 def ARシステム_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """ARシステム特性: メモリの奪取・交換を防ぐ。"""
+    """ARシステム特性: メモリの奪取・交換を防ぐ。
+
+    自分の持つメモリの奪取・交換を防ぐだけでなく、トリック/すりかえ等の
+    道具交換では相手がメモリを持っている場合も交換自体が失敗する。
+    """
     mon = getattr(ctx, "target", None) or getattr(ctx, "defender", None)
+    if getattr(ctx, "is_exchange", False) and battle.foe(mon).item.name in MEMORY_TO_TYPE:
+        return HandlerReturn(value=False, stop_event=True)
     return _block_item_change(mon, list(MEMORY_TO_TYPE.keys()))
 
 
@@ -347,12 +353,7 @@ def アイスフェイス_block_physical(battle: Battle, ctx: AttackContext, val
 def アイスフェイス_restore_on_snow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アイスフェイス特性: ゆきが発生したときナイスフェイスからアイスフェイスに戻る。"""
     mon = ctx.source
-    if (
-        mon is None
-        or not battle.is_active(mon)
-        or mon.name != EISCUE_NICE
-        or battle.weather.name != "ゆき"
-    ):
+    if mon.name != EISCUE_NICE or battle.weather.name != "ゆき":
         return HandlerReturn(value=value)
     mon.set_form(EISCUE_ICE)
     _announce_ability_triggered(battle, mon)
@@ -380,14 +381,31 @@ def アイスボディ_heal(battle: Battle, ctx: EventContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
+# 元々ひるみの追加効果を持つ技（アイアンヘッド等）。あくしゅうの効果は重複しない。
+# handlers/item.py の _INNATE_FLINCH_MOVES（おうじゃのしるし・するどいキバ）と同一。
+_INNATE_FLINCH_MOVES: frozenset[str] = frozenset({
+    "3ぼんのや", "アイアンヘッド", "あくのはどう", "いびき", "いわなだれ", "エアスラッシュ",
+    "おどろかす", "かみつく", "かみなりのキバ", "こおりのキバ", "ゴッドバード", "しねんのずつき",
+    "じんつうりき", "ずつき", "たきのぼり", "たつまき", "つららおとし",
+    "ドラゴンダイブ", "ねこだまし", "はやてがえし",
+    "ひょうざんおろし", "びりびりちくちく", "ふみつけ",
+    "ほのおのキバ", "もえあがるいかり",
+})
+
+
 def あくしゅう_maybe_flinch(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """あくしゅう特性: 攻撃技を命中させたとき10%の確率でひるみを付与する。
 
+    元々ひるみの追加効果を持つ技（アイアンヘッド等）や一撃必殺技には効果が無い。
     特性りんぷん・アイテムおんみつマントで防がれるため、確率は
     resolve_secondary_chance を経由して解決する。
     """
     defender = ctx.defender
-    if defender is None:
+    if (
+        defender is None
+        or ctx.move.has_flag("ohko")
+        or ctx.move.name in _INNATE_FLINCH_MOVES
+    ):
         return HandlerReturn(value=value)
     chance = battle.resolve_secondary_chance(ctx, 0.1)
     if battle.random.random() < chance:
@@ -408,7 +426,13 @@ def あとだし_delay_move_order(battle: Battle, ctx: AttackContext, value: int
 
 
 def アナライズ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。"""
+    """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。
+
+    こんらんによる自傷行動（内部技"_こんらん"）の威力は上がらない。
+    """
+    if ctx.move.name == "_こんらん":
+        return HandlerReturn(value=value)
+
     # 条件分岐が複雑なのでコメントを追加する
     attacker_player = battle.get_player(ctx.attacker)
     is_second_actor = battle.query.is_second_actor(attacker_player)
@@ -477,21 +501,36 @@ def アロマベール_prevent_volatile(battle: Battle, ctx: EventContext, value
 
 
 def いかく_lower_foe_atk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """いかく特性: 登場時に相手のこうげきを1段階下げる。"""
+    """いかく特性: 登場時に相手のこうげきを1段階下げる。みがわり状態の相手には無効。"""
     source = ctx.source
     target = battle.foe(source)
     _announce_ability_triggered(battle, source)
+    if target.has_volatile("みがわり"):
+        return HandlerReturn(value=value)
     battle.modify_stats(target, {"atk": -1}, source=source, reason="いかく")
     return HandlerReturn(value=value)
 
 
 def いかりのこうら_boost_on_half_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """いかりのこうら特性: HPが半分以下になったときA・C・S↑1、B・D↓1。"""
+    """いかりのこうら特性: HPが半分以下になったときA・C・S↑1、B・D↓1。
+
+    ひんしになった場合は発動しない（ON_DAMAGE_HIT はKO後にも発火するため明示的に除外する）。
+    連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
+    1発目を受ける前のHPを基準にまとめて判定する（かいがらのすずの合計ダメージ集計と同じ idiom）。
+    """
     mon = ctx.defender
     if not mon.alive:
         return HandlerReturn(value=value)
+
+    if ctx.hit_index == 1:
+        ctx._angershell_hp_before = mon.hp + value
+
+    is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
+    if not is_last_hit:
+        return HandlerReturn(value=value)
+
+    hp_before = ctx._angershell_hp_before
     hp_after = mon.hp
-    hp_before = hp_after + value
     if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
         return HandlerReturn(value=value)
     battle.modify_stats(mon, {"def": -1, "spd": -1}, source=ctx.attacker)
@@ -511,7 +550,7 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def いしあたま_ignore_recoil(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+def いしあたま_ignore_recoil(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """いしあたま特性: 反動ダメージを受けない。"""
     if ctx.hp_change_reason == "recoil":
         return HandlerReturn(value=0, stop_event=True)
@@ -606,8 +645,8 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
 
 
 def うるおいボイス_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """うるおいボイス特性: ノーマルタイプの音技をみずタイプに変換する。"""
-    if ctx.move.has_flag("sound") and value == "ノーマル":
+    """うるおいボイス特性: 音技を（元のタイプに関わらず）みずタイプに変換する。"""
+    if ctx.move.has_flag("sound"):
         return HandlerReturn(value="みず")
     return HandlerReturn(value=value)
 
@@ -2178,6 +2217,13 @@ def ドラゴンスキン_modify_power(battle: Battle, ctx: AttackContext, value
     return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
 
 
+def どんかん_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """どんかん特性: いかくによるこうげきランク低下を無効化する (第八世代以降)。"""
+    if ctx.stat_change_reason == "いかく":
+        value = {}
+    return HandlerReturn(value=value)
+
+
 def どんかん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ちょうはつ", "メロメロ"])
 
@@ -2491,13 +2537,10 @@ def バリアフリー_remove_screens(battle: Battle, ctx: EventContext, value: 
 
 
 def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """ばんけん特性: いかくを受けたときこうげきを1段階上げる。"""
-    if ctx.stat_change_reason != "いかく":
+    """ばんけん特性: いかくによるこうげき低下を、こうげきの上昇に変える。"""
+    if ctx.stat_change_reason != "いかく" or "atk" not in value:
         return HandlerReturn(value=value)
-    mon = ctx.target
-    battle.modify_stats(mon, {"atk": +1}, source=mon)
-    _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
+    return HandlerReturn(value={**value, "atk": 1})
 
 
 def パンクロック_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -2976,6 +3019,13 @@ def マイティチェンジ_change_form(battle: Battle, ctx: EventContext, valu
     mon = ctx.source
     if mon.name == PALAFIN_ZERO and mon.alive:
         mon.set_form(PALAFIN_HERO)
+    return HandlerReturn(value=value)
+
+
+def マイペース_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """マイペース特性: いかくによるこうげきランク低下を無効化する (第八世代以降)。"""
+    if ctx.stat_change_reason == "いかく":
+        value = {}
     return HandlerReturn(value=value)
 
 

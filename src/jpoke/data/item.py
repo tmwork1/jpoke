@@ -42,6 +42,9 @@ def _add_mega_stones(items: dict[ItemName, ItemData]):
 
 ITEMS: dict[ItemName, ItemData] = {
     "": ItemData(name=""),
+    "アイスメモリ": ItemData(
+        fling_power=50,
+    ),
     "あかいいと": ItemData(
         fling_power=10,
         handlers={
@@ -204,6 +207,9 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "ウォーターメモリ": ItemData(
+        fling_power=50,
+    ),
     "ウタンのみ": ItemData(
         fling_power=10,
         handlers={
@@ -236,6 +242,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="source:self",
             ),
         }
+    ),
+    "エレクトロメモリ": ItemData(
+        fling_power=50,
     ),
     "おうじゃのしるし": ItemData(
         fling_power=30,
@@ -659,6 +668,9 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "グラウンドメモリ": ItemData(
+        fling_power=50,
+    ),
     "グラスシード": ItemData(
         fling_power=10,
         handlers={
@@ -676,6 +688,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="source:self",
             ),
         }
+    ),
+    "グラスメモリ": ItemData(
+        fling_power=50,
     ),
     "グランドコート": ItemData(
         fling_power=60,
@@ -769,6 +784,12 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="defender:self",
             )
         }
+    ),
+    "ゴーストメモリ": ItemData(
+        fling_power=50,
+    ),
+    "サイキックメモリ": ItemData(
+        fling_power=50,
     ),
     "サイコシード": ItemData(
         fling_power=10,
@@ -941,6 +962,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="target:self",
             )
         }
+    ),
+    "スチールメモリ": ItemData(
+        fling_power=50,
     ),
     "するどいキバ": ItemData(
         fling_power=30,
@@ -1175,6 +1199,9 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "ダークメモリ": ItemData(
+        fling_power=50,
+    ),
     "チイラのみ": ItemData(
         fling_power=10,
         handlers={
@@ -1292,6 +1319,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="attacker:self",
             )
         }
+    ),
+    "ドラゴンメモリ": ItemData(
+        fling_power=50,
     ),
     "ナゾのみ": ItemData(
         fling_power=10,
@@ -1412,6 +1442,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject="defender",
             )
         }
+    ),
+    "バグメモリ": ItemData(
+        fling_power=50,
     ),
     "バコウのみ": ItemData(
         fling_power=10,
@@ -1537,9 +1570,13 @@ ITEMS: dict[ItemName, ItemData] = {
     "ビビリだま": ItemData(
         fling_power=30,
         handlers={
-            Event.ON_MODIFY_STAT: h.ItemHandler(
+            # priority=50: しろいきり(130)やクリアボディ等の無効化ハンドラ(既定100)より先に
+            # 判定し、いかくが無効化された場合でも発動するようにする（一次情報:
+            # docs/wiki/abilities/いかく.html 特性の仕様#ランク低下効果 の発動順一覧 3.）。
+            Event.ON_BEFORE_MODIFY_STAT: h.ItemHandler(
                 h.ビビリだま_boost_speed_on_intimidate,
                 subject_spec="target:self",
+                priority=50,
             )
         }
     ),
@@ -1551,6 +1588,12 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="attacker:self",
             )
         }
+    ),
+    "ファイアーメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ファイトメモリ": ItemData(
+        fling_power=50,
     ),
     "フィラのみ": ItemData(
         fling_power=10,
@@ -1594,6 +1637,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="attacker:self",
             )
         }
+    ),
+    "フライングメモリ": ItemData(
+        fling_power=50,
     ),
     "ブーストエナジー": ItemData(
         removable=False,
@@ -1649,6 +1695,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="target:self",
             ),
         }
+    ),
+    "ポイズンメモリ": ItemData(
+        fling_power=50,
     ),
     "まがったスプーン": ItemData(
         fling_power=30,
@@ -2014,6 +2063,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject="defender",
             )
         }
+    ),
+    "ロックメモリ": ItemData(
+        fling_power=50,
     ),
 }
 

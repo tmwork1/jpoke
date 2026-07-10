@@ -241,7 +241,21 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "うなぎのぼり": AbilityData(),
+    "うなぎのぼり": AbilityData(
+        flags={
+            "mold_breaker_ignorable",
+        },
+        handlers={
+            Event.ON_CHECK_FLOATING: h.AbilityHandler(
+                h.ふゆう_float,
+                subject_spec="source:self",
+            ),
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.ビーストブースト_boost_best_stat_on_ko,
+                subject_spec="attacker:self",
+            ),
+        }
+    ),
     "うのミサイル": AbilityData(
         flags={
             "gas_proof",
@@ -1944,7 +1958,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.どんかん_block_intimidate,
+                subject_spec="target:self",
+            ),
         }
     ),
     "ナイトメア": AbilityData(
@@ -2804,7 +2822,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.マイペース_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.マイペース_block_intimidate,
+                subject_spec="target:self",
+            ),
         }
     ),
     "マグマのよろい": AbilityData(
