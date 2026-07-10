@@ -375,6 +375,33 @@ def test_アナライズ_後攻なら威力上昇():
     assert 5325 == battle.damage_calculator.power_modifier
 
 
+def test_アナライズ_相手が交代した場合は威力上昇():
+    """アナライズ: 自分より速い場合でも、相手がその場で交代した場合は
+    行動順として相手（交代）→自分（技）の順になるため威力補正がかかる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="アナライズ", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン"), Pokemon("コイル")],
+    )
+    t.reserve_command(battle, command0=Command.MOVE_0, command1=Command.SWITCH_1)
+    battle.step()
+    assert 5325 == battle.damage_calculator.power_modifier
+
+
+def test_アナライズ_こんらんの自傷では威力上昇しない():
+    """アナライズ: 後攻でも、こんらんによる自傷ダメージ（内部技"_こんらん"）には
+    威力補正がかからない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("コイル", ability_name="アナライズ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    battle.test_option.trigger_volatile = True
+    battle.step()
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
 def test_あまのじゃく_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく")],
