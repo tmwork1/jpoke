@@ -81,7 +81,6 @@ class StatusManager:
             self.battle.add_event_log(
                 target, LogCode.HP_CHANGED,
                 payload=HPChangePayload(
-                    pokemon=target.name,
                     value=v,
                     hp=target.hp,
                     max_hp=target.max_hp,

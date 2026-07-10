@@ -9,8 +9,7 @@ from jpoke.enums import LogCode
 from jpoke.core.log_payload import (
     Payload, FailureLogPayload, HPChangePayload, StatChangePayload,
     AilmentPayload, VolatilePayload, AbilityPayload, ItemPayload,
-    SwitchPayload, FieldPayload, MoveActionPayload, TerastalPayload,
-    TextPayload,
+    FieldPayload, MoveActionPayload, TerastalPayload, TextPayload,
 )
 
 
@@ -26,11 +25,15 @@ class EventLog:
         idx: プレイヤーのインデックス (0 or 1)
         log: イベントの内容を表すLogCode列挙値
         payload: イベントの詳細情報（必要に応じて）
+        pokemon: イベントの主体となったポケモン名（add_event_log の呼び出し元が
+            Pokemon インスタンスを渡した場合のみ設定される。Payload クラスごとに
+            同じ情報を別名（pokemon/source等）で持たせず、ここに一本化する）
     """
     turn: int
     idx: int
     log: LogCode
     payload: Payload | None = None
+    pokemon: str | None = None
 
     def to_dict(self) -> dict:
         """ログエントリを辞書形式に変換。
@@ -43,6 +46,7 @@ class EventLog:
             "idx": self.idx,
             "log": self.log.name,
             "payload": asdict(self.payload) if self.payload is not None else None,
+            "pokemon": self.pokemon,
         }
 
     def render(self) -> str:
@@ -79,12 +83,10 @@ class EventLog:
                 return "敗北"
 
             case LogCode.SWITCHED_IN:
-                pokemon = payload.pokemon if isinstance(payload, SwitchPayload) else "ポケモン"
-                return f"{pokemon} 入場"
+                return f"{self.pokemon or 'ポケモン'} 入場"
 
             case LogCode.SWITCHED_OUT:
-                pokemon = payload.pokemon if isinstance(payload, SwitchPayload) else "ポケモン"
-                return f"{pokemon} 退場"
+                return f"{self.pokemon or 'ポケモン'} 退場"
 
             case LogCode.TEXT_LOG:
                 return payload.text if isinstance(payload, TextPayload) else ""
@@ -229,7 +231,8 @@ class EventLogger:
         """すべてのログをクリアする。"""
         self.logs.clear()
 
-    def add(self, turn: int, idx: int, log: LogCode, payload: Payload | None = None):
+    def add(self, turn: int, idx: int, log: LogCode, payload: Payload | None = None,
+             pokemon: str | None = None):
         """イベントログを追加。
 
         Args:
@@ -237,8 +240,9 @@ class EventLogger:
             idx: プレイヤーインデックス (0 or 1)
             log: イベントの内容を表すLogCode列挙値
             payload: イベントの詳細情報（必要に応じて）
+            pokemon: イベントの主体となったポケモン名（あれば）
         """
-        self.logs.append(EventLog(turn, idx, log, payload))
+        self.logs.append(EventLog(turn, idx, log, payload, pokemon))
 
     def get(self, turn: int, idx: int) -> list[EventLog]:
         """指定したターンとプレイヤーのイベントログを取得。

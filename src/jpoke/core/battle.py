@@ -758,9 +758,11 @@ class Battle:
         """
         if isinstance(source, int):
             idx = source
+            pokemon = None
         else:
             idx = self._get_player_index(source)
-        self.event_logger.add(self.turn, idx, log, payload)
+            pokemon = source.name if isinstance(source, Pokemon) else None
+        self.event_logger.add(self.turn, idx, log, payload, pokemon)
 
     def get_event_logs(self, turn: int | None = None) -> dict[Player, list]:
         """指定したターンの全プレイヤーのイベントログを取得。
@@ -813,8 +815,7 @@ class Battle:
         lines = []
         for log in event_logs:
             player = self.players[log.idx]
-            pokemon = getattr(log.payload, "pokemon", "") if log.payload else ""
-            lines.append(f"Turn {turn} : {player.name} : {pokemon} : {log.render()}")
+            lines.append(f"Turn {turn} : {player.name} : {log.pokemon or ''} : {log.render()}")
         return lines
 
     def print_logs(self, turn: int | None = None):

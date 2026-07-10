@@ -36,8 +36,9 @@ class HPChangePayload(LogPayload):
     """display_reason は使わない（HP変化に「表示してよい理由」は無いため常に空）。
     internal_reason は render() から一切参照しないことで
     [move_damage] のような漏れを構造的に防ぐ。
+    対象ポケモン名は EventLog.pokemon（add_event_log の呼び出し元から自動記録）
+    で取得するため、ここでは持たない。
     """
-    pokemon: str = ""
     value: int = 0
     hp: int = 0
     max_hp: int = 0
@@ -81,12 +82,6 @@ class ItemPayload(LogPayload):
 
 
 @dataclass(frozen=True)
-class SwitchPayload(LogPayload):
-    """render() が pokemon を実際に読む唯一のカテゴリ。"""
-    pokemon: str = ""
-
-
-@dataclass(frozen=True)
 class FieldPayload(LogPayload):
     field: str = ""
     count: int | None = None
@@ -118,6 +113,5 @@ class TextPayload(LogPayload):
 Payload = (
     LogPayload | FailureLogPayload | HPChangePayload | StatChangePayload
     | AilmentPayload | VolatilePayload | AbilityPayload | ItemPayload
-    | SwitchPayload | FieldPayload | MoveActionPayload | TerastalPayload
-    | TextPayload
+    | FieldPayload | MoveActionPayload | TerastalPayload | TextPayload
 )
