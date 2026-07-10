@@ -18,9 +18,12 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワイドガード": MoveData(
         type="いわ",
         category="status",
-        pp=10,
+        pp=12,  # champions基準（docs/champions/move_list.txt 970行目）。Gen9本家は10
         priority=3,
-        handlers={},  # シングルバトルでは効果なし（複数対象技が存在しない）
+        target="own_side",  # 味方の場が対象。foe/foe_side ではないためマジックコート等の対象外になる
+        handlers={},  # 本プロジェクトはシングルバトル専用で、本技が防ぐ「複数対象の技」を区別する
+        # ターゲット種別（相手全体・自分以外全体）を技データ上でモデル化していないため、
+        # 現状は防御対象となる技が存在せず実質効果なし。詳細はdocs/spec/moves/ワイドガード.md参照
     ),
     "ワイドフォース": MoveData(
         type="エスパー",
