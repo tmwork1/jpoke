@@ -826,6 +826,16 @@ def test_パワーシェア_ランク変化は変更されない():
     assert defender.rank["spa"] == 0
 
 
+def test_パワースワップ_PPと必中フラグが正しい():
+    """パワースワップ: PP=12（Championsの正）、accuracy=None（必中）、
+    unreflectable・bypass_substituteフラグを持つこと"""
+    move_data = MOVES["パワースワップ"]
+    assert move_data.pp == 12
+    assert move_data.accuracy is None
+    assert "unreflectable" in move_data.flags
+    assert "bypass_substitute" in move_data.flags
+
+
 def test_パワースワップ_ACランクが双方で入れ替わる():
     """パワースワップ: 使用者と相手のこうげき・とくこうランクが互いに入れ替わること"""
     battle = t.start_battle(
@@ -907,6 +917,79 @@ def test_パワースワップ_実数値は変化しない():
     assert attacker._stats_manager.stats[3] == atk_c_before
     assert defender._stats_manager.stats[1] == def_a_before
     assert defender._stats_manager.stats[3] == def_c_before
+
+
+def test_パワースワップ_マジックコートで跳ね返されない():
+    """パワースワップ: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワースワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["atk"] = 2
+    defender.rank["atk"] = -1
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、使用者側のランクが相手の値に変わる
+    assert attacker.rank["atk"] == -1
+    assert defender.rank["atk"] == 2
+
+
+def test_パワースワップ_まもるで防がれる():
+    """パワースワップ: まもる状態の相手には防がれ、ランクは入れ替わらないこと"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワースワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["atk"] = 2
+    defender.rank["atk"] = -1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 2
+    assert defender.rank["atk"] == -1
+
+
+def test_パワースワップ_みがわり状態の相手にも効果が発動する():
+    """パワースワップ: bypass_substituteフラグを持つため、みがわり状態の相手にも効果が発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワースワップ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.rank["atk"] = 2
+    defender.rank["atk"] = -1
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("みがわり")
+    assert attacker.rank["atk"] == -1
+    assert defender.rank["atk"] == 2
+
+
+def test_パワースワップ_相手の回避率が高くても必ず命中する():
+    """パワースワップ: 必中技のため、相手の回避率ランクが高くても必ず命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["パワースワップ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    attacker.rank["atk"] = 2
+    defender.rank["atk"] = -1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == -1
+    assert defender.rank["atk"] == 2
 
 
 def test_パワートリック_2回使用で元の値に戻る():
