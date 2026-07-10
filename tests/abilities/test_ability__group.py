@@ -478,9 +478,13 @@ def test_ふかしのこぶし_接触技でまもるを貫通(ability_name: str,
     assert battle.damage_calculator.protect_modifier == 1024
 
 
-def test_ふかしのこぶし_非接触技はまもるを貫通しない():
+@pytest.mark.parametrize(
+    "ability_name",
+    ["ふかしのこぶし", "かんつうドリル"],
+)
+def test_ふかしのこぶし_非接触技はまもるを貫通しない(ability_name: str):
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ふかしのこぶし", move_names=["でんきショック"])],
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
         volatile1={"まもる": 1},
     )
