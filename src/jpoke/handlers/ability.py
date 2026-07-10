@@ -1047,9 +1047,9 @@ def かんろなミツ_lower_foe_evasion(battle: Battle, ctx: EventContext, valu
 
 def カーリーヘアー_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """カーリーヘアー特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
-    attacker = ctx.attacker
-    if attacker is not None and battle.query.is_contact_reaction(ctx):
-        battle.modify_stats(attacker, {"spe": -1}, source=ctx.defender)
+    if battle.query.is_contact_reaction(ctx):
+        _announce_ability_triggered(battle, ctx.defender)
+        battle.modify_stats(ctx.attacker, {"spe": -1}, source=ctx.defender)
     return HandlerReturn(value=value)
 
 
