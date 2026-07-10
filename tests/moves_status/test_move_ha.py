@@ -1944,6 +1944,23 @@ def test_フラフラダンス_すでにこんらん状態なら失敗():
     assert defender.volatiles["こんらん"].count == old_count
 
 
+def test_フラフラダンス_マジックコートで跳ね返されない():
+    """フラフラダンス: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フラフラダンス"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 跳ね返されず、相手にこんらんが付与される
+    assert defender.has_volatile("こんらん")
+    assert not attacker.has_volatile("こんらん")
+
+
 def test_へびにらみ_PPは20():
     """へびにらみ: チャンピオンズでのPPは20（docs/champions/move_list.txt準拠）。"""
     assert MOVES["へびにらみ"].pp == 20

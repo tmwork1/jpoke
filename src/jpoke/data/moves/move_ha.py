@@ -959,7 +959,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         accuracy=100,
-        flags={"dance"},
+        flags={"dance", "unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.フラフラダンス_apply,
