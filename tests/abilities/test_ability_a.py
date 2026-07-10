@@ -713,6 +713,57 @@ def test_いろめがね_いまひとつのダメージが2倍():
     assert 8192 == battle.damage_calculator.damage_modifier
 
 
+def test_うなぎのぼり_かたやぶりでじめん技が通る():
+    """うなぎのぼり: かたやぶり持ちの相手のじめん技は無効化できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="うなぎのぼり")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
+    )
+    defender, _ = battle.actives
+    t.run_move(battle, 1)
+    assert defender.hp < defender.max_hp
+
+
+def test_うなぎのぼり_じめん技が通らない():
+    """うなぎのぼり: じめんタイプの攻撃技を無効化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="うなぎのぼり")],
+        team1=[Pokemon("ピカチュウ", move_names=["じしん"])],
+    )
+    defender, _ = battle.actives
+    t.run_move(battle, 1)
+    assert defender.hp == defender.max_hp
+
+
+def test_うなぎのぼり_浮いている():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="うなぎのぼり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.query.is_floating(battle.actives[0])
+
+
+@pytest.mark.parametrize(
+    "name, stat",
+    [
+        ("ウインディ", "atk"),
+        ("ピカチュウ", "spe"),
+    ]
+)
+def test_うなぎのぼり_倒すと最高実数値の能力が上がる(name: str, stat: Stat):
+    """うなぎのぼり: 攻撃技で倒すと最高実数値の能力が1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon(name, ability_name="うなぎのぼり", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank[stat] == 1
+
+
 def test_うのミサイル_ウッウ以外では発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="うのミサイル", move_names=["なみのり"])],
