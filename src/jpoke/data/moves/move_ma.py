@@ -735,8 +735,9 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "メロメロ": MoveData(
         type="ノーマル",
         category="status",
-        pp=15,
+        pp=16,
         accuracy=100,
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_TRY_MOVE_2: h.MoveHandler(
                 hs.メロメロ_check_gender,
