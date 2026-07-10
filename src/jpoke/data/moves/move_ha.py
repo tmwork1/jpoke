@@ -599,8 +599,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "パワートリック": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.パワートリック_swap_stats,

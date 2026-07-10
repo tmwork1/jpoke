@@ -909,6 +909,17 @@ def test_パワースワップ_実数値は変化しない():
     assert defender._stats_manager.stats[3] == def_c_before
 
 
+def test_パワートリック_PPは12():
+    """パワートリック: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["パワートリック"].pp == 12
+
+
+def test_パワートリック_対象はself():
+    """パワートリック: 対象は自分（target="self"）。foeのままだとまもる・マジックコートに誤って阻害される"""
+    move_data = MOVES["パワートリック"]
+    assert move_data.target == "self"
+
+
 def test_パワートリック_2回使用で元の値に戻る():
     """パワートリック: 2回使用するとこうげきとぼうぎょの実数値が元に戻ること"""
     battle = t.start_battle(
