@@ -572,11 +572,15 @@ def らんきりゅう_type_modifier(battle: Battle, ctx: AttackContext, value: 
 
 
 def リフレクター_reduce_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """リフレクターで物理技ダメージ軽減"""
+    """リフレクターで物理技ダメージ軽減。
+
+    こんらんの自傷ダメージ（"_こんらん"）は物理カテゴリだが攻撃技扱いではないため軽減されない。
+    """
     if (
         not ctx.critical
         and not ctx.can_bypass_screen(battle)
         and ctx.move.category == "physical"
+        and ctx.move.name != "_こんらん"
     ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)

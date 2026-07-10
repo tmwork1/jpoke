@@ -1382,6 +1382,22 @@ def test_らんきりゅう_通常天候に上書きされない(weather: Weathe
     assert battle.raw_weather.name == "らんきりゅう"
 
 
+def test_リフレクター_こんらん自傷ダメージは軽減されない():
+    """リフレクター: こんらんの自傷ダメージ（物理カテゴリ）は攻撃技扱いではないため軽減されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"リフレクター": 5},
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    # こんらんの自傷ダメージはリフレクターで軽減されないため damage_modifier が 4096（等倍）
+    assert battle.damage_calculator.damage_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
 def test_リフレクター_すりぬけは軽減を貫通する():
     """リフレクター: すりぬけ特性を持つ攻撃側はリフレクターを無視する"""
     battle = t.start_battle(
@@ -1392,6 +1408,18 @@ def test_リフレクター_すりぬけは軽減を貫通する():
     t.run_move(battle, 0)
     # すりぬけ特性のため damage_modifier が 4096（等倍、軽減なし）
     assert battle.damage_calculator.damage_modifier == 4096
+
+
+def test_リフレクター_ワンダールーム中でも物理技を軽減する():
+    """リフレクター: ワンダールーム中で防御参照が入れ替わっても物理技の軽減は変わらない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        side1={"リフレクター": 5},
+        field={"ワンダールーム": 99},
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 2048
 
 
 def test_ワンダールーム_再使用で解除():
