@@ -1586,6 +1586,54 @@ ITEMS: dict[ItemName, ItemData] = {
     "フェアリーメモリ": ItemData(
         fling_power=50,
     ),
+    "アイスメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ウォーターメモリ": ItemData(
+        fling_power=50,
+    ),
+    "エレクトロメモリ": ItemData(
+        fling_power=50,
+    ),
+    "グラウンドメモリ": ItemData(
+        fling_power=50,
+    ),
+    "グラスメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ゴーストメモリ": ItemData(
+        fling_power=50,
+    ),
+    "サイキックメモリ": ItemData(
+        fling_power=50,
+    ),
+    "スチールメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ダークメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ドラゴンメモリ": ItemData(
+        fling_power=50,
+    ),
+    "バグメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ファイアーメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ファイトメモリ": ItemData(
+        fling_power=50,
+    ),
+    "フライングメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ポイズンメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ロックメモリ": ItemData(
+        fling_power=50,
+    ),
     "フォーカスレンズ": ItemData(
         fling_power=10,
         handlers={

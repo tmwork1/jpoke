@@ -86,7 +86,8 @@ class ItemManager:
                         source: Pokemon | None = None,
                         *,
                         dry_run: bool = False,
-                        ignore_sticky_hold: bool = False) -> bool:
+                        ignore_sticky_hold: bool = False,
+                        is_exchange: bool = False) -> bool:
         """アイテム変更が許可されるかを共通イベントで判定する。
 
         Args:
@@ -98,6 +99,9 @@ class ItemManager:
             ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを無視する
                 （例: むしくい・ついばむが対象をひんしにさせた場合の第五世代以降の仕様）。
                 ねんちゃく以外のアイテム変更禁止効果（マルチタイプ等）は通常通り機能する。
+            is_exchange: True の場合、トリック・すりかえ等、相手の道具と入れ替わる形の
+                道具変更判定として扱う（ARシステム等、相手の道具次第で交換自体が
+                失敗する特性の判定に使う）。
 
         Returns:
             変更可能な場合はTrue
@@ -106,7 +110,7 @@ class ItemManager:
             Event.ON_CHECK_ITEM_CHANGE,
             EventContext(
                 target=target, source=source, dry_run=dry_run,
-                ignore_sticky_hold=ignore_sticky_hold,
+                ignore_sticky_hold=ignore_sticky_hold, is_exchange=is_exchange,
             ),
             True
         )
@@ -222,7 +226,9 @@ class ItemManager:
 
         # アイテムの変更が禁止されている場合は失敗
         if not all(
-            self.can_change_item(target=mon, ignore_sticky_hold=ignore_sticky_hold)
+            self.can_change_item(
+                target=mon, ignore_sticky_hold=ignore_sticky_hold, is_exchange=True
+            )
             for mon in mons
         ):
             return False

@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 733
+テスト数: 738
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -169,8 +169,13 @@
 - [x] 音ラベル無効系_param(defender_ability=ぼうだん, attacker_ability=かたやぶり, move_name=かえんボール, should_block=False)
 - [x] 音ラベル無効系_param(defender_ability=ぼうだん, attacker_ability=, move_name=みずあめボム, should_block=True)
 - [x] 音ラベル無効系_param(defender_ability=ぼうだん, attacker_ability=かたやぶり, move_name=みずあめボム, should_block=False)
+- [x] ARシステム_はたきおとすは相手の道具に影響されない
 - [x] ARシステム_メモリで対応タイプになる
 - [x] ARシステム_メモリなしでタイプ変更なし
+- [x] ARシステム_メモリなしなら自分の道具変更は防がれない
+- [x] ARシステム_相手がメモリを持たなければ通常の道具変更を防がない
+- [x] ARシステム_相手がメモリを持つ場合トリックすりかえ相当の交換が失敗する
+- [x] ARシステム_自分のメモリの奪取交換を防ぐ
 - [x] アイスフェイス_エアロック中はゆき変化でフォルムチェンジしない
 - [x] アイスフェイス_かたやぶりで物理技のダメージを防がない
 - [x] アイスフェイス_ナイスフェイスでは物理技を防がない
