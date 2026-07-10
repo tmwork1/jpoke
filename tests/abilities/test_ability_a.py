@@ -397,6 +397,18 @@ def test_あまのじゃく_能力変化の符号反転():
         assert target.rank[stat] == max(-6, min(6, -change))
 
 
+def test_あまのじゃく_相手の能力を下げる技は反転しない():
+    """あまのじゃくは自分自身が対象（target）のランク変化のみ反転する。
+    相手の能力を下げる技を使った場合は自分がsource側なので反転しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく", move_names=["なきごえ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
+    assert battle.actives[0].rank["atk"] == 0
+
+
 def test_あめうけざら_あめ以外では発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ヤドン", ability_name="あめうけざら")],
