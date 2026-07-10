@@ -423,6 +423,44 @@ def test_イバンのみ_先制後は通常行動順になる():
     assert order2[0] == battle.actives[1]  # ピカチュウが先攻
 
 
+def test_イバンのみ_きんしのちからで変化技選択時は発動しない():
+    """イバンのみ: 所有者の特性がきんしのちからで変化技を選んだ場合はフラグが立っていても発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "カビゴン", ability_name="きんしのちから", item_name="イバンのみ",
+            move_names=["なきごえ"],
+        )],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1  # フラグは立つ
+
+    order = t.get_action_order(battle)
+    assert order[-1] == mon  # カビゴンは変化技選択できんしのちからにより最後に行動
+    assert mon.has_item()  # アイテムは消費されない
+
+
+def test_イバンのみ_きんしのちからでも攻撃技選択時は発動する():
+    """イバンのみ: 所有者の特性がきんしのちからでも攻撃技を選んだ場合は発動し得る"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "カビゴン", ability_name="きんしのちから", item_name="イバンのみ",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.item.count == 1
+
+    order = t.get_action_order(battle)
+    assert order[0] == mon  # カビゴンが先攻
+    assert not mon.has_item()  # アイテムが消費される
+
+
 def test_ウイのみ_それ以外の性格ではこんらんしない():
     """ウイのみ: しぶい味が嫌いでない性格では発動してもこんらんしない"""
     battle = t.start_battle(

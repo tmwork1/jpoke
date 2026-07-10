@@ -466,8 +466,14 @@ def イバンのみ_boost_priority(battle: Battle, ctx: AttackContext, value: in
 
     相手のきんちょうかん・じんばいったいの影響下では消費・発動しない
     （フラグは持ち越され、その効果が無くなったターンで発動する）。
+    所有者の特性がきんしのちからで変化技を選んだ場合も発動しない。
     """
     mon = ctx.attacker
+    if (
+        mon.ability.name == "きんしのちから"
+        and not ctx.move.is_attack
+    ):
+        return HandlerReturn(value=value)
     if mon.item.count == 1 and not battle.query.is_nervous(mon):
         battle.item_manager.consume_item(mon)
         return HandlerReturn(value=value + 1)
