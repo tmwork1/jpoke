@@ -2185,8 +2185,9 @@ def ハロウィン_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 
 
 def ハロウィン_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ハロウィンの使用条件チェック: 相手がすでにゴーストタイプなら失敗する。"""
-    if ctx.defender.has_type("ゴースト"):
+    """ハロウィンの使用条件チェック: 相手がすでにゴーストタイプ、またはテラスタル中の場合は失敗する。"""
+    defender = ctx.defender
+    if defender.has_type("ゴースト") or defender.terastallized:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ハロウィン")
