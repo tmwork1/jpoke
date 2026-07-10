@@ -759,7 +759,23 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             ),
         }
     ),
-    "ぎたい": AbilityData(),
+    "ぎたい": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ぎたい_change_type,
+                subject_spec="source:self",
+                priority=120,
+            ),
+            Event.ON_FIELD_CHANGE: h.AbilityHandler(
+                h.ぎたい_change_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ぎたい_change_type,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ぎゃくじょう": AbilityData(
         handlers={
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
