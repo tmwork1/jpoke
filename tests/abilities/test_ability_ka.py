@@ -347,6 +347,19 @@ def test_かんろなミツ_入場時一度だけ発動():
     assert foe.rank["evasion"] == -1
 
 
+def test_かんろなミツ_みがわり状態の相手には無効():
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ"), Pokemon("ピカチュウ", ability_name="かんろなミツ")],
+        team1=[Pokemon("カビゴン", move_names=["みがわり"])],
+    )
+    t.run_move(battle, 1)
+    t.run_switch(battle, 0, 1)
+    mon, foe = battle.actives
+    assert foe.rank["evasion"] == 0
+    assert mon.ability.revealed
+    assert not mon.ability.enabled
+
+
 def test_カーリーヘアー_直接攻撃で攻撃者のSが1段階下がる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="カーリーヘアー")],

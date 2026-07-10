@@ -1092,7 +1092,7 @@ def かんそうはだ_modify_fire_damage(battle: Battle, ctx: AttackContext, va
 
 
 def かんろなミツ_lower_foe_evasion(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かんろなミツ特性: 初登場時に相手の回避率を1段階下げる（バトル中1回）。"""
+    """かんろなミツ特性: 初登場時に相手の回避率を1段階下げる（バトル中1回）。みがわり状態の相手には無効。"""
     mon = ctx.source
     if mon is None:
         return HandlerReturn(value=value)
@@ -1100,8 +1100,10 @@ def かんろなミツ_lower_foe_evasion(battle: Battle, ctx: EventContext, valu
     if foe is None:
         return HandlerReturn(value=value)
     battle.add_ability_disabled_reason(mon, "consumed")
-    if battle.modify_stats(foe, {"evasion": -1}, source=mon):
-        _announce_ability_triggered(battle, mon)
+    _announce_ability_triggered(battle, mon)
+    if foe.has_volatile("みがわり"):
+        return HandlerReturn(value=value)
+    battle.modify_stats(foe, {"evasion": -1}, source=mon)
     return HandlerReturn(value=value)
 
 
