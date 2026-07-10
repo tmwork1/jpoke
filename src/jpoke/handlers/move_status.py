@@ -1125,11 +1125,15 @@ def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: A
     使用者または対象の特性が protected フラグを持つ場合は失敗する。
     かたやぶりを持っていても、この失敗条件は回避できない。
     使用者または対象がとくせいガードを持ち特性の変更が防がれる場合も失敗する。
+
+    例外: うのミサイルは上書き（いえき・なかまづくり等）には protected フラグで
+    抵抗するが、SV Ver.3.0.0 以降はスキルスワップ/さまようたましいでの交換のみ
+    可能になったため base_name で個別に除外する。
     """
     assert ctx.defender is not None
     if (
-        ctx.attacker.ability.has_flag("protected")
-        or ctx.defender.ability.has_flag("protected")
+        (ctx.attacker.ability.has_flag("protected") and ctx.attacker.ability.base_name != "うのミサイル")
+        or (ctx.defender.ability.has_flag("protected") and ctx.defender.ability.base_name != "うのミサイル")
         or battle.ability_manager.is_change_blocked(ctx.attacker)
         or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
