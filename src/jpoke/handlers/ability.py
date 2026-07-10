@@ -1259,6 +1259,10 @@ def きよめのしお_prevent_ailment(battle: Battle, ctx: EventContext, value:
     return _prevent_ailment(battle, ctx, value)
 
 
+def きよめのしお_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
+
+
 def きよめのしお_reduce_ghost(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """きよめのしお特性: ゴースト技を受けるとき攻撃補正を0.5倍にする。"""
     if ctx.move.type == "ゴースト":

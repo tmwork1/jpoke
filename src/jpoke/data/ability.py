@@ -725,6 +725,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.きよめのしお_prevent_ailment,
                 subject_spec="target:self",
             ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
+                h.きよめのしお_prevent_volatile,
+                subject_spec="target:self",
+            ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.きよめのしお_reduce_ghost,
                 subject_spec="defender:self",

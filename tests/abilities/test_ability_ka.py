@@ -798,6 +798,36 @@ def test_きよめのしお_状態異常無効(ailment_name):
     assert not t.apply_ailment(battle, 0, ailment_name)
 
 
+def test_きよめのしお_あくびのねむけ無効():
+    """きよめのしお: あくびによるねむけ状態も無効化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きよめのしお")],
+        team1=[Pokemon("カビゴン", move_names=["あくび"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert not battle.actives[0].has_volatile("ねむけ")
+
+
+def test_きよめのしお_かたやぶりのあくびはねむけになるが次のターンねむりにならない():
+    """きよめのしお: かたやぶりであくびを受けたときはねむけ状態になるが、
+    ねむけ→ねむりへの移行は特性により防がれる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きよめのしお")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["あくび"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    assert not mon.has_volatile("ねむけ")
+    assert not mon.has_ailment("ねむり")
+
+
 def test_きれあじ_きる技は威力補正1_5倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="きれあじ", move_names=["きりさく"])],
