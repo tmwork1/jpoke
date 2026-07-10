@@ -1290,12 +1290,29 @@ def test_おもかげやどし_テラスタル時に能力が上昇する():
         team1=[Pokemon("ピカチュウ")],
     )
     mon = battle.actives[0]
-    # 登場時の上昇をリセット
+    # 登場時の発動状態をリセットして、テラスタル起因の発動のみを検証する
+    # （実機では実際にテラスタルするまでこの特性を持たないため、登場時点では未発動の状態を再現する）
     mon.rank["spe"] = 0
+    mon.ability.activated_since_switch_in = False
     # テラスタルコマンドを予約して step でテラスタルフェーズを実行する
     t.reserve_command(battle, Command.TERASTAL_0, Command.MOVE_0)
     battle.step()
     assert mon.terastallized
+    assert mon.rank["spe"] == 1
+
+
+def test_おもかげやどし_場に出るたびに1回しか発動しない():
+    """おもかげやどし: 場に出てから既に発動している場合、かがくへんかガスの発動・解除が起きても再発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オーガポン(みどり)", ability_name="おもかげやどし")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    # 登場時に発動済み
+    assert mon.rank["spe"] == 1
+    # かがくへんかガスの発動・解除が起きても再発動しない
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
     assert mon.rank["spe"] == 1
 
 
