@@ -577,19 +577,50 @@ def いわはこび_modify_atk(battle: Battle, ctx: AttackContext, value: int) -
     return _modify_by_move_condition(ctx.move, value, modifier=6144, move_type="いわ")
 
 
+def _set_cramorant_form_by_hp(battle: Battle, mon: Pokemon) -> None:
+    """うのミサイル特性: HP に応じたフォルムへ変化させる（うのみ/まるのみ）。"""
+    next_form = CRAMORANT_GULPING if mon.hp * 2 > mon.max_hp else CRAMORANT_GORGING
+    mon.set_form(next_form)
+    _announce_ability_triggered(battle, mon)
+
+
 def うのミサイル_load_prey(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うのミサイル特性: なみのり/ダイビング成功後に HP に応じてフォルムチェンジする。"""
+    """うのミサイル特性: なみのり成功後に HP に応じてフォルムチェンジする。
+
+    ダイビングは溜めターン（1ターン目）に成功した時点でフォルムチェンジが
+    確定し、2ターン目の攻撃がまもる等で無効化されても維持されるため、
+    `うのミサイル_load_prey_on_charge`（Event.ON_MOVE_CHARGE）で別途処理する。
+    """
     mon = ctx.attacker
     if (
         mon.name != CRAMORANT_NORMAL
-        or ctx.move.name not in ["なみのり", "ダイビング"]
+        or ctx.move.name != "なみのり"
         or not battle.move_executor.move_applied
     ):
         return HandlerReturn(value=value)
 
-    next_form = CRAMORANT_GULPING if mon.hp * 2 > mon.max_hp else CRAMORANT_GORGING
-    mon.set_form(next_form)
-    _announce_ability_triggered(battle, mon)
+    _set_cramorant_form_by_hp(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def うのミサイル_load_prey_on_charge(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """うのミサイル特性: ダイビングの溜めターン（1ターン目）に成功すると HP に応じてフォルムチェンジする。
+
+    技自身の揮発状態「ダイビング」付与ハンドラ（Event.ON_MOVE_CHARGE, priority=100）
+    より先に判定する必要があるため priority=90 とし、揮発状態がまだ付与されて
+    いない（＝1ターン目）ことを条件にする。パワフルハーブで1ターンで繰り出した
+    場合も、揮発状態が付与される前にこのハンドラが実行されるためフォルム
+    チェンジは成立する。
+    """
+    mon = ctx.attacker
+    if (
+        mon.name != CRAMORANT_NORMAL
+        or ctx.move.name != "ダイビング"
+        or mon.has_volatile("ダイビング")
+    ):
+        return HandlerReturn(value=value)
+
+    _set_cramorant_form_by_hp(battle, mon)
     return HandlerReturn(value=value)
 
 
@@ -1317,14 +1348,18 @@ def さいせいりょく_heal_on_withdraw(battle: Battle, ctx: EventContext, va
 
 
 def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """さまようたましい特性: 直接攻撃を受けたとき攻撃者と特性を入れ替える。"""
+    """さまようたましい特性: 直接攻撃を受けたとき攻撃者と特性を入れ替える。
+
+    例外: うのミサイルは protected フラグを持つが、SV Ver.3.0.0 以降は
+    さまようたましいでの交換が可能になったため base_name で個別に除外する。
+    """
     attacker = ctx.attacker
     defender = ctx.defender
     if (
         not battle.query.is_contact_reaction(ctx)
         or attacker is None
         or attacker.fainted
-        or attacker.ability.has_flag("protected")
+        or (attacker.ability.has_flag("protected") and attacker.ability.base_name != "うのミサイル")
         or defender is None
     ):
         return HandlerReturn(value=value)

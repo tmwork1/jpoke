@@ -352,6 +352,19 @@ def test_いえき_protectedフラグ持ちに失敗():
     assert not defender.has_volatile("とくせいなし")
 
 
+def test_いえき_うのミサイルには失敗():
+    """いえき: うのミサイル（上書きできない特性のためprotectedフラグ持ち）の相手には失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["いえき"])],
+        team1=[Pokemon("カビゴン", ability_name="うのミサイル")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("とくせいなし")
+
+
 def test_いえき_すでにとくせいなし状態の相手には失敗():
     """いえき: すでに「とくせいなし」状態の相手には失敗する（volatile_manager内部で処理）"""
     battle = t.start_battle(
