@@ -1333,8 +1333,16 @@ MOVES_KA: dict[MoveName, MoveData] = {
     "コートチェンジ": MoveData(
         type="ノーマル",
         category="status",
-        pp=100,
-        handlers={},  # 追加効果なし
+        pp=10,
+        target="field",
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.コートチェンジ_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.コートチェンジ_swap_fields,
+            ),
+        },
     ),
     "コールドフレア": MoveData(
         type="こおり",

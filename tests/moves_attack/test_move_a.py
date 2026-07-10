@@ -150,6 +150,30 @@ def test_アイススピナー_フィールドなしでも命中する():
     assert defender.hp < hp_before
 
 
+def test_アイスハンマー_相手にダメージを与える():
+    """アイスハンマー: こおりタイプの物理技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["アイスハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_アイスハンマー_自分のすばやさが1段階下がる():
+    """アイスハンマー: 攻撃後、100%の確率で自分のすばやさランクが1段階下がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["アイスハンマー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spe"] == -1
+
+
 def test_あおいほのお_やけどが発動する():
     """あおいほのお: 20%でやけどを付与する。"""
     battle = t.start_battle(
@@ -199,6 +223,30 @@ def test_アクアジェット_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_アクアステップ_相手にダメージを与える():
+    """アクアステップ: みずタイプの物理技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["アクアステップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_アクアステップ_自分のすばやさが1段階上がる():
+    """アクアステップ: 攻撃後、100%の確率で自分のすばやさランクが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["アクアステップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spe"] == 1
+
+
 def test_アクアテール_相手にダメージを与える():
     """アクアテール: 追加効果なしの物理みず技で相手にダメージを与える。"""
     battle = t.start_battle(
@@ -210,6 +258,30 @@ def test_アクアテール_相手にダメージを与える():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp < hp_before
+
+
+def test_アクアブレイク_ぼうぎょ1段階低下が発動しない():
+    """アクアブレイク: 追加効果不発時は相手のぼうぎょランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["アクアブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == 0
+
+
+def test_アクアブレイク_ぼうぎょ1段階低下が発動する():
+    """アクアブレイク: 20%の確率で相手のぼうぎょランクを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カメックス", move_names=["アクアブレイク"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["def"] == -1
 
 
 def test_あくうせつだん_急所ランクが1():
