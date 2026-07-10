@@ -460,7 +460,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "バトンタッチ": MoveData(
         type="ノーマル",
         category="status",
-        pp=40,
+        pp=20,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.バトンタッチ_check,
