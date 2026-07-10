@@ -120,6 +120,19 @@ def test_マジックガード_技ダメージを受ける():
     assert defender.hp < defender.max_hp
 
 
+def test_マジックミラー_unreflectableフラグを持つ技は跳ね返さない():
+    """マジックミラー: unreflectableフラグを持つうつしえは跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
+        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    # 跳ね返されず、通常通り相手の特性がコピーされる
+    assert attacker.ability.name == "マジックミラー"
+
+
 def test_マジックミラー_ステルスロックを跳ね返す():
     """マジックミラー: ステルスロックを跳ね返し、使用者側に設置する"""
     battle = t.start_battle(
@@ -141,19 +154,6 @@ def test_マジックミラー_変化技を跳ね返す():
     t.run_move(battle, 0)
     assert attacker.rank["atk"] == -1
     assert defender.rank["atk"] == 0
-
-
-def test_マジックミラー_unreflectableフラグを持つ技は跳ね返さない():
-    """マジックミラー: unreflectableフラグを持つうつしえは跳ね返されない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["うつしえ"])],
-        team1=[Pokemon("ニャース", ability_name="マジックミラー")],
-        accuracy=100,
-    )
-    attacker, defender = battle.actives
-    t.run_move(battle, 0)
-    # 跳ね返されず、通常通り相手の特性がコピーされる
-    assert attacker.ability.name == "マジックミラー"
 
 
 def test_マルチスケイル_HP満タンのとき半減():

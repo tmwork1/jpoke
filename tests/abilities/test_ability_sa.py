@@ -36,6 +36,19 @@ def test_さいせいりょく_交代で控えに戻ると回復する():
     assert mon.hp == 1 + mon.max_hp // 3
 
 
+def test_さまようたましい_うのミサイルは例外的に入れ替わる():
+    """さまようたましい: うのミサイルはprotectedフラグを持つが、SV Ver.3.0.0以降は
+    さまようたましいでの交換が可能になったため例外的に入れ替わる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="うのミサイル", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="さまようたましい")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "さまようたましい"
+    assert defender.ability.name == "うのミサイル"
+
+
 def test_さまようたましい_特定の特性は書き換えられない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="おもかげやどし", move_names=["たいあたり"])],
@@ -58,19 +71,6 @@ def test_さまようたましい_直接攻撃で特性が入れ替わる():
     t.run_move(battle, 0)
     assert attacker.ability.name == "さまようたましい"
     assert defender.ability.name == "いかく"
-
-
-def test_さまようたましい_うのミサイルは例外的に入れ替わる():
-    """さまようたましい: うのミサイルはprotectedフラグを持つが、SV Ver.3.0.0以降は
-    さまようたましいでの交換が可能になったため例外的に入れ替わる。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="うのミサイル", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ", ability_name="さまようたましい")],
-    )
-    attacker, defender = battle.actives
-    t.run_move(battle, 0)
-    assert attacker.ability.name == "さまようたましい"
-    assert defender.ability.name == "うのミサイル"
 
 
 def test_さまようたましい_非直接攻撃では発動しない():

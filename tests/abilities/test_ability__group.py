@@ -488,6 +488,18 @@ def test_ふかしのこぶし_非接触技はまもるを貫通しない():
     assert not battle.move_executor.move_success
 
 
+def test_ふみん_かたやぶりでねむり付与後は直後に回復する():
+    """ふみん: かたやぶりの効果でねむり状態にされても、技終了直後に特性の効果で回復する"""
+    # カビゴン（ノーマル）はねむりのタイプ耐性を持たないため使用
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ふみん")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ねむりごな"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert not battle.actives[0].ailment.is_active
+
+
 @pytest.mark.parametrize(
     "weather_name",
     weathers
@@ -965,18 +977,6 @@ def test_状態異常無効_かたやぶりで無効(ability: str, ailment: Ailm
     )
     t.run_move(battle, 1)
     assert battle.actives[0].ailment.is_active
-
-
-def test_ふみん_かたやぶりでねむり付与後は直後に回復する():
-    """ふみん: かたやぶりの効果でねむり状態にされても、技終了直後に特性の効果で回復する"""
-    # カビゴン（ノーマル）はねむりのタイプ耐性を持たないため使用
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", ability_name="ふみん")],
-        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ねむりごな"])],
-        accuracy=100,
-    )
-    t.run_move(battle, 1)
-    assert not battle.actives[0].ailment.is_active
 
 
 @pytest.mark.parametrize(
