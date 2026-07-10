@@ -2479,8 +2479,12 @@ def apply_bind_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def はたきおとす_remove_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はたきおとすのアイテム除去効果。"""
-    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+    """はたきおとすのアイテム除去効果。
+
+    場に存在したまま消滅する扱いのため、技リサイクルや特性ものひろい・しゅうかくの
+    復元/拾得対象にしない（track_loss=False）。
+    """
+    battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 
@@ -3230,6 +3234,7 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     take_item はねんちゃくチェックを内包し、attacker がアイテムを
     持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせた場合は
     ねんちゃくによる阻止を無視して奪取できる（第五世代以降の仕様）。
+    奪って消費したきのみはリサイクルの復元対象にならないため track_loss=False を指定する。
     """
     if ctx.substitute_damage > 0:
         return HandlerReturn(value=value)
@@ -3241,7 +3246,7 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     if not battle.item_manager.take_item(defender, ignore_sticky_hold=defender.fainted):
         return HandlerReturn(value=value)
     # attackerがきのみを得たので効果を発動して消費する
-    battle.item_manager.force_trigger_berry(attacker)
+    battle.item_manager.force_trigger_berry(attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 
@@ -3409,12 +3414,14 @@ def やきつくす_burn_item(battle: Battle, ctx: AttackContext, value: Any) ->
     `Event.ON_CALC_DAMAGE_MODIFIER`で消費されるため、既に消費済みなら燃やす対象がなくなる。
     remove_item はねんちゃく等のアイテム変更禁止判定を内包するため、
     それらを持つ相手には効果がない。
+    場に存在したまま消滅する扱いのため、技リサイクルや特性ものひろい・しゅうかくの
+    復元/拾得対象にしない（track_loss=False）。
     """
     if ctx.substitute_damage > 0:
         return HandlerReturn(value=value)
     item = ctx.defender.item
     if item.is_berry() or item.name == "ノーマルジュエル":
-        battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker)
+        battle.item_manager.remove_item(target=ctx.defender, source=ctx.attacker, track_loss=False)
     return HandlerReturn(value=value)
 
 

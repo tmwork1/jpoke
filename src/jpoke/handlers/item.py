@@ -56,9 +56,9 @@ def _announce_item_triggered(battle: Battle, mon: Pokemon) -> None:
         payload=ItemPayload(item=mon.item.name)
     )
 
-def _announce_and_consume_item(battle: Battle, mon: Pokemon) -> None:
+def _announce_and_consume_item(battle: Battle, mon: Pokemon, *, track_loss: bool = True) -> None:
     _announce_item_triggered(battle, mon)
-    battle.item_manager.consume_item(mon)
+    battle.item_manager.consume_item(mon, track_loss=track_loss)
 
 def _reset_negative_ranks(battle: Battle, mon: Pokemon, reason: str) -> bool:
     """能力ランクがマイナスのステータスを全て0に戻す（しろいハーブ・くろいきり等で使用）。
@@ -1545,10 +1545,13 @@ def ふうせん_pop_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> H
     アイスフェイスで肩代わりした場合、ダメージ量が補正で0になった場合を含む）
     攻撃技が無効化されずに命中した時点で発火するため、これらのケースでも
     正しくふうせんが割れる。
+
+    割れたふうせんはものひろい・リサイクルの対象にならないため track_loss=False を指定する
+    （なげつけるでふうせんを消費した場合は別経路で処理され、対象になる）。
     """
     mon = ctx.defender
     assert mon is not None
-    _announce_and_consume_item(battle, mon)
+    _announce_and_consume_item(battle, mon, track_loss=False)
     return HandlerReturn(value=value)
 
 

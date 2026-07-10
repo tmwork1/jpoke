@@ -85,7 +85,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "リサイクル": MoveData(
         type="ノーマル",
         category="status",
-        pp=10,
+        pp=12,
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.リサイクル_can_apply,

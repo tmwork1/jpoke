@@ -176,12 +176,18 @@ class ItemManager:
 
     def remove_item(self,
                     target: Pokemon,
-                    source: Pokemon | None = None) -> bool:
+                    source: Pokemon | None = None,
+                    *,
+                    track_loss: bool = True) -> bool:
         """対象のアイテムを失わせる。
 
         Args:
             target: アイテムを失うポケモン
             source: 変更の発生源となるポケモン
+            track_loss: True の場合、last_lost_item_name を更新し
+                リサイクル・しゅうかく・ものひろい等の復元/拾得対象にする。
+                はたきおとす・やきつくす・ふしょくガス等、場に存在したまま
+                消滅する扱いの効果では False を指定する。
 
         Returns:
             取り外しに成功した場合はTrue
@@ -194,7 +200,7 @@ class ItemManager:
         if not self.can_change_item(target, source=source):
             return False
 
-        self._change_item(target, "")
+        self._change_item(target, "", track_loss=track_loss)
         return True
 
     def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
@@ -252,22 +258,25 @@ class ItemManager:
             return False
         return self.swap_items(ignore_sticky_hold=ignore_sticky_hold)
 
-    def consume_item(self, mon: Pokemon) -> bool:
+    def consume_item(self, mon: Pokemon, *, track_loss: bool = True) -> bool:
         """ポケモンの道具を消費する。
 
         きのみを消費する場合は食べたフラグを立ててから remove_item を呼ぶ。
 
         Args:
             mon: アイテムを消費するポケモン
+            track_loss: True の場合、last_lost_item_name を更新し
+                リサイクル・しゅうかく・ものひろい等の復元/拾得対象にする。
+                割れたふうせん等、対象外にすべき場合は False を指定する。
 
         Returns:
             消費に成功した場合はTrue
         """
         if mon.item.is_berry():
             mon.ate_berry = True
-        return self.remove_item(mon, source=mon)
+        return self.remove_item(mon, source=mon, track_loss=track_loss)
 
-    def force_trigger_berry(self, mon: Pokemon) -> None:
+    def force_trigger_berry(self, mon: Pokemon, *, track_loss: bool = True) -> None:
         """きのみを強制発動してから消費する。
 
         ほおばる・おちゃかい等で「HP閾値やターン終了を待たずに即座に」
@@ -281,7 +290,13 @@ class ItemManager:
 
         Args:
             mon: きのみを強制発動するポケモン
+            track_loss: True の場合、消費したきのみは last_lost_item_name に記録され
+                リサイクル等の復元対象になる。むしくい・ついばむで奪って自分が消費した
+                きのみは復元対象にならないため False を指定する。各きのみハンドラは
+                個別に track_loss を意識しないため、False の場合は発動後に
+                last_lost_item_name を発動前の値へ戻して記録を打ち消す。
         """
+        previous_last_lost = mon.last_lost_item_name
         # HP 閾値ベースのきのみを発動（オボンのみ・フィラのみ等）
         hp_ctx = EventContext(target=mon, source=mon)
         self._events.emit(Event.ON_HP_CHANGED, hp_ctx, mon.max_hp)
@@ -292,3 +307,5 @@ class ItemManager:
         # いずれの発火でも消費されなかった場合は明示的に消費する
         if mon.item.is_berry():
             self.consume_item(mon)
+        if not track_loss:
+            mon.last_lost_item_name = previous_last_lost

@@ -182,6 +182,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
             ),
             # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
+            # TODO: ON_DAMAGE_HIT は modify_hp（ON_HP_CHANGEDによるオボンのみ等の自動発動）より
+            # 後に発火するため、相手がHPしきい値回復きのみを持っている場合、はたきおとすで
+            # 奪う前にきのみが発動してしまう。docs/spec/moves/はたきおとす.md「持ち物との発動順序」
+            # の「はたきおとすの効果が優先される」規定（きのみは奪われる前に発動しない）に反する。
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.はたきおとす_remove_item,
             )
