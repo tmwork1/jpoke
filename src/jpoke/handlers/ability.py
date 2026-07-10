@@ -1063,7 +1063,10 @@ def カーリーヘアー_lower_spd_on_contact(battle: Battle, ctx: AttackContex
 
 
 def がんじょう_block_ohko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """がんじょう特性: 一撃必殺技を無効化する。"""
+    """がんじょう特性: 一撃必殺技を無効化する。(ON_TRY_MOVE_2 / subject_spec="defender:self")
+
+    命中判定(Interrupt)より前に無効化する（docs/spec/abilities/がんじょう.md 参照）。
+    """
     if ctx.move.has_flag("ohko"):
         _announce_ability_triggered(battle, ctx.defender)
         battle.add_event_log(ctx.attacker, LogCode.MOVE_IMMUNED,
@@ -1073,7 +1076,7 @@ def がんじょう_block_ohko(battle: Battle, ctx: AttackContext, value: Any) -
 
 
 def がんじょう_survive_lethal(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """がんじょう特性: HP満タン時の致死ダメージをHP1残しに補正する。(ON_BEFORE_DAMAGE_APPLY / subject_spec="target:self")"""
+    """がんじょう特性: HP満タン時の致死ダメージをHP1残しに補正する。(ON_MODIFY_MOVE_DAMAGE / subject_spec="defender:self")"""
     defender = ctx.defender
     if (
         defender.hp == defender.max_hp
@@ -1081,6 +1084,23 @@ def がんじょう_survive_lethal(battle: Battle, ctx: AttackContext, value: in
     ):
         _announce_ability_triggered(battle, defender)
         value = defender.hp - 1
+    return HandlerReturn(value=value)
+
+
+def がんじょう_survive_confusion_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """がんじょう特性: こんらんの自傷ダメージも、HP満タン時はHP1残しで耐える。
+    (ON_MODIFY_NON_MOVE_DAMAGE / subject_spec="target:self")
+
+    だいばくはつ等の自滅効果(reason="self_cost")、反動ダメージ(reason="recoil")、
+    みちづれ/ほろびのうたによるひんし(reason="perish")には発動しない
+    （docs/spec/abilities/がんじょう.md 参照）。
+    """
+    if ctx.hp_change_reason != "self_attack":
+        return HandlerReturn(value=value)
+    mon = ctx.target
+    if mon.hp == mon.max_hp and -value >= mon.hp:
+        _announce_ability_triggered(battle, mon)
+        value = -(mon.hp - 1)
     return HandlerReturn(value=value)
 
 

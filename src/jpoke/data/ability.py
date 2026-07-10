@@ -637,9 +637,17 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.がんじょう_survive_lethal,
                 subject_spec="defender:self",
             ),
-            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
+            # こんらんの自傷ダメージは技扱いではないため ON_MODIFY_NON_MOVE_DAMAGE で別途判定する
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
+                h.がんじょう_survive_confusion_damage,
+                subject_spec="target:self",
+            ),
+            # 命中判定(Interrupt)より前に無効化するため ON_TRY_MOVE_2 で判定する
+            # (docs/spec/turn.md の ON_TRY_MOVE_2 priority=140 を参照)
+            Event.ON_TRY_MOVE_2: h.AbilityHandler(
                 h.がんじょう_block_ohko,
                 subject_spec="defender:self",
+                priority=140,
             ),
         },
         lethal_handlers={
