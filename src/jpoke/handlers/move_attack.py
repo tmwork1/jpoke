@@ -15,7 +15,9 @@ from jpoke.core import HandlerReturn
 from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
 from jpoke.utils.math import apply_fixed_modifier, round_half_down, round_half_up
 from jpoke.data import TYPE_MODIFIER
+from jpoke.data.pokedex import POKEDEX
 from jpoke.data.signature_items import PLATE_TO_TYPE
+from .ability import WISHIWASHI_SOLO, WISHIWASHI_SCHOOL
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -2796,8 +2798,17 @@ def フォトンゲイザー_restore_defender_ability(battle: Battle, ctx: Attac
 
 
 def ふくろだたき_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふくろだたき: 各ヒットの威力 = 使用者の基礎こうげき種族値 / 10 + 5。"""
-    power = ctx.attacker.data.base[1] // 10 + 5
+    """ふくろだたき: 各ヒットの威力 = 使用者の基礎こうげき種族値 / 10 + 5。
+
+    ヨワシは現在のフォルム（ぎょぐんによるフォルムチェンジ）に関係なく、
+    「たんどくのすがた」の基礎こうげき種族値を用いる。
+    """
+    mon = ctx.attacker
+    if mon.name in (WISHIWASHI_SOLO, WISHIWASHI_SCHOOL):
+        base_atk = POKEDEX[WISHIWASHI_SOLO].base[1]
+    else:
+        base_atk = mon.data.base[1]
+    power = base_atk // 10 + 5
     return HandlerReturn(value=power * 4096)
 
 

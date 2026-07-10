@@ -70,6 +70,20 @@ def test_ふくろだたき_威力は基礎こうげきから計算される():
     assert battle.damage_calculator.final_power == 18
 
 
+def test_ふくろだたき_ヨワシはむれたすがたでもたんどくのすがたの種族値で計算される():
+    """ふくろだたき: ヨワシはぎょぐんによるフォルムに関係なく「たんどくのすがた」の
+    基礎こうげき種族値（A=20）で威力を計算する（20//10+5=7）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヨワシ(むれ)", ability_name="ぎょぐん", move_names=["ふくろだたき"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ヨワシ(むれ)"
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_power == 7
+
+
 def test_ふくろだたき_状態異常ポケモンはカウントされない():
     """ふくろだたき: やけど状態のポケモンはカウントから除外され、3体中1体やけどなら2ヒットする。"""
     battle = t.start_battle(
