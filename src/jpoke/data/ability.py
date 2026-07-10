@@ -337,9 +337,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    # 実装保留: 自分以外のポケモンの踊り技成功に反応して追加行動を割り込ませる機構
-    # （ターン制御側の新規フックが必要）が現行エンジンにないため対応を見送る。
-    # 詳細は docs/plan/abilities/おどりこ.md 参照（前例: へんしん・ものまね）。
     "おどりこ": AbilityData(),
     "おみとおし": AbilityData(
         handlers={

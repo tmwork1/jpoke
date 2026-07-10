@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 781
+テスト数: 788
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -75,6 +75,7 @@
 - [x] 交代抑制特性_param(ability_name=ありじごく, attacker_name=ゲンガー, attacker_ability=, expected_can_switch=True)
 - [x] 交代抑制特性_param(ability_name=かげふみ, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=False)
 - [x] 交代抑制特性_param(ability_name=かげふみ, attacker_name=ピカチュウ, attacker_ability=かげふみ, expected_can_switch=True)
+- [x] 交代抑制特性_param(ability_name=かげふみ, attacker_name=ゲンガー, attacker_ability=, expected_can_switch=True)
 - [x] 交代抑制特性_param(ability_name=じりょく, attacker_name=コイル, attacker_ability=, expected_can_switch=False)
 - [x] 交代抑制特性_param(ability_name=じりょく, attacker_name=ピカチュウ, attacker_ability=, expected_can_switch=True)
 - [x] 体重操作系(ability_name=ライトメタル, expected_modifier=0.5)
@@ -264,13 +265,17 @@
 - [x] えんかく_直接攻撃でさめはだが発動しない
 - [x] えんかく_直接攻撃でもふもふのダメージ半減が発動しない
 - [x] えんかく_直接攻撃でわるいてぐせが発動しない
+- [x] おうごんのからだ_おちゃかいは自分への効果のみ防ぐ
 - [x] おうごんのからだ_かたやぶりで無効
+- [x] おうごんのからだ_ほろびのうたは自分への付与のみ防ぐ
 - [x] おうごんのからだ_場が対象の技は無効化しない
 - [x] おうごんのからだ_攻撃技は無効化しない
 - [x] おうごんのからだ_相手の変化技を無効化
+- [x] おうごんのからだ_自分が使うおちゃかいは自分の特性で防がれない
 - [x] おうごんのからだ_自分対象の変化技は無効化しない
 - [x] おみとおし_アイテムありの相手のアイテムが公開される
 - [x] おみとおし_アイテムなしの相手には発動しない
+- [x] おみとおし_ぶきようでアイテム無効化中でも公開される
 - [x] おもかげやどし_オーガポン以外は発動しない
 - [x] おもかげやどし_テラスタル時に能力が上昇する
 - [x] おもかげやどし_フォルムに対応した能力が1段上昇する(form_name=オーガポン(みどり), expected_stat=spe)
@@ -278,7 +283,9 @@
 - [x] おもかげやどし_フォルムに対応した能力が1段上昇する(form_name=オーガポン(かまど), expected_stat=atk)
 - [x] おもかげやどし_フォルムに対応した能力が1段上昇する(form_name=オーガポン(いしずえ), expected_stat=def)
 - [x] おもかげやどし_交代して再登場すると再発動する
+- [x] おもかげやどし_場に出るたびに1回しか発動しない
 - [x] おもかげやどし_特性再有効化時にも発動する
+- [x] おやこあい_2ヒット目は端数切り捨てでも最低1ダメージ保証
 - [x] おやこあい_がむしゃらには適用しない
 - [x] おやこあい_ころがるには適用しない
 - [x] おやこあい_単発攻撃が2ヒットする

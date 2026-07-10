@@ -119,7 +119,6 @@ def _blocked_by_ougon_no_karada(battle: Battle, mon: Pokemon) -> bool:
     )
     return True
 
-
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)

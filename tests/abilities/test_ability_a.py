@@ -1301,21 +1301,6 @@ def test_おもかげやどし_テラスタル時に能力が上昇する():
     assert mon.rank["spe"] == 1
 
 
-def test_おもかげやどし_場に出るたびに1回しか発動しない():
-    """おもかげやどし: 場に出てから既に発動している場合、かがくへんかガスの発動・解除が起きても再発動しない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("オーガポン(みどり)", ability_name="おもかげやどし")],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    # 登場時に発動済み
-    assert mon.rank["spe"] == 1
-    # かがくへんかガスの発動・解除が起きても再発動しない
-    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
-    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
-    assert mon.rank["spe"] == 1
-
-
 @pytest.mark.parametrize(
     "form_name, expected_stat",
     [
@@ -1351,6 +1336,21 @@ def test_おもかげやどし_交代して再登場すると再発動する():
     assert mon.rank["spe"] == 1
 
 
+def test_おもかげやどし_場に出るたびに1回しか発動しない():
+    """おもかげやどし: 場に出てから既に発動している場合、かがくへんかガスの発動・解除が起きても再発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("オーガポン(みどり)", ability_name="おもかげやどし")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    # 登場時に発動済み
+    assert mon.rank["spe"] == 1
+    # かがくへんかガスの発動・解除が起きても再発動しない
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert mon.rank["spe"] == 1
+
+
 def test_おもかげやどし_特性再有効化時にも発動する():
     """おもかげやどし: かがくへんかガス解除後に特性が再有効化されると再発動する。"""
     battle = t.start_battle(
@@ -1363,6 +1363,20 @@ def test_おもかげやどし_特性再有効化時にも発動する():
     # かがくへんかガスの無効化を解除すると特性が再発動してS+1
     battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
     assert mon.rank["spe"] == 1
+
+
+def test_おやこあい_2ヒット目は端数切り捨てでも最低1ダメージ保証():
+    """おやこあい: 1ヒット目のダメージが小さく1/4が0になる場合でも、2ヒット目は最低1ダメージ入る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    # 1ヒット目のダメージを3に固定 → 3//4=0になってしまうが、最低1ダメージが保証される
+    t.fix_damage(battle, 3)
+    t.run_move(battle, 0)
+    attacker, defender = battle.actives
+    assert defender.hits_taken == 2
+    assert defender.hp == defender.max_hp - 3 - 1
 
 
 def test_おやこあい_がむしゃらには適用しない():
@@ -1404,20 +1418,6 @@ def test_おやこあい_単発攻撃が2ヒットする():
     assert defender.hits_taken == 2
     assert defender.hp == defender.max_hp - 40 - 10
     assert attacker.rank["spe"] == 2
-
-
-def test_おやこあい_2ヒット目は端数切り捨てでも最低1ダメージ保証():
-    """おやこあい: 1ヒット目のダメージが小さく1/4が0になる場合でも、2ヒット目は最低1ダメージ入る。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    # 1ヒット目のダメージを3に固定 → 3//4=0になってしまうが、最低1ダメージが保証される
-    t.fix_damage(battle, 3)
-    t.run_move(battle, 0)
-    attacker, defender = battle.actives
-    assert defender.hits_taken == 2
-    assert defender.hp == defender.max_hp - 3 - 1
 
 
 def test_おやこあい_既存連続技には適用しない():
