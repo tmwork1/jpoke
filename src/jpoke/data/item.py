@@ -42,6 +42,9 @@ def _add_mega_stones(items: dict[ItemName, ItemData]):
 
 ITEMS: dict[ItemName, ItemData] = {
     "": ItemData(name=""),
+    "アイスメモリ": ItemData(
+        fling_power=50,
+    ),
     "あかいいと": ItemData(
         fling_power=10,
         handlers={
@@ -204,6 +207,9 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "ウォーターメモリ": ItemData(
+        fling_power=50,
+    ),
     "ウタンのみ": ItemData(
         fling_power=10,
         handlers={
@@ -236,6 +242,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="source:self",
             ),
         }
+    ),
+    "エレクトロメモリ": ItemData(
+        fling_power=50,
     ),
     "おうじゃのしるし": ItemData(
         fling_power=30,
@@ -659,6 +668,9 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "グラウンドメモリ": ItemData(
+        fling_power=50,
+    ),
     "グラスシード": ItemData(
         fling_power=10,
         handlers={
@@ -676,6 +688,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="source:self",
             ),
         }
+    ),
+    "グラスメモリ": ItemData(
+        fling_power=50,
     ),
     "グランドコート": ItemData(
         fling_power=60,
@@ -769,6 +784,12 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="defender:self",
             )
         }
+    ),
+    "ゴーストメモリ": ItemData(
+        fling_power=50,
+    ),
+    "サイキックメモリ": ItemData(
+        fling_power=50,
     ),
     "サイコシード": ItemData(
         fling_power=10,
@@ -941,6 +962,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="target:self",
             )
         }
+    ),
+    "スチールメモリ": ItemData(
+        fling_power=50,
     ),
     "するどいキバ": ItemData(
         fling_power=30,
@@ -1175,6 +1199,9 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "ダークメモリ": ItemData(
+        fling_power=50,
+    ),
     "チイラのみ": ItemData(
         fling_power=10,
         handlers={
@@ -1292,6 +1319,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="attacker:self",
             )
         }
+    ),
+    "ドラゴンメモリ": ItemData(
+        fling_power=50,
     ),
     "ナゾのみ": ItemData(
         fling_power=10,
@@ -1412,6 +1442,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject="defender",
             )
         }
+    ),
+    "バグメモリ": ItemData(
+        fling_power=50,
     ),
     "バコウのみ": ItemData(
         fling_power=10,
@@ -1552,6 +1585,12 @@ ITEMS: dict[ItemName, ItemData] = {
             )
         }
     ),
+    "ファイアーメモリ": ItemData(
+        fling_power=50,
+    ),
+    "ファイトメモリ": ItemData(
+        fling_power=50,
+    ),
     "フィラのみ": ItemData(
         fling_power=10,
         handlers={
@@ -1586,54 +1625,6 @@ ITEMS: dict[ItemName, ItemData] = {
     "フェアリーメモリ": ItemData(
         fling_power=50,
     ),
-    "アイスメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ウォーターメモリ": ItemData(
-        fling_power=50,
-    ),
-    "エレクトロメモリ": ItemData(
-        fling_power=50,
-    ),
-    "グラウンドメモリ": ItemData(
-        fling_power=50,
-    ),
-    "グラスメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ゴーストメモリ": ItemData(
-        fling_power=50,
-    ),
-    "サイキックメモリ": ItemData(
-        fling_power=50,
-    ),
-    "スチールメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ダークメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ドラゴンメモリ": ItemData(
-        fling_power=50,
-    ),
-    "バグメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ファイアーメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ファイトメモリ": ItemData(
-        fling_power=50,
-    ),
-    "フライングメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ポイズンメモリ": ItemData(
-        fling_power=50,
-    ),
-    "ロックメモリ": ItemData(
-        fling_power=50,
-    ),
     "フォーカスレンズ": ItemData(
         fling_power=10,
         handlers={
@@ -1642,6 +1633,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="attacker:self",
             )
         }
+    ),
+    "フライングメモリ": ItemData(
+        fling_power=50,
     ),
     "ブーストエナジー": ItemData(
         removable=False,
@@ -1697,6 +1691,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject_spec="target:self",
             ),
         }
+    ),
+    "ポイズンメモリ": ItemData(
+        fling_power=50,
     ),
     "まがったスプーン": ItemData(
         fling_power=30,
@@ -2062,6 +2059,9 @@ ITEMS: dict[ItemName, ItemData] = {
                 subject="defender",
             )
         }
+    ),
+    "ロックメモリ": ItemData(
+        fling_power=50,
     ),
 }
 

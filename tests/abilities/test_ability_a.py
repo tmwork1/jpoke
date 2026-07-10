@@ -194,18 +194,6 @@ def test_アイスフェイス_特殊技のダメージを防がない():
     assert defender.name == "コオリッポ(アイス)"
 
 
-def test_アイスボディ_ゆき以外では発動しない():
-    battle = t.start_battle(
-        team0=[Pokemon("ヤドン", ability_name="アイスボディ")],
-        team1=[Pokemon("ピカチュウ")],
-        weather=("はれ", 5),
-    )
-    mon = battle.actives[0]
-    mon.hp = 1
-    t.end_turn(battle)
-    assert mon.hp == 1
-
-
 def test_アイスボディ_かいふくふうじ中は回復しない():
     battle = t.start_battle(
         team0=[Pokemon("ヤドン", ability_name="アイスボディ")],
@@ -231,50 +219,16 @@ def test_アイスボディ_ノーてんき下では発動しない():
     assert mon.hp == 1
 
 
-def test_あくしゅう_攻撃時10パーセントでひるみを付与する():
+def test_アイスボディ_ゆき以外では発動しない():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="あくしゅう", move_names=["たいあたり"])],
-        team1=[Pokemon("カビゴン")],
+        team0=[Pokemon("ヤドン", ability_name="アイスボディ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
     )
-    t.fix_damage(battle, 1)
-    battle.random.random = lambda: 0.09
-    t.run_move(battle, 0)
-    assert battle.actives[1].has_volatile("ひるみ")
-
-
-def test_あくしゅう_確率外ではひるみを付与しない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="あくしゅう", move_names=["たいあたり"])],
-        team1=[Pokemon("カビゴン")],
-    )
-    t.fix_damage(battle, 1)
-    battle.random.random = lambda: 0.11
-    t.run_move(battle, 0)
-    assert not battle.actives[1].has_volatile("ひるみ")
-
-
-def test_あくしゅう_元々ひるみ効果がある技には重複しない():
-    """あくしゅう: 元々ひるみの追加効果がある技（エアスラッシュ等）には
-    重複して効果が発動しない（追加の乱数判定が発生しないことで確認する）"""
-    def count_random_calls(has_ability: bool) -> int:
-        kwargs = {"ability_name": "あくしゅう"} if has_ability else {}
-        battle = t.start_battle(
-            team0=[Pokemon("ピカチュウ", move_names=["エアスラッシュ"], **kwargs)],
-            team1=[Pokemon("ピカチュウ")],
-            accuracy=100,
-        )
-        count = 0
-
-        def counting_random() -> float:
-            nonlocal count
-            count += 1
-            return 0.5
-
-        battle.random.random = counting_random
-        t.run_move(battle, 0)
-        return count
-
-    assert count_random_calls(True) == count_random_calls(False)
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
 
 
 def test_あくしゅう_一撃必殺技には効果がない():
@@ -302,6 +256,76 @@ def test_あくしゅう_一撃必殺技には効果がない():
         return count
 
     assert count_random_calls(True) == count_random_calls(False)
+
+
+def test_あくしゅう_元々ひるみ効果がある技には重複しない():
+    """あくしゅう: 元々ひるみの追加効果がある技（エアスラッシュ等）には
+    重複して効果が発動しない（追加の乱数判定が発生しないことで確認する）"""
+    def count_random_calls(has_ability: bool) -> int:
+        kwargs = {"ability_name": "あくしゅう"} if has_ability else {}
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["エアスラッシュ"], **kwargs)],
+            team1=[Pokemon("ピカチュウ")],
+            accuracy=100,
+        )
+        count = 0
+
+        def counting_random() -> float:
+            nonlocal count
+            count += 1
+            return 0.5
+
+        battle.random.random = counting_random
+        t.run_move(battle, 0)
+        return count
+
+    assert count_random_calls(True) == count_random_calls(False)
+
+
+def test_あくしゅう_攻撃時10パーセントでひるみを付与する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あくしゅう", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.fix_damage(battle, 1)
+    battle.random.random = lambda: 0.09
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
+def test_あくしゅう_確率外ではひるみを付与しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あくしゅう", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.fix_damage(battle, 1)
+    battle.random.random = lambda: 0.11
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
+def test_あとだし_あとだし同士では素早さの高い方が先攻():
+    """あとだし: 双方があとだしを持つ場合、後攻ティアが同じになるため素早さの高い方が先攻になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あとだし", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="あとだし", move_names=["たいあたり"])],
+    )
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]  # 素早さで勝るピカチュウが先攻
+
+
+def test_あとだし_せんせいのツメ発動で効果が無くなる():
+    """あとだし: せんせいのツメが発動すると後攻ティア補正が相殺され、素早さの高い方が先攻になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", ability_name="あとだし", item_name="せんせいのツメ",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    t.fix_random(battle, 0.0)  # < 0.2 → せんせいのツメ発動
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]  # 素早さで勝るピカチュウが先攻（あとだし効果は相殺）
 
 
 def test_あとだし_トリックルームでも後攻():
@@ -333,28 +357,18 @@ def test_あとだし_技優先度が優先される():
     assert order[0] == battle.actives[0]
 
 
-def test_あとだし_あとだし同士では素早さの高い方が先攻():
-    """あとだし: 双方があとだしを持つ場合、後攻ティアが同じになるため素早さの高い方が先攻になる。"""
+def test_アナライズ_こんらんの自傷では威力上昇しない():
+    """アナライズ: 後攻でも、こんらんによる自傷ダメージ（内部技"_こんらん"）には
+    威力補正がかからない。
+    """
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="あとだし", move_names=["たいあたり"])],
-        team1=[Pokemon("カビゴン", ability_name="あとだし", move_names=["たいあたり"])],
+        team0=[Pokemon("コイル", ability_name="アナライズ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
     )
-    order = t.get_action_order(battle)
-    assert order[0] == battle.actives[0]  # 素早さで勝るピカチュウが先攻
-
-
-def test_あとだし_せんせいのツメ発動で効果が無くなる():
-    """あとだし: せんせいのツメが発動すると後攻ティア補正が相殺され、素早さの高い方が先攻になる。"""
-    battle = t.start_battle(
-        team0=[Pokemon(
-            "ピカチュウ", ability_name="あとだし", item_name="せんせいのツメ",
-            move_names=["たいあたり"],
-        )],
-        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-    )
-    t.fix_random(battle, 0.0)  # < 0.2 → せんせいのツメ発動
-    order = t.get_action_order(battle)
-    assert order[0] == battle.actives[0]  # 素早さで勝るピカチュウが先攻（あとだし効果は相殺）
+    battle.test_option.trigger_volatile = True
+    battle.step()
+    assert 4096 == battle.damage_calculator.power_modifier
 
 
 def test_アナライズ_先攻なら威力据え置き():
@@ -388,20 +402,6 @@ def test_アナライズ_相手が交代した場合は威力上昇():
     assert 5325 == battle.damage_calculator.power_modifier
 
 
-def test_アナライズ_こんらんの自傷では威力上昇しない():
-    """アナライズ: 後攻でも、こんらんによる自傷ダメージ（内部技"_こんらん"）には
-    威力補正がかからない。
-    """
-    battle = t.start_battle(
-        team0=[Pokemon("コイル", ability_name="アナライズ", move_names=["でんきショック"])],
-        team1=[Pokemon("ピカチュウ")],
-        volatile0={"こんらん": 2},
-    )
-    battle.test_option.trigger_volatile = True
-    battle.step()
-    assert 4096 == battle.damage_calculator.power_modifier
-
-
 def test_あまのじゃく_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく")],
@@ -409,6 +409,18 @@ def test_あまのじゃく_かたやぶりで無効():
     )
     t.run_move(battle, 1)
     assert battle.actives[0].rank["atk"] == -1
+
+
+def test_あまのじゃく_相手の能力を下げる技は反転しない():
+    """あまのじゃくは自分自身が対象（target）のランク変化のみ反転する。
+    相手の能力を下げる技を使った場合は自分がsource側なので反転しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく", move_names=["なきごえ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["atk"] == -1
+    assert battle.actives[0].rank["atk"] == 0
 
 
 def test_あまのじゃく_能力変化の符号反転():
@@ -422,18 +434,6 @@ def test_あまのじゃく_能力変化の符号反転():
     battle.modify_stats(target, stats, source=source)
     for stat, change in stats.items():
         assert target.rank[stat] == max(-6, min(6, -change))
-
-
-def test_あまのじゃく_相手の能力を下げる技は反転しない():
-    """あまのじゃくは自分自身が対象（target）のランク変化のみ反転する。
-    相手の能力を下げる技を使った場合は自分がsource側なので反転しない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="あまのじゃく", move_names=["なきごえ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    t.run_move(battle, 0)
-    assert battle.actives[1].rank["atk"] == -1
-    assert battle.actives[0].rank["atk"] == 0
 
 
 def test_あめうけざら_あめ以外では発動しない():
