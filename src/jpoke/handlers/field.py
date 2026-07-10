@@ -591,20 +591,17 @@ def リフレクター_tick(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def ワンダールーム_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ワンダールーム中は防御実数値参照を入れ替える。"""
+    """ワンダールーム中は防御実数値参照を入れ替える。
+
+    ランク補正は入れ替わらず、技の分類（物理/特殊）に対応する本来の
+    ランク値のまま据え置かれる（本家の既知の仕様）。実数値の比率のみを
+    ON_CALC_DEF_MODIFIER に掛けることで、実数値だけを入れ替えた計算結果になる。
+    """
     base_stat = "def" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "spd"
     swapped_stat = "spd" if base_stat == "def" else "def"
     base_value = max(1, ctx.defender.stats[base_stat])
     swap_value = max(1, ctx.defender.stats[swapped_stat])
     return HandlerReturn(value=value * swap_value // base_value)
-
-
-def ワンダールーム_def_rank_modifier(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
-    """ワンダールーム中は物理/特殊で参照する防御ランクを入れ替える。"""
-    category_to_stat = {"physical": "spd", "special": "def"}
-    swapped_stat = category_to_stat.get(ctx.move.category)
-    value = ctx.defender.rank_modifier(swapped_stat)
-    return HandlerReturn(value=value)
 
 
 def ワンダールーム_tick(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

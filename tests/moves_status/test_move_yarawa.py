@@ -3,6 +3,7 @@
 import pytest
 
 from jpoke import Pokemon
+from jpoke.data.move import MOVES
 from .. import test_utils as t
 
 
@@ -995,3 +996,53 @@ def test_わるだくみ_とくこう最大なら失敗する():
     t.run_move(battle, 0)
 
     assert attacker.rank["spa"] == 6
+
+
+def test_ワンダールーム_PPは12():
+    """ワンダールーム: チャンピオンズでのPPは12（docs/champions/move_list.txt準拠）。Gen5〜9本家は10。"""
+    assert MOVES["ワンダールーム"].pp == 12
+
+
+def test_ワンダールーム_マジックコートで跳ね返されない():
+    """ワンダールーム: 全体の場を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["ワンダールーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"マジックコート": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("ワンダールーム").is_active
+
+
+def test_ワンダールーム_まもるで防がれない():
+    """ワンダールーム: 全体の場を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["ワンダールーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+    )
+    t.run_move(battle, 0)
+    assert battle.get_global_field("ワンダールーム").is_active
+
+
+def test_ワンダールーム_場が発動する():
+    """ワンダールーム: 使用すると場が『ワンダールーム』状態になり、5ターン継続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["ワンダールーム"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    field = battle.get_global_field("ワンダールーム")
+    assert field.is_active
+    assert field.count == 5
+
+
+def test_ワンダールーム_発動中に再使用すると解除される():
+    """ワンダールーム: 発動中に再度使用すると即座にフィールドが解除される（トグル動作）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", move_names=["ワンダールーム"])],
+        team1=[Pokemon("ピカチュウ")],
+        field={"ワンダールーム": 5},
+    )
+    t.run_move(battle, 0)
+    assert not battle.get_global_field("ワンダールーム").is_active
