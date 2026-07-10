@@ -131,6 +131,36 @@ def test_かそく_交代直後のターンは発動しない():
     assert mon.rank["spe"] == 1
 
 
+def test_かそく_すばやさランクが最大なら発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かそく", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spe"] = 6
+
+    t.reserve_command(battle, command0=Command.MOVE_0)
+    battle.step()
+    assert mon.rank["spe"] == 6
+
+
+def test_かそく_まひで最初の行動がPP消費なしで失敗しても発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="かそく", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "まひ")
+    # 必ず行動不能になる設定（フルパラ）
+    battle.test_option.trigger_ailment = True
+
+    t.reserve_command(battle, command0=Command.MOVE_0)
+    battle.step()
+
+    assert not battle.move_executor.action_success
+    assert mon.rank["spe"] == 1
+
+
 @pytest.mark.parametrize(
     "move_name, expected_boost",
     [

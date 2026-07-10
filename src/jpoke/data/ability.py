@@ -492,6 +492,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.かそく_boost_speed,
                 subject_spec="source:self",
+                priority=150,
             ),
         }
     ),

@@ -898,10 +898,15 @@ def かぜのり_boost_atk_on_tailwind_start(battle: Battle, ctx: EventContext, 
 
 
 def かそく_boost_speed(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """かそく特性: 行動済みならターン終了時に素早さを1段階上げる。"""
+    """かそく特性: 場に出てから一度でも行動を選択していればターン終了時に素早さを1段階上げる。
+
+    状態異常等でPPを消費せず技が失敗した場合も「行動を選択した」ことになるため、
+    技の成否を問わない acted_since_switch_in を判定に用いる（executed_move は
+    技が実際に実行された場合のみ True になるため使用しない）。
+    """
     mon = ctx.source
     if (
-        mon.executed_move is not None
+        mon.acted_since_switch_in
         and battle.modify_stats(mon, {"spe": +1}, source=mon)
     ):
         _announce_ability_triggered(battle, mon)
