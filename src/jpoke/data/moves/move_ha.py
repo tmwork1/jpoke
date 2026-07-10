@@ -792,7 +792,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フェアリーロック": MoveData(
         type="フェアリー",
         category="status",
-        pp=10,
+        pp=12,
+        target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.フェアリーロック_activate_global_field,
