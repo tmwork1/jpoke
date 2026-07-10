@@ -100,6 +100,19 @@ def test_かぜのり_風の技を吸収してこうげき上昇():
     assert defender.rank["atk"] == 1
 
 
+def test_かぜのり_みがわり状態でも風の技を吸収して発動():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ぼうふう"])],
+        team1=[Pokemon("ピカチュウ", ability_name="かぜのり")],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 0)
+    assert defender.volatiles["みがわり"].hp == 999
+    assert defender.rank["atk"] == 1
+
+
 def test_かそく_交代直後のターンは発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="かそく", move_names=["でんきショック"])],
