@@ -1153,8 +1153,16 @@ def ブラッドムーン_tick_volatile(battle: Battle, ctx: EventContext, value
 
 
 def ほろびのうた_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ほろびのうたでひんしになる処理。マジックガードでも防げない。"""
+    """ほろびのうたでひんしになる処理。マジックガードでも防げない。
+
+    ON_VOLATILE_END はカウント0による自然解除だけでなく、交代（remove_all_volatiles）
+    による強制解除でも発火する。交代退場処理中はひんしにせず、状態変化を消滅させるのみとする
+    （docs/spec/volatiles/ほろびのうた.md「交代によって解除される」「バトンタッチによって
+    引き継がれる」）。
+    """
     mon = ctx.source
+    if battle.switch_manager.switching_out_mon is mon:
+        return HandlerReturn(value=value)
     battle.modify_hp(mon, v=-mon.hp, reason="perish")
     return HandlerReturn(value=value)
 
