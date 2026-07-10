@@ -35,6 +35,7 @@
 でんじふゆう	x	x	x	x	n/a	n/a	x	?
 トーチカ	x	x	x	x	n/a	n/a	x	?
 とくせいなし	x	x	x	x	n/a	n/a	x	?
+ニードルガード	x	x	x	x	n/a	n/a	x	?
 にげられない	x	x	x	x	n/a	n/a	x	?
 ねむけ	x	x	x	x	n/a	n/a	x	?
 ねをはる	x	x	x	x	x	x	x	?

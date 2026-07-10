@@ -759,6 +759,32 @@ def test_ニードルガード_非接触技ではダメージなし():
     assert attacker.hp == attacker.max_hp
 
 
+def test_ニードルガード_ぼうごパット所持者にはダメージを与えない():
+    """ニードルガード: 攻撃者がぼうごパットを持つ場合は接触カウンターダメージを受けない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", item_name="ぼうごパット", move_names=["たいあたり"])],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(battle.actives[1], "ニードルガード", count=1)
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+
+
+def test_ニードルガード_マジックガード所持者にはダメージを与えない():
+    """ニードルガード: 攻撃者の特性がマジックガードの場合は接触カウンターダメージを受けない"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード", move_names=["たいあたり"])],
+    )
+    attacker = battle.actives[0]
+    battle.volatile_manager.apply(battle.actives[1], "ニードルガード", count=1)
+    t.run_move(battle, 0)
+
+    assert attacker.hp == attacker.max_hp
+
+
 def test_ねばねばネット_すでに設置済みなら失敗():
     """ねばねばネット: すでにねばねばネットが有効なら失敗（再設置されない）"""
     battle = t.start_battle(

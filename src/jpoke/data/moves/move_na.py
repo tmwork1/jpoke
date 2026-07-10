@@ -256,7 +256,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ニードルガード": MoveData(
         type="くさ",
         category="status",
-        pp=10,
+        pp=8,
         priority=4,
         target="self",
         flags={"protect"},
