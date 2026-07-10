@@ -408,7 +408,13 @@ def あとだし_delay_move_order(battle: Battle, ctx: AttackContext, value: int
 
 
 def アナライズ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。"""
+    """アナライズ特性: 行動が後になったターンの技威力を1.3倍にする。
+
+    こんらんによる自傷行動（内部技"_こんらん"）の威力は上がらない。
+    """
+    if ctx.move.name == "_こんらん":
+        return HandlerReturn(value=value)
+
     # 条件分岐が複雑なのでコメントを追加する
     attacker_player = battle.get_player(ctx.attacker)
     is_second_actor = battle.query.is_second_actor(attacker_player)
