@@ -625,6 +625,24 @@ def test_ハロウィン_ハロウィン状態を付与する():
     assert defender.has_volatile("ハロウィン")
 
 
+def test_ハロウィン_テラスタル中の相手には失敗する():
+    """ハロウィン: テラスタルしている相手には失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハロウィン"])],
+        team1=[Pokemon("カビゴン", tera_type="ほのお")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # テラスタル状態にする
+    defender.terastallized = True
+    assert defender.active_tera_type == "ほのお"
+    t.run_move(battle, 0)
+
+    # 技自体が失敗し、volatile は付与されない
+    assert not defender.has_volatile("ハロウィン")
+    assert defender.types == ["ほのお"]
+
+
 def test_ハロウィン_交代後にゴーストタイプがリセットされる():
     """ハロウィン: 交代後に added_types がリセットされること"""
     battle = t.start_battle(
