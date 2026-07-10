@@ -769,9 +769,9 @@ def おやこあい_modify_hit_count(battle: Battle, ctx: AttackContext, value: 
 
 
 def おやこあい_reduce_second_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """おやこあい特性: 2ヒット目のダメージを減衰させる。"""
+    """おやこあい特性: 2ヒット目のダメージを1/4に減衰させる（最低1ダメージ保証）。"""
     if ctx.hit_index == 2:
-        value //= 4
+        value = max(1, value // 4)
     return HandlerReturn(value=value)
 
 
