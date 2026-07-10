@@ -1622,6 +1622,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ドわすれ_modify_attacker_stats,
