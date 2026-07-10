@@ -1143,13 +1143,17 @@ def がんじょうあご_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def ききかいひ_switch_on_half_hp(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ききかいひ特性: HPが半分以下になったとき交代する。"""
+    """ききかいひ特性: HPが半分以下になったとき交代する。
+
+    こんらん自傷(self_attack)・いたみわけ(pain_split)・みがわり/はらだいこ/のろい/
+    ソウルビートなどの自己HP消費(self_cost)によるHP減少では発動しない。
+    """
     mon = ctx.target
 
     # 交代できない条件
     if (
         mon.fainted
-        or ctx.hp_change_reason in {"self_attack", "pain_split"}
+        or ctx.hp_change_reason in {"self_attack", "pain_split", "self_cost"}
     ):
         return HandlerReturn(value=value)
 

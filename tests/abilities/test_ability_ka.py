@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.enums import Command
+from jpoke.enums import Command, Interrupt
 from jpoke.types import AilmentName
 
 from .. import test_utils as t
@@ -474,6 +474,63 @@ def test_ききかいひ_被弾前HPが半分以下なら発動しない():
     )
     defender = battle.actives[0]
     defender.hp = defender.max_hp // 2
+    battle.step()
+
+    assert battle.actives[0] is defender
+
+
+def test_ききかいひ_はらだいこの自己HP消費では発動しない():
+    """はらだいこのHP消費(self_cost)ではききかいひが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ききかいひ", move_names=["はらだいこ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp * 9 // 10
+    t.run_move(battle, 0)
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ききかいひ_みがわりの自己HP消費では発動しない():
+    """みがわりのHP消費(self_cost)ではききかいひが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ききかいひ", move_names=["みがわり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp * 6 // 10
+    t.run_move(battle, 0)
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ききかいひ_相手のいたみわけを受けても発動しない():
+    """相手のいたみわけによるHP均等化(pain_split)ではききかいひが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ききかいひ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["いたみわけ"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp
+    attacker = battle.actives[1]
+    attacker.hp = 1
+    t.run_move(battle, 1)
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ききかいひ_控えがいない場合は発動しない():
+    """交代先の控えがいない場合はききかいひが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ききかいひ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
     battle.step()
 
     assert battle.actives[0] is defender
