@@ -102,9 +102,8 @@ MOVES_WA: dict[MoveName, MoveData] = {
     "ワンダールーム": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
-        flags=set(),
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ワンダールーム_activate_global_field,

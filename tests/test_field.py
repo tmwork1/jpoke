@@ -1435,30 +1435,25 @@ def test_ワンダールーム_再使用で解除():
     assert not field.is_active
 
 
-def test_ワンダールーム_物理技は特防側を参照():
-    """ワンダールーム: 物理技の防御参照が特防側に入れ替わる"""
-    normal = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    normal_defender = normal.actives[1]
-    normal_defender.rank["def"] = 6
-    normal_defender.rank["spd"] = -6
-    normal_ctx = AttackContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
-    normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
+def test_ワンダールーム_物理技のランク補正はぼうぎょランクのまま():
+    """ワンダールーム: 物理技を受けるとき、実数値はとくぼうを参照するが、ランク補正は
+    ぼうぎょランクのまま据え置かれる（実数値のみが入れ替わり、ランク補正は入れ替わらない）"""
+    def _final_defense(def_rank: int, spd_rank: int) -> int:
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+            team1=[Pokemon("ピカチュウ")],
+            field={"ワンダールーム": 99},
+        )
+        defender = battle.actives[1]
+        defender.rank["def"] = def_rank
+        defender.rank["spd"] = spd_rank
+        ctx = AttackContext(attacker=battle.actives[0], defender=defender, move=battle.actives[0].moves[0])
+        return battle.damage_calculator._calc_final_defense(ctx)
 
-    wonder = t.start_battle(
-        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-        field={"ワンダールーム": 99},
-    )
-    wonder_defender = wonder.actives[1]
-    wonder_defender.rank["def"] = 6
-    wonder_defender.rank["spd"] = -6
-    wonder_ctx = AttackContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
-    wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
-
-    assert wonder_def < normal_def
+    # ぼうぎょランクを変えると結果が変わる（ランク補正はぼうぎょのまま）
+    assert _final_defense(def_rank=6, spd_rank=0) != _final_defense(def_rank=0, spd_rank=0)
+    # とくぼうランクを変えても結果は変わらない（ランク補正は入れ替わらない）
+    assert _final_defense(def_rank=0, spd_rank=6) == _final_defense(def_rank=0, spd_rank=0)
 
 
 def test_ワンダールーム_物理技は特防実数値を使用():
@@ -1479,30 +1474,25 @@ def test_ワンダールーム_物理技は特防実数値を使用():
     assert actual == expected, f"物理技がB実数値({defender.stats['B']})ではなくD実数値({expected})を参照するはず"
 
 
-def test_ワンダールーム_特殊技は防御側を参照():
-    """ワンダールーム: 特殊技の防御参照が防御側に入れ替わる"""
-    normal = t.start_battle(
-        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    normal_defender = normal.actives[1]
-    normal_defender.rank["def"] = -6
-    normal_defender.rank["spd"] = 6
-    normal_ctx = AttackContext(attacker=normal.actives[0], defender=normal_defender, move=normal.actives[0].moves[0])
-    normal_def = normal.damage_calculator._calc_final_defense(normal_ctx)
+def test_ワンダールーム_特殊技のランク補正はとくぼうランクのまま():
+    """ワンダールーム: 特殊技を受けるとき、実数値はぼうぎょを参照するが、ランク補正は
+    とくぼうランクのまま据え置かれる（実数値のみが入れ替わり、ランク補正は入れ替わらない）"""
+    def _final_defense(def_rank: int, spd_rank: int) -> int:
+        battle = t.start_battle(
+            team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
+            team1=[Pokemon("ピカチュウ")],
+            field={"ワンダールーム": 99},
+        )
+        defender = battle.actives[1]
+        defender.rank["def"] = def_rank
+        defender.rank["spd"] = spd_rank
+        ctx = AttackContext(attacker=battle.actives[0], defender=defender, move=battle.actives[0].moves[0])
+        return battle.damage_calculator._calc_final_defense(ctx)
 
-    wonder = t.start_battle(
-        team0=[Pokemon("ゼニガメ", move_names=["みずでっぽう"])],
-        team1=[Pokemon("ピカチュウ")],
-        field={"ワンダールーム": 99},
-    )
-    wonder_defender = wonder.actives[1]
-    wonder_defender.rank["def"] = -6
-    wonder_defender.rank["spd"] = 6
-    wonder_ctx = AttackContext(attacker=wonder.actives[0], defender=wonder_defender, move=wonder.actives[0].moves[0])
-    wonder_def = wonder.damage_calculator._calc_final_defense(wonder_ctx)
-
-    assert wonder_def < normal_def
+    # とくぼうランクを変えると結果が変わる（ランク補正はとくぼうのまま）
+    assert _final_defense(def_rank=0, spd_rank=6) != _final_defense(def_rank=0, spd_rank=0)
+    # ぼうぎょランクを変えても結果は変わらない（ランク補正は入れ替わらない）
+    assert _final_defense(def_rank=6, spd_rank=0) == _final_defense(def_rank=0, spd_rank=0)
 
 
 def test_ワンダールーム_特殊技は防御実数値を使用():
