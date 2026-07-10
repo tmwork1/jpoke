@@ -535,7 +535,7 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def いしあたま_ignore_recoil(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+def いしあたま_ignore_recoil(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """いしあたま特性: 反動ダメージを受けない。"""
     if ctx.hp_change_reason == "recoil":
         return HandlerReturn(value=0, stop_event=True)
