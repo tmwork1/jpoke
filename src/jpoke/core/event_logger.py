@@ -6,11 +6,20 @@
 from dataclasses import dataclass, asdict
 
 from jpoke.enums import LogCode
+from jpoke.types import Stat
 from jpoke.core.log_payload import (
     Payload, FailureLogPayload, HPChangePayload, StatChangePayload,
     AilmentPayload, VolatilePayload, AbilityPayload, ItemPayload,
     FieldPayload, MoveActionPayload, TerastalPayload, TextPayload,
 )
+
+# STAT_CHANGED の render() 表示専用。Stat Literal（内部識別子）をそのまま
+# 表示すると英語が漏れるため、日本語ラベルに変換する。
+_STAT_LABELS: dict[Stat, str] = {
+    "hp": "HP", "atk": "こうげき", "def": "ぼうぎょ",
+    "spa": "とくこう", "spd": "とくぼう", "spe": "すばやさ",
+    "accuracy": "めいちゅう", "evasion": "かいひ",
+}
 
 
 @dataclass(frozen=True)
@@ -158,8 +167,10 @@ class EventLog:
                 stats = payload.stats if isinstance(payload, StatChangePayload) else {}
                 texts = []
                 for stat, value in stats.items():
-                    texts.append(f"{stat}{'+' if value > 0 else ''}{value}")
-                return " ".join(texts) if texts else "能力値が変化した"
+                    label = _STAT_LABELS.get(stat, stat)
+                    direction = "上がった" if value > 0 else "下がった"
+                    texts.append(f"{label}が{abs(value)}段階{direction}")
+                return "、".join(texts) if texts else "能力値が変化した"
 
             case LogCode.STAT_CHANGE_BLOCKED:
                 return "能力値は変化しなかった"
