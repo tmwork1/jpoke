@@ -2938,22 +2938,6 @@ def リフレクター_set_side_field(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def リフレッシュ_cure_ailment(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """リフレッシュ: 自分の状態異常（やけど・こおり・まひ・どく・ねむり）を回復する。
-
-    状態異常がない場合は失敗する。
-    """
-    mon = ctx.attacker
-    if not mon.ailment.is_active:
-        battle.add_event_log(
-            mon, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="リフレッシュ_状態異常なし"),
-        )
-        return HandlerReturn(value=False, stop_event=True)
-    battle.ailment_manager.remove(mon)
-    return HandlerReturn(value=value)
-
-
 def りゅうのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """りゅうのまいの効果: 自分のこうげき・すばやさを1段階ずつ上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spe": 1})
