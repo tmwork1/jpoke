@@ -590,8 +590,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "パワースワップ": MoveData(
         type="エスパー",
         category="status",
-        pp=10,
-        accuracy=100,
+        pp=12,
+        accuracy=None,  # 必中
+        # マジックコートで跳ね返されず、みがわりを貫通する
+        flags={"unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.パワースワップ_swap_ranks,
