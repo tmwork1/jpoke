@@ -32,46 +32,6 @@ def test_リフレクター_自陣営に5ターン設置される():
     assert side.fields["リフレクター"].count == 5
 
 
-def test_リフレッシュ_まひを治す():
-    """リフレッシュ: まひ状態のとき使用するとまひが回復する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["リフレッシュ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    t.apply_ailment(battle, 0, "まひ", by_foe=True)
-    assert attacker.ailment.name == "まひ"
-    # まひによる行動不能（12.5%）で技が不発になるとテストがフレーキーになるため固定する
-    battle.test_option.trigger_ailment = False
-    t.run_move(battle, 0)
-    assert not attacker.ailment.is_active
-
-
-def test_リフレッシュ_やけどを治す():
-    """リフレッシュ: やけど状態のとき使用するとやけどが回復する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["リフレッシュ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    t.apply_ailment(battle, 0, "やけど", by_foe=True)
-    assert attacker.ailment.name == "やけど"
-    t.run_move(battle, 0)
-    assert not attacker.ailment.is_active
-
-
-def test_リフレッシュ_状態異常がなければ失敗する():
-    """リフレッシュ: 状態異常がない場合は技が失敗し、状態に変化がない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["リフレッシュ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    assert not attacker.ailment.is_active
-    t.run_move(battle, 0)
-    assert not attacker.ailment.is_active
-
-
 def test_りゅうのまい_こうげきとすばやさ1段階ずつ上がる():
     """りゅうのまい: 使用すると自分のこうげきとすばやさランクが1段階ずつ上がる"""
     battle = t.start_battle(

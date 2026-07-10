@@ -107,16 +107,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
             ),
         }
     ),
-    "リフレッシュ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
-        handlers={
-            Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.リフレッシュ_cure_ailment,
-            ),
-        },
-    ),
     "りゅうせいぐん": MoveData(
         type="ドラゴン",
         category="special",
