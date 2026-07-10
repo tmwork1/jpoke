@@ -179,6 +179,17 @@ def _apply_contact_item_chip(battle: Battle,
         return bool(v)
     return False
 
+def _gluttony_denominator(mon: Pokemon, denominator: int) -> int:
+    """くいしんぼう: 残りHP1/4以下(denominator=4)で発動するきのみの発動条件を
+    残りHP1/2以下(denominator=2)に緩和する。
+
+    もとから最大HPの1/2以下で発動するきのみ（オボンのみ等、denominator=2）には
+    効果が無いため、denominator=4のときのみ変換する。
+    """
+    if denominator == 4 and mon.ability.name == "くいしんぼう":
+        return 2
+    return denominator
+
 def _heal_berry(battle: Battle,
                 ctx: EventContext,
                 value: Any,
@@ -189,6 +200,7 @@ def _heal_berry(battle: Battle,
                 confuse_natures: tuple[str, ...] | None = None) -> HandlerReturn:
     mon = ctx.target
     assert mon is not None
+    denominator = _gluttony_denominator(mon, denominator)
     # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
     forced = value >= mon.max_hp
     if not forced:
@@ -261,15 +273,17 @@ def _boost_on_quarter_hp(battle: Battle,
     """1/4HP以下になった瞬間に能力を上昇させる共通処理。
 
     value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     forced = value >= mon.max_hp
+    denominator = _gluttony_denominator(mon, 4)
     if not forced:
         # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
         if ctx.hp_change_reason == "self_attack":
             return HandlerReturn(value=value)
-        if mon.hp * 4 > mon.max_hp:
+        if mon.hp * denominator > mon.max_hp:
             return HandlerReturn(value=value)
     if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
         _announce_and_consume_item(battle, mon)
@@ -478,14 +492,16 @@ def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: 
     """イバンのみ: HPが1/4以下に下がった瞬間に先制フラグを立てる。
 
     こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
+    denominator = _gluttony_denominator(mon, 4)
     hp_after = mon.hp
     hp_before = hp_after + value
-    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+    if hp_before * denominator > mon.max_hp and hp_after * denominator <= mon.max_hp:
         mon.item.count = 1
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -923,10 +939,12 @@ def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: An
     """サンのみ: HP1/4以下できゅうしょアップ状態になる。
 
     value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
-    if mon.hp * 4 <= mon.max_hp or value >= mon.max_hp:
+    denominator = _gluttony_denominator(mon, 4)
+    if mon.hp * denominator <= mon.max_hp or value >= mon.max_hp:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -1034,15 +1052,17 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
     うちランダムな1つ（ランクが最大でないもの）+2。
 
     value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     forced = value >= mon.max_hp
+    denominator = _gluttony_denominator(mon, 4)
     if not forced:
         # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
         if ctx.hp_change_reason == "self_attack":
             return HandlerReturn(value=value)
-        if mon.hp * 4 > mon.max_hp:
+        if mon.hp * denominator > mon.max_hp:
             return HandlerReturn(value=value)
     # すでにランクが最大の能力は選ばれない（5箇所全て最大なら発動しない）
     candidates: list[Stat] = [s for s in ("atk", "def", "spa", "spd", "spe") if mon.rank[s] < 6]
@@ -1709,14 +1729,16 @@ def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: 
     """ミクルのみ: HP1/4以下に下がった瞬間に命中率アップフラグを立てる。
 
     こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
+    denominator = _gluttony_denominator(mon, 4)
     hp_after = mon.hp
     hp_before = hp_after + value
-    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+    if hp_before * denominator > mon.max_hp and hp_after * denominator <= mon.max_hp:
         mon.item.count = 1
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
