@@ -228,8 +228,12 @@ def アロマセラピー_cure_team_ailment(battle: Battle, ctx: AttackContext, 
 
 
 def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """アンコールの効果を発動する。"""
-    move = ctx.defender.selected_move
+    """アンコールの効果を発動する。
+
+    ロックする対象は仕様（docs/spec/moves/アンコール.md）の「最後にPPを消費した技」。
+    ねごとのサブ技（PP消費0）ではなくねごと自身が対象になる。
+    """
+    move = ctx.defender.last_pp_consumed_move
     return apply_volatile_to_defender(
         battle, ctx, value, volatile="アンコール", count=3, move_name=move.name
     )
@@ -238,11 +242,13 @@ def アンコール_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def アンコール_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """アンコールの失敗条件を判定する。
 
-    - 相手がまだ技を選択していない（selected_move が None）場合は失敗する
-    - 相手が最後に選択した技（ねごと等でサブ技を実行した場合はねごと自身）が
+    - 相手がPPを消費する行動をしていない（last_pp_consumed_move が None）場合は失敗する
+    - 相手が最後にPPを消費した技（ねごと等でサブ技を実行した場合はねごと自身）が
       non_encore ラベルを持つ場合は失敗する
+    - PP消費後に失敗した技（ねむり状態でないのに使ったねごと等）も
+      「最後にPPを消費した技」として判定の対象になる
     """
-    move = ctx.defender.selected_move
+    move = ctx.defender.last_pp_consumed_move
     if not move or move.has_flag("non_encore"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
