@@ -109,9 +109,14 @@ MOVES_KA: dict[MoveName, MoveData] = {
         target="self",
         flags={"protect"},
         handlers={
-            Event.ON_TRY_MOVE_2: h.MoveHandler(
-                hs.まもる系_連続使用失敗チェック,
-            ),
+            Event.ON_TRY_MOVE_2: [
+                h.MoveHandler(
+                    hs.まもる系_連続使用失敗チェック,
+                ),
+                h.MoveHandler(
+                    hs.かえんのまもり_check,
+                ),
+            ],
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かえんのまもり_apply,
             ),
@@ -222,6 +227,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=30,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かたくなる_modify_attacker_stats,
@@ -249,14 +255,12 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=20,
         accuracy=100,
         handlers={
-            Event.ON_STATUS_HIT: [
-                h.MoveHandler(
-                    hs.かなしばり_can_apply,
-                ),
-                h.MoveHandler(
-                    hs.かなしばり_apply,
-                ),
-            ],
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.かなしばり_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.かなしばり_apply,
+            ),
         }
     ),
     "かふんだんご": MoveData(
@@ -379,6 +383,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="みず",
         category="status",
         pp=40,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.からにこもる_modify_attacker_stats,
@@ -497,7 +502,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=12,
-        accuracy=100,
+        accuracy=None,  # 必中
+        # マジックコートで跳ね返されない
+        flags={"unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ガードシェア_equalize_stats,
@@ -508,7 +515,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=12,
-        accuracy=100,
+        accuracy=None,  # 必中
+        # マジックコートで跳ね返されず、みがわりを貫通する
+        flags={"unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ガードスワップ_swap_ranks,
@@ -532,6 +541,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きあいだめ_apply,
@@ -626,7 +636,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=5,
         power=100,
         accuracy=100,
-        flags={"contact", "slash"},
+        flags={"contact", "slash", "non_copycat"},
         handlers={},  # 追加効果なし
     ),
     "きょじゅうだん": MoveData(
@@ -675,6 +685,9 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ひこう",
         category="status",
         pp=16,
+        # みがわりに対して技自体は無効化されない（回避率変化のみ防がれ、
+        # 場の効果解除は独立して発動する。一次情報: docs/wiki/moves/きりばらい.html 技の仕様節）。
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.きりばらい_defog,
@@ -713,7 +726,12 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="はがね",
         category="status",
         pp=10,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ギアチェンジ_modify_attacker_stats,
+            ),
+        }
     ),
     "ギガインパクト": MoveData(
         type="ノーマル",
@@ -882,7 +900,8 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=8,
-        accuracy=100,
+        accuracy=None,  # 必中
+        flags={"unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.くろいまなざし_apply,
@@ -1064,6 +1083,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1193,6 +1213,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.コットンガード_modify_attacker_stats,
@@ -1228,6 +1249,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=2,
+        flags={"non_copycat"},
         handlers={},  # 追加効果なし
     ),
     "コメットパンチ": MoveData(
@@ -1249,7 +1271,11 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=12,
         priority=4,
         target="self",
+        flags={"protect"},
         handlers={
+            Event.ON_TRY_MOVE_2: h.MoveHandler(
+                hs.まもる系_連続使用失敗チェック,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.こらえる_apply,
             ),
@@ -1311,7 +1337,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=5,
         power=140,
         accuracy=90,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "コールドフレア"),
@@ -1328,7 +1354,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         power=140,
         accuracy=90,
         critical_rank=1,
-        flags={"secondary_effect"},
+        flags={"secondary_effect", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "ゴッドバード"),
@@ -1344,7 +1370,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=12,
         power=90,
         accuracy=100,
-        flags={"contact", "unprotectable"},
+        flags={"contact", "unprotectable", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "シャドーダイブ"),

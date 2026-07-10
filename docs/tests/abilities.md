@@ -1,6 +1,6 @@
 # abilities
 
-テスト数: 732
+テスト数: 733
 
 - [x] あめふらし_強天候は上書き不可
 - [x] あめふらし_通常天候を上書きする(initial_weather=はれ)
@@ -152,10 +152,10 @@
 - [x] 状態異常無効_かたやぶりで無効(ability=パステルベール, ailment=どく, move=どくのこな)
 - [x] 状態異常無効_かたやぶりで無効(ability=パステルベール, ailment=もうどく, move=どくどく)
 - [x] 状態異常無効_かたやぶりで無効(ability=じゅうなん, ailment=まひ, move=でんじは)
-- [x] 状態異常無効_かたやぶりで無効(ability=ふみん, ailment=ねむり, move=ねむりごな)
 - [x] 状態異常無効_かたやぶりで無効(ability=やるき, ailment=ねむり, move=ねむりごな)
 - [x] 状態異常無効_かたやぶりで無効(ability=スイートベール, ailment=ねむり, move=ねむりごな)
 - [x] 状態異常無効_かたやぶりで無効(ability=みずのベール, ailment=やけど, move=おにび)
+- [x] ふみん_かたやぶりでねむり付与後は直後に回復する
 - [x] 能力低下防止特性_param(ability_name=かいりきバサミ, stats={'atk': -1, 'def': -1, 'spa': -2}, source_is_self=False, expected={'def': -1, 'spa': -2})
 - [x] 能力低下防止特性_param(ability_name=かいりきバサミ, stats={'atk': -1}, source_is_self=True, expected={'atk': -1})
 - [x] 能力低下防止特性_param(ability_name=はとむね, stats={'atk': -1, 'def': -1, 'spa': -2}, source_is_self=False, expected={'atk': -1, 'spa': -2})
@@ -455,6 +455,7 @@
 - [x] マジックガード_技ダメージを受ける
 - [x] マジックミラー_ステルスロックを跳ね返す
 - [x] マジックミラー_変化技を跳ね返す
+- [x] マジックミラー_unreflectableフラグを持つ技は跳ね返さない
 - [x] マルチスケイル_HP満タンのとき半減
 - [x] マルチスケイル_かたやぶりで無効
 - [x] マルチタイプ_プレートで対応タイプになる

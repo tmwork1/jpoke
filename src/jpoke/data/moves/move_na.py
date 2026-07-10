@@ -19,7 +19,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
-        flags={"sound"},
+        accuracy=None,  # 必中
+        flags={"sound", "unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ないしょばなし_modify_defender_stats,
@@ -72,6 +73,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        accuracy=None,  # 必中
+        flags={"unprotectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.なかよくする_modify_defender_stats,
@@ -130,6 +133,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -141,6 +145,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        accuracy=None,  # 必中
+        flags={"unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.なみだめ_modify_defender_stats,
@@ -177,7 +183,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=12,
-        accuracy=100,
+        accuracy=None,  # 必中
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.なりきり_can_apply,
@@ -270,7 +277,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
-        target="field",
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
@@ -314,7 +321,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         pp=12,
         flags={"non_encore", "non_negoto"},
         handlers={
-            Event.ON_TRY_ACTION: h.MoveHandler(
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.ねごと_check_sleep,
                 subject_spec="attacker:self",
                 priority=30,
@@ -428,7 +435,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
     "ねむりごな": MoveData(
         type="くさ",
         category="status",
-        pp=16,
+        pp=16,  # champions基準（move_list.txt）。Gen9本家は15
         accuracy=75,
         flags={"powder"},
         handlers={
@@ -441,6 +448,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -469,6 +477,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="くさ",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ねをはる_apply,
@@ -520,6 +529,8 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ゴースト",
         category="status",
         pp=12,
+        # まもる・ダイウォールを無視し、マジックコートで跳ね返されず、みがわりを貫通する
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.のろい_can_apply,

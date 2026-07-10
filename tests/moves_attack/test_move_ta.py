@@ -706,6 +706,23 @@ def test_ダストシュート_どくが発動する():
     assert battle.actives[1].ailment.name == "どく"
 
 
+def test_ダブルアタック_タイプ分類威力命中PPが仕様通り():
+    """ダブルアタック: ノーマルタイプ・物理・威力35・命中90・PP12・直接攻撃の固定2回攻撃技。"""
+    move_data = MOVES["ダブルアタック"]
+    assert move_data.type == "ノーマル"
+    assert move_data.category == "physical"
+    assert move_data.power == 35
+    assert move_data.accuracy == 90
+    assert move_data.pp == 12
+    assert "contact" in move_data.flags
+    assert move_data.multi_hit == {
+        "min": 2,
+        "max": 2,
+        "check_hit_each_time": False,
+        "power_sequence": (),
+    }
+
+
 def test_ダブルウイング_タイプ分類威力命中PPが仕様通り():
     """ダブルウイング: ひこうタイプ・物理・威力40・命中90・PP12・直接攻撃の固定2回攻撃技。"""
     move_data = MOVES["ダブルウイング"]
@@ -748,6 +765,20 @@ def test_ダメおし_同ターンにダメージを受けていたら威力2倍
     battle.random.random = lambda: 0.9
     t.run_move(battle, 0)
     assert battle.damage_calculator.power_modifier == 8192
+
+
+def test_ダメおし_相手がみをけずるでHPを消費しても威力は2倍にならない():
+    """ダメおし: 相手がみをけずるで自分のHPを消費しても、そのHP減少はダメおしの
+    威力2倍判定に加算されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ミガルーサ", move_names=["みをけずる"])],
+        team1=[Pokemon("カビゴン", move_names=["ダメおし"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    battle.random.random = lambda: 0.9
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.power_modifier == 4096
 
 
 def test_ダメおし_相手が受けたゴツゴツメットの反射ダメージも同ターンのダメージとして扱われる():

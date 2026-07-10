@@ -227,6 +227,84 @@ def test_マジカルシャイン_相手にダメージを与える():
     assert defender.hp < hp_before
 
 
+def test_マジカルフレイム_secondary_effectフラグを持つ():
+    """マジカルフレイム: ちからずくとの相互作用のためsecondary_effectフラグを持つこと。"""
+    move_data = MOVES["マジカルフレイム"]
+    assert "secondary_effect" in move_data.flags
+
+
+def test_マジカルフレイム_ちからずくで威力上昇しとくこう低下は発動しない():
+    """マジカルフレイム: ちからずく使用時は威力が1.3倍になる代わりに、とくこう低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", ability_name="ちからずく", move_names=["マジカルフレイム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spa"] == 0
+
+
+def test_マジカルフレイム_とくこう1段階低下が発動する():
+    """マジカルフレイム: 100%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["マジカルフレイム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_マジカルリーフ_相手にダメージを与える():
+    """マジカルリーフ: 追加効果なしの特殊くさ技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["マジカルリーフ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_マジカルリーフ_相手の回避率が高くても必ず命中する():
+    """マジカルリーフ: 自分の命中率、相手の回避率に関係なく必ず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フシギバナ", move_names=["マジカルリーフ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    defender = battle.actives[1]
+    battle.modify_stats(defender, {"evasion": 6}, source=defender)
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_マッドショット_すばやさ低下が発動する():
+    """マッドショット: 100%の確率で相手のすばやさを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヌマクロー", move_names=["マッドショット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spe"] == -1
+
+
+def test_マッドショット_ちからずくで威力上昇しすばやさ低下は発動しない():
+    """マッドショット: ちからずく使用時は威力が1.3倍になる代わりに、すばやさ低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヌマクロー", ability_name="ちからずく", move_names=["マッドショット"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spe"] == 0
+
+
 def test_マッハパンチ_相手にダメージを与える():
     """マッハパンチ: 優先度+1の先制物理技で相手にダメージを与える。"""
     battle = t.start_battle(
@@ -238,6 +316,28 @@ def test_マッハパンチ_相手にダメージを与える():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp < hp_before
+
+
+def test_マッハパンチ_素早さで劣っていても先制する():
+    """マッハパンチ: 優先度+1のため、素早さで劣っていても相手より先に行動できる。
+
+    カビゴン（素早さで劣る）がマッハパンチを使い、
+    ピカチュウ（素早さで勝る）が10まんボルトを使う場合、
+    優先度の高いマッハパンチが先に発動しHP1のピカチュウを先に倒すため、
+    ピカチュウは行動できずカビゴンはダメージを受けない。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["マッハパンチ"])],
+        team1=[Pokemon("ピカチュウ", move_names=["10まんボルト"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    defender.hp = 1
+    attacker_hp_before = attacker.hp
+    battle.step()
+    assert not defender.alive
+    assert attacker.hp == attacker_hp_before
 
 
 def test_まとわりつく_ダメージを与える():
@@ -307,6 +407,29 @@ def test_ミストバースト_しめりけ持ちには技が失敗する():
     assert attacker.hp == hp_before
 
 
+def test_ミストバースト_フィールドなしのとき威力補正なし():
+    """ミストバースト: ミストフィールドが発動していない場合、威力補正はない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ミストバースト_ミストフィールドかつ自分接地で威力1_5倍になる():
+    """ミストバースト: 使用者がミストフィールドの効果を受けている場合、威力が1.5倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("ミストフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+
+
 def test_ミストバースト_使用後に攻撃者がひんしになる():
     """ミストバースト: ON_PAY_HPで現在HPを全消費し、技使用後に使用者がひんし状態になる。"""
     battle = t.start_battle(
@@ -318,6 +441,55 @@ def test_ミストバースト_使用後に攻撃者がひんしになる():
     t.run_move(battle, 0)
     assert attacker.hp == 0
     assert not attacker.alive
+
+
+def test_ミストバースト_自分が浮遊している場合は威力補正が乗らない():
+    """ミストバースト: ミストフィールド中でも自分が浮いている場合、地面にいないため威力補正は乗らない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ロトム", ability_name="ふゆう", move_names=["ミストバースト"])],
+        team1=[Pokemon("カビゴン")],
+        terrain=("ミストフィールド", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+def test_ミストボール_ちからずくで威力上昇しとくこう低下は発動しない():
+    """ミストボール: ちからずく使用時は威力が1.3倍になる代わりに、とくこう低下が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", ability_name="ちからずく", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 5325 == battle.damage_calculator.power_modifier
+    assert battle.actives[1].rank["spa"] == 0
+
+
+def test_ミストボール_とくこう低下が発動する():
+    """ミストボール: 50%の確率で相手のとくこうを1段階下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_ミストボール_ぼうだん持ちには技が無効化される():
+    """ミストボール: 弾のわざのため、特性『ぼうだん』所持者には無効化される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ラティアス", move_names=["ミストボール"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうだん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
 
 
 def test_みずあめボム_あめまみれでターンごとに素早さが低下する():
@@ -585,6 +757,115 @@ def test_みらいよち_使用ターンには攻撃が発動しない():
     hp_before = defender.hp
     t.run_move(battle, 0)
     assert defender.hp == hp_before
+
+
+def test_ミラーコート_まねっこでコピーできる():
+    """ミラーコート: SVではまねっこでコピー可能（カウンターとは異なる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["10まんボルト", "まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # ピカチュウ: 10まんボルトでカビゴンに特殊ダメージ
+    t.run_move(battle, 0, move_idx=0)
+    # カビゴン: ミラーコートで反撃し、成功して最後の使用技になる（ピカチュウが特殊ダメージを受ける）
+    t.run_move(battle, 1)
+    assert attacker.last_special_damage_received > 0
+    hp_before = defender.hp
+    # ピカチュウ: まねっこ（ミラーコートをコピー）→ 成功するはず
+    t.run_move(battle, 0, move_idx=1)
+    assert battle.move_executor.move_applied
+    assert defender.hp < hp_before
+
+
+def test_ミラーコート_みがわりに当たったダメージは参照されない():
+    """ミラーコート: みがわりが被弾したダメージは特殊ダメージとして記録されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+        volatile0={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手の特殊技をみがわりで受ける
+    t.run_move(battle, 1)
+    assert attacker.last_special_damage_received == 0
+    hp_before = defender.hp
+    # ミラーコートは失敗するはず
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_ミラーコート_物理ダメージのみ受けたとき失敗する():
+    """ミラーコート: そのターン物理ダメージのみ受けた場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["ひっかく"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # 相手の物理技を受ける
+    t.run_move(battle, 1)
+    hp_before = defender.hp
+    # ミラーコートは失敗するはず
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_ミラーコート_特殊ダメージを2倍返しする():
+    """ミラーコート: 受けた特殊ダメージの2倍を相手に与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    # 相手の特殊技を受ける
+    t.run_move(battle, 1)
+    special_dmg = attacker.last_special_damage_received
+    assert special_dmg > 0
+    hp_before = defender.hp
+    # ミラーコートで2倍返し
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - special_dmg * 2
+
+
+def test_ミラーコート_特殊ダメージを受けていないとき失敗する():
+    """ミラーコート: そのターン特殊ダメージを受けていない場合は失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
+def test_ミラーコート_連続技を受けた場合は最後の1回分のダメージのみ参照する():
+    """ミラーコート: 連続技を受けた場合、合計ではなく最後の1回分のダメージを2倍にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["ミラーコート"])],
+        team1=[Pokemon("カビゴン", move_names=["ツインビーム"])],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.fix_damage(battle, 10)
+    # 相手の連続技（2回攻撃）を受ける
+    t.run_move(battle, 1)
+    assert attacker.hits_taken == 2
+    # 合計(20)ではなく最後の1回分(10)のみが記録される
+    assert attacker.last_special_damage_received == 10
+    hp_before = defender.hp
+    # ミラーコートは最後の1回分(10)の2倍=20だけを返す
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before - 20
 
 
 def test_ミラーショット_命中率1段階低下が発動する():
@@ -860,7 +1141,7 @@ def test_むねんのつるぎ_回復量の端数は切り上げになる():
 
 
 def test_ムーンフォース_とくこう1段階低下が発動する():
-    """ムーンフォース: 30%の確率で相手のとくこうを1段階下げる。"""
+    """ムーンフォース: 10%の確率で相手のとくこうを1段階下げる（Championsで30%→10%に変更）。"""
     battle = t.start_battle(
         team0=[Pokemon("ニンフィア", move_names=["ムーンフォース"])],
         team1=[Pokemon("カビゴン")],
@@ -869,6 +1150,56 @@ def test_ムーンフォース_とくこう1段階低下が発動する():
     )
     t.run_move(battle, 0)
     assert battle.actives[1].rank["spa"] == -1
+
+
+def test_ムーンフォース_基準確率0_1で発動しない():
+    """ムーンフォース: 乱数0.1は境界値0.1以上のため発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニンフィア", move_names=["ムーンフォース"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.1)  # 0.1 >= 0.1 → 発動しない
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == 0
+
+
+def test_ムーンフォース_基準確率0_1で発動する():
+    """ムーンフォース: チャンピオンズ基準の発動確率は0.1(=境界0.1未満で発動)。secondary_chanceを上書きせず既定値で判定する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ニンフィア", move_names=["ムーンフォース"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.09)  # 0.09 < 0.1 → 発動
+    t.run_move(battle, 0)
+    assert battle.actives[1].rank["spa"] == -1
+
+
+def test_メガトンキック_相手にダメージを与える():
+    """メガトンキック: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["メガトンキック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
+def test_メガトンパンチ_相手にダメージを与える():
+    """メガトンパンチ: 追加効果なしの物理ノーマル技で相手にダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カイリキー", move_names=["メガトンパンチ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
 
 
 def test_メガドレイン_使用後に攻撃者のHPが回復する():
@@ -935,6 +1266,44 @@ def test_めざめるダンス_使用者のタイプ1と同じタイプになる
     assert battle.move_executor.move_type == "くさ"
 
 
+def test_メタルクロー_こうげき1段階上昇が発動しない():
+    """メタルクロー: 追加効果不発時はこうげきランクが変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハッサム", move_names=["メタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 0
+
+
+def test_メタルクロー_こうげき1段階上昇が発動する():
+    """メタルクロー: 10%の確率で自分のこうげきを1段階上げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ハッサム", move_names=["メタルクロー"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+        secondary_chance=1.0,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == 1
+
+
+def test_メタルクロー_タイプ威力命中PPが仕様通り():
+    """メタルクロー: はがねタイプの物理直接攻撃技で、威力50・命中95・PP35を持つ。"""
+    move_data = MOVES["メタルクロー"]
+    assert move_data.type == "はがね"
+    assert move_data.category == "physical"
+    assert move_data.power == 50
+    assert move_data.accuracy == 95
+    assert move_data.pp == 35
+    assert "contact" in move_data.flags
+    assert "secondary_effect" in move_data.flags
+
+
 def test_メテオドライブ_もふもふのダメージ軽減を無視する():
     """メテオドライブ: 相手の特性を無視するため、もふもふによる接触技の被ダメ半減が発動しない。"""
     battle = t.start_battle(
@@ -992,6 +1361,38 @@ def test_メテオビーム_2ターンで攻撃する():
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert not attacker.has_volatile("メテオビーム")
+
+
+def test_メテオビーム_ちからずくでも威力は上がらずとくこうは上昇する():
+    """メテオビーム: 追加効果に分類されないため、ちからずくを持っていても威力は上がらず、
+    とくこう上昇は通常通り発動する。"""
+    battle_with = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ちからずく", move_names=["メテオビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle_without = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["メテオビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker_with = battle_with.actives[0]
+    attacker_without = battle_without.actives[0]
+
+    # 1ターン目: とくこう+1 のみ（ちからずくの有無に関わらず発動）
+    t.run_move(battle_with, 0)
+    t.run_move(battle_without, 0)
+    assert attacker_with.rank["spa"] == 1
+    assert attacker_without.rank["spa"] == 1
+
+    # 2ターン目: ちからずくの有無でダメージ量が変わらない（威力補正なし）
+    hp_before_with = battle_with.actives[1].hp
+    hp_before_without = battle_without.actives[1].hp
+    t.run_move(battle_with, 0)
+    t.run_move(battle_without, 0)
+    damage_with = hp_before_with - battle_with.actives[1].hp
+    damage_without = hp_before_without - battle_without.actives[1].hp
+    assert damage_with == damage_without
 
 
 def test_メテオビーム_パワフルハーブ使用時1ターンで攻撃してとくこうが上昇する():

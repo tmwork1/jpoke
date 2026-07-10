@@ -32,46 +32,6 @@ def test_リフレクター_自陣営に5ターン設置される():
     assert side.fields["リフレクター"].count == 5
 
 
-def test_リフレッシュ_まひを治す():
-    """リフレッシュ: まひ状態のとき使用するとまひが回復する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["リフレッシュ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    t.apply_ailment(battle, 0, "まひ", by_foe=True)
-    assert attacker.ailment.name == "まひ"
-    # まひによる行動不能（12.5%）で技が不発になるとテストがフレーキーになるため固定する
-    battle.test_option.trigger_ailment = False
-    t.run_move(battle, 0)
-    assert not attacker.ailment.is_active
-
-
-def test_リフレッシュ_やけどを治す():
-    """リフレッシュ: やけど状態のとき使用するとやけどが回復する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["リフレッシュ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    t.apply_ailment(battle, 0, "やけど", by_foe=True)
-    assert attacker.ailment.name == "やけど"
-    t.run_move(battle, 0)
-    assert not attacker.ailment.is_active
-
-
-def test_リフレッシュ_状態異常がなければ失敗する():
-    """リフレッシュ: 状態異常がない場合は技が失敗し、状態に変化がない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("カビゴン", move_names=["リフレッシュ"])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    attacker = battle.actives[0]
-    assert not attacker.ailment.is_active
-    t.run_move(battle, 0)
-    assert not attacker.ailment.is_active
-
-
 def test_りゅうのまい_こうげきとすばやさ1段階ずつ上がる():
     """りゅうのまい: 使用すると自分のこうげきとすばやさランクが1段階ずつ上がる"""
     battle = t.start_battle(
@@ -97,3 +57,152 @@ def test_りゅうのまい_こうげき最大でもすばやさは上昇する(
 
     assert attacker.rank["atk"] == 6
     assert attacker.rank["spe"] == 1
+
+
+def test_りゅうのまい_マジックコートで跳ね返されない():
+    """りゅうのまい: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["りゅうのまい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 1
+    assert defender.rank["atk"] == 0
+    assert defender.rank["spe"] == 0
+
+
+def test_りゅうのまい_自分対象のためまもるで防がれない():
+    """りゅうのまい: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["りゅうのまい"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spe"] == 1
+
+
+def test_ロックオン_すでにロックオン状態なら失敗する():
+    """ロックオン: すでに自分がロックオン状態の場合、再使用しても失敗する（カウントは変わらない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"ロックオン": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.volatiles["ロックオン"].count == 1
+
+
+def test_ロックオン_マジックコートで跳ね返されない():
+    """ロックオン: unreflectableフラグを持つため、マジックコート状態の相手に使っても跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ロックオン")
+    assert not defender.has_volatile("ロックオン")
+
+
+def test_ロックオン_まもるで防がれる():
+    """ロックオン: まもる状態の相手に使うと防がれ、ロックオン状態が付与されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert not attacker.has_volatile("ロックオン")
+
+
+def test_ロックオン_自分にロックオン状態が付与される():
+    """ロックオン: 使用すると相手ではなく自分にロックオン状態が付与される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ロックオン"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ロックオン")
+    assert not defender.has_volatile("ロックオン")
+
+
+def test_ロックカット_すばやさ2段階上がる():
+    """ロックカット: 使用すると自分のすばやさランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["spe"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+
+
+def test_ロックカット_すばやさが上限のとき失敗する():
+    """ロックカット: すばやさランクがすでに+6のときは失敗し、ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["spe"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 6
+
+
+def test_ロックカット_マジックコートで跳ね返されない():
+    """ロックカット: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+    assert defender.rank["spe"] == 0
+
+
+def test_ロックカット_まもるで防がれない():
+    """ロックカット: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+
+
+def test_ロックカット_みがわりに防がれない():
+    """ロックカット: 自分を対象とする技のため、相手のみがわりがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2

@@ -22,7 +22,7 @@ MOVES_SYMBOL: dict[MoveName, MoveData] = {
         category="physical",
         pp=PP_INFINITE,
         power=50,
-        flags={"contact", "non_encore", "non_onnen"},
+        flags={"contact", "non_encore", "non_onnen", "non_copycat"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.わるあがき_self_damage,

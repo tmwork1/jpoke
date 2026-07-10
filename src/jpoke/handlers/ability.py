@@ -2729,6 +2729,21 @@ def ふとうのけん_boost_A(battle: Battle, ctx: EventContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
+def ふみん_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ふみん特性: 特性が有効化された時点ですでにねむり状態なら即座に回復する。
+
+    なやみのタネ・なかまづくり等で特性がふみんに書き換わった場合や、
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合、
+    メガシンカで特性がふみんに変わった場合などに発動する。
+    """
+    mon = ctx.source
+    if mon is None:
+        return HandlerReturn(value=value)
+    if mon.ailment.is_sleep and battle.ailment_manager.remove(mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ふみん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
@@ -2896,8 +2911,15 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
 
 
 def ぼうおん_block_sound(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """ぼうおん特性: 音技を無効化する。"""
-    if not ctx.move.has_flag("sound"):
+    """ぼうおん特性: 音技を無効化する。
+
+    自分や味方（自分自身も含む）を対象とする音技（例: いやしのすず）は、
+    相手のぼうおんとは無関係のため、相手を対象とする技（target="foe"）のみを無効化する。
+    """
+    if (
+        not ctx.move.has_flag("sound")
+        or ctx.move.target != "foe"
+    ):
         return HandlerReturn(value=value)
 
     _announce_ability_triggered(battle, ctx.defender)
@@ -2988,10 +3010,7 @@ def マジックガード_ignore_damage(battle: Battle, ctx: EventContext, value
 
 def マジックミラー_reflect(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """マジックミラー特性: 反射対象の変化技を跳ね返す。"""
-    value = (
-        ctx.move.category == "status"
-        and ctx.move.target in {"foe", "foe_side"}
-    )
+    value = ctx.move.is_reflectable
     if value:
         _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)

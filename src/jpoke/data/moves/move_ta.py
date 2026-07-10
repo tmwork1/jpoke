@@ -58,6 +58,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 hs.たくわえる_check_can_use,
@@ -109,6 +110,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="はがね",
         category="status",
         pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.たてこもる_modify_attacker_stats,
@@ -142,14 +144,19 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "タマゴうみ": MoveData(
         type="ノーマル",
         category="status",
-        pp=5,
+        pp=8,
+        target="self",
         flags={"heal"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.タマゴうみ_heal_self,
+            )
+        }
     ),
     "タールショット": MoveData(
         type="いわ",
         category="status",
-        pp=15,
+        pp=20,
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -209,7 +216,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_negoto"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 lambda b, c, v: h.charge_into_volatile(b, c, v, "ダイビング"),
@@ -298,7 +305,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "ダブルアタック": MoveData(
         type="ノーマル",
         category="physical",
-        pp=12,
+        pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
         power=35,
         accuracy=90,
         flags={"contact"},
@@ -355,12 +362,21 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=10,
         accuracy=50,
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                hs.ダークホール_check_species,
+                priority=30,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ダークホール_apply_sleep,
+            ),
+        }
     ),
     "ちいさくなる": MoveData(
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ちいさくなる_apply,
@@ -431,12 +447,17 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=20,
         accuracy=55,
         flags={"sound"},
-        handlers={},  # 追加効果なし
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.ちょうおんぱ_apply,
+            ),
+        }
     ),
     "ちょうのまい": MoveData(
         type="むし",
         category="status",
         pp=20,
+        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -449,6 +470,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         accuracy=100,
+        flags={"bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ちょうはつ_apply,
@@ -484,6 +506,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="フェアリー",
         category="status",
         pp=8,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -617,8 +640,13 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "つめとぎ": MoveData(
         type="あく",
         category="status",
-        pp=15,
-        handlers={},  # 追加効果なし
+        pp=16,
+        target="self",
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.つめとぎ_modify_attacker_stats,
+            ),
+        }
     ),
     "つららおとし": MoveData(
         type="こおり",
@@ -672,21 +700,36 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=30,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.テクスチャー_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.テクスチャー_apply,
+            ),
+        }
     ),
     "テクスチャー２": MoveData(
         type="ノーマル",
         category="status",
         pp=30,
-        handlers={},  # 追加効果なし
+        flags={"unprotectable", "unreflectable", "bypass_substitute"},
+        handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.テクスチャー2_can_apply,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.テクスチャー2_apply,
+            ),
+        }
     ),
     "てだすけ": MoveData(
         type="ノーマル",
         category="status",
         pp=20,
-        accuracy=100,
         priority=5,
-        handlers={},  # 追加効果なし
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "てっていこうせん": MoveData(
         type="はがね",
@@ -705,6 +748,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="はがね",
         category="status",
         pp=16,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.てっぺき_modify_attacker_stats,
@@ -759,7 +803,16 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=20,
         priority=-6,
-        handlers={},  # 追加効果なし
+        target="self",
+        handlers={
+            Event.ON_TRY_MOVE_1: h.MoveHandler(
+                hs.テレポート_check,
+                priority=30,
+            ),
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.テレポート_apply,
+            ),
+        },
     ),
     "てんしのキッス": MoveData(
         type="フェアリー",
@@ -806,8 +859,12 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="フェアリー",
         category="status",
         pp=16,
-        accuracy=100,
-        handlers={},  # 追加効果なし
+        flags={"unprotectable", "unreflectable"},
+        handlers={
+            Event.ON_STATUS_HIT: h.MoveHandler(
+                hs.デコレーション_modify_defender_stats,
+            ),
+        }
     ),
     "デスウイング": MoveData(
         type="ひこう",
@@ -880,6 +937,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=20,
         accuracy=90,
         handlers={
+            Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
+                hs.でんじは_can_apply,
+                priority=130,
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.でんじは_apply_ailment_to_defender,
             ),
@@ -889,13 +950,21 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="でんき",
         category="status",
         pp=12,
+        target="self",
         flags={"gravity_restricted"},
         handlers={
-            Event.ON_TRY_MOVE_1: h.MoveHandler(
-                h.gravity_restricted_fail,
-                subject_spec="attacker:self",
-                priority=30,
-            ),
+            Event.ON_TRY_MOVE_1: [
+                h.MoveHandler(
+                    h.gravity_restricted_fail,
+                    subject_spec="attacker:self",
+                    priority=30,
+                ),
+                h.MoveHandler(
+                    hs.でんじふゆう_check_can_use,
+                    subject_spec="attacker:self",
+                    priority=30,
+                ),
+            ],
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.でんじふゆう_apply,
             ),
@@ -918,7 +987,8 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=8,
-        accuracy=100,
+        accuracy=None,  # 必中
+        flags={"unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.とおせんぼう_apply,
@@ -929,6 +999,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         flags={"sound"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -952,6 +1023,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="どく",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.とぐろをまく_modify_attacker_stats,
@@ -962,6 +1034,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="どく",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.とける_modify_attacker_stats,
@@ -1064,7 +1137,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=8,
         power=85,
         accuracy=85,
-        flags={"contact", "gravity_restricted", "secondary_effect"},
+        flags={"contact", "gravity_restricted", "secondary_effect", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
                 h.gravity_restricted_fail,
@@ -1104,7 +1177,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=90,
         priority=-6,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ともえなげ_force_switch,
@@ -1142,10 +1215,17 @@ MOVES_TA: dict[MoveName, MoveData] = {
         category="status",
         pp=12,
         accuracy=100,
+        flags={"unreflectable", "non_copycat"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.すりかえ_swap_items,
-            )
+            ),
+            # こだわり系アイテムの ON_MOVE_END ハンドラ（デフォルト優先度100）より
+            # 後に発動させ、自身の効果で入手したこだわり系アイテムによるロックを解除する。
+            Event.ON_MOVE_END: h.MoveHandler(
+                hs.すりかえ_release_choice_lock,
+                priority=110,
+            ),
         }
     ),
     "トリックフラワー": MoveData(
@@ -1242,7 +1322,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "トーチカ": MoveData(
         type="どく",
         category="status",
-        pp=8,
+        pp=8,  # champions基準（docs/champions/move_list.txt）。Gen9本家は10
         priority=4,
         target="self",
         flags={"protect"},
@@ -1258,7 +1338,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "どくガス": MoveData(
         type="どく",
         category="status",
-        pp=40,
+        pp=20,  # championsのPP圧縮則により導出（move_list.txtに単独項目なし）。Gen9本家は40
         accuracy=90,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -1288,6 +1368,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=12,
         accuracy=90,
         handlers={
+            Event.ON_MODIFY_ACCURACY: h.MoveHandler(
+                hs.どくどく_accuracy,
+                subject_spec="attacker:self",
+            ),
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.どくどく_apply_ailment_to_defender,
             ),
@@ -1420,8 +1504,9 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ドラゴン",
         category="status",
         pp=16,
-        accuracy=100,
-        handlers={},  # 追加効果なし
+        target="self",
+        flags={"sound"},
+        handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "ドラゴンクロー": MoveData(
         type="ドラゴン",
@@ -1453,7 +1538,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         power=60,
         accuracy=90,
         priority=-6,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ドラゴンテール_force_switch,
@@ -1555,10 +1640,10 @@ MOVES_TA: dict[MoveName, MoveData] = {
     "どろぼう": MoveData(
         type="あく",
         category="physical",
-        pp=20,
+        pp=20,  # champions基準（docs/champions/move_list.txt）。旧値25はSV本家基準の移行漏れ。
         power=60,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "non_copycat"},
         handlers={
             # docs/spec/turn.md ON_DAMAGE: 「100 はたきおとす等のアイテム効果」
             # くっつきバリの転移判定（priority=30）より後に発動する必要があるため ON_DAMAGE_HIT を使用する。
@@ -1571,6 +1656,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ドわすれ_modify_attacker_stats,

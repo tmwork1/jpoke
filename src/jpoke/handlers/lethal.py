@@ -742,8 +742,9 @@ def リンドのみ_resist_grass(battle: Battle, ctx: LethalContext, hp_dist: St
 
 
 def ルミナコリジョン_lower_spd(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """ルミナコリジョン: 命中後、防御側のとくぼうを2段階下げる。"""
-    ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 2)
+    """ルミナコリジョン: 命中後、追加効果有効時に防御側のとくぼうを2段階下げる。"""
+    if ctx.move_secondary:
+        ctx.defender.rank["spd"] = clamp_stats(ctx.defender.rank["spd"] - 2)
     return hp_dist
 
 

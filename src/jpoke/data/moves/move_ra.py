@@ -62,6 +62,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ラスターカノン_lower_defender_spd,
@@ -71,9 +72,10 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ラスターパージ": MoveData(
         type="エスパー",
         category="special",
-        pp=5,
+        pp=8,
         power=95,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ラスターパージ_lower_defender_spd,
@@ -104,16 +106,6 @@ MOVES_RA: dict[MoveName, MoveData] = {
                 hs.リフレクター_set_side_field,
             ),
         }
-    ),
-    "リフレッシュ": MoveData(
-        type="ノーマル",
-        category="status",
-        pp=20,
-        handlers={
-            Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.リフレッシュ_cure_ailment,
-            ),
-        },
     ),
     "りゅうせいぐん": MoveData(
         type="ドラゴン",
@@ -156,6 +148,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         type="ドラゴン",
         category="status",
         pp=20,
+        target="self",
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
@@ -223,6 +216,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         pp=12,
         power=80,
         accuracy=100,
+        flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ルミナコリジョン_sharply_lower_defender_spd,
@@ -316,6 +310,8 @@ MOVES_RA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=8,
+        # マジックコートで跳ね返されない
+        flags={"unreflectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックオン_apply,
@@ -326,6 +322,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         type="いわ",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックカット_modify_attacker_stats,
@@ -348,7 +345,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
     "ロックブラスト": MoveData(
         type="いわ",
         category="physical",
-        pp=12,
+        pp=12,  # チャンピオンズ基準（docs/champions/move_list.txt）。第9世代本家基準は10
         power=25,
         accuracy=90,
         flags={"bullet"},
@@ -366,7 +363,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         pp=20,
         power=65,
         accuracy=100,
-        flags={"contact"},
+        flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ローキック_lower_defender_spd,

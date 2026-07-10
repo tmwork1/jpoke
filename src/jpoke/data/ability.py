@@ -244,8 +244,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "うなぎのぼり": AbilityData(),
     "うのミサイル": AbilityData(
         flags={
-            "uncopyable",
-            "protected",
             "gas_proof",
         },
         handlers={
@@ -2565,6 +2563,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.ふみん_prevent_volatile,
                 "target:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ふみん_cure_sleep_on_enable,
+                subject_spec="source:self",
             ),
         }
     ),
