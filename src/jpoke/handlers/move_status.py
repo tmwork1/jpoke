@@ -2381,13 +2381,18 @@ def フラフラダンス_apply(battle: Battle, ctx: AttackContext, value: Any) 
 
 def フラワーヒール_heal_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """フラワーヒール: 相手のHPを回復させる。HPが満タンの場合は失敗する。
-    グラスフィールド中は最大HPの2/3、通常時は最大HPの1/2を回復する。
+
+    通常時は最大HPの1/2（端数切り上げ）、グラスフィールド中は最大HPの2732/4096（≒2/3、
+    端数は五捨五超入）を回復する。
     """
     mon = ctx.defender
     if mon.hp == mon.max_hp:
         return HandlerReturn(value=False, stop_event=True)
-    r = 2/3 if battle.terrain.name == "グラスフィールド" else 1/2
-    battle.modify_hp(mon, r=r)
+    if battle.terrain.name == "グラスフィールド":
+        heal = round_half_down(mon.max_hp * 2732 / 4096)
+    else:
+        heal = (mon.max_hp + 1) // 2
+    battle.modify_hp(mon, v=heal)
     return HandlerReturn(value=value)
 
 

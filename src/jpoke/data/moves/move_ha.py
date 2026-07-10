@@ -970,7 +970,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
     "フラワーヒール": MoveData(
         type="フェアリー",
         category="status",
-        pp=10,
+        pp=12,
         flags={"heal"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(

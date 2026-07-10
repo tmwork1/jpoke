@@ -75,8 +75,10 @@ def test_ファストガード_連続使用で失敗する():
     assert not attacker.has_volatile("ファストガード")
 
 
-def test_フラワーヒール_グラスフィールドで2_3回復する():
-    """フラワーヒール: グラスフィールド展開中は相手のHPを最大HPの2/3回復する"""
+def test_フラワーヒール_グラスフィールドで2732_4096回復する():
+    """フラワーヒール: グラスフィールド展開中は相手のHPを最大HPの2732/4096（≒2/3、端数は五捨五超入）回復する"""
+    from jpoke.utils.math import round_half_down
+
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["フラワーヒール"])],
         team1=[Pokemon("カビゴン")],
@@ -86,7 +88,7 @@ def test_フラワーヒール_グラスフィールドで2_3回復する():
     defender.hp = 1
     t.run_move(battle, 0)
 
-    assert defender.hp == 1 + int(defender.max_hp * 2 / 3)
+    assert defender.hp == 1 + round_half_down(defender.max_hp * 2732 / 4096)
 
 
 def test_フラワーヒール_満タンなら失敗する():
@@ -103,7 +105,7 @@ def test_フラワーヒール_満タンなら失敗する():
 
 
 def test_フラワーヒール_相手のHPを半分回復する():
-    """フラワーヒール: 通常時、相手のHPを最大HPの1/2回復する"""
+    """フラワーヒール: 通常時、相手のHPを最大HPの1/2回復する（端数は切り上げ）"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["フラワーヒール"])],
         team1=[Pokemon("カビゴン")],
@@ -112,7 +114,21 @@ def test_フラワーヒール_相手のHPを半分回復する():
     defender.hp = 1
     t.run_move(battle, 0)
 
-    assert defender.hp == 1 + int(defender.max_hp * 1 / 2)
+    assert defender.hp == 1 + (defender.max_hp + 1) // 2
+
+
+def test_フラワーヒール_かいふくふうじ中は回復が無効化される():
+    """フラワーヒール: かいふくふうじ状態の相手には回復が無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フラワーヒール"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"かいふくふうじ": 3},
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
 
 
 def test_ふるいたてる_いたずらごころ持ちがあくタイプ相手でも成功する():
