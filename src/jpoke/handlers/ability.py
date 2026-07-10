@@ -347,12 +347,7 @@ def アイスフェイス_block_physical(battle: Battle, ctx: AttackContext, val
 def アイスフェイス_restore_on_snow(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """アイスフェイス特性: ゆきが発生したときナイスフェイスからアイスフェイスに戻る。"""
     mon = ctx.source
-    if (
-        mon is None
-        or not battle.is_active(mon)
-        or mon.name != EISCUE_NICE
-        or battle.weather.name != "ゆき"
-    ):
+    if mon.name != EISCUE_NICE or battle.weather.name != "ゆき":
         return HandlerReturn(value=value)
     mon.set_form(EISCUE_ICE)
     _announce_ability_triggered(battle, mon)
