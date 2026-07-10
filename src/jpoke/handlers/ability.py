@@ -1128,18 +1128,6 @@ def がんじょう_block_ohko(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def がんじょう_survive_lethal(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """がんじょう特性: HP満タン時の致死ダメージをHP1残しに補正する。(ON_MODIFY_MOVE_DAMAGE / subject_spec="defender:self")"""
-    defender = ctx.defender
-    if (
-        defender.hp == defender.max_hp
-        and value >= defender.hp
-    ):
-        _announce_ability_triggered(battle, defender)
-        value = defender.hp - 1
-    return HandlerReturn(value=value)
-
-
 def がんじょう_survive_confusion_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
     """がんじょう特性: こんらんの自傷ダメージも、HP満タン時はHP1残しで耐える。
     (ON_MODIFY_NON_MOVE_DAMAGE / subject_spec="target:self")
@@ -1154,6 +1142,18 @@ def がんじょう_survive_confusion_damage(battle: Battle, ctx: EventContext, 
     if mon.hp == mon.max_hp and -value >= mon.hp:
         _announce_ability_triggered(battle, mon)
         value = -(mon.hp - 1)
+    return HandlerReturn(value=value)
+
+
+def がんじょう_survive_lethal(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """がんじょう特性: HP満タン時の致死ダメージをHP1残しに補正する。(ON_MODIFY_MOVE_DAMAGE / subject_spec="defender:self")"""
+    defender = ctx.defender
+    if (
+        defender.hp == defender.max_hp
+        and value >= defender.hp
+    ):
+        _announce_ability_triggered(battle, defender)
+        value = defender.hp - 1
     return HandlerReturn(value=value)
 
 
