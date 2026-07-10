@@ -133,6 +133,43 @@ def test_アイスフェイス_特殊技のダメージを防がない():
     assert defender.name == "コオリッポ(アイス)"
 
 
+def test_アイスボディ_ゆき以外では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="アイスボディ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
+def test_アイスボディ_かいふくふうじ中は回復しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="アイスボディ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("ゆき", 5),
+        volatile0={"かいふくふうじ": 3},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
+def test_アイスボディ_ノーてんき下では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="アイスボディ")],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき")],
+        weather=("ゆき", 5),
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
 def test_あくしゅう_攻撃時10パーセントでひるみを付与する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="あくしゅう", move_names=["たいあたり"])],
