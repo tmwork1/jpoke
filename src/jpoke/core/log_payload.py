@@ -28,16 +28,17 @@ LogCode ごとに必要な詳細情報を dataclass として定義する。
 | MOVE_IMMUNED | `FailureLogPayload` | `move`=無効化された技名 |
 | PP_CONSUMED | `MoveActionPayload` | `move`=技名, `value`=消費PP量 |
 | MOVE_REFLECTED / SUBSTITUTE_HIT / PROTECT_SUCCEEDED / PROTECT_FAILED / CRITICAL_HIT | `MoveActionPayload` | `move`=関係する技名。`value` は常に None |
+| MOVE_REVEALED | `MoveRevealPayload` | `target`=技を公開された相手のポケモン名, `move`=公開された技名（よちむ等） |
 | HP_CHANGED | `HPChangePayload` | `value`=増減量（符号付き）, `hp`/`max_hp`=変化後, `source`=攻撃者名, `internal_reason`=内部判定コード（表示しない）。対象ポケモン名は `EventLog.pokemon` |
 | STAT_CHANGED | `StatChangePayload` | `stats`=`{Stat: 増減段階}`, `source`=原因となったポケモン名。対象ポケモン名は `EventLog.pokemon` |
 | ABILITY_TRIGGERED | `AbilityPayload` | `ability`=発動した特性名。発動したポケモン名は `EventLog.pokemon` |
 | ITEM_TRIGGERED / ITEM_GAINED / ITEM_LOST | `ItemPayload` | `item`=対象アイテム名。対象ポケモン名は `EventLog.pokemon` |
+| ITEM_REVEALED | `ItemRevealPayload` | `target`=持ち物を公開された相手のポケモン名, `item`=公開されたアイテム名（おみとおし等） |
 | AILMENT_APPLIED / AILMENT_REMOVED / AILMENT_PREVENTED | `AilmentPayload` | `ailment`=状態異常名, `source`=原因となったポケモン名（あれば）。AILMENT_PREVENTED は特性名を `display_reason` に持つ |
 | VOLATILE_IMMUNE / VOLATILE_APPLIED / VOLATILE_REMOVED / VOLATILE_DISPLAY / VOLATILE_PREVENTED | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因となったポケモン名（あれば）。REMOVED/PREVENTED は理由を `display_reason` に持つ |
 | FIELD_STARTED / FIELD_ENDED | `FieldPayload` | `field`=場の状態名, `count`=残りターン数（あれば） |
 | TERASALLIZED | `TerastalPayload` | `type`=テラスタイプ |
 | MEGA_EVOLVED | None | メガシンカしたポケモン名は `EventLog.pokemon` |
-| TEXT_LOG | `TextPayload` | `text`=呼び出し元が組み立てた完成文（構造化されない自由記述。新規の使用箇所は増やさず、可能な限り専用 LogCode/Payload を追加すること） |
 
 対応関係の実体は `EventLog._get_base_text()`（event_logger.py）の `match` 文。
 この docstring は解析用リファレンスであり、実装が変わった場合は両方を
@@ -121,6 +122,15 @@ class ItemPayload(LogPayload):
 
 
 @dataclass(frozen=True)
+class ItemRevealPayload(LogPayload):
+    """ITEM_REVEALED 専用（おみとおし等、相手の持ち物を公開する効果）。
+    行動主体（公開した側）は EventLog.pokemon、target は公開された側。
+    """
+    target: str = ""  # 持ち物を公開された相手のポケモン名
+    item: str = ""    # 公開されたアイテム名
+
+
+@dataclass(frozen=True)
 class FieldPayload(LogPayload):
     field: str = ""
     count: int | None = None
@@ -137,6 +147,15 @@ class MoveActionPayload(LogPayload):
 
 
 @dataclass(frozen=True)
+class MoveRevealPayload(LogPayload):
+    """MOVE_REVEALED 専用（よちむ等、相手の技を公開する効果）。
+    行動主体（公開した側）は EventLog.pokemon、target は公開された側。
+    """
+    target: str = ""  # 技を公開された相手のポケモン名
+    move: str = ""    # 公開された技名
+
+
+@dataclass(frozen=True)
 class TerastalPayload(LogPayload):
     """TERASALLIZED 専用。MEGA_EVOLVED はフィールドが異なる（pokemonのみ、
     かつ render() 未使用）ため統合しない。MEGA_EVOLVED は payload=None のまま。
@@ -144,13 +163,9 @@ class TerastalPayload(LogPayload):
     type: Type | None = None
 
 
-@dataclass(frozen=True)
-class TextPayload(LogPayload):
-    text: str = ""
-
-
 Payload = (
     LogPayload | FailureLogPayload | HPChangePayload | StatChangePayload
     | AilmentPayload | VolatilePayload | AbilityPayload | ItemPayload
-    | FieldPayload | MoveActionPayload | TerastalPayload | TextPayload
+    | ItemRevealPayload | FieldPayload | MoveActionPayload | MoveRevealPayload
+    | TerastalPayload
 )

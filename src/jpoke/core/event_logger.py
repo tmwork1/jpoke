@@ -10,7 +10,8 @@ from jpoke.types import Stat
 from jpoke.core.log_payload import (
     Payload, FailureLogPayload, HPChangePayload, StatChangePayload,
     AilmentPayload, VolatilePayload, AbilityPayload, ItemPayload,
-    FieldPayload, MoveActionPayload, TerastalPayload, TextPayload,
+    ItemRevealPayload, FieldPayload, MoveActionPayload, MoveRevealPayload,
+    TerastalPayload,
 )
 
 # STAT_CHANGED の render() 表示専用。Stat Literal（内部識別子）をそのまま
@@ -103,9 +104,6 @@ class EventLog:
             case LogCode.SWITCHED_OUT:
                 return f"{self.pokemon or 'ポケモン'} 退場"
 
-            case LogCode.TEXT_LOG:
-                return payload.text if isinstance(payload, TextPayload) else ""
-
             case LogCode.MOVE_FAILED:
                 return "技は失敗した"
 
@@ -130,6 +128,11 @@ class EventLog:
             case LogCode.ITEM_LOST:
                 item = payload.item if isinstance(payload, ItemPayload) else "アイテム"
                 return f"{item}を失った"
+
+            case LogCode.ITEM_REVEALED:
+                target = payload.target if isinstance(payload, ItemRevealPayload) else "相手"
+                item = payload.item if isinstance(payload, ItemRevealPayload) else "アイテム"
+                return f"{self.pokemon or 'ポケモン'}は{target}の{item}をお見通しだ！"
 
             case LogCode.AILMENT_APPLIED:
                 ailment = payload.ailment if isinstance(payload, AilmentPayload) else "状態異常"
@@ -204,6 +207,11 @@ class EventLog:
             case LogCode.MOVE_IMMUNED:
                 move = payload.move if isinstance(payload, FailureLogPayload) else "技"
                 return f"{move} を無効化した"
+
+            case LogCode.MOVE_REVEALED:
+                target = payload.target if isinstance(payload, MoveRevealPayload) else "相手"
+                move = payload.move if isinstance(payload, MoveRevealPayload) else "技"
+                return f"{target}の{move}を読み取った！"
 
             case LogCode.FIELD_STARTED:
                 field_ = payload.field if isinstance(payload, FieldPayload) else "場の状態"
