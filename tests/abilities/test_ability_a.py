@@ -1108,6 +1108,21 @@ def test_エレキメイカー_別フィールドを上書きする(initial_terr
     assert battle.actives[0].ability.revealed
 
 
+def test_エレキメイカー_特性再有効化時にも発動する():
+    """エレキメイカー: かがくへんかガス解除後に特性が再有効化されると再発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="エレキメイカー")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    # かがくへんかガスにより特性が無効化されているのでフィールドは展開されていない
+    assert battle.terrain.name == ""
+    # かがくへんかガスの無効化を解除すると特性が再発動してエレキフィールドが展開される
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.terrain.name == "エレキフィールド"
+    assert battle.terrain.count == 5
+
+
 def test_えんかく_直接攻撃でさめはだが発動しない():
     """えんかく所持者が直接攻撃を使っても、相手のさめはだが発動しない。"""
     battle = t.start_battle(
