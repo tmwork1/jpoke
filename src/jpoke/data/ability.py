@@ -764,6 +764,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.announce_ability_triggered,
                 subject_spec="source:self",
+                priority=30,
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
                 h.きんちょうかん_check_nervous,
@@ -1258,6 +1259,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.announce_ability_triggered,
                 subject_spec="source:self",
+                priority=30,
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
                 h.きんちょうかん_check_nervous,
