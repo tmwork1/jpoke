@@ -35,6 +35,16 @@ normal_weathers = weathers[:4]
 strong_weathers = weathers[4:]
 
 
+def test_ARシステム_はたきおとすは相手の道具に影響されない():
+    """一方的な除去（is_exchange=False）では、相手がメモリを持っていても判定に影響しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("シルヴァディ", ability_name="ARシステム", item_name="いのちのたま")],
+        team1=[Pokemon("ピカチュウ", item_name="フェアリーメモリ")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source)
+
+
 @pytest.mark.parametrize(
     "memory_item_name, expected_type",
     AR_SYSTEM_MEMORY_CASES,
@@ -57,6 +67,46 @@ def test_ARシステム_メモリなしでタイプ変更なし():
     mon = battle.actives[0]
     assert mon.ability_override_type is None
     assert mon.ability.revealed is False  # メモリなしは不発なので False
+
+
+def test_ARシステム_メモリなしなら自分の道具変更は防がれない():
+    battle = t.start_battle(
+        team0=[Pokemon("シルヴァディ", ability_name="ARシステム", item_name="いのちのたま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source)
+
+
+def test_ARシステム_相手がメモリを持たなければ通常の道具変更を防がない():
+    """交換判定であっても、自分・相手ともメモリを持たなければ道具変更は妨げられない"""
+    battle = t.start_battle(
+        team0=[Pokemon("シルヴァディ", ability_name="ARシステム")],
+        team1=[Pokemon("ピカチュウ", item_name="いのちのたま")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source, is_exchange=True)
+
+
+def test_ARシステム_相手がメモリを持つ場合トリックすりかえ相当の交換が失敗する():
+    """相手がメモリを持っている場合、自分がメモリを持っていなくても道具交換自体が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("シルヴァディ", ability_name="ARシステム")],
+        team1=[Pokemon("ピカチュウ", item_name="フェアリーメモリ")],
+    )
+    target, source = battle.actives
+    before = [mon.item.name for mon in battle.actives]
+    assert not battle.item_manager.swap_items()
+    assert [mon.item.name for mon in battle.actives] == before
+
+
+def test_ARシステム_自分のメモリの奪取交換を防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("シルヴァディ", ability_name="ARシステム", item_name="ファイトメモリ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    target, source = battle.actives
+    assert not battle.item_manager.can_change_item(target=target, source=source)
 
 
 def test_アイスフェイス_エアロック中はゆき変化でフォルムチェンジしない():
