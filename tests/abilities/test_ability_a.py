@@ -155,6 +155,57 @@ def test_あくしゅう_確率外ではひるみを付与しない():
     assert not battle.actives[1].has_volatile("ひるみ")
 
 
+def test_あくしゅう_元々ひるみ効果がある技には重複しない():
+    """あくしゅう: 元々ひるみの追加効果がある技（エアスラッシュ等）には
+    重複して効果が発動しない（追加の乱数判定が発生しないことで確認する）"""
+    def count_random_calls(has_ability: bool) -> int:
+        kwargs = {"ability_name": "あくしゅう"} if has_ability else {}
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["エアスラッシュ"], **kwargs)],
+            team1=[Pokemon("ピカチュウ")],
+            accuracy=100,
+        )
+        count = 0
+
+        def counting_random() -> float:
+            nonlocal count
+            count += 1
+            return 0.5
+
+        battle.random.random = counting_random
+        t.run_move(battle, 0)
+        return count
+
+    assert count_random_calls(True) == count_random_calls(False)
+
+
+def test_あくしゅう_一撃必殺技には効果がない():
+    """あくしゅう: 一撃必殺技には効果が無い（追加の乱数判定が発生しないことで確認する）
+
+    きあいのタスキで耐えた場合の挙動も合わせて確認する。
+    """
+    def count_random_calls(has_ability: bool) -> int:
+        kwargs = {"ability_name": "あくしゅう"} if has_ability else {}
+        battle = t.start_battle(
+            team0=[Pokemon("ピカチュウ", move_names=["じわれ"], **kwargs)],
+            team1=[Pokemon("ピカチュウ", item_name="きあいのタスキ")],
+            accuracy=100,
+        )
+        count = 0
+
+        def counting_random() -> float:
+            nonlocal count
+            count += 1
+            return 0.5
+
+        battle.random.random = counting_random
+        t.run_move(battle, 0)
+        assert battle.actives[1].hp == 1
+        return count
+
+    assert count_random_calls(True) == count_random_calls(False)
+
+
 def test_あとだし_トリックルームでも後攻():
     """あとだし: トリックルーム状態でも最後に行動する（素早さ逆転の影響を受けない）。"""
     battle = t.start_battle(
