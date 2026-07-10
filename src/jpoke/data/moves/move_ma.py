@@ -284,7 +284,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
     "ミストフィールド": MoveData(
         type="フェアリー",
         category="status",
-        pp=10,
+        pp=12,
         target="field",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
