@@ -184,6 +184,30 @@ def test_あとだし_技優先度が優先される():
     assert order[0] == battle.actives[0]
 
 
+def test_あとだし_あとだし同士では素早さの高い方が先攻():
+    """あとだし: 双方があとだしを持つ場合、後攻ティアが同じになるため素早さの高い方が先攻になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="あとだし", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="あとだし", move_names=["たいあたり"])],
+    )
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]  # 素早さで勝るピカチュウが先攻
+
+
+def test_あとだし_せんせいのツメ発動で効果が無くなる():
+    """あとだし: せんせいのツメが発動すると後攻ティア補正が相殺され、素早さの高い方が先攻になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", ability_name="あとだし", item_name="せんせいのツメ",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    t.fix_random(battle, 0.0)  # < 0.2 → せんせいのツメ発動
+    order = t.get_action_order(battle)
+    assert order[0] == battle.actives[0]  # 素早さで勝るピカチュウが先攻（あとだし効果は相殺）
+
+
 def test_アナライズ_先攻なら威力据え置き():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="アナライズ", move_names=["でんきショック"])],
