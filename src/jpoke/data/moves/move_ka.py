@@ -195,6 +195,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=16,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.かげぶんしん_boost_attacker_evasion,
@@ -407,6 +408,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=16,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.からをやぶる_modify_attacker_stats,
@@ -1095,6 +1097,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.こうそくいどう_modify_attacker_stats,
@@ -1203,6 +1206,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.コスモパワー_modify_attacker_stats,
@@ -1248,6 +1252,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         priority=2,
         flags={"non_copycat"},
         handlers={},  # 追加効果なし
@@ -1322,7 +1327,7 @@ MOVES_KA: dict[MoveName, MoveData] = {
         type="かくとう",
         category="status",
         pp=12,
-        accuracy=100,
+        target="own_side",
         handlers={},  # 追加効果なし
     ),
     "コートチェンジ": MoveData(

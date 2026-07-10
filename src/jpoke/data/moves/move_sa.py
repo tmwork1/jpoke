@@ -263,7 +263,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         pp=12,
         power=90,
         accuracy=100,
-        flags={"contact", "secondary_effect"},
+        flags={"secondary_effect"},
         handlers={
             Event.ON_MODIFY_MOVE_CATEGORY: h.MoveHandler(
                 ha.シェルアームズ_modify_move_category,
@@ -387,6 +387,7 @@ MOVES_SA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(
                 hs.しっぽきり_check,

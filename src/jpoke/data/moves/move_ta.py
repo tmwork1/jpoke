@@ -728,6 +728,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="own_side",
         priority=5,
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
@@ -1203,6 +1204,7 @@ MOVES_TA: dict[MoveName, MoveData] = {
         pp=16,
         power=35,
         accuracy=100,
+        flags={"contact"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(ha.apply_bind_to_defender)
         },

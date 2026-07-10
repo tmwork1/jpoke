@@ -86,6 +86,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
         type="あく",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.わるだくみ_modify_attacker_stats,

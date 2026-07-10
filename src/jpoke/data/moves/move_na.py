@@ -319,6 +319,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         flags={"non_encore", "non_negoto"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(
@@ -514,6 +515,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=12,
+        target="self",
         flags={"heal"},
         handlers={
             Event.ON_TRY_MOVE_1: h.MoveHandler(

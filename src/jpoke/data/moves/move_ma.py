@@ -153,6 +153,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=20,
+        target="self",
         flags={"non_negoto", "non_copycat"},  # まねっこ自身はまねっこでコピー不可
         handlers={
             Event.ON_BEFORE_APPLY_MOVE: h.MoveHandler(hs.まねっこ_can_use),
@@ -417,6 +418,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="ゴースト",
         category="status",
         pp=8,  # champions基準（docs/champions/move_list.txt）。旧値5はSV本家基準の移行漏れ。
+        target="self",
         flags={"non_copycat"},
         handlers={
             # 第七世代以降: みちづれを成功させた直後にもう一度使うと必ず失敗する
@@ -454,6 +456,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         pp=12,
         power=120,
         accuracy=100,
+        flags={"unprotectable"},
         handlers={
             Event.ON_MOVE_CHARGE: h.MoveHandler(
                 ha.みらいよち_charge,
@@ -617,6 +620,7 @@ MOVES_MA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.めいそう_modify_attacker_stats,

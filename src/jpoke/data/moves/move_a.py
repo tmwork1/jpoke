@@ -523,6 +523,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="むし",
         category="status",
         pp=20,
+        target="self",
         priority=2,
         flags={"non_copycat"},
         handlers={},  # 追加効果なし
@@ -1176,6 +1177,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=16,
+        target="own_side",
         handlers={},  # ダブル専用（本プロジェクトはシングルバトル専用のため対象外）
     ),
     "おしゃべり": MoveData(
