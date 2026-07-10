@@ -890,6 +890,37 @@ def test_ぎょぐん_HP1_4超で登場するとむれたすがたになる():
     assert mon.name == "ヨワシ(むれ)"
 
 
+def test_ぎょぐん_HP1_4以下で登場してもたんどくのすがたのまま():
+    mon = Pokemon("ヨワシ(たんどく)", ability_name="ぎょぐん")
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), mon],
+        team1=[Pokemon("コラッタ")],
+    )
+    mon.hp = mon.max_hp // 4
+    t.run_switch(battle, 0, 1)
+    assert mon.name == "ヨワシ(たんどく)"
+
+
+def test_ぎょぐん_レベル20未満では登場時にフォルムチェンジしない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヨワシ(たんどく)", ability_name="ぎょぐん", level=19)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ヨワシ(たんどく)"
+
+
+def test_ぎょぐん_レベル20未満ではターン終了時にフォルムチェンジしない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヨワシ(むれ)", ability_name="ぎょぐん", level=19)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4
+    t.end_turn(battle)
+    assert mon.name == "ヨワシ(むれ)"
+
+
 def test_ぎょぐん_ターン終了時にHP1_4以下ならたんどくのすがたになる():
     battle = t.start_battle(
         team0=[Pokemon("ヨワシ(むれ)", ability_name="ぎょぐん")],
