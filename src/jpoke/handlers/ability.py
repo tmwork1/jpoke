@@ -744,10 +744,15 @@ def おみとおし_reveal_foe_item(battle: Battle, ctx: EventContext, value: An
 
 
 def おもかげやどし_boost_stat(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """おもかげやどし特性: 場に出たときフォルムに対応する能力が1段階上がる。"""
+    """おもかげやどし特性: 場に出たとき（かこの特性に変化したとき）フォルムに対応する能力が1段階上がる。
+
+    場に出るたびに1回しか発動しない（かがくへんかガスの発動・解除が起きても再発動しない）。
+    """
     mon = ctx.source
     stat = _OGERPON_STAT.get(mon.name)
     if stat is None:
+        return HandlerReturn(value=value)
+    if mon.ability.activated_since_switch_in:
         return HandlerReturn(value=value)
     mon.ability.activated_since_switch_in = True
     _announce_ability_triggered(battle, mon)
