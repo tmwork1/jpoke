@@ -1646,6 +1646,51 @@ def test_フェアリーロック_使用者側が交代できない():
     assert not t.can_switch(battle, 0)
 
 
+def test_フェザーダンス_PPは16():
+    """フェザーダンス: チャンピオンズでのPPは16（docs/champions/move_list.txt準拠）。"""
+    assert MOVES["フェザーダンス"].pp == 16
+
+
+def test_フェザーダンス_defenderのこうげきが2段階下がる():
+    """フェザーダンス: 相手（defender）のこうげきが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェザーダンス"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["atk"] == -2
+
+
+def test_フェザーダンス_まもるで防がれる():
+    """フェザーダンス: まもるで防がれ、ランクが変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェザーダンス"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.rank["atk"] == 0
+
+
+def test_フェザーダンス_マジックコートで跳ね返される():
+    """フェザーダンス: マジックコートで跳ね返され、使用者のこうげきが2段階下がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["フェザーダンス"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert attacker.rank["atk"] == -2
+    assert defender.rank["atk"] == 0
+
+
 def test_ふきとばし_かぜのりで無効化される():
     """ふきとばし: 相手が特性かぜのりの場合、無効化されてこうげきが1段階上がる"""
     battle = t.start_battle(
