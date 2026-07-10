@@ -2636,7 +2636,7 @@ def パラボラチャージ_drain(battle: Battle, ctx: AttackContext, value: in
     return HandlerReturn(value=value)
 
 
-def ひけん・ちえなみ_set_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ひけんちえなみ_set_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ひけん・ちえなみ: 命中後、相手陣営に「まきびし」を1層設置する（最大3層）。
 
     追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。
