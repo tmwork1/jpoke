@@ -632,8 +632,8 @@ def うのミサイル_spit_out_prey(battle: Battle, ctx: AttackContext, value: 
 
 
 def うるおいボイス_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """うるおいボイス特性: ノーマルタイプの音技をみずタイプに変換する。"""
-    if ctx.move.has_flag("sound") and value == "ノーマル":
+    """うるおいボイス特性: 音技を（元のタイプに関わらず）みずタイプに変換する。"""
+    if ctx.move.has_flag("sound"):
         return HandlerReturn(value="みず")
     return HandlerReturn(value=value)
 
