@@ -501,10 +501,12 @@ def アロマベール_prevent_volatile(battle: Battle, ctx: EventContext, value
 
 
 def いかく_lower_foe_atk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """いかく特性: 登場時に相手のこうげきを1段階下げる。"""
+    """いかく特性: 登場時に相手のこうげきを1段階下げる。みがわり状態の相手には無効。"""
     source = ctx.source
     target = battle.foe(source)
     _announce_ability_triggered(battle, source)
+    if target.has_volatile("みがわり"):
+        return HandlerReturn(value=value)
     battle.modify_stats(target, {"atk": -1}, source=source, reason="いかく")
     return HandlerReturn(value=value)
 
@@ -2202,6 +2204,13 @@ def ドラゴンスキン_modify_power(battle: Battle, ctx: AttackContext, value
     return _skin_boost_power(battle, ctx, value, trigger_type="ノーマル")
 
 
+def どんかん_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """どんかん特性: いかくによるこうげきランク低下を無効化する (第八世代以降)。"""
+    if ctx.stat_change_reason == "いかく":
+        value = {}
+    return HandlerReturn(value=value)
+
+
 def どんかん_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ちょうはつ", "メロメロ"])
 
@@ -2515,13 +2524,10 @@ def バリアフリー_remove_screens(battle: Battle, ctx: EventContext, value: 
 
 
 def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """ばんけん特性: いかくを受けたときこうげきを1段階上げる。"""
-    if ctx.stat_change_reason != "いかく":
+    """ばんけん特性: いかくによるこうげき低下を、こうげきの上昇に変える。"""
+    if ctx.stat_change_reason != "いかく" or "atk" not in value:
         return HandlerReturn(value=value)
-    mon = ctx.target
-    battle.modify_stats(mon, {"atk": +1}, source=mon)
-    _announce_ability_triggered(battle, mon)
-    return HandlerReturn(value=value)
+    return HandlerReturn(value={**value, "atk": 1})
 
 
 def パンクロック_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
@@ -3000,6 +3006,13 @@ def マイティチェンジ_change_form(battle: Battle, ctx: EventContext, valu
     mon = ctx.source
     if mon.name == PALAFIN_ZERO and mon.alive:
         mon.set_form(PALAFIN_HERO)
+    return HandlerReturn(value=value)
+
+
+def マイペース_block_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """マイペース特性: いかくによるこうげきランク低下を無効化する (第八世代以降)。"""
+    if ctx.stat_change_reason == "いかく":
+        value = {}
     return HandlerReturn(value=value)
 
 
