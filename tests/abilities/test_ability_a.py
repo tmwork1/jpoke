@@ -1104,6 +1104,16 @@ def test_えんかく_直接攻撃でわるいてぐせが発動しない():
     assert attacker.has_item()
 
 
+def test_えんかく_直接攻撃でもふもふのダメージ半減が発動しない():
+    """えんかく所持者が接触技を使っても、相手のもふもふによるダメージ半減が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="えんかく", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="もふもふ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
 def test_おうごんのからだ_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
