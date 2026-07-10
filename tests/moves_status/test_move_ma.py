@@ -1313,6 +1313,34 @@ def test_ミルクのみ_HP不満のとき最大HPの半分回復する():
     assert attacker.hp == 1 + int(attacker.max_hp * 1 / 2)
 
 
+def test_ミルクのみ_まもるで防がれない():
+    """ミルクのみ: 自分を対象とする技のため、相手のまもるで防がれない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミルクのみ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    attacker.hp = 1
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+
+
+def test_ミルクのみ_マジックコートで跳ね返されない():
+    """ミルクのみ: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ミルクのみ"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    defender_hp = defender.hp
+    t.run_move(battle, 0)
+    assert attacker.hp > 1
+    assert defender.hp == defender_hp
+
+
 def test_みをけずる_3ランクすべて上限なら技が失敗しHPも減らない():
     """みをけずる: こうげき・とくこう・すばやさが全て既に+6の場合、ランクは変化せず
     技自体が失敗する。HPも消費されない。"""
