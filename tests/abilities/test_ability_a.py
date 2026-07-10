@@ -1406,6 +1406,20 @@ def test_おやこあい_単発攻撃が2ヒットする():
     assert attacker.rank["spe"] == 2
 
 
+def test_おやこあい_2ヒット目は端数切り捨てでも最低1ダメージ保証():
+    """おやこあい: 1ヒット目のダメージが小さく1/4が0になる場合でも、2ヒット目は最低1ダメージ入る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["アクアステップ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    # 1ヒット目のダメージを3に固定 → 3//4=0になってしまうが、最低1ダメージが保証される
+    t.fix_damage(battle, 3)
+    t.run_move(battle, 0)
+    attacker, defender = battle.actives
+    assert defender.hits_taken == 2
+    assert defender.hp == defender.max_hp - 3 - 1
+
+
 def test_おやこあい_既存連続技には適用しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="おやこあい", move_names=["すいりゅうれんだ"])],
