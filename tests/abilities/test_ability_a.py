@@ -599,6 +599,49 @@ def test_いかりのこうら_被弾前HPが半分以下なら発動しない()
     assert defender.rank["atk"] == 0
 
 
+def test_いかりのこうら_連続攻撃技は最終ヒット後にまとめて判定する():
+    """いかりのこうら: 連続攻撃技の途中でHPが半分を下回っても、全ヒットが終わるまで発動しない。
+
+    途中のヒットで発動してしまうと ぼうぎょ が下がり、後続ヒットのダメージが
+    本来より大きくなってしまう。1発目を受ける前のHPを基準にまとめて判定されることを、
+    ランク補正前提で計算したダメージ合計と実際の被ダメージ量を比較して確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="いかりのこうら")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリプルアクセル"])],
+        accuracy=100,
+        damage_roll="最大",
+    )
+    t.fix_random(battle, 0.99)  # 急所を回避する
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    move = attacker.moves[0]
+    power_sequence = move.data.multi_hit["power_sequence"]
+
+    # ランク変化前提のダメージを事前計算する（正しい実装では3発目もこの値になるはず）。
+    expected_damages = []
+    for power in power_sequence:
+        move.power = power
+        expected_damages.append(battle.roll_damage(attacker, defender, move, critical=False))
+
+    # 2発目終了時点でHPが半分を下回るように調整する。
+    half = defender.max_hp // 2
+    start_hp = half + expected_damages[0] + expected_damages[1] // 2 + 1
+    defender.hp = start_hp
+    assert (start_hp - expected_damages[0]) * 2 > defender.max_hp  # 1発目では下回らない
+    assert (start_hp - expected_damages[0] - expected_damages[1]) * 2 <= defender.max_hp  # 2発目で下回る
+
+    t.run_move(battle, 1)
+
+    # 3発目のダメージがぼうぎょダウン前提で計算されていれば、実際の被ダメージ合計が
+    # ランク変化前提の合計より大きくなってしまう。ここが一致することで、
+    # 全ヒット終了後にまとめて判定されていることを確認する。
+    assert defender.alive
+    assert defender.hp == start_hp - sum(expected_damages)
+    assert defender.rank["atk"] == 1
+    assert defender.rank["def"] == -1
+
+
 def test_いかりのつぼ_A最大のとき急所被弾でも変化なし():
     """いかりのつぼ: こうげきランクがすでに最大のときは急所被弾しても発動しない。"""
     battle = t.start_battle(
