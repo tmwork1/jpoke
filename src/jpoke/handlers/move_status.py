@@ -436,12 +436,14 @@ def うつしえ_change_ability(battle: Battle, ctx: AttackContext, value: Any) 
 def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うらみの失敗チェック。
 
+    仕様（docs/spec/moves/うらみ.md）の「最後にPPを消費した技」を対象とするため、
+    ねごとのサブ技（PP消費0）ではなくねごと自身が対象になる。
     以下のいずれかに該当する場合は失敗する。
-    - 相手が技を使っていない（executed_move が None）
-    - 相手の直前の技が「わるあがき」（PPが概念上無限で対象にならない）
-    - 相手の直前の技のPPがすでに0（他の効果で0まで減っていた場合）
+    - 相手がPPを消費する行動をしていない（last_pp_consumed_move が None）
+    - 相手が最後にPPを消費した技が「わるあがき」（PPが概念上無限で対象にならない）
+    - 相手が最後にPPを消費した技のPPがすでに0（他の効果で0まで減っていた場合）
     """
-    move = ctx.defender.executed_move
+    move = ctx.defender.last_pp_consumed_move
     if move is None or move.name == "わるあがき" or move.pp <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -452,8 +454,8 @@ def うらみ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handl
 
 
 def うらみ_deplete_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うらみの効果: 相手が直前に使った技のPPを4減らす。"""
-    move = ctx.defender.executed_move
+    """うらみの効果: 相手が最後にPPを消費した技のPPを4減らす。"""
+    move = ctx.defender.last_pp_consumed_move
     move.modify_pp(-4)
     return HandlerReturn(value=value)
 
@@ -609,8 +611,12 @@ def かたくなる_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
 
 
 def かなしばり_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """かなしばりの効果: 相手に「かなしばり」状態を付与する（4 ターン）。"""
-    move = ctx.defender.executed_move
+    """かなしばりの効果: 相手に「かなしばり」状態を付与する（4 ターン）。
+
+    封じる対象は仕様（docs/spec/moves/かなしばり.md）の「相手が最後にPPを消費した技」。
+    ねごとのサブ技（PP消費0）ではなくねごと自身が封じられる。
+    """
+    move = ctx.defender.last_pp_consumed_move
     return apply_volatile_to_defender(
         battle, ctx, value, volatile="かなしばり", count=4, move_name=move.name
     )
@@ -619,10 +625,10 @@ def かなしばり_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def かなしばり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かなしばりの失敗条件を判定する。
 
-    - 相手がまだ技を使っていない（executed_move が None）場合は失敗する
+    - 相手がPPを消費する行動をしていない（last_pp_consumed_move が None）場合は失敗する
     - わるあがきに対して使うと失敗する
     """
-    move = ctx.defender.executed_move
+    move = ctx.defender.last_pp_consumed_move
     if (
         not move
         or move.name == "わるあがき"
@@ -877,12 +883,16 @@ def サイコフィールド_activate_terrain(battle: Battle, ctx: AttackContext
 def さいはい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """さいはいの失敗条件を判定する。
 
-    - 相手が場に出てからPPを消費する行動を一度もしていない（executed_move が None）場合は失敗する
-    - 相手の直前の技が指示できない技（_INSTRUCT_BLOCKED_MOVES）の場合は失敗する
-    - 相手の直前の技のPPがすでに0の場合は失敗する
+    仕様（docs/spec/moves/さいはい.md「技の仕様」）では対象は「直近のPPを消費した行動」の技
+    であるため、last_pp_consumed_move を参照する（ねごとのサブ技はPPを消費しないため対象に
+    ならず、ねごと自身が対象となり指示不可技として失敗する）。
+    - 相手が場に出てからPPを消費する行動を一度もしていない（last_pp_consumed_move が None）
+      場合は失敗する
+    - 相手が最後にPPを消費した技が指示できない技（_INSTRUCT_BLOCKED_MOVES）の場合は失敗する
+    - 相手が最後にPPを消費した技のPPがすでに0の場合は失敗する
       （0のまま battle.run_move に渡すと わるあがき に自動置換されてしまうため、ここで弾く）
     """
-    move = ctx.defender.executed_move
+    move = ctx.defender.last_pp_consumed_move
     if move is None or move.name in _INSTRUCT_BLOCKED_MOVES or move.pp <= 0:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
@@ -893,7 +903,7 @@ def さいはい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def さいはい_instruct(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """さいはいの効果: 相手が直前に使用した技を、相手のPPを消費してもう一度使わせる。
+    """さいはいの効果: 相手が最後にPPを消費した技を、相手のPPを消費してもう一度使わせる。
 
     battle.run_move(ctx.defender, move) により通常の技実行フローが走るため、
     状態異常・状態変化による行動失敗判定やPP消費、ちょうはつ等による技封じは
@@ -903,13 +913,13 @@ def さいはい_instruct(battle: Battle, ctx: AttackContext, value: Any) -> Han
     イベントマネージャーに登録されたままになる。登録されたままだと、指示された技の実行中にも
     さいはいの使用者（ctx.attacker）に対してこれらのイベントが発火し、さいはい_can_apply が
     無関係な技（指示された技自身）に対して誤って再評価されてしまう
-    （この時点で ctx.attacker.executed_move はすでにさいはい自身に更新済みのため、
+    （この時点で ctx.attacker.last_pp_consumed_move はすでにさいはい自身に更新済みのため、
     「さいはいはさいはいを指示できない」という自己参照チェックに誤って引っかかり、
     指示した技のPPだけ消費されて不発になってしまう）。これを避けるため、
     指示された技の実行中はさいはい自身の ON_BEFORE_APPLY_MOVE / ON_STATUS_HIT ハンドラを
     一時的に解除する（ねごと_select_and_execute と同じパターン）。
     """
-    move = ctx.defender.executed_move
+    move = ctx.defender.last_pp_consumed_move
     suppressed_events = (Event.ON_BEFORE_APPLY_MOVE, Event.ON_STATUS_HIT)
     handlers_data = ctx.move.data.handlers
     for event in suppressed_events:

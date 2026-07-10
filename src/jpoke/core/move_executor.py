@@ -610,6 +610,9 @@ class MoveExecutor:
         if v > 0:
             # 実際にPPを消費した技として記録する（とっておき用）
             ctx.attacker.pp_consumed_moves.add(cast(MoveName, move.name))
+            # 最後にPPを消費した技として記録する（かなしばり・うらみ・さいはい等の参照先）。
+            # ねごとのサブ技は ねごと_suppress_pp により v=0 となるためここには記録されない。
+            ctx.attacker.last_pp_consumed_move = move
         self.battle.add_event_log(
             ctx.attacker,
             LogCode.PP_CONSUMED,

@@ -1119,6 +1119,29 @@ def test_うつしえ_相手の特性が使用者にコピーされる():
     assert defender.ability.name == "めんえき"
 
 
+def test_うらみ_ねごと経由ではねごとのPPが減る():
+    """うらみ: 相手がねごとでサブ技を実行した場合、減るのはサブ技ではなく
+    最後にPPを消費したねごと自身のPPである（サブ技はPPを消費しないため対象にならない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["うらみ"])],
+        team1=[Pokemon("カビゴン", move_names=["ねごと", "たいあたり"])],
+        ailment1=("ねむり", 3),
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    negoto = defender.moves[0]
+    taiatari = defender.moves[1]
+
+    t.run_move(battle, 1, 0)  # カビゴン: ねごと（候補はたいあたりのみ）
+    assert negoto.pp == 11, "ねごと自身のPPは1消費される"
+    assert taiatari.pp == 35, "サブ技のPPは消費されない"
+
+    t.run_move(battle, 0)  # ピカチュウ: うらみ
+
+    assert negoto.pp == 11 - 4, "うらみで減るのはねごとのPP"
+    assert taiatari.pp == 35, "サブ技のPPは変化しない"
+
+
 def test_うらみ_みがわり状態の相手にも効果がある():
     """うらみ: みがわり状態の相手にも貫通して効果を発揮する"""
     battle = t.start_battle(
