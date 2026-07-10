@@ -734,6 +734,111 @@ def test_きんちょうかん_相手をきんちょうかん状態にする():
     assert battle.query.is_nervous(battle.actives[0])
 
 
+@pytest.mark.parametrize("terrain, expected_type", [
+    ("エレキフィールド", "でんき"),
+    ("グラスフィールド", "くさ"),
+    ("ミストフィールド", "フェアリー"),
+    ("サイコフィールド", "エスパー"),
+])
+def test_ぎたい_フィールドが発生している場に繰り出すと対応タイプに変化する(terrain: str, expected_type: str):
+    battle = t.start_battle(
+        team0=[Pokemon("マッギョ(ガラル)", ability_name="ぎたい")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=(terrain, 5),
+    )
+    mon = battle.actives[0]
+    assert mon.types == [expected_type]
+    assert mon.ability.revealed is True
+
+
+def test_ぎたい_自身が場にいる状態でフィールドが変化すると即座にタイプが変わる():
+    battle = t.start_battle(
+        team0=[Pokemon("マッギョ(ガラル)", ability_name="ぎたい")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.types == ["じめん", "はがね"]
+
+    battle.terrain_manager.apply("グラスフィールド", 5)
+    assert mon.types == ["くさ"]
+
+    battle.terrain_manager.apply("サイコフィールド", 5)
+    assert mon.types == ["エスパー"]
+
+
+def test_ぎたい_フィールドが解除されると本来のタイプに戻る():
+    battle = t.start_battle(
+        team0=[Pokemon("マッギョ(ガラル)", ability_name="ぎたい")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("ミストフィールド", 5),
+    )
+    mon = battle.actives[0]
+    assert mon.types == ["フェアリー"]
+
+    battle.terrain_manager.remove()
+    assert mon.types == ["じめん", "はがね"]
+
+
+def test_ぎたい_フィールドが無い状態で登場すると本来のタイプのまま発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("マッギョ(ガラル)", ability_name="ぎたい")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.types == ["じめん", "はがね"]
+    assert mon.ability.revealed is False
+
+
+def test_ぎたい_交代すると本来のタイプに戻り再度場に出ると再びタイプが変わる():
+    battle = t.start_battle(
+        team0=[
+            Pokemon("マッギョ(ガラル)", ability_name="ぎたい"),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("エレキフィールド", 5),
+    )
+    mon = battle.actives[0]
+    assert mon.types == ["でんき"]
+
+    t.run_switch(battle, 0, 1)
+    assert mon.types == ["じめん", "はがね"]
+
+    t.run_switch(battle, 0, 0)
+    assert battle.actives[0] is mon
+    assert mon.types == ["でんき"]
+
+
+def test_ぎたい_特性がぎたいに変わると即座にフィールドに応じたタイプになる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いかく")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("サイコフィールド", 5),
+    )
+    mon = battle.actives[0]
+    assert mon.types == ["でんき"]
+
+    battle.change_ability(mon, "ぎたい")
+    assert mon.types == ["エスパー"]
+
+
+def test_ぎたい_かがくへんかガスの効果中は発動せず解除後に即座に発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("マッギョ(ガラル)", ability_name="ぎたい")],
+        team1=[Pokemon("ピカチュウ")],
+        terrain=("グラスフィールド", 5),
+    )
+    mon = battle.actives[0]
+    assert mon.types == ["くさ"]
+
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.terrain_manager.remove()
+    assert mon.types == ["くさ"]
+
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert mon.types == ["じめん", "はがね"]
+
+
 def test_ぎゃくじょう_HPが半分以下になると攻撃が1段階上がる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ぎゃくじょう")],

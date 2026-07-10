@@ -1279,6 +1279,30 @@ def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=True)
 
 
+ぎたい_フィールドタイプ対応表: dict[TerrainName, Type] = {
+    "エレキフィールド": "でんき",
+    "グラスフィールド": "くさ",
+    "ミストフィールド": "フェアリー",
+    "サイコフィールド": "エスパー",
+}
+
+
+def ぎたい_change_type(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ぎたい特性: フィールドに応じて自身のタイプを単タイプに変化させる。
+
+    フィールドが無いときは本来のタイプ（種族本来のタイプ）に戻す。
+    現在のタイプと変化先のタイプが同じ場合は発動しない。
+    """
+    mon = ctx.source
+    terrain_type = ぎたい_フィールドタイプ対応表.get(battle.terrain.name)
+    target_types = [terrain_type] if terrain_type else mon.base_types
+    if mon.types == target_types:
+        return HandlerReturn(value=value)
+    mon.ability_override_type = terrain_type
+    _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def ぎゃくじょう_boost_spa_on_half_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ぎゃくじょう特性: HP が半分以下になった時、特攻が1段階上昇する。"""
     mon = ctx.defender
