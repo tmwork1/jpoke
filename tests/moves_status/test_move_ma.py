@@ -75,6 +75,19 @@ def test_まねっこ_おいわいはコピーできない():
     assert not battle.move_executor.move_applied
 
 
+def test_まねっこ_ハッピータイムはコピーできる():
+    """まねっこ: 直前の技がハッピータイム（non_copycatフラグなし）の場合はコピーに成功する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まねっこ"])],
+        team1=[Pokemon("カビゴン", move_names=["ハッピータイム"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)  # カビゴン: ハッピータイム
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ → ハッピータイムをコピーして成功するはず
+
+    assert battle.move_executor.move_applied
+
+
 def test_まねっこ_カウンターはコピーできない():
     """まねっこ: 直前の技がカウンター（non_copycatフラグ持ち）の場合は失敗する"""
     battle = t.start_battle(

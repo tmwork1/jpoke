@@ -223,7 +223,8 @@ MOVES_HA: dict[MoveName, MoveData] = {
         type="ノーマル",
         category="status",
         pp=30,
-        handlers={},  # 追加効果なし
+        target="own_side",
+        handlers={},  # 効果のないわざ（戦闘上の効果なし）
     ),
     "はどうだん": MoveData(
         type="かくとう",
