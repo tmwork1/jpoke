@@ -14,7 +14,7 @@ from jpoke.exceptions import InvalidCommandError
 
 from .event_manager import Event
 from .context import EventContext
-from .event_logger import SwitchPayload
+from .log_payload import SwitchPayload
 from jpoke.utils import fast_copy
 
 

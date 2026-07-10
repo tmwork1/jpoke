@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
-from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
+from jpoke.core.log_payload import FailureLogPayload, VolatilePayload, StatChangePayload
 from jpoke.utils.math import apply_fixed_modifier, round_half_down, round_half_up
 from jpoke.data import TYPE_MODIFIER
 from jpoke.data.signature_items import PLATE_TO_TYPE

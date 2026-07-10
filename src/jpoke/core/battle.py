@@ -27,7 +27,8 @@ from .player_state import PlayerState
 from .event_manager import EventManager
 from .context import EventContext
 from .player import Player
-from .event_logger import EventLogger, Payload
+from .event_logger import EventLogger
+from .log_payload import Payload
 from .replay import RecordedCommand, BattleReplayData
 from .damage import DamageCalculator
 from .field_manager import WeatherManager, TerrainManager, GlobalFieldManager, SideFieldManager

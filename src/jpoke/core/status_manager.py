@@ -11,7 +11,7 @@ from jpoke.model import Pokemon
 from jpoke.types import Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
-from jpoke.core.event_logger import HPChangePayload, StatChangePayload
+from jpoke.core.log_payload import HPChangePayload, StatChangePayload
 from jpoke.utils import fast_copy
 
 

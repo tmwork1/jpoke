@@ -15,7 +15,7 @@ from jpoke.data import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
 from jpoke.model import Field
 from jpoke.core import EventContext
-from .event_logger import FieldPayload
+from .log_payload import FieldPayload
 
 T = TypeVar("T")
 

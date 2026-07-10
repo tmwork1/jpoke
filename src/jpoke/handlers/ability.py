@@ -16,7 +16,7 @@ from jpoke.data import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode, Interrupt
 from jpoke.core import HandlerReturn, Handler
-from jpoke.core.event_logger import (
+from jpoke.core.log_payload import (
     AbilityPayload, AilmentPayload, VolatilePayload, FailureLogPayload,
     FieldPayload, TextPayload,
 )

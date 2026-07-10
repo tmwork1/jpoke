@@ -8,7 +8,7 @@ from jpoke.enums import LogCode
 from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.core import HandlerReturn, Handler
-from jpoke.core.event_logger import FailureLogPayload
+from jpoke.core.log_payload import FailureLogPayload
 
 class FieldHandler(Handler):
     def __init__(self,

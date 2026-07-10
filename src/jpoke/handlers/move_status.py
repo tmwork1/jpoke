@@ -25,7 +25,7 @@ from jpoke.types import MoveName, Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
-from jpoke.core.event_logger import FailureLogPayload, ItemPayload, StatChangePayload
+from jpoke.core.log_payload import FailureLogPayload, ItemPayload, StatChangePayload
 from jpoke.data import TYPE_MODIFIER, TYPES
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット

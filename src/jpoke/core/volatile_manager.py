@@ -11,7 +11,7 @@ from jpoke.model import Pokemon, Volatile
 from jpoke.types import VolatileName
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
-from .event_logger import VolatilePayload
+from .log_payload import VolatilePayload
 from jpoke.utils import fast_copy
 
 
