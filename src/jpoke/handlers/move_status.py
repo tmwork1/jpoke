@@ -1425,72 +1425,6 @@ def つるぎのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 2})
 
 
-def テクスチャー_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """テクスチャーの失敗チェック。
-
-    - 自分がテラスタルしているときは失敗する。
-    - 自分が覚えている技のうち一番上の技（moves[0]）のタイプが、自分の現在のタイプ
-      （added_types含む）のいずれかと同じ場合は失敗する。第六世代以降の仕様であり、
-      次の技へのフォールバックは行わない。
-    """
-    attacker = ctx.attacker
-    if attacker.terastallized:
-        battle.add_event_log(
-            attacker, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_テラスタル")
-        )
-        return HandlerReturn(value=False, stop_event=True)
-    top_type = attacker.moves[0].data.type
-    if top_type in attacker.types:
-        battle.add_event_log(
-            attacker, LogCode.MOVE_FAILED,
-            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_タイプ同じ")
-        )
-        return HandlerReturn(value=False, stop_event=True)
-    return HandlerReturn(value=value)
-
-
-def テクスチャー_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """テクスチャーの効果: 自分が覚えている技のうち一番上の技と同じタイプに
-    自分のタイプを変更する（単一タイプになる）。
-
-    タイプ変更後は、もりののろい・ハロウィンによる追加タイプ（added_types）はリセットされる。
-    """
-    attacker = ctx.attacker
-    top_type = attacker.moves[0].data.type
-    attacker.move_override_types = [top_type]
-    attacker.added_types = []
-    return HandlerReturn(value=value)
-
-
-# テクスチャー2: 内部的な判定タイプがゲーム内バグにより実際の技タイプと異なる技。
-# フリーズドライ・フライングプレス・サウザンアローは技の効果（水4倍弱点付与・
-# ひこう複合弱点付与）を考慮せず、それぞれ固定のタイプとして扱われる。
-テクスチャー2_判定タイプ上書き: dict[MoveName, Type] = {
-    "フリーズドライ": "みず",
-    "フライングプレス": "むし",
-    "サウザンアロー": "ひこう",
-}
-
-
-def テクスチャー2_取得_変更候補タイプ(attacker: Pokemon, defender: Pokemon) -> list[Type]:
-    """テクスチャー2で変更可能なタイプ（相手の技を半減か無効にでき、
-    かつ自分が現在持っていないタイプ）の一覧を返す。"""
-    if defender.last_move_type is None:
-        return []
-    move_type = テクスチャー2_判定タイプ上書き.get(
-        cast(MoveName, defender.last_move_name), defender.last_move_type
-    )
-    type_chart = TYPE_MODIFIER.get(move_type, {})
-    current_types = set(attacker.types)
-    return [
-        t for t in TYPES
-        if t not in ("", "ステラ")
-        and type_chart.get(t, 1.0) < 1.0
-        and t not in current_types
-    ]
-
-
 def テクスチャー2_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """テクスチャー2の効果: 自分のタイプを、相手が直前に使った技を半減か無効にする
     タイプ（現在持っていないもの）にランダムに変更する。
@@ -1538,15 +1472,74 @@ def テクスチャー2_can_apply(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
+# テクスチャー2: 内部的な判定タイプがゲーム内バグにより実際の技タイプと異なる技。
+# フリーズドライ・フライングプレス・サウザンアローは技の効果（水4倍弱点付与・
+# ひこう複合弱点付与）を考慮せず、それぞれ固定のタイプとして扱われる。
+テクスチャー2_判定タイプ上書き: dict[MoveName, Type] = {
+    "フリーズドライ": "みず",
+    "フライングプレス": "むし",
+    "サウザンアロー": "ひこう",
+}
+
+
+def テクスチャー2_取得_変更候補タイプ(attacker: Pokemon, defender: Pokemon) -> list[Type]:
+    """テクスチャー2で変更可能なタイプ（相手の技を半減か無効にでき、
+    かつ自分が現在持っていないタイプ）の一覧を返す。"""
+    if defender.last_move_type is None:
+        return []
+    move_type = テクスチャー2_判定タイプ上書き.get(
+        cast(MoveName, defender.last_move_name), defender.last_move_type
+    )
+    type_chart = TYPE_MODIFIER.get(move_type, {})
+    current_types = set(attacker.types)
+    return [
+        t for t in TYPES
+        if t not in ("", "ステラ")
+        and type_chart.get(t, 1.0) < 1.0
+        and t not in current_types
+    ]
+
+
+def テクスチャー_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テクスチャーの効果: 自分が覚えている技のうち一番上の技と同じタイプに
+    自分のタイプを変更する（単一タイプになる）。
+
+    タイプ変更後は、もりののろい・ハロウィンによる追加タイプ（added_types）はリセットされる。
+    """
+    attacker = ctx.attacker
+    top_type = attacker.moves[0].data.type
+    attacker.move_override_types = [top_type]
+    attacker.added_types = []
+    return HandlerReturn(value=value)
+
+
+def テクスチャー_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """テクスチャーの失敗チェック。
+
+    - 自分がテラスタルしているときは失敗する。
+    - 自分が覚えている技のうち一番上の技（moves[0]）のタイプが、自分の現在のタイプ
+      （added_types含む）のいずれかと同じ場合は失敗する。第六世代以降の仕様であり、
+      次の技へのフォールバックは行わない。
+    """
+    attacker = ctx.attacker
+    if attacker.terastallized:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_テラスタル")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    top_type = attacker.moves[0].data.type
+    if top_type in attacker.types:
+        battle.add_event_log(
+            attacker, LogCode.MOVE_FAILED,
+            payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_タイプ同じ")
+        )
+        return HandlerReturn(value=False, stop_event=True)
+    return HandlerReturn(value=value)
+
+
 def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
-
-
-def てんしのキッス_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """てんしのキッスの効果: 相手をこんらん状態にする。"""
-    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
-        ctx.defender, source=ctx.attacker
-    ))
 
 
 def テレポート_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1575,6 +1568,18 @@ def テレポート_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
+
+
+def てんしのキッス_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """てんしのキッスの効果: 相手をこんらん状態にする。"""
+    return HandlerReturn(value=battle.volatile_manager.apply_confusion(
+        ctx.defender, source=ctx.attacker
+    ))
+
+
+def デコレーション_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """デコレーションの効果: 相手のこうげき・とくこうを2段階ずつ上げる。"""
+    return modify_defender_stats(battle, ctx, value, stats={"atk": 2, "spa": 2})
 
 
 def でんじは_apply_ailment_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1608,11 +1613,6 @@ def でんじふゆう_check_can_use(battle: Battle, ctx: AttackContext, value: 
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
-
-
-def デコレーション_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """デコレーションの効果: 相手のこうげき・とくこうを2段階ずつ上げる。"""
-    return modify_defender_stats(battle, ctx, value, stats={"atk": 2, "spa": 2})
 
 
 def とおせんぼう_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
