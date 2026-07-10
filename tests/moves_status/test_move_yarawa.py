@@ -158,6 +158,25 @@ def test_ねごと_候補技がすべてnon_negotoの場合は失敗():
     assert defender.hp == hp_before, "候補技なしの場合はダメージを与えない"
 
 
+def test_ねごと_ハッピータイムも候補になる():
+    """ねごと: おいわいと異なりハッピータイムはnon_negotoフラグを持たないため候補になり選択・成功しうる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ねごと", "ハッピータイム"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    negoto = mon.moves[0]
+    happy_hour = mon.moves[1]
+
+    t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（候補はハッピータイムのみ）
+
+    assert battle.move_executor.move_applied
+    assert negoto.pp == 11, "ねごとのPPは1消費される"
+    assert happy_hour.pp == 30, "選ばれた技のPPは消費されない"
+
+
 def test_ねごと_変化技を選んでも無限再帰にならない():
     """ねごと: 選ばれた技が変化技（status技）の場合でも RecursionError 等を起こさず正常に実行される
 
