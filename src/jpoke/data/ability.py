@@ -559,8 +559,8 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.かるわざ_init_state,
                 subject_spec="source:self",
             ),
-            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
-                h.かるわざ_reset_state,
+            Event.ON_ITEM_LOST: h.AbilityHandler(
+                h.かるわざ_activate_on_item_lost,
                 subject_spec="source:self",
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
