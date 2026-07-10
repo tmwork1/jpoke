@@ -510,12 +510,25 @@ def いかく_lower_foe_atk(battle: Battle, ctx: EventContext, value: Any) -> Ha
 
 
 def いかりのこうら_boost_on_half_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """いかりのこうら特性: HPが半分以下になったときA・C・S↑1、B・D↓1。"""
+    """いかりのこうら特性: HPが半分以下になったときA・C・S↑1、B・D↓1。
+
+    ひんしになった場合は発動しない（ON_DAMAGE_HIT はKO後にも発火するため明示的に除外する）。
+    連続攻撃技はすべてのヒットが終わった後（攻撃側がひんしになって中断した場合はその時点）に、
+    1発目を受ける前のHPを基準にまとめて判定する（かいがらのすずの合計ダメージ集計と同じ idiom）。
+    """
     mon = ctx.defender
     if not mon.alive:
         return HandlerReturn(value=value)
+
+    if ctx.hit_index == 1:
+        ctx._angershell_hp_before = mon.hp + value
+
+    is_last_hit = ctx.hit_index == ctx.hit_count or ctx.attacker.fainted
+    if not is_last_hit:
+        return HandlerReturn(value=value)
+
+    hp_before = ctx._angershell_hp_before
     hp_after = mon.hp
-    hp_before = hp_after + value
     if not _crossed_half_hp(hp_before, hp_after, mon.max_hp):
         return HandlerReturn(value=value)
     battle.modify_stats(mon, {"def": -1, "spd": -1}, source=ctx.attacker)
