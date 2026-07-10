@@ -140,3 +140,69 @@ def test_ロックオン_マジックコートで跳ね返されない():
 
     assert attacker.has_volatile("ロックオン")
     assert not defender.has_volatile("ロックオン")
+
+
+def test_ロックカット_すばやさ2段階上がる():
+    """ロックカット: 使用すると自分のすばやさランクが2段階上がる"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    assert attacker.rank["spe"] == 0
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+
+
+def test_ロックカット_すばやさが上限のとき失敗する():
+    """ロックカット: すばやさランクがすでに+6のときは失敗し、ランクは変化しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    attacker.rank["spe"] = 6
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 6
+
+
+def test_ロックカット_マジックコートで跳ね返されない():
+    """ロックカット: 自分を対象とする技のため、相手のマジックコートで跳ね返されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+    assert defender.rank["spe"] == 0
+
+
+def test_ロックカット_まもるで防がれない():
+    """ロックカット: 自分を対象とする技のため、相手のまもるがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"まもる": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2
+
+
+def test_ロックカット_みがわりに防がれない():
+    """ロックカット: 自分を対象とする技のため、相手のみがわりがあっても効果は発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("イワーク", move_names=["ロックカット"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"みがわり": 1},
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert attacker.rank["spe"] == 2

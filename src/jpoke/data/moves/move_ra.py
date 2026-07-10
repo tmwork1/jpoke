@@ -322,6 +322,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         type="いわ",
         category="status",
         pp=20,
+        target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ロックカット_modify_attacker_stats,
