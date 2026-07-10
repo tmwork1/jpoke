@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.types import RoleSpec, Stat, AilmentName, VolatileName
 
 from jpoke.core import Handler, HandlerReturn
-from jpoke.core.event_logger import FailureLogPayload
+from jpoke.core.log_payload import FailureLogPayload
 from jpoke.enums import Command, LogCode
 
 

@@ -11,7 +11,7 @@ from jpoke.model import Pokemon
 from jpoke.types import Stat, HPChangeReason, StatChangeReason
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext
-from jpoke.core.event_logger import HPChangePayload, StatChangePayload
+from jpoke.core.log_payload import HPChangePayload, StatChangePayload
 from jpoke.utils import fast_copy
 
 
@@ -81,7 +81,6 @@ class StatusManager:
             self.battle.add_event_log(
                 target, LogCode.HP_CHANGED,
                 payload=HPChangePayload(
-                    pokemon=target.name,
                     value=v,
                     hp=target.hp,
                     max_hp=target.max_hp,

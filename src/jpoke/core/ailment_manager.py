@@ -11,7 +11,7 @@ from jpoke.model import Pokemon, Ailment
 from jpoke.types import AilmentName
 from jpoke.enums import Event, LogCode
 from jpoke.core import EventContext, BaseContext
-from .event_logger import AilmentPayload
+from .log_payload import AilmentPayload
 from jpoke.utils import fast_copy
 
 

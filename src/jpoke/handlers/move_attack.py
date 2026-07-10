@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
-from jpoke.core.event_logger import FailureLogPayload, VolatilePayload, StatChangePayload
+from jpoke.core.log_payload import FailureLogPayload, VolatilePayload, StatChangePayload
 from jpoke.utils.math import apply_fixed_modifier, round_half_down, round_half_up
 from jpoke.data import TYPE_MODIFIER
 from jpoke.data.signature_items import PLATE_TO_TYPE
@@ -2636,7 +2636,7 @@ def パラボラチャージ_drain(battle: Battle, ctx: AttackContext, value: in
     return HandlerReturn(value=value)
 
 
-def ひけん・ちえなみ_set_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ひけんちえなみ_set_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ひけん・ちえなみ: 命中後、相手陣営に「まきびし」を1層設置する（最大3層）。
 
     追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。

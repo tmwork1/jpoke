@@ -14,7 +14,7 @@ from jpoke.enums import LogCode
 
 from .event_manager import Event
 from .context import AttackContext
-from .event_logger import FailureLogPayload, MoveActionPayload
+from .log_payload import FailureLogPayload, MoveActionPayload
 from jpoke.utils import fast_copy
 
 CRIT_RATES = [1/24, 1/8, 1/2, 1]

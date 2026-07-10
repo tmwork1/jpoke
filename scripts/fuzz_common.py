@@ -86,8 +86,7 @@ def format_full_log(battle: Battle) -> str:
     lines = []
     for log in battle.event_logger.logs:
         player = battle.players[log.idx]
-        pokemon = getattr(log.payload, "pokemon", "") if log.payload else ""
-        lines.append(f"Turn {log.turn} : {player.name} : {pokemon} : {log.render()}")
+        lines.append(f"Turn {log.turn} : {player.name} : {log.pokemon or ''} : {log.render()}")
     return "\n".join(lines)
 
 
