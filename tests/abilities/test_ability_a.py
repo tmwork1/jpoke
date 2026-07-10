@@ -422,6 +422,43 @@ def test_あめうけざら_あめ以外では発動しない():
     assert mon.hp == before
 
 
+def test_あめうけざら_かいふくふうじ中は回復しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="あめうけざら")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("あめ", 5),
+        volatile0={"かいふくふうじ": 3},
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
+def test_あめうけざら_ノーてんき下では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="あめうけざら")],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき")],
+        weather=("あめ", 5),
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
+def test_あめうけざら_ばんのうがさ所持時は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="あめうけざら", item_name="ばんのうがさ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("あめ", 5),
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.end_turn(battle)
+    assert mon.hp == 1
+
+
 def test_いかく_登場時に相手攻撃1段階ダウン():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
