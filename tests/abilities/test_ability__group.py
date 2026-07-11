@@ -713,6 +713,27 @@ def test_倒すと能力上昇系_相手を倒せないと発動しない(abilit
 
 
 @pytest.mark.parametrize(
+    "ability_name, stat",
+    [
+        ("じしんかじょう", "atk"),
+        ("しろのいななき", "atk"),
+        ("くろのいななき", "spa"),
+    ],
+)
+def test_倒すと能力上昇系_ランクがすでに最大のときは発動しない(ability_name: str, stat: Stat):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    attacker.rank[stat] = 6
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank[stat] == 6
+
+
+@pytest.mark.parametrize(
     "ability_name",
     ["じょおうのいげん", "テイルアーマー", "ビビッドボディ"],
 )
