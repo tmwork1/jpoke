@@ -1253,9 +1253,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "じゅくせい": AbilityData(),
     "じょうききかん": AbilityData(
         handlers={
+            # 技側の ON_DAMAGE_HIT ハンドラ（h.MoveHandler、デフォルト priority=100）より
+            # 大きい値を指定し、バブルこうせん等の追加効果（S-1）の後にじょうききかん
+            # （S+6）が発動する仕様（docs/spec/abilities/じょうききかん.md）を満たす。
+            # priority を指定しない場合、(priority, -speed) のタイブレークで攻撃側・
+            # 防御側どちらが速いかによって発動順が変わってしまうため明示する。
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.じょうききかん_max_boost_speed,
                 subject_spec="defender:self",
+                priority=110,
             )
         }
     ),
