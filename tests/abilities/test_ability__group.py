@@ -106,6 +106,30 @@ def test_おわりのだいち_らんきりゅう以外上書きする(weather_n
     assert battle.weather.name == "おおひでり"
 
 
+def test_はじまりのうみ_らんきりゅうは上書きできない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="はじまりのうみ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("らんきりゅう", 1),
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == "らんきりゅう"
+
+
+@pytest.mark.parametrize(
+    "weather_name",
+    normal_weathers + ["おおひでり"]
+)
+def test_はじまりのうみ_らんきりゅう以外上書きする(weather_name: WeatherName):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ピカチュウ", ability_name="はじまりのうみ")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=(weather_name, 99)
+    )
+    t.run_switch(battle, 0, 1)
+    assert battle.weather.name == "おおあめ"
+
+
 @pytest.mark.parametrize(
     "ability_name, move_name",
     [
