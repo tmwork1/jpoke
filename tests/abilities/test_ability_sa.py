@@ -1839,6 +1839,30 @@ def test_せいしんりょく_ひるみを防ぐ():
     assert not battle.volatile_manager.apply(battle.actives[0], "ひるみ", count=1)
 
 
+def test_せいしんりょく_おうじゃのしるしのひるみを防ぐ():
+    """せいしんりょく: おうじゃのしるし由来のひるみも防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="おうじゃのしるし", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいしんりょく")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].has_volatile("ひるみ")
+
+
+def test_せいしんりょく_かたやぶりの技によるひるみは防げない():
+    """せいしんりょく: 特性かたやぶりの効果が発動した技によるひるみは防げない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["アイアンヘッド"])],
+        team1=[Pokemon("ピカチュウ", ability_name="せいしんりょく")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].has_volatile("ひるみ")
+
+
 def test_ゼロフォーミング_テラスタル時に天候とフィールドが消える():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ゼロフォーミング")],
