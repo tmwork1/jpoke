@@ -1469,7 +1469,13 @@ def こおりのりんぷん_reduce_special_damage(battle: Battle, ctx: AttackCo
 
 
 def こぼれダネ_set_grassy_terrain(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こぼれダネ特性: 攻撃技でダメージを受けたときグラスフィールドを展開する。"""
+    """こぼれダネ特性: 攻撃技でダメージを受けたときグラスフィールドを展開する。
+
+    こらえるでHP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     mon = ctx.defender
     if battle.terrain_manager.apply("グラスフィールド", 5, source=mon):
         _announce_ability_triggered(battle, mon)
