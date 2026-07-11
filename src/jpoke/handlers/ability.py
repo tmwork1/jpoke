@@ -2553,12 +2553,16 @@ def とうそうしん_modify_power(battle: Battle, ctx: AttackContext, value: i
 
 
 def とびだすなかみ_retaliate_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすなかみ特性: 攻撃技でひんしになったとき攻撃者に反撃ダメージを与える。"""
+    """とびだすなかみ特性: 攻撃技でひんしになったとき攻撃者に反撃ダメージを与える。
+
+    反撃ダメージは技を受ける直前（ON_BEGIN_MOVE時点）のHPが基準。連続攻撃技で複数回
+    ヒットしてひんしになった場合も、最初のヒット前のHP（ctx.defender_hp_before_move）を使う。
+    """
     attacker = ctx.attacker
     defender = ctx.defender
     if attacker is None or attacker.fainted:
         return HandlerReturn(value=value)
-    hp_before = _とびだすなかみ_hp_before.pop(id(defender), abs(value))
+    hp_before = ctx.defender_hp_before_move or abs(value)
     if hp_before <= 0:
         return HandlerReturn(value=value)
     battle.modify_hp(attacker, -hp_before)
@@ -2566,12 +2570,9 @@ def とびだすなかみ_retaliate_on_ko(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=value)
 
 
-_とびだすなかみ_hp_before: dict[int, int] = {}  # id(defender) → HP before move
-
-
 def とびだすなかみ_save_hp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """とびだすなかみ補助: 技開始時に防御側の初期HPを保存する。"""
-    _とびだすなかみ_hp_before[id(ctx.defender)] = ctx.defender.hp
+    """とびだすなかみ補助: 技開始時（ON_BEGIN_MOVE）に防御側の初期HPをコンテキストへ保存する。"""
+    ctx.defender_hp_before_move = ctx.defender.hp
     return HandlerReturn(value=value)
 
 

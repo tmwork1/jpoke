@@ -1288,6 +1288,51 @@ def test_とびだすなかみ_多段技では最初のヒット前HPが基準()
     assert attacker.hp == attacker.max_hp - defender.max_hp
 
 
+def test_とびだすなかみ_状態異常ダメージのひんしでは発動しない():
+    """とびだすなかみ: 攻撃技以外（どく等）のダメージでひんしになった場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン")],
+        team1=[Pokemon("ピカチュウ", ability_name="とびだすなかみ")],
+    )
+    attacker, defender = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    battle.ailment_manager.apply(defender, "どく")
+    t.end_turn(battle)
+    assert defender.fainted
+    assert not defender.ability.revealed
+    assert attacker.hp == attacker.max_hp
+
+
+def test_とびだすなかみ_攻撃者がじばくで先にひんしなら発動しない():
+    """とびだすなかみ: じばく等で攻撃者がすでにひんしになって場にいない場合は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["じばく"])],
+        team1=[Pokemon("ピカチュウ", ability_name="とびだすなかみ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.fix_damage(battle, 999)
+    t.run_move(battle, 0)
+    assert attacker.fainted
+    assert defender.fainted
+    assert not defender.ability.revealed
+
+
+def test_とびだすなかみ_攻撃者のみがわりを無視してダメージを与える():
+    """とびだすなかみ: 攻撃者がみがわり状態でも、その実HPに直接ダメージを与える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="とびだすなかみ")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(attacker, "みがわり", hp=999)
+    t.fix_damage(battle, 999)
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.hp == attacker.max_hp - defender.max_hp
+    assert attacker.has_volatile("みがわり")
+
+
 @pytest.mark.parametrize(
     "move_name, result",
     [
