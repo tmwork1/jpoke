@@ -70,7 +70,7 @@ def play_game(row_probs: tuple[float, float, float],
     p0.team.append(make_hitmonchan())
     p1.team.append(make_hitmonchan())
 
-    battle = Battle([p0, p1], seed=seed)
+    battle = Battle(p0, p1, seed=seed)
     battle.test_option.accuracy = 100
     battle.start()  # Turn 0: 初期繰り出し
 

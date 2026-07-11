@@ -34,7 +34,7 @@ def main() -> None:
     player2 = Player("Player 2")
     player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
-    battle = Battle((player1, player2), seed=1)
+    battle = Battle(player1, player2, seed=1)
     battle.start()
 
     while battle.judge_winner() is None and battle.turn < 100:

@@ -49,7 +49,7 @@ def _run_random_battle(seed: int) -> Battle:
     for player, rng in zip(players, team_rngs):
         player.team = build_team(random_team_spec(rng, N_POKEMON))
 
-    battle = Battle(players, n_selected=n_selected, seed=seed)
+    battle = Battle(*players, n_selected=n_selected, seed=seed)
     battle.start()
     while battle.judge_winner() is None and battle.turn < MAX_TURNS:
         battle.step()

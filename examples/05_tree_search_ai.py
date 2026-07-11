@@ -15,7 +15,6 @@ from jpoke.players.tree_search_player import TreeSearchPlayer
 
 
 # TODO: TreeSearchPlayer という名前は適切か。MinimaxPlayer の方がわかりやすいかも。
-# TODO: ユーザーからは木探索の深さ設定が見えてこない。
 class KOFocusedPlayer(TreeSearchPlayer):
     """相手を瀕死にできる手を優先する簡易AI（evaluate() の拡張例）。"""
 
@@ -30,13 +29,16 @@ class KOFocusedPlayer(TreeSearchPlayer):
 def main() -> None:
     # 1ターンで決着してしまうと探索の様子が観察しづらいため、HPが高いカビゴン同士を
     # 対戦させ、複数ターンにわたる駆け引きが起きるようにする
+    # max_plies は木探索の深さ（何手先まで読むか）を表す変更可能なパラメータ。
+    # max_plies=2 にすると相手の応手まで読むようになるが、分岐は自分の合法手数×
+    # 相手の合法手数倍に増えるため、探索ノード数（max_nodes）も合わせて調整が必要
     ai_player = KOFocusedPlayer("TreeSearchAI", max_plies=1, max_nodes=50)
     ai_player.add_pokemon("カビゴン", move_names=["のしかかり", "じしん"])
 
     random_player = RandomPlayer("RandomPlayer")
     random_player.add_pokemon("カビゴン", move_names=["たいあたり", "からげんき"])
 
-    battle = Battle((ai_player, random_player), seed=1)
+    battle = Battle(ai_player, random_player, seed=1)
     battle.start()
 
     max_turns = 20
@@ -52,7 +54,9 @@ def main() -> None:
     battle.print_logs()
 
     # 試してみよう: evaluate() に「残り技のPP」や「急所を受けた回数」など
-    # 別の要素を加点・減点として加えると、AIの手の選び方がどう変わるか観察できる
+    # 別の要素を加点・減点として加えると、AIの手の選び方がどう変わるか観察できる。
+    # max_plies を2以上に増やして探索の深さを変えると、手の選び方や
+    # nodes_expanded（展開ノード数）がどう変わるかも比較できる
 
 
 if __name__ == "__main__":

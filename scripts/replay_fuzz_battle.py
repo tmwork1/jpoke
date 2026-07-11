@@ -85,7 +85,7 @@ def run_replay_fuzz_battle(seed: int,
     for player, spec in zip(players, team_specs):
         player.team = build_team(spec)
 
-    battle = Battle(tuple(players), n_selected=n_selected, seed=seed)
+    battle = Battle(*players, n_selected=n_selected, seed=seed)
 
     base_kwargs = dict(
         n_selected=n_selected, max_turns=max_turns, n_pokemon=n_pokemon, teams=team_specs,

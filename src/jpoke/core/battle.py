@@ -103,7 +103,7 @@ class Battle:
         run_move や modify_stats などの委譲メソッドはこの方針のための公式 API である。
 
     Attributes:
-        players: 参加プレイヤーのリスト（通常2人）
+        players: 参加プレイヤーのタプル（通常2人）
         seed: 乱数シード値
         turn: 現在のターン数
         winner: 勝者のPlayerインスタンス（勝負がついていない場合はNone）
@@ -124,7 +124,7 @@ class Battle:
     """
 
     def __init__(self,
-                 players: tuple[Player, ...],
+                 *players: Player,
                  n_selected: int | None = None,
                  seed: int | None = None,
                  mega_evolution: bool = True,
@@ -137,7 +137,8 @@ class Battle:
         """Battleインスタンスを初期化する。
 
         Args:
-            players: 参加プレイヤーのタプル（通常2人）
+            players: 参加プレイヤー（可変長引数、通常2人）。`Battle(player1, player2)` のように
+                個別の位置引数で渡す（`Battle((player1, player2))` のようなタプル渡しは不可）
             n_selected: 選出可能なポケモンの数（Noneの場合は `min(3, 各プレイヤーの手持ち数)`
                 を自動設定する。手持ち数がプレイヤー間で異なる場合も両者に同じ値が
                 適用されるため、片方の手持ちが少ないと両者とも選出数が絞られる点に注意）

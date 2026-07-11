@@ -82,7 +82,7 @@ def start_battle(team0: list[Pokemon],
             player.team.append(mon)
 
     battle = Battle(
-        players,
+        *players,
         mega_evolution=mega_evolution,
         terastal=terastal,
         critical_mode=critical_mode,

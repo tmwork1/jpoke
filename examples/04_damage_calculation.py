@@ -18,7 +18,7 @@ def main() -> None:
     defender_player.add_pokemon("カイリュー", item_name="オボンのみ")
 
     # calc_lethal は対戦を進行させないため、バトルは1体選出で start() しただけでよい
-    battle = Battle((attacker_player, defender_player), seed=1)
+    battle = Battle(attacker_player, defender_player, seed=1)
     battle.start()
 
     attacker = battle.get_active(attacker_player)

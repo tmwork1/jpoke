@@ -151,7 +151,7 @@ def _convert_pokemon(pe_mon, name_maps, *, known_stats: bool) -> Pokemon: ...
 3. `Player` 2体を生成し `.team` にセット（`players[0]` = 自分視点固定、とドキュメント化）
 4. 選出を固定する内部限定の `_FixedSelectionPlayer(Player)` を使い、`choose_selection` で
    「現在アクティブな種族が先頭に来る」順序を返す
-5. `Battle((self_player, opponent_player), n_selected=..., seed=..., mega_evolution=..., terastal=...)`
+5. `Battle(self_player, opponent_player, n_selected=..., seed=..., mega_evolution=..., terastal=...)`
    を構築し `battle.start()` を呼ぶ（通常のON_SWITCH_INフロー。副作用は後続手順の上書きで解消される）
 6. active一致検証（だっしゅつパック等の割り込みで想定外の交代が起きていないか）。
    不一致なら `PokeEnvConversionError`

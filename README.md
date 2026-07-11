@@ -44,7 +44,7 @@ player2 = Player("Player 2")
 player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
 # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは1）
-battle = Battle((player1, player2))
+battle = Battle(player1, player2)
 battle.start()
 
 while battle.judge_winner() is None and battle.turn < 100:
