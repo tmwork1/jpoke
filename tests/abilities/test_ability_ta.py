@@ -1196,6 +1196,20 @@ def test_てんのめぐみ_追加効果確率が2倍になる():
     assert with_megumi.actives[1].rank["spd"] == -1
 
 
+def test_てんのめぐみ_発動率が50パーセント以上の技は100パーセントになる():
+    """てんのめぐみ: 追加効果発動率が50%以上の技（チャージビーム70%）は2倍計算後に
+    100%へ上限で丸められる。乱数0.99は元の70%では外れるが、てんのめぐみありでは
+    100%になるため必ず発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="てんのめぐみ", move_names=["チャージビーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.99
+    t.run_move(battle, 0)
+    assert battle.actives[0].rank["spa"] == 1
+
+
 def test_でんきにかえる_被弾でじゅうでん状態になる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="でんきにかえる")],
