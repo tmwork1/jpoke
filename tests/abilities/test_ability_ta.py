@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
+from jpoke.enums import LogCode
 from jpoke.types import Type, AilmentName, WeatherName, Gender
 
 from .. import test_utils as t
@@ -32,6 +33,58 @@ def test_たんじゅん_能力変化量が2倍になる():
     battle.modify_stats(target, stats, source=source)
     for stat, change in stats.items():
         assert target.rank[stat] == max(-6, min(6, change * 2))
+
+
+def test_ターボブレイズ_場に出たときに特性開示():
+    battle = t.start_battle(
+        team0=[Pokemon("レシラム", ability_name="ターボブレイズ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.actives[0].ability.revealed
+
+
+def test_ターボブレイズ_がんじょうを無視して一撃で倒す():
+    battle = t.start_battle(
+        team0=[Pokemon("コイル", ability_name="がんじょう")],
+        team1=[Pokemon("レシラム", ability_name="ターボブレイズ", move_names=["じしん"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].hp == 0
+
+
+def test_ターボブレイズ_プリズムアーマーは無効化されない():
+    battle = t.start_battle(
+        team0=[Pokemon("レシラム", ability_name="ターボブレイズ", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="プリズムアーマー")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.damage_modifier
+
+
+def test_ターボブレイズ_かがくへんかガス解除後に特性発動ログが再度記録される():
+    """ターボブレイズ: かたやぶりと同様、かがくへんかガスの効果が切れて特性が
+    再有効化されたときに場に出たときのログが再度記録される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス"), Pokemon("コラッタ")],
+        team1=[Pokemon("レシラム", ability_name="ターボブレイズ")],
+    )
+    mon = battle.actives[1]
+    assert not mon.ability.enabled
+
+    def count_triggered() -> int:
+        return sum(
+            1 for log in battle.event_logger.logs
+            if log.log == LogCode.ABILITY_TRIGGERED
+            and log.idx == 1
+            and log.payload is not None
+            and getattr(log.payload, "ability", None) == "ターボブレイズ"
+        )
+
+    assert count_triggered() == 0
+
+    t.run_switch(battle, 0, 1)
+    assert mon.ability.enabled
+    assert count_triggered() == 1
 
 
 @pytest.mark.parametrize(
