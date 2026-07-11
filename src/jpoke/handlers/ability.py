@@ -1840,8 +1840,26 @@ def じょおうのいげん_block_priority(battle: Battle, ctx: AttackContext, 
 
 
 def じりょく_check_trapped(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """じりょく特性: はがねタイプのポケモンの交代を防ぐ。"""
-    return HandlerReturn(value=ctx.source.has_type("はがね"))
+    """じりょく特性: はがねタイプのポケモンの交代を防ぐ。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_CHECK_TRAPPED)
+            - source: 交代を試みるポケモン
+        value: イベント値（未使用）
+
+    Returns:
+        HandlerReturn: (True, 交代が制限されるかどうか)
+            - はがねタイプの場合はTrue（交代制限）
+            - ゴーストタイプを併せ持つ場合はゴーストタイプの性質が優先され、交代を制限しない
+    """
+    source = ctx.source
+    result = (
+        source is not None
+        and source.has_type("はがね")
+        and not source.has_type("ゴースト")
+    )
+    return HandlerReturn(value=result)
 
 
 def すいすい_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:

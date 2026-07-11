@@ -634,6 +634,18 @@ def test_交代抑制特性_param(ability_name: str, attacker_name: str, attacke
     assert t.can_switch(battle, 0) is expected_can_switch
 
 
+def test_じりょく_ゴーストタイプを併せ持つはがねタイプの相手は交代できる():
+    """じりょく: ハロウィンでゴーストタイプが追加されたはがねタイプの相手は交代できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイル"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="じりょく")],
+        volatile0={"ハロウィン": 0},
+    )
+    assert "はがね" in battle.actives[0].types
+    assert "ゴースト" in battle.actives[0].types
+    assert t.can_switch(battle, 0) is True
+
+
 @pytest.mark.parametrize(
     "ability_name, expected_modifier",
     [
