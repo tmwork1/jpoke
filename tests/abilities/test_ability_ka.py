@@ -1544,6 +1544,16 @@ def test_こおりのりんぷん_特殊技のダメージ半減(move_name, expe
     assert expected_modifier == battle.damage_calculator.damage_modifier
 
 
+def test_こおりのりんぷん_ぼうぎょ参照の特殊技には効果が乗る():
+    """サイコショック等、特殊技だがぼうぎょを参照する技にも半減効果が乗る"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["サイコショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name="こおりのりんぷん")],
+    )
+    t.run_move(battle, 0)
+    assert 2048 == battle.damage_calculator.damage_modifier
+
+
 def test_こぼれダネ_すでにグラスフィールドなら発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="こぼれダネ")],
