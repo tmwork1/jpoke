@@ -258,7 +258,7 @@ class Battle:
         # player_states のキャッシュを複製後の PlayerState で再構築する
         new._player_states_map = dict(zip(new.players, new._player_states))
 
-        # ポケモンが持つ他ポケモンへの参照（contact_hitter 等）を複製後の個体に付け替える
+        # ポケモンが持つ他ポケモンへの参照を複製後の個体に付け替える
         mon_map = {
             id(old_mon): new_mon
             for old_state, new_state in zip(self._player_states, new._player_states)

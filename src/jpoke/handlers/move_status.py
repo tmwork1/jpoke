@@ -591,8 +591,9 @@ def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) 
     かえんのまもりはそのターンに自分より後に行動する相手の技から身を守るための
     技であるため、自分がそのターンの最後に行動する場合は守る対象がなく失敗する
     （シングルバトル想定）。
-    失敗時は protect_chain_move を None にリセットし、まもる系の
-    連続使用カウントもリセットする（連続使用扱いにしない）。
+    この失敗により run_move の finally で failed_or_immobile_last_turn が True に
+    なるため、まもる系の連続使用チェック（failed_or_immobile_last_turn を参照）は
+    次ターン自然にリセットされる。個別のリセット処理は不要。
     """
     attacker_player = battle.get_player(ctx.attacker)
     if battle.query.is_second_actor(attacker_player):
@@ -600,7 +601,6 @@ def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) 
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="かえんのまもり_最終行動")
         )
-        ctx.attacker.protect_chain_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2667,21 +2667,25 @@ def まもる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
 def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """守る系技の連続使用失敗チェック。
 
-    直前ターンに守る系の技（protect フラグを持つ技）を正常に使用していた場合、
-    今ターンの守る系技を失敗させる。
-    失敗時は protect_chain_move を None にリセットして次ターンは
-    再度使えるようにする。
+    直前の行動が守る系の技（protect フラグを持つ技）で、かつ成功していた場合、
+    今ターンの守る系技を失敗させる。failed_or_immobile_last_turn を併せて見る
+    ことで、直前行動が（この連続使用チェック自身の失敗も含めて）何らかの理由で
+    失敗していれば連鎖が途切れたとみなし、次ターンは再度成功しうる。
+    executed_move は行動の成否に関わらず run_move の finally より前に確定するが、
+    このチェック自体が早期returnした場合はそのまもる系技には更新されない
+    （_execute_move 内で executed_move への代入より前に判定されるため）ので、
+    executed_move 単独では連続使用と1回休みを区別できない。
     """
     mon = ctx.attacker
     if (
-        mon.protect_chain_move is not None
-        and mon.protect_chain_move.has_flag("protect")
+        mon.executed_move is not None
+        and mon.executed_move.has_flag("protect")
+        and not mon.failed_or_immobile_last_turn
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="まもる系_連続使用")
         )
-        mon.protect_chain_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2801,20 +2805,19 @@ def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackConte
     """みちづれの連続使用失敗チェック（第七世代以降）。
 
     直前の自分の行動で成功裏にみちづれを使用していた場合、今回のみちづれは失敗する
-    （まもる系_連続使用失敗チェックと同じパターン）。
-    失敗時は protect_chain_move を None にリセットし、次回の使用は
-    連続使用扱いにしない。
+    （まもる系_連続使用失敗チェックと同じパターン。failed_or_immobile_last_turn を
+    併せて見る理由もそちらのdocstring参照）。
     """
     mon = ctx.attacker
     if (
-        mon.protect_chain_move is not None
-        and mon.protect_chain_move.name == "みちづれ"
+        mon.executed_move is not None
+        and mon.executed_move.name == "みちづれ"
+        and not mon.failed_or_immobile_last_turn
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="みちづれ_連続使用")
         )
-        mon.protect_chain_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

@@ -406,9 +406,6 @@ class MoveExecutor:
 
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
-        # まもる系・みちづれ・かえんのまもりの連続使用失敗判定専用の内部状態。
-        # executed_move と同じタイミングで更新するが、他機能とは共用しない。
-        ctx.attacker.protect_chain_move = ctx.move
         # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
         # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
         # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
@@ -521,11 +518,6 @@ class MoveExecutor:
         # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
         category = "physical" if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "special"
         ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
-
-        # 接触技ヒット時に攻撃者を記録する（くちばしキャノン等の判定用）
-        # ぼうごパットで反応効果が防がれる場合は記録しない
-        if self.battle.query.is_contact_reaction(ctx):
-            ctx.defender.contact_hitter = ctx.attacker
 
         self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)
 

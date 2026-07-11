@@ -128,6 +128,9 @@ class TurnController:
         # メガシンカ
         self._run_megaevolve_phase()
 
+        # 予備動作（きあいパンチ・くちばしキャノン等の準備行動）
+        self._run_before_move_phase()
+
         # 技の処理
         self._run_move_phase()
 
@@ -254,6 +257,35 @@ class TurnController:
 
                 # メガシンカ後の特性が発動するイベントを追加
                 self._events.emit(Event.ON_ABILITY_ENABLED, EventContext(source=mon))
+
+    def _run_before_move_phase(self):
+        """予備動作フェーズを実行する。
+
+        行動順解決後・実際の技実行前に、各プレイヤーの予約コマンドを技に解決した上で
+        Event.ON_BEFORE_MOVE を発火する（くちばしキャノンの加熱等、行動可否の判定より
+        前に「この技を選んだ」時点で発動する効果向け）。技本体の実行ではないため、
+        対象の技ハンドラは発火直後に解除し、後続の run_move での登録と重複させない。
+        """
+        if not self.battle.is_new_turn():
+            return
+
+        for index in self.action_order:
+            player = self.battle.players[index]
+            state = self.battle.player_states[player]
+            if not state.command_reserved():
+                continue
+
+            mon = state.active
+            command = state.next_command
+            if not command.is_type("move") or mon.fainted:
+                continue
+
+            move = self.battle.command_to_move(player, command)
+            move.register_handlers(self._events, mon)
+            try:
+                self._events.emit(Event.ON_BEFORE_MOVE, EventContext(source=mon))
+            finally:
+                move.unregister_handlers(self._events, mon)
 
     def _run_move_phase(self):
         """技発動フェーズを実行する。"""
