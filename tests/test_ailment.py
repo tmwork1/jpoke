@@ -39,7 +39,7 @@ def test_modify_hp_r正_最低1回復():
     )
     mon = battle.actives[0]
     # max_hp=8 にすると int(8 * (1/16)) == 0 になる
-    mon._stats_manager._stats[0] = 8
+    mon._stats[0] = 8
     mon.hp = 2
     result = battle.modify_hp(mon, r=1/16)
     assert result == 1, f"最低1HP回復のはずだが {result} だった"
@@ -54,7 +54,7 @@ def test_modify_hp_r負_最低1ダメージ():
     )
     mon = battle.actives[0]
     # max_hp=8 にすると int(8 * (-1/16)) == 0 になる
-    mon._stats_manager._stats[0] = 8
+    mon._stats[0] = 8
     mon.hp = 8
     result = battle.modify_hp(mon, r=-1/16)
     assert result == -1, f"最低1ダメージのはずだが {result} だった"

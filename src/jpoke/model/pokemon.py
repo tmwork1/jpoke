@@ -13,14 +13,14 @@ from jpoke.types import Nature, Type, Stat, Gender, HpPolicy, \
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
-from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS
+from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS, NATURE_MODIFIER
 
 from .ability import Ability
 from .item import Item
 from .move import Move
 from .ailment import Ailment
 from .volatile import Volatile
-from .stats import PokemonStats
+from .stats import calc_hp, calc_stat, chmp_to_legacy_effort
 
 
 class Pokemon:
@@ -82,11 +82,13 @@ class Pokemon:
 
         self.set_moves(move_names if move_names is not None else ["はねる"])
 
-        # ステータス計算マネージャー
-        self._stats_manager = PokemonStats()
+        # ステータス（実数値・個体値・努力値）
+        self._stats: list[int] = [100]*6
+        self._indiv: list[int] = [31]*6
+        self._effort: list[int] = [0]*6
 
         # 初期ステータス計算（hp は未定義のため update_stats() の hp 追従処理は経由しない）
-        self._stats_manager.update_stats(self._level, self.data.base, self._nature)
+        self._recalc_stats()
 
         self.paradox_boost_stat: Stat | None = None
         self.paradox_boost_source: BoostSource = ""
@@ -134,7 +136,6 @@ class Pokemon:
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
             'executed_move', 'selected_move', 'last_pp_consumed_move',
-            '_stats_manager',
         ])
         return new
 
@@ -509,7 +510,7 @@ class Pokemon:
         Returns:
             個体値のリスト
         """
-        return self._stats_manager.indiv
+        return self._indiv
 
     def set_indiv(self, indiv: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """個体値を設定する。
@@ -521,7 +522,7 @@ class Pokemon:
         Note:
             個体値変更時にステータスを自動再計算する。
         """
-        self._stats_manager.indiv = indiv
+        self._indiv = indiv
         self.update_stats(hp_policy)
 
     @property
@@ -531,7 +532,7 @@ class Pokemon:
         Returns:
             Champions形式の努力値のリスト
         """
-        return self._stats_manager.effort
+        return self._effort
 
     def set_effort(self, effort: list[int], hp_policy: HpPolicy = "keep_absolute"):
         """努力値をChampions形式（0〜32）で設定する。
@@ -543,7 +544,7 @@ class Pokemon:
         Note:
             努力値変更時にステータスを自動再計算する。
         """
-        self._stats_manager.effort = effort
+        self._effort = effort
         self.update_stats(hp_policy)
 
     @property
@@ -553,7 +554,8 @@ class Pokemon:
         Returns:
             ステータス名をキーとする実数値の辞書
         """
-        return self._stats_manager.stats_dict
+        labels = STATS[:6]
+        return {s: v for s, v in zip(labels, self._stats)}
 
     def set_stats(self, stats: dict[Stat, int], hp_policy: HpPolicy = "keep_absolute"):
         """実数値から努力値を逆算して設定する。
@@ -565,8 +567,26 @@ class Pokemon:
         Note:
             設定後、ステータスを自動再計算する。
         """
-        self._stats_manager.set_stats_from_dict(stats, self._level, self.data.base, self._nature)
+        for i, value in enumerate(stats.values()):
+            self._set_stat_from_value(i, value)
         self.update_stats(hp_policy)
+
+    def get_raw_stat(self, idx: int) -> int:
+        """指定インデックスの実数値を取得する。
+
+        Args:
+            idx: ステータスのインデックス (0=HP, 1=攻撃, 2=防御, ...)
+        """
+        return self._stats[idx]
+
+    def set_raw_stat(self, idx: int, value: int):
+        """指定インデックスの実数値を努力値と無関係に直接書き換える。
+
+        Note:
+            ガードシェア・パワーシェア・パワートリック・スピードスワップなど、
+            努力値の再計算を伴わずに実数値そのものを操作する専用効果でのみ使用する。
+        """
+        self._stats[idx] = value
 
     @property
     def ranked_stats(self) -> dict[Stat, int]:
@@ -596,7 +616,7 @@ class Pokemon:
         Returns:
             最大HP
         """
-        return self._stats_manager.stats[0]
+        return self._stats[0]
 
     @property
     def hp_ratio(self) -> float:
@@ -623,6 +643,43 @@ class Pokemon:
             damage = old_max_hp - old_hp
             self.hp = max(0, min(self.max_hp, self.max_hp - damage))
 
+    def _recalc_stats(self):
+        """レベル・種族値・個体値・努力値・性格から実数値を再計算する。"""
+        self._stats[0] = calc_hp(
+            self._level, self.data.base[0],
+            self._indiv[0], chmp_to_legacy_effort(self._effort[0])
+        )
+
+        nc = NATURE_MODIFIER[self._nature]
+        for i in range(1, 6):
+            self._stats[i] = calc_stat(
+                self._level, self.data.base[i],
+                self._indiv[i], chmp_to_legacy_effort(self._effort[i]), nc[i]
+            )
+
+    def _set_stat_from_value(self, idx: int, value: int) -> bool:
+        """指定インデックスの実数値になるよう努力値を逆算して設定する。
+
+        Note:
+            Champions努力値（0〜32）に対応するSV等価値を前提とした逆算を行う。
+            該当する努力値が見つからない場合は失敗する。
+        """
+        nc = NATURE_MODIFIER[self._nature]
+
+        for chmp in range(33):
+            eff = chmp_to_legacy_effort(chmp)
+            if idx == 0:
+                v = calc_hp(self._level, self.data.base[idx], self._indiv[idx], eff)
+            else:
+                v = calc_stat(self._level, self.data.base[idx], self._indiv[idx], eff, nc[idx])
+
+            if v == value:
+                self._effort[idx] = chmp
+                self._stats[idx] = v
+                return True
+
+        return False
+
     def update_stats(self, hp_policy: HpPolicy = "keep_absolute"):
         """ステータスを再計算する。
 
@@ -636,10 +693,7 @@ class Pokemon:
         old_max_hp = self.max_hp
         old_hp = self.hp
 
-        # ステータスを再計算
-        self._stats_manager.update_stats(
-            self._level, self.data.base, self._nature
-        )
+        self._recalc_stats()
 
         self._apply_hp_policy(old_max_hp, old_hp, hp_policy)
 
@@ -653,16 +707,11 @@ class Pokemon:
 
         Returns:
             設定に成功した場合True、失敗した場合False
-
-        Note:
-            内部的に PokemonStats に委譲する。
         """
         old_max_hp = self.max_hp
         old_hp = self.hp
 
-        ok = self._stats_manager.set_stats_from_value(
-            idx, value, self._level, self.data.base, self._nature
-        )
+        ok = self._set_stat_from_value(idx, value)
 
         if ok and idx == 0:
             self._apply_hp_policy(old_max_hp, old_hp, hp_policy)
@@ -680,7 +729,7 @@ class Pokemon:
         Note:
             設定後、ステータスを自動再計算する。
         """
-        self._stats_manager.effort[idx] = value
+        self._effort[idx] = value
         self.update_stats(hp_policy)
 
     def modify_hp(self, v: int) -> int:
@@ -893,7 +942,7 @@ class Pokemon:
             s += f"{self.tera_type}T{sep}"
         else:
             s += f"No terastal{sep}"
-        for st, ef in zip(self._stats_manager.stats, self._stats_manager.effort):
+        for st, ef in zip(self._stats, self._effort):
             s += f"{st}({ef})-" if ef else f"{st}-"
         s = s[:-1] + sep
         s += "/".join(move.name for move in self.moves)
@@ -917,8 +966,8 @@ class Pokemon:
             "ability": self.ability.name,
             "item": self.item.name,
             "moves": [move.name for move in self.moves],
-            "indiv": self._stats_manager.indiv,
-            "effort": self._stats_manager.effort,
+            "indiv": self._indiv,
+            "effort": self._effort,
             "tera_type": self.tera_type,
         }
 

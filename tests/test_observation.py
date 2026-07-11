@@ -36,7 +36,7 @@ def test_観測で相手の性格と努力値が隠蔽される():
     masked = obs.player_states[obs.opponent(observer)].team[0]
 
     assert masked._nature == "まじめ"
-    assert masked._stats_manager.effort == [0] * 6
+    assert masked._effort == [0] * 6
 
 
 def test_観測で相手のHP割合が維持される():

@@ -661,13 +661,12 @@ def ガードシェア_equalize_stats(battle: Battle, ctx: AttackContext, value:
     ランク変化は行わず、実数値のみを書き換える。
     平均は切り捨て（// 2）。
     """
-    atk_stats = ctx.attacker._stats_manager.stats
-    def_stats = ctx.defender._stats_manager.stats
+    atk, df = ctx.attacker, ctx.defender
     # B=インデックス2、D=インデックス4
     for idx in (2, 4):
-        avg = (atk_stats[idx] + def_stats[idx]) // 2
-        atk_stats[idx] = avg
-        def_stats[idx] = avg
+        avg = (atk.get_raw_stat(idx) + df.get_raw_stat(idx)) // 2
+        atk.set_raw_stat(idx, avg)
+        df.set_raw_stat(idx, avg)
     return HandlerReturn(value=value)
 
 
@@ -1279,9 +1278,10 @@ def スピードスワップ_swap_speed(battle: Battle, ctx: AttackContext, valu
     ランク変化は行わず、実数値のみを入れ替える。
     インデックス 5 = すばやさ（[HP, 攻撃, 防御, 特攻, 特防, 素早さ]）。
     """
-    atk_stats = ctx.attacker._stats_manager.stats
-    def_stats = ctx.defender._stats_manager.stats
-    atk_stats[5], def_stats[5] = def_stats[5], atk_stats[5]
+    atk, df = ctx.attacker, ctx.defender
+    atk_spe, def_spe = atk.get_raw_stat(5), df.get_raw_stat(5)
+    atk.set_raw_stat(5, def_spe)
+    df.set_raw_stat(5, atk_spe)
     return HandlerReturn(value=value)
 
 
@@ -2353,13 +2353,12 @@ def パワーシェア_equalize_stats(battle: Battle, ctx: AttackContext, value:
     ランク変化は行わず、実数値のみを書き換える。
     平均は切り捨て（// 2）。
     """
-    atk_stats = ctx.attacker._stats_manager.stats
-    def_stats = ctx.defender._stats_manager.stats
+    atk, df = ctx.attacker, ctx.defender
     # A=インデックス1、C=インデックス3
     for idx in (1, 3):
-        avg = (atk_stats[idx] + def_stats[idx]) // 2
-        atk_stats[idx] = avg
-        def_stats[idx] = avg
+        avg = (atk.get_raw_stat(idx) + df.get_raw_stat(idx)) // 2
+        atk.set_raw_stat(idx, avg)
+        df.set_raw_stat(idx, avg)
     return HandlerReturn(value=value)
 
 
@@ -2382,8 +2381,10 @@ def パワートリック_swap_stats(battle: Battle, ctx: AttackContext, value: 
     インデックス 1 = こうげき、インデックス 2 = ぼうぎょ
     （[HP, 攻撃, 防御, 特攻, 特防, 素早さ]）。
     """
-    stats = ctx.attacker._stats_manager.stats
-    stats[1], stats[2] = stats[2], stats[1]
+    atk = ctx.attacker
+    atk_stat, def_stat = atk.get_raw_stat(1), atk.get_raw_stat(2)
+    atk.set_raw_stat(1, def_stat)
+    atk.set_raw_stat(2, atk_stat)
     return HandlerReturn(value=value)
 
 
