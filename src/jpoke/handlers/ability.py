@@ -2526,10 +2526,33 @@ def でんきエンジン_absorb_electric(battle: Battle, ctx: AttackContext, va
 
 
 def でんきにかえる_charge_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """でんきにかえる特性: 攻撃技でダメージを受けるとじゅうでん状態になる。"""
+    """でんきにかえる特性: 攻撃技でダメージを受けるとじゅうでん状態になる。
+
+    その攻撃技でひんしになったときは発動しない
+    （スカーレット・バイオレット Ver.1.2.0 以降の仕様。ポケモンチャンピオンズは現行パッチ準拠）。
+    すでにじゅうでん状態のときも改めて発動する（volatile_manager.apply は失敗するが、
+    アナウンスは apply の成否に関わらず行う）。
+    """
     mon = ctx.defender
-    if battle.volatile_manager.apply(mon, "じゅうでん", source=mon):
-        _announce_ability_triggered(battle, mon)
+    if not mon.alive:
+        return HandlerReturn(value=value)
+    battle.volatile_manager.apply(mon, "じゅうでん", source=mon)
+    _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def でんきにかえる_charge_on_zero_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """でんきにかえる特性: 実HPダメージが0だった場合（こらえる・みねうち等）でも発動する。
+
+    Event.ON_DAMAGE_HIT は実HPダメージが0のとき発火しないため、常に発火する
+    Event.ON_HIT 側でこのケース（value<=0）のみを処理する（レッドカードと同じ idiom）。
+    みがわりに阻まれた場合（実ダメージ0だが ctx.substitute_damage が立つ）は対象外。
+    """
+    if value > 0 or ctx.substitute_damage:
+        return HandlerReturn(value=value)
+    mon = ctx.defender
+    battle.volatile_manager.apply(mon, "じゅうでん", source=mon)
+    _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
 

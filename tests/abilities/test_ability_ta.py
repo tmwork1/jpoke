@@ -1276,6 +1276,57 @@ def test_でんきにかえる_被弾でじゅうでん状態になる():
     assert battle.actives[0].has_volatile("じゅうでん")
 
 
+def test_でんきにかえる_こらえるで実ダメージ0でも発動する():
+    """でんきにかえる: こらえるでHP1のまま耐えた（実ダメージ0）ときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきにかえる")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    holder = battle.actives[0]
+    holder.hp = 1
+    battle.volatile_manager.apply(holder, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert holder.hp == 1
+    assert not holder.fainted
+    assert holder.has_volatile("じゅうでん")
+
+
+def test_でんきにかえる_ひんしになったときは発動しない():
+    """でんきにかえる: その攻撃技でひんしになったときは発動しない
+    （スカーレット・バイオレット Ver.1.2.0 以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきにかえる")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert not defender.has_volatile("じゅうでん")
+
+
+def test_でんきにかえる_みがわりに阻まれたときは発動しない():
+    """でんきにかえる: みがわり状態で攻撃を防いだときは発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきにかえる")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    holder = battle.actives[0]
+    battle.volatile_manager.apply(holder, "みがわり", hp=999)
+
+    t.run_move(battle, 1)
+
+    assert not holder.has_volatile("じゅうでん")
+
+
 def test_とうそうしん_こんらん自傷ダメージには補正なし():
     """とうそうしん: こんらんの自傷ダメージには威力補正がかからない（第五世代以降の仕様）"""
     battle = t.start_battle(
