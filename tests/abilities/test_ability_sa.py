@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.enums import Command
+from jpoke.enums import Command, Interrupt
 from jpoke.types import AilmentName, WeatherName, SideFieldName
 
 from .. import test_utils as t
@@ -34,6 +34,44 @@ def test_さいせいりょく_交代で控えに戻ると回復する():
     mon.hp = 1
     t.run_switch(battle, 0, 1)
     assert mon.hp == 1 + mon.max_hp // 3
+
+
+def test_さいせいりょく_とんぼがえりで交代しても回復する():
+    """さいせいりょく: 使うと交代する技（とんぼがえり）で引っ込んだときも回復する。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ヤドン", ability_name="さいせいりょく", move_names=["とんぼがえり"]),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 0)
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+    assert mon.hp == 1 + mon.max_hp // 3
+
+
+def test_さいせいりょく_強制交代させられても回復する():
+    """さいせいりょく: ドラゴンテール等で強制交代させられたときも回復する。
+
+    与ダメージを固定（fix_damage）した上で、ダメージ後のHPに最大HPの1/3が
+    加算されることを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ドラゴンテール"])],
+        team1=[
+            Pokemon("ヤドン", ability_name="さいせいりょく"),
+            Pokemon("ピカチュウ"),
+        ],
+        accuracy=100,
+    )
+    mon = battle.actives[1]
+    damage = mon.max_hp // 2
+    t.fix_damage(battle, damage)
+    t.run_move(battle, 0)
+    assert mon.hp == mon.max_hp - damage + mon.max_hp // 3
 
 
 def test_さまようたましい_うのミサイルは例外的に入れ替わる():
