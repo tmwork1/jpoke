@@ -25,16 +25,6 @@ weathers = [x[1] for x in ability_weather_defaultcount]
 strong_weathers = weathers[4:]
 
 
-def test_はがねのせいしん_はがね技の威力が1_5倍になる():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="はがねのせいしん", move_names=["アイアンヘッド"])],
-        team1=[Pokemon("ピカチュウ")],
-        accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert 6144 == battle.damage_calculator.power_modifier
-
-
 def test_はがねのせいしん_はがね以外の技は威力補正なし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="はがねのせいしん", move_names=["たいあたり"])],
@@ -43,6 +33,16 @@ def test_はがねのせいしん_はがね以外の技は威力補正なし():
     )
     t.run_move(battle, 0)
     assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_はがねのせいしん_はがね技の威力が1_5倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はがねのせいしん", move_names=["アイアンヘッド"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
 
 
 def test_はがねのせいしん_はめつのねがいの威力も上がる():
