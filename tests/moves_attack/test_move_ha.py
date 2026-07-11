@@ -2219,7 +2219,7 @@ def test_ぶきみなじゅもん_ねごと経由ではねごとのPPが減る()
 
 
 def test_ぶきみなじゅもん_相手が技未使用ならPP変化なし():
-    """ぶきみなじゅもん: 相手の last_pp_consumed_move が None の場合はPPを変化させない
+    """ぶきみなじゅもん: 相手の pp_consumed_move が None の場合はPPを変化させない
     （ダメージは通常どおり与える）。"""
     battle = t.start_battle(
         team0=[Pokemon("フーディン", move_names=["ぶきみなじゅもん"])],
@@ -2230,7 +2230,7 @@ def test_ぶきみなじゅもん_相手が技未使用ならPP変化なし():
     move = defender.moves[0]
     pp_before = move.pp
     hp_before = defender.hp
-    # カビゴンはまだPPを消費する行動をしていない（last_pp_consumed_move=None）
+    # カビゴンはまだPPを消費する行動をしていない（pp_consumed_move=None）
     t.run_move(battle, 0)
     assert move.pp == pp_before
     assert defender.hp < hp_before, "PP減少がなくてもダメージは与える"
@@ -2245,7 +2245,7 @@ def test_ぶきみなじゅもん_相手の直前技PPが3減る():
     )
     defender = battle.actives[1]
     move = defender.moves[0]
-    # カビゴンに技を使わせて last_pp_consumed_move を設定する
+    # カビゴンに技を使わせて pp_consumed_move を設定する
     t.run_move(battle, 1)
     pp_after_use = move.pp
     # ぶきみなじゅもんを使う

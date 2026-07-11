@@ -2930,8 +2930,8 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
     （ダメージは通常どおり与えられており、技自体は失敗しない）。
     """
     mon = ctx.defender
-    if mon.last_pp_consumed_move is not None:
-        mon.last_pp_consumed_move.modify_pp(-3)
+    if mon.pp_consumed_move is not None:
+        mon.pp_consumed_move.modify_pp(-3)
     return HandlerReturn(value=value)
 
 

@@ -322,7 +322,7 @@ def test_アンコール_PP消費後に失敗した技が対象になる():
 
     t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（ねむり状態でないため失敗する）
     assert negoto.pp == 11, "失敗してもねごとのPPは消費される"
-    assert mon.last_pp_consumed_move.name == "ねごと"
+    assert mon.pp_consumed_move.name == "ねごと"
 
     t.run_move(battle, 1, 0)  # カビゴン: アンコール（ねごとは non_encore のため失敗する）
     assert not mon.has_volatile("アンコール")
@@ -352,7 +352,7 @@ def test_アンコール_ねごとで実行された技には失敗する():
     ねごと自身（non_encore ラベル持ち）として扱われるため失敗する。
 
     ねごとの実行中に executed_move がサブ技（たいあたり）で上書きされても、
-    サブ技はPPを消費しないため last_pp_consumed_move はねごと自身のままである
+    サブ技はPPを消費しないため pp_consumed_move はねごと自身のままである
     ことを利用して判定する回帰テスト。
     """
     battle = t.start_battle(
@@ -366,7 +366,7 @@ def test_アンコール_ねごとで実行された技には失敗する():
     t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（候補はたいあたりのみ）
     assert mon.selected_move.name == "ねごと"
     assert mon.executed_move.name == "たいあたり"
-    assert mon.last_pp_consumed_move.name == "ねごと"
+    assert mon.pp_consumed_move.name == "ねごと"
 
     t.run_move(battle, 1, 0)  # カビゴン: アンコール（ねごとは non_encore のため失敗する）
     assert not mon.has_volatile("アンコール")
