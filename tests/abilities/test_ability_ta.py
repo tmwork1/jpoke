@@ -290,6 +290,20 @@ def test_ダルマモード_交代するとノーマルのすがたに戻る():
     assert mon.name == "ヒヒダルマ(ノーマル)"
 
 
+def test_ダルマモード_HP1_2以下で場に出た直後は変化しない():
+    """発動にはターン終了まで待つ必要があり、場に出た瞬間には変化しない。"""
+    darmanitan = Pokemon("ヒヒダルマ(ノーマル)", ability_name="ダルマモード")
+    darmanitan.hp = darmanitan.max_hp // 2
+    battle = t.start_battle(
+        team0=[darmanitan],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ヒヒダルマ(ノーマル)"
+    t.end_turn(battle)
+    assert mon.name == "ヒヒダルマ(ダルマ)"
+
+
 def test_ちからずく_いっちょうあがりは追加効果がなくても威力が1_3倍になる():
     """いっちょうあがり: 追加効果は無いがちからずく対象フラグを持つため、威力が1.3倍になる。"""
     battle = t.start_battle(
