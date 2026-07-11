@@ -171,7 +171,7 @@ class Player:
         for opponent in opponents:
             for i in range(n_battles):
                 seed = base_seed + i if base_seed is not None else None
-                battle = Battle((self, opponent), seed=seed, **battle_kwargs)
+                battle = Battle(self, opponent, seed=seed, **battle_kwargs)
                 battle.start()
                 winner = battle.play_out(max_turns=MAX_TURNS)
                 if winner is None:

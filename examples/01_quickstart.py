@@ -18,12 +18,11 @@ def main() -> None:
 
     # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは1）
     # seed: 乱数シードを固定し、命中判定・急所判定などを再現可能にする
-    # TODO: playerをtupleで渡すより個別引数で渡す方がわかりやすいかも
     # TODO: Battleクラスをimportせずとも、Player.battle_against()で同じことができるようにする
     # TODO: poke-envのbattle_against()はバトルを最後まで進めるが、jpokeでは手動でstep()している。jpoke.Player.battle_against()はpoke-env互換にしておいて、手動で進めるための別メソッドも用意すべき(別スクリプトにする)
-    battle = Battle((player1, player2), seed=1)
+    battle = Battle(player1, player2, seed=1)
 
-    # TODO: ユーザー視点だとstart()で何をしているのかわからない
+    # 選出と初期繰り出しを行い、対戦を開始する
     battle.start()
 
     # 決着がつくかターン上限に達するまで手動でstep()する

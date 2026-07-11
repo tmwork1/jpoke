@@ -26,7 +26,7 @@ def main(attacker: str,
     ]
 
     # バトルを作成・実行
-    battle = Battle((player1, player2), n_selected=1)
+    battle = Battle(player1, player2, n_selected=1)
     battle.start()
 
     results = battle.calc_lethal(

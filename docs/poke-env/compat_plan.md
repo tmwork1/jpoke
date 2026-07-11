@@ -392,7 +392,7 @@ def battle_against(self, *opponents: "Player", n_battles: int = 1, **battle_kwar
 
     for opponent in opponents:
         for _ in range(n_battles):
-            battle = Battle((self, opponent), **battle_kwargs)
+            battle = Battle(self, opponent, **battle_kwargs)
             battle.start()
             while battle.judge_winner() is None and battle.turn < MAX_TURNS:
                 battle.step()

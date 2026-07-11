@@ -52,7 +52,7 @@ def play_game(seed: int | None = None,
     player2.team[1].revealed = True
 
     # バトルを作成・実行
-    battle = Battle((player1, player2), n_selected=len(player1.team), seed=seed)
+    battle = Battle(player1, player2, n_selected=len(player1.team), seed=seed)
 
     battle.start()
 

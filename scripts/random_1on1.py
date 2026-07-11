@@ -99,7 +99,7 @@ def play_game(seed: int = None, max_turns: int = 10) -> tuple[Player | None, int
         players[i].team.append(mon)
 
     # バトルを作成・実行
-    battle = Battle(players, n_selected=1, seed=seed)
+    battle = Battle(*players, n_selected=1, seed=seed)
     battle.start()
 
     while (winner := battle.judge_winner()) is None:

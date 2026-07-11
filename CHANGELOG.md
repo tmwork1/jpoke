@@ -23,6 +23,10 @@
 
 ### Changed
 
+- **破壊的変更**: `Battle.__init__` が `players: tuple[Player, ...]` ではなく
+  `*players: Player` の可変長引数を受け取るようになった。
+  `Battle((player1, player2), ...)` ではなく `Battle(player1, player2, ...)`
+  と書く
 - `Battle(n_selected=...)` を省略した場合、`min(3, 各プレイヤーの手持ち数)` を
   自動設定するようになった（従来は常に3固定で、手持ちが3未満だと `n_selected` の
   明示指定が必須だった）

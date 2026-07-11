@@ -118,7 +118,7 @@ def replay_battle(data: BattleReplayData, max_turns: int = 300) -> Battle:
         ReplayPlayer("Player 1", data.teams[0], data.selections[0], commands_by_player[0]),
         ReplayPlayer("Player 2", data.teams[1], data.selections[1], commands_by_player[1]),
     )
-    battle = Battle(players, n_selected=data.n_selected, seed=data.seed, **data.battle_option)
+    battle = Battle(*players, n_selected=data.n_selected, seed=data.seed, **data.battle_option)
     battle.start()
 
     while battle.judge_winner() is None and battle.turn < max_turns:
