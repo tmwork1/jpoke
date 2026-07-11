@@ -131,6 +131,64 @@ def test_ダウンロード_能力アップ(foe_name, stat):
     assert battle.actives[0].rank[stat] == 1
 
 
+def test_ダウンロード_ランク補正を考慮して比較する():
+    """防御・特防の比較にはランク補正込みの実数値を使う。
+
+    フシギダネは素の実数値では防御<特防だが、特防のランクを-6まで下げると
+    ランク補正後は防御の方が上回るため、攻撃ではなく特攻が上がる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("コイキング"), Pokemon("ピカチュウ", ability_name="ダウンロード")],
+        team1=[Pokemon("フシギダネ")],
+    )
+    battle.actives[1].rank["spd"] = -6
+    mon = t.run_switch(battle, 0, 1)
+    assert mon.rank["atk"] == 0
+    assert mon.rank["spa"] == 1
+
+
+def test_ダウンロード_ワンダールームでランク補正のみ入れ替えて比較する():
+    """ワンダールーム下では実数値は据え置いたまま、防御・特防のランク補正のみを入れ替えて比較する。
+
+    フシギダネの防御ランクを+6・特防ランクを-6にすると、通常の比較（ランク補正も入れ替えない）
+    では防御実数値×防御ランク補正＞特防実数値×特防ランク補正となり特攻が上がってしまうが、
+    ワンダールーム下ではランク補正のみが入れ替わるため、
+    防御実数値×特防ランク補正＜特防実数値×防御ランク補正となり攻撃が上がる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("コイキング"), Pokemon("ピカチュウ", ability_name="ダウンロード")],
+        team1=[Pokemon("フシギダネ")],
+        field={"ワンダールーム": 99},
+    )
+    battle.actives[1].rank["def"] = 6
+    battle.actives[1].rank["spd"] = -6
+    mon = t.run_switch(battle, 0, 1)
+    assert mon.rank["atk"] == 1
+    assert mon.rank["spa"] == 0
+
+
+def test_ダウンロード_上げる能力が既に最大なら発動しない():
+    """上げる能力のランクが既に+6の場合、ランクは変化せず特性発動ログも記録されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイキング"), Pokemon("ピカチュウ", ability_name="ダウンロード")],
+        team1=[Pokemon("フシギダネ")],  # 防御<特防のためこうげきが上がる想定
+    )
+    mon = battle.player_states[battle.players[0]].team[1]
+    mon.rank["atk"] = 6
+
+    def count_triggered() -> int:
+        return sum(
+            1 for log in battle.event_logger.logs
+            if log.log == LogCode.ABILITY_TRIGGERED
+            and log.payload is not None
+            and getattr(log.payload, "ability", None) == "ダウンロード"
+        )
+
+    t.run_switch(battle, 0, 1)
+    assert mon.rank["atk"] == 6
+    assert count_triggered() == 0
+
+
 @pytest.mark.parametrize(
     "ailment_name",
     ["どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"],

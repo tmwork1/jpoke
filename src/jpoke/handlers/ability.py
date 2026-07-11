@@ -2252,12 +2252,21 @@ def たんじゅん_double_stat(battle: Battle, ctx: EventContext, value: dict[s
 
 
 def ダウンロード_raise_stat(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ダウンロード特性: 入場時に相手の防御と特防を比較し、低い方に対応する攻撃能力を上げる。"""
+    """ダウンロード特性: 入場時に相手の防御と特防を比較し、低い方に対応する攻撃能力を上げる。
+
+    比較にはランク補正（パワートリック・ガードシェアで書き換わった実数値を含む）を
+    考慮し、持ち物・特性・天候による補正は除外する。ワンダールーム下では実数値は
+    据え置いたまま防御・特防のランク補正のみを入れ替えて比較する（本家の既知の仕様）。
+    """
     mon = ctx.source
     foe = battle.foe(mon)
 
-    foe_def = foe.ranked_stats["def"]
-    foe_spd = foe.ranked_stats["spd"]
+    if battle.get_global_field("ワンダールーム").is_active:
+        foe_def = foe.stats["def"] * foe.rank_modifier("spd")
+        foe_spd = foe.stats["spd"] * foe.rank_modifier("def")
+    else:
+        foe_def = foe.ranked_stats["def"]
+        foe_spd = foe.ranked_stats["spd"]
     boost_stat = "atk" if foe_def < foe_spd else "spa"
 
     changed = battle.modify_stats(mon, {boost_stat: +1}, source=mon)
