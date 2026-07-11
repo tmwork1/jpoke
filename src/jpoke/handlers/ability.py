@@ -1170,9 +1170,9 @@ def ききかいひ_switch_on_half_hp(battle: Battle, ctx: EventContext, value: 
 
     こんらん自傷(self_attack)・いたみわけ(pain_split)・みがわり/はらだいこ/のろい/
     ソウルビートなどの自己HP消費(self_cost)によるHP減少では発動しない。
-    特性ちからずくの効果が発動した技（secondary_effect フラグを持つ技をちからずく
-    所持者が使用した場合）のダメージでHPが半分以下になったときも発動しない
-    （docs/spec/abilities/ききかいひ.md参照）。
+    特性ちからずくの効果が発動した技のダメージでHPが半分以下になっても発動しない制限は
+    第七世代からSVまでの仕様であり、Championsでは撤廃されているため判定しない
+    （ぎゃくじょう/いかりのこうらと同様の修正。docs/spec/abilities/ききかいひ.md参照）。
     """
     mon = ctx.target
 
@@ -1180,15 +1180,6 @@ def ききかいひ_switch_on_half_hp(battle: Battle, ctx: EventContext, value: 
     if (
         mon.fainted
         or ctx.hp_change_reason in {"self_attack", "pain_split", "self_cost"}
-    ):
-        return HandlerReturn(value=value)
-
-    if (
-        ctx.hp_change_reason == "move_damage"
-        and ctx.source is not None
-        and ctx.source.ability.name == "ちからずく"
-        and ctx.source.executed_move is not None
-        and ctx.source.executed_move.has_flag("secondary_effect")
     ):
         return HandlerReturn(value=value)
 

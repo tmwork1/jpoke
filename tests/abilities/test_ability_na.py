@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
+from jpoke.enums import Interrupt
 
 from .. import test_utils as t
 
@@ -89,6 +90,131 @@ def test_なまけ_1ターン行動して次のターンはさぼる():
     # ターン3: 行動できる
     t.run_move(battle, 0)
     assert defender.hp < hp
+
+
+def test_にげごし_HPが半分以下になると交代():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    battle.step()
+
+    assert battle.actives[0] is not defender
+
+
+def test_にげごし_こんらん自傷では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    battle.modify_hp(defender, v=-1, reason="self_attack")
+
+    assert battle.actives[0] is defender
+
+
+def test_にげごし_ちからずくの技のダメージでも発動する():
+    """相手がちからずくで追加効果技（secondary_effect フラグ持ち）を使用した場合の
+    ダメージ(move_damage)でも、Championsではにげごしが通常どおり発動する
+    （第七世代からSVまでは不発だったが、Championsではこの制限が撤廃されている。
+    docs/spec/abilities/にげごし.md参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", ability_name="ちからずく", move_names=["かえんほうしゃ"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    attacker.executed_move = attacker.moves[0]
+    defender.hp = defender.max_hp
+    battle.modify_hp(defender, v=-(defender.max_hp // 2 + 1), source=attacker, reason="move_damage")
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.EMERGENCY
+
+
+def test_にげごし_はらだいこの自己HP消費では発動しない():
+    """はらだいこのHP消費(self_cost)ではにげごしが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし", move_names=["はらだいこ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp * 9 // 10
+    t.run_move(battle, 0)
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_にげごし_みがわりの自己HP消費では発動しない():
+    """みがわりのHP消費(self_cost)ではにげごしが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし", move_names=["みがわり"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    attacker.hp = attacker.max_hp * 6 // 10
+    t.run_move(battle, 0)
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_にげごし_やけどダメージでも発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("やけど", None),
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    battle.step()
+
+    assert battle.actives[0] is not defender
+
+
+def test_にげごし_控えがいない場合は発動しない():
+    """交代先の控えがいない場合はにげごしが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    battle.step()
+
+    assert battle.actives[0] is defender
+
+
+def test_にげごし_相手のいたみわけを受けても発動しない():
+    """相手のいたみわけによるHP均等化(pain_split)ではにげごしが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", move_names=["いたみわけ"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp
+    attacker = battle.actives[1]
+    attacker.hp = 1
+    t.run_move(battle, 1)
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_にげごし_被弾前HPが半分以下なら発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="にげごし"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2
+    battle.step()
+
+    assert battle.actives[0] is defender
 
 
 def test_ぬめぬめ_直接攻撃で攻撃者のSが1段階下がる():
