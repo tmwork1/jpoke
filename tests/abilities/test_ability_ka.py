@@ -691,6 +691,23 @@ def test_ききかいひ_相手のいたみわけを受けても発動しない(
     assert battle.player_states[player].interrupt == Interrupt.NONE
 
 
+def test_ききかいひ_ちからずくの技のダメージでは発動しない():
+    """相手がちからずくで追加効果技（secondary_effect フラグ持ち）を使用した場合の
+    ダメージ(move_damage)ではききかいひが発動しない（docs/spec/abilities/ききかいひ.md参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ききかいひ"), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", ability_name="ちからずく", move_names=["かえんほうしゃ"])],
+    )
+    defender = battle.actives[0]
+    attacker = battle.actives[1]
+    attacker.executed_move = attacker.moves[0]
+    defender.hp = defender.max_hp
+    battle.modify_hp(defender, v=-(defender.max_hp // 2 + 1), source=attacker, reason="move_damage")
+
+    player = battle.players[0]
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
 def test_ききかいひ_被弾前HPが半分以下なら発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ききかいひ"), Pokemon("ライチュウ")],
@@ -1078,6 +1095,22 @@ def test_ぎゃくじょう_被弾前HPが半分以下なら発動しない():
     t.run_move(battle, 1)
 
     assert defender.rank["spa"] == 0
+
+
+def test_ぎゃくじょう_ちからずくの技を受けても発動する():
+    """ぎゃくじょう: Championsではちからずくの効果が発動した技を受けたときも
+    通常通り発動する（docs/spec/abilities/ちからずく.md参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ぎゃくじょう")],
+        team1=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["かえんほうしゃ"])],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    defender = battle.actives[0]
+    defender.hp = defender.max_hp // 2 + 1
+    t.run_move(battle, 1)
+
+    assert defender.rank["spa"] == 1
 
 
 def test_ぎゃくじょう_連続攻撃技は最終ヒット後にまとめて判定する():

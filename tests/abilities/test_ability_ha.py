@@ -968,6 +968,20 @@ def test_へんしょく_既に同タイプなら発動しない():
     assert defender.types == ["でんき"]
 
 
+def test_へんしょく_ちからずくの技を受けてもタイプ変化しない():
+    """へんしょく: 特性ちからずくの効果が発動した技（secondary_effect フラグ持ち）を
+    受けた場合はタイプが変化しない（docs/spec/abilities/へんしょく.md参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからずく", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="へんしょく")],
+        accuracy=100,
+        secondary_chance=0.0,
+    )
+    _, defender = battle.actives
+    t.run_move(battle, 0)
+    assert "ほのお" not in defender.types
+
+
 @pytest.mark.parametrize("attacker_name, random_val, expected_ailment", [
     ("ピカチュウ", 0.0, "どく"),
     ("フシギダネ", 0.09, "まひ"),
