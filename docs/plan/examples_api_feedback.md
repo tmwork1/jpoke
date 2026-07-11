@@ -26,7 +26,7 @@
 ## 公開APIの使い勝手
 
 - [x] `Player.team` への追加方法が `.append()`（01,03,05,06）と `= [...]` 代入（02,04）で混在。どちらも動くが教材として一貫性がなく、また `team` が素のlistのため6匹超過などの検証が入らない。`add_pokemon()` 等の正規ルートを1つ定めるか、examples内だけでも書式を統一したい。（→ 2026-07-11/12 `Player.add_pokemon()` を新設し、examples全体で統一）
-- [ ] `player.team` はコンストラクタ時点のスナップショットで対戦中は更新されず、対戦中の状態は `battle.get_active(player)` で取る必要がある（03のコメントで補足している通り）。「自分のチームなのに戦況が反映されない」のは学習者が最初に踏む罠で、docstringだけでなくAPIリファレンスでの明示が必要。（未対応: examples/03のコード内コメントのみで、`Player.team`属性のdocstring自体には未反映）
+- [x] `player.team` はコンストラクタ時点のスナップショットで対戦中は更新されず、対戦中の状態は `battle.get_active(player)` で取る必要がある（03のコメントで補足している通り）。「自分のチームなのに戦況が反映されない」のは学習者が最初に踏む罠で、docstringだけでなくAPIリファレンスでの明示が必要。（未対応: examples/03のコード内コメントのみで、`Player.team`属性のdocstring自体には未反映）（→ 2026-07-12 `Player` の `Attributes:` の `team` 説明にスナップショットである旨と `battle.get_active(player)` / `battle.get_team(player)` への誘導を追記）
 - [x] 場のポケモンの取得方法が `battle.get_active(player)`（03）と `battle.actives[0]`（04）の2通り登場する。相手チーム参照に至っては `battle.player_states[battle.opponent(self)].team`（05）と内部構造に踏み込んでおり、「外部APIはBattleの公開メソッドを入口にする」方針と齟齬がある。`battle.get_team(player)` のような公開アクセサが欲しい。（→ 2026-07-11 `Battle.get_team()` を新設し、examples全体で`get_active`/`get_team`に統一）
 - [x] `Pokemon.__init__` の暗黙デフォルトが多い: `nature="まじめ"`, `level=50`, `move_names` 省略時は `["はねる"]`, `ability_name=""`, IV31/EV0。特に「技を渡さないとはねるになる」「特性が空文字で何になるか」はコードから読み取れず、docstringでの明記かクラスメソッド（例: `Pokemon.simple(...)`）での整理を検討したい。（→ 2026-07-11 docstringに明記して対応。代替コンストラクタは`add_pokemon()`が実質的に代替するため追加実装は見送り）
 - [x] `n_selected` のデフォルト3とチーム1匹構成の組み合わせは、01のように毎回 `n_selected=1` を明示する必要がある。省略時に「min(3, len(team))に自動調整」する方が導入体験は滑らか。（→ 2026-07-11 自動調整を実装）
@@ -35,7 +35,7 @@
 ## 既知のバグ・要修正候補
 
 - [x] `Battle(seed=None)` が `int(time.time())`（秒精度）にフォールバックする（`src/jpoke/core/battle.py:155`）。`battle_against(n_battles=30)` をseed省略で呼ぶと30戦全てが同一seedになり勝率が0%/100%に張り付く。対応案: (1) フォールバックを `time.time_ns()` または `Random(None)`（OSエントロピー）に変更、(2) `battle_against` 側で `seed` 指定時は対局ごとに `seed+i` の派生seedを振る。両方入れれば `examples/06` のワークアラウンド（n_battles=1×ループ）を素直な `battle_against(..., n_battles=30)` に書き戻せる。（→ 2026-07-11 `secrets.randbits(32)` に変更 + `battle_against`の対局別seed派生を実装）
-- [ ] デフォルト `Player.choose_command()` が「利用可能なコマンドの先頭を選ぶ」決定的挙動である点は、seedを変えても同一展開になりやすく、06のような統計比較の分散を殺す方向に働く。ベースラインとしてランダム選択（05の `RandomPlayer` 相当）を標準提供するか、既定挙動をdocstringで強調すべき。（未対応）
+- [x] デフォルト `Player.choose_command()` が「利用可能なコマンドの先頭を選ぶ」決定的挙動である点は、seedを変えても同一展開になりやすく、06のような統計比較の分散を殺す方向に働く。ベースラインとしてランダム選択（05の `RandomPlayer` 相当）を標準提供するか、既定挙動をdocstringで強調すべき。（未対応）（→ 2026-07-12 `jpoke.players.RandomPlayer` を新設（`battle.random` ベースで `Battle(seed=...)` の再現性を保つ）。examples/05のローカル定義を置き換え、`Player.choose_command()` のdocstringにも既定実装が決定的である旨と `RandomPlayer` への誘導を追記）
 
 ## 優先度メモ
 
@@ -90,3 +90,30 @@
 ### 2026-07-12 再レビュー対応
 
 PR #38 の差分に対して再度Fableモデルでレビューを受け、上記「再レビュー指摘」の内容を修正した。
+
+### 2026-07-12 残り2項目の実装（`player.team`スナップショット警告 + `RandomPlayer`新設）
+
+- `Player`（`src/jpoke/core/player.py`）の `Attributes:` の `team` 説明に、対戦中は
+  更新されないスナップショットであることと、対戦中の実際の状態は
+  `battle.get_active(player)` / `battle.get_team(player)` を使うべき旨を追記
+- `src/jpoke/players/random_player.py` に `RandomPlayer(Player)` を新設。
+  `battle.random.choice(battle.get_available_commands(self))` で選ぶ実装で、
+  `examples/05_tree_search_ai.py` に元々ローカル定義されていたものと同等
+  （`battle.random` を使うため `Battle(seed=...)` の再現性を壊さない）
+- `src/jpoke/players/__init__.py` に `RandomPlayer` を追加してエクスポート
+- `Player.choose_command()` のdocstringに、既定実装が決定的（常に先頭のコマンドを
+  選ぶ）である旨と、統計比較などで分散が必要な場合は `jpoke.players.RandomPlayer`
+  を使うとよい旨を追記
+- `examples/05_tree_search_ai.py` のローカル `RandomPlayer` 定義を削除し、
+  `from jpoke.players import RandomPlayer` に置き換え（未使用になった `Player` /
+  `Command` importも削除）
+- `CHANGELOG.md` の `[Unreleased]` / `### Added` に `RandomPlayer` の追加を記載
+- `tests/test_poke_env_compat.py` に `RandomPlayer` のテストを2件追加
+  （選択コマンドが常に `get_available_commands()` に含まれること、
+  `battle.random` 経由で同一seedなら同一コマンド列を再現すること）。
+  `scripts/sort_tests.py` / `scripts/generate_test_list.py` を実行し、
+  フルテストスイートを3回連続実行して全件成功・非flakyを確認済み
+  （worktree分離環境ではeditable installが別チェックアウトの`src`を指すため、
+  `tests/test_examples_smoke.py`（サブプロセス起動によるスモークテスト）を
+  検証する際は `PYTHONPATH=<worktree>/src` を明示してworktree内の実装を
+  優先させる必要があった。mainマージ後は不要な手当て）

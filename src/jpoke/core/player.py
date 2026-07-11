@@ -22,7 +22,11 @@ class Player:
 
     Attributes:
         username: プレイヤー名
-        team: ポケモンチームのリスト（最大6匹）
+        team: ポケモンチームのリスト（最大6匹）。**コンストラクタ〜対戦開始前の
+            スナップショット**であり、`Battle` 開始後の対戦中はここに反映される
+            HP・瀕死・状態異常・ランク変化などは更新されない。対戦中の実際の
+            状態を見たい場合は `battle.get_active(player)`（場に出ている
+            ポケモン）や `battle.get_team(player)`（チーム全体の実体）を使う。
         n_finished_battles: 対戦数
         n_won_battles: 勝利数
         rating: レーティング値
@@ -118,7 +122,10 @@ class Player:
     def choose_command(self, battle: Battle) -> Command:
         """コマンドを選択する。
 
-        デフォルト実装では利用可能な行動コマンドの最初の1つを返す。
+        デフォルト実装では利用可能な行動コマンドの最初の1つを返す。この既定実装は
+        決定的（常に先頭のコマンドを選ぶ）で、`seed` を変えても展開が変わらない。
+        `Player.battle_against()` で複数回対戦して統計比較する場合など、行動選択に
+        分散が必要な場合は `jpoke.players.RandomPlayer` を使うとよい。
 
         Args:
             battle: バトルオブジェクト

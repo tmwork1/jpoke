@@ -13,6 +13,9 @@
   （`player_states[player].team` への直接アクセスを置き換える）
 - `Player.add_pokemon(name, **kwargs)` — `Pokemon` を直接importせずにチームへ
   ポケモンを追加できる正規ルート
+- `jpoke.players.RandomPlayer` — 合法手からランダムに選ぶ `Player` 実装。既定の
+  `Player.choose_command()`（常に先頭のコマンドを選ぶ決定的挙動）では
+  `battle_against()` による統計比較の分散が潰れてしまう問題への対応
 
 ### Changed
 

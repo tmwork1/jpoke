@@ -1,6 +1,6 @@
 # test_poke_env_compat
 
-テスト数: 36
+テスト数: 38
 
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver未設定時場の先頭2匹を返す
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver視点で取得できる
@@ -34,6 +34,8 @@
 - [x] pokemon_effectsはvolatilesのエイリアス
 - [x] pokemon_first_turnは登場直後True行動後False
 - [x] pokemon_statusはailment_nameのエイリアス
+- [x] randomplayerが選ぶコマンドは常にget_available_commandsに含まれる
+- [x] randomplayerは同じseedで対戦すると同じコマンド列を再現する
 - [x] stat_indexはhpからspeまでの6ステータスを網羅する
 - [x] stats_from_poke_envは欠けているキーを0扱いにする
 - [x] stats_from_poke_envは辞書をhp_atk_def_spa_spd_spe順のリストに変換する
