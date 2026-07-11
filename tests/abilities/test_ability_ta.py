@@ -551,6 +551,156 @@ def test_ちどりあし_こんらん中命中率が半減する():
     assert battle.move_executor.accuracy == 50
 
 
+def test_ちょすい_みず技を無効化してHPが減っていれば1_4回復():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("ピカチュウ", move_names=["なみのり"])],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+    assert mon.ability.revealed
+
+
+def test_ちょすい_HP満タンならみず技無効化のみで回復しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("ピカチュウ", move_names=["なみのり"])],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.hp == mon.max_hp
+    assert mon.ability.revealed
+
+
+def test_ちょすい_みずタイプの変化技も無効化する():
+    """ちょすい: みずびたしのようなみずタイプの変化技を受けても無効化し、タイプは変わらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("カビゴン", move_names=["みずびたし"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+    assert mon.types == ["でんき"]
+
+
+def test_ちょすい_自分自身を対象とするみず技には発動しない():
+    """ちょすい: アクアリングなど自分自身を対象とするみず技には発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい", move_names=["アクアリング"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert mon.has_volatile("アクアリング")
+
+
+def test_ちょすい_場を対象とするみず技には発動しない():
+    """ちょすい: あまごいなど場を対象とするみず技には発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまごい"])],
+        team1=[Pokemon("カビゴン", ability_name="ちょすい")],
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.weather.name == "あめ"
+    assert defender.hp == defender.max_hp
+    assert not defender.ability.revealed
+
+
+def test_ちょすい_連続技を受けても回復は1回のみ():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("カビゴン", move_names=["すいりゅうれんだ"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+
+
+def test_ちょすい_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("カビゴン", move_names=["なみのり"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.volatile_manager.apply(mon, "まもる", count=1)
+    t.run_move(battle, 1)
+    assert mon.hp == 1
+    assert not mon.ability.revealed
+
+
+def test_ちょすい_みがわり状態の攻撃技でも発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("カビゴン", move_names=["なみのり"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "みがわり", count=mon.max_hp // 4)
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+    assert mon.has_volatile("みがわり")
+
+
+def test_ちょすい_マジックコート状態では変化技を跳ね返し回復しない():
+    """ちょすい: マジックコート状態のちょすい持ちがみずタイプの変化技を受けても、
+    先に跳ね返されるためちょすいは発動せず回復しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("カビゴン", move_names=["みずびたし"])],
+        volatile0={"マジックコート": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1
+    assert not mon.ability.revealed
+
+
+def test_ちょすい_マジックコートで跳ね返された変化技を受けると回復する():
+    """ちょすい: 自分が使ったみずタイプの変化技が相手のマジックコートで跳ね返され、
+    跳ね返った技を自分自身が受けた場合はちょすいが発動して回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい", move_names=["みずびたし"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"マジックコート": 1},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    foe = battle.actives[1]
+    mon.hp = 1
+    t.run_move(battle, 0)
+    assert mon.hp == 1 + mon.max_hp // 4
+    assert foe.types == ["ノーマル"]
+
+
+def test_ちょすい_かいふくふうじ状態でも無効化はできるが回復はできない():
+    """ちょすい: かいふくふうじ状態でもみず技の無効化（ダメージ0）はできるが、
+    第五世代以降の仕様のためHPの回復はできない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちょすい")],
+        team1=[Pokemon("カビゴン", move_names=["なみのり"])],
+        volatile0={"かいふくふうじ": 3},
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1
+    assert mon.ability.revealed
+
+
 @pytest.mark.parametrize(
     "name, tera_type, move_name, expected_modifier",
     [
