@@ -1949,7 +1949,7 @@ def すてみ_boost_power(battle: Battle, ctx: AttackContext, value: int) -> Han
 
 def スナイパー_boost_critical(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """スナイパー特性: 急所時の最終ダメージ補正を1.5倍にする。"""
-    if getattr(ctx, "critical", False):
+    if ctx.critical:
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
