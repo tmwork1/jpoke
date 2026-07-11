@@ -1552,6 +1552,91 @@ def test_どくのくさり_確率外ではもうどくにならない():
     assert not battle.actives[1].ailment.is_active
 
 
+def test_どくのくさり_直接攻撃でない技でも発動する():
+    """どくのくさり: 直接攻撃でない技（はどうだん）でも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["はどうだん"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "もうどく"
+
+
+def test_どくのくさり_こらえるでHP1のまま耐えたときも発動する():
+    """どくのくさり: こらえるでHP1のまま耐えた（実HPダメージ0）ときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+    t.fix_random(battle, 0.0)
+
+    t.run_move(battle, 0)
+
+    assert defender.hp == 1
+    assert defender.ailment.name == "もうどく"
+
+
+def test_どくのくさり_みがわりに阻まれたときは発動しない():
+    """どくのくさり: みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_random(battle, 0.0)
+
+    t.run_move(battle, 0)
+
+    assert not defender.ailment.is_active
+
+
+def test_どくのくさり_どくタイプの相手には発動しない():
+    """どくのくさり: もうどく状態にできない相手（どくタイプ）には発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["たいあたり"])],
+        team1=[Pokemon("ベトベトン")],
+        accuracy=100,
+    )
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_どくのくさり_りんぷん所持相手には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="りんぷん")],
+        accuracy=100,
+    )
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
+def test_どくのくさり_おんみつマント所持相手には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="おんみつマント")],
+        accuracy=100,
+    )
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_どくぼうそう_どく状態でない場合は倍率なし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="どくぼうそう", move_names=["ねっとう"])],

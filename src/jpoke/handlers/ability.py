@@ -2667,7 +2667,13 @@ def どくしゅ_maybe_poison_on_contact(battle: Battle, ctx: AttackContext, val
 
 
 def どくのくさり_maybe_badly_poison(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """どくのくさり特性: 攻撃を命中させたとき30%の確率で相手をもうどくにする。"""
+    """どくのくさり特性: 攻撃を命中させたとき30%の確率で相手をもうどくにする。
+
+    こらえるでHP1のまま耐えたときなど（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     if battle.random.random() < battle.resolve_secondary_chance(ctx, 0.3):
         battle.ailment_manager.apply(
             ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx,
