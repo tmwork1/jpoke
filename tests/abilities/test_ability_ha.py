@@ -628,6 +628,22 @@ def test_バリアフリー_入場で壁を解除():
     assert not side1.get("ひかりのかべ").is_active
 
 
+def test_バリアフリー_オーロラベールも解除される():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="バリアフリー")],
+        team1=[Pokemon("フシギダネ")],
+        side0={"オーロラベール": 5},
+        side1={"オーロラベール": 5},
+    )
+    t.run_switch(battle, 0, 1)
+    side0 = battle.get_side(battle.players[0])
+    side1 = battle.get_side(battle.players[1])
+
+    assert battle.actives[0].ability.revealed
+    assert not side0.get("オーロラベール").is_active
+    assert not side1.get("オーロラベール").is_active
+
+
 def test_バリアフリー_壁がない場合アナウンスなし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="バリアフリー")],
@@ -635,6 +651,25 @@ def test_バリアフリー_壁がない場合アナウンスなし():
     )
     t.run_switch(battle, 0, 1)
     assert not battle.actives[0].ability.revealed
+
+
+def test_バリアフリー_しんぴのまもりしろいきり設置技は解除しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="バリアフリー")],
+        team1=[Pokemon("フシギダネ")],
+        side0={"しんぴのまもり": 5, "しろいきり": 5, "まきびし": 1},
+        side1={"しんぴのまもり": 5, "しろいきり": 5, "まきびし": 1},
+    )
+    t.run_switch(battle, 0, 1)
+    side0 = battle.get_side(battle.players[0])
+    side1 = battle.get_side(battle.players[1])
+
+    assert side0.get("しんぴのまもり").is_active
+    assert side0.get("しろいきり").is_active
+    assert side0.get("まきびし").is_active
+    assert side1.get("しんぴのまもり").is_active
+    assert side1.get("しろいきり").is_active
+    assert side1.get("まきびし").is_active
 
 
 def test_ばんけん_いかくで下がらずAが1段階上がる():
