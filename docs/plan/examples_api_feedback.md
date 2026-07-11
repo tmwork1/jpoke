@@ -66,6 +66,27 @@
   双方の指摘に対応）
 - 04の防御側表示も `defender_player.team[0]` から `battle.get_active(defender_player)` に統一
 
+## 再レビュー（2026-07-12 Fableサブエージェント）
+
+PR #38 の差分に対して再度Fableモデルでレビューを受け、以下を修正した。
+
+- `tests/moves_attack/test_move_ha.py` の `test_はたきおとす_相手のアイテムがないとき
+  威力補正なし` が同種のflakiness（急所のブレでダメージ比較が逆転しうる）を持つと
+  Monte Carlo実測（300回中8回失敗）で指摘され、`fix_random()` を追加して解消
+- `Battle.roll_damage()` の `int(random() * len(damages))` が `random()==1.0` の
+  境界（一部テストが `battle.random.random = lambda: 1.0` を使用）でIndexErrorになり
+  得ると指摘され、`min(index, len(damages)-1)` のクランプを追加
+- `examples/README.md` の01の説明が `Pokemon` importなし化に追従していなかったため修正
+- `n_selected` 自動調整のdocstringに「チーム間で手持ち数が異なっても両者に同じ値が
+  適用される」旨を追記
+- `battle_against` のdocstringに「複数opponent指定時は対戦通番がopponentごとに
+  リセットされ、同じseed系列を使い回す」旨を追記
+
+指摘のみで対応不要と判断した項目: `test_ability_a.py:667`（いかりのつぼ）で
+`random()==1.0` 固定時に技自体がミスして意図せず空虚に合格する既存の問題は、
+今回の変更で新たに生じたものではなく、examples APIフィードバック対応のスコープ外
+のため見送った。
+
 ### 見送った項目
 
 - 04の配置変更（03/05のAI系列と隣接させる）: フィードバック内でも「現状でも許容」と

@@ -139,7 +139,8 @@ class Battle:
         Args:
             players: 参加プレイヤーのタプル（通常2人）
             n_selected: 選出可能なポケモンの数（Noneの場合は `min(3, 各プレイヤーの手持ち数)`
-                を自動設定する）
+                を自動設定する。手持ち数がプレイヤー間で異なる場合も両者に同じ値が
+                適用されるため、片方の手持ちが少ないと両者とも選出数が絞られる点に注意）
             seed: 乱数シード値（Noneの場合はOSの乱数源から高エントロピーな値を生成する。
                 同一プロセス内で短時間に複数の `Battle` を作る場合でも衝突しない）
             mega_evolution: メガシンカを許可するか（デフォルトTrue）
@@ -720,7 +721,9 @@ class Battle:
                 # random() のみを固定するテストヘルパー（fix_random）では制御できない。
                 # random() ベースの選択にすることで、乱数シードが異なる2つの Battle
                 # 間でも fix_random() だけでダメージロールを再現できるようにする。
-                index = int(self.random.random() * len(damages))
+                # random() は理論上 [0, 1) だが、fix_random() で 1.0 を代入する
+                # テストが存在するため、境界超過による IndexError を防ぐ
+                index = min(int(self.random.random() * len(damages)), len(damages) - 1)
                 return damages[index]
 
     def calc_damages(self,
