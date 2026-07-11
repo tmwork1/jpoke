@@ -1504,6 +1504,21 @@ def test_クリアボディ_自己低下は防げない():
     assert expected == battle.modify_stats(mon0, stats, source=mon0)
 
 
+def test_グラスメイカー_特性再有効化時にも発動する():
+    """グラスメイカー: かがくへんかガス解除後に特性が再有効化されると再発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="グラスメイカー")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    # かがくへんかガスにより特性が無効化されているのでフィールドは展開されていない
+    assert battle.terrain.name == ""
+    # かがくへんかガスの無効化を解除すると特性が再発動してグラスフィールドが展開される
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.terrain.name == "グラスフィールド"
+    assert battle.terrain.count == 5
+
+
 def test_こおりのりんぷん_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["でんきショック"])],
