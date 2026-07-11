@@ -22,7 +22,7 @@ def test_HP25以下でランク上昇するきのみ(item_name, stat, amount):
     mon = battle.actives[0]
     mon.hp = mon.max_hp // 4 + 1
     battle.modify_hp(mon, v=-1)
-    assert mon.rank[stat] == amount
+    assert mon.boosts[stat] == amount
     assert not mon.has_item()
 
 
@@ -50,7 +50,7 @@ def test_HP25以下でランク上昇するきのみ_こんらんの自傷では
     assert mon.has_item(), "こんらんの自傷ダメージでアイテムが消費された"
 
     battle.modify_hp(mon, v=-1)
-    assert mon.rank[stat] == amount
+    assert mon.boosts[stat] == amount
     assert not mon.has_item()
 
 

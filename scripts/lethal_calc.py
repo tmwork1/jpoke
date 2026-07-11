@@ -20,7 +20,7 @@ def main(attacker: str,
         Pokemon(attacker)
     ]
 
-    player2 = Player(name="RandomPlayer")
+    player2 = Player(username="RandomPlayer")
     player2.team = [
         Pokemon(defender, ability_name=defender_ability, item_name=defender_item)
     ]

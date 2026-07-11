@@ -128,7 +128,7 @@ def test_あめまみれ_1ターン経過でSマイナス1():
         volatile0={"あめまみれ": 2}
     )
     t.end_turn(battle)
-    assert battle.actives[0].rank["spe"] == -1
+    assert battle.actives[0].boosts["spe"] == -1
 
 
 def test_あめまみれ_3ターンで合計3回Sが下がる():
@@ -140,11 +140,11 @@ def test_あめまみれ_3ターンで合計3回Sが下がる():
     )
     mon = battle.actives[0]
     t.end_turn(battle)
-    assert mon.rank["spe"] == -1
+    assert mon.boosts["spe"] == -1
     t.end_turn(battle)
-    assert mon.rank["spe"] == -2
+    assert mon.boosts["spe"] == -2
     t.end_turn(battle)
-    assert mon.rank["spe"] == -3
+    assert mon.boosts["spe"] == -3
     assert not mon.has_volatile("あめまみれ")
 
 
@@ -224,7 +224,7 @@ def test_アンコール_実行時も技固定():
     attacker = battle.actives[0]
     battle.volatile_manager.apply(attacker, "アンコール", move_name="なきごえ")
     t.run_move(battle, 0, move_idx=0)
-    assert attacker.executed_move.name == "なきごえ"
+    assert attacker.last_move.name == "なきごえ"
 
 
 def test_アンコール_対象技がかなしばりで使えないとわるあがきになる():

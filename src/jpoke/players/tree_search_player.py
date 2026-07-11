@@ -50,10 +50,10 @@ class TreeSearchPlayer(Player):
     """
 
     def __init__(self,
-                 name: str,
+                 username: str,
                  max_plies: int = 1,
                  max_nodes: int | None = None):
-        super().__init__(name=name)
+        super().__init__(username=username)
         self.max_plies = max_plies
         self.max_nodes = max_nodes
         self.nodes_expanded = 0

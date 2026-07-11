@@ -509,7 +509,7 @@ def test_クリアスモッグ_とくぼうリセットで2発目のダメージ
         team0=[Pokemon("ガブリアス")],
         team1=[Pokemon("カイリュー")],
     )
-    battle.actives[1].rank["spd"] = 2
+    battle.actives[1].boosts["spd"] = 2
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("クリアスモッグ"), max_attack=2)
     assert results[1].min_damage > results[0].min_damage
 
@@ -900,8 +900,8 @@ def test_テラバースト_ステラでこうげきとくこうダウン():
     )
     battle.actives[0].terastallize()
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
-    assert results[0].attacker.rank["atk"] == -1
-    assert results[0].attacker.rank["spa"] == -1
+    assert results[0].attacker.boosts["atk"] == -1
+    assert results[0].attacker.boosts["spa"] == -1
 
 
 def test_テラバースト_ステラ以外はランクが下がらない():
@@ -912,8 +912,8 @@ def test_テラバースト_ステラ以外はランクが下がらない():
     )
     battle.actives[0].terastallize()
     results = t.calc_lethal(battle, atk_idx=0, moves=Move("テラバースト"), max_attack=1)
-    assert results[0].attacker.rank["atk"] == 0
-    assert results[0].attacker.rank["spa"] == 0
+    assert results[0].attacker.boosts["atk"] == 0
+    assert results[0].attacker.boosts["spa"] == 0
 
 
 def test_トラバサミ_バインド付与():
