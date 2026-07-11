@@ -1812,7 +1812,13 @@ def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, va
 
 
 def じょおうのいげん_block_priority(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じょおうのいげん/テイルアーマー/ビビッドボディ: 優先度+1以上の技を無効化する。"""
+    """じょおうのいげん/テイルアーマー/ビビッドボディ: 優先度+1以上の技を無効化する。
+
+    自分や味方が味方側に対して使用した技（まもる等の自己対象技）や、
+    場の全体・相手の場が対象の技は対象外（相手の単体を対象とする技のみ無効化する）。
+    """
+    if ctx.move.target != "foe":
+        return HandlerReturn(value=value)
     effective_priority = battle.speed_calculator.calc_move_priority(ctx.attacker, ctx.move)
     if effective_priority <= 0:
         return HandlerReturn(value=value)
