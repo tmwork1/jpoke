@@ -1379,6 +1379,56 @@ def test_どくくぐつ_どく付与時にこんらん付与(ailment_name: Ailm
     assert defender.has_volatile("こんらん") is result
 
 
+def test_どくくぐつ_自傷での毒付与ではこんらんしない():
+    """どくくぐつ: どくどくだま・どくびし等の自傷（source と target が同一）ではこんらんしない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくくぐつ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert battle.ailment_manager.apply(mon, "どく", source=mon)
+    assert not mon.has_volatile("こんらん")
+
+
+def test_どくくぐつ_既にこんらん状態なら追加付与されず特性バーも表示されない():
+    """どくくぐつ: 相手がすでにこんらん状態の場合、こんらんは上書きされず特性バーも表示されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくくぐつ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "こんらん", count=3)
+    assert battle.ailment_manager.apply(defender, "どく", source=attacker)
+    assert defender.volatiles["こんらん"].count == 3  # 上書きされない
+    assert attacker.ability.revealed is False  # どくくぐつの特性バーは表示されない
+
+
+@pytest.mark.parametrize("roll, expected_count", [(2, 2), (5, 5)])
+def test_どくくぐつ_こんらんの継続ターンは2から5ターン(roll: int, expected_count: int):
+    """どくくぐつ: 付与されるこんらんは通常のこんらん技と同じ2〜5ターン継続する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくくぐつ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    battle.random.randint = lambda a, b: roll
+    assert battle.ailment_manager.apply(defender, "どく", source=attacker)
+    assert defender.volatiles["こんらん"].count == expected_count
+
+
+def test_どくくぐつ_スキルスワップは失敗する():
+    """どくくぐつ: この特性に対するスキルスワップは失敗する（上書き自体は可能）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name="いかく")],
+        team1=[Pokemon("カビゴン", ability_name="どくくぐつ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.base_name == "いかく"
+    assert defender.ability.base_name == "どくくぐつ"
+
+
 def test_どくげしょう_物理技をくらうとどくびしを設置():
     """どくげしょう: どくびし1層のとき被弾すると2層になる。"""
     battle = t.start_battle(

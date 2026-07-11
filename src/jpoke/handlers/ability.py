@@ -2615,14 +2615,20 @@ def トレース_copy_ability(battle: Battle, ctx: EventContext, value: Any) -> 
 
 
 def どくくぐつ_confuse_on_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """どくくぐつ特性: どく/もうどく付与時に対象をこんらんにする。"""
+    """どくくぐつ特性: 自身が使用した技でどく/もうどく状態にした相手を2〜5ターンのこんらんにもする。
+
+    どくびし・どくどくだま等による自傷では発動しない（source と target が同一のポケモンに
+    なるため ctx.is_foe_target() で除外する）。
+    """
     if value not in ("どく", "もうどく"):
+        return HandlerReturn(value=value)
+    if not ctx.is_foe_target():
         return HandlerReturn(value=value)
     target = ctx.target
     if target is None:
         return HandlerReturn(value=value)
-    battle.volatile_manager.apply(target, "こんらん", source=ctx.source)
-    _announce_ability_triggered(battle, ctx.source)
+    if battle.volatile_manager.apply_confusion(target, source=ctx.source):
+        _announce_ability_triggered(battle, ctx.source)
     return HandlerReturn(value=value)
 
 

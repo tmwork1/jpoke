@@ -1186,12 +1186,12 @@ def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: A
     抵抗するが、SV Ver.3.0.0 以降はスキルスワップ/さまようたましいでの交換のみ
     可能になったため base_name で個別に除外する。
 
-    かがくへんかガス/クォークチャージ/こだいかっせいは protected フラグを持たない
-    （いえき/コアパニッシャー等による上書き・無効化は可能なため）が、
+    かがくへんかガス/クォークチャージ/こだいかっせい/どくくぐつは protected フラグを
+    持たない（いえき/コアパニッシャー等による上書き・無効化は可能なため）が、
     スキルスワップ/さまようたましいでの交換だけは対象外のため base_name で個別に判定する。
     """
     assert ctx.defender is not None
-    UNSWAPPABLE_ABILITIES = ("かがくへんかガス", "クォークチャージ", "こだいかっせい")
+    UNSWAPPABLE_ABILITIES = ("かがくへんかガス", "クォークチャージ", "こだいかっせい", "どくくぐつ")
     if (
         (ctx.attacker.ability.has_flag("protected") and ctx.attacker.ability.base_name != "うのミサイル")
         or (ctx.defender.ability.has_flag("protected") and ctx.defender.ability.base_name != "うのミサイル")
