@@ -771,6 +771,32 @@ def test_しんがん_相手の回避ランクを無視する():
     assert battle.move_executor.accuracy == 100
 
 
+def test_しんがん_いかくは無効化されない():
+    """しんがん: きもったまと異なりいかくによる攻撃ランク低下は防がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しんがん")],
+        team1=[Pokemon("ウインディ", ability_name="いかく")],
+    )
+    assert battle.actives[0].rank["atk"] == -1
+
+
+@pytest.mark.parametrize(
+    "move_name, expected_modifier",
+    [
+        ("かわらわり", 8192),  # かくとう技 → はがねに2倍
+        ("たいあたり", 2048),  # ノーマル技 → ゴーストに等倍
+    ]
+)
+def test_しんがん_かくとう技がゴースト複合に抜群(move_name, expected_modifier):
+    # かわらわり(かくとう) vs サーフゴー(はがね/ゴースト) → はがね×2倍
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しんがん", move_names=[move_name])],
+        team1=[Pokemon("サーフゴー", ability_name="")],
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == expected_modifier
+
+
 def test_シンクロ_こんらんは伝染しない():
     """シンクロ: 揮発性状態(こんらん等)は伝染しない"""
     battle = t.start_battle(
