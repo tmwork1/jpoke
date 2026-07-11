@@ -19,6 +19,11 @@ from jpoke.enums import Command
 class RandomPlayer(Player):
     """毎ターン、利用可能なコマンドからランダムに選ぶプレイヤー。"""
 
+    def choose_selection(self, battle: Battle) -> list[int]:
+        """選出コマンドを選択する（チーム数に合わせて先頭から選出）。"""
+        n = min(battle.n_selected, len(self.team))
+        return list(range(n))
+
     def choose_command(self, battle: Battle) -> Command:
         """行動コマンドを選択する（利用可能なコマンドからランダムに選択）。"""
         available_commands = battle.get_available_commands(self)
@@ -94,7 +99,7 @@ def play_game(seed: int = None, max_turns: int = 10) -> tuple[Player | None, int
         players[i].team.append(mon)
 
     # バトルを作成・実行
-    battle = Battle(players, seed=seed)
+    battle = Battle(players, n_selected=1, seed=seed)
     battle.start()
 
     while (winner := battle.judge_winner()) is None:
