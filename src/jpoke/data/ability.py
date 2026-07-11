@@ -1636,7 +1636,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.たいねつ_reduce_fire,
                 subject_spec="defender:self",
-            )
+            ),
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
+                h.たいねつ_reduce_burn_damage,
+                subject_spec="target:self",
+            ),
         }
     ),
     "たまひろい": AbilityData(),

@@ -2232,6 +2232,13 @@ def ソウルハート_boost_spa_on_ko(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
+def たいねつ_reduce_burn_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """たいねつ特性: やけどのターン終了時ダメージを半分にする（最低1）。"""
+    if ctx.hp_change_reason == "burn":
+        value = -max(1, apply_fixed_modifier(-value, 2048))
+    return HandlerReturn(value=value)
+
+
 def たいねつ_reduce_fire(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """たいねつ特性: 炎技を受けるとき攻撃補正を0.5倍にする。"""
     if ctx.move.type == "ほのお":
