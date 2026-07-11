@@ -811,6 +811,19 @@ def test_シンクロ_こんらんは伝染しない():
     assert "こんらん" not in foe.volatiles
 
 
+def test_シンクロ_技によるまひが相手に伝染する():
+    """シンクロ: でんじはでまひにされた場合も相手にまひが伝染する（統合テスト）"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="シンクロ")],
+        team1=[Pokemon("コラッタ", move_names=["でんじは"])],
+        accuracy=100,
+    )
+    sync_mon, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert sync_mon.has_ailment("まひ")
+    assert attacker.has_ailment("まひ")
+
+
 @pytest.mark.parametrize(
     "ailment_name",
     ["どく", "もうどく", "まひ", "やけど"]
@@ -825,6 +838,21 @@ def test_シンクロ_状態異常が相手に伝染する(ailment_name: Ailment
     battle.ailment_manager.apply(sync_mon, ailment_name, source=foe)
     assert sync_mon.has_ailment(ailment_name)
     assert foe.has_ailment(ailment_name)
+
+
+def test_シンクロ_相手が既に状態異常のときは発動しない():
+    """シンクロ: 相手が既に状態異常のときは状態異常を付与できず伝染しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="シンクロ")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("まひ", None),
+    )
+    sync_mon, foe = battle.actives
+    battle.ailment_manager.apply(sync_mon, "どく", source=foe)
+    assert sync_mon.has_ailment("どく")
+    # 相手は既にまひ状態のため、どくは伝染しない
+    assert foe.has_ailment("まひ")
+    assert not foe.has_ailment("どく")
 
 
 def test_シンクロ_自発的な状態異常は伝染しない():
