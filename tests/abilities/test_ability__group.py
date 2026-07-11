@@ -180,6 +180,18 @@ def test_クォークチャージ_最大ステータスがバフされる(name: 
     assert mon.paradox_boost_stat == stat
 
 
+def test_じりょく_ゴーストタイプを併せ持つはがねタイプの相手は交代できる():
+    """じりょく: ハロウィンでゴーストタイプが追加されたはがねタイプの相手は交代できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("コイル"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="じりょく")],
+        volatile0={"ハロウィン": 0},
+    )
+    assert "はがね" in battle.actives[0].types
+    assert "ゴースト" in battle.actives[0].types
+    assert t.can_switch(battle, 0) is True
+
+
 @pytest.mark.parametrize(
     "ability_name, expected_type",
     SKIN_CASES
@@ -634,18 +646,6 @@ def test_交代抑制特性_param(ability_name: str, attacker_name: str, attacke
     assert t.can_switch(battle, 0) is expected_can_switch
 
 
-def test_じりょく_ゴーストタイプを併せ持つはがねタイプの相手は交代できる():
-    """じりょく: ハロウィンでゴーストタイプが追加されたはがねタイプの相手は交代できる"""
-    battle = t.start_battle(
-        team0=[Pokemon("コイル"), Pokemon("ピカチュウ")],
-        team1=[Pokemon("ピカチュウ", ability_name="じりょく")],
-        volatile0={"ハロウィン": 0},
-    )
-    assert "はがね" in battle.actives[0].types
-    assert "ゴースト" in battle.actives[0].types
-    assert t.can_switch(battle, 0) is True
-
-
 @pytest.mark.parametrize(
     "ability_name, expected_modifier",
     [
@@ -747,6 +747,20 @@ def test_倒すと能力上昇系_相手を倒せないと発動しない(abilit
 
 @pytest.mark.parametrize(
     "ability_name",
+    ["じょおうのいげん", "テイルアーマー"],
+)
+def test_先制技無効系_いたずらごころで優先度が上がった変化技も無効化する(ability_name):
+    """じょおうのいげん: いたずらごころで優先度+1になった変化技も無効化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いたずらごころ", move_names=["でんじは"])],
+        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_success is False
+
+
+@pytest.mark.parametrize(
+    "ability_name",
     ["じょおうのいげん", "テイルアーマー", "ビビッドボディ"],
 )
 def test_先制技無効系_かたやぶりで無効化される(ability_name):
@@ -787,20 +801,6 @@ def test_先制技無効系_優先度プラスの技を無効化する(ability_n
         team0=[Pokemon("ピカチュウ", move_names=["でんこうせっか"])],
         team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
         accuracy=100,
-    )
-    t.run_move(battle, 0)
-    assert battle.move_executor.move_success is False
-
-
-@pytest.mark.parametrize(
-    "ability_name",
-    ["じょおうのいげん", "テイルアーマー"],
-)
-def test_先制技無効系_いたずらごころで優先度が上がった変化技も無効化する(ability_name):
-    """じょおうのいげん: いたずらごころで優先度+1になった変化技も無効化する。"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="いたずらごころ", move_names=["でんじは"])],
-        team1=[Pokemon("ピカチュウ", ability_name=ability_name)],
     )
     t.run_move(battle, 0)
     assert battle.move_executor.move_success is False

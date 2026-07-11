@@ -12,6 +12,18 @@ from jpoke.types import AilmentName, WeatherName
 from .. import test_utils as t
 
 
+def test_ゆうばく_攻撃側がしめりけを持つ場合発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", ability_name="しめりけ", move_names=["たいあたり"])],
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.fainted
+    assert foe.hp == foe.max_hp
+
+
 def test_ゆうばく_直接攻撃KO時に攻撃者に1_4ダメージ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
@@ -28,18 +40,6 @@ def test_ゆうばく_非接触KOでは発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
         team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
-    )
-    mon, foe = battle.actives
-    mon.hp = 1
-    t.run_move(battle, 1)
-    assert mon.fainted
-    assert foe.hp == foe.max_hp
-
-
-def test_ゆうばく_攻撃側がしめりけを持つ場合発動しない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
-        team1=[Pokemon("カビゴン", ability_name="しめりけ", move_names=["たいあたり"])],
     )
     mon, foe = battle.actives
     mon.hp = 1
