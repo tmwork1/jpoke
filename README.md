@@ -3,6 +3,15 @@
 ポケモンバトルシミュレーション開発用の Python ライブラリ。イベント駆動でポケモンの技・特性・アイテム・
 状態異常・場の効果などを再現し、bot 開発や乱数調整・ダメージ計算・木探索などの用途に使う。
 
+jpoke is an event-driven Python library for simulating Pokémon Champions single battles, reproducing
+moves, abilities, items, status conditions, and field effects. It targets bot development, RNG tuning,
+damage calculation, and tree search.
+
+> 本プロジェクトは株式会社ポケモン・任天堂・株式会社ゲームフリークとは無関係の非公式（fan-made）
+> プロジェクトです。
+> This is an unofficial, fan-made project and is not affiliated with, endorsed by, or sponsored by
+> Nintendo, Game Freak, or The Pokémon Company.
+
 ## 対象範囲
 
 - **対象はポケモンチャンピオンズのシングルバトルのみ**（ダブルバトル等は対象外）
@@ -10,20 +19,14 @@
   ポケモンチャンピオンズ側でルールが異なる場合はそちらを優先する
 - 第9世代で実装されていない技・アイテム・特性・ポケモンなどは実装しない
 
-このプロジェクトの規約・アーキテクチャの詳細は [CLAUDE.md](CLAUDE.md) を参照（この README の対象範囲の
+このプロジェクトの規約・アーキテクチャの詳細は
+[CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/CLAUDE.md) を参照（この README の対象範囲の
 定義を正とし、CLAUDE.md 側はこの記述を参照する）。
 
 ## インストール
 
 ```bash
-git clone https://github.com/tmwork1/jpoke.git
-cd jpoke
-pip install -e .
-
-# 開発（テスト・lint・型チェック）に必要な依存を含める場合
-pip install -e . pytest pytest-cov ruff mypy
-# または uv を使う場合
-uv sync
+pip install jpoke
 ```
 
 `requires-python = ">=3.10"`。型アノテーションは Python 3.10+ の構文（`X | Y`, `list[X]`）を使用する。
@@ -51,24 +54,6 @@ while battle.judge_winner() is None and battle.turn < 100:
 
 print(battle.judge_winner().username)   # 勝者の名前
 battle.print_logs()                 # このターンのログを表示
-```
-
-任意ターンでのピンポイントな状態検証や技の実行など、より細かい制御をしたい場合は
-`tests/test_utils.py` のヘルパー（`start_battle` / `run_move` / `run_switch` 等）が便利。
-これはテスト用のヘルパーだが、プロジェクトルートを `sys.path` に含めれば通常のスクリプトからも使える。
-詳細な使い方は [tests/CLAUDE.md](tests/CLAUDE.md) を参照:
-
-```python
-# プロジェクトルートから実行する想定（tests/ が import できる状態）
-from jpoke import Pokemon
-from tests import test_utils as t
-
-battle = t.start_battle(
-    team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
-    team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-    accuracy=100,  # 命中率を固定して再現性を上げる
-)
-t.run_move(battle, atk_idx=0, move_idx=0)
 ```
 
 ## アーキテクチャ
@@ -119,6 +104,43 @@ t.run_move(battle, atk_idx=0, move_idx=0)
 | 場の効果（field: 天候・地形・グローバル・サイド） | 31 |
 
 最新の詳細は `docs/progress/` 配下の各ファイルを参照。
+
+## 開発（clone 前提）
+
+ソースを直接編集する場合や、テストヘルパーを使ってピンポイントな状態検証をしたい場合は
+リポジトリを clone してセットアップする。
+
+```bash
+git clone https://github.com/tmwork1/jpoke.git
+cd jpoke
+pip install -e .
+
+# 開発（テスト・lint・型チェック）に必要な依存を含める場合
+pip install -e . pytest pytest-cov ruff mypy
+# または uv を使う場合
+uv sync
+```
+
+### テストヘルパーを使った検証
+
+任意ターンでのピンポイントな状態検証や技の実行など、クイックスタートより細かい制御をしたい場合は
+`tests/test_utils.py` のヘルパー（`start_battle` / `run_move` / `run_switch` 等）が便利。
+これはテスト用のヘルパーだが、プロジェクトルートから実行すれば（`tests/` が import できる状態）
+通常のスクリプトからも使える。詳細な使い方は
+[tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) を参照:
+
+```python
+# プロジェクトルートから実行する想定（tests/ が import できる状態）
+from jpoke import Pokemon
+from tests import test_utils as t
+
+battle = t.start_battle(
+    team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
+    team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    accuracy=100,  # 命中率を固定して再現性を上げる
+)
+t.run_move(battle, atk_idx=0, move_idx=0)
+```
 
 ## テストの実行
 

@@ -133,21 +133,21 @@ prune .loop
 PyPI のプロジェクトページは `readme = "README.md"` をそのまま表示するため、
 以下を修正する:
 
-- [ ] 冒頭に `pip install jpoke` を追加し、`git clone` 手順は「開発用」見出しへ分離
-- [ ] 相対リンクを絶対 URL 化: `README.md:13` の `[CLAUDE.md](CLAUDE.md)`、
+- [x] 冒頭に `pip install jpoke` を追加し、`git clone` 手順は「開発用」見出しへ分離
+- [x] 相対リンクを絶対 URL 化: `README.md:13` の `[CLAUDE.md](CLAUDE.md)`、
       `README.md:59` の `[tests/CLAUDE.md](tests/CLAUDE.md)`
       → `https://github.com/tmwork1/jpoke/blob/main/...`
-- [ ] クイックスタートから `tests/test_utils.py` 依存の記述（`README.md:56-72`）を除去。
+- [x] クイックスタートから `tests/test_utils.py` 依存の記述（`README.md:56-72`）を除去。
       pip ユーザーには `tests/` が存在しないため。ヘルパー紹介は「開発（clone 前提）」
       節へ移動する。中期的には `jpoke.testing` として本体へ昇格を検討（フェーズ4）
-- [ ] 商標免責を追加（日英併記、冒頭または末尾）:
+- [x] 商標免責を追加（日英併記、冒頭または末尾）:
 
   > 本プロジェクトは株式会社ポケモン・任天堂・株式会社ゲームフリークとは無関係の
   > 非公式（fan-made）プロジェクトです。
   > This is an unofficial, fan-made project and is not affiliated with, endorsed by,
   > or sponsored by Nintendo, Game Freak, or The Pokémon Company.
 
-- [ ] 冒頭に3文程度の英語サマリを追加（全文翻訳は不要）
+- [x] 冒頭に3文程度の英語サマリを追加（全文翻訳は不要）
 
 ## フェーズ 3: CI・リリース基盤
 
