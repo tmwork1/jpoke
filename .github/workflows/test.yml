@@ -35,7 +35,7 @@ jobs:
         run: python -m pytest tests/ -q
 
       - name: Run ruff
-        run: python -m ruff check src/ tests/ scripts/
+        run: python -m ruff check src/ tests/ scripts/ examples/
 
       - name: Run mypy
         run: python -m mypy

@@ -219,6 +219,11 @@ package-check:
 - `import jpoke` の初期化コスト削減（実測 約460ms。pokedex.json 544KB と
   全ハンドラテーブルを import 時に無条件ロードしている。遅延 import の余地あり）
 - CONTRIBUTING.md / SECURITY.md の整備
+- 実施済み: 導入・AI学習資料向けサンプルスクリプトを `examples/` に新設（6本、公開APIのみ依存・
+  `pip install jpoke` だけで実行可能）。`examples/README.md` と `tests/test_examples_smoke.py`
+  （壊れたサンプルの放置防止）を追加し、CI/README の ruff 対象にも `examples/` を追加。
+  サンプル作成時に見えた公開APIの使い勝手・既知の seed バグは `docs/plan/examples_api_feedback.md`
+  に記録済み（API自体の変更は別タスク）
 
 ## 検証チェックリスト（フェーズ1〜3完了時）
 
