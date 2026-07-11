@@ -1506,13 +1506,6 @@ def こんじょう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -
     return HandlerReturn(value=value)
 
 
-def ごりむちゅう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ごりむちゅう特性: 物理技の攻撃補正を1.5倍にする。"""
-    if ctx.move.category == "physical":
-        value = apply_fixed_modifier(value, 6144)
-    return HandlerReturn(value=value)
-
-
 def ごりむちゅう_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ごりむちゅう特性: 最初に使用した技でロックする。
 
@@ -1528,6 +1521,13 @@ def ごりむちゅう_lock_move(battle: Battle, ctx: AttackContext, value: Any)
         battle.volatile_manager.apply(
             mon, "ごりむちゅう", source=mon, move_name=ctx.move.name
         )
+    return HandlerReturn(value=value)
+
+
+def ごりむちゅう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """ごりむちゅう特性: 物理技の攻撃補正を1.5倍にする。"""
+    if ctx.move.category == "physical":
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 

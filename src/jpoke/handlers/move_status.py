@@ -833,6 +833,20 @@ def こわいかお_modify_defender_stats(battle: Battle, ctx: AttackContext, va
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
 
+def ごりむちゅう_release_lock_on_ability_change(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なりきり・スキルスワップの使用により自身が新たにごりむちゅうを得た場合、
+    その技自体ではロックしない（次のターンのみ自由に技を選べる）。
+
+    ごりむちゅうの `ON_MOVE_END` ハンドラ（デフォルト優先度100、`ごりむちゅう_lock_move`）
+    より後に発動させ、自身の効果で入手したごりむちゅうによるロックを解除する
+    （なりきり・スキルスワップ双方の登録時に priority=110 を指定する）。
+    """
+    mon = ctx.attacker
+    if mon.ability.base_name == "ごりむちゅう" and mon.has_volatile("ごりむちゅう"):
+        battle.volatile_manager.remove(mon, "ごりむちゅう")
+    return HandlerReturn(value=value)
+
+
 def さいきのいのり_check(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """さいきのいのりの失敗条件: ひんし状態の味方（控え）が1体もいない場合は失敗する。"""
     player = battle.get_player(ctx.attacker)
@@ -1896,20 +1910,6 @@ def なりきり_change_ability(battle: Battle, ctx: AttackContext, value: Any) 
     """
     assert ctx.defender is not None
     battle.change_ability(ctx.attacker, _ability_name_to_copy(ctx.defender))
-    return HandlerReturn(value=value)
-
-
-def ごりむちゅう_release_lock_on_ability_change(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なりきり・スキルスワップの使用により自身が新たにごりむちゅうを得た場合、
-    その技自体ではロックしない（次のターンのみ自由に技を選べる）。
-
-    ごりむちゅうの `ON_MOVE_END` ハンドラ（デフォルト優先度100、`ごりむちゅう_lock_move`）
-    より後に発動させ、自身の効果で入手したごりむちゅうによるロックを解除する
-    （なりきり・スキルスワップ双方の登録時に priority=110 を指定する）。
-    """
-    mon = ctx.attacker
-    if mon.ability.base_name == "ごりむちゅう" and mon.has_volatile("ごりむちゅう"):
-        battle.volatile_manager.remove(mon, "ごりむちゅう")
     return HandlerReturn(value=value)
 
 
