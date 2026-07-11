@@ -1932,6 +1932,7 @@ def test_ごりむちゅう_特殊技には効果がない():
     battle = t.start_battle(
         team0=[Pokemon("ヒヒダルマ(ガラル)", ability_name="ごりむちゅう", move_names=["だいもんじ"])],
         team1=[Pokemon("ピカチュウ")],
+        accuracy=100,  # だいもんじの命中率(85%)固定漏れで技が外れるとatk_modifierが計算されずflakyになるため
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.atk_modifier == 4096
