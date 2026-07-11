@@ -2891,12 +2891,18 @@ def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext,
 
 
 def ノーガード_guarantee_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ノーガード特性: 命中判定を必中化する。"""
+    """ノーガード特性: 命中判定を必中化する。
+
+    すながくれ・はりきり・ミラクルスキンなど他の命中率補正ハンドラより後に実行されて
+    Noneを掛け算しクラッシュする事態を避けるため、必中確定時は stop_event=True で
+    以降のON_MODIFY_ACCURACYハンドラの実行を止める
+    （きょけんとつげき・ちいさくなる・ロックオンの必中実装と同じパターン）。
+    """
     if value is not None:
         attacker_no_guard = ctx.attacker.ability.name == "ノーガード"
         defender_no_guard = ctx.defender.ability.name == "ノーガード"
         if attacker_no_guard or defender_no_guard:
-            value = None
+            return HandlerReturn(value=None, stop_event=True)
     return HandlerReturn(value=value)
 
 

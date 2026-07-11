@@ -494,6 +494,64 @@ def test_ノーガード_防御側で必中化():
     assert battle.move_executor.accuracy is None
 
 
+def test_ノーガード_すながくれの命中率低下を無視して必中になる():
+    """攻撃側ノーガード（すばやさで勝る）・防御側すながくれ、すなあらし下。
+    ON_MODIFY_ACCURACYの実行順（すばやさ順）次第でノーガードが先に必中確定し、
+    後続のすながくれハンドラがNoneに乗算してクラッシュしないことの回帰テストも兼ねる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ノーガード", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="すながくれ")],
+        weather=("すなあらし", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy is None
+
+
+def test_ノーガード_はりきりの命中率低下を無視して必中になる():
+    """防御側ノーガード（すばやさで劣る）・攻撃側はりきりの物理技。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はりきり", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="ノーガード")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy is None
+
+
+def test_ノーガード_ミラクルスキンの変化技命中率低下を無視して必中になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ノーガード", move_names=["どくどく"])],
+        team1=[Pokemon("カビゴン", ability_name="ミラクルスキン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy is None
+    assert battle.actives[1].has_ailment("もうどく")
+
+
+def test_ノーガード_一撃必殺技でも必中になる():
+    """こおりタイプでない攻撃側がぜったいれいどを使っても必中になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ノーガード", move_names=["ぜったいれいど"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.accuracy is None
+    assert battle.actives[1].fainted
+
+
+def test_ノーガード_半無敵状態の相手にも命中する():
+    """そらをとぶ中の相手にも、技限定の回避判定を経由せず命中する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ノーガード", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        volatile1={"そらをとぶ": 1},
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp < hp_before
+
+
 def test_ノーマルスキン_ノーマルタイプに変えた技は強化される():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ノーマルスキン", move_names=["ひのこ"])],
