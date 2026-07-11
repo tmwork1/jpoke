@@ -34,6 +34,40 @@ def test_ナイトメア_ねむり中相手のHPを削る():
     assert foe.hp < foe.max_hp
 
 
+def test_ナイトメア_ダメージ量は最大HPの1_8切り捨て():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("ねむり", 3)
+    )
+    _, foe = battle.actives
+    t.end_turn(battle)
+    assert foe.hp == foe.max_hp - foe.max_hp // 8
+
+
+def test_ナイトメア_マジックガードでダメージ無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
+        team1=[Pokemon("カビゴン", ability_name="マジックガード")],
+        ailment1=("ねむり", 3)
+    )
+    _, foe = battle.actives
+    t.end_turn(battle)
+    assert foe.hp == foe.max_hp
+
+
+def test_ナイトメア_ぜったいねむりのゆめうつつ状態でもダメージを受ける():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("ゆめうつつ", None)
+    )
+    mon, foe = battle.actives
+    t.end_turn(battle)
+    assert mon.ability.revealed
+    assert foe.hp == foe.max_hp - foe.max_hp // 8
+
+
 def test_なまけ_1ターン行動して次のターンはさぼる():
     """なまけ: 1ターン行動すると次のターンは行動スキップになる"""
     battle = t.start_battle(
