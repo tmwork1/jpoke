@@ -1405,6 +1405,57 @@ def test_トレース_交代で元の特性に戻る():
     assert tracer.ability.base_name == "トレース"
 
 
+def test_トレース_とくせいガードを持っていると特性が変わらない():
+    """トレース: とくせいガードを持っていると特性の変更・無効化がブロックされるため、
+    相手にコピー可能な特性を持つポケモンがいてもトレースのまま変化しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ", ability_name="トレース", item_name="とくせいガード")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    tracer = battle.actives[0]
+    assert tracer.ability.base_name == "トレース"
+
+
+def test_トレース_かがくへんかガス発動中は保留され相手交代で再判定して発動する():
+    """トレース: 相手のかがくへんかガスが発動している間は自分のトレース自体が
+    無効化されるため不発のまま保留し、相手が交代してガスが解除されると
+    新しい相手の特性を即座にコピーする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ", ability_name="トレース")],
+        team1=[
+            Pokemon("ドガース", ability_name="かがくへんかガス"),
+            Pokemon("プリン", ability_name="いかく"),
+        ],
+    )
+    tracer = battle.actives[0]
+    assert tracer.ability.base_name == "トレース"
+    assert not tracer.ability.enabled
+
+    t.run_switch(battle, 1, 1)
+    assert tracer.ability.base_name == "いかく"
+
+
+def test_トレース_瀕死の相手からはコピーせず死に出しで再判定して発動する():
+    """トレース: 相手が瀕死のまま自分だけ交代した場合は保留され、瀕死の相手の
+    特性をコピーしない。その後相手が死に出し交代すると再判定して発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("コラッタ", ability_name="トレース")],
+        team1=[
+            Pokemon("ピカチュウ"),
+            Pokemon("プリン", ability_name="いかく"),
+        ],
+    )
+    battle.faint(battle.actives[1])
+    assert battle.actives[1].fainted
+
+    t.run_switch(battle, 0, 1)
+    tracer = battle.actives[0]
+    assert tracer.ability.base_name == "トレース"
+
+    t.run_switch(battle, 1, 1)
+    assert tracer.ability.base_name == "いかく"
+
+
 @pytest.mark.parametrize("roll, expected_count", [(2, 2), (5, 5)])
 def test_どくくぐつ_こんらんの継続ターンは2から5ターン(roll: int, expected_count: int):
     """どくくぐつ: 付与されるこんらんは通常のこんらん技と同じ2〜5ターン継続する。"""

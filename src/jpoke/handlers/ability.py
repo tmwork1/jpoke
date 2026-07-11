@@ -2599,20 +2599,43 @@ def とれないにおい_overwrite_attacker_ability(battle: Battle, ctx: Attack
     return HandlerReturn(value=value)
 
 
-def トレース_copy_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """トレース特性: 入場時に相手のコピー可能な特性へ変更する。"""
-    mon = ctx.source
+def _トレース_try_copy(battle: Battle, mon: Pokemon) -> HandlerReturn:
+    """トレース共通処理: mon（トレース所持者）の特性を相手のコピー可能な特性に変更する。
+
+    相手が瀕死で場を去っている場合や、相手の特性がコピー不可の場合は何もしない
+    （不発のまま保留し、相手側の変化を契機とする再判定ハンドラに委ねる）。
+    """
     foe = battle.foe(mon)
+    if foe.fainted:
+        return HandlerReturn(value=None)
 
     copied_ability = foe.ability.base_name
     if (
         not copied_ability
         or foe.ability.has_flag("uncopyable")
     ):
-        return HandlerReturn(value=value)
+        return HandlerReturn(value=None)
 
     battle.change_ability(mon, copied_ability)
-    return HandlerReturn(value=value)
+    return HandlerReturn(value=None)
+
+
+def トレース_copy_ability(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """トレース特性: 自分が場に出たとき、または自分の特性が有効化された
+    （かがくへんかガスの解除など）ときに、相手のコピー可能な特性へ変更する。
+    """
+    return _トレース_try_copy(battle, ctx.source)
+
+
+def トレース_copy_ability_on_foe_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """トレース特性: 相手が場に出たとき、または相手の特性が有効化されたとき
+    （相手不在からの復帰、相手のかがくへんかガス解除・特性変化など）に、
+    自分がまだトレースのままであれば相手のコピー可能な特性へ変更する。
+
+    コピーに成功すると自身の特性がトレースでなくなり、このハンドラの登録自体が
+    解除されるため、以降に本ハンドラが誤って再発動することはない。
+    """
+    return _トレース_try_copy(battle, battle.foe(ctx.source))
 
 
 def どくくぐつ_confuse_on_poison(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
