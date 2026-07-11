@@ -819,6 +819,22 @@ def test_テラスシェル_等倍以上を半減(defender_name, move_name, expe
     assert battle.damage_calculator.def_type_modifier == expected
 
 
+def test_テラスシェル_相性0倍の無効化技には発動しない():
+    """テラスシェル: タイプ相性で無効(0倍)になる技を受けたときは特性が発動せず、そのまま無効になる。
+
+    無効化技はダメージ計算そのものに入らず「タイプ無効」で失敗するため、
+    damage_calculator は使われない（HPが減らないことと特性が発動しないことで確認する）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],  # ノーマル技
+        team1=[Pokemon("ゲンガー", ability_name="テラスシェル")],  # ゴーストはノーマル技を無効化
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert defender.hp == defender.max_hp
+    assert not defender.ability.revealed
+
+
 def test_テラスチェンジ_登場時にテラスタルフォルムになる():
     battle = t.start_battle(
         team0=[Pokemon("テラパゴス(ノーマル)", ability_name="テラスチェンジ")],
