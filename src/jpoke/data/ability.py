@@ -2405,6 +2405,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.はらぺこスイッチ_on_turn_end,
                 subject_spec="source:self",
+                # docs/spec/turn.md ON_TURN_END: 「160 ダルマモード/リミットシールド/
+                # スワームチェンジ/ぎょぐんによるフォルムチェンジ」と同じ160だと
+                # _sort_handlers の (priority, -speed) tie-break ですばやさ次第で
+                # 順序が入れ替わってしまう。一次情報で「すばやさに関係なくはらぺこ
+                # スイッチが後に発動する」と明記されているため、161にして必ず後に回す。
+                priority=161,
             ),
         }
     ),

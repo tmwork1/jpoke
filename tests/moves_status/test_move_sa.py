@@ -1175,6 +1175,28 @@ def test_スキルスワップ_かがくへんかガスなら失敗(a_ability, d
     assert defender.ability.base_name == d_ability
 
 
+@pytest.mark.parametrize("a_ability,d_ability", [
+    ("はらぺこスイッチ", "めんえき"),  # 使用者がはらぺこスイッチ
+    ("めんえき", "はらぺこスイッチ"),  # 対象がはらぺこスイッチ
+])
+def test_スキルスワップ_はらぺこスイッチなら失敗(a_ability, d_ability):
+    """スキルスワップ: 使用者または対象の特性がはらぺこスイッチの場合は
+    protectedフラグを持たなくても失敗する（一次情報:
+    「この特性をスキルスワップ/さまようたましいで交換することはできない」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["スキルスワップ"], ability_name=a_ability)],
+        team1=[Pokemon("カビゴン", ability_name=d_ability)],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    # 特性は入れ替わらない
+    assert attacker.ability.base_name == a_ability
+    assert defender.ability.base_name == d_ability
+
+
 def test_スキルスワップ_いかく取得で相手のこうげきが下がる():
     """スキルスワップ: スキルスワップでいかくを取得すると再活性化し相手のこうげきが下がる"""
     battle = t.start_battle(

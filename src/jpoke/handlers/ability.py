@@ -1578,9 +1578,10 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
     例外: うのミサイルは protected フラグを持つが、SV Ver.3.0.0 以降は
     さまようたましいでの交換が可能になったため base_name で個別に除外する。
 
-    かがくへんかガスは protected フラグを持たないが、とくせいなし状態に
-    なっていてもさまようたましいでの交換は発動しないため base_name で
-    個別に判定する。
+    かがくへんかガス/はらぺこスイッチは protected フラグを持たないが、
+    さまようたましいでの交換は発動しないため base_name で個別に判定する
+    （はらぺこスイッチの一次情報: 「この特性をスキルスワップ/さまようたましいで
+    交換することはできない」）。
     """
     attacker = ctx.attacker
     defender = ctx.defender
@@ -1589,7 +1590,7 @@ def さまようたましい_swap_ability_on_contact(battle: Battle, ctx: Attack
         or attacker is None
         or attacker.fainted
         or (attacker.ability.has_flag("protected") and attacker.ability.base_name != "うのミサイル")
-        or attacker.ability.base_name == "かがくへんかガス"
+        or attacker.ability.base_name in ("かがくへんかガス", "はらぺこスイッチ")
         or defender is None
     ):
         return HandlerReturn(value=value)
@@ -3025,10 +3026,17 @@ def はやてのつばさ_modify_priority(battle: Battle, ctx: AttackContext, va
 
 
 def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
-    # テラスタル状態でなければ
+    """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。
+
+    一次情報: 「基本的に、はらぺこもようで交代した場合や、ひんしになった場合は
+    まんぷくもように戻る。はらぺこもようでテラスタルした後に交代したときは、
+    はらぺこもようを維持する...テラスタルしてひんしになった場合は、
+    まんぷくもように戻る。」
+    テラスタル中でも、ひんしになった場合はまんぷくもようへ戻す
+    （テラスタル中の維持は「生きたまま交代」した場合のみの例外）。
+    """
     mon = ctx.source
-    if not mon.terastallized:
+    if mon.fainted or not mon.terastallized:
         mon.ability.is_hangry = False
     return HandlerReturn(value=value)
 
