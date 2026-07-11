@@ -2334,6 +2334,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.はっこう_block_acc_drop,
                 subject_spec="target:self",
+            ),
+            Event.ON_GET_STAT_RANK: h.AbilityHandler(
+                h.はっこう_ignore_evasion,
+                subject_spec="attacker:self",
             )
         }
     ),

@@ -2945,8 +2945,14 @@ def はじまりのうみ_deactivate_strong_weather(battle: Battle, ctx: EventCo
 
 def はっこう_block_acc_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """はっこう特性: 相手による命中率ランク低下を無効化する。"""
-    filtered = {stat: v for stat, v in value.items() if not (stat == "accuracy" and v < 0)}
-    return HandlerReturn(value=filtered)
+    value = _block_stat_drop_by_foe(value, ctx, "accuracy")
+    return HandlerReturn(value=value)
+
+
+def はっこう_ignore_evasion(battle: Battle, ctx: AttackContext, value: dict[Stat, int]) -> HandlerReturn:
+    """はっこう特性: 相手の回避率ランク（上昇・低下とも）を無視して攻撃する。"""
+    value["evasion"] = 0
+    return HandlerReturn(value=value)
 
 
 def はとむね_block_B_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
