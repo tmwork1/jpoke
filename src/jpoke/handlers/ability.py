@@ -2367,7 +2367,7 @@ def ちくでん_absorb_electric(battle: Battle, ctx: AttackContext, value: bool
 
 def ちどりあし_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちどりあし特性: こんらん中の自分に対する技の命中率を半分にする。"""
-    if ctx.defender is not None and ctx.defender.has_volatile("こんらん"):
+    if ctx.defender.has_volatile("こんらん"):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
