@@ -12,6 +12,29 @@ from jpoke.enums import Interrupt
 from .. import test_utils as t
 
 
+def test_ナイトメア_ぜったいねむりのゆめうつつ状態でもダメージを受ける():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("ゆめうつつ", None)
+    )
+    mon, foe = battle.actives
+    t.end_turn(battle)
+    assert mon.ability.revealed
+    assert foe.hp == foe.max_hp - foe.max_hp // 8
+
+
+def test_ナイトメア_ダメージ量は最大HPの1_8切り捨て():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
+        team1=[Pokemon("カビゴン")],
+        ailment1=("ねむり", 3)
+    )
+    _, foe = battle.actives
+    t.end_turn(battle)
+    assert foe.hp == foe.max_hp - foe.max_hp // 8
+
+
 def test_ナイトメア_ねむりでないとき発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
@@ -35,17 +58,6 @@ def test_ナイトメア_ねむり中相手のHPを削る():
     assert foe.hp < foe.max_hp
 
 
-def test_ナイトメア_ダメージ量は最大HPの1_8切り捨て():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
-        team1=[Pokemon("カビゴン")],
-        ailment1=("ねむり", 3)
-    )
-    _, foe = battle.actives
-    t.end_turn(battle)
-    assert foe.hp == foe.max_hp - foe.max_hp // 8
-
-
 def test_ナイトメア_マジックガードでダメージ無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
@@ -55,18 +67,6 @@ def test_ナイトメア_マジックガードでダメージ無効():
     _, foe = battle.actives
     t.end_turn(battle)
     assert foe.hp == foe.max_hp
-
-
-def test_ナイトメア_ぜったいねむりのゆめうつつ状態でもダメージを受ける():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ナイトメア")],
-        team1=[Pokemon("カビゴン")],
-        ailment1=("ゆめうつつ", None)
-    )
-    mon, foe = battle.actives
-    t.end_turn(battle)
-    assert mon.ability.revealed
-    assert foe.hp == foe.max_hp - foe.max_hp // 8
 
 
 def test_なまけ_1ターン行動して次のターンはさぼる():
@@ -249,29 +249,6 @@ def test_にげごし_被弾前HPが半分以下なら発動しない():
     assert battle.actives[0] is defender
 
 
-def test_ぬめぬめ_直接攻撃で攻撃者のSが1段階下がる():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
-        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-    )
-    defender, attacker = battle.actives
-    t.run_move(battle, 1)
-    assert defender.ability.revealed
-    assert attacker.rank["spe"] == -1
-
-
-def test_ぬめぬめ_非接触技では発動しない():
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
-        team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
-    )
-    defender, attacker = battle.actives
-    t.run_move(battle, 1)
-
-    assert not defender.ability.revealed
-    assert attacker.rank["spe"] == 0
-
-
 def test_ぬめぬめ_すばやさが最低ランクのときは特性が発動しない():
     """ぬめぬめ: 攻撃者のすばやさがすでに最低ランクのときは、ランクが変化せず特性バーも現れない。"""
     battle = t.start_battle(
@@ -315,24 +292,55 @@ def test_ぬめぬめ_みがわりで防いだときは発動しない():
     assert attacker.rank["spe"] == 0
 
 
-def test_ねつこうかん_ほのお技を受けるとこうげき1段階アップ():
+def test_ぬめぬめ_直接攻撃で攻撃者のSが1段階下がる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert defender.ability.revealed
+    assert attacker.rank["spe"] == -1
+
+
+def test_ぬめぬめ_非接触技では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
+        team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+
+    assert not defender.ability.revealed
+    assert attacker.rank["spe"] == 0
+
+
+def test_ねつこうかん_こうげきがすでに最大なら発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
         team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
     )
     defender = battle.actives[0]
+    defender.rank["atk"] = 6
     t.run_move(battle, 1)
 
-    assert defender.rank["atk"] == 1
-    assert defender.ability.revealed
+    assert defender.rank["atk"] == 6
+    assert not defender.ability.revealed
 
 
-def test_ねつこうかん_やけど状態にならない():
+def test_ねつこうかん_ひんし時は発動しない():
+    """ねつこうかん: ほのお技でひんしになった場合はこうげきが上がらない。"""
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
-        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("カビゴン", ability_name="ねつこうかん"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+        accuracy=100,
     )
-    assert not battle.ailment_manager.apply(battle.actives[0], "やけど")
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert defender.rank["atk"] == 0
 
 
 def test_ねつこうかん_ほのお以外の技では発動しない():
@@ -347,17 +355,16 @@ def test_ねつこうかん_ほのお以外の技では発動しない():
     assert not defender.ability.revealed
 
 
-def test_ねつこうかん_こうげきがすでに最大なら発動しない():
+def test_ねつこうかん_ほのお技を受けるとこうげき1段階アップ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
         team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
     )
     defender = battle.actives[0]
-    defender.rank["atk"] = 6
     t.run_move(battle, 1)
 
-    assert defender.rank["atk"] == 6
-    assert not defender.ability.revealed
+    assert defender.rank["atk"] == 1
+    assert defender.ability.revealed
 
 
 def test_ねつこうかん_まもるで防がれたときは発動しない():
@@ -386,19 +393,12 @@ def test_ねつこうかん_みがわり状態では発動しない():
     assert not defender.ability.revealed
 
 
-def test_ねつこうかん_ひんし時は発動しない():
-    """ねつこうかん: ほのお技でひんしになった場合はこうげきが上がらない。"""
+def test_ねつこうかん_やけど状態にならない():
     battle = t.start_battle(
-        team0=[Pokemon("カビゴン", ability_name="ねつこうかん"), Pokemon("ピカチュウ")],
-        team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
-        accuracy=100,
+        team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
+        team1=[Pokemon("ピカチュウ")],
     )
-    defender = battle.actives[0]
-    t.fix_damage(battle, defender.max_hp)
-    t.run_move(battle, 1)
-
-    assert defender.fainted
-    assert defender.rank["atk"] == 0
+    assert not battle.ailment_manager.apply(battle.actives[0], "やけど")
 
 
 def test_ねつぼうそう_やけど状態でない場合は倍率なし():
