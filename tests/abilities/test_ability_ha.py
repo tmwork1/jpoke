@@ -358,7 +358,7 @@ def test_はらぺこスイッチ_交代時は通常まんぷくへ戻る():
     assert mon.ability.is_hangry is False
 
 
-def test_はりきり_命中率が低下():
+def test_はりきり_一撃必殺技は命中率が下がらない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="はりきり", move_names=["つのドリル"])],
         team1=[Pokemon("ピカチュウ")],
