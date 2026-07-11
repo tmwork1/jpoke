@@ -7,32 +7,35 @@ n_selected=3 で3体を選出し、瀕死になったポケモンが交代コマ
 """
 from __future__ import annotations
 
+# TODO: RandomPlayer を使う。
 from jpoke import Battle, Player
 
+
+# TODO: 技名を入力するときにひらがなも受け付けると、型ヒントの予測変換が効きやすくて親切かもしれない（例: "ぎがどれいん" → "ギガドレイン"）
 
 def main() -> None:
     player1 = Player("Team A")
     player1.add_pokemon("ピカチュウ", move_names=["かみなり"])
     player1.add_pokemon("ヒトカゲ", move_names=["かえんほうしゃ"])
-    player1.add_pokemon("フシギダネ", move_names=["つるのムチ"])
+    player1.add_pokemon("フシギダネ", move_names=["ギガドレイン"])
 
     player2 = Player("Team B")
-    player2.add_pokemon("ゼニガメ", move_names=["ハイドロポンプ"])
-    player2.add_pokemon("コラッタ", move_names=["たいあたり"])
-    player2.add_pokemon("カビゴン", move_names=["のしかかり"])
+    player2.add_pokemon("ゼニガメ", move_names=["なみのり"])
+    player2.add_pokemon("コラッタ", move_names=["すてみタックル"])
+    player2.add_pokemon("ピッピ", move_names=["ムーンフォース"])
 
     # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは3）
     battle = Battle((player1, player2), seed=1)
     battle.start()
 
     max_turns = 30
-    while battle.judge_winner() is None and battle.turn < max_turns:
+    while not battle.finished and battle.turn < max_turns:
         battle.step()
         # このターンのログを表示
         battle.print_logs()
         print("-" * 50)
 
-    winner = battle.judge_winner()
+    winner = battle.winner
     if winner is None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:

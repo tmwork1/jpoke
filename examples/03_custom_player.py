@@ -16,13 +16,12 @@ class StrongestMovePlayer(Player):
 
     def choose_command(self, battle: Battle) -> Command:
         commands = battle.get_available_commands(self)
-        mon = battle.get_active(self)
 
         def move_power(command: Command) -> int:
             # 技コマンド以外（交代・わるあがき等）は最低優先度として扱う
             if not command.is_regular_move:
                 return -1
-            move = mon.moves[command.index]
+            move = battle.command_to_move(self, command)
             return move.base_power or 0  # 変化技は base_power が None
 
         return max(commands, key=move_power)

@@ -173,9 +173,7 @@ class Player:
                 seed = base_seed + i if base_seed is not None else None
                 battle = Battle((self, opponent), seed=seed, **battle_kwargs)
                 battle.start()
-                while battle.judge_winner() is None and battle.turn < MAX_TURNS:
-                    battle.step()
-                winner = battle.judge_winner()
+                winner = battle.play_out(max_turns=MAX_TURNS)
                 if winner is None:
                     # ターン上限で決着しなかった対戦は不成立として戦績に数えない
                     continue

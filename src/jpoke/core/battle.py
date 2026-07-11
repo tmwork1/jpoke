@@ -351,10 +351,34 @@ class Battle:
 
     def calc_lethal(self,
                     attacker: Pokemon,
-                    moves: Move | tuple[Move, int] | list[Move | tuple[Move, int]],
+                    moves: MoveName | Move | tuple[MoveName | Move, int]
+                        | list[MoveName | Move | tuple[MoveName | Move, int]],
                     critical: bool = False,
                     secondary: bool = False,
                     max_attack: int = 10) -> list[LethalResult]:
+        """指定した技（列）を最大 max_attack 回撃ち込んだ場合の致死率を計算する（LethalCalculatorへの委譲）。
+
+        `moves` には技名の文字列（`MoveName`）・`Move` インスタンス・
+        `(技, ヒット数)` のタプル、およびそれらのリストを渡せる。文字列は
+        内部で `Move(name)` に正規化される。リストで複数の技を渡した場合は
+        その順番通りに1回ずつ使用する（例: `["でんこうせっか", "かみなり"]` は
+        1発目にでんこうせっか、2発目にかみなりを撃つ）。
+
+        Args:
+            attacker: 攻撃側のポケモン
+            moves: 使用する技。単体 / (技, ヒット数) / それらのリスト
+            critical: 急所として計算するか
+            secondary: 追加効果ハンドラ（火傷・怯みなど）を適用するか
+            max_attack: 最大攻撃回数（確定数が出た時点で打ち切り）
+
+        Returns:
+            list[LethalResult]: 各ヒット後の致死率計算結果のリスト。
+                リストの1要素が1ヒットに対応し、`hp_dist` はそのヒットを
+                適用した後の防御側HP分布を表す。多段技はヒットごとに
+                要素が分かれる。最終的な致死率（max_attack回、または
+                多段技も含め全ヒット終了時点のもの）は `results[-1].lethal_probability`
+                で読み取れる
+        """
         return lethal.calc_lethal(
             self, attacker, moves, critical=critical,
             move_secondary=secondary, max_attack=max_attack
@@ -619,6 +643,24 @@ class Battle:
 
         self.turn_controller.step(commands)
 
+    def play_out(self, max_turns: int = 100) -> Player | None:
+        """決着がつくかターン上限に達するまで自動的に進める。
+
+        `battle.start()` の後に呼ぶ。01/03/05等の examples で繰り返されていた
+        `while not battle.finished and battle.turn < N: battle.step()` という
+        定型ループを1メソッドにまとめたもの。手動で `step()` を呼ぶ過程自体を
+        観察したい場合はこのメソッドを使わず、従来通りループを書けばよい。
+
+        Args:
+            max_turns: 最大ターン数
+
+        Returns:
+            勝者のPlayerインスタンス。ターン上限で決着がつかなかった場合はNone
+        """
+        while not self.finished and self.turn < max_turns:
+            self.step()
+        return self.winner
+
     def run_move(self, attacker: Pokemon, move: Move):
         """技を実行（MoveExecutorへの委譲）。
 
@@ -634,6 +676,8 @@ class Battle:
 
     def command_to_move(self, player: Player, command: Command) -> Move:
         """コマンドから技オブジェクトを取得。
+
+        方策実装（`choose_command`）でコマンドから技を引きたいときに使う。
 
         Args:
             player: プレイヤー
@@ -827,33 +871,38 @@ class Battle:
             return 0.0
         return chance
 
-    def get_log_lines(self, turn: int | None = None) -> list[str]:
+    def get_log_lines(self, turn: int | None | Literal["all"] = None) -> list[str]:
         """指定したターンのログを整形した文字列のリストとして返す。
 
         出力先（print / logging / GUI 等）を呼び出し側に委ねるための API。
         `print_logs` はこのメソッドの結果を print するだけの薄いラッパー。
 
         Args:
-            turn: ターン番号（Noneの場合は現在のターン）
+            turn: ターン番号。Noneの場合は現在のターンのみ、`"all"` の場合は
+                1ターン目から現在のターンまでの全ログを返す
 
         Returns:
             list[str]: 整形済みログ行のリスト
         """
-        if turn is None:
-            turn = self.turn
+        if turn == "all":
+            target_turns = None
+        else:
+            target_turns = self.turn if turn is None else turn
 
-        event_logs = [log for log in self.event_logger.logs if log.turn == turn]
         lines = []
-        for log in event_logs:
+        for log in self.event_logger.logs:
+            if target_turns is not None and log.turn != target_turns:
+                continue
             player = self.players[log.idx]
-            lines.append(f"Turn {turn} : {player.username} : {log.pokemon or ''} : {log.render()}")
+            lines.append(f"Turn {log.turn} : {player.username} : {log.pokemon or ''} : {log.render()}")
         return lines
 
-    def print_logs(self, turn: int | None = None):
+    def print_logs(self, turn: int | None | Literal["all"] = None):
         """指定したターンのログを整形して出力する（`get_log_lines` の互換ラッパー）。
 
         Args:
-            turn: ターン番号（Noneの場合は現在のターン）
+            turn: ターン番号。Noneの場合は現在のターンのみ、`"all"` の場合は
+                1ターン目から現在のターンまでの全ログを出力する
         """
         for line in self.get_log_lines(turn):
             print(line)
@@ -866,8 +915,15 @@ class Battle:
 
     @property
     def finished(self) -> bool:
-        """poke-env 互換: 対戦が終了しているかどうか。"""
-        return self.winner is not None
+        """poke-env 互換: 対戦が終了しているかどうか。
+
+        `self.winner` は `judge_winner()` を呼んだ時点で初めて遅延判定・
+        キャッシュされるため、`judge_winner()` を一度も呼ばずに `self.winner`
+        だけを参照すると、TODスコアで実際には決着している対戦でも
+        `None` のままになる。そのため単純な `self.winner is not None` ではなく、
+        `judge_winner()` を経由して判定する。
+        """
+        return self.judge_winner() is not None
 
     def won(self, player: Player) -> bool:
         """poke-env 互換: 指定したプレイヤーが勝利したかどうか。

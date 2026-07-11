@@ -1,6 +1,6 @@
 """jpoke で学べること: TreeSearchPlayer を継承した簡易AIとランダム方策の対戦。
 
-TreeSearchPlayer は「自分の全ての合法手 × 相手の全ての合法手」を1手分シミュレーションし、
+TreeSearchPlayer は「自分の全ての合法手x相手の全ての合法手」を1手分シミュレーションし、
 相手が自分にとって最も不利な手を選ぶと仮定したミニマックスで評価する木探索の基底クラス
 （詳細: https://github.com/tmwork1/jpoke/blob/main/src/jpoke/players/tree_search_player.py）。
 既定の評価関数（残りHP割合の差）のままでも
@@ -14,6 +14,8 @@ from jpoke.players import RandomPlayer
 from jpoke.players.tree_search_player import TreeSearchPlayer
 
 
+# TODO: TreeSearchPlayer という名前は適切か。MinimaxPlayer の方がわかりやすいかも。
+# TODO: ユーザーからは木探索の深さ設定が見えてこない。
 class KOFocusedPlayer(TreeSearchPlayer):
     """相手を瀕死にできる手を優先する簡易AI（evaluate() の拡張例）。"""
 
@@ -38,7 +40,7 @@ def main() -> None:
     battle.start()
 
     max_turns = 20
-    while battle.judge_winner() is None and battle.turn < max_turns:
+    while not battle.finished and battle.turn < max_turns:
         battle.step()
 
     winner = battle.judge_winner()
