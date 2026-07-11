@@ -2190,8 +2190,33 @@ def そうだいしょう_modify_power(battle: Battle, ctx: AttackContext, value
 
 
 def ソウルハート_boost_spa_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ソウルハート特性: 攻撃技で相手を倒すととくこうが1段階上がる。"""
+    """ソウルハート特性: 自分の攻撃技で相手を倒すととくこうが1段階上がる。
+
+    攻撃技によるKOはミイラ/さまようたましい/とれないにおいの特性書き換え
+    （ON_DAMAGE_HIT）より後に発火する ON_MOVE_KO で処理する必要がある
+    （一次情報: 直接攻撃で倒した相手がミイラ等を持つ場合、特性が書き換えられて
+    ソウルハートは発動しない）。ON_MOVE_KO は ON_DAMAGE_HIT の後に発火するため、
+    この順序が自然に守られる。
+    """
     mon = ctx.attacker
+    if not battle.is_active(mon):
+        return HandlerReturn(value=value)
+    if battle.modify_stats(mon, {"spa": +1}, source=mon):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def ソウルハート_boost_spa_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ソウルハート特性: 相手が攻撃技以外の要因（状態異常・天候・自滅技など）で
+    ひんしになったときもとくこうが1段階上がる。
+
+    攻撃技によるKO（reason="move_damage"）は ON_MOVE_KO 側の
+    ソウルハート_boost_spa_on_ko で処理するため、ここでは除外する
+    （二重発動の防止、およびミイラ等による特性書き換え順序を正しく保つため）。
+    """
+    if not ctx.target.fainted or ctx.hp_change_reason == "move_damage":
+        return HandlerReturn(value=value)
+    mon = battle.foe(ctx.target)
     if not battle.is_active(mon):
         return HandlerReturn(value=value)
     if battle.modify_stats(mon, {"spa": +1}, source=mon):
