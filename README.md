@@ -1,11 +1,13 @@
 # jpoke
 
-ポケモンバトルシミュレーション開発用の Python ライブラリ。イベント駆動でポケモンの技・特性・アイテム・
-状態異常・場の効果などを再現し、bot 開発や乱数調整・ダメージ計算・木探索などの用途に使う。
+ポケモンチャンピオンズ（シングルバトル）準拠の対戦シミュレーション環境とダメージ計算ロジックを提供する
+Python ライブラリ。イベント駆動でポケモンの技・特性・アイテム・状態異常・場の効果などを再現し、
+戦術研究・AI 開発・ダメージ計算ツール開発などの用途を想定している。
 
-jpoke is an event-driven Python library for simulating Pokémon Champions single battles, reproducing
-moves, abilities, items, status conditions, and field effects. It targets bot development, RNG tuning,
-damage calculation, and tree search.
+jpoke is an event-driven Python library that provides a battle simulation environment and damage
+calculation logic for Pokémon Champions single battles, reproducing moves, abilities, items, status
+conditions, and field effects. It is intended for tactics research, AI development, and building
+damage calculation tools.
 
 > 本プロジェクトは株式会社ポケモン・任天堂・株式会社ゲームフリークとは無関係の非公式（fan-made）
 > プロジェクトです。
@@ -18,6 +20,8 @@ damage calculation, and tree search.
 - 技・特性・アイテム・ポケモンなどの仕様ソースは **第9世代（スカーレット・バイオレット）** を基本とし、
   ポケモンチャンピオンズ側でルールが異なる場合はそちらを優先する
 - 第9世代で実装されていない技・アイテム・特性・ポケモンなどは実装しない
+- ローカルでのシミュレーション・分析を目的としたライブラリであり、公式対戦での自動化（bot 運用）は
+  目的としていない。乱数調整もサポート対象外
 
 このプロジェクトの規約・アーキテクチャの詳細は
 [CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/CLAUDE.md) を参照（この README の対象範囲の

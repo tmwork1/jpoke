@@ -1,7 +1,7 @@
 [project]
 name = "jpoke"
 version = "0.1.0"
-description = "Event-driven Pokemon Champions single-battle simulation library (unofficial)"
+description = "Event-driven Pokemon Champions single-battle simulation and damage calculation library (unofficial)"
 authors = [
     { name = "Tomoo Mari", email = "tmtm.holmes@gmail.com" }
 ]
@@ -10,7 +10,7 @@ license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
-keywords = ["pokemon", "battle", "simulator", "bot"]
+keywords = ["pokemon", "battle", "simulator", "damage-calculator"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
