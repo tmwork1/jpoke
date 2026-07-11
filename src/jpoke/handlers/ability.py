@@ -2976,7 +2976,14 @@ def ハドロンエンジン_modify_atk(battle: Battle, ctx: AttackContext, valu
 
 
 def はやあし_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """はやあし特性: 状態異常時に素早さが1.5倍になる。まひの素早さ低下も無効化する。"""
+    """はやあし特性: 状態異常時に素早さが1.5倍になる。まひの素早さ低下も無効化する。
+
+    特性ハンドラは状態異常ハンドラより先に登録される
+    （switch_manager._register_handlers_on_switch_in 参照）ため、
+    ON_CALC_SPEED では本ハンドラが まひ_speed より先に実行される。
+    まひの場合は先に3倍しておき、後続の まひ_speed が1/2に切り捨てることで
+    結果的に floor(素早さ*1.5) と一致する（切り捨て1回のみで済むため誤差が出ない）。
+    """
     mon = ctx.source
     if not mon.ailment.is_active:
         return HandlerReturn(value=value)
@@ -2985,7 +2992,7 @@ def はやあし_modify_speed(battle: Battle, ctx: EventContext, value: int) -> 
         # まひ_speed による 1/2 ペナルティを打ち消して 1.5 倍（合計 *3）
         value *= 3
     else:
-        value *= 1.5
+        value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 

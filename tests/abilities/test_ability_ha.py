@@ -143,6 +143,27 @@ def test_はやあし_状態異常で素早さ1_5倍(ailment_name: AilmentName):
     assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * 3 // 2
 
 
+@pytest.mark.parametrize(
+    "ailment_name",
+    ["どく", "まひ", "やけど"],
+)
+def test_はやあし_素早さが奇数でも小数にならず切り捨てられる(ailment_name: AilmentName):
+    """種族値が奇数でステータス素早さが奇数になる個体でも、
+    まひ・まひ以外いずれの状態異常でも floor(素早さ*1.5) の整数値になることを確認する。
+    （まひ以外でfloat演算になっていた・まひで切り捨て順序がずれるという2種の回帰を防ぐ）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ゼニガメ", ability_name="はやあし")],
+        team1=[Pokemon("チャーレム")],
+        ailment0=(ailment_name, None),
+    )
+    mon = battle.actives[0]
+    assert mon.stats["spe"] % 2 == 1
+    result = battle.speed_calculator.calc_effective_speed(mon)
+    assert result == mon.stats["spe"] * 3 // 2
+    assert isinstance(result, int)
+
+
 def test_はやおき_ねむりカウンタが通常の2倍速で減る():
     """はやおき: ねむり状態のとき1ターンで2回カウントが減る"""
     battle = t.start_battle(
