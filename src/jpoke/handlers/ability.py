@@ -1778,7 +1778,13 @@ def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle:
 
 
 def じきゅうりょく_boost_B_on_hit(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じきゅうりょく特性: 攻撃技でダメージを受けるたびにぼうぎょが1段階上がる。"""
+    """じきゅうりょく特性: 攻撃技でダメージを受けるたびにぼうぎょが1段階上がる。
+
+    こらえるでHP1のまま耐えたときなど（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     mon = ctx.defender
     if battle.modify_stats(mon, {"def": +1}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
