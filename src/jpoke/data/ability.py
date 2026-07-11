@@ -1862,6 +1862,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
