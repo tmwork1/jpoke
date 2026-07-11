@@ -1800,7 +1800,11 @@ def じゅうなん_cure_paralysis_on_enable(battle: Battle, ctx: EventContext, 
 
 
 def じょうききかん_max_boost_speed(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じょうききかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。"""
+    """じょうききかん特性: みずまたはほのお技でダメージを受けるとすばやさが6段階上がる。
+
+    バブルこうせん等、技自身の追加効果によるすばやさ変化との発動順は
+    priority（data/ability.py 側で指定）で制御する。
+    """
     if ctx.move.type not in ("みず", "ほのお"):
         return HandlerReturn(value=value)
     mon = ctx.defender
