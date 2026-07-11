@@ -16,12 +16,23 @@
 - `jpoke.players.RandomPlayer` — 合法手からランダムに選ぶ `Player` 実装。既定の
   `Player.choose_command()`（常に先頭のコマンドを選ぶ決定的挙動）では
   `battle_against()` による統計比較の分散が潰れてしまう問題への対応
+- `Battle.play_out(max_turns=100)` — 決着がつくかターン上限に達するまで
+  自動的に対戦を進める便宜メソッド。`start()` → `while not battle.finished
+  and battle.turn < N: battle.step()` という定型ループの重複を解消する。
+  `Player.battle_against()` の内部ループもこれに置き換えた
 
 ### Changed
 
 - `Battle(n_selected=...)` を省略した場合、`min(3, 各プレイヤーの手持ち数)` を
   自動設定するようになった（従来は常に3固定で、手持ちが3未満だと `n_selected` の
   明示指定が必須だった）
+- `Battle.calc_lethal` / `core.lethal.calc_lethal` の `moves` 引数が技名の文字列
+  （`MoveName`）を受け付けるようになった。`Move(name)` へのラップなしに
+  `moves="ドラゴンテール"` のように渡せる（`Move` インスタンスでの指定は従来通り
+  可能）
+- `Battle.print_logs(turn)` / `Battle.get_log_lines(turn)` が `turn="all"` を
+  受け付けるようになった。1ターン目から現在ターンまでの全ログを一括で
+  取得・出力できる（`turn=None` で現在ターンのみ、という既存の挙動は変更なし）
 
 ### Fixed
 
@@ -36,6 +47,10 @@
   依存し `random()` のみを固定するテストヘルパーでは制御できない）だったため
   `random.random()` ベースの抽選に変更。上記のseed高エントロピー化に伴い、
   乱数固定が不十分だった一部テストがダメージ比較で偶発的に失敗する状態を解消した
+- `Battle.finished` が `self.winner is not None` だけを見ていたため、
+  `judge_winner()` を一度も呼ばずに `finished` だけを参照すると、TODスコアで
+  実際には決着している対戦でも `False` を返し続ける不整合を修正。
+  `judge_winner()` 経由で判定するように変更した
 
 ## [0.1.0] - 2026-07-11
 
