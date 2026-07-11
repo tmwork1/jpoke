@@ -2650,19 +2650,29 @@ def どくげしょう_set_toxic_spikes(battle: Battle, ctx: AttackContext, valu
 
 
 def どくしゅ_maybe_poison_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """どくしゅ特性: 直接攻撃でダメージを与えた相手を30%でどくにする。"""
+    """どくしゅ特性: 直接攻撃でダメージを与えた相手を30%でどくにする。
+
+    Event.ON_DAMAGE_HIT は実HPダメージが0以下のときは発火しないため、こらえるでHP1のまま
+    耐えた場合やばけのかわ/アイスフェイスで攻撃を肩代わりされた場合（実HPダメージ0）は
+    発動しない（docs/spec/abilities/どくしゅ.md に記載の一部エッジケースは未対応）。
+    Event.ON_HIT に変更すればこれらのケースには対応できるが、ON_HIT は技自身の追加効果
+    （Event.ON_DAMAGE_HIT で処理される、例: どくづき）より先に発火してしまい、「追加効果の
+    判定の後にどくしゅの判定がある」という基本仕様が崩れるため、docs/spec/turn.md の
+    Event.ON_DAMAGE（実装上の Event.ON_DAMAGE_HIT）の記載どおり本イベントを使用する。
+    """
     if (
         not battle.query.is_contact(ctx)
         or battle.random.random() >= battle.resolve_secondary_chance(ctx, 0.3)
     ):
         return HandlerReturn(value=value)
 
-    battle.ailment_manager.apply(
+    if battle.ailment_manager.apply(
         ctx.defender,
         "どく",
         source=ctx.attacker,
         ctx=ctx,
-    )
+    ):
+        _announce_ability_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
 
 
