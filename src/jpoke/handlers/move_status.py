@@ -330,7 +330,7 @@ def いばる_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerRe
 def いばる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いばるの失敗条件: 相手のこうげきランクがすでに+6、かつすでにこんらん状態なら失敗する。"""
     assert ctx.defender is not None
-    if ctx.defender.rank["atk"] == 6 and ctx.defender.has_volatile("こんらん"):
+    if ctx.defender.boosts["atk"] == 6 and ctx.defender.has_volatile("こんらん"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="いばる")
@@ -517,7 +517,7 @@ def おだてる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
 def おだてる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おだてるの失敗条件: 相手のとくこうランクがすでに+6、かつすでにこんらん状態なら失敗する。"""
     assert ctx.defender is not None
-    if ctx.defender.rank["spa"] == 6 and ctx.defender.has_volatile("こんらん"):
+    if ctx.defender.boosts["spa"] == 6 and ctx.defender.has_volatile("こんらん"):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="おだてる")
@@ -674,8 +674,8 @@ def ガードスワップ_swap_ranks(battle: Battle, ctx: AttackContext, value: 
 
     実数値は変化せず、ランク変化のみを互いに入れ替える。
     """
-    atk_rank = ctx.attacker.rank
-    def_rank = ctx.defender.rank
+    atk_rank = ctx.attacker.boosts
+    def_rank = ctx.defender.boosts
     for stat in ("def", "spd"):
         atk_rank[stat], def_rank[stat] = def_rank[stat], atk_rank[stat]
     return HandlerReturn(value=value)
@@ -758,10 +758,10 @@ def くろいきり_reset_all_ranks(battle: Battle, ctx: AttackContext, value: A
     しろいきり状態でも防げない（ON_BEFORE_MODIFY_STAT を経由しない直接リセット）。
     """
     for mon in battle.actives:
-        changed = {s: v for s, v in mon.rank.items() if v != 0}
+        changed = {s: v for s, v in mon.boosts.items() if v != 0}
         if changed:
             for s in changed:
-                mon.rank[s] = 0
+                mon.boosts[s] = 0
             battle.add_event_log(
                 mon, LogCode.STAT_CHANGED,
                 payload=StatChangePayload(
@@ -988,7 +988,7 @@ def しっぽきり_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     # バトンタッチの仕組みを流用してみがわりを交代先に引き継ぐ
     # ランクは引き継がず、みがわりのみを渡す
     battle.player_states[player].baton_pass_data = {
-        "rank": {},
+        "boosts": {},
         "volatiles": {"みがわり": {"hp": migawari_hp}},
     }
     # ピボット交代（交代先選択をプレイヤーに委ねる）
@@ -1105,17 +1105,17 @@ def じこあんじ_copy_ranks(battle: Battle, ctx: AttackContext, value: Any) -
     defender = ctx.defender
     rank_stats: list[Stat] = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
     for stat in rank_stats:
-        attacker.rank[stat] = defender.rank[stat]
+        attacker.boosts[stat] = defender.boosts[stat]
 
     # 急所ランクに関する効果（きゅうしょアップ状態）も第六世代以降コピー対象。
     attacker.critical_rank = defender.critical_rank
 
     # しろいハーブ: マイナスのランクをコピーした直後に発動する（じこあんじ固有の特例）。
     if attacker.item.name == "しろいハーブ":
-        changed = {s: -v for s, v in attacker.rank.items() if v < 0}
+        changed = {s: -v for s, v in attacker.boosts.items() if v < 0}
         if changed:
             for s in changed:
-                attacker.rank[s] = 0
+                attacker.boosts[s] = 0
             battle.add_event_log(
                 attacker, LogCode.STAT_CHANGED,
                 payload=StatChangePayload(stats=changed, display_reason="しろいハーブ"),
@@ -1346,7 +1346,7 @@ def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> 
     mon = ctx.attacker
     if (
         mon.hp <= mon.max_hp // 3
-        or all(mon.rank[stat] >= 6 for stat in ("atk", "def", "spa", "spd", "spe"))
+        or all(mon.boosts[stat] >= 6 for stat in ("atk", "def", "spa", "spd", "spe"))
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
@@ -1456,7 +1456,7 @@ def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: An
 def ちからをすいとる_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ちからをすいとるの失敗チェック: 相手のこうげきランクがすでに -6 なら失敗する。"""
     assert ctx.defender is not None
-    if ctx.defender.rank["atk"] == -6:
+    if ctx.defender.boosts["atk"] == -6:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="こうげき最低"),
@@ -1493,7 +1493,7 @@ def つぼをつく_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     すでに+6まで上がっている能力は候補から除外し、全能力が最大の場合は失敗する。
     """
     stats: list[Stat] = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"]
-    candidates = [s for s in stats if ctx.attacker.rank[s] < 6]
+    candidates = [s for s in stats if ctx.attacker.boosts[s] < 6]
     if not candidates:
         return HandlerReturn(value=False)
     stat = cast(Stat, battle.random.choice(candidates))
@@ -1535,13 +1535,13 @@ def テクスチャー2_can_apply(battle: Battle, ctx: AttackContext, value: Any
     """
     attacker = ctx.attacker
     defender = ctx.defender
-    if attacker.terastallized:
+    if attacker.is_terastallized:
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_テラスタル中"),
         )
         return HandlerReturn(value=False, stop_event=True)
-    if defender.executed_move is None:
+    if defender.last_move is None:
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_相手未行動"),
@@ -1571,14 +1571,14 @@ def テクスチャー2_取得_変更候補タイプ(attacker: Pokemon, defender
     かつ自分が現在持っていないタイプ）の一覧を返す。
 
     「相手が直前に使った技」は、ねごと等のサブ技実行も含めて実際に発動した
-    技を参照すべきため executed_move を使う（selected_move はトップレベルの
+    技を参照すべきため last_move を使う（selected_move はトップレベルの
     選択技のみ、pp_consumed_move はPP消費を伴わないと更新されないため
     いずれも不適）。
     """
-    if defender.executed_move is None:
+    if defender.last_move is None:
         return []
     move_type = テクスチャー2_判定タイプ上書き.get(
-        cast(MoveName, defender.executed_move.name), defender.executed_move.type
+        cast(MoveName, defender.last_move.name), defender.last_move.type
     )
     type_chart = TYPE_MODIFIER.get(move_type, {})
     current_types = set(attacker.types)
@@ -1612,7 +1612,7 @@ def テクスチャー_can_apply(battle: Battle, ctx: AttackContext, value: Any)
       次の技へのフォールバックは行わない。
     """
     attacker = ctx.attacker
-    if attacker.terastallized:
+    if attacker.is_terastallized:
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー_テラスタル")
@@ -2254,7 +2254,7 @@ def ハバネロエキス_apply(battle: Battle, ctx: AttackContext, value: Any) 
 def はらだいこ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はらだいこの効果: こうげきランクを最大まで上げ、HPを最大HPの半分消費する。"""
     mon = ctx.attacker
-    delta = 6 - mon.rank["atk"]
+    delta = 6 - mon.boosts["atk"]
     battle.modify_stats(mon, {"atk": delta}, source=mon)
     battle.modify_hp(mon, r=-0.5)
     return HandlerReturn(value=value)
@@ -2263,7 +2263,7 @@ def はらだいこ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def はらだいこ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """はらだいこの使用条件チェック: こうげきランクがすでに+6、またはHPが最大HPの半分以下ならば失敗する。"""
     mon = ctx.attacker
-    if mon.rank["atk"] >= 6 or mon.hp <= mon.max_hp // 2:
+    if mon.boosts["atk"] >= 6 or mon.hp <= mon.max_hp // 2:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="はらだいこ")
@@ -2280,7 +2280,7 @@ def ハロウィン_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
 def ハロウィン_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ハロウィンの使用条件チェック: 相手がすでにゴーストタイプ、またはテラスタル中の場合は失敗する。"""
     defender = ctx.defender
-    if defender.has_type("ゴースト") or defender.terastallized:
+    if defender.has_type("ゴースト") or defender.is_terastallized:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ハロウィン")
@@ -2295,7 +2295,7 @@ def ハートスワップ_swap_ranks(battle: Battle, ctx: AttackContext, value: 
     こうげき・ぼうぎょ・とくこう・とくぼう・すばやさ・めいちゅう・かいひの
     ランク変化を互いに交換する。実数値は変化しない。
     """
-    ctx.attacker.rank, ctx.defender.rank = ctx.defender.rank, ctx.attacker.rank
+    ctx.attacker.boosts, ctx.defender.boosts = ctx.defender.boosts, ctx.attacker.boosts
     return HandlerReturn(value=value)
 
 
@@ -2309,7 +2309,7 @@ def バトンタッチ_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     player = battle.get_player(mon)
 
     # 退場時にランクがリセットされるため、事前にコピーを作成
-    rank_copy = dict(mon.rank)
+    rank_copy = dict(mon.boosts)
 
     # 引き継ぎ対象の volatile をスナップショット
     volatile_copy: dict[str, dict] = {}
@@ -2325,7 +2325,7 @@ def バトンタッチ_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
 
     # PlayerState に引き継ぎデータを格納
     battle.player_states[player].baton_pass_data = {
-        "rank": rank_copy,
+        "boosts": rank_copy,
         "volatiles": volatile_copy,
     }
 
@@ -2372,8 +2372,8 @@ def パワースワップ_swap_ranks(battle: Battle, ctx: AttackContext, value: 
 
     実数値は変化せず、ランク変化のみを互いに入れ替える。
     """
-    atk_rank = ctx.attacker.rank
-    def_rank = ctx.defender.rank
+    atk_rank = ctx.attacker.boosts
+    def_rank = ctx.defender.boosts
     for stat in ("atk", "spa"):
         atk_rank[stat], def_rank[stat] = def_rank[stat], atk_rank[stat]
     return HandlerReturn(value=value)
@@ -2407,14 +2407,14 @@ def ひっくりかえす_invert_ranks(battle: Battle, ctx: AttackContext, value
     全ランクが0の場合は技が失敗する。
     """
     mon = ctx.defender
-    if all(v == 0 for v in mon.rank.values()):
+    if all(v == 0 for v in mon.boosts.values()):
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="能力ランクに変化がない"),
         )
         return HandlerReturn(value=False, stop_event=True)
-    for stat in mon.rank:
-        mon.rank[stat] = -mon.rank[stat]
+    for stat in mon.boosts:
+        mon.boosts[stat] = -mon.boosts[stat]
     return HandlerReturn(value=value)
 
 
@@ -2503,9 +2503,9 @@ def ほおばる_check_defense_max(battle: Battle, ctx: AttackContext, value: An
     """
     mon = ctx.attacker
     if mon.ability.name == "あまのじゃく":
-        maxed = mon.rank["def"] <= -6
+        maxed = mon.boosts["def"] <= -6
     else:
-        maxed = mon.rank["def"] >= 6
+        maxed = mon.boosts["def"] >= 6
     if maxed:
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
@@ -2650,7 +2650,7 @@ def まほうのこな_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     defender = ctx.defender
     if (
         defender.types == ["エスパー"]
-        or defender.terastallized
+        or defender.is_terastallized
         or defender.name in ("アルセウス", "シルヴァディ")
     ):
         battle.add_event_log(
@@ -2672,15 +2672,15 @@ def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackConte
     今ターンの守る系技を失敗させる。failed_or_immobile_last_turn を併せて見る
     ことで、直前行動が（この連続使用チェック自身の失敗も含めて）何らかの理由で
     失敗していれば連鎖が途切れたとみなし、次ターンは再度成功しうる。
-    executed_move は行動の成否に関わらず run_move の finally より前に確定するが、
+    last_move は行動の成否に関わらず run_move の finally より前に確定するが、
     このチェック自体が早期returnした場合はそのまもる系技には更新されない
-    （_execute_move 内で executed_move への代入より前に判定されるため）ので、
-    executed_move 単独では連続使用と1回休みを区別できない。
+    （_execute_move 内で last_move への代入より前に判定されるため）ので、
+    last_move 単独では連続使用と1回休みを区別できない。
     """
     mon = ctx.attacker
     if (
-        mon.executed_move is not None
-        and mon.executed_move.has_flag("protect")
+        mon.last_move is not None
+        and mon.last_move.has_flag("protect")
         and not mon.failed_or_immobile_last_turn
     ):
         battle.add_event_log(
@@ -2787,7 +2787,7 @@ def みずびたし_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     defender = ctx.defender
     if (
         defender.types == ["みず"]
-        or defender.terastallized
+        or defender.is_terastallized
         or defender.name in ("アルセウス", "シルヴァディ")
     ):
         battle.add_event_log(
@@ -2811,8 +2811,8 @@ def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackConte
     """
     mon = ctx.attacker
     if (
-        mon.executed_move is not None
-        and mon.executed_move.name == "みちづれ"
+        mon.last_move is not None
+        and mon.last_move.name == "みちづれ"
         and not mon.failed_or_immobile_last_turn
     ):
         battle.add_event_log(
@@ -2848,7 +2848,7 @@ def ミラータイプ_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     """
     attacker = ctx.attacker
     defender = ctx.defender
-    if attacker.terastallized:
+    if attacker.is_terastallized:
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ミラータイプ_テラスタル中"),
@@ -2940,7 +2940,7 @@ def もりののろい_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
 def もりののろい_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """もりののろいの使用条件チェック: 相手がすでにくさタイプ、またはテラスタル中の場合は失敗する。"""
     defender = ctx.defender
-    if defender.has_type("くさ") or defender.terastallized:
+    if defender.has_type("くさ") or defender.is_terastallized:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="もりののろい")

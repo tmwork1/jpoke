@@ -576,7 +576,7 @@ class Battle:
             for player in self.players:
                 command = commands.get(player)
                 if not self.command_manager.validate_command(player, command):
-                    raise InvalidCommandError(f"Invalid command type for {player.name}: {command}.")
+                    raise InvalidCommandError(f"Invalid command type for {player.username}: {command}.")
 
         if not commands:
             raise InvalidCommandError("No commands provided for step().")
@@ -815,7 +815,7 @@ class Battle:
         lines = []
         for log in event_logs:
             player = self.players[log.idx]
-            lines.append(f"Turn {turn} : {player.name} : {log.pokemon or ''} : {log.render()}")
+            lines.append(f"Turn {turn} : {player.username} : {log.pokemon or ''} : {log.render()}")
         return lines
 
     def print_logs(self, turn: int | None = None):

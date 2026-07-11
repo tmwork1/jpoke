@@ -1402,7 +1402,7 @@ def リチャージ_block_action(battle: Battle, ctx: AttackContext, value: Any)
 def れんぞくぎり_reset_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """れんぞくぎり揮発状態: ターン終了時に前ターンの技がれんぞくぎり以外なら揮発を解除する。"""
     mon = ctx.source
-    if mon.executed_move is None or mon.executed_move.name != "れんぞくぎり":
+    if mon.last_move is None or mon.last_move.name != "れんぞくぎり":
         battle.volatile_manager.remove(mon, "れんぞくぎり")
     return HandlerReturn(value=value)
 

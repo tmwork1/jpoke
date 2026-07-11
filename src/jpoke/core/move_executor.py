@@ -136,13 +136,13 @@ class MoveExecutor:
             ヒットごとの威力。指定がなければ基礎威力を返す。
         """
         if move.data.multi_hit is None:
-            return move.power
+            return move.base_power
 
         power_sequence = move.data.multi_hit.get("power_sequence", ())
         if power_sequence:
             idx = min(hit_index - 1, len(power_sequence) - 1)
             return power_sequence[idx]
-        return move.power
+        return move.base_power
 
     def _check_hit(self, ctx: AttackContext) -> bool:
         """技の命中判定。
@@ -178,8 +178,8 @@ class MoveExecutor:
 
         # ランク補正
         ranks = {
-            "accuracy": attacker.rank["accuracy"],
-            "evasion": defender.rank["evasion"]
+            "accuracy": attacker.boosts["accuracy"],
+            "evasion": defender.boosts["evasion"]
         }
         modified_rank = self._events.emit(Event.ON_GET_STAT_RANK, ctx, ranks)
         rank_modifier = hit_rank_modifier(modified_rank["accuracy"], modified_rank["evasion"])
@@ -209,7 +209,7 @@ class MoveExecutor:
             bool: 急所に当たるかどうか
         """
         if self.battle.option.critical_mode == "確定のみ":
-            critical_rank = clamp_critic(ctx.move.critical_rank)
+            critical_rank = clamp_critic(ctx.move.crit_ratio)
             self.critical_rank = critical_rank  # デバッグ用に保存
             return self.battle.random.random() < CRIT_RATES[critical_rank]
 
@@ -217,7 +217,7 @@ class MoveExecutor:
         critical_rank = self._events.emit(
             Event.ON_CALC_CRITICAL_RANK,
             ctx,
-            ctx.move.critical_rank
+            ctx.move.crit_ratio
         )
         critical_rank = clamp_critic(critical_rank)
 
@@ -405,7 +405,7 @@ class MoveExecutor:
             return
 
         # 発動した技の確定
-        ctx.attacker.executed_move = ctx.move
+        ctx.attacker.last_move = ctx.move
         # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
         # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
         # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
@@ -442,8 +442,8 @@ class MoveExecutor:
             ctx.hit_index = hit_index
 
             # ヒットごとの技の威力を設定
-            ctx.move.power = self._resolve_hit_power(ctx.move, hit_index)
-            self.move_power = ctx.move.power
+            ctx.move.base_power = self._resolve_hit_power(ctx.move, hit_index)
+            self.move_power = ctx.move.base_power
 
             # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
             need_hit_check = (

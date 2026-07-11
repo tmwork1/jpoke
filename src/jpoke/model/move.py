@@ -30,7 +30,7 @@ class Move(GameEffect):
         self.pp: int = self.data.pp
 
         self.type: Type = self.data.type
-        self.power: int | None = self.data.power
+        self.base_power: int | None = self.data.power
         self.category: MoveCategory = self.data.category
 
         self.data: MoveData  # type hint
@@ -38,7 +38,7 @@ class Move(GameEffect):
     def reset(self, reset_pp: bool = False):
         """技の状態をリセットする。"""
         self.type = self.data.type
-        self.power = self.data.power
+        self.base_power = self.data.power
         self.category = self.data.category
         if reset_pp:
             self.pp = self.data.pp
@@ -90,7 +90,7 @@ class Move(GameEffect):
         return self.data.accuracy
 
     @property
-    def critical_rank(self) -> int:
+    def crit_ratio(self) -> int:
         """急所ランク補正値を取得する。"""
         return self.data.critical_rank
 

@@ -547,7 +547,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         }
         # リーサル計算は対象外（追加効果は defender の『とくこう』を下げるのみで、
         # バークアウト自身は特殊技のためダメージ計算は defender の『とくぼう』を参照する。
-        # defender.rank["spa"] は calc_damages に一切影響しないため、Gのちから等と異なり
+        # defender.boosts["spa"] は calc_damages に一切影響しないため、Gのちから等と異なり
         # lethal_handlers を実装しても後続ヒットのダメージ分布は変化しない。
         # 同様の理由でひやみず・うらみつらみ・がんせきふうじ・だいちのちから等も n/a。
     ),

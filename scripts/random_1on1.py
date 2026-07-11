@@ -80,7 +80,7 @@ def play_game(seed: int = None, max_turns: int = 10) -> tuple[Player | None, int
 
     players = []
     for i in range(2):
-        players.append(RandomPlayer(name=f"Player{i+1}"))
+        players.append(RandomPlayer(username=f"Player{i+1}"))
         mon = build_random_pokemon(
             name=None,
             ability=None,
@@ -118,7 +118,7 @@ def main():
     if winner is None:
         print(f"結果: 引き分け（{turn}ターン）")
     else:
-        print(f"結果: {winner.name} 勝利（{turn}ターン）")
+        print(f"結果: {winner.username} 勝利（{turn}ターン）")
     print("=" * 50)
 
 

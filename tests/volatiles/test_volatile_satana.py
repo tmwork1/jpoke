@@ -254,7 +254,7 @@ def test_スレッドトラップ_接触技で素早さを下げる():
     )
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
     t.run_move(battle, 0)
-    assert battle.actives[0].rank["spe"] == -1
+    assert battle.actives[0].boosts["spe"] == -1
 
 
 def test_スレッドトラップ_非接触では素早さが下がらない():
@@ -264,7 +264,7 @@ def test_スレッドトラップ_非接触では素早さが下がらない():
     )
     battle.volatile_manager.apply(battle.actives[1], "スレッドトラップ", count=1)
     t.run_move(battle, 0)
-    assert battle.actives[0].rank["spe"] == 0
+    assert battle.actives[0].boosts["spe"] == 0
 
 
 def test_そうでん_ターン終了時に状態が解除される():

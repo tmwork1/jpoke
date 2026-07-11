@@ -440,7 +440,7 @@ def アナライズ_boost_power(battle: Battle, ctx: AttackContext, value: int) 
         defender_player = battle.get_player(ctx.defender)
         defender_state = battle.player_states[defender_player]
         is_second_actor = (
-            ctx.defender.executed_move is not None
+            ctx.defender.last_move is not None
             or defender_state.has_switched
         )
 
@@ -544,7 +544,7 @@ def いかりのつぼ_max_atk_on_crit(battle: Battle, ctx: AttackContext, value
     if not battle.move_executor.critical:
         return HandlerReturn(value=value)
     mon = ctx.defender
-    diff = 6 - mon.rank["atk"]
+    diff = 6 - mon.boosts["atk"]
     if diff > 0 and battle.modify_stats(mon, {"atk": diff}, source=ctx.attacker):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -2010,7 +2010,7 @@ def てきおうりょく_modify_stab(battle: Battle, ctx: AttackContext, value:
     attacker = ctx.attacker
 
     # ステラテラスタル時はてきおうりょくがSTAB補正に影響しない。
-    if attacker.terastallized and attacker.tera_type == "ステラ":
+    if attacker.is_terastallized and attacker.tera_type == "ステラ":
         return HandlerReturn(value=value)
 
     if value == 6144:
@@ -2469,7 +2469,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, va
     """はらぺこスイッチ特性: 交代時のフォルム状態を更新する。"""
     # テラスタル状態でなければ
     mon = ctx.source
-    if not mon.terastallized:
+    if not mon.is_terastallized:
         mon.ability.is_hangry = False
     return HandlerReturn(value=value)
 
@@ -2477,7 +2477,7 @@ def はらぺこスイッチ_on_switch_out(battle: Battle, ctx: EventContext, va
 def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """はらぺこスイッチ特性: ターン終了時にフォルムを切り替える。"""
     mon = ctx.source
-    if mon.terastallized:
+    if mon.is_terastallized:
         return HandlerReturn(value=value)
 
     mon.ability.is_hangry = not mon.ability.is_hangry
@@ -2920,7 +2920,7 @@ def へんげんじざい_change_type(battle: Battle, ctx: AttackContext, value:
 
     if (
         not ctx.attacker.ability.activated_since_switch_in
-        and not ctx.attacker.terastallized
+        and not ctx.attacker.is_terastallized
         and [move_type] != ctx.attacker.types
     ):
         ctx.attacker.ability_override_type = move_type
@@ -3199,12 +3199,12 @@ def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> H
     raised_stat: Stat | None = None
     changed = False
 
-    up_candidates = [stat for stat in stats if mon.rank[stat] < 6]
+    up_candidates = [stat for stat in stats if mon.boosts[stat] < 6]
     if up_candidates:
         raised_stat = battle.random.choice(up_candidates)
         changed = battle.modify_stats(mon, {raised_stat: +2}, source=mon, reason="ムラっけ") or changed
 
-    down_candidates = [stat for stat in stats if mon.rank[stat] > -6 and stat != raised_stat]
+    down_candidates = [stat for stat in stats if mon.boosts[stat] > -6 and stat != raised_stat]
     if down_candidates:
         lowered_stat = battle.random.choice(down_candidates)
         changed = battle.modify_stats(mon, {lowered_stat: -1}, source=mon, reason="ムラっけ") or changed

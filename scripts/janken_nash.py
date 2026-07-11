@@ -27,8 +27,8 @@ SHOW_PROGRESS = True  # 進捗ログを見たいときだけ True
 class MixedMovePlayer(Player):
     """毎ターン、指定確率で技を選ぶプレイヤー。"""
 
-    def __init__(self, probs: tuple[float, float, float], name: str = ""):
-        super().__init__(name)
+    def __init__(self, probs: tuple[float, float, float], username: str = ""):
+        super().__init__(username)
         self.probs = probs
 
     def choose_command(self, battle: Battle) -> Command:
@@ -49,8 +49,8 @@ def make_hitmonchan() -> Pokemon:
         nature="いじっぱり",
         move_names=MOVES,
     )
-    mon.set_effort([0, 0, 0, 0, 0, 0])
-    mon.set_indiv([31, 31, 31, 31, 31, 31], hp_policy="reset")  # 新規構築なので満タンにする
+    mon.set_evs([0, 0, 0, 0, 0, 0])
+    mon.set_ivs([31, 31, 31, 31, 31, 31], hp_policy="reset")  # 新規構築なので満タンにする
     return mon
 
 
@@ -65,8 +65,8 @@ def play_game(row_probs: tuple[float, float, float],
         0.5: 引き分け
         0.0: 列側勝利
     """
-    p0 = MixedMovePlayer(row_probs, name="p0")
-    p1 = MixedMovePlayer(col_probs, name="p1")
+    p0 = MixedMovePlayer(row_probs, username="p0")
+    p1 = MixedMovePlayer(col_probs, username="p1")
     p0.team.append(make_hitmonchan())
     p1.team.append(make_hitmonchan())
 

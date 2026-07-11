@@ -86,9 +86,9 @@ class ReplayPlayer(Player):
     盤面が記録時と完全に一致する限り常に正しい決定を返す。
     """
 
-    def __init__(self, name: str, team_spec: list[dict],
+    def __init__(self, username: str, team_spec: list[dict],
                  selection: list[int], commands: list[Command]):
-        super().__init__(name=name)
+        super().__init__(username=username)
         self.team = [Pokemon.from_dict(spec) for spec in team_spec]
         self._selection = selection
         self._queue: deque[Command] = deque(commands)

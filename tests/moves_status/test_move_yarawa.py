@@ -200,7 +200,7 @@ def test_ねごと_変化技を選んでも無限再帰にならない():
     t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（候補はなきごえのみ）
 
     assert battle.move_executor.move_applied
-    assert defender.rank["atk"] == -1  # なきごえが実行されカビゴンのこうげきが下がる
+    assert defender.boosts["atk"] == -1  # なきごえが実行されカビゴンのこうげきが下がる
     assert negoto.pp == 11, "ねごとのPPは1消費される"
     assert nakigoe.pp == 40, "選ばれた技のPPは消費されない"
 
@@ -261,7 +261,7 @@ def test_ねごと_選ばれた技が実行されダメージを与える():
 
 
 def test_ねごと_選択技と実行技が区別される():
-    """ねごと: selected_move はねごと自身、executed_move はサブ技になる
+    """ねごと: selected_move はねごと自身、last_move はサブ技になる
 
     アンコール等「選択した技」を参照すべき効果のための区別を検証する回帰テスト。
     候補技をたいあたりのみにすることで選択結果を決定的にしている。
@@ -277,7 +277,7 @@ def test_ねごと_選択技と実行技が区別される():
     t.run_move(battle, 0, 0)  # ピカチュウ: ねごと（候補はたいあたりのみ）
 
     assert mon.selected_move.name == "ねごと"
-    assert mon.executed_move.name == "たいあたり"
+    assert mon.last_move.name == "たいあたり"
 
 
 def test_ねむる_HP全回復する():
@@ -579,9 +579,9 @@ def test_のろい_ゴーストタイプ以外_こうげきぼうぎょ上がり
     mon = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert mon.rank["atk"] == 1
-    assert mon.rank["def"] == 1
-    assert mon.rank["spe"] == -1
+    assert mon.boosts["atk"] == 1
+    assert mon.boosts["def"] == 1
+    assert mon.boosts["spe"] == -1
 
 
 def test_のろい_のろい状態のポケモンはターン終了時に最大HPの1_4ダメージ():
@@ -642,7 +642,7 @@ def test_ハロウィン_テラスタル中の相手には失敗する():
     )
     defender = battle.actives[1]
     # テラスタル状態にする
-    defender.terastallized = True
+    defender.is_terastallized = True
     assert defender.active_tera_type == "ほのお"
     t.run_move(battle, 0)
 
@@ -1017,7 +1017,7 @@ def test_わたほうし_くさタイプには無効():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["spe"] == 0
+    assert defender.boosts["spe"] == 0
 
 
 def test_わたほうし_相手のすばやさ2段階下がる():
@@ -1030,7 +1030,7 @@ def test_わたほうし_相手のすばやさ2段階下がる():
     defender = battle.actives[1]
     t.run_move(battle, 0)
 
-    assert defender.rank["spe"] == -2
+    assert defender.boosts["spe"] == -2
 
 
 def test_わるだくみ_とくこう2段階上がる():
@@ -1042,7 +1042,7 @@ def test_わるだくみ_とくこう2段階上がる():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["spa"] == 2
+    assert attacker.boosts["spa"] == 2
 
 
 def test_わるだくみ_とくこう最大なら失敗する():
@@ -1052,10 +1052,10 @@ def test_わるだくみ_とくこう最大なら失敗する():
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    attacker.rank["spa"] = 6
+    attacker.boosts["spa"] = 6
     t.run_move(battle, 0)
 
-    assert attacker.rank["spa"] == 6
+    assert attacker.boosts["spa"] == 6
 
 
 def test_ワンダールーム_PPは12():

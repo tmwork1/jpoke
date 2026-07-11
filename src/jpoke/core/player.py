@@ -16,24 +16,24 @@ class Player:
     """バトルプレイヤーを表すクラス。
 
     Attributes:
-        name: プレイヤー名
+        username: プレイヤー名
         team: ポケモンチームのリスト（最大6匹）
-        n_game: 対戦数
-        n_won: 勝利数
+        n_finished_battles: 対戦数
+        n_won_battles: 勝利数
         rating: レーティング値
     """
 
-    def __init__(self, name: str = ""):
+    def __init__(self, username: str = ""):
         """Playerインスタンスを初期化する。
 
         Args:
-            name: プレイヤー名（デフォルトは空文字列）
+            username: プレイヤー名（デフォルトは空文字列）
         """
-        self.name = name
+        self.username = username
 
         self.team: list[Pokemon] = []
-        self.n_game: int = 0
-        self.n_won: int = 0
+        self.n_finished_battles: int = 0
+        self.n_won_battles: int = 0
         self.rating: float = 1500
 
     def choose_selection(self, battle: Battle) -> list[int]:

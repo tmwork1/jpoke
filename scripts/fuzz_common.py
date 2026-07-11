@@ -52,8 +52,8 @@ def random_team_spec(rng: Random, n_pokemon: int = 6) -> list[dict]:
             "nature": rng.choice(NATURES),
             "level": rng.randint(1, 100),
             "tera_type": rng.choice(TERA_TYPES),
-            "indiv": [rng.randint(0, 31) for _ in range(6)],
-            "effort": [rng.randint(0, 32) for _ in range(6)],  # チャンピオンズ仕様（0~32刻み、合計制限なし）
+            "ivs": [rng.randint(0, 31) for _ in range(6)],
+            "evs": [rng.randint(0, 32) for _ in range(6)],  # チャンピオンズ仕様（0~32刻み、合計制限なし）
             "ability": rng.choice(ability_names),
             "item": rng.choice(item_names),
             "moves": rng.sample(move_names, n_moves),
@@ -75,8 +75,8 @@ def build_team(spec: list[dict]) -> list[Pokemon]:
             move_names=s["moves"],
             tera_type=s["tera_type"],
         )
-        mon.set_indiv(s["indiv"])
-        mon.set_effort(s["effort"], hp_policy="reset")  # 新規構築なので満タンにする
+        mon.set_ivs(s["ivs"])
+        mon.set_evs(s["evs"], hp_policy="reset")  # 新規構築なので満タンにする
         team.append(mon)
     return team
 
@@ -86,7 +86,7 @@ def format_full_log(battle: Battle) -> str:
     lines = []
     for log in battle.event_logger.logs:
         player = battle.players[log.idx]
-        lines.append(f"Turn {log.turn} : {player.name} : {log.pokemon or ''} : {log.render()}")
+        lines.append(f"Turn {log.turn} : {player.username} : {log.pokemon or ''} : {log.render()}")
     return "\n".join(lines)
 
 
@@ -124,7 +124,7 @@ def format_team(spec: list[dict]) -> str:
         gender = mon["gender"] or "不明"
         lines.append(
             f"  - {mon['name']} (性別:{gender} 性格:{mon['nature']} Lv{mon['level']} "
-            f"テラス:{mon['tera_type']} 個体値:{mon['indiv']} 努力値:{mon['effort']}) "
+            f"テラス:{mon['tera_type']} 個体値:{mon['ivs']} 努力値:{mon['evs']}) "
             f"特性:{mon['ability']} 持ち物:{mon['item']} 技:{moves}"
         )
     return "\n".join(lines)

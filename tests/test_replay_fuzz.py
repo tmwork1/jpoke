@@ -26,8 +26,8 @@ FUZZ_SEEDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 class _RandomPlayer(Player):
     """自前の乱数生成器で選出・行動をランダムに選ぶプレイヤー（scripts/fuzz_battle.py 参照）。"""
 
-    def __init__(self, name: str, rng: Random):
-        super().__init__(name)
+    def __init__(self, username: str, rng: Random):
+        super().__init__(username)
         self.rng = rng
 
     def choose_selection(self, battle: Battle) -> list[int]:
