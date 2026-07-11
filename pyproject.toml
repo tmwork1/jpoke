@@ -1,6 +1,6 @@
 [project]
 name = "jpoke"
-version = "0.0.1"
+version = "0.1.0"
 description = "Event-driven Pokemon Champions single-battle simulation library (unofficial)"
 authors = [
     { name = "Tomoo Mari", email = "tmtm.holmes@gmail.com" }
