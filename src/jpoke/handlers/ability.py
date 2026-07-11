@@ -2484,6 +2484,18 @@ def てんきや_sync_form(battle: Battle, ctx: EventContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
+def てんねん_ignore_accuracy(battle: Battle, ctx: AttackContext, value: dict[Stat, int]) -> HandlerReturn:
+    """てんねん特性: 技を受けるとき、相手の命中率ランク補正を無視する。"""
+    value["accuracy"] = 0
+    return HandlerReturn(value=value)
+
+
+def てんねん_ignore_evasion(battle: Battle, ctx: AttackContext, value: dict[Stat, int]) -> HandlerReturn:
+    """てんねん特性: 技を使用するとき、相手の回避率ランク補正を無視する。"""
+    value["evasion"] = 0
+    return HandlerReturn(value=value)
+
+
 def てんねん_ignore_rank(battle: Battle, ctx: AttackContext, value: float) -> HandlerReturn:
     """てんねん特性: ランク補正を無視する。"""
     return HandlerReturn(value=1)
