@@ -1675,7 +1675,7 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
     ):
         return HandlerReturn(value=value)
 
-    # 発動確率の計算（ばんのうがさを持つ場合は晴れの恩恵を受けない）
+    # 発動確率の計算（weather_for はノーてんき/エアロックの影響で「なし」天候を返す）
     chance = 1.0 if battle.weather_for(mon).sunny else 0.5
 
     if battle.random.random() >= chance:
@@ -1685,7 +1685,11 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
 
     _announce_ability_triggered(battle, mon)
 
-    # 復活直後に使用条件を満たすきのみは、その場で使用される。
+    # TODO: 使用条件（HPしきい値等）を満たすきのみは仕様上その場で即時使用されるが、
+    # gain_item は ON_ITEM_GAINED のみ発火し、オボンのみ等のHPしきい値判定は
+    # ON_HP_CHANGED 側にしか登録されていないため即時発動しない。ON_HP_CHANGED を
+    # 直接emitすると ききかいひ 等の無関係なハンドラまで誤発火するため、当面は
+    # 次にHPが変化するタイミングまで発動が持ち越される（リサイクルも同様の制約）。
     return HandlerReturn(value=value)
 
 

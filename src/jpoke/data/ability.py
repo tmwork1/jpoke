@@ -1130,6 +1130,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.しゅうかく_restore_berry,
                 subject_spec="source:self",
+                priority=150,  # docs/spec/turn.md ON_TURN_END: 「150 しゅうかく」
             ),
         }
     ),
