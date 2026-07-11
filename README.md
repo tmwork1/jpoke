@@ -63,6 +63,10 @@ print(battle.judge_winner().username)   # 勝者の名前
 battle.print_logs()                 # このターンのログを表示
 ```
 
+戦術研究・AI開発・ダメージ計算ツール開発それぞれのユースケース別に動かして学べるサンプルを
+[examples/](https://github.com/tmwork1/jpoke/blob/main/examples/README.md) に用意している。
+`pip install jpoke` だけで `python examples/01_quickstart.py` のように実行できる。
+
 ## アーキテクチャ
 
 イベント駆動モデルを採用している:
@@ -180,7 +184,7 @@ python -m pytest tests/ -q --cov=jpoke --cov-report=term
 
 ```bash
 # lint
-python -m ruff check src/ tests/ scripts/
+python -m ruff check src/ tests/ scripts/ examples/
 
 # 型チェック（src/jpoke/core のみを対象に段階導入中）
 python -m mypy
