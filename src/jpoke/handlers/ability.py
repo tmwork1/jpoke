@@ -1497,10 +1497,15 @@ def こんじょう_ignore_burn_penalty(battle: Battle, ctx: AttackContext, valu
 
 
 def こんじょう_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """こんじょう特性: 状態異常時に物理技の攻撃補正を1.5倍にする。"""
+    """こんじょう特性: 状態異常時に物理技の攻撃補正を1.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い
+    （Champions仕様＝第五世代以降の仕様に準拠）。
+    """
     if (
         ctx.attacker.ailment.is_active
         and ctx.move.category == "physical"
+        and ctx.move.name != "_こんらん"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
