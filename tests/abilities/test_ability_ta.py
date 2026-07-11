@@ -1210,6 +1210,63 @@ def test_てんのめぐみ_追加効果確率が2倍になる():
     assert with_megumi.actives[1].rank["spd"] == -1
 
 
+def test_でんきエンジン_でんき変化技も無効化してすばやさが上がる():
+    """でんきエンジン: でんきタイプの変化技を受けても無効化し、すばやさが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきエンジン")],
+        team1=[Pokemon("ゼブライカ", move_names=["でんじは"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert defender.rank["spe"] == 1
+    assert not defender.ailment.is_active
+
+
+def test_でんきエンジン_みがわり状態でも発動する():
+    """でんきエンジン: みがわり状態ででんき技を受けても無効化してすばやさが上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきエンジン")],
+        team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
+        volatile0={"みがわり": 1},
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert defender.rank["spe"] == 1
+    assert defender.has_volatile("みがわり")
+
+
+def test_でんきエンジン_連続攻撃技を受けてもすばやさ上昇は1回のみ():
+    """でんきエンジン: でんきタイプの連続攻撃技を受けても無効化されるのは初回ヒットのみで、
+    すばやさの上昇も1段階だけ発生する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきエンジン")],
+        team1=[Pokemon("カビゴン", move_names=["にどげり"])],
+        volatile1={"そうでん": 1},
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert defender.rank["spe"] == 1
+    assert defender.hp == defender.max_hp
+
+
+def test_でんきエンジン_すばやさ最大時は無効化のみ発動する():
+    """でんきエンジン: すばやさランクが最大でもでんき技の無効化自体は発動する（上昇はしない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="でんきエンジン")],
+        team1=[Pokemon("カビゴン", move_names=["でんきショック"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    defender.rank["spe"] = 6
+    t.run_move(battle, 1)
+    assert defender.hp == defender.max_hp
+    assert defender.rank["spe"] == 6
+    assert defender.ability.revealed
+
+
 def test_でんきにかえる_被弾でじゅうでん状態になる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="でんきにかえる")],
