@@ -1508,6 +1508,44 @@ def ごりむちゅう_modify_atk(battle: Battle, ctx: AttackContext, value: int
     return HandlerReturn(value=value)
 
 
+def ごりむちゅう_lock_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ごりむちゅう特性: 最初に使用した技でロックする。
+
+    ねごとのサブ実行中（sleep_talk_active）はロック対象としない
+    （こだわり系アイテムと同様、ねごとで選ばれた技ではなく「ねごと」自体でロックする）。
+    かがくへんかガス等で特性が無効化されている間は本ハンドラ自体が発火しないため、
+    無効化中に使用した技ではロックされず、無効化解除後は無効化前のロックが再度有効になる。
+    """
+    mon = ctx.attacker
+    if mon.sleep_talk_active:
+        return HandlerReturn(value=value)
+    if not mon.has_volatile("ごりむちゅう"):
+        battle.volatile_manager.apply(
+            mon, "ごりむちゅう", source=mon, move_name=ctx.move.name
+        )
+    return HandlerReturn(value=value)
+
+
+def ごりむちゅう_restrict_commands(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """ごりむちゅう特性: ロック中の技と交代コマンドのみ選択可能にする。
+
+    かがくへんかガス等で特性が無効化されている間は本ハンドラ自体が発火しないため、
+    ロック中の技があっても無効化中は自由に技を選べる。
+    """
+    mon = ctx.source
+    if not mon.has_volatile("ごりむちゅう"):
+        return HandlerReturn(value=value)
+    fixed_move_name = mon.volatiles["ごりむちゅう"].move_name
+    new_options = [
+        cmd for cmd in value
+        if (
+            cmd.is_type("switch")
+            or (cmd.is_type("move") and mon.moves[cmd.index].name == fixed_move_name)
+        )
+    ]
+    return HandlerReturn(value=new_options)
+
+
 def サイコメイカー_activate_terrain(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     return _activate_terrain(battle, ctx.source, value, terrain="サイコフィールド", count=5)
 

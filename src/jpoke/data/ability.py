@@ -1014,7 +1014,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.ごりむちゅう_modify_atk,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_MOVE_END: h.AbilityHandler(
+                h.ごりむちゅう_lock_move,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.AbilityHandler(
+                h.ごりむちゅう_restrict_commands,
+                subject_spec="source:self",
+            ),
         }
     ),
     "サイコメイカー": AbilityData(
