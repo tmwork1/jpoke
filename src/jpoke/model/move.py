@@ -146,3 +146,24 @@ class Move(GameEffect):
             and self.target in ("foe", "foe_side")
             and not self.has_flag("unreflectable")
         )
+
+    # ── poke-env 互換 ───────────────────────────────────────────
+
+    @property
+    def current_pp(self) -> int:
+        """poke-env 互換: 技の残りPP（`pp` のエイリアス）。"""
+        return self.pp
+
+    @property
+    def max_pp(self) -> int:
+        """poke-env 互換: 技の最大PP（`data.pp` のエイリアス）。"""
+        return self.data.pp
+
+    @property
+    def expected_hits(self) -> float:
+        """poke-env 互換: 期待ヒット数（poke-env の実装に合わせる）。"""
+        if self.min_hits == self.max_hits:
+            return float(self.min_hits)
+        # 2〜5回技のヒット数分布 2:3:4:5 = 35:35:15:15 の期待値 3.1（poke-env と同値）。
+        # (min_hits + max_hits) / 2 は 3.5 になり一致しないため採用しない。
+        return (2 + 3) * 0.35 + (4 + 5) * 0.15

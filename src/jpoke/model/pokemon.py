@@ -1030,6 +1030,38 @@ class Pokemon:
         """
         return self.volatiles.get(volatile_name, None)
 
+    # ── poke-env 互換 ───────────────────────────────────────────
+    # poke-env との互換性のために追加したエイリアス property。
+    # 実体は既存の property/属性であり、ここでは名前の変換のみを行う。
+
+    @property
+    def current_hp(self) -> int:
+        """poke-env 互換: 現在HP（`hp` のエイリアス）。"""
+        return self.hp
+
+    @property
+    def current_hp_fraction(self) -> float:
+        """poke-env 互換: 現在のHP割合（`hp_fraction` のエイリアス）。"""
+        return self.hp_fraction
+
+    @property
+    def status(self) -> str:
+        """poke-env 互換: 状態異常名（`ailment.name` のエイリアス、型変換なし）。"""
+        return self.ailment.name
+
+    @property
+    def effects(self) -> dict[VolatileName, Volatile]:
+        """poke-env 互換: 揮発性状態の辞書（`volatiles` のエイリアス、型変換なし）。"""
+        return self.volatiles
+
+    @property
+    def first_turn(self) -> bool:
+        """poke-env 互換: 場に出てから最初の行動かどうか。
+
+        `acted_since_switch_in`（場に出てから一度でも行動したか）の否定形で代替する。
+        """
+        return not self.acted_since_switch_in
+
     # ── ユーティリティ ──────────────────────────────────────────
 
     def render_info(self) -> str:
