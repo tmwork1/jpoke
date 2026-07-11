@@ -298,6 +298,42 @@ def test_サンパワー_物理技は補正なし():
     assert battle.damage_calculator.atk_modifier == 4096
 
 
+def test_サンパワー_はれが止むターンではダメージなし():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="サンパワー")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 1),
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert battle.weather.name == ""
+    assert mon.hp == mon.max_hp
+
+
+def test_サンパワー_ノーてんき下では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="サンパワー")],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
+def test_サンパワー_ばんのうがさ所持時は効果が発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="サンパワー", item_name="ばんのうがさ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
 def test_サーフテール_エレキフィールド中にS2倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="サーフテール")],

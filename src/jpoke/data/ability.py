@@ -1077,7 +1077,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         lethal_handlers={
             LethalEvent.ON_TURN_END: LethalHandler(
                 func=l.サンパワー_take_sun_damage,
-                subject="attacker",
+                subject="defender",
             )
         }
     ),
