@@ -137,6 +137,43 @@ def test_さめはだ_接触ダメージ(ability_name: str, move_name: str, dama
     assert attacker.hp == attacker.max_hp - int(attacker.max_hp * damage_ratio)
 
 
+def test_さめはだ_マジックガードの相手にはダメージを与えない():
+    """さめはだ: 攻撃者がマジックガード持ちの場合、反撃ダメージを受けない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="さめはだ")],
+        team1=[Pokemon("イーブイ", ability_name="マジックガード", move_names=["たいあたり"])],
+    )
+    _, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert attacker.hp == attacker.max_hp
+
+
+def test_さめはだ_みがわりで防いだときは発動しない():
+    """さめはだ: 相手のみがわりが技を防いだとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="さめはだ")],
+        team1=[Pokemon("イーブイ", move_names=["たいあたり"])],
+    )
+    defender, attacker = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 1)
+    assert attacker.hp == attacker.max_hp
+
+
+def test_さめはだ_ひんしになっても発動する():
+    """さめはだ: 自身が直接攻撃でひんしになったときも反撃ダメージが発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="さめはだ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    t.run_move(battle, 1)
+    assert defender.fainted
+    assert attacker.hp == attacker.max_hp - int(attacker.max_hp * (1 / 8))
+
+
 def test_サンパワー_はれ中にターン終了時1_8ダメージ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="サンパワー")],
