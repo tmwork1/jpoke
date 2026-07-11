@@ -2834,8 +2834,14 @@ def ぬめぬめ_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value:
 
 
 def ねつこうかん_boost_atk_on_fire(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ねつこうかん特性: ほのおタイプの攻撃技でダメージを受けたとき、こうげきが1段階上がる。"""
+    """ねつこうかん特性: ほのおタイプの攻撃技でダメージを受けたとき、こうげきが1段階上がる。
+
+    攻撃技でひんしになった場合は発動しない（ON_DAMAGE_HIT はKO後にも発火するため
+    明示的に除外する。へんしょく・いかりのこうら等と同じ idiom）。
+    """
     if ctx.move.type != "ほのお":
+        return HandlerReturn(value=value)
+    if ctx.defender.fainted:
         return HandlerReturn(value=value)
 
     changed = battle.modify_stats(ctx.defender, {"atk": +1}, source=ctx.attacker)

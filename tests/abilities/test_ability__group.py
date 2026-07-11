@@ -1148,6 +1148,7 @@ def test_揮発状態耐性(ability: str, volatile: VolatileName, result: bool):
         ("みずのベール", "やけど"),
         ("マグマのよろい", "こおり"),
         ("すいほう", "やけど"),
+        ("ねつこうかん", "やけど"),
     ],
 )
 def test_状態異常無効(ability: str, ailment: AilmentName):
@@ -1173,6 +1174,7 @@ def test_状態異常無効(ability: str, ailment: AilmentName):
         ("やるき", "ねむり", "ねむりごな", False),
         ("みずのベール", "やけど", "おにび", False),
         ("すいほう", "やけど", "おにび", False),
+        ("ねつこうかん", "やけど", "おにび", False),
         # スイートベールは無視して状態異常にしても回復しない
         ("スイートベール", "ねむり", "ねむりごな", True),
         # ("マグマのよろい", "こおり", "", False),
