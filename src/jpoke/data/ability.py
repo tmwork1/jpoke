@@ -1210,7 +1210,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "じきゅうりょく": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様（docs/spec/abilities/
+            # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT を使用する
+            # （みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.じきゅうりょく_boost_B_on_hit,
                 subject_spec="defender:self",
             )
