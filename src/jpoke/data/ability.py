@@ -1497,6 +1497,14 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.スロースタート_start,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.スロースタート_start,
+                subject_spec="source:self",
+            ),
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
+                h.スロースタート_modify_speed,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.スロースタート_modify_atk,
                 subject_spec="attacker:self",

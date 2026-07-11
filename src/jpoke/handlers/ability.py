@@ -2061,6 +2061,13 @@ def スロースタート_modify_atk(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
+def スロースタート_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """スロースタート特性: 登場から5ターンのすばやさ補正を0.5倍にする。"""
+    if ctx.source.ability.count < 5:
+        value = apply_fixed_modifier(value, 2048)
+    return HandlerReturn(value=value)
+
+
 def スロースタート_start(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """スロースタート特性: 登場ターンを記録する。"""
     ctx.source.ability.count = 0
