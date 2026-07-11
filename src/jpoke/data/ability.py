@@ -1970,7 +1970,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.でんきにかえる_charge_on_hit,
                 subject_spec="defender:self",
-            )
+            ),
+            Event.ON_HIT: h.AbilityHandler(
+                h.でんきにかえる_charge_on_zero_damage,
+                subject_spec="defender:self",
+            ),
         }
     ),
     "とうそうしん": AbilityData(
