@@ -45,6 +45,8 @@ DARMANITAN_NORMAL = "ヒヒダルマ(ノーマル)"
 DARMANITAN_ZEN = "ヒヒダルマ(ダルマ)"
 TERAPAGOS_NORMAL = "テラパゴス(ノーマル)"
 TERAPAGOS_TERASTAL = "テラパゴス(テラスタル)"
+CALYREX_ICE = "バドレックス(はくば)"
+CALYREX_SHADOW = "バドレックス(こくば)"
 
 WEATHER_TO_CASTFORM: dict[str, str] = {
     "はれ": CASTFORM_SUNNY,
@@ -1860,6 +1862,14 @@ def じりょく_check_trapped(battle: Battle, ctx: EventContext, value: Any) ->
         and not source.has_type("ゴースト")
     )
     return HandlerReturn(value=result)
+
+
+def じんばいったい_boost(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じんばいったい特性: 攻撃技で相手を倒すと、はくばじょうのすがたはこうげき、
+    こくばじょうのすがたはとくこうが1段階上がる（しろのいななき/くろのいななき相当）。
+    """
+    stat: Stat = "atk" if ctx.attacker.name == CALYREX_ICE else "spa"
+    return _boost_on_move_ko(battle, ctx, value, stats={stat: +1})
 
 
 def すいすい_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:

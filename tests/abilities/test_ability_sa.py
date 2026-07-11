@@ -733,6 +733,32 @@ def test_しろいけむり_自己低下は防げない():
     assert expected == battle.modify_stats(mon0, stats, source=mon0)
 
 
+def test_しんがん_いかくは無効化されない():
+    """しんがん: きもったまと異なりいかくによる攻撃ランク低下は防がない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しんがん")],
+        team1=[Pokemon("ウインディ", ability_name="いかく")],
+    )
+    assert battle.actives[0].rank["atk"] == -1
+
+
+@pytest.mark.parametrize(
+    "move_name, expected_modifier",
+    [
+        ("かわらわり", 8192),  # かくとう技 → はがねに2倍
+        ("たいあたり", 2048),  # ノーマル技 → ゴーストに等倍
+    ]
+)
+def test_しんがん_かくとう技がゴースト複合に抜群(move_name, expected_modifier):
+    # かわらわり(かくとう) vs サーフゴー(はがね/ゴースト) → はがね×2倍
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しんがん", move_names=[move_name])],
+        team1=[Pokemon("サーフゴー", ability_name="")],
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_type_modifier == expected_modifier
+
+
 def test_しんがん_ゴーストタイプへのノーマル技が当たる():
     """しんがん: ノーマル技がゴーストタイプに等倍で当たる"""
     battle = t.start_battle(
@@ -769,32 +795,6 @@ def test_しんがん_相手の回避ランクを無視する():
     defender.rank["evasion"] = 6
     t.run_move(battle, 0)
     assert battle.move_executor.accuracy == 100
-
-
-def test_しんがん_いかくは無効化されない():
-    """しんがん: きもったまと異なりいかくによる攻撃ランク低下は防がない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="しんがん")],
-        team1=[Pokemon("ウインディ", ability_name="いかく")],
-    )
-    assert battle.actives[0].rank["atk"] == -1
-
-
-@pytest.mark.parametrize(
-    "move_name, expected_modifier",
-    [
-        ("かわらわり", 8192),  # かくとう技 → はがねに2倍
-        ("たいあたり", 2048),  # ノーマル技 → ゴーストに等倍
-    ]
-)
-def test_しんがん_かくとう技がゴースト複合に抜群(move_name, expected_modifier):
-    # かわらわり(かくとう) vs サーフゴー(はがね/ゴースト) → はがね×2倍
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="しんがん", move_names=[move_name])],
-        team1=[Pokemon("サーフゴー", ability_name="")],
-    )
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.def_type_modifier == expected_modifier
 
 
 def test_シンクロ_こんらんは伝染しない():
@@ -1235,6 +1235,36 @@ def test_じょうききかん_変化技では発動しない():
     assert not defender.ability.revealed
 
 
+def test_じんばいったい_こくばじょうのすがたが相手を倒すととくこうが上がる():
+    """じんばいったい: こくばじょうのすがた（くろのいななき相当）は攻撃技で相手を倒すと
+    とくこうが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(こくば)", ability_name="じんばいったい", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["atk"] == 0
+
+
+def test_じんばいったい_はくばじょうのすがたが相手を倒すとこうげきが上がる():
+    """じんばいったい: はくばじょうのすがた（しろのいななき相当）は攻撃技で相手を倒すと
+    こうげきが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(はくば)", ability_name="じんばいったい", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 0
+
+
 def test_じんばいったい_相手をきんちょうかん状態にする():
     """じんばいったい: きんちょうかんと同様に相手のきのみ使用を禁止する。"""
     battle = t.start_battle(
@@ -1243,6 +1273,18 @@ def test_じんばいったい_相手をきんちょうかん状態にする():
     )
     assert battle.actives[1].ability.revealed
     assert battle.query.is_nervous(battle.actives[0])
+
+
+def test_じんばいったい_相手を倒せないと能力上昇しない():
+    """じんばいったい: 攻撃技で相手を倒せなければ能力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(はくば)", ability_name="じんばいったい", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not defender.fainted
+    assert attacker.rank["atk"] == 0
 
 
 def test_すいすい_おおあめ中も素早さ2倍():
