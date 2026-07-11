@@ -406,14 +406,14 @@ class MoveExecutor:
 
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
+        # まもる系・みちづれ・かえんのまもりの連続使用失敗判定専用の内部状態。
+        # executed_move と同じタイミングで更新するが、他機能とは共用しない。
+        ctx.attacker.protect_chain_move = ctx.move
         # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
         # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
         # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
         if self._run_move_depth == 1:
             ctx.attacker.selected_move = ctx.move
-        # 直近で使用した技の実効タイプ・技名を記録する（テクスチャー2用）
-        ctx.attacker.last_move_type = ctx.move.type
-        ctx.attacker.last_move_name = cast(MoveName, ctx.move.name)
         # non_negotoでない技のみバトル全体の最後使用技として記録する
         if not ctx.move.has_flag("non_negoto"):
             self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
@@ -517,13 +517,10 @@ class MoveExecutor:
             return
 
         ctx.defender.hits_taken += 1
-        ctx.defender.last_damage_received = actual_damage
         # カウンター・ミラーコートは「最後に受けた1回分」のダメージを参照するため、
         # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
-        if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move):
-            ctx.defender.last_physical_damage_received = actual_damage
-        else:
-            ctx.defender.last_special_damage_received = actual_damage
+        category = "physical" if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "special"
+        ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
 
         # 接触技ヒット時に攻撃者を記録する（くちばしキャノン等の判定用）
         # ぼうごパットで反応効果が防がれる場合は記録しない

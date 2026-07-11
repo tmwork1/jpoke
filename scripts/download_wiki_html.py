@@ -73,7 +73,7 @@ def main(target: str):
 if __name__ == "__main__":
     targets = [
         # "abilities",
-        "items",
+        # "items",
         "moves",
         # "ailments",
         # "volatiles",
