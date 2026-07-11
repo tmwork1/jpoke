@@ -2090,8 +2090,25 @@ def スワームチェンジ_form_change_on_low_hp(battle: Battle, ctx: EventCon
     if mon.name not in (ZYGARDE_50, ZYGARDE_10):
         return HandlerReturn(value=value)
     if mon.hp * 2 <= mon.max_hp:
+        # ひんし後にさいきのいのり等で復活した際、元のフォルムへ戻すために記憶しておく
+        mon.memory["battle"]["スワームチェンジ_origin_form"] = mon.name
         mon.set_form(ZYGARDE_PERFECT)
         _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
+def スワームチェンジ_revert_form_on_faint(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """スワームチェンジ特性: パーフェクトフォルムでひんしになったとき、フォルムと最大HPを元に戻す。
+
+    一次情報: 「ひんし状態になった場合、フォルムと最大HPは元に戻る。このときも
+    げんきのかけらなどで復活できれば、条件を満たすことで再度スワームチェンジが発動する。」
+    """
+    mon = ctx.target
+    if mon.name != ZYGARDE_PERFECT or not mon.fainted:
+        return HandlerReturn(value=value)
+    origin_form = mon.memory["battle"].get("スワームチェンジ_origin_form")
+    if origin_form:
+        mon.set_form(origin_form, keep_damage=False)
     return HandlerReturn(value=value)
 
 

@@ -1528,6 +1528,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 subject_spec="source:self",
                 priority=160,
             ),
+            Event.ON_HP_CHANGED: h.AbilityHandler(
+                h.スワームチェンジ_revert_form_on_faint,
+                subject_spec="target:self",
+            ),
         }
     ),
     "せいぎのこころ": AbilityData(
