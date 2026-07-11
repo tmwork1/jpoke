@@ -380,35 +380,51 @@ print(player.win_rate)
 **`core/player.py`**
 
 ```python
-def battle_against(self, *opponents: "Player", n_battles: int = 1) -> None:
+MAX_TURNS = 100
+
+def battle_against(self, *opponents: "Player", n_battles: int = 1, **battle_kwargs) -> None:
     """各 opponent と n_battles 回ずつ対戦し、双方の戦績を更新する。
 
     poke-env と同じシグネチャ。ただしネットワーク I/O がないため同期メソッド
     （await / asyncio.run 不要。compat_analysis.md §0「同期モデル」参照）。
     """
+    from .battle import Battle  # 循環import回避のための遅延import
+
     for opponent in opponents:
         for _ in range(n_battles):
-            battle = Battle((self, opponent))
+            battle = Battle((self, opponent), **battle_kwargs)
             battle.start()
             while battle.judge_winner() is None and battle.turn < MAX_TURNS:
                 battle.step()
             winner = battle.judge_winner()
+            if winner is None:
+                continue  # ターン上限で決着しなかった対戦は戦績に数えない
             for player in (self, opponent):
                 player.n_finished_battles += 1
                 if winner is player:
                     player.n_won_battles += 1
 ```
 
-**実装メモ**
+**実装メモ（実装済み・確定事項）**
 
 - 戦績の更新は `battle_against` 内で行い、`Battle` 側には自動更新の仕組みを追加しない。
   Phase 3 の `win_rate` / `n_lost_battles` / `n_tied_battles` はこのメソッドとセットで初めて意味を持つ
 - フィールド名 `n_won_battles` / `n_finished_battles` は Phase 2 の改名（`n_won` / `n_game`）後の名前
-- ターン上限で決着しないケースの扱い（上記 `MAX_TURNS` の値と、打ち切り時に `tod_score()` で
-  勝者を決めるか未決着のまま戦績に数えないか）は実装時に確定する。
-  既存の `scripts/fuzz_battle.py --player tree_search` は外部の `max_turns` ガードで打ち切っている
-- `Battle` 生成時のパラメータ（`n_selected`, `seed` 等）を渡したい場合に備え、
-  キーワード引数の素通し（`**battle_kwargs`）を検討する（jpoke 独自拡張。poke-env にはない）
+- **【確定】ターン上限で決着しないケースの扱い**: `tod_score()` 等によるダメージレース判定で
+  無理に勝者を決めることはせず、**未決着（不成立）として戦績に一切数えない**
+  （`n_won_battles` はもちろん `n_finished_battles` もインクリメントしない）。
+  jpoke には引き分け概念（`n_tied_battles` は常に0）がないため、「引き分けとして記録する」選択肢は
+  取らず、「対戦が成立しなかった」として扱う方が既存の戦績プロパティの意味と整合する。
+  既存の `scripts/fuzz_battle.py --player tree_search` も外部の `max_turns` ガードで打ち切り、
+  勝者を強制しない実装になっており、これと方針を揃えた
+- **【確定】`MAX_TURNS` の値**: `100`。`scripts/fuzz_battle.py` の `"random"` プリセット
+  （`max_turns=100`, 6匹パーティ想定）を参考にした。`core/player.py` モジュール直下の定数として定義
+- `Battle` 生成時のパラメータ（`n_selected`, `seed` 等）は `**battle_kwargs` として素通しする
+  形で実装した（jpoke独自拡張。poke-env にはない）
+- **【確定】循環import対策**: `core/battle.py` が `from .player import Player` を
+  モジュールトップレベルで行っているため、`core/player.py` から `Battle` をトップレベルで
+  importすると循環importになる。`battle_against` メソッド内での遅延import
+  （`from .battle import Battle`）で回避した
 - チームは poke-env のパックド文字列ではなく、事前に `player.team` へ `Pokemon` オブジェクトの
   リストを設定しておく前提（compat_analysis.md §0「チームの定義方法」参照）
 - ドキュメントに「再現可能な対戦を組みたい場合は `TestOption` / `seed` を使う」導線を明記する
@@ -432,7 +448,7 @@ def battle_against(self, *opponents: "Player", n_battles: int = 1) -> None:
 | Phase 2 (改名) | Phase 1 完了後 | 改名後の参照漏れ。grep で一括確認する |
 | Phase 3 (property 追加) | Phase 2 完了後 | 既存コードへの影響なし |
 | Phase 4 (変換テーブル) | 独立（いつでも可） | poke-env 依存なし |
-| Phase 5 (`battle_against`) | Phase 2（`n_won_battles` 等の改名）・Phase 3（`win_rate` 等の property）完了後 | ターン上限で決着しない対戦の終了条件（`tod_score` 判定 or 戦績に数えない）が未確定 |
+| Phase 5 (`battle_against`) | Phase 2（`n_won_battles` 等の改名）・Phase 3（`win_rate` 等の property）完了後 | **対応済み**。ターン上限で決着しない対戦は戦績に数えない方針で確定・実装済み |
 
 ## 対象外
 
