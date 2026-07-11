@@ -1985,9 +1985,12 @@ def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, v
     return _ignore_sandstorm_damage(battle, ctx, value)
 
 
-def すながくれ_reduce_accuracy(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """すながくれ特性: すなあらし中に受ける技の命中率を3277/4096倍にする（必中技は除く）。"""
-    if battle.weather.name == "すなあらし":
+def すながくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """すながくれ特性: すなあらし中に受ける技の命中率を3277/4096倍にする（必中技・一撃必殺技は除く）。"""
+    if (
+        battle.weather.name == "すなあらし"
+        and not ctx.move.has_flag("ohko")
+    ):
         value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
 
