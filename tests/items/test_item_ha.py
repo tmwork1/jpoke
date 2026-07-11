@@ -1179,6 +1179,19 @@ def test_ぼうごパット_ゴツゴツメットのダメージを防ぐ():
     assert attacker.hp == attacker.max_hp
 
 
+def test_ぼうごパット_さまようたましいの特性交換を防ぐ():
+    """ぼうごパット: 相手が接触を受けたことに反応する特性（さまようたましい）の効果を防ぐ"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いかく", item_name="ぼうごパット", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="さまようたましい")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "いかく"
+    assert defender.ability.name == "さまようたましい"
+
+
 def test_ぼうごパット_さめはだのダメージを防ぐ():
     """ぼうごパット: 相手が接触を受けたことに反応する特性（さめはだ）の効果を防ぐ"""
     battle = t.start_battle(
