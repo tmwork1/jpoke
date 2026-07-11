@@ -1737,11 +1737,11 @@ def test_どくぼうそう_どく状態でない場合は倍率なし():
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [
-        ("でんきショック", 6144),
-        ("たいあたり", 4096),
+        ("たいあたり", 6144),
+        ("でんきショック", 4096),
     ]
 )
-def test_どくぼうそう_どく状態で特殊技の威力が1_5倍(move_name: str, expected_modifier: int):
+def test_どくぼうそう_どく状態で物理技の威力が1_5倍(move_name: str, expected_modifier: int):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="どくぼうそう", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
@@ -1749,6 +1749,16 @@ def test_どくぼうそう_どく状態で特殊技の威力が1_5倍(move_name
     )
     t.run_move(battle, 0)
     assert expected_modifier == battle.damage_calculator.power_modifier
+
+
+def test_どくぼうそう_もうどく状態で物理技の威力が1_5倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくぼうそう", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("もうどく", None),
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
 
 
 def test_どんかん_いかくを無効化する():
