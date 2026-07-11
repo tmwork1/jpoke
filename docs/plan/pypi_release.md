@@ -153,6 +153,10 @@ PyPI のプロジェクトページは `readme = "README.md"` をそのまま表
 
 ### 3-1. CI に wheel 検証ジョブを追加
 
+- 実施済み（`.github/workflows/test.yml` に `package-check` ジョブを追加。
+  `python -m build` → `twine check dist/*` → wheel インストール → `/tmp` からの
+  `import jpoke` の一連をローカルでも再現確認済み）
+
 今回の致命的不具合（1-1）を CI が素通しした根本原因は、`test.yml` が
 `pip install -e .`（editable）しか行わないこと。`.github/workflows/test.yml` に追加:
 
@@ -173,6 +177,14 @@ package-check:
 
 ### 3-2. publish ワークフローの新設
 
+- 実施済み（`.github/workflows/publish.yml` を新設。`v*` タグの push をトリガーに
+  build → publish の2ジョブ構成、publish ジョブに `environment: pypi` と
+  `permissions: id-token: write` を設定し `pypa/gh-action-pypi-publish@release/v1` で
+  Trusted Publishing する。YAML 構文はローカルで PyYAML により検証済み）
+- 未実施（ユーザー側作業）: PyPI 側での pending publisher
+  （リポジトリ `tmwork1/jpoke` / workflow `publish.yml` / environment `pypi`）の事前登録、
+  および GitHub 側の `pypi` environment 作成・保護ルール設定
+
 `.github/workflows/publish.yml` を追加。`v*` タグの push をトリガーに
 Trusted Publishing（OIDC、`pypa/gh-action-pypi-publish`）で公開する。
 PyPI 側で pending publisher（リポジトリ `tmwork1/jpoke` / workflow `publish.yml`）を
@@ -180,10 +192,12 @@ PyPI 側で pending publisher（リポジトリ `tmwork1/jpoke` / workflow `publ
 
 ### 3-3. バージョニングと初回リリース
 
-- semver を採用（0.x 系は minor bump で破壊的変更があり得る旨を README に一言）
-- `CHANGELOG.md` を新設（Keep a Changelog 形式）し、`[project.urls]` に `Changelog` を追加
-- 初回公開は `version = "0.1.0"` に上げ、`v0.1.0` タグを打つ
-- 公開前に TestPyPI で一度リハーサルする（publish.yml に TestPyPI ジョブを含めるか手動）
+- 実施済み: semver 採用方針を README に明記（0.x 系は minor bump で破壊的変更が
+  あり得る旨）。`CHANGELOG.md` を新設（Keep a Changelog 形式、現状は
+  `## [Unreleased]` のみ）し、`[project.urls]` に `Changelog` を追加
+- 未実施（今回のスコープ外、後続で実施）: `version = "0.1.0"` への更新、`v0.1.0` タグの
+  作成・push、TestPyPI/PyPI への実際の公開（PyPI 側の Trusted Publisher 事前登録が
+  ユーザー自身の作業として必要なため）
 
 ## フェーズ 4: 公開後の改善（ブロッカーではない）
 

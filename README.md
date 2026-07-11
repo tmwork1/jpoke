@@ -31,6 +31,10 @@ pip install jpoke
 
 `requires-python = ">=3.10"`。型アノテーションは Python 3.10+ の構文（`X | Y`, `list[X]`）を使用する。
 
+バージョニングは [Semantic Versioning](https://semver.org/lang/ja/) に準拠するが、0.x 系の間は
+minor バージョンの更新（例: 0.1.0 → 0.2.0）でも破壊的変更が入る場合がある。変更履歴は
+[CHANGELOG.md](https://github.com/tmwork1/jpoke/blob/main/CHANGELOG.md) を参照。
+
 ## クイックスタート
 
 もっとも低レベルな API（`Battle` / `Player` / `Pokemon`）だけを使った最小例:
