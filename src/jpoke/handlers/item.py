@@ -1637,6 +1637,8 @@ def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventConte
     - 保持者自身がこだいかっせい/クォークチャージ持ちの場合、
       トリック・すりかえ・はたきおとす・どろぼう等による外部からの授受を防ぐ
       （渡す/奪われる双方）。ただし、ブースト発動に伴う自己消費（source が自分自身）は防がない。
+      特性がかがくへんかガス等で無効化されているときでも、この効果は無効にならないため
+      base_name（無効化状態に関わらない元の特性名）で判定する。
     - 保持者がそうでない場合でも、トリック・すりかえ・どろぼう等の交換相手
       （source未指定で判定される場合の相手側）がこだいかっせい/クォークチャージ持ちなら、
       その相手にブーストエナジーが渡ることを防ぐ。
@@ -1647,12 +1649,12 @@ def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventConte
         return HandlerReturn(value=value)
 
     paradox_abilities = ("こだいかっせい", "クォークチャージ")
-    if mon.ability.name in paradox_abilities and ctx.source is not mon:
+    if mon.ability.base_name in paradox_abilities and ctx.source is not mon:
         return HandlerReturn(value=False, stop_event=True)
 
     if ctx.source is None:
         foe = battle.foe(mon)
-        if foe is not None and foe.ability.name in paradox_abilities:
+        if foe is not None and foe.ability.base_name in paradox_abilities:
             return HandlerReturn(value=False, stop_event=True)
 
     return HandlerReturn(value=value)

@@ -9,6 +9,7 @@ import pytest
 from jpoke import Pokemon
 from jpoke.data.item import ITEMS
 from jpoke.data.signature_items import PLATE_TO_TYPE
+from jpoke.enums import Interrupt
 from jpoke.types import Stat, AilmentName, VolatileName, \
     WeatherName, TerrainName
 
@@ -444,6 +445,59 @@ def test_パラドックス特性_天候優先_場消滅後アイテム発動():
     assert mon.paradox_boost_active
     assert mon.paradox_boost_source == "item"
     assert not mon.has_item("ブーストエナジー")
+
+
+def test_クォークチャージ_しろいハーブより先に発動判定する():
+    """クォークチャージ: 設置技/入場効果より後、しろいハーブより先に発動判定がある
+    (docs/spec/turn.md ON_SWITCH_IN: 140 クォークチャージ、160 しろいハーブ)。
+    バトンタッチで引き継いだ下降ランクを参照して能力を選ぶため、
+    しろいハーブがランクを戻す前に『とくこう』が選ばれる。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", move_names=["バトンタッチ"]),
+            Pokemon("ワカシャモ", ability_name="クォークチャージ", item_name="しろいハーブ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+        terrain=("エレキフィールド", 5),
+    )
+    attacker = battle.actives[0]
+    attacker.rank["atk"] = -2
+    t.run_move(battle, 0)
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+
+    mon = battle.actives[0]
+    assert mon.paradox_boost_stat == "spa"
+    assert mon.rank["atk"] == 0
+
+
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_スキルスワップは失敗する(ability_name: str):
+    """クォークチャージ/こだいかっせい: 使用者か対象のどちらかがこの特性であるとき、
+    スキルスワップは失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["スキルスワップ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[0].ability.name == ability_name
+    assert battle.actives[1].ability.name == ""
+
+
+@pytest.mark.parametrize("ability_name", ["クォークチャージ", "こだいかっせい"])
+def test_パラドックス特性_こんらんの自傷ダメージには影響しない(ability_name: str):
+    """クォークチャージ/こだいかっせい: 特性で攻撃/防御が上がってもこんらんの
+    自傷ダメージ（内部技"_こんらん"）には影響しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("スピアー", ability_name=ability_name, item_name="ブーストエナジー")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.paradox_boost_stat == "atk"
+
+    battle.test_option.trigger_volatile = True
+    battle.volatile_manager.apply(mon, "こんらん", count=5)
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
 
 
 @pytest.mark.parametrize(
