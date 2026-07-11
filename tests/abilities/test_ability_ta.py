@@ -189,6 +189,17 @@ def test_だっぴ_非発動時は状態異常が残る():
     assert mon.ailment.is_active
 
 
+def test_だっぴ_状態異常がなければ何も起きない():
+    """だっぴ: 状態異常がないときは何も起きない（エラーにならない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="だっぴ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert not mon.ailment.is_active
+
+
 def test_ダルマモード_ターン終了時にHP1_2以下ならダルマのすがたになる():
     battle = t.start_battle(
         team0=[Pokemon("ヒヒダルマ(ノーマル)", ability_name="ダルマモード")],
