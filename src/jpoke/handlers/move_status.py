@@ -1899,6 +1899,20 @@ def なりきり_change_ability(battle: Battle, ctx: AttackContext, value: Any) 
     return HandlerReturn(value=value)
 
 
+def ごりむちゅう_release_lock_on_ability_change(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なりきり・スキルスワップの使用により自身が新たにごりむちゅうを得た場合、
+    その技自体ではロックしない（次のターンのみ自由に技を選べる）。
+
+    ごりむちゅうの `ON_MOVE_END` ハンドラ（デフォルト優先度100、`ごりむちゅう_lock_move`）
+    より後に発動させ、自身の効果で入手したごりむちゅうによるロックを解除する
+    （なりきり・スキルスワップ双方の登録時に priority=110 を指定する）。
+    """
+    mon = ctx.attacker
+    if mon.ability.base_name == "ごりむちゅう" and mon.has_volatile("ごりむちゅう"):
+        battle.volatile_manager.remove(mon, "ごりむちゅう")
+    return HandlerReturn(value=value)
+
+
 def にほんばれ_activate_weather(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return HandlerReturn(value=battle.weather_manager.apply("はれ", 5, source=ctx.attacker))
 
