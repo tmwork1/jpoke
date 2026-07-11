@@ -14,6 +14,70 @@
   詳細な指示書付きで委任する。1件ずつ都度サブエージェントに投げてよく、まとめて
   バッチ実行する必要はない（関連メモ: `feedback_sonnet_subagent_for_work`）
 
+## examples カバレッジチェックリスト（今後の拡充候補）
+
+README「実装状況」の規模（特性310・アイテム247・技733・揮発性状態66・状態異常7・場の効果31）に対し、
+`examples/` がどの主要概念を実演できているか／できていないかを一覧管理する。「4度目のレビュー指摘」
+（jpoke内部実装を知らない設定のsonnetサブエージェントによる調査）で洗い出した未カバー項目の追跡用。
+新しいサンプルを追加・既存サンプルを拡充した際はここのチェックを更新する。
+
+- [x] EV/IV設定（`Pokemon.set_evs()`/`set_ivs()`）— `examples/04_damage_calculation.py` に実演あり
+  （→ 2026-07-12対応）
+- [ ] 特性（`ability_name`）がダメージ計算・行動選択に与える影響（例: もらいび・ふゆう・いかく等）
+- [ ] 天候（あめ・すなあらし等）の効果
+- [ ] 地形（エレキフィールド等）の効果
+- [ ] 状態異常（どく・やけど・ねむり・こおり・こんらん等）を意図的に発生させる例
+- [ ] アイテム・特性の発動ログが実際に画面に出る例（`calc_lethal()`はバトルを進行させないため
+  発動ログが出ない。`battle.step()`を伴う例で見せる必要がある）
+- [ ] 交代誘発技（とんぼがえり・ボルトチェンジ等）・設置技（ステルスロック・まきびし等）
+- [ ] 先制技・素早さ操作技（トリックルーム等）— 木探索AI（05）の行動順読み合いの価値を示す題材として有効
+- [ ] わるあがき（PP切れ）の挙動
+- [ ] テラスタルを能動的に選ぶ方法（`Command.get_terastal_command()`相当の使い方）
+- [ ] 交代コマンドを明示的に組み立てる例（既存の`get_available_commands()`から選ぶだけでなく）
+- [ ] コマンド候補・選択理由をデバッグ的に確認する方法（`evaluate_commands()`等の既存APIの紹介を含む）
+
+### 内部実装に精通したsonnetサブエージェントによる追加調査（2026-07-12）
+
+`src/jpoke/` を自由に読ませ、上記チェックリストと重複しない「コードを読んだからこそ気づく」未紹介APIを
+洗い出させた。詳細（該当ファイル:行）は各項目のコメント参照。最も価値が高いのはAで、次点でB。
+
+- [ ] **【最重要】`Battle.calc_lethal()` は状態異常・天候・設置効果込みの複合ダメージ蓄積を既に
+  計算できるのに一度も実演されていない**。`core/lethal.py` の `_lethal_loop`（`lethal.py:227`）が
+  1攻撃ごとに `ON_TURN_END` 等の `LethalEvent` を発火し、どく/もうどく/やけどの毎ターンダメージ
+  （`data/ailment.py:19,41,73`）・すなあらしダメージ（`data/field/weather.py:70`）・
+  やどりぎのタネ等（`data/volatile.py`）が自動的に合算される。「どくを付与した状態で何ターンで
+  詰むか」が実戦で頻出の問いなのに04で一切示されていない。ただし **`Battle` に状態異常・天候を
+  直接セットする公開メソッドが無い**（`ailment_manager.apply(...)` は `tests/test_utils.py` が
+  内部を直呼びしているのみ）という設計ギャップも同時に判明した。examples化するには
+  「実際に技を当てて状態異常にしてから`calc_lethal`を呼ぶ」か、公開ラッパーの新設が要検討
+- [ ] リプレイ機能一式（`Battle.build_replay_data()`・`ReplayPlayer`・`replay_battle()`、
+  `core/replay.py`）が丸ごとexamples未紹介。`tests/test_replay_fuzz.py`等では使われている。
+  「興味深い対戦を記録して後で解析する」という戦術研究ユースケースに直結するのに未紹介
+- [ ] poke-env互換プロパティ群（`battle.active_pokemon`/`opponent_active_pokemon`/
+  `available_moves`/`available_switches`/`side_conditions`/`team`、`battle.py:952-1022`）が
+  `choose_command`に渡される観測コピーでそのまま使えるのに、03は`get_available_commands`/
+  `command_to_move`というjpokeネイティブな書き方のみ紹介。poke-env経験者向けに両方並べる価値あり
+- [ ] `Battle.roll_damage()`/`calc_damages()`（`battle.py:740,774`、16通りの生ダメージロール）が
+  `calc_lethal`の陰に隠れて未紹介
+- [ ] `Battle.modify_hp()`/`faint()`/`modify_stats()`（`battle.py:692,725,732`、特定のHP・ランク
+  状態からシナリオを組み立てる公開API）が未紹介。CLAUDE.mdの「`Pokemon.hp`に直接代入禁止、
+  `modify_hp()`を使う」という内部ルールがexamples読者に伝わらない
+- [ ] `BattleOption`の`damage_roll`/`critical_mode`/`double_battle`等のパラメータがexamples全体で
+  一度も指定されていない。特に`damage_roll="最大"`+`critical_mode="確定のみ"`は`calc_lethal`と
+  並ぶダメージ計算手段として04で紹介する価値が高い
+- [ ] `Battle.get_event_logs(turn)`（`battle.py:843`、`LogCode`付き構造化ログ）が
+  `print_logs`/`get_log_lines`の文字列版の陰で未紹介
+- [ ] `Pokemon.show()`/`render_info()`（`model/pokemon.py:1076,1098`、状態の整形表示）が未紹介。
+  02/04の手書き`print(f"...")`を代替できる
+- [ ] `Pokemon.status`/`effects`/`has_ailment()`/`has_volatile()`（状態異常・揮発性状態の読み取り
+  API）が未紹介。状態異常を発生させる例が無い以上に、発生を確認する側のAPIも一度も出てこない
+- [ ] `Move.expected_hits`（連続技の平均ヒット数）・`Move.is_attack`（03の`base_power or 0`という
+  間接的な変化技判定を代替できる直接的なプロパティ）が未活用
+- [ ] `Battle.copy(reseed=True)`（`battle.py:305`、独立乱数系列での複製）・
+  `TreeSearchPlayer.configure_sim()`/`opponent_estimator()`（05の発展編になり得る拡張ポイント）・
+  `Player.n_tied_battles`/`n_lost_battles`（06の勝率のみ表示を補完）・`Player.add_pokemon()`の
+  戻り値活用（控えポケモンへの参照保持）は優先度低だが併せて記録
+
 ## 教材としての質
 
 - [x] 難易度勾配（01→06）は概ね適切。01/02で進行、03で方策、04で計算、05で探索、06で統計と段階的に積み上がっており、各docstring冒頭の「jpoke で学べること:」統一フォーマットも良い。（対応不要・肯定的所感）
