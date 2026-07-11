@@ -161,7 +161,8 @@ jpoke {config.category} 再レビュータスク: {entry}
    `t.calc_lethal` を使ったテストを追加・修正する。
    ※ sort_tests.py / generate_test_list.py は実行しない（マージ後に一括実行）。
    python -m pytest tests/ -v でテストを実行し、結果を .loop/test_logs/{entry}.log に保存する。
-   全テストが通ることを確認する。
+   全テストが通ることを確認する。今回の修正と無関係な既存テストが flaky（間欠的に失敗）と
+   判明した場合は `.claude/loop/_common.md` §共通13 に従いその場で修正する。
 
 7. 修正内容を書き出す
    `{config.review_dir}{entry}.md` を Write で作成し、以下の形式で記録する:

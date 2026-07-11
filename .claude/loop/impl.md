@@ -133,6 +133,8 @@ jpoke {config.category} レビュー・テストタスク: {entry}
    impl が {entry} のリーサルハンドラを実装した場合（progress の「リーサル実装」列が `x`）は
    tests/test_lethal.py に `t.calc_lethal` を使ったテストも追加する
 3. python -m pytest tests/ -v を実行し全テストが通ることを確認する
+   （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
+   従いその場で修正する）
    ※ sort_tests.py / generate_test_list.py は実行しない（マージ後にディスパッチャーが一括実行）
 4. {config.progress_file} の {entry} 行のテスト済み列を更新する（自分の行だけ）
    手順2でリーサルテストを追加した場合は「リーサルテスト」列も `x` にする

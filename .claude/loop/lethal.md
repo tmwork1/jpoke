@@ -72,6 +72,8 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 6. python scripts/sort_tests.py tests/test_lethal.py を実行する
 7. python scripts/generate_test_list.py を実行する
 8. python -m pytest tests/ -v を実行し全テストが通ることを確認する
+   （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
+   従いその場で修正する）
 9. 変更をすべてコミットする（作業は `loop/lethal` ブランチ上で行う）:
    git add src/ tests/ docs/
    git commit -m "impl: lethal/{name}"
