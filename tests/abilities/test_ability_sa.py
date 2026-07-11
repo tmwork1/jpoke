@@ -1217,6 +1217,48 @@ def test_じんばいったい_相手をきんちょうかん状態にする():
     assert battle.query.is_nervous(battle.actives[0])
 
 
+def test_じんばいったい_はくばじょうのすがたが相手を倒すとこうげきが上がる():
+    """じんばいったい: はくばじょうのすがた（しろのいななき相当）は攻撃技で相手を倒すと
+    こうげきが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(はくば)", ability_name="じんばいったい", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["spa"] == 0
+
+
+def test_じんばいったい_こくばじょうのすがたが相手を倒すととくこうが上がる():
+    """じんばいったい: こくばじょうのすがた（くろのいななき相当）は攻撃技で相手を倒すと
+    とくこうが1段階上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(こくば)", ability_name="じんばいったい", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.rank["spa"] == 1
+    assert attacker.rank["atk"] == 0
+
+
+def test_じんばいったい_相手を倒せないと能力上昇しない():
+    """じんばいったい: 攻撃技で相手を倒せなければ能力は上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バドレックス(はくば)", ability_name="じんばいったい", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert not defender.fainted
+    assert attacker.rank["atk"] == 0
+
+
 def test_すいほう_相手のほのお技を弱化():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="すいほう")],

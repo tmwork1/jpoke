@@ -1301,6 +1301,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.きんちょうかん_check_nervous,
                 subject_spec="source:foe",
             ),
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.じんばいったい_boost,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "すいすい": AbilityData(
