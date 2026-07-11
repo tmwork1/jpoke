@@ -2878,9 +2878,14 @@ def ねんちゃく_prevent_item_change(battle: Battle, ctx: EventContext, value
 
 
 def のろわれボディ_maybe_disable_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """のろわれボディ特性: 直接攻撃を受けたとき30%の確率で攻撃技をかなしばりにする。"""
-    if not battle.query.is_contact_reaction(ctx) or ctx.attacker is None:
-        return HandlerReturn(value=value)
+    """のろわれボディ特性: 攻撃技によるダメージを受けたとき30%の確率で攻撃技をかなしばりにする。
+
+    接触技かどうかは問わない（一次情報: 非直接攻撃に対しても発動する）。
+    ON_DAMAGE_HIT は実ダメージが発生したときのみ発火するため、変化技・みがわり・
+    タイプ相性無効・まもる等で防がれた場合は自然に発動しない。
+    既にかなしばり状態の相手への再付与、アロマベールによる保護は
+    volatile_manager.apply（ON_BEFORE_APPLY_VOLATILE）側で処理される。
+    """
     if battle.random.random() < 0.3:
         battle.volatile_manager.apply(
             ctx.attacker, "かなしばり",
