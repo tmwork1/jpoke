@@ -131,6 +131,44 @@ def test_さまようたましい_特定の特性は書き換えられない():
     assert defender.ability.name == "さまようたましい"
 
 
+def test_さまようたましい_ひんしになっても発動する():
+    """さまようたましい: 直接攻撃を受けてひんしになったときも特性を入れ替える。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウインディ", ability_name="いかく", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="さまようたましい")],
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+    assert defender.fainted
+    assert attacker.ability.name == "さまようたましい"
+
+
+def test_さまようたましい_みがわり状態では発動しない():
+    """さまようたましい: みがわりが身代わりになった場合はダメージを受けていないので発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウインディ", ability_name="いかく", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="さまようたましい")],
+        volatile1={"みがわり": 1},
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "いかく"
+    assert defender.ability.name == "さまようたましい"
+
+
+def test_さまようたましい_同士は互いに交換する():
+    """さまようたましい: 攻撃相手もさまようたましいである場合、さまようたましい同士を交換する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="さまようたましい", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="さまようたましい")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.name == "さまようたましい"
+    assert defender.ability.name == "さまようたましい"
+
+
 def test_さまようたましい_直接攻撃で特性が入れ替わる():
     """さまようたましい: 直接攻撃を受けたとき攻撃者と特性が入れ替わる。"""
     battle = t.start_battle(
