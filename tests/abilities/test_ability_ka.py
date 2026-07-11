@@ -908,6 +908,20 @@ def test_きんちょうかん_相手をきんちょうかん状態にする():
     assert battle.query.is_nervous(battle.actives[0])
 
 
+def test_きんちょうかん_自身がひんしになった瞬間に効果が解除される():
+    """きんちょうかん: 場から去るか特性が効かなくなった瞬間にきのみ使用禁止の効果が失われる。
+    ひんしになった場合、交代（後続の繰り出し）を待たずその時点で解除される。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", ability_name="きんちょうかん")],
+    )
+    assert battle.query.is_nervous(battle.actives[0])
+    battle.faint(battle.actives[1])
+    assert battle.actives[1].fainted
+    assert not battle.query.is_nervous(battle.actives[0])
+
+
 def test_ぎたい_かがくへんかガスの効果中は発動せず解除後に即座に発動する():
     battle = t.start_battle(
         team0=[Pokemon("マッギョ(ガラル)", ability_name="ぎたい")],

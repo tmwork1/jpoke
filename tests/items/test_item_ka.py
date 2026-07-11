@@ -160,6 +160,19 @@ def test_カシブのみ_ポルターガイストは成功しダメージ半減(
     assert not defender.has_item()  # カシブのみは消費される
 
 
+def test_カムラのみ_きんちょうかんの相手がいると発動しない():
+    """カムラのみ: 相手が特性きんちょうかんを持つときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="カムラのみ")],
+        team1=[Pokemon("ピカチュウ", ability_name="きんちょうかん")],
+    )
+    mon = battle.actives[0]
+    mon.hp = mon.max_hp // 4 + 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.rank["spe"] == 0
+    assert mon.has_item()
+
+
 def test_カムラのみ_すばやさランクが最大のとき発動しない():
     """カムラのみ: すでにすばやさランクが最大まで上がっているときはHP1/4以下でも発動せず消費もしない"""
     battle = t.start_battle(

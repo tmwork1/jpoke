@@ -1303,7 +1303,14 @@ def きんしのちから_restore_foe_ability(battle: Battle, ctx: AttackContext
 
 
 def きんちょうかん_check_nervous(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
-    """きんちょうかん特性: 相手のきのみ使用を禁止する。"""
+    """きんちょうかん特性: 相手のきのみ使用を禁止する。
+
+    自身がひんしになった瞬間に効果が失われるため、場に留まっている（生存している）
+    ことを確認する。
+    """
+    assert ctx.source is not None
+    if battle.foe(ctx.source).fainted:
+        return HandlerReturn(value=value)
     return HandlerReturn(value=True)
 
 

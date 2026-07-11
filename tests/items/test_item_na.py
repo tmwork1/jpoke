@@ -32,6 +32,20 @@ def test_ナゾのみ_一撃必殺技を耐えたときは発動する():
     assert not foe.has_item()
 
 
+def test_ナゾのみ_きんちょうかんの相手がいると発動しない():
+    """ナゾのみ: 相手が特性きんちょうかんを持つときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きんちょうかん", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="ナゾのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.fix_damage(battle, 50)
+    t.run_move(battle, 0)
+    assert foe.hp == foe.max_hp - 50
+    assert foe.has_item()
+
+
 def test_ナゾのみ_効果抜群でHP回復():
     """ナゾのみ: 効果抜群のダメージを受けたときHPを25%回復する"""
     battle = t.start_battle(

@@ -392,6 +392,19 @@ def test_じゃくてんほけん_等倍では発動しない():
     assert foe.has_item()
 
 
+def test_ジャポのみ_きんちょうかんの相手がいると発動しない():
+    """ジャポのみ: 相手が特性きんちょうかんを持つときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="きんちょうかん", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", item_name="ジャポのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
+    assert battle.actives[1].has_item()
+
+
 def test_ジャポのみ_マジシャンより先に発動して奪われない():
     """ジャポのみ: 特性マジシャンの物理技を受けても、ジャポのみが先に発動して消費されるため奪われない
     （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずジャポのみが先に発動する）

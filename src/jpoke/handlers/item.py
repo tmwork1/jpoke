@@ -133,6 +133,9 @@ def _modify_super_effective_damage(battle: Battle,
     """
     if ctx.move.type != type_:
         return HandlerReturn(value=value)
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(ctx.defender):
+        return HandlerReturn(value=value)
     def_type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     if super_effective_only:
         triggers = def_type_modifier > 4096
@@ -283,6 +286,9 @@ def _boost_on_quarter_hp(battle: Battle,
         # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
         if ctx.hp_change_reason == "self_attack":
             return HandlerReturn(value=value)
+        # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+        if battle.query.is_nervous(mon):
+            return HandlerReturn(value=value)
         if mon.hp * denominator > mon.max_hp:
             return HandlerReturn(value=value)
     if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
@@ -309,6 +315,9 @@ def _boost_on_attack_category(battle: Battle,
         and ctx.move.has_flag("secondary_effect")
     ):
         return HandlerReturn(value=value)
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(mon):
+        return HandlerReturn(value=value)
     if ctx.move.category == category:
         if battle.modify_stats(mon, {stat: amount}, source=mon):
             _announce_and_consume_item(battle, mon)
@@ -325,6 +334,9 @@ def _retaliate_on_category(battle: Battle,
     """
     mon = ctx.defender
     assert mon is not None
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(mon):
+        return HandlerReturn(value=value)
     if ctx.move.category == category:
         if battle.modify_hp(ctx.attacker, r=-1/8):
             # ダメおし判定用: ジャポのみ/レンブのみによるダメージも「そのターンに
@@ -1331,6 +1343,9 @@ def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, val
     mon = ctx.defender
     assert mon is not None
     if ctx.move.has_flag("fixed_damage"):
+        return HandlerReturn(value=value)
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(mon):
         return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
         battle.modify_hp(mon, r=1/4)
