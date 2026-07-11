@@ -1606,6 +1606,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.そうだいしょう_announce_on_entry,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.そうだいしょう_announce_on_entry,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
                 h.そうだいしょう_modify_power,
                 subject_spec="attacker:self",

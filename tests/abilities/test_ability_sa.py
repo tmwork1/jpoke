@@ -2028,7 +2028,78 @@ def test_そうだいしょう_味方1体ひんしで補正率1_1():
     )
     player0 = battle.players[0]
     bench = battle.player_states[player0].bench
-    bench[0].hp = 0
+    battle.modify_hp(bench[0], v=-bench[0].max_hp)  # ライチュウをひんしにする
+
+    mon = t.run_switch(battle, 0, 2)
+    assert mon.ability.revealed
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096 * 11 // 10
+
+
+def test_そうだいしょう_味方5体ひんしで補正率上限1_5():
+    """そうだいしょう: ひんし味方が5体以上でも威力補正率は上限の1.5倍(+50%)まで。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ"),
+            Pokemon("ライチュウ"), Pokemon("コラッタ"), Pokemon("ラッタ"),
+            Pokemon("ポッポ"), Pokemon("ピジョン"),
+            Pokemon("カビゴン", ability_name="そうだいしょう", move_names=["たいあたり"]),
+        ],
+        team1=[Pokemon("フシギダネ")],
+    )
+    player0 = battle.players[0]
+    bench = battle.player_states[player0].bench
+    for mon in bench[:5]:
+        battle.modify_hp(mon, v=-mon.max_hp)
+
+    mon = t.run_switch(battle, 0, 6)
+    assert mon.ability.revealed
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096 * 15 // 10
+
+
+def test_そうだいしょう_入場後に味方がひんしになっても補正率は変わらない():
+    """そうだいしょう: 威力補正率は特性発動時点で確定し、以後味方がひんしになっても変わらない。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ"), Pokemon("ライチュウ"),
+            Pokemon("カビゴン", ability_name="そうだいしょう", move_names=["たいあたり"]),
+        ],
+        team1=[Pokemon("フシギダネ")],
+    )
+    player0 = battle.players[0]
+    bench = battle.player_states[player0].bench
+    battle.modify_hp(bench[0], v=-bench[0].max_hp)  # ライチュウをひんしにする
+
+    mon = t.run_switch(battle, 0, 2)
+    assert mon.ability.revealed
+
+    # そうだいしょう発動後にピカチュウがひんしになっても補正率は上昇しない
+    battle.modify_hp(battle.player_states[player0].bench[0], v=-battle.player_states[player0].bench[0].max_hp)
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096 * 11 // 10
+
+
+def test_そうだいしょう_復活しても延べひんし回数は減らない():
+    """そうだいしょう: 一度ひんしになった味方が復活しても、延べひんし回数は減らない。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ"), Pokemon("ライチュウ"),
+            Pokemon("カビゴン", ability_name="そうだいしょう", move_names=["たいあたり"]),
+        ],
+        team1=[Pokemon("フシギダネ")],
+    )
+    player0 = battle.players[0]
+    bench = battle.player_states[player0].bench
+    ally = bench[0]
+    battle.modify_hp(ally, v=-ally.max_hp)  # ライチュウをひんしにする
+    assert ally.fainted
+
+    battle.modify_hp(ally, v=ally.max_hp // 2)  # ライチュウを復活させる
+    assert not ally.fainted
 
     mon = t.run_switch(battle, 0, 2)
     assert mon.ability.revealed

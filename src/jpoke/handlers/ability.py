@@ -2171,20 +2171,28 @@ def そうしょく_absorb_grass(battle: Battle, ctx: AttackContext, value: bool
 
 
 def そうだいしょう_announce_on_entry(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """そうだいしょう特性: 入場時、ひんし味方の数×10%の威力補正を得る（最大50%）。"""
-    player = battle.get_player(ctx.source)
+    """そうだいしょう特性: 特性発動時点（場に出たとき、または他の特性からそうだいしょうに
+    書き変わったとき）で、その戦闘で自分側がひんしになった延べ回数×10%の威力補正率を
+    確定させる（最大+50%）。復活しても延べ回数は減らず、再度ひんしになれば加算される
+    （一次情報: docs/wiki/abilities/そうだいしょう.html 特性の仕様節）。
+    確定した補正率は `ability.count` に保持し、以後その戦闘中に味方がひんしになっても
+    再計算しない（威力の補正率は発動時点で決まる）。
+    """
+    mon = ctx.source
+    player = battle.get_player(mon)
     state = battle.player_states[player]
-    fainted_count = sum(1 for p in state.bench if p.fainted)
+    fainted_count = min(state.total_fainted_count, 5)
+    mon.ability.count = fainted_count
     if fainted_count:
-        _announce_ability_triggered(battle, ctx.source)
+        _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
 
 def そうだいしょう_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """そうだいしょう特性: 入場時に記録した威力補正を適用する。"""
-    player = battle.get_player(ctx.attacker)
-    state = battle.player_states[player]
-    fainted_count = sum(1 for p in state.bench if p.fainted)
+    """そうだいしょう特性: 特性発動時に確定した威力補正率（ability.count）を適用する。"""
+    fainted_count = ctx.attacker.ability.count
+    if not fainted_count:
+        return HandlerReturn(value=value)
     modifier = 4096 * (10 + fainted_count) // 10
     return HandlerReturn(value=apply_fixed_modifier(value, modifier))
 

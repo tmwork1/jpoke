@@ -96,6 +96,9 @@ class StatusManager:
                 # かたきうち用: 味方がひんしになったターンを記録する
                 player = self.battle.get_player(target)
                 self.battle.player_states[player].ally_fainted_turn = self.battle.turn
+                # そうだいしょう用: 自分側がひんしになった延べ回数を加算する
+                # （さいきのいのり等で復活しても減らず、再度ひんしになれば加算され続ける）
+                self.battle.player_states[player].total_fainted_count += 1
 
             # ダメおし・きあいパンチ判定用: 反動ダメージ（すてみタックル系・わるあがき系の
             # 確定反動）も「そのターンに攻撃を受けた」扱いにする（一次情報:

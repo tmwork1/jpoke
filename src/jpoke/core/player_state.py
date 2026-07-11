@@ -26,6 +26,7 @@ class PlayerState:
         self.baton_pass_data: dict = {}  # バトンタッチの引き継ぎデータ
         self.last_move_succeeded: bool | None = None  # このターンの技が成功したか（未実行ならNone）
         self.ally_fainted_turn: int | None = None  # 味方が直近にひんしになったターン（かたきうち用）
+        self.total_fainted_count: int = 0  # その戦闘で自分側のポケモンがひんしになった延べ回数（そうだいしょう用。復活しても減らず、再度ひんしになれば加算される）
 
     def __deepcopy__(self, memo):
         cls = self.__class__
