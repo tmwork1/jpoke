@@ -25,6 +25,38 @@ weathers = [x[1] for x in ability_weather_defaultcount]
 strong_weathers = weathers[4:]
 
 
+def test_はがねのせいしん_はがね技の威力が1_5倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はがねのせいしん", move_names=["アイアンヘッド"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
+
+
+def test_はがねのせいしん_はがね以外の技は威力補正なし():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はがねのせいしん", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_はがねのせいしん_はめつのねがいの威力も上がる():
+    """はめつのねがい: 溜め処理（ON_MOVE_CHARGE）時点でダメージが確定するため、
+    その時点の攻撃者である特性所持者自身の威力補正が反映される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ジバコイル", ability_name="はがねのせいしん", move_names=["はめつのねがい"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
+
+
 def test_はっこう_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="はっこう")],
