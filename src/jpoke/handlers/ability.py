@@ -2852,10 +2852,10 @@ def ねつこうかん_cure_burn_on_enable(battle: Battle, ctx: EventContext, va
 
 
 def ねつぼうそう_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ねつぼうそう特性: やけど状態時の物理技の威力を1.5倍にする。"""
+    """ねつぼうそう特性: やけど状態時の特殊技の威力を1.5倍にする。"""
     if (
         ctx.attacker.has_ailment("やけど")
-        and ctx.move.category == "physical"
+        and ctx.move.category == "special"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
