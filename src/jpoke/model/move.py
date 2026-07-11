@@ -4,7 +4,7 @@ if TYPE_CHECKING:
     from jpoke.types import Type, MoveCategory, MoveFlag, MoveTarget, MoveName
 
 from jpoke.utils import fast_copy
-from jpoke.data import MOVES
+from jpoke.data.move import MOVES
 from jpoke.data.models import MoveData
 from .effect import GameEffect
 

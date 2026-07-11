@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Move
 
 from jpoke.enums import DomainEvent
-from jpoke.model import Pokemon
+from jpoke.model.pokemon import Pokemon
 from .context import EventContext, AttackContext
 from jpoke.utils import fast_copy
 

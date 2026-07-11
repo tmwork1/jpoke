@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 from jpoke.utils import fast_copy
 from jpoke.types import AbilityDisabledReason, AbilityName
 from jpoke.enums import Event
-from jpoke.model import Ability
+from jpoke.model.ability import Ability
 from .context import EventContext
 
 

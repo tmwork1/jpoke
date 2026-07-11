@@ -9,7 +9,8 @@ if TYPE_CHECKING:
 from jpoke.utils import fast_copy
 from jpoke.types import ItemDisabledReason, ItemName
 from jpoke.enums import Event, LogCode
-from jpoke.model import Pokemon, Item
+from jpoke.model.pokemon import Pokemon
+from jpoke.model.item import Item
 
 from .context import EventContext
 from .log_payload import ItemPayload

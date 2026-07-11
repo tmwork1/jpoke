@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 from jpoke.types import RoleSpec, Type, Stat, WeatherName, TerrainName, \
     AilmentName, VolatileName, ItemDisabledReason, MoveFlag, AbilityName, ItemName
 from jpoke.data.signature_items import PLATE_TO_TYPE, MEMORY_TO_TYPE
-from jpoke.data import TYPE_MODIFIER
+from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.enums import LogCode, Interrupt
-from jpoke.core import HandlerReturn, Handler
+from jpoke.core.handler import HandlerReturn, Handler
 from jpoke.core.log_payload import (
     AbilityPayload, AilmentPayload, VolatilePayload, FailureLogPayload,
     FieldPayload, ItemRevealPayload, MoveRevealPayload,

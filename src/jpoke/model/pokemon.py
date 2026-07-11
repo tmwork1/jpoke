@@ -13,7 +13,9 @@ from jpoke.types import Nature, Type, Stat, Gender, HpPolicy, \
 from jpoke.utils.constants import STATS
 from jpoke.utils import math as m
 from jpoke.utils import fast_copy
-from jpoke.data import POKEDEX, MEGA_STONES, MEGA_POKEMONS, NATURE_MODIFIER
+from jpoke.data.pokedex import POKEDEX
+from jpoke.data.megaevol import MEGA_STONES, MEGA_POKEMONS
+from jpoke.data.nature import NATURE_MODIFIER
 
 from .ability import Ability
 from .item import Item

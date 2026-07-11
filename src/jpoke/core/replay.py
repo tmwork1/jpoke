@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 
 from jpoke.types import BattlePhase
 from jpoke.enums import Command
-from jpoke.model import Pokemon
+from jpoke.model.pokemon import Pokemon
 
 from .player import Player
 

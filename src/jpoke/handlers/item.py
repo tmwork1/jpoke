@@ -13,9 +13,9 @@ from jpoke.types import RoleSpec, Stat, Type, MoveCategory, \
     AilmentName, WeatherName, TerrainName, SideFieldName
 from jpoke.utils.math import apply_fixed_modifier, round_half_down
 from jpoke.enums import Interrupt, LogCode, Command
-from jpoke.core import HandlerReturn, Handler
+from jpoke.core.handler import HandlerReturn, Handler
 from jpoke.core.log_payload import ItemPayload, StatChangePayload
-from jpoke.data import TYPE_MODIFIER
+from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.data.megaevol import MEGA_STONES
 from jpoke.data.pokedex import POKEDEX
 from . import ability_paradox as paradox

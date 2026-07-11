@@ -21,7 +21,9 @@ from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
 from jpoke.utils.math import round_half_down
 
-from jpoke.model import Pokemon, Move, Field
+from jpoke.model.pokemon import Pokemon
+from jpoke.model.move import Move
+from jpoke.model.field import Field
 
 from .player_state import PlayerState
 from .event_manager import EventManager

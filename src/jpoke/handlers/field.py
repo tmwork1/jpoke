@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 from jpoke.enums import LogCode
 from jpoke.types import RoleSpec, GlobalFieldName, SideFieldName, VolatileName
 from jpoke.utils.math import apply_fixed_modifier
-from jpoke.core import HandlerReturn, Handler
+from jpoke.core.handler import HandlerReturn, Handler
 from jpoke.core.log_payload import FailureLogPayload
 
 class FieldHandler(Handler):

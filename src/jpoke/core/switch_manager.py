@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from . import Battle, EventManager, Player, PlayerState
 
-from jpoke.model import Pokemon
+from jpoke.model.pokemon import Pokemon
 from jpoke.enums import Interrupt, LogCode
 from jpoke.exceptions import InvalidCommandError
 

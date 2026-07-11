@@ -206,8 +206,16 @@ package-check:
   最低限 `Battle` / `Player` / `Pokemon` の公開 API を README か `docs/api/` にまとめる）
 - `tests/test_utils.py` の主要ヘルパー（`start_battle` / `run_move` / `run_switch`）を
   `jpoke.testing` として本体パッケージへ昇格
-- `core` ⇔ `model` ⇔ `data` の循環 import 解消（現状は `core/__init__.py` の
-  import 順序に依存して偶然動いている。順序を変えると ImportError が再発しうる）
+- 実施済み: `core` ⇔ `model` ⇔ `data` の循環 import 解消。パッケージ内の他ファイルが
+  `from jpoke.core import X` / `from jpoke.model import X` / `from jpoke.data import X` という
+  パッケージレベル絶対importを使い、対象パッケージの `__init__.py` が完全実行済みであることに
+  暗黙依存していた（約43箇所）。同一パッケージ内の自己参照は相対import（`from .context import X`）、
+  パッケージをまたぐ参照はサブモジュール直接指定の絶対import（`from jpoke.core.lethal import X` 等）に
+  書き換え、`__init__.py` の実行順序に依存しない形へ統一した。
+  実証実験: 修正前は `core/__init__.py` の `context` を `lethal` より前に並び替えると
+  `ImportError: cannot import name 'LethalHandler' from partially initialized module 'jpoke.core'`
+  が実際に発生することを確認。修正後は同じ並び替えを行っても `import jpoke` が成功することを確認済み
+  （実験用の並び替えはコミットに含めず、`core/__init__.py` は元の順序のまま）
 - `import jpoke` の初期化コスト削減（実測 約460ms。pokedex.json 544KB と
   全ハンドラテーブルを import 時に無条件ロードしている。遅延 import の余地あり）
 - CONTRIBUTING.md / SECURITY.md の整備

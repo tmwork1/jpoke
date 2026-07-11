@@ -1,5 +1,5 @@
 from jpoke.enums import DomainEvent, Event, LethalEvent
-from jpoke.core import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import field as h
 from jpoke.handlers import lethal as l
 from ..models import FieldData
