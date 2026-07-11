@@ -2183,7 +2183,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TRY_ACTION: h.AbilityHandler(
                 h.なまけ_try_action,
                 subject_spec="attacker:self",
-                priority=10,
+                # 一次情報:「なまけているメッセージが現れるタイミングはねむり/こおり
+                # 判定の後」。ねむり_check_action/こおり_action は同じ priority=10 で
+                # stop_event するため、tie-break で先に実行されると眠り・氷結で
+                # 動けないターンにXが誤って消費されてしまう。ねむり/こおり(10)より
+                # 後、PPが残っていない(20)より前になるよう priority=15 とする。
+                priority=15,
             ),
         }
     ),

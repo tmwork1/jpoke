@@ -91,6 +91,38 @@ def test_なまけ_1ターン行動して次のターンはさぼる():
     assert defender.hp < hp
 
 
+def test_なまけ_ねむり中は行動可否のカウントが消費されない():
+    """なまけ: ねむり状態で行動できないターンはXを消費しない（第五世代以降仕様）。
+    起きたターンには通常通り行動でき、その後は行動→なまけの交互パターンに戻る。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="なまけ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("ねむり", 3),
+        accuracy=100,
+    )
+    mon, defender = battle.actives
+
+    # ねむり中（2ターン）はなまけの行動可否状態が変化しない
+    t.run_move(battle, 0)
+    assert mon.ability.state == "can_act"
+    assert defender.hp == defender.max_hp
+    t.run_move(battle, 0)
+    assert mon.ability.state == "can_act"
+    assert defender.hp == defender.max_hp
+
+    # 起きたターンは通常通り行動できる（Xが消費されていなかったので行動可能）
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not mon.has_ailment("ねむり")
+    assert defender.hp < hp_before
+
+    # 次のターンはなまけて行動できない
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert defender.hp == hp_before
+
+
 def test_ぬめぬめ_直接攻撃で攻撃者のSが1段階下がる():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
