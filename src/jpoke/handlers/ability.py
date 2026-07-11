@@ -54,7 +54,6 @@ WEATHER_TO_CASTFORM: dict[str, str] = {
     "あめ": CASTFORM_RAINY,
     "おおあめ": CASTFORM_RAINY,
     "ゆき": CASTFORM_SNOWY,
-    "あられ": CASTFORM_SNOWY,
 }
 
 _OGERPON_STAT: dict[str, Stat] = {
@@ -2471,7 +2470,11 @@ def テラスチェンジ_form_change_on_entry(battle: Battle, ctx: EventContext
 
 
 def てんきや_sync_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """てんきや特性: 現在の天気に合わせたフォルムへフォルムチェンジする。ノーてんき/エアロック中は通常フォルムに戻す。"""
+    """てんきや特性: 現在の天気に合わせたフォルムへフォルムチェンジする。ノーてんき/エアロック中は通常フォルムに戻す。
+
+    姿が変わるとき、みずびたし/もりののろい/ハロウィン/ミラータイプなどによる
+    タイプ変化があればそれらを解消し、天気に対応したタイプに置き換える。
+    """
     mon = ctx.source
     if mon.name not in (CASTFORM_NORMAL, CASTFORM_SUNNY, CASTFORM_RAINY, CASTFORM_SNOWY):
         return HandlerReturn(value=value)
@@ -2480,6 +2483,9 @@ def てんきや_sync_form(battle: Battle, ctx: EventContext, value: Any) -> Han
     weather_name = battle.weather.name
     form = WEATHER_TO_CASTFORM.get(weather_name, CASTFORM_NORMAL)
     if mon.set_form(form):
+        for volatile_name in ("みずびたし", "もりののろい", "ハロウィン"):
+            battle.volatile_manager.remove(mon, volatile_name)
+        mon.move_override_types = None
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
