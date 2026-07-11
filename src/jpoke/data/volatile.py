@@ -194,6 +194,23 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "くちばしキャノン": VolatileData(
+        handlers={
+            Event.ON_DAMAGE_HIT: h.VolatileHandler(
+                h.くちばしキャノン_burn_on_contact,
+                subject_spec="defender:self",
+            ),
+            Event.ON_TRY_ACTION: h.VolatileHandler(
+                h.くちばしキャノン_end_heating,
+                subject_spec="attacker:self",
+                priority=5,
+            ),
+            Event.ON_TURN_END: h.VolatileHandler(
+                h.くちばしキャノン_end_heating,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "こだわり": VolatileData(
         handlers={
             Event.ON_MODIFY_COMMAND_OPTIONS: h.VolatileHandler(

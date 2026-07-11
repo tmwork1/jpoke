@@ -102,9 +102,9 @@ def test_かぜのり_風の技を吸収してこうげき上昇():
 
 def test_かそく_まもる連続使用失敗後もターン終了時にすばやさが上がる():
     """かそく: まもるを連続使用して2回目が失敗しても、行動自体はしているため
-    ターン終了時にすばやさが上がる。まもる系連続使用失敗チェックは
-    executed_move ではなく protect_chain_move 専用フィールドで判定するため、
-    そちらのNone化がかそくの判定（acted_since_switch_in）に巻き添えにならないことを確認する。"""
+    ターン終了時にすばやさが上がる。かそくの判定は acted_since_switch_in を見ており、
+    まもる系連続使用失敗チェック（executed_move/failed_or_immobile_last_turn を参照）
+    とは独立しているため、連続使用失敗がかそくの判定に巻き添えにならないことを確認する。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かそく", move_names=["まもる"])],
         team1=[Pokemon("カビゴン")],

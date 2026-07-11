@@ -95,7 +95,6 @@ class Pokemon:
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
         self.volatiles: dict[VolatileName, Volatile] = {}
-        self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
         # トップレベルで選択した技（ねごと・さいはい等のネスト実行では更新されない）。
@@ -103,11 +102,8 @@ class Pokemon:
         self.selected_move: Move | None = None
         # 最後に実際にPPを消費した技（ねごとのサブ技のように消費量0の実行では更新されない）。
         # かなしばり・うらみ・さいはい等「最後にPPを消費した技」を参照すべき効果はこちらを使う。
-        self.last_pp_consumed_move: Move | None = None
-        # まもる系・みちづれ・かえんのまもりの連続使用失敗判定専用の内部状態。
-        # executed_move/selected_move とは異なり、他機能から参照されることを想定しない。
-        self.protect_chain_move: Move | None = None
-        self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
+        # 複数形の pp_consumed_moves（とっておき用、場に出てから消費した技名の集合）とは別物。
+        self.pp_consumed_move: Move | None = None
 
         # スコープ付きメモリ。技・特性個別のフラグはここに保存し、
         # リセットはスコープ単位（turn: ターン開始 / switch: 登場時・退場時 / battle: リセットなし）
@@ -121,8 +117,7 @@ class Pokemon:
         memo[id(self)] = new
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
-            'executed_move', 'selected_move', 'last_pp_consumed_move',
-            'protect_chain_move',
+            'executed_move', 'selected_move', 'pp_consumed_move',
         ])
         return new
 
@@ -142,8 +137,7 @@ class Pokemon:
         self.update_stats()
         self.executed_move = None
         self.selected_move = None
-        self.last_pp_consumed_move = None
-        self.protect_chain_move = None
+        self.pp_consumed_move = None
         self.ability.activated_since_switch_in = False
 
         # 特性の状態をリセット
@@ -161,7 +155,6 @@ class Pokemon:
 
     def reset_turn_state(self):
         """ターン初期化処理。"""
-        self.contact_hitter = None
         self.memory["turn"] = {}
 
     # ── スコープ付きメモリ ──────────────────────────────────────
@@ -176,6 +169,15 @@ class Pokemon:
     @stat_lowered_this_turn.setter
     def stat_lowered_this_turn(self, value: bool):
         self.memory["turn"]["stat_lowered"] = value
+
+    @property
+    def sleep_talk_active(self) -> bool:
+        """ねごとによるサブ技実行中フラグ。呼び出し元のtry/finallyで必ずFalseに戻される。"""
+        return self.memory["turn"].get("sleep_talk_active", False)
+
+    @sleep_talk_active.setter
+    def sleep_talk_active(self, value: bool):
+        self.memory["turn"]["sleep_talk_active"] = value
 
     @property
     def hits_taken(self) -> int:
@@ -241,7 +243,8 @@ class Pokemon:
 
     @property
     def pp_consumed_moves(self) -> set[MoveName]:
-        """場に出てからPPを消費して使用した技名の集合（とっておき用）。"""
+        """場に出てからPPを消費して使用した技名の集合（とっておき用）。
+        単数形の pp_consumed_move（最後にPPを消費した1つの技）とは別物。"""
         return self.memory["switch"].setdefault("pp_consumed_moves", set())
 
     @pp_consumed_moves.setter

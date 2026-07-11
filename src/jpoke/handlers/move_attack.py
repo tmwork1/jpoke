@@ -8,7 +8,7 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, AttackContext
+    from jpoke.core import Battle, AttackContext, EventContext
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
@@ -928,18 +928,15 @@ def くさわけ_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: A
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
 
-def くちばしキャノン_burn_contact_hitter(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """くちばしキャノン発動前の判定: 接触技を受けていた場合は攻撃者をやけどにする。
+def くちばしキャノン_start_heating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くちばしキャノンの予備動作: この技を選んだ時点で体を加熱させる。
 
-    くちばしキャノンは優先度-3で必ず後攻となるため、技発動前に相手の接触技を受けることがある。
-    この時点で contact_hitter が記録されていれば、その攻撃者をやけど状態にする。技自体はそのまま発動する。
-    ON_TRY_ACTION の中でも最も早い priority=5 で登録することで、まひ・ねむり・こおり・こんらん等により
-    使用者自身が行動できない場合でも「加熱」自体は必ず行われ、やけど付与が判定されるという仕様
-    （加熱状態については行動可否の判定と独立している）を再現する。
+    Event.ON_BEFORE_MOVE は行動順解決後・行動可否の判定より前に発火するため、
+    まひ・ねむり・こおり・こんらん等により使用者自身が結局行動できない場合でも、
+    「加熱」自体は必ず行われるという仕様を再現できる。実際のやけど付与・加熱の
+    終了は「くちばしキャノン」揮発性状態側（handlers/volatile.py）が担う。
     """
-    hitter = ctx.attacker.contact_hitter
-    if hitter is not None:
-        battle.ailment_manager.apply(hitter, "やけど", source=ctx.attacker, ctx=ctx)
+    battle.volatile_manager.apply(ctx.source, "くちばしキャノン")
     return HandlerReturn(value=value)
 
 
@@ -2930,8 +2927,8 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
     （ダメージは通常どおり与えられており、技自体は失敗しない）。
     """
     mon = ctx.defender
-    if mon.last_pp_consumed_move is not None:
-        mon.last_pp_consumed_move.modify_pp(-3)
+    if mon.pp_consumed_move is not None:
+        mon.pp_consumed_move.modify_pp(-3)
     return HandlerReturn(value=value)
 
 
