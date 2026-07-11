@@ -10,7 +10,10 @@
 
 - 対象: `pyproject.toml`、`LICENSE`、`README.md`、`src/jpoke/__init__.py`、
   `src/jpoke/utils/string_utils.py`、`.github/workflows/`
-- 実装状態: 未着手（本計画は 2026-07-11 のレビュー結果に基づく）
+- 実装状態: **フェーズ0〜3完了。`jpoke` 0.1.0 を PyPI に公開済み**
+  （https://pypi.org/project/jpoke/ 。`v0.1.0` タグ push → `publish.yaml` の
+  Trusted Publishing 経由で公開し、クリーン venv での `pip install jpoke` 実地確認も
+  完了済み）。残るはフェーズ4（公開後の改善、ブロッカーではない）のみ
 - レビュー方法: `git archive HEAD` のスナップショットを `python -m build` で実際に
   ビルドし、リポジトリ外のクリーン venv に wheel をインストールして `import jpoke` と
   README クイックスタートを実行する実地検証を実施済み
@@ -31,11 +34,11 @@
 
 ## フェーズ 0: 前提（本計画の外側）
 
-- [ ] 作業ツリーの未解決マージコンフリクト6ファイルを解決する
+- [x] 作業ツリーの未解決マージコンフリクト6ファイルを解決する
       （`core/move_executor.py`, `handlers/move_status.py`, `model/pokemon.py`,
       `tests/abilities/test_ability_ka.py`, `tests/moves_status/test_move_a.py`,
       `tests/moves_status/test_move_ta.py`）
-- [ ] `.loop` 系フローの main 反映（`_common.md` §共通6）を済ませてから作業ブランチを切る
+- [x] `.loop` 系フローの main 反映（`_common.md` §共通6）を済ませてから作業ブランチを切る
       （`pyproject.toml` / `README.md` は共有ファイルのため衝突回避）
 
 ## フェーズ 1: 公開ブロッカーの修正（1 PR にまとまる規模）
@@ -177,27 +180,25 @@ package-check:
 
 ### 3-2. publish ワークフローの新設
 
-- 実施済み（`.github/workflows/publish.yml` を新設。`v*` タグの push をトリガーに
+- 実施済み（`.github/workflows/publish.yaml` を新設。`v*` タグの push をトリガーに
   build → publish の2ジョブ構成、publish ジョブに `environment: pypi` と
   `permissions: id-token: write` を設定し `pypa/gh-action-pypi-publish@release/v1` で
-  Trusted Publishing する。YAML 構文はローカルで PyYAML により検証済み）
-- 未実施（ユーザー側作業）: PyPI 側での pending publisher
-  （リポジトリ `tmwork1/jpoke` / workflow `publish.yml` / environment `pypi`）の事前登録、
-  および GitHub 側の `pypi` environment 作成・保護ルール設定
-
-`.github/workflows/publish.yml` を追加。`v*` タグの push をトリガーに
-Trusted Publishing（OIDC、`pypa/gh-action-pypi-publish`）で公開する。
-PyPI 側で pending publisher（リポジトリ `tmwork1/jpoke` / workflow `publish.yml`）を
-事前登録しておけば API トークン不要。
+  Trusted Publishing する。ファイル名は当初 `publish.yml` だったが、PyPI 側の
+  pending publisher 登録が `publish.yaml` だったため一致させるようリネーム済み
+  （OIDC はワークフローファイル名を厳密照合するため）
+- 実施済み（ユーザー側作業）: PyPI 側での pending publisher
+  （リポジトリ `tmwork1/jpoke` / workflow `publish.yaml`）を登録済み。
+  `v0.1.0` タグ push で実際に build → publish が成功したことを確認済み
 
 ### 3-3. バージョニングと初回リリース
 
 - 実施済み: semver 採用方針を README に明記（0.x 系は minor bump で破壊的変更が
-  あり得る旨）。`CHANGELOG.md` を新設（Keep a Changelog 形式、現状は
-  `## [Unreleased]` のみ）し、`[project.urls]` に `Changelog` を追加
-- 未実施（今回のスコープ外、後続で実施）: `version = "0.1.0"` への更新、`v0.1.0` タグの
-  作成・push、TestPyPI/PyPI への実際の公開（PyPI 側の Trusted Publisher 事前登録が
-  ユーザー自身の作業として必要なため）
+  あり得る旨）。`CHANGELOG.md` を新設（Keep a Changelog 形式）し `[0.1.0]` を記載、
+  `[project.urls]` に `Changelog` を追加
+- 実施済み: `version = "0.1.0"` へ更新、`v0.1.0` タグを作成・push し、
+  Trusted Publishing 経由で PyPI へ実際に公開。クリーン venv から
+  `pip install jpoke==0.1.0` → `import jpoke` の実地確認済み
+  （TestPyPI でのリハーサルは省略し、本番公開のみで実施）
 
 ## フェーズ 4: 公開後の改善（ブロッカーではない）
 
@@ -222,3 +223,4 @@ PyPI 側で pending publisher（リポジトリ `tmwork1/jpoke` / workflow `publ
 - [x] `jpoke.__version__` が pyproject.toml の version と一致する
 - [x] `python -m pytest tests/ -q` 全通過、`ruff check` / `mypy` 通過
 - [ ] README を PyPI の Markdown レンダリングで確認（相対リンクなし・免責あり）
+      — 自動取得（WebFetch）が Bot 対策で失敗するため未確認。ユーザーによる目視確認が必要
