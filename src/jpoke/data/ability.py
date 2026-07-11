@@ -2027,10 +2027,26 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             "uncopyable"
         },
         handlers={
-            Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.トレース_copy_ability,
-                subject_spec="source:self",
-            ),
+            Event.ON_SWITCH_IN: [
+                h.AbilityHandler(
+                    h.トレース_copy_ability,
+                    subject_spec="source:self",
+                ),
+                h.AbilityHandler(
+                    h.トレース_copy_ability_on_foe_change,
+                    subject_spec="source:foe",
+                ),
+            ],
+            Event.ON_ABILITY_ENABLED: [
+                h.AbilityHandler(
+                    h.トレース_copy_ability,
+                    subject_spec="source:self",
+                ),
+                h.AbilityHandler(
+                    h.トレース_copy_ability_on_foe_change,
+                    subject_spec="source:foe",
+                ),
+            ],
         },
     ),
     "どくくぐつ": AbilityData(
