@@ -2533,8 +2533,14 @@ def でんきにかえる_charge_on_hit(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def とうそうしん_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """とうそうしん特性: 同性の相手にこうげく/とくこうが1.25倍、異性には0.75倍になる。"""
+def とうそうしん_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """とうそうしん特性: 攻撃技の威力が、自分と相手が同性なら1.25倍、異性なら0.75倍になる。
+
+    どちらか一方でも性別不明（gender=""）の場合は補正なし。
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない（第五世代以降の仕様）。
+    """
+    if ctx.move.name == "_こんらん":
+        return HandlerReturn(value=value)
     a_gender = ctx.attacker.gender
     d_gender = ctx.defender.gender if ctx.defender is not None else ""
     if not a_gender or not d_gender:

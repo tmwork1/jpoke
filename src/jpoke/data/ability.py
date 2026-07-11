@@ -1975,8 +1975,8 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "とうそうしん": AbilityData(
         handlers={
-            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.とうそうしん_modify_atk,
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.とうそうしん_modify_power,
                 subject_spec="attacker:self",
             )
         }
