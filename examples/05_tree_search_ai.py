@@ -2,7 +2,8 @@
 
 TreeSearchPlayer は「自分の全ての合法手 × 相手の全ての合法手」を1手分シミュレーションし、
 相手が自分にとって最も不利な手を選ぶと仮定したミニマックスで評価する木探索の基底クラス
-（src/jpoke/players/tree_search_player.py 参照）。既定の評価関数（残りHP割合の差）のままでも
+（詳細: https://github.com/tmwork1/jpoke/blob/main/src/jpoke/players/tree_search_player.py）。
+既定の評価関数（残りHP割合の差）のままでも
 動くが、ここでは evaluate() をオーバーライドして「相手を瀕死にできたか」を加点する例を示す。
 AI開発ユースケースの発展形。
 """

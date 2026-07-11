@@ -1,7 +1,9 @@
 """jpoke で学べること: 3体チーム・複数選出・複数ターンにわたるバトルの進め方。
 
 n_selected=3 で3体を選出し、瀕死になったポケモンが交代コマンドで控えと入れ替わる様子を
-ターンごとに battle.print_logs() で確認しながら決着まで進める。
+ターンごとに battle.print_logs() で確認しながら決着まで進める。先頭のポケモンが瀕死になると、
+以降のターンでは自動的に控えへの交代コマンドが要求される。既定の Player.choose_command() は
+利用可能なコマンドの先頭を選ぶだけなので、交代も自動的に処理される。
 """
 from __future__ import annotations
 
@@ -30,9 +32,7 @@ def main() -> None:
     max_turns = 30
     while battle.judge_winner() is None and battle.turn < max_turns:
         battle.step()
-        # このターンのログを表示（先頭のポケモンが瀕死になると、以降のターンでは
-        # 自動的に控えへの交代コマンドが要求される。既定の Player.choose_command()
-        # は利用可能なコマンドの先頭を選ぶだけなので、交代も自動的に処理される）
+        # このターンのログを表示
         battle.print_logs()
         print("-" * 50)
 

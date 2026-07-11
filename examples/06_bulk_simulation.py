@@ -32,7 +32,7 @@ def main() -> None:
     n_battles = 30
 
     for item_name in ("こだわりスカーフ", "こだわりハチマキ"):
-        player = build_player(item_name, item_name)
+        player = build_player(username=item_name, item_name=item_name)
 
         # 注意: Battle は seed 省略時 int(time.time())（秒単位）を既定値として使う。
         # そのため battle_against(..., n_battles=N) を seed 指定なしで1回呼ぶと、
