@@ -1,0 +1,198 @@
+# 計画: jpoke の PyPI 公開
+
+更新日: 2026-07-11
+
+## ゴール
+
+`pip install jpoke` だけで対戦シミュレーションを始められる状態にして PyPI に公開する。
+
+## スコープ
+
+- 対象: `pyproject.toml`、`LICENSE`、`README.md`、`src/jpoke/__init__.py`、
+  `src/jpoke/utils/string_utils.py`、`.github/workflows/`
+- 実装状態: 未着手（本計画は 2026-07-11 のレビュー結果に基づく）
+- レビュー方法: `git archive HEAD` のスナップショットを `python -m build` で実際に
+  ビルドし、リポジトリ外のクリーン venv に wheel をインストールして `import jpoke` と
+  README クイックスタートを実行する実地検証を実施済み
+
+## 現状の結論
+
+**現状の設定でビルドした wheel をインストールすると、`import jpoke` の時点で全ユーザーが
+必ず `FileNotFoundError` になる**（`pokedex.json` のパッケージング漏れ。実機で再現確認済み）。
+`pokedex.json` を手動配置すればクイックスタートが正常動作することも確認済みで、
+パッケージング上の致命傷はこの1点のみ。コード本体は PyPI 配布への適性が高い:
+
+- データ読み込みは `importlib.resources` 経由・`encoding='utf-8'` 明示（`data/pokedex.py`）
+- `sys.path` 操作・`os.chdir`・環境変数依存・cwd 相対パスは `src/jpoke` 内に皆無
+- OS 依存のパス構築なし。`print()` はオプトインの表示メソッド2箇所のみ
+- `types/poke_env.py` は純粋なマッピング辞書のみで poke-env への import なし
+
+問題はパッケージング設定・メタデータ・ドキュメントに集中している。
+
+## フェーズ 0: 前提（本計画の外側）
+
+- [ ] 作業ツリーの未解決マージコンフリクト6ファイルを解決する
+      （`core/move_executor.py`, `handlers/move_status.py`, `model/pokemon.py`,
+      `tests/abilities/test_ability_ka.py`, `tests/moves_status/test_move_a.py`,
+      `tests/moves_status/test_move_ta.py`）
+- [ ] `.loop` 系フローの main 反映（`_common.md` §共通6）を済ませてから作業ブランチを切る
+      （`pyproject.toml` / `README.md` は共有ファイルのため衝突回避）
+
+## フェーズ 1: 公開ブロッカーの修正（1 PR にまとまる規模）
+
+### 1-1. `pokedex.json` のパッケージング漏れ【最優先】
+
+`pyproject.toml` の `package-data` が `py.typed` しか宣言していない。
+
+```toml
+[tool.setuptools.package-data]
+jpoke = ["py.typed"]
+"jpoke.data" = ["*.json"]
+```
+
+修正後、`python -m build` → リポジトリ外のクリーン venv に wheel をインストール →
+`import jpoke` + README クイックスタート実行で必ず検証する
+（CI の `pip install -e .` は editable のためこの不具合を検出できない。フェーズ3参照）。
+
+### 1-2. LICENSE 本文の破損
+
+`LICENSE:17` が `IN NO イベント SHALL` になっている（過去の「EVENT→イベント」一括置換が
+MIT 条文まで書き換えた事故）。`IN NO EVENT SHALL` に修正する。
+
+### 1-3. 未宣言依存 `jaconv` / `rapidfuzz` の解消
+
+`src/jpoke/utils/string_utils.py:1,3` が `jaconv` と `rapidfuzz` を import しているが
+`dependencies = []` に未宣言。このモジュールは `utils/__init__.py` からも
+`src/jpoke` 内のどこからも import されていないデッドコード。
+**ファイルごと削除する**（将来必要になったら依存宣言とセットで復活させる）。
+削除前に `scripts/` からの参照がないことを grep で確認する。
+
+### 1-4. `__version__` の定義
+
+`jpoke.__version__` が存在しない。`src/jpoke/__init__.py` に追加:
+
+```python
+from importlib.metadata import version as _version
+
+__version__ = _version("jpoke")
+```
+
+あわせて `__all__` を定義する（現状のエクスポート: `Battle`, `Player`, `Pokemon`,
+`Ability`, `Item`, `Move`, `POKEDEX`）。
+
+### 1-5. pyproject.toml メタデータ整備
+
+- `license = { file = "LICENSE" }` → PEP 639 書式へ（setuptools のビルド警告対象。
+  2027-02 に非互換化予定）:
+
+  ```toml
+  license = "MIT"
+  license-files = ["LICENSE"]
+  ```
+
+  あわせて classifier `License :: OSI Approved :: MIT License` を削除（二重管理・非推奨）。
+- classifiers 追加: `Development Status :: 3 - Alpha`, `Intended Audience :: Developers`,
+  `Topic :: Games/Entertainment :: Turn Based Strategy`,
+  `Programming Language :: Python :: 3.10` / `3.11` / `3.12`,
+  `Natural Language :: Japanese`, `Typing :: Typed`
+- `keywords = ["pokemon", "battle", "simulator", "bot"]` を追加
+- `[project.urls]` に `Issues = "https://github.com/tmwork1/jpoke/issues"` を追加
+- `description` をスコープに合わせて具体化（例:
+  `"Event-driven Pokemon Champions single-battle simulation library (unofficial)"`）
+
+### 1-6. sdist への tests/ の中途半端な混入解消
+
+MANIFEST.in 不在のため、sdist に `tests/` 直下の `test_*.py` だけが自動で拾われている
+（サブディレクトリは入らない不完全な状態）。`MANIFEST.in` を新設して明示的に制御する:
+
+```
+prune tests
+prune docs
+prune scripts
+prune .claude
+prune .loop
+```
+
+（sdist にテストを同梱したい場合は逆に `recursive-include tests *.py` で全部入れる。
+どちらかに寄せて「中途半端」を解消するのが目的。既定は prune 推奨。）
+
+## フェーズ 2: README の PyPI 対応
+
+PyPI のプロジェクトページは `readme = "README.md"` をそのまま表示するため、
+以下を修正する:
+
+- [ ] 冒頭に `pip install jpoke` を追加し、`git clone` 手順は「開発用」見出しへ分離
+- [ ] 相対リンクを絶対 URL 化: `README.md:13` の `[CLAUDE.md](CLAUDE.md)`、
+      `README.md:59` の `[tests/CLAUDE.md](tests/CLAUDE.md)`
+      → `https://github.com/tmwork1/jpoke/blob/main/...`
+- [ ] クイックスタートから `tests/test_utils.py` 依存の記述（`README.md:56-72`）を除去。
+      pip ユーザーには `tests/` が存在しないため。ヘルパー紹介は「開発（clone 前提）」
+      節へ移動する。中期的には `jpoke.testing` として本体へ昇格を検討（フェーズ4）
+- [ ] 商標免責を追加（日英併記、冒頭または末尾）:
+
+  > 本プロジェクトは株式会社ポケモン・任天堂・株式会社ゲームフリークとは無関係の
+  > 非公式（fan-made）プロジェクトです。
+  > This is an unofficial, fan-made project and is not affiliated with, endorsed by,
+  > or sponsored by Nintendo, Game Freak, or The Pokémon Company.
+
+- [ ] 冒頭に3文程度の英語サマリを追加（全文翻訳は不要）
+
+## フェーズ 3: CI・リリース基盤
+
+### 3-1. CI に wheel 検証ジョブを追加
+
+今回の致命的不具合（1-1）を CI が素通しした根本原因は、`test.yml` が
+`pip install -e .`（editable）しか行わないこと。`.github/workflows/test.yml` に追加:
+
+```yaml
+package-check:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with: { python-version: "3.12" }
+    - run: pip install build twine
+    - run: python -m build
+    - run: twine check dist/*
+    - run: pip install dist/*.whl
+    # リポジトリ外から import できることを確認（cwd の src/ を拾わないよう /tmp で実行）
+    - run: cd /tmp && python -c "import jpoke; print(jpoke.__version__)"
+```
+
+### 3-2. publish ワークフローの新設
+
+`.github/workflows/publish.yml` を追加。`v*` タグの push をトリガーに
+Trusted Publishing（OIDC、`pypa/gh-action-pypi-publish`）で公開する。
+PyPI 側で pending publisher（リポジトリ `tmwork1/jpoke` / workflow `publish.yml`）を
+事前登録しておけば API トークン不要。
+
+### 3-3. バージョニングと初回リリース
+
+- semver を採用（0.x 系は minor bump で破壊的変更があり得る旨を README に一言）
+- `CHANGELOG.md` を新設（Keep a Changelog 形式）し、`[project.urls]` に `Changelog` を追加
+- 初回公開は `version = "0.1.0"` に上げ、`v0.1.0` タグを打つ
+- 公開前に TestPyPI で一度リハーサルする（publish.yml に TestPyPI ジョブを含めるか手動）
+
+## フェーズ 4: 公開後の改善（ブロッカーではない）
+
+- 利用者向け API リファレンスの整備（`docs/` は現状すべて開発内部向け。
+  最低限 `Battle` / `Player` / `Pokemon` の公開 API を README か `docs/api/` にまとめる）
+- `tests/test_utils.py` の主要ヘルパー（`start_battle` / `run_move` / `run_switch`）を
+  `jpoke.testing` として本体パッケージへ昇格
+- `core` ⇔ `model` ⇔ `data` の循環 import 解消（現状は `core/__init__.py` の
+  import 順序に依存して偶然動いている。順序を変えると ImportError が再発しうる）
+- `import jpoke` の初期化コスト削減（実測 約460ms。pokedex.json 544KB と
+  全ハンドラテーブルを import 時に無条件ロードしている。遅延 import の余地あり）
+- CONTRIBUTING.md / SECURITY.md の整備
+
+## 検証チェックリスト（フェーズ1〜3完了時）
+
+- [ ] `python -m build` が警告なしで成功する
+- [ ] `twine check dist/*` が PASSED
+- [ ] wheel に `jpoke/data/pokedex.json` と `jpoke/py.typed` が含まれる
+- [ ] sdist に `tests/` / `docs/` / `scripts/` / `.claude/` が混入していない
+- [ ] リポジトリ外のクリーン venv で wheel をインストールし、
+      `import jpoke` と README クイックスタートが動く
+- [ ] `jpoke.__version__` が pyproject.toml の version と一致する
+- [ ] `python -m pytest tests/ -q` 全通過、`ruff check` / `mypy` 通過
+- [ ] README を PyPI の Markdown レンダリングで確認（相対リンクなし・免責あり）
