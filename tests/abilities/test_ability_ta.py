@@ -761,6 +761,24 @@ def test_てつのこぶし_パンチ技以外は補正なし(move_name: str, ex
     assert expected_modifier == battle.damage_calculator.power_modifier
 
 
+def test_てつのこぶし_パンチグローブと累積して1_32倍になる():
+    battle = t.start_battle(
+        team0=[
+            Pokemon(
+                "ピカチュウ",
+                ability_name="てつのこぶし",
+                item_name="パンチグローブ",
+                move_names=["マッハパンチ"],
+            )
+        ],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    # てつのこぶし(4915/4096) と パンチグローブ(4506/4096) が乗算されて累積する
+    # 4096 * 4915 // 4096 * 4506 // 4096 = 5406（約1.32倍）
+    assert battle.damage_calculator.power_modifier == 5406
+
+
 def test_テラスシェル_HP満タンでないと発動しない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
