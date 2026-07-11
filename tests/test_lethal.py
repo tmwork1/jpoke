@@ -621,6 +621,22 @@ def test_サイコブースト_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_サンダープリズン_バインド付与():
+    """サンダープリズンは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
+    battle_move = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+    )
+    battle_pre = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        volatile1={"バインド": 5},
+    )
+    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
+    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
+    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
+
+
 def test_サンパワー_はれでダメージ():
     """サンパワー: defender がサンパワーを持つ場合、はれ天気のターン終了時に最大HPの1/8ダメージを受ける"""
     with_ability = t.start_battle(
@@ -639,22 +655,6 @@ def test_サンパワー_はれでダメージ():
     max_hp = with_ability.actives[1].max_hp
     damage = max(1, max_hp // 8)
     assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
-
-
-def test_サンダープリズン_バインド付与():
-    """サンダープリズンは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
-    battle_move = t.start_battle(
-        team0=[Pokemon("ガブリアス")],
-        team1=[Pokemon("カイリュー")],
-    )
-    battle_pre = t.start_battle(
-        team0=[Pokemon("ガブリアス")],
-        team1=[Pokemon("カイリュー")],
-        volatile1={"バインド": 5},
-    )
-    results_move = t.calc_lethal(battle_move, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
-    results_pre = t.calc_lethal(battle_pre, atk_idx=0, moves=Move("サンダープリズン"), max_attack=2)
-    assert max(results_move[1].hp_counter) == max(results_pre[1].hp_counter)
 
 
 def test_しおづけ_ターン終了時ダメージ():

@@ -1748,6 +1748,21 @@ def test_こんがりボディ_自分対象技では発動しない():
     assert not defender.ability.revealed
 
 
+def test_こんじょう_こんらん自傷ダメージには補正なし():
+    """こんじょう: こんらんの自傷ダメージには攻撃補正がかからない（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ", ability_name="こんじょう", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("どく", None),
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
 @pytest.mark.parametrize(
     "ailment_name",
     ["どく", "もうどく", "やけど"],
@@ -1885,21 +1900,6 @@ def test_ごりむちゅう_特殊技には効果がない():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.atk_modifier == 4096
-
-
-def test_こんじょう_こんらん自傷ダメージには補正なし():
-    """こんじょう: こんらんの自傷ダメージには攻撃補正がかからない（第五世代以降の仕様）"""
-    battle = t.start_battle(
-        team0=[Pokemon("コラッタ", ability_name="こんじょう", move_names=["たいあたり"])],
-        team1=[Pokemon("ピカチュウ")],
-        ailment0=("どく", None),
-        volatile0={"こんらん": 2},
-    )
-    attacker = battle.actives[0]
-    battle.test_option.trigger_volatile = True
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.atk_modifier == 4096
-    assert attacker.hp < attacker.max_hp
 
 
 if __name__ == "__main__":
