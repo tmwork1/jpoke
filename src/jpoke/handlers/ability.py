@@ -2901,15 +2901,15 @@ def ノーガード_guarantee_hit(battle: Battle, ctx: AttackContext, value: Any
 
 
 def ノーマルスキン_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ノーマルスキン特性: 変換した技の威力を4915/4096倍にする。"""
-    if ctx.move.data.type not in ("ノーマル", "ステラ"):
+    """ノーマルスキン特性: 変換した技の威力を4915/4096倍にする（わるあがき等のタイプなし技は対象外）。"""
+    if ctx.move.data.type not in ("", "ノーマル", "ステラ"):
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
 
 
 def ノーマルスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:
-    """ノーマルスキン特性: 全ての技をノーマルタイプに変換する（ステラタイプ除く）。"""
-    if value not in ("ノーマル", "ステラ"):
+    """ノーマルスキン特性: 全ての技をノーマルタイプに変換する（ステラタイプ・わるあがき等のタイプなし技は除く）。"""
+    if value not in ("", "ノーマル", "ステラ"):
         value = "ノーマル"
     return HandlerReturn(value=value)
 
