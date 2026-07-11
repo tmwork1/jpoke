@@ -35,7 +35,8 @@ LogCode ごとに必要な詳細情報を dataclass として定義する。
 | ITEM_TRIGGERED / ITEM_GAINED / ITEM_LOST | `ItemPayload` | `item`=対象アイテム名。対象ポケモン名は `EventLog.pokemon` |
 | ITEM_REVEALED | `ItemRevealPayload` | `target`=持ち物を公開された相手のポケモン名, `item`=公開されたアイテム名（おみとおし等） |
 | AILMENT_APPLIED / AILMENT_REMOVED / AILMENT_PREVENTED | `AilmentPayload` | `ailment`=状態異常名, `source`=原因となったポケモン名（あれば）。AILMENT_PREVENTED は特性名を `display_reason` に持つ |
-| VOLATILE_IMMUNE / VOLATILE_APPLIED / VOLATILE_REMOVED / VOLATILE_DISPLAY / VOLATILE_PREVENTED | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因となったポケモン名（あれば）。REMOVED/PREVENTED は理由を `display_reason` に持つ |
+| VOLATILE_IMMUNE / VOLATILE_APPLIED / VOLATILE_DISPLAY | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因ポケモン名（あれば） |
+| VOLATILE_REMOVED / VOLATILE_PREVENTED | `VolatilePayload` | `volatile`=揮発状態名, `source`=原因ポケモン名（あれば）, `display_reason`=理由 |
 | FIELD_STARTED / FIELD_ENDED | `FieldPayload` | `field`=場の状態名, `count`=残りターン数（あれば） |
 | TERASALLIZED | `TerastalPayload` | `type`=テラスタイプ |
 | MEGA_EVOLVED | None | メガシンカしたポケモン名は `EventLog.pokemon` |

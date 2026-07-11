@@ -6,6 +6,7 @@ Note:
     実際の要素タプルを取得して検証する。
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +53,8 @@ def test_generateliteralスクリプト_再実行しても差分が出ない(scr
         cwd=ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
     )
     assert result.returncode == 0, result.stderr
 
