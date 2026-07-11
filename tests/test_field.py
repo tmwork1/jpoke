@@ -1343,6 +1343,18 @@ def test_らんきりゅう_ひこう弱点半減(move_name: str):
     assert 4096 == battle.damage_calculator.def_type_modifier
 
 
+@pytest.mark.parametrize("ability_name", ["エアロック", "ノーてんき"])
+def test_らんきりゅう_エアロックノーてんきで弱点半減が無効化される(ability_name: str):
+    """らんきりゅう: エアロック・ノーてんき下ではひこうタイプの弱点軽減が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピジョン", ability_name=ability_name)],
+        weather=("らんきりゅう", 99),
+    )
+    t.run_move(battle, 0)
+    assert 8192 == battle.damage_calculator.def_type_modifier
+
+
 @pytest.mark.parametrize("weather", ["はれ", "あめ", "すなあらし", "ゆき", "おおひでり", "おおあめ"])
 def test_らんきりゅう_全天候を上書き(weather: WeatherName):
     """らんきりゅう: 通常天候・強天候を問わず上書きできる"""
