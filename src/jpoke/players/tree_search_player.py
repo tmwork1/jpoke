@@ -83,11 +83,11 @@ class TreeSearchPlayer(Player):
         空のまま推定もできない場合に使う既定の方策。
 
         評価値付きの探索は行わず、合法手からランダムに1つ選ぶだけの軽量な
-        方策。`battle.random`（各盤面固有の乱数系列）を使うため、
+        方策。`battle.decision_random`（行動選択専用の乱数系列）を使うため、
         `Battle(seed=...)` で固定した対戦全体の再現性を壊さない。
         差し替える場合はオーバーライドする。
         """
-        return battle.random.choice(battle.get_available_commands(self))
+        return battle.decision_random.choice(battle.get_available_commands(self))
 
     def opponent_estimator(self, battle: Battle, opponent: Player) -> None:
         """相手の合法手が未公開で空のときに呼ばれる推定フック。
