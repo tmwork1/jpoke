@@ -1579,6 +1579,17 @@ def test_するどいめ_相手の回避率ランクを無視する():
     assert battle.move_executor.accuracy == move.accuracy
 
 
+def test_するどいめ_相手の回避率ランク低下も無視する():
+    """するどいめ: 相手の回避率ランクが下がっていても命中率を上げない（第六世代以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="するどいめ", move_names=["ストーンエッジ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.actives[1].rank["evasion"] = -1
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 def test_スロースタート_特攻には補正がかからない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="スロースタート", move_names=["10まんボルト"])],
