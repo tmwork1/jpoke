@@ -49,7 +49,7 @@ while battle.judge_winner() is None and battle.turn < 100:
     # （デフォルト実装は利用可能な最初のコマンドを選ぶだけの単純なプレイヤー）
     battle.step()
 
-print(battle.judge_winner().name)   # 勝者の名前
+print(battle.judge_winner().username)   # 勝者の名前
 battle.print_logs()                 # このターンのログを表示
 ```
 
