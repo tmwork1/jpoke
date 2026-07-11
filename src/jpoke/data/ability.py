@@ -2054,9 +2054,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "どくしゅ": AbilityData(
         handlers={
+            # docs/spec/turn.md の Event.ON_DAMAGE（実装上の Event.ON_DAMAGE_HIT に相当）に
+            # 「10 | 攻撃側のどくしゅによるどく」と明記されているため priority=10 を指定する。
+            # ミイラ/さまようたましい/とれないにおい（同イベントpriority=20）や
+            # はたきおとす等のアイテム効果（同100）より先に発動する必要がある
+            # （docs/spec/abilities/どくしゅ.md）ため、デフォルト(100)のままでは順序が壊れる。
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.どくしゅ_maybe_poison_on_contact,
                 subject_spec="attacker:self",
+                priority=10,
             )
         }
     ),

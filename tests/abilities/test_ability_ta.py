@@ -1528,6 +1528,94 @@ def test_どくしゅ_非接触技では発動しない():
     assert not defender.ailment.is_active
 
 
+def test_どくしゅ_特性発動が記録される():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker, defender = battle.actives
+
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+
+    assert defender.has_ailment("どく")
+    assert attacker.ability.revealed
+
+
+def test_どくしゅ_みがわりに阻まれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    _, defender = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+
+    assert not defender.ailment.is_active
+
+
+def test_どくしゅ_りんぷん所持相手には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="りんぷん")],
+    )
+    _, defender = battle.actives
+
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+
+    assert not defender.ailment.is_active
+
+
+def test_どくしゅ_パンチグローブ所持時はパンチ技に発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ",
+            ability_name="どくしゅ",
+            item_name="パンチグローブ",
+            move_names=["ほのおのパンチ"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    _, defender = battle.actives
+
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+
+    # ほのおのパンチ自体の追加効果でやけどになるが、パンチグローブで接触技でなくなるため
+    # どくしゅ由来のどく状態にはならない
+    assert not defender.has_ailment("どく")
+
+
+def test_どくしゅ_連続攻撃技は1発ごとに発動判定がある():
+    """ダブルアタック(2回攻撃)で resolve_secondary_chance の呼び出し回数を数え、
+    ヒットごとに独立した発動判定が行われることを確認する（命中判定・急所判定でも
+    battle.random.random() が呼ばれるため、単純な乱数呼び出し回数では判定できない）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["ダブルアタック"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+
+    count = 0
+    orig_resolve_secondary_chance = battle.resolve_secondary_chance
+
+    def counting_resolve_secondary_chance(ctx, chance):
+        nonlocal count
+        count += 1
+        return orig_resolve_secondary_chance(ctx, chance)
+
+    battle.resolve_secondary_chance = counting_resolve_secondary_chance
+    t.fix_random(battle, 0.5)  # どくの発動確率(30%)を外れる値にして状態異常の重複判定を避ける
+    t.run_move(battle, 0)
+
+    assert count == 2
+
+
 def test_どくのくさり_30パーセントでもうどくを付与する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="どくのくさり", move_names=["たいあたり"])],
