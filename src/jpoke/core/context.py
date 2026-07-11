@@ -102,6 +102,9 @@ class AttackContext(BaseContext):
     critical: bool = False
     fainted: bool = False
     substitute_damage: int = 0
+    defender_hp_before_move: int = 0
+    """技開始時点（ON_BEGIN_MOVE）の防御側HP。とびだすなかみ等、多段技の最初のヒット前HPを
+    基準とする効果で使用する。"""
 
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""
