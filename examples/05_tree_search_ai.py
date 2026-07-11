@@ -9,20 +9,9 @@ AI開発ユースケースの発展形。
 """
 from __future__ import annotations
 
-from jpoke import Battle, Player
-from jpoke.enums import Command
+from jpoke import Battle
+from jpoke.players import RandomPlayer
 from jpoke.players.tree_search_player import TreeSearchPlayer
-
-
-class RandomPlayer(Player):
-    """比較対象として使う、合法手からランダムに選ぶだけのプレイヤー。
-
-    battle.random（各対戦固有の乱数系列）を使うため、Battle(seed=...) による
-    再現性を壊さない。
-    """
-
-    def choose_command(self, battle: Battle) -> Command:
-        return battle.random.choice(battle.get_available_commands(self))
 
 
 class KOFocusedPlayer(TreeSearchPlayer):

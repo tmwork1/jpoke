@@ -7,9 +7,10 @@ from typing import get_args
 
 import pytest
 
-from jpoke.core import Player
+from jpoke.core import Battle, Player
 from jpoke.core.player import MAX_TURNS
 from jpoke.model import Pokemon, Move
+from jpoke.players import RandomPlayer
 from jpoke.types import (
     AilmentName, GlobalFieldName, Nature, SideFieldName, TerrainName, Type, WeatherName,
 )
@@ -341,6 +342,70 @@ def test_pokemon_statusはailment_nameのエイリアス():
 
     assert mon.status == "やけど"
     assert mon.status == mon.ailment.name
+
+
+def test_randomplayerが選ぶコマンドは常にget_available_commandsに含まれる():
+    """RandomPlayer.choose_command() の戻り値が、選択時点の合法手
+    （battle.get_available_commands()）に必ず含まれることを確認する。
+
+    choose_command()の呼び出し前後で合法手が変化しないことを保証するため、
+    RandomPlayerを継承したクラスで呼び出し直前の合法手を記録し、実際の対戦
+    （battle.step()）を通じて検証する。
+    """
+    class _RecordingRandomPlayer(RandomPlayer):
+        def __init__(self, username: str):
+            super().__init__(username)
+            self.checked: list[bool] = []
+
+        def choose_command(self, battle: "Battle"):
+            available = battle.get_available_commands(self)
+            command = super().choose_command(battle)
+            self.checked.append(command in available)
+            return command
+
+    p0 = _RecordingRandomPlayer("p0")
+    p0.add_pokemon("ピカチュウ", move_names=["でんきショック", "でんこうせっか", "アイアンテール"])
+    p1 = _RecordingRandomPlayer("p1")
+    p1.add_pokemon("ゼニガメ", move_names=["みずでっぽう", "たいあたり"])
+
+    battle = Battle((p0, p1), seed=1)
+    battle.start()
+
+    for _ in range(5):
+        if battle.judge_winner() is not None:
+            break
+        battle.step()
+
+    assert p0.checked and all(p0.checked)
+    assert p1.checked and all(p1.checked)
+
+
+def test_randomplayerは同じseedで対戦すると同じコマンド列を再現する():
+    """RandomPlayer は battle.random（Battle(seed=...) に紐づく乱数系列）を使って
+    選ぶため、同じseedで対戦を最初からやり直すと同じコマンド列（battle.command_log）
+    を再現できることを確認する。グローバルなrandomモジュールに依存していれば
+    プロセス内の他の乱数消費と競合してこの再現性が崩れるため、battle.random を
+    使っている（＝Battle(seed=...)による再現性を壊さない）ことの検証になる。
+    """
+    def run(seed: int) -> list:
+        p0 = RandomPlayer("p0")
+        p0.add_pokemon("ピカチュウ", move_names=["でんきショック", "でんこうせっか", "アイアンテール"])
+        p1 = RandomPlayer("p1")
+        p1.add_pokemon("ゼニガメ", move_names=["みずでっぽう", "たいあたり"])
+
+        battle = Battle((p0, p1), seed=seed)
+        battle.start()
+        for _ in range(5):
+            if battle.judge_winner() is not None:
+                break
+            battle.step()
+        return list(battle.command_log)
+
+    log_a = run(12345)
+    log_b = run(12345)
+
+    assert log_a == log_b
+    assert len(log_a) > 0
 
 
 def test_stat_indexはhpからspeまでの6ステータスを網羅する():
