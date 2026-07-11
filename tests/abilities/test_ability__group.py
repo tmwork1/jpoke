@@ -1221,6 +1221,7 @@ def test_状態異常無効_かたやぶりで無効(ability: str, ailment: Ailm
         ("かいりきバサミ", {"atk": -1, "def": -1, "spa": -2}, False, {"def": -1, "spa": -2}),
         ("かいりきバサミ", {"atk": -1}, True, {"atk": -1}),
         ("はとむね", {"atk": -1, "def": -1, "spa": -2}, False, {"atk": -1, "spa": -2}),
+        ("はとむね", {"def": -1}, True, {"def": -1}),
     ],
 )
 def test_能力低下防止特性_param(ability_name: str, stats: dict, source_is_self: bool, expected: dict):
