@@ -768,6 +768,8 @@ def test_ミラーコート_まねっこでコピーできる():
     )
     attacker = battle.actives[0]
     defender = battle.actives[1]
+    # 命中は通過（50 < 100）、0.5 >= 0.1 なので10まんボルトの追加効果（まひ）は発生しない
+    t.fix_random(battle, 0.5)
     # ピカチュウ: 10まんボルトでカビゴンに特殊ダメージ
     t.run_move(battle, 0, move_idx=0)
     # カビゴン: ミラーコートで反撃し、成功して最後の使用技になる（ピカチュウが特殊ダメージを受ける）
