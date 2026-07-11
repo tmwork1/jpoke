@@ -1427,12 +1427,17 @@ def くさのけがわ_boost_B(battle: Battle, ctx: AttackContext, value: int) -
 
 
 def くだけるよろい_drop_B_boost_S(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """くだけるよろい特性: 物理技を受けるとぼうぎょが1段階下がりすばやさが2段階上がる。"""
+    """くだけるよろい特性: 物理技を受けるとぼうぎょが1段階下がりすばやさが2段階上がる。
+
+    自分自身の特性による自発的な変化のため、しろいきり/フラワーベールでは防げない。
+    source は攻撃者ではなく自分自身を指定する（クリアボディ等の「相手由来の低下」判定にも
+    引っかからないようにするため）。
+    """
     if ctx.move.category != "physical":
         return HandlerReturn(value=value)
     mon = ctx.defender
-    battle.modify_stats(mon, {"def": -1}, source=ctx.attacker)
-    if battle.modify_stats(mon, {"spe": +2}, source=ctx.attacker):
+    battle.modify_stats(mon, {"def": -1}, source=mon)
+    if battle.modify_stats(mon, {"spe": +2}, source=mon):
         _announce_ability_triggered(battle, mon)
     return HandlerReturn(value=value)
 
