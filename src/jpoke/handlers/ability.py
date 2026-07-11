@@ -2008,7 +2008,13 @@ def すなのちから_modify_power(battle: Battle, ctx: AttackContext, value: i
 
 
 def すなはき_set_sandstorm(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """すなはき特性: 攻撃を受けたときすなあらし（5ターン）を展開する。"""
+    """すなはき特性: 攻撃技でダメージを受けたときすなあらし（5ターン）を展開する。
+
+    こらえるでHP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     mon = ctx.defender
     if battle.weather_manager.apply("すなあらし", 5, source=mon):
         _announce_ability_triggered(battle, mon)

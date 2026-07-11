@@ -1402,6 +1402,34 @@ def test_すなのちから_すなあらし以外では威力補正なし():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+def test_すなはき_こらえるでHP1のまま耐えたときも発動する():
+    """すなはき: こらえるでHP1のまま耐えた（実ダメージ0）ときも発動する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すなはき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.hp == 1
+    assert battle.weather.name == "すなあらし"
+    assert battle.weather.count == 5
+
+
+def test_すなはき_さらさらいわ所持で継続ターンが8になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すなはき", item_name="さらさらいわ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.weather.name == "すなあらし"
+    assert battle.weather.count == 8
+
+
 def test_すなはき_すでにすなあらし中は変化なし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="すなはき")],
@@ -1410,6 +1438,41 @@ def test_すなはき_すでにすなあらし中は変化なし():
     )
     t.run_move(battle, 1)
     assert battle.weather.count == 3
+
+
+def test_すなはき_タイプ相性でダメージを無効化したときは発動しない():
+    """すなはき: 攻撃技のダメージを無効化（タイプ相性0倍）したときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ゲンガー", ability_name="すなはき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    assert battle.weather.name == ""
+
+
+def test_すなはき_みがわりに阻まれたときは発動しない():
+    """すなはき: みがわりに攻撃を防がれたとき（実ダメージ0）は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すなはき")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+
+    t.run_move(battle, 1)
+
+    assert battle.weather.name == ""
+
+
+def test_すなはき_変化技を受けても発動しない():
+    """すなはき: みずびたし等、変化技を受けたときは発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すなはき")],
+        team1=[Pokemon("カビゴン", move_names=["みずびたし"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.weather.name == ""
 
 
 def test_すなはき_被弾ですなあらし発動():
