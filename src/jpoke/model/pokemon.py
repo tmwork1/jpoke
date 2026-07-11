@@ -107,8 +107,6 @@ class Pokemon:
         # まもる系・みちづれ・かえんのまもりの連続使用失敗判定専用の内部状態。
         # executed_move/selected_move とは異なり、他機能から参照されることを想定しない。
         self.protect_chain_move: Move | None = None
-        self.last_move_type: Type | None = None  # 直近で使用した技の実効タイプ（テクスチャー2用）
-        self.last_move_name: MoveName | None = None  # 直近で使用した技名（テクスチャー2用）
         self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
 
         # スコープ付きメモリ。技・特性個別のフラグはここに保存し、
@@ -146,8 +144,6 @@ class Pokemon:
         self.selected_move = None
         self.last_pp_consumed_move = None
         self.protect_chain_move = None
-        self.last_move_type = None
-        self.last_move_name = None
         self.ability.activated_since_switch_in = False
 
         # 特性の状態をリセット
@@ -337,6 +333,16 @@ class Pokemon:
     def stellar_boosted_types(self) -> set[Type]:
         """ステラテラスタルで威力補正が消費済みのタイプ集合（バトル中リセットされない）。"""
         return self.memory["battle"].setdefault("stellar_boosted_types", set())
+
+    @property
+    def last_move_type(self) -> Type | None:
+        """直近で使用した技の実効タイプ（テクスチャー2用）。executed_move から算出する。"""
+        return self.executed_move.type if self.executed_move else None
+
+    @property
+    def last_move_name(self) -> MoveName | None:
+        """直近で使用した技名（テクスチャー2用）。executed_move から算出する。"""
+        return self.executed_move.name if self.executed_move else None
 
     # ── 基本情報 ────────────────────────────────────────────────
 
