@@ -406,6 +406,9 @@ class MoveExecutor:
 
         # 発動した技の確定
         ctx.attacker.executed_move = ctx.move
+        # まもる系・みちづれ・かえんのまもりの連続使用失敗判定専用の内部状態。
+        # executed_move と同じタイミングで更新するが、他機能とは共用しない。
+        ctx.attacker.protect_chain_move = ctx.move
         # 選択した技の確定: トップレベル実行（深度1）のときのみ更新する。
         # ねごと・さいはい等によるサブ技実行（深度2以上）では選択技は変化しない
         # （アンコール・いちゃもん等「選択した技」を参照すべき効果のため）。
