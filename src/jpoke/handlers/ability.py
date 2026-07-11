@@ -3065,6 +3065,24 @@ def ハードロック_reduce_effective(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
+def ばけのかわ_block_confusion_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
+    """ばけのかわを消費して、こんらんによる自傷ダメージを0にする。
+    (ON_MODIFY_NON_MOVE_DAMAGE / subject_spec="target:self")
+
+    docs/spec/abilities/ばけのかわ.md「こんらん時の自分への攻撃には発動し、
+    ダメージを防ぐ」を参照。攻撃技によるダメージ肩代わりと異なり、
+    ダメおし・きあいパンチの判定に用いる hits_taken は増加させない
+    （こんらんで技が失敗した時点でそのターンの行動自体が失敗するため）。
+    """
+    if ctx.hp_change_reason != "self_attack":
+        return HandlerReturn(value=value)
+    mon = ctx.target
+    battle.add_ability_disabled_reason(mon, "consumed")
+    battle.modify_hp(mon, r=-1/8)
+    _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=0)
+
+
 def ばけのかわ_block_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """ばけのかわを消費して、このヒットの攻撃ダメージを0にする。
 

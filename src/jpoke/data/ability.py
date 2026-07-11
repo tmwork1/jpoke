@@ -2450,7 +2450,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ばけのかわ_block_damage,
                 subject_spec="defender:self",
                 priority=10,
-            )
+            ),
+            # こんらんの自傷ダメージは技扱いではないため ON_MODIFY_NON_MOVE_DAMAGE で別途判定する
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
+                h.ばけのかわ_block_confusion_damage,
+                subject_spec="target:self",
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_BEFORE_HIT: LethalHandler(

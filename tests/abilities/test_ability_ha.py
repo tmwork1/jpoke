@@ -314,6 +314,24 @@ def test_ばけのかわ_2回目以降の攻撃は防がない():
     assert defender.hp == hp_before - 30
 
 
+def test_ばけのかわ_こんらんの自傷ダメージも防ぐ():
+    """こんらんの自傷ダメージ（ON_MODIFY_NON_MOVE_DAMAGE 経由）もばけのかわで防ぎ、
+    最大HPの1/8のみ消費する（docs/spec/abilities/ばけのかわ.md「こんらん時の自分への
+    攻撃には発動し、ダメージを防ぐ」参照）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ばけのかわ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"こんらん": 2},
+    )
+    mon = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.fix_damage(battle, mon.max_hp)
+    t.run_move(battle, 0)
+
+    assert mon.hp == mon.max_hp - mon.max_hp // 8
+    assert mon.ability.enabled is False
+
+
 def test_ばけのかわ_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["たいあたり"])],
