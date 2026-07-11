@@ -2352,9 +2352,14 @@ def ちからずく_disable_secondary_effect(battle: Battle, ctx: AttackContext,
 
 
 def ちからもち_boost_physical(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。"""
+    """ちからもち・ヨガパワー特性: 物理技時の攻撃補正を2.0倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない
+    （Champions仕様＝第五世代以降の仕様に準拠）。
+    """
     if (
         ctx.move.category == "physical"
+        and ctx.move.name != "_こんらん"
     ):
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)

@@ -376,6 +376,49 @@ def test_ちからもち_イカサマを受けるときは補正なし():
     assert 4096 == battle.damage_calculator.atk_modifier
 
 
+def test_ちからもち_こんらん自傷ダメージには補正なし():
+    """ちからもち: こんらんの自傷ダメージには攻撃補正がかからない（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからもち")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
+def test_ちからもち_ボディプレスで自分の防御を2倍にする():
+    """ちからもち: ボディプレス使用時は自分の防御実数値を2倍にしてダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ちからもち", move_names=["ボディプレス"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert 8192 == battle.damage_calculator.atk_modifier
+
+
+def test_ちからもち_パワートリック状態で物理技を使うと入れ替わった防御が2倍になる():
+    """ちからもち: パワートリックで入れ替わった実数値（元の防御）が物理技のダメージ計算で2倍になる"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon(
+                "ピカチュウ",
+                ability_name="ちからもち",
+                move_names=["パワートリック", "たいあたり"],
+            )
+        ],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    t.run_move(battle, 0, move_idx=1)
+    assert 8192 == battle.damage_calculator.atk_modifier
+
+
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [
