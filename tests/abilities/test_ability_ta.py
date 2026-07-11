@@ -800,5 +800,51 @@ def test_どんかん_いかくを無効化する():
     assert battle.actives[0].rank["atk"] == 0
 
 
+def test_ダークオーラ_登場時に特性開示():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ダークオーラ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.actives[0].ability.revealed is True
+
+
+def test_ダークオーラ_自分のあく技威力が5448_4096倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ダークオーラ", move_names=["あくのはどう"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
+def test_ダークオーラ_相手のあく技威力も5448_4096倍になる():
+    """ダークオーラの効果対象は場にいるポケモン全員のため、敵のあく技威力も上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ダークオーラ")],
+        team1=[Pokemon("ピカチュウ", move_names=["あくのはどう"])],
+    )
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
+def test_ダークオーラ_あく技以外には効果がない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ダークオーラ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_ダークオーラ_かたやぶりでも威力補正は無効化されない():
+    """現行世代ではかたやぶりの効果がある技はダークオーラの影響を受ける（無視されない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ダークオーラ")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["あくのはどう"])],
+    )
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
