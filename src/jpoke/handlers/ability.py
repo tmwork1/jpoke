@@ -1716,8 +1716,7 @@ def しんりょくもうかげきりゅうむしのしらせ_modify_atk(battle:
     required_type = PINCH_TYPE_BOOST_ABILITIES.get(ctx.attacker.ability.name)
 
     if (
-        ctx.move is not None
-        and ctx.attacker.hp * 3 <= ctx.attacker.max_hp
+        ctx.attacker.hp * 3 <= ctx.attacker.max_hp
         and ctx.move.type == required_type
     ):
         value = apply_fixed_modifier(value, 6144)

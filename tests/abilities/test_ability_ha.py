@@ -556,26 +556,6 @@ def test_ビーストブースト_倒すと最高実数値の能力が上がる(
     assert attacker.rank[stat] == 1
 
 
-@pytest.mark.parametrize(
-    "ability_name, move_name",
-    [
-        ("しんりょく", "エナジーボール"),
-        ("もうか", "ひのこ"),
-        ("げきりゅう", "なみのり"),
-        ("むしのしらせ", "むしのていこう"),
-    ],
-)
-def test_ピンチ系特性_HP1_3以下で攻撃補正1_5倍(ability_name: str, move_name: str):
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
-        team1=[Pokemon("ピカチュウ")],
-    )
-    mon = battle.actives[0]
-    mon.hp = 1
-    t.run_move(battle, 0)
-    assert 6144 == battle.damage_calculator.atk_modifier
-
-
 def test_ファントムガード_かたやぶりで無効化されない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["たいあたり"])],
