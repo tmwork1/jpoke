@@ -1471,6 +1471,55 @@ def test_くだけるよろい_特殊技では発動しない():
     assert battle.actives[0].rank["spe"] == 0
 
 
+def test_くだけるよろい_すばやさが最大でもぼうぎょは下がる():
+    """すでにすばやさランクが最大まで上がっている場合も、ぼうぎょの低下は発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="くだけるよろい")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    battle.actives[0].rank["spe"] = 6
+    t.run_move(battle, 1)
+    assert battle.actives[0].rank["def"] == -1
+    assert battle.actives[0].rank["spe"] == 6
+
+
+def test_くだけるよろい_ぼうぎょが最低でもすばやさは上がる():
+    """すでにぼうぎょランクが最低まで下がっている場合も、すばやさの上昇は発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="くだけるよろい")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    battle.actives[0].rank["def"] = -6
+    t.run_move(battle, 1)
+    assert battle.actives[0].rank["def"] == -6
+    assert battle.actives[0].rank["spe"] == 2
+
+
+def test_くだけるよろい_しろいきりでは防げない():
+    """くだけるよろいの防御低下は自発的な変化のため、しろいきりでも防げない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="くだけるよろい")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        side0={"しろいきり": 1},
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].rank["def"] == -1
+    assert battle.actives[0].rank["spe"] == 2
+
+
+def test_くだけるよろい_連続攻撃技は1発ごとに発動する():
+    """物理技の連続攻撃技を受けた場合、1発ごとにB↓1・S↑2が発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="くだけるよろい")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリプルアクセル"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    defender = battle.actives[0]
+    assert defender.rank["def"] == -3
+    assert defender.rank["spe"] == 6  # 2段階 x 3発だが+6で頭打ち
+
+
 def test_クリアボディ_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="クリアボディ")],
