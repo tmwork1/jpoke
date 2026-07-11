@@ -1450,7 +1450,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "すなはき": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/すなはき.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.すなはき_set_sandstorm,
                 subject_spec="defender:self",
             )
