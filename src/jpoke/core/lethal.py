@@ -67,13 +67,13 @@ class LethalPokemonState:
     """致死率計算時点でのポケモン片側の状態スナップショット。
 
     将来的に item/ability の有効状態など他のフィールドを追加しやすいように、
-    rank と ailment を1つのオブジェクトにまとめる。
+    boosts と ailment を1つのオブジェクトにまとめる。
 
     Attributes:
-        rank: 計算時のランク補正
+        boosts: 計算時のランク補正
         ailment: 計算時の状態異常
     """
-    rank: dict[Stat, int] = field(default_factory=dict)
+    boosts: dict[Stat, int] = field(default_factory=dict)
     ailment: AilmentName = ""
 
 
@@ -245,10 +245,10 @@ def _lethal_loop(hp_dist: StateDist,
                     n_attack=ctx.n_attack, move=ctx.move, hit=ctx.hit,
                     hp_dist=hp_dist, damage_dist=ctx.damage_dist,
                     attacker=LethalPokemonState(
-                        rank=ctx.attacker.rank.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
+                        boosts=ctx.attacker.boosts.copy(), ailment=cast(AilmentName, ctx.attacker.ailment.name)
                     ),
                     defender=LethalPokemonState(
-                        rank=ctx.defender.rank.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
+                        boosts=ctx.defender.boosts.copy(), ailment=cast(AilmentName, ctx.defender.ailment.name)
                     ),
                 )
                 results.append(result)

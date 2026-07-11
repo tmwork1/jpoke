@@ -13,7 +13,6 @@ from . import test_utils as t
 # 共有されていても問題ない型（不変オブジェクト・設計上共有する参照）
 _ATOMIC_TYPES = (str, int, float, bool, bytes, type(None), frozenset, enum.Enum)
 
-
 def _is_shared_ok(obj) -> bool:
     """コピー間で同一オブジェクトを共有してよいかを判定する。"""
     if isinstance(obj, _ATOMIC_TYPES):
@@ -32,7 +31,6 @@ def _is_shared_ok(obj) -> bool:
     if callable(obj):
         return True
     return False
-
 
 def _find_shared_mutables(old, new, path="battle", seen=None, findings=None):
     """コピー元とコピー先のオブジェクトグラフを並行に歩き、
@@ -87,31 +85,6 @@ def _find_shared_mutables(old, new, path="battle", seen=None, findings=None):
                     old_vars[key], new_vars[key], f"{path}.{key}", seen, findings
                 )
     return findings
-
-
-def test_コピー後に可変状態が共有されない():
-    """Battle.copy() 後、元と複製の間で可変オブジェクトが共有されないことを
-    オブジェクトグラフ走査で機械的に検証する（新規属性の追加にも自動追従する）。"""
-    old = t.start_battle(
-        team0=[
-            Pokemon("ピカチュウ", item_name="たべのこし", move_names=["たいあたり"]),
-            Pokemon("ヒトカゲ"),
-        ],
-        team1=[Pokemon("フシギダネ", move_names=["やどりぎのタネ"])],
-        weather=("すなあらし", 3),
-        terrain=("グラスフィールド", 3),
-        accuracy=100,
-    )
-    t.run_move(old, 0)
-    # ターン途中相当の状態を再現する（接触技の被弾記録が相手ポケモンを参照した状態）
-    old.actives[1].contact_hitter = old.actives[0]
-
-    new = old.copy()
-
-    findings = _find_shared_mutables(old, new)
-    assert not findings, (
-        "コピー間で共有されている可変オブジェクト:\n" + "\n".join(findings)
-    )
 
 
 def test_mon():
@@ -175,6 +148,29 @@ def test_weather():
     assert old.weather.count == 2
     assert new.actives[0].hp < new.actives[0].max_hp
     assert old.actives[0].hp == old.actives[0].max_hp
+
+
+def test_コピー後に可変状態が共有されない():
+    """Battle.copy() 後、元と複製の間で可変オブジェクトが共有されないことを
+    オブジェクトグラフ走査で機械的に検証する（新規属性の追加にも自動追従する）。"""
+    old = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", item_name="たべのこし", move_names=["たいあたり"]),
+            Pokemon("ヒトカゲ"),
+        ],
+        team1=[Pokemon("フシギダネ", move_names=["やどりぎのタネ"])],
+        weather=("すなあらし", 3),
+        terrain=("グラスフィールド", 3),
+        accuracy=100,
+    )
+    t.run_move(old, 0)
+
+    new = old.copy()
+
+    findings = _find_shared_mutables(old, new)
+    assert not findings, (
+        "コピー間で共有されている可変オブジェクト:\n" + "\n".join(findings)
+    )
 
 
 def test_木探索用の観測でswitchフェーズ中の相手コマンドがrequired_command_typeでフィルタされる():

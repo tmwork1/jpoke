@@ -41,8 +41,8 @@ def test_りゅうのまい_こうげきとすばやさ1段階ずつ上がる():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 1
-    assert attacker.rank["spe"] == 1
+    assert attacker.boosts["atk"] == 1
+    assert attacker.boosts["spe"] == 1
 
 
 def test_りゅうのまい_こうげき最大でもすばやさは上昇する():
@@ -52,11 +52,11 @@ def test_りゅうのまい_こうげき最大でもすばやさは上昇する(
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    attacker.rank["atk"] = 6
+    attacker.boosts["atk"] = 6
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 6
-    assert attacker.rank["spe"] == 1
+    assert attacker.boosts["atk"] == 6
+    assert attacker.boosts["spe"] == 1
 
 
 def test_りゅうのまい_マジックコートで跳ね返されない():
@@ -69,10 +69,10 @@ def test_りゅうのまい_マジックコートで跳ね返されない():
     attacker, defender = battle.actives
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 1
-    assert attacker.rank["spe"] == 1
-    assert defender.rank["atk"] == 0
-    assert defender.rank["spe"] == 0
+    assert attacker.boosts["atk"] == 1
+    assert attacker.boosts["spe"] == 1
+    assert defender.boosts["atk"] == 0
+    assert defender.boosts["spe"] == 0
 
 
 def test_りゅうのまい_自分対象のためまもるで防がれない():
@@ -85,8 +85,8 @@ def test_りゅうのまい_自分対象のためまもるで防がれない():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["atk"] == 1
-    assert attacker.rank["spe"] == 1
+    assert attacker.boosts["atk"] == 1
+    assert attacker.boosts["spe"] == 1
 
 
 def test_ロックオン_すでにロックオン状態なら失敗する():
@@ -149,10 +149,10 @@ def test_ロックカット_すばやさ2段階上がる():
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    assert attacker.rank["spe"] == 0
+    assert attacker.boosts["spe"] == 0
     t.run_move(battle, 0)
 
-    assert attacker.rank["spe"] == 2
+    assert attacker.boosts["spe"] == 2
 
 
 def test_ロックカット_すばやさが上限のとき失敗する():
@@ -162,10 +162,10 @@ def test_ロックカット_すばやさが上限のとき失敗する():
         team1=[Pokemon("カビゴン")],
     )
     attacker = battle.actives[0]
-    attacker.rank["spe"] = 6
+    attacker.boosts["spe"] = 6
     t.run_move(battle, 0)
 
-    assert attacker.rank["spe"] == 6
+    assert attacker.boosts["spe"] == 6
 
 
 def test_ロックカット_マジックコートで跳ね返されない():
@@ -178,8 +178,8 @@ def test_ロックカット_マジックコートで跳ね返されない():
     attacker, defender = battle.actives
     t.run_move(battle, 0)
 
-    assert attacker.rank["spe"] == 2
-    assert defender.rank["spe"] == 0
+    assert attacker.boosts["spe"] == 2
+    assert defender.boosts["spe"] == 0
 
 
 def test_ロックカット_まもるで防がれない():
@@ -192,7 +192,7 @@ def test_ロックカット_まもるで防がれない():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["spe"] == 2
+    assert attacker.boosts["spe"] == 2
 
 
 def test_ロックカット_みがわりに防がれない():
@@ -205,4 +205,4 @@ def test_ロックカット_みがわりに防がれない():
     attacker = battle.actives[0]
     t.run_move(battle, 0)
 
-    assert attacker.rank["spe"] == 2
+    assert attacker.boosts["spe"] == 2

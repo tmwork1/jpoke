@@ -840,10 +840,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         priority=-3,
         flags={"bullet", "non_negoto"},
         handlers={
-            Event.ON_TRY_ACTION: h.MoveHandler(
-                ha.くちばしキャノン_burn_contact_hitter,
-                subject_spec="attacker:self",
-                priority=5,
+            Event.ON_BEFORE_MOVE: h.MoveHandler(
+                ha.くちばしキャノン_start_heating,
+                subject_spec="source:self",
+                priority=100,
             ),
         }
     ),

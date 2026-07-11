@@ -8,7 +8,7 @@ Note:
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
-    from jpoke.core import Battle, AttackContext
+    from jpoke.core import Battle, AttackContext, EventContext
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core import HandlerReturn
@@ -140,7 +140,7 @@ def アシストパワー_boost_power_by_rank(battle: Battle, ctx: AttackContext
     """
     attacker = ctx.attacker
     # 正のランク変化の合計を計算（A/B/C/D/S/命中率/回避率が対象、HPは除く）
-    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k != "hp")
+    rank_sum = sum(max(0, v) for k, v in attacker.boosts.items() if k != "hp")
     if rank_sum > 0:
         modifier = 4096 * (1 + rank_sum)
         value = apply_fixed_modifier(value, modifier)
@@ -391,7 +391,7 @@ def エコーボイス_apply_chain_power(battle: Battle, ctx: AttackContext, val
     elif battle.echoed_voice_last_turn != battle.turn:
         battle.echoed_voice_power = 40
     battle.echoed_voice_last_turn = battle.turn
-    ctx.move.power = battle.echoed_voice_power
+    ctx.move.base_power = battle.echoed_voice_power
     return HandlerReturn(value=value)
 
 
@@ -928,18 +928,15 @@ def くさわけ_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: A
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 1})
 
 
-def くちばしキャノン_burn_contact_hitter(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """くちばしキャノン発動前の判定: 接触技を受けていた場合は攻撃者をやけどにする。
+def くちばしキャノン_start_heating(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """くちばしキャノンの予備動作: この技を選んだ時点で体を加熱させる。
 
-    くちばしキャノンは優先度-3で必ず後攻となるため、技発動前に相手の接触技を受けることがある。
-    この時点で contact_hitter が記録されていれば、その攻撃者をやけど状態にする。技自体はそのまま発動する。
-    ON_TRY_ACTION の中でも最も早い priority=5 で登録することで、まひ・ねむり・こおり・こんらん等により
-    使用者自身が行動できない場合でも「加熱」自体は必ず行われ、やけど付与が判定されるという仕様
-    （加熱状態については行動可否の判定と独立している）を再現する。
+    Event.ON_BEFORE_MOVE は行動順解決後・行動可否の判定より前に発火するため、
+    まひ・ねむり・こおり・こんらん等により使用者自身が結局行動できない場合でも、
+    「加熱」自体は必ず行われるという仕様を再現できる。実際のやけど付与・加熱の
+    終了は「くちばしキャノン」揮発性状態側（handlers/volatile.py）が担う。
     """
-    hitter = ctx.attacker.contact_hitter
-    if hitter is not None:
-        battle.ailment_manager.apply(hitter, "やけど", source=ctx.attacker, ctx=ctx)
+    battle.volatile_manager.apply(ctx.source, "くちばしキャノン")
     return HandlerReturn(value=value)
 
 
@@ -973,10 +970,10 @@ def クリアスモッグ_reset_defender_rank(battle: Battle, ctx: AttackContext
     （ON_MODIFY_SECONDARY_CHANCE を経由しないため自然に満たされる）。
     """
     defender = ctx.defender
-    changed = {s: v for s, v in defender.rank.items() if v != 0}
+    changed = {s: v for s, v in defender.boosts.items() if v != 0}
     if changed:
         for s in changed:
-            defender.rank[s] = 0
+            defender.boosts[s] = 0
         battle.add_event_log(
             defender, LogCode.STAT_CHANGED,
             payload=StatChangePayload(
@@ -1737,7 +1734,7 @@ def つけあがる_calc_power(battle: Battle, ctx: AttackContext, value: int) -
     アシストパワーと同様の計算。
     """
     attacker = ctx.attacker
-    rank_sum = sum(max(0, v) for k, v in attacker.rank.items() if k != "hp")
+    rank_sum = sum(max(0, v) for k, v in attacker.boosts.items() if k != "hp")
     return HandlerReturn(value=apply_fixed_modifier(value, 4096 * (1 + rank_sum)))
 
 
@@ -1799,7 +1796,7 @@ def テラクラスター_reduce_damage(battle: Battle, ctx: AttackContext, valu
 def テラバースト_modify_move_category(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """テラバーストの分類（物理/特殊）を判定する。"""
     mon = ctx.attacker
-    if mon.terastallized:
+    if mon.is_terastallized:
         atk = mon.ranked_stats["atk"]
         spa = mon.ranked_stats["spa"]
         value = "physical" if atk > spa else "special"
@@ -1809,7 +1806,7 @@ def テラバースト_modify_move_category(battle: Battle, ctx: AttackContext, 
 def テラバースト_modify_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """テラバーストのタイプを判定する。"""
     mon = ctx.attacker
-    if mon.terastallized:
+    if mon.is_terastallized:
         value = mon.active_tera_type
     return HandlerReturn(value=value)
 
@@ -2120,10 +2117,10 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         # 相手の下がった能力ランクを全て0に戻す（対象がしろいハーブを持っている訳ではないため
         # アイテムの発動宣言・消費は行わない）。
         defender = ctx.defender
-        changed = {s: -v for s, v in defender.rank.items() if v < 0}
+        changed = {s: -v for s, v in defender.boosts.items() if v < 0}
         if changed:
             for s in changed:
-                defender.rank[s] = 0
+                defender.boosts[s] = 0
             battle.add_event_log(
                 defender, LogCode.STAT_CHANGED,
                 payload=StatChangePayload(stats=changed, display_reason="しろいハーブ"),
@@ -2205,7 +2202,7 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         battle.volatile_manager.apply(ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker)
     elif item_name == "スターのみ":
         defender = ctx.defender
-        candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.rank[s] < 6]
+        candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.boosts[s] < 6]
         if candidates:
             stat = battle.random.choice(candidates)
             battle.modify_stats(defender, {stat: 2}, source=ctx.attacker)
@@ -2257,7 +2254,7 @@ def なげつける_check_item(battle: Battle, ctx: AttackContext, value: Any) -
         )
         return HandlerReturn(value=False, stop_event=True)
 
-    ctx.move.power = item_data.fling_power
+    ctx.move.base_power = item_data.fling_power
     return HandlerReturn(value=value)
 
 
@@ -2457,7 +2454,7 @@ def はきだす_set_power(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     mon = ctx.attacker
     count = (mon.volatiles["たくわえる"].count or 0) if mon.has_volatile("たくわえる") else 0
     power = count * 100  # 1回=100, 2回=200, 3回=300
-    ctx.move.power = power
+    ctx.move.base_power = power
     return HandlerReturn(value=value)
 
 
@@ -2930,8 +2927,8 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
     （ダメージは通常どおり与えられており、技自体は失敗しない）。
     """
     mon = ctx.defender
-    if mon.last_pp_consumed_move is not None:
-        mon.last_pp_consumed_move.modify_pp(-3)
+    if mon.pp_consumed_move is not None:
+        mon.pp_consumed_move.modify_pp(-3)
     return HandlerReturn(value=value)
 
 
@@ -2963,7 +2960,7 @@ def ブレイブバード_recoil(battle: Battle, ctx: AttackContext, value: Any)
 
 def プレゼント_apply_heal(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """プレゼントの回復効果: 相手のHPを1/4回復する。"""
-    if ctx.move.power:
+    if ctx.move.base_power:
         return HandlerReturn(value=value)
     battle.modify_hp(ctx.defender, r=0.25)
     return HandlerReturn(value=0)
@@ -2971,7 +2968,7 @@ def プレゼント_apply_heal(battle: Battle, ctx: AttackContext, value: Any) -
 
 def プレゼント_check_heal_full(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """プレゼントの回復効果: 相手のHPが満タンの場合は失敗する。"""
-    if ctx.move.power:
+    if ctx.move.base_power:
         return HandlerReturn(value=value)
     if ctx.defender.hp >= ctx.defender.max_hp:
         battle.add_event_log(
@@ -2992,11 +2989,11 @@ def プレゼント_roll_outcome(battle: Battle, ctx: AttackContext, value: Any)
     """
     roll = battle.random.random()
     if roll < 0.40:
-        ctx.move.power = 40
+        ctx.move.base_power = 40
     elif roll < 0.70:
-        ctx.move.power = 80
+        ctx.move.base_power = 80
     elif roll < 0.80:
-        ctx.move.power = 120
+        ctx.move.base_power = 120
     # 残り20%: 回復。powerは0のまま
     return HandlerReturn(value=value)
 
@@ -3527,7 +3524,7 @@ def りんしょう_apply_chain_power(battle: Battle, ctx: AttackContext, value:
     成立するため、無効化判定より前の ON_BEGIN_MOVE の時点で判定・記録する。
     """
     if battle.round_used_turn == battle.turn:
-        ctx.move.power = 120
+        ctx.move.base_power = 120
     battle.round_used_turn = battle.turn
     return HandlerReturn(value=value)
 

@@ -65,7 +65,7 @@ def test_ぬめぬめ_直接攻撃で攻撃者のSが1段階下がる():
     defender, attacker = battle.actives
     t.run_move(battle, 1)
     assert defender.ability.revealed
-    assert attacker.rank["spe"] == -1
+    assert attacker.boosts["spe"] == -1
 
 
 def test_ぬめぬめ_非接触技では発動しない():
@@ -77,7 +77,7 @@ def test_ぬめぬめ_非接触技では発動しない():
     t.run_move(battle, 1)
 
     assert not defender.ability.revealed
-    assert attacker.rank["spe"] == 0
+    assert attacker.boosts["spe"] == 0
 
 
 def test_ねつこうかん_ほのお技を受けるとこうげき1段階アップ():
@@ -88,7 +88,7 @@ def test_ねつこうかん_ほのお技を受けるとこうげき1段階アッ
     defender = battle.actives[0]
     t.run_move(battle, 1)
 
-    assert defender.rank["atk"] == 1
+    assert defender.boosts["atk"] == 1
     assert defender.ability.revealed
 
 

@@ -66,8 +66,8 @@ class RandomPlayer(Player):
     別物に分岐してしまうため使わない（シードからの再現性が壊れる）。
     """
 
-    def __init__(self, name: str, rng: Random):
-        super().__init__(name)
+    def __init__(self, username: str, rng: Random):
+        super().__init__(username)
         self.rng = rng
 
     def choose_selection(self, battle: Battle) -> list[int]:
@@ -88,8 +88,8 @@ class TreeSearchFuzzPlayer(TreeSearchPlayer):
     完全に再現できるようにする。
     """
 
-    def __init__(self, name: str, rng: Random, max_plies: int = 1):
-        super().__init__(name=name, max_plies=max_plies)
+    def __init__(self, username: str, rng: Random, max_plies: int = 1):
+        super().__init__(username=username, max_plies=max_plies)
         self.rng = rng
 
     def fallback(self, battle: Battle) -> Command:
@@ -155,7 +155,7 @@ def run_fuzz_battle(seed: int,
     winner = battle.judge_winner()
     return FuzzResult(
         seed=seed, ok=True, turn=battle.turn,
-        winner=winner.name if winner else None,
+        winner=winner.username if winner else None,
         n_selected=n_selected, max_turns=max_turns,
         n_pokemon=n_pokemon,
         teams=team_specs,

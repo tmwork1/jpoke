@@ -258,7 +258,7 @@ class Battle:
         # player_states のキャッシュを複製後の PlayerState で再構築する
         new._player_states_map = dict(zip(new.players, new._player_states))
 
-        # ポケモンが持つ他ポケモンへの参照（contact_hitter 等）を複製後の個体に付け替える
+        # ポケモンが持つ他ポケモンへの参照を複製後の個体に付け替える
         mon_map = {
             id(old_mon): new_mon
             for old_state, new_state in zip(self._player_states, new._player_states)
@@ -576,7 +576,7 @@ class Battle:
             for player in self.players:
                 command = commands.get(player)
                 if not self.command_manager.validate_command(player, command):
-                    raise InvalidCommandError(f"Invalid command type for {player.name}: {command}.")
+                    raise InvalidCommandError(f"Invalid command type for {player.username}: {command}.")
 
         if not commands:
             raise InvalidCommandError("No commands provided for step().")
@@ -815,7 +815,7 @@ class Battle:
         lines = []
         for log in event_logs:
             player = self.players[log.idx]
-            lines.append(f"Turn {turn} : {player.name} : {log.pokemon or ''} : {log.render()}")
+            lines.append(f"Turn {turn} : {player.username} : {log.pokemon or ''} : {log.render()}")
         return lines
 
     def print_logs(self, turn: int | None = None):
@@ -830,3 +830,105 @@ class Battle:
     def remove_all_volatiles(self, mon: Pokemon):
         """対象のポケモンからすべての揮発性状態を解除する（VolatileManagerへの委譲）。"""
         self.volatile_manager.remove_all(mon)
+
+    # ── poke-env 互換 ───────────────────────────────────────────
+
+    @property
+    def finished(self) -> bool:
+        """poke-env 互換: 対戦が終了しているかどうか。"""
+        return self.winner is not None
+
+    def won(self, player: Player) -> bool:
+        """poke-env 互換: 指定したプレイヤーが勝利したかどうか。
+
+        poke-env の `won` は引数なしのプロパティで、未終了時は None を返す
+        （`bool | None`）。jpoke は完全情報でプレイヤー視点が固定されないため、
+        Player を引数に取るメソッドとして提供する（意図的な差異）。
+        未終了時に False を返す点も poke-env（None）と異なる。
+
+        Args:
+            player: 判定対象のプレイヤー
+        """
+        return self.winner is player
+
+    def lost(self, player: Player) -> bool:
+        """poke-env 互換: 指定したプレイヤーが敗北したかどうか。
+
+        `won` と同様、poke-env とはシグネチャ・未終了時の戻り値が異なる（意図的な差異）。
+
+        Args:
+            player: 判定対象のプレイヤー
+        """
+        return self.winner is not None and self.winner is not player
+
+    @property
+    def active_pokemon(self) -> Pokemon | None:
+        """poke-env 互換: observer 視点の場のポケモン。
+
+        observer が設定されていない場合は先頭のポケモン（`actives[0]`）を返す。
+        """
+        if self.observer:
+            return self.get_active(self.observer)
+        return self.actives[0] if self.actives else None
+
+    @property
+    def opponent_active_pokemon(self) -> Pokemon | None:
+        """poke-env 互換: observer から見た相手側の場のポケモン。
+
+        observer が設定されていない場合は2番目のポケモン（`actives[1]`）を返す。
+        """
+        if self.observer:
+            rival = self.opponent(self.observer)
+            return self.get_active(rival)
+        return self.actives[1] if len(self.actives) > 1 else None
+
+    @property
+    def side_conditions(self) -> dict:
+        """poke-env 互換: observer 側のサイドフィールド状態（`side_managers[i].fields` のエイリアス）。"""
+        if self.observer:
+            idx = self.players.index(self.observer)
+            return self.side_managers[idx].fields
+        return {}
+
+    @property
+    def team(self) -> list[Pokemon]:
+        """poke-env 互換: observer 側のチーム。
+
+        poke-env は `Dict[str, Pokemon]` を返すが、jpoke は list のまま返す（ユーザー判断）。
+        """
+        if self.observer:
+            return self.player_states[self.observer].team
+        return []
+
+    @property
+    def available_moves(self) -> list[Move]:
+        """poke-env 互換: observer が選択可能な技のリスト。
+
+        `get_available_commands` の通常技コマンド（MOVE_i）を `command_to_move` で
+        Move に変換する。テラスタル・メガシンカ等、同じ技のバリアントコマンドは
+        重複を避けるため含めない。技コマンドが1つもない場合（わるあがきのみ）は
+        わるあがきを1件返す。
+        """
+        if self.observer is None:
+            return []
+        commands = self.get_available_commands(self.observer)
+        moves = [
+            self.command_to_move(self.observer, cmd)
+            for cmd in commands
+            if cmd.is_regular_move
+        ]
+        if not moves and Command.STRUGGLE in commands:
+            moves = [self.command_to_move(self.observer, Command.STRUGGLE)]
+        return moves
+
+    @property
+    def available_switches(self) -> list[Pokemon]:
+        """poke-env 互換: observer が交代可能なポケモンのリスト。
+
+        `get_available_commands` の交代コマンド（SWITCH_i）からチームの該当ポケモンを抽出する。
+        """
+        if self.observer is None:
+            return []
+        commands = self.get_available_commands(self.observer)
+        team = self.player_states[self.observer].team
+        return [team[cmd.index] for cmd in commands if cmd.is_switch()]

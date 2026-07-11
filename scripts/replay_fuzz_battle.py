@@ -138,8 +138,8 @@ def run_replay_fuzz_battle(seed: int,
             seed=seed, ok=False, turn=battle.turn, **base_kwargs,
             mismatch_kind="winner",
             detail=(
-                f"original={winner.name if winner else None} "
-                f"replayed={replayed_winner.name if replayed_winner else None}"
+                f"original={winner.username if winner else None} "
+                f"replayed={replayed_winner.username if replayed_winner else None}"
             ),
             signature="REPLAY_MISMATCH:winner",
             original_log_text=format_full_log(battle),
