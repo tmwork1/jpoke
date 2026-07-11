@@ -621,6 +621,26 @@ def test_サイコブースト_とくこうダウン():
     assert results[1].min_damage < results[0].min_damage
 
 
+def test_サンパワー_はれでダメージ():
+    """サンパワー: defender がサンパワーを持つ場合、はれ天気のターン終了時に最大HPの1/8ダメージを受ける"""
+    with_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー", ability_name="サンパワー")],
+        weather=("はれ", 5),
+    )
+    without_ability = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カイリュー")],
+        weather=("はれ", 5),
+    )
+    results_with = t.calc_lethal(with_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+    results_without = t.calc_lethal(without_ability, atk_idx=0, moves=Move("たいあたり"), max_attack=2)
+
+    max_hp = with_ability.actives[1].max_hp
+    damage = max(1, max_hp // 8)
+    assert max(results_without[1].hp_counter) - max(results_with[1].hp_counter) == damage * 2
+
+
 def test_サンダープリズン_バインド付与():
     """サンダープリズンは命中後にバインドを付与し、ターン終了時ダメージが発生する（バインド事前付与と同じ結果）"""
     battle_move = t.start_battle(
