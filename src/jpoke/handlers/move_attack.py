@@ -18,6 +18,7 @@ from jpoke.data import TYPE_MODIFIER
 from jpoke.data.pokedex import POKEDEX
 from jpoke.data.signature_items import PLATE_TO_TYPE
 from .ability import WISHIWASHI_SOLO, WISHIWASHI_SCHOOL
+from .item import berry_heal_amount, himeri_pp_restore_cap, is_ripen
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -2083,6 +2084,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     チイラ/リュガ・アッキ/カムラ/ヤタピ/ズア・タラプのみ → 対応する能力ランク+1、
     サンのみ → きゅうしょアップ付与、スターのみ → ランダムな能力ランク+2、
     ミクルのみ → 次の技の命中率を1.2倍にする。
+    対象の特性がじゅくせいの場合、上記のうちきのみによるHP/PP回復・能力ランク上昇効果は
+    2倍になる（サンのみ・ミクルのみは対象外）。
 
     対象の特性がりんぷん、または持ち物がおんみつマントの場合、これらの追加効果は
     （きのみによる回復効果も含めて）一切発動しない。resolve_secondary_chance経由で
@@ -2145,48 +2148,56 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     elif item_name == "キーのみ":
         battle.volatile_manager.remove(ctx.defender, "こんらん")
     elif item_name == "ヒメリのみ":
-        move = next((m for m in ctx.defender.moves if m.pp == 0), None)
+        defender = ctx.defender
+        move = next((m for m in defender.moves if m.pp == 0), None)
         if move is not None:
-            move.pp = min(10, move.data.pp)
+            move.pp = min(himeri_pp_restore_cap(defender), move.data.pp)
     elif item_name == "オレンのみ":
-        battle.modify_hp(ctx.defender, v=10)
+        defender = ctx.defender
+        battle.modify_hp(defender, v=berry_heal_amount(defender, v=10))
     elif item_name == "オボンのみ":
-        battle.modify_hp(ctx.defender, r=1/4)
+        defender = ctx.defender
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/4))
     elif item_name == "フィラのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "ウイのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("いじっぱり", "わんぱく", "ようき", "しんちょう"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "マゴのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("ゆうかん", "のんき", "れいせい", "なまいき"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "バンジのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "イアのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("さみしがり", "おっとり", "おとなしい", "せっかち"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "チイラのみ":
-        battle.modify_stats(ctx.defender, {"atk": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"atk": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name in ("リュガのみ", "アッキのみ"):
-        battle.modify_stats(ctx.defender, {"def": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"def": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name == "カムラのみ":
-        battle.modify_stats(ctx.defender, {"spe": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"spe": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name == "ヤタピのみ":
-        battle.modify_stats(ctx.defender, {"spa": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"spa": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name in ("ズアのみ", "タラプのみ"):
-        battle.modify_stats(ctx.defender, {"spd": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"spd": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name == "サンのみ":
         battle.volatile_manager.apply(ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker)
     elif item_name == "スターのみ":
@@ -2194,7 +2205,8 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.rank[s] < 6]
         if candidates:
             stat = battle.random.choice(candidates)
-            battle.modify_stats(defender, {stat: 2}, source=ctx.attacker)
+            boost = 4 if is_ripen(defender) else 2
+            battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
     elif item_name == "ミクルのみ":
         battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
     return HandlerReturn(value=value)

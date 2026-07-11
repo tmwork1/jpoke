@@ -142,7 +142,10 @@ def _modify_super_effective_damage(battle: Battle,
     else:
         triggers = def_type_modifier > 0
     if triggers:
-        value = int(value * modifier)
+        # じゅくせい所持時は被ダメージが1/4になる。modifier(1/2)を2回掛けるのではなく、
+        # 1回の乗算で1/4を算出する（一次情報: 端数処理が異なるため）。
+        applied_modifier = modifier * modifier if is_ripen(ctx.defender) else modifier
+        value = int(value * applied_modifier)
         _announce_and_consume_item(battle, ctx.defender)
     return HandlerReturn(value=value)
 
@@ -193,6 +196,26 @@ def _gluttony_denominator(mon: Pokemon, denominator: int) -> int:
         return 2
     return denominator
 
+def is_ripen(mon: Pokemon) -> bool:
+    """じゅくせい: 効果を受け取る本人（きのみを消費するポケモン）の特性を判定する。"""
+    return mon.ability.name == "じゅくせい"
+
+def berry_heal_amount(mon: Pokemon, *, r: float | None = None, v: int | None = None) -> int:
+    """じゅくせい: きのみによる回復量を計算する。
+
+    最大HP割合(r)指定の場合は端数を切り捨てた後の値をじゅくせい所持時に2倍にする
+    （切り捨て前の割合を2倍にしてから丸めるわけではない）。固定値(v)指定の場合は
+    そのまま2倍にする。
+    """
+    if r is not None:
+        amount = max(1, int(mon.max_hp * r))
+    else:
+        assert v is not None
+        amount = v
+    if is_ripen(mon):
+        amount *= 2
+    return amount
+
 def _heal_berry(battle: Battle,
                 ctx: EventContext,
                 value: Any,
@@ -214,10 +237,7 @@ def _heal_berry(battle: Battle,
         if battle.query.is_nervous(mon):
             return HandlerReturn(value=value)
     if forced or mon.hp * denominator <= mon.max_hp:
-        if heal_r is not None:
-            healed = battle.modify_hp(mon, r=heal_r)
-        else:
-            healed = battle.modify_hp(mon, v=heal_v)
+        healed = battle.modify_hp(mon, v=berry_heal_amount(mon, r=heal_r, v=heal_v))
         # かいふくふうじ等で回復が完全に無効化された場合は消費しない
         if healed:
             _announce_and_consume_item(battle, mon)
@@ -291,7 +311,9 @@ def _boost_on_quarter_hp(battle: Battle,
             return HandlerReturn(value=value)
         if mon.hp * denominator > mon.max_hp:
             return HandlerReturn(value=value)
-    if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
+    # じゅくせい所持時はランク上昇量が2倍になる
+    boost = amount * 2 if is_ripen(mon) else amount
+    if battle.modify_stats(mon, {stat: boost}):  # すでにランクが最大の場合は不発・消費しない
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -319,7 +341,9 @@ def _boost_on_attack_category(battle: Battle,
     if battle.query.is_nervous(mon):
         return HandlerReturn(value=value)
     if ctx.move.category == category:
-        if battle.modify_stats(mon, {stat: amount}, source=mon):
+        # じゅくせい所持時はランク上昇量が2倍になる
+        boost = amount * 2 if is_ripen(mon) else amount
+        if battle.modify_stats(mon, {stat: boost}, source=mon):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -338,7 +362,10 @@ def _retaliate_on_category(battle: Battle,
     if battle.query.is_nervous(mon):
         return HandlerReturn(value=value)
     if ctx.move.category == category:
-        if battle.modify_hp(ctx.attacker, r=-1/8):
+        # じゅくせい所持時は最大HPの1/4ダメージになる。1/8を2倍にするのではなく、
+        # 1回の乗算で1/4を算出する（一次情報: 端数処理が異なるため）。
+        r = -1/4 if is_ripen(mon) else -1/8
+        if battle.modify_hp(ctx.attacker, r=r):
             # ダメおし判定用: ジャポのみ/レンブのみによるダメージも「そのターンに
             # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
             ctx.attacker.hits_taken += 1
@@ -1348,7 +1375,7 @@ def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, val
     if battle.query.is_nervous(mon):
         return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
-        battle.modify_hp(mon, r=1/4)
+        battle.modify_hp(mon, v=berry_heal_amount(mon, r=1/4))
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1515,11 +1542,16 @@ def ひかりのねんど_resolve_field_count(_battle: Battle, _ctx: EventContex
     return _resolve_field_count(value, "リフレクター", "ひかりのかべ", "オーロラベール", additonal_count=3)
 
 
+def himeri_pp_restore_cap(mon: Pokemon) -> int:
+    """ヒメリのみ: 回復するPP量（じゅくせい所持時は2倍の20）。"""
+    return 20 if is_ripen(mon) else 10
+
+
 def ヒメリのみ_restore_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ヒメリのみ: 使用した技のPPが0になったときPPを回復する。"""
     mon = ctx.attacker
     if ctx.move.pp == 0:
-        ctx.move.pp = min(10, ctx.move.data.pp)
+        ctx.move.pp = min(himeri_pp_restore_cap(mon), ctx.move.data.pp)
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1530,7 +1562,7 @@ def ヒメリのみ_restore_pp_on_item_enabled(battle: Battle, ctx: EventContext
     assert mon is not None
     move = next((m for m in mon.moves if m.pp == 0), None)
     if move is not None:
-        move.pp = min(10, move.data.pp)
+        move.pp = min(himeri_pp_restore_cap(mon), move.data.pp)
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 

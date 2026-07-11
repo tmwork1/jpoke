@@ -602,3 +602,5 @@ class MoveExecutor:
             LogCode.PP_CONSUMED,
             payload=MoveActionPayload(move=move.name, value=v)
         )
+        # PP消費後のフック（ヒメリのみ: PPが0になったとき回復する）
+        self._events.emit(Event.ON_PP_CONSUMED, ctx, move.pp)
