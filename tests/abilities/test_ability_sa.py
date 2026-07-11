@@ -1217,6 +1217,17 @@ def test_じんばいったい_相手をきんちょうかん状態にする():
     assert battle.query.is_nervous(battle.actives[0])
 
 
+def test_すいすい_おおあめ中も素早さ2倍():
+    """すいすい: おおあめ状態でもあめと同様に素早さが2倍になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="すいすい")],
+        team1=[Pokemon("ピカチュウ")],
+        weather=("おおあめ", 99),
+    )
+    mon = battle.actives[0]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] * 2
+
+
 def test_すいほう_相手のほのお技を弱化():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="すいほう")],

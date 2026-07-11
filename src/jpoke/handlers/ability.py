@@ -1863,7 +1863,9 @@ def じりょく_check_trapped(battle: Battle, ctx: EventContext, value: Any) ->
 
 
 def すいすい_modify_speed(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """すいすい特性: あめ中に素早さが2倍になる。ばんのうがさを持つ場合は無効。"""
+    """すいすい特性: あめ・おおあめ中に素早さが2倍になる。
+    ばんのうがさを持つ場合や、ノーてんき/エアロックで天候効果が無効化されている場合は発動しない。
+    """
     if battle.weather_for(ctx.source).rainy:
         value *= 2
     return HandlerReturn(value=value)
