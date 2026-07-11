@@ -2039,7 +2039,7 @@ def すりぬけ_bypass_substitute(battle: Battle, ctx: AttackContext, value: bo
     return HandlerReturn(value=False, stop_event=True)
 
 
-def するどいめ_block_ACC_drop(battle: Battle, ctx: AttackContext, value: dict) -> HandlerReturn:
+def するどいめ_block_ACC_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
     """するどいめ特性: 相手による命中率ランク低下を無効化する。"""
     value = _block_stat_drop_by_foe(value, ctx, "accuracy")
     return HandlerReturn(value=value)
