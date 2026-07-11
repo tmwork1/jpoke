@@ -2587,9 +2587,7 @@ def とびだすハバネロ_burn_attacker(battle: Battle, ctx: AttackContext, v
 
 def トランジスタ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """トランジスタ特性: でんき技の攻撃補正を1.3倍にする。"""
-    if ctx.move.type == "でんき":
-        value = apply_fixed_modifier(value, 5325)
-    return HandlerReturn(value=value)
+    return _modify_by_move_condition(ctx.move, value, modifier=5325, move_type="でんき")
 
 
 def とれないにおい_overwrite_attacker_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
