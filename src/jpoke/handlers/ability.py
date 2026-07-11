@@ -2283,7 +2283,11 @@ def だっぴ_cure_ailment(battle: Battle, ctx: EventContext, value: Any) -> Han
 
 
 def ダルマモード_revert_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ダルマモード特性: 交代時にダルマのすがたから元のすがたへ戻す。"""
+    """ダルマモード特性: 交代時にダルマのすがたから元のすがたへ戻す。
+
+    Note:
+        ガラルのすがた未対応の理由は `ダルマモード_update_form` を参照。
+    """
     mon = ctx.source
     if mon.name == DARMANITAN_ZEN:
         mon.set_form(DARMANITAN_NORMAL)
@@ -2291,7 +2295,15 @@ def ダルマモード_revert_form(battle: Battle, ctx: EventContext, value: Any
 
 
 def ダルマモード_update_form(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ダルマモード特性: ターン終了時にHPが1/2以下ならダルマのすがたへ、1/2超なら元のすがたへフォルムチェンジする。"""
+    """ダルマモード特性: ターン終了時にHPが1/2以下ならダルマのすがたへ、1/2超なら元のすがたへフォルムチェンジする。
+
+    Note:
+        ヒヒダルマ(ガラルのすがた)もダルマモードを隠れ特性として持つが、
+        ダルマモード発動後のガラル専用フォルムのデータが pokedex.json に
+        存在しないため、この判定は通常のヒヒダルマ(ノーマル/ダルマ)のみを
+        対象とする。ガラルのすがたのヒヒダルマがダルマモードを持っていても
+        名前が一致せずフォルムチェンジは発動しない。
+    """
     mon = ctx.source
     if mon.hp * 2 <= mon.max_hp:
         if mon.name == DARMANITAN_NORMAL:
