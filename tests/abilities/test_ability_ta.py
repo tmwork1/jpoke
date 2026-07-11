@@ -1012,6 +1012,51 @@ def test_てんきや_天候変化で即座にフォルムチェンジ():
     assert mon.name == "ポワルン(たいよう)"
 
 
+def test_てんきや_かがくへんかガス発動中はフォルムチェンジしない():
+    """てんきや: かがくへんかガスで特性が無効化されている間は天候が変わってもフォルムチェンジしない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポワルン", ability_name="てんきや")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    assert mon.name == "ポワルン"
+
+    battle.weather_manager.apply("あめ", 5)
+    assert mon.name == "ポワルン"
+
+
+def test_てんきや_かがくへんかガス解除時に即座にフォルムチェンジする():
+    """てんきや: かがくへんかガスの効果が切れて特性が再有効化された瞬間、
+    その時点の天候に対応したフォルムへ即座にフォルムチェンジする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポワルン", ability_name="てんきや")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    battle.weather_manager.apply("あめ", 5)
+    assert mon.name == "ポワルン"
+
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert mon.name == "ポワルン(あまみず)"
+
+
+def test_てんきや_フォルムチェンジ時にみずびたしを解消する():
+    """てんきや: フォルムチェンジが発生すると、みずびたしによるタイプ変化を解消して
+    天候に対応したタイプに戻る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ポワルン", ability_name="てんきや")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "みずびたし")
+    assert mon.types == ["みず"]
+
+    battle.weather_manager.apply("はれ", 5)
+    assert mon.name == "ポワルン(たいよう)"
+    assert mon.types == ["ほのお"]
+    assert not mon.has_volatile("みずびたし")
+
+
 @pytest.mark.parametrize(
     "move_name, stat",
     [

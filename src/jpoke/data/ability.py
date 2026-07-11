@@ -1895,6 +1895,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.てんきや_sync_form,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.てんきや_sync_form,
+                subject_spec="source:self",
+            ),
         }
     ),
     "てんねん": AbilityData(
