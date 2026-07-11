@@ -1303,8 +1303,13 @@ def すりかえ_release_choice_lock(battle: Battle, ctx: AttackContext, value: 
 
 
 def すりかえ_swap_items(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """すりかえ・トリックのアイテム交換効果。"""
-    success = battle.item_manager.swap_items()
+    """すりかえ・トリックのアイテム交換効果。
+
+    source=ctx.attacker を渡すことで、この技の使用者自身が持つねんちゃくは
+    発動しない（自分から道具を交換するときは防がれない）が、相手が持つ
+    ねんちゃくは通常どおり交換を阻止する。
+    """
+    success = battle.item_manager.swap_items(source=ctx.attacker)
     return HandlerReturn(value=success)
 
 

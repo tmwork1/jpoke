@@ -830,7 +830,11 @@ def くっつきバリ_damage_on_turn_end(battle: Battle, ctx: EventContext, val
 
 
 def くっつきバリ_transfer_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """くっつきバリ: 接触攻撃者がアイテムを持っていない場合、攻撃者に転送する。"""
+    """くっつきバリ: 接触攻撃者がアイテムを持っていない場合、攻撃者に転送する。
+
+    ねんちゃくを持っていても発動条件を満たせば攻撃側に渡る仕様のため、
+    source=mon（自分自身）を渡してねんちゃくによる阻止を回避する。
+    """
     mon = ctx.defender
     assert mon is not None
     if (
@@ -838,8 +842,8 @@ def くっつきバリ_transfer_on_contact(battle: Battle, ctx: AttackContext, v
         not ctx.attacker.has_item()
     ):
         _announce_item_triggered(battle, mon)
-        battle.item_manager.remove_item(mon)
-        battle.item_manager.gain_item(ctx.attacker, "くっつきバリ")
+        if battle.item_manager.remove_item(mon, source=mon):
+            battle.item_manager.gain_item(ctx.attacker, "くっつきバリ")
     return HandlerReturn(value=value)
 
 
@@ -1672,9 +1676,10 @@ def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventConte
       特性がかがくへんかガス等で無効化されているときでも、この効果は無効にならないため
       base_name（無効化状態に関わらない元の特性名）で判定する。
     - 保持者がそうでない場合でも、トリック・すりかえ・どろぼう等の交換相手
-      （source未指定で判定される場合の相手側）がこだいかっせい/クォークチャージ持ちなら、
-      その相手にブーストエナジーが渡ることを防ぐ。
-      はたきおとす等source指定済みの単純消失処理では相手側の判定を行わない。
+      （ctx.is_exchange が立つ swap_items 経由の判定における相手側）が
+      こだいかっせい/クォークチャージ持ちなら、その相手にブーストエナジーが
+      渡ることを防ぐ。
+      はたきおとす等 is_exchange を立てない単純消失処理では相手側の判定を行わない。
     """
     mon = ctx.target
     if mon is None:
@@ -1684,7 +1689,7 @@ def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventConte
     if mon.ability.base_name in paradox_abilities and ctx.source is not mon:
         return HandlerReturn(value=False, stop_event=True)
 
-    if ctx.source is None:
+    if ctx.is_exchange:
         foe = battle.foe(mon)
         if foe is not None and foe.ability.base_name in paradox_abilities:
             return HandlerReturn(value=False, stop_event=True)

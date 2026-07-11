@@ -1676,6 +1676,23 @@ def test_トリック_両者のアイテムが入れ替わる():
     assert defender.item.name == "たべのこし"
 
 
+def test_トリック_使用者がねんちゃく持ちでも道具を渡せる():
+    """トリック: ねんちゃくは自分からの道具変更を防がないため、
+    使用者自身がねんちゃく持ちでも通常どおり道具を交換できる
+    （仕様書「トリック・すりかえ・ギフトパスを使用して道具を渡すことはできる」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "オボンのみ"
+    assert defender.item.name == "たべのこし"
+
+
 def test_トリック_既にロックされていた場合も解除される():
     """トリック: 既にこだわりでロックされていた場合も、トリックの使用でロックが解除される。"""
     battle = t.start_battle(

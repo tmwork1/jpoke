@@ -22,6 +22,22 @@ def test_どろぼう_ねんちゃく持ちから奪えない():
     assert defender.has_item("オボンのみ")
 
 
+def test_どろぼう_攻撃者がねんちゃく持ちでも道具を奪える():
+    """どろぼう: ねんちゃくは自分からの道具変更を防がないため、
+    攻撃者自身がねんちゃく持ちでも通常どおり奪取できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ねんちゃく", move_names=["どろぼう"])],
+        team1=[Pokemon("ピカチュウ", item_name="たべのこし")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "たべのこし"
+    assert not defender.has_item()
+
+
 def test_どろぼう_攻撃者がアイテムを得て防御者がアイテムを失う():
     """どろぼう: 命中するとattackerが相手のアイテムを奪う。"""
     battle = t.start_battle(
