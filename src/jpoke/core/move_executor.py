@@ -520,13 +520,10 @@ class MoveExecutor:
             return
 
         ctx.defender.hits_taken += 1
-        ctx.defender.last_damage_received = actual_damage
         # カウンター・ミラーコートは「最後に受けた1回分」のダメージを参照するため、
         # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
-        if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move):
-            ctx.defender.last_physical_damage_received = actual_damage
-        else:
-            ctx.defender.last_special_damage_received = actual_damage
+        category = "physical" if self.battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "special"
+        ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
 
         # 接触技ヒット時に攻撃者を記録する（くちばしキャノン等の判定用）
         # ぼうごパットで反応効果が防がれる場合は記録しない

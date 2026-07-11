@@ -94,13 +94,7 @@ class Pokemon:
         self.terastallized: bool = False
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
-        self.added_types: list[Type] = []
-        self.removed_types: list[Type] = []
         self.volatiles: dict[VolatileName, Volatile] = {}
-        self.hits_taken: int = 0
-        self.last_physical_damage_received: int = 0  # 今ターン最後に受けた物理ダメージ量（カウンター等の反射元）
-        self.last_special_damage_received: int = 0   # 今ターン最後に受けた特殊ダメージ量（ミラーコート等の反射元）
-        self.last_damage_received: int = 0           # 今ターン最後に受けたダメージ量
         self.contact_hitter: "Pokemon | None" = None  # ターン中に接触技でダメージを与えたポケモン（くちばしキャノン等の判定用）
         self.rank: dict[Stat, int] = {k: 0 for k in STATS}
         self.executed_move: Move | None = None
@@ -155,8 +149,6 @@ class Pokemon:
         self.last_move_type = None
         self.last_move_name = None
         self.ability.activated_since_switch_in = False
-        self.added_types = []
-        self.removed_types = []
 
         # 特性の状態をリセット
         # 特性が変わっている場合は特性自体をリセットする
@@ -173,10 +165,6 @@ class Pokemon:
 
     def reset_turn_state(self):
         """ターン初期化処理。"""
-        self.hits_taken = 0
-        self.last_physical_damage_received = 0
-        self.last_special_damage_received = 0
-        self.last_damage_received = 0
         self.contact_hitter = None
         self.memory["turn"] = {}
 
@@ -192,6 +180,41 @@ class Pokemon:
     @stat_lowered_this_turn.setter
     def stat_lowered_this_turn(self, value: bool):
         self.memory["turn"]["stat_lowered"] = value
+
+    @property
+    def hits_taken(self) -> int:
+        """このターン中に受けた攻撃回数（カウント等）。"""
+        return self.memory["turn"].get("hits_taken", 0)
+
+    @hits_taken.setter
+    def hits_taken(self, value: int):
+        self.memory["turn"]["hits_taken"] = value
+
+    @property
+    def last_damage_taken(self) -> dict[str, Any]:
+        """今ターン最後に受けたダメージ情報（damage: 量, category: "physical"/"special"/None）。"""
+        return self.memory["turn"].setdefault("last_damage_taken", {"damage": 0, "category": None})
+
+    @last_damage_taken.setter
+    def last_damage_taken(self, value: dict[str, Any]):
+        self.memory["turn"]["last_damage_taken"] = value
+
+    @property
+    def last_damage_received(self) -> int:
+        """今ターン最後に受けたダメージ量（種別問わず）。"""
+        return self.last_damage_taken["damage"]
+
+    @property
+    def last_physical_damage_received(self) -> int:
+        """今ターン最後に受けた物理ダメージ量（カウンター等の反射元）。"""
+        info = self.last_damage_taken
+        return info["damage"] if info["category"] == "physical" else 0
+
+    @property
+    def last_special_damage_received(self) -> int:
+        """今ターン最後に受けた特殊ダメージ量（ミラーコート等の反射元）。"""
+        info = self.last_damage_taken
+        return info["damage"] if info["category"] == "special" else 0
 
     @property
     def stat_raised_this_turn(self) -> bool:
@@ -255,6 +278,24 @@ class Pokemon:
     @volatile_override_type.setter
     def volatile_override_type(self, value: Type | None):
         self.memory["switch"]["volatile_override_type"] = value
+
+    @property
+    def added_types(self) -> list[Type]:
+        """技・特性等で追加されたタイプ（ハロウィン・もりののろい等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].setdefault("added_types", [])
+
+    @added_types.setter
+    def added_types(self, value: list[Type]):
+        self.memory["switch"]["added_types"] = value
+
+    @property
+    def removed_types(self) -> list[Type]:
+        """はねやすめ等によるタイプ除去。登場・退場時にリセットされる。"""
+        return self.memory["switch"].setdefault("removed_types", [])
+
+    @removed_types.setter
+    def removed_types(self, value: list[Type]):
+        self.memory["switch"]["removed_types"] = value
 
     @property
     def last_lost_item_name(self) -> ItemName:
