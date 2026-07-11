@@ -347,8 +347,9 @@ class Event(Enum):
     # handle: ability.py（フォトンゲイザー等の分類変換能力）
     ON_MODIFY_MOVE_CATEGORY = auto()
 
-    # emit: core/move_executor.py（みがわりへのヒット可否）
-    # handle: 音技・パンチ系など代替物を貫通する技のハンドラ
+    # emit: core/move_executor.py（みがわりへのヒット可否。音技・bypass_substitute
+    #       フラグ技はこのイベントより前に move_executor 側で直接判定される）
+    # handle: ability.py（すりぬけ等）subject_spec="attacker:self"
     ON_CHECK_HIT_SUBSTITUTE = auto()
 
     # emit: core/pokemon_state.py（接触判定確認）
