@@ -438,6 +438,74 @@ def test_バトルスイッチ_交代時はシールドへ戻る():
     assert mon.name == "ギルガルド(シールド)"
 
 
+def test_バトルスイッチ_まひで行動できない場合は発動しない():
+    """第七世代以降の仕様: 行動の判定を決めてから特性を発動するため、
+    まひ等で行動できなかった場合はフォルムチェンジしない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギルガルド(シールド)", ability_name="バトルスイッチ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("まひ", None),
+    )
+    mon = battle.actives[0]
+    battle.test_option.trigger_ailment = True  # 必ず行動不能にする
+
+    t.run_move(battle, 0)
+
+    assert not battle.move_executor.action_success
+    assert mon.name == "ギルガルド(シールド)"
+
+
+def test_バトルスイッチ_わるあがきでもブレードになる():
+    """わるあがきは攻撃技扱いのため、変化技しか覚えていなくてもブレードフォルムになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギルガルド(シールド)", ability_name="バトルスイッチ", move_names=["わるあがき"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert mon.name == "ギルガルド(ブレード)"
+
+
+def test_バトルスイッチ_まもるで無効化されても発動する():
+    """シールドフォルムで選んだ攻撃技がまもる等で無効化されても、
+    バトルスイッチは発動してブレードフォルムになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギルガルド(シールド)", ability_name="バトルスイッチ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile1={"まもる": 1},
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert mon.name == "ギルガルド(ブレード)"
+
+
+def test_バトルスイッチ_溜め技の1ターン目でも発動する():
+    """ソーラーブレード等の溜め技を使用した場合、溜めるターンでバトルスイッチが発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギルガルド(シールド)", ability_name="バトルスイッチ", move_names=["ソーラーブレード"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)
+
+    assert mon.name == "ギルガルド(ブレード)"
+
+
+def test_バトルスイッチ_ねごとで選ばれた技に応じて発動する():
+    """ねごとを使用した場合、出た技に応じてバトルスイッチは発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ギルガルド(シールド)", ability_name="バトルスイッチ", move_names=["ねごと", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        ailment0=("ねむり", 3),
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 0)  # ねごと -> 候補はたいあたりのみ
+
+    assert mon.name == "ギルガルド(ブレード)"
+
+
 def test_バリアフリー_入場で壁を解除():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="バリアフリー")],
