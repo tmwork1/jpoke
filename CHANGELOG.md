@@ -55,6 +55,14 @@
   `judge_winner()` を一度も呼ばずに `finished` だけを参照すると、TODスコアで
   実際には決着している対戦でも `False` を返し続ける不整合を修正。
   `judge_winner()` 経由で判定するように変更した
+- `Battle.build_observation()`（`choose_command()`/`choose_selection()` に渡される
+  観測用コピーを構築する）が乱数生成器 `random` をdeepcopyで独立複製していたため、
+  `RandomPlayer` 等が観測用コピー側の `random` を消費しても本体の `battle.random` が
+  一切進まなかった。技を使わず交代コマンドのみが選ばれ続けるターンでは本体の乱数状態が
+  毎ターン同一のまま固定され、`build_observation()` が同じ乱数状態から同じコピーを
+  作り直すことで同じ選択が繰り返される無限交代ループに陥っていた
+  （`examples/02_team_battle.py` の `seed=1,2,3,5` で再現）。観測用コピーの `random` を
+  本体と同一のオブジェクト参照に差し替えて解消した
 
 ## [0.1.0] - 2026-07-11
 

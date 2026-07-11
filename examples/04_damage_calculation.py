@@ -23,6 +23,12 @@ def main() -> None:
 
     attacker = battle.get_active(attacker_player)
     defender = battle.get_active(defender_player)
+
+    # こうげき努力値をChampions形式（0〜32、poke-envの0〜252スケールとは異なる）で
+    # 最大まで振る。実数値のこうげきが上がるため、下記の確定数・致死率も
+    # 無振りの場合より高く（＝倒しやすく）なる
+    attacker.set_evs([0, 32, 0, 0, 0, 0])
+
     # moves には技名の文字列 / Move 単体 / (Move, ヒット数) / それらのリストを渡せる
     results = battle.calc_lethal(
         attacker=attacker,
@@ -30,7 +36,7 @@ def main() -> None:
         max_attack=5,  # 最大5回攻撃するまで計算する（確定数が出た時点で打ち切り）
     )
 
-    print(f"攻撃側: {attacker.name}（{move_name}）")
+    print(f"攻撃側: {attacker.name}（{move_name}, こうげき実数値 {attacker.stats['atk']}）")
     print(f"防御側: {defender.name}（HP {defender.max_hp}, オボンのみ）")
     print("-" * 50)
 

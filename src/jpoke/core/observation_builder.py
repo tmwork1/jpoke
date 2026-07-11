@@ -27,6 +27,13 @@ def build(battle: Battle, observer: Player) -> Battle:
 
     # Battle インスタンスをコピーして、相手プレイヤーの情報を隠蔽する
     new = deepcopy(battle)
+    # deepcopyされた乱数生成器を捨て、本体と同一のオブジェクト参照に差し替える。
+    # 観測用コピーは choose_command()/choose_selection() に渡され、RandomPlayer 等は
+    # sim.random（＝battle.random）を消費して選択する。ここでdeepcopyのまま独立させると、
+    # 技を使わず交代のみが選ばれ続けるターンでは本体の battle.random が一切進まず、
+    # 次のターンも同じ乱数状態から観測用コピーが作られて同じ選択を繰り返す無限ループに陥る
+    # （交代コマンドのみ選ばれ続け技が二度と使われない不具合の原因だった）。
+    new.random = battle.random
     new.observer = observer
     _mask(new, opponent)
     return new
