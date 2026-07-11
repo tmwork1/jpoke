@@ -1,6 +1,6 @@
 # test_poke_env_compat
 
-テスト数: 38
+テスト数: 40
 
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver未設定時場の先頭2匹を返す
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver視点で取得できる
@@ -26,6 +26,7 @@
 - [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=たいあたり, expected=1.0)
 - [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=タキオンカッター, expected=2.0)
 - [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=ミサイルばり, expected=3.1)
+- [x] observation_randomは本体のbattle_randomと同じ参照を共有する
 - [x] player_n_lost_battlesは対戦数から勝利数と引き分け数を引いた値
 - [x] player_n_tied_battlesは常に0
 - [x] player_win_rateは勝利数を対戦数で割った値
@@ -40,3 +41,4 @@
 - [x] stats_from_poke_envは欠けているキーを0扱いにする
 - [x] stats_from_poke_envは辞書をhp_atk_def_spa_spd_spe順のリストに変換する
 - [x] 変換マップの値は対応するliteral型の値に含まれる
+- [x] 無限交代ループの再現条件下でもコマンドが技を含んで決着する
