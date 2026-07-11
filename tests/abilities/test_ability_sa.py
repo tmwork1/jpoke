@@ -1603,6 +1603,57 @@ def test_スロースタート_登場5ターン未満は攻撃補正0_5倍():
     assert 4096 == battle.damage_calculator.atk_modifier
 
 
+def test_スロースタート_登場5ターン未満はすばやさが半分になる():
+    """スロースタート: 場に出てから5ターンの間、実効すばやさが半分になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="スロースタート", move_names=["たいあたり"])],
+        team1=[Pokemon("ハガネール", move_names=["たいあたり"])],
+    )
+    mon = battle.actives[0]
+    base_speed = mon.stats["spe"]
+
+    for _ in range(5):
+        assert battle.speed_calculator.calc_effective_speed(mon) == base_speed // 2
+        battle.step()
+
+    assert battle.speed_calculator.calc_effective_speed(mon) == base_speed
+
+
+def test_スロースタート_かがくへんかガス解除後はカウントがリセットされる():
+    """スロースタート: かがくへんかガスで無効化されている間に消費したカウントは、
+    解除後にリセットされる（消費分は引き継がれない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="スロースタート", move_names=["たいあたり"])],
+        team1=[Pokemon("ハガネール", move_names=["たいあたり"])],
+    )
+    mon = battle.actives[0]
+    battle.step()
+    battle.step()
+    assert mon.ability.count == 2
+
+    battle.add_ability_disabled_reason(mon, "かがくへんかガス")
+    battle.step()
+    battle.step()
+    assert mon.ability.count == 2
+
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert mon.ability.count == 0
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] // 2
+
+
+def test_スロースタート_特性を変えるわざで得た場合そのターンからカウントを開始する():
+    """スロースタート: なりきり等で新たにスロースタートを得た場合、その瞬間から
+    カウントが始まる（発動時のアナウンスが再度行われる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="いかく")],
+        team1=[Pokemon("ハガネール")],
+    )
+    mon = battle.actives[0]
+    battle.change_ability(mon, "スロースタート")
+    assert mon.ability.count == 0
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"] // 2
+
+
 def test_スワームチェンジ_ジガルデ以外はHP1_2以下でもフォルムチェンジしない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="スワームチェンジ")],
