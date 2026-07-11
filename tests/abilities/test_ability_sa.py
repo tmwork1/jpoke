@@ -1665,6 +1665,65 @@ def test_せいぎのこころ_あく技を受けるとA上昇(move_name: str, r
     assert battle.actives[0].rank["atk"] == rank
 
 
+def test_せいぎのこころ_A最大のときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいぎのこころ")],
+        team1=[Pokemon("カビゴン", move_names=["かみつく"])],
+    )
+    defender = battle.actives[0]
+    defender.rank["atk"] = 6
+    t.run_move(battle, 1)
+    assert defender.rank["atk"] == 6
+
+
+def test_せいぎのこころ_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいぎのこころ")],
+        team1=[Pokemon("カビゴン", move_names=["かみつく"])],
+        volatile0={"まもる": 1},
+    )
+    defender = battle.actives[0]
+    t.run_move(battle, 1)
+    assert defender.rank["atk"] == 0
+    assert not defender.ability.revealed
+
+
+def test_せいぎのこころ_みがわり状態では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいぎのこころ")],
+        team1=[Pokemon("カビゴン", move_names=["かみつく"])],
+    )
+    defender = battle.actives[0]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 1)
+    assert defender.rank["atk"] == 0
+    assert not defender.ability.revealed
+
+
+def test_せいぎのこころ_あくタイプの変化技では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいぎのこころ")],
+        team1=[Pokemon("カビゴン", move_names=["ちょうはつ"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].rank["atk"] == 0
+
+
+def test_せいぎのこころ_連続技はヒットごとに発動する():
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ガブリアス", move_names=["ふくろだたき"]),
+            Pokemon("ピカチュウ"),
+            Pokemon("カビゴン"),
+        ],
+        team1=[Pokemon("ピカチュウ", ability_name="せいぎのこころ")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    # 選出3体とも健康なので3ヒットし、そのたびにAが1段階ずつ上がる
+    assert battle.actives[1].rank["atk"] == 3
+
+
 def test_せいしんりょく_いかくを防ぐ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="せいしんりょく")],
