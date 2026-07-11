@@ -1642,6 +1642,7 @@ def しぜんかいふく_cure_ailment(battle: Battle, ctx: EventContext, value:
 def しめりけ_block_explosion_foe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """しめりけ特性（防御側）: 相手が爆発技を使おうとしたとき失敗させる。"""
     if ctx.move.has_flag("explosion"):
+        _announce_ability_triggered(battle, ctx.defender)
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_FAILED,
@@ -1654,6 +1655,7 @@ def しめりけ_block_explosion_foe(battle: Battle, ctx: AttackContext, value: 
 def しめりけ_block_explosion_self(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """しめりけ特性（攻撃側）: 自分が爆発技を使おうとしたとき失敗させる。"""
     if ctx.move.has_flag("explosion"):
+        _announce_ability_triggered(battle, ctx.attacker)
         battle.add_event_log(
             ctx.attacker,
             LogCode.MOVE_FAILED,
@@ -3653,12 +3655,20 @@ def やるき_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) ->
 
 
 def ゆうばく_damage_attacker_on_ko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ゆうばく特性: 直接攻撃でひんしになったとき攻撃者に最大HPの1/4ダメージを与える。"""
+    """ゆうばく特性: 直接攻撃でひんしになったとき攻撃者に最大HPの1/4ダメージを与える。
+
+    しめりけ特性のポケモンが場にいる場合は発動しない
+    （かたやぶり等でしめりけが無効化されている場合は通常通り発動する）。
+    この無効化が発生したとき、しめりけ・ゆうばくいずれのメッセージも表示されない
+    （docs/spec/abilities/しめりけ.md）。
+    """
     attacker = ctx.attacker
     if (
         not battle.query.is_contact_reaction(ctx)
         or attacker.fainted
     ):
+        return HandlerReturn(value=value)
+    if attacker.ability.enabled and attacker.ability.name == "しめりけ":
         return HandlerReturn(value=value)
     damage = max(1, attacker.max_hp // 4)
     battle.modify_hp(attacker, -damage, reason="ability")

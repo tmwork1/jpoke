@@ -36,6 +36,18 @@ def test_ゆうばく_非接触KOでは発動しない():
     assert foe.hp == foe.max_hp
 
 
+def test_ゆうばく_攻撃側がしめりけを持つ場合発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ゆうばく")],
+        team1=[Pokemon("カビゴン", ability_name="しめりけ", move_names=["たいあたり"])],
+    )
+    mon, foe = battle.actives
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.fainted
+    assert foe.hp == foe.max_hp
+
+
 def test_よちむ_場に出たとき相手の最高威力の技が公開される():
     """よちむ: 登場時に相手の技のうち最高威力の技が公開される"""
     battle = t.start_battle(
