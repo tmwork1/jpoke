@@ -101,6 +101,9 @@ def can_hit_hidden_target(battle: Battle,
                           volatile: VolatileName) -> HandlerReturn:
     """潜伏中の回避判定を行う。
 
+    攻撃側・防御側いずれかがノーガードを持つ場合は、あなをほる等の技限定の
+    回避判定を経由せず必ず命中する（docs/spec/abilities/ノーガード.md参照）。
+
     Args:
         battle: バトルインスタンス
         ctx: コンテキスト
@@ -109,6 +112,8 @@ def can_hit_hidden_target(battle: Battle,
     Returns:
         HandlerReturn: 命中可ならTrue、回避するならFalse
     """
+    if ctx.attacker.ability.name == "ノーガード" or ctx.defender.ability.name == "ノーガード":
+        return HandlerReturn(value=value)
     allowed_moves = HIDDEN_MOVE_ALLOWED_MOVES.get(volatile, [])
     if ctx.move.name not in allowed_moves:
         battle.add_event_log(
