@@ -146,6 +146,49 @@ def test_ぬめぬめ_非接触技では発動しない():
     assert attacker.rank["spe"] == 0
 
 
+def test_ぬめぬめ_すばやさが最低ランクのときは特性が発動しない():
+    """ぬめぬめ: 攻撃者のすばやさがすでに最低ランクのときは、ランクが変化せず特性バーも現れない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender, attacker = battle.actives
+    attacker.rank["spe"] = -6
+    t.run_move(battle, 1)
+
+    assert not defender.ability.revealed
+    assert attacker.rank["spe"] == -6
+
+
+def test_ぬめぬめ_ひんしになっても発動する():
+    """ぬめぬめ: 自身が直接攻撃でひんしになったときも攻撃者のすばやさを下げる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert attacker.rank["spe"] == -1
+
+
+def test_ぬめぬめ_みがわりで防いだときは発動しない():
+    """ぬめぬめ: 自身のみがわりが技を防いだとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぬめぬめ")],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    )
+    defender, attacker = battle.actives
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 1)
+
+    assert not defender.ability.revealed
+    assert attacker.rank["spe"] == 0
+
+
 def test_ねつこうかん_ほのお技を受けるとこうげき1段階アップ():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
