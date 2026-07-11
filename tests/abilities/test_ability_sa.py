@@ -424,6 +424,24 @@ def test_しんがん_相手の回避ランクを無視する():
     assert battle.move_executor.accuracy == 100
 
 
+def test_シェルアーマー_かたやぶりで無効化():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="シェルアーマー")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["トリックフラワー"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.move_executor.critical is True
+
+
+def test_シェルアーマー_急所に当たらない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="シェルアーマー")],
+        team1=[Pokemon("ピカチュウ", move_names=["トリックフラワー"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.move_executor.critical is False
+
+
 def test_シンクロ_こんらんは伝染しない():
     """シンクロ: 揮発性状態(こんらん等)は伝染しない"""
     battle = t.start_battle(
