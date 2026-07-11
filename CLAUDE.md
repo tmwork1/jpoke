@@ -114,16 +114,33 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 `/loop <name>` を受け取ったとき、`.claude/loop/<name>.md` が存在する場合は **その指示書を Read して内容に従って実行する**。
 ループの開始時に `.claude/loop/instructions.md` を Read してフロー一覧を確認すること。
 
-## ブランチ運用ルール
+## Git運用ルール
+
+### ブランチ・PR
 
 - **`.loop/` 経由の自動作業以外は main への直接コミット禁止**。作業前に必ず `feature/<内容>` などの
   作業ブランチを切る
 - 完了したら `gh pr create` でPRを作成し、確認のうえ `gh pr merge` でmainに取り込む（`--no-verify` は使わない）
+- リポジトリは `delete_branch_on_merge` が有効。PRマージ後、**リモートブランチは自動削除されるが
+  ローカルブランチは残るので `git branch -d <branch>` で必ず削除する**（残したまま気づかず同じ
+  ブランチに追いコミットしてしまう事故を防ぐ）
+- 既存ブランチで作業を再開する前に、そのブランチが既にmainへマージ済みでないか
+  （`git log <branch>..main`、`gh pr list --state merged`）を確認する
 - `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz）は対象外。既存の分離済みブランチ
   （`loop/{flow}` / `loop/{flow}/integration`）で完結し、`_common.md` §共通6 の手順でユーザーが任意
   タイミングでmainに反映する
 - 手動ブランチとループ成果が `data/*.py` / `docs/progress/*` / `docs/tests/*` など同じ共有ファイルに
   触れる場合は、ループ側のmain反映（§共通6）を先に済ませてから手動ブランチを切ると衝突を避けやすい
+
+### 一時保存・worktree
+
+- 一時退避に `git stash` を使わない。中断する作業でも作業ブランチにWIPコミットしておく
+  （stashは `git status` にも `git branch` にも現れず、存在を忘れて長期間放置されやすい）
+- Agent（`isolation: "worktree"`）で作業したworktreeは、タスクの結論（マージ or 破棄）が出た時点で
+  `git worktree remove` する。**worktreeを除去するコマンドはworktreeの外（リポジトリルート等）から
+  実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立ディレクトリが残ることがある）
+- 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
+  `git stash list` で放置物がないか確認する
 
 ## 開発ルール
 
