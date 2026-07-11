@@ -646,7 +646,14 @@ class Battle:
             case "最小":
                 return min(damages)
             case _:
-                return self.random.choice(damages)
+                # random.choice() は getrandbits() 経由でPRNG内部状態に依存するため、
+                # random() のみを固定するテストヘルパー（fix_random）では制御できない。
+                # random() ベースの選択にすることで、乱数シードが異なる2つの Battle
+                # 間でも fix_random() だけでダメージロールを再現できるようにする。
+                # random() は理論上 [0, 1) だが、fix_random() で 1.0 を代入する
+                # テストが存在するため、境界超過による IndexError を防ぐ。
+                index = min(int(self.random.random() * len(damages)), len(damages) - 1)
+                return damages[index]
 
     def calc_damages(self,
                      attacker: Pokemon,
