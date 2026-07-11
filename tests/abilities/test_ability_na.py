@@ -322,6 +322,7 @@ def test_ねつこうかん_こうげきがすでに最大なら発動しない(
     )
     defender = battle.actives[0]
     defender.rank["atk"] = 6
+    t.fix_random(battle, 1.0)
     t.run_move(battle, 1)
 
     assert defender.rank["atk"] == 6
