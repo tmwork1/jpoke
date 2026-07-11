@@ -1,13 +1,12 @@
 # jpoke
 
-ポケモンチャンピオンズ（シングルバトル）準拠の対戦シミュレーション環境とダメージ計算ロジックを提供する
-Python ライブラリ。イベント駆動でポケモンの技・特性・アイテム・状態異常・場の効果などを再現し、
-戦術研究・AI 開発・ダメージ計算ツール開発などの用途を想定している。
+ポケモンチャンピオンズ準拠のシングル対戦シミュレーション環境とダメージ計算ロジックを提供する
+Python ライブラリ。イベント駆動でポケモンの技・特性・アイテム・状態異常・場の効果などを再現している。戦術研究・AI 開発・ダメージ計算ツール開発などの用途を想定している。
 
-jpoke is an event-driven Python library that provides a battle simulation environment and damage
-calculation logic for Pokémon Champions single battles, reproducing moves, abilities, items, status
-conditions, and field effects. It is intended for tactics research, AI development, and building
-damage calculation tools.
+jpoke is a Python library that provides a single-battle simulation environment and damage calculation
+logic compliant with Pokémon Champions rules. It reproduces moves, abilities, items, status conditions,
+and field effects in an event-driven manner. It is intended for use cases such as tactics research,
+AI development, and building damage calculation tools.
 
 > 本プロジェクトは株式会社ポケモン・任天堂・株式会社ゲームフリークとは無関係の非公式（fan-made）
 > プロジェクトです。
