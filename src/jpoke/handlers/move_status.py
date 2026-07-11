@@ -1541,7 +1541,7 @@ def テクスチャー2_can_apply(battle: Battle, ctx: AttackContext, value: Any
             payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_テラスタル中"),
         )
         return HandlerReturn(value=False, stop_event=True)
-    if defender.last_move_type is None:
+    if defender.executed_move is None:
         battle.add_event_log(
             attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="テクスチャー2_相手未行動"),
@@ -1568,11 +1568,17 @@ def テクスチャー2_can_apply(battle: Battle, ctx: AttackContext, value: Any
 
 def テクスチャー2_取得_変更候補タイプ(attacker: Pokemon, defender: Pokemon) -> list[Type]:
     """テクスチャー2で変更可能なタイプ（相手の技を半減か無効にでき、
-    かつ自分が現在持っていないタイプ）の一覧を返す。"""
-    if defender.last_move_type is None:
+    かつ自分が現在持っていないタイプ）の一覧を返す。
+
+    「相手が直前に使った技」は、ねごと等のサブ技実行も含めて実際に発動した
+    技を参照すべきため executed_move を使う（selected_move はトップレベルの
+    選択技のみ、last_pp_consumed_move はPP消費を伴わないと更新されないため
+    いずれも不適）。
+    """
+    if defender.executed_move is None:
         return []
     move_type = テクスチャー2_判定タイプ上書き.get(
-        cast(MoveName, defender.last_move_name), defender.last_move_type
+        cast(MoveName, defender.executed_move.name), defender.executed_move.type
     )
     type_chart = TYPE_MODIFIER.get(move_type, {})
     current_types = set(attacker.types)

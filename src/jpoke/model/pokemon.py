@@ -333,16 +333,6 @@ class Pokemon:
         """ステラテラスタルで威力補正が消費済みのタイプ集合（バトル中リセットされない）。"""
         return self.memory["battle"].setdefault("stellar_boosted_types", set())
 
-    @property
-    def last_move_type(self) -> Type | None:
-        """直近で使用した技の実効タイプ（テクスチャー2用）。executed_move から算出する。"""
-        return self.executed_move.type if self.executed_move else None
-
-    @property
-    def last_move_name(self) -> MoveName | None:
-        """直近で使用した技名（テクスチャー2用）。executed_move から算出する。"""
-        return self.executed_move.name if self.executed_move else None
-
     # ── 基本情報 ────────────────────────────────────────────────
 
     @property
