@@ -2373,7 +2373,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
                 h.はやあし_modify_speed,
                 subject_spec="source:self",
-                priority=200,
             ),
         }
     ),
