@@ -403,7 +403,7 @@ def test_ねつこうかん_やけど状態にならない():
 
 def test_ねつぼうそう_やけど状態でない場合は倍率なし():
     battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="ねつぼうそう", move_names=["たいあたり"])],
+        team0=[Pokemon("ピカチュウ", ability_name="ねつぼうそう", move_names=["でんきショック"])],
         team1=[Pokemon("ピカチュウ")],
     )
     t.run_move(battle, 0)
@@ -413,11 +413,11 @@ def test_ねつぼうそう_やけど状態でない場合は倍率なし():
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [
-        ("たいあたり", 6144),
-        ("でんきショック", 4096),
+        ("でんきショック", 6144),
+        ("たいあたり", 4096),
     ]
 )
-def test_ねつぼうそう_やけど状態で物理技の威力が1_5倍(move_name: str, expected_modifier: int):
+def test_ねつぼうそう_やけど状態で特殊技の威力が1_5倍(move_name: str, expected_modifier: int):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねつぼうそう", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
