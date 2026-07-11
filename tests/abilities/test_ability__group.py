@@ -225,6 +225,29 @@ def test_スキン系_変換した技の威力が4915倍になる(
 
 
 @pytest.mark.parametrize(
+    "ability_name, expected_type, move_name",
+    [
+        ("スカイスキン", "ひこう", "つばさでうつ"),
+        ("ドラゴンスキン", "ドラゴン", "りゅうのいぶき"),
+        ("フェアリースキン", "フェアリー", "ムーンフォース"),
+        ("フリーズスキン", "こおり", "れいとうビーム"),
+    ],
+)
+def test_スキン系_もともと対応タイプの技は威力補正を受けない(
+    ability_name: str,
+    expected_type: str,
+    move_name: str,
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == expected_type
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+@pytest.mark.parametrize(
     "ability_name, move_name",
     [
         ("あついしぼう", "ひのこ"),
