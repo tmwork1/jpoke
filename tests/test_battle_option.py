@@ -35,6 +35,7 @@ def test_ダブルバトルで壁と複数対象補正が重複する():
         side1={"ひかりのかべ": 5},
         double_battle=True,
     )
+    t.fix_random(battle, 0.999)  # 急所になると壁の軽減が無視されるため固定
     t.run_move(battle, 0)
     # 0.75倍(3072) と 2/3倍(2732) の重複補正
     assert battle.damage_calculator.damage_modifier == 2049
@@ -47,6 +48,7 @@ def test_ダブルバトルで壁の軽減率が2_3倍になる():
         side1={"リフレクター": 5},
         double_battle=True,
     )
+    t.fix_random(battle, 0.999)  # 急所になると壁の軽減が無視されるため固定
     t.run_move(battle, 0)
     assert battle.damage_calculator.damage_modifier == 2732
 
@@ -76,6 +78,7 @@ def test_ダブルバトル無効なら壁の軽減率は従来通り1_2倍():
         side1={"リフレクター": 5},
         double_battle=False,
     )
+    t.fix_random(battle, 0.999)  # 急所になると壁の軽減が無視されるため固定
     t.run_move(battle, 0)
     assert battle.damage_calculator.damage_modifier == 2048
 
