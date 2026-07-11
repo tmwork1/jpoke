@@ -816,9 +816,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             ),
         }
     ),
-    # 効果はきのみの発動HP閾値を緩和するのみで、専用の発動イベントを持たないため
-    # handlers/item.py 側の各きのみハンドラ内で mon.ability.name を直接判定している
-    # （ちからずく等と同様のインライン判定パターン）。
     "くいしんぼう": AbilityData(),
     "クイックドロウ": AbilityData(
         handlers={
