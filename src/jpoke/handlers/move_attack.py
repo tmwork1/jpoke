@@ -744,7 +744,14 @@ def ガリョウテンセイ_lower_attacker_stats(battle: Battle, ctx: AttackCon
 
 
 def がんせきアックス_set_stealth_rock(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """がんせきアックス: 命中後、相手陣営にステルスロックを設置する。"""
+    """がんせきアックス: 命中後、相手陣営にステルスロックを設置する。
+
+    追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。
+    りんぷん・おんみつマントは対象個体ではなく場を変化させる効果のため影響を受けない
+    （resolve_secondary_chance は経由しない）。
+    """
+    if _is_sheer_force_blocked(ctx):
+        return HandlerReturn(value=value)
     side = battle.get_side(ctx.defender)
     side.activate("ステルスロック", 1)
     return HandlerReturn(value=value)
@@ -2929,7 +2936,14 @@ def Vジェネレート_lower_attacker_def_spd_spe(battle: Battle, ctx: AttackCo
 
 
 def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ぶきみなじゅもん: 相手の最後に使った技のPPを3減らす。"""
+    """ぶきみなじゅもん: 相手の最後に使った技のPPを3減らす。
+
+    追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。
+    りんぷん・おんみつマントは対象個体のPPを直接減らす効果ではあるが、resolve_secondary_chance
+    は経由しないため、ちからずくの判定のみ個別に行う。
+    """
+    if _is_sheer_force_blocked(ctx):
+        return HandlerReturn(value=value)
     mon = ctx.defender
     if mon.executed_move is not None:
         mon.executed_move.modify_pp(-3)

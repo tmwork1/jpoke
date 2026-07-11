@@ -1171,6 +1171,9 @@ def ききかいひ_switch_on_half_hp(battle: Battle, ctx: EventContext, value: 
 
     こんらん自傷(self_attack)・いたみわけ(pain_split)・みがわり/はらだいこ/のろい/
     ソウルビートなどの自己HP消費(self_cost)によるHP減少では発動しない。
+    特性ちからずくの効果が発動した技（secondary_effect フラグを持つ技をちからずく
+    所持者が使用した場合）のダメージでHPが半分以下になったときも発動しない
+    （docs/spec/abilities/ききかいひ.md参照）。
     """
     mon = ctx.target
 
@@ -1178,6 +1181,15 @@ def ききかいひ_switch_on_half_hp(battle: Battle, ctx: EventContext, value: 
     if (
         mon.fainted
         or ctx.hp_change_reason in {"self_attack", "pain_split", "self_cost"}
+    ):
+        return HandlerReturn(value=value)
+
+    if (
+        ctx.hp_change_reason == "move_damage"
+        and ctx.source is not None
+        and ctx.source.ability.name == "ちからずく"
+        and ctx.source.executed_move is not None
+        and ctx.source.executed_move.has_flag("secondary_effect")
     ):
         return HandlerReturn(value=value)
 
@@ -3342,7 +3354,12 @@ def へんげんじざい_change_type(battle: Battle, ctx: AttackContext, value:
 
 
 def へんしょく_copy_move_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """へんしょく特性: 攻撃技を受けた後、その技のタイプになる。"""
+    """へんしょく特性: 攻撃技を受けた後、その技のタイプになる。
+
+    特性ちからずくの効果が発動した技（secondary_effect フラグを持つ技をちからずく
+    所持者が使用した場合）を受けた場合はタイプが変化しない
+    （docs/spec/abilities/へんしょく.md参照）。
+    """
     mon = ctx.defender
     move_type = ctx.move.type
     if (
@@ -3350,6 +3367,10 @@ def へんしょく_copy_move_type(battle: Battle, ctx: AttackContext, value: An
         or ctx.hit_index != ctx.hit_count
         or not move_type
         or move_type in mon.types
+        or (
+            ctx.attacker.ability.name == "ちからずく"
+            and ctx.move.has_flag("secondary_effect")
+        )
     ):
         return HandlerReturn(value=value)
     mon.ability_override_type = move_type
