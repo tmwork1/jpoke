@@ -12,6 +12,34 @@ from jpoke.types import Type, AilmentName, WeatherName, Gender
 from .. import test_utils as t
 
 
+def test_たいねつ_やけどダメージ半減():
+    """たいねつ: やけどのターン終了時ダメージが通常の半分（最大HPの1/32、最低1）になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="たいねつ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "やけど")
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp - max(1, mon.max_hp // 32)
+
+
+def test_たいねつ_やけどダメージ最低1保証():
+    """たいねつ: 半減後に端数切り捨てで0になる場合でも最低1ダメージは受ける。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="たいねつ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    # max_hp=20 のとき通常やけどダメージは20//16=1。たいねつの最低1保証がなければ
+    # 1を0.5倍した結果0になってしまう。
+    mon._stats_manager._stats[0] = 20
+    mon.hp = 20
+    battle.ailment_manager.apply(mon, "やけど")
+    t.end_turn(battle)
+    assert mon.hp == 19
+
+
 def test_たんじゅん_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="たんじゅん")],
