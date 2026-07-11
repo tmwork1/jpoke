@@ -152,7 +152,6 @@ class Pokemon:
         self.move_override_types = None
         self.volatile_override_type = None
         self.ability.activated_since_switch_in = False
-        self.last_lost_item_name = ""
         self.paradox_boost_stat = None
         self.paradox_boost_source = ""
         self.added_types = []

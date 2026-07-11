@@ -457,6 +457,231 @@ def test_しめりけ_自分の爆発技も失敗させる():
     assert battle.move_executor.move_success is False
 
 
+def test_しゅうかく_50パーセントの確率で発動する():
+    """しゅうかく: 通常時はターン終了時に50%の確率で消費したきのみを復活させる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+    assert mon.last_lost_item_name == "オボンのみ"
+
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    assert mon.has_item("オボンのみ")
+
+
+def test_しゅうかく_確率判定に外れると発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+
+    t.fix_random(battle, 0.99)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_しゅうかく_晴れ中は確率判定に外れても必ず発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+
+    t.fix_random(battle, 0.99)
+    t.end_turn(battle)
+    assert mon.has_item("オボンのみ")
+
+
+def test_しゅうかく_おおひでり中は必ず発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("おおひでり", 5),
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+
+    t.fix_random(battle, 0.99)
+    t.end_turn(battle)
+    assert mon.has_item("オボンのみ")
+
+
+def test_しゅうかく_晴れが切れるターンは50パーセントになる():
+    """しゅうかく: 天気カウントが0になり晴れが終了するターンは、しゅうかくの発動判定より
+    先に天気が戻ってしまうため発動率は50%になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 1),
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+
+    t.fix_random(battle, 0.99)
+    t.end_turn(battle)
+    assert battle.weather.name == ""
+    assert not mon.has_item()
+
+
+def test_しゅうかく_ノーてんき下では晴れでも50パーセントになる():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン", ability_name="ノーてんき")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+
+    t.fix_random(battle, 0.99)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_しゅうかく_エアロック下では晴れでも50パーセントになる():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン", ability_name="エアロック")],
+        weather=("はれ", 5),
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+
+    t.fix_random(battle, 0.99)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_しゅうかく_アイテムを持っている場合は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+    assert mon.last_lost_item_name == "オボンのみ"
+    battle.item_manager.gain_item(mon, "たべのこし")
+
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    assert mon.has_item("たべのこし")
+
+
+def test_しゅうかく_きのみ以外の持ち物は復活しない():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="たべのこし")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+    assert mon.last_lost_item_name == "たべのこし"
+
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_しゅうかく_きのみを消費していない場合は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.last_lost_item_name == ""
+
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_しゅうかく_控えにいる間は発動せず再度場に出ると発動する():
+    """しゅうかく: きのみ消費後に交代しても記憶は保持され、再度場に出れば発動する。
+    控えにいる間は発動しない。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ"),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+    assert mon.last_lost_item_name == "オボンのみ"
+
+    t.run_switch(battle, 0, 1)
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    # 控えにいる間は発動しない
+    assert not mon.has_item()
+
+    t.run_switch(battle, 0, 0)
+    assert battle.actives[0] is mon
+    t.end_turn(battle)
+    # 再度場に出ると記憶が保持されているため発動する
+    assert mon.has_item("オボンのみ")
+
+
+def test_しゅうかく_どろぼうで奪われた持ち物は復活しない():
+    """しゅうかく: 相手に奪われた（場に存在したまま持ち主が変わる）持ち物は復活対象にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.take_item(mon)
+    assert not mon.has_item()
+    assert mon.last_lost_item_name == ""
+
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    assert not mon.has_item()
+
+
+def test_しゅうかく_トリックで渡した持ち物は復活しない():
+    """しゅうかく: すりかえ・トリック等で相手に渡った持ち物（場に存在したまま持ち主が
+    変わるだけ）は消費とみなされないため復活しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン", item_name="たべのこし")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.swap_items()
+    assert mon.item.name == "たべのこし"
+    assert mon.last_lost_item_name == ""
+
+    battle.item_manager.remove_item(mon)  # たべのこしを消費扱いで手放す
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    # オボンのみは復活せず、最後に失ったたべのこしのみが復活候補になる（かつきのみでないため復活しない）
+    assert not mon.has_item()
+
+
+def test_しゅうかく_消費後に別の持ち物を消費すると新しい方が復活する():
+    """しゅうかく: きのみ消費後に別の持ち物を入手してそれも消費すると、
+    しゅうかくの対象は新しく消費した持ち物に更新される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("タマタマ", ability_name="しゅうかく", item_name="オボンのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    battle.item_manager.remove_item(mon)
+    assert mon.last_lost_item_name == "オボンのみ"
+
+    battle.item_manager.gain_item(mon, "ラムのみ")
+    battle.item_manager.remove_item(mon)
+    assert mon.last_lost_item_name == "ラムのみ"
+
+    t.fix_random(battle, 0.0)
+    t.end_turn(battle)
+    assert mon.has_item("ラムのみ")
+
+
 def test_しょうりのほし_一撃必殺技には適用されない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="しょうりのほし", move_names=["つのドリル"])],
