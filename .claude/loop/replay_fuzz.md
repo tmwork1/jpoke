@@ -46,8 +46,7 @@
   "failure_dir": "replay_fuzz_failures",
   "current_failure": null,
   "completed_bugs": [{"seed": 123, "signature": "...", "summary": "..."}],
-  "failed_bugs": [{"signature": "...", "attempts": 1, "last_seed": 123}],
-  "rate_limit_reset_at": null
+  "failed_bugs": [{"signature": "...", "attempts": 1, "last_seed": 123}]
 }
 ```
 
@@ -62,8 +61,7 @@
 
 ### 1. 状態ファイルを読む
 
-`.loop/replay_fuzz_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
-未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
+`.loop/replay_fuzz_state.json` を Read で読み込む（存在しなければ初回起動）。
 
 ### 1.5. 未処理の current_failure が残っていないか確認
 

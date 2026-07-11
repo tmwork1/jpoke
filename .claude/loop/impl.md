@@ -42,8 +42,7 @@
   "completed":           ["..."],
   "failed":              ["..."],
   "unformatted_merges":  0,
-  "last_format_commit":  "...",
-  "rate_limit_reset_at": null
+  "last_format_commit":  "..."
 }
 ```
 
@@ -72,8 +71,7 @@ fi
 
 ### 1. 状態ファイルを読む
 
-`.loop/impl_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
-未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
+`.loop/impl_state.json` を Read で読み込む（存在しなければ初回起動）。
 
 ### 2. 終了チェック
 
@@ -245,8 +243,7 @@ jpoke {config.category} 計画書作成タスク: {entry}
   "plan_queue": ["からをやぶる", "ガードシェア"], "impl_queue": ["いばる"],
   "review_queue": ["あくまのキッス"], "review_in_progress": ["あくび"],
   "completed": [], "failed": [],
-  "unformatted_merges": 4, "last_format_commit": "1df4c9e7...",
-  "rate_limit_reset_at": "2026-07-10 01:50 (Etc/GMT-9)"
+  "unformatted_merges": 4, "last_format_commit": "1df4c9e7..."
 }
 ```
 

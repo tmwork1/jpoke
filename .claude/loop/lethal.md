@@ -26,8 +26,7 @@
     "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
-  "failed":    [{"name": "...", "type": "..."}],
-  "rate_limit_reset_at": null
+  "failed":    [{"name": "...", "type": "..."}]
 }
 ```
 
@@ -37,8 +36,7 @@
 
 ### 1. 状態ファイルを読む
 
-`.loop/lethal_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
-未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
+`.loop/lethal_state.json` を Read で読み込む（存在しなければ初回起動）。
 
 ### 1.5. worktree を準備する
 

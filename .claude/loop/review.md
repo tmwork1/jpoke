@@ -38,8 +38,7 @@ review エージェントが並列にレビュー・修正する。`loop/review/
   "completed":    ["..."],
   "failed":       [],
   "unformatted_merges": 0,
-  "last_format_commit": "...",
-  "rate_limit_reset_at": null
+  "last_format_commit": "..."
 }
 ```
 
@@ -59,8 +58,7 @@ review エージェントが並列にレビュー・修正する。`loop/review/
 
 ### 1. 状態ファイルを読む
 
-`.loop/review_state.json` を Read で読み込む（存在しなければ初回起動）。`rate_limit_reset_at` が
-未設定なら §共通12 手順1 に従い、通常の手順に進む前にユーザーへ次のリセット時刻を確認して記録する。
+`.loop/review_state.json` を Read で読み込む（存在しなければ初回起動）。
 
 ### 2. 終了チェック
 
@@ -230,7 +228,6 @@ jpoke {config.category} 再レビュータスク: {entry}
   },
   "review_queue": ["いえき", "いばる", "うたう"],
   "in_progress": [], "completed": ["あくび"], "failed": [],
-  "unformatted_merges": 3, "last_format_commit": "1df4c9e7...",
-  "rate_limit_reset_at": "2026-07-10 01:50 (Etc/GMT-9)"
+  "unformatted_merges": 3, "last_format_commit": "1df4c9e7..."
 }
 ```
