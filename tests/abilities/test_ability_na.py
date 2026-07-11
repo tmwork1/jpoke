@@ -166,6 +166,72 @@ def test_ねつこうかん_やけど状態にならない():
     assert not battle.ailment_manager.apply(battle.actives[0], "やけど")
 
 
+def test_ねつこうかん_ほのお以外の技では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
+        team1=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+    )
+    defender = battle.actives[0]
+    t.run_move(battle, 1)
+
+    assert defender.rank["atk"] == 0
+    assert not defender.ability.revealed
+
+
+def test_ねつこうかん_こうげきがすでに最大なら発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
+        team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+    )
+    defender = battle.actives[0]
+    defender.rank["atk"] = 6
+    t.run_move(battle, 1)
+
+    assert defender.rank["atk"] == 6
+    assert not defender.ability.revealed
+
+
+def test_ねつこうかん_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
+        team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+        volatile0={"まもる": 1},
+    )
+    defender = battle.actives[0]
+    t.run_move(battle, 1)
+
+    assert defender.rank["atk"] == 0
+    assert not defender.ability.revealed
+
+
+def test_ねつこうかん_みがわり状態では発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねつこうかん")],
+        team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+    )
+    defender = battle.actives[0]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.run_move(battle, 1)
+
+    assert defender.rank["atk"] == 0
+    assert not defender.ability.revealed
+
+
+def test_ねつこうかん_ひんし時は発動しない():
+    """ねつこうかん: ほのお技でひんしになった場合はこうげきが上がらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ねつこうかん"), Pokemon("ピカチュウ")],
+        team1=[Pokemon("ピカチュウ", move_names=["ひのこ"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    t.fix_damage(battle, defender.max_hp)
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert defender.rank["atk"] == 0
+
+
 def test_ねつぼうそう_やけど状態でない場合は倍率なし():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ねつぼうそう", move_names=["たいあたり"])],
