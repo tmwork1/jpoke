@@ -1839,6 +1839,81 @@ def test_せいしんりょく_ひるみを防ぐ():
     assert not battle.volatile_manager.apply(battle.actives[0], "ひるみ", count=1)
 
 
+def test_ぜったいねむり_登場時にゆめうつつ状態になる():
+    """ぜったいねむり: 場に出ると状態異常『ゆめうつつ』になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.ailment.name == "ゆめうつつ"
+    assert mon.ailment.is_sleep
+
+
+def test_ぜったいねむり_他の状態異常を新たに受け付けない():
+    """ぜったいねむり: ゆめうつつ状態のため、どくなど他の状態異常を新たに付与できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert not battle.ailment_manager.apply(mon, "どく")
+    assert mon.ailment.name == "ゆめうつつ"
+
+
+def test_ぜったいねむり_どくどくだまでも状態異常にならない():
+    """ぜったいねむり: どくどくだまを持たせてもターン終了時にもうどくが発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり", item_name="どくどくだま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+    assert mon.ailment.name == "ゆめうつつ"
+
+
+def test_ぜったいねむり_ゆめうつつは解除されない():
+    """ぜったいねむり: ゆめうつつは回復不能（uncurable）のため、状態異常回復手段でも解除できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert not battle.ailment_manager.remove(mon)
+    assert mon.ailment.name == "ゆめうつつ"
+
+
+def test_ぜったいねむり_ねごとが成功する():
+    """ぜったいねむり: ゆめうつつ状態でもねごとが成功する（ねむり状態でなくても失敗しない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ネッコアラ", ability_name="ぜったいねむり", move_names=["ねごと", "たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    # ねごとで自動選択された技（たいあたり）が実行されダメージが発生する
+    assert defender.hp < hp_before
+
+
+def test_ぜったいねむり_交代して戻ってもゆめうつつを維持する():
+    """ぜったいねむり: 一度交代して戻ってきても、再度ゆめうつつになる。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ネッコアラ", ability_name="ぜったいねむり"),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    assert mon.ailment.name == "ゆめうつつ"
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+    mon = battle.actives[0]
+    assert mon.ailment.name == "ゆめうつつ"
+
+
 def test_ゼロフォーミング_テラスタル時に天候とフィールドが消える():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ゼロフォーミング")],
