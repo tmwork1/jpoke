@@ -552,6 +552,63 @@ def test_ノーガード_半無敵状態の相手にも命中する():
     assert defender.hp < hp_before
 
 
+@pytest.mark.parametrize("weather,pokemon_name,move_name", [
+    ("はれ", "ヒトカゲ", "ひのこ"),
+    ("あめ", "ゼニガメ", "みずでっぽう"),
+])
+def test_ノーてんき_はれあめ威力補正が無効化される(weather: str, pokemon_name: str, move_name: str):
+    """ノーてんき: 場にいる間ははれ/あめによるタイプ一致技の威力補正が無効になる"""
+    battle = t.start_battle(
+        team0=[Pokemon(pokemon_name, move_names=[move_name])],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき")],
+        weather=(weather, 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_ノーてんき_かたやぶりでも天候効果無効化は貫通されない():
+    """ノーてんき: 天候の影響を無くす効果はかたやぶりでも無視されない
+    （エアロック・ノーてんきは mold_breaker_ignorable フラグを持たない）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒトカゲ", ability_name="かたやぶり", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき")],
+        weather=("はれ", 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_ノーてんき_天候自体は解除されない():
+    """ノーてんき: 天候の効果を無くすだけで天候自体は解除されず、経過ターンもカウントされ続ける。
+    既に発動している天候をあまごい等で発動させようとすると失敗する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["あまごい"])],
+        team1=[Pokemon("カビゴン", ability_name="ノーてんき")],
+        weather=("あめ", 3),
+    )
+    assert battle.raw_weather.name == "あめ"
+    t.run_move(battle, 0)
+    # 既にあめが降っているためあまごいは失敗し、天候・カウントとも変化しない
+    assert battle.raw_weather.name == "あめ"
+    assert battle.raw_weather.count == 3
+
+
+def test_ノーてんき_場から退場すると天候効果が復活する():
+    """ノーてんき: 交代して場から去ると天候の効果（威力補正）が復活する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヒトカゲ", move_names=["ひのこ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ノーてんき"), Pokemon("コイル")],
+        weather=("はれ", 99),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+    t.run_switch(battle, 1, 1)  # ノーてんき持ちを引っ込める
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.power_modifier
+
+
 def test_ノーマルスキン_ノーマルタイプに変えた技は強化される():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ノーマルスキン", move_names=["ひのこ"])],
