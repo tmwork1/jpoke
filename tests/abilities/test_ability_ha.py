@@ -172,6 +172,26 @@ def test_はやおき_ねむりカウンタが通常の2倍速で減る():
     assert count_after == count_before - 2, f"はやおきで2回消費: {count_before} → {count_after}"
 
 
+def test_はやおき_ねごと使用時も1ターンに2回のみ消費される():
+    """はやおき: ねごとのサブ実行中の ON_TRY_ACTION では追加tickを行わない
+    （ねごと自身の ON_TRY_ACTION で既に2回消費済みのため、合計は通常通り2回のみ）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はやおき", move_names=["ねごと", "たいあたり"])],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("ねむり", 5),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    count_before = mon.ailment.count
+
+    t.run_move(battle, 0, 0)
+
+    count_after = mon.ailment.count
+    assert count_after == count_before - 2, (
+        f"はやおき+ねごとでも2回消費のみ: {count_before} → {count_after}"
+    )
+
+
 def test_はやてのつばさ_HPが減ると優先度が上がらない():
     """はやてのつばさ: HP満タンでないときはひこう技の優先度は変わらない"""
     battle = t.start_battle(

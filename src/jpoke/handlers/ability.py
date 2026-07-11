@@ -2999,6 +2999,11 @@ def はやおき_extra_decrement(battle: Battle, ctx: AttackContext, value: Any)
         value: 行動可否フラグ
     """
     mon = ctx.attacker
+    if mon.sleep_talk_active:
+        # ねごとのサブ実行中は、選ばれた技の ON_TRY_ACTION でも本ハンドラが
+        # 再度発火するが、ねむりのカウント消費は1ターンに1回のみで良いため
+        # （ねごと自身の ON_TRY_ACTION 時点ですでに消費済み）、ここでは何もしない。
+        return HandlerReturn(value=value)
     if not mon.has_ailment("ねむり"):
         return HandlerReturn(value=value)
     # ねむり_check_action より先 (priority=9) に追加tickを実行
