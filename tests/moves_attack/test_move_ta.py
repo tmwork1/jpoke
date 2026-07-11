@@ -8,13 +8,18 @@ from .. import test_utils as t
 
 
 def test_DDラリアット_相手のぼうぎょランクを無視する():
-    """DDラリアット: 相手のぼうぎょランクが上がっていてもダメージが変わらない。"""
+    """DDラリアット: 相手のぼうぎょランクが上がっていてもダメージが変わらない。
+
+    Note:
+        battle.random.random の上書きは random.choice ベースのダメージ乱数
+        ロールには効かないため、damage_roll="最大" でロールそのものを固定する。
+    """
     battle1 = t.start_battle(
         team0=[Pokemon("ルカリオ", move_names=["DDラリアット"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
+        damage_roll="最大",
     )
-    battle1.random.random = lambda: 0.9
     mon1 = battle1.actives[1]
     battle1.modify_stats(mon1, {"def": 6}, source=mon1)
     hp_before = mon1.hp
@@ -25,8 +30,8 @@ def test_DDラリアット_相手のぼうぎょランクを無視する():
         team0=[Pokemon("ルカリオ", move_names=["DDラリアット"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
+        damage_roll="最大",
     )
-    battle2.random.random = lambda: 0.9
     mon2 = battle2.actives[1]
     hp_before2 = mon2.hp
     t.run_move(battle2, 0)
@@ -36,13 +41,18 @@ def test_DDラリアット_相手のぼうぎょランクを無視する():
 
 
 def test_DDラリアット_相手のぼうぎょランク低下も無視する():
-    """DDラリアット: 相手のぼうぎょランクが下がっていてもダメージが変わらない。"""
+    """DDラリアット: 相手のぼうぎょランクが下がっていてもダメージが変わらない。
+
+    Note:
+        battle.random.random の上書きは random.choice ベースのダメージ乱数
+        ロールには効かないため、damage_roll="最大" でロールそのものを固定する。
+    """
     battle1 = t.start_battle(
         team0=[Pokemon("ルカリオ", move_names=["DDラリアット"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
+        damage_roll="最大",
     )
-    battle1.random.random = lambda: 0.9
     mon1 = battle1.actives[1]
     battle1.modify_stats(mon1, {"def": -6}, source=mon1)
     hp_before = mon1.hp
@@ -53,8 +63,8 @@ def test_DDラリアット_相手のぼうぎょランク低下も無視する()
         team0=[Pokemon("ルカリオ", move_names=["DDラリアット"])],
         team1=[Pokemon("カビゴン")],
         accuracy=100,
+        damage_roll="最大",
     )
-    battle2.random.random = lambda: 0.9
     mon2 = battle2.actives[1]
     hp_before2 = mon2.hp
     t.run_move(battle2, 0)
