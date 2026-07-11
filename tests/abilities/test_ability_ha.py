@@ -413,6 +413,39 @@ def test_はりこみ_交代直後の相手への攻撃強化():
     assert battle.damage_calculator.atk_modifier == 8192
 
 
+def test_はりこみ_初手の相手には発動しない():
+    """はりこみ: 初手（0ターン目の初期交代）で繰り出された相手には発動しない。
+
+    has_switched は初期交代でも True になるが、1ターン目の開始時
+    （_begin_turn の reset_turn_state）でリセットされるため、
+    実際のターン進行（battle.step）を経由して検証する必要がある
+    （t.run_move を直接呼ぶだけでは初期交代の has_switched がリセットされず
+    誤って発動してしまう）。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はりこみ", move_names=["たいあたり"])],
+        team1=[Pokemon("ライチュウ")],
+        accuracy=100,
+    )
+    t.reserve_command(battle, command0=Command.MOVE_0, command1=Command.MOVE_0)
+    battle.step()
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
+def test_はりこみ_死に出しの相手には発動しない():
+    """はりこみ: 死に出し（瀕死交代）で繰り出された相手には発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はりこみ", move_names=["たいあたり"])],
+        team1=[Pokemon("コイキング"), Pokemon("ライチュウ")],
+    )
+    defender = battle.actives[1]
+    battle.modify_hp(defender, v=-defender.max_hp)
+    battle.switch_manager.run_faint_switch()
+
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
 def test_ハードロック_かたやぶりで無効():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
