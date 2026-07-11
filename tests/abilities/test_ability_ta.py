@@ -844,6 +844,17 @@ def test_テラスチェンジ_登場時にテラスタルフォルムになる(
     assert mon.name == "テラパゴス(テラスタル)"
 
 
+def test_テラスチェンジ_かがくへんかガスが発動中でも発動する():
+    """テラスチェンジ: 既にかがくへんかガスが発動している場に繰り出したときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("テラパゴス(ノーマル)", ability_name="テラスチェンジ")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    t.run_switch(battle, player_idx=0, new_idx=1)
+    mon = battle.actives[0]
+    assert mon.name == "テラパゴス(テラスタル)"
+
+
 def test_てんきや_エアロック中はフォルムチェンジしない():
     battle = t.start_battle(
         team0=[Pokemon("ポワルン", ability_name="てんきや")],
