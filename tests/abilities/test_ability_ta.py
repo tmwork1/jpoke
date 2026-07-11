@@ -1798,6 +1798,98 @@ def test_どくぼうそう_もうどく状態で物理技の威力が1_5倍():
     assert battle.damage_calculator.power_modifier == 6144
 
 
+def test_どしょく_HP満タンなら無効化のみで回復しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ミミズズ", ability_name="どしょく")],
+        team1=[Pokemon("カビゴン", move_names=["じしん"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    t.run_move(battle, 1)
+    assert mon.hp == mon.max_hp
+    assert mon.ability.revealed
+
+
+def test_どしょく_じめん変化技も無効化して回復する():
+    """どしょく: すなかけのようなじめんタイプの変化技を受けても無効化し、最大HPの1/4回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ミミズズ", ability_name="どしょく")],
+        team1=[Pokemon("カビゴン", move_names=["すなかけ"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+    assert mon.rank["accuracy"] == 0
+
+
+def test_どしょく_クリアチャーム所持でもどしょくが優先発動する():
+    """どしょく: クリアチャーム所持で命中ランク低下自体が無効なはずのすなかけでも、
+    ランク低下無効化より先にどしょくが発動して技自体を無効化し回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ミミズズ", ability_name="どしょく", item_name="クリアチャーム")],
+        team1=[Pokemon("カビゴン", move_names=["すなかけ"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+    assert mon.ability.revealed
+
+
+def test_どしょく_まきびしなど場を対象とした技には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン")],
+        team1=[Pokemon("ミミズズ", ability_name="どしょく", move_names=["まきびし"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.side_managers[0].fields["まきびし"].is_active
+    assert not battle.actives[1].ability.revealed
+
+
+def test_どしょく_連続攻撃技も無効化するが回復は1回のみ():
+    battle = t.start_battle(
+        team0=[Pokemon("ミミズズ", ability_name="どしょく")],
+        team1=[Pokemon("カビゴン", move_names=["ボーンラッシュ"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    t.run_move(battle, 1)
+    assert mon.hp == 1 + mon.max_hp // 4
+
+
+def test_どしょく_みがわり状態でじめん技を受けても発動して回復する():
+    battle = t.start_battle(
+        team0=[Pokemon("ミミズズ", ability_name="どしょく")],
+        team1=[Pokemon("カビゴン", move_names=["じしん"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    battle.volatile_manager.apply(mon, "みがわり", count=mon.max_hp // 4)
+    mon.hp = mon.max_hp // 2
+    hp_before = mon.hp
+    t.run_move(battle, 1)
+    assert mon.hp == hp_before + mon.max_hp // 4
+    assert mon.has_volatile("みがわり")
+
+
+def test_どしょく_まもるで防がれたときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ミミズズ", ability_name="どしょく")],
+        team1=[Pokemon("カビゴン", move_names=["じしん"])],
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.volatile_manager.apply(mon, "まもる", count=1)
+    t.run_move(battle, 1)
+    assert mon.hp == 1
+    assert not mon.ability.revealed
+
+
 def test_どんかん_いかくを無効化する():
     """どんかん: いかくによるこうげきランク低下を無効化する（第八世代以降）。"""
     battle = t.start_battle(
