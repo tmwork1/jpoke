@@ -1621,7 +1621,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.ソウルハート_boost_spa_on_ko,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_HP_CHANGED: h.AbilityHandler(
+                h.ソウルハート_boost_spa_on_faint,
+                subject_spec="target:foe",
+            ),
         }
     ),
     "たいねつ": AbilityData(

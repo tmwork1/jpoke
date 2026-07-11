@@ -2211,5 +2211,80 @@ def test_ソウルハート_KO時にCが1段階上がる():
     assert attacker.ability.revealed
 
 
+def test_ソウルハート_攻撃技によるKOでランクがすでに最大のときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ソウルハート", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker, defender = battle.actives
+    attacker.rank["spa"] = 6
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert defender.fainted
+    assert attacker.rank["spa"] == 6
+
+
+def test_ソウルハート_相手が状態異常のダメージでひんしになってもCが1段階上がる():
+    """攻撃技によるKOではないため、ON_HP_CHANGED(target:foe) 経由で発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ソウルハート")],
+        team1=[Pokemon("コイキング")],
+    )
+    attacker, defender = battle.actives
+    t.apply_ailment(battle, active_index=1, ailment_name="どく")
+    defender.hp = 1
+    t.end_turn(battle)
+
+    assert defender.fainted
+    assert attacker.rank["spa"] == 1
+    assert attacker.ability.revealed
+
+
+def test_ソウルハート_相手が状態異常のダメージでひんしになってもランクがすでに最大のときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ソウルハート")],
+        team1=[Pokemon("コイキング")],
+    )
+    attacker, defender = battle.actives
+    attacker.rank["spa"] = 6
+    t.apply_ailment(battle, active_index=1, ailment_name="どく")
+    defender.hp = 1
+    t.end_turn(battle)
+
+    assert defender.fainted
+    assert attacker.rank["spa"] == 6
+
+
+def test_ソウルハート_相手が自滅技でひんしになってもCが1段階上がる():
+    """だいばくはつ等の自己HP消費（reason="self_cost"）による自滅も、攻撃技による
+    KOではないため ON_HP_CHANGED(target:foe) 経由で発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ソウルハート")],
+        team1=[Pokemon("カビゴン", move_names=["だいばくはつ"])],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert attacker.rank["spa"] == 1
+    assert attacker.ability.revealed
+
+
+def test_ソウルハート_自分自身がひんしになってもCは上がらない():
+    """一次情報では発動条件が「自分以外が倒れる」に分類されており、自分自身が
+    ひんしになったことは対象外。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ソウルハート")],
+        team1=[Pokemon("カビゴン", move_names=["じしん"])],
+    )
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    t.run_move(battle, 1)
+
+    assert attacker.fainted
+    assert attacker.rank["spa"] == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
