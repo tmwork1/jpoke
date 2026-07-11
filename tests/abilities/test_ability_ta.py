@@ -587,6 +587,46 @@ def test_テクニシャン_威力補正(move_name, expected_modifier):
     assert battle.damage_calculator.power_modifier == expected_modifier
 
 
+def test_テクニシャン_アクロバット_道具を持っているとき変動前威力で補正がかかる():
+    """アクロバットは道具を持っているとき威力55のまま変動しないため、テクニシャンの
+    補正（1.5倍）がかかる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="テクニシャン", move_names=["アクロバット"],
+                       item_name="いのちのたま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 6144
+    assert battle.damage_calculator.final_power == 82
+
+
+def test_テクニシャン_アクロバット_道具を持っていないとき変動後威力で補正がかからない():
+    """アクロバットは道具を持っていないとき技自身の効果で威力が110に変動する。
+    テクニシャンは変動後の威力（110）で判定するため、60を超えて対象外になる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="テクニシャン", move_names=["アクロバット"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    # 8192(4096*2) = アクロバット自身の道具無し補正(2倍)のみ。テクニシャンの1.5倍は乗らない。
+    assert battle.damage_calculator.power_modifier == 8192
+    assert battle.damage_calculator.final_power == 110
+
+
+def test_テクニシャン_こんらんの自傷では威力上昇しない():
+    """こんらんによる自傷ダメージ（内部技"_こんらん"、威力40）はテクニシャンの対象外。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="テクニシャン", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    battle.test_option.trigger_volatile = True
+    battle.step()
+    assert battle.damage_calculator.power_modifier == 4096
+
+
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [

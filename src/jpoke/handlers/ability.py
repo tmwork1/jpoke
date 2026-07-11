@@ -2398,8 +2398,29 @@ def てきおうりょく_modify_stab(battle: Battle, ctx: AttackContext, value:
 
 
 def テクニシャン_boost_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """テクニシャン特性: 元威力60以下の技威力補正を1.5倍にする。"""
-    if ctx.move.data.power is not None and ctx.move.data.power <= 60:
+    """テクニシャン特性: 元威力60以下の技威力補正を1.5倍にする。
+
+    もちもの・他の特性・フィールドなどの外部要因による威力変動は、`value`（累積補正値）では
+    なく `ctx.move.data.power`（変動前の元威力）を参照して判定するため、自動的に判定対象外
+    になる（変動後の威力が60を超えてもテクニシャンの効果を受ける）。
+
+    一方、技自身の効果で威力が変動する技は「変動後の威力」で判定する必要があるため個別に
+    例外処理する。
+    - こんらんによる自傷攻撃（内部技"_こんらん"）の威力は上がらない。
+    - アクロバットは攻撃者が道具を持っていないとき技自身の効果で威力が110に変動し、
+      テクニシャンの対象外になる（道具を持っている場合は威力55のままなので対象になる）。
+    """
+    if ctx.move.name == "_こんらん":
+        return HandlerReturn(value=value)
+
+    power = ctx.move.data.power
+    if power is None:
+        return HandlerReturn(value=value)
+
+    if ctx.move.name == "アクロバット" and not ctx.attacker.has_item():
+        power *= 2
+
+    if power <= 60:
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
