@@ -78,7 +78,6 @@ class Pokemon:
         self.base_ability_name: AbilityName = ability_name
 
         self.item = Item(item_name)
-        self.last_lost_item_name: ItemName = ""
 
         self.set_moves(move_names if move_names is not None else ["はねる"])
 
@@ -90,19 +89,14 @@ class Pokemon:
         # 初期ステータス計算（hp は未定義のため update_stats() の hp 追従処理は経由しない）
         self._recalc_stats()
 
-        self.paradox_boost_stat: Stat | None = None
-        self.paradox_boost_source: BoostSource = ""
-
         # バトル中に利用する属性はコンストラクタで明示的に定義する。
         self.revealed: bool = False
         self.terastallized: bool = False
         self.hp: int = self.max_hp
         self.ailment: Ailment = Ailment()
-        self.stellar_boosted_types: set[Type] = set()
         self.added_types: list[Type] = []
         self.removed_types: list[Type] = []
         self.volatiles: dict[VolatileName, Volatile] = {}
-        self.active_turn: int = 0
         self.hits_taken: int = 0
         self.last_physical_damage_received: int = 0  # 今ターン最後に受けた物理ダメージ量（カウンター等の反射元）
         self.last_special_damage_received: int = 0   # 今ターン最後に受けた特殊ダメージ量（ミラーコート等の反射元）
@@ -116,15 +110,15 @@ class Pokemon:
         # 最後に実際にPPを消費した技（ねごとのサブ技のように消費量0の実行では更新されない）。
         # かなしばり・うらみ・さいはい等「最後にPPを消費した技」を参照すべき効果はこちらを使う。
         self.last_pp_consumed_move: Move | None = None
+        # まもる系・みちづれ・かえんのまもりの連続使用失敗判定専用の内部状態。
+        # executed_move/selected_move とは異なり、他機能から参照されることを想定しない。
+        self.protect_chain_move: Move | None = None
         self.last_move_type: Type | None = None  # 直近で使用した技の実効タイプ（テクスチャー2用）
         self.last_move_name: MoveName | None = None  # 直近で使用した技名（テクスチャー2用）
-        self.ability_override_type: Type | None = None
-        self.move_override_types: list[Type] | None = None
-        self.volatile_override_type: Type | None = None
         self.sleep_talk_active: bool = False  # ねごとによるサブ技実行中フラグ
 
         # スコープ付きメモリ。技・特性個別のフラグはここに保存し、
-        # リセットはスコープ単位（turn: ターン開始 / switch: 登場時 / battle: リセットなし）
+        # リセットはスコープ単位（turn: ターン開始 / switch: 登場時・退場時 / battle: リセットなし）
         # で一括して行う。新しいフラグを追加してもリセット処理の追記は不要。
         # 代表的なフラグへのアクセスは下部のプロパティ（スコープ付きメモリ節）を参照。
         self.memory: dict[str, dict[str, Any]] = {"turn": {}, "switch": {}, "battle": {}}
@@ -136,6 +130,7 @@ class Pokemon:
         fast_copy(self, new, keys_to_deepcopy=[
             'ability', 'item', 'moves', 'ailment', 'volatiles',
             'executed_move', 'selected_move', 'last_pp_consumed_move',
+            'protect_chain_move',
         ])
         return new
 
@@ -146,8 +141,9 @@ class Pokemon:
         self.memory["switch"] = {}
 
     def reset_on_switch_out(self):
-        self.active_turn = 0
-        self.hits_taken = 0
+        # switch スコープは登場時だけでなく退場時にも即座にクリアする
+        # （タイプ上書き系など、退場直後に戻す必要があるフラグを収容するため）
+        self.memory["switch"] = {}
         self.rank = {k: 0 for k in STATS}
         # ガードシェア・パワーシェア・パワートリックなどによる実数値の書き換えを
         # 種族値ベースの値に再計算してリセットする（交代でリセットされる仕様）
@@ -155,15 +151,10 @@ class Pokemon:
         self.executed_move = None
         self.selected_move = None
         self.last_pp_consumed_move = None
+        self.protect_chain_move = None
         self.last_move_type = None
         self.last_move_name = None
-        self.ability_override_type = None
-        self.move_override_types = None
-        self.volatile_override_type = None
         self.ability.activated_since_switch_in = False
-        self.last_lost_item_name = ""
-        self.paradox_boost_stat = None
-        self.paradox_boost_source = ""
         self.added_types = []
         self.removed_types = []
 
@@ -191,7 +182,7 @@ class Pokemon:
 
     # ── スコープ付きメモリ ──────────────────────────────────────
     # 技・特性個別のフラグへのアクセサ。実体は memory の各スコープに保存され、
-    # reset_turn_state / reset_on_switch_in でスコープごと一括クリアされる。
+    # reset_turn_state / reset_on_switch_in / reset_on_switch_out でスコープごと一括クリアされる。
 
     @property
     def stat_lowered_this_turn(self) -> bool:
@@ -239,6 +230,60 @@ class Pokemon:
         self.memory["switch"]["pp_consumed_moves"] = value
 
     @property
+    def ability_override_type(self) -> Type | None:
+        """特性によるタイプ上書き（へんげんじざい等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("ability_override_type")
+
+    @ability_override_type.setter
+    def ability_override_type(self, value: Type | None):
+        self.memory["switch"]["ability_override_type"] = value
+
+    @property
+    def move_override_types(self) -> list[Type] | None:
+        """技によるタイプ上書き（テクスチャー・ミラータイプ等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("move_override_types")
+
+    @move_override_types.setter
+    def move_override_types(self, value: list[Type] | None):
+        self.memory["switch"]["move_override_types"] = value
+
+    @property
+    def volatile_override_type(self) -> Type | None:
+        """揮発性状態によるタイプ上書き（まほうのこな・みずびたし等）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("volatile_override_type")
+
+    @volatile_override_type.setter
+    def volatile_override_type(self, value: Type | None):
+        self.memory["switch"]["volatile_override_type"] = value
+
+    @property
+    def last_lost_item_name(self) -> ItemName:
+        """直近で失った（消費・奪取された）アイテム名（ものひろい・しゅうかく用）。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("last_lost_item_name", "")
+
+    @last_lost_item_name.setter
+    def last_lost_item_name(self, value: ItemName):
+        self.memory["switch"]["last_lost_item_name"] = value
+
+    @property
+    def paradox_boost_stat(self) -> Stat | None:
+        """パラドックス特性で強化されているステータス。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("paradox_boost_stat")
+
+    @paradox_boost_stat.setter
+    def paradox_boost_stat(self, value: Stat | None):
+        self.memory["switch"]["paradox_boost_stat"] = value
+
+    @property
+    def paradox_boost_source(self) -> BoostSource:
+        """パラドックス補正の発動要因。登場・退場時にリセットされる。"""
+        return self.memory["switch"].get("paradox_boost_source", "")
+
+    @paradox_boost_source.setter
+    def paradox_boost_source(self, value: BoostSource):
+        self.memory["switch"]["paradox_boost_source"] = value
+
+    @property
     def ate_berry(self) -> bool:
         """今バトル中にきのみを食べたかどうか（ゲップの使用条件）。"""
         return self.memory["battle"].get("ate_berry", False)
@@ -246,6 +291,11 @@ class Pokemon:
     @ate_berry.setter
     def ate_berry(self, value: bool):
         self.memory["battle"]["ate_berry"] = value
+
+    @property
+    def stellar_boosted_types(self) -> set[Type]:
+        """ステラテラスタルで威力補正が消費済みのタイプ集合（バトル中リセットされない）。"""
+        return self.memory["battle"].setdefault("stellar_boosted_types", set())
 
     # ── 基本情報 ────────────────────────────────────────────────
 

@@ -591,7 +591,7 @@ def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) 
     かえんのまもりはそのターンに自分より後に行動する相手の技から身を守るための
     技であるため、自分がそのターンの最後に行動する場合は守る対象がなく失敗する
     （シングルバトル想定）。
-    失敗時は executed_move / selected_move を None にリセットし、まもる系の
+    失敗時は protect_chain_move を None にリセットし、まもる系の
     連続使用カウントもリセットする（連続使用扱いにしない）。
     """
     attacker_player = battle.get_player(ctx.attacker)
@@ -600,8 +600,7 @@ def かえんのまもり_check(battle: Battle, ctx: AttackContext, value: Any) 
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="かえんのまもり_最終行動")
         )
-        ctx.attacker.executed_move = None
-        ctx.attacker.selected_move = None
+        ctx.attacker.protect_chain_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2665,20 +2664,19 @@ def まもる系_連続使用失敗チェック(battle: Battle, ctx: AttackConte
 
     直前ターンに守る系の技（protect フラグを持つ技）を正常に使用していた場合、
     今ターンの守る系技を失敗させる。
-    失敗時は executed_move / selected_move を None にリセットして次ターンは
+    失敗時は protect_chain_move を None にリセットして次ターンは
     再度使えるようにする。
     """
     mon = ctx.attacker
     if (
-        mon.executed_move is not None
-        and mon.executed_move.has_flag("protect")
+        mon.protect_chain_move is not None
+        and mon.protect_chain_move.has_flag("protect")
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="まもる系_連続使用")
         )
-        mon.executed_move = None
-        mon.selected_move = None
+        mon.protect_chain_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 
@@ -2799,20 +2797,19 @@ def みちづれ_連続使用失敗チェック(battle: Battle, ctx: AttackConte
 
     直前の自分の行動で成功裏にみちづれを使用していた場合、今回のみちづれは失敗する
     （まもる系_連続使用失敗チェックと同じパターン）。
-    失敗時は executed_move / selected_move を None にリセットし、次回の使用は
+    失敗時は protect_chain_move を None にリセットし、次回の使用は
     連続使用扱いにしない。
     """
     mon = ctx.attacker
     if (
-        mon.executed_move is not None
-        and mon.executed_move.name == "みちづれ"
+        mon.protect_chain_move is not None
+        and mon.protect_chain_move.name == "みちづれ"
     ):
         battle.add_event_log(
             mon, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="みちづれ_連続使用")
         )
-        mon.executed_move = None
-        mon.selected_move = None
+        mon.protect_chain_move = None
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
 

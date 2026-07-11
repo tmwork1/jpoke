@@ -887,7 +887,7 @@ def かそく_boost_speed(battle: Battle, ctx: EventContext, value: Any) -> Hand
     """かそく特性: 行動済みならターン終了時に素早さを1段階上げる。"""
     mon = ctx.source
     if (
-        mon.executed_move is not None
+        mon.acted_since_switch_in
         and battle.modify_stats(mon, {"spe": +1}, source=mon)
     ):
         _announce_ability_triggered(battle, mon)
