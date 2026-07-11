@@ -332,6 +332,41 @@ def test_しぜんかいふく_交代時に状態異常回復():
     assert not mon.ailment.is_active
 
 
+def test_しぜんかいふく_とんぼがえりで交代しても状態異常回復():
+    """しぜんかいふく: 使うと交代する技（とんぼがえり）で引っ込んだときも回復する。"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", ability_name="しぜんかいふく", move_names=["とんぼがえり"]),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+        ailment0=("どく", None),
+        accuracy=100,
+    )
+    mon = battle.actives[0]
+    assert mon.ailment.is_active
+    t.run_move(battle, 0)
+    battle.switch_manager.run_interrupt_switch(Interrupt.PIVOT)
+    assert not mon.ailment.is_active
+
+
+def test_しぜんかいふく_強制交代させられても状態異常回復():
+    """しぜんかいふく: ドラゴンテール等で強制交代させられたときも回復する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("リザードン", move_names=["ドラゴンテール"])],
+        team1=[
+            Pokemon("ピカチュウ", ability_name="しぜんかいふく"),
+            Pokemon("ピカチュウ"),
+        ],
+        ailment1=("どく", None),
+        accuracy=100,
+    )
+    mon = battle.actives[1]
+    assert mon.ailment.is_active
+    t.run_move(battle, 0)
+    assert not mon.ailment.is_active
+
+
 def test_しめりけ_かたやぶりで爆発技が通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じばく"])],
