@@ -2682,7 +2682,13 @@ def どくのくさり_maybe_badly_poison(battle: Battle, ctx: AttackContext, va
 
 
 def どくのトゲ_maybe_poison_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """どくのトゲ特性: 直接攻撃を受けた相手を30%でどくにする。"""
+    """どくのトゲ特性: 直接攻撃を受けた相手を30%でどくにする。
+
+    こらえるでHP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     return _apply_contact_counter_ailment(battle, ctx, value, ailment="どく", chance=0.3)
 
 
