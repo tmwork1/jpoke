@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, Player
 
-from jpoke.core import EventContext
+from .context import EventContext
 from jpoke.core.log_payload import TerastalPayload
 from jpoke.enums import Event, Command, Interrupt, LogCode
 from jpoke.utils import fast_copy

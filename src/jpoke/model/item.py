@@ -1,7 +1,7 @@
 from typing import Literal
 
 from jpoke.utils import fast_copy
-from jpoke.data import ITEMS
+from jpoke.data.item import ITEMS
 from jpoke.data.models import ItemData
 from jpoke.types import PokemonName, MoveName, ItemName
 

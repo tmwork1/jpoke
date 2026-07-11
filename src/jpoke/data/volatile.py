@@ -4,7 +4,7 @@ Note:
     このモジュール内の揮発状態定義はVOLATILES辞書内で五十音順に配置されています。
 """
 from jpoke.enums import Event, LethalEvent
-from jpoke.core import LethalHandler
+from jpoke.core.lethal import LethalHandler
 from jpoke.handlers import volatile as h
 from jpoke.handlers import lethal as l
 from .models import VolatileData

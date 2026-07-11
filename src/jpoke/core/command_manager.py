@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from jpoke.utils import fast_copy
 from jpoke.types import BattlePhase, MoveName
 from jpoke.enums import Event, Command, Interrupt
-from jpoke.model import Move
+from jpoke.model.move import Move
 
 from .context import EventContext
 from .replay import RecordedCommand

@@ -11,10 +11,10 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.types import GlobalFieldName, SideFieldName, WeatherName, TerrainName
-from jpoke.data import WEATHER_PRIORITY
+from jpoke.data.field import WEATHER_PRIORITY
 from jpoke.enums import Event, LogCode
-from jpoke.model import Field
-from jpoke.core import EventContext
+from jpoke.model.field import Field
+from .context import EventContext
 from .log_payload import FieldPayload
 
 T = TypeVar("T")

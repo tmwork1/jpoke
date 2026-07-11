@@ -6,7 +6,8 @@ if TYPE_CHECKING:
 
 from copy import deepcopy
 
-from jpoke.model import Ability, Item
+from jpoke.model.ability import Ability
+from jpoke.model.item import Item
 
 
 OBSERVED_MOVE_INDEXES: dict[Pokemon, dict[int, int]] = {}  # 技のインデックス変更を記録する辞書. dict[Pokemon, dict[old_index, new_index]]

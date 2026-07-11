@@ -8,9 +8,9 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager, Player
     from jpoke.model import Move
 
-from jpoke.model import Pokemon
+from jpoke.model.pokemon import Pokemon
 from jpoke.enums import Event
-from jpoke.core import EventContext, AttackContext
+from .context import EventContext, AttackContext
 from jpoke.utils import fast_copy
 from jpoke.types import MoveCategory
 

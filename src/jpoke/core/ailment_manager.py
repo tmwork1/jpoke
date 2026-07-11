@@ -7,10 +7,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from jpoke.core import Battle, EventManager
 
-from jpoke.model import Pokemon, Ailment
+from jpoke.model.pokemon import Pokemon
+from jpoke.model.ailment import Ailment
 from jpoke.types import AilmentName
 from jpoke.enums import Event, LogCode
-from jpoke.core import EventContext, BaseContext
+from .context import EventContext, BaseContext
 from .log_payload import AilmentPayload
 from jpoke.utils import fast_copy
 

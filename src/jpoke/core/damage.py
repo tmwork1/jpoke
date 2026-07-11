@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 from jpoke.enums import Event
 from jpoke.types import Stat
 from jpoke.utils import fast_copy
-from jpoke.data import TYPE_MODIFIER
+from jpoke.data.type_chart import TYPE_MODIFIER
 from jpoke.utils.math import round_half_down
 
 from .context import AttackContext

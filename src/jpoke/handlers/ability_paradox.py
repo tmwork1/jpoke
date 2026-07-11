@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, EventContext, AttackContext
     from jpoke.model import Pokemon
 
-from jpoke.core import HandlerReturn
+from jpoke.core.handler import HandlerReturn
 from jpoke.utils.math import apply_fixed_modifier
 from jpoke.types import BoostSource, Stat
 

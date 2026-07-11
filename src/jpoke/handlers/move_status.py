@@ -14,7 +14,7 @@ from .move import (
     modify_attacker_stats,
     modify_defender_stats,
 )
-from jpoke.core import HandlerReturn
+from jpoke.core.handler import HandlerReturn
 from jpoke.utils.math import round_half_down
 from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
 from jpoke.core.log_payload import FailureLogPayload, ItemPayload, StatChangePayload
-from jpoke.data import TYPE_MODIFIER, TYPES
+from jpoke.data.type_chart import TYPE_MODIFIER, TYPES
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
 # docs/wiki/moves/バトンタッチ.html「状態変化の引き継ぎ」表（第9世代列）を正とする。

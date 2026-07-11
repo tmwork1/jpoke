@@ -9,7 +9,8 @@ if TYPE_CHECKING:
 
 from jpoke.types import Type, MoveCategory, MoveName
 from jpoke.utils.math import clamp_stats, clamp_critic
-from jpoke.model import Pokemon, Move
+from jpoke.model.pokemon import Pokemon
+from jpoke.model.move import Move
 from jpoke.enums import LogCode
 
 from .event_manager import Event
