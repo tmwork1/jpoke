@@ -2195,6 +2195,24 @@ def test_ふんか_HP満タンのとき威力150():
     assert battle.damage_calculator.final_power == 150
 
 
+def test_ぶきみなじゅもん_ちからずくで威力上昇しPP減少は発動しない():
+    """ぶきみなじゅもん: ちからずく使用時は威力が1.3倍になる代わりに相手技のPP減少が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", ability_name="ちからずく", move_names=["ぶきみなじゅもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンに技を使わせて executed_move を設定する
+    t.run_move(battle, 1)
+    pp_after_use = move.pp
+    # ぶきみなじゅもんを使う（ちからずく所持）
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 5325
+    assert move.pp == pp_after_use
+
+
 def test_ぶきみなじゅもん_相手が技未使用ならPP変化なし():
     """ぶきみなじゅもん: 相手の executed_move が None の場合はPPを変化させない。"""
     battle = t.start_battle(
@@ -2225,24 +2243,6 @@ def test_ぶきみなじゅもん_相手の直前技PPが3減る():
     # ぶきみなじゅもんを使う
     t.run_move(battle, 0)
     assert move.pp == pp_after_use - 3
-
-
-def test_ぶきみなじゅもん_ちからずくで威力上昇しPP減少は発動しない():
-    """ぶきみなじゅもん: ちからずく使用時は威力が1.3倍になる代わりに相手技のPP減少が発動しない。"""
-    battle = t.start_battle(
-        team0=[Pokemon("フーディン", ability_name="ちからずく", move_names=["ぶきみなじゅもん"])],
-        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-        accuracy=100,
-    )
-    defender = battle.actives[1]
-    move = defender.moves[0]
-    # カビゴンに技を使わせて executed_move を設定する
-    t.run_move(battle, 1)
-    pp_after_use = move.pp
-    # ぶきみなじゅもんを使う（ちからずく所持）
-    t.run_move(battle, 0)
-    assert battle.damage_calculator.power_modifier == 5325
-    assert move.pp == pp_after_use
 
 
 def test_ぶちかまし_secondary_effectフラグを持たない():
