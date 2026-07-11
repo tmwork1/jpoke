@@ -1,7 +1,7 @@
 """変化技ハンドラの単体テスト（た行）。"""
 
 import pytest
-from jpoke import Pokemon
+from jpoke import Pokemon, Move
 from jpoke.data.move import MOVES
 from jpoke.enums import Interrupt, LogCode
 from .. import test_utils as t
@@ -774,9 +774,9 @@ def test_テクスチャー２_まもるを無視して成立する():
         volatile1={"まもる": 1},
     )
     attacker, defender = battle.actives
-    # まもる状態のためかえんほうしゃ自体は直接発動できないので、直近使用技を直接設定して検証する
-    defender.last_move_type = "ほのお"
-    defender.last_move_name = "かえんほうしゃ"
+    # まもる状態のためかえんほうしゃ自体は直接発動できないので、
+    # executed_move（last_move_type/last_move_nameの算出元）を直接設定して検証する
+    defender.executed_move = Move("かえんほうしゃ")
     battle.random.choice = lambda seq: seq[0]
     t.run_move(battle, 0)
 
