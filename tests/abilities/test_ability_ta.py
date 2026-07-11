@@ -1404,6 +1404,50 @@ def test_どくげしょう_特殊技では発動しない():
     assert not battle.actives[0].ability.revealed
 
 
+def test_どくげしょう_こらえるでHP1のまま耐えたときも発動する():
+    """どくげしょう: こらえるでHP1のまま耐えた（実HPダメージ0）ときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくげしょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+
+    t.run_move(battle, 1)
+
+    assert defender.hp == 1
+    foe_side = battle.get_side(battle.players[1])
+    assert foe_side.get("どくびし").count == 1
+
+
+def test_どくげしょう_直接攻撃でない物理技でも発動する():
+    """どくげしょう: 直接攻撃でない物理技（じしん）を受けても発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくげしょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["じしん"])],
+    )
+    t.run_move(battle, 1)
+    foe_side = battle.get_side(battle.players[1])
+    assert foe_side.get("どくびし").count == 1
+
+
+def test_どくげしょう_みがわりに阻まれたときは発動しない():
+    """どくげしょう: みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくげしょう")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender = battle.actives[0]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+
+    t.run_move(battle, 1)
+
+    foe_side = battle.get_side(battle.players[1])
+    assert foe_side.get("どくびし").count == 0
+
+
 def test_どくしゅ_どく付与():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="どくしゅ", move_names=["たいあたり"])],

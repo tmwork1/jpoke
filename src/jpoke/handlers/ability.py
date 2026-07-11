@@ -2627,18 +2627,18 @@ def どくくぐつ_confuse_on_poison(battle: Battle, ctx: EventContext, value: 
 
 
 def どくげしょう_set_toxic_spikes(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """どくげしょう特性: 物理技被弾時に攻撃者の場にどくびしを1層設置する。"""
+    """どくげしょう特性: 物理技被弾時に攻撃者の場にどくびしを1層設置する（最大2層）。
+
+    こらえるでHP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
     if ctx.move.category != "physical":
         return HandlerReturn(value=value)
-    foe_side = battle.get_side(ctx.attacker)
-    field = foe_side.get("どくびし")
-    if field.count >= 2:
+    if ctx.substitute_damage:
         return HandlerReturn(value=value)
-    if field.is_active:
-        field.count += 1
-        battle.add_event_log(0, LogCode.FIELD_STARTED, payload=FieldPayload(field="どくびし", count=field.count))
-    else:
-        foe_side.activate("どくびし", 1)
+    foe_side = battle.get_side(ctx.attacker)
+    if not foe_side.activate("どくびし", 1):
+        return HandlerReturn(value=value)
     _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
