@@ -1215,14 +1215,28 @@ def test_でんきにかえる_被弾でじゅうでん状態になる():
         ("", "", 4096),
     ]
 )
-def test_とうそうしん_攻撃補正(gendar0: Gender, gendar1: Gender, expected_modifier: int):
+def test_とうそうしん_威力補正(gendar0: Gender, gendar1: Gender, expected_modifier: int):
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="とうそうしん", move_names=["たいあたり"], gender=gendar0)],
         team1=[Pokemon("カビゴン", gender=gendar1)],
         accuracy=100,
     )
     t.run_move(battle, 0)
-    assert expected_modifier == battle.damage_calculator.atk_modifier
+    assert expected_modifier == battle.damage_calculator.power_modifier
+
+
+def test_とうそうしん_こんらん自傷ダメージには補正なし():
+    """とうそうしん: こんらんの自傷ダメージには威力補正がかからない（第五世代以降の仕様）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="とうそうしん", gender="male")],
+        team1=[Pokemon("カビゴン", gender="male")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 4096
+    assert attacker.hp < attacker.max_hp
 
 
 def test_とびだすなかみ_KOされなければダメージなし():
