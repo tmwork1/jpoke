@@ -1373,6 +1373,17 @@ def test_スナイパー_急所時の最終ダメージを1_5倍():
     assert 6144 == battle.damage_calculator.damage_modifier
 
 
+def test_すながくれ_一撃必殺技には命中率変化なし():
+    """一撃必殺技の命中率は独自計算のため、すながくれの命中率補正は適用されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じわれ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="すながくれ")],
+        weather=("すなあらし", 5),
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 @pytest.mark.parametrize(
     "move_name, expected",
     [
