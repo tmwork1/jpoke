@@ -13,6 +13,21 @@ from jpoke.types import AilmentName, WeatherName, SideFieldName
 from .. import test_utils as t
 
 
+def test_サイコメイカー_特性再有効化時にも発動する():
+    """サイコメイカー: かがくへんかガス解除後に特性が再有効化されると再発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="サイコメイカー")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    # かがくへんかガスにより特性が無効化されているのでフィールドは展開されていない
+    assert battle.terrain.name == ""
+    # かがくへんかガスの無効化を解除すると特性が再発動してサイコフィールドが展開される
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.terrain.name == "サイコフィールド"
+    assert battle.terrain.count == 5
+
+
 def test_さいせいりょく_かいふくふうじ中でも回復する():
     battle = t.start_battle(
         team0=[Pokemon("ヤドン", ability_name="さいせいりょく"), Pokemon("ピカチュウ")],

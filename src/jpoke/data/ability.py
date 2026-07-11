@@ -1030,7 +1030,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.サイコメイカー_activate_terrain,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.サイコメイカー_activate_terrain,
+                "source:self",
+            ),
         }
     ),
     "さいせいりょく": AbilityData(
