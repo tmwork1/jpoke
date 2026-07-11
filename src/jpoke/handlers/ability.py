@@ -2703,10 +2703,10 @@ def どくのトゲ_maybe_poison_attacker(battle: Battle, ctx: AttackContext, va
 
 
 def どくぼうそう_modify_power(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """どくぼうそう特性: どく状態時に特殊技の威力を1.5倍にする。"""
+    """どくぼうそう特性: どく・もうどく状態時に物理技の威力を1.5倍にする。"""
     if (
         (ctx.attacker.has_ailment("どく", "もうどく"))
-        and ctx.move.category == "special"
+        and ctx.move.category == "physical"
     ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
