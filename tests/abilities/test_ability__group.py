@@ -248,6 +248,44 @@ def test_スキン系_変換した技の威力が4915倍になる(
 
 
 @pytest.mark.parametrize(
+    "ability_name, expected_type",
+    SKIN_CASES
+)
+def test_スキン系_対象外タイプの技はタイプも威力も変化しない(
+    ability_name: str,
+    expected_type: str,
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability_name, move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == "でんき"
+    assert battle.damage_calculator.power_modifier == 4096
+
+
+@pytest.mark.parametrize(
+    "ability_name, expected_type",
+    SKIN_CASES
+)
+def test_スキン系_テラスタル後もノーマル技は対応タイプに変換される(
+    ability_name: str,
+    expected_type: str,
+):
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", ability_name=ability_name, tera_type="みず",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.actives[0].terastallize()
+    t.run_move(battle, 0)
+    assert battle.move_executor.move_type == expected_type
+    assert battle.damage_calculator.power_modifier == 4915
+
+
+@pytest.mark.parametrize(
     "ability_name, move_name",
     [
         ("あついしぼう", "ひのこ"),
