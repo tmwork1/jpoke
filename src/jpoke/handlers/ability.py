@@ -2822,10 +2822,14 @@ def なまけ_try_action(battle: Battle, ctx: AttackContext, value: Any) -> Hand
 
 
 def ぬめぬめ_lower_spd_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ぬめぬめ特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。"""
+    """ぬめぬめ特性: 直接攻撃を受けると攻撃者のすばやさを1段階下げる。
+
+    相手のすばやさがすでに最低ランクの場合は特性が発動しない（特性バーが現れない）ため、
+    modify_stats が実際にランクを変化させたときのみ発動を通知する。
+    """
     if battle.query.is_contact_reaction(ctx):
-        _announce_ability_triggered(battle, ctx.defender)
-        battle.modify_stats(ctx.attacker, {"spe": -1}, source=ctx.defender)
+        if battle.modify_stats(ctx.attacker, {"spe": -1}, source=ctx.defender):
+            _announce_ability_triggered(battle, ctx.defender)
     return HandlerReturn(value=value)
 
 
