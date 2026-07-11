@@ -26,7 +26,7 @@
 - [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=たいあたり, expected=1.0)
 - [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=タキオンカッター, expected=2.0)
 - [x] move_expected_hitsは技のヒット回数分布に応じた期待値を返す(move_name=ミサイルばり, expected=3.1)
-- [x] observation_randomは本体のbattle_randomと同じ参照を共有する
+- [x] observationのdecision_randomは共有されrandomは独立している
 - [x] player_n_lost_battlesは対戦数から勝利数と引き分け数を引いた値
 - [x] player_n_tied_battlesは常に0
 - [x] player_win_rateは勝利数を対戦数で割った値
