@@ -1413,9 +1413,13 @@ def クイックドロウ_maybe_fast_attack(battle: Battle, ctx: AttackContext, 
 
 
 def くさのけがわ_boost_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """くさのけがわ特性: グラスフィールド中の物理技への防御補正を1.5倍にする。"""
+    """くさのけがわ特性: グラスフィールド中の物理技への防御補正を1.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い。
+    """
     if (
         battle.terrain.name == "グラスフィールド"
+        and ctx.move.name != "_こんらん"
         and battle.query.deals_physical_damage(ctx.attacker, ctx.move)
     ):
         value = apply_fixed_modifier(value, 6144)
