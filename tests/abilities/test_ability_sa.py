@@ -700,6 +700,39 @@ def test_しょうりのほし_命中率が1_1倍になる():
     assert battle.move_executor.accuracy == move.accuracy * 4506 // 4096
 
 
+def test_しろいけむり_かたやぶりで無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しろいけむり")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["なきごえ"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.actives[0].rank["atk"] == -1
+
+
+def test_しろいけむり_能力低下を防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しろいけむり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, mon1 = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = {k: v for k, v in stats.items() if v > 0}
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon1)
+
+
+def test_しろいけむり_自己低下は防げない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="しろいけむり")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, _ = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = stats
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon0)
+
+
 def test_しんがん_ゴーストタイプへのノーマル技が当たる():
     """しんがん: ノーマル技がゴーストタイプに等倍で当たる"""
     battle = t.start_battle(
