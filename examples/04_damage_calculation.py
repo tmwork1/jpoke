@@ -5,23 +5,24 @@
 """
 from __future__ import annotations
 
-from jpoke import Battle, Player, Pokemon, Move
+from jpoke import Battle, Player, Move
 
 
 def main() -> None:
     move_name = "ドラゴンテール"
 
     attacker_player = Player("Attacker")
-    attacker_player.team = [Pokemon("ガブリアス", move_names=[move_name])]
+    attacker_player.add_pokemon("ガブリアス", move_names=[move_name])
 
     defender_player = Player("Defender")
-    defender_player.team = [Pokemon("カイリュー", item_name="オボンのみ")]
+    defender_player.add_pokemon("カイリュー", item_name="オボンのみ")
 
     # calc_lethal は対戦を進行させないため、バトルは1体選出で start() しただけでよい
-    battle = Battle((attacker_player, defender_player), n_selected=1, seed=1)
+    battle = Battle((attacker_player, defender_player), seed=1)
     battle.start()
 
-    attacker = battle.actives[0]
+    attacker = battle.get_active(attacker_player)
+    defender = battle.get_active(defender_player)
     # moves には Move 単体 / (Move, ヒット数) / それらのリストを渡せる
     results = battle.calc_lethal(
         attacker=attacker,
@@ -30,7 +31,7 @@ def main() -> None:
     )
 
     print(f"攻撃側: {attacker.name}（{move_name}）")
-    print(f"防御側: {defender_player.team[0].name}（HP {defender_player.team[0].max_hp}, オボンのみ）")
+    print(f"防御側: {defender.name}（HP {defender.max_hp}, オボンのみ）")
     print("-" * 50)
     for result in results:
         print(
@@ -41,6 +42,9 @@ def main() -> None:
     final = results[-1]
     print("-" * 50)
     print(f"{final.n_attack}回攻撃した時点での致死率: {final.lethal_probability:.2%}")
+
+    # 試してみよう: move_name を別の技に変えたり、defender_player のアイテムを
+    # 変えたりすると、確定数や致死率がどう変わるか比較できる
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ python examples/01_quickstart.py
 
 | ファイル | 学べる内容 | 対応ユースケース |
 |---|---|---|
-| `01_quickstart.py` | `Battle` / `Player` / `Pokemon` を使った最小構成の1vs1バトル | 導入 |
+| `01_quickstart.py` | `Battle` / `Player` を使った最小構成の1vs1バトル | 導入 |
 | `02_team_battle.py` | 3体チーム・複数選出・複数ターンのバトルループ・ログ確認 | 導入 |
 | `03_custom_player.py` | `Player` を継承した最小のカスタム方策 | AI開発 |
 | `04_damage_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージ計算 | ダメージ計算ツール開発 |

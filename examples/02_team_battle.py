@@ -7,26 +7,22 @@ n_selected=3 で3体を選出し、瀕死になったポケモンが交代コマ
 """
 from __future__ import annotations
 
-from jpoke import Battle, Player, Pokemon
+from jpoke import Battle, Player
 
 
 def main() -> None:
     player1 = Player("Team A")
-    player1.team = [
-        Pokemon("ピカチュウ", move_names=["かみなり"]),
-        Pokemon("ヒトカゲ", move_names=["かえんほうしゃ"]),
-        Pokemon("フシギダネ", move_names=["つるのムチ"]),
-    ]
+    player1.add_pokemon("ピカチュウ", move_names=["かみなり"])
+    player1.add_pokemon("ヒトカゲ", move_names=["かえんほうしゃ"])
+    player1.add_pokemon("フシギダネ", move_names=["つるのムチ"])
 
     player2 = Player("Team B")
-    player2.team = [
-        Pokemon("ゼニガメ", move_names=["ハイドロポンプ"]),
-        Pokemon("コラッタ", move_names=["たいあたり"]),
-        Pokemon("カビゴン", move_names=["のしかかり"]),
-    ]
+    player2.add_pokemon("ゼニガメ", move_names=["ハイドロポンプ"])
+    player2.add_pokemon("コラッタ", move_names=["たいあたり"])
+    player2.add_pokemon("カビゴン", move_names=["のしかかり"])
 
-    # n_selected: 3体チームすべてを選出する
-    battle = Battle((player1, player2), n_selected=3, seed=1)
+    # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは3）
+    battle = Battle((player1, player2), seed=1)
     battle.start()
 
     max_turns = 30
@@ -41,6 +37,9 @@ def main() -> None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:
         print(f"結果: {winner.username} 勝利（{battle.turn}ターン）")
+
+    # 試してみよう: player1/player2 のチーム構成や技を変えて、
+    # どのポケモンが先に瀕死になり交代が起きるか観察できる
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 from dataclasses import dataclass
 from contextlib import contextmanager
-import time
+import secrets
 from random import Random
 from copy import deepcopy
 
@@ -125,7 +125,7 @@ class Battle:
 
     def __init__(self,
                  players: tuple[Player, ...],
-                 n_selected: int = 3,
+                 n_selected: int | None = None,
                  seed: int | None = None,
                  mega_evolution: bool = True,
                  terastal: bool = True,
@@ -138,8 +138,11 @@ class Battle:
 
         Args:
             players: 参加プレイヤーのタプル（通常2人）
-            n_selected: 選出可能なポケモンの数（デフォルトは3）
-            seed: 乱数シード値（Noneの場合は現在時刻を使用）
+            n_selected: 選出可能なポケモンの数（Noneの場合は `min(3, 各プレイヤーの手持ち数)`
+                を自動設定する。手持ち数がプレイヤー間で異なる場合も両者に同じ値が
+                適用されるため、片方の手持ちが少ないと両者とも選出数が絞られる点に注意）
+            seed: 乱数シード値（Noneの場合はOSの乱数源から高エントロピーな値を生成する。
+                同一プロセス内で短時間に複数の `Battle` を作る場合でも衝突しない）
             mega_evolution: メガシンカを許可するか（デフォルトTrue）
             terastal: テラスタルを許可するか（デフォルトTrue）
             critical_mode: 急所判定モード（"通常" / "確定のみ"、デフォルト"通常"）
@@ -151,8 +154,11 @@ class Battle:
         """
 
         self.players: tuple[Player, ...] = players
-        self.n_selected: int = n_selected
-        self.seed: int = seed if seed is not None else int(time.time())
+        self.n_selected: int = (
+            n_selected if n_selected is not None
+            else min(3, min(len(ply.team) for ply in players))
+        )
+        self.seed: int = seed if seed is not None else secrets.randbits(32)
 
         self.random = Random(self.seed)
 
@@ -380,6 +386,22 @@ class Battle:
         """
         if player in self.player_states:
             return self.player_states[player].active
+        raise ValueError(f"Player {player} not found in battle.")
+
+    def get_team(self, player: Player) -> list[Pokemon]:
+        """指定したプレイヤーの対戦中のチームを取得。
+
+        `player.team` はコンストラクタ時点のスナップショットで対戦中は更新されないため、
+        瀕死・HP変化などバトル開始後の状態を見るには本メソッドを使う。
+
+        Args:
+            player: プレイヤー
+
+        Returns:
+            list[Pokemon]: 対戦中のポケモンのリスト（選出漏れの控えも含む）
+        """
+        if player in self.player_states:
+            return self.player_states[player].team
         raise ValueError(f"Player {player} not found in battle.")
 
     def is_active(self, mon: Pokemon) -> bool:
@@ -695,7 +717,14 @@ class Battle:
             case "最小":
                 return min(damages)
             case _:
-                return self.random.choice(damages)
+                # random.choice() は getrandbits() 経由でPRNG内部状態に依存するため、
+                # random() のみを固定するテストヘルパー（fix_random）では制御できない。
+                # random() ベースの選択にすることで、乱数シードが異なる2つの Battle
+                # 間でも fix_random() だけでダメージロールを再現できるようにする。
+                # random() は理論上 [0, 1) だが、fix_random() で 1.0 を代入する
+                # テストが存在するため、境界超過による IndexError を防ぐ
+                index = min(int(self.random.random() * len(damages)), len(damages) - 1)
+                return damages[index]
 
     def calc_damages(self,
                      attacker: Pokemon,

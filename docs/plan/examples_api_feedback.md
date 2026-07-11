@@ -30,3 +30,66 @@
 1. **seed フォールバックの修正 + battle_against の対局別seed派生**（上記バグ）。統計的に誤った結果を静かに返す罠であり、examples/06 の注意書きと歪んだ書き方を解消できるため最優先。
 2. **対戦中状態へのアクセスAPI整理**（`get_active` / `actives` / `player_states` の一本化と `get_team` 追加）。教材3本にまたがって説明コメントが必要になっている＝学習コストが最も高い箇所。
 3. **`n_selected` の自動調整（min(3, len(team))）**。全サンプルで `n_selected=1` の明示とコメントが必要になっており、導入の最初の1行目の摩擦を減らせる。
+
+## 実施記録（2026-07-11 実装）
+
+優先度メモ1〜3および教材としての質の指摘事項を反映した。
+
+- `Battle(seed=None)` のフォールバックを `secrets.randbits(32)`（OSエントロピー）に変更。
+  `Player.battle_against(..., seed=...)` は対戦ごとに `seed + 対戦通番` の派生シードを
+  自動的に使うよう変更し、examples/06 のワークアラウンド（seedを手動でずらすループ）を
+  `battle_against(..., n_battles=N, seed=1)` の素直な呼び出しに戻した
+  - 副作用として、`Battle.roll_damage()` の通常ロール抽選が `random.choice()`
+    （`getrandbits()` 依存）だったため、テストヘルパー `fix_random()`（`random()` のみ固定）
+    では制御できず、seedの高エントロピー化により一部テストが乱数依存で不安定化することが
+    判明した。`roll_damage()` の抽選を `random.random()` ベースに変更し、`fix_random()` で
+    完全に制御できるようにして解消（`tests/moves_attack/test_move_ma.py` の1件は
+    `fix_random()` 追加で対応）
+  - さらに `critical_mode="確定のみ"` は「急所を確定させる」設定ではなく「急所レート
+    計算を特性等の割り込みなしの基礎値のみにする」設定で、急所に当たるか自体は
+    引き続き `random.random()` の実ロールに依存すると判明。`damage_roll="最大"` /
+    `critical_mode="確定のみ"` だけに頼り `fix_random()` を使っていなかった
+    `test_move_ta.py`（DDラリアット×2）・`test_move_sa.py`（ソーラービーム×2）の
+    比較系テストが急所のブレで偶発的に失敗し得たため、`fix_random()` を追加して解消。
+    フルテストスイートを10回超連続実行して再発しないことを確認済み
+- `Battle(n_selected=None)` を `min(3, 各プレイヤーの手持ち数)` に自動設定するよう変更。
+  全examplesから冗長な `n_selected=1`/`n_selected=3` の明示を削除
+- `Battle.get_team(player)` を追加し、examples/05 の
+  `battle.player_states[battle.opponent(self)].team` を置き換え。examples/04 の
+  `battle.actives[0]` も `battle.get_active()` に統一
+- 各サンプル末尾に「試してみよう」の1行コメントを追加（01/02/03/04/05/06）
+- `Player.team` への追加方法を `.append()` に統一（02, 04 の `= [...]` 代入を書き換え）
+- `Pokemon.__init__` のdocstringに暗黙のデフォルト（性格・レベル・特性・技・個体値/努力値）を明記
+- ユーザー指摘により、`Player.add_pokemon(name, **kwargs)` を新設。`Pokemon` を直接
+  importせずにチームを組めるようにし、examples全体で `from jpoke import ... Pokemon` の
+  importと `team.append(Pokemon(...))` を置き換えた（教材としての質・公開APIの使い勝手
+  双方の指摘に対応）
+- 04の防御側表示も `defender_player.team[0]` から `battle.get_active(defender_player)` に統一
+
+## 再レビュー（2026-07-12 Fableサブエージェント）
+
+PR #38 の差分に対して再度Fableモデルでレビューを受け、以下を修正した。
+
+- `tests/moves_attack/test_move_ha.py` の `test_はたきおとす_相手のアイテムがないとき
+  威力補正なし` が同種のflakiness（急所のブレでダメージ比較が逆転しうる）を持つと
+  Monte Carlo実測（300回中8回失敗）で指摘され、`fix_random()` を追加して解消
+- `Battle.roll_damage()` の `int(random() * len(damages))` が `random()==1.0` の
+  境界（一部テストが `battle.random.random = lambda: 1.0` を使用）でIndexErrorになり
+  得ると指摘され、`min(index, len(damages)-1)` のクランプを追加
+- `examples/README.md` の01の説明が `Pokemon` importなし化に追従していなかったため修正
+- `n_selected` 自動調整のdocstringに「チーム間で手持ち数が異なっても両者に同じ値が
+  適用される」旨を追記
+- `battle_against` のdocstringに「複数opponent指定時は対戦通番がopponentごとに
+  リセットされ、同じseed系列を使い回す」旨を追記
+
+指摘のみで対応不要と判断した項目: `test_ability_a.py:667`（いかりのつぼ）で
+`random()==1.0` 固定時に技自体がミスして意図せず空虚に合格する既存の問題は、
+今回の変更で新たに生じたものではなく、examples APIフィードバック対応のスコープ外
+のため見送った。
+
+### 見送った項目
+
+- 04の配置変更（03/05のAI系列と隣接させる）: フィードバック内でも「現状でも許容」と
+  されており、examplesの連番・READMEの対応表への影響が見送りに見合わないため据え置き
+- `Command` から技実体への直接ヘルパー（`battle.get_move(command)` 等）: 「検討したい」
+  という言及に留まり優先度メモには含まれていないため、今回は見送り
