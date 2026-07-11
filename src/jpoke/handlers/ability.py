@@ -2383,11 +2383,22 @@ def ちょすい_absorb_water(battle: Battle, ctx: AttackContext, value: bool) -
 
 
 def てきおうりょく_modify_stab(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """てきおうりょく特性: タイプ一致補正を強化する。"""
+    """てきおうりょく特性: タイプ一致補正を強化する。
+
+    テラスタル中は、テラスタイプに一致した技のみ効果が発動する。
+    テラスタルにより失った元タイプの技（元タイプには一致するがテラスタイプには
+    一致しない技）には発動しない（STAB補正は1.5倍のまま据え置かれる）。
+    """
     attacker = ctx.attacker
+    tera_type = attacker.active_tera_type
 
     # ステラテラスタル時はてきおうりょくがSTAB補正に影響しない。
-    if attacker.terastallized and attacker.tera_type == "ステラ":
+    if tera_type == "ステラ":
+        return HandlerReturn(value=value)
+
+    # テラスタル中、技のタイプがテラスタイプと不一致なら効果は発動しない
+    # （元タイプ一致による1.5倍のSTABはそのまま）。
+    if tera_type and ctx.move.type != tera_type:
         return HandlerReturn(value=value)
 
     if value == 6144:
