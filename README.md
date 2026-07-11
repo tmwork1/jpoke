@@ -40,18 +40,18 @@ minor バージョンの更新（例: 0.1.0 → 0.2.0）でも破壊的変更が
 
 ## クイックスタート
 
-もっとも低レベルな API（`Battle` / `Player` / `Pokemon`）だけを使った最小例:
+もっとも低レベルな API（`Battle` / `Player`）だけを使った最小例:
 
 ```python
-from jpoke import Battle, Player, Pokemon
+from jpoke import Battle, Player
 
 player1 = Player("Player 1")
-player1.team.append(Pokemon("ピカチュウ", move_names=["でんこうせっか"]))
+player1.add_pokemon("ピカチュウ", move_names=["でんこうせっか"])
 player2 = Player("Player 2")
-player2.team.append(Pokemon("フシギダネ", move_names=["たいあたり"]))
+player2.add_pokemon("フシギダネ", move_names=["たいあたり"])
 
-# n_selected: 選出数（チームが1匹だけの場合は1にする。デフォルトは3）
-battle = Battle((player1, player2), n_selected=1)
+# n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは1）
+battle = Battle((player1, player2))
 battle.start()
 
 while battle.judge_winner() is None and battle.turn < 100:

@@ -62,12 +62,19 @@ class Pokemon:
         Args:
             name: ポケモン名
             gender: 性別（"male"/"female"/""）
-            nature: 性格
+            nature: 性格（デフォルト"まじめ"、ステータス補正なし）
             level: レベル（デフォルト50）
-            ability_name: 特性（文字列）
-            item_name: アイテム（文字列）
-            move_names: 技のリスト（文字列のリスト）
-            tera_type: テラスタルタイプ
+            ability_name: 特性（文字列、デフォルト""＝特性なし扱い）
+            item_name: アイテム（文字列、デフォルト""＝アイテムなし）
+            move_names: 技のリスト（文字列のリスト、省略時は["はねる"]の1技のみ
+                になるため、実際に戦わせる場合は必ず指定する）
+            tera_type: テラスタルタイプ（デフォルトNoneの場合、そのポケモンの
+                第1タイプを引き継ぐ）
+
+        Note:
+            個体値・努力値はコンストラクタの引数ではなく、初期状態は
+            個体値31・努力値0固定で生成される。変更する場合は生成後に
+            `set_ivs()` / `set_evs()` を呼ぶ。
         """
         self.data: PokemonData = POKEDEX[name]
         self.gender: Gender = gender

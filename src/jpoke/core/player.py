@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from jpoke.model import Pokemon
 
 from jpoke.enums import Command
+from jpoke.types import AbilityName, Gender, ItemName, MoveName, Nature, PokemonName, Type
 
 # poke-env 互換の battle_against() でターン上限に使う既定値。
 # scripts/fuzz_battle.py の "random" プリセット（max_turns=100）を参考にした値。
@@ -25,6 +26,12 @@ class Player:
         n_finished_battles: 対戦数
         n_won_battles: 勝利数
         rating: レーティング値
+
+    Note:
+        `team` へポケモンを追加するには `add_pokemon()` を使う（`from jpoke import
+        Pokemon` が不要になる）。`team.append(Pokemon(...))` でも動作するが、
+        `Pokemon` を直接構築する場合に比べて import が1つ減る分、導入時の
+        依存関係が単純になる。
     """
 
     def __init__(self, username: str = ""):
@@ -39,6 +46,41 @@ class Player:
         self.n_finished_battles: int = 0
         self.n_won_battles: int = 0
         self.rating: float = 1500
+
+    def add_pokemon(self,
+                    name: PokemonName,
+                    gender: Gender = "",
+                    nature: Nature = "まじめ",
+                    level: int = 50,
+                    ability_name: AbilityName = "",
+                    item_name: ItemName = "",
+                    move_names: list[MoveName] | None = None,
+                    tera_type: Type | None = None) -> Pokemon:
+        """ポケモンを1体作成し、チームに追加する。
+
+        `from jpoke import Pokemon` を使わずにチームを組める、`team` への
+        正規の追加ルート。引数は `Pokemon.__init__` にそのまま渡す。
+
+        Returns:
+            Pokemon: 追加したポケモンのインスタンス（交代先の参照などに使う）
+        """
+        # jpoke.model はデータ定義（jpoke.data）経由でハンドラ（jpoke.core.handler が
+        # Player をimportする）まで依存が繋がっており、モジュールトップレベルで
+        # importすると循環importになる。関数内での遅延importで回避する。
+        from jpoke.model.pokemon import Pokemon
+
+        mon = Pokemon(
+            name,
+            gender=gender,
+            nature=nature,
+            level=level,
+            ability_name=ability_name,
+            item_name=item_name,
+            move_names=move_names,
+            tera_type=tera_type,
+        )
+        self.team.append(mon)
+        return mon
 
     # ── poke-env 互換 ───────────────────────────────────────────
 
@@ -98,7 +140,10 @@ class Player:
             n_battles: 各opponentと対戦する回数（デフォルト1）
             **battle_kwargs: `Battle.__init__` へ素通しするキーワード引数
                 （`n_selected`, `seed`, `mega_evolution` 等）。poke-envにはない
-                jpoke独自の拡張。再現可能な対戦を組みたい場合は `seed` を指定する
+                jpoke独自の拡張。`seed` を指定すると対戦ごとに `seed + 対戦通番`
+                の派生シードを自動的に使うため、`n_battles` 回すべてが同一の
+                展開になることはない。省略した場合は `Battle` 側の既定（OSの
+                乱数源から生成する高エントロピーな値）に従う
 
         Note:
             ターン数が `MAX_TURNS` に達しても決着しない対戦は、勝者を強制的に
@@ -111,9 +156,12 @@ class Player:
         # importしているため循環importになる。関数内での遅延importで回避する。
         from .battle import Battle
 
+        base_seed = battle_kwargs.pop("seed", None)
+
         for opponent in opponents:
-            for _ in range(n_battles):
-                battle = Battle((self, opponent), **battle_kwargs)
+            for i in range(n_battles):
+                seed = base_seed + i if base_seed is not None else None
+                battle = Battle((self, opponent), seed=seed, **battle_kwargs)
                 battle.start()
                 while battle.judge_winner() is None and battle.turn < MAX_TURNS:
                     battle.step()
