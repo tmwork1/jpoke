@@ -23,6 +23,7 @@ class PlayerState:
         self.required_command_type: CommandType | None = None  # 木探索を行う際に補完すべきコマンドタイプ（Noneの場合は補完不要）
         self.interrupt: Interrupt = Interrupt.NONE
         self.has_switched: bool = False
+        self.switched_in_by_faint: bool = False  # 今ターン瀕死交代（死に出し）で場に出たか（はりこみ用）
         self.baton_pass_data: dict = {}  # バトンタッチの引き継ぎデータ
         self.last_move_succeeded: bool | None = None  # このターンの技が成功したか（未実行ならNone）
         self.ally_fainted_turn: int | None = None  # 味方が直近にひんしになったターン（かたきうち用）
@@ -38,6 +39,7 @@ class PlayerState:
     def reset_turn_state(self):
         """ターン状態を初期化する。"""
         self.has_switched = False
+        self.switched_in_by_faint = False
         self.last_move_succeeded = None
         self.active.reset_turn_state()
 

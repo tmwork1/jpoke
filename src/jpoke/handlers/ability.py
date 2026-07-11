@@ -3075,11 +3075,17 @@ def はりきり_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> H
 
 
 def はりこみ_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。"""
-    if (
-        ctx.defender is not None
-        and battle.player_states[battle.get_player(ctx.defender)].has_switched
-    ):
+    """はりこみ特性: 交代直後の相手に対する攻撃補正を2倍にする。
+
+    初手で繰り出された相手（1ターン目の初期交代は次ターン開始時に
+    has_switched がリセットされるため自然に除外される）や、死に出しで
+    繰り出された相手には発動しない（switched_in_by_faint で除外）。
+    """
+    if ctx.defender is None:
+        return HandlerReturn(value=value)
+
+    defender_state = battle.player_states[battle.get_player(ctx.defender)]
+    if defender_state.has_switched and not defender_state.switched_in_by_faint:
         value = apply_fixed_modifier(value, 8192)
     return HandlerReturn(value=value)
 
