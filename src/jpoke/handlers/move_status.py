@@ -1950,8 +1950,12 @@ def ねがいごと_set_side_field(battle: Battle, ctx: AttackContext, value: An
 
 
 def ねごと_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ねごとの発動条件チェック: ねむり状態でない場合に失敗させる。"""
-    if not ctx.attacker.has_ailment("ねむり"):
+    """ねごとの発動条件チェック: ねむり状態（ゆめうつつ含む）でない場合に失敗させる。
+
+    特性 ぜったいねむり のポケモンは「ゆめうつつ」状態を持つため、
+    is_sleep で判定して対象に含める。
+    """
+    if not ctx.attacker.ailment.is_sleep:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ねごと_ねむり状態でない"),
