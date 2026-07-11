@@ -75,6 +75,28 @@ def test_はっこう_命中率低下を防ぐ():
     assert battle.actives[0].rank["accuracy"] == 0
 
 
+def test_はっこう_相手の回避率ランクを無視する():
+    """はっこう: 攻撃時に相手の回避率ランク上昇を無視する（第九世代以降）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はっこう", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.actives[1].rank["evasion"] = 6
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+def test_はっこう_相手の回避率ランク低下も無視する():
+    """はっこう: 相手の回避率ランクが下がっていても命中率を上げない（第九世代以降の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="はっこう", move_names=["ストーンエッジ"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.actives[1].rank["evasion"] = -1
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 @pytest.mark.parametrize(
     "move_name, expected_modifier",
     [
