@@ -1020,13 +1020,18 @@ def test_てんきや_天候変化で即座にフォルムチェンジ():
     ]
 )
 def test_てんねん_攻撃側は防御ランク補正を無視する(move_name, stat):
-    """てんねん攻撃側: 防御ランク+2でも防御の実効値がランクなし（+0）と同じになる。"""
+    """てんねん攻撃側: 防御ランク+2でも防御の実効値がランクなし（+0）と同じになる。
+
+    急所に当たると防御ランク補正が無効化され対照確認が崩れるため、
+    random.random() を固定して急所を発生させない。
+    """
     # てんねんなし: 防御ランク+2でfinal_defenseが上昇する
     without_ten = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=[move_name])],
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    without_ten.random.random = lambda: 0.9
     without_ten.actives[1].rank[stat] = 2
     t.run_move(without_ten, 0)
     defense_with_rank = without_ten.damage_calculator.final_defense
@@ -1037,6 +1042,7 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    without_rank.random.random = lambda: 0.9
     t.run_move(without_rank, 0)
     defense_without_rank = without_rank.damage_calculator.final_defense
 
@@ -1046,6 +1052,7 @@ def test_てんねん_攻撃側は防御ランク補正を無視する(move_name
         team1=[Pokemon("ピカチュウ")],
         accuracy=100,
     )
+    with_ten.random.random = lambda: 0.9
     with_ten.actives[1].rank[stat] = 2
     t.run_move(with_ten, 0)
     defense_tennen = with_ten.damage_calculator.final_defense
@@ -1094,6 +1101,30 @@ def test_てんねん_防御側はACランク無視(move_name, stat):
 
     assert attack_with_rank > attack_without_rank  # ランクあり > ランクなし（対照確認）
     assert attack_tennen == attack_without_rank  # てんねんはランクを無視する
+
+
+@pytest.mark.parametrize("evasion_rank", [3, -3])
+def test_てんねん_攻撃側は相手の回避率ランク補正を無視する(evasion_rank):
+    """てんねん攻撃側: 相手の回避率ランクが上昇・下降していても命中率が変わらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="てんねん", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    battle.actives[1].rank["evasion"] = evasion_rank
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
+@pytest.mark.parametrize("accuracy_rank", [3, -3])
+def test_てんねん_防御側は相手の命中率ランク補正を無視する(accuracy_rank):
+    """てんねん防御側: 相手の命中率ランクが上昇・下降していても命中率が変わらない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="てんねん")],
+    )
+    battle.actives[0].rank["accuracy"] = accuracy_rank
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
 
 
 def test_てんのめぐみ_追加効果確率が2倍になる():

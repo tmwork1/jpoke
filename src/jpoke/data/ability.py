@@ -1910,6 +1910,16 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.てんねん_ignore_rank,
                 subject_spec="attacker:self",
             ),
+            Event.ON_GET_STAT_RANK: [
+                h.AbilityHandler(
+                    h.てんねん_ignore_accuracy,
+                    subject_spec="defender:self",
+                ),
+                h.AbilityHandler(
+                    h.てんねん_ignore_evasion,
+                    subject_spec="attacker:self",
+                ),
+            ],
         }
     ),
     "てんのめぐみ": AbilityData(
