@@ -976,6 +976,49 @@ def test_メガソーラー_相手が攻撃するときは天候補正なし():
     assert battle.damage_calculator.power_modifier == 4096
 
 
+def test_メガソーラー_にほんばれの技で実際の天候を変更できる():
+    """メガソーラーの仮想的な「はれ」上書きに阻まれず、にほんばれ自身は
+    実際の天候をあめからはれに変更でき、変更後もその状態が維持される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["にほんばれ"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("あめ", 5),
+    )
+    t.run_move(battle, 0)
+    assert battle.weather.name == "はれ"
+    assert battle.raw_weather.count == 5
+
+
+def test_メガソーラー_ソーラービームが溜めずに1ターンで攻撃できる():
+    """メガソーラー: 実際の天候に関わらず、ソーラービームがはれ扱いで即座に攻撃できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="メガソーラー", move_names=["ソーラービーム"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    hp_before = defender.hp
+    t.run_move(battle, 0)
+    assert not attacker.has_volatile("ソーラービーム")
+    assert defender.hp < hp_before
+
+
+def test_メガソーラー_まねっこでネストしても天候が正しく元に戻る():
+    """まねっこ経由で技実行がネストしても（ON_BEGIN_MOVE/ON_END_MOVEが二重発火しても）、
+    行動全体が終わった後には実際の天候が正しく元に戻る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["まねっこ"])],
+        team1=[Pokemon("コラッタ", move_names=["でんこうせっか"])],
+        weather=("あめ", 5),
+    )
+    t.run_move(battle, 1)  # コラッタ: でんこうせっか（まねっこのコピー対象を作る）
+    t.run_move(battle, 0)  # ピカチュウ: まねっこ（内部でrun_moveがネストする）
+    assert battle.weather.name == "あめ"
+    assert battle.actives[0].ability.state == ""
+    assert battle.actives[0].ability.weather_override_depth == 0
+
+
 def test_メタルプロテクト_かたやぶりで無効化されない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="メタルプロテクト")],
