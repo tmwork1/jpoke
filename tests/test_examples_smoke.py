@@ -14,7 +14,9 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 EXAMPLES_DIR = ROOT / "examples"
 
-EXAMPLE_SCRIPTS = sorted(p.name for p in EXAMPLES_DIR.glob("*.py"))
+EXAMPLE_SCRIPTS = sorted(
+    p.relative_to(EXAMPLES_DIR).as_posix() for p in EXAMPLES_DIR.glob("**/*.py")
+)
 
 
 @pytest.mark.parametrize("script_name", EXAMPLE_SCRIPTS)
