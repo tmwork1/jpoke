@@ -232,6 +232,11 @@ class Event(Enum):
     #        subject_spec="source:self" を使う
     ON_FORCE_BERRY_TRIGGER = auto()
 
+    # 発火: きのみ消費が確定した時点（ItemManagerを経由しない消費・被弾効果も含む）
+    # 用例: はんすう（次のターン終了時に同じきのみを再度食べるカウントを開始する）
+    #        subject_spec="source:self" を使う
+    ON_BERRY_CONSUMED = auto()
+
     # 発火: 技によるひんし時
     # 用例: おんねん・みちづれ等のひんし時効果
     ON_MOVE_KO = auto()
@@ -344,8 +349,9 @@ class Event(Enum):
     # 用例: フォトンゲイザー等の分類変換能力
     ON_MODIFY_MOVE_CATEGORY = auto()
 
-    # 発火: みがわりへのヒット可否
-    # 用例: 音技・パンチ系など代替物を貫通する技のハンドラ
+    # 発火: みがわりへのヒット可否（音技・bypass_substituteフラグ技はこのイベントより前に
+    #        move_executor 側で直接判定される）
+    # 用例: すりぬけ等 subject_spec="attacker:self"
     ON_CHECK_HIT_SUBSTITUTE = auto()
 
     # 発火: 接触判定確認

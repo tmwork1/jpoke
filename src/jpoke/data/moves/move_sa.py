@@ -948,6 +948,12 @@ MOVES_SA: dict[MoveName, MoveData] = {
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.スキルスワップ_swap_ability,
             ),
+            # ごりむちゅうの ON_MOVE_END ハンドラ（デフォルト優先度100）より
+            # 後に発動させ、自身の効果で入手したごりむちゅうによるロックを解除する。
+            Event.ON_MOVE_END: h.MoveHandler(
+                hs.ごりむちゅう_release_lock_on_ability_change,
+                priority=110,
+            ),
         }
     ),
     "スケイルショット": MoveData(

@@ -21,11 +21,11 @@ if TYPE_CHECKING:
     from jpoke.core import Battle, AttackContext
     from jpoke.model import Pokemon
 
-from jpoke.types import MoveName, SideFieldName, Stat, Type
+from jpoke.types import AbilityName, MoveName, SideFieldName, Stat, Type
 from jpoke.utils.math import round_half_up
 
 from jpoke.enums import Event, Interrupt, LogCode
-from jpoke.core.log_payload import FailureLogPayload, ItemPayload, StatChangePayload
+from jpoke.core.log_payload import AbilityPayload, FailureLogPayload, ItemPayload, StatChangePayload
 from jpoke.data.type_chart import TYPE_MODIFIER, TYPES
 
 # バトンタッチで交代先に引き継ぐ揮発性状態の名前セット
@@ -97,6 +97,27 @@ _INSTRUCT_BLOCKED_MOVES: frozenset[str] = frozenset({
     # スターモービル専用技
     "ダークアクセル", "バーンアクセル", "ファイトアクセル", "ポイズンアクセル", "マジカルアクセル",
 })
+
+def _blocked_by_ougon_no_karada(battle: Battle, mon: Pokemon) -> bool:
+    """おうごんのからだ特性: 自分含む全員が対象の変化技（おちゃかい・ほろびのうたなど）に
+    おける、使用者以外への効果を防ぐ。
+
+    通常の変化技は Event.ON_BEFORE_APPLY_MOVE の時点で技全体が無効化されるが、
+    自分含む全員が対象の技は使用者自身にも効果が及ぶため一律には無効化できない。
+    そのため各技のハンドラ側で対象ポケモンごとに本関数を用いて免疫判定を行う
+    （docs/spec/abilities/おうごんのからだ.md「自分含む全員が対象の技」）。
+    呼び出し側で使用者自身は対象から除外すること
+    （自身が使用する技が自身の特性で防がれることはないため）。
+    """
+    if not (mon.ability.enabled and mon.ability.name == "おうごんのからだ"):
+        return False
+    mon.ability.revealed = True
+    battle.add_event_log(
+        mon,
+        LogCode.ABILITY_TRIGGERED,
+        payload=AbilityPayload(ability=mon.ability.name),
+    )
+    return True
 
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
@@ -408,6 +429,20 @@ def うたう_apply_sleep(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return apply_ailment_to_defender(battle, ctx, value, ailment="ねむり")
 
 
+def _ability_name_to_copy(mon: Pokemon) -> AbilityName:
+    """うつしえ・なりきりでコピーする際に参照する対象の特性名を返す。
+
+    とくせいなし状態（いえき・コアパニッシャー等）の場合、無効化された
+    特性の名前（空文字列）をそのままコピーする。
+    かがくへんかガス等、とくせいなし以外の理由で特性が抑制されている場合は
+    見た目の効果が発動していなくても内部的には元の特性が残っているため、
+    base_name（元の特性名）をコピーする。
+    """
+    if mon.has_volatile("とくせいなし"):
+        return mon.ability.name
+    return mon.ability.base_name
+
+
 def うつしえ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うつしえの失敗条件チェック。
 
@@ -433,9 +468,14 @@ def うつしえ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def うつしえ_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """うつしえの効果: 使用者の特性を対象の特性と同じにする。"""
+    """うつしえの効果: 使用者の特性を対象の特性と同じにする。
+
+    対象がとくせいなし状態の場合は無効化された特性名（空文字列）を、
+    かがくへんかガス等それ以外の理由で抑制されている場合は元の特性名を
+    コピーする（`_ability_name_to_copy` 参照）。
+    """
     assert ctx.defender is not None
-    battle.change_ability(ctx.attacker, ctx.defender.ability.name)
+    battle.change_ability(ctx.attacker, _ability_name_to_copy(ctx.defender))
     return HandlerReturn(value=value)
 
 
@@ -542,6 +582,8 @@ def おちゃかい_force_consume_berries(battle: Battle, ctx: AttackContext, va
         if any(mon.has_volatile(v) for v in hidden_volatiles):
             continue
         if not mon.item.is_berry():
+            continue
+        if mon is not attacker and _blocked_by_ougon_no_karada(battle, mon):
             continue
         battle.item_manager.force_trigger_berry(mon)
 
@@ -845,6 +887,20 @@ def コートチェンジ_swap_fields(battle: Battle, ctx: AttackContext, value:
     attacker_side = battle.get_side(ctx.attacker)
     defender_side = battle.get_side(ctx.defender)
     attacker_side.swap_fields(defender_side, _COURT_CHANGE_TARGET_FIELDS)
+    return HandlerReturn(value=value)
+
+
+def ごりむちゅう_release_lock_on_ability_change(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """なりきり・スキルスワップの使用により自身が新たにごりむちゅうを得た場合、
+    その技自体ではロックしない（次のターンのみ自由に技を選べる）。
+
+    ごりむちゅうの `ON_MOVE_END` ハンドラ（デフォルト優先度100、`ごりむちゅう_lock_move`）
+    より後に発動させ、自身の効果で入手したごりむちゅうによるロックを解除する
+    （なりきり・スキルスワップ双方の登録時に priority=110 を指定する）。
+    """
+    mon = ctx.attacker
+    if mon.ability.base_name == "ごりむちゅう" and mon.has_volatile("ごりむちゅう"):
+        battle.volatile_manager.remove(mon, "ごりむちゅう")
     return HandlerReturn(value=value)
 
 
@@ -1190,11 +1246,21 @@ def スキルスワップ_can_apply(battle: Battle, ctx: AttackContext, value: A
     例外: うのミサイルは上書き（いえき・なかまづくり等）には protected フラグで
     抵抗するが、SV Ver.3.0.0 以降はスキルスワップ/さまようたましいでの交換のみ
     可能になったため base_name で個別に除外する。
+
+    かがくへんかガス/クォークチャージ/こだいかっせい/どくくぐつ/はらぺこスイッチは
+    protected フラグを持たない（いえき/コアパニッシャー等による上書き・無効化は
+    可能なため）が、スキルスワップ/さまようたましいでの交換だけは対象外のため
+    base_name で個別に判定する。
     """
     assert ctx.defender is not None
+    UNSWAPPABLE_ABILITIES = (
+        "かがくへんかガス", "クォークチャージ", "こだいかっせい", "どくくぐつ", "はらぺこスイッチ",
+    )
     if (
         (ctx.attacker.ability.has_flag("protected") and ctx.attacker.ability.base_name != "うのミサイル")
         or (ctx.defender.ability.has_flag("protected") and ctx.defender.ability.base_name != "うのミサイル")
+        or ctx.attacker.ability.base_name in UNSWAPPABLE_ABILITIES
+        or ctx.defender.ability.base_name in UNSWAPPABLE_ABILITIES
         or battle.ability_manager.is_change_blocked(ctx.attacker)
         or battle.ability_manager.is_change_blocked(ctx.defender)
     ):
@@ -1302,8 +1368,13 @@ def すりかえ_release_choice_lock(battle: Battle, ctx: AttackContext, value: 
 
 
 def すりかえ_swap_items(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """すりかえ・トリックのアイテム交換効果。"""
-    success = battle.item_manager.swap_items()
+    """すりかえ・トリックのアイテム交換効果。
+
+    source=ctx.attacker を渡すことで、この技の使用者自身が持つねんちゃくは
+    発動しない（自分から道具を交換するときは防がれない）が、相手が持つ
+    ねんちゃくは通常どおり交換を阻止する。
+    """
+    success = battle.item_manager.swap_items(source=ctx.attacker)
     return HandlerReturn(value=success)
 
 
@@ -1357,9 +1428,12 @@ def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> 
 
 
 def ソウルビート_pay_hp_and_boost_all_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。"""
+    """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。
+
+    reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
+    """
     mon = ctx.attacker
-    battle.modify_hp(mon, r=-1/3)
+    battle.modify_hp(mon, r=-1/3, reason="self_cost", source=mon)
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1, "spa": 1, "spd": 1, "spe": 1})
 
 
@@ -1910,8 +1984,14 @@ def なりきり_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> Ha
 
 
 def なりきり_change_ability(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """なりきりの効果: 自分の特性を相手の特性と同じにする。"""
-    battle.change_ability(ctx.attacker, ctx.defender.ability.name)
+    """なりきりの効果: 自分の特性を相手の特性と同じにする。
+
+    対象がとくせいなし状態の場合は無効化された特性名（空文字列）を、
+    かがくへんかガス等それ以外の理由で抑制されている場合は元の特性名を
+    コピーする（`_ability_name_to_copy` 参照）。
+    """
+    assert ctx.defender is not None
+    battle.change_ability(ctx.attacker, _ability_name_to_copy(ctx.defender))
     return HandlerReturn(value=value)
 
 
@@ -1952,8 +2032,12 @@ def ねがいごと_set_side_field(battle: Battle, ctx: AttackContext, value: An
 
 
 def ねごと_check_sleep(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ねごとの発動条件チェック: ねむり状態でない場合に失敗させる。"""
-    if not ctx.attacker.has_ailment("ねむり"):
+    """ねごとの発動条件チェック: ねむり状態（ゆめうつつ含む）でない場合に失敗させる。
+
+    特性 ぜったいねむり のポケモンは「ゆめうつつ」状態を持つため、
+    is_sleep で判定して対象に含める。
+    """
+    if not ctx.attacker.ailment.is_sleep:
         battle.add_event_log(
             ctx.attacker, LogCode.MOVE_FAILED,
             payload=FailureLogPayload(move=ctx.move.name, display_reason="ねごと_ねむり状態でない"),
@@ -2258,11 +2342,14 @@ def ハバネロエキス_apply(battle: Battle, ctx: AttackContext, value: Any) 
 
 
 def はらだいこ_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """はらだいこの効果: こうげきランクを最大まで上げ、HPを最大HPの半分消費する。"""
+    """はらだいこの効果: こうげきランクを最大まで上げ、HPを最大HPの半分消費する。
+
+    reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
+    """
     mon = ctx.attacker
     delta = 6 - mon.boosts["atk"]
     battle.modify_stats(mon, {"atk": delta}, source=mon)
-    battle.modify_hp(mon, r=-0.5)
+    battle.modify_hp(mon, r=-0.5, reason="self_cost", source=mon)
     return HandlerReturn(value=value)
 
 
@@ -2556,6 +2643,8 @@ def ほろびのうた_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     """
     triggered = False
     for mon in battle.actives:
+        if mon is not ctx.attacker and _blocked_by_ougon_no_karada(battle, mon):
+            continue
         if battle.volatile_manager.apply(
             mon,
             "ほろびのうた",
@@ -2749,10 +2838,11 @@ def みがわり_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
 
     最大HPの1/4（切り捨て）を消費し、消費量と同じHPのみがわりを生成する。
     技の成功に伴い、自分のバインド状態を解除する（第三世代以降の仕様）。
+    reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
     """
     mon = ctx.attacker
     migawari_hp = mon.max_hp // 4
-    battle.modify_hp(mon, -migawari_hp)
+    battle.modify_hp(mon, -migawari_hp, reason="self_cost", source=mon)
     battle.volatile_manager.apply(mon, "みがわり", hp=migawari_hp)
     battle.volatile_manager.remove(mon, "バインド")
     return HandlerReturn(value=value)

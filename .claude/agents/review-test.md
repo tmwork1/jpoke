@@ -24,10 +24,12 @@ tools:
 
 ## ブランチ管理
 
-ループから呼ばれる場合、作業ディレクトリは `impl/{entry}` から派生した `review/{entry}` ブランチの
-git worktree になっている（例: `C:\Users\tmtmp\Documents\pokemon\jpoke-review`）。
-その worktree 内で作業し、完了後は変更をコミットすること。
-ブランチの merge・worktree の削除はループオーケストレーターが担当するため、エージェント側では行わない。
+ループから呼ばれる場合、作業ディレクトリは impl 完了済みの `loop/impl/{entry}` ブランチ（impl と
+同一ブランチ）を checkout した使い捨て worktree になっている
+（例: `{config.worktree_base}\review`）。
+その worktree 内で作業し、完了後は同じブランチ上に変更をコミットすること。
+ブランチの統合ブランチへのマージ・worktree の削除はループディスパッチャーが担当するため、
+エージェント側では行わない。
 
 ## 結果ファイルの書き込み
 

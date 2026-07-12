@@ -394,7 +394,7 @@ MOVES_A: dict[MoveName, MoveData] = {
         pp=5,
         power=60,
         accuracy=100,
-        flags={"wind", "secondary_effect"},
+        flags={"secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.あやしいかぜ_boost_all_stats,

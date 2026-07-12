@@ -16,7 +16,7 @@
 バグを見つけたら `impl`（修正）→ `review-test`（回帰テスト追加・全体テスト・コミット）の
 2段階で `loop/replay_fuzz` 上で自動修正する（`fuzz` ループと同じ2段階パターン）。
 
-食い違いは4種類に分類される（`replay_fuzz_battle.py` の判定順）:
+食い違いは6種類に分類される（`replay_fuzz_battle.py` の判定順）:
 
 | `mismatch_kind` | 意味 |
 |---|---|
@@ -164,6 +164,7 @@ impl エージェントが replay_fuzz（リプレイ再現検証）発見バグ
 
 review-test 成功 → §共通10 の成功時ルールに従う。`completed_bugs` のエントリ形式は
 `{"seed": seed, "signature": signature, "summary": "<一言説明>"}`。
+続けて「main への反映」の手順に従い、この1件をただちに main へマージする。
 
 review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新し、`current_failure` をクリアして
 保存し、手順6へ。
@@ -181,7 +182,8 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/replay_fuzz`）。
+1件の修正が review-test で成功・コミットされるたびに、ディスパッチャーがその場で §共通6 の
+手順に従い直ちに main へ反映する（`{branch}` = `loop/replay_fuzz`）。
 
 ## エラーハンドリング
 

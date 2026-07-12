@@ -15,7 +15,10 @@ from jpoke.core.handler import HandlerReturn
 from jpoke.core.log_payload import FailureLogPayload, VolatilePayload, StatChangePayload
 from jpoke.utils.math import apply_fixed_modifier, round_half_down, round_half_up
 from jpoke.data.type_chart import TYPE_MODIFIER
+from jpoke.data.pokedex import POKEDEX
 from jpoke.data.signature_items import PLATE_TO_TYPE
+from .ability import WISHIWASHI_SOLO, WISHIWASHI_SCHOOL
+from .item import berry_heal_amount, himeri_pp_restore_cap, is_ripen
 from .move import (
     apply_ailment_to_defender,
     apply_confusion_to_defender,
@@ -747,7 +750,14 @@ def ガリョウテンセイ_lower_attacker_def_spd(battle: Battle, ctx: AttackC
 
 
 def がんせきアックス_set_stealth_rock(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """がんせきアックス: 命中後、相手陣営にステルスロックを設置する。"""
+    """がんせきアックス: 命中後、相手陣営にステルスロックを設置する。
+
+    追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。
+    りんぷん・おんみつマントは対象個体ではなく場を変化させる効果のため影響を受けない
+    （resolve_secondary_chance は経由しない）。
+    """
+    if _is_sheer_force_blocked(ctx):
+        return HandlerReturn(value=value)
     side = battle.get_side(ctx.defender)
     side.activate("ステルスロック", 1)
     return HandlerReturn(value=value)
@@ -2085,6 +2095,17 @@ def ナイトバースト_lower_defender_accuracy(battle: Battle, ctx: AttackCon
     return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1}, chance=0.4)
 
 
+# なげつけるで対象に効果が発動するきのみの集合（はんすうの対象判定にも使う）。
+# 半減系きのみ等、この集合に含まれないきのみを受けても効果が無いためはんすうの対象にならない。
+_NAGETSUKERU_BERRY_EFFECT_ITEMS: frozenset[str] = frozenset({
+    "ラムのみ", "クラボのみ", "カゴのみ", "モモンのみ", "チーゴのみ", "ナナシのみ",
+    "キーのみ", "ヒメリのみ", "オレンのみ", "オボンのみ", "フィラのみ", "ウイのみ",
+    "マゴのみ", "バンジのみ", "イアのみ", "チイラのみ", "リュガのみ", "アッキのみ",
+    "カムラのみ", "ヤタピのみ", "ズアのみ", "タラプのみ", "サンのみ", "スターのみ",
+    "ミクルのみ",
+})
+
+
 def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なげつける: アイテムに応じた追加効果を命中時に適用する。
 
@@ -2100,10 +2121,15 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     チイラ/リュガ・アッキ/カムラ/ヤタピ/ズア・タラプのみ → 対応する能力ランク+1、
     サンのみ → きゅうしょアップ付与、スターのみ → ランダムな能力ランク+2、
     ミクルのみ → 次の技の命中率を1.2倍にする。
+    対象の特性がじゅくせいの場合、上記のうちきのみによるHP/PP回復・能力ランク上昇効果は
+    2倍になる（サンのみ・ミクルのみは対象外）。
 
     対象の特性がりんぷん、または持ち物がおんみつマントの場合、これらの追加効果は
     （きのみによる回復効果も含めて）一切発動しない。resolve_secondary_chance経由で
     ON_MODIFY_SECONDARY_CHANCEを発火させ、確率0で無効化された場合はここで打ち切る。
+
+    上記のうちきのみで実際に効果が発動したもの（_NAGETSUKERU_BERRY_EFFECT_ITEMS）は、
+    対象がはんすう持ちの場合の再発動対象にするため Event.ON_BERRY_CONSUMED を発火する。
     """
     if battle.resolve_secondary_chance(ctx, 1.0) < 1:
         return HandlerReturn(value=value)
@@ -2162,48 +2188,56 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     elif item_name == "キーのみ":
         battle.volatile_manager.remove(ctx.defender, "こんらん")
     elif item_name == "ヒメリのみ":
-        move = next((m for m in ctx.defender.moves if m.pp == 0), None)
+        defender = ctx.defender
+        move = next((m for m in defender.moves if m.pp == 0), None)
         if move is not None:
-            move.pp = min(10, move.data.pp)
+            move.pp = min(himeri_pp_restore_cap(defender), move.data.pp)
     elif item_name == "オレンのみ":
-        battle.modify_hp(ctx.defender, v=10)
+        defender = ctx.defender
+        battle.modify_hp(defender, v=berry_heal_amount(defender, v=10))
     elif item_name == "オボンのみ":
-        battle.modify_hp(ctx.defender, r=1/4)
+        defender = ctx.defender
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/4))
     elif item_name == "フィラのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "ウイのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("いじっぱり", "わんぱく", "ようき", "しんちょう"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "マゴのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("ゆうかん", "のんき", "れいせい", "なまいき"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "バンジのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "イアのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, r=1/3)
+        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
         if defender.nature in ("さみしがり", "おっとり", "おとなしい", "せっかち"):
             battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
     elif item_name == "チイラのみ":
-        battle.modify_stats(ctx.defender, {"atk": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"atk": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name in ("リュガのみ", "アッキのみ"):
-        battle.modify_stats(ctx.defender, {"def": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"def": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name == "カムラのみ":
-        battle.modify_stats(ctx.defender, {"spe": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"spe": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name == "ヤタピのみ":
-        battle.modify_stats(ctx.defender, {"spa": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"spa": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name in ("ズアのみ", "タラプのみ"):
-        battle.modify_stats(ctx.defender, {"spd": 1}, source=ctx.attacker)
+        defender = ctx.defender
+        battle.modify_stats(defender, {"spd": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
     elif item_name == "サンのみ":
         battle.volatile_manager.apply(ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker)
     elif item_name == "スターのみ":
@@ -2211,9 +2245,19 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
         candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.boosts[s] < 6]
         if candidates:
             stat = battle.random.choice(candidates)
-            battle.modify_stats(defender, {stat: 2}, source=ctx.attacker)
+            boost = 4 if is_ripen(defender) else 2
+            battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
     elif item_name == "ミクルのみ":
         battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
+
+    if item_name in _NAGETSUKERU_BERRY_EFFECT_ITEMS:
+        # モジュール読み込み時の循環インポートを避けるため遅延インポートする
+        # （move_attack.py は jpoke.core パッケージの初期化中に読み込まれる経路があるため）
+        from jpoke.core.context import EventContext
+        battle.events.emit(
+            Event.ON_BERRY_CONSUMED,
+            EventContext(source=ctx.defender, item_name=item_name)
+        )
     return HandlerReturn(value=value)
 
 
@@ -2272,8 +2316,19 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     より優先度の低い同一攻撃側のON_HITハンドラより先にアイテムを手放させる。
     remove_itemは対象がすでにアイテムを持っていない場合は何もしないため、
     ON_HITで消費済みの場合にON_MOVE_ENDで再度呼び出しても副作用はない。
+
+    ItemManager.consume_itemを経由しないため、使用者自身がきのみを投げたときは
+    ここで明示的にEvent.ON_BERRY_CONSUMEDを発火し、はんすうの再発動対象にする
+    （2回目呼び出し時は既に手放しているためis_berryがFalseとなり二重発火しない）。
     """
-    battle.item_manager.remove_item(ctx.attacker, source=ctx.attacker)
+    attacker = ctx.attacker
+    if attacker.item.is_berry():
+        from jpoke.core.context import EventContext
+        battle.events.emit(
+            Event.ON_BERRY_CONSUMED,
+            EventContext(source=attacker, item_name=attacker.item.base_name)
+        )
+    battle.item_manager.remove_item(attacker, source=attacker)
     return HandlerReturn(value=value)
 
 
@@ -2815,8 +2870,17 @@ def フォトンゲイザー_restore_defender_ability(battle: Battle, ctx: Attac
 
 
 def ふくろだたき_calc_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふくろだたき: 各ヒットの威力 = 使用者の基礎こうげき種族値 / 10 + 5。"""
-    power = ctx.attacker.data.base[1] // 10 + 5
+    """ふくろだたき: 各ヒットの威力 = 使用者の基礎こうげき種族値 / 10 + 5。
+
+    ヨワシは現在のフォルム（ぎょぐんによるフォルムチェンジ）に関係なく、
+    「たんどくのすがた」の基礎こうげき種族値を用いる。
+    """
+    mon = ctx.attacker
+    if mon.name in (WISHIWASHI_SOLO, WISHIWASHI_SCHOOL):
+        base_atk = POKEDEX[WISHIWASHI_SOLO].base[1]
+    else:
+        base_atk = mon.data.base[1]
+    power = base_atk // 10 + 5
     return HandlerReturn(value=power * 4096)
 
 
@@ -2931,7 +2995,13 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
     するため、ねごとのサブ技（PP消費0）ではなくねごと自身のPPが減る。
     相手がPPを消費する行動をしていない場合はPP減少のみスキップする
     （ダメージは通常どおり与えられており、技自体は失敗しない）。
+
+    追加効果のため、使用者が特性「ちからずく」の場合は発動しない（威力1.3倍化と引き換え）。
+    りんぷん・おんみつマントは対象個体のPPを直接減らす効果ではあるが、resolve_secondary_chance
+    は経由しないため、ちからずくの判定のみ個別に行う。
     """
+    if _is_sheer_force_blocked(ctx):
+        return HandlerReturn(value=value)
     mon = ctx.defender
     if mon.pp_consumed_move is not None:
         mon.pp_consumed_move.modify_pp(-3)
@@ -3252,13 +3322,21 @@ def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: Attac
     return apply_confusion_to_defender(battle, ctx, value)
 
 
-def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """むしくい・ついばむ: 相手のバトルに効果のあるきのみを奪って自分が消費する。
+
+    Event.ON_MODIFY_MOVE_DAMAGE の終盤（がんじょう・きあいのタスキ等HP1残し補正より後、
+    priority=110）で発動する。HP反映（battle.modify_hp）より前のこのタイミングで奪う
+    ことで、被弾側自身のHP閾値で発動するきのみ（オボンのみ等、Event.ON_HP_CHANGED で
+    反応する）より確実に先に奪取を成立させる。本家の「ダメージを与えると同時に相手の
+    きのみを奪う」仕様に対応する。
 
     みがわりに防がれた場合はきのみを食べられない（実体への攻撃ではないため）。
     take_item はねんちゃくチェックを内包し、attacker がアイテムを
-    持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせた場合は
+    持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせる場合は
     ねんちゃくによる阻止を無視して奪取できる（第五世代以降の仕様）。
+    HP反映前のため、value（がんじょう等の生存補正を経た確定ダメージ）が
+    defender の現在HP以上かどうかで「このヒットでひんしになるか」を判定する。
     奪って消費したきのみはリサイクルの復元対象にならないため track_loss=False を指定する。
     """
     if ctx.substitute_damage > 0:
@@ -3267,8 +3345,9 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     attacker = ctx.attacker
     if not defender.has_item() or not defender.item.is_berry():
         return HandlerReturn(value=value)
+    will_faint = value >= defender.hp
     # take_item でdefenderのきのみをattackerに移す（ねんちゃく等で失敗する場合あり）
-    if not battle.item_manager.take_item(defender, ignore_sticky_hold=defender.fainted):
+    if not battle.item_manager.take_item(defender, ignore_sticky_hold=will_faint):
         return HandlerReturn(value=value)
     # attackerがきのみを得たので効果を発動して消費する
     battle.item_manager.force_trigger_berry(attacker, track_loss=False)
@@ -3665,11 +3744,16 @@ def わるあがき_self_damage(battle: Battle, ctx: AttackContext, value: Any) 
     与えたダメージ量に依存しない固定割合の反動であり、特性いしあたま・マジックガード
     のどちらでも無効化されない特殊な性質を持つため、reason="self_cost" を用いて
     一般的な反動ダメージ（reason="recoil"）向けの無効化ハンドラの対象から外す。
+
+    ON_HIT の value（相手への実ダメージ量）は他のON_HITハンドラ（レッドカード等）に
+    引き継がれるため、他の反動技用ハンドラ（_recoil）と同様に自身の modify_hp の
+    戻り値ではなく元の value をそのまま返す必要がある。誤って modify_hp の戻り値
+    （自傷ダメージ量）を返すと、後続ハンドラが「相手への実ダメージが0以下だった」
+    と誤認識してしまう。
     """
     recoil = max(1, round_half_down(ctx.attacker.max_hp / 4))
-    return HandlerReturn(
-        value=battle.modify_hp(ctx.attacker, v=-recoil, reason="self_cost", source=ctx.attacker)
-    )
+    battle.modify_hp(ctx.attacker, v=-recoil, reason="self_cost", source=ctx.attacker)
+    return HandlerReturn(value=value)
 
 
 def ワンダースチーム_apply_confusion_to_defender(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:

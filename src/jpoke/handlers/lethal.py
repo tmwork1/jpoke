@@ -404,7 +404,9 @@ def サイコブースト_lower_spa(battle: Battle, ctx: LethalContext, hp_dist:
 
 
 def サンパワー_take_sun_damage(battle: Battle, ctx: LethalContext, hp_dist: StateDist) -> StateDist:
-    """サンパワー: はれ・おおひでりのとき攻撃側が1/8ダメージ（攻撃者HP未追跡のためスタブ）。"""
+    """サンパワー: はれ・おおひでりのとき、ターン終了時に最大HPの1/8ダメージを受ける（defender側のみ追跡対象）。"""
+    if battle.weather_for(ctx.defender).sunny:
+        return _damage(hp_dist, max(1, ctx.defender.max_hp // 8))
     return hp_dist
 
 

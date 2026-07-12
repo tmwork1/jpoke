@@ -26,9 +26,14 @@
     "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
-  "failed":    [{"name": "...", "type": "..."}]
+  "failed":    [{"name": "...", "type": "..."}],
+  "pending_main_merges": 0
 }
 ```
+
+`pending_main_merges`: 前回 main 反映（PR マージ）以降にコミットが成立した件数。「main への反映」
+節（10件ごと）で使う。統合ブランチ方式の `unformatted_merges`（§共通5）と違い、整形処理を伴わない
+単純なカウンタ（このフローは §共通5 を適用しないため、五十音ソート等は都度コミットで完結している）。
 
 ---
 
@@ -48,7 +53,8 @@
 「リーサル実装 = `-`」かつ「実装 = `x`」の行を探す（`n/a`・`保留`・`x` はスキップ）。
 `completed` と `failed` に含まれる名前もスキップ。
 
-- 対象が見つからなければ → 「リーサルハンドラ 全件完了」と報告してループ終了。
+- 対象が見つからなければ → `pending_main_merges > 0` の場合は「main への反映」の手順に従い
+  残りを先に main へ反映してから、「リーサルハンドラ 全件完了」と報告してループ終了。
 - 見つかった場合 → その名前・ファイル種別・効果列の説明を記録する。
 
 ### 3. 実装（impl エージェント、foreground）
@@ -64,7 +70,7 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 1. docs/spec/ に仕様書があれば読む。なければ現状の実装（handlers/lethal.py・core/lethal.py）を調査する
 2. `.claude/loop/_common.md` §共通11「リーサル計算ハンドラの実装パターン」に従ってハンドラ関数を実装する
    （この entry は progress ファイルで「影響する」と既に確定済みなので、影響有無の判断は不要）
-3. type に対応する data ファイルの lethal_handlers にエントリを追加する（§共通11 の routing table を参照）
+3. type に対応する data ファイルの lethal_handlers にエントリを追加する（§共通11 の種別対応の一覧を参照）
 4. ソートを実行する:
    python scripts/sort_handlers.py src/jpoke/handlers/lethal.py
    （data ファイルを変更した場合は scripts/sort_data/sort_abilities.py / sort_items.py / sort_moves.py も実行）
@@ -96,14 +102,19 @@ git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"
 
 ### 5. 状態保存・終了
 
-成功: `completed` に `{"name": "{name}", "type": "{type}"}` を追加。失敗: `failed` に追加。
+成功: `completed` に `{"name": "{name}", "type": "{type}"}` を追加し、`pending_main_merges += 1`。
+`pending_main_merges >= 10` になったら「main への反映」の手順に従いその場で main へ反映し、
+`pending_main_merges = 0` に戻す。失敗: `failed` に追加（`pending_main_merges` は変更しない）。
 §共通7 に従う（続きはユーザーの `/loop lethal` 再実行で再開する）。
 
 ---
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/lethal`）。
+`impl`/`review` とは異なり整形処理を挟まないため、**10件の実装・テストが成功しコミットされる
+たびに**、ディスパッチャーがその場で §共通6 の手順に従い、まとめて main へ反映する
+（`{branch}` = `loop/lethal`）。ループ終了時（バックログを消化しきった場合）は、
+`pending_main_merges` が10件未満でも1件以上残っていれば反映してから終える。
 
 ## エラーハンドリング
 

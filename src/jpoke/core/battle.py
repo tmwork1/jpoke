@@ -633,6 +633,34 @@ class Battle:
         """
         return self.turn_controller.judge_winner()
 
+    def flush_winner_log(self) -> None:
+        """保留中のGAME_WON/GAME_LOSTログを記録する（TurnControllerへの委譲）。
+
+        `begin_deferred_winner_log()` で開始した抑制区間の内側では何もしない
+        （区間の外、または `end_deferred_winner_log()` で区間が閉じられた
+        時点で記録される）。
+        """
+        self.turn_controller.flush_winner_log()
+
+    def begin_deferred_winner_log(self) -> None:
+        """勝敗ログの自動フラッシュを抑制する区間を開始する（TurnControllerへの委譲）。
+
+        技の1ヒット処理のように、HP変化とそれに付随する後続イベント（ON_HIT・
+        ON_DAMAGE_HIT・ON_MOVE_KO 等）をひとまとまりとして扱いたい場合に、その
+        処理の先頭で呼ぶ。区間の内側で発生した `modify_hp` 呼び出し（撃破に
+        付随するさめはだ等の反撃ダメージ・状態異常付与など）による自動フラッシュ
+        は抑制され、対応する `end_deferred_winner_log()` が呼ばれるまで
+        GAME_WON/GAME_LOST ログの記録が遅延する。ネスト可能（カウンタ管理）。
+        """
+        self.turn_controller.begin_deferred_winner_log()
+
+    def end_deferred_winner_log(self) -> None:
+        """`begin_deferred_winner_log()` に対応する抑制区間を終了する（TurnControllerへの委譲）。
+
+        区間の深さが0に戻った時点で、保留中のGAME_WON/GAME_LOSTログがあれば記録する。
+        """
+        self.turn_controller.end_deferred_winner_log()
+
     def resolve_command(self, phase: BattlePhase, player: Player | None = None) -> dict[Player, Command]:
         """コマンドを解決する（CommandManagerへの委譲）。"""
         return self.command_manager.resolve_command(phase, player)
@@ -761,6 +789,11 @@ class Battle:
 
         Raises:
             ValueError: v と r を同時に指定した場合、または r が範囲外の場合
+
+        Note:
+            瀕死判定時のGAME_WON/GAME_LOSTログ記録のタイミングは
+            `begin_deferred_winner_log()` / `end_deferred_winner_log()` の
+            抑制区間で制御する。詳細は StatusManager.modify_hp を参照。
         """
         if v and r:
             raise ValueError("modify_hp では v と r を同時に指定できません。")
@@ -772,7 +805,9 @@ class Battle:
                 v = max(1, raw)
             else:
                 v = min(-1, raw)
-        return self.status_manager.modify_hp(target, v=v, reason=reason, source=source)
+        return self.status_manager.modify_hp(
+            target, v=v, reason=reason, source=source,
+        )
 
     def faint(self,
               target: Pokemon,

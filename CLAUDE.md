@@ -118,8 +118,8 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 
 ### ブランチ・PR
 
-- **`.loop/` 経由の自動作業以外は main への直接コミット禁止**。作業前に必ず `feature/<内容>` などの
-  作業ブランチを切る
+- **main への直接コミット・マージは禁止**（`.loop/` 経由の自動作業を含む）。手動作業では作業前に
+  必ず `feature/<内容>` などの作業ブランチを切る。`.loop/` 系フローの反映方法は後述
 - 完了したら `gh pr create` でPRを作成し、確認のうえ `gh pr merge` でmainに取り込む（`--no-verify` は使わない）
 - リポジトリは `delete_branch_on_merge` が有効。PRマージ後、**リモートブランチは自動削除されるが
   ローカルブランチは残るので `git branch -d <branch>` で必ず削除する**（残したまま気づかず同じ
@@ -130,24 +130,34 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
   事故につながる
 - 既存ブランチで作業を再開する前に、そのブランチが既にmainへマージ済みでないか
   （`git log <branch>..main`、`gh pr list --state merged`）を確認する
-- `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz）は対象外。既存の分離済みブランチ
-  （`loop/{flow}` / `loop/{flow}/integration`）で完結し、`_common.md` §共通6 の手順でユーザーが任意
-  タイミングでmainに反映する
-- 手動ブランチとループ成果が `data/*.py` / `docs/progress/*` / `docs/tests/*` など同じ共有ファイルに
-  触れる場合は、ループ側のmain反映（§共通6）を先に済ませてから手動ブランチを切ると衝突を避けやすい
+- `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz / fuzz_log / flaky）は上記の「手動で
+  feature ブランチを切り、確認のうえ `gh pr merge`」という手順の対象外だが、main への直接コミット・
+  マージ禁止自体は同様に適用される。既存の分離済みブランチ（`loop/{flow}` / `loop/{flow}/integration`）
+  で作業し、ローカルテストを通過した
+  単位（`fuzz`/`replay_fuzz`/`fuzz_log`/`flaky`は1件ごと、`todo`は5件ごと、`lethal`は10件ごと、`impl`/`review`
+  は §共通5 のバッチ整形ごと）でディスパッチャーが `_common.md` §共通6 の手順に従い GitHub PR経由
+  （`gh pr create` → 即 `gh pr merge`、人間レビュー待ちはしない）で自動的にmainへ反映する。
+  **ローカルの `jpoke/`（main の作業ツリー）へ直接コミット・マージすることは絶対にしない**
+  （同一 `.git` を共有する他セッション・他worktreeのローカル `main` refを不用意に動かし混乱を招くため）
+- ループはmain反映を自動かつ継続的に行うため、手動ブランチと `data/*.py` / `docs/progress/*` /
+  `docs/tests/*` など同じ共有ファイルに触れる作業を始める直前は `git pull` してmainを最新化すると
+  衝突を避けやすい
 
 ### 一時保存・worktree
 
 - 一時退避に `git stash` を使わない。中断する作業でも作業ブランチにWIPコミットしておく
   （stashは `git status` にも `git branch` にも現れず、存在を忘れて長期間放置されやすい）
-- Agent（`isolation: "worktree"`）で作業したworktreeは、タスクの結論（マージ or 破棄）が出た時点で
-  `git worktree remove` する。**worktreeを除去するコマンドはworktreeの外（リポジトリルート等）から
-  実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立ディレクトリが残ることがある）
-- **例外**: `work1` `work3` など汎用作業用に手動作成したworktree（Agentの`isolation: "worktree"`
-  以外で作られたもの）は、対応するPRがマージされてもタスクの結論とみなさず、ユーザーの明示的な
-  指示がない限り `git worktree remove` しない。ユーザーが継続利用する前提の永続ワークスペースとして扱う
+- worktree（Agentの`isolation: "worktree"`で作られたものか、`work1`/`work3`のように汎用作業用に
+  手動作成したものかを問わず）は、タスクの結論（マージ or 破棄）が出た時点で `git worktree remove`
+  する。永続ワークスペースとして残す例外は設けない。**worktreeを除去するコマンドはworktreeの外
+  （リポジトリルート等）から実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立
+  ディレクトリが残ることがある）
 - 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
   `git stash list` で放置物がないか確認する
+- `.loop/` 系フローの永続 worktree・統合 worktree は稼働中は残したままでよいが、フローが
+  バックログを使い切り完全終了（各指示書の「終了チェック」で全件完了を報告するケース）した時点で、
+  ディスパッチャー自身が `.claude/loop/_common.md` §共通7「完全終了」の手順に従い worktree・
+  ブランチ（ローカル・リモート）を削除する
 
 ## 開発ルール
 

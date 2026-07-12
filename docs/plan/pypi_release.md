@@ -320,5 +320,5 @@ package-check:
       `import jpoke` と README クイックスタートが動く
 - [x] `jpoke.__version__` が pyproject.toml の version と一致する
 - [x] `python -m pytest tests/ -q` 全通過、`ruff check` / `mypy` 通過
-- [ ] README を PyPI の Markdown レンダリングで確認（相対リンクなし・免責あり）
-      — 自動取得（WebFetch）が Bot 対策で失敗するため未確認。ユーザーによる目視確認が必要
+- [x] README を PyPI の Markdown レンダリングで確認（相対リンクなし・免責あり）
+      — ユーザーが https://pypi.org/project/jpoke/ を目視確認済み（2026-07-12）。問題なし

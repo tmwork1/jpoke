@@ -1121,7 +1121,7 @@ def test_みちづれ_2ターン目失敗後3ターン目は再使用できる()
     assert not battle.move_executor.move_success
     t.end_turn(battle)
 
-    # 3ターン目: 直前が失敗（executed_moveがリセット済み）のため再び成功する
+    # 3ターン目: 直前が失敗（last_moveがリセット済み）のため再び成功する
     t.run_move(battle, 0)
     assert battle.move_executor.move_success
     assert attacker.has_volatile("みちづれ")
@@ -1177,7 +1177,7 @@ def test_みちづれ_別の技をはさむと再使用できる():
     t.run_move(battle, 0, 1)
     t.end_turn(battle)
 
-    # 3ターン目: みちづれ再び成功（executed_moveがみちづれでないため）
+    # 3ターン目: みちづれ再び成功（last_moveがみちづれでないため）
     t.run_move(battle, 0, 0)
     assert battle.move_executor.move_success
     assert attacker.has_volatile("みちづれ")

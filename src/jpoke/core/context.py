@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event
 from jpoke.model.move import Move
-from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason
+from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason, ItemName
 
 
 @dataclass(eq=False)
@@ -96,6 +96,8 @@ class EventContext(BaseContext):
     ARシステム/マルチタイプ等、相手が特定の道具を持っている場合も交換自体が
     失敗する特性の判定に使う（はたきおとす等の一方的な除去では立てない）。
     """
+    item_name: ItemName = ""
+    """Event.ON_BERRY_CONSUMED で消費されたきのみ名を伝える（はんすう用）。"""
 
     def is_foe_target(self) -> bool:
         """source と target が異なるポケモンかを返す。"""
@@ -117,6 +119,9 @@ class AttackContext(BaseContext):
     critical: bool = False
     fainted: bool = False
     substitute_damage: int = 0
+    defender_hp_before_move: int = 0
+    """技開始時点（ON_BEGIN_MOVE）の防御側HP。とびだすなかみ等、多段技の最初のヒット前HPを
+    基準とする効果で使用する。"""
 
     def is_foe_target(self) -> bool:
         """attacker と defender が異なるポケモンかを返す。"""

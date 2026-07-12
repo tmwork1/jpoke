@@ -281,8 +281,11 @@ def じゅうりょく_grounded(battle: Battle, ctx: EventContext, value: Any) -
 
 
 def じゅうりょく_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）。一撃必殺技は対象外。"""
-    if ctx.move.has_flag("ohko"):
+    """じゅうりょく中の命中率補正（約1.67倍: 6840/4096）。一撃必殺技は対象外。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is None or ctx.move.has_flag("ohko"):
         return HandlerReturn(value=value)
     return HandlerReturn(value=apply_fixed_modifier(value, 6840))
 
@@ -564,7 +567,11 @@ def ゆき_boost_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
 
 def らんきりゅう_type_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する"""
+    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する。
+    エアロック・ノーてんきで天候が無効化されている場合は効果を発動しない。
+    """
+    if battle.weather_for(ctx.defender).name == "":
+        return HandlerReturn(value=value)
     if (
         ctx.defender.has_type("ひこう")
         and ctx.move.type in {"でんき", "いわ", "こおり"}
