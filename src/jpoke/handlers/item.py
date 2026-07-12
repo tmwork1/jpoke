@@ -2045,10 +2045,11 @@ def _レッドカード_try_force_switch(battle: Battle, ctx: AttackContext) -> 
     foe = ctx.attacker
     opponent = battle.get_player(foe)
     state = battle.player_states[opponent]
+    bench = state.bench
     commands = [
         Command.get_switch_command(i)
         for i, m in enumerate(state.team)
-        if m is not state.active and m.alive
+        if m in bench and m.alive
     ]
     if not commands:
         return
