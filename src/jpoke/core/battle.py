@@ -821,7 +821,20 @@ class Battle:
                      stats: dict[Stat, int],
                      source: Pokemon | None = None,
                      reason: StatChangeReason = "") -> dict[Stat, int]:
-        """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
+        """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。
+
+        しろいハーブなどのアイテムが正しく動作するよう、複数の能力変化を
+        一度に処理してから ON_MODIFY_RANK を1回発火する。
+
+        Args:
+            target: 対象のポケモン
+            stats: 能力とランク変化量の辞書（例: {"def": -1, "spd": -1}）
+            source: 変更の原因となったポケモン
+            reason: 変更の理由（ログ記録用）
+
+        Returns:
+            実際に変化した能力とランク量の辞書
+        """
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
 
     def set_ailment(self,
@@ -1074,7 +1087,16 @@ class Battle:
         return self.item_manager.remove_disabled_reason(mon, reason)
 
     def gain_item(self, target: Pokemon, name: ItemName) -> bool:
-        """対象のポケモンにアイテムを得させる（ItemManagerへの委譲）。"""
+        """対象のポケモンにアイテムを得させる（ItemManagerへの委譲）。
+
+        Args:
+            target: アイテムを得るポケモン
+            name: 得るアイテムの名前
+
+        Returns:
+            bool: アイテムを得ることに成功した場合True（既にアイテムを
+                持っている場合はFalse）
+        """
         return self.item_manager.gain_item(target, name)
 
     def remove_item(self,
@@ -1082,20 +1104,63 @@ class Battle:
                     source: Pokemon | None = None,
                     *,
                     track_loss: bool = True) -> bool:
-        """対象のアイテムを失わせる（ItemManagerへの委譲）。"""
+        """対象のアイテムを失わせる（ItemManagerへの委譲）。
+
+        Args:
+            target: アイテムを失うポケモン
+            source: 変更の発生源となるポケモン
+            track_loss: True の場合、last_lost_item_name を更新し
+                リサイクル・しゅうかく・ものひろい等の復元/拾得対象にする。
+                はたきおとす・やきつくす・ふしょくガス等、場に存在したまま
+                消滅する扱いの効果では False を指定する
+
+        Returns:
+            bool: 取り外しに成功した場合True
+        """
         return self.item_manager.remove_item(target, source=source, track_loss=track_loss)
 
     def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
-        """場に出ている2体のアイテムを入れ替える（ItemManagerへの委譲）。"""
+        """場に出ている2体のアイテムを入れ替える（ItemManagerへの委譲）。
+
+        Args:
+            ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを
+                無視する（むしくい・ついばむが対象をひんしにさせた場合の
+                第五世代以降の仕様）
+
+        Returns:
+            bool: 入れ替えに成功した場合True
+        """
         return self.item_manager.swap_items(ignore_sticky_hold=ignore_sticky_hold)
 
     def take_item(self, target: Pokemon, *, ignore_sticky_hold: bool = False) -> bool:
-        """対象のアイテムを奪う（ItemManagerへの委譲）。"""
+        """対象のアイテムを奪う（ItemManagerへの委譲）。
+
+        Args:
+            target: アイテムを奪われるポケモン
+            ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを
+                無視する（むしくい・ついばむが対象をひんしにさせた場合の
+                第五世代以降の仕様）
+
+        Returns:
+            bool: 奪取に成功した場合True
+        """
         return self.item_manager.take_item(target, ignore_sticky_hold=ignore_sticky_hold)
 
-    def consume_item(self, mon: Pokemon, *, track_loss: bool = True) -> bool:
-        """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
-        return self.item_manager.consume_item(mon, track_loss=track_loss)
+    def consume_item(self, target: Pokemon, *, track_loss: bool = True) -> bool:
+        """ポケモンの道具を消費する（ItemManagerへの委譲）。
+
+        きのみを消費する場合は食べたフラグを立ててから remove_item を呼ぶ。
+
+        Args:
+            target: アイテムを消費するポケモン
+            track_loss: True の場合、last_lost_item_name を更新し
+                リサイクル・しゅうかく・ものひろい等の復元/拾得対象にする。
+                割れたふうせん等、対象外にすべき場合は False を指定する
+
+        Returns:
+            bool: 消費に成功した場合True
+        """
+        return self.item_manager.consume_item(target, track_loss=track_loss)
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""
