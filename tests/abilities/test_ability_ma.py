@@ -585,6 +585,30 @@ def test_みずがため_みず技でBが2段階上がる(move_name: str, expect
 
 
 @pytest.mark.parametrize(
+    "move_name",
+    ["アクアブレイク", "シェルブレード"],
+)
+def test_みずがため_アクアブレイクとシェルブレードでは追加効果の後に発動する(move_name: str):
+    """みずがため: アクアブレイク/シェルブレードを受けた場合、
+    ぼうぎょ低下の追加効果が先に適用されてからみずがための2段階上昇が発動する。
+    順序によってランク上限のクランプ挙動が変わるため、B+5から検証する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="みずがため")],
+        team1=[Pokemon("カビゴン", move_names=[move_name])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    assert battle.modify_stats(defender, {"def": 5}, source=defender)
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)  # 追加効果(ぼうぎょ低下)を確定発動させる
+    t.run_move(battle, 1)
+    # 追加効果(B-1)が先に適用され 5→4、その後にみずがため(B+2)が発動し 4→6。
+    # 順序が逆であれば 5→7(+6にクランプ)→+5 になってしまう。
+    assert defender.boosts["def"] == 6
+
+
+@pytest.mark.parametrize(
     "move_name, expected_accuracy",
     [
         ("どくどく", 50),
