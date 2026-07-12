@@ -465,7 +465,14 @@ MOVES_TA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"contact"},
         handlers={
-            Event.ON_HIT: h.MoveHandler(ha.むしくい_steal_and_use_berry)
+            # HP反映（Event.ON_HP_CHANGED発火）前に奪取するため、被弾側自身のHP閾値
+            # きのみ（オボンのみ等）より確実に先行させる必要がある。がんじょう・
+            # きあいのタスキ等のHP1残し補正（priority=100）より後の110で実行する
+            # （docs/plan/moves/むしくい.md「Priority根拠」参照）。
+            Event.ON_MODIFY_MOVE_DAMAGE: h.MoveHandler(
+                ha.むしくい_steal_and_use_berry,
+                priority=110,
+            )
         }
     ),
     "ツインビーム": MoveData(

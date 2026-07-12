@@ -3298,13 +3298,21 @@ def みわくのボイス_apply_confusion_to_defender(battle: Battle, ctx: Attac
     return apply_confusion_to_defender(battle, ctx, value)
 
 
-def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """むしくい・ついばむ: 相手のバトルに効果のあるきのみを奪って自分が消費する。
+
+    Event.ON_MODIFY_MOVE_DAMAGE の終盤（がんじょう・きあいのタスキ等HP1残し補正より後、
+    priority=110）で発動する。HP反映（battle.modify_hp）より前のこのタイミングで奪う
+    ことで、被弾側自身のHP閾値で発動するきのみ（オボンのみ等、Event.ON_HP_CHANGED で
+    反応する）より確実に先に奪取を成立させる。本家の「ダメージを与えると同時に相手の
+    きのみを奪う」仕様に対応する。
 
     みがわりに防がれた場合はきのみを食べられない（実体への攻撃ではないため）。
     take_item はねんちゃくチェックを内包し、attacker がアイテムを
-    持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせた場合は
+    持っている場合は失敗して何もしない。ただし、この技で対象をひんしにさせる場合は
     ねんちゃくによる阻止を無視して奪取できる（第五世代以降の仕様）。
+    HP反映前のため、value（がんじょう等の生存補正を経た確定ダメージ）が
+    defender の現在HP以上かどうかで「このヒットでひんしになるか」を判定する。
     奪って消費したきのみはリサイクルの復元対象にならないため track_loss=False を指定する。
     """
     if ctx.substitute_damage > 0:
@@ -3313,8 +3321,9 @@ def むしくい_steal_and_use_berry(battle: Battle, ctx: AttackContext, value: 
     attacker = ctx.attacker
     if not defender.has_item() or not defender.item.is_berry():
         return HandlerReturn(value=value)
+    will_faint = value >= defender.hp
     # take_item でdefenderのきのみをattackerに移す（ねんちゃく等で失敗する場合あり）
-    if not battle.item_manager.take_item(defender, ignore_sticky_hold=defender.fainted):
+    if not battle.item_manager.take_item(defender, ignore_sticky_hold=will_faint):
         return HandlerReturn(value=value)
     # attackerがきのみを得たので効果を発動して消費する
     battle.item_manager.force_trigger_berry(attacker, track_loss=False)
