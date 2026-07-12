@@ -1809,6 +1809,56 @@ def test_ふしぎなうろこ_かたやぶりで無効():
     assert 4096 == battle.damage_calculator.def_modifier
 
 
+def test_ふしぎなうろこ_こんらんのみでは発動しない():
+    """ふしぎなうろこ: こんらん（状態変化）だけでは発動しない。状態異常でないと発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        volatile1={"こんらん": 2},
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_こんらんの自傷ダメージには発動しない():
+    """ふしぎなうろこ: こんらんの自傷ダメージ（"_こんらん"）には効果が無い（第五世代以降の仕様）。"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        team0=[Pokemon("ピカチュウ")],
+        ailment1=("やけど", None),
+        volatile1={"こんらん": 2},
+    )
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 1)
+    assert 4096 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_ぼうぎょ参照の特殊技には発動する():
+    """サイコショック等、特殊技だがぼうぎょを参照する技には効果が乗る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["サイコショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        ailment1=("やけど", None),
+    )
+    t.run_move(battle, 0)
+    assert 6144 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_ワンダールームでとくぼうが1_5倍になる():
+    """ワンダールーム中は物理技でも防御と特防が入れ替わり参照されるため、
+    ふしぎなうろこの効果は実質的に特防を1.5倍にする形になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        ailment1=("やけど", None),
+        field={"ワンダールーム": 5},
+    )
+    defender = battle.actives[1]
+    before = defender.stats["spd"]
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.final_defense == round(before * 1.5)
+
+
 @pytest.mark.parametrize(
     "ailment_name",
     ["どく", "もうどく", "まひ", "やけど", "ねむり", "こおり"],
@@ -1821,6 +1871,16 @@ def test_ふしぎなうろこ_状態異常でB上昇(ailment_name: AilmentName)
     )
     t.run_move(battle, 0)
     assert 6144 == battle.damage_calculator.def_modifier
+
+
+def test_ふしぎなうろこ_特殊技には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ふしぎなうろこ")],
+        ailment1=("やけど", None),
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.def_modifier
 
 
 def test_ふしぎなまもり_かたやぶりで無効化される():

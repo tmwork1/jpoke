@@ -3531,9 +3531,13 @@ def ふくつのたて_boost_B(battle: Battle, ctx: EventContext, value: Any) ->
 
 
 def ふしぎなうろこ_boost_B(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """ふしぎなうろこ特性: 状態異常時に物理技への防御補正を1.5倍にする。"""
+    """ふしぎなうろこ特性: 状態異常時に物理技への防御補正を1.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）には効果が無い（第五世代以降の仕様）。
+    """
     if (
         ctx.defender.ailment.is_active
+        and ctx.move.name != "_こんらん"
         and battle.query.deals_physical_damage(ctx.attacker, ctx.move)
     ):
         value = apply_fixed_modifier(value, 6144)
