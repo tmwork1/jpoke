@@ -4073,13 +4073,20 @@ def _overwrite_ability_on_contact(battle: Battle,
                                   new_ability: AbilityName) -> bool:
     """直接攻撃でダメージを受けたとき攻撃者の特性を書き換える共通処理。
 
+    かがくへんかガスは通常uncopyableで上書きできないが、いえき/コアパニッシャー等で
+    自身の特性がとくせいなし状態になっている場合は例外的に上書きできる
+    （docs/spec/abilities/ミイラ.md「特性の仕様」）。
+
     Returns:
         書き換えに成功した場合True
     """
     attacker = ctx.attacker
     if not battle.query.is_contact_reaction(ctx):
         return False
-    if attacker.ability.has_flag("uncopyable"):
+    if attacker.ability.has_flag("uncopyable") and not (
+        attacker.ability.base_name == "かがくへんかガス"
+        and attacker.has_volatile("とくせいなし")
+    ):
         return False
     if attacker.ability.name == new_ability:
         return False
