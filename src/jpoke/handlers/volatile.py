@@ -316,6 +316,10 @@ def かいふくふうじ_block_heal(battle: Battle, ctx: EventContext, value: A
     """
     if ctx.hp_change_reason in ("pain_split", "bench_heal"):
         return HandlerReturn(value=value)
+    if value <= 0:
+        # ヘドロえき等により回復がダメージへ変換済みの場合はブロック対象外
+        # （相手がかいふくふうじ状態であってもヘドロえきのダメージ効果は発動する）。
+        return HandlerReturn(value=value)
 
     battle.add_event_log(
         ctx.target, LogCode.HEAL_BLOCKED,

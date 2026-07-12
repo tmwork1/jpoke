@@ -2517,6 +2517,20 @@ def test_ヘドロえき_回復がダメージになる():
     assert defender.hp < defender.max_hp
 
 
+def test_ヘドロえき_おおきなねっこ持ちの相手には1_3倍のダメージを与える():
+    """ヘドロえき: 攻撃側がおおきなねっこを持つ場合、ヘドロえきのダメージは1.3倍になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="おおきなねっこ", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン", ability_name="ヘドロえき")],
+    )
+    t.fix_damage(battle, 100)
+    attacker = battle.actives[0]
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    # 吸収量50に対しおおきなねっこ補正(5324/4096倍、五捨五超入)をかけた65がダメージになる
+    assert hp_before - attacker.hp == 65
+
+
 def test_ヘドロえき_通常の回復には影響しない():
     """ヘドロえき: drain以外の理由の回復には影響しない"""
     battle = t.start_battle(
@@ -2553,6 +2567,36 @@ def test_ヘヴィメタル_おもさが基本値の2倍になる():
     )
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 120
+
+
+def test_ヘドロえき_マジックガード持ちの相手にはダメージを与えられない():
+    """ヘドロえき: 攻撃側がマジックガードを持つ場合、ダメージを与えられない（回復効果も無くなる）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン", ability_name="ヘドロえき")],
+    )
+    attacker, defender = battle.actives
+    hp_a0, hp_d0 = attacker.hp, defender.hp
+    t.run_move(battle, 0)
+    assert attacker.hp == hp_a0
+    assert defender.hp < hp_d0
+
+
+def test_ヘドロえき_みがわり状態の相手にもダメージを与える():
+    """ヘドロえき: 相手のみがわり状態を無視してダメージを与える"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ギガドレイン"])],
+        team1=[Pokemon("カビゴン", ability_name="ヘドロえき", move_names=["みがわり"])],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 1)
+    assert defender.has_volatile("みがわり")
+    hp_a0, hp_d0 = attacker.hp, defender.hp
+    t.run_move(battle, 0)
+    # みがわりがダメージを肩代わりするため本体のHPは変化しない
+    assert defender.hp == hp_d0
+    # ヘドロえきのダメージはみがわりを無視して攻撃側に入る
+    assert attacker.hp < hp_a0
 
 
 def test_へんげんじざい_交代でリセットされ再発動できる():
