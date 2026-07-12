@@ -1804,6 +1804,24 @@ def test_ふゆう_浮いている():
     assert battle.query.is_floating(battle.actives[0])
 
 
+def test_フィルター_かたやぶりで無効():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="フィルター")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_フィルター_効果抜群ダメージを0_75倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="フィルター")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.damage_modifier
+
+
 def test_フラワーギフト_晴れ中攻撃が1_5倍になる():
     battle = t.start_battle(
         team0=[Pokemon("チェリム", ability_name="フラワーギフト", move_names=["たいあたり"])],
