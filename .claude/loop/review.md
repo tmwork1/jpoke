@@ -1,15 +1,19 @@
 # 再レビュー 自律ループ 指示書
 
 **前提**: `_common.md` を読んでいること（`{flow}` = `review`、方式は統合ブランチ）。
-- **統合 worktree**: `{config.worktree_base}\integration`（ブランチ `loop/review/integration`。
-  マージ・整形・状態集約をここで行う）。
-- **レビュー worktree**: `{config.worktree_base}\slot{N}`（entry ごとの使い捨て、ブランチ
-  `loop/review/{entry}`。`loop/review/integration` から分岐）。
 
-並列モデル: 統合 worktree にディスパッチャーが集約し、slot1..slot{parallel_max} で background
+2 種類の worktree を使う:
+- **統合 worktree** `{config.worktree_base}\integration`（ブランチ `loop/review/integration`。
+  マージ・整形・状態集約をここで行う）
+- **レビュー worktree** `{config.worktree_base}\slot{N}`（entry ごとの使い捨て。ブランチ
+  `loop/review/{entry}` を `loop/review/integration` から分岐）
+
+並列モデル: ディスパッチャーが統合 worktree に集約し、slot1..slot{parallel_max} で background
 review エージェントが並列にレビュー・修正する。`loop/review/{entry}` は成功したら
-`loop/review/integration` にマージ。ソート・テスト一覧生成は slot では行わず §共通5 で一括実行する。
-**ローリング・ディスパッチ**: `in_progress` が全件完了するのを待たず、1 件完了するたびにその場で
+`loop/review/integration` にマージする。ソート・テスト一覧生成は slot では行わず、§共通5 で
+一括実行する。
+
+**ローリング・ディスパッチ**: `in_progress` の全件完了を待たず、1 件完了するたびにその場で
 収穫・マージし、空いたスロットに `review_queue` の次の entry を即座に補充する（§4）。常に
 `parallel_max` 件が稼働している状態を維持する。
 

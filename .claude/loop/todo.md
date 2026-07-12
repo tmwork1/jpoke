@@ -134,12 +134,14 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 {
   "config": {
     "category":     "TODO修正",
+    "scan_glob":    "**/*.py",
     "test_files":   ["tests/test_move.py"],
     "review_extra": "",
     "worktree":     "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\todo"
   },
   "todo_queue": ["ひるみ確率の適用を実装する", "追加効果フラグを追加する"],
   "completed": [],
-  "failed":    []
+  "failed":    [],
+  "pending_main_merges": 0
 }
 ```

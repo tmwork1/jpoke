@@ -85,7 +85,8 @@ fi
 または `.fail`）を確認する。
 
 - `.ok` が存在 →
-  1. マージ: `git -C "$INTG" merge --no-ff "loop/impl/{entry}" -m "Merge loop/impl/{entry}"`（dirty チェック不要）
+  1. マージ: `git -C "$INTG" merge --no-ff "loop/impl/{entry}" -m "Merge loop/impl/{entry}"`
+     （統合 worktree はループ専用で常にクリーン。dirty チェック不要）
   2. `git -C "$INTG" worktree remove "{config.worktree_base}\review" --force`
   3. `git -C "$INTG" branch -d "loop/impl/{entry}"`
   4. `.ok` ファイルを削除（§共通9 のガード付き rm を使う）
@@ -106,7 +107,7 @@ non-fast-forward 衝突時は §共通8 に従う。
 `{フロー固有のテストファイル群}` = `{config.test_files をスペース区切り} tests/test_lethal.py`
 （リーサルハンドラを実装した entry があるため test_lethal.py も併せてソートする）。
 
-### 4. バックグラウンド review-test の起動
+### 4. review-test の起動（background）
 
 `review_queue` にエントリがあり、かつ `len(review_in_progress) < config.review_parallel_max` の場合、
 `review_queue` 先頭の entry を取り出し:

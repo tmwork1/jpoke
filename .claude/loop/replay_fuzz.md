@@ -16,7 +16,7 @@
 バグを見つけたら `impl`（修正）→ `review-test`（回帰テスト追加・全体テスト・コミット）の
 2段階で `loop/replay_fuzz` 上で自動修正する（`fuzz` ループと同じ2段階パターン）。
 
-食い違いは4種類に分類される（`replay_fuzz_battle.py` の判定順）:
+食い違いは6種類に分類される（`replay_fuzz_battle.py` の判定順）:
 
 | `mismatch_kind` | 意味 |
 |---|---|
