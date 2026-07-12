@@ -172,8 +172,8 @@ def test_あめまみれ_ミラーアーマーでも反射されず自分のSの
     )
     mon, foe = battle.actives
     t.end_turn(battle)
-    assert mon.rank["spe"] == -1
-    assert foe.rank["spe"] == 0
+    assert mon.boosts["spe"] == -1
+    assert foe.boosts["spe"] == 0
 
 
 def test_アンコール():
