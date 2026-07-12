@@ -236,20 +236,7 @@ class TurnController:
 
             # 交代
             if self.battle.is_new_turn():
-                if state.has_switched:
-                    # いかく・だっしゅつパックなどの割り込みにより、この
-                    # プレイヤーの番がループで回ってくる前に既に交代済みに
-                    # なっていることがある。この場合、今ターン用に予約
-                    # されていたコマンド（例: MOVE_x や SWITCH_x）が
-                    # 一度も使われないまま予約リストに残っていることがある
-                    # （割り込み交代は別経路で解決されるため）。残しておくと
-                    # 次ターンの新しいコマンドの手前に古いコマンドが残留し、
-                    # 交代後のポケモンに対して不正なインデックスのコマンドが
-                    # 誤って使われてしまう（IndexError の原因）。そのため
-                    # ここで使われなかったコマンドを破棄しておく。
-                    if state.command_reserved():
-                        state.pop_command()
-                elif state.next_command.is_type("switch"):
+                if not state.has_switched and state.next_command.is_type("switch"):
                     # 行動順を記録
                     self.action_order.append(idx)
 
@@ -265,6 +252,23 @@ class TurnController:
 
             # だっしゅつパックによる交代
             self._switch.run_interrupt_switch(interrupt)
+
+        # いかく・だっしゅつパックなどの割り込みにより、あるプレイヤーの
+        # 交代がループの途中（自分の番より後に処理される別プレイヤーの交代
+        # に付随して）発生することがある。この場合、今ターン用に予約されて
+        # いたコマンド（例: MOVE_x や SWITCH_x）が一度も使われないまま予約
+        # リストに残ってしまう（割り込み交代は別経路で解決されるため）。
+        # ループの途中で対象プレイヤーの番を判定して破棄しようとすると、
+        # 自分の番より後に発生した割り込み交代を取りこぼす（ループが既に
+        # そのプレイヤーの番を通過済みのため）。残しておくと次ターンの
+        # 新しいコマンドの手前に古いコマンドが残留し、交代後のポケモンに
+        # 対して不正なインデックスのコマンドが誤って使われてしまう
+        # （IndexError の原因）。そのためループ全体が終わった時点で、
+        # 交代済みかつコマンドが残っている全プレイヤーをまとめて破棄する。
+        if self.battle.is_new_turn():
+            for state in self.battle.player_states.values():
+                if state.has_switched and state.command_reserved():
+                    state.pop_command()
 
     def _resolve_action_order(self):
         """行動順を解決する。"""
@@ -413,7 +417,13 @@ class TurnController:
 
     def _run_end_phase(self):
         """ターン終了時の処理を実行する。"""
-        if self.battle.is_new_turn():
+        # ターン中の技実行等で既に勝敗が確定している場合、どく・やけど等の
+        # ターン終了時の継続ダメージ処理（ON_TURN_END）は実行しない
+        # （決着後に敗者側の追加行動や勝者側への継続ダメージが記録される
+        # のを防ぐ）。ただし瀕死交代処理（run_faint_switch）は決着後でも
+        # 内部で battle.judge_winner() を確認した上で早期returnする既存の
+        # 安全策があるため、そのまま呼び出す。
+        if self.battle.is_new_turn() and self.battle.winner is None:
             self._events.emit(Event.ON_TURN_END)
 
             # だっしゅつパックによる割り込みフラグをフェーズに合わせて設定

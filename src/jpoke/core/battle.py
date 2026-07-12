@@ -590,6 +590,124 @@ class Battle:
         """
         return self.query.can_switch(player)
 
+    def has_available_bench(self, player: Player) -> bool:
+        """プレイヤーの控えに瀕死でないポケモンが残っているかを判定する（PokemonQueryへの委譲）。
+
+        だっしゅつパックなど、とらわれ状態（にげられない・バインド・ねをはる・
+        フェアリーロックや特性かげふみ・ありじごく・じりょくなど）を無視して
+        強制的に交代させる効果の判定に使う。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool: 交代先が残っている場合True
+        """
+        return self.query.has_available_bench(player)
+
+    def is_floating(self, pokemon: Pokemon) -> bool:
+        """浮いている状態か判定する（PokemonQueryへの委譲）。
+
+        タイプ（ひこう）や特性、技の効果を考慮して判定する。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 浮いていればTrue
+        """
+        return self.query.is_floating(pokemon)
+
+    def is_trapped(self, pokemon: Pokemon) -> bool:
+        """逃げられない状態か判定する（PokemonQueryへの委譲）。
+
+        ゴーストタイプは逃げられる。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 逃げられない場合True
+        """
+        return self.query.is_trapped(pokemon)
+
+    def is_nervous(self, pokemon: Pokemon) -> bool:
+        """きんちょうかん状態か判定する（PokemonQueryへの委譲）。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: きんちょうかん状態の場合True
+        """
+        return self.query.is_nervous(pokemon)
+
+    def is_hazard_immune(self, pokemon: Pokemon) -> bool:
+        """エントリーハザードへの免疫があるか判定する（PokemonQueryへの委譲）。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 免疫がある場合True
+        """
+        return self.query.is_hazard_immune(pokemon)
+
+    def can_use_last_resort(self, pokemon: Pokemon) -> bool:
+        """とっておきの発動条件を満たしているか判定する（PokemonQueryへの委譲）。
+
+        自身がとっておきを覚えており、かつとっておき以外に覚えている技を
+        すべて場に出てから1回以上PP消費して使用していれば True を返す。
+        Champions では条件を満たしていない場合、とっておき自体を選択できない。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 発動条件を満たす場合True
+        """
+        return self.query.can_use_last_resort(pokemon)
+
+    def get_forced_move_name(self, pokemon: Pokemon) -> str | None:
+        """強制行動中のポケモンが実行すべき技名を返す（PokemonQueryへの委譲）。
+
+        いかりのつぼみ・かなしばり等、揮発性状態によって技が固定されている
+        場合にその技名を返す。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            str | None: 固定されている技名（固定されていない場合None）
+        """
+        return self.query.get_forced_move_name(pokemon)
+
+    def is_first_actor(self, player: Player) -> bool | None:
+        """このターンで player が先攻かどうかを判定する（PokemonQueryへの委譲）。
+
+        1vs1想定。行動順が未確定の場合はNoneを返す。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool | None: 先攻の場合True、後攻の場合False、未確定の場合None
+        """
+        return self.query.is_first_actor(player)
+
+    def is_second_actor(self, player: Player) -> bool | None:
+        """このターンで player が後攻かどうかを判定する（PokemonQueryへの委譲）。
+
+        1vs1想定。行動順が未確定の場合はNoneを返す。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool | None: 後攻の場合True、先攻の場合False、未確定の場合None
+        """
+        return self.query.is_second_actor(player)
+
     def resolve_speed_order(self) -> list[Pokemon]:
         """素早さ順序を解決（SpeedCalculatorへの委譲）。
 
@@ -845,6 +963,14 @@ class Battle:
                     overwrite: bool = True) -> bool:
         """状態異常を直接付与する（シナリオ構築・ダメージ計算検証用）。
 
+        `set_*` 系（本メソッド・`set_volatile`/`set_weather`/`set_terrain`）は、対象に
+        「単一の状態を直接セットする」ことを表す。天候・地形は排他的（同時に1つだけ）、
+        状態異常・揮発性状態は対象ポケモンに紐づく個別の状態であり、いずれも「差し替え」の
+        ニュアンスが自然なため `set_` を使う。一方、`activate_global_field`/`activate_side_field`
+        （フィールド効果）は複数の効果が同時にスタックしうる（例: まきびし＋ステルスロック）ため
+        「発動」のニュアンスが強く `activate_` を使う。詳細は `docs/api/README.md`
+        「シナリオ構築系」節を参照。
+
         既定では既存の状態異常があれば上書きするが、タイプ免疫（例: ほのおタイプへの「やけど」）や
         ON_BEFORE_APPLY_AILMENT（不眠等の特性による無効化）の判定は通常付与と同様に行う。
         これらの判定によって付与が阻まれた場合は戻り値がFalseになり、状態異常は付与されない。
@@ -870,6 +996,8 @@ class Battle:
                      source: Pokemon | None = None) -> bool:
         """揮発性状態を直接付与する（シナリオ構築・ダメージ計算検証用）。
 
+        `set_*`/`activate_*` の動詞の使い分けは `set_ailment` のdocstringを参照。
+
         Args:
             target: 対象のポケモン
             name: 揮発性状態名
@@ -884,6 +1012,15 @@ class Battle:
     def set_weather(self, name: WeatherName, count: int = 5) -> bool:
         """天候を直接発動する（シナリオ構築・ダメージ計算検証用）。
 
+        `set_*`/`activate_*` の動詞の使い分けは `set_ailment` のdocstringを参照。
+        `count` の既定値5は、通常天候を発動する全ての技・特性ハンドラ（`handlers/move_status.py`・
+        `handlers/ability.py`）が例外なく5ターンで発動している実装上の事実に基づく。強天候
+        （おおひでり・おおあめ・らんきりゅう）を発動する特性ハンドラ（`おわりのだいち`等）は
+        `count=1`で発動するが、強天候の`FieldData`には`ON_TURN_END`のターンカウントダウン
+        ハンドラ自体が登録されておらず（`data/field/weather.py`参照）、特性保持者が場を離れる
+        まで`count`の値に関係なく持続する。そのため`count=1`は実質的に無視される値であり、
+        この既定値5の判断には影響しない。
+
         Args:
             name: 天候名
             count: 持続ターン数
@@ -895,6 +1032,10 @@ class Battle:
 
     def set_terrain(self, name: TerrainName, count: int = 5) -> bool:
         """地形を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        `set_*`/`activate_*` の動詞の使い分けは `set_ailment` のdocstringを参照。
+        `count` の既定値5は、地形を発動する全ての技ハンドラ（`handlers/move_status.py`）が
+        例外なく5ターンで発動している実装上の事実に基づく。
 
         Args:
             name: 地形名
@@ -908,6 +1049,14 @@ class Battle:
     def activate_global_field(self, name: GlobalFieldName, count: int) -> bool:
         """グローバルフィールド効果を直接発動する（シナリオ構築・ダメージ計算検証用）。
 
+        `set_*`/`activate_*` の動詞の使い分けは `set_ailment` のdocstringを参照。
+        天候・地形と異なり `count` に既定値を設けていないのは意図的：
+        グローバルフィールド効果は `count` の実際の意味が効果ごとに異なり（例:
+        じゅうりょく/トリックルーム/マジックルーム/ワンダールームは5ターンだが、
+        フェアリーロックは1ターンで発動する。`handlers/move_status.py` の各
+        `*_activate_global_field` を参照）、単一の既定値を設けると誤った持続ターン数で
+        シナリオを構築してしまう恐れがあるため、呼び出し側に明示を求めている。
+
         Args:
             name: グローバルフィールド効果名
             count: 持続ターン数
@@ -919,6 +1068,13 @@ class Battle:
 
     def activate_side_field(self, player: Player, name: SideFieldName, count: int) -> bool:
         """指定プレイヤーのサイドフィールド効果を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        `set_*`/`activate_*` の動詞の使い分けは `set_ailment` のdocstringを参照。
+        天候・地形と異なり `count` に既定値を設けていないのは意図的：サイドフィールド効果は
+        壁技（リフレクター等、5ターン）・設置技（まきびし等、1層ずつ増加）・遅延効果
+        （みらいよち等、発動までのターン数）が同じ `SideFieldName` に混在しており、`count` の
+        意味が効果ごとに大きく異なる（`data/field/side_field.py` を参照）。単一の既定値を
+        設けると誤った値でシナリオを構築してしまう恐れがあるため、呼び出し側に明示を求めている。
 
         Args:
             player: 発動対象のサイドを持つプレイヤー

@@ -41,7 +41,8 @@
   "worktree": "C:\\Users\\tmtmh\\Documents\\pokemon\\jpoke-loop\\replay_fuzz",
   "next_seed": 0,
   "total_battles": 0,
-  "batch_size": 100,
+  "batch_size": 200,
+  "workers": 4,
   "max_turns": 30,
   "n_pokemon": 3,
   "failure_dir": "replay_fuzz_failures",
@@ -89,14 +90,15 @@ worktree 配下に書き込まれる）:
 
 ```bash
 cd "{worktree}" && PYTHONPATH=src python scripts/replay_fuzz_battle.py --search \
-  --start-seed {next_seed} --count {batch_size} \
+  --start-seed {next_seed} --count {batch_size} --workers {workers} \
   --max-turns {max_turns} --n-pokemon {n_pokemon}
 ```
 
-`count` 件は打ち切らず必ず全件並列実行される（`--workers` は既定で CPU数と count の小さい方が
-自動選択される。明示指定したい場合のみ `--workers N` を追加する）。exit code 0 = 全件一致、
-exit code 1 = 食い違いあり（stdout に `FAIL: seed=... signature=...` と `report: {絶対パス}` の組が
-食い違った件数分、seed 昇順で出力される）。
+`count` 件は打ち切らず必ず全件並列実行される。`--workers {workers}`（既定4）は、他の並行
+セッション・ループ（review/impl 等）も同じマシンの CPU を使うため、`replay_fuzz` が全コアを
+専有しないよう明示的に絞っている値（省略時のスクリプト既定は CPU数と count の小さい方）。
+exit code 0 = 全件一致、exit code 1 = 食い違いあり（stdout に `FAIL: seed=... signature=...` と
+`report: {絶対パス}` の組が食い違った件数分、seed 昇順で出力される）。
 
 ### 3. 統計を更新
 

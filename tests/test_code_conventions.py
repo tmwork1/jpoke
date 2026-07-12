@@ -69,6 +69,27 @@ def test_consume_itemの引数名がtargetにリネームされている():
         battle.consume_item(mon=battle.actives[0])  # type: ignore[call-arg]
 
 
+def test_docs_examplesがjpoke_testingモジュールに言及している():
+    """`src/jpoke/testing.py` は `pip install jpoke` だけで（`jpoke` リポジトリを clone
+    せずに）シナリオ検証ができるよう本体パッケージへ昇格した公開モジュールだが、昇格当初は
+    `docs/api/README.md` と `examples/` の両方から言及が欠落しており、外部利用者が存在に
+    気づけない状態になっていた（id: r6-1）。再発防止のため、APIドキュメントに `jpoke.testing`
+    への言及があること、`examples/` 配下に `jpoke.testing` を import するサンプルが
+    存在することを確認する。
+    """
+    docs_root = Path(__file__).resolve().parent.parent / "docs" / "api" / "README.md"
+    readme_text = docs_root.read_text(encoding="utf-8")
+    assert "jpoke.testing" in readme_text
+
+    examples_importing_testing = [
+        path for path in EXAMPLES_ROOT.rglob("*.py")
+        if "jpoke.testing" in path.read_text(encoding="utf-8")
+    ]
+    assert examples_importing_testing, (
+        "examples/ 配下に jpoke.testing を import するサンプルが見つからない"
+    )
+
+
 def test_examplesがteam_append_Pokemon経由でチームを構築していない():
     """`Player.add_pokemon()` が jpoke の正規のチーム追加ルートであり、
     `team.append(Pokemon(...))`（`Pokemon` を直接構築して `team` に追加する書き方）は
