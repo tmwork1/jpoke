@@ -114,12 +114,17 @@ def announce_ability_triggered(battle: Battle,
     return HandlerReturn(value=value)
 
 def _announce_ability_triggered(battle: Battle, mon: Pokemon) -> None:
-    """特性発動ログを記録する。"""
+    """特性発動ログを記録する。
+
+    発動処理自身が呼び出し直前に対象の特性を無効化（例: ばけのかわの消費）する
+    ケースがあるため、有効/無効状態に関わらず元の特性名を返す base_name を使う
+    （name は無効化後に空文字を返す仕様のため、ログの特性名が空欄になってしまう）。
+    """
     mon.ability.revealed = True
     battle.add_event_log(
         mon,
         LogCode.ABILITY_TRIGGERED,
-        payload=AbilityPayload(ability=mon.ability.name)
+        payload=AbilityPayload(ability=mon.ability.base_name)
     )
 
 def _crossed_half_hp(hp_before: int, hp_after: int, max_hp: int) -> bool:

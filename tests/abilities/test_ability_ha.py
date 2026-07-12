@@ -8,7 +8,7 @@ import pytest
 
 from jpoke import Move, Pokemon
 from jpoke.data.ability import ABILITIES
-from jpoke.enums import Command, Event, Interrupt
+from jpoke.enums import Command, Event, Interrupt, LogCode
 from jpoke.types import Stat, AilmentName, VolatileName, WeatherName
 
 from .. import test_utils as t
@@ -738,6 +738,28 @@ def test_ばけのかわ_かたやぶりで無効():
     assert defender.hp == defender.max_hp - 30
 
 
+def test_ばけのかわ_こんらんの自傷ダメージでも発動ログに特性名が記録される():
+    """こんらんの自傷ダメージ（ばけのかわ_block_confusion_damage）を防いだ際も、
+    ログの特性名が空欄にならないことを確認する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ばけのかわ")],
+        team1=[Pokemon("カビゴン")],
+        volatile0={"こんらん": 2},
+    )
+    mon = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.fix_damage(battle, mon.max_hp)
+    t.run_move(battle, 0)
+
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "ばけのかわ"
+    ]
+    assert len(logs) == 1
+
+
 def test_ばけのかわ_こんらんの自傷ダメージも防ぐ():
     """こんらんの自傷ダメージ（ON_MODIFY_NON_MOVE_DAMAGE 経由）もばけのかわで防ぎ、
     最大HPの1/8のみ消費する（docs/spec/abilities/ばけのかわ.md「こんらん時の自分への
@@ -769,6 +791,26 @@ def test_ばけのかわ_交代しても再有効化されない():
     t.run_switch(battle, 1, 1)
     t.run_switch(battle, 1, 0)
     assert mon.ability.enabled is False
+
+
+def test_ばけのかわ_発動ログに特性名が記録される():
+    """ばけのかわは発動と同時に自己無効化（"consumed"）されるため、ログ記録時点で
+    ability.name が空文字にならず、常に元の特性名（base_name）を使って記録されることを確認する
+    （fuzz_log seed=19 で発見されたログ空欄バグの回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ばけのかわ")],
+    )
+    t.fix_damage(battle, 30)
+    t.run_move(battle, 0)
+
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "ばけのかわ"
+    ]
+    assert len(logs) == 1
 
 
 def test_ばけのかわ_連続技の2発目以降は防がない():
@@ -1849,6 +1891,23 @@ def test_ふくつのたて_初登場でBが1段階上がる():
     assert mon.boosts["def"] == 1
 
 
+def test_ふくつのたて_発動ログに特性名が記録される():
+    """ふくつのたては発動と同時に自己無効化（"consumed"）されるため、ログ記録時点で
+    ability.name が空文字にならず、常に元の特性名（base_name）を使って記録されることを確認する
+    （fuzz_log seed=19 で発見されたログ空欄バグの回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "ふくつのたて"
+    ]
+    assert len(logs) == 1
+
+
 def test_ふしぎなうろこ_かたやぶりで無効():
     """ふしぎなうろこ: かたやぶり持ちの物理技はふしぎなうろこの防御補正を貫通する。"""
     battle = t.start_battle(
@@ -2119,6 +2178,23 @@ def test_ふとうのけん_初登場でAが1段階上がる():
     )
     mon = battle.actives[0]
     assert mon.boosts["atk"] == 1
+
+
+def test_ふとうのけん_発動ログに特性名が記録される():
+    """ふとうのけんは発動と同時に自己無効化（"consumed"）されるため、ログ記録時点で
+    ability.name が空文字にならず、常に元の特性名（base_name）を使って記録されることを確認する
+    （fuzz_log seed=19 で発見されたログ空欄バグの回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ザシアン(れきせん)", ability_name="ふとうのけん")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "ふとうのけん"
+    ]
+    assert len(logs) == 1
 
 
 def test_ふみん_すでにねむり状態のポケモンを場に出すと即座に回復する():
