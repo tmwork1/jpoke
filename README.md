@@ -121,6 +121,24 @@ battle.print_logs()                 # このターンのログを表示
 
 最新の詳細は `docs/progress/` 配下の各ファイルを参照。
 
+## 計算速度
+
+種族・特性・アイテム・技などが完全ランダムな3vs3全選出バトルを300戦繰り返し、`Battle.step()`
+（1ターン進行）1回あたりの所要時間を計測（[examples/05_benchmark/01_step_time_benchmark.py](https://github.com/tmwork1/jpoke/blob/main/examples/05_benchmark/01_step_time_benchmark.py)）:
+
+| 指標 | 値 |
+|---|---|
+| 1step所要時間 | 3.8 ms ± 2.4 ms（mean ± σ） |
+| turns/sec | 約260 |
+| battles/sec | 約15 |
+
+Windows 11 / Python 3.14 / Intel64（手元環境）での計測値。計算コストは選出中のポケモンの状態
+（場の効果・技構成など）に大きく左右されるため、σが大きい（分布の幅が広い）点に注意。
+
+```bash
+python examples/05_benchmark/01_step_time_benchmark.py
+```
+
 ## テストヘルパーを使った検証
 
 任意ターンでのピンポイントな状態検証や技の実行など、クイックスタートより細かい制御をしたい場合は

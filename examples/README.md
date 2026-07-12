@@ -20,6 +20,7 @@ python examples/01_basics/01_quickstart.py
 | `02_ai/` | AI開発（`Player` を継承した方策の実装） |
 | `03_damage_calc/` | ダメージ計算ツール開発 |
 | `04_research/` | 戦術研究（多数回対戦・リプレイ・読み合いの定量分析） |
+| `05_benchmark/` | 計算速度の計測 |
 
 ## ファイル一覧
 
@@ -34,6 +35,7 @@ python examples/01_basics/01_quickstart.py
 | `04_research/02_replay.py` | `Battle.build_replay_data()` / `ReplayPlayer` / `replay_battle()` によるリプレイの記録・再生 | 戦術研究（対戦の記録・解析） |
 | `04_research/03_janken_nash_fictitious_play.py` | 実バトルのモンテカルロ推定 + 反復最適反応（fictitious play）によるNash均衡（混合戦略）の近似、`ProcessPoolExecutor` による並列化 | 戦術研究（読み合いの定量分析、発展） |
 | `04_research/04_janken_nash_cfr.py` | `Battle.copy()` を使ったロールアウトベースのregret matching（CFR風）による、HP状況に応じた適応的な戦略の自己対戦学習 | 戦術研究（読み合いの定量分析、発展） |
+| `05_benchmark/01_step_time_benchmark.py` | 完全ランダムな3vs3全選出バトルを繰り返し実行し、`Battle.step()` 1回あたりの所要時間（mean ± σ）を計測 | 計算速度の計測 |
 
 `04_research/03_janken_nash_fictitious_play.py` / `04_research/04_janken_nash_cfr.py` は
 多数回のバトルシミュレーションを行うため、他のサンプルより実行に時間がかかる
