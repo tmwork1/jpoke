@@ -20,7 +20,7 @@
     python scripts/fuzz_battle.py --seed 12345
     python scripts/fuzz_battle.py --seed 12345 --player tree_search --max-plies 1
 
-    # バッチ探索モード（失敗が出るまでシードを進める）
+    # バッチ探索モード（count 件を worker プロセスに分散して並列実行）
     python scripts/fuzz_battle.py --search --start-seed 0 --count 200
     python scripts/fuzz_battle.py --search --player tree_search --start-seed 0 --count 50
 """
@@ -42,8 +42,8 @@ from fuzz_common import (
     build_team,
     failure_signature,
     format_full_log,
+    parallel_search,
     random_team_spec,
-    search,
     write_failure_report,
 )
 
@@ -187,6 +187,8 @@ def main():
                         help="1チームの匹数（既定はプレイヤーモデル依存）")
     parser.add_argument("--max-plies", type=int, default=1,
                         help="木探索の先読み手数（player=tree_search のときのみ有効）")
+    parser.add_argument("--workers", type=int, default=None,
+                        help="バッチ探索モードでの並列worker数（既定: CPU数とcountの小さい方）")
     args = parser.parse_args()
 
     defaults = PLAYER_DEFAULTS[args.player]
@@ -202,13 +204,15 @@ def main():
     )
 
     if args.search:
-        result = search(run_fuzz_battle, args.start_seed, args.count, **kwargs)
-        if result is None:
+        failures = parallel_search(run_fuzz_battle, args.start_seed, args.count,
+                                    workers=args.workers, **kwargs)
+        if not failures:
             print(f"OK: {args.count}件すべて成功（seed {args.start_seed}〜{args.start_seed + args.count - 1}）")
             sys.exit(0)
-        path = write_failure_report(result, failure_dir, _repro_cmd(result, args.player, args.max_plies))
-        print(f"FAIL: seed={result.seed} signature={result.signature}")
-        print(f"report: {path}")
+        for result in sorted(failures, key=lambda r: r.seed):
+            path = write_failure_report(result, failure_dir, _repro_cmd(result, args.player, args.max_plies))
+            print(f"FAIL: seed={result.seed} signature={result.signature}")
+            print(f"report: {path}")
         sys.exit(1)
 
     if args.seed is None:
