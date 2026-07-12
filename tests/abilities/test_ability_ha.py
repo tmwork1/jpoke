@@ -2323,6 +2323,15 @@ def test_プリズムアーマー_かたやぶりで無効化されない():
     assert 3072 == battle.damage_calculator.damage_modifier
 
 
+def test_プリズムアーマー_効果抜群ダメージを0_75倍():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じしん"])],
+        team1=[Pokemon("コイル", ability_name="プリズムアーマー")],
+    )
+    t.run_move(battle, 0)
+    assert 3072 == battle.damage_calculator.damage_modifier
+
+
 def test_プレッシャー_場に出たときに開示される():
     """プレッシャー: 場に出たときABILITY_TRIGGEREDログが記録される"""
     battle = t.start_battle(
