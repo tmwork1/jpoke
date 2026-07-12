@@ -937,7 +937,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
-                priority=200,
+                priority=140,  # docs/spec/turn.md ON_SWITCH_IN: 「140 こだいかっせい（特性）」
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
