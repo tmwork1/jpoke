@@ -214,8 +214,61 @@ package-check:
   `show()`, 状態読み取り系）を実際のソースコード（`core/battle.py`, `core/player.py`,
   `model/pokemon.py`）を読んで確認しながらまとめた。README.md の「ドキュメント」テーブルにも
   1行追加
-- `tests/test_utils.py` の主要ヘルパー（`start_battle` / `run_move` / `run_switch`）を
-  `jpoke.testing` として本体パッケージへ昇格
+- 実施済み: `tests/test_utils.py` の14関数（`start_battle` / `run_move` / `run_switch` /
+  `end_turn` / `apply_ailment` / `fix_damage` / `fix_random` / `get_action_order` /
+  `change_item` / `calc_lethal` / `calc_move_priority` / `build_context` /
+  `reserve_command` / `can_switch`）と `CustomPlayer` を `src/jpoke/testing.py` として
+  本体パッケージへ昇格（`pyproject.toml` は無変更で反映確認済み。`packages.find` が
+  `jpoke` パッケージ配下のモジュールを自動的に含めるため、`python -m build` →
+  クリーンvenvへのwheelインストール → `import jpoke.testing` の実地確認で
+  追加設定不要と判断）。`tests/test_utils.py` は既存テストの
+  `from . import test_utils as t` / `from .. import test_utils as t` という参照パターンを
+  壊さないよう `jpoke.testing` を再エクスポートする薄いシムに変更した。
+  移植時に判明した「内部マネージャー直呼び」の難所は以下のように判断した:
+  - `apply_ailment`（`ailment_manager.apply` の `source`/`overwrite` 引数を使用）は、
+    既存の `Battle.set_ailment()` が常に上書き・`source` 指定不可だったため意味が
+    変わってしまうと判断し、`Battle.set_ailment()` 自体に `source` / `overwrite`
+    引数を追加（デフォルト値は `overwrite=True` のまま据え置き、既存呼び出し元との
+    後方互換を維持）して吸収した
+  - `get_action_order`（`speed_calculator.resolve_action_order()` 直呼び）と
+    `calc_move_priority`（`speed_calculator.calc_move_priority()` 直呼び）は、
+    既に `Battle.resolve_speed_order()` という同種の薄い委譲メソッドが前例として
+    存在したため、同じパターンで `Battle.resolve_action_order()` /
+    `Battle.calc_move_priority()` を新設して公開APIに昇格した
+  - `change_item`（`item_manager.gain_item`/`remove_item`/`can_change_item` に加えて
+    private な `_change_item` を直接呼んでいた）は、「持ち物を持っている状態から
+    別の持ち物へ直接差し替える」経路を表す public メソッドが `ItemManager` に
+    存在しなかったため、`ItemManager.set_item()` を新設（`_change_item` の呼び出しは
+    同クラス内に閉じたので privateアクセスの問題も解消）し、`Battle.set_item()` で
+    公開した
+  - `can_switch`（`query.can_switch()` 直呼び）も同様に `Battle.can_switch()` を
+    新設して公開した。`PokemonQuery` の他のメソッド（`is_floating` 等）は
+    ハンドラ内部専用の判定ロジックであり外部から使う想定がないため、今回は
+    `can_switch` 以外への公開ラッパー追加は見送った
+  - `start_battle` が使っていた `volatile_manager.apply` / `global_manager.activate` /
+    `side_managers[i].activate` にも同様の理由で
+    `Battle.set_volatile()` / `Battle.activate_global_field()` /
+    `Battle.activate_side_field()` を新設し、`set_ailment`/`set_weather`/`set_terrain`
+    と並ぶ「シナリオ構築・ダメージ計算検証用」薄いラッパー群として揃えた
+  - `end_turn`（`events.emit(Event.ON_TURN_END)` 直呼び）も `Battle.end_turn()` を
+    新設して公開した。ターン終了時効果だけを技の実行なしに検証したい場合の
+    ショートカットである旨をdocstringに明記した
+  - `fix_damage` / `fix_random` は `Battle.roll_damage` / `Battle.random.random` を
+    差し替えるモンキーパッチであり、公開APIとして安定化させる性質のものではないと
+    判断。`jpoke.testing` に残しつつ、docstringに「テスト・デバッグ専用、本番の対戦
+    進行では使わないこと」と明記するに留めた（`fix_random` は `random()` のみを
+    固定し `choice`/`randint`/`shuffle` には効かない注意点も明記）
+  - `reserve_command`（`battle.phase_context()` と `player_states[player]` から得た
+    `PlayerState` の `reset_turn_state()`/`reserve_command()` を呼ぶ）は、通常の対戦
+    進行が `step()` を介するのに対し、コマンド予約状態だけを対戦を進めずに作る
+    シナリオ検証専用の操作であり、`step()` に代わる安定した公開APIとして一般化する
+    のは時期尚早と判断し、`player_states`（既存の公開プロパティ）経由のアクセスを
+    そのまま維持した。docstringにその旨と用途を明記した
+  - 検証: `python -m pytest tests/ -q`（4842 passed, 1 skipped）、
+    `python -m pytest tests/test_examples_smoke.py -q`、`python -m ruff check src/ tests/`、
+    `python -m mypy` がいずれも成功。`python -m build` でwheelを作成し、クリーンな
+    venvに実際にインストールして `import jpoke.testing` と `start_battle`/`run_move`/
+    `get_action_order` の実行まで通ることを確認済み
 - 実施済み: `core` ⇔ `model` ⇔ `data` の循環 import 解消。パッケージ内の他ファイルが
   `from jpoke.core import X` / `from jpoke.model import X` / `from jpoke.data import X` という
   パッケージレベル絶対importを使い、対象パッケージの `__init__.py` が完全実行済みであることに

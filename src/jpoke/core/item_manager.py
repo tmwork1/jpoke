@@ -208,6 +208,37 @@ class ItemManager:
         self._change_item(target, "", track_loss=track_loss)
         return True
 
+    def set_item(self,
+                target: Pokemon,
+                name: ItemName,
+                source: Pokemon | None = None) -> bool:
+        """ポケモンの持ち物を任意の状態に設定する（シナリオ構築・ダメージ計算検証用）。
+
+        現在の持ち物と一致する場合は何もせず成功扱いにする。持ち物を持たない場合は
+        そのまま獲得させ、name が空文字列の場合は除去する。既に別の持ち物を持っている
+        場合は can_change_item による判定を経て入れ替える（gain_item / remove_item /
+        _change_item の組み合わせでは表現できない「既存の持ち物を別の持ち物へ
+        直接差し替える」経路をまとめたもの）。
+
+        Args:
+            target: 持ち物を設定するポケモン
+            name: 設定後の持ち物名（空文字列の場合は持ち物を外す）
+            source: 変更の原因となったポケモン（例: 交換元のポケモン、技の使用者など）
+
+        Returns:
+            bool: 設定に成功した場合True
+        """
+        if target.has_item(name):
+            return True
+        if not target.has_item():
+            return self.gain_item(target, name)
+        if not name:
+            return self.remove_item(target, source=source)
+        if not self.can_change_item(target, source=source):
+            return False
+        self._change_item(target, name)
+        return True
+
     def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
         """2体のアイテムを入れ替える。
 
