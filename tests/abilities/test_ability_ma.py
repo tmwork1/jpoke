@@ -526,6 +526,15 @@ def test_マルチタイプ_プレートなしでタイプ変更なし():
     assert mon.ability.revealed is False  # プレートなしは不発なので False
 
 
+def test_マルチタイプ_プレートなしなら自分の道具変更は防がれない():
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ", item_name="いのちのたま")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source)
+
+
 def test_マルチタイプ_プレートの奪取を阻止する():
     """マルチタイプ: はたきおとすでプレートを奪取できない。"""
     battle = t.start_battle(
@@ -538,6 +547,52 @@ def test_マルチタイプ_プレートの奪取を阻止する():
     # プレートが奪取されずに残っている
     assert mon.item.name == "せいれいプレート"
     assert mon.has_item()
+
+
+def test_マルチタイプ_相手がプレートを持たなければ通常の道具変更を防がない():
+    """交換判定であっても、自分・相手ともプレートを持たなければ道具変更は妨げられない"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ")],
+        team1=[Pokemon("ピカチュウ", item_name="いのちのたま")],
+    )
+    target, source = battle.actives
+    assert battle.item_manager.can_change_item(target=target, source=source, is_exchange=True)
+
+
+def test_マルチタイプ_相手がプレートを持つ場合トリックすりかえ相当の交換が失敗する():
+    """相手がプレートを持っている場合、自分がプレートを持っていなくても道具交換自体が失敗する"""
+    battle = t.start_battle(
+        team0=[Pokemon("アルセウス", ability_name="マルチタイプ")],
+        team1=[Pokemon("ピカチュウ", item_name="せいれいプレート")],
+    )
+    before = [mon.item.name for mon in battle.actives]
+    assert not battle.item_manager.swap_items()
+    assert [mon.item.name for mon in battle.actives] == before
+
+
+def test_ミイラ_かがくへんかガス保持者がとくせいなし状態なら上書きできる():
+    """ミイラ: かがくへんかガス保持者自身がとくせいなし状態（いえき等）の場合は例外的に上書きできる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="ミイラ")],
+        volatile0={"とくせいなし": 3},
+    )
+    attacker, defender = battle.actives
+    # とくせいなしによりガス効果が切れ、相手のミイラが有効化されていることを確認
+    assert defender.ability.enabled
+    t.run_move(battle, 0)
+    assert attacker.ability.base_name == "ミイラ"
+
+
+def test_ミイラ_かがくへんかガス保持者には発動しない():
+    """ミイラ: かがくへんかガスはuncopyableのため上書きできない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="ミイラ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.base_name == "かがくへんかガス"
 
 
 def test_ミイラ_接触技で攻撃した相手の特性がミイラになる():
@@ -568,6 +623,45 @@ def test_ミイラ_非接触技では特性が変わらない():
     assert attacker.ability.name != "ミイラ"
 
 
+def test_ミストメイカー_特性再有効化時にも発動する():
+    """ミストメイカー: かがくへんかガス解除後に特性が再有効化されると再発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミストメイカー")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    # かがくへんかガスにより特性が無効化されているのでフィールドは展開されていない
+    assert battle.terrain.name == ""
+    # かがくへんかガスの無効化を解除すると特性が再発動してミストフィールドが展開される
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.terrain.name == "ミストフィールド"
+    assert battle.terrain.count == 5
+
+
+@pytest.mark.parametrize(
+    "move_name",
+    ["アクアブレイク", "シェルブレード"],
+)
+def test_みずがため_アクアブレイクとシェルブレードでは追加効果の後に発動する(move_name: str):
+    """みずがため: アクアブレイク/シェルブレードを受けた場合、
+    ぼうぎょ低下の追加効果が先に適用されてからみずがための2段階上昇が発動する。
+    順序によってランク上限のクランプ挙動が変わるため、B+5から検証する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="みずがため")],
+        team1=[Pokemon("カビゴン", move_names=[move_name])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    assert battle.modify_stats(defender, {"def": 5}, source=defender)
+    t.fix_damage(battle, 1)
+    t.fix_random(battle, 0.0)  # 追加効果(ぼうぎょ低下)を確定発動させる
+    t.run_move(battle, 1)
+    # 追加効果(B-1)が先に適用され 5→4、その後にみずがため(B+2)が発動し 4→6。
+    # 順序が逆であれば 5→7(+6にクランプ)→+5 になってしまう。
+    assert defender.boosts["def"] == 6
+
+
 @pytest.mark.parametrize(
     "move_name, expected_rank",
     [
@@ -582,6 +676,76 @@ def test_みずがため_みず技でBが2段階上がる(move_name: str, expect
     )
     t.run_move(battle, 1)
     assert battle.actives[0].boosts["def"] == expected_rank
+
+
+def test_みずのベール_すでにやけど状態のポケモンを場に出すと即座に回復する():
+    """みずのベール: 元の特性がみずのベールのポケモンが、特性を書き換えられてやけど状態に
+    なった後、交代でベンチに戻ると特性はみずのベールに戻る（やけどは残る）。この状態の
+    ポケモンを再び場に出すと、場に出た直後に特性の効果でやけどが治る。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="みずのベール"),
+            Pokemon("ラッキー"),
+        ],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    # スキルスワップで特性を入れ替え、みずのベールの効果を持たない状態にする
+    t.run_move(battle, 0)
+    assert defender.ability.name == "せいでんき"
+    assert defender.base_ability == "みずのベール"
+
+    # 特性がみずのベールでない間にやけど状態にする
+    assert battle.ailment_manager.apply(defender, "やけど")
+
+    # ベンチに戻ると特性は元のみずのベールに戻るが、やけどはそのまま残る
+    t.run_switch(battle, 1, 1)
+    bench = battle.get_team(battle.players[1])[0]
+    assert bench.ability.name == "みずのベール"
+    assert bench.ailment.name == "やけど"
+
+    # 再び場に出すと、場に出た直後にみずのベールの効果でやけどが治る
+    t.run_switch(battle, 1, 0)
+    active = battle.actives[1]
+    assert active.ability.name == "みずのベール"
+    assert not active.ailment.is_active
+
+
+def test_みずのベール_どくびしと同時に発生した場合はどくびしの毒付与が不発してから回復する():
+    """みずのベール: すでにやけど状態のみずのベールのポケモンを、どくびしが設置された
+    サイドに出した場合、どくびしのどく付与判定はやけど状態により不発してから、
+    みずのベールの効果でやけどが治る（どくびしの効果は防がれる）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["スキルスワップ"])],
+        team1=[
+            Pokemon("カビゴン", ability_name="みずのベール"),
+            Pokemon("ラッキー"),
+        ],
+        accuracy=100,
+        side1={"どくびし": 2},
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+    assert battle.ailment_manager.apply(defender, "やけど")
+
+    t.run_switch(battle, 1, 1)
+    t.run_switch(battle, 1, 0)
+    active = battle.actives[1]
+
+    # やけどは治り、どくびしのどくも付与されない
+    assert not active.ailment.is_active
+
+
+def test_ミラクルスキン_かたやぶりで無効化される():
+    """ミラクルスキン: かたやぶりの効果がある変化技に対しては発動せず、
+    変化技本来の命中率のまま判定される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラクルスキン")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["どくどく"])],
+    )
+    t.run_move(battle, 1)
+    assert battle.move_executor.accuracy == 90
 
 
 @pytest.mark.parametrize(
@@ -610,6 +774,26 @@ def test_ミラーアーマー_かたやぶりで反射されない():
     assert battle.actives[1].boosts["atk"] == 0
 
 
+def test_ミラーアーマー_しろいきりで無効化されたときは反射しない():
+    """ミラーアーマー: 自身のしろいきりで能力低下を無効にした場合は反射も発動しない
+    （docs/spec/abilities/ミラーアーマー.md「自身のみがわり/しろいきり状態...により
+    無効にしたとき...ミラーアーマーは発動しない」）。
+
+    side0 はバトル開始時点（battle.start()）より後に設置されるため、初手の
+    いかくで検証すると場の効果が間に合わない。中盤の交代で発動するいかくを使う。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        side0={"しろいきり": 1},
+    )
+    mon = battle.actives[0]
+    t.run_switch(battle, 1, 1)
+    foe = battle.actives[1]
+    assert mon.boosts["atk"] == 0
+    assert foe.boosts["atk"] == 0
+
+
 def test_ミラーアーマー_反射により相手のかちきが発動する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
@@ -620,6 +804,40 @@ def test_ミラーアーマー_反射により相手のかちきが発動する(
     assert ally.boosts["atk"] == 0
     assert foe.boosts["atk"] == -1
     assert foe.boosts["spa"] == 2
+
+
+def test_ミラーアーマー_反射成功時に特性バーが出る():
+    """ミラーアーマー: 反射に成功した場合、ABILITY_TRIGGERED ログが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
+    )
+    t.run_move(battle, 1)
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED and log.payload.ability == "ミラーアーマー"
+    ]
+    assert len(triggered) == 1
+
+
+def test_ミラーアーマー_相手が最低ランクのときは特性バーが出ない():
+    """ミラーアーマー: 反射先（相手）が既に最低ランクで実際には変化しない場合、
+    特性バーは出ずにランクが変わらない旨のメッセージだけが出る
+    （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
+    )
+    _, foe = battle.actives
+    foe.boosts["atk"] = -6
+    t.run_move(battle, 1)
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED and log.payload.ability == "ミラーアーマー"
+    ]
+    assert not triggered
+    assert foe.boosts["atk"] == -6
+    assert battle.actives[0].boosts["atk"] == 0
 
 
 def test_ミラーアーマー_能力低下のみ反射する():
@@ -647,6 +865,20 @@ def test_ミラーアーマー_自己能力低下は反射しない():
     battle.modify_stats(target, {"atk": -1}, source=target)
     assert battle.actives[0].boosts["atk"] == -1
     assert battle.actives[1].boosts["atk"] == 0
+
+
+def test_ムラっけ_しろいきりでは能力低下を防げない():
+    """ムラっけの能力低下は自発的な変化のため、しろいきりでも防げない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ムラっけ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"しろいきり": 1},
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+
+    assert 2 in mon.boosts.values()
+    assert -1 in mon.boosts.values()
 
 
 def test_ムラっけ_ターン終了時に別々の能力が上昇と下降する():
@@ -751,6 +983,30 @@ def test_メタルプロテクト_かたやぶりで無効化されない():
     )
     t.run_move(battle, 1)
     assert battle.actives[0].boosts["atk"] == 0
+
+
+def test_メタルプロテクト_能力低下を防ぐ():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メタルプロテクト")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, mon1 = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = {k: v for k, v in stats.items() if v > 0}
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon1)
+
+
+def test_メタルプロテクト_自己低下は防げない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="メタルプロテクト")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon0, _ = battle.actives
+    stats = {"atk": -1, "def": +1, "spa": -3, "spd": +3, "spe": -5, "accuracy": +5, "evasion": -6}
+    expected = stats
+
+    assert expected == battle.modify_stats(mon0, stats, source=mon0)
 
 
 def test_メロメロボディ_接触攻撃30パーセントでメロメロ():

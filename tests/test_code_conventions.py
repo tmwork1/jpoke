@@ -90,6 +90,33 @@ def test_docs_examplesがjpoke_testingモジュールに言及している():
     )
 
 
+def test_examplesがjudge_winnerのis_None比較を使っていない():
+    """`battle.judge_winner()` は決着判定のたびにTOD判定込みで再計算する重い遅延判定APIで、
+    決着したかどうかのチェックには軽量な `battle.finished`（キャッシュされた `battle.winner`
+    を経由）を使うべきという規約になっている。`judge_winner() is None` / `is not None` の
+    直接比較は `battle.finished` への置き換え漏れの兆候である。かつて
+    `examples/05_benchmark/01_step_time_benchmark.py` と
+    `examples/04_research/03_janken_nash_fictitious_play.py`・`04_janken_nash_cfr.py` の
+    計3ファイルで `judge_winner() is None` によるループ継続判定が残っていた（id: r6-4）。
+    再発防止のため examples/ 配下に `judge_winner()` の `is None` / `is not None` 直接比較が
+    無いことを確認する（`judge_winner()` 自体は勝者取得APIとして今後も使われてよく、
+    禁止対象は None との直接比較のみ）。
+    """
+    pattern = re.compile(r"judge_winner\(\)\s*is\s*(not\s+)?None")
+    violations = []
+    for path in EXAMPLES_ROOT.rglob("*.py"):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if pattern.search(line):
+                rel_path = path.relative_to(EXAMPLES_ROOT).as_posix()
+                violations.append(f"{rel_path}:{lineno}: {line.strip()}")
+
+    assert not violations, (
+        "examples/ 配下で judge_winner() の is None / is not None 直接比較を検出"
+        "（battle.finished / battle.winner に置き換えること）:\n" + "\n".join(violations)
+    )
+
+
 def test_examplesがteam_append_Pokemon経由でチームを構築していない():
     """`Player.add_pokemon()` が jpoke の正規のチーム追加ルートであり、
     `team.append(Pokemon(...))`（`Pokemon` を直接構築して `team` に追加する書き方）は
