@@ -246,7 +246,12 @@ class PokemonQuery:
         return any(not mon.fainted for mon in state.bench)
 
     def get_volatile_duration(self, ctx: AttackContext, name: str, count: int) -> int:
-        """ON_MODIFY_DURATION を発火して揮発性状態の持続ターン数を返す。
+        """ON_MODIFY_BIND_DURATION を発火して揮発性状態の持続ターン数を返す。
+
+        Notes:
+            フィールド・場の状態の持続ターン延長で使う Event.ON_MODIFY_DURATION は
+            EventContext 専用イベントのため、AttackContext から発火する本メソッドでは
+            別イベント（ON_MODIFY_BIND_DURATION）を使う（1イベント=1コンテキスト型の原則）。
 
         Args:
             ctx: AttackContext
@@ -257,7 +262,7 @@ class PokemonQuery:
             int: アイテム等の効果を反映した最終ターン数
         """
         _, modified_count = self._events.emit(
-            Event.ON_MODIFY_DURATION,
+            Event.ON_MODIFY_BIND_DURATION,
             ctx,
             [name, count]
         )

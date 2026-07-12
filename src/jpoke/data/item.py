@@ -1369,7 +1369,7 @@ ITEMS: dict[ItemName, ItemData] = {
     "ねばりのかぎづめ": ItemData(
         fling_power=90,
         handlers={
-            Event.ON_MODIFY_DURATION: h.ItemHandler(
+            Event.ON_MODIFY_BIND_DURATION: h.ItemHandler(
                 h.ねばりのかぎづめ_fix_bind_duration,
                 subject_spec="attacker:self",
             )

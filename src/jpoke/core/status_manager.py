@@ -89,7 +89,7 @@ class StatusManager:
         if v < 0:
             v = self._events.emit(Event.ON_MODIFY_NON_MOVE_DAMAGE, ctx, v)
 
-        v = target.modify_hp(v)
+        v = target._modify_hp_raw(v)
 
         if v != 0:
             self.battle.add_event_log(
