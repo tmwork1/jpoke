@@ -16,7 +16,7 @@ from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode, \
-    AilmentName, WeatherName, TerrainName
+    AilmentName, WeatherName, TerrainName, VolatileName, SideFieldName, ItemName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
@@ -577,6 +577,19 @@ class Battle:
 
         raise InvalidPhaseError(f"Invalid phase: {self.phase}")
 
+    def can_switch(self, player: Player) -> bool:
+        """指定したプレイヤーが交代可能かどうかを判定する（PokemonQueryへの委譲）。
+
+        場のポケモンがとらわれ状態にある場合、または控えが全滅している場合はFalse。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool: 交代可能な場合True
+        """
+        return self.query.can_switch(player)
+
     def resolve_speed_order(self) -> list[Pokemon]:
         """素早さ順序を解決（SpeedCalculatorへの委譲）。
 
@@ -584,6 +597,33 @@ class Battle:
             素早さの速い順にソートされたポケモンのリスト
         """
         return self.speed_calculator.resolve_speed_order()
+
+    def resolve_action_order(self) -> list[Pokemon]:
+        """技の行動順序を解決する（SpeedCalculatorへの委譲）。
+
+        優先度と実効素早さを考慮した行動順を返す。各プレイヤーに予約済みコマンド
+        （`player_states[player].reserved_commands`）が必要（`step()` 内部や
+        シナリオ検証で `phase_context` 経由でコマンドを予約した後に呼ぶ）。
+
+        Returns:
+            list[Pokemon]: 行動順にソートされたポケモンのリスト
+        """
+        return self.speed_calculator.resolve_action_order()
+
+    def calc_move_priority(self, attacker: Pokemon, move: Move) -> int:
+        """技を発動したときの優先度を計算する（SpeedCalculatorへの委譲）。
+
+        技本来の優先度に加え、ON_MODIFY_MOVE_PRIORITYイベント（さきどり等）による
+        補正後の優先度を返す。
+
+        Args:
+            attacker: 技を使用するポケモン
+            move: 使用する技
+
+        Returns:
+            int: 補正後の優先度
+        """
+        return self.speed_calculator.calc_move_priority(attacker, move)
 
     def judge_winner(self) -> Player | None:
         """勝者を判定（TurnControllerへの委譲）。
@@ -749,10 +789,15 @@ class Battle:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
 
-    def set_ailment(self, target: Pokemon, name: AilmentName, count: int | None = None) -> bool:
+    def set_ailment(self,
+                    target: Pokemon,
+                    name: AilmentName,
+                    count: int | None = None,
+                    source: Pokemon | None = None,
+                    overwrite: bool = True) -> bool:
         """状態異常を直接付与する（シナリオ構築・ダメージ計算検証用）。
 
-        既存の状態異常があれば上書きするが、タイプ免疫（例: ほのおタイプへの「やけど」）や
+        既定では既存の状態異常があれば上書きするが、タイプ免疫（例: ほのおタイプへの「やけど」）や
         ON_BEFORE_APPLY_AILMENT（不眠等の特性による無効化）の判定は通常付与と同様に行う。
         これらの判定によって付与が阻まれた場合は戻り値がFalseになり、状態異常は付与されない。
 
@@ -760,11 +805,33 @@ class Battle:
             target: 対象のポケモン
             name: 状態異常名
             count: 継続ターン数（ねむりは省略時にChampions仕様で自動決定）
+            source: 状態異常の原因となったポケモン（シンクロ等、原因ポケモンを
+                参照するハンドラの検証に使う）
+            overwrite: False の場合、既に状態異常があれば付与に失敗する
+                （デフォルトTrueで既存の状態異常を上書き）
 
         Returns:
             bool: 付与に成功した場合True
         """
-        return self.ailment_manager.apply(target, name, count=count, overwrite=True)
+        return self.ailment_manager.apply(target, name, count=count, source=source, overwrite=overwrite)
+
+    def set_volatile(self,
+                     target: Pokemon,
+                     name: VolatileName,
+                     count: int | None = None,
+                     source: Pokemon | None = None) -> bool:
+        """揮発性状態を直接付与する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            target: 対象のポケモン
+            name: 揮発性状態名
+            count: 継続ターン数
+            source: 揮発性状態の原因となったポケモン
+
+        Returns:
+            bool: 付与に成功した場合True（既に同じ揮発性状態がある場合は失敗）
+        """
+        return self.volatile_manager.apply(target, name, count=count, source=source)
 
     def set_weather(self, name: WeatherName, count: int = 5) -> bool:
         """天候を直接発動する（シナリオ構築・ダメージ計算検証用）。
@@ -789,6 +856,44 @@ class Battle:
             bool: 発動に成功した場合True
         """
         return self.terrain_manager.apply(name, count)
+
+    def activate_global_field(self, name: GlobalFieldName, count: int) -> bool:
+        """グローバルフィールド効果を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            name: グローバルフィールド効果名
+            count: 持続ターン数
+
+        Returns:
+            bool: 発動に成功した場合True
+        """
+        return self.global_manager.activate(name, count)
+
+    def activate_side_field(self, player: Player, name: SideFieldName, count: int) -> bool:
+        """指定プレイヤーのサイドフィールド効果を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            player: 発動対象のサイドを持つプレイヤー
+            name: サイドフィールド効果名
+            count: 層数・持続ターン数（効果による）
+
+        Returns:
+            bool: 発動に成功した場合True
+        """
+        return self.get_side(player).activate(name, count)
+
+    def set_item(self, target: Pokemon, name: ItemName, source: Pokemon | None = None) -> bool:
+        """ポケモンの持ち物を直接設定する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            target: 持ち物を設定するポケモン
+            name: 設定後の持ち物名（空文字列の場合は持ち物を外す）
+            source: 変更の原因となったポケモン（例: 交換元のポケモン、技の使用者など）
+
+        Returns:
+            bool: 設定に成功した場合True
+        """
+        return self.item_manager.set_item(target, name, source=source)
 
     def roll_damage(self,
                     attacker: Pokemon,
@@ -873,6 +978,16 @@ class Battle:
             emit: ON_SWITCH_INイベントを発火する場合True
         """
         self.switch_manager.run_switch(player, new, emit)
+
+    def end_turn(self) -> None:
+        """ターン終了処理（ON_TURN_ENDイベント）のみを発火する（シナリオ構築・検証用）。
+
+        通常のターン進行は `step()` が内部でこのイベントも含めて実行するため、
+        対戦を進めながら使う分にはこのメソッドは不要。技を使わず状態異常・天候・
+        揮発性状態などのターン終了時効果（毒ダメージ・やけど回復阻害・天候ダメージ等）
+        だけを単体で検証したい場合に使う。
+        """
+        self.events.emit(Event.ON_TURN_END)
 
     def add_event_log(self,
                       source: Player | Pokemon | int,

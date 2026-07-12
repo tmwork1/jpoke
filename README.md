@@ -93,10 +93,18 @@ battle.print_logs()                 # このターンのログを表示
 
 | ディレクトリ | 役割 |
 |---|---|
+| `docs/api/` | 利用者向け公開APIリファレンス（`Battle` / `Player` / `Pokemon`） |
 | `docs/spec/` | 技・アイテム・特性・場の効果の挙動仕様 |
 | `docs/plan/` | 実行計画と優先順位 |
 | `docs/progress/` | カテゴリ別の実装追跡（`ability.md`, `item.md`, `move.md` 等） |
 | `docs/tests/` | テスト一覧（`scripts/generate_test_list.py` で生成） |
+
+開発への貢献方法は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)、
+脆弱性の報告方法は [SECURITY.md](https://github.com/tmwork1/jpoke/blob/main/SECURITY.md) を参照。
+
+`jpoke.testing` — `pip install jpoke` だけで使える、任意ターンでのピンポイントな状態検証・技の
+実行などを行うテストヘルパー集（`start_battle` / `run_move` / `run_switch` 等）。詳細は後述の
+「テストヘルパーを使った検証」を参照。
 
 ## 実装状況
 
@@ -113,10 +121,52 @@ battle.print_logs()                 # このターンのログを表示
 
 最新の詳細は `docs/progress/` 配下の各ファイルを参照。
 
+## 計算速度
+
+種族・特性・アイテム・技などが完全ランダムな3vs3全選出バトルを300戦繰り返し、`Battle.step()`
+（1ターン進行）1回あたりの所要時間を計測（[examples/05_benchmark/01_step_time_benchmark.py](https://github.com/tmwork1/jpoke/blob/main/examples/05_benchmark/01_step_time_benchmark.py)）:
+
+| 指標 | 値 |
+|---|---|
+| 1step所要時間 | 3.8 ms ± 2.4 ms（mean ± σ） |
+| turns/sec | 約260 |
+| battles/sec | 約15 |
+
+Windows 11 / Python 3.14 / Intel64（手元環境）での計測値。計算コストは選出中のポケモンの状態
+（場の効果・技構成など）に大きく左右されるため、σが大きい（分布の幅が広い）点に注意。
+
+```bash
+python examples/05_benchmark/01_step_time_benchmark.py
+```
+
+## テストヘルパーを使った検証
+
+任意ターンでのピンポイントな状態検証や技の実行など、クイックスタートより細かい制御をしたい場合は
+`jpoke.testing` のヘルパー（`start_battle` / `run_move` / `run_switch` 等）が便利。
+`pip install jpoke` だけで（リポジトリを clone せずに）使える:
+
+```python
+from jpoke import Pokemon
+from jpoke import testing as t
+
+battle = t.start_battle(
+    team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
+    team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    accuracy=100,  # 命中率を固定して再現性を上げる
+)
+t.run_move(battle, atk_idx=0, move_idx=0)
+```
+
+`fix_damage` / `fix_random` は対戦オブジェクトの内部属性を直接差し替えるモンキーパッチのため、
+テスト・デバッグ専用であり本番の対戦進行では使わないこと。
+
+リポジトリ内部のテストコード（`tests/`）は同じ実体を `tests/test_utils.py` 経由（後方互換の
+薄い再エクスポート層）で使っている。詳細な使い方は
+[tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) も参照。
+
 ## 開発（clone 前提）
 
-ソースを直接編集する場合や、テストヘルパーを使ってピンポイントな状態検証をしたい場合は
-リポジトリを clone してセットアップする。
+ソースを直接編集する場合はリポジトリを clone してセットアップする。
 
 ```bash
 git clone https://github.com/tmwork1/jpoke.git
@@ -127,27 +177,6 @@ pip install -e .
 pip install -e . pytest pytest-cov ruff mypy
 # または uv を使う場合
 uv sync
-```
-
-### テストヘルパーを使った検証
-
-任意ターンでのピンポイントな状態検証や技の実行など、クイックスタートより細かい制御をしたい場合は
-`tests/test_utils.py` のヘルパー（`start_battle` / `run_move` / `run_switch` 等）が便利。
-これはテスト用のヘルパーだが、プロジェクトルートから実行すれば（`tests/` が import できる状態）
-通常のスクリプトからも使える。詳細な使い方は
-[tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) を参照:
-
-```python
-# プロジェクトルートから実行する想定（tests/ が import できる状態）
-from jpoke import Pokemon
-from tests import test_utils as t
-
-battle = t.start_battle(
-    team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
-    team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-    accuracy=100,  # 命中率を固定して再現性を上げる
-)
-t.run_move(battle, atk_idx=0, move_idx=0)
 ```
 
 ## テストの実行
