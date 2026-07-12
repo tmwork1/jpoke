@@ -5,7 +5,6 @@ README のクイックスタートと同内容。
 """
 from __future__ import annotations
 
-# TODO: RandomPlayer を使う。未実装ならplayers/random_player.py を作る
 from jpoke import Battle, Player
 
 
@@ -18,10 +17,6 @@ def main() -> None:
 
     # n_selected: 省略時は min(3, チームの手持ち数) が自動設定される（ここでは1）
     # seed: 乱数シードを固定し、命中判定・急所判定などを再現可能にする
-    # TODO: Battleクラスをimportせずとも、Player.battle_against()で同じことができるようにする
-    # TODO: poke-envのbattle_against()はバトルを最後まで進めるが、jpokeでは手動でstep()している。
-    # TODO: jpoke.Player.battle_against()はpoke-env互換にしておいて、手動で進めるための
-    #       別メソッドも用意すべき(別スクリプトにする)
     battle = Battle(player1, player2, seed=1)
 
     # 選出と初期繰り出しを行い、対戦を開始する

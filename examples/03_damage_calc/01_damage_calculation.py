@@ -45,7 +45,6 @@ def main() -> None:
     print(f"防御側: {defender.name}（HP {defender.max_hp}, オボンのみ）")
     print("-" * 50)
 
-    # TODO: 致死判定はresults[-1]に格納されている。resultsの各要素はヒットごとのHP分布が格納されている。ということがわかるようにする。
     for result in results:
         print(
             f"{result.n_attack}発目: ダメージ {result.min_damage}~{result.max_damage} "
