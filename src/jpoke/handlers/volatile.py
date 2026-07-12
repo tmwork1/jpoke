@@ -452,7 +452,7 @@ def くちばしキャノン_burn_on_contact(battle: Battle, ctx: AttackContext,
     解除されるまで）に自分より先に行動した相手から接触技を受けた時点でやけどを付与する。
     """
     if battle.query.is_contact_reaction(ctx):
-        battle.ailment_manager.apply(ctx.attacker, "やけど", source=ctx.defender, ctx=ctx)
+        battle.ailment_manager.apply(ctx.attacker, "やけど", source=ctx.defender)
     return HandlerReturn(value=value)
 
 

@@ -91,7 +91,7 @@ def apply_ailment_to_defender(battle: Battle,
     if chance < 1 and battle.random.random() >= chance:
         return HandlerReturn(value=value)
     return HandlerReturn(value=battle.ailment_manager.apply(
-        ctx.defender, ailment, count=count, source=ctx.attacker, ctx=ctx
+        ctx.defender, ailment, count=count, source=ctx.attacker
     ))
 
 

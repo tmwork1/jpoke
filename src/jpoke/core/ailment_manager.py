@@ -11,7 +11,7 @@ from jpoke.model.pokemon import Pokemon
 from jpoke.model.ailment import Ailment
 from jpoke.types import AilmentName
 from jpoke.enums import Event, LogCode
-from .context import EventContext, BaseContext
+from .context import EventContext
 from .log_payload import AilmentPayload
 from jpoke.utils import fast_copy
 
@@ -53,8 +53,7 @@ class AilmentManager:
               name: AilmentName,
               count: int | None = None,
               source: Pokemon | None = None,
-              overwrite: bool = False,
-              ctx: BaseContext | None = None) -> bool:
+              overwrite: bool = False) -> bool:
         """状態異常を付与する。
 
         Args:
@@ -63,7 +62,6 @@ class AilmentManager:
             count: 継続ターン数（ねむりは省略時に Champions 仕様で自動決定）
             source: 状態異常の原因となったポケモン
             overwrite: Trueの場合、既存の状態異常を上書き
-            ctx: ON_BEFORE_APPLY_AILMENT イベントの EventContext
         Returns:
             付与に成功したTrue
 
@@ -93,10 +91,7 @@ class AilmentManager:
             return False
 
         # ON_BEFORE_APPLY_AILMENT イベントを発火して特性などによる無効化をチェック
-        if ctx is not None:
-            apply_ctx = EventContext(source=source, target=target)
-        else:
-            apply_ctx = EventContext(target=target, source=source)
+        apply_ctx = EventContext(source=source, target=target)
 
         # ハンドラーが空値を返した場合は状態異常を付与しない
         resolved_name = self._events.emit(Event.ON_BEFORE_APPLY_AILMENT, apply_ctx, name)

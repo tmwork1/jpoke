@@ -1703,7 +1703,7 @@ def だいもんじ_apply_burn_to_defender(battle: Battle, ctx: AttackContext, v
     return apply_ailment_to_defender(battle, ctx, value, ailment="やけど", chance=0.1)
 
 
-def ダイヤストーム_sharply_boost_defender_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ダイヤストーム_sharply_boost_attacker_B(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2}, chance=0.5)
 
 
@@ -1994,7 +1994,7 @@ def トライアタック_apply_ailment_to_defender(battle: Battle, ctx: AttackC
     else:
         return HandlerReturn(value=value)
     return HandlerReturn(value=battle.ailment_manager.apply(
-        ctx.defender, ailment, source=ctx.attacker, ctx=ctx
+        ctx.defender, ailment, source=ctx.attacker
     ))
 
 
@@ -2104,13 +2104,13 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
 
     item_name = ctx.attacker.item.base_name
     if item_name == "でんきだま":
-        battle.ailment_manager.apply(ctx.defender, "まひ", source=ctx.attacker, ctx=ctx)
+        battle.ailment_manager.apply(ctx.defender, "まひ", source=ctx.attacker)
     elif item_name == "かえんだま":
-        battle.ailment_manager.apply(ctx.defender, "やけど", source=ctx.attacker, ctx=ctx)
+        battle.ailment_manager.apply(ctx.defender, "やけど", source=ctx.attacker)
     elif item_name == "どくバリ":
-        battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker, ctx=ctx)
+        battle.ailment_manager.apply(ctx.defender, "どく", source=ctx.attacker)
     elif item_name == "どくどくだま":
-        battle.ailment_manager.apply(ctx.defender, "もうどく", source=ctx.attacker, ctx=ctx)
+        battle.ailment_manager.apply(ctx.defender, "もうどく", source=ctx.attacker)
     elif item_name in ("おうじゃのしるし", "するどいキバ"):
         battle.volatile_manager.apply(ctx.defender, "ひるみ", source=ctx.attacker)
     elif item_name == "しろいハーブ":
@@ -2762,7 +2762,7 @@ def フェイタルクロー_apply_ailment_to_defender(battle: Battle, ctx: Atta
     else:
         return HandlerReturn(value=value)
     return HandlerReturn(value=battle.ailment_manager.apply(
-        ctx.defender, ailment, source=ctx.attacker, ctx=ctx
+        ctx.defender, ailment, source=ctx.attacker
     ))
 
 

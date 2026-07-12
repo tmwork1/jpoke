@@ -7,12 +7,30 @@ from jpoke.enums import Command
 
 from . import test_utils as t
 
-
 stones = list(MEGA_STONES.keys())
 normal_names = [x[0] for x in MEGA_STONES.values()]
 mega_names = [x[-1] for x in MEGA_STONES.values()]
 
 stone_normal_mega = list(zip(stones, normal_names, mega_names))
+
+
+def test_megaevolved_繰り返し判定しても結果が変わらない():
+    """MEGA_POKEMONSがジェネレータ式に戻ると、in判定を繰り返すうちに
+    非メガシンカ形の判定（イテレータ消費）を経て以後megaevolvedが常にFalseを返す
+    退行バグが再発する。frozenset化により何度呼び出しても結果が安定することを確認する"""
+    battle = t.start_battle(
+        team0=[Pokemon("バンギラス", item_name="バンギラスナイト")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.reserve_command(battle, Command.MEGAEVOL_0)
+    battle.step()
+
+    mon = battle.actives[0]
+    assert mon.name == "メガバンギラス"
+    # 非メガシンカ形を含め繰り返し判定しても、メガシンカ形の判定結果が変わらないこと
+    for _ in range(3):
+        assert battle.actives[1].megaevolved is False
+    assert mon.megaevolved is True
 
 
 @pytest.mark.parametrize(

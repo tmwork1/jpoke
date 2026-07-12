@@ -405,7 +405,9 @@ MOVES_HA: dict[MoveName, MoveData] = {
         type="エスパー",
         category="status",
         pp=10,
-        accuracy=100,
+        accuracy=None,  # 必中
+        # マジックコートで跳ね返されず、みがわりを貫通する
+        flags={"unreflectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
                 hs.ハートスワップ_swap_ranks,
@@ -450,7 +452,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
             )
         },
         lethal_handlers={
-            LethalEvent.ON_HIT: LethalHandler(l.ばかぢから_lower_atk)
+            LethalEvent.ON_HIT: LethalHandler(l.ばかぢから_lower_atk_def)
         }
     ),
     "ばくおんぱ": MoveData(

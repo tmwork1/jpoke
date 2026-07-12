@@ -612,6 +612,36 @@ def test_ハートスワップ_全ランクゼロのとき変化なし():
         assert defender.boosts[stat] == 0
 
 
+def test_ハートスワップ_必中フラグが正しい():
+    """ハートスワップ: accuracy=None（必中）、unreflectable・bypass_substituteフラグを持つこと
+
+    兄弟技のガードスワップ・パワースワップ・スピードスワップと同じく必中である必要がある
+    （accuracy=100のままだとON_MODIFY_ACCURACY経由でランク補正の影響を受け必中にならない）。
+    """
+    move_data = MOVES["ハートスワップ"]
+    assert move_data.accuracy is None
+    assert "unreflectable" in move_data.flags
+    assert "bypass_substitute" in move_data.flags
+
+
+def test_ハートスワップ_相手の回避ランクが高くても必ず命中する():
+    """ハートスワップ: 必中技のため、相手の回避ランクが高くても必ず命中する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ハートスワップ"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=0,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    attacker.boosts["atk"] = 2
+    defender.boosts["evasion"] = 6
+    t.run_move(battle, 0)
+
+    # 必中判定を通過しランクが入れ替わっていれば命中している
+    assert attacker.boosts["atk"] == 0
+    assert defender.boosts["atk"] == 2
+
+
 def test_バトンタッチ_ちょうはつは引き継がれない():
     """バトンタッチ: ちょうはつ状態は交代先に引き継がれない（原作Wikiの記載通り）。
 
