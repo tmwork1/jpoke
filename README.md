@@ -102,6 +102,10 @@ battle.print_logs()                 # このターンのログを表示
 開発への貢献方法は [CONTRIBUTING.md](https://github.com/tmwork1/jpoke/blob/main/CONTRIBUTING.md)、
 脆弱性の報告方法は [SECURITY.md](https://github.com/tmwork1/jpoke/blob/main/SECURITY.md) を参照。
 
+`jpoke.testing` — `pip install jpoke` だけで使える、任意ターンでのピンポイントな状態検証・技の
+実行などを行うテストヘルパー集（`start_battle` / `run_move` / `run_switch` 等）。詳細は後述の
+「テストヘルパーを使った検証」を参照。
+
 ## 実装状況
 
 `docs/progress/*.md` に基づく件数（データ定義済みの実数、内部用の空エントリ等を除く）:
@@ -117,10 +121,34 @@ battle.print_logs()                 # このターンのログを表示
 
 最新の詳細は `docs/progress/` 配下の各ファイルを参照。
 
+## テストヘルパーを使った検証
+
+任意ターンでのピンポイントな状態検証や技の実行など、クイックスタートより細かい制御をしたい場合は
+`jpoke.testing` のヘルパー（`start_battle` / `run_move` / `run_switch` 等）が便利。
+`pip install jpoke` だけで（リポジトリを clone せずに）使える:
+
+```python
+from jpoke import Pokemon
+from jpoke import testing as t
+
+battle = t.start_battle(
+    team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
+    team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+    accuracy=100,  # 命中率を固定して再現性を上げる
+)
+t.run_move(battle, atk_idx=0, move_idx=0)
+```
+
+`fix_damage` / `fix_random` は対戦オブジェクトの内部属性を直接差し替えるモンキーパッチのため、
+テスト・デバッグ専用であり本番の対戦進行では使わないこと。
+
+リポジトリ内部のテストコード（`tests/`）は同じ実体を `tests/test_utils.py` 経由（後方互換の
+薄い再エクスポート層）で使っている。詳細な使い方は
+[tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) も参照。
+
 ## 開発（clone 前提）
 
-ソースを直接編集する場合や、テストヘルパーを使ってピンポイントな状態検証をしたい場合は
-リポジトリを clone してセットアップする。
+ソースを直接編集する場合はリポジトリを clone してセットアップする。
 
 ```bash
 git clone https://github.com/tmwork1/jpoke.git
@@ -131,27 +159,6 @@ pip install -e .
 pip install -e . pytest pytest-cov ruff mypy
 # または uv を使う場合
 uv sync
-```
-
-### テストヘルパーを使った検証
-
-任意ターンでのピンポイントな状態検証や技の実行など、クイックスタートより細かい制御をしたい場合は
-`tests/test_utils.py` のヘルパー（`start_battle` / `run_move` / `run_switch` 等）が便利。
-これはテスト用のヘルパーだが、プロジェクトルートから実行すれば（`tests/` が import できる状態）
-通常のスクリプトからも使える。詳細な使い方は
-[tests/CLAUDE.md](https://github.com/tmwork1/jpoke/blob/main/tests/CLAUDE.md) を参照:
-
-```python
-# プロジェクトルートから実行する想定（tests/ が import できる状態）
-from jpoke import Pokemon
-from tests import test_utils as t
-
-battle = t.start_battle(
-    team0=[Pokemon("ピカチュウ", ability_name="せいでんき", move_names=["でんこうせっか"])],
-    team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
-    accuracy=100,  # 命中率を固定して再現性を上げる
-)
-t.run_move(battle, atk_idx=0, move_idx=0)
 ```
 
 ## テストの実行
