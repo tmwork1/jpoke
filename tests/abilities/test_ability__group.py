@@ -1158,6 +1158,17 @@ def test_天候がくれ系_対応天候以外では命中率変化なし(abilit
     assert battle.move_executor.accuracy == move.accuracy
 
 
+def test_ゆきがくれ_一撃必殺技には命中率変化なし():
+    """一撃必殺技の命中率は独自計算のため、ゆきがくれの命中率補正は適用されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["じわれ"])],
+        team1=[Pokemon("ピカチュウ", ability_name="ゆきがくれ")],
+        weather=("ゆき", 5),
+    )
+    move = t.run_move(battle, 0)
+    assert battle.move_executor.accuracy == move.accuracy
+
+
 @pytest.mark.parametrize(
     "ability, weather, expected_mult",
     [
