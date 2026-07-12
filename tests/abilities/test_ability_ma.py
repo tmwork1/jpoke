@@ -568,6 +568,21 @@ def test_ミイラ_非接触技では特性が変わらない():
     assert attacker.ability.name != "ミイラ"
 
 
+def test_ミストメイカー_特性再有効化時にも発動する():
+    """ミストメイカー: かがくへんかガス解除後に特性が再有効化されると再発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミストメイカー")],
+        team1=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    # かがくへんかガスにより特性が無効化されているのでフィールドは展開されていない
+    assert battle.terrain.name == ""
+    # かがくへんかガスの無効化を解除すると特性が再発動してミストフィールドが展開される
+    battle.remove_ability_disabled_reason(mon, "かがくへんかガス")
+    assert battle.terrain.name == "ミストフィールド"
+    assert battle.terrain.count == 5
+
+
 @pytest.mark.parametrize(
     "move_name, expected_rank",
     [

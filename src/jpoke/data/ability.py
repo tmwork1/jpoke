@@ -3198,7 +3198,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.ミストメイカー_activate_terrain,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ミストメイカー_activate_terrain,
+                "source:self",
+            ),
         }
     ),
     "みずがため": AbilityData(
