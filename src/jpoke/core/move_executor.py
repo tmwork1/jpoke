@@ -500,38 +500,50 @@ class MoveExecutor:
 
         damage = self._events.emit(Event.ON_MODIFY_MOVE_DAMAGE, ctx, damage)
 
-        actual_damage = -self.battle.modify_hp(
-            ctx.defender, -damage, source=ctx.attacker, reason="move_damage"
-        )
+        # GAME_WON/GAME_LOSTログの記録は、この技ヒットに付随する後続イベント
+        # （ON_HIT・ON_DAMAGE_HIT・ON_MOVE_KO、およびそれらに付随して発生する
+        # さめはだ等の反撃ダメージ・自己ランク低下・状態異常付与等）が
+        # すべて完了した後に行いたい（＝この1ヒットの処理全体を1つの区間として
+        # 扱う）。ここで即座に記録すると、Vジェネレート等の自己ランク低下や
+        # 撃破時特性（しろのいななき等）・さめはだ等の反撃ダメージのログが
+        # 勝敗確定ログより後に記録されてしまうため。なお勝者判定自体
+        # （battle.winner の確定）は modify_hp 内で即座に行われる。
+        self.battle.begin_deferred_winner_log()
+        try:
+            actual_damage = -self.battle.modify_hp(
+                ctx.defender, -damage, source=ctx.attacker, reason="move_damage",
+            )
 
-        self._events.emit(Event.ON_HIT, ctx, actual_damage)
+            self._events.emit(Event.ON_HIT, ctx, actual_damage)
 
-        # ダメージを与えた後の処理（actual_damage は正値=ダメージ量）
-        if actual_damage <= 0:
-            # ばけのかわ等、フォルムチェンジの消費ダメージで既にひんしになっている場合がある。
-            # この場合も、相手を倒したことをトリガーとする効果（じしんかじょう等の特性）は発動する。
+            # ダメージを与えた後の処理（actual_damage は正値=ダメージ量）
+            if actual_damage <= 0:
+                # ばけのかわ等、フォルムチェンジの消費ダメージで既にひんしになっている場合がある。
+                # この場合も、相手を倒したことをトリガーとする効果（じしんかじょう等の特性）は発動する。
+                if ctx.defender.fainted:
+                    self._events.emit(Event.ON_MOVE_KO, ctx, actual_damage)
+                return
+
+            ctx.defender.hits_taken += 1
+            # カウンター・ミラーコートは「最後に受けた1回分」のダメージを参照するため、
+            # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
+            # 技のカテゴリは run_move 実行時に既に確定済み（ctx.move.category）のため、
+            # ここで再度 resolve_move_category（battle.foe(attacker) を参照）を呼ばない。
+            # ON_HIT イベント（レッドカード等）で attacker が既に交代済みの場合、
+            # battle.foe(attacker) が例外を送出するため。
+            category = "physical" if (ctx.move.category == "physical" or ctx.move.has_flag("physical_damage")) else "special"
+            ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
+
+            self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)
+
             if ctx.defender.fainted:
                 self._events.emit(Event.ON_MOVE_KO, ctx, actual_damage)
-            return
 
-        ctx.defender.hits_taken += 1
-        # カウンター・ミラーコートは「最後に受けた1回分」のダメージを参照するため、
-        # 連続技で複数回ヒットした場合も合算せず直近のヒット量で上書きする。
-        # 技のカテゴリは run_move 実行時に既に確定済み（ctx.move.category）のため、
-        # ここで再度 resolve_move_category（battle.foe(attacker) を参照）を呼ばない。
-        # ON_HIT イベント（レッドカード等）で attacker が既に交代済みの場合、
-        # battle.foe(attacker) が例外を送出するため。
-        category = "physical" if (ctx.move.category == "physical" or ctx.move.has_flag("physical_damage")) else "special"
-        ctx.defender.last_damage_taken = {"damage": actual_damage, "category": category}
-
-        self._events.emit(Event.ON_DAMAGE_HIT, ctx, actual_damage)
-
-        if ctx.defender.fainted:
-            self._events.emit(Event.ON_MOVE_KO, ctx, actual_damage)
-
-        # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
-        if ctx.attacker.active_tera_type == 'ステラ':
-            ctx.attacker.stellar_boosted_types.add(ctx.move.type)
+            # ステラ補正の消費記録: ダメージを与えた技タイプを記録する
+            if ctx.attacker.active_tera_type == 'ステラ':
+                ctx.attacker.stellar_boosted_types.add(ctx.move.type)
+        finally:
+            self.battle.end_deferred_winner_log()
 
     def _execute_status_hit(self, ctx: AttackContext) -> None:
         """状態変化技の命中処理を実行する。
