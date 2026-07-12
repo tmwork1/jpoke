@@ -1923,7 +1923,6 @@ _SKIN_ALWAYS_EXEMPT_MOVES: frozenset[str] = frozenset({
 })
 _SKIN_TERA_EXEMPT_MOVES: frozenset[str] = frozenset({"テラバースト", "テラクラスター"})
 
-
 def _skin_is_exempt(ctx: AttackContext) -> bool:
     """スキン系特性共通: タイプが変わる技のうち、スキン系特性の対象外となる技かどうかを判定する。
 
@@ -1936,7 +1935,6 @@ def _skin_is_exempt(ctx: AttackContext) -> bool:
     if name in _SKIN_TERA_EXEMPT_MOVES and ctx.attacker.is_terastallized:
         return True
     return False
-
 
 def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: Type, *, from_type: str, to_type: str) -> HandlerReturn:
     """スキン系特性共通: from_type の技を to_type に変換する。"""
