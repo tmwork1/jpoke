@@ -2982,7 +2982,14 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "ほおぶくろ": AbilityData(),
+    "ほおぶくろ": AbilityData(
+        handlers={
+            Event.ON_BERRY_CONSUMED: h.AbilityHandler(
+                h.ほおぶくろ_heal_on_berry_consumed,
+                subject_spec="source:self",
+            )
+        }
+    ),
     "ほのおのからだ": AbilityData(
         handlers={
             # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
