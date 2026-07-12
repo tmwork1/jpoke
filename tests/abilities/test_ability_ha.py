@@ -3035,6 +3035,30 @@ def test_ぼうじん_粉技を無効化する():
     assert defender.ability.revealed is True
 
 
+def test_ぼうじん_かたやぶりの粉技は防げない():
+    """ぼうじん: かたやぶりの効果がある粉技は無効化できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ぼうじん")],
+        team1=[Pokemon("カビゴン", ability_name="かたやぶり", move_names=["キノコのほうし"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+    assert defender.ailment.name == "ねむり"
+
+
+def test_ぼうじん_特性ほうしを無効化する():
+    """ぼうじん: 特性ほうし持ちに接触しても状態異常を受けない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほうし")],
+        team1=[Pokemon("ピカチュウ", ability_name="ぼうじん", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    battle.random.random = lambda: 0.0
+    t.run_move(battle, 1)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_ポイズンヒール_かいふくふうじ中は回復もダメージも受けない():
     battle = t.start_battle(
         team0=[Pokemon("グライオン", ability_name="ポイズンヒール")],
