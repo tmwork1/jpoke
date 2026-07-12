@@ -52,6 +52,37 @@ def test_Gのちから_ぼうぎょダウン_secondary無し():
     assert results[1].min_damage == results[0].min_damage
 
 
+def test_set_ailmentでどくを付与すると確定数が短縮される():
+    """calc_lethal は防御側の状態異常による毎ターンダメージも合算する。
+
+    battle.set_ailment() でどくを付与すると、技ダメージに加えて毎ターンの
+    どくダメージが積み重なるため、どく無しの場合より少ない攻撃回数で
+    致死率がほぼ確定（100%近く）に達することを確認する。
+    """
+    battle_without = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カバルドン")],
+    )
+    results_without = t.calc_lethal(
+        battle_without, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=10
+    )
+
+    battle_with = t.start_battle(
+        team0=[Pokemon("ガブリアス")],
+        team1=[Pokemon("カバルドン")],
+    )
+    defender = battle_with.actives[1]
+    assert battle_with.set_ailment(defender, "どく")
+    results_with = t.calc_lethal(
+        battle_with, atk_idx=0, moves=Move("ドラゴンテール"), max_attack=10
+    )
+
+    assert results_without[-1].n_attack == 5
+    assert results_with[-1].n_attack == 3
+    assert results_with[-1].n_attack < results_without[-1].n_attack
+    assert results_with[-1].lethal_probability > 0.9
+
+
 def test_アイスボディ_ゆき天気でターン終了時回復():
     """アイスボディ所持時、ゆき天気のターン終了時に最大HPの1/16を回復する"""
     with_ability = t.start_battle(

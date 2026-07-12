@@ -1,8 +1,8 @@
 """jpoke で学べること: CFR風の自己対戦学習で「状態に応じて手を変える」読み合いAIを作る。
 
-## 07との違い
+## 08との違い
 
-`07_janken_nash_fictitious_play.py` は「毎ターン同じ確率で技を選び続ける」固定の混合戦略の
+`08_janken_nash_fictitious_play.py` は「毎ターン同じ確率で技を選び続ける」固定の混合戦略の
 Nash均衡を求めた。しかし実戦の読み合いはもっと現実的で、「自分のHPが少ない
 ときはリスクを避けて確実なマッハパンチを選ぶ」「相手を追い詰めたら一発逆転の
 きあいパンチを警戒してはやてがえしを増やす」といった、局面（HP状況）に応じて
@@ -53,7 +53,7 @@ outcome-sampling MCCFR等）ではなく、`battle.copy()` によるロールア
 ## 実行時間とサンプル数
 
 `battle.copy()` を伴うフォーク評価を1ターンにつき最大6回（両陣営×3手）行うため、
-07よりも重く、手元では数十秒程度かかる。`N_EPISODES` / `HP_BUCKETS` を増やすと
+08よりも重く、手元では数十秒程度かかる。`N_EPISODES` / `HP_BUCKETS` を増やすと
 学習は安定するが実行時間も増える。
 """
 from __future__ import annotations
@@ -147,7 +147,7 @@ class CFRMovePlayer(Player):
 
     def choose_command(self, battle: Battle) -> Command:
         strategy = regret_matching_strategy(self.regrets[self.info_set(battle)])
-        return sample_command(strategy, battle.random)
+        return sample_command(strategy, battle.decision_random)
 
 
 def result_point(battle: Battle, p0: Player, p1: Player) -> float:
@@ -217,8 +217,8 @@ def play_training_episode(regrets: dict[tuple[int, int], list[float]],
         visit_counts[info0] += 1
         visit_counts[info1] += 1
 
-        actual_cmd0 = sample_command(strategy0, battle.random)
-        actual_cmd1 = sample_command(strategy1, battle.random)
+        actual_cmd0 = sample_command(strategy0, battle.decision_random)
+        actual_cmd1 = sample_command(strategy1, battle.decision_random)
 
         # p0の反実仮想価値: p1の手は実際にサンプルされた手に固定し、p0の3手を評価する
         values0 = [
@@ -278,7 +278,7 @@ def main() -> None:
     # 試してみよう:
     # * HP_BUCKETS を増やす、または状態にターン数を加えると、より細かい読み合いを
     #   学習できるが、その分エピソード数(N_EPISODES)を増やさないと学習が安定しない
-    # * 07_janken_nash_fictitious_play.py の固定混合戦略の結果と比較し、「HPが少ないときだけ
+    # * 08_janken_nash_fictitious_play.py の固定混合戦略の結果と比較し、「HPが少ないときだけ
     #   マッハパンチに偏る」といった適応的な傾向が出ているか観察する
     # * rollout_value() の呼び出しを毎回1回ではなく複数回平均するようにすると、
     #   反実仮想価値の推定分散が減り学習が安定するが、実行時間は増える

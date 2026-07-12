@@ -15,7 +15,8 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode
+    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode, \
+    AilmentName, WeatherName, TerrainName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
@@ -109,7 +110,10 @@ class Battle:
         winner: 勝者のPlayerインスタンス（勝負がついていない場合はNone）
         events: イベント管理システム
         logger: バトルログ記録システム
-        random: 乱数生成器
+        random: ゲーム進行用の乱数生成器（ダメージロール・命中判定・急所判定など）
+        decision_random: 行動選択（choose_command）専用の乱数生成器。observation_builder.build()
+            の観測用コピーはこちらだけを本体と共有するため、方策がこれを消費しても
+            ゲーム進行用の乱数系列（random）を先取りすることはない
         damage_calculator: ダメージ計算機
         move_executor: 技実行管理
         switch_manager: 交代管理
@@ -162,6 +166,12 @@ class Battle:
         self.seed: int = seed if seed is not None else secrets.randbits(32)
 
         self.random = Random(self.seed)
+        # 行動選択（choose_command）専用の乱数生成器。ゲーム進行用の self.random とは
+        # 完全に独立させる。observation_builder.build() の観測用コピーはこちらだけを
+        # 本体と同一参照で共有するため、方策がこれを消費してもダメージロール・命中判定・
+        # 急所判定など未来の乱数を先取りしてしまうことがない。同じ seed なら毎回同じ
+        # 初期状態になるよう seed から決定的に派生させる。
+        self.decision_random = Random(hash((self.seed, "decision")) & 0xFFFFFFFF)
 
         self.copy_depth: int = 0
         self._reseed_count: int = 0
@@ -224,6 +234,7 @@ class Battle:
     # 「マネージャーでない可変オブジェクト」のみ。
     _EXTRA_DEEPCOPY_KEYS: tuple[str, ...] = (
         "random",
+        "decision_random",
         "_player_states",
         "event_logger",
         "option",
@@ -316,6 +327,7 @@ class Battle:
             self._reseed_count += 1
             new.seed = hash((self.seed, self._reseed_count)) & 0xFFFFFFFF
             new.random = Random(new.seed)
+            new.decision_random = Random(hash((new.seed, "decision")) & 0xFFFFFFFF)
         return new
 
     @contextmanager
@@ -736,6 +748,46 @@ class Battle:
                      reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
+
+    def set_ailment(self, target: Pokemon, name: AilmentName, count: int | None = None) -> bool:
+        """状態異常を直接付与する（シナリオ構築・ダメージ計算検証用）。
+
+        既存の状態異常があれば上書きする。特性・タイプ等による無効化判定は行わない
+        （examples/スクリプトから素直に状態を作るための薄いラッパーのため）。
+
+        Args:
+            target: 対象のポケモン
+            name: 状態異常名
+            count: 継続ターン数（ねむりは省略時にChampions仕様で自動決定）
+
+        Returns:
+            bool: 付与に成功した場合True
+        """
+        return self.ailment_manager.apply(target, name, count=count, overwrite=True)
+
+    def set_weather(self, name: WeatherName, count: int = 5) -> bool:
+        """天候を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            name: 天候名
+            count: 持続ターン数
+
+        Returns:
+            bool: 発動に成功した場合True
+        """
+        return self.weather_manager.apply(name, count)
+
+    def set_terrain(self, name: TerrainName, count: int = 5) -> bool:
+        """地形を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            name: 地形名
+            count: 持続ターン数
+
+        Returns:
+            bool: 発動に成功した場合True
+        """
+        return self.terrain_manager.apply(name, count)
 
     def roll_damage(self,
                     attacker: Pokemon,

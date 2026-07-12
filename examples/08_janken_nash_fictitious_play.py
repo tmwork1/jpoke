@@ -84,8 +84,9 @@ SHOW_PROGRESS = True  # 進捗ログを見たいときだけ True
 class MixedMovePlayer(Player):
     """毎ターン、指定確率で3つの技のどれかを選ぶプレイヤー。
 
-    `battle.random` は jpoke の既存プレイヤー（`RandomPlayer` 等）が行動選択に
-    使っているものと同じ乱数源で、ここでもそれに合わせている。
+    `battle.decision_random` は jpoke の既存プレイヤー（`RandomPlayer` 等）が
+    行動選択に使っているものと同じ乱数源（ゲーム進行用の `battle.random` とは
+    独立）で、ここでもそれに合わせている。
     """
 
     def __init__(self, probs: tuple[float, float, float], username: str = ""):
@@ -93,7 +94,7 @@ class MixedMovePlayer(Player):
         self.probs = probs  # (マッハパンチ, はやてがえし, きあいパンチ) を選ぶ確率
 
     def choose_command(self, battle: Battle) -> Command:
-        r = battle.random.random()
+        r = battle.decision_random.random()
         p0, p1, _p2 = self.probs
         if r < p0:
             return Command.MOVE_0

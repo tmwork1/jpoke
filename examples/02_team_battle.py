@@ -8,6 +8,7 @@ n_selected=3 で3体を選出し、瀕死になったポケモンが交代コマ
 from __future__ import annotations
 
 from jpoke import Battle
+from jpoke.enums import LogCode
 from jpoke.players import RandomPlayer
 
 
@@ -40,6 +41,24 @@ def main() -> None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:
         print(f"結果: {winner.username} 勝利（{battle.turn}ターン）")
+
+    # print_logs/get_log_lines は文字列化済みログだが、get_event_logs(turn) は
+    # LogCode付きの構造化ログ（EventLog）をそのまま返す。特定の種類のイベント
+    # （ここでは急所発生）だけをプログラムで抽出したい場合に使う
+    print("-" * 50)
+    critical_hits = [
+        (t, player.username, log.pokemon)
+        for t in range(1, battle.turn + 1)
+        for player, logs in battle.get_event_logs(t).items()
+        for log in logs
+        if log.log is LogCode.CRITICAL_HIT
+    ]
+    if critical_hits:
+        print("急所に当たったログ:")
+        for t, username, pokemon in critical_hits:
+            print(f"  ターン{t} {username}側の{pokemon}")
+    else:
+        print("このseedでは急所は発生しなかった")
 
     # 試してみよう: player1/player2 のチーム構成や技を変えて、
     # どのポケモンが先に瀕死になり交代が起きるか観察できる
