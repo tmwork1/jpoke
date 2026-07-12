@@ -223,6 +223,11 @@ class TurnController:
             for attacker in self.battle.resolve_speed_order()
         ]
         for idx in order:
+            # ターン中に勝敗が既に確定している場合、残りのキュー済み交代は
+            # 実行しない（瀕死による事前確定など、稀なケース向けの保険）。
+            if self.battle.winner is not None:
+                break
+
             player = self.battle.players[idx]
             state = self.battle.player_states[player]
 
@@ -349,6 +354,12 @@ class TurnController:
     def _run_move_phase(self):
         """技発動フェーズを実行する。"""
         for index in self.action_order:
+            # ターン中に勝敗が既に確定している場合、残りのキュー済み行動
+            # （さいはい等の割り込みで先に決着がついた後に残っている本来の
+            # 行動コマンドなど）は実行しない。
+            if self.battle.winner is not None:
+                break
+
             player = self.battle.players[index]
             state = self.battle.player_states[player]
 
@@ -376,6 +387,11 @@ class TurnController:
                 # 技を実行
                 move = self.battle.command_to_move(player, command)
                 self.battle.run_move(attacker, move)
+
+                # 今の技の実行で勝敗が確定した場合、割り込み交代を含め
+                # このターンの残りの処理は行わない。
+                if self.battle.winner is not None:
+                    break
 
             # だっしゅつボタンによる交代
             self._switch.run_interrupt_switch(Interrupt.EJECTBUTTON)
