@@ -6,7 +6,7 @@ if TYPE_CHECKING:
 
 import pytest
 
-from jpoke import Pokemon
+from jpoke import Move, Pokemon
 from jpoke.data.ability import ABILITIES
 from jpoke.enums import Command, Event
 from jpoke.types import Stat, AilmentName, VolatileName, WeatherName
@@ -1894,6 +1894,32 @@ def test_ふしぎなまもり_かたやぶりで無効化される():
     assert defender.hp < defender.max_hp
 
 
+def test_ふしぎなまもり_こんらんの自傷ダメージは無効化されない():
+    """ふしぎなまもり: こんらんの自傷ダメージは通常の攻撃フローを経由しないため無効化されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピジョット", ability_name="ふしぎなまもり", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    mon = battle.actives[0]
+    before = mon.hp
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert mon.hp < before
+
+
+def test_ふしぎなまもり_発動時に特性バーとログを表示する():
+    """ふしぎなまもり: 攻撃を無効化したときは特性発動が公開され、無効化ログが記録される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピジョット", ability_name="ふしぎなまもり")],
+    )
+    _, defender = battle.actives
+    assert not defender.ability.revealed
+    t.run_move(battle, 0)
+    assert defender.ability.revealed
+
+
 def test_ふしぎなまもり_変化技は通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
@@ -1902,6 +1928,17 @@ def test_ふしぎなまもり_変化技は通る():
     _, defender = battle.actives
     t.run_move(battle, 0)
     assert defender.boosts["atk"] == -1
+
+
+def test_ふしぎなまもり_わるあがきは無効化されない():
+    """ふしぎなまもり: タイプを持たないわるあがきは相性判定の対象外のため無効化できない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("ピジョット", ability_name="ふしぎなまもり")],
+    )
+    attacker, defender = battle.actives
+    battle.run_move(attacker, Move("わるあがき"))
+    assert defender.hp < defender.max_hp
 
 
 @pytest.mark.parametrize(
