@@ -1,6 +1,6 @@
 # test_poke_env_compat
 
-テスト数: 40
+テスト数: 41
 
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver未設定時場の先頭2匹を返す
 - [x] battle_active_pokemonとopponent_active_pokemonはobserver視点で取得できる
@@ -10,6 +10,7 @@
 - [x] battle_available_movesはobserverが選択可能な技をmoveで返す
 - [x] battle_available_movesは技のppが尽きるとわるあがきのみになる
 - [x] battle_available_switchesはobserverの交代先候補をpokemonで返す
+- [x] battle_decision_randomの種はpythonhashseedに依存しない
 - [x] battle_finishedとwonとlostは決着後に更新される
 - [x] battle_side_conditionsはobserver未設定時は空辞書
 - [x] battle_side_conditionsはobserver視点のサイドフィールド状態を返す
