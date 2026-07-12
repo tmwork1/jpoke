@@ -150,7 +150,11 @@ PyPI のプロジェクトページは `readme = "README.md"` をそのまま表
   > This is an unofficial, fan-made project and is not affiliated with, endorsed by,
   > or sponsored by Nintendo, Game Freak, or The Pokémon Company.
 
-- [x] 冒頭に3文程度の英語サマリを追加（全文翻訳は不要）
+  ※ v0.1.0後のREADME整理（3f6fcbe8「docs: READMEから英語説明文を削除」）で英語版が
+  意図せず削除されていたが、2026-07-12 に日英併記へ復活済み。
+
+- [x] 冒頭に3文程度の英語サマリを追加（全文翻訳は不要） (※現在は未掲載。上記コミットで
+      英語説明文ごと削除されたまま復活していない。後続対応が必要)
 
 ## フェーズ 3: CI・リリース基盤
 
