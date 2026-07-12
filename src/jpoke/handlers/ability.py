@@ -4311,11 +4311,14 @@ def めんえき_cure_poison_on_enable(battle: Battle, ctx: EventContext, value:
 
 
 def ものひろい_pickup_foe_item(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ものひろい特性: ターン終了時に自分がアイテムを持っていなければ相手が消費したアイテムを拾う。"""
+    """ものひろい特性: ターン終了時に自分がアイテムを持っていなければ、
+    そのターン中に相手が消費した道具を拾う。"""
     mon = ctx.source
     if mon is None or mon.has_item():
         return HandlerReturn(value=value)
     foe = battle.foe(mon)
+    if foe.last_lost_item_turn != battle.turn:
+        return HandlerReturn(value=value)
     item_name = foe.last_lost_item_name
     if not item_name:
         return HandlerReturn(value=value)

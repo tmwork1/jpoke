@@ -144,6 +144,7 @@ class ItemManager:
         if mon.has_item():
             if not name and track_loss:
                 mon.last_lost_item_name = cast(ItemName, lost_item_name)
+                mon.last_lost_item_turn = self.battle.turn
             self._events.emit(Event.ON_ITEM_LOST, ctx)
             mon.item.unregister_handlers(self._events, mon)
 
@@ -353,6 +354,7 @@ class ItemManager:
                 last_lost_item_name を発動前の値へ戻して記録を打ち消す。
         """
         previous_last_lost = mon.last_lost_item_name
+        previous_last_lost_turn = mon.last_lost_item_turn
         # HP 閾値ベースのきのみを発動（オボンのみ・フィラのみ等）
         hp_ctx = EventContext(target=mon, source=mon)
         self._events.emit(Event.ON_HP_CHANGED, hp_ctx, mon.max_hp)
@@ -365,3 +367,4 @@ class ItemManager:
             self.consume_item(mon)
         if not track_loss:
             mon.last_lost_item_name = previous_last_lost
+            mon.last_lost_item_turn = previous_last_lost_turn
