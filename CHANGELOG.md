@@ -27,6 +27,20 @@
   検証で、対戦を進行させずに状態異常・天候込みの複合致死率を確認できる
 - `examples/07_replay.py` — `Battle.build_replay_data()` / `ReplayPlayer` /
   `replay_battle()`（リプレイの記録・再生一式）を紹介するサンプルを新設
+- `jpoke.testing` モジュール — `tests/test_utils.py` にあった内部テストヘルパー
+  （`start_battle` / `run_move` / `run_switch` / `apply_ailment` /
+  `get_action_order` / `calc_lethal` / `fix_damage` / `fix_random` 等14関数と
+  `CustomPlayer`）を本体パッケージへ昇格。`pip install jpoke` だけで（リポジトリを
+  clone せずに）任意ターンでのピンポイントな状態検証・技の実行ができるようになった。
+  `tests/test_utils.py` は後方互換のための薄い再エクスポート層として残している。
+  移植にあたり `Battle` に不足していた公開ラッパーを追加した:
+  `Battle.set_ailment()` に `source` / `overwrite` 引数を追加、
+  `Battle.set_volatile()` / `Battle.set_item()` /
+  `Battle.activate_global_field()` / `Battle.activate_side_field()` /
+  `Battle.resolve_action_order()` / `Battle.calc_move_priority()` /
+  `Battle.can_switch()` / `Battle.end_turn()` を新設
+  （いずれも `ailment_manager` 等の内部マネージャーへの薄い委譲で、外部コードが
+  `battle.<manager>.<method>()` を直接呼ばずに済むようにするための追加）
 
 ### Changed
 
