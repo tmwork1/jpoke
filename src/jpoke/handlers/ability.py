@@ -3330,6 +3330,29 @@ def びびり_boost_spd_on_fear_move(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=value)
 
 
+def びびり_boost_spd_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
+    """びびり特性: いかくの効果で自分のこうげきが下がるとすばやさが1段階上がる（第八世代以降）。
+
+    いかくで攻撃が下がること自体は防がない（value はそのまま返す）。
+    しろいきり・フラワーベール・クリアチャーム・クリアボディ等でいかくの効果が
+    無効化された場合（"atk" が value から取り除かれている場合）は発動しない。
+    こうげきが既に最低ランク（-6）でいかくの効果が不発だったときも発動しない。
+    あまのじゃく/ばんけん（下降を上昇に反転する特性）はびびりと同一ポケモンが
+    同時に持つことがない（特性は1つのみ）ため、反転ケースの考慮は不要。
+    """
+    mon = ctx.target
+    assert mon is not None
+    if (
+        ctx.stat_change_reason != "いかく"
+        or "atk" not in value
+        or mon.rank["atk"] <= -6
+    ):
+        return HandlerReturn(value=value)
+    if battle.modify_stats(mon, {"spe": +1}, source=ctx.source):
+        _announce_ability_triggered(battle, mon)
+    return HandlerReturn(value=value)
+
+
 def びんじょう_copy_stat_rise(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
     """びんじょう特性: 相手のランク上昇をコピーする。
 
