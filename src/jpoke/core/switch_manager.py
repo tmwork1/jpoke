@@ -276,8 +276,14 @@ class SwitchManager:
         self.battle.remove_all_volatiles(mon)
         self.switching_out_mon = None
 
-        mon.reset_on_switch_out()
+        # ハンドラの解除は、実際に登録されていた特性（トレース等でコピーした
+        # ものを含む）に対して行う必要があるため、mon.reset_on_switch_out() で
+        # mon.ability が素の特性に差し替えられる前に実行する。順序を逆にすると
+        # 差し替え後の（本来登録されていない）特性のハンドラを解除しようとして
+        # しまい、実際に登録されていたハンドラが解除されずに残り続けてしまう
+        # （例: トレースでコピーした特性を持ったまま退場した場合）。
         self._unregister_handlers_on_switch_out(mon)
+        mon.reset_on_switch_out()
 
         self.battle.add_event_log(mon, LogCode.SWITCHED_OUT)
 
