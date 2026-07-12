@@ -2435,6 +2435,35 @@ def test_ブレインフォース_効果抜群のとき強化():
     assert 5120 == battle.damage_calculator.damage_modifier
 
 
+def test_ブレインフォース_等倍のときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ブレインフォース", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    t.run_move(battle, 0)
+    # でんきショックはノーマルタイプに等倍のため、ブレインフォースは発動しない
+    assert 4096 == battle.damage_calculator.damage_modifier
+
+
+def test_ブレインフォース_たつじんのおびと併用すると累積して1_5倍になる():
+    """ブレインフォース: たつじんのおびと両立すると効果が累積してダメージ1.5倍になる"""
+    battle = t.start_battle(
+        team0=[
+            Pokemon(
+                "ピカチュウ",
+                ability_name="ブレインフォース",
+                item_name="たつじんのおび",
+                move_names=["でんきショック"],
+            )
+        ],
+        team1=[Pokemon("ゼニガメ")],
+    )
+    t.run_move(battle, 0)
+    # 1.25倍(5120)と1.2倍(4915)が固定小数点演算で逐次適用されるため、
+    # 端数処理の結果ちょうど1.5倍(6144)ではなく6143になる
+    assert 6143 == battle.damage_calculator.damage_modifier
+
+
 def test_プリズムアーマー_かたやぶりで無効化されない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["じしん"])],
