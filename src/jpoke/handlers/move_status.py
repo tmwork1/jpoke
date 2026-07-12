@@ -119,6 +119,28 @@ def _blocked_by_ougon_no_karada(battle: Battle, mon: Pokemon) -> bool:
     )
     return True
 
+def _blocked_by_bouon(battle: Battle, mon: Pokemon) -> bool:
+    """ぼうおん特性: 自分含む全員が対象の音技（ほろびのうたなど）における、
+    使用者以外への効果を防ぐ。
+
+    通常の音技は Event.ON_BEFORE_APPLY_MOVE の時点で技全体が無効化されるが、
+    自分含む全員が対象の音技は使用者自身にも効果が及ぶため一律には無効化できない
+    （防いだ場合でも他の対象への効果は通常通り発動する）。
+    そのため各技のハンドラ側で対象ポケモンごとに本関数を用いて免疫判定を行う
+    （docs/spec/abilities/ぼうおん.md、handlers/ability.py の _BOUON_EXCLUDED_MOVES）。
+    呼び出し側で使用者自身は対象から除外すること
+    （現行世代では自身のぼうおんは無視され、自身の技の効果を自身の特性で防ぐことはないため）。
+    """
+    if not (mon.ability.enabled and mon.ability.name == "ぼうおん"):
+        return False
+    mon.ability.revealed = True
+    battle.add_event_log(
+        mon,
+        LogCode.ABILITY_TRIGGERED,
+        payload=AbilityPayload(ability=mon.ability.name),
+    )
+    return True
+
 def on_blow_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """吹き飛ばし技の効果を防げるかを判定する。"""
     value = battle.events.emit(Event.ON_TRY_BLOW, ctx, value)
@@ -2640,10 +2662,15 @@ def ほろびのうた_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
 
     使用者自身も対象になる。音技のためみがわりを貫通する。
     すでにほろびのうた状態のポケモンには付与されない（volatile_manager.apply が False を返す）。
+    使用者以外の対象は、おうごんのからだ・ぼうおん特性を持つ場合そのポケモンへの
+    付与のみ防がれる（技全体は無効化されない）。
     """
     triggered = False
     for mon in battle.actives:
-        if mon is not ctx.attacker and _blocked_by_ougon_no_karada(battle, mon):
+        if mon is not ctx.attacker and (
+            _blocked_by_ougon_no_karada(battle, mon)
+            or _blocked_by_bouon(battle, mon)
+        ):
             continue
         if battle.volatile_manager.apply(
             mon,

@@ -8,7 +8,7 @@ import pytest
 
 from jpoke import Move, Pokemon
 from jpoke.data.ability import ABILITIES
-from jpoke.enums import Command, Event
+from jpoke.enums import Command, Event, Interrupt
 from jpoke.types import Stat, AilmentName, VolatileName, WeatherName
 
 from .. import test_utils as t
@@ -3011,6 +3011,75 @@ def test_ほろびのボディ_非接触技では発動しない():
 
     assert not defender.has_volatile("ほろびのうた")
     assert not attacker.has_volatile("ほろびのうた")
+
+
+def test_ぼうおん_かたやぶりで無効():
+    """ぼうおん: かたやぶりの相手が音技を使った場合は無効化されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ちょうおんぱ"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうおん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert defender.has_volatile("こんらん")
+
+
+def test_ぼうおん_すてゼリフの能力低下と交代効果を両方無効化する():
+    """すてゼリフ: 相手がぼうおんの場合、攻撃・特攻の低下効果と交代効果のどちらも無効化される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["すてゼリフ"]), Pokemon("ライチュウ")],
+        team1=[Pokemon("カビゴン", ability_name="ぼうおん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    player = battle.players[0]
+    t.run_move(battle, 0)
+
+    assert defender.boosts["atk"] == 0
+    assert defender.boosts["spa"] == 0
+    assert battle.player_states[player].interrupt == Interrupt.NONE
+
+
+def test_ぼうおん_音技を無効化する():
+    """ぼうおん: 音技（ちょうおんぱ）によるこんらん付与を無効化する"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ちょうおんぱ"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうおん")],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert not defender.has_volatile("こんらん")
+
+
+def test_ぼうおん_ほろびのうたのかたやぶりで無効():
+    """ほろびのうた: かたやぶりの使用者に対してはぼうおんによる免疫が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうおん")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert attacker.has_volatile("ほろびのうた")
+    assert defender.has_volatile("ほろびのうた")
+
+
+def test_ぼうおん_ほろびのうたは自分への付与のみ防ぐ():
+    """ほろびのうた: ぼうおん所持者は自分への状態付与のみ防ぎ、使用者には通常通り付与される。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ほろびのうた"])],
+        team1=[Pokemon("カビゴン", ability_name="ぼうおん")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+
+    assert battle.move_executor.move_applied
+    assert attacker.has_volatile("ほろびのうた")
+    assert not defender.has_volatile("ほろびのうた")
 
 
 def test_ぼうじん_すなあらしダメージを無効化する():

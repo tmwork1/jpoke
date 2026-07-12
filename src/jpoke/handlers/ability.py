@@ -3830,15 +3830,27 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
     return HandlerReturn(value=value)
 
 
+# 自分含む全員が対象の音技（使用者自身にも効果が及ぶ技）は、技全体を無効化すると
+# 使用者自身への効果まで防いでしまうため、通常の全体無効化の対象から除外する。
+# 対象ポケモンごとの免疫判定は各技のハンドラ側（handlers/move_status.py の
+# _blocked_by_bouon）で行う（docs/spec/abilities/ぼうおん.md「特性の仕様」、
+# docs/spec/moves/ほろびのうた.md「技の仕様」）。
+_BOUON_EXCLUDED_MOVES: frozenset[str] = frozenset({"ほろびのうた"})
+
+
 def ぼうおん_block_sound(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """ぼうおん特性: 音技を無効化する。
 
     自分や味方（自分自身も含む）を対象とする音技（例: いやしのすず）は、
     相手のぼうおんとは無関係のため、相手を対象とする技（target="foe"）のみを無効化する。
+    ほろびのうたのように使用者自身にも効果が及ぶ技は、技全体を無効化すると使用者
+    自身への効果まで防いでしまうため対象外とし、対象ポケモンごとの免疫判定を
+    各技のハンドラ側（_blocked_by_bouon）で行う。
     """
     if (
         not ctx.move.has_flag("sound")
         or ctx.move.target != "foe"
+        or ctx.move.name in _BOUON_EXCLUDED_MOVES
     ):
         return HandlerReturn(value=value)
 
