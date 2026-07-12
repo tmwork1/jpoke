@@ -1980,6 +1980,45 @@ def test_ふしょく_免疫タイプにもどくが入る(target_name: str, ail
     assert target.ailment.name == ailment_name
 
 
+def test_ふしょく_どくどくではがねタイプにももうどくが入る():
+    """ふしょく: 技（どくどく）経由でも、はがねタイプの相手にもうどくを付与できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤトウモリ", ability_name="ふしょく", move_names=["どくどく"])],
+        team1=[Pokemon("コイル")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "もうどく"
+
+
+def test_ふしょく_どく技がはがねタイプに無効化されると追加効果も発動しない():
+    """ふしょく: どく技自体がはがねタイプへのタイプ相性で無効化された場合、
+    ふしょくを持っていても追加効果（どく付与）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤトウモリ", ability_name="ふしょく", move_names=["どくづき"])],
+        team1=[Pokemon("コイル")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    defender = battle.actives[1]
+    assert defender.hp == defender.max_hp
+    assert not defender.ailment.is_active
+
+
+def test_ふしょく_相手のどくのトゲには効果がない():
+    """ふしょく: 相手の特性どくのトゲによる付与はふしょくの効果対象外であり、
+    ふしょく持ちがはがね・どくタイプなら通常どおり毒状態にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくのトゲ")],
+        team1=[Pokemon("コイル", ability_name="ふしょく", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 1)
+    assert not battle.actives[1].ailment.is_active
+
+
 def test_ふゆう_かたやぶりでじめん技が通る():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ふゆう")],
