@@ -2704,10 +2704,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         }
     ),
     "フェアリーオーラ": AbilityData(
-        flags={
-            "mold_breaker_ignorable",
-        },
         handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_POWER_MODIFIER: [
                 h.AbilityHandler(
                     h.フェアリーオーラ_boost_power,

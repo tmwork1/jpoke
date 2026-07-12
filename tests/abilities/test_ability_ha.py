@@ -1621,6 +1621,52 @@ def test_ファーコート_物理技の防御が2倍になる(move_name: str, e
     assert battle.damage_calculator.def_modifier == expected_modifier
 
 
+def test_フェアリーオーラ_かたやぶりでも威力補正は無効化されない():
+    """現行世代ではかたやぶりの効果がある技はフェアリーオーラの影響を受ける（無視されない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["ムーンフォース"])],
+    )
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーオーラ_フェアリー技以外には効果がない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 4096 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーオーラ_登場時に特性開示():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    assert battle.actives[0].ability.revealed is True
+
+
+def test_フェアリーオーラ_相手のフェアリー技威力も5448_4096倍になる():
+    """フェアリーオーラの効果対象は場にいるポケモン全員のため、敵のフェアリー技威力も上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ")],
+        team1=[Pokemon("ピカチュウ", move_names=["ムーンフォース"])],
+    )
+    t.run_move(battle, 1)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
+def test_フェアリーオーラ_自分のフェアリー技威力が5448_4096倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="フェアリーオーラ", move_names=["ムーンフォース"])],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    t.run_move(battle, 0)
+    assert 5448 == battle.damage_calculator.power_modifier
+
+
 def test_ふうりょくでんき_おいかぜ発生でじゅうでん():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ")],
