@@ -1,10 +1,10 @@
 """jpoke で学べること: 設置技（サイドフィールド効果）と交代誘発技の効果、
-交代・テラスタルコマンドを明示的に組み立てる方法、わるあがき（PP切れ）の挙動。
+交代・テラスタル・メガシンカコマンドを明示的に組み立てる方法、わるあがき（PP切れ）の挙動。
 
 これまでのサンプルは battle.get_available_commands() から選ぶか、Player の既定方策
 （先頭のコマンドを選ぶ）に任せていた。ここでは Command.get_switch_command() /
-get_terastal_command() で自分でコマンドを組み立て、battle.step({player: command, ...})
-に直接渡す方法を示す。
+get_terastal_command() / get_megaevol_command() で自分でコマンドを組み立て、
+battle.step({player: command, ...}) に直接渡す方法を示す。
 """
 from __future__ import annotations
 
@@ -107,6 +107,24 @@ def show_explicit_terastal_command() -> None:
     print(f"テラスタル後: is_terastallized={attacker.is_terastallized}, テラスタイプ={attacker.tera_type}")
 
 
+def show_explicit_megaevol_command() -> None:
+    """Command.get_megaevol_command(index) で「index番目の技を使いながらメガシンカする」
+    コマンドを明示的に組み立てる。テラスタルと違い、対応するメガストーン（例: フシギバナイト）を
+    持たせたポケモンでなければメガシンカできない（Pokemon.can_megaevolve()で判定可能）。
+    """
+    player1 = Player("Attacker")
+    player1.add_pokemon("フシギバナ", item_name="フシギバナイト", move_names=["たいあたり"])
+    player2 = Player("Defender")
+    player2.add_pokemon("カビゴン")
+
+    battle = Battle(player1, player2, seed=1)
+    battle.start()
+    attacker = battle.get_active(player1)
+    print(f"メガシンカ前: {attacker.name}（can_megaevolve={attacker.can_megaevolve()}）")
+    battle.step({player1: Command.get_megaevol_command(0), player2: Command.MOVE_0})
+    print(f"メガシンカ後: {attacker.name}（megaevolved={attacker.megaevolved}）")
+
+
 def main() -> None:
     show_entry_hazard_and_explicit_switch()
     print("-" * 50)
@@ -115,6 +133,8 @@ def main() -> None:
     show_struggle_when_out_of_pp()
     print("-" * 50)
     show_explicit_terastal_command()
+    print("-" * 50)
+    show_explicit_megaevol_command()
 
     # 試してみよう: ステルスロックをまきびしに変えたり、交代先のタイプ相性を変えたりすると
     # 設置技のダメージ・効果がどう変わるか比較できる

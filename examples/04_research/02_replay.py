@@ -21,11 +21,8 @@ def main() -> None:
 
     battle = Battle(player1, player2, seed=1)
     battle.start()
-
-    while not battle.finished and battle.turn < 100:
-        battle.step()
-
-    winner = battle.winner
+    # 手動でstep()するループの定型は01で学んだので、ここではplay_out()で一括して進める
+    winner = battle.play_out(max_turns=100)
     print(f"元の対戦の勝者: {winner.username if winner else '引き分け（ターン上限）'}（{battle.turn}ターン）")
 
     # build_replay_data() は対戦の途中でも呼べるが、ここでは決着後に呼ぶ
