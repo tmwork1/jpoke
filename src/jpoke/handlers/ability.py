@@ -1917,14 +1917,39 @@ def スイートベール_prevent_volatile(battle: Battle, ctx: EventContext, va
     return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
 
+_SKIN_ALWAYS_EXEMPT_MOVES: frozenset[str] = frozenset({
+    "ウェザーボール", "さばきのつぶて", "しぜんのめぐみ", "だいちのはどう",
+    "マルチアタック", "めざめるダンス",
+})
+_SKIN_TERA_EXEMPT_MOVES: frozenset[str] = frozenset({"テラバースト", "テラクラスター"})
+
+
+def _skin_is_exempt(ctx: AttackContext) -> bool:
+    """スキン系特性共通: タイプが変わる技のうち、スキン系特性の対象外となる技かどうかを判定する。
+
+    ウェザーボール等は使用時のタイプに関わらず常に対象外。
+    テラバースト・テラクラスターはテラスタル中のみ対象外（テラスタルしていなければ対象）。
+    """
+    name = ctx.move.name
+    if name in _SKIN_ALWAYS_EXEMPT_MOVES:
+        return True
+    if name in _SKIN_TERA_EXEMPT_MOVES and ctx.attacker.is_terastallized:
+        return True
+    return False
+
+
 def _skin_modify_move_type(battle: Battle, ctx: AttackContext, value: Type, *, from_type: str, to_type: str) -> HandlerReturn:
     """スキン系特性共通: from_type の技を to_type に変換する。"""
+    if _skin_is_exempt(ctx):
+        return HandlerReturn(value=value)
     if value == from_type:
         value = to_type
     return HandlerReturn(value=value)
 
 def _skin_boost_power(battle: Battle, ctx: AttackContext, value: int, *, trigger_type: str) -> HandlerReturn:
     """スキン系特性共通: trigger_type だった技の威力を 4915/4096 倍にする。"""
+    if _skin_is_exempt(ctx):
+        return HandlerReturn(value=value)
     if ctx.move.data.type == trigger_type:
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
