@@ -1787,6 +1787,17 @@ def test_ふくつのこころ_ひるみ時にS上昇(volatile_name: VolatileNam
     assert mon.boosts["spe"] == expected_rank
 
 
+def test_ふくつのこころ_S最大時は上昇しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふくつのこころ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.boosts["spe"] = 6
+    battle.volatile_manager.apply(mon, "ひるみ")
+    assert mon.boosts["spe"] == 6
+
+
 def test_ふしぎなうろこ_かたやぶりで無効():
     """ふしぎなうろこ: かたやぶり持ちの物理技はふしぎなうろこの防御補正を貫通する。"""
     battle = t.start_battle(
