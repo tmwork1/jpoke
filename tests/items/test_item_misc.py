@@ -54,6 +54,32 @@ def test_HP25以下でランク上昇するきのみ_こんらんの自傷では
     assert not mon.has_item()
 
 
+@pytest.mark.parametrize("item_name, stat, amount",
+                         [
+                             ("チイラのみ", "atk", 1),
+                             ("カムラのみ", "spe", 1),
+                             ("ヤタピのみ", "spa", 1),
+                             ("リュガのみ", "def", 1),
+                             ("ズアのみ", "spd", 1),
+                         ]
+                         )
+def test_HP25以下でランク上昇するきのみ_瀕死になったときは発動しない(item_name, stat, amount):
+    """ダメージでHPが0(ひんし)になったときはランク上昇せず、アイテムも消費されない
+    （ref: docs/spec/items/_ランク上昇ピンチきのみ.md「所持者がひんしになったときは発動しない」）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == 0
+    assert mon.fainted
+    assert mon.boosts[stat] == 0
+    assert mon.has_item()
+
+
 @pytest.mark.parametrize(
     "item_name",
     ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"]
@@ -86,6 +112,27 @@ def test_HP4分の1以下で回復するきのみ(item_name):
     battle.modify_hp(mon, v=-1)
     assert mon.hp == mon.max_hp // 4 + mon.max_hp // 3
     assert not mon.has_item()
+
+
+@pytest.mark.parametrize(
+    "item_name",
+    ["ウイのみ", "イアのみ", "フィラのみ", "マゴのみ", "バンジのみ"]
+)
+def test_HP4分の1以下で回復するきのみ_瀕死になったときは発動しない(item_name):
+    """ダメージでHPが0(ひんし)になったときは回復せず、こんらんも付与されず、
+    アイテムも消費されない
+    （ref: docs/spec/items/_HP回復ピンチきのみ.md）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name=item_name)],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == 0
+    assert mon.fainted
+    assert mon.has_item()
 
 
 @pytest.mark.parametrize(
