@@ -4381,10 +4381,9 @@ def もらいび_modify_power(battle: Battle, ctx: AttackContext, value: int) ->
 
 def もらいび_reserve_fire_boost(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """もらいび特性: ほのお技使用時に強化適用予約。"""
-    mon = getattr(ctx, "source", None) or getattr(ctx, "attacker", None)
+    mon = ctx.attacker
     if (
         ctx.move.type == "ほのお"
-        and mon is not None
         and mon.ability.state == "charged"
     ):
         mon.ability.state = "active"
