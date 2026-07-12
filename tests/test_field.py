@@ -6,6 +6,32 @@ from jpoke.core import AttackContext
 from . import test_utils as t
 
 
+def test_set_terrain_地形を発動できる():
+    """battle.set_terrain(): 地形を直接発動できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+
+    result = battle.set_terrain("エレキフィールド")
+
+    assert result
+    assert battle.terrain.name == "エレキフィールド"
+
+
+def test_set_weather_天候を発動できる():
+    """battle.set_weather(): 天候を直接発動できる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ")],
+        team1=[Pokemon("カビゴン")],
+    )
+
+    result = battle.set_weather("すなあらし")
+
+    assert result
+    assert battle.weather.name == "すなあらし"
+
+
 @pytest.mark.parametrize("weather,pokemon_name,move_name,expected", [
     ("あめ", "ゼニガメ", "みずでっぽう", 4096),
     ("あめ", "ヒトカゲ", "ひのこ", 4096),

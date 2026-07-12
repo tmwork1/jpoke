@@ -15,7 +15,8 @@ from random import Random
 from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
-    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode
+    HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode, \
+    AilmentName, WeatherName, TerrainName
 from jpoke.enums import Event, Command, LogCode
 from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
@@ -747,6 +748,46 @@ class Battle:
                      reason: StatChangeReason = "") -> dict[Stat, int]:
         """ポケモンの複数の能力ランクを同時に変更する（StatusManagerへの委譲）。"""
         return self.status_manager.modify_stats(target, stats, source=source, reason=reason)
+
+    def set_ailment(self, target: Pokemon, name: AilmentName, count: int | None = None) -> bool:
+        """状態異常を直接付与する（シナリオ構築・ダメージ計算検証用）。
+
+        既存の状態異常があれば上書きする。特性・タイプ等による無効化判定は行わない
+        （examples/スクリプトから素直に状態を作るための薄いラッパーのため）。
+
+        Args:
+            target: 対象のポケモン
+            name: 状態異常名
+            count: 継続ターン数（ねむりは省略時にChampions仕様で自動決定）
+
+        Returns:
+            bool: 付与に成功した場合True
+        """
+        return self.ailment_manager.apply(target, name, count=count, overwrite=True)
+
+    def set_weather(self, name: WeatherName, count: int = 5) -> bool:
+        """天候を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            name: 天候名
+            count: 持続ターン数
+
+        Returns:
+            bool: 発動に成功した場合True
+        """
+        return self.weather_manager.apply(name, count)
+
+    def set_terrain(self, name: TerrainName, count: int = 5) -> bool:
+        """地形を直接発動する（シナリオ構築・ダメージ計算検証用）。
+
+        Args:
+            name: 地形名
+            count: 持続ターン数
+
+        Returns:
+            bool: 発動に成功した場合True
+        """
+        return self.terrain_manager.apply(name, count)
 
     def roll_damage(self,
                     attacker: Pokemon,

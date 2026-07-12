@@ -20,6 +20,11 @@
   自動的に対戦を進める便宜メソッド。`start()` → `while not battle.finished
   and battle.turn < N: battle.step()` という定型ループの重複を解消する。
   `Player.battle_against()` の内部ループもこれに置き換えた
+- `Battle.set_ailment(target, name, count=None)` / `Battle.set_weather(name, count=5)` /
+  `Battle.set_terrain(name, count=5)` — 状態異常・天候・地形を技を介さず直接
+  セットする薄い公開ラッパー（既存の `ailment_manager` / `weather_manager` /
+  `terrain_manager` への委譲）。シナリオ構築や `calc_lethal()` によるダメージ計算
+  検証で、対戦を進行させずに状態異常・天候込みの複合致死率を確認できる
 
 ### Changed
 
