@@ -152,6 +152,10 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
   ディレクトリが残ることがある）
 - 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
   `git stash list` で放置物がないか確認する
+- `.loop/` 系フローの永続 worktree・統合 worktree は稼働中は残したままでよいが、フローが
+  バックログを使い切り完全終了（各指示書の「終了チェック」で全件完了を報告するケース）した時点で、
+  ディスパッチャー自身が `.claude/loop/_common.md` §共通7「完全終了」の手順に従い worktree・
+  ブランチ（ローカル・リモート）を削除する
 
 ## 開発ルール
 
