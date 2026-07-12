@@ -5,7 +5,7 @@ if TYPE_CHECKING:
 
 from jpoke.utils import fast_copy
 from jpoke.data.ability import ABILITIES
-from jpoke.types import AbilityState, AbilityName, ItemName
+from jpoke.types import AbilityState, AbilityName, ItemName, WeatherName
 
 from .effect import GameEffect
 
@@ -40,6 +40,15 @@ class Ability(GameEffect):
         self.cud_chew_turns: int = 0
         """はんすう専用: 再発動までの残りターン数（消費時点で2にセットし0で発動）。"""
 
+        self.saved_weather_name: WeatherName = ""
+        """メガソーラー専用: 天候を「はれ」に上書きする前の本来の天候名を一時保存する。"""
+        self.saved_weather_count: int = 0
+        """メガソーラー専用: 天候を上書きする前の「はれ」フィールドのカウントを一時保存する。"""
+        self.weather_override_depth: int = 0
+        """メガソーラー専用: ねごと・まねっこ等で技実行がネストした場合に対応する深度カウンター。
+        最も外側の ON_BEGIN_MOVE でのみ本来の天候を保存し、深度が0に戻る
+        ON_END_MOVE でのみ復元する。"""
+
         self.data: AbilityData  # 型ヒントのための属性。実際のデータはsuper().__init__で設定される
 
     def __deepcopy__(self, memo):
@@ -58,6 +67,9 @@ class Ability(GameEffect):
         self.activated_since_switch_in = False
         self.cud_chew_item = ""
         self.cud_chew_turns = 0
+        self.saved_weather_name = ""
+        self.saved_weather_count = 0
+        self.weather_override_depth = 0
         self.reset_enable_state()
 
     def reset_enable_state(self):

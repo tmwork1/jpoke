@@ -74,8 +74,18 @@ _EFFECT_SPORE_AILMENTS: list[tuple[float, AilmentName]] = [
     (0.30, "ねむり"),
 ]
 
-# メガソーラー: ON_BEGIN_MOVE で保存した天候状態（current_name, はれのcount）を ON_END_MOVE で復元するための辞書
-_メガソーラー_saved: dict[int, tuple[str, int]] = {}
+_メガソーラー_WEATHER_SETTING_MOVES: frozenset[str] = frozenset({
+    "にほんばれ", "あまごい", "すなあらし", "ゆきげしき", "さむいギャグ",
+})
+"""メガソーラー専用: 天候を実際に変更する技の一覧。
+
+これらの技を使用する際は天候の仮想上書きを行わない。上書きしたまま
+技自身の天候変更処理（weather_manager.apply）を通すと、既に「はれ」に
+上書き済みであるせいで「元から同じ天候」と誤判定され、技自身の天候変更が
+機能しなくなってしまう（一次情報: docs/wiki/abilities/メガソーラー.html
+特性の仕様「この特性であっても技のにほんばれは使用でき、場をにほんばれ
+状態に変えることができる」）。
+"""
 
 class AbilityHandler(Handler):
     def __init__(self,
@@ -4194,46 +4204,68 @@ def ムラっけ_boost_stats(battle: Battle, ctx: EventContext, value: Any) -> H
 
 
 def メガソーラー_activate(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メガソーラー特性: 技使用前に天候を「はれ」に直接変更する（副作用なし）。"""
+    """メガソーラー特性: 技使用前に天候を「はれ」に直接変更する（副作用なし）。
+
+    にほんばれ・あまごい等、天候を実際に変更する技を使用する場合は上書きしない
+    （_メガソーラー_WEATHER_SETTING_MOVES 参照）。
+
+    ねごと・まねっこ等、同じ攻撃者に対して run_move がネストして呼ばれるケースに
+    対応するため、深度カウンター（ability.weather_override_depth）で多重発動を
+    管理する。最も外側の呼び出し時のみ本来の天候を保存する。
+    """
+    if ctx.move.name in _メガソーラー_WEATHER_SETTING_MOVES:
+        return HandlerReturn(value=value)
+
     mon = ctx.attacker
     wm = battle.weather_manager
-    original_name = wm.current_name
-    original_hare_count = wm.fields["はれ"].count
-    _メガソーラー_saved[id(mon)] = (original_name, original_hare_count)
+    if mon.ability.weather_override_depth == 0:
+        original_name = wm.current_name
+        mon.ability.saved_weather_name = original_name
+        mon.ability.saved_weather_count = wm.fields["はれ"].count
 
-    if original_name != "はれ":
-        # 元天候のハンドラを解除してから「はれ」のハンドラを登録する
-        if wm.fields[original_name].is_active:
-            for player in wm.fields[original_name].owners:
-                wm.fields[original_name].unregister_handlers(battle.events, player)
-        wm.fields["はれ"].count = 1
-        for player in wm.fields["はれ"].owners:
-            wm.fields["はれ"].register_handlers(battle.events, player)
+        if original_name != "はれ":
+            # 元天候のハンドラを解除してから「はれ」のハンドラを登録する
+            if wm.fields[original_name].is_active:
+                for player in wm.fields[original_name].owners:
+                    wm.fields[original_name].unregister_handlers(battle.events, player)
+            wm.fields["はれ"].count = 1
+            for player in wm.fields["はれ"].owners:
+                wm.fields["はれ"].register_handlers(battle.events, player)
 
-    wm.current_name = "はれ"
-    mon.ability.state = "active"
+        wm.current_name = "はれ"
+        mon.ability.state = "active"
+    mon.ability.weather_override_depth += 1
     return HandlerReturn(value=value)
 
 
 def メガソーラー_deactivate(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """メガソーラー特性: 技使用後に天候を元に戻す。"""
+    """メガソーラー特性: 技使用後に天候を元に戻す（最も外側の呼び出しでのみ実行）。"""
+    if ctx.move.name in _メガソーラー_WEATHER_SETTING_MOVES:
+        return HandlerReturn(value=value)
+
     mon = ctx.attacker
     if mon.ability.state != "active":
         return HandlerReturn(value=value)
+
+    mon.ability.weather_override_depth -= 1
+    if mon.ability.weather_override_depth > 0:
+        # ねごと・まねっこ等でネストした内側の解除。外側の解除まで天候を維持する
+        return HandlerReturn(value=value)
+
     wm = battle.weather_manager
-    saved = _メガソーラー_saved.pop(id(mon), None)
-    if saved is not None:
-        original_name, original_hare_count = saved
-        if original_name != "はれ":
-            # 「はれ」のハンドラを解除して元天候のハンドラを復元する
-            for player in wm.fields["はれ"].owners:
-                wm.fields["はれ"].unregister_handlers(battle.events, player)
-            wm.fields["はれ"].count = original_hare_count
-            if wm.fields[original_name].is_active:
-                for player in wm.fields[original_name].owners:
-                    wm.fields[original_name].register_handlers(battle.events, player)
-        wm.current_name = original_name
+    original_name = mon.ability.saved_weather_name
+    if original_name != "はれ":
+        # 「はれ」のハンドラを解除して元天候のハンドラを復元する
+        for player in wm.fields["はれ"].owners:
+            wm.fields["はれ"].unregister_handlers(battle.events, player)
+        wm.fields["はれ"].count = mon.ability.saved_weather_count
+        if wm.fields[original_name].is_active:
+            for player in wm.fields[original_name].owners:
+                wm.fields[original_name].register_handlers(battle.events, player)
+    wm.current_name = original_name
     mon.ability.state = ""
+    mon.ability.saved_weather_name = ""
+    mon.ability.saved_weather_count = 0
     return HandlerReturn(value=value)
 
 
