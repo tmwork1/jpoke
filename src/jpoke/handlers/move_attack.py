@@ -2938,7 +2938,7 @@ def ぶきみなじゅもん_reduce_defender_pp(battle: Battle, ctx: AttackConte
     return HandlerReturn(value=value)
 
 
-def ぶちかまし_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ぶちかまし_lower_attacker_def_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": -1, "spd": -1})
 
 

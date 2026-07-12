@@ -1172,7 +1172,7 @@ MOVES_HA: dict[MoveName, MoveData] = {
         flags={"contact", "punch"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.ぶちかまし_lower_defender_spd,
+                ha.ぶちかまし_lower_attacker_def_spd,
             )
         }
     ),
