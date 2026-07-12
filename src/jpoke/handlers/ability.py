@@ -3974,14 +3974,31 @@ def マグマのよろい_cure_freeze_on_enable(battle: Battle, ctx: EventContex
     return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["こおり"])
 
 
-def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """まけんき特性: 敵から能力を下げられたときこうげきが2段階上昇する。"""
-    if (
-        any(v < 0 for v in value.values())
-        and ctx.source != ctx.target
-    ):
-        battle.modify_stats(ctx.target, {"atk": +2}, source=ctx.source)
-        _announce_ability_triggered(battle, ctx.target)
+def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value: dict[Stat, int]) -> HandlerReturn:
+    """まけんき特性: 敵から能力を下げられるとこうげきが2段階上昇する。下がった能力の数だけ発動する。
+
+    くすぐる・おきみやげのように一度に複数の能力を下げる技を受けた場合、
+    下がった能力の数だけまけんきが発動する（一次情報: docs/wiki/abilities/まけんき.html
+    特性の仕様節）。
+
+    Args:
+        battle: バトルインスタンス
+        ctx: コンテキスト (ON_MODIFY_STAT)
+            - target: 能力変化の対象（自分）
+            - source: 能力変化の原因
+        value: 能力変化の辞書 {stat: change}
+
+    Returns:
+        HandlerReturn: (処理実行フラグ)
+            - 能力が下がり、自分以外が原因の場合はこうげき上昇
+    """
+    # 下がった能力の数を数える
+    negative_count = sum(1 for v in value.values() if v < 0)
+    # 自分以外が原因で能力が下がった場合、下がった数だけこうげきを2段階上昇
+    if negative_count and ctx.source != ctx.target:
+        for _ in range(negative_count):
+            if battle.modify_stats(ctx.target, {"atk": +2}, source=ctx.source):
+                _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value=value)
 
 
