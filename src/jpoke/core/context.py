@@ -48,16 +48,31 @@ class BaseContext:
             spec: "role:side" 形式のロール指定（例: "source:foe"）
 
         Returns:
-            解決されたポケモン。存在しない場合は None
+            解決されたポケモン。ロールに対応するポケモンが存在しない場合（例:
+            AttackContext.defender が None）は None
+
+        Raises:
+            ValueError: role がこのコンテキスト型に定義されていない場合（例:
+                EventContext に対して "attacker:self" を指定した場合）。
+                subject_spec と登録先イベントのコンテキスト型が食い違う
+                実装ミスを、サイレントなハンドラ無効化ではなく即座に検出するため。
+                各イベントは単一のコンテキスト型からのみ発火する前提（1イベント
+                = 1コンテキスト型）。複数のコンテキスト型から発火しうる効果
+                （例: ON_CALC_DRAIN、技由来/揮発状態由来のHP吸収）は、emit側で
+                EventContext に正規化してから発火することでこの前提を保つ。
         """
         if spec is None:
             return None
         role, side = spec.split(":")
         if role not in ("source", "target", "attacker", "defender"):
             raise ValueError(f"不正なロール指定: {spec}")
-        # コンテキスト型に存在しないロール（例: EventContext に 'attacker'）は
-        # None を返し、呼び出し側でハンドラをスキップさせる
-        mon = getattr(self, role, None)
+        if not hasattr(self, role):
+            raise ValueError(
+                f"{type(self).__name__} は role '{role}' を持たない"
+                f"（subject_spec='{spec}'）。ハンドラの subject_spec と"
+                "登録先イベントのコンテキスト型が一致しているか確認してください。"
+            )
+        mon = getattr(self, role)
         if mon is not None and side == "foe":
             mon = battle.foe(mon)
         return mon

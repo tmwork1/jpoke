@@ -1443,10 +1443,16 @@ def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: An
 
     特性などでランクが下がらない場合は回復効果のみ発動する。
     """
+    from jpoke.core.context import EventContext  # 循環importを避けるための遅延import
+
     assert ctx.defender is not None
     # 相手のこうげきランク補正込みの実数値分だけ自分のHPを回復（ランク変更前に取得）
     recover_amount = ctx.defender.ranked_stats["atk"]
-    recover_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, recover_amount)
+    # ON_CALC_DRAIN は EventContext 専用イベント（おおきなねっこ等が source:self で判定するため）。
+    # AttackContext のまま渡さず、回復対象（attacker）を source に正規化して発火する。
+    recover_amount = battle.events.emit(
+        Event.ON_CALC_DRAIN, EventContext(source=ctx.attacker), recover_amount
+    )
     battle.modify_hp(ctx.attacker, v=recover_amount, reason="drain")
     # 相手のこうげきを1段階下げる（失敗しても回復は発動済み）
     battle.modify_stats(ctx.defender, {"atk": -1}, source=ctx.attacker)

@@ -16,7 +16,7 @@ from copy import deepcopy
 
 from jpoke.types import BattlePhase, Stat, StatChangeReason, GlobalFieldName, \
     HPChangeReason, AbilityDisabledReason, AbilityName, MoveName, CriticalMode, DamageRollMode, \
-    AilmentName, WeatherName, TerrainName, VolatileName, SideFieldName, ItemName
+    AilmentName, WeatherName, TerrainName, VolatileName, SideFieldName, ItemName, ItemDisabledReason
 from jpoke.enums import Event, Command, LogCode
 from jpoke.exceptions import InvalidCommandError, InvalidPhaseError
 from jpoke.utils import fast_copy
@@ -1029,6 +1029,38 @@ class Battle:
     def remove_ability_disabled_reason(self, mon: Pokemon, reason: AbilityDisabledReason) -> bool:
         """特性の無効化理由を削除する（AbilityManagerへの委譲）。"""
         return self.ability_manager.remove_disabled_reason(mon, reason)
+
+    def add_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
+        """道具の無効化理由を追加する（ItemManagerへの委譲）。"""
+        return self.item_manager.add_disabled_reason(mon, reason)
+
+    def remove_item_disabled_reason(self, mon: Pokemon, reason: ItemDisabledReason) -> bool:
+        """道具の無効化理由を削除する（ItemManagerへの委譲）。"""
+        return self.item_manager.remove_disabled_reason(mon, reason)
+
+    def gain_item(self, target: Pokemon, name: ItemName) -> bool:
+        """対象のポケモンにアイテムを得させる（ItemManagerへの委譲）。"""
+        return self.item_manager.gain_item(target, name)
+
+    def remove_item(self,
+                    target: Pokemon,
+                    source: Pokemon | None = None,
+                    *,
+                    track_loss: bool = True) -> bool:
+        """対象のアイテムを失わせる（ItemManagerへの委譲）。"""
+        return self.item_manager.remove_item(target, source=source, track_loss=track_loss)
+
+    def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
+        """場に出ている2体のアイテムを入れ替える（ItemManagerへの委譲）。"""
+        return self.item_manager.swap_items(ignore_sticky_hold=ignore_sticky_hold)
+
+    def take_item(self, target: Pokemon, *, ignore_sticky_hold: bool = False) -> bool:
+        """対象のアイテムを奪う（ItemManagerへの委譲）。"""
+        return self.item_manager.take_item(target, ignore_sticky_hold=ignore_sticky_hold)
+
+    def consume_item(self, mon: Pokemon, *, track_loss: bool = True) -> bool:
+        """ポケモンの道具を消費する（ItemManagerへの委譲）。"""
+        return self.item_manager.consume_item(mon, track_loss=track_loss)
 
     def resolve_secondary_chance(self, ctx: EventContext, chance: float) -> float:
         """追加効果補正後の実効確率を返す。"""

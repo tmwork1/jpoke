@@ -872,9 +872,15 @@ def _drain_hp(battle: Battle, ctx: AttackContext, damage: int, heal_ratio: float
     端数は第五世代以降の仕様に合わせて四捨五入（round_half_up）で丸め、
     最低1回復を保証する（`max(1, ...)`）。
     """
+    from jpoke.core.context import EventContext  # 循環importを避けるための遅延import
+
     damage = damage or ctx.substitute_damage
     heal_amount = max(1, round_half_up(damage * heal_ratio))
-    heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
+    # ON_CALC_DRAIN は EventContext 専用イベント（おおきなねっこ等が source:self で判定するため）。
+    # AttackContext のまま渡さず、回復対象（attacker）を source に正規化して発火する。
+    heal_amount = battle.events.emit(
+        Event.ON_CALC_DRAIN, EventContext(source=ctx.attacker), heal_amount
+    )
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
 
 def _recoil(battle: Battle, ctx: AttackContext, value: int, ratio: float) -> HandlerReturn:
@@ -3283,9 +3289,15 @@ def むねんのつるぎ_drain(battle: Battle, ctx: AttackContext, value: int) 
     他の多くのドレイン技（`_drain_hp`）は端数を切り捨てるが、むねんのつるぎは
     公式仕様上、回復量の端数を切り上げる点が異なるため専用に実装する。
     """
+    from jpoke.core.context import EventContext  # 循環importを避けるための遅延import
+
     damage = value or ctx.substitute_damage
     heal_amount = (damage + 1) // 2  # 端数切り上げ
-    heal_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, heal_amount)
+    # ON_CALC_DRAIN は EventContext 専用イベント（おおきなねっこ等が source:self で判定するため）。
+    # AttackContext のまま渡さず、回復対象（attacker）を source に正規化して発火する。
+    heal_amount = battle.events.emit(
+        Event.ON_CALC_DRAIN, EventContext(source=ctx.attacker), heal_amount
+    )
     battle.modify_hp(ctx.attacker, v=heal_amount, reason="drain")
     return HandlerReturn(value=value)
 
