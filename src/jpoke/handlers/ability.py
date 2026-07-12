@@ -1708,8 +1708,11 @@ def しゅうかく_restore_berry(battle: Battle, ctx: EventContext, value: Any)
 
 
 def しょうりのほし_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """しょうりのほし特性: 技の命中率を1.1倍にする（一撃必殺技を除く）。"""
-    if not ctx.move.has_flag("ohko"):
+    """しょうりのほし特性: 技の命中率を1.1倍にする（一撃必殺技を除く）。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is not None and not ctx.move.has_flag("ohko"):
         value = apply_fixed_modifier(value, 4506)
     return HandlerReturn(value=value)
 
@@ -2019,9 +2022,13 @@ def すながくれ_ignore_sandstorm_damage(battle: Battle, ctx: EventContext, v
 
 
 def すながくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """すながくれ特性: すなあらし中に受ける技の命中率を3277/4096倍にする（必中技・一撃必殺技は除く）。"""
+    """すながくれ特性: すなあらし中に受ける技の命中率を3277/4096倍にする（必中技・一撃必殺技は除く）。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
     if (
-        battle.weather.name == "すなあらし"
+        value is not None
+        and battle.weather.name == "すなあらし"
         and not ctx.move.has_flag("ohko")
     ):
         value = apply_fixed_modifier(value, 3277)
@@ -2406,8 +2413,11 @@ def ちくでん_absorb_electric(battle: Battle, ctx: AttackContext, value: bool
 
 
 def ちどりあし_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ちどりあし特性: こんらん中の自分に対する技の命中率を半分にする。"""
-    if ctx.defender.has_volatile("こんらん"):
+    """ちどりあし特性: こんらん中の自分に対する技の命中率を半分にする。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is not None and ctx.defender.has_volatile("こんらん"):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
@@ -3088,11 +3098,15 @@ def はらぺこスイッチ_on_turn_end(battle: Battle, ctx: EventContext, valu
 
 
 def はりきり_modify_accuracy(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。"""
+    """はりきり特性: 物理技（一撃必殺・必中技除外）の命中率を0.8倍にする。
+
+    value が None の場合は（技自体が必中技、または他の効果で必中状態が確定している場合）
+    補正をかけずそのまま返す。
+    """
     if (
-        ctx.move.category == "physical"
+        value is not None
+        and ctx.move.category == "physical"
         and not ctx.move.has_flag("ohko")  # 一撃必殺技は命中率ペナルティなし
-        and ctx.move.accuracy is not None  # 必中技は命中率ペナルティなし
     ):
         value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
@@ -3499,8 +3513,11 @@ def ふかしのこぶし_reduce_damage(battle: Battle, ctx: AttackContext, valu
 
 
 def ふくがん_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ふくがん特性: 使用技の命中率を1.3倍にする（一撃必殺技を除く）。"""
-    if not ctx.move.has_flag("ohko"):
+    """ふくがん特性: 使用技の命中率を1.3倍にする（一撃必殺技を除く）。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is not None and not ctx.move.has_flag("ohko"):
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
 
@@ -4210,8 +4227,11 @@ def ゆきかき_boost_speed(battle: Battle, ctx: EventContext, value: int) -> H
 
 
 def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技は除く）。"""
-    if battle.weather.name == "ゆき":
+    """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技は除く）。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is not None and battle.weather.name == "ゆき":
         value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
 
