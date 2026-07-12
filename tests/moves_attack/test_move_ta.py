@@ -3,7 +3,7 @@
 import pytest
 from jpoke import Pokemon
 from jpoke.data.move import MOVES
-from jpoke.enums import Interrupt
+from jpoke.enums import Command, Interrupt
 from .. import test_utils as t
 
 
@@ -2240,6 +2240,32 @@ def test_とびはねる_2ターンで攻撃する():
     t.run_move(battle, 0)
     assert defender.hp < hp_before
     assert "そらをとぶ" not in attacker.volatiles
+
+
+def test_とびはねる_2ターン目にわるあがきやそらをとぶへすり替わらない():
+    """とびはねる: 揮発状態名はそらをとぶと共有されるが、揮発状態のmove_nameは
+    使用技であるとびはねる自身が設定されること。また2ターン目にCommand.FORCEDで
+    強制実行される技もとびはねる自身であり、わるあがきにも、揮発状態名である
+    そらをとぶにもすり替わらないこと（charge_into_volatileがvolatile引数ではなく
+    ctx.move.nameをmove_nameに設定していることの回帰確認）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["とびはねる"])],
+        team1=[Pokemon("カビゴン")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+
+    # 1ターン目: 揮発状態付与のみ（揮発状態名は「そらをとぶ」を共有するが、
+    # move_nameは実際に使用した「とびはねる」になっているはず）
+    t.run_move(battle, 0)
+    assert "そらをとぶ" in attacker.volatiles
+    assert attacker.volatiles["そらをとぶ"].move_name == "とびはねる"
+
+    # 2ターン目に強制実行される技を実際のコマンド解決経路で確認する
+    with battle.phase_context("action"):
+        assert battle.get_available_commands(battle.players[0]) == [Command.FORCED]
+    move = battle.command_manager.resolve_move_from_command(battle.players[0], Command.FORCED)
+    assert move.name == "とびはねる"
 
 
 def test_とびはねる_まひが発動する():
