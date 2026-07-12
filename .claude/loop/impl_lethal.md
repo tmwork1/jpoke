@@ -1,16 +1,16 @@
 # リーサル計算ハンドラ 実装ループ 指示書
 
-**前提**: `_common.md` を読んでいること（`{flow}` = `lethal`、方式は単一ブランチ）。
-**実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/lethal`）。
+**前提**: `_common.md` を読んでいること（`{flow}` = `impl_lethal`、方式は単一ブランチ）。
+**実装作業ディレクトリ**: `{config.worktree}`（永続 worktree、ブランチ `loop/impl_lethal`）。
 
 > **位置づけ（移行期・削除予定）**: リーサルの新規実装は `impl` フローが担当するようになった
-> （impl.md 手順3・新規 entry は `-` を残さない）。この lethal フローは、それ以前に実装された
+> （impl.md 手順3・新規 entry は `-` を残さない）。この impl_lethal フローは、それ以前に実装された
 > **`リーサル実装 = -` のバックログを総ざらいで消化するための一時的な後追いフロー**。
 > バックログを消化しきったら（下記コマンドで `-` が 0 件になったら）このフローと状態ファイルは削除してよい。
 > 残バックログ確認: `awk -F'\t' 'NR>1 && $6=="-"' docs/progress/*.md`
 
 `impl.md` を簡略化したシングルエージェント実装ループ（計画書なし）。進捗ファイルのリーサル列を
-読んで実装対象を決定し、`loop/lethal` 上で 1 件ずつ実装・テスト・進捗更新・コミットを行う。
+読んで実装対象を決定し、`loop/impl_lethal` 上で 1 件ずつ実装・テスト・進捗更新・コミットを行う。
 
 ---
 
@@ -23,7 +23,7 @@
     "spec_hint":      "docs/spec/ 以下の仕様書を参照",
     "test_files":     ["tests/test_lethal.py"],
     "progress_files": ["docs/progress/item.md", "docs/progress/ability.md", "..."],
-    "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\lethal"
+    "worktree":       "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\impl_lethal"
   },
   "completed": [{"name": "...", "type": "item|ability|ailment|volatile|global_field|move"}],
   "failed":    [{"name": "...", "type": "..."}],
@@ -41,11 +41,11 @@
 
 ### 1. 状態ファイルを読む
 
-`.loop/lethal_state.json` を Read で読み込む（存在しなければ初回起動）。
+`.loop/impl_lethal_state.json` を Read で読み込む（存在しなければ初回起動）。
 
 ### 1.5. worktree を準備する
 
-§共通4 パターンA を適用する（`{config.worktree}`・ブランチ `loop/lethal`）。
+§共通4 パターンA を適用する（`{config.worktree}`・ブランチ `loop/impl_lethal`）。
 
 ### 2. 次の実装対象を決定する
 
@@ -80,9 +80,9 @@ jpoke リーサル計算ハンドラ実装タスク: {name}（{type}）
 8. python -m pytest tests/ -v を実行し全テストが通ることを確認する
    （今回の実装と無関係な既存テストが flaky と判明した場合は `.claude/loop/_common.md` §共通13 に
    従いその場で修正する）
-9. 変更をすべてコミットする（作業は `loop/lethal` ブランチ上で行う）:
+9. 変更をすべてコミットする（作業は `loop/impl_lethal` ブランチ上で行う）:
    git add src/ tests/ docs/
-   git commit -m "impl: lethal/{name}"
+   git commit -m "impl: impl_lethal/{name}"
 
 {config.spec_hint}
 ```
@@ -97,7 +97,7 @@ worktree 内でコミットする:
 
 ```bash
 # {config.worktree} 配下の progress_file を Edit で修正後:
-git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"
+git -C "{config.worktree}" commit -am "docs: impl_lethal/{name} progress"
 ```
 
 ### 5. 状態保存・終了
@@ -105,7 +105,7 @@ git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"
 成功: `completed` に `{"name": "{name}", "type": "{type}"}` を追加し、`pending_main_merges += 1`。
 `pending_main_merges >= 10` になったら「main への反映」の手順に従いその場で main へ反映し、
 `pending_main_merges = 0` に戻す。失敗: `failed` に追加（`pending_main_merges` は変更しない）。
-§共通7 に従う（続きはユーザーの `/loop lethal` 再実行で再開する）。
+§共通7 に従う（続きはユーザーの `/loop impl_lethal` 再実行で再開する）。
 
 ---
 
@@ -113,7 +113,7 @@ git -C "{config.worktree}" commit -am "docs: lethal/{name} progress"
 
 `impl`/`review` とは異なり整形処理を挟まないため、**10件の実装・テストが成功しコミットされる
 たびに**、ディスパッチャーがその場で §共通6 の手順に従い、まとめて main へ反映する
-（`{branch}` = `loop/lethal`）。ループ終了時（バックログを消化しきった場合）は、
+（`{branch}` = `loop/impl_lethal`）。ループ終了時（バックログを消化しきった場合）は、
 `pending_main_merges` が10件未満でも1件以上残っていれば反映してから終える。
 
 ## エラーハンドリング
