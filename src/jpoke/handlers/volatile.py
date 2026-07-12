@@ -1325,10 +1325,38 @@ def みちづれ_remove(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 
 def めいちゅうアップ_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """めいちゅうアップ: 次の技の命中率を1.2倍にし、効果を消費する。"""
+    """めいちゅうアップ: 次の技の命中率を1.2倍にし、効果を消費する。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずに効果のみ消費する。
+    """
     mon = ctx.attacker
     battle.volatile_manager.remove(mon, "めいちゅうアップ")
+    if value is None:
+        return HandlerReturn(value=value)
     return HandlerReturn(value=apply_fixed_modifier(value, 4915))
+
+
+def めいちゅうアップ_clear_after_move(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """めいちゅうアップ: 命中判定のない技を使ったときなど、
+    ON_MODIFY_ACCURACYで消費されなかった場合でも行動完了時に効果を消す
+    （ノーガード等のstop_eventでON_MODIFY_ACCURACY自体が発火しなかった場合を含む）。
+
+    行動不能（状態異常・ひるみ等）や溜め技の溜めターンでは効果を維持する。
+    """
+    mon = ctx.attacker
+    if not mon.has_volatile("めいちゅうアップ"):
+        return HandlerReturn(value=value)
+    executor = battle.move_executor
+    if executor.action_success is False:
+        return HandlerReturn(value=value)
+    if (
+        executor.move_success is None
+        and executor.move_applied is None
+        and not executor.move_missed
+    ):
+        return HandlerReturn(value=value)
+    battle.volatile_manager.remove(mon, "めいちゅうアップ")
+    return HandlerReturn(value=value)
 
 
 def メテオビーム_remove_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:

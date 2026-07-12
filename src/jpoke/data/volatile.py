@@ -782,6 +782,10 @@ VOLATILES: dict[str, VolatileData] = {
                 h.めいちゅうアップ_boost_accuracy,
                 subject_spec="attacker:self",
             ),
+            Event.ON_END_MOVE: h.VolatileHandler(
+                h.めいちゅうアップ_clear_after_move,
+                subject_spec="attacker:self",
+            ),
         }
     ),
     "メロメロ": VolatileData(

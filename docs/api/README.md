@@ -136,6 +136,7 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 | `faint(target, source=None, reason="")` | 対象を即座にひんしにする（`modify_hp(v=-target.max_hp)` の薄いラッパー） |
 | `modify_stats(target, stats, source=None, reason="")` | 複数の能力ランクを同時に変更する |
 | `set_ailment(target, name, count=None)` | 状態異常を直接付与する（特性・タイプによる無効化判定はしない、シナリオ構築用の薄いラッパー） |
+| `set_volatile(target, name, count=None)` | 揮発性状態（やどりぎのタネ等）を直接付与する |
 | `set_weather(name, count=5)` | 天候を直接発動する |
 | `set_terrain(name, count=5)` | 地形を直接発動する |
 
@@ -143,6 +144,7 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 battle.modify_hp(defender, r=-0.6, reason="シナリオ構築用")   # 最大HPの60%分ダメージ
 battle.modify_stats(defender, {"def": 1})                    # ぼうぎょ+1
 battle.set_ailment(defender, "どく")
+battle.set_volatile(defender, "やどりぎのタネ")
 battle.faint(defender)
 ```
 

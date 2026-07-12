@@ -28,12 +28,12 @@ python examples/01_basics/01_quickstart.py
 |---|---|---|
 | `01_basics/01_quickstart.py` | `Battle` / `Player` を使った最小構成の1vs1バトル | 導入 |
 | `01_basics/02_team_battle.py` | 3体チーム・複数選出・複数ターンのバトルループ・ログ確認 | 導入 |
-| `01_basics/03_hazards_and_explicit_commands.py` | 設置技（ステルスロック）・交代誘発技（とんぼがえり）の効果、`Command.get_switch_command()` / `get_terastal_command()` による交代・テラスタルコマンドの明示的な組み立て、わるあがき（PP切れ）の挙動 | 導入 |
-| `02_ai/01_custom_player.py` | `Player` を継承した最小のカスタム方策 | AI開発 |
+| `01_basics/03_hazards_and_explicit_commands.py` | 設置技（ステルスロック）・交代誘発技（とんぼがえり）の効果、`Command.get_switch_command()` / `get_terastal_command()` / `get_megaevol_command()` による交代・テラスタル・メガシンカコマンドの明示的な組み立て、わるあがき（PP切れ）の挙動 | 導入 |
+| `02_ai/01_custom_player.py` | `Player` を継承した最小のカスタム方策、`choose_selection()` のオーバーライドによる選出順のカスタマイズ | AI開発 |
 | `02_ai/02_tree_search_ai.py` | `TreeSearchPlayer` を継承した木探索AIとランダム方策の対戦 | AI開発（発展） |
 | `02_ai/03_priority_and_command_debug.py` | 優先度技・素早さ操作技（トリックルーム）が行動順に与える影響、`TreeSearchPlayer.evaluate_commands()` によるコマンド候補・評価値のデバッグ確認 | AI開発（発展） |
-| `03_damage_calc/01_damage_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージ計算 | ダメージ計算ツール開発 |
-| `03_damage_calc/02_field_and_status_effects.py` | 天候（すなあらし）・地形（エレキフィールド）の効果、技を実際に当てて状態異常を発生させる方法、`battle.step()` を伴う進行での特性・アイテムの発動ログ確認 | ダメージ計算ツール開発 |
+| `03_damage_calc/01_damage_calculation.py` | `battle.calc_lethal()` による確定数・乱数ダメージ計算、複数技の組み合わせ（`moves=[...]`）、`secondary=True` による追加効果込みの確定数短縮 | ダメージ計算ツール開発 |
+| `03_damage_calc/02_field_and_status_effects.py` | 天候（すなあらし）・地形（エレキフィールド）の効果、技を実際に当てて状態異常を発生させる方法、`battle.set_volatile()` による揮発性状態（やどりぎのタネ）の直接付与、`battle.step()` を伴う進行での特性・アイテムの発動ログ確認、`effect_chance_threshold` による追加効果発動確率の固定 | ダメージ計算ツール開発 |
 | `04_research/01_bulk_simulation.py` | `Player.battle_against()` による多数回対戦・構成比較 | 戦術研究（構成比較） |
 | `04_research/02_replay.py` | `Battle.build_replay_data()` / `ReplayPlayer` / `replay_battle()` によるリプレイの記録・再生 | 戦術研究（対戦の記録・解析） |
 | `04_research/03_janken_nash_fictitious_play.py` | 実バトルのモンテカルロ推定 + 反復最適反応（fictitious play）によるNash均衡（混合戦略）の近似、`ProcessPoolExecutor` による並列化 | 戦術研究（読み合いの定量分析、発展） |

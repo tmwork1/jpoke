@@ -41,7 +41,7 @@ def main() -> None:
     while not battle.finished and battle.turn < max_turns:
         battle.step()
 
-    winner = battle.judge_winner()
+    winner = battle.winner
     if winner is None:
         print(f"結果: 決着つかず（{max_turns}ターン経過）")
     else:
