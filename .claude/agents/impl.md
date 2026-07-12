@@ -24,8 +24,10 @@ tools:
 
 ## ブランチ管理
 
-ループから呼ばれる場合、プロンプトに `git checkout -b impl/{entry} main` が含まれる。
-必ず指示通りにブランチを作成してから実装を開始し、完了後はコミットして main に戻ること。
+ループから呼ばれる場合、プロンプトに `git checkout -B "loop/impl/{entry}" loop/impl/integration`
+が含まれる（統合ブランチ `loop/impl/integration` の先端から entry ブランチを作成する）。
+必ず指示通りにブランチを作成してから実装を開始し、完了後はコミットして
+`loop/impl/integration` へ detach で戻ること（`git checkout --detach loop/impl/integration`）。
 
 ## 成果物チェックリスト
 
@@ -38,5 +40,5 @@ tools:
 - [ ] `data/ability.py` / `data/item.py` / `data/move.py` を変更した場合、対応するスクリプト（`scripts/sort_data/sort_abilities.py` / `scripts/sort_data/sort_items.py` / `scripts/sort_data/sort_moves.py`）を実行した
 - [ ] `docs/progress/<category>.md` の実装列（実装）を `x` に更新した
 - [ ] 変更をコミットした（`git add -A && git commit -m "impl: {entry}"`）
-- [ ] main ブランチに戻った（`git checkout main`）
+- [ ] `loop/impl/integration` に detach で戻った（`git checkout --detach loop/impl/integration`）
 - [ ] `review-test` に渡すべき仕様上の注意点・エッジケースをまとめた
