@@ -4038,8 +4038,14 @@ def マジックミラー_reflect(battle: Battle, ctx: AttackContext, value: boo
 
 
 def マルチスケイル_reduce_damage(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """防御側特性: HP満タン時の被ダメージを0.5倍にする。"""
-    if ctx.defender.hp == ctx.defender.max_hp:
+    """防御側特性: HP満タン時の被ダメージを0.5倍にする。
+
+    こんらんの自傷ダメージ（"_こんらん"）は攻撃技扱いではないため半減しない。
+    """
+    if (
+        ctx.defender.hp == ctx.defender.max_hp
+        and ctx.move.name != "_こんらん"
+    ):
         value = apply_fixed_modifier(value, 2048)
     return HandlerReturn(value=value)
 
