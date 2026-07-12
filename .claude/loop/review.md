@@ -206,7 +206,8 @@ jpoke {config.category} 再レビュータスク: {entry}
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/review/integration`）。
+エントリ単位では反映しない。§3.3 のバッチ整形コミットが成立するたびに、その手順内（§共通5 →
+§共通6）で直ちに main へ反映される（`{branch}` = `loop/review/integration`）。
 
 ## エラーハンドリング
 

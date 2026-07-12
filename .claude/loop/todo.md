@@ -102,9 +102,8 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 {config.review_extra}
 ```
 
-成功: `completed` に追加。失敗: `failed` に追加。
-
-> main へのマージは行わない（§共通2）。コミットは `loop/todo` に積むだけでよい。
+成功: `completed` に追加。続けて「main への反映」の手順に従い、この1件をただちに main へ
+マージする。失敗: `failed` に追加（main への反映は行わない）。
 
 ### 6. 状態保存・終了
 
@@ -114,7 +113,8 @@ jpoke {config.category} レビュー・テストタスク: {entry}
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/todo`）。
+1件の修正が review-test で成功・コミットされるたびに、ディスパッチャーがその場で §共通6 の
+手順に従い直ちに main へ反映する（`{branch}` = `loop/todo`）。
 
 ## エラーハンドリング
 

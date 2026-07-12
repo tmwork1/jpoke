@@ -179,6 +179,7 @@ impl エージェントが fuzzer（行動選択={active_mode}）発見バグ（
 
 review-test 成功 → §共通10 の成功時ルールに従う。`completed_bugs` のエントリ形式は
 `{"player": active_mode, "seed": seed, "signature": signature, "summary": "<一言説明>"}`。
+続けて「main への反映」の手順に従い、この1件をただちに main へマージする。
 
 review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新し、`current_failure` をクリアして
 保存し、手順6へ。
@@ -199,7 +200,8 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 ## main への反映
 
-§共通6 を適用する（`{branch}` = `loop/fuzz`）。両モードの修正がここに積まれる。
+1件の修正が review-test で成功・コミットされるたびに、ディスパッチャーがその場で §共通6 の
+手順に従い直ちに main へ反映する（`{branch}` = `loop/fuzz`）。両モードの修正がここに積まれる。
 
 ## エラーハンドリング
 
