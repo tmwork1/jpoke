@@ -294,6 +294,37 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_つめたいいわ_所持者がいる場でバインド技を使ってもValueErrorが発生しない():
+    """seed=10 player=random (ValueError@context.py:resolve_role:70) の回帰テスト。
+
+    core/query.py の get_volatile_duration（バインド技の継続ターン数を決定する）は
+    AttackContext から Event.ON_MODIFY_DURATION を発火していたが、
+    ON_MODIFY_DURATION はフィールド・場の状態（天候・地形・壁）の残りターン延長
+    ハンドラ（天候いわ系アイテム等、EventContext・subject_spec="source:self"）
+    にも登録されていた。天候いわ系アイテム所持者が場にいる状態でバインド技が
+    使われると、この共有イベントの発火時にAttackContextからsubject_spec
+    "source:self" を解決しようとして、AttackContextがroleを持たない
+    （resolve_roleのhasattrチェック）ためValueErrorが発生していた。
+
+    修正後は get_volatile_duration がAttackContext専用の新イベント
+    Event.ON_MODIFY_BIND_DURATION を発火するようになり、ON_MODIFY_DURATION
+    （EventContext専用）のハンドラとコンテキスト型が競合しなくなる。
+    つめたいいわ自体はバインドの継続ターンに影響しないため、通常通り
+    4か5ターンになることも確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["まきつく"])],
+        team1=[Pokemon("カビゴン", item_name="つめたいいわ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+
+    t.run_move(battle, 0)  # 修正前はここでValueErrorになっていた
+
+    assert foe.has_volatile("バインド")
+    assert foe.volatiles["バインド"].count in {4, 5}  # つめたいいわの影響を受けない
+
+
 def test_バインド_瀕死交代時にとらわれ状態チェックが誤って適用されない():
     """seed=4 (IndexError@command_manager.py:resolve_command:156) の回帰テスト。
 
