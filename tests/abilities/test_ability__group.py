@@ -1191,6 +1191,28 @@ def test_天候依存素早さ上昇_非対応天候は据え置き(ability: str
 
 
 @pytest.mark.parametrize(
+    "ability, weather",
+    [
+        ("すなかき", "すなあらし"),
+        ("すいすい", "あめ"),
+        ("ようりょくそ", "はれ"),
+        ("ゆきかき", "ゆき"),
+    ],
+)
+@pytest.mark.parametrize("suppressor_ability", ["ノーてんき", "エアロック"])
+def test_天候依存素早さ上昇_ノーてんきエアロックで無効化(
+    ability: str, weather: WeatherName, suppressor_ability: str
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ", ability_name=suppressor_ability)],
+        weather=(weather, 999),
+    )
+    mon = battle.actives[0]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
+
+
+@pytest.mark.parametrize(
     "ability_name,weather_name,weather_count",
     [
         ("あめうけざら", "あめ", 5),
