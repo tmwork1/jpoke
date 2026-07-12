@@ -2504,6 +2504,98 @@ def test_プレッシャー_相手のPP消費が1増える():
     assert pp_before - move.pp == 2
 
 
+def test_プレッシャー_かたやぶりの影響を受けない():
+    """プレッシャー: PP消費はかたやぶりが適用されるより前に確定するため、
+    かたやぶり所持者が技を使ってもPP消費が通常+1になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker, _ = battle.actives
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)
+    assert pp_before - move.pp == 2
+
+
+def test_プレッシャー_ふういんは自分対象の技だがPP消費が増える():
+    """プレッシャー: ふういんは自分を対象に選択する技だが、例外的にプレッシャーの影響を受ける"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふういん"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker, _ = battle.actives
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)
+    assert pp_before - move.pp == 2
+
+
+def test_プレッシャー_まもるで防がれてもPP消費が増える():
+    """プレッシャー: まもる状態で防いだときであってもPP消費が通常+1になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker, defender = battle.actives
+    battle.volatile_manager.apply(defender, "まもる", count=1)
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)
+    assert pp_before - move.pp == 2
+
+
+def test_プレッシャー_命中しなかった場合もPP消費が増える():
+    """プレッシャー: 技が命中しなかったときであってもPP消費が通常+1になる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["ふぶき"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+        accuracy=0,
+    )
+    attacker, _ = battle.actives
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)
+    assert pp_before - move.pp == 2
+
+
+def test_プレッシャー_のろいはゴーストタイプのときのみPP消費が増える():
+    """プレッシャー: のろいはゴーストタイプが使う"呪い"のときのみ影響を受け、
+    それ以外のタイプが使う"鈍い"は影響を受けない"""
+    battle_ghost = t.start_battle(
+        team0=[Pokemon("ゲンガー", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker_ghost, _ = battle_ghost.actives
+    move_ghost = attacker_ghost.moves[0]
+    pp_before_ghost = move_ghost.pp
+    t.run_move(battle_ghost, 0)
+    assert pp_before_ghost - move_ghost.pp == 2
+
+    battle_normal = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["のろい"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker_normal, _ = battle_normal.actives
+    move_normal = attacker_normal.moves[0]
+    pp_before_normal = move_normal.pp
+    t.run_move(battle_normal, 0)
+    assert pp_before_normal - move_normal.pp == 1
+
+
+def test_プレッシャー_自分を対象にする技はPP消費が増えない():
+    """プレッシャー: 基本的に自分が対象の技（つるぎのまい等）はプレッシャーの影響を受けない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["つるぎのまい"])],
+        team1=[Pokemon("カビゴン", ability_name="プレッシャー")],
+    )
+    attacker, _ = battle.actives
+    move = attacker.moves[0]
+    pp_before = move.pp
+    t.run_move(battle, 0)
+    assert pp_before - move.pp == 1
+
+
 def test_ヘドロえき_回復がダメージになる():
     """ヘドロえき: ドレイン回収(drain)でヘドロえき所持者が吸収される際、
     回復する側の回復量だけ逆にダメージを受ける"""
