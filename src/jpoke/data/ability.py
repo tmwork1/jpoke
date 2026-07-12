@@ -2630,7 +2630,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.びびり_boost_spd_on_fear_move,
                 subject_spec="defender:self",
-            )
+            ),
+            # priority=140: しろいきり(130)やクリアボディ等の無効化ハンドラ(既定100)より後に
+            # 判定し、いかくの効果が実際に無効化された場合は発動しないようにする
+            # （一次情報: docs/wiki/abilities/びびり.html 特性の仕様#第八世代以降）。
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.びびり_boost_spd_on_intimidate,
+                subject_spec="target:self",
+                priority=140,
+            ),
         }
     ),
     "びんじょう": AbilityData(

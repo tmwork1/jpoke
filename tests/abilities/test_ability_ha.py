@@ -1176,6 +1176,71 @@ def test_びびり_Sが1段階上がる(move_name: str, rank: int):
     assert battle.actives[0].rank["spe"] == rank
 
 
+def test_びびり_いかくでS上昇():
+    """びびり: いかくによってこうげきが下がったときすばやさ+1（第八世代以降）"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びびり")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["atk"] == -1
+    assert mon.rank["spe"] == 1
+
+
+def test_びびり_しろいきりでいかくが無効化されたときは発動しない():
+    """びびり: ビビリだまと異なり、しろいきりでいかくの効果が無効化された場合は発動しない
+
+    side0 はバトル開始時点（battle.start()）より後に設置されるため、初手の
+    いかくで検証すると場の効果が間に合わない。中盤の交代で発動するいかくを使う。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びびり")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        side0={"しろいきり": 1},
+    )
+    mon = battle.actives[0]
+    t.run_switch(battle, 1, 1)
+    assert mon.rank["atk"] == 0
+    assert mon.rank["spe"] == 0
+
+
+def test_びびり_クリアチャームでいかくが無効化されたときは発動しない():
+    """びびり: ビビリだまと異なり、クリアチャームでいかくの効果が無効化された場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びびり", item_name="クリアチャーム")],
+        team1=[Pokemon("カビゴン", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    assert mon.rank["atk"] == 0
+    assert mon.rank["spe"] == 0
+
+
+def test_びびり_こうげきが最低ランクで変化しない場合は発動しない():
+    """びびり: こうげきが既に最低ランクでいかくが不発だった場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びびり")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("コラッタ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    mon.rank["atk"] = -6
+    t.run_switch(battle, 1, 1)
+    assert mon.rank["atk"] == -6
+    assert mon.rank["spe"] == 0
+
+
+def test_びびり_すばやさが最大ランクの場合は発動しない():
+    """びびり: すばやさが既に最大ランクの場合は発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="びびり")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("コラッタ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    mon.rank["spe"] = 6
+    t.run_switch(battle, 1, 1)
+    assert mon.rank["atk"] == -1
+    assert mon.rank["spe"] == 6
+
+
 def test_びんじょう_相手のランク上昇をコピーする():
     """びんじょう: 相手のランクが上昇したとき自分も同じランク上昇をする"""
     battle = t.start_battle(
