@@ -713,6 +713,60 @@ def test_ミラーアーマー_自己能力低下は反射しない():
     assert battle.actives[1].boosts["atk"] == 0
 
 
+def test_ミラーアーマー_反射成功時に特性バーが出る():
+    """ミラーアーマー: 反射に成功した場合、ABILITY_TRIGGERED ログが記録される"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
+    )
+    t.run_move(battle, 1)
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED and log.payload.ability == "ミラーアーマー"
+    ]
+    assert len(triggered) == 1
+
+
+def test_ミラーアーマー_相手が最低ランクのときは特性バーが出ない():
+    """ミラーアーマー: 反射先（相手）が既に最低ランクで実際には変化しない場合、
+    特性バーは出ずにランクが変わらない旨のメッセージだけが出る
+    （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ", move_names=["なきごえ"])],
+    )
+    _, foe = battle.actives
+    foe.boosts["atk"] = -6
+    t.run_move(battle, 1)
+    triggered = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED and log.payload.ability == "ミラーアーマー"
+    ]
+    assert not triggered
+    assert foe.boosts["atk"] == -6
+    assert battle.actives[0].boosts["atk"] == 0
+
+
+def test_ミラーアーマー_しろいきりで無効化されたときは反射しない():
+    """ミラーアーマー: 自身のしろいきりで能力低下を無効にした場合は反射も発動しない
+    （docs/spec/abilities/ミラーアーマー.md「自身のみがわり/しろいきり状態...により
+    無効にしたとき...ミラーアーマーは発動しない」）。
+
+    side0 はバトル開始時点（battle.start()）より後に設置されるため、初手の
+    いかくで検証すると場の効果が間に合わない。中盤の交代で発動するいかくを使う。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ミラーアーマー")],
+        team1=[Pokemon("ピカチュウ"), Pokemon("カビゴン", ability_name="いかく")],
+        side0={"しろいきり": 1},
+    )
+    mon = battle.actives[0]
+    t.run_switch(battle, 1, 1)
+    foe = battle.actives[1]
+    assert mon.boosts["atk"] == 0
+    assert foe.boosts["atk"] == 0
+
+
 def test_ムラっけ_ターン終了時に別々の能力が上昇と下降する():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ムラっけ")],

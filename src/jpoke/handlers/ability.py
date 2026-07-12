@@ -4141,9 +4141,14 @@ def ミラーアーマー_reflect_stat_drop(battle: Battle, ctx: EventContext, v
     drops = {stat: v for stat, v in value.items() if v < 0}
     if drops:
         # 低下を source（相手）側へ反射（source を ctx.target にすることで「相手から下げられた」扱いになりまけんき等が正常発動）
-        battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
+        changed = battle.modify_stats(ctx.source, drops, source=ctx.target, reason="ミラーアーマー")
         # 自分側の低下分を除去（上昇分は残す）
         value = {stat: v for stat, v in value.items() if v > 0}
+
+        # 相手が既に最低ランクで実際には何も変化しなかった場合は特性バーを出さない
+        # （一次情報: docs/wiki/abilities/ミラーアーマー.html 特性の仕様「相手のランクがすでに最低で…」）。
+        if changed:
+            _announce_ability_triggered(battle, ctx.target)
 
         # だっしゅつパック: 自身のランクは実際には変化しないが、跳ね返した時点で発動する
         mon = ctx.target
