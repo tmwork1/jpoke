@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from jpoke import Pokemon
+
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src" / "jpoke"
 
 # 直接代入が許可されているファイル（相対パス、"/" 区切り）
@@ -32,6 +34,17 @@ DIRECT_ASSIGNMENT_PATTERN = re.compile(r"(?<![=!<>])\.hp\s*=(?!=)")
 def _iter_python_files():
     for path in SRC_ROOT.rglob("*.py"):
         yield path
+
+
+def test_Pokemon_modify_hpが公開APIとして露出していない():
+    """`Pokemon.modify_hp()` はHPクランプのみを行いON_HP_CHANGE系ハンドラの発火・瀕死判定・
+    ログ記録をスキップする内部専用の低レベル実装であり、外部からは `Battle.modify_hp()` を
+    使うべきという規約になっている。かつてはこの規約がdocstringのみで示され、メソッド名に
+    アンダースコアが付いていなかったため誤って直接呼び出しやすい罠になっていた。
+    `_modify_hp_raw` へのリネーム後、外部公開されたクラス属性としては存在しないことを確認する。
+    """
+    assert not hasattr(Pokemon, "modify_hp")
+    assert hasattr(Pokemon, "_modify_hp_raw")
 
 
 def test_hp直接代入がallowlist外のファイルに存在しない():
