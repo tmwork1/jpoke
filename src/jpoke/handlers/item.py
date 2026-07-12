@@ -434,6 +434,10 @@ def _boost_stat_on_type_hit(battle: Battle,
     return HandlerReturn(value=value)
 
 
+def あおぞらプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ひこう", modifier=4915)
+
+
 def あかいいと_infatuate_foe(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """あかいいと: 持ち主がメロメロになったとき相手にもメロメロを付与する。"""
     if value != "メロメロ":
@@ -479,6 +483,10 @@ def いかさまダイス_modify_hit_count(battle: Battle, ctx: AttackContext, v
     if (min_hits, max_hits) == (2, 5):
         value = 4 if battle.random.random() < 0.5 else 5
     return HandlerReturn(value=value)
+
+
+def いかずちプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="でんき", modifier=4915)
 
 
 def イトケのみ_modify_super_effective_damage(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -727,6 +735,10 @@ def からぶりほけん_boost_speed_on_miss(battle: Battle, ctx: AttackContext
     return HandlerReturn(value=value)
 
 
+def がんせきプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="いわ", modifier=4915)
+
+
 def きあいのタスキ_survive_ohko(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """きあいのタスキ: HPが満タンのときひんし以上のダメージをHP1で耐える。"""
     mon = ctx.defender
@@ -925,6 +937,10 @@ def こうこうのしっぽ_back_tier(_battle: Battle, _ctx: AttackContext, val
     return HandlerReturn(value=value - 1)
 
 
+def こうてつのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="はがね", modifier=4915)
+
+
 def こころのしずく_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こころのしずく: ラティオス・ラティアス持ちのエスパー・ドラゴン技1.2倍。"""
     return _dedicated_item_modify_power(ctx, value, {"ラティオス", "ラティアス"}, ("エスパー", "ドラゴン"))
@@ -977,6 +993,14 @@ def こだわりメガネ_boost_special(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
+def こぶしのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="かくとう", modifier=4915)
+
+
+def こわもてプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="あく", modifier=4915)
+
+
 def こんごうだま_modify_power(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こんごうだま: ディアルガ持ちのドラゴン・はがね技1.2倍。"""
     return _dedicated_item_modify_power(ctx, value, frozenset({"ディアルガ", "ディアルガ(オリジン)"}), ("ドラゴン", "はがね"))
@@ -1014,6 +1038,10 @@ def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: An
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
+
+
+def しずくプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="みず", modifier=4915)
 
 
 def しめったいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1160,70 +1188,6 @@ def せいれいプレート_modify_power_by_type(battle: Battle, ctx: AttackCon
     return _modify_power_by_type(ctx.move, value, type_="フェアリー", modifier=4915)
 
 
-def ひのたまプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="ほのお", modifier=4915)
-
-
-def もりのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="くさ", modifier=4915)
-
-
-def しずくプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="みず", modifier=4915)
-
-
-def いかずちプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="でんき", modifier=4915)
-
-
-def つららのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="こおり", modifier=4915)
-
-
-def こぶしのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="かくとう", modifier=4915)
-
-
-def もうどくプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="どく", modifier=4915)
-
-
-def だいちのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="じめん", modifier=4915)
-
-
-def あおぞらプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="ひこう", modifier=4915)
-
-
-def ふしぎのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="エスパー", modifier=4915)
-
-
-def たまむしのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="むし", modifier=4915)
-
-
-def がんせきプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="いわ", modifier=4915)
-
-
-def もののけプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="ゴースト", modifier=4915)
-
-
-def りゅうのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="ドラゴン", modifier=4915)
-
-
-def こわもてプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="あく", modifier=4915)
-
-
-def こうてつのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    return _modify_power_by_type(ctx.move, value, type_="はがね", modifier=4915)
-
-
 def せんせいのツメ_priority_boost(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """せんせいのツメ: 20%の確率で先制ティアを+1する。
 
@@ -1255,6 +1219,10 @@ def たべのこし_heal(battle: Battle, ctx: EventContext, value: Any) -> Handl
     if battle.modify_hp(mon, r=1/16):
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
+
+
+def たまむしのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="むし", modifier=4915)
 
 
 def タラプのみ_boost_spdef(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1310,6 +1278,10 @@ def だいしらたま_prevent_item_change(battle: Battle, ctx: EventContext, va
 def だいしらたま_prevent_transfer_to_base_form(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
     """だいしらたま: 通常の姿のパルキアへトリック・すりかえ等で渡すことを防ぐ。"""
     return _dedicated_item_prevent_transfer_to_base_form(ctx, value, "パルキア")
+
+
+def だいちのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="じめん", modifier=4915)
 
 
 def だいはっきんだま_form_change(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1399,6 +1371,10 @@ def チーゴのみ_cure_burn_on_apply(battle: Battle, ctx: EventContext, value:
 
 def つめたいいわ_resolve_field_count(_battle: Battle, _ctx: EventContext, value: Any) -> HandlerReturn:
     return _resolve_field_count(value, "ゆき", additonal_count=3)
+
+
+def つららのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="こおり", modifier=4915)
 
 
 def でんきだま_boost_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1636,6 +1612,10 @@ def ひかりのねんど_resolve_field_count(_battle: Battle, _ctx: EventContex
     return _resolve_field_count(value, "リフレクター", "ひかりのかべ", "オーロラベール", additonal_count=3)
 
 
+def ひのたまプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ほのお", modifier=4915)
+
+
 def himeri_pp_restore_cap(mon: Pokemon) -> int:
     """ヒメリのみ: 回復するPP量（じゅくせい所持時は2倍の20）。"""
     return 20 if is_ripen(mon) else 10
@@ -1756,6 +1736,10 @@ def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackCo
     if is_second:
         value = apply_fixed_modifier(value, 4915)
     return HandlerReturn(value=value)
+
+
+def ふしぎのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="エスパー", modifier=4915)
 
 
 def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventContext, value: bool) -> HandlerReturn:
@@ -1960,6 +1944,10 @@ def メンタルハーブ_cure_mental_volatile(battle: Battle, ctx: EventContext
     return HandlerReturn(value=value)
 
 
+def もうどくプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="どく", modifier=4915)
+
+
 def もくたん_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="ほのお", modifier=4915)
 
@@ -1969,6 +1957,10 @@ def ものしりメガネ_boost_special(battle: Battle, ctx: AttackContext, valu
     if ctx.move.category == "special":
         value = apply_fixed_modifier(value, 4505)
     return HandlerReturn(value=value)
+
+
+def もののけプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ゴースト", modifier=4915)
 
 
 def ものまねハーブ_copy_stat_boost(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -1997,6 +1989,10 @@ def モモンのみ_cure_poison(battle: Battle, ctx: EventContext, value: Any) -
 def モモンのみ_cure_poison_on_apply(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """モモンのみ: どく・もうどく付与直後に治療して消費する。"""
     return _cure_ailment_berry_on_apply(battle, ctx, value, "どく", "もうどく")
+
+
+def もりのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="くさ", modifier=4915)
 
 
 def ヤタピのみ_boost_spatk(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
@@ -2059,6 +2055,10 @@ def ラムのみ_cure_ailment_and_confusion_on_confuse(battle: Battle, ctx: Even
 
 
 def りゅうのキバ_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    return _modify_power_by_type(ctx.move, value, type_="ドラゴン", modifier=4915)
+
+
+def りゅうのプレート_modify_power_by_type(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return _modify_power_by_type(ctx.move, value, type_="ドラゴン", modifier=4915)
 
 
