@@ -13,7 +13,8 @@
 既存の `fuzz` ループ（`.claude/loop/fuzz.md`）が「未捕捉例外」を検出するのに対し、
 こちらは「対戦は正常終了するがリプレイが元と食い違う」というリプレイ機能固有のバグを狙う
 （`--player` によるモード切替はなく、`fuzz` の random モードと同じチーム生成・行動選択のみを使う）。
-バグを見つけたら `impl`（修正）→ `review-test`（回帰テスト追加・全体テスト・コミット）の
+バッチ内の全シードを worker プロセスに分散して並列実行し（打ち切りなし）、食い違いが複数件見つかる
+こともある。バグを見つけたら `impl`（修正）→ `review-test`（回帰テスト追加・全体テスト・コミット）の
 2段階で `loop/replay_fuzz` 上で自動修正する（`fuzz` ループと同じ2段階パターン）。
 
 食い違いは6種類に分類される（`replay_fuzz_battle.py` の判定順）:
@@ -37,13 +38,16 @@
 
 ```json
 {
-  "worktree": "C:\\Users\\tmtmp\\Documents\\pokemon\\jpoke-loop\\replay_fuzz",
+  "worktree": "C:\\Users\\tmtmh\\Documents\\pokemon\\jpoke-loop\\replay_fuzz",
   "next_seed": 0,
   "total_battles": 0,
   "batch_size": 100,
   "max_turns": 30,
   "n_pokemon": 3,
   "failure_dir": "replay_fuzz_failures",
+  "pending_failures": [
+    {"seed": 123, "signature": "...", "mismatch_kind": "...", "report_path": "..."}
+  ],
   "current_failure": null,
   "completed_bugs": [{"seed": 123, "signature": "...", "summary": "..."}],
   "failed_bugs": [{"signature": "...", "attempts": 1, "last_seed": 123}]
@@ -53,6 +57,10 @@
 - `next_seed` / `total_battles`: 探索済みシード範囲の管理（`fuzz` の `modes.random` と同じ意味）。
 - `max_turns` / `n_pokemon`: `tests/test_replay_fuzz.py` の既定値（`MAX_TURNS=30`, `N_POKEMON=3`）を
   踏襲した既定値。値を大きくするほど1戦が高コストになる。
+- `pending_failures`: 直近のバッチ実行で見つかった未処理の食い違いのキュー（`fuzz_log.md` の
+  `pending_anomalies` と同じ形）。`scripts/replay_fuzz_battle.py --search` は打ち切りをせず
+  `batch_size` 件を必ず全て並列実行するため、1バッチで複数件の食い違いが同時に見つかることがある。
+  1件ずつ手順4で処理し、処理し終えたらそのエントリを取り除く。
 - バグ台帳（`completed_bugs` / `failed_bugs`）は `fuzz` と同じ形式（`player` フィールドは無し）。
 
 ---
@@ -63,9 +71,11 @@
 
 `.loop/replay_fuzz_state.json` を Read で読み込む（存在しなければ初回起動）。
 
-### 1.5. 未処理の current_failure が残っていないか確認
+### 1.5. 未処理の current_failure / pending_failures が残っていないか確認
 
-§共通10 の再開ルールを適用する。`current_failure` が null でない場合、手順4からやり直す。
+§共通10 の再開ルールを適用する。`current_failure` が null でない場合、手順4.3（impl）からやり直す。
+`current_failure` が null で `pending_failures` が空でない場合、新規バッチは実行せず手順4.1から
+キューの先頭を処理する。
 
 ### 1.6. worktree を準備する
 
@@ -73,8 +83,9 @@
 
 ### 2. バッチ探索を実行
 
-`{worktree}` に cd してから実行する（`replay_fuzz_battle.py` はスクリプト自身のパスから
-`.loop/{failure_dir}/` を解決するため、worktree 内で実行するとレポートも worktree 配下に書き込まれる）:
+`pending_failures` が空の場合のみ実施する。`{worktree}` に cd してから実行する（`replay_fuzz_battle.py`
+はスクリプト自身のパスから `.loop/{failure_dir}/` を解決するため、worktree 内で実行するとレポートも
+worktree 配下に書き込まれる）:
 
 ```bash
 cd "{worktree}" && PYTHONPATH=src python scripts/replay_fuzz_battle.py --search \
@@ -82,21 +93,30 @@ cd "{worktree}" && PYTHONPATH=src python scripts/replay_fuzz_battle.py --search 
   --max-turns {max_turns} --n-pokemon {n_pokemon}
 ```
 
-exit code 0 = 全件一致、exit code 1 = 食い違いあり（stdout に worktree 配下の絶対パスでレポートパスが
-出力される。以降その絶対パスをそのまま使う）。
+`count` 件は打ち切らず必ず全件並列実行される（`--workers` は既定で CPU数と count の小さい方が
+自動選択される。明示指定したい場合のみ `--workers N` を追加する）。exit code 0 = 全件一致、
+exit code 1 = 食い違いあり（stdout に `FAIL: seed=... signature=...` と `report: {絶対パス}` の組が
+食い違った件数分、seed 昇順で出力される）。
 
 ### 3. 統計を更新
 
-`next_seed += batch_size`、`total_battles += batch_size`
-（探索は失敗地点で打ち切られるが、シード範囲は消費済みとして前進させる）。
+`next_seed += batch_size`、`total_battles += batch_size`（全件並列実行するため、これで seed 範囲を
+漏れなく消費したことになる）。
 食い違いなしなら状態を保存して手順6へ。
 
-### 4. バグ対応（食い違いありの場合）
+食い違いありの場合、stdout の `FAIL:`/`report:` の組をすべて読み取り、`pending_failures` に
+`{"seed": seed, "signature": signature, "mismatch_kind": mismatch_kind, "report_path": path}` として
+seed 昇順で積む（`mismatch_kind` はレポート内の該当行から取得する）。状態を保存し、手順4.1へ進む。
 
-#### 4.1 レポートを読んで signature を取得
+### 4. バグ対応
 
-手順2 stdout の `report:` パス（`{worktree}\.loop\{failure_dir}\seed_{seed}.log` 形式の絶対パス）
-を Read する。冒頭に `signature:` `mismatch_kind:` `detail:` がある。
+#### 4.1 キューの先頭を取り出す
+
+`pending_failures` の先頭を取り出す（キューからは取り除く）。以下 `{seed}` `{signature}`
+`{mismatch_kind}` `{report_path}` はこのエントリの値。
+
+レポート（`{worktree}\.loop\{failure_dir}\seed_{seed}.log`）を Read する（冒頭に `signature:`
+`mismatch_kind:` `detail:` がある。stdout から取得済みなら再取得不要）。
 
 #### 4.2 重複チェック
 
@@ -104,7 +124,7 @@ exit code 0 = 全件一致、exit code 1 = 食い違いあり（stdout に workt
 
 #### 4.3 current_failure を記録
 
-`current_failure = {"seed": {seed}, "signature": {signature}, "mismatch_kind": {mismatch_kind}, "report_path": {path}}`
+`current_failure = {"seed": {seed}, "signature": {signature}, "mismatch_kind": {mismatch_kind}, "report_path": {report_path}}`
 を保存する。
 
 #### 4.4 impl エージェント（foreground）を起動
@@ -139,7 +159,7 @@ jpoke replay_fuzz バグ修正タスク: seed={seed} (signature: {signature}, mi
 
 impl 失敗（原因不明・修正できず） → §共通10 の失敗時ルールに従う。`failed_bugs` のエントリ形式は
 `{"signature": signature, "attempts": N, "last_seed": seed}`。
-`current_failure` をクリアして保存し、手順6へ（review-test はスキップ）。
+`current_failure` をクリアして保存し、手順5へ（review-test はスキップ）。
 
 #### 4.5 review-test エージェント（foreground）を起動
 
@@ -167,11 +187,12 @@ review-test 成功 → §共通10 の成功時ルールに従う。`completed_bu
 続けて「main への反映」の手順に従い、この1件をただちに main へマージする。
 
 review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新し、`current_failure` をクリアして
-保存し、手順6へ。
+保存し、手順5へ。
 
-### 5. （手順4完了後）状態ファイルを保存
+### 5. 次のバグへ
 
-§共通7・§共通3 に従い Write で上書き（コミット不要）。
+`pending_failures` が空でなければ手順4.1に戻って続行する。1件処理し終えた時点でターンを終えても
+よい（§共通7）。`pending_failures` が空なら手順6へ。
 
 ### 6. 終了
 
@@ -187,6 +208,6 @@ review-test 失敗 → 手順4.4の失敗時と同様に `failed_bugs` を更新
 
 ## エラーハンドリング
 
-- impl / review-test 失敗 → `failed_bugs` に記録してループ継続。
+- impl / review-test 失敗 → `failed_bugs` に記録してループ継続（`pending_failures` の残りがあれば続行）。
 - 同一 signature が `failed_bugs` で attempts >= 2 → ループ中断（手動確認）。
 - エージェント呼び出しがAPIセッション制限で失敗した場合 → §共通12 に従う。

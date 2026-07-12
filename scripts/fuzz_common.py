@@ -9,8 +9,11 @@
 
 from __future__ import annotations
 
+import os
 import traceback
 from dataclasses import dataclass, field
+from functools import partial
+from multiprocessing import Pool
 from pathlib import Path
 from random import Random
 from typing import Callable
@@ -161,15 +164,18 @@ def write_failure_report(result: FuzzResult, failure_dir: Path, repro_cmd: str) 
     return path
 
 
-def search(run_fn: Callable[..., FuzzResult],
-           start_seed: int,
-           count: int,
-           **kwargs) -> FuzzResult | None:
-    """start_seed から count 件分シードを進めて run_fn を実行し、
-    最初の失敗を返す（全部okならNone）。
+def parallel_search(run_fn: Callable[..., FuzzResult],
+                     start_seed: int,
+                     count: int,
+                     workers: int | None = None,
+                     **kwargs) -> list[FuzzResult]:
+    """start_seed から count 件分のシードを worker プロセスに分散して実行し、
+    失敗した結果を seed 昇順で全て返す（打ち切らず必ず count 件すべて実行する）。
     """
-    for seed in range(start_seed, start_seed + count):
-        result = run_fn(seed, **kwargs)
-        if not result.ok:
-            return result
-    return None
+    seeds = range(start_seed, start_seed + count)
+    if workers is None:
+        workers = min(count, os.cpu_count() or 4)
+    worker = partial(run_fn, **kwargs)
+    with Pool(workers) as pool:
+        results = pool.map(worker, seeds)
+    return [r for r in results if not r.ok]

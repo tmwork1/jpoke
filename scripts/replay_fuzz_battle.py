@@ -17,7 +17,7 @@
     # 単発再現モード
     python scripts/replay_fuzz_battle.py --seed 12345
 
-    # バッチ探索モード（食い違いが出るまでシードを進める）
+    # バッチ探索モード（count 件を worker プロセスに分散して並列実行）
     python scripts/replay_fuzz_battle.py --search --start-seed 0 --count 200
 """
 
@@ -39,8 +39,8 @@ from fuzz_common import (
     failure_signature,
     format_full_log,
     format_team,
+    parallel_search,
     random_team_spec,
-    search,
 )
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -234,19 +234,23 @@ def main():
     parser.add_argument("--count", type=int, default=100, help="探索するバトル数")
     parser.add_argument("--max-turns", type=int, default=DEFAULT_MAX_TURNS, help="1バトルの最大ターン数")
     parser.add_argument("--n-pokemon", type=int, default=DEFAULT_N_POKEMON, help="1チームの匹数")
+    parser.add_argument("--workers", type=int, default=None,
+                        help="バッチ探索モードでの並列worker数（既定: CPU数とcountの小さい方）")
     args = parser.parse_args()
 
     failure_dir = _ROOT / ".loop" / FAILURE_DIR_NAME
     kwargs = dict(max_turns=args.max_turns, n_pokemon=args.n_pokemon)
 
     if args.search:
-        result = search(run_replay_fuzz_battle, args.start_seed, args.count, **kwargs)
-        if result is None:
+        failures = parallel_search(run_replay_fuzz_battle, args.start_seed, args.count,
+                                    workers=args.workers, **kwargs)
+        if not failures:
             print(f"OK: {args.count}件すべて一致（seed {args.start_seed}〜{args.start_seed + args.count - 1}）")
             sys.exit(0)
-        path = write_failure_report(result, failure_dir, _repro_cmd(result))
-        print(f"FAIL: seed={result.seed} signature={result.signature}")
-        print(f"report: {path}")
+        for result in sorted(failures, key=lambda r: r.seed):
+            path = write_failure_report(result, failure_dir, _repro_cmd(result))
+            print(f"FAIL: seed={result.seed} signature={result.signature}")
+            print(f"report: {path}")
         sys.exit(1)
 
     if args.seed is None:

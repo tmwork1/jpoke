@@ -97,7 +97,9 @@ cd "{worktree}" && PYTHONPATH=src python scripts/fuzz_log_battle.py \
   --max-turns {max_turns} --n-pokemon {n_pokemon}
 ```
 
-常に exit code 0 で終了し、stdout に1行ずつ `report: {path} crashed={True|False}` が出力される
+`count` 件は worker プロセスに分散して並列実行される（`--workers` は既定で CPU数と count の小さい方が
+自動選択される。明示指定したい場合のみ `--workers N` を追加する）。常に exit code 0 で終了し、
+stdout に1行ずつ seed 昇順で `report: {path} crashed={True|False}` が出力される
 （`{path}` は worktree 配下の絶対パス）。`next_seed += batch_size`、
 `total_battles += batch_size` を更新する。
 
