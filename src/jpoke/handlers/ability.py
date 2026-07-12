@@ -4002,9 +4002,22 @@ def まけんき_boost_atk_on_stat_drop(battle: Battle, ctx: EventContext, value
     return HandlerReturn(value=value)
 
 
+# マジシャンが発動しない技（docs/spec/abilities/マジシャン.md「技の仕様」）。
+# なげつける: 使用者自身のアイテムを消費して攻撃するため、通常のダメージ処理を経由するが
+# マジシャンは発動しない。しぜんのめぐみ/みらいよち/はめつのねがいは本プロジェクトでは
+# 通常のON_DAMAGE_HITを経由しない実装（しぜんのめぐみは未実装、みらいよち/はめつのねがいは
+# ON_MOVE_CHARGEでの遅延ダメージ処理）のため、構造的にこの集合へ含める必要がない。
+_MAGICIAN_EXCLUDED_MOVES: frozenset[str] = frozenset({"なげつける"})
+
+
 def マジシャン_steal_item(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """マジシャン特性: 攻撃成功後に相手のアイテムを奪う。"""
-    battle.item_manager.take_item(ctx.defender)
+    """マジシャン特性: 攻撃成功後に相手のアイテムを奪う。
+
+    技で相手をひんしにさせた場合は、相手の特性ねんちゃくによる阻止も無視して奪える。
+    """
+    if ctx.move.name in _MAGICIAN_EXCLUDED_MOVES:
+        return HandlerReturn(value=value)
+    battle.item_manager.take_item(ctx.defender, ignore_sticky_hold=ctx.defender.fainted)
     return HandlerReturn(value=value)
 
 

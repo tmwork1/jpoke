@@ -1235,5 +1235,23 @@ def test_ゴツゴツメット_非接触技では発動しない():
     assert attacker.hp == initial_hp
 
 
+def test_ゴツゴツメット_マジシャンより先に発動してから奪われる():
+    """ゴツゴツメット: 特性マジシャンの接触技を受けても、ゴツゴツメットが先に発動してから奪われる
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずゴツゴツメットが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", item_name="ゴツゴツメット")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    initial_hp = attacker.max_hp
+    t.run_move(battle, 0)
+    assert attacker.hp < initial_hp
+    assert attacker.item.name == "ゴツゴツメット"
+    foe = battle.actives[1]
+    assert not foe.has_item()
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
