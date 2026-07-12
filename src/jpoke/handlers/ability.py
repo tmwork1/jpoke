@@ -4119,6 +4119,11 @@ def みずのベール_cure_burn_on_enable(battle: Battle, ctx: EventContext, va
     """みずのベール特性: 特性が有効化された時点ですでにやけど状態なら即座に回復する。
 
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    ON_SWITCH_INにも同じ関数を登録しており、すでにやけど状態のみずのベールの
+    ポケモンを場に出した場合にも即座に回復する（docs/spec/turn.md の
+    ON_SWITCH_IN priority=100「みずのベール（特性）による状態異常回復」に対応。
+    どくびしのどく付与判定も同じpriority=100だが、どくびしの方が先に
+    ハンドラ登録されているため実行順は保たれる）。
     """
     return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["やけど"])
 
