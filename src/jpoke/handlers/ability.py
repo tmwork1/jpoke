@@ -3810,7 +3810,13 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
 
 
 def ほのおのからだ_maybe_burn_attacker(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。"""
+    """ほのおのからだ特性: 直接攻撃を受けた相手を30%でやけどにする。
+
+    こらえるでHP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動するが、
+    みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。
+    """
+    if ctx.substitute_damage:
+        return HandlerReturn(value=value)
     return _apply_contact_counter_ailment(battle, ctx, value, ailment="やけど", chance=0.3)
 
 

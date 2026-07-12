@@ -3037,6 +3037,59 @@ def test_ほうし_連続攻撃技でねむりが発動すると中断される(
     assert defender.hits_taken == 1
 
 
+def test_ほのおのからだ_こらえるでHP1のまま耐えたときも発動する():
+    """ほのおのからだ: こらえるでHP1のまま耐えた（実HPダメージ0）ときも発動する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほのおのからだ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    defender.hp = 1
+    battle.volatile_manager.apply(defender, "こらえる")
+    t.fix_damage(battle, 9999)
+    t.fix_random(battle, 0.0)
+
+    t.run_move(battle, 1)
+
+    assert defender.hp == 1
+    attacker = battle.actives[1]
+    assert attacker.has_ailment("やけど")
+
+
+def test_ほのおのからだ_みがわりに阻まれたときは発動しない():
+    """ほのおのからだ: みがわりに攻撃を防がれたとき（実HPダメージ0）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほのおのからだ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[0]
+    battle.volatile_manager.apply(defender, "みがわり", hp=999)
+    t.fix_random(battle, 0.0)
+
+    t.run_move(battle, 1)
+
+    attacker = battle.actives[1]
+    assert not attacker.ailment.is_active
+
+
+def test_ほのおのからだ_相手がみがわり状態でもやけど状態にする():
+    """ほのおのからだ: 攻撃してきた相手自身がみがわり状態であっても、その相手をやけど状態にする。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほのおのからだ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        volatile1={"みがわり": 1},
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+
+    t.run_move(battle, 1)
+
+    attacker = battle.actives[1]
+    assert attacker.ailment.name == "やけど"
+
+
 def test_ほろびのボディ_すでにほろびのうた状態なら追加しない():
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="ほろびのボディ")],
