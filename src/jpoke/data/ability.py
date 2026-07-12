@@ -2149,7 +2149,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
-                "target:self",
+                subject_spec="target:self",
             ),
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.どんかん_block_intimidate,
