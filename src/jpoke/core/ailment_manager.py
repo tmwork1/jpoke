@@ -74,7 +74,13 @@ class AilmentManager:
             - overwrite=Falseの場合、既に状態異常があれば失敗
             - 同じ状態異常の重ね掛けは不可
             - ねむりの count=None 時は Champions 仕様で自動決定（2: 1/3、3: 2/3）
+            - targetが瀕死（HP0）の場合は付与しない。技の追加効果等でダメージにより
+              瀕死になった相手には状態異常が付与されないため（実機仕様）
         """
+        # 瀕死のポケモンには状態異常を付与しない
+        if target.fainted:
+            return False
+
         # ねむりのcountをChampions仕様で自動決定（count=Noneのとき）
         if name == "ねむり" and count is None:
             count = 2 if self.battle.random.random() < 1 / 3 else 3
