@@ -213,11 +213,11 @@ def あさのひざし_heal_self(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def あまいかおり_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def あまいかおり_lower_defender_evasion(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"evasion": -2})
 
 
-def あまえる_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def あまえる_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"atk": -2})
 
 
@@ -322,7 +322,7 @@ def いちゃもん_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     )
 
 
-def いとをはく_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def いとをはく_lower_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """いとをはくの効果: 相手のすばやさを 2 段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
@@ -419,7 +419,7 @@ def いやなおと_lower_defender_def(battle: Battle, ctx: AttackContext, value
     return modify_defender_stats(battle, ctx, value, stats={"def": -2})
 
 
-def うそなき_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def うそなき_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """うそなきの効果: 相手のとくぼうを2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spd": -2})
 
@@ -511,7 +511,7 @@ def エレキフィールド_activate_terrain(battle: Battle, ctx: AttackContext
     return HandlerReturn(value=battle.terrain_manager.apply("エレキフィールド", 5))
 
 
-def えんまく_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def えんまく_lower_defender_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1})
 
 
@@ -542,7 +542,7 @@ def おきみやげ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def おたけび_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def おたけび_lower_defender_atk_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """おたけびの効果: 相手のこうげきととくこうを 1 段階ずつ下げる。音系の技のためみがわりを貫通する。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
 
@@ -613,7 +613,7 @@ def オーロラベール_set_side_field(battle: Battle, ctx: AttackContext, val
     return HandlerReturn(value=value)
 
 
-def かいでんぱ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かいでんぱ_lower_defender_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """相手の特攻を2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spa": -2})
 
@@ -652,7 +652,7 @@ def かげぶんしん_boost_attacker_evasion(battle: Battle, ctx: AttackContext
     return modify_attacker_stats(battle, ctx, value, stats={"evasion": 1})
 
 
-def かたくなる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def かたくなる_boost_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """かたくなるの効果: 自分の防御を1段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1})
 
@@ -688,7 +688,7 @@ def かなしばり_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def からにこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def からにこもる_boost_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1})
 
 
@@ -780,16 +780,16 @@ def キングシールド_apply(battle: Battle, ctx: AttackContext, value: Any) 
     return apply_volatile_to_attacker(battle, ctx, value, volatile="キングシールド")
 
 
-def きんぞくおん_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def きんぞくおん_lower_defender_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spd": -2})
 
 
-def ギアチェンジ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ギアチェンジ_boost_attacker_atk_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ギアチェンジの効果: 自分のこうげきを1段階、すばやさを2段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spe": 2})
 
 
-def くすぐる_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def くすぐる_lower_defender_atk_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """くすぐるの効果: 相手のこうげきとぼうぎょを 1 段階ずつ下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "def": -1})
 
@@ -823,15 +823,15 @@ def グラスフィールド_activate_terrain(battle: Battle, ctx: AttackContext
     return HandlerReturn(value=battle.terrain_manager.apply("グラスフィールド", 5))
 
 
-def こうそくいどう_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def こうそくいどう_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 2})
 
 
-def コスモパワー_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def コスモパワー_boost_attacker_def_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
 
 
-def コットンガード_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def コットンガード_boost_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 3})
 
 
@@ -840,7 +840,7 @@ def こらえる_apply(battle: Battle, ctx: AttackContext, value: Any) -> Handle
     return apply_volatile_to_attacker(battle, ctx, value, volatile="こらえる")
 
 
-def こわいかお_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def こわいかお_lower_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """こわいかおの効果: 相手のすばやさを2段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
@@ -1088,7 +1088,7 @@ def しっぽきり_check(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return HandlerReturn(value=value)
 
 
-def しっぽをふる_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def しっぽをふる_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"def": -1})
 
 
@@ -1195,6 +1195,11 @@ def じこさいせい_heal_self(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
+def じばそうさ_boost_attacker_def_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """じばそうさの効果: ぼうぎょ・とくぼうをそれぞれ1段階上げる。"""
+    return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
+
+
 def じばそうさ_can_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """じばそうさの失敗条件: 使用者の特性がプラス/マイナスでない場合は失敗させる。"""
     if ctx.attacker.ability.name not in ("プラス", "マイナス"):
@@ -1204,11 +1209,6 @@ def じばそうさ_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
         )
         return HandlerReturn(value=False, stop_event=True)
     return HandlerReturn(value=value)
-
-
-def じばそうさ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """じばそうさの効果: ぼうぎょ・とくぼうをそれぞれ1段階上げる。"""
-    return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
 
 
 def ジャングルヒール_apply(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
@@ -1333,7 +1333,7 @@ def すなあらし_activate_weather(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=battle.weather_manager.apply("すなあらし", 5, source=ctx.attacker))
 
 
-def すなかけ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def すなかけ_lower_defender_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"accuracy": -1})
 
 
@@ -1382,7 +1382,7 @@ def スレッドトラップ_apply(battle: Battle, ctx: AttackContext, value: An
     return apply_volatile_to_attacker(battle, ctx, value, volatile="スレッドトラップ")
 
 
-def せいちょう_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def せいちょう_boost_attacker_atk_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """せいちょう: 天候が晴れの時はこうげき・とくこうを2段階、通常時は1段階上げる。
     攻撃側がばんのうがさを持つ場合、晴れでも1段階のみ。
     """
@@ -1427,7 +1427,7 @@ def ソウルビート_check(battle: Battle, ctx: AttackContext, value: Any) -> 
     return HandlerReturn(value=value)
 
 
-def ソウルビート_pay_hp_and_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ソウルビート_pay_hp_and_boost_all_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ソウルビートの効果: 最大HPの1/3を消費し、すべての能力を1段階ずつ上げる。
 
     reason="self_cost": マジックガードでも防げない自己HP消費として扱う（ききかいひ不発）。
@@ -1462,7 +1462,7 @@ def たくわえる_check_can_use(battle: Battle, ctx: AttackContext, value: Any
     return HandlerReturn(value=value)
 
 
-def たてこもる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def たてこもる_boost_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """たてこもるの効果: 自分のぼうぎょを 2 段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
 
@@ -1517,10 +1517,16 @@ def ちからをすいとる_apply(battle: Battle, ctx: AttackContext, value: An
 
     特性などでランクが下がらない場合は回復効果のみ発動する。
     """
+    from jpoke.core.context import EventContext  # 循環importを避けるための遅延import
+
     assert ctx.defender is not None
     # 相手のこうげきランク補正込みの実数値分だけ自分のHPを回復（ランク変更前に取得）
     recover_amount = ctx.defender.ranked_stats["atk"]
-    recover_amount = battle.events.emit(Event.ON_CALC_DRAIN, ctx, recover_amount)
+    # ON_CALC_DRAIN は EventContext 専用イベント（おおきなねっこ等が source:self で判定するため）。
+    # AttackContext のまま渡さず、回復対象（attacker）を source に正規化して発火する。
+    recover_amount = battle.events.emit(
+        Event.ON_CALC_DRAIN, EventContext(source=ctx.attacker), recover_amount
+    )
     battle.modify_hp(ctx.attacker, v=recover_amount, reason="drain")
     # 相手のこうげきを1段階下げる（失敗しても回復は発動済み）
     battle.modify_stats(ctx.defender, {"atk": -1}, source=ctx.attacker)
@@ -1556,7 +1562,7 @@ def ちょうはつ_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return apply_volatile_to_defender(battle, ctx, value, volatile="ちょうはつ", count=3)
 
 
-def つぶらなひとみ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def つぶらなひとみ_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """つぶらなひとみの効果: 相手のこうげきを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
@@ -1574,12 +1580,12 @@ def つぼをつく_modify_attacker_stats(battle: Battle, ctx: AttackContext, va
     return HandlerReturn(value=battle.modify_stats(ctx.attacker, {stat: 2}, source=ctx.attacker))
 
 
-def つめとぎ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def つめとぎ_boost_attacker_atk_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """つめとぎ: 自分のこうげき・命中率ランクをそれぞれ1段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "accuracy": 1})
 
 
-def つるぎのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def つるぎのまい_boost_attacker_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 2})
 
 
@@ -1702,7 +1708,7 @@ def テクスチャー_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def てっぺき_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def てっぺき_boost_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
 
 
@@ -1741,7 +1747,7 @@ def てんしのキッス_apply(battle: Battle, ctx: AttackContext, value: Any) 
     ))
 
 
-def デコレーション_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def デコレーション_boost_defender_atk_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """デコレーションの効果: 相手のこうげき・とくこうを2段階ずつ上げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": 2, "spa": 2})
 
@@ -1784,7 +1790,7 @@ def とおせんぼう_apply(battle: Battle, ctx: AttackContext, value: Any) -> 
     return apply_volatile_to_defender(battle, ctx, value, volatile="にげられない")
 
 
-def とおぼえ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def とおぼえ_boost_attacker_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """とおぼえの効果: 自分のこうげきを1段階上げる（シングルバトルでは自分のみ）。"""
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1})
 
@@ -1793,7 +1799,7 @@ def とぐろをまく_modify_attacker_stats(battle: Battle, ctx: AttackContext,
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1, "accuracy": 1})
 
 
-def とける_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def とける_boost_attacker_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
 
 
@@ -1847,11 +1853,11 @@ def どくびし_set_field(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
-def ドわすれ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ドわすれ_boost_attacker_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spd": 2})
 
 
-def ないしょばなし_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ないしょばなし_lower_defender_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"spa": -1})
 
 
@@ -1890,12 +1896,12 @@ def なかまづくり_change_defender_ability(battle: Battle, ctx: AttackContex
     return HandlerReturn(value=value)
 
 
-def なかよくする_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def なかよくする_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なかよくする: 相手のこうげきを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
 
-def なきごえ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def なきごえ_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なきごえ: 相手のこうげきを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1})
 
@@ -1909,7 +1915,7 @@ def なまける_heal_self(battle: Battle, ctx: AttackContext, value: Any) -> Ha
     return HandlerReturn(value=value)
 
 
-def なみだめ_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def なみだめ_lower_defender_atk_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """なみだめ: 相手のこうげき・とくこうをそれぞれ1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"atk": -1, "spa": -1})
 
@@ -1993,7 +1999,7 @@ def にほんばれ_activate_weather(battle: Battle, ctx: AttackContext, value: 
     return HandlerReturn(value=battle.weather_manager.apply("はれ", 5, source=ctx.attacker))
 
 
-def にらみつける_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def にらみつける_lower_defender_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """にらみつけるの効果: 相手のぼうぎょを1段階下げる。"""
     return modify_defender_stats(battle, ctx, value, stats={"def": -1})
 
@@ -2505,7 +2511,7 @@ def ひっくりかえす_invert_ranks(battle: Battle, ctx: AttackContext, value
     return HandlerReturn(value=value)
 
 
-def ビルドアップ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ビルドアップ_boost_attacker_atk_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "def": 1})
 
 
@@ -2522,7 +2528,7 @@ def フェアリーロック_activate_global_field(battle: Battle, ctx: AttackCo
     return HandlerReturn(value=battle.global_manager.activate("フェアリーロック", 1))
 
 
-def フェザーダンス_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def フェザーダンス_lower_defender_atk(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_defender_stats(battle, ctx, value, stats={"atk": -2})
 
 
@@ -2560,7 +2566,7 @@ def フラワーヒール_heal_defender(battle: Battle, ctx: AttackContext, valu
     return HandlerReturn(value=value)
 
 
-def ふるいたてる_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ふるいたてる_boost_attacker_atk_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ふるいたてるの効果: 自分のこうげき・とくこうを1段階ずつ上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spa": 1})
 
@@ -2624,7 +2630,7 @@ def ほおばる_consume_berry_and_boost(battle: Battle, ctx: AttackContext, val
     return modify_attacker_stats(battle, ctx, value, stats={"def": 2})
 
 
-def ほたるび_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ほたるび_boost_attacker_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ほたるびの効果: 自分の『とくこう』ランクを3段階上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 3})
 
@@ -2661,7 +2667,7 @@ def ほろびのうた_can_apply(battle: Battle, ctx: AttackContext, value: Any)
     return HandlerReturn(value=value)
 
 
-def ぼうぎょしれい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ぼうぎょしれい_boost_attacker_def_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ぼうぎょしれいの効果: 自分のぼうぎょ・とくぼうを1段階ずつ上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"def": 1, "spd": 1})
 
@@ -2997,7 +3003,7 @@ def みをけずる_can_apply(battle: Battle, ctx: AttackContext, value: Any) ->
     return HandlerReturn(value=value)
 
 
-def めいそう_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def めいそう_boost_attacker_spa_spd(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 1, "spd": 1})
 
 
@@ -3106,7 +3112,7 @@ def リフレクター_set_side_field(battle: Battle, ctx: AttackContext, value:
     return HandlerReturn(value=value)
 
 
-def りゅうのまい_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def りゅうのまい_boost_attacker_atk_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """りゅうのまいの効果: 自分のこうげき・すばやさを1段階ずつ上げる。"""
     return modify_attacker_stats(battle, ctx, value, stats={"atk": 1, "spe": 1})
 
@@ -3116,16 +3122,16 @@ def ロックオン_apply(battle: Battle, ctx: AttackContext, value: Any) -> Han
     return apply_volatile_to_attacker(battle, ctx, value, volatile="ロックオン", count=2)
 
 
-def ロックカット_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def ロックカット_boost_attacker_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spe": 2})
 
 
-def わたほうし_modify_defender_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def わたほうし_lower_defender_spe(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """わたほうしの効果: 相手のすばやさを2段階下げる。粉技のためくさタイプ・ぼうじん無効。"""
     return modify_defender_stats(battle, ctx, value, stats={"spe": -2})
 
 
-def わるだくみ_modify_attacker_stats(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+def わるだくみ_boost_attacker_spa(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     return modify_attacker_stats(battle, ctx, value, stats={"spa": 2})
 
 

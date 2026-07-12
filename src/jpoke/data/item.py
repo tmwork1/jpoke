@@ -258,16 +258,10 @@ ITEMS: dict[ItemName, ItemData] = {
     "おおきなねっこ": ItemData(
         fling_power=10,
         handlers={
-            Event.ON_CALC_DRAIN: [
-                h.ItemHandler(
-                    h.おおきなねっこ_boost_drain,
-                    subject_spec="attacker:self",
-                ),
-                h.ItemHandler(
-                    h.おおきなねっこ_boost_drain,
-                    subject_spec="source:self",
-                ),
-            ]
+            Event.ON_CALC_DRAIN: h.ItemHandler(
+                h.おおきなねっこ_boost_drain,
+                subject_spec="source:self",
+            ),
         }
     ),
     "オッカのみ": ItemData(

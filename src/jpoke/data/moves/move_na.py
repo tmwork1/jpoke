@@ -23,7 +23,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         flags={"sound", "unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ないしょばなし_modify_defender_stats,
+                hs.ないしょばなし_lower_defender_spa,
             )
         }
     ),
@@ -36,7 +36,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         flags={"secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ナイトバースト_lower_acc,
+                ha.ナイトバースト_lower_defender_accuracy,
             )
         }
     ),
@@ -77,7 +77,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         flags={"unprotectable", "bypass_substitute"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.なかよくする_modify_defender_stats,
+                hs.なかよくする_lower_defender_atk,
             )
         }
     ),
@@ -89,7 +89,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         flags={"sound"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.なきごえ_modify_defender_stats,
+                hs.なきごえ_lower_defender_atk,
             )
         }
     ),
@@ -149,7 +149,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         flags={"unprotectable"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.なみだめ_modify_defender_stats,
+                hs.なみだめ_lower_defender_atk_spa,
             )
         }
     ),
@@ -259,7 +259,7 @@ MOVES_NA: dict[MoveName, MoveData] = {
         accuracy=100,
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.にらみつける_modify_defender_stats,
+                hs.にらみつける_lower_defender_def,
             )
         }
     ),

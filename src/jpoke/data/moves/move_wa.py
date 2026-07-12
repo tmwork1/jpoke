@@ -78,7 +78,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
         flags={"powder"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.わたほうし_modify_defender_stats,
+                hs.わたほうし_lower_defender_spe,
             ),
         }
     ),
@@ -89,7 +89,7 @@ MOVES_WA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.わるだくみ_modify_attacker_stats,
+                hs.わるだくみ_boost_attacker_spa,
             )
         }
     ),

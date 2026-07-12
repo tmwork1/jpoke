@@ -845,11 +845,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 subject_spec="source:self",
                 priority=200,
             ),
-            Event.ON_REFRESH_PARADOX_BOOST: h.AbilityHandler(
-                paradox.refresh_paradox_charge_state,
-                subject_spec="source:self",
-                priority=200,
-            ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
                 paradox.modify_speed,
                 subject_spec="source:self",
@@ -950,11 +945,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 priority=200,
             ),
             Event.ON_FIELD_CHANGE: h.AbilityHandler(
-                paradox.refresh_paradox_charge_state,
-                subject_spec="source:self",
-                priority=200,
-            ),
-            Event.ON_REFRESH_PARADOX_BOOST: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,

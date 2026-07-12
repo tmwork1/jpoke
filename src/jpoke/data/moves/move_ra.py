@@ -116,7 +116,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.りゅうせいぐん_sharply_lower_spa_C,
+                ha.りゅうせいぐん_sharply_lower_attacker_spa,
             )
         },
         lethal_handlers={
@@ -153,7 +153,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         flags={"dance"},
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.りゅうのまい_modify_attacker_stats,
+                hs.りゅうのまい_boost_attacker_atk_spe,
             ),
         }
     ),
@@ -194,7 +194,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         accuracy=90,
         handlers={
             Event.ON_HIT: h.MoveHandler(
-                ha.リーフストーム_sharply_lower_spa_C,
+                ha.リーフストーム_sharply_lower_attacker_spa,
             )
         },
         lethal_handlers={
@@ -326,7 +326,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         target="self",
         handlers={
             Event.ON_STATUS_HIT: h.MoveHandler(
-                hs.ロックカット_modify_attacker_stats,
+                hs.ロックカット_boost_attacker_spe,
             )
         }
     ),
@@ -367,7 +367,7 @@ MOVES_RA: dict[MoveName, MoveData] = {
         flags={"contact", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
-                ha.ローキック_lower_defender_spd,
+                ha.ローキック_lower_defender_spe,
             )
         }
     ),
