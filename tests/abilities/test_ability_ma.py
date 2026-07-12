@@ -905,6 +905,20 @@ def test_ムラっけ_全能力が最小なら上昇のみ発動する():
     assert -4 in mon.boosts.values()
 
 
+def test_ムラっけ_しろいきりでは能力低下を防げない():
+    """ムラっけの能力低下は自発的な変化のため、しろいきりでも防げない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ムラっけ")],
+        team1=[Pokemon("ピカチュウ")],
+        side0={"しろいきり": 1},
+    )
+    mon = battle.actives[0]
+    t.end_turn(battle)
+
+    assert 2 in mon.boosts.values()
+    assert -1 in mon.boosts.values()
+
+
 def test_メガソーラー_あめ中でもほのお技が1_5倍():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="メガソーラー", move_names=["ひのこ"])],
