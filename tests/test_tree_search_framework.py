@@ -46,6 +46,46 @@ def test_configure_simが各分岐でsim_step実行前に呼ばれる():
     assert len(player1.configure_sim_calls) == player1.nodes_expanded
 
 
+def test_evaluate_commandsがmax_nodesを無視して全合法手を評価する():
+    """r6-9回帰: evaluate_commands() は呼び出し中 max_nodes を一時的に無効化し、
+    自分の全合法手 × 相手の全合法手を打ち切りなく評価すること。
+
+    max_nodes を1という極端に小さい値に設定した状態で呼び出しても、
+    choose_command()（_best_command 経由）のようにノード数上限で打ち切られず
+    （途中で打ち切られると評価未了のコマンドが float("inf") のままになる）、
+    全てのコマンドの評価値が有限値になることを確認する。呼び出し後は
+    max_nodes・nodes_expanded とも呼び出し前の値に復元されることも合わせて
+    確認する。
+    """
+    player1 = TreeSearchPlayer(username="SearchPlayer", max_nodes=1)
+    player1.team = [
+        Pokemon("ヒトカゲ", item_name="", move_names=["たいあたり", "10まんボルト"]),
+    ]
+
+    player2 = Player(username="RandomPlayer")
+    player2.team = [Pokemon("ゼニガメ", item_name="", move_names=["たいあたり", "みずでっぽう"])]
+    for move in player2.team[0].moves:
+        move.revealed = True
+
+    battle = Battle(player1, player2, n_selected=1, seed=1)
+    battle.test_option.accuracy = 100
+    battle.start()
+
+    before_max_nodes, before_nodes = player1.max_nodes, player1.nodes_expanded
+
+    with battle.phase_context("action"):
+        result = player1.evaluate_commands(battle)
+
+    assert len(result) >= 2, "自分の合法手（技2種）が両方とも評価対象になっていない"
+    for command, value in result.items():
+        assert value not in (float("inf"), float("-inf")), (
+            f"{command} の評価値がノード数上限で打ち切られ未評価のままになっている: {value}"
+        )
+    # 呼び出し前の max_nodes・nodes_expanded が復元されていること
+    assert player1.max_nodes == before_max_nodes == 1
+    assert player1.nodes_expanded == before_nodes
+
+
 def test_evaluate_commandsが非破壊的に評価値一覧を返す():
     """FW-U6: evaluate_commands(battle) が探索本体（choose_command）の状態
     （_searching・nodes_expanded）を変更せず、各合法手の評価値一覧を辞書で
