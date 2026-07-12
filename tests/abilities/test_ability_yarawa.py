@@ -84,6 +84,42 @@ def test_よわき_HP半分以下で攻撃補正0_5倍(move_name: str):
     assert 2048 == battle.damage_calculator.atk_modifier
 
 
+def test_リベロ_へんげんじざいと同様に技実行直前にタイプが変化する():
+    """リベロはへんげんじざいと同一効果（共通ハンドラ）を持ち、技実行直前に技タイプへ変化する。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="リベロ", move_names=["たいあたり", "ひのこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+
+    t.run_move(battle, 0, 0)
+    assert attacker.types == ["ノーマル"]
+
+    # 同一滞在で1回のみ発動するため、2回目の技では変化しない
+    t.run_move(battle, 0, 1)
+    assert attacker.types == ["ノーマル"]
+
+
+def test_リベロ_交代でリセットされ再発動できる():
+    battle = t.start_battle(
+        team0=[
+            Pokemon("ピカチュウ", ability_name="リベロ", move_names=["たいあたり", "ひのこ"]),
+            Pokemon("ピカチュウ"),
+        ],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+
+    t.run_move(battle, 0, 0)
+    assert mon.types == ["ノーマル"]
+
+    t.run_switch(battle, 0, 1)
+    t.run_switch(battle, 0, 0)
+    t.run_move(battle, 0, 1)
+
+    assert mon.types == ["ほのお"]
+
+
 def test_リミットシールド_HP1_2以下で登場してもコアの姿のまま():
     battle = t.start_battle(
         team0=[Pokemon("メテノ(コア)", ability_name="リミットシールド")],
