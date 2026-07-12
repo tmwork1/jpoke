@@ -3273,6 +3273,70 @@ def test_ほろびのボディ_非接触技では発動しない():
     assert not attacker.has_volatile("ほろびのうた")
 
 
+def test_ほろびのボディ_付与されたほろびのうたは3ターン後に両者瀕死になる():
+    """ほろびのボディで付与されるほろびのうたはcount=3で、ほろびのうた技で
+    付与した場合と同様に3ターン経過すると瀕死になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほろびのボディ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+
+    assert defender.volatiles["ほろびのうた"].count == 3
+    assert attacker.volatiles["ほろびのうた"].count == 3
+
+    t.end_turn(battle)
+    t.end_turn(battle)
+    t.end_turn(battle)
+
+    assert defender.fainted
+    assert attacker.fainted
+
+
+def test_ほろびのボディ_自分が攻撃で瀕死になっても発動する():
+    """自分（ほろびのボディ側）が攻撃を受けて瀕死になった場合でも発動し、
+    攻撃者はほろびのうた状態になる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほろびのボディ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    battle.modify_hp(defender, v=-(defender.max_hp - 1))
+    t.run_move(battle, 1)
+
+    assert defender.fainted
+    assert attacker.has_volatile("ほろびのうた")
+
+
+def test_ほろびのボディ_みがわりで防いだときは発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほろびのボディ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"])],
+        accuracy=100,
+        volatile0={"みがわり": 1},
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+
+    assert not defender.has_volatile("ほろびのうた")
+    assert not attacker.has_volatile("ほろびのうた")
+
+
+def test_ほろびのボディ_ぼうごパットを持つ攻撃者には発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ほろびのボディ")],
+        team1=[Pokemon("ピカチュウ", move_names=["たいあたり"], item_name="ぼうごパット")],
+        accuracy=100,
+    )
+    defender, attacker = battle.actives
+    t.run_move(battle, 1)
+
+    assert not defender.has_volatile("ほろびのうた")
+    assert not attacker.has_volatile("ほろびのうた")
+
+
 def test_ぼうおん_かたやぶりで無効():
     """ぼうおん: かたやぶりの相手が音技を使った場合は無効化されない"""
     battle = t.start_battle(

@@ -3858,7 +3858,7 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
     defender = ctx.defender
     triggered = False
     for mon in (defender, attacker):
-        if battle.volatile_manager.apply(mon, "ほろびのうた", source=defender):
+        if battle.volatile_manager.apply(mon, "ほろびのうた", count=3, source=defender):
             triggered = True
     if triggered:
         _announce_ability_triggered(battle, defender)

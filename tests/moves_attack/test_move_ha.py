@@ -2010,6 +2010,7 @@ def test_ふみつけ_ひるみが発動する():
         accuracy=100,
         secondary_chance=1.0,
     )
+    battle.random.random = lambda: 0.99  # 急所が発生しない乱数（急所で瀕死になりひるみが付与されなくなるのを防ぐ。1.0だとaccuracy=100の命中判定も外れるため使わない）
     t.run_move(battle, 0)
     assert battle.actives[1].has_volatile("ひるみ")
 
