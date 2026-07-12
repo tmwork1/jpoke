@@ -2946,6 +2946,9 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MODIFY_HEAL: h.AbilityHandler(
                 h.ヘドロえき_reverse_drain,
                 subject_spec="target:foe",
+                # かいふくふうじの回復ブロック（優先度100）より先に処理し、
+                # 回復量をダメージへ変換したうえで通過させる必要があるため優先度を上げる。
+                priority=90,
             ),
         }
     ),

@@ -628,6 +628,23 @@ def test_やどりぎのタネ_ヘドロえきで回復がダメージに変換(
     assert to_mon.hp == to_hp_before - expected_drain
 
 
+def test_やどりぎのタネ_ヘドロえきでかいふくふうじの相手にもダメージを与える():
+    """やどりぎのタネ: 回復側がかいふくふうじ状態でも、回復は阻止されるがヘドロえきのダメージ効果は発動する"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ", ability_name="ヘドロえき")],
+        volatile0={"やどりぎのタネ": 1},
+        volatile1={"かいふくふうじ": 5},
+    )
+    from_mon, to_mon = battle.actives
+    to_hp_before = to_mon.hp
+    t.end_turn(battle)
+    expected_drain = from_mon.max_hp // 8
+    assert from_mon.hp == from_mon.max_hp - expected_drain
+    # かいふくふうじにより通常の回復は発生しないが、ヘドロえきのダメージ効果は発動する
+    assert to_mon.hp == to_hp_before - expected_drain
+
+
 def test_やどりぎのタネ_マジックガードでダメージ無効():
     """やどりぎのタネ: マジックガード特性を持つポケモンはダメージを受けない。回復も発生しない"""
     battle = t.start_battle(
