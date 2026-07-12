@@ -1178,6 +1178,28 @@ def test_天候依存素早さ上昇(ability: str, weather: WeatherName, expecte
 
 
 @pytest.mark.parametrize(
+    "ability, weather",
+    [
+        ("すなかき", "すなあらし"),
+        ("すいすい", "あめ"),
+        ("ようりょくそ", "はれ"),
+        ("ゆきかき", "ゆき"),
+    ],
+)
+@pytest.mark.parametrize("suppressor_ability", ["ノーてんき", "エアロック"])
+def test_天候依存素早さ上昇_ノーてんきエアロックで無効化(
+    ability: str, weather: WeatherName, suppressor_ability: str
+):
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name=ability)],
+        team1=[Pokemon("ピカチュウ", ability_name=suppressor_ability)],
+        weather=(weather, 999),
+    )
+    mon = battle.actives[0]
+    assert battle.speed_calculator.calc_effective_speed(mon) == mon.stats["spe"]
+
+
+@pytest.mark.parametrize(
     "ability",
     ["すなかき", "すいすい", "ようりょくそ", "ゆきかき"],
 )
@@ -1267,6 +1289,8 @@ def test_強天候始動特性_退場時に解除される(ability_name: str, we
         ("きれあじ", "きりさく", 6144),
         ("てつのこぶし", "かみなりパンチ", 4915),
         ("パンクロック", "バークアウト", 5325),
+        ("メガランチャー", "みずのはどう", 6144),
+        ("メガランチャー", "たいあたり", 4096),
     ],
 )
 def test_技カテゴリによる威力補正_param(ability_name: str, move_name: str, expected_power: int):
