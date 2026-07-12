@@ -366,6 +366,49 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_ターン終了処理_決着ターンでは継続ダメージのON_TURN_ENDが処理されない():
+    """seed=24 (LogInconsistency@turn_controller.py:_run_end_phase:422) の回帰テスト。
+
+    TurnController._run_end_phase は、ターン中の技実行等で既に勝敗が確定している
+    場合でも Event.ON_TURN_END（どく等のターン終了時の継続ダメージ処理）を
+    無条件に発火していた。そのため、そのターンの技実行で勝敗が確定した後に、
+    決着に関与しない側のポケモンが毒状態であれば、決着後にもかかわらず
+    毒ダメージが処理されHP変化・ログが記録されてしまっていた
+    （元のバグでは「勝利/敗北」ログの前に、既に決着した側の毒ダメージログが
+    紛れ込んでいた）。
+
+    1匹選出同士で、相手（team1）の技によって自分（team0）の最後の1匹が
+    瀕死になり決着するターンに、相手側が毒状態であってもそのターンの
+    毒ダメージログ・HP変化が発生しないことを確認する。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("コラッタ", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        ailment1=("どく", None),
+        accuracy=100,
+    )
+    player0, player1 = battle.players
+    attacker, defender = battle.actives
+    attacker.hp = 1
+    t.fix_damage(battle, 1)
+
+    # Turn1: たいあたりの打ち合いで、たいあたり1発で瀕死になるコラッタが
+    # 先に決着する。カビゴンは毒状態だが、決着後の毒ダメージは処理されないはず。
+    battle.step(commands={player0: Command.MOVE_0, player1: Command.MOVE_0})
+
+    assert attacker.fainted
+    assert battle.winner is player1
+    # カビゴンのHP変化はたいあたりの1ダメージのみで、毒ダメージ分は含まれない
+    assert defender.hp == defender.max_hp - 1
+
+    logs = [log for log in battle.event_logger.logs if log.turn == battle.turn]
+    hp_changed_logs = [
+        log for log in logs
+        if log.log == LogCode.HP_CHANGED and log.pokemon == defender.name
+    ]
+    assert len(hp_changed_logs) == 1  # たいあたりの反撃分のみ（毒ダメージ分の追加ログが無い）
+
+
 def test_だっしゅつパック_自分の番より後の割り込み交代で残った予約コマンドが次ターンに持ち越されない():
     """seed=1755 player=random (IndexError@command_manager.py:resolve_move_from_command:149) の回帰テスト。
 

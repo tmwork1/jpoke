@@ -111,6 +111,29 @@ commands = battle.get_available_commands(player1)
 move = battle.command_to_move(player1, commands[0])
 ```
 
+`battle.query`（`PokemonQuery`）には他にも判定用メソッドがあるが、そのうち `Pokemon`/`Player`
+単体の引数で完結するものは以下の通り `Battle` 直下からも呼べる（`AttackContext`/`EventContext`
+を要求する内部専用メソッドは委譲していない）。
+
+| API | 概要 |
+|---|---|
+| `can_switch(player)` | プレイヤーが交代可能かどうかを判定する（場のポケモンがとらわれ状態、または控えが全滅していれば不可） |
+| `has_available_bench(player)` | とらわれ状態を無視して、控えに瀕死でないポケモンが残っているかを判定する（だっしゅつパック等の強制交代判定用） |
+| `is_floating(pokemon)` | 浮いている状態か判定する（ひこうタイプ・特性・技の効果を考慮） |
+| `is_trapped(pokemon)` | 逃げられない状態か判定する（ゴーストタイプは逃げられる） |
+| `is_nervous(pokemon)` | きんちょうかん状態か判定する |
+| `is_hazard_immune(pokemon)` | エントリーハザードへの免疫があるか判定する |
+| `can_use_last_resort(pokemon)` | とっておきの発動条件を満たしているか判定する |
+| `get_forced_move_name(pokemon)` | 強制行動中のポケモンが実行すべき技名を返す（固定されていなければ`None`） |
+| `is_first_actor(player)` / `is_second_actor(player)` | このターンでplayerが先攻/後攻かどうかを判定する（1vs1想定、行動順未確定なら`None`） |
+
+```python
+active = battle.get_active(player1)
+if battle.can_switch(player1):
+    ...
+print(battle.is_floating(active), battle.can_use_last_resort(active))
+```
+
 ### ダメージ計算系
 
 | API | 概要 |

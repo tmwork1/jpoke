@@ -44,8 +44,8 @@ Explore エージェントの指摘は誤検知（既存仕様通りの挙動・
   "next_seed": 0,
   "total_battles": 0,
   "batch_size": 10,
-  "workers": 4,
-  "max_turns": 30,
+  "workers": 1,
+  "max_turns": 20,
   "n_pokemon": 3,
   "report_dir": "fuzz_log_reports",
   "pending_anomalies": [
@@ -59,7 +59,7 @@ Explore エージェントの指摘は誤検知（既存仕様通りの挙動・
 
 - `next_seed` / `total_battles` / `batch_size`: 探索済みシード範囲の管理（`fuzz`/`replay_fuzz` と同じ意味）。
 - `max_turns` / `n_pokemon`: ログを sub agent が読みやすいサイズに保つため、既定値は
-  `replay_fuzz` と同じ小さめの値（30ターン・3匹）にしている。
+  `replay_fuzz` と同じ小さめの値（20ターン・3匹）にしている。
 - `pending_anomalies`: 直近のバッチでディスパッチャーが「真のバグらしい」と判断したが
   まだ impl に回していない指摘のキュー。1件ずつ手順4で処理し、処理し終えたらそのエントリを
   取り除く。
@@ -72,7 +72,7 @@ Explore エージェントの指摘は誤検知（既存仕様通りの挙動・
 ### 1. 状態ファイルを読む
 
 `.loop/fuzz_log_state.json` を Read で読み込む（存在しなければ初回起動。上記スキーマの
-初期値で新規作成する: `next_seed=0`, `total_battles=0`, `batch_size=10`, `max_turns=30`,
+初期値で新規作成する: `next_seed=0`, `total_battles=0`, `batch_size=10`, `max_turns=20`,
 `n_pokemon=3`, `report_dir="fuzz_log_reports"`, `pending_anomalies=[]`, `current_failure=null`,
 `completed_bugs=[]`, `failed_bugs=[]`）。
 
@@ -98,7 +98,7 @@ cd "{worktree}" && PYTHONPATH=src python scripts/fuzz_log_battle.py \
   --max-turns {max_turns} --n-pokemon {n_pokemon}
 ```
 
-`count` 件は worker プロセスに分散して並列実行される。`--workers {workers}`（既定4）は、他の
+`count` 件は worker プロセスに分散して並列実行される。`--workers {workers}`（既定1）は、他の
 並行セッション・ループ（review/impl 等）も同じマシンの CPU を使うため、`fuzz_log` が全コアを
 専有しないよう明示的に絞っている値（省略時のスクリプト既定は CPU数と count の小さい方）。
 常に exit code 0 で終了し、stdout に1行ずつ seed 昇順で `report: {path} crashed={True|False}` が出力される

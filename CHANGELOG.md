@@ -41,6 +41,15 @@
   `Battle.can_switch()` / `Battle.end_turn()` を新設
   （いずれも `ailment_manager` 等の内部マネージャーへの薄い委譲で、外部コードが
   `battle.<manager>.<method>()` を直接呼ばずに済むようにするための追加）
+- `Battle.has_available_bench(player)` / `Battle.is_floating(pokemon)` /
+  `Battle.is_trapped(pokemon)` / `Battle.is_nervous(pokemon)` /
+  `Battle.is_hazard_immune(pokemon)` / `Battle.can_use_last_resort(pokemon)` /
+  `Battle.get_forced_move_name(pokemon)` / `Battle.is_first_actor(player)` /
+  `Battle.is_second_actor(player)` — `battle.query`（`PokemonQuery`）のうち
+  `Pokemon`/`Player` 単体の引数で完結する判定メソッドを `Battle` 直下に薄い
+  委譲として追加。`can_switch()` 以外は `battle.query.<method>()` の直接呼び出しが
+  必要で `docs/api/README.md` にも未掲載だったための対応（`AttackContext`/
+  `EventContext` を要求する内部専用メソッドは対象外のまま）
 
 ### Changed
 
