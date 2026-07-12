@@ -150,6 +150,21 @@ def test_ミクルのみ_次の技の命中率が1_2倍になり消費される(
     assert battle.move_executor.accuracy == move.accuracy
 
 
+def test_ミクルのみ_瀕死になったときはフラグが立たない():
+    """ミクルのみ: ダメージでHPが0(ひんし)になったときはフラグが立たず消費もされない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="ミクルのみ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == 0
+    assert mon.fainted
+    assert mon.item.count == 0
+    assert mon.has_item()
+
+
 def test_ミクルのみ_行動不能のときは効果が持続する():
     """ミクルのみ: ねむり等で行動できなかった場合、効果は消費されず持続する。"""
     battle = t.start_battle(
