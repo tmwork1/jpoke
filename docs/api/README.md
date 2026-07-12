@@ -165,14 +165,46 @@ one_damage = battle.roll_damage(attacker, defender, "ドラゴンテール")
 | `set_volatile(target, name, count=None)` | 揮発性状態（やどりぎのタネ等）を直接付与する |
 | `set_weather(name, count=5)` | 天候を直接発動する |
 | `set_terrain(name, count=5)` | 地形を直接発動する |
+| `activate_global_field(name, count)` | グローバルフィールド効果（じゅうりょく・トリックルーム等）を直接発動する |
+| `activate_side_field(player, name, count)` | 指定プレイヤーのサイドフィールド効果（リフレクター・ステルスロック等）を直接発動する |
 
 ```python
 battle.modify_hp(defender, r=-0.6, reason="シナリオ構築用")   # 最大HPの60%分ダメージ
 battle.modify_stats(defender, {"def": 1})                    # ぼうぎょ+1
 battle.set_ailment(defender, "どく")
 battle.set_volatile(defender, "やどりぎのタネ")
+battle.activate_global_field("トリックルーム", 5)
+battle.activate_side_field(player1, "ステルスロック", 1)
 battle.faint(defender)
 ```
+
+#### `set_*` と `activate_*` の使い分け
+
+上表のメソッド名の動詞が `set_ailment`/`set_volatile`/`set_weather`/`set_terrain` と
+`activate_global_field`/`activate_side_field` とで異なるのは意図的な区別であり、リネームの
+予定はない。
+
+- **`set_*`（状態異常・揮発性状態・天候・地形）**: 対象（ポケモン、またはバトル全体）に
+  「単一の状態を直接セットする」メソッド。天候・地形は排他的（同時に有効なのは常に1つ）で、
+  新しい状態を発動すると既存の状態を置き換える。状態異常・揮発性状態も対象ポケモンに紐づく
+  個別の状態であり、いずれも「差し替え」のニュアンスが自然
+- **`activate_*`（グローバルフィールド効果・サイドフィールド効果）**: 複数の効果が
+  同時にスタックしうる（例: まきびし＋どくびし＋ステルスロックが同じサイドに共存）ため、
+  「発動」のニュアンスが強い。内部実装でも `StackableFieldManager.activate()` を使っており、
+  天候・地形が使う `ExclusiveFieldManager.apply()`（`set_weather`/`set_terrain`の委譲先）とは
+  別クラスの別メソッドになっている
+
+`set_weather`/`set_terrain` の `count` に既定値5があるのに対し `activate_global_field`/
+`activate_side_field` に既定値が無いのも同じ理由に由来する整備漏れではなく意図的な差である。
+天候・地形は通常の発動元（技・特性）が例外なく5ターンで発動するため単一の既定値が安全だが
+（強天候〔おおひでり・おおあめ・らんきりゅう〕を発動する特性は`count=1`で発動するものの、
+ターン経過による自然消滅の仕組み自体を持たず特性保持者が場を離れるまで持続するため、
+この既定値の判断に影響しない。詳細は`set_weather`のdocstringを参照）、
+グローバルフィールド効果はフェアリーロックのみ1ターン（他は5ターン）、サイドフィールド効果は
+壁技（5ターン）・設置技（1層ずつ）・遅延効果（発動までのターン数）が同じ引数に混在するため、
+単一の既定値を設けるとかえって誤ったシナリオを組んでしまう恐れがある。そのため
+`activate_global_field`/`activate_side_field` では `count` を必須のまま維持している
+（詳細は各メソッドのdocstringを参照）。
 
 ### ログ系
 
