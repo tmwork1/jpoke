@@ -4447,11 +4447,15 @@ def ゆきかき_boost_speed(battle: Battle, ctx: EventContext, value: int) -> H
 
 
 def ゆきがくれ_reduce_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技は除く）。
+    """ゆきがくれ特性: ゆき中に受ける技の命中率を3277/4096倍にする（必中技・一撃必殺技は除く）。
 
     value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
     """
-    if value is not None and battle.weather.name == "ゆき":
+    if (
+        value is not None
+        and battle.weather.name == "ゆき"
+        and not ctx.move.has_flag("ohko")
+    ):
         value = apply_fixed_modifier(value, 3277)
     return HandlerReturn(value=value)
 
