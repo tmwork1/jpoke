@@ -171,7 +171,16 @@ class Battle:
         # 本体と同一参照で共有するため、方策がこれを消費してもダメージロール・命中判定・
         # 急所判定など未来の乱数を先取りしてしまうことがない。同じ seed なら毎回同じ
         # 初期状態になるよう seed から決定的に派生させる。
-        self.decision_random = Random(hash((self.seed, "decision")) & 0xFFFFFFFF)
+        # 文字列を含む hash((seed, "decision")) は str の hash が PYTHONHASHSEED に
+        # よりプロセスごとにランダム化されるため使わない（int のみの算術式なら
+        # プロセスを跨いで再現する）。self.random の種（seed そのもの）とは値が
+        # 一致しないよう、0でない定数を mod 2**32 で加算して派生させる
+        # （加算対象の定数が非ゼロである限り mod 2**32 上で不動点を持たない
+        # 全単射になるため、あらゆる seed で self.random と衝突しないことが
+        # 保証される。定数はハッシュ関数の撹拌によく使われる黄金比由来の値
+        # 0x9E3779B9（2^32 / 黄金比の整数近似、Boost hash_combine 等で使われる
+        # 定数）を採用した）。
+        self.decision_random = Random((self.seed + 0x9E3779B9) & 0xFFFFFFFF)
 
         self.copy_depth: int = 0
         self._reseed_count: int = 0
@@ -327,7 +336,7 @@ class Battle:
             self._reseed_count += 1
             new.seed = hash((self.seed, self._reseed_count)) & 0xFFFFFFFF
             new.random = Random(new.seed)
-            new.decision_random = Random(hash((new.seed, "decision")) & 0xFFFFFFFF)
+            new.decision_random = Random((new.seed + 0x9E3779B9) & 0xFFFFFFFF)
         return new
 
     @contextmanager

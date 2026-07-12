@@ -87,6 +87,20 @@
   発火・瀕死判定・ログ記録がスキップされる罠になっていたため、命名で
   内部専用であることを明示した。外部コードは常に `Battle.modify_hp()` を使うこと
 
+- **破壊的変更**: `Battle.decision_random`（行動選択専用の乱数生成器）の種の派生式を
+  `hash((seed, "decision")) & 0xFFFFFFFF` から `(seed + 0x9E3779B9) & 0xFFFFFFFF` に
+  変更した。`str` を含む `tuple` の `hash()` は `PYTHONHASHSEED` によりプロセスごとに
+  ランダム化されるため、同じ `seed` を指定しても `decision_random` が生成する乱数列が
+  プロセスを跨ぐと再現しなかった（`RandomPlayer.choose_command()` /
+  `TreeSearchPlayer.fallback()` はこの乱数列を消費するため、これらを経由するコマンド
+  選択の再現実験・CI比較が壊れうる問題があった）。新しい派生式は整数の算術演算のみで
+  `PYTHONHASHSEED` に依存しないため、プロセスを跨いでも同じ `seed` なら同じ乱数列が
+  再現される。加算する定数（ハッシュ撹拌でよく使われる黄金比由来の値）が0でないため
+  mod 2**32 上で不動点を持たず、あらゆる `seed` で `Battle.random`（種は `seed` その
+  もの）と衝突しないことが保証される。`Battle.copy(reseed=True)` 側も同様に修正した。
+  **同じ `seed` でも `decision_random` が生成する具体的な乱数列は旧バージョンから
+  変わる**（ゲーム進行用の `Battle.random` の乱数列には影響しない）
+
 ### Fixed
 
 - `Battle(seed=None)` のフォールバックが `int(time.time())`（秒精度）だったため、
