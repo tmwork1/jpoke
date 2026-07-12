@@ -1178,6 +1178,57 @@ def test_ビーストブースト_倒すと最高実数値の能力が上がる(
     assert attacker.rank[stat] == 1
 
 
+def test_ビーストブースト_同値のときは優先順で決まる():
+    """ヤドンは攻撃・防御の実数値が同値で最も高い。優先順（攻撃→防御）により攻撃が上がる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤドン", ability_name="ビーストブースト", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 1
+    assert attacker.rank["def"] == 0
+
+
+def test_ビーストブースト_最高実数値の能力が既に最大ランクなら発動しない():
+    """上げるはずの能力が既に+6の場合、2番目に高い能力に代わりに発動することはない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ウインディ", ability_name="ビーストブースト", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+    )
+    attacker, defender = battle.actives
+    attacker.rank["atk"] = 6
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["atk"] == 6
+    assert attacker.rank["spa"] == 0
+
+
+def test_ビーストブースト_ワンダールーム下では防御と特防の実数値を入れ替えて比較する():
+    """フシギダネは特攻・特防が同値で最も高い（通常なら特攻が上がる）。
+
+    ワンダールーム下では防御・特防の実数値が入れ替わるため、
+    防御の実数値が特攻と同値になり、優先順（防御→特攻）により防御が上がる。
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("フシギダネ", ability_name="ビーストブースト", move_names=["たいあたり"])],
+        team1=[Pokemon("ピカチュウ")],
+        accuracy=100,
+        field={"ワンダールーム": 99},
+    )
+    attacker, defender = battle.actives
+    defender.hp = 1
+    t.run_move(battle, 0)
+
+    assert attacker.rank["def"] == 1
+    assert attacker.rank["spa"] == 0
+
+
 def test_ファントムガード_かたやぶりで無効化されない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="かたやぶり", move_names=["たいあたり"])],
