@@ -2510,7 +2510,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 subject_spec="target:self",
             ),
             Event.ON_TRY_BLOW: h.AbilityHandler(
-                h.きゅうばん_block_blow,
+                h.ばんけん_block_blow,
                 subject_spec="defender:self",
             ),
         }

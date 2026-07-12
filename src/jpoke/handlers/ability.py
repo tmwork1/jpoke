@@ -1238,6 +1238,18 @@ def きゅうばん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -
     return HandlerReturn(value=False, stop_event=True)
 
 
+def ばんけん_block_blow(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
+    """ばんけん特性: 強制交代技・レッドカードによる交代を防ぐ。
+
+    きゅうばんと異なり、特性バーやメッセージは流れないまま交代のみが
+    無効化される（一次情報: docs/wiki/abilities/ばんけん.html 特性の仕様節）。
+    ほえる/ふきとばしの「しかし うまく 決まらなかった!!」表示は on_blow_apply /
+    _force_switch_random 側の MOVE_IMMUNED ログで別途処理されるため、
+    ここでは特性の発動演出（_announce_ability_triggered）を行わない。
+    """
+    return HandlerReturn(value=False, stop_event=True)
+
+
 def きょううん_modify_critical_rank(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
     """きょううん特性: 攻撃側の急所ランクを+1する。"""
     return HandlerReturn(value=value + 1)
@@ -3168,9 +3180,17 @@ def バリアフリー_remove_screens(battle: Battle, ctx: EventContext, value: 
 
 
 def ばんけん_boost_atk_on_intimidate(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """ばんけん特性: いかくによるこうげき低下を、こうげきの上昇に変える。"""
+    """ばんけん特性: いかくによるこうげき低下を、こうげきの上昇に変える。
+
+    あまのじゃく（メッセージなし）と異なり、いかくを受けたときは特性バーが
+    表れて発動する（一次情報: docs/wiki/abilities/ばんけん.html 特性の仕様節）。
+    こうげきが既に最大ランク（+6）でいかくの効果が無かったときは発動しない
+    （あまのじゃくの同種の仕様に準拠。ビビリだまの at_limit 判定と同じロジック）。
+    """
     if ctx.stat_change_reason != "いかく" or "atk" not in value:
         return HandlerReturn(value=value)
+    if ctx.target.rank["atk"] < 6:
+        _announce_ability_triggered(battle, ctx.target)
     return HandlerReturn(value={**value, "atk": 1})
 
 
