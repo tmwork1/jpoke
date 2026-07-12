@@ -837,7 +837,12 @@ def グランドコート_resolve_field_count(_battle: Battle, _ctx: EventContex
 
 
 def こうかくレンズ_modify_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """こうかくレンズ: 命中率を1.1倍にする。"""
+    """こうかくレンズ: 命中率を1.1倍にする。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is None:
+        return HandlerReturn(value=value)
     return HandlerReturn(value=apply_fixed_modifier(value, 4506))
 
 
@@ -1464,8 +1469,11 @@ def ひかりごけ_boost_spdef_on_water_hit(battle: Battle, ctx: AttackContext,
 
 
 def ひかりのこな_reduce_accuracy(_battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """ひかりのこな: 命中率を0.9倍にする（一撃必殺技を除く）。"""
-    if not ctx.move.has_flag("ohko"):
+    """ひかりのこな: 命中率を0.9倍にする（一撃必殺技を除く）。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
+    """
+    if value is not None and not ctx.move.has_flag("ohko"):
         value = apply_fixed_modifier(value, 3686)
     return HandlerReturn(value=value)
 
@@ -1570,8 +1578,9 @@ def フォーカスレンズ_boost_accuracy_second(battle: Battle, ctx: AttackCo
 
     - 一撃必殺技には効果がない。
     - 交代してきたばかりで技を未使用の相手には効果がない（第五世代以降の仕様）。
+    - value が None の場合は既に必中状態が確定しているため、補正をかけずそのまま返す。
     """
-    if ctx.move.has_flag("ohko"):
+    if value is None or ctx.move.has_flag("ohko"):
         return HandlerReturn(value=value)
 
     defender = ctx.defender
@@ -1673,12 +1682,13 @@ def ミクルのみ_boost_accuracy(battle: Battle, ctx: AttackContext, value: An
     """ミクルのみ: 命中率フラグが立っているとき次の技の命中率を1.2倍にする。
 
     一撃必殺技は命中率が固定式（レベル差依存）のため倍率は適用されないが、
-    効果自体は消費される。
+    効果自体は消費される。value が None の場合（既に必中状態が確定している場合）も
+    同様に倍率は適用しないが、効果自体は消費される。
     """
     mon = ctx.attacker
     if mon.item.count == 1:
         battle.item_manager.consume_item(mon)
-        if not ctx.move.has_flag("ohko"):
+        if value is not None and not ctx.move.has_flag("ohko"):
             return HandlerReturn(value=apply_fixed_modifier(value, 4915))
     return HandlerReturn(value=value)
 

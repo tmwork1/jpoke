@@ -1320,9 +1320,14 @@ def みちづれ_remove(battle: Battle, ctx: EventContext, value: Any) -> Handle
 
 
 def めいちゅうアップ_boost_accuracy(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """めいちゅうアップ: 次の技の命中率を1.2倍にし、効果を消費する。"""
+    """めいちゅうアップ: 次の技の命中率を1.2倍にし、効果を消費する。
+
+    value が None の場合は既に必中状態が確定しているため、補正をかけずに効果のみ消費する。
+    """
     mon = ctx.attacker
     battle.volatile_manager.remove(mon, "めいちゅうアップ")
+    if value is None:
+        return HandlerReturn(value=value)
     return HandlerReturn(value=apply_fixed_modifier(value, 4915))
 
 
