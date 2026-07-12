@@ -1798,6 +1798,57 @@ def test_ふくつのこころ_ひるみ時にS上昇(volatile_name: VolatileNam
     assert mon.boosts["spe"] == expected_rank
 
 
+def test_ふくつのたて_初登場でBが1段階上がる():
+    battle = t.start_battle(
+        team0=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.boosts["def"] == 1
+
+
+def test_ふくつのたて_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+        team1=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+    )
+    mon = battle.actives[1]
+    assert not mon.ability.enabled
+    assert mon.boosts["def"] == 0
+
+
+def test_ふくつのたて_かがくへんかガス解除後に発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+    )
+    mon = battle.actives[1]
+    assert mon.boosts["def"] == 0
+
+    t.run_switch(battle, 0, 1)
+    assert mon.boosts["def"] == 1
+
+
+def test_ふくつのたて_Bが既に最大でも特性は消費される():
+    """ふくつのたて: ぼうぎょが既に最大まで上がっているため特性が不発した場合でも、
+    その戦闘で特性を再度発動させることはできなくなる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+        team1=[Pokemon("カビゴン")],
+    )
+    bench = battle.get_team(battle.players[0])[1]
+    battle.modify_stats(bench, {"def": +6})
+
+    t.run_switch(battle, 0, 1)
+    mon = battle.actives[0]
+    assert mon.boosts["def"] == 6
+    assert not mon.ability.enabled
+
+    t.run_switch(battle, 0, 0)
+    t.run_switch(battle, 0, 1)
+    assert mon.boosts["def"] == 0
+
+
 def test_ふしぎなうろこ_かたやぶりで無効():
     """ふしぎなうろこ: かたやぶり持ちの物理技はふしぎなうろこの防御補正を貫通する。"""
     battle = t.start_battle(
