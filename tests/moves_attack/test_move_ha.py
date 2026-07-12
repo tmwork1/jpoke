@@ -55,6 +55,22 @@ def test_どろぼう_攻撃者がアイテムを持っているとき失敗():
     assert defender.item.name == "オボンのみ"
 
 
+def test_どろぼう_攻撃者がねんちゃく持ちでも道具を奪える():
+    """どろぼう: ねんちゃくは自分からの道具変更を防がないため、
+    攻撃者自身がねんちゃく持ちでも通常どおり奪取できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="ねんちゃく", move_names=["どろぼう"])],
+        team1=[Pokemon("ピカチュウ", item_name="たべのこし")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "たべのこし"
+    assert not defender.has_item()
+
+
 def test_どろぼう_防御者がアイテムを持っていないとき失敗():
     """どろぼう: 相手がアイテムを持っていない場合は奪取しない。"""
     battle = t.start_battle(
@@ -2196,6 +2212,24 @@ def test_ふんか_HP満タンのとき威力150():
     attacker.hp = attacker.max_hp  # 満タン
     t.run_move(battle, 0)
     assert battle.damage_calculator.final_power == 150
+
+
+def test_ぶきみなじゅもん_ちからずくで威力上昇しPP減少は発動しない():
+    """ぶきみなじゅもん: ちからずく使用時は威力が1.3倍になる代わりに相手技のPP減少が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("フーディン", ability_name="ちからずく", move_names=["ぶきみなじゅもん"])],
+        team1=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    defender = battle.actives[1]
+    move = defender.moves[0]
+    # カビゴンに技を使わせて pp_consumed_move を設定する
+    t.run_move(battle, 1)
+    pp_after_use = move.pp
+    # ぶきみなじゅもんを使う（ちからずく所持）
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier == 5325
+    assert move.pp == pp_after_use
 
 
 def test_ぶきみなじゅもん_ねごと経由ではねごとのPPが減る():

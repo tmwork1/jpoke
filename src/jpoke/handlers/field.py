@@ -567,7 +567,11 @@ def ゆき_boost_def(battle: Battle, ctx: AttackContext, value: Any) -> HandlerR
 
 
 def らんきりゅう_type_modifier(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する"""
+    """らんきりゅう中にひこうタイプの弱点（でんき/いわ/こおり）を0.5倍に軽減する。
+    エアロック・ノーてんきで天候が無効化されている場合は効果を発動しない。
+    """
+    if battle.weather_for(ctx.defender).name == "":
+        return HandlerReturn(value=value)
     if (
         ctx.defender.has_type("ひこう")
         and ctx.move.type in {"でんき", "いわ", "こおり"}

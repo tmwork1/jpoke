@@ -307,12 +307,16 @@ class Pokemon:
 
     @property
     def last_lost_item_name(self) -> ItemName:
-        """直近で失った（消費・奪取された）アイテム名（ものひろい・しゅうかく用）。登場・退場時にリセットされる。"""
-        return self.memory["switch"].get("last_lost_item_name", "")
+        """直近で失った（消費・奪取された）アイテム名（ものひろい・しゅうかく用）。
+
+        リサイクル・しゅうかく等は交代して控えに戻っても記憶を保持するため、
+        switch スコープではなく battle スコープ（バトル中リセットなし）に保存する。
+        """
+        return self.memory["battle"].get("last_lost_item_name", "")
 
     @last_lost_item_name.setter
     def last_lost_item_name(self, value: ItemName):
-        self.memory["switch"]["last_lost_item_name"] = value
+        self.memory["battle"]["last_lost_item_name"] = value
 
     @property
     def paradox_boost_stat(self) -> Stat | None:

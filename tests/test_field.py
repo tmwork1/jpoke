@@ -1349,6 +1349,18 @@ def test_ゆき_こおり防御強化():
     assert 6144 == battle.damage_calculator.def_modifier
 
 
+@pytest.mark.parametrize("ability_name", ["エアロック", "ノーてんき"])
+def test_らんきりゅう_エアロックノーてんきで弱点半減が無効化される(ability_name: str):
+    """らんきりゅう: エアロック・ノーてんき下ではひこうタイプの弱点軽減が発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ピジョン", ability_name=ability_name)],
+        weather=("らんきりゅう", 99),
+    )
+    t.run_move(battle, 0)
+    assert 8192 == battle.damage_calculator.def_type_modifier
+
+
 def test_らんきりゅう_ひこう以外は軽減しない():
     """らんきりゅう: ひこうタイプでなければ軽減しない"""
     battle = t.start_battle(

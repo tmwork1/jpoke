@@ -311,7 +311,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.エレキメイカー_activate_terrain,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.エレキメイカー_activate_terrain,
+                "source:self",
+            ),
         }
     ),
     "えんかく": AbilityData(
@@ -453,6 +457,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_ABILITY_DISABLED: h.AbilityHandler(
                 h.かがくへんかガス_gas_deactivate,
                 subject_spec="source:self",
+                # とくせいなし状態になった直後にガスの解除処理自身が
+                # 無効化理由の判定でスキップされないようにする
+                # （このハンドラの主体自身が「とくせいなし」で無効化された結果として
+                # 発火するため、その理由だけは無視して発動させる必要がある）
+                ignored_disable_reasons=frozenset({"とくせいなし"}),
             )
         }
     ),
@@ -488,6 +497,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.かそく_boost_speed,
                 subject_spec="source:self",
+                priority=150,
             ),
         }
     ),
@@ -549,8 +559,8 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.かるわざ_init_state,
                 subject_spec="source:self",
             ),
-            Event.ON_ABILITY_DISABLED: h.AbilityHandler(
-                h.かるわざ_reset_state,
+            Event.ON_ITEM_LOST: h.AbilityHandler(
+                h.かるわざ_activate_on_item_lost,
                 subject_spec="source:self",
             ),
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
@@ -627,9 +637,17 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.がんじょう_survive_lethal,
                 subject_spec="defender:self",
             ),
-            Event.ON_BEFORE_APPLY_MOVE: h.AbilityHandler(
+            # こんらんの自傷ダメージは技扱いではないため ON_MODIFY_NON_MOVE_DAMAGE で別途判定する
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
+                h.がんじょう_survive_confusion_damage,
+                subject_spec="target:self",
+            ),
+            # 命中判定(Interrupt)より前に無効化するため ON_TRY_MOVE_2 で判定する
+            # (docs/spec/turn.md の ON_TRY_MOVE_2 priority=140 を参照)
+            Event.ON_TRY_MOVE_2: h.AbilityHandler(
                 h.がんじょう_block_ohko,
                 subject_spec="defender:self",
+                priority=140,
             ),
         },
         lethal_handlers={
@@ -707,6 +725,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.きよめのしお_prevent_ailment,
                 subject_spec="target:self",
             ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
+                h.きよめのしお_prevent_volatile,
+                subject_spec="target:self",
+            ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.きよめのしお_reduce_ghost,
                 subject_spec="defender:self",
@@ -742,6 +764,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.announce_ability_triggered,
                 subject_spec="source:self",
+                priority=30,
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
                 h.きんちょうかん_check_nervous,
@@ -749,7 +772,23 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             ),
         }
     ),
-    "ぎたい": AbilityData(),
+    "ぎたい": AbilityData(
+        handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ぎたい_change_type,
+                subject_spec="source:self",
+                priority=120,
+            ),
+            Event.ON_FIELD_CHANGE: h.AbilityHandler(
+                h.ぎたい_change_type,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ぎたい_change_type,
+                subject_spec="source:self",
+            ),
+        }
+    ),
     "ぎゃくじょう": AbilityData(
         handlers={
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
@@ -792,6 +831,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
+                paradox.refresh_paradox_charge_state,
+                subject_spec="source:self",
+                priority=140,  # docs/spec/turn.md ON_SWITCH_IN: 「140 クォークチャージ（特性）」
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
                 priority=200,
@@ -864,7 +908,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.グラスメイカー_activate_terrain,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.グラスメイカー_activate_terrain,
+                "source:self",
+            ),
         }
     ),
     "げきりゅう": AbilityData(
@@ -927,7 +975,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "こぼれダネ": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/こぼれダネ.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.こぼれダネ_set_grassy_terrain,
                 subject_spec="defender:self",
             )
@@ -962,7 +1014,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.ごりむちゅう_modify_atk,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_MOVE_END: h.AbilityHandler(
+                h.ごりむちゅう_lock_move,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_MODIFY_COMMAND_OPTIONS: h.AbilityHandler(
+                h.ごりむちゅう_restrict_commands,
+                subject_spec="source:self",
+            ),
         }
     ),
     "サイコメイカー": AbilityData(
@@ -970,7 +1030,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.サイコメイカー_activate_terrain,
                 "source:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.サイコメイカー_activate_terrain,
+                "source:self",
+            ),
         }
     ),
     "さいせいりょく": AbilityData(
@@ -1013,7 +1077,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         lethal_handlers={
             LethalEvent.ON_TURN_END: LethalHandler(
                 func=l.サンパワー_take_sun_damage,
-                subject="attacker",
+                subject="defender",
             )
         }
     ),
@@ -1066,6 +1130,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.しゅうかく_restore_berry,
                 subject_spec="source:self",
+                priority=150,  # docs/spec/turn.md ON_TURN_END: 「150 しゅうかく」
             ),
         }
     ),
@@ -1146,7 +1211,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "じきゅうりょく": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様（docs/spec/abilities/
+            # じきゅうりょく.md）を満たすため、常に発火する Event.ON_HIT を使用する
+            # （みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.じきゅうりょく_boost_B_on_hit,
                 subject_spec="defender:self",
             )
@@ -1174,15 +1243,25 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_paralysis_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.じゅうなん_cure_paralysis_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "じゅくせい": AbilityData(),
     "じょうききかん": AbilityData(
         handlers={
+            # 技側の ON_DAMAGE_HIT ハンドラ（h.MoveHandler、デフォルト priority=100）より
+            # 大きい値を指定し、バブルこうせん等の追加効果（S-1）の後にじょうききかん
+            # （S+6）が発動する仕様（docs/spec/abilities/じょうききかん.md）を満たす。
+            # priority を指定しない場合、(priority, -speed) のタイブレークで攻撃側・
+            # 防御側どちらが速いかによって発動順が変わってしまうため明示する。
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.じょうききかん_max_boost_speed,
                 subject_spec="defender:self",
+                priority=110,
             )
         }
     ),
@@ -1209,16 +1288,22 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "じんばいったい": AbilityData(
         flags={
             "uncopyable",
-            "protected"
+            "protected",
+            "gas_proof",
         },
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 h.announce_ability_triggered,
                 subject_spec="source:self",
+                priority=30,
             ),
             Event.ON_CHECK_NERVOUS: h.AbilityHandler(
                 h.きんちょうかん_check_nervous,
                 subject_spec="source:foe",
+            ),
+            Event.ON_MOVE_KO: h.AbilityHandler(
+                h.じんばいったい_boost,
+                subject_spec="attacker:self",
             ),
         }
     ),
@@ -1244,7 +1329,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                     h.すいほう_reduce_fire,
                     subject_spec="defender:self",
                 ),
-            ]
+            ],
+            Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
+                h.prevent_burn_ailment,
+                "target:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.すいほう_cure_burn_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "スイートベール": AbilityData(
@@ -1357,7 +1450,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "すなはき": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/すなはき.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.すなはき_set_sandstorm,
                 subject_spec="defender:self",
             )
@@ -1400,6 +1497,14 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.スロースタート_start,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.スロースタート_start,
+                subject_spec="source:self",
+            ),
+            DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
+                h.スロースタート_modify_speed,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.スロースタート_modify_atk,
                 subject_spec="attacker:self",
@@ -1422,6 +1527,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.スワームチェンジ_form_change_on_low_hp,
                 subject_spec="source:self",
                 priority=160,
+            ),
+            Event.ON_HP_CHANGED: h.AbilityHandler(
+                h.スワームチェンジ_revert_form_on_faint,
+                subject_spec="target:self",
             ),
         }
     ),
@@ -1497,6 +1606,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.そうだいしょう_announce_on_entry,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.そうだいしょう_announce_on_entry,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
                 h.そうだいしょう_modify_power,
                 subject_spec="attacker:self",
@@ -1508,7 +1621,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_MOVE_KO: h.AbilityHandler(
                 h.ソウルハート_boost_spa_on_ko,
                 subject_spec="attacker:self",
-            )
+            ),
+            Event.ON_HP_CHANGED: h.AbilityHandler(
+                h.ソウルハート_boost_spa_on_faint,
+                subject_spec="target:foe",
+            ),
         }
     ),
     "たいねつ": AbilityData(
@@ -1519,7 +1636,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
                 h.たいねつ_reduce_fire,
                 subject_spec="defender:self",
-            )
+            ),
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
+                h.たいねつ_reduce_burn_damage,
+                subject_spec="target:self",
+            ),
         }
     ),
     "たまひろい": AbilityData(),
@@ -1537,6 +1658,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     "ターボブレイズ": AbilityData(
         handlers={
             Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
@@ -1586,10 +1711,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         }
     ),
     "ダークオーラ": AbilityData(
-        flags={
-            "mold_breaker_ignorable",
-        },
         handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_POWER_MODIFIER: [
                 h.AbilityHandler(
                     h.ダークオーラ_boost_power,
@@ -1732,6 +1862,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.announce_ability_triggered,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_BEGIN_MOVE: h.AbilityHandler(
                 h.かたやぶり_disable_foe_ability,
                 subject_spec="attacker:self",
@@ -1761,6 +1895,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.てんきや_sync_form,
                 subject_spec="source:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.てんきや_sync_form,
+                subject_spec="source:self",
+            ),
         }
     ),
     "てんねん": AbilityData(
@@ -1776,6 +1914,16 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.てんねん_ignore_rank,
                 subject_spec="attacker:self",
             ),
+            Event.ON_GET_STAT_RANK: [
+                h.AbilityHandler(
+                    h.てんねん_ignore_accuracy,
+                    subject_spec="defender:self",
+                ),
+                h.AbilityHandler(
+                    h.てんねん_ignore_evasion,
+                    subject_spec="attacker:self",
+                ),
+            ],
         }
     ),
     "てんのめぐみ": AbilityData(
@@ -1822,13 +1970,17 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.でんきにかえる_charge_on_hit,
                 subject_spec="defender:self",
-            )
+            ),
+            Event.ON_HIT: h.AbilityHandler(
+                h.でんきにかえる_charge_on_zero_damage,
+                subject_spec="defender:self",
+            ),
         }
     ),
     "とうそうしん": AbilityData(
         handlers={
-            Event.ON_CALC_ATK_MODIFIER: h.AbilityHandler(
-                h.とうそうしん_modify_atk,
+            Event.ON_CALC_POWER_MODIFIER: h.AbilityHandler(
+                h.とうそうしん_modify_power,
                 subject_spec="attacker:self",
             )
         }
@@ -1875,10 +2027,26 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             "uncopyable"
         },
         handlers={
-            Event.ON_SWITCH_IN: h.AbilityHandler(
-                h.トレース_copy_ability,
-                subject_spec="source:self",
-            ),
+            Event.ON_SWITCH_IN: [
+                h.AbilityHandler(
+                    h.トレース_copy_ability,
+                    subject_spec="source:self",
+                ),
+                h.AbilityHandler(
+                    h.トレース_copy_ability_on_foe_change,
+                    subject_spec="source:foe",
+                ),
+            ],
+            Event.ON_ABILITY_ENABLED: [
+                h.AbilityHandler(
+                    h.トレース_copy_ability,
+                    subject_spec="source:self",
+                ),
+                h.AbilityHandler(
+                    h.トレース_copy_ability_on_foe_change,
+                    subject_spec="source:foe",
+                ),
+            ],
         },
     ),
     "どくくぐつ": AbilityData(
@@ -1894,24 +2062,37 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "どくげしょう": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/どくげしょう.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.どくげしょう_set_toxic_spikes,
                 subject_spec="defender:self",
-                priority=20,
             )
         }
     ),
     "どくしゅ": AbilityData(
         handlers={
+            # docs/spec/turn.md の Event.ON_DAMAGE（実装上の Event.ON_DAMAGE_HIT に相当）に
+            # 「10 | 攻撃側のどくしゅによるどく」と明記されているため priority=10 を指定する。
+            # ミイラ/さまようたましい/とれないにおい（同イベントpriority=20）や
+            # はたきおとす等のアイテム効果（同100）より先に発動する必要がある
+            # （docs/spec/abilities/どくしゅ.md）ため、デフォルト(100)のままでは順序が壊れる。
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.どくしゅ_maybe_poison_on_contact,
                 subject_spec="attacker:self",
+                priority=10,
             )
         }
     ),
     "どくのくさり": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/どくのくさり.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.どくのくさり_maybe_badly_poison,
                 subject_spec="attacker:self",
             )
@@ -1919,7 +2100,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "どくのトゲ": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときやみねうちを受けたとき（実HPダメージ0）も発動する仕様
+            # （どくげしょう・どくのくさり等の同種特性と同じ挙動）を満たすため、常に発火する
+            # Event.ON_HIT を使用する（みがわりに阻まれた場合はハンドラ内で
+            # ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.どくのトゲ_maybe_poison_attacker,
                 subject_spec="defender:self",
             )
@@ -1963,11 +2149,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         handlers={
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.どんかん_prevent_volatile,
-                "target:self",
+                subject_spec="target:self",
             ),
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.どんかん_block_intimidate,
                 subject_spec="target:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.どんかん_cure_volatile_on_enable,
+                subject_spec="source:self",
             ),
         }
     ),
@@ -1993,7 +2183,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TRY_ACTION: h.AbilityHandler(
                 h.なまけ_try_action,
                 subject_spec="attacker:self",
-                priority=10,
+                # 一次情報:「なまけているメッセージが現れるタイミングはねむり/こおり
+                # 判定の後」。ねむり_check_action/こおり_action は同じ priority=10 で
+                # stop_event するため、tie-break で先に実行されると眠り・氷結で
+                # 動けないターンにXが誤って消費されてしまう。ねむり/こおり(10)より
+                # 後、PPが残っていない(20)より前になるよう priority=15 とする。
+                priority=15,
             ),
         }
     ),
@@ -2026,6 +2221,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.ねつこうかん_boost_atk_on_fire,
                 subject_spec="defender:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.ねつこうかん_cure_burn_on_enable,
+                subject_spec="source:self",
             ),
         }
     ),
@@ -2135,6 +2334,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.はっこう_block_acc_drop,
                 subject_spec="target:self",
+            ),
+            Event.ON_GET_STAT_RANK: h.AbilityHandler(
+                h.はっこう_ignore_evasion,
+                subject_spec="attacker:self",
             )
         }
     ),
@@ -2170,7 +2373,6 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             DomainEvent.ON_CALC_SPEED: h.AbilityHandler(
                 h.はやあし_modify_speed,
                 subject_spec="source:self",
-                priority=200,
             ),
         }
     ),
@@ -2203,6 +2405,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_TURN_END: h.AbilityHandler(
                 h.はらぺこスイッチ_on_turn_end,
                 subject_spec="source:self",
+                # docs/spec/turn.md ON_TURN_END: 「160 ダルマモード/リミットシールド/
+                # スワームチェンジ/ぎょぐんによるフォルムチェンジ」と同じ160だと
+                # _sort_handlers の (priority, -speed) tie-break ですばやさ次第で
+                # 順序が入れ替わってしまう。一次情報で「すばやさに関係なくはらぺこ
+                # スイッチが後に発動する」と明記されているため、161にして必ず後に回す。
+                priority=161,
             ),
         }
     ),
@@ -2226,7 +2434,19 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             )
         }
     ),
-    "はんすう": AbilityData(),
+    "はんすう": AbilityData(
+        handlers={
+            Event.ON_BERRY_CONSUMED: h.AbilityHandler(
+                h.はんすう_start_counter,
+                subject_spec="source:self",
+            ),
+            Event.ON_TURN_END: h.AbilityHandler(
+                h.はんすう_on_turn_end,
+                subject_spec="source:self",
+                priority=150,  # docs/spec/turn.md ON_TURN_END: 「150 はんすう」
+            ),
+        }
+    ),
     "ハードロック": AbilityData(
         flags={
             "mold_breaker_ignorable"
@@ -2251,7 +2471,12 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ばけのかわ_block_damage,
                 subject_spec="defender:self",
                 priority=10,
-            )
+            ),
+            # こんらんの自傷ダメージは技扱いではないため ON_MODIFY_NON_MOVE_DAMAGE で別途判定する
+            Event.ON_MODIFY_NON_MOVE_DAMAGE: h.AbilityHandler(
+                h.ばけのかわ_block_confusion_damage,
+                subject_spec="target:self",
+            ),
         },
         lethal_handlers={
             LethalEvent.ON_BEFORE_HIT: LethalHandler(
@@ -2297,7 +2522,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 subject_spec="target:self",
             ),
             Event.ON_TRY_BLOW: h.AbilityHandler(
-                h.きゅうばん_block_blow,
+                h.ばんけん_block_blow,
                 subject_spec="defender:self",
             ),
         }
@@ -2310,7 +2535,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_poison_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.パステルベール_cure_poison_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "パワースポット": AbilityData(),
@@ -2401,7 +2630,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_DAMAGE_HIT: h.AbilityHandler(
                 h.びびり_boost_spd_on_fear_move,
                 subject_spec="defender:self",
-            )
+            ),
+            # priority=140: しろいきり(130)やクリアボディ等の無効化ハンドラ(既定100)より後に
+            # 判定し、いかくの効果が実際に無効化された場合は発動しないようにする
+            # （一次情報: docs/wiki/abilities/びびり.html 特性の仕様#第八世代以降）。
+            Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
+                h.びびり_boost_spd_on_intimidate,
+                subject_spec="target:self",
+                priority=140,
+            ),
         }
     ),
     "びんじょう": AbilityData(
@@ -2455,10 +2692,13 @@ ABILITIES: dict[AbilityName, AbilityData] = {
     ),
     "ふうりょくでんき": AbilityData(
         handlers={
-            Event.ON_DAMAGE_HIT: h.AbilityHandler(
+            # ON_DAMAGE_HIT は actual_damage<=0 のとき発火しないため採用しない。こらえるで
+            # HP1のまま耐えたときなど（実HPダメージ0）も発動する仕様
+            # （docs/spec/abilities/ふうりょくでんき.md）を満たすため、常に発火する Event.ON_HIT
+            # を使用する（みがわりに阻まれた場合はハンドラ内で ctx.substitute_damage を見て除外する）。
+            Event.ON_HIT: h.AbilityHandler(
                 h.ふうりょくでんき_on_damage,
                 subject_spec="defender:self",
-                priority=20,
             ),
             Event.ON_FIELD_ACTIVATE: h.AbilityHandler(
                 h.ふうりょくでんき_on_field_activate,
@@ -2467,10 +2707,15 @@ ABILITIES: dict[AbilityName, AbilityData] = {
         }
     ),
     "フェアリーオーラ": AbilityData(
-        flags={
-            "mold_breaker_ignorable",
-        },
         handlers={
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.announce_ability_triggered,
+                subject_spec="source:self",
+            ),
             Event.ON_CALC_POWER_MODIFIER: [
                 h.AbilityHandler(
                     h.フェアリーオーラ_boost_power,
@@ -2833,6 +3078,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.マイペース_block_intimidate,
                 subject_spec="target:self",
             ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.マイペース_cure_confusion_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "マグマのよろい": AbilityData(
@@ -2843,7 +3092,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_freeze_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.マグマのよろい_cure_freeze_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "まけんき": AbilityData(
@@ -2945,7 +3198,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_burn_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.みずのベール_cure_burn_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "みつあつめ": AbilityData(),
@@ -3040,7 +3297,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_AILMENT: h.AbilityHandler(
                 h.prevent_poison_ailment,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.めんえき_cure_poison_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "もうか": AbilityData(
@@ -3110,7 +3371,11 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
                 h.やるき_prevent_volatile,
                 "target:self",
-            )
+            ),
+            Event.ON_ABILITY_ENABLED: h.AbilityHandler(
+                h.やるき_cure_sleep_on_enable,
+                subject_spec="source:self",
+            ),
         }
     ),
     "ゆうばく": AbilityData(

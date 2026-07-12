@@ -256,6 +256,13 @@ VOLATILES: dict[str, VolatileData] = {
             ),
         }
     ),
+    "ごりむちゅう": VolatileData(
+        # ロックした技名の保持のみ行う。実際の選択制限は特性側の
+        # ON_MODIFY_COMMAND_OPTIONS ハンドラ（ごりむちゅう_restrict_commands）で行う。
+        # かがくへんかガス等で特性が無効化されている間は選択制限を止める必要があるため、
+        # 常に発動する VolatileHandler ではなく特性ハンドラ側に制限ロジックを持たせている。
+        handlers={}
+    ),
     "こんらん": VolatileData(
         handlers={
             Event.ON_TRY_ACTION: h.VolatileHandler(
@@ -773,6 +780,10 @@ VOLATILES: dict[str, VolatileData] = {
         handlers={
             Event.ON_MODIFY_ACCURACY: h.VolatileHandler(
                 h.めいちゅうアップ_boost_accuracy,
+                subject_spec="attacker:self",
+            ),
+            Event.ON_END_MOVE: h.VolatileHandler(
+                h.めいちゅうアップ_clear_after_move,
                 subject_spec="attacker:self",
             ),
         }

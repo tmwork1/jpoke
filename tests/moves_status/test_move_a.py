@@ -1066,6 +1066,26 @@ def test_うたう_ねむり付与():
     assert defender.has_ailment("ねむり")
 
 
+def test_うつしえ_かがくへんかガスで無効化された相手の特性は元の特性がコピーされる():
+    """うつしえ: 相手の特性がかがくへんかガスで無効化されていても、
+    とくせいなしとは異なり本来の特性（base_name）がコピーされる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス", move_names=["うつしえ"])],
+        team1=[Pokemon("カビゴン", ability_name="めんえき")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    assert not defender.ability.enabled
+
+    t.run_move(battle, 0)
+
+    assert attacker.ability.name == "めんえき"
+    # 使用者自身の特性がかがくへんかガスでなくなったのでガスの効果が切れ、
+    # 相手の特性（コピー元と同じめんえき）が有効に戻る
+    assert defender.ability.enabled
+
+
 def test_うつしえ_まもる状態の相手にも効果が発動する():
     """うつしえ: unprotectableフラグを持つため、まもる状態の相手にも特性コピーが発動する"""
     battle = t.start_battle(

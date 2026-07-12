@@ -776,7 +776,7 @@ def test_テクスチャー２_まもるを無視して成立する():
     )
     attacker, defender = battle.actives
     # まもる状態のためかえんほうしゃ自体は直接発動できないので、
-    # executed_move（last_move_type/last_move_nameの算出元）を直接設定して検証する
+    # last_move（last_move_type/last_move_nameの算出元）を直接設定して検証する
     defender.last_move = Move("かえんほうしゃ")
     battle.random.choice = lambda seq: seq[0]
     t.run_move(battle, 0)
@@ -1666,6 +1666,23 @@ def test_トリック_両者のアイテムが入れ替わる():
     """トリック: 使用者と相手のアイテムを入れ替える。"""
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", move_names=["トリック"], item_name="たべのこし")],
+        team1=[Pokemon("カビゴン", item_name="オボンのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    defender = battle.actives[1]
+    t.run_move(battle, 0)
+
+    assert attacker.item.name == "オボンのみ"
+    assert defender.item.name == "たべのこし"
+
+
+def test_トリック_使用者がねんちゃく持ちでも道具を渡せる():
+    """トリック: ねんちゃくは自分からの道具変更を防がないため、
+    使用者自身がねんちゃく持ちでも通常どおり道具を交換できる
+    （仕様書「トリック・すりかえ・ギフトパスを使用して道具を渡すことはできる」）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ねんちゃく", move_names=["トリック"], item_name="たべのこし")],
         team1=[Pokemon("カビゴン", item_name="オボンのみ")],
         accuracy=100,
     )

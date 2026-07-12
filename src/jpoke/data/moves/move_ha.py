@@ -1156,7 +1156,10 @@ MOVES_HA: dict[MoveName, MoveData] = {
         pp=8,
         power=80,
         accuracy=100,
-        flags={"sound"},
+        # PP減少効果自体に確率判定は無いが、ちからずく対象技として
+        # 明記されている技のため secondary_effect フラグを設定する
+        # （docs/spec/abilities/ちからずく.md参照）。
+        flags={"sound", "secondary_effect"},
         handlers={
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.ぶきみなじゅもん_reduce_defender_pp,
