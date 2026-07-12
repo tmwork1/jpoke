@@ -132,10 +132,10 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
   （`git log <branch>..main`、`gh pr list --state merged`）を確認する
 - `.loop/` 系フロー（impl / review / todo / lethal / fuzz / replay_fuzz / flaky）は対象外。既存の
   分離済みブランチ（`loop/{flow}` / `loop/{flow}/integration`）で作業し、ローカルテストを通過した
-  単位（単一ブランチ方式は1件のバグ修正・エントリごと、統合ブランチ方式は §共通5 のバッチ整形
-  ごと。`lethal` のみ例外で10件ごと）でディスパッチャーが `_common.md` §共通6 の手順に従い
-  GitHub PR経由（`gh pr create` → 即 `gh pr merge`、人間レビュー待ちはしない）で自動的にmainへ
-  反映する。**ローカルの `jpoke/`（main の作業ツリー）へ直接コミット・マージすることは絶対にしない**
+  単位（`fuzz`/`replay_fuzz`/`flaky`は1件ごと、`todo`は5件ごと、`lethal`は10件ごと、`impl`/`review`
+  は §共通5 のバッチ整形ごと）でディスパッチャーが `_common.md` §共通6 の手順に従い GitHub PR経由
+  （`gh pr create` → 即 `gh pr merge`、人間レビュー待ちはしない）で自動的にmainへ反映する。
+  **ローカルの `jpoke/`（main の作業ツリー）へ直接コミット・マージすることは絶対にしない**
   （同一 `.git` を共有する他セッション・他worktreeのローカル `main` refを不用意に動かし混乱を招くため）
 - ループはmain反映を自動かつ継続的に行うため、手動ブランチと `data/*.py` / `docs/progress/*` /
   `docs/tests/*` など同じ共有ファイルに触れる作業を始める直前は `git pull` してmainを最新化すると
