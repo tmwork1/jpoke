@@ -409,6 +409,24 @@ def test_じゃくてんほけん_等倍では発動しない():
     assert foe.has_item()
 
 
+def test_じゃくてんほけん_マジシャンより先に発動して奪われない():
+    """じゃくてんほけん: 特性マジシャンの効果抜群の技を受けても、じゃくてんほけんが先に発動して
+    消費されるため奪われない（攻撃側の素早さが防御側より高い場合でも、素早さに依存せず先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ヒトカゲ", ability_name="マジシャン", move_names=["かえんほうしゃ"])],
+        team1=[Pokemon("フシギダネ", item_name="じゃくてんほけん")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.boosts["atk"] == 2
+    assert foe.boosts["spa"] == 2
+    assert not foe.has_item()
+    assert not attacker.has_item()
+
+
 def test_ジャポのみ_きんちょうかんの相手がいると発動しない():
     """ジャポのみ: 相手が特性きんちょうかんを持つときは発動しない"""
     battle = t.start_battle(
@@ -568,6 +586,23 @@ def test_じゅうでんち_でんき被弾でA上昇():
     t.run_move(battle, 0)
     assert foe.boosts["atk"] == 1
     assert not foe.has_item()
+
+
+def test_じゅうでんち_マジシャンより先に発動して奪われない():
+    """じゅうでんち: 特性マジシャンのでんき技を受けても、じゅうでんちが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずじゅうでんちが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["でんきショック"])],
+        team1=[Pokemon("カビゴン", item_name="じゅうでんち")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.run_move(battle, 0)
+    assert foe.boosts["atk"] == 1
+    assert not foe.has_item()
+    assert not attacker.has_item()
 
 
 def test_スターのみ_HP25以下でランダム能力上昇():

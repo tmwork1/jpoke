@@ -2128,13 +2128,17 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
     （きのみによる回復効果も含めて）一切発動しない。resolve_secondary_chance経由で
     ON_MODIFY_SECONDARY_CHANCEを発火させ、確率0で無効化された場合はここで打ち切る。
 
-    上記のうちきのみで実際に効果が発動したもの（_NAGETSUKERU_BERRY_EFFECT_ITEMS）は、
-    対象がはんすう持ちの場合の再発動対象にするため Event.ON_BERRY_CONSUMED を発火する。
+    上記のうちきのみで実際に効果が発動したもの（_NAGETSUKERU_BERRY_EFFECT_ITEMS に含まれ、
+    かつ effect_applied が True のもの）は、対象がほおぶくろ・はんすう持ちの場合の
+    再発動対象にするため Event.ON_BERRY_CONSUMED を発火する。状態異常でないときにラムのみを
+    受けた場合等、きのみ本来の効果が実際には発動しなかった場合はほおぶくろ・はんすういずれも
+    対象にならない（一次情報: ほおぶくろの一次情報 特性の仕様節）。
     """
     if battle.resolve_secondary_chance(ctx, 1.0) < 1:
         return HandlerReturn(value=value)
 
     item_name = ctx.attacker.item.base_name
+    effect_applied = False
     if item_name == "でんきだま":
         battle.ailment_manager.apply(ctx.defender, "まひ", source=ctx.attacker)
     elif item_name == "かえんだま":
@@ -2163,94 +2167,114 @@ def なげつける_apply_item_effect(battle: Battle, ctx: AttackContext, value:
             battle.volatile_manager.remove(defender, volatile_name)
     elif item_name == "ラムのみ":
         defender = ctx.defender
-        battle.ailment_manager.remove(defender)
-        battle.volatile_manager.remove(defender, "こんらん")
+        cured_ailment = battle.ailment_manager.remove(defender)
+        cured_confusion = battle.volatile_manager.remove(defender, "こんらん")
+        effect_applied = cured_ailment or cured_confusion
     elif item_name == "クラボのみ":
         defender = ctx.defender
         if defender.ailment.name == "まひ":
-            battle.ailment_manager.remove(defender)
+            effect_applied = battle.ailment_manager.remove(defender)
     elif item_name == "カゴのみ":
         defender = ctx.defender
         if defender.ailment.name == "ねむり":
-            battle.ailment_manager.remove(defender)
+            effect_applied = battle.ailment_manager.remove(defender)
     elif item_name == "モモンのみ":
         defender = ctx.defender
         if defender.ailment.name in ("どく", "もうどく"):
-            battle.ailment_manager.remove(defender)
+            effect_applied = battle.ailment_manager.remove(defender)
     elif item_name == "チーゴのみ":
         defender = ctx.defender
         if defender.ailment.name == "やけど":
-            battle.ailment_manager.remove(defender)
+            effect_applied = battle.ailment_manager.remove(defender)
     elif item_name == "ナナシのみ":
         defender = ctx.defender
         if defender.ailment.name == "こおり":
-            battle.ailment_manager.remove(defender)
+            effect_applied = battle.ailment_manager.remove(defender)
     elif item_name == "キーのみ":
-        battle.volatile_manager.remove(ctx.defender, "こんらん")
+        effect_applied = battle.volatile_manager.remove(ctx.defender, "こんらん")
     elif item_name == "ヒメリのみ":
         defender = ctx.defender
         move = next((m for m in defender.moves if m.pp == 0), None)
         if move is not None:
             move.pp = min(himeri_pp_restore_cap(defender), move.data.pp)
+            effect_applied = True
     elif item_name == "オレンのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, v=10))
+        effect_applied = bool(battle.modify_hp(defender, v=berry_heal_amount(defender, v=10)))
     elif item_name == "オボンのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/4))
+        effect_applied = bool(battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/4)))
     elif item_name == "フィラのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        confused = False
         if defender.nature in ("ずぶとい", "ひかえめ", "おだやか", "おくびょう"):
-            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        effect_applied = bool(healed) or confused
     elif item_name == "ウイのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        confused = False
         if defender.nature in ("いじっぱり", "わんぱく", "ようき", "しんちょう"):
-            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        effect_applied = bool(healed) or confused
     elif item_name == "マゴのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        confused = False
         if defender.nature in ("ゆうかん", "のんき", "れいせい", "なまいき"):
-            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        effect_applied = bool(healed) or confused
     elif item_name == "バンジのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        confused = False
         if defender.nature in ("やんちゃ", "のうてんき", "うっかりや", "むじゃき"):
-            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        effect_applied = bool(healed) or confused
     elif item_name == "イアのみ":
         defender = ctx.defender
-        battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        healed = battle.modify_hp(defender, v=berry_heal_amount(defender, r=1/3))
+        confused = False
         if defender.nature in ("さみしがり", "おっとり", "おとなしい", "せっかち"):
-            battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+            confused = battle.volatile_manager.apply_confusion(defender, source=ctx.attacker)
+        effect_applied = bool(healed) or confused
     elif item_name == "チイラのみ":
         defender = ctx.defender
-        battle.modify_stats(defender, {"atk": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        changed = battle.modify_stats(defender, {"atk": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        effect_applied = bool(changed)
     elif item_name in ("リュガのみ", "アッキのみ"):
         defender = ctx.defender
-        battle.modify_stats(defender, {"def": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        changed = battle.modify_stats(defender, {"def": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        effect_applied = bool(changed)
     elif item_name == "カムラのみ":
         defender = ctx.defender
-        battle.modify_stats(defender, {"spe": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        changed = battle.modify_stats(defender, {"spe": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        effect_applied = bool(changed)
     elif item_name == "ヤタピのみ":
         defender = ctx.defender
-        battle.modify_stats(defender, {"spa": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        changed = battle.modify_stats(defender, {"spa": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        effect_applied = bool(changed)
     elif item_name in ("ズアのみ", "タラプのみ"):
         defender = ctx.defender
-        battle.modify_stats(defender, {"spd": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        changed = battle.modify_stats(defender, {"spd": 2 if is_ripen(defender) else 1}, source=ctx.attacker)
+        effect_applied = bool(changed)
     elif item_name == "サンのみ":
-        battle.volatile_manager.apply(ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker)
+        effect_applied = battle.volatile_manager.apply(
+            ctx.defender, "きゅうしょアップ", count=2, source=ctx.attacker
+        )
     elif item_name == "スターのみ":
         defender = ctx.defender
         candidates = [s for s in ("atk", "def", "spa", "spd", "spe") if defender.boosts[s] < 6]
         if candidates:
             stat = battle.random.choice(candidates)
             boost = 4 if is_ripen(defender) else 2
-            battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
+            changed = battle.modify_stats(defender, {stat: boost}, source=ctx.attacker)
+            effect_applied = bool(changed)
     elif item_name == "ミクルのみ":
-        battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
+        effect_applied = battle.volatile_manager.apply(ctx.defender, "めいちゅうアップ", source=ctx.attacker)
 
-    if item_name in _NAGETSUKERU_BERRY_EFFECT_ITEMS:
+    if item_name in _NAGETSUKERU_BERRY_EFFECT_ITEMS and effect_applied:
         # モジュール読み込み時の循環インポートを避けるため遅延インポートする
         # （move_attack.py は jpoke.core パッケージの初期化中に読み込まれる経路があるため）
         from jpoke.core.context import EventContext
@@ -2320,13 +2344,15 @@ def なげつける_consume_item(battle: Battle, ctx: AttackContext, value: Any)
     ItemManager.consume_itemを経由しないため、使用者自身がきのみを投げたときは
     ここで明示的にEvent.ON_BERRY_CONSUMEDを発火し、はんすうの再発動対象にする
     （2回目呼び出し時は既に手放しているためis_berryがFalseとなり二重発火しない）。
+    「食べる」ではなく「投げて手放す」消費のため is_self_fling=True で発火する
+    （ほおぶくろはこの経路では発動しない。詳細は EventContext.is_self_fling を参照）。
     """
     attacker = ctx.attacker
     if attacker.item.is_berry():
         from jpoke.core.context import EventContext
         battle.events.emit(
             Event.ON_BERRY_CONSUMED,
-            EventContext(source=attacker, item_name=attacker.item.base_name)
+            EventContext(source=attacker, item_name=attacker.item.base_name, is_self_fling=True)
         )
     battle.item_manager.remove_item(attacker, source=attacker)
     return HandlerReturn(value=value)

@@ -77,6 +77,24 @@ def test_ナゾのみ_瀕死になったときは発動しない():
     assert foe.has_item()
 
 
+def test_ナゾのみ_マジシャンより先に発動して奪われない():
+    """ナゾのみ: 特性マジシャンの効果抜群の技を受けても、ナゾのみが先に発動して消費されるため奪われない
+    （攻撃側の素早さが防御側より高い場合でも、素早さに依存せずナゾのみが先に発動する）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジシャン", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="ナゾのみ")],
+        accuracy=100,
+    )
+    attacker = battle.actives[0]
+    foe = battle.actives[1]
+    t.fix_damage(battle, 50)
+    t.run_move(battle, 0)
+    assert foe.hp == foe.max_hp - 50 + foe.max_hp // 4
+    assert not foe.has_item()
+    assert not attacker.has_item()
+
+
 def test_ナゾのみ_等倍では発動しない():
     """ナゾのみ: 等倍の攻撃では発動しない"""
     battle = t.start_battle(

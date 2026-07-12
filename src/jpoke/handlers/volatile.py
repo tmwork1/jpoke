@@ -1426,13 +1426,13 @@ def やどりぎのタネ_drain_hp(battle: Battle, ctx: EventContext, value: Any
 
 
 def リチャージ_block_action(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """リチャージ状態による次ターン行動不能。状態を解除して行動をブロックする。"""
+    """リチャージ状態による次ターン行動不能。行動不能を示してから状態を解除する。"""
     mon = ctx.attacker
-    battle.volatile_manager.remove(mon, "リチャージ")
     battle.add_event_log(
         mon, LogCode.ACTION_BLOCKED,
         payload=FailureLogPayload(move=ctx.move.name, display_reason="リチャージ")
     )
+    battle.volatile_manager.remove(mon, "リチャージ")
     return HandlerReturn(value=False, stop_event=True)
 
 
