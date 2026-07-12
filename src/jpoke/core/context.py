@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 from jpoke.enums import Event
 from jpoke.model import Move
-from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason
+from jpoke.types import RoleSpec, HPChangeReason, StatChangeReason, ItemName
 
 
 @dataclass(eq=False)
@@ -81,6 +81,8 @@ class EventContext(BaseContext):
     ARシステム/マルチタイプ等、相手が特定の道具を持っている場合も交換自体が
     失敗する特性の判定に使う（はたきおとす等の一方的な除去では立てない）。
     """
+    item_name: ItemName = ""
+    """Event.ON_BERRY_CONSUMED で消費されたきのみ名を伝える（はんすう用）。"""
 
     def is_foe_target(self) -> bool:
         """source と target が異なるポケモンかを返す。"""
