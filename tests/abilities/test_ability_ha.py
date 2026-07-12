@@ -753,6 +753,22 @@ def test_パンクロック_音技被ダメ半減():
     assert 2048 == battle2.damage_calculator.damage_modifier
 
 
+def test_パンクロック_音の変化技には威力上昇も被ダメ軽減も発動しない():
+    """パンクロック: 音の技であっても変化技の使用・被弾では特性が発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="パンクロック", move_names=["うたう"])],
+        team1=[Pokemon("ピカチュウ", move_names=["うたう"])],
+        accuracy=100,
+    )
+    # 自身が音の変化技を使用しても威力補正イベントは発動しない
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.power_modifier is None
+
+    # 音の変化技を受けてもダメージ補正イベントは発動しない
+    t.run_move(battle, 1)
+    assert battle.damage_calculator.damage_modifier is None
+
+
 @pytest.mark.parametrize(
     "ailment_name, critical_rank",
     [
