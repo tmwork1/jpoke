@@ -2142,6 +2142,27 @@ def test_ふゆう_じめん技が通らない():
     assert defender.hp == defender.max_hp
 
 
+def test_ふゆう_かがくへんかガスで浮遊が無効化される():
+    """ふゆう: かがくへんかガスの効果中は特性が無効化され、地面にいる扱いになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふゆう")],
+        team1=[Pokemon("ドガース", ability_name="かがくへんかガス")],
+    )
+    mon = battle.actives[0]
+    assert not mon.ability.enabled
+    assert not battle.query.is_floating(mon)
+
+
+def test_ふゆう_じゅうりょく中は浮遊が無効化される():
+    """ふゆう: じゅうりょく状態では地面にいる扱いになる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="ふゆう")],
+        team1=[Pokemon("ピカチュウ")],
+        field={"じゅうりょく": 99},
+    )
+    assert not battle.query.is_floating(battle.actives[0])
+
+
 def test_ふゆう_浮いている():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="ふゆう")],
