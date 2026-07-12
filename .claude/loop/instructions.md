@@ -14,6 +14,6 @@
 | replay_fuzz | 単一ブランチ | `.loop/replay_fuzz_state.json` | `.claude/loop/replay_fuzz.md`（リプレイ再現の一致検証） |
 | fuzz_log | 単一ブランチ | `.loop/fuzz_log_state.json` | `.claude/loop/fuzz_log.md`（イベントログの整合性をsub agentにレビューさせる） |
 | flaky | 単一ブランチ | `.loop/flaky_state.json` | `.claude/loop/flaky.md`（全テストの反復実行によるflaky test検出・修正） |
-| api | 単一ブランチ | `.loop/api_state.json` | `.claude/loop/api.md`（開発者/初心者2エージェントによるAPI・examplesレビューと改善の自律ループ） |
+| api | 単一ブランチ | `.loop/api_state.json` | `.claude/loop/api.md`（開発者/初心者/AI開発者の3エージェントによるAPI・examplesレビューと改善の自律ループ） |
 
 フローの指定がない場合は `impl` とみなす。
