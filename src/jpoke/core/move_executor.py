@@ -420,73 +420,87 @@ class MoveExecutor:
             self.battle.last_used_move_name = cast(MoveName, ctx.move.name)
 
         # HPコストの支払い
-        self._events.emit(Event.ON_PAY_HP, ctx)
+        # てっていこうせん等、HPコストの支払いにより使用者が瀕死になった場合でも
+        # 以降のヒット処理（命中判定・ダメージ適用・ON_MOVE_KO等の撃破時効果）は
+        # 通常どおり進行する（docs/spec/moves/てっていこうせん.md「HP消費の順序」
+        # 「HP0でのひんし・全滅判定」を参照）。
+        # そのため、HPコスト支払いの時点で使用者が瀕死になり勝敗が確定しても、
+        # 以降のヒット処理が完了するまではGAME_WON/GAME_LOSTログの記録を遅延させる。
+        # そうしないと、相手へのダメージ適用や撃破時特性の発動より前に
+        # 勝敗確定ログが記録されてしまい、ログ上「勝敗が決した後に戦闘が続いた」
+        # ような不整合が生じる（勝者判定自体はmodify_hp内で即座に行われ、
+        # ここで遅延するのはログ記録タイミングのみ）。
+        self.battle.begin_deferred_winner_log()
+        try:
+            self._events.emit(Event.ON_PAY_HP, ctx)
 
-        # 反射判定
-        if self._events.emit(Event.ON_CHECK_REFLECT, ctx, False):
-            self.battle.add_event_log(
-                ctx.defender, LogCode.MOVE_REFLECTED,
-                payload=MoveActionPayload(move=ctx.move.name)
-            )
-            ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
-
-        # 連続技のヒット回数を決定
-        hit_count = self._resolve_hit_count(ctx)
-        ctx.hit_count = hit_count
-
-        # 開始時点で既にねむり状態か（ねごとで眠ったまま行動する場合等）を記録しておく。
-        # ほうし等でヒット中に新たにねむり状態になった場合のみ中断対象とするため。
-        was_asleep_before_hits = ctx.attacker.has_ailment("ねむり")
-
-        # ヒットごとに命中判定を行うかどうか（いかさまダイス等で上書き可能）
-        check_hit_each_time = self._events.emit(
-            Event.ON_MODIFY_HIT_CHECK_EACH_TIME,
-            ctx,
-            ctx.move.has_flag("check_hit_each_time"),
-        )
-
-        # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
-        for hit_index in range(1, hit_count + 1):
-            ctx.hit_index = hit_index
-
-            # ヒットごとの技の威力を設定
-            ctx.move.base_power = self._resolve_hit_power(ctx.move, hit_index)
-            self.move_power = ctx.move.base_power
-
-            # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
-            need_hit_check = (
-                ctx.move.accuracy is not None
-                and (hit_index == 1 or check_hit_each_time)
-            )
-
-            if need_hit_check and not self._check_hit(ctx):
-                self.move_missed = True
+            # 反射判定
+            if self._events.emit(Event.ON_CHECK_REFLECT, ctx, False):
                 self.battle.add_event_log(
-                    ctx.attacker, LogCode.MOVE_MISSED,
-                    payload=FailureLogPayload(move=ctx.move.name)
+                    ctx.defender, LogCode.MOVE_REFLECTED,
+                    payload=MoveActionPayload(move=ctx.move.name)
                 )
-                self._events.emit(Event.ON_MISS, ctx)
-                break
+                ctx.attacker, ctx.defender = ctx.defender, ctx.attacker
 
-            # 無効化されたら中断
-            self.move_applied = self._events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
-            if not self.move_applied:
-                return
+            # 連続技のヒット回数を決定
+            hit_count = self._resolve_hit_count(ctx)
+            ctx.hit_count = hit_count
 
-            # 技が当たったときの処理を実行
-            self._execute_hit(ctx)
+            # 開始時点で既にねむり状態か（ねごとで眠ったまま行動する場合等）を記録しておく。
+            # ほうし等でヒット中に新たにねむり状態になった場合のみ中断対象とするため。
+            was_asleep_before_hits = ctx.attacker.has_ailment("ねむり")
 
-            # ひんしになったら中断
-            if ctx.defender.fainted or ctx.attacker.fainted:
-                break
+            # ヒットごとに命中判定を行うかどうか（いかさまダイス等で上書き可能）
+            check_hit_each_time = self._events.emit(
+                Event.ON_MODIFY_HIT_CHECK_EACH_TIME,
+                ctx,
+                ctx.move.has_flag("check_hit_each_time"),
+            )
 
-            # 連続攻撃技の途中で新たにねむり状態になった場合（ほうし等）は直ちに中断。
-            # 開始時点で既にねむり状態だった場合（ねごとで眠ったまま行動する場合）は対象外。
-            if not was_asleep_before_hits and ctx.attacker.has_ailment("ねむり"):
-                break
+            # 命中判定が必要な技の場合、ヒットごとに命中判定を行うかどうかを決定
+            for hit_index in range(1, hit_count + 1):
+                ctx.hit_index = hit_index
 
-        # 技実行完了後の処理（状態管理・撤去など）
-        self._events.emit(Event.ON_MOVE_END, ctx)
+                # ヒットごとの技の威力を設定
+                ctx.move.base_power = self._resolve_hit_power(ctx.move, hit_index)
+                self.move_power = ctx.move.base_power
+
+                # 命中判定: 通常技は初回ヒットのみ、ヒットごと判定技は毎ヒットで判定
+                need_hit_check = (
+                    ctx.move.accuracy is not None
+                    and (hit_index == 1 or check_hit_each_time)
+                )
+
+                if need_hit_check and not self._check_hit(ctx):
+                    self.move_missed = True
+                    self.battle.add_event_log(
+                        ctx.attacker, LogCode.MOVE_MISSED,
+                        payload=FailureLogPayload(move=ctx.move.name)
+                    )
+                    self._events.emit(Event.ON_MISS, ctx)
+                    break
+
+                # 無効化されたら中断
+                self.move_applied = self._events.emit(Event.ON_BEFORE_APPLY_MOVE, ctx, True)
+                if not self.move_applied:
+                    return
+
+                # 技が当たったときの処理を実行
+                self._execute_hit(ctx)
+
+                # ひんしになったら中断
+                if ctx.defender.fainted or ctx.attacker.fainted:
+                    break
+
+                # 連続攻撃技の途中で新たにねむり状態になった場合（ほうし等）は直ちに中断。
+                # 開始時点で既にねむり状態だった場合（ねごとで眠ったまま行動する場合）は対象外。
+                if not was_asleep_before_hits and ctx.attacker.has_ailment("ねむり"):
+                    break
+
+            # 技実行完了後の処理（状態管理・撤去など）
+            self._events.emit(Event.ON_MOVE_END, ctx)
+        finally:
+            self.battle.end_deferred_winner_log()
 
     def _execute_hit(self, ctx: AttackContext) -> None:
         """1 ヒット分の処理を実行する。
