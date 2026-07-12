@@ -214,15 +214,19 @@ jpoke API改善タスク: {finding.summary}（id: {finding.id}）
    examples/・docs/api/ を中心に確認すればよい）
 2. 妥当性を再確認する。既に対応済み、または指摘が事実誤認と判明した場合は実装を行わず
    「対応不要: <理由>」とだけ報告して終了する
-3. 必要な実装・修正を行う（src/jpoke/ の公開API変更、examples/ への追加・修正、
-   docs/api/README.md 等の関連ドキュメント更新を含みうる）。src/jpoke/ の公開APIの
-   シグネチャ変更（引数の削除・型変更等）を伴う破壊的変更は、他の並行 loop の進行中
-   ブランチと衝突しうるため、examples/ 側の書き換えだけで済む代替手段が無いか優先的に
-   検討する。実装する場合は CHANGELOG.md への明記を忘れない
-4. handlers/ を変更した場合、python scripts/sort_handlers.py src/jpoke/handlers/<category>.py を実行する
-5. data/ability.py・data/item.py・data/move.py を変更した場合、対応する
+3. 必要な実装・修正を行う（src/jpoke/ の公開API変更、examples/ への追加・修正を含みうる）。
+   src/jpoke/ の公開APIの シグネチャ変更（引数の削除・型変更等）を伴う破壊的変更は、
+   他の並行 loop の進行中ブランチと衝突しうるため、examples/ 側の書き換えだけで済む
+   代替手段が無いか優先的に検討する。実装する場合は CHANGELOG.md への明記を忘れない
+4. **公開APIを新設・変更した場合（新規メソッド・クラス、シグネチャ変更、デフォルト値変更、
+   docstring追加を含む）は、`docs/api/README.md` を同じコミットで必ず更新する**（見取り図
+   として掲載範囲内のクラス（`Battle`/`Player`/`Pokemon` 等）が対象。掲載対象外の内部APIのみ
+   の変更なら不要）。過去に手動レビューでこの追記漏れが実際に発生した既知の見落としポイント
+   のため、examples/ の更新だけで終わらせないこと
+5. handlers/ を変更した場合、python scripts/sort_handlers.py src/jpoke/handlers/<category>.py を実行する
+6. data/ability.py・data/item.py・data/move.py を変更した場合、対応する
    scripts/sort_data/sort_*.py を実行する
-6. テストは書かない（review-test エージェントが担当）
+7. テストは書かない（review-test エージェントが担当）
 ```
 
 - **「対応不要」と報告された場合**: 何も変更されていないので diff は無い。`dismissed` に
@@ -250,17 +254,21 @@ impl エージェントが jpoke API改善指摘（第{round}ラウンド、{fin
 
 手順:
 1. 修正内容を対象ファイルで確認し、問題があれば修正する
-2. 必要なテストを追加・修正する（tests/test_utils.py のヘルパーを再利用する）
-3. python scripts/sort_tests.py <対象ファイル> でソートする（テストファイルを変更した場合）
-4. python scripts/generate_test_list.py でテスト一覧を更新する
-5. examples/ 配下のファイルを変更・追加した場合、そのファイルを個別実行して出力を確認する。
+2. **impl の変更が公開API（`Battle`/`Player`/`Pokemon` 等、`docs/api/README.md` の掲載範囲内の
+   クラス）の新設・シグネチャ変更・デフォルト値変更に該当するのに `docs/api/README.md` が
+   未更新の場合、ここで追記・修正する**（impl が見落とした場合の最終チェックとして必ず確認する。
+   過去に手動レビューでこの追記漏れが実際に発生している既知の見落としポイント）
+3. 必要なテストを追加・修正する（tests/test_utils.py のヘルパーを再利用する）
+4. python scripts/sort_tests.py <対象ファイル> でソートする（テストファイルを変更した場合）
+5. python scripts/generate_test_list.py でテスト一覧を更新する
+6. examples/ 配下のファイルを変更・追加した場合、そのファイルを個別実行して出力を確認する。
    tests/test_examples_smoke.py が存在すれば併せて実行する
-6. python -m pytest tests/ -v を実行し、全テストが通ることを確認する。今回の修正と無関係な
+7. python -m pytest tests/ -v を実行し、全テストが通ることを確認する。今回の修正と無関係な
    既存テストが flaky と判明した場合は .claude/loop/_common.md §共通13 に従いその場で修正する
-7. docs/plan/examples_api_feedback.md に対応内容を追記する。第{round}ラウンドの見出し
+8. docs/plan/examples_api_feedback.md に対応内容を追記する。第{round}ラウンドの見出し
    （`## 第{round}ラウンド（apiループ）`）がまだ無ければ新規作成し、既存ラウンドと同じ形式
    （`- [x] <指摘要約> → 対応内容 (日付): <実施内容>`）で1項目を追記する
-8. 変更をすべてコミットする（このブランチ loop/api 上で行う）:
+9. 変更をすべてコミットする（このブランチ loop/api 上で行う）:
    git add -A
    git commit -m "api: {finding.summary}"
 ```
