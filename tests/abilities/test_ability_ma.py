@@ -211,6 +211,21 @@ def test_マジックガード_いたみわけを受ける():
     assert defender.hp == expected_hp
 
 
+def test_マジックガード_こんらんの自傷ダメージは防げない():
+    """マジックガード: こんらん状態の自傷ダメージ(self_attack)は無効化されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    # 自傷を強制
+    battle.test_option.trigger_volatile = True
+    hp_before = attacker.hp
+    t.run_move(battle, 0)
+    assert attacker.hp < hp_before
+
+
 def test_マジックガード_すなあらしダメージを受けない():
     battle = t.start_battle(
         team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
@@ -231,6 +246,42 @@ def test_マジックガード_どくダメージを受けない():
     battle.ailment_manager.apply(mon, "どく")
     t.end_turn(battle)
     assert mon.hp == mon.max_hp
+
+
+def test_マジックガード_はらだいこの自己HP消費は防げない():
+    """マジックガード: はらだいこ等の自己HP消費(self_cost)は無効化されない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード", move_names=["はらだいこ"])],
+        team1=[Pokemon("カビゴン")],
+    )
+    attacker = battle.actives[0]
+    max_hp = attacker.max_hp
+    t.run_move(battle, 0)
+    assert attacker.hp == max_hp - (max_hp // 2)
+
+
+def test_マジックガード_やけどダメージを受けない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マジックガード")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    battle.ailment_manager.apply(mon, "やけど")
+    t.end_turn(battle)
+    assert mon.hp == mon.max_hp
+
+
+def test_マジックガード_いのちのたまの反動ダメージを受けない():
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "ピカチュウ", ability_name="マジックガード", item_name="いのちのたま",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    attacker = battle.actives[0]
+    t.run_move(battle, 0)
+    assert attacker.hp == attacker.max_hp
 
 
 def test_マジックガード_わるあがきの反動ダメージは防げない():
