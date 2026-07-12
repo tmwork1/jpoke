@@ -35,7 +35,6 @@ def main() -> None:
     max_turns = 30
     while not battle.finished and battle.turn < max_turns:
         battle.step()
-        # このターンのログを表示
         battle.print_logs()
         print("-" * 50)
 
@@ -64,24 +63,22 @@ def main() -> None:
         print("このseedでは急所は発生しなかった")
 
     # ポケモンごとに持てる特性は POKEDEX[name].abilities で確認できる
-    # （通常特性1・2・隠れ特性の順）。ability_name を省略すると特性は空文字のままで、
-    # 自動的に先頭の特性が設定されるわけではない点に注意
+    # （通常特性1・2・隠れ特性の順）。ability_name を省略しても特性は自動設定されず、
+    # 空文字のままになる点に注意
     print("-" * 50)
     print(f"ライチュウが持てる特性: {POKEDEX['ライチュウ'].abilities}")
 
-    # 特性の効果を確認する: 「ひらいしん」（でんきタイプの技を受けると無効化し、
-    # 自分のとくこうを1段階上げる）を例に、ピカチュウの「かみなり」がどう扱われるかを
-    # 1ターンだけ確認する。RandomPlayer同士のメインバトルとは別に、決定論的な
-    # Player同士・素早さを調整した専用のミニバトルを組んで、毎回同じ展開になるようにする
+    # 「ひらいしん」（でんきタイプの技を無効化し、とくこうを1段階上げる）の効果を
+    # 決定論的な1ターンのミニバトルで確認する
     ability_player1 = Player("Team A")
     attacker = ability_player1.add_pokemon("ピカチュウ", nature="ようき", move_names=["かみなり"])
-    attacker.set_evs([0, 0, 0, 0, 0, 32])  # すばやさ努力値を最大まで振り、ライチュウより先に行動させる
+    attacker.set_evs([0, 0, 0, 0, 0, 32])  # ライチュウより先に行動させる
 
     ability_player2 = Player("Team B")
     defender = ability_player2.add_pokemon(
         "ライチュウ", ability_name="ひらいしん", nature="ずぶとい", move_names=["じしん"],
     )
-    defender.set_ivs([31, 31, 31, 31, 31, 0])  # すばやさ個体値を下げ、ピカチュウより後に行動させる
+    defender.set_ivs([31, 31, 31, 31, 31, 0])  # ピカチュウより後に行動させる
 
     ability_battle = Battle(ability_player1, ability_player2, seed=1)
     ability_battle.start()

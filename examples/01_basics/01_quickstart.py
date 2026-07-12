@@ -19,19 +19,16 @@ def main() -> None:
     # seed: 乱数シードを固定し、命中判定・急所判定などを再現可能にする
     battle = Battle(player1, player2, seed=1)
 
-    # 選出と初期繰り出しを行い、対戦を開始する
     battle.start()
 
     # 決着がつくかターン上限に達するまで手動でstep()する
     # （バトルを最後まで自動的に進めたいだけなら battle.play_out() も使える）
     while not battle.finished and battle.turn < 100:
-        # commands=None の場合は各 Player.choose_command() が使われる
-        # （デフォルト実装は利用可能な最初のコマンドを選ぶだけの単純なプレイヤー）
         battle.step()
 
     winner = battle.winner
     print(f"勝者: {winner.username if winner else '引き分け（ターン上限）'}")
-    battle.print_logs("all")  # 1ターン目から現在ターンまでの全ログを表示
+    battle.print_logs("all")
 
     # 試してみよう: player1 の技を "ひのこ" に変えると、決着までのターン数がどう変わるか観察できる
 

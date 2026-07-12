@@ -188,7 +188,7 @@ def rollout_value(battle: Battle,
     fork = battle.copy(reseed=True)
     fork.step({p0: cmd0, p1: cmd1})
     while fork.judge_winner() is None and fork.turn <= max_turns:
-        fork.step()  # 以降は両者ともchoose_command()（現在の戦略テーブル）に従う
+        fork.step()
     return result_point(fork, p0, p1)
 
 

@@ -12,18 +12,16 @@ from jpoke import Player
 def build_player(username: str, item_name: str) -> Player:
     """アイテムだけが異なるガブリアスを1体持つプレイヤーを作る。"""
     player = Player(username)
-    # add_pokemon() は追加したPokemonインスタンスを返すので、team[0]を辿らなくても
-    # そのまま追加設定（ここではこうげき努力値を最大まで振る）に使える
+    # add_pokemon() は追加したPokemonインスタンスを返すので、そのまま追加設定に使える
     mon = player.add_pokemon("ガブリアス", item_name=item_name, move_names=["ドラゴンクロー"])
     mon.set_evs([0, 32, 0, 0, 0, 0])
     return player
 
 
 def build_opponent() -> Player:
-    # ドラパルト（素早さ実数値162）はガブリアス（同122）より速いため、
-    # こだわりハチマキ（火力+50%、素早さ変化なし）では後攻になり先制攻撃を受けるが、
-    # こだわりスカーフ（素早さ+50%、実数値183）なら先攻を取れる
-    # ——という素早さ逆転がアイテムで起きる組み合わせにして、構成差が勝率に出るようにする
+    # ドラパルト（素早さ実数値162）はガブリアス（同122）より速いため、こだわりハチマキ
+    # （火力+50%、素早さ変化なし）では後攻になるが、こだわりスカーフ（素早さ+50%）なら
+    # 先攻を取れる——というアイテムによる素早さ逆転で構成差が勝率に出るようにする
     opponent = Player("Opponent")
     opponent.add_pokemon("ドラパルト", move_names=["げきりん"])
     return opponent
