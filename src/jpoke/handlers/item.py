@@ -427,6 +427,9 @@ def _boost_stat_on_type_hit(battle: Battle,
                             stats: dict[Stat, int]) -> HandlerReturn:
     mon = ctx.defender
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if ctx.move.type == type_:
         changes = battle.modify_stats(mon, stats)
         if changes:  # ランク上限などで不発の場合は消費しない
@@ -1122,6 +1125,9 @@ def じゃくてんほけん_boost_on_super_effective(battle: Battle, ctx: Attac
     """
     mon = ctx.defender
     assert mon is not None
+    # ひんし(HP0)になったときは発動しない
+    if mon.fainted:
+        return HandlerReturn(value=value)
     if ctx.move.has_flag("fixed_damage"):
         return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
