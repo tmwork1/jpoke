@@ -3583,13 +3583,17 @@ def ふしぎなまもり_block_non_effective(battle: Battle, ctx: AttackContext
 
 
 def ふとうのけん_boost_A(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ふとうのけん特性: 初登場時にこうげきが1段階上がる（バトル中1回）。"""
+    """ふとうのけん特性: 初登場時にこうげきが1段階上がる（バトル中1回）。
+
+    すでにこうげきが最大まで上がっていて不発だった場合でも、その戦闘では
+    再度発動できなくなる（発動済みフラグは効果の成否に関わらず立てる）。
+    """
     mon = ctx.source
     if mon is None:
         return HandlerReturn(value=value)
+    battle.add_ability_disabled_reason(mon, "consumed")
     if battle.modify_stats(mon, {"atk": +1}, source=mon):
         _announce_ability_triggered(battle, mon)
-        battle.add_ability_disabled_reason(mon, "consumed")
     return HandlerReturn(value=value)
 
 
