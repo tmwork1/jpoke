@@ -14,7 +14,6 @@ from jpoke.players import RandomPlayer
 from jpoke.players.tree_search_player import TreeSearchPlayer
 
 
-# TODO: TreeSearchPlayer という名前は適切か。MinimaxPlayer の方がわかりやすいかも。
 class KOFocusedPlayer(TreeSearchPlayer):
     """相手を瀕死にできる手を優先する簡易AI（evaluate() の拡張例）。"""
 
