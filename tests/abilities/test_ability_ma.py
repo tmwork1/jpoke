@@ -19,6 +19,31 @@ MULTI_TYPE_PLATE_CASES = [
 ]
 
 
+def test_まけんき_こうげきが最大のときはそれ以上上がらない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="まけんき")],
+        team1=[Pokemon("ピカチュウ", ability_name="いかく")],
+    )
+    mon = battle.actives[0]
+    mon.boosts["atk"] = 6
+    battle.modify_stats(mon, {"def": -1}, source=battle.actives[1])
+    assert mon.boosts["atk"] == 6
+
+
+def test_まけんき_複数能力低下技で下がった数だけ発動する():
+    # くすぐるはこうげき・ぼうぎょを1段階ずつ下げる技のため、まけんきが2回発動してこうげきが4段階分上昇する。
+    # ただし上昇対象のこうげき自身もくすぐるで1段階下がっているため、差し引きの最終値は+3となる。
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="まけんき")],
+        team1=[Pokemon("ピカチュウ", move_names=["くすぐる"])],
+        accuracy=100,
+    )
+    t.run_move(battle, 1)
+    mon = battle.actives[0]
+    assert mon.boosts["atk"] == 3
+    assert mon.boosts["def"] == -1
+
+
 def test_マイティチェンジ_ナイーブで交代するとマイティへ変化する():
     battle = t.start_battle(
         team0=[Pokemon("イルカマン(ナイーブ)", ability_name="マイティチェンジ"), Pokemon("ピカチュウ")],
