@@ -409,6 +409,20 @@ def test_マルチスケイル_かたやぶりで無効():
     assert 4096 == battle.damage_calculator.damage_modifier
 
 
+def test_マルチスケイル_こんらんの自傷ダメージは半減しない():
+    """マルチスケイル: HPが満タンでも、こんらんの自傷ダメージ（内部技"_こんらん"）は半減しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="マルチスケイル")],
+        team1=[Pokemon("ピカチュウ")],
+        volatile0={"こんらん": 2},
+    )
+    attacker = battle.actives[0]
+    battle.test_option.trigger_volatile = True
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.damage_modifier == 4096
+    assert attacker.hp < attacker.max_hp
+
+
 @pytest.mark.parametrize("plate_item_name, expected_type", MULTI_TYPE_PLATE_CASES)
 def test_マルチタイプ_プレートで対応タイプになる(plate_item_name: str, expected_type: str):
     battle = t.start_battle(
