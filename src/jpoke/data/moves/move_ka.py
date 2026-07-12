@@ -467,7 +467,10 @@ MOVES_KA: dict[MoveName, MoveData] = {
         pp=16,
         power=65,
         accuracy=90,
-        flags={"contact", "slash"},
+        # ステルスロック設置自体に確率判定は無いが、ちからずく対象技として
+        # 明記されている技のため secondary_effect フラグを設定する
+        # （docs/spec/abilities/ちからずく.md参照）。
+        flags={"contact", "slash", "secondary_effect"},
         handlers={
             Event.ON_HIT: h.MoveHandler(
                 ha.がんせきアックス_set_stealth_rock,

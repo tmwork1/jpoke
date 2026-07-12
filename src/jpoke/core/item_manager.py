@@ -21,6 +21,11 @@ class ItemManager:
 
     def __init__(self, battle: Battle):
         self.battle = battle
+        self.suppress_berry_consumed_event: bool = False
+        """True の間は consume_item が Event.ON_BERRY_CONSUMED を発火しない。
+        はんすうが自分の再発動できのみを消費する際、その消費自体が新たな
+        はんすうカウントの起点にならないようにするための一時停止フラグ。
+        """
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -239,10 +244,17 @@ class ItemManager:
         self._change_item(target, name)
         return True
 
-    def swap_items(self, *, ignore_sticky_hold: bool = False) -> bool:
+    def swap_items(self,
+                  *,
+                  source: Pokemon | None = None,
+                  ignore_sticky_hold: bool = False) -> bool:
         """2体のアイテムを入れ替える。
 
         Args:
+            source: 交換の発生源となるポケモン（トリック・すりかえ・どろぼう等の
+                使用者）。ねんちゃくを持つポケモン自身がこの交換を起こした場合
+                （= source が対象自身と同一の場合）は、ねんちゃくの効果は
+                発動しない（自分から道具を交換するときは防がれない）。
             ignore_sticky_hold: True の場合、ねんちゃくによる奪取阻止のみを無視する
                 （むしくい・ついばむが対象をひんしにさせた場合の第五世代以降の仕様）。
 
@@ -259,7 +271,8 @@ class ItemManager:
         # アイテムの変更が禁止されている場合は失敗
         if not all(
             self.can_change_item(
-                target=mon, ignore_sticky_hold=ignore_sticky_hold, is_exchange=True
+                target=mon, source=source,
+                ignore_sticky_hold=ignore_sticky_hold, is_exchange=True,
             )
             for mon in mons
         ):
@@ -294,7 +307,7 @@ class ItemManager:
             or source.has_item()
         ):
             return False
-        return self.swap_items(ignore_sticky_hold=ignore_sticky_hold)
+        return self.swap_items(source=source, ignore_sticky_hold=ignore_sticky_hold)
 
     def consume_item(self, mon: Pokemon, *, track_loss: bool = True) -> bool:
         """ポケモンの道具を消費する。
@@ -312,6 +325,11 @@ class ItemManager:
         """
         if mon.item.is_berry():
             mon.ate_berry = True
+            if not self.suppress_berry_consumed_event:
+                self._events.emit(
+                    Event.ON_BERRY_CONSUMED,
+                    EventContext(source=mon, item_name=mon.item.base_name)
+                )
         return self.remove_item(mon, source=mon, track_loss=track_loss)
 
     def force_trigger_berry(self, mon: Pokemon, *, track_loss: bool = True) -> None:

@@ -110,7 +110,13 @@ def apply_atk_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
     「使用者自身」の攻撃側スロット（物理技なら攻撃、特殊技なら特攻）に対してのみ適用される。
     どの実数値が計算に使われているかは影響しない
     （docs/spec/abilities/クォークチャージ.md 「特性の効果はランク補正上昇とは異なる」の項を参照）。
+
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない
+    （同項「特性で攻撃/防御が上がってもこんらんのダメージには影響しない」を参照）。
     """
+    if ctx.move.name == "_こんらん":
+        return HandlerReturn(value=value)
+
     attacker = ctx.attacker
     stat = "atk" if ctx.move.category == "physical" else "spa"
 
@@ -120,8 +126,15 @@ def apply_atk_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
 
 
 def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。"""
+    """防御側補正時: 強化対象能力と参照能力が一致すれば 1.3 倍補正を適用する。
+
+    こんらんの自傷ダメージ（"_こんらん"）には影響しない
+    （docs/spec/abilities/クォークチャージ.md 「特性で攻撃/防御が上がってもこんらんの
+    ダメージには影響しない」を参照）。
+    """
     if ctx.attacker is None or ctx.move is None or ctx.defender is None:
+        return HandlerReturn(value=value)
+    if ctx.move.name == "_こんらん":
         return HandlerReturn(value=value)
 
     stat = "def" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "spd"

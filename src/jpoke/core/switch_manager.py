@@ -66,6 +66,10 @@ class SwitchManager:
         """
         state = self.battle.player_states[player]
 
+        # 瀕死交代（死に出し）かどうかを、割り込みフラグを破棄する前に記録する
+        # （はりこみ: 死に出しで出てきた相手には発動しないため）
+        fainted_switch = state.interrupt == Interrupt.FAINTED
+
         # 割り込みフラグを破棄
         state.interrupt = Interrupt.NONE
 
@@ -79,6 +83,7 @@ class SwitchManager:
 
         # 入場
         self._switch_in(state, new)
+        state.switched_in_by_faint = fainted_switch
 
         # バトンタッチのランク・volatile を交代先に適用する
         if baton_data:

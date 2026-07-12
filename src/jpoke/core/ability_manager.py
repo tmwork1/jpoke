@@ -84,10 +84,12 @@ class AbilityManager:
         ctx = EventContext(source=mon)
         is_active = self.battle.is_active(mon)
 
-        # 対象のポケモンが場に出ている場合は、古い特性のハンドラを解除し、イベントを発火する
+        # 対象のポケモンが場に出ている場合は、古い特性のハンドラが登録された
+        # 状態でイベントを発火してから解除する（かがくへんかガスの解除処理など、
+        # 無効化イベント自身のハンドラで反応する処理を確実に発火させるため）
         if is_active:
-            self._unregister_ability_handlers(mon)
             self._events.emit(Event.ON_ABILITY_DISABLED, ctx)
+            self._unregister_ability_handlers(mon)
 
         # 新しい特性に更新して公開する
         mon.ability = Ability(ability)

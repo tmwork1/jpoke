@@ -133,13 +133,19 @@ def _modify_super_effective_damage(battle: Battle,
     """
     if ctx.move.type != type_:
         return HandlerReturn(value=value)
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(ctx.defender):
+        return HandlerReturn(value=value)
     def_type_modifier = battle.damage_calculator.calc_def_type_modifier(ctx)
     if super_effective_only:
         triggers = def_type_modifier > 4096
     else:
         triggers = def_type_modifier > 0
     if triggers:
-        value = int(value * modifier)
+        # じゅくせい所持時は被ダメージが1/4になる。modifier(1/2)を2回掛けるのではなく、
+        # 1回の乗算で1/4を算出する（一次情報: 端数処理が異なるため）。
+        applied_modifier = modifier * modifier if is_ripen(ctx.defender) else modifier
+        value = int(value * applied_modifier)
         _announce_and_consume_item(battle, ctx.defender)
     return HandlerReturn(value=value)
 
@@ -179,6 +185,37 @@ def _apply_contact_item_chip(battle: Battle,
         return bool(v)
     return False
 
+def _gluttony_denominator(mon: Pokemon, denominator: int) -> int:
+    """くいしんぼう: 残りHP1/4以下(denominator=4)で発動するきのみの発動条件を
+    残りHP1/2以下(denominator=2)に緩和する。
+
+    もとから最大HPの1/2以下で発動するきのみ（オボンのみ等、denominator=2）には
+    効果が無いため、denominator=4のときのみ変換する。
+    """
+    if denominator == 4 and mon.ability.name == "くいしんぼう":
+        return 2
+    return denominator
+
+def is_ripen(mon: Pokemon) -> bool:
+    """じゅくせい: 効果を受け取る本人（きのみを消費するポケモン）の特性を判定する。"""
+    return mon.ability.name == "じゅくせい"
+
+def berry_heal_amount(mon: Pokemon, *, r: float | None = None, v: int | None = None) -> int:
+    """じゅくせい: きのみによる回復量を計算する。
+
+    最大HP割合(r)指定の場合は端数を切り捨てた後の値をじゅくせい所持時に2倍にする
+    （切り捨て前の割合を2倍にしてから丸めるわけではない）。固定値(v)指定の場合は
+    そのまま2倍にする。
+    """
+    if r is not None:
+        amount = max(1, int(mon.max_hp * r))
+    else:
+        assert v is not None
+        amount = v
+    if is_ripen(mon):
+        amount *= 2
+    return amount
+
 def _heal_berry(battle: Battle,
                 ctx: EventContext,
                 value: Any,
@@ -189,6 +226,7 @@ def _heal_berry(battle: Battle,
                 confuse_natures: tuple[str, ...] | None = None) -> HandlerReturn:
     mon = ctx.target
     assert mon is not None
+    denominator = _gluttony_denominator(mon, denominator)
     # value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）
     forced = value >= mon.max_hp
     if not forced:
@@ -199,10 +237,7 @@ def _heal_berry(battle: Battle,
         if battle.query.is_nervous(mon):
             return HandlerReturn(value=value)
     if forced or mon.hp * denominator <= mon.max_hp:
-        if heal_r is not None:
-            healed = battle.modify_hp(mon, r=heal_r)
-        else:
-            healed = battle.modify_hp(mon, v=heal_v)
+        healed = battle.modify_hp(mon, v=berry_heal_amount(mon, r=heal_r, v=heal_v))
         # かいふくふうじ等で回復が完全に無効化された場合は消費しない
         if healed:
             _announce_and_consume_item(battle, mon)
@@ -261,17 +296,24 @@ def _boost_on_quarter_hp(battle: Battle,
     """1/4HP以下になった瞬間に能力を上昇させる共通処理。
 
     value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     forced = value >= mon.max_hp
+    denominator = _gluttony_denominator(mon, 4)
     if not forced:
         # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
         if ctx.hp_change_reason == "self_attack":
             return HandlerReturn(value=value)
-        if mon.hp * 4 > mon.max_hp:
+        # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+        if battle.query.is_nervous(mon):
             return HandlerReturn(value=value)
-    if battle.modify_stats(mon, {stat: amount}):  # すでにランクが最大の場合は不発・消費しない
+        if mon.hp * denominator > mon.max_hp:
+            return HandlerReturn(value=value)
+    # じゅくせい所持時はランク上昇量が2倍になる
+    boost = amount * 2 if is_ripen(mon) else amount
+    if battle.modify_stats(mon, {stat: boost}):  # すでにランクが最大の場合は不発・消費しない
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -295,8 +337,13 @@ def _boost_on_attack_category(battle: Battle,
         and ctx.move.has_flag("secondary_effect")
     ):
         return HandlerReturn(value=value)
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(mon):
+        return HandlerReturn(value=value)
     if ctx.move.category == category:
-        if battle.modify_stats(mon, {stat: amount}, source=mon):
+        # じゅくせい所持時はランク上昇量が2倍になる
+        boost = amount * 2 if is_ripen(mon) else amount
+        if battle.modify_stats(mon, {stat: boost}, source=mon):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -311,8 +358,14 @@ def _retaliate_on_category(battle: Battle,
     """
     mon = ctx.defender
     assert mon is not None
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(mon):
+        return HandlerReturn(value=value)
     if ctx.move.category == category:
-        if battle.modify_hp(ctx.attacker, r=-1/8):
+        # じゅくせい所持時は最大HPの1/4ダメージになる。1/8を2倍にするのではなく、
+        # 1回の乗算で1/4を算出する（一次情報: 端数処理が異なるため）。
+        r = -1/4 if is_ripen(mon) else -1/8
+        if battle.modify_hp(ctx.attacker, r=r):
             # ダメおし判定用: ジャポのみ/レンブのみによるダメージも「そのターンに
             # 攻撃を受けた」扱いにする（一次情報: docs/wiki/moves/ダメおし.html 技の仕様節）。
             ctx.attacker.hits_taken += 1
@@ -466,8 +519,14 @@ def イバンのみ_boost_priority(battle: Battle, ctx: AttackContext, value: in
 
     相手のきんちょうかん・じんばいったいの影響下では消費・発動しない
     （フラグは持ち越され、その効果が無くなったターンで発動する）。
+    所有者の特性がきんしのちからで変化技を選んだ場合も発動しない。
     """
     mon = ctx.attacker
+    if (
+        mon.ability.name == "きんしのちから"
+        and not ctx.move.is_attack
+    ):
+        return HandlerReturn(value=value)
     if mon.item.count == 1 and not battle.query.is_nervous(mon):
         battle.item_manager.consume_item(mon)
         return HandlerReturn(value=value + 1)
@@ -478,14 +537,16 @@ def イバンのみ_set_priority_flag(battle: Battle, ctx: EventContext, value: 
     """イバンのみ: HPが1/4以下に下がった瞬間に先制フラグを立てる。
 
     こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
+    denominator = _gluttony_denominator(mon, 4)
     hp_after = mon.hp
     hp_before = hp_after + value
-    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+    if hp_before * denominator > mon.max_hp and hp_after * denominator <= mon.max_hp:
         mon.item.count = 1
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)
@@ -769,7 +830,11 @@ def くっつきバリ_damage_on_turn_end(battle: Battle, ctx: EventContext, val
 
 
 def くっつきバリ_transfer_on_contact(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
-    """くっつきバリ: 接触攻撃者がアイテムを持っていない場合、攻撃者に転送する。"""
+    """くっつきバリ: 接触攻撃者がアイテムを持っていない場合、攻撃者に転送する。
+
+    ねんちゃくを持っていても発動条件を満たせば攻撃側に渡る仕様のため、
+    source=mon（自分自身）を渡してねんちゃくによる阻止を回避する。
+    """
     mon = ctx.defender
     assert mon is not None
     if (
@@ -777,8 +842,8 @@ def くっつきバリ_transfer_on_contact(battle: Battle, ctx: AttackContext, v
         not ctx.attacker.has_item()
     ):
         _announce_item_triggered(battle, mon)
-        battle.item_manager.remove_item(mon)
-        battle.item_manager.gain_item(ctx.attacker, "くっつきバリ")
+        if battle.item_manager.remove_item(mon, source=mon):
+            battle.item_manager.gain_item(ctx.attacker, "くっつきバリ")
     return HandlerReturn(value=value)
 
 
@@ -923,10 +988,12 @@ def サンのみ_apply_focus_energy(battle: Battle, ctx: EventContext, value: An
     """サンのみ: HP1/4以下できゅうしょアップ状態になる。
 
     value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
-    if mon.hp * 4 <= mon.max_hp or value >= mon.max_hp:
+    denominator = _gluttony_denominator(mon, 4)
+    if mon.hp * denominator <= mon.max_hp or value >= mon.max_hp:
         if battle.volatile_manager.apply(mon, "きゅうしょアップ", count=2):
             _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
@@ -1034,15 +1101,17 @@ def スターのみ_random_boost(battle: Battle, ctx: EventContext, value: Any) 
     うちランダムな1つ（ランクが最大でないもの）+2。
 
     value >= mon.max_hp はほおばる等による強制発動（HP閾値チェックを無視する）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     forced = value >= mon.max_hp
+    denominator = _gluttony_denominator(mon, 4)
     if not forced:
         # こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）
         if ctx.hp_change_reason == "self_attack":
             return HandlerReturn(value=value)
-        if mon.hp * 4 > mon.max_hp:
+        if mon.hp * denominator > mon.max_hp:
             return HandlerReturn(value=value)
     # すでにランクが最大の能力は選ばれない（5箇所全て最大なら発動しない）
     candidates: list[Stat] = [s for s in ("atk", "def", "spa", "spd", "spe") if mon.boosts[s] < 6]
@@ -1306,8 +1375,11 @@ def ナゾのみ_heal_on_super_effective(battle: Battle, ctx: AttackContext, val
     assert mon is not None
     if ctx.move.has_flag("fixed_damage"):
         return HandlerReturn(value=value)
+    # 相手のきんちょうかん・じんばいったいの影響下では発動しない
+    if battle.query.is_nervous(mon):
+        return HandlerReturn(value=value)
     if battle.query.is_super_effective(ctx):
-        battle.modify_hp(mon, r=1/4)
+        battle.modify_hp(mon, v=berry_heal_amount(mon, r=1/4))
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1474,11 +1546,16 @@ def ひかりのねんど_resolve_field_count(_battle: Battle, _ctx: EventContex
     return _resolve_field_count(value, "リフレクター", "ひかりのかべ", "オーロラベール", additonal_count=3)
 
 
+def himeri_pp_restore_cap(mon: Pokemon) -> int:
+    """ヒメリのみ: 回復するPP量（じゅくせい所持時は2倍の20）。"""
+    return 20 if is_ripen(mon) else 10
+
+
 def ヒメリのみ_restore_pp(battle: Battle, ctx: AttackContext, value: Any) -> HandlerReturn:
     """ヒメリのみ: 使用した技のPPが0になったときPPを回復する。"""
     mon = ctx.attacker
     if ctx.move.pp == 0:
-        ctx.move.pp = min(10, ctx.move.data.pp)
+        ctx.move.pp = min(himeri_pp_restore_cap(mon), ctx.move.data.pp)
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1489,7 +1566,7 @@ def ヒメリのみ_restore_pp_on_item_enabled(battle: Battle, ctx: EventContext
     assert mon is not None
     move = next((m for m in mon.moves if m.pp == 0), None)
     if move is not None:
-        move.pp = min(10, move.data.pp)
+        move.pp = min(himeri_pp_restore_cap(mon), move.data.pp)
         _announce_and_consume_item(battle, mon)
     return HandlerReturn(value=value)
 
@@ -1596,22 +1673,25 @@ def ブーストエナジー_prevent_item_change(battle: Battle, ctx: EventConte
     - 保持者自身がこだいかっせい/クォークチャージ持ちの場合、
       トリック・すりかえ・はたきおとす・どろぼう等による外部からの授受を防ぐ
       （渡す/奪われる双方）。ただし、ブースト発動に伴う自己消費（source が自分自身）は防がない。
+      特性がかがくへんかガス等で無効化されているときでも、この効果は無効にならないため
+      base_name（無効化状態に関わらない元の特性名）で判定する。
     - 保持者がそうでない場合でも、トリック・すりかえ・どろぼう等の交換相手
-      （source未指定で判定される場合の相手側）がこだいかっせい/クォークチャージ持ちなら、
-      その相手にブーストエナジーが渡ることを防ぐ。
-      はたきおとす等source指定済みの単純消失処理では相手側の判定を行わない。
+      （ctx.is_exchange が立つ swap_items 経由の判定における相手側）が
+      こだいかっせい/クォークチャージ持ちなら、その相手にブーストエナジーが
+      渡ることを防ぐ。
+      はたきおとす等 is_exchange を立てない単純消失処理では相手側の判定を行わない。
     """
     mon = ctx.target
     if mon is None:
         return HandlerReturn(value=value)
 
     paradox_abilities = ("こだいかっせい", "クォークチャージ")
-    if mon.ability.name in paradox_abilities and ctx.source is not mon:
+    if mon.ability.base_name in paradox_abilities and ctx.source is not mon:
         return HandlerReturn(value=False, stop_event=True)
 
-    if ctx.source is None:
+    if ctx.is_exchange:
         foe = battle.foe(mon)
-        if foe is not None and foe.ability.name in paradox_abilities:
+        if foe is not None and foe.ability.base_name in paradox_abilities:
             return HandlerReturn(value=False, stop_event=True)
 
     return HandlerReturn(value=value)
@@ -1709,14 +1789,16 @@ def ミクルのみ_set_accuracy_flag(battle: Battle, ctx: EventContext, value: 
     """ミクルのみ: HP1/4以下に下がった瞬間に命中率アップフラグを立てる。
 
     こんらんの自傷ダメージでは発動しない（第五世代以降の仕様）。
+    くいしんぼう所持時は1/2HP以下に緩和される。
     """
     mon = ctx.target
     assert mon is not None
     if ctx.hp_change_reason == "self_attack":
         return HandlerReturn(value=value)
+    denominator = _gluttony_denominator(mon, 4)
     hp_after = mon.hp
     hp_before = hp_after + value
-    if hp_before * 4 > mon.max_hp and hp_after * 4 <= mon.max_hp:
+    if hp_before * denominator > mon.max_hp and hp_after * denominator <= mon.max_hp:
         mon.item.count = 1
         _announce_item_triggered(battle, mon)
     return HandlerReturn(value=value)

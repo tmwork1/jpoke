@@ -357,11 +357,14 @@ class MoveExecutor:
         くさタイプの防御側に powder ラベルを持つ技を使うと無効化される。
         特定の技ではなく powder フラグから導出される汎用ルールのため、
         個別技へのハンドラ登録ではなく意図的にコア側で判定する。
+        特性そうしょくを持つ場合は、くさタイプによる無効化よりそうしょくの
+        効果（Event.ON_BEFORE_APPLY_MOVE）が優先されるため、ここでは無効化しない。
         """
         assert ctx.defender is not None
         if (
             ctx.move.has_flag("powder")
             and ctx.defender.has_type("くさ")
+            and ctx.defender.ability.name != "そうしょく"
         ):
             self.battle.add_event_log(
                 ctx.attacker,
@@ -612,3 +615,5 @@ class MoveExecutor:
             LogCode.PP_CONSUMED,
             payload=MoveActionPayload(move=move.name, value=v)
         )
+        # PP消費後のフック（ヒメリのみ: PPが0になったとき回復する）
+        self._events.emit(Event.ON_PP_CONSUMED, ctx, move.pp)
