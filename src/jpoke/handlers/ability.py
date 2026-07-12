@@ -3713,8 +3713,20 @@ def プレッシャー_announce(battle: Battle, ctx: EventContext, value: Any) -
     return HandlerReturn(value=value)
 
 
-def プレッシャー_extra_pp(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """プレッシャー特性: こちらを対象にした技のPPを1多く消費させる。"""
+def プレッシャー_extra_pp(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
+    """プレッシャー特性: こちらを対象にした技のPPを1多く消費させる。
+
+    自分を対象にする技（つるぎのまい等）は基本的にプレッシャーの影響を受けない。
+    ただし以下は例外:
+    - ふういん: 自分を対象にする技だが、相手のプレッシャーの影響を受ける。
+    - のろい: ゴーストタイプが使う"呪い"のときのみ影響を受け、
+      それ以外のタイプが使う"鈍い"は影響を受けない（どちらも target="foe"）。
+    """
+    move_name = ctx.move.name
+    if move_name == "のろい" and not ctx.attacker.has_type("ゴースト"):
+        return HandlerReturn(value=value)
+    if ctx.move.target not in ("foe", "foe_side", "field") and move_name != "ふういん":
+        return HandlerReturn(value=value)
     return HandlerReturn(value=value + 1)
 
 
@@ -3728,15 +3740,23 @@ def ヘドロえき_reverse_drain(battle: Battle, ctx: EventContext, value: int)
 
 
 def へんげんじざい_change_type(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
-    """へんげんじざい・リベロ: 技実行前に技タイプへ自身のタイプを変更する。"""
+    """へんげんじざい・リベロ: 技実行前に技タイプへ自身のタイプを変更する。
+
+    わるあがきなどタイプを持たない技（type=""）を使用したときは発動しない。
+    もりののろい/ハロウィンによる追加タイプ（added_types）を持っている場合は
+    複数タイプ扱いになるため発動条件を満たすが、発動時にはその追加タイプも
+    リセットして技タイプの単タイプにする。
+    """
     move_type = ctx.move.type
 
     if (
-        not ctx.attacker.ability.activated_since_switch_in
+        move_type
+        and not ctx.attacker.ability.activated_since_switch_in
         and not ctx.attacker.is_terastallized
         and [move_type] != ctx.attacker.types
     ):
         ctx.attacker.ability_override_type = move_type
+        ctx.attacker.added_types = []
         ctx.attacker.ability.activated_since_switch_in = True
         _announce_ability_triggered(battle, ctx.attacker)
     return HandlerReturn(value=value)
@@ -3771,10 +3791,13 @@ def ほうし_maybe_inflict_ailment_on_contact(battle: Battle, ctx: AttackContex
     """ほうし特性: 接触技を受けたとき30%でどく/まひ/ねむりのいずれかを付与。
 
     Note:
-        攻撃側がぼうじんゴーグルを持っている場合は無効（ぼうじんゴーグルの仕様）。
+        攻撃側がくさタイプ・特性ぼうじん・アイテムぼうじんゴーグルのいずれかを
+        持っている場合は無効（粉・胞子技と同様の耐性）。
     """
     if (
         not battle.query.is_contact_reaction(ctx)
+        or ctx.attacker.has_type("くさ")
+        or ctx.attacker.ability.name == "ぼうじん"
         or ctx.attacker.has_item("ぼうじんゴーグル")
     ):
         return HandlerReturn(value=value)
@@ -3810,15 +3833,27 @@ def ほろびのボディ_apply_perish_song_on_contact(battle: Battle, ctx: Atta
     return HandlerReturn(value=value)
 
 
+# 自分含む全員が対象の音技（使用者自身にも効果が及ぶ技）は、技全体を無効化すると
+# 使用者自身への効果まで防いでしまうため、通常の全体無効化の対象から除外する。
+# 対象ポケモンごとの免疫判定は各技のハンドラ側（handlers/move_status.py の
+# _blocked_by_bouon）で行う（docs/spec/abilities/ぼうおん.md「特性の仕様」、
+# docs/spec/moves/ほろびのうた.md「技の仕様」）。
+_BOUON_EXCLUDED_MOVES: frozenset[str] = frozenset({"ほろびのうた"})
+
+
 def ぼうおん_block_sound(battle: Battle, ctx: AttackContext, value: bool) -> HandlerReturn:
     """ぼうおん特性: 音技を無効化する。
 
     自分や味方（自分自身も含む）を対象とする音技（例: いやしのすず）は、
     相手のぼうおんとは無関係のため、相手を対象とする技（target="foe"）のみを無効化する。
+    ほろびのうたのように使用者自身にも効果が及ぶ技は、技全体を無効化すると使用者
+    自身への効果まで防いでしまうため対象外とし、対象ポケモンごとの免疫判定を
+    各技のハンドラ側（_blocked_by_bouon）で行う。
     """
     if (
         not ctx.move.has_flag("sound")
         or ctx.move.target != "foe"
+        or ctx.move.name in _BOUON_EXCLUDED_MOVES
     ):
         return HandlerReturn(value=value)
 
@@ -3865,9 +3900,9 @@ def ぼうだん_block_bullet(battle: Battle, ctx: AttackContext, value: bool) -
 
 
 def ポイズンヒール_modify_poison_damage(battle: Battle, ctx: EventContext, value: int) -> HandlerReturn:
-    """ポイズンヒール特性: どく/もうどく由来のHP変化を最大HPの1/8回復に置き換える。"""
+    """ポイズンヒール特性: どく/もうどく由来のHP変化を最大HPの1/8回復に置き換える（切り捨て、最低1）。"""
     if value < 0:
-        value = ctx.target.max_hp // 8
+        value = max(1, ctx.target.max_hp // 8)
     return HandlerReturn(value=value)
 
 

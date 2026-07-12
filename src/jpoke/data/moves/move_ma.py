@@ -794,15 +794,17 @@ MOVES_MA: dict[MoveName, MoveData] = {
         accuracy=100,
         flags={"thaw"},
         handlers={
-            Event.ON_TRY_ACTION: h.MoveHandler(
-                ha.もえつきる_thaw_attacker,
-                priority=5,
-            ),
-            Event.ON_TRY_MOVE_1: h.MoveHandler(
-                ha.もえつきる_fail_if_no_fire_type,
-                subject_spec="attacker:self",
-                priority=10,
-            ),
+            Event.ON_TRY_ACTION: [
+                h.MoveHandler(
+                    ha.もえつきる_thaw_attacker,
+                    priority=5,
+                ),
+                h.MoveHandler(
+                    ha.もえつきる_fail_if_no_fire_type,
+                    subject_spec="attacker:self",
+                    priority=15,
+                ),
+            ],
             Event.ON_DAMAGE_HIT: h.MoveHandler(
                 ha.もえつきる_remove_fire_type,
                 subject_spec="attacker:self",

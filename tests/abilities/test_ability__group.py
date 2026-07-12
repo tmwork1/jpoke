@@ -1451,6 +1451,7 @@ def test_能力反発系_自己能力低下では発動しない(ability_name: s
         ("ぼうだん", "かたやぶり", "かえんボール", False),
         ("ぼうだん", "", "みずあめボム", True),
         ("ぼうだん", "かたやぶり", "みずあめボム", False),
+        ("ぼうだん", "", "じばく", False),
     ],
 )
 def test_音ラベル無効系_param(defender_ability: str, attacker_ability: str, move_name: str, should_block: bool):
