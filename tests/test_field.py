@@ -792,6 +792,21 @@ def test_どくびし_浮いているポケモンには効かない():
     assert not active.ailment.is_active
 
 
+def test_どくびし_ふしょく持ちのはがねタイプにも効かない():
+    """どくびし: 繰り出したポケモン自身がふしょく持ちのはがねタイプでも、
+    どくびしの毒付与はふしょくのタイプ無効貫通の対象外なので毒状態にならない
+    （フィールドも消滅しない）。"""
+    battle = t.start_battle(
+        team1=[Pokemon("ピカチュウ")],
+        team0=[Pokemon("ピカチュウ"), Pokemon("ニャース(ガラル)", ability_name="ふしょく")],
+        side0={"どくびし": 2},
+    )
+    active = t.run_switch(battle, 0, 1)
+    field = battle.get_side(battle.players[0]).get("どくびし")
+    assert field.is_active
+    assert not active.ailment.is_active
+
+
 def test_ねがいごと_かいふくふうじ中は回復しない():
     """ねがいごと: かいふくふうじ状態のポケモンはねがいごとによる回復を受けない"""
     battle = t.start_battle(

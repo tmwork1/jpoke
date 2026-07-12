@@ -1798,6 +1798,57 @@ def test_ふくつのこころ_ひるみ時にS上昇(volatile_name: VolatileNam
     assert mon.boosts["spe"] == expected_rank
 
 
+def test_ふくつのたて_初登場でBが1段階上がる():
+    battle = t.start_battle(
+        team0=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    assert mon.boosts["def"] == 1
+
+
+def test_ふくつのたて_かがくへんかガス中は発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス")],
+        team1=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+    )
+    mon = battle.actives[1]
+    assert not mon.ability.enabled
+    assert mon.boosts["def"] == 0
+
+
+def test_ふくつのたて_かがくへんかガス解除後に発動する():
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かがくへんかガス"), Pokemon("ライチュウ")],
+        team1=[Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+    )
+    mon = battle.actives[1]
+    assert mon.boosts["def"] == 0
+
+    t.run_switch(battle, 0, 1)
+    assert mon.boosts["def"] == 1
+
+
+def test_ふくつのたて_Bが既に最大でも特性は消費される():
+    """ふくつのたて: ぼうぎょが既に最大まで上がっているため特性が不発した場合でも、
+    その戦闘で特性を再度発動させることはできなくなる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ"), Pokemon("ザマゼンタ(れきせん)", ability_name="ふくつのたて")],
+        team1=[Pokemon("カビゴン")],
+    )
+    bench = battle.get_team(battle.players[0])[1]
+    battle.modify_stats(bench, {"def": +6})
+
+    t.run_switch(battle, 0, 1)
+    mon = battle.actives[0]
+    assert mon.boosts["def"] == 6
+    assert not mon.ability.enabled
+
+    t.run_switch(battle, 0, 0)
+    t.run_switch(battle, 0, 1)
+    assert mon.boosts["def"] == 0
+
+
 def test_ふしぎなうろこ_かたやぶりで無効():
     """ふしぎなうろこ: かたやぶり持ちの物理技はふしぎなうろこの防御補正を貫通する。"""
     battle = t.start_battle(
@@ -1978,6 +2029,45 @@ def test_ふしょく_免疫タイプにもどくが入る(target_name: str, ail
 
     assert battle.ailment_manager.apply(target, ailment_name, source=source)
     assert target.ailment.name == ailment_name
+
+
+def test_ふしょく_どくどくではがねタイプにももうどくが入る():
+    """ふしょく: 技（どくどく）経由でも、はがねタイプの相手にもうどくを付与できる。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤトウモリ", ability_name="ふしょく", move_names=["どくどく"])],
+        team1=[Pokemon("コイル")],
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.actives[1].ailment.name == "もうどく"
+
+
+def test_ふしょく_どく技がはがねタイプに無効化されると追加効果も発動しない():
+    """ふしょく: どく技自体がはがねタイプへのタイプ相性で無効化された場合、
+    ふしょくを持っていても追加効果（どく付与）は発動しない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ヤトウモリ", ability_name="ふしょく", move_names=["どくづき"])],
+        team1=[Pokemon("コイル")],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 0)
+    defender = battle.actives[1]
+    assert defender.hp == defender.max_hp
+    assert not defender.ailment.is_active
+
+
+def test_ふしょく_相手のどくのトゲには効果がない():
+    """ふしょく: 相手の特性どくのトゲによる付与はふしょくの効果対象外であり、
+    ふしょく持ちがはがね・どくタイプなら通常どおり毒状態にならない。"""
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", ability_name="どくのトゲ")],
+        team1=[Pokemon("コイル", ability_name="ふしょく", move_names=["たいあたり"])],
+        accuracy=100,
+    )
+    t.fix_random(battle, 0.0)
+    t.run_move(battle, 1)
+    assert not battle.actives[1].ailment.is_active
 
 
 def test_ふゆう_かたやぶりでじめん技が通る():
