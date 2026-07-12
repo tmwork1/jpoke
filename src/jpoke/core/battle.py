@@ -590,6 +590,124 @@ class Battle:
         """
         return self.query.can_switch(player)
 
+    def has_available_bench(self, player: Player) -> bool:
+        """プレイヤーの控えに瀕死でないポケモンが残っているかを判定する（PokemonQueryへの委譲）。
+
+        だっしゅつパックなど、とらわれ状態（にげられない・バインド・ねをはる・
+        フェアリーロックや特性かげふみ・ありじごく・じりょくなど）を無視して
+        強制的に交代させる効果の判定に使う。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool: 交代先が残っている場合True
+        """
+        return self.query.has_available_bench(player)
+
+    def is_floating(self, pokemon: Pokemon) -> bool:
+        """浮いている状態か判定する（PokemonQueryへの委譲）。
+
+        タイプ（ひこう）や特性、技の効果を考慮して判定する。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 浮いていればTrue
+        """
+        return self.query.is_floating(pokemon)
+
+    def is_trapped(self, pokemon: Pokemon) -> bool:
+        """逃げられない状態か判定する（PokemonQueryへの委譲）。
+
+        ゴーストタイプは逃げられる。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 逃げられない場合True
+        """
+        return self.query.is_trapped(pokemon)
+
+    def is_nervous(self, pokemon: Pokemon) -> bool:
+        """きんちょうかん状態か判定する（PokemonQueryへの委譲）。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: きんちょうかん状態の場合True
+        """
+        return self.query.is_nervous(pokemon)
+
+    def is_hazard_immune(self, pokemon: Pokemon) -> bool:
+        """エントリーハザードへの免疫があるか判定する（PokemonQueryへの委譲）。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 免疫がある場合True
+        """
+        return self.query.is_hazard_immune(pokemon)
+
+    def can_use_last_resort(self, pokemon: Pokemon) -> bool:
+        """とっておきの発動条件を満たしているか判定する（PokemonQueryへの委譲）。
+
+        自身がとっておきを覚えており、かつとっておき以外に覚えている技を
+        すべて場に出てから1回以上PP消費して使用していれば True を返す。
+        Champions では条件を満たしていない場合、とっておき自体を選択できない。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            bool: 発動条件を満たす場合True
+        """
+        return self.query.can_use_last_resort(pokemon)
+
+    def get_forced_move_name(self, pokemon: Pokemon) -> str | None:
+        """強制行動中のポケモンが実行すべき技名を返す（PokemonQueryへの委譲）。
+
+        いかりのつぼみ・かなしばり等、揮発性状態によって技が固定されている
+        場合にその技名を返す。
+
+        Args:
+            pokemon: 対象のポケモン
+
+        Returns:
+            str | None: 固定されている技名（固定されていない場合None）
+        """
+        return self.query.get_forced_move_name(pokemon)
+
+    def is_first_actor(self, player: Player) -> bool | None:
+        """このターンで player が先攻かどうかを判定する（PokemonQueryへの委譲）。
+
+        1vs1想定。行動順が未確定の場合はNoneを返す。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool | None: 先攻の場合True、後攻の場合False、未確定の場合None
+        """
+        return self.query.is_first_actor(player)
+
+    def is_second_actor(self, player: Player) -> bool | None:
+        """このターンで player が後攻かどうかを判定する（PokemonQueryへの委譲）。
+
+        1vs1想定。行動順が未確定の場合はNoneを返す。
+
+        Args:
+            player: 判定するプレイヤー
+
+        Returns:
+            bool | None: 後攻の場合True、先攻の場合False、未確定の場合None
+        """
+        return self.query.is_second_actor(player)
+
     def resolve_speed_order(self) -> list[Pokemon]:
         """素早さ順序を解決（SpeedCalculatorへの委譲）。
 
