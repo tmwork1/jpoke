@@ -139,6 +139,9 @@ data/ability.py  →  handlers/ability.py に実装  →  data/ability.py に登
 - Agent（`isolation: "worktree"`）で作業したworktreeは、タスクの結論（マージ or 破棄）が出た時点で
   `git worktree remove` する。**worktreeを除去するコマンドはworktreeの外（リポジトリルート等）から
   実行する**（内部の作業ディレクトリから実行すると削除に失敗し孤立ディレクトリが残ることがある）
+- **例外**: `work1` `work3` など汎用作業用に手動作成したworktree（Agentの`isolation: "worktree"`
+  以外で作られたもの）は、対応するPRがマージされてもタスクの結論とみなさず、ユーザーの明示的な
+  指示がない限り `git worktree remove` しない。ユーザーが継続利用する前提の永続ワークスペースとして扱う
 - 作業の節目や `.loop` 以外のセッション終了時には `git status` / `git worktree list` /
   `git stash list` で放置物がないか確認する
 
