@@ -568,6 +568,31 @@ def test_ミイラ_非接触技では特性が変わらない():
     assert attacker.ability.name != "ミイラ"
 
 
+def test_ミイラ_かがくへんかガス保持者には発動しない():
+    """ミイラ: かがくへんかガスはuncopyableのため上書きできない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="ミイラ")],
+    )
+    attacker, defender = battle.actives
+    t.run_move(battle, 0)
+    assert attacker.ability.base_name == "かがくへんかガス"
+
+
+def test_ミイラ_かがくへんかガス保持者がとくせいなし状態なら上書きできる():
+    """ミイラ: かがくへんかガス保持者自身がとくせいなし状態（いえき等）の場合は例外的に上書きできる"""
+    battle = t.start_battle(
+        team0=[Pokemon("ドガース", ability_name="かがくへんかガス", move_names=["たいあたり"])],
+        team1=[Pokemon("カビゴン", ability_name="ミイラ")],
+        volatile0={"とくせいなし": 3},
+    )
+    attacker, defender = battle.actives
+    # とくせいなしによりガス効果が切れ、相手のミイラが有効化されていることを確認
+    assert defender.ability.enabled
+    t.run_move(battle, 0)
+    assert attacker.ability.base_name == "ミイラ"
+
+
 @pytest.mark.parametrize(
     "move_name, expected_rank",
     [
