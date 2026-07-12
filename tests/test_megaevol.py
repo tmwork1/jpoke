@@ -14,6 +14,19 @@ mega_names = [x[-1] for x in MEGA_STONES.values()]
 stone_normal_mega = list(zip(stones, normal_names, mega_names))
 
 
+def test_megaevolve_戻り値はNone():
+    """Pokemon.megaevolve()はフォルムを切り替えるだけの内部メソッドであり、
+    戻り値は常にNone（成功/失敗を示すbool値ではない）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("バンギラス", item_name="バンギラスナイト")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    result = mon.megaevolve()
+    assert result is None
+    assert mon.name == "メガバンギラス"
+
+
 def test_megaevolved_繰り返し判定しても結果が変わらない():
     """MEGA_POKEMONSがジェネレータ式に戻ると、in判定を繰り返すうちに
     非メガシンカ形の判定（イテレータ消費）を経て以後megaevolvedが常にFalseを返す
