@@ -2193,6 +2193,55 @@ def test_フラワーギフト_雨中では発動しない():
     assert battle.damage_calculator.atk_modifier == 4096
 
 
+def test_フラワーギフト_晴れ中でも特殊技の攻撃補正は変化しない():
+    battle = t.start_battle(
+        team0=[Pokemon("チェリム", ability_name="フラワーギフト", move_names=["はかいこうせん"])],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
+def test_フラワーギフト_晴れ中に特殊技を受けると特防補正が1_5倍になる():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["はかいこうせん"])],
+        team1=[Pokemon("チェリム", ability_name="フラワーギフト")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_modifier == 6144
+
+
+def test_フラワーギフト_晴れ中でも物理技を受けたときの防御補正は変化しない():
+    battle = t.start_battle(
+        team0=[Pokemon("カビゴン", move_names=["たいあたり"])],
+        team1=[Pokemon("チェリム", ability_name="フラワーギフト")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.def_modifier == 4096
+
+
+def test_フラワーギフト_ばんのうがさ所持時は攻撃補正が発動しない():
+    battle = t.start_battle(
+        team0=[Pokemon(
+            "チェリム",
+            ability_name="フラワーギフト",
+            item_name="ばんのうがさ",
+            move_names=["たいあたり"],
+        )],
+        team1=[Pokemon("カビゴン")],
+        weather=("はれ", 5),
+        accuracy=100,
+    )
+    t.run_move(battle, 0)
+    assert battle.damage_calculator.atk_modifier == 4096
+
+
 def test_フラワーベール_くさタイプでないと保護しない():
     battle = t.start_battle(
         team0=[Pokemon("カビゴン", ability_name="フラワーベール")],

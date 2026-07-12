@@ -3623,19 +3623,25 @@ def ふゆう_float(battle: Battle, ctx: EventContext, value: bool) -> HandlerRe
 
 
 def フラワーギフト_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """フラワーギフト特性（攻撃側）: はれ中にこうげきが1.5倍になる。
+    """フラワーギフト特性（攻撃側）: はれ中に物理技のこうげきが1.5倍になる。
     フラワーギフト持ちポケモン（attacker）自身がばんのうがさを持つ場合は無効。
     """
-    if battle.weather_for(ctx.attacker).sunny:
+    if (
+        battle.weather_for(ctx.attacker).sunny
+        and ctx.move.category == "physical"
+    ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def フラワーギフト_modify_def(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """フラワーギフト特性（防御側）: はれ中にとくぼうが1.5倍になる。
+    """フラワーギフト特性（防御側）: はれ中に特殊技のとくぼうが1.5倍になる。
     フラワーギフト持ちポケモン（defender）自身がばんのうがさを持つ場合は無効。
     """
-    if battle.weather_for(ctx.defender).sunny:
+    if (
+        battle.weather_for(ctx.defender).sunny
+        and not battle.query.deals_physical_damage(ctx.attacker, ctx.move)
+    ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
