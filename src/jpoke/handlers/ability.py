@@ -4394,7 +4394,15 @@ def もらいび_reserve_fire_boost(battle: Battle, ctx: AttackContext, value: b
 def やるき_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
     """やるき特性: 特性が有効化された時点ですでにねむり状態なら即座に回復する。
 
-    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合などに発動する。
+    なやみのタネ・なかまづくり等で特性がやるきに書き換わった場合や、
+    かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になって
+    ONに戻った場合などに発動する。
+    ON_SWITCH_INにもこの関数を登録しており、すでにねむり状態のやるきの
+    ポケモンが場に出た場合にも即座に回復する（docs/spec/turn.md の
+    ON_SWITCH_IN priority=100「やるき（特性）による状態異常回復」に対応。
+    どくびし等その他のpriority=100効果とは、どくびしが場設置時に一度だけ
+    priority=100が登録されるのに対し、やるきは交代のたびに新規登録される
+    ため、実行順は自然に保たれる）。
     """
     return _cure_ailment_on_enable(battle, ctx, blocked_ailments=["ねむり"])
 

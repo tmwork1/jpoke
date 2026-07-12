@@ -3401,6 +3401,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.やるき_prevent_volatile,
                 "target:self",
             ),
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.やるき_cure_sleep_on_enable,
+                subject_spec="source:self",
+            ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 h.やるき_cure_sleep_on_enable,
                 subject_spec="source:self",
