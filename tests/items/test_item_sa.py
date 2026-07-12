@@ -58,6 +58,23 @@ def test_サンのみ_ほおばるでHPに関わらず発動する():
     assert not mon.has_item()
 
 
+def test_サンのみ_瀕死になったときは発動しない():
+    """サンのみ: ダメージでHPが0(ひんし)になったときはきゅうしょアップ状態にならず、
+    アイテムも消費されない
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="サンのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == 0
+    assert mon.fainted
+    assert not mon.has_volatile("きゅうしょアップ")
+    assert mon.has_item()
+
+
 def test_しめつけバンド_バインドダメージ増加():
     """しめつけバンド: バインドダメージを最大HPの1/6に増加する"""
     battle = t.start_battle(
@@ -630,6 +647,22 @@ def test_スターのみ_全ての能力が最大なら発動しない():
     mon.hp = mon.max_hp // 4 + 1
     battle.modify_hp(mon, v=-1)
     assert all(mon.boosts[stat] == 6 for stat in ("atk", "def", "spa", "spd", "spe"))
+    assert mon.has_item()
+
+
+def test_スターのみ_瀕死になったときは発動しない():
+    """スターのみ: ダメージでHPが0(ひんし)になったときは能力上昇せず、アイテムも消費されない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", item_name="スターのみ")],
+        team1=[Pokemon("ピカチュウ")],
+    )
+    mon = battle.actives[0]
+    mon.hp = 1
+    battle.random.choice = lambda seq: seq[0]  # A が選ばれる（発動すれば検知できる）
+    battle.modify_hp(mon, v=-1)
+    assert mon.hp == 0
+    assert mon.fainted
+    assert all(mon.boosts[stat] == 0 for stat in ("atk", "def", "spa", "spd", "spe"))
     assert mon.has_item()
 
 

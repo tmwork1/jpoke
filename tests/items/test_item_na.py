@@ -4,6 +4,20 @@ from jpoke import Pokemon
 from .. import test_utils as t
 
 
+def test_ナゾのみ_きんちょうかんの相手がいると発動しない():
+    """ナゾのみ: 相手が特性きんちょうかんを持つときは発動しない"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="きんちょうかん", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="ナゾのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.fix_damage(battle, 50)
+    t.run_move(battle, 0)
+    assert foe.hp == foe.max_hp - 50
+    assert foe.has_item()
+
+
 def test_ナゾのみ_ダメージ固定技では発動しない():
     """ナゾのみ: タイプ相性上は弱点でもダメージ固定技（一撃必殺技を除く）では発動しない"""
     battle = t.start_battle(
@@ -32,20 +46,6 @@ def test_ナゾのみ_一撃必殺技を耐えたときは発動する():
     assert not foe.has_item()
 
 
-def test_ナゾのみ_きんちょうかんの相手がいると発動しない():
-    """ナゾのみ: 相手が特性きんちょうかんを持つときは発動しない"""
-    battle = t.start_battle(
-        team0=[Pokemon("ピカチュウ", ability_name="きんちょうかん", move_names=["でんきショック"])],
-        team1=[Pokemon("ゼニガメ", item_name="ナゾのみ")],
-        accuracy=100,
-    )
-    foe = battle.actives[1]
-    t.fix_damage(battle, 50)
-    t.run_move(battle, 0)
-    assert foe.hp == foe.max_hp - 50
-    assert foe.has_item()
-
-
 def test_ナゾのみ_効果抜群でHP回復():
     """ナゾのみ: 効果抜群のダメージを受けたときHPを25%回復する"""
     battle = t.start_battle(
@@ -58,6 +58,23 @@ def test_ナゾのみ_効果抜群でHP回復():
     t.run_move(battle, 0)
     assert foe.hp == foe.max_hp - 50 + foe.max_hp // 4
     assert not foe.has_item()
+
+
+def test_ナゾのみ_瀕死になったときは発動しない():
+    """ナゾのみ: 効果抜群のダメージでHPが0(ひんし)になったときは回復せず、消費もされない
+    （ref: docs/spec/items/ナゾのみ.md「ひんしになったときは発動しない」）
+    """
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", move_names=["でんきショック"])],
+        team1=[Pokemon("ゼニガメ", item_name="ナゾのみ")],
+        accuracy=100,
+    )
+    foe = battle.actives[1]
+    t.fix_damage(battle, foe.max_hp)
+    t.run_move(battle, 0)
+    assert foe.hp == 0
+    assert foe.fainted
+    assert foe.has_item()
 
 
 def test_ナゾのみ_等倍では発動しない():
