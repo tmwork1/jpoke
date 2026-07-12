@@ -65,6 +65,7 @@ _OGERPON_STAT: dict[str, Stat] = {
 
 _PROTECT_VOLATILES: frozenset[str] = frozenset({
     "まもる", "トーチカ", "キングシールド", "スレッドトラップ", "かえんのまもり",
+    "ニードルガード", "ファストガード",
 })
 
 _EFFECT_SPORE_AILMENTS: list[tuple[float, AilmentName]] = [
@@ -3583,13 +3584,17 @@ def ふしぎなまもり_block_non_effective(battle: Battle, ctx: AttackContext
 
 
 def ふとうのけん_boost_A(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
-    """ふとうのけん特性: 初登場時にこうげきが1段階上がる（バトル中1回）。"""
+    """ふとうのけん特性: 初登場時にこうげきが1段階上がる（バトル中1回）。
+
+    すでにこうげきが最大まで上がっていて不発だった場合でも、その戦闘では
+    再度発動できなくなる（発動済みフラグは効果の成否に関わらず立てる）。
+    """
     mon = ctx.source
     if mon is None:
         return HandlerReturn(value=value)
+    battle.add_ability_disabled_reason(mon, "consumed")
     if battle.modify_stats(mon, {"atk": +1}, source=mon):
         _announce_ability_triggered(battle, mon)
-        battle.add_ability_disabled_reason(mon, "consumed")
     return HandlerReturn(value=value)
 
 
@@ -3599,6 +3604,11 @@ def ふみん_cure_sleep_on_enable(battle: Battle, ctx: EventContext, value: Any
     なやみのタネ・なかまづくり等で特性がふみんに書き換わった場合や、
     かがくへんかガス・かたやぶりの効果が終わって特性が再び有効になった場合、
     メガシンカで特性がふみんに変わった場合などに発動する。
+    ON_SWITCH_INにも同じ関数を登録しており、すでにねむり状態のふみんの
+    ポケモンを場に出した場合にも即座に回復する（docs/spec/turn.md の
+    ON_SWITCH_IN priority=100「ふみん（特性）による状態異常回復」に対応。
+    どくびしのどく付与判定も同じpriority=100だが、どくびしの方が先に
+    ハンドラ登録されているため実行順は保たれる）。
     """
     mon = ctx.source
     if mon is None:
@@ -3618,19 +3628,25 @@ def ふゆう_float(battle: Battle, ctx: EventContext, value: bool) -> HandlerRe
 
 
 def フラワーギフト_modify_atk(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """フラワーギフト特性（攻撃側）: はれ中にこうげきが1.5倍になる。
+    """フラワーギフト特性（攻撃側）: はれ中に物理技のこうげきが1.5倍になる。
     フラワーギフト持ちポケモン（attacker）自身がばんのうがさを持つ場合は無効。
     """
-    if battle.weather_for(ctx.attacker).sunny:
+    if (
+        battle.weather_for(ctx.attacker).sunny
+        and ctx.move.category == "physical"
+    ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
 
 def フラワーギフト_modify_def(battle: Battle, ctx: AttackContext, value: int) -> HandlerReturn:
-    """フラワーギフト特性（防御側）: はれ中にとくぼうが1.5倍になる。
+    """フラワーギフト特性（防御側）: はれ中に特殊技のとくぼうが1.5倍になる。
     フラワーギフト持ちポケモン（defender）自身がばんのうがさを持つ場合は無効。
     """
-    if battle.weather_for(ctx.defender).sunny:
+    if (
+        battle.weather_for(ctx.defender).sunny
+        and not battle.query.deals_physical_damage(ctx.attacker, ctx.move)
+    ):
         value = apply_fixed_modifier(value, 6144)
     return HandlerReturn(value=value)
 
@@ -3640,19 +3656,30 @@ def フラワーベール_prevent_ailment(battle: Battle, ctx: EventContext, val
     target = ctx.target
     if target is None or "くさ" not in target.types:
         return HandlerReturn(value=value)
-    _announce_ability_triggered(battle, target)
-    return HandlerReturn(value=False, stop_event=True)
+    return _prevent_ailment(battle, ctx, value)
 
 
 def フラワーベール_prevent_stat_drop(battle: Battle, ctx: EventContext, value: dict) -> HandlerReturn:
-    """フラワーベール特性: くさタイプへの能力低下を防ぐ。"""
+    """フラワーベール特性: くさタイプへの相手由来の能力ランク低下を防ぐ。
+
+    リーフストーム・からをやぶる・くだけるよろい・ムラっけなど自分自身の技/特性
+    による自発的なランク低下は防がない。
+    """
     target = ctx.target
     if target is None or "くさ" not in target.types:
         return HandlerReturn(value=value)
-    filtered = {s: v for s, v in value.items() if v >= 0}
+    filtered = _block_stat_drop_by_foe(value, ctx)
     if filtered != value:
         _announce_ability_triggered(battle, target)
     return HandlerReturn(value=filtered)
+
+
+def フラワーベール_prevent_volatile(battle: Battle, ctx: EventContext, value: Any) -> HandlerReturn:
+    """フラワーベール特性: くさタイプのねむけ状態を防ぐ。"""
+    target = ctx.target
+    if target is None or "くさ" not in target.types:
+        return HandlerReturn(value=value)
+    return _prevent_volatile(battle, ctx, value, blocked_volatiles=["ねむけ"])
 
 
 def フリーズスキン_modify_move_type(battle: Battle, ctx: AttackContext, value: Type) -> HandlerReturn:

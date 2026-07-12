@@ -937,7 +937,7 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             Event.ON_SWITCH_IN: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
                 subject_spec="source:self",
-                priority=200,
+                priority=140,  # docs/spec/turn.md ON_SWITCH_IN: 「140 こだいかっせい（特性）」
             ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 paradox.refresh_paradox_charge_state,
@@ -2823,6 +2823,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
                 h.ふみん_prevent_volatile,
                 "target:self",
             ),
+            Event.ON_SWITCH_IN: h.AbilityHandler(
+                h.ふみん_cure_sleep_on_enable,
+                subject_spec="source:self",
+            ),
             Event.ON_ABILITY_ENABLED: h.AbilityHandler(
                 h.ふみん_cure_sleep_on_enable,
                 subject_spec="source:self",
@@ -2867,6 +2871,10 @@ ABILITIES: dict[AbilityName, AbilityData] = {
             ),
             Event.ON_BEFORE_MODIFY_STAT: h.AbilityHandler(
                 h.フラワーベール_prevent_stat_drop,
+                subject_spec="target:self",
+            ),
+            Event.ON_BEFORE_APPLY_VOLATILE: h.AbilityHandler(
+                h.フラワーベール_prevent_volatile,
                 subject_spec="target:self",
             ),
         }

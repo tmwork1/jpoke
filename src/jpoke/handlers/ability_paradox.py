@@ -13,15 +13,30 @@ from jpoke.types import BoostSource, Stat
 from .ability import _announce_ability_triggered
 
 
-def _select_paradox_boost_stat(mon: Pokemon) -> Stat:
+def _select_paradox_boost_stat(battle: Battle, mon: Pokemon) -> Stat:
     """パラドックス補正の対象能力を選ぶ。
     実数値(ランク補正込み)が最も高い能力を選ぶ。同値時は A>B>C>D>S の順で先勝ち。
+
+    ワンダールーム状態では、ぼうぎょ/とくぼうの実数値（ランク補正を除く）が
+    入れ替わった状態で比較する。ランク補正は技の分類に対応する本来の区分のまま
+    据え置く（handlers/field.py の ワンダールーム_def_modifier と同じ仕様。
+    docs/spec/abilities/こだいかっせい.md「パワーシェア/ガードシェア/パワートリック/
+    スピードスワップ/ワンダールームによる実数値変動も考慮する」
+    「実数値の変動はステータスの比較より先に考慮する」を参照）。
     """
     stat_order: tuple[Stat, ...] = ("atk", "def", "spa", "spd", "spe")
+    wonder_room = battle.get_global_field("ワンダールーム").is_active
+
+    def value_of(stat: Stat) -> int:
+        raw_stat = stat
+        if wonder_room and stat in ("def", "spd"):
+            raw_stat = "spd" if stat == "def" else "def"
+        return int(mon.stats[raw_stat] * mon.rank_modifier(stat))
+
     best_stat: Stat = stat_order[0]
-    best_value = mon.ranked_stats[best_stat]
+    best_value = value_of(best_stat)
     for stat in stat_order[1:]:
-        value = mon.ranked_stats[stat]
+        value = value_of(stat)
         if value > best_value:
             best_stat = stat
             best_value = value
@@ -38,7 +53,7 @@ def _activate_paradox_boost(battle: Battle,
                             mon: Pokemon,
                             source: BoostSource) -> None:
     """パラドックス補正を有効化し、必要なら消費ログを記録する。"""
-    mon.paradox_boost_stat = _select_paradox_boost_stat(mon)
+    mon.paradox_boost_stat = _select_paradox_boost_stat(battle, mon)
     mon.paradox_boost_source = source
     _announce_ability_triggered(battle, mon)
 
@@ -131,6 +146,15 @@ def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
     こんらんの自傷ダメージ（"_こんらん"）には影響しない
     （docs/spec/abilities/クォークチャージ.md 「特性で攻撃/防御が上がってもこんらんの
     ダメージには影響しない」を参照）。
+
+    ワンダールーム状態では、防御側の実数値参照そのものが入れ替わる
+    （handlers/field.py の ワンダールーム_def_modifier）ため、パラドックス補正の
+    対象判定も入れ替えて追従させる。これにより、ぼうぎょ/とくぼうが強化対象のとき
+    ワンダールームの発生・解除に応じて補正が掛かる能力（物理/特殊いずれの防御計算に
+    乗るか）が入れ替わる
+    （docs/spec/abilities/こだいかっせい.md「防御か特防が上昇しているときに
+    ワンダールーム状態が発生した場合や、解除された場合では、その度に補正が
+    掛かっている能力も入れ替わる」を参照）。
     """
     if ctx.attacker is None or ctx.move is None or ctx.defender is None:
         return HandlerReturn(value=value)
@@ -138,6 +162,8 @@ def apply_def_modifier(battle: Battle, ctx: AttackContext, value: int) -> Handle
         return HandlerReturn(value=value)
 
     stat = "def" if battle.query.deals_physical_damage(ctx.attacker, ctx.move) else "spd"
+    if battle.get_global_field("ワンダールーム").is_active:
+        stat = "spd" if stat == "def" else "def"
     if ctx.defender.paradox_boost_stat == stat:
         value = apply_fixed_modifier(value, 5325)
     return HandlerReturn(value=value)
