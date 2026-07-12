@@ -1531,6 +1531,9 @@ def test_うちおとす_ひこうタイプの浮遊が無効化される():
     )
     defender = battle.actives[1]
     assert battle.query.is_floating(defender)
+    # 急所（いわ→ひこうの効果抜群も重なる）でポッポが瀕死になると
+    # 揮発性状態が付与されず判定できなくなるため、急所を固定して防ぐ
+    t.fix_random(battle, 0.99)
     t.run_move(battle, 0)
     assert not battle.query.is_floating(defender)
 
