@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 import pytest
 
 from jpoke import Pokemon
-from jpoke.enums import Command, Interrupt
+from jpoke.enums import Command, Interrupt, LogCode
 from jpoke.types import AilmentName
 
 from .. import test_utils as t
@@ -474,6 +474,23 @@ def test_かんろなミツ_入場時一度だけ発動():
     t.run_switch(battle, 0, 1)
     t.run_switch(battle, 0, 0)
     assert foe.boosts["evasion"] == -1
+
+
+def test_かんろなミツ_発動ログに特性名が記録される():
+    """かんろなミツは発動と同時に自己無効化（"consumed"）されるため、ログ記録時点で
+    ability.name が空文字にならず、常に元の特性名（base_name）を使って記録されることを確認する
+    （fuzz_log seed=19 で発見されたログ空欄バグの回帰）。"""
+    battle = t.start_battle(
+        team0=[Pokemon("ピカチュウ", ability_name="かんろなミツ")],
+        team1=[Pokemon("カビゴン")],
+    )
+    logs = [
+        log for log in battle.event_logger.logs
+        if log.log == LogCode.ABILITY_TRIGGERED
+        and log.payload is not None
+        and getattr(log.payload, "ability", None) == "かんろなミツ"
+    ]
+    assert len(logs) == 1
 
 
 def test_カーリーヘアー_直接攻撃で攻撃者のSが1段階下がる():

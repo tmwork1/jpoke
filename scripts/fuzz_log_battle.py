@@ -17,7 +17,10 @@
 from __future__ import annotations
 
 import argparse
+import os
 import traceback
+from functools import partial
+from multiprocessing import Pool
 from pathlib import Path
 from random import Random
 
@@ -101,10 +104,16 @@ def main():
     parser.add_argument("--count", type=int, default=10, help="実行するバトル数")
     parser.add_argument("--max-turns", type=int, default=DEFAULT_MAX_TURNS, help="1バトルの最大ターン数")
     parser.add_argument("--n-pokemon", type=int, default=DEFAULT_N_POKEMON, help="1チームの匹数")
+    parser.add_argument("--workers", type=int, default=None,
+                        help="並列worker数（既定: CPU数とcountの小さい方）")
     args = parser.parse_args()
 
-    for seed in range(args.start_seed, args.start_seed + args.count):
-        path, crashed = run_one(seed, args.max_turns, args.n_pokemon)
+    seeds = range(args.start_seed, args.start_seed + args.count)
+    workers = args.workers if args.workers is not None else min(args.count, os.cpu_count() or 4)
+    worker = partial(run_one, max_turns=args.max_turns, n_pokemon=args.n_pokemon)
+    with Pool(workers) as pool:
+        results = pool.map(worker, seeds)
+    for seed, (path, crashed) in zip(seeds, results):
         print(f"report: {path} crashed={crashed}")
 
 
