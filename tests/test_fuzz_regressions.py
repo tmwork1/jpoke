@@ -366,6 +366,66 @@ def test_じゅうりょく_ノーガード相手への攻撃でNoneのままTyp
     assert battle.move_executor.accuracy is None  # 倍率は適用されない
 
 
+def test_だっしゅつパック_自分の番より後の割り込み交代で残った予約コマンドが次ターンに持ち越されない():
+    """seed=1755 player=random (IndexError@command_manager.py:resolve_move_from_command:149) の回帰テスト。
+
+    TurnController._run_switch_phase は resolve_speed_order() の速度順でプレイヤーを
+    1人ずつ処理する。修正前は「自分の番がループで回ってくる前に既に交代済みだった
+    場合」だけ、使われなかった予約コマンド（MOVE_x等）をその場（自分の番の
+    イテレーション時点）で破棄していた。
+
+    しかし、自分の番の処理が既に終わった後に、後から処理される別プレイヤーの交代
+    （その switch-in 効果によるランクダウン）に付随してだっしゅつパックの割り込み
+    交代が発生するケースでは、対象プレイヤーの予約コマンドは一度も pop されない
+    まま reserved_commands に残り続けていた。resolve_action_order() は
+    has_switched なプレイヤーを action_order から除外するため、_run_move_phase 側の
+    同種の破棄ロジックにも到達せず、残留コマンドは次ターン以降までそのまま
+    持ち越されてしまう。
+
+    修正後はループ全体が終わった後の後処理として、has_switched かつコマンドが
+    残っている全プレイヤーの予約コマンドをまとめて破棄するため、割り込み交代が
+    ループの前半・後半どちらのタイミングで起きても残留コマンドは残らない。
+
+    速いピカチュウ（だっしゅつパック持ち）が通常の技コマンド（MOVE_1）を予約し、
+    自分の番の処理が終わった後に、遅いカビゴン側がいかく持ちのコラッタに交代して
+    ピカチュウのこうげきを下げ、だっしゅつパックの割り込み交代を誘発する。
+    交代後のビードルは技を1つ（index=0）しか持たないため、残留したMOVE_1
+    （index=1）が破棄されていないと、次ターンの技実行でIndexErrorが発生する。
+    """
+    battle = t.start_battle(
+        team0=[
+            Pokemon(
+                "ピカチュウ", item_name="だっしゅつパック",
+                move_names=["でんきショック", "でんこうせっか"],
+            ),
+            Pokemon("ビードル", move_names=["たいあたり"]),
+        ],
+        team1=[
+            Pokemon("カビゴン", move_names=["たいあたり"]),
+            Pokemon("コラッタ", ability_name="いかく", move_names=["たいあたり"]),
+        ],
+    )
+    player0, player1 = battle.players
+
+    # Turn1: ピカチュウ（速い）はMOVE_1（でんこうせっか）を予約するが、
+    # 自分の番の処理では交代コマンドではないため何も起きずそのまま残る。
+    # その後、遅いカビゴン側がいかく持ちのコラッタに交代し、ピカチュウの
+    # こうげきが下がってだっしゅつパックの割り込み交代が発生する。この時点で
+    # ピカチュウの予約コマンド（MOVE_1）は一度も使われずに残る。
+    battle.step(commands={player0: Command.MOVE_1, player1: Command.SWITCH_1})
+
+    assert battle.actives[0].name == "ビードル"  # だっしゅつパックで自動的に交代済み
+    assert battle.actives[1].name == "コラッタ"
+
+    # Turn2: 交代後のビードルは技を1つ（index=0）しか持たない。
+    # 修正前は残留したMOVE_1（index=1）が誤って使われ、
+    # command_manager.resolve_move_from_commandでIndexErrorが発生していた。
+    battle.step()
+
+    assert battle.turn == 2  # 例外なく2ターン目が完了したことを確認
+    assert battle.actives[0].pp_consumed_move.name == "たいあたり"  # 新しいコマンドが正しく使われた
+
+
 def test_つめたいいわ_所持者がいる場でバインド技を使ってもValueErrorが発生しない():
     """seed=10 player=random (ValueError@context.py:resolve_role:70) の回帰テスト。
 
